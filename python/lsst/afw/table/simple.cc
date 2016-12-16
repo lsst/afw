@@ -20,63 +20,89 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Simple.h"
+#include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace py = pybind11;
 
 namespace lsst {
 namespace afw {
 namespace table {
+namespace {
+
+using PySimpleTable = py::class_<SimpleTable, std::shared_ptr<SimpleTable>, BaseTable>;
+using PySimpleRecord = py::class_<SimpleRecord, std::shared_ptr<SimpleRecord>, BaseRecord>;
+using PyBaseSimpleCatalog = py::class_<CatalogT<SimpleRecord>, std::shared_ptr<CatalogT<SimpleRecord>>>;
+using PySimpleCatalog = py::class_<SimpleCatalog, std::shared_ptr<SimpleCatalog>, CatalogT<SimpleRecord>>;
+
+void declareSimpleRecord(PySimpleRecord & cls) {
+    table::pybind11::addCastFrom<BaseRecord>(cls);
+
+    cls.def("getId", &SimpleRecord::getId);
+    cls.def("setId", &SimpleRecord::setId);
+    cls.def("getCoord", &SimpleRecord::getCoord);
+    cls.def("setCoord", (void (SimpleRecord::*)(IcrsCoord const &)) &SimpleRecord::setCoord);
+    cls.def("setCoord", (void (SimpleRecord::*)(Coord const &)) &SimpleRecord::setCoord);
+    cls.def("getRa", &SimpleRecord::getRa);
+    cls.def("setRa", &SimpleRecord::setRa);
+    cls.def("getDec", &SimpleRecord::getDec);
+    cls.def("setDec", &SimpleRecord::setDec);
+}
+
+void declareSimpleTable(PySimpleTable & cls) {
+    table::pybind11::addCastFrom<BaseTable>(cls);
+
+    cls.def_static("make",
+                   (std::shared_ptr<SimpleTable> (*)(Schema const &, std::shared_ptr<IdFactory> const &))
+                        &SimpleTable::make);
+    cls.def_static("make", (std::shared_ptr<SimpleTable> (*)(Schema const &)) &SimpleTable::make);
+    cls.def_static("makeMinimalSchema", &SimpleTable::makeMinimalSchema);
+    cls.def_static("checkSchema", &SimpleTable::checkSchema, "schema"_a);
+    cls.def_static("getIdKey", &SimpleTable::getIdKey);
+    cls.def_static("getCoordKey", &SimpleTable::getCoordKey);
+
+    cls.def("getIdFactory", (std::shared_ptr<IdFactory> (SimpleTable::*)()) &SimpleTable::getIdFactory);
+    cls.def("setIdFactory", &SimpleTable::setIdFactory, "idFactory"_a);
+    cls.def("clone", &SimpleTable::clone);
+    cls.def("makeRecord", &SimpleTable::makeRecord);
+    cls.def("copyRecord",
+            (std::shared_ptr<SimpleRecord> (SimpleTable::*)(BaseRecord const &)) &SimpleTable::copyRecord,
+            "other"_a);
+    cls.def("copyRecord",
+            (std::shared_ptr<SimpleRecord> (SimpleTable::*)(BaseRecord const &, SchemaMapper const &))
+                &SimpleTable::copyRecord,
+            "other"_a, "mapper"_a);
+
+}
+
+}  // namespace lsst::afw::table::<anonymous>
 
 PYBIND11_PLUGIN(_simple) {
     py::module mod("_simple", "Python wrapper for afw _simple library");
 
     /* Module level */
-    py::class_<SimpleTable, std::shared_ptr<SimpleTable>, BaseTable> clsSimpleTable(mod, "SimpleTable");
-    py::class_<SimpleRecord, std::shared_ptr<SimpleRecord>, BaseRecord> clsSimpleRecord(mod, "SimpleRecord");
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
+    PySimpleTable clsSimpleTable(mod, "SimpleTable");
+    PySimpleRecord clsSimpleRecord(mod, "SimpleRecord");
+    PyBaseSimpleCatalog clsBaseSimpleCatalog(mod, "_BaseSimpleCatalog");
+    PySimpleCatalog clsSimpleCatalog(mod, "SimpleCatalog", py::dynamic_attr());
 
     /* Members */
-    clsSimpleTable.def_static("make", (PTR(SimpleTable) (*)(Schema const &, PTR(IdFactory) const &))
-        &SimpleTable::make);
-    clsSimpleTable.def_static("make", (PTR(SimpleTable) (*)(Schema const &)) &SimpleTable::make);
-    clsSimpleTable.def_static("makeMinimalSchema", &SimpleTable::makeMinimalSchema);
-    // Commented-out methods have not yet been tested
-    // clsSimpleTable.def_static("checkSchema", &SimpleTable::checkSchema, "other"_a);
-    clsSimpleTable.def_static("getIdKey", &SimpleTable::getIdKey);
-    clsSimpleTable.def_static("getCoordKey", &SimpleTable::getCoordKey);
+    declareSimpleRecord(clsSimpleRecord);
+    declareSimpleTable(clsSimpleTable);
+    pybind11::declareCatalog<SimpleRecord>(clsBaseSimpleCatalog);
+    pybind11::declareSortedCatalog<SimpleRecord>(clsSimpleCatalog);
 
-    // clsSimpleTable.def("getIdFactory", (PTR(IdFactory) (*)()) &SimpleTable::getIdFactory);
-    // clsSimpleTable.def("getIdFactory", (CONST_PTR(IdFactory) (*)()) &SimpleTable::getIdFactory);
-    // clsSimpleTable.def("setIdFactory", &SimpleTable::setIdFactory, "idFactory"_a);
-    // clsSimpleTable.def("clone", &SimpleTable::clone);
-    clsSimpleTable.def("makeRecord", &SimpleTable::makeRecord);
-    // clsSimpleTable.def("copyRecord", (PTR(SimpleRecord) (*)(BaseRecord const &)
-    //                    &SimpleTable::copyRecord, "other"_a);
-    // clsSimpleTable.def("copyRecord", (PTR(SimpleRecord) (*)(BaseRecord const &, SchemaMapper const &)
-    //                    &SimpleTable::copyRecord, "other"_a);
-
-    clsSimpleRecord.def("getId", &SimpleRecord::getId);
-    clsSimpleRecord.def("setId", &SimpleRecord::setId);
-    clsSimpleRecord.def("getCoord", &SimpleRecord::getCoord);
-    clsSimpleRecord.def("setCoord", (void (SimpleRecord::*)(IcrsCoord const &)) &SimpleRecord::setCoord);
-    clsSimpleRecord.def("setCoord", (void (SimpleRecord::*)(Coord const &)) &SimpleRecord::setCoord);
-    clsSimpleRecord.def("getRa", &SimpleRecord::getRa);
-    clsSimpleRecord.def("setRa", &SimpleRecord::setRa);
-    clsSimpleRecord.def("getDec", &SimpleRecord::getDec);
-    clsSimpleRecord.def("setDec", &SimpleRecord::setDec);
+    clsSimpleCatalog.attr("Record") = clsSimpleRecord;
+    clsSimpleCatalog.attr("Table") = clsSimpleTable;
 
     return mod.ptr();
 }
