@@ -2,8 +2,8 @@ from __future__ import absolute_import
 
 from lsst.afw.table.catalog import addCatalogMethods
 
-from ._peak import PeakRecordCatalog
+from ._peak import PeakCatalog
 
-__all__ = [] # only imported for side effects
+__all__ = []  # import this module only for its side effects
 
-addCatalogMethods(PeakRecordCatalog)
+addCatalogMethods(PeakCatalog)
