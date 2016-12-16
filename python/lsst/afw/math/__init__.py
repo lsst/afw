@@ -25,5 +25,6 @@
 from __future__ import absolute_import
 from .mathLib import *
 from .detail import *
+# background imports mathLib so don't import background in mathLib
+from .background import *
 #from .warper import *
-#from .background import *
