@@ -22,20 +22,19 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
-#include <sstream>
-#include <stdexcept>
+#include <utility>
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
-#include "lsst/pex/exceptions.h"
+#include "lsst/utils/pybind11.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
@@ -46,6 +45,19 @@ using namespace pybind11::literals;
 namespace lsst {
 namespace afw {
 namespace table {
+namespace pybind11 {
+
+/**
+Add a _castFrom method to a table or record class
+*/
+template <typename FromT, typename ClassT>
+void addCastFrom(ClassT & cls) {
+    using ToT = typename ClassT::type;
+    cls.def_static("_castFrom",
+                   [](std::shared_ptr<FromT> from) {
+                        return std::dynamic_pointer_cast<ToT>(from);
+                   });
+}
 
 /**
 Declare field-type-specific overloaded catalog member functions for one field type
@@ -67,10 +79,10 @@ void declareCatalogOverloads(
     cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) &Catalog::isSorted);
     cls.def("sort", (void (Catalog::*)(Key<T> const &)) &Catalog::sort);
     cls.def(("_find_" + suffix).c_str(),
-            [](Catalog & self, T const & value, Key<T> const & key)->PTR(RecordT) {
+            [](Catalog & self, T const & value, Key<T> const & key)->std::shared_ptr<RecordT> {
         typename Catalog::const_iterator iter = self.find(value, key);
         if (iter == self.end()) {
-            return PTR(RecordT)();
+            return std::shared_ptr<RecordT>();
         };
         return iter;
     });
@@ -99,16 +111,12 @@ Declare member and static functions for a given instantiation of lsst::afw::tabl
 */
 template <typename RecordT>
 void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls) {
-    typedef CatalogT<RecordT> Catalog;
-    typedef typename RecordT::Table Table;
-    typedef typename RecordT::ColumnView ColumnView;
-    typedef std::vector<PTR(RecordT)> Internal;
-    typedef typename Internal::size_type size_type;
-    typedef RecordT & reference;
+    using Catalog = CatalogT<RecordT>;
+    using Table = typename RecordT::Table;
 
     /* Constructors */
     cls.def(py::init<Schema const &>());
-    cls.def(py::init<PTR(Table) const &>());
+    cls.def(py::init<std::shared_ptr<Table> const &>());
     cls.def(py::init<Catalog const &>());
 
     /* Static Methods */
@@ -118,22 +126,35 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
     cls.def_static("readFits",
                    (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
                    "manager"_a, "hdu"_a=0, "flags"_a=0);
-    //cls.def_static("readFits", (Catalog (*)()) &Catalog::readFits);
 
     /* Methods */
     cls.def("getTable", &Catalog::getTable);
+    cls.def_property_readonly("table", &Catalog::getTable);
     cls.def("getSchema", &Catalog::getSchema);
-    cls.def("getColumnView", &Catalog::getColumnView);
+    cls.def_property_readonly("schema", &Catalog::getSchema);
     cls.def("capacity", &Catalog::capacity);
-    cls.def("addNew", &Catalog::addNew);
     cls.def("__len__", &Catalog::size);
+
+    // Use private names for the following so the public Python method
+    // can manage the _column cache
+    cls.def("_getColumnView", &Catalog::getColumnView);
+    cls.def("_addNew", &Catalog::addNew);
+    cls.def("_extend", [](Catalog & self, Catalog const & other, bool deep){
+        self.insert(self.end(), other.begin(), other.end(), deep);
+    });
+    cls.def("_extend", [](Catalog & self, Catalog const & other, SchemaMapper const & mapper) {
+        self.insert(mapper, self.end(), other.begin(), other.end());
+    });
+    cls.def("_append", [](Catalog & self, std::shared_ptr<RecordT> const & rec) {
+        self.push_back(rec);
+    });
+    cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
+        self.erase(self.begin() + utils::cppIndex(self, i));
+    });
+ 
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
-        // If the index is less than 0, treat as an offset from the end (the Python convention)
-        if (i < 0) {
-            i = self.size() + i;
-        };
-        return self.get(i);
+        return self.get(utils::cppIndex(self, i));
     });
     cls.def("isContiguous", &Catalog::isContiguous);
     cls.def("writeFits",
@@ -143,33 +164,10 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
             (void (Catalog::*)(fits::MemFileManager &, std::string const &, int) const) &Catalog::writeFits,
             "manager"_a, "mode"_a="w", "flags"_a=0);
     //cls.def("writeFits", (void (Catalog::*)() const) &Catalog::writeFits);
-    cls.def("_extend", [](Catalog & self, Catalog const & other, bool deep){
-        self.insert(self.end(), other.begin(), other.end(), deep);
-    });
-    cls.def("_extend", [](Catalog & self, Catalog const & other, SchemaMapper const & mapper) {
-        self.insert(mapper, self.end(), other.begin(), other.end());
-    });
-    cls.def("append", [](Catalog & self, PTR(RecordT) const & rec) {
-        self.push_back(rec);
-    });
     cls.def("reserve", &Catalog::reserve);
     cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const,1> const &) const) &Catalog::subset);
     cls.def("subset",
             (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &Catalog::subset);
-    cls.def("__delitem__", [](Catalog & self, std::ptrdiff_t i) {
-        auto const i_orig = i;
-        if (i < 0) {
-            // index backwards from the end
-            i += self.size();
-        }
-        if (i < 0 || static_cast<std::size_t>(i) >= self.size()) {
-            std::ostringstream os;
-            os << "Catalog index " << i_orig << " out of range.";
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
-        }
-        self.erase(self.begin() + i);
-
-    });
 
     declareCatalogOverloads<RecordT, std::int32_t>(cls, "I");
     declareCatalogOverloads<RecordT, std::int64_t>(cls, "L");
@@ -178,6 +176,6 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
     declareCatalogOverloads<RecordT, lsst::afw::geom::Angle>(cls, "Angle");
 };
 
-}}} // lsst::afw::table
+}}}} // lsst::afw::table::pybind11
 
 #endif

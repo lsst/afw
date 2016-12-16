@@ -1,37 +1,41 @@
 from __future__ import absolute_import
 
-from ._affineTransform import *
+from ._affineTransform import AffineTransform
 
-def AffineTransform__setitem__(self, k, v):
-    if k < 0 or k > 5: raise IndexError
-    self._setitem_nochecking(k, v)
-AffineTransform.__setitem__ = AffineTransform__setitem__
-del AffineTransform__setitem__
+__all__ = []  # import this module only for its side effects
 
-def AffineTransform__getitem__(self, k):
-    try:
-        i,j = k
-        if i < 0 or i > 2: raise IndexError
-        if j < 0 or j > 2: raise IndexError
-        return self._getitem_nochecking(i, j)
-    except TypeError:
-        if k < 0 or k > 5: raise IndexError
-        return self._getitem_nochecking(k)
-AffineTransform.__getitem__ = AffineTransform__getitem__
-del AffineTransform__getitem__
 
-def AffineTransform__str__(self):
-    return str(self.getMatrix())
-AffineTransform.__str__ = AffineTransform__str__
-del AffineTransform__str__
+def addAffineTransformMethods(cls):
+    def __setitem__(self, k, v):
+        if k < 0 or k > 5:
+            raise IndexError
+        self._setitem_nochecking(k, v)
+    AffineTransform.__setitem__ = __setitem__
 
-def AffineTransform__reduce__(self):
-    return (AffineTransform, (self.getMatrix(),))
-AffineTransform.__reduce__ = AffineTransform__reduce__
-del AffineTransform__reduce__
+    def __getitem__(self, k):
+        try:
+            i, j = k
+            if i < 0 or i > 2:
+                raise IndexError
+            if j < 0 or j > 2:
+                raise IndexError
+            return self._getitem_nochecking(i, j)
+        except TypeError:
+            if k < 0 or k > 5:
+                raise IndexError
+            return self._getitem_nochecking(k)
+    AffineTransform.__getitem__ = __getitem__
 
-def AffineTransform__repr__(self):
-    return "AffineTransform(\n%r\n)" % (self.getMatrix(),)
-AffineTransform.__repr__ = AffineTransform__repr__
-del AffineTransform__repr__
+    def __str__(self):
+        return str(self.getMatrix())
+    AffineTransform.__str__ = __str__
 
+    def __reduce__(self):
+        return (AffineTransform, (self.getMatrix(),))
+    AffineTransform.__reduce__ = __reduce__
+
+    def __repr__(self):
+        return "AffineTransform(\n%r\n)" % (self.getMatrix(),)
+    AffineTransform.__repr__ = __repr__
+
+addAffineTransformMethods(AffineTransform)

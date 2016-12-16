@@ -21,7 +21,6 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "numpy/arrayobject.h"
@@ -45,26 +44,31 @@ namespace lsst {
 namespace afw {
 namespace table {
 
+namespace {
+
 template <typename T>
 void declarePointKey(py::module &mod, std::string const & suffix) {
-    py::class_<PointKey<T>> clsPointKey(mod, ("Point"+suffix+"Key").c_str());
+    py::class_<PointKey<T>> cls(mod, ("Point"+suffix+"Key").c_str());
+
     /* Constructors */
-    clsPointKey.def(py::init<>());
-    clsPointKey.def(py::init<Key<T> const &, Key<T> const &>());
-    clsPointKey.def(py::init<SubSchema const &>());
+    cls.def(py::init<>());
+    cls.def(py::init<Key<T> const &, Key<T> const &>());
+    cls.def(py::init<SubSchema const &>());
+
     /* Operators */
-    clsPointKey.def(py::self == py::self);
-    clsPointKey.def(py::self != py::self);
+    cls.def("__eq__", &PointKey<T>::operator==, py::is_operator());
+    cls.def("__ne__", &PointKey<T>::operator!=, py::is_operator());
+
     /* Members */
-    clsPointKey.def("getX", &PointKey<T>::getX);
-    clsPointKey.def("getY", &PointKey<T>::getY);
-    clsPointKey.def("isValid", &PointKey<T>::isValid);
-    clsPointKey.def_static("addFields", &PointKey<T>::addFields);
-    clsPointKey.def("set",
+    cls.def("getX", &PointKey<T>::getX);
+    cls.def("getY", &PointKey<T>::getY);
+    cls.def("isValid", &PointKey<T>::isValid);
+    cls.def_static("addFields", &PointKey<T>::addFields);
+    cls.def("set",
                     [](PointKey<T> & self, BaseRecord & record, lsst::afw::geom::Point<T,2> const & value) {
         return self.set(record, value);
     });
-    clsPointKey.def("get", &PointKey<T>::get);
+    cls.def("get", &PointKey<T>::get);
 };
 
 template <typename T, int N>
@@ -79,7 +83,10 @@ void declareCovarianceMatrixKey(py::module &mod, const::std::string & suffix) {
     cls.def(py::init<SigmaKeyArray const &, CovarianceKeyArray const &>(),
             "sigma"_a, "cov"_a=CovarianceKeyArray());
     cls.def(py::init<SubSchema const &, NameArray const &>());
-    
+
+    cls.def("__eq__", &CovarianceMatrixKey<T,N>::operator==, py::is_operator());
+    cls.def("__ne__", &CovarianceMatrixKey<T,N>::operator!=, py::is_operator());
+
     cls.def_static("addFields", (CovarianceMatrixKey<T,N> (*)(
             Schema &,
             std::string const &,
@@ -106,13 +113,10 @@ void declareCovarianceMatrixKey(py::module &mod, const::std::string & suffix) {
     cls.def("isValid", &CovarianceMatrixKey<T,N>::isValid);
     cls.def("setElement", &CovarianceMatrixKey<T,N>::setElement);
     cls.def("getElement", &CovarianceMatrixKey<T,N>::getElement);
-    cls.def("__eq__", [](CovarianceMatrixKey<T,N> & self, CovarianceMatrixKey<T,N> & other) {
-        return self==other;
-    });
-    cls.def("__ne__", [](CovarianceMatrixKey<T,N> & self, CovarianceMatrixKey<T,N> & other) {
-        return self!=other;
-    });
 };
+
+}  // namespace lsst::afw::table::<anonymous>
+
 
 PYBIND11_PLUGIN(_aggregates) {
     py::module mod("_aggregates", "Python wrapper for afw _aggregates library");
@@ -156,17 +160,19 @@ PYBIND11_PLUGIN(_aggregates) {
     clsEllipseKey.def(py::init<SubSchema const &>());
 
     /* Operators */
+    clsCoordKey.def("__eq__", &CoordKey::operator==, py::is_operator());
+    clsCoordKey.def("__ne__", &CoordKey::operator!=, py::is_operator());
+
+    clsQuadrupoleKey.def("__eq__", &QuadrupoleKey::operator==, py::is_operator());
+    clsQuadrupoleKey.def("__nq__", &QuadrupoleKey::operator!=, py::is_operator());
+
+    clsEllipseKey.def("__eq__", &EllipseKey::operator==, py::is_operator());
+    clsEllipseKey.def("__nq__", &EllipseKey::operator!=, py::is_operator());
 
     /* Members */
     clsCoordKey.def_static("addFields", &CoordKey::addFields);
     clsCoordKey.def("getRa", &CoordKey::getRa);
     clsCoordKey.def("getDec", &CoordKey::getDec);
-    clsCoordKey.def("__eq__", [](CoordKey & self, CoordKey & other) {
-        return self==other;
-    });
-    clsCoordKey.def("__ne__", [](CoordKey & self, CoordKey & other) {
-        return self!=other;
-    });
     clsCoordKey.def("isValid", &CoordKey::isValid);
     clsCoordKey.def("get", [](CoordKey & self, BaseRecord const & record) {
         return self.get(record);
@@ -185,12 +191,6 @@ PYBIND11_PLUGIN(_aggregates) {
     clsQuadrupoleKey.def("isValid", &QuadrupoleKey::isValid);
     clsQuadrupoleKey.def("set", &QuadrupoleKey::set);
     clsQuadrupoleKey.def("get", &QuadrupoleKey::get);
-    clsQuadrupoleKey.def("__eq__", [](QuadrupoleKey & self, QuadrupoleKey & other) {
-        return self==other;
-    });
-    clsQuadrupoleKey.def("__ne__", [](QuadrupoleKey & self, QuadrupoleKey & other) {
-        return self!=other;
-    });
     
     clsEllipseKey.def_static("addFields", &EllipseKey::addFields);
     clsEllipseKey.def("get", &EllipseKey::get);
@@ -198,12 +198,6 @@ PYBIND11_PLUGIN(_aggregates) {
     clsEllipseKey.def("isValid", &EllipseKey::isValid);
     clsEllipseKey.def("getCore", &EllipseKey::getCore);
     clsEllipseKey.def("getCenter", &EllipseKey::getCenter);
-    clsEllipseKey.def("__eq__", [](EllipseKey & self, EllipseKey & other) {
-        return self==other;
-    });
-    clsEllipseKey.def("__ne__", [](EllipseKey & self, EllipseKey & other) {
-        return self!=other;
-    });
     
     return mod.ptr();
 }

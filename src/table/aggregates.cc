@@ -80,14 +80,6 @@ void CoordKey::set(BaseRecord & record, coord::Coord const & value) const {
     set(record, value.toIcrs());
 }
 
-bool operator==(CoordKey const & lhs, CoordKey const & rhs) {
-    return lhs.getRa() == rhs.getRa() && lhs.getDec() == rhs.getDec();
-}
-
-bool operator!=(CoordKey const & lhs, CoordKey const & rhs) {
-    return !(lhs == rhs);
-}
-
 //============ QuadrupoleKey ================================================================================
 
 QuadrupoleKey QuadrupoleKey::addFields(

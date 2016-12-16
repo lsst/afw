@@ -6,7 +6,7 @@ from past.builtins import basestring
 import lsst.pex.exceptions
 from .schema import _suffixes
 
-__all__ = ["addCatalogMethods"]
+__all__ = ["addCatalogMethods", "searchTemplate"]
 
 
 def addCatalogMethods(cls):
@@ -16,11 +16,23 @@ def addCatalogMethods(cls):
     For sorted catalogs such as SimpleCatalog and SourceCatalog,
     call addSortedCatalogMethods (which calls this) instead.
     """
-    def _iter(self):
+    def getColumnView(self):
+        self._columns = self._getColumnView()
+        return self._columns
+    cls.getColumnView = getColumnView
+
+    def __getColumns(self):
+        if not hasattr(self, "_columns") or self._columns is None:
+            self._columns = self._getColumnView()
+        return self._columns
+    cls.columns = property(__getColumns, doc="a column view of the catalog")
+
+    def __iter__(self):
         for i in range(len(self)):
             yield self[i]
+    cls.__iter__ = __iter__
 
-    def _getitem(self, key):
+    def __getitem__(self, key):
         """Return the record at index key if key is an integer,
         return a column if key is a string field name or Key,
         or return a subset of the catalog if key is a slice
@@ -43,25 +55,64 @@ def addCatalogMethods(cls):
         except TypeError:
             # when record access fails, try column access
             return self.columns[key]
+    cls.__getitem__ = __getitem__
 
-    def _setitem(self, key, value):
+    def __setitem__(self, key, value):
         """
         If ``key`` is an integer, set ``catalog[key]`` to ``value``. Otherwise select column ``key``
         and set it to ``value``.
         """
+        self._columns = None
         try:
             # this works only for integer arguments (single record access)
             return self.set(key, value)
         except TypeError:
             self.columns[key] = value
+    cls.__setitem__ = __setitem__
 
-    def _getColumns(self):
-        """
-        Call ``getColmnview()`` method.
-        """
-        return self.getColumnView()
+    def __delitem__(self, key):
+        self._columns = None
+        self._delitem_(key)
+    cls.__delitem__ = __delitem__
 
-    def _getattribute(self, name):
+    def append(self, record):
+        self._columns = None
+        self._append(record)
+    cls.append = append
+
+    def insert(self, key, value):
+        self._columns = None
+        self._insert(key, value)
+    cls.insert = insert
+
+    def addNew(self):
+        self._columns = None
+        return self._addNew()
+    cls.addNew = addNew
+
+    def cast(self, type_, deep=False):
+        """Return a copy of the catalog with the given type, optionally
+        cloning the table and deep-copying all records if deep==True.
+        """
+        if deep:
+            table = self.table.clone()
+            table.preallocate(len(self))
+        else:
+            table = self.table
+        newTable = table.cast(type_.Table)
+        copy = type_(newTable)
+        copy.extend(self, deep=deep)
+        return copy
+    cls.cast = cast
+
+    def copy(self, deep=False):
+        """
+        Copy a catalog (default is not a deep copy).
+        """
+        return self.cast(type(self), deep)
+    cls.copy = copy
+
+    def __getattribute__(self, name):
         # Catalog forwards unknown method calls to its table and column view
         # for convenience.  (Feature requested by RHL; complaints about magic
         # should be directed to him.)
@@ -79,8 +130,9 @@ def addCatalogMethods(cls):
             return getattr(self.table, name)
         except AttributeError:
             return getattr(self.columns, name)
+    cls.__getattribute__ = __getattribute__
 
-    def _extend(self, iterable, deep=False, mapper=None):
+    def extend(self, iterable, deep=False, mapper=None):
         """Append all records in the given iterable to the catalog.
 
         Arguments:
@@ -89,7 +141,7 @@ def addCatalogMethods(cls):
                           if mapper is not None (that always implies True).
           mapper -------- a SchemaMapper object used to translate records
         """
-        # self._columns = None
+        self._columns = None
         # We can't use isinstance here, because the SchemaMapper symbol isn't available
         # when this code is part of a subclass of Catalog in another package.
         if type(deep).__name__ == "SchemaMapper":
@@ -103,47 +155,14 @@ def addCatalogMethods(cls):
         else:
             for record in iterable:
                 if mapper is not None:
-                    self.append(self.table.copyRecord(record, mapper))
+                    self._append(self.table.copyRecord(record, mapper))
                 elif deep:
-                    self.append(self.table.copyRecord(record))
+                    self._append(self.table.copyRecord(record))
                 else:
-                    self.append(record)
+                    self._append(record.cast(self.Record))
+    cls.extend = extend
 
-    def _copy(self, deep=False):
-        """
-        Copy a catalog (default is not a deep copy).
-        """
-        _type = type(self)
-        if deep:
-            table = self.table.clone()
-            table.preallocate(len(self))
-        else:
-            table = self.table
-        copy = _type(table)
-        copy.extend(self, deep=deep)
-        return copy
-
-    def _searchTemplate(self, func, value, key):
-        if not isinstance(key, basestring):
-            try:
-                prefix, suffix = type(key).__name__.split("_")
-            except Exception:
-                raise TypeError("Argument to Catalog.find must be a string or Key.")
-            if prefix != "Key":
-                raise TypeError("Argument to Catalog.find must be a string or Key.")
-            attr = func + suffix
-            method = getattr(self, attr)
-            return method(value, key)
-        for suffix in _suffixes.values():
-            attr = func + suffix
-            method = getattr(self, attr)
-            try:
-                return method(value, key)
-            except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
-                pass
-        raise KeyError("Record '%s' not found in Catalog." % key)
-
-    def _find(self, value, key):
+    def find(self, value, key):
         """Return the record for which record.get(key) == value
 
         If no such record is found, return None; if multiple such records are found,
@@ -151,9 +170,10 @@ def addCatalogMethods(cls):
 
         The catalog must be sorted by this key before this method is called.
         """
-        return _searchTemplate(self, "_find_", value, key)
+        return searchTemplate(self, "_find_", value, key)
+    cls.find = find
 
-    def _lower_bound(self, value, key):
+    def lower_bound(self, value, key):
         """Return the index of the first record for which record.get(key) >= value.
 
         If all elements in the catalog column are greater than or equal to the given
@@ -162,9 +182,10 @@ def addCatalogMethods(cls):
 
         The catalog must be sorted by this key before this method is called.
         """
-        return _searchTemplate(self, "_lower_bound_", value, key)
+        return searchTemplate(self, "_lower_bound_", value, key)
+    cls.lower_bound = lower_bound
 
-    def _upper_bound(self, value, key):
+    def upper_bound(self, value, key):
         """Return the record for which record.get(key) == value
 
         If all elements in the catalog column are greater than the given value,
@@ -173,105 +194,45 @@ def addCatalogMethods(cls):
 
         The catalog must be sorted by this key before this method is called.
         """
-        return _searchTemplate(self, "_upper_bound_", value, key)
+        return searchTemplate(self, "_upper_bound_", value, key)
+    cls.upper_bound = upper_bound
 
-    def _between(self, lower, upper, key):
+    def between(self, lower, upper, key):
         """Return a slice object representing the records for which record.get(key)
         is between lower (inclusive) and upper(exclusive).
 
         The catalog must be sorted by this key before this method is called.
         """
         return slice(self.lower_bound(lower, key), self.upper_bound(upper, key))
+    cls.between = between
 
-    def _equal_range(self, value, key):
+    def equal_range(self, value, key):
         """Return a slice object representing the records for which record.get(key)
         is equal to the given value
 
         The catalog must be sorted by this key before this method is called.
         """
-        lower, upper = _searchTemplate(self, '_equal_range_', value, key)
+        lower, upper = searchTemplate(self, '_equal_range_', value, key)
         return slice(lower, upper)
-
-    cls.__iter__ = _iter
-    cls.__getitem__ = _getitem
-    cls.__setitem__ = _setitem
-    cls.__getattribute__ = _getattribute
-    cls.extend = _extend
-    cls.copy = _copy
-    cls.find = _find
-    cls.lower_bound = _lower_bound
-    cls.upper_bound = _upper_bound
-    cls.equal_range = _equal_range
-    cls.between = _between
-    cls.columns = property(_getColumns, doc="a column view of the catalog")
-    cls.schema = property(cls.getSchema)
-    cls.table = property(cls.getTable)
+    cls.equal_range = equal_range
 
 
-def _asAstropy(self, cls=None, copy=False, unviewable="copy"):
-    """!
-    Return an astropy.table.Table (or subclass thereof) view into this catalog.
-
-    @param[in]   cls        Table subclass to use; None implies astropy.table.Table itself.
-                            Use astropy.table.QTable to get Quantity columns.
-
-    @param[in]  copy        Whether to copy data from the LSST catalog to the astropy table.
-                            Not copying is usually faster, but can keep memory from being
-                            freed if columns are later removed from the Astropy view.
-
-    @param[in]  unviewable  One of the following options, indicating how to handle field types
-                            (string and Flag) for which views cannot be constructed:
-                              - 'copy' (default): copy only the unviewable fields.
-                              - 'raise': raise ValueError if unviewable fields are present.
-                              - 'skip': do not include unviewable fields in the Astropy Table.
-                            This option is ignored if copy=True.
-    """
-    import astropy.table
-    if cls is None:
-        cls = astropy.table.Table
-    if unviewable not in ("copy", "raise", "skip"):
-        raise ValueError("'unviewable' must be one of 'copy', 'raise', or 'skip'")
-    ps = self.getMetadata()
-    meta = ps.toOrderedDict() if ps is not None else None
-    columns = []
-    items = self.schema.extract("*", ordered=True)
-    for name, item in items.items():
-        key = item.key
-        unit = item.field.getUnits() or None  # use None instead of "" when empty
-        if key.getTypeString() == "String":
-            if not copy:
-                if unviewable == "raise":
-                    raise ValueError(
-                        "Cannot extract string unless copy=True or unviewable='copy' or 'skip'.")
-                elif unviewable == "skip":
-                    continue
-            data = np.zeros(len(self), dtype=np.dtype((str, key.getSize())))
-            for i, record in enumerate(self):
-                data[i] = record.get(key)
-        elif key.getTypeString() == "Flag":
-            if not copy:
-                if unviewable == "raise":
-                    raise ValueError(
-                        "Cannot extract packed bit columns unless copy=True or unviewable='copy' or 'skip'."
-                    )
-                elif unviewable == "skip":
-                    continue
-            data = self.columns.get_bool_array(key)
-        elif key.getTypeString() == "Angle":
-            data = self.columns.get(key)
-            unit = "radian"
-            if copy:
-                data = data.copy()
-        else:
-            data = self.columns.get(key)
-            if copy:
-                data = data.copy()
-        columns.append(
-            astropy.table.Column(
-                data,
-                name=item.field.getName(),
-                unit=unit,
-                description=item.field.getDoc()
-            )
-        )
-    return cls(columns, meta=meta, copy=False)
+def searchTemplate(self, func, value, key):
+    if not isinstance(key, basestring):
+        try:
+            prefix, suffix = type(key).__name__.split("_")
+        except Exception:
+            raise TypeError("Argument to Catalog.find must be a string or Key.")
+        if prefix != "Key":
+            raise TypeError("Argument to Catalog.find must be a string or Key.")
+        attr = func + suffix
+        method = getattr(self, attr)
+        return method(value, key)
+    for suffix in _suffixes.values():
+        attr = func + suffix
+        method = getattr(self, attr)
+        try:
+            return method(value, key)
+        except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
+            pass
+    raise KeyError("Record '%s' not found in Catalog." % key)

@@ -30,6 +30,7 @@ using namespace pybind11::literals;
 
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/detection/Psf.h"  // forward-declared by Exposure.h
+#include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/polygon/Polygon.h"  // forward-declared by Exposure.h
@@ -50,16 +51,75 @@ namespace table {
 
 namespace {
 
+using PyExposureRecord = py::class_<ExposureRecord, std::shared_ptr<ExposureRecord>, BaseRecord>;
+using PyExposureTable = py::class_<ExposureTable, std::shared_ptr<ExposureTable>, BaseTable>;
 using PyBaseExposureCatalog = py::class_<CatalogT<ExposureRecord>,
                                          std::shared_ptr<CatalogT<ExposureRecord>>>;
-
 using PySortedBaseExposureCatalog =  py::class_<SortedCatalogT<ExposureRecord>,
                                                 std::shared_ptr<SortedCatalogT<ExposureRecord>>,
                                                 CatalogT<ExposureRecord>>;
-
 using PyExposureCatalog = py::class_<ExposureCatalogT<ExposureRecord>,
                                      std::shared_ptr<ExposureCatalogT<ExposureRecord>>,
                                      SortedCatalogT<ExposureRecord>>;
+
+/**
+Declare constructors and member and static functions for a pybind11 ExposureRecord
+*/
+void declareExposureRecord(PyExposureRecord & cls) {
+    table::pybind11::addCastFrom<BaseRecord>(cls);
+
+    cls.def("getId", &ExposureRecord::getId);
+    cls.def("setId", &ExposureRecord::setId, "id"_a);
+    cls.def("getBBox", &ExposureRecord::getBBox);
+    cls.def("setBBox", &ExposureRecord::setBBox, "bbox"_a);
+
+    //cls.def("writeFits",
+    //        (void (Catalog::*)(std::string const &, std::string const &, int) const) &Catalog::writeFits,
+    //        "filename"_a, "mode"_a="w", "flags"_a = 0);
+
+    cls.def("contains",
+            (bool (ExposureRecord::*)(coord::Coord const &, bool) const) &ExposureRecord::contains,
+            "coord"_a, "includeValidPolygon"_a=false);
+    cls.def("contains",
+                          (bool (ExposureRecord::*)(geom::Point2D const &, image::Wcs const &, bool) const)
+                           &ExposureRecord::contains, "point"_a, "wcs"_a, "includeValidPolygon"_a=false);
+    cls.def("getWcs", &ExposureRecord::getWcs);
+    cls.def("setWcs", &ExposureRecord::setWcs, "wcs"_a);
+    cls.def("getPsf", &ExposureRecord::getPsf);
+    cls.def("setPsf", &ExposureRecord::setPsf, "psf"_a);
+    cls.def("getCalib", &ExposureRecord::getCalib);
+    cls.def("setCalib", &ExposureRecord::setCalib, "calib"_a);
+    cls.def("getApCorrMap", &ExposureRecord::getApCorrMap);
+    cls.def("setApCorrMap", &ExposureRecord::setApCorrMap, "appCorrMap"_a);
+    cls.def("getValidPolygon", &ExposureRecord::getValidPolygon);
+    cls.def("setValidPolygon", &ExposureRecord::setValidPolygon, "polygon"_a);
+    cls.def("getVisitInfo", &ExposureRecord::getVisitInfo);
+    cls.def("setVisitInfo", &ExposureRecord::setVisitInfo, "visitInfo"_a);
+}
+
+/**
+Declare constructors and member and static functions for a pybind11 ExposureTable
+*/
+void declareExposureTable(PyExposureTable & cls) {
+    table::pybind11::addCastFrom<BaseTable>(cls);
+
+    cls.def_static("make", &ExposureTable::make);
+    cls.def_static("makeMinimalSchema", &ExposureTable::makeMinimalSchema);
+    cls.def_static("checkSchema", &ExposureTable::checkSchema, "schema"_a);
+
+    cls.def_static("getIdKey", &ExposureTable::getIdKey);
+    cls.def_static("getBBoxMinKey", &ExposureTable::getBBoxMinKey);
+    cls.def_static("getBBoxMaxKey", &ExposureTable::getBBoxMaxKey);
+
+    cls.def("clone", &ExposureTable::clone);
+    cls.def("makeRecord", &ExposureTable::makeRecord);
+    cls.def("copyRecord",
+           (std::shared_ptr<ExposureRecord> (ExposureTable::*)(BaseRecord const &))
+               &ExposureTable::copyRecord);
+    cls.def("copyRecord",
+           (std::shared_ptr<ExposureRecord> (ExposureTable::*)(BaseRecord const &, SchemaMapper const &))
+               &ExposureTable::copyRecord);
+}
 
 /**
 Declare constructors and member and static functions for a pybind11 ExposureCatalog
@@ -69,7 +129,6 @@ Declare constructors and member and static functions for a pybind11 ExposureCata
 @param[in] cls  Catalog pybind11 class.
 */
 void declareExposureCatalog(PyExposureCatalog & cls) {
-    using Table = ExposureRecord::Table;
     using Catalog = ExposureCatalogT<ExposureRecord>;
 
     // TODO: Commented-out code is waiting until needed and is untested.
@@ -77,27 +136,28 @@ void declareExposureCatalog(PyExposureCatalog & cls) {
 
     /* Constructors */
     cls.def(py::init<Schema const &>(), "schema"_a);
-    cls.def(py::init<PTR(Table) const &>(), "table"_a=PTR(Table)());
+    cls.def(py::init<std::shared_ptr<ExposureTable> const &>(), "table"_a=std::shared_ptr<ExposureTable>());
     // The C++ also defines a templated constructor taking a table and an input iterator,
     // but I'm not sure how to wrap it nor if it's needed; I don't see it instantiated in the old code.
     cls.def(py::init<Catalog const &>(), "other"_a);
 
     /* Methods */
-    //cls.def_static("writeFits", &Catalog::writeFits, "fitsfile"_a, "archive"_a, "flags"_a=0);
+    // cls.def("writeFits", 
+    //         (void (Catalog::*)(fits::Fits &, std::shared_ptr<io::OutputArchive>, int) const)
+    //             &Catalog::writeFits,
+    //         "fitsfile"_a, "archive"_a, "flags"_a=0);
     cls.def_static("readFits",
                    (Catalog (*)(std::string const &, int, int)) &Catalog::readFits,
                    "filename"_a, "hdu"_a=0, "flags"_a=0);
-    //cls.def_static("readFits",
-    //               (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
-    //               "manager"_a, "hdu"_a=0, "flags"_a=0);
+    cls.def_static("readFits",
+                  (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
+                  "manager"_a, "hdu"_a=0, "flags"_a=0);
     //cls.def_static("readFits",
     //               (Catalog (*)(fits::Fits &, int)) &Catalog::readFits,
     //               "fitsfile"_a, "flags"_a=0);
     //cls.def_static("readFits",
-    //               (Catalog (*)(fits::Fits &, PTR(io::InputArchive), int)) &Catalog::readFits,
+    //               (Catalog (*)(fits::Fits &, std::shared_ptr<io::InputArchive>, int)) &Catalog::readFits,
     //               "fitsfile"_a, "archive"_a, "flags"_a=0);
-    //cls.def("writeToArchive", &Catalog::writeToArchive, "handle"_a, "ignoreUnpersistable"_a=true);
-    //cls.def_static("readFromArchive", &Catalog::readFromArchive, "archive"_a, "catalog"_a);
     cls.def("subset",
             (Catalog (Catalog::*)(ndarray::Array<bool const, 1> const &) const) &Catalog::subset, "mask"_a);
     cls.def("subset",
@@ -119,69 +179,21 @@ PYBIND11_PLUGIN(_exposure) {
     py::module mod("_exposure", "Python wrapper for afw _exposure library");
 
     /* Module level */
-    py::class_<ExposureTable, std::shared_ptr<ExposureTable>, BaseTable>
-        clsExposureTable(mod, "ExposureTable");
-    py::class_<ExposureRecord, std::shared_ptr<ExposureRecord>, BaseRecord>
-        clsExposureRecord(mod, "ExposureRecord");
-
+    PyExposureRecord clsExposureRecord(mod, "ExposureRecord");
+    PyExposureTable clsExposureTable(mod, "ExposureTable");
     PyBaseExposureCatalog clsBaseExposureCatalog(mod, "_BaseExposureCatalog");
     PySortedBaseExposureCatalog clsSortedBaseExposureCatalog(mod, "_SortedBaseExposureCatalog");
-    PyExposureCatalog clsExposureCatalog(mod, "ExposureCatalog");
-
-    /* Constructors */
-
-    /* Operators */
+    PyExposureCatalog clsExposureCatalog(mod, "ExposureCatalog", py::dynamic_attr());
 
     /* Members */
-    clsExposureRecord.def("getId", &ExposureRecord::getId);
-    clsExposureRecord.def("setId", &ExposureRecord::setId, "id"_a);
-    clsExposureRecord.def("getBBox", &ExposureRecord::getBBox);
-    clsExposureRecord.def("setBBox", &ExposureRecord::setBBox, "bbox"_a);
-
-    //cls.def("writeFits",
-    //        (void (Catalog::*)(std::string const &, std::string const &, int) const) &Catalog::writeFits,
-    //        "filename"_a, "mode"_a="w", "flags"_a = 0);
-
-    clsExposureRecord.def("contains",
-                          (bool (ExposureRecord::*)(coord::Coord const &, bool) const)
-                           &ExposureRecord::contains, "coord"_a, "includeValidPolygon"_a=false);
-    clsExposureRecord.def("contains",
-                          (bool (ExposureRecord::*)(geom::Point2D const &, image::Wcs const &, bool) const)
-                           &ExposureRecord::contains, "point"_a, "wcs"_a, "includeValidPolygon"_a=false);
-    clsExposureRecord.def("getWcs", &ExposureRecord::getWcs);
-    clsExposureRecord.def("setWcs", &ExposureRecord::setWcs, "wcs"_a);
-    clsExposureRecord.def("getPsf", &ExposureRecord::getPsf);
-    clsExposureRecord.def("setPsf", &ExposureRecord::setPsf, "psf"_a);
-    clsExposureRecord.def("getCalib", &ExposureRecord::getCalib);
-    clsExposureRecord.def("setCalib", &ExposureRecord::setCalib, "calib"_a);
-    clsExposureRecord.def("getApCorrMap", &ExposureRecord::getApCorrMap);
-    clsExposureRecord.def("setApCorrMap", &ExposureRecord::setApCorrMap, "appCorrMap"_a);
-    clsExposureRecord.def("getValidPolygon", &ExposureRecord::getValidPolygon);
-    clsExposureRecord.def("setValidPolygon", &ExposureRecord::setValidPolygon, "polygon"_a);
-    clsExposureRecord.def("getVisitInfo", &ExposureRecord::getVisitInfo);
-    clsExposureRecord.def("setVisitInfo", &ExposureRecord::setVisitInfo, "visitInfo"_a);
-
-    clsExposureTable.def_static("make", &ExposureTable::make);
-    clsExposureTable.def_static("makeMinimalSchema", &ExposureTable::makeMinimalSchema);
-    //clsExposureTable.def_static("checkSchema", &ExposureTable::checkSchema);
-
-    //clsExposureTable.def_static("getIdKey", &ExposureTable::getIdKey);
-    //clsExposureTable.def_static("getBBoxMinKey", &ExposureTable::getBBoxMinKey);
-    //clsExposureTable.def_static("getBBoxMaxKey", &ExposureTable::getBBoxMaxKey);
-
-    //clsExposureTable.def("clone", &ExposureTable::clone);
-    clsExposureTable.def("makeRecord", &ExposureTable::makeRecord);
-    //clsExposureTable.def("copyRecord",
-    //                     (std::shared_ptr<ExposureRecord> (ExposureTable::*)(BaseRecord const &))
-    //                         &ExposureTable::copyRecord);
-    //clsExposureTable.def("copyRecord",
-    //                     (std::shared_ptr<ExposureRecord> (ExposureTable::*)(BaseRecord const &,
-    //                                                                         SchemaMapper const &))
-    //                     &ExposureTable::copyRecord);
-
-    declareCatalog<ExposureRecord>(clsBaseExposureCatalog);
-    declareSortedCatalog<ExposureRecord>(clsSortedBaseExposureCatalog);
+    declareExposureRecord(clsExposureRecord);
+    declareExposureTable(clsExposureTable);
+    lsst::afw::table::pybind11::declareCatalog<ExposureRecord>(clsBaseExposureCatalog);
+    lsst::afw::table::pybind11::declareSortedCatalog<ExposureRecord>(clsSortedBaseExposureCatalog);
     declareExposureCatalog(clsExposureCatalog);
+
+    clsExposureCatalog.attr("Record") = clsExposureRecord;
+    clsExposureCatalog.attr("Table") = clsExposureTable;
 
     return mod.ptr();
 }
