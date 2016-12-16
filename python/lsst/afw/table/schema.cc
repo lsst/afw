@@ -24,6 +24,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
+#include "lsst/afw/fits.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
@@ -155,9 +156,9 @@ PYBIND11_PLUGIN(_schema) {
     clsSchema.def_static("readFits",
                          (Schema (*)(std::string const &, int)) &Schema::readFits,
                          "filename"_a, "hdu"_a=0);
-    // clsSchema.def_static("readFits",
-    //                      (Schema (*)(fits::MemFileManager &, int)) &Schema::readFits,
-    //                      "manager"_a, "hdu"_a=0);
+    clsSchema.def_static("readFits",
+                         (Schema (*)(fits::MemFileManager &, int)) &Schema::readFits,
+                         "manager"_a, "hdu"_a=0);
     // clsSchema.def_static("readFits",
     //                      (Schema (*)(fits::Fits &)) &Schema::readFits,
     //                      "fitsfile"_a);

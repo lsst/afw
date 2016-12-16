@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from past.builtins import long, basestring
+from past.builtins import basestring
 from builtins import str as futurestr
 import collections
 import fnmatch
@@ -8,9 +8,7 @@ import re
 import numpy
 import astropy.units
 
-from ..geom import Angle, Point2D, Point2I
-#from ..geom.ellipses import Quadrupole
-from ..coord import Coord, IcrsCoord
+from ..geom import Angle
 from . import _fieldBase
 from ._flag import FieldBase_Flag
 from . import detail
@@ -23,7 +21,7 @@ _fieldBase.FieldBase_Flag = FieldBase_Flag
 
 # Types defined for FieldBase objects
 _suffixes = {getattr(_fieldBase, k).getTypeString(): k.split('_')[1] for k in dir(_fieldBase)
-    if k.startswith('FieldBase')}
+             if k.startswith('FieldBase')}
 
 # Map python types to C++ type identifiers
 aliases = {
@@ -37,13 +35,14 @@ aliases = {
     Angle: "Angle",
 }
 
+
 def _schemaAddField(self, field, type=None, doc="", units="",
                     size=None, doReplace=False, parse_strict='raise'):
     """
     The C++ Schema class has a templated addField function, which is exposed to python via
     Schema._addField_Suffix, where suffix is the type exposed to python, for example
     Schema._addField_I for 32 bit integers.
-    
+
     This method finds the correct type for the current field and calls the appropriate C++ member.
     """
     # Check for astropy compatible unit string
@@ -69,16 +68,17 @@ def _schemaAddField(self, field, type=None, doc="", units="",
         size = getattr(_fieldBase, "FieldBase_" + suffix)(size)
     return method(field, doc, units, size, doReplace)
 
+
 def _schemaFind(self, k):
     """
     The C++ Schema class has a templated find function, which is exposed to python via
     Schema._find_Suffix, where suffix is the type exposed to python, for example
     Schema._find_I for 32 bit integers.
-    
+
     This method finds the correct type for the current field and calls the appropriate C++ member.
     """
     if not isinstance(k, basestring):
-        
+
         try:
             prefix, suffix = type(k).__name__.split("_")
         except Exception:
@@ -97,12 +97,14 @@ def _schemaFind(self, k):
             pass
     raise KeyError("Field '%s' not found in Schema." % k)
 
+
 def _schemaCheckUnits(self, parse_strict='raise'):
     """
     Check all of the SchemaItems in a Schema have valid units
     """
     for schemaItem in self:
         astropy.units.Unit(schemaItem.getField().getUnits(), parse_strict=parse_strict)
+
 
 def _schemaContains(self, key):
     """
@@ -113,6 +115,7 @@ def _schemaContains(self, key):
         return True
     except:
         return False
+
 
 def schemaComparisonAnd(self, other):
     """
@@ -125,6 +128,7 @@ def schemaComparisonAnd(self, other):
         compare = int(other)
     return int(self) & compare
 
+
 def schemaComparisonRand(self, other):
     """
     Enumerated types do not have __and__ and __rand__ operators defined, so for
@@ -136,34 +140,44 @@ def schemaComparisonRand(self, other):
         compare = int(other)
     return compare & int(self)
 
+
 def schemaComparisonInvert(self):
     """
     Enumerated types does not have the unary ~ (__invert__) operator defined.
     For SchemaComparisons we cast a Schema.ComparisonFlags enumerated type into an integer,
     invert it, and keep only the first 8 bits (since Schema.ComparisonFlags is an 8 bit bitmask).
     """
-    return ~int(self)&0xFF
+    return ~int(self) & 0xFF
+
 
 class _FieldNameExtractor:
+
     """
     Schema.forEach requires a functor, which is applied to each item.
     In this case the method "getOrderedNames" uses this functor to extract the
     ordered field names from the Schema.
     """
+
     def __init__(self):
         self.fieldNames = []
+
     def __call__(self, item):
         return self.fieldNames.append(item.field.getName())
 
+
 class _ItemExtractor:
+
     """
     Schema.forEach requires a functor, which is applied to each item.
     This functor creates a list of all the items in the Schema.
     """
+
     def __init__(self):
         self.items = []
+
     def __call__(self, item):
         return self.items.append(item)
+
 
 def _schemaGetOrderedNames(self):
     """
@@ -174,6 +188,7 @@ def _schemaGetOrderedNames(self):
     self._forEach(nameFunctor)
     return nameFunctor.fieldNames
 
+
 def _schemaIter(self):
     """
     Iterator for a schema that returns a list of SchemaItems
@@ -181,6 +196,7 @@ def _schemaIter(self):
     itemFunctor = _ItemExtractor()
     self._forEach(itemFunctor)
     return iter(itemFunctor.items)
+
 
 def _schemaExtract(self, *patterns, **kwds):
     """
@@ -221,11 +237,11 @@ def _schemaExtract(self, *patterns, **kwds):
                     if sub is not None:
                         name = m.expand(sub)
                     d[name] = item
-                    continue # continue middle loop so we don't match the same name twice
+                    continue  # continue middle loop so we don't match the same name twice
             for pattern in patterns:
                 if fnmatch.fnmatchcase(name, pattern):
                     d[name] = item
-                    break # break inner loop so we don't match the same name twice
+                    break  # break inner loop so we don't match the same name twice
     return d
 
 Schema.addField = _schemaAddField
@@ -239,16 +255,17 @@ Schema.ComparisonFlags.__rand__ = schemaComparisonRand
 Schema.ComparisonFlags.__invert__ = schemaComparisonInvert
 Schema.extract = _schemaExtract
 
+
 def runSubTemplateFunc(subSchema, func, *args):
     """
     The C++ SubSchema class has templated functions, which are exposed to python via
     SubSchema._function_suffix, where function is the C++ function and
     suffix is the type exposed to python.
     For example, SubSchema._addField_I funs SubSchema.addField for 32 bit integers.
-    
+
     This function tries all of the available template types for a given function and
     raises an Exception if none of the functions have matching types.
-    
+
     Parameters
     ----------
     subSchema: lsst.afw.table.SubSchema
@@ -260,41 +277,44 @@ def runSubTemplateFunc(subSchema, func, *args):
         Arguments to pass to the function.
     """
     for suffix in _suffixes.values():
-         attr = "_"+func+"_" + suffix
-         method = getattr(subSchema, attr)
-         try:
-             return method(*args)
-         except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
-             pass
+        attr = "_"+func+"_" + suffix
+        method = getattr(subSchema, attr)
+        try:
+            return method(*args)
+        except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
+            pass
     raise KeyError("Field '%s' not found in Schema." % subSchema.getPrefix())
+
 
 def subFind(self, key):
     """
     The C++ SubSchema class has a templated find function, which is exposed to python via
     SubSchema._find_Suffix, where suffix is the type exposed to python, for example
     SubSchema._find_I for 32 bit integers.
-    
+
     SubSchema.find takes a lsst.afw.table.Key as an input and returns the lsst.afw.table.SchemaItem
     corresponding to the key.
     """
     return runSubTemplateFunc(self, "find", key)
+
 
 def subAsField(self):
     """
     The C++ SubSchema class has a templated find function, which is exposed to python via
     SubSchema._asField_suffix, where suffix is the type exposed to python, for example
     SubSchema._asField_I for 32 bit integers.
-    
+
     SubSchema.asField casts the Schema as an lsst.afw.table.Field.
     """
     return runSubTemplateFunc(self, "asField")
+
 
 def subAsKey(self):
     """
     The C++ SubSchema class has a templated find function, which is exposed to python via
     SubSchema._asKey_Suffix, where suffix is the type exposed to python, for example
     SubSchema._asKey_I for 32 bit integers.
-    
+
     SubSchema.asKey casts the Schema as an lsst.afw.table.Key.
     """
     return runSubTemplateFunc(self, "asKey")
@@ -304,9 +324,10 @@ SubSchema.asField = subAsField
 SubSchema.asKey = subAsKey
 
 SchemaItem = {getattr(_fieldBase, k).getTypeString(): getattr(detail, "SchemaItem_"+k.split('_')[1])
-    for k in dir(_fieldBase) if k.startswith('FieldBase')}
+              for k in dir(_fieldBase) if k.startswith('FieldBase')}
 for _k, _v in aliases.items():
     SchemaItem[_k] = SchemaItem[_v]
+
 
 def schemaItemGet(self, i):
     if i == 0:
@@ -314,10 +335,16 @@ def schemaItemGet(self, i):
     elif i == 1:
         return self.field
     raise IndexError("SchemaItem index must be 0 or 1")
+
+
 def schemaItemStr(self):
     return str(tuple(self))
+
+
 def schemaItemRepr(self):
     return "SchemaItem(%r, %r)" % (self.key, self.field)
+
+
 def schemaItemGetField(self):
     return self.field
 
