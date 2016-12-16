@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from ._baseCatalog import BaseCatalog
+from ._base import BaseCatalog
 from ._match import SimpleMatch, ReferenceMatch, SourceMatch
 from ._schema import Schema
 

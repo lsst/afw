@@ -163,6 +163,12 @@ public:
     /// Set a Coord of another type in the given record; must be convertable to ICRS
     virtual void set(BaseRecord & record, coord::Coord const & value) const;
 
+    //@{
+    /// Compare CoordKeys for equality using the constituent `ra` and `dec` Keys
+    bool operator==(CoordKey const & other) const { return _ra == other._ra && _dec == other._dec; }
+    bool operator!=(CoordKey const & other) const { return !(*this == other); }
+    //@}
+
     bool isValid() const { return _ra.isValid() && _dec.isValid(); }
 
     //@{
@@ -175,12 +181,6 @@ private:
     Key<geom::Angle> _ra;
     Key<geom::Angle> _dec;
 };
-
-//@{
-/// Compare CoordKeys for equality using the constituent Keys
-bool operator==(CoordKey const & lhs, CoordKey const & rhs);
-bool operator!=(CoordKey const & lhs, CoordKey const & rhs);
-//@}
 
 /**
  *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from a tuple of constituent Keys.
