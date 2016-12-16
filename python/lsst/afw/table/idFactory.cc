@@ -21,7 +21,6 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
 #include "lsst/afw/table/IdFactory.h"
@@ -38,10 +37,15 @@ PYBIND11_PLUGIN(_idFactory) {
 
     py::class_<IdFactory, std::shared_ptr<IdFactory>> clsIdFactory(mod, "IdFactory");
 
+    /* Operators */
+    clsIdFactory.def("__call__", &IdFactory::operator());
+
     /* Members */
+    clsIdFactory.def("notify", &IdFactory::notify, "id"_a);
+    clsIdFactory.def("clone", &IdFactory::clone);
     clsIdFactory.def_static("makeSimple", IdFactory::makeSimple);
     clsIdFactory.def_static("makeSource", IdFactory::makeSource,
-            "expId"_a, "reserved"_a);
+                            "expId"_a, "reserved"_a);
 
     return mod.ptr();
 }

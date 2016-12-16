@@ -42,7 +42,7 @@ namespace pybind11 {
 /**
 Declare an instantiation of TransformMap
 
-@param[in] cls  Catalog pybind11 class.
+@param[in] mod  pybind11 module.
 @param[in] prefix  Prefix for python class name; full name = prefix + "TransformMap"
 */
 template <typename CoordSysT>

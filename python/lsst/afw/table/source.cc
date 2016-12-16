@@ -25,10 +25,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -37,143 +45,203 @@ namespace lsst {
 namespace afw {
 namespace table {
 
-template <typename RecordT>
-void declareSourceColumnView(py::module & mod) {
-    py::class_<SourceColumnViewT<RecordT>, std::shared_ptr<SourceColumnViewT<RecordT>>>
-        cls(mod, "SourceColumnViewT");
-    //cls.def_static("make", &SourceColumnViewT<RecordT>::make);
+namespace {
+
+using PySourceRecord = py::class_<SourceRecord, std::shared_ptr<SourceRecord>, SimpleRecord>;
+using PySourceTable = py::class_<SourceTable, std::shared_ptr<SourceTable>, SimpleTable>;
+using PySourceColumnView = py::class_<SourceColumnViewT<SourceRecord>,
+                                      std::shared_ptr<SourceColumnViewT<SourceRecord>>,
+                                      ColumnViewT<SourceRecord>>;
+using PyBaseSourceCatalog = py::class_<CatalogT<SourceRecord>, std::shared_ptr<CatalogT<SourceRecord>>>;
+using PySourceCatalog = py::class_<SourceCatalog, std::shared_ptr<SourceCatalog>, CatalogT<SourceRecord>>;
+
+/**
+Declare member and static functions for a pybind11 wrapper of SourceRecord
+*/
+void declareSourceRecord(PySourceRecord & cls) {
+    table::pybind11::addCastFrom<BaseRecord>(cls);
+    table::pybind11::addCastFrom<SimpleRecord>(cls);
+
+    cls.def("getFootprint", &SourceRecord::getFootprint);
+    cls.def("setFootprint", &SourceRecord::setFootprint);
+    cls.def("getTable", &SourceRecord::getTable);
+
+    cls.def("getParent", &SourceRecord::getParent);
+    cls.def("setParent", &SourceRecord::setParent, "id"_a);
+
+    cls.def("getPsfFlux", &SourceRecord::getPsfFlux);
+    cls.def("getPsfFluxErr", &SourceRecord::getPsfFluxErr);
+    cls.def("getPsfFluxFlag", &SourceRecord::getPsfFluxFlag);
+
+    cls.def("getModelFlux", &SourceRecord::getModelFlux);
+    cls.def("getModelFluxErr", &SourceRecord::getModelFluxErr);
+    cls.def("getModelFluxFlag", &SourceRecord::getModelFluxFlag);
+
+    cls.def("getApFlux", &SourceRecord::getApFlux);
+    cls.def("getApFluxErr", &SourceRecord::getApFluxErr);
+    cls.def("getApFluxFlag", &SourceRecord::getApFluxFlag);
+
+    cls.def("getInstFlux", &SourceRecord::getInstFlux);
+    cls.def("getInstFluxErr", &SourceRecord::getInstFluxErr);
+    cls.def("getInstFluxFlag", &SourceRecord::getInstFluxFlag);
+
+    cls.def("getCalibFlux", &SourceRecord::getCalibFlux);
+    cls.def("getCalibFluxErr", &SourceRecord::getCalibFluxErr);
+    cls.def("getCalibFluxFlag", &SourceRecord::getCalibFluxFlag);
+
+    cls.def("getCentroid", &SourceRecord::getCentroid);
+    cls.def("getCentroidErr", &SourceRecord::getCentroidErr);
+    cls.def("getCentroidFlag", &SourceRecord::getCentroidFlag);
+
+    cls.def("getShape", &SourceRecord::getShape);
+    cls.def("getShapeErr", &SourceRecord::getShapeErr);
+    cls.def("getShapeFlag", &SourceRecord::getShapeFlag);
+
+    cls.def("getX", &SourceRecord::getX);
+    cls.def("getY", &SourceRecord::getY);
+    cls.def("getIxx", &SourceRecord::getIxx);
+    cls.def("getIyy", &SourceRecord::getIyy);
+    cls.def("getIxy", &SourceRecord::getIxy);
+    cls.def("updateCoord",
+            (void (SourceRecord::*)(image::Wcs const &)) &SourceRecord::updateCoord,
+            "wcs"_a);
+    cls.def("updateCoord",
+            (void (SourceRecord::*)(image::Wcs const &, PointKey<double> const &)) &SourceRecord::updateCoord,
+            "wcs"_a, "key"_a);
+}
+
+/**
+Declare member and static functions for a pybind11 wrapper of SourceTable
+*/
+void declareSourceTable(PySourceTable & cls) {
+    table::pybind11::addCastFrom<BaseTable>(cls);
+    table::pybind11::addCastFrom<SimpleTable>(cls);
+
+    cls.def_static("make",
+                   (std::shared_ptr<SourceTable> (*)(Schema const &, std::shared_ptr<IdFactory> const &))
+                        &SourceTable::make);
+    cls.def_static("make", (std::shared_ptr<SourceTable> (*)(Schema const &)) &SourceTable::make);
+    cls.def_static("makeMinimalSchema", &SourceTable::makeMinimalSchema);
+    cls.def_static("getParentKey", &SourceTable::getParentKey);
+    cls.def("copyRecord",
+            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &)) &SourceTable::copyRecord);
+    cls.def("copyRecord",
+            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &, SchemaMapper const &))
+                            &SourceTable::copyRecord);
+    cls.def("makeRecord", &SourceTable::makeRecord);
+
+    cls.def("getPsfFluxSlot", &SourceTable::getPsfFluxSlot);
+    cls.def("definePsfFlux", &SourceTable::definePsfFlux, "name"_a);
+    cls.def("getPsfFluxDefinition", &SourceTable::getPsfFluxDefinition);
+    cls.def("hasPsfFluxSlot", &SourceTable::hasPsfFluxSlot);
+    cls.def("getPsfFluxKey", &SourceTable::getPsfFluxKey);
+    cls.def("getPsfFluxErrKey", &SourceTable::getPsfFluxErrKey);
+    cls.def("getPsfFluxFlagKey", &SourceTable::getPsfFluxFlagKey);
+
+    cls.def("getModelFluxSlot", &SourceTable::getModelFluxSlot);
+    cls.def("defineModelFlux", &SourceTable::defineModelFlux, "name"_a);
+    cls.def("getModelFluxDefinition", &SourceTable::getModelFluxDefinition);
+    cls.def("hasModelFluxSlot", &SourceTable::hasModelFluxSlot);
+    cls.def("getModelFluxKey", &SourceTable::getModelFluxKey);
+    cls.def("getModelFluxErrKey", &SourceTable::getModelFluxErrKey);
+    cls.def("getModelFluxFlagKey", &SourceTable::getModelFluxFlagKey);
+
+    cls.def("getApFluxSlot", &SourceTable::getApFluxSlot);
+    cls.def("defineApFlux", &SourceTable::defineApFlux, "name"_a);
+    cls.def("getApFluxDefinition", &SourceTable::getApFluxDefinition);
+    cls.def("hasApFluxSlot", &SourceTable::hasApFluxSlot);
+    cls.def("getApFluxKey", &SourceTable::getApFluxKey);
+    cls.def("getApFluxErrKey", &SourceTable::getApFluxErrKey);
+    cls.def("getApFluxFlagKey", &SourceTable::getApFluxFlagKey);
+
+    cls.def("getInstFluxSlot", &SourceTable::getInstFluxSlot);
+    cls.def("defineInstFlux", &SourceTable::defineInstFlux, "name"_a);
+    cls.def("getInstFluxDefinition", &SourceTable::getInstFluxDefinition);
+    cls.def("hasInstFluxSlot", &SourceTable::hasInstFluxSlot);
+    cls.def("getInstFluxKey", &SourceTable::getInstFluxKey);
+    cls.def("getInstFluxErrKey", &SourceTable::getInstFluxErrKey);
+    cls.def("getInstFluxFlagKey", &SourceTable::getInstFluxFlagKey);
+
+    cls.def("getCalibFluxSlot", &SourceTable::getCalibFluxSlot);
+    cls.def("defineCalibFlux", &SourceTable::defineCalibFlux, "name"_a);
+    cls.def("getCalibFluxDefinition", &SourceTable::getCalibFluxDefinition);
+    cls.def("hasCalibFluxSlot", &SourceTable::hasCalibFluxSlot);
+    cls.def("getCalibFluxKey", &SourceTable::getCalibFluxKey);
+    cls.def("getCalibFluxErrKey", &SourceTable::getCalibFluxErrKey);
+    cls.def("getCalibFluxFlagKey", &SourceTable::getCalibFluxFlagKey);
+
+    cls.def("getCentroidSlot", &SourceTable::getCentroidSlot);
+    cls.def("defineCentroid", &SourceTable::defineCentroid, "name"_a);
+    cls.def("getCentroidDefinition", &SourceTable::getCentroidDefinition);
+    cls.def("hasCentroidSlot", &SourceTable::hasCentroidSlot);
+    cls.def("getCentroidKey", &SourceTable::getCentroidKey);
+    cls.def("getCentroidErrKey", &SourceTable::getCentroidErrKey);
+    cls.def("getCentroidFlagKey", &SourceTable::getCentroidFlagKey);
+
+    cls.def("getShapeSlot", &SourceTable::getShapeSlot);
+    cls.def("defineShape", &SourceTable::defineShape, "name"_a);
+    cls.def("getShapeDefinition", &SourceTable::getShapeDefinition);
+    cls.def("hasShapeSlot", &SourceTable::hasShapeSlot);
+    cls.def("getShapeKey", &SourceTable::getShapeKey);
+    cls.def("getShapeErrKey", &SourceTable::getShapeErrKey);
+    cls.def("getShapeFlagKey", &SourceTable::getShapeFlagKey);
+}
+
+void declareSourceColumnView(PySourceColumnView & cls) {
+    using SourceColumnView = SourceColumnViewT<SourceRecord>;
+
+    //cls.def_static("make", &SourceColumnView::make);
+
+    cls.def("getPsfFlux", &SourceColumnView::getPsfFlux);
+    cls.def("getPsfFluxErr", &SourceColumnView::getPsfFluxErr);
+    cls.def("getApFlux", &SourceColumnView::getApFlux);
+    cls.def("getApFluxErr", &SourceColumnView::getApFluxErr);
+    cls.def("getModelFlux", &SourceColumnView::getModelFlux);
+    cls.def("getModelFluxErr", &SourceColumnView::getModelFluxErr);
+    cls.def("getInstFlux", &SourceColumnView::getInstFlux);
+    cls.def("getInstFluxErr", &SourceColumnView::getInstFluxErr);
+    cls.def("getCalibFlux", &SourceColumnView::getCalibFlux);
+    cls.def("getCalibFluxErr", &SourceColumnView::getCalibFluxErr);
+    cls.def("getX", &SourceColumnView::getX);
+    cls.def("getY", &SourceColumnView::getY);
+    cls.def("getIxx", &SourceColumnView::getIxx);
+    cls.def("getIyy", &SourceColumnView::getIyy);
+    cls.def("getIxy", &SourceColumnView::getIxy);
 };
+
+}  // namespace lsst::afw::table::<anonymous>
+
 
 PYBIND11_PLUGIN(_source) {
     py::module mod("_source", "Python wrapper for afw _source library");
 
-    /* Module level */
-    py::class_<SourceTable, std::shared_ptr<SourceTable>, SimpleTable>
-        clsSourceTable(mod, "SourceTable");
-    py::class_<SourceRecord, std::shared_ptr<SourceRecord>, SimpleRecord>
-        clsSourceRecord(mod, "SourceRecord");
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+    };
 
     /* Member types and enums */
+    py::enum_<SourceFitsFlags>(mod, "SourceFitsFlags")
+        .value("SOURCE_IO_NO_FOOTPRINTS", SourceFitsFlags::SOURCE_IO_NO_FOOTPRINTS)
+        .value("SOURCE_IO_NO_HEAVY_FOOTPRINTS", SourceFitsFlags::SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+        .export_values();
 
-    /* Constructors */
-
-    /* Operators */
+    /* Module level */
+    PySourceRecord clsSourceRecord(mod, "SourceRecord");
+    PySourceTable clsSourceTable(mod, "SourceTable");
+    PySourceColumnView clsSourceColumnView(mod, "SourceColumnView");
+    PyBaseSourceCatalog clsBaseSourceCatalog(mod, "_BaseSourceCatalog");
+    PySourceCatalog clsSourceCatalog(mod, "SourceCatalog", py::dynamic_attr());
 
     /* Members */
-    clsSourceTable.def_static("make",
-                              (std::shared_ptr<SourceTable> (*)(Schema const &,
-                                                                std::shared_ptr<IdFactory> const &))
-                                    &SourceTable::make);
-    clsSourceTable.def_static("make",
-                              (std::shared_ptr<SourceTable> (*)(Schema const &)) &SourceTable::make);
-    clsSourceTable.def_static("makeMinimalSchema", &SourceTable::makeMinimalSchema);
-    clsSourceTable.def("copyRecord",
-                       (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &))
-                            &SourceTable::copyRecord);
-    clsSourceTable.def("copyRecord",
-                       (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &,
-                                                                       SchemaMapper const &))
-                            &SourceTable::copyRecord);
-    clsSourceTable.def("makeRecord", &SourceTable::makeRecord);
+    declareSourceRecord(clsSourceRecord);
+    declareSourceTable(clsSourceTable);
+    declareSourceColumnView(clsSourceColumnView);
+    pybind11::declareCatalog<SourceRecord>(clsBaseSourceCatalog);
+    pybind11::declareSortedCatalog<SourceRecord>(clsSourceCatalog);
 
-    //clsSourceTable.def("getPsfFluxSlot", &SourceTable::getPsfFluxSlot);
-    clsSourceTable.def("definePsfFlux", &SourceTable::definePsfFlux, "name"_a);
-    //clsSourceTable.def("getPsfFluxDefinition", &SourceTable::getPsfFluxDefinition);
-    //clsSourceTable.def("hasPsfFluxSlot", &SourceTable::hasPsfFluxSlot);
-    clsSourceTable.def("getPsfFluxKey", &SourceTable::getPsfFluxKey);
-    //clsSourceTable.def("getPsfFluxErrKey", &SourceTable::getPsfFluxErrKey);
-    //clsSourceTable.def("getPsfFluxFlagKey", &SourceTable::getPsfFluxFlagKey);
-
-    //clsSourceTable.def("getModelFluxSlot", &SourceTable::getModelFluxSlot);
-    //clsSourceTable.def("defineModelFlux", &SourceTable::defineModelFlux, "name"_a);
-    //clsSourceTable.def("getModelFluxDefinition", &SourceTable::getModelFluxDefinition);
-    //clsSourceTable.def("hasModelFluxSlot", &SourceTable::hasModelFluxSlot);
-    //clsSourceTable.def("getModelFluxKey", &SourceTable::getModelFluxKey);
-    //clsSourceTable.def("getModelFluxErrKey", &SourceTable::getModelFluxErrKey);
-    //clsSourceTable.def("getModelFluxFlagKey", &SourceTable::getModelFluxFlagKey);
-
-    //clsSourceTable.def("getApFluxSlot", &SourceTable::getApFluxSlot);
-    //clsSourceTable.def("defineApFlux", &SourceTable::defineApFlux, "name"_a);
-    //clsSourceTable.def("getApFluxDefinition", &SourceTable::getApFluxDefinition);
-    //clsSourceTable.def("hasApFluxSlot", &SourceTable::hasApFluxSlot);
-    //clsSourceTable.def("getApFluxKey", &SourceTable::getApFluxKey);
-    //clsSourceTable.def("getApFluxErrKey", &SourceTable::getApFluxErrKey);
-    //clsSourceTable.def("getApFluxFlagKey", &SourceTable::getApFluxFlagKey);
-
-    //clsSourceTable.def("getInstFluxSlot", &SourceTable::getInstFluxSlot);
-    //clsSourceTable.def("defineInstFlux", &SourceTable::defineInstFlux, "name"_a);
-    //clsSourceTable.def("getInstFluxDefinition", &SourceTable::getInstFluxDefinition);
-    //clsSourceTable.def("hasInstFluxSlot", &SourceTable::hasInstFluxSlot);
-    //clsSourceTable.def("getInstFluxKey", &SourceTable::getInstFluxKey);
-    //clsSourceTable.def("getInstFluxErrKey", &SourceTable::getInstFluxErrKey);
-    //clsSourceTable.def("getInstFluxFlagKey", &SourceTable::getInstFluxFlagKey);
-
-    //clsSourceTable.def("getCalibFluxSlot", &SourceTable::getCalibFluxSlot);
-    //clsSourceTable.def("defineCalibFlux", &SourceTable::defineCalibFlux, "name"_a);
-    //clsSourceTable.def("getCalibFluxDefinition", &SourceTable::getCalibFluxDefinition);
-    //clsSourceTable.def("hasCalibFluxSlot", &SourceTable::hasCalibFluxSlot);
-    //clsSourceTable.def("getCalibFluxKey", &SourceTable::getCalibFluxKey);
-    //clsSourceTable.def("getCalibFluxErrKey", &SourceTable::getCalibFluxErrKey);
-    //clsSourceTable.def("getCalibFluxFlagKey", &SourceTable::getCalibFluxFlagKey);
-
-    //clsSourceTable.def("getCentroidSlot", &SourceTable::getCentroidSlot);
-    clsSourceTable.def("defineCentroid", &SourceTable::defineCentroid, "name"_a);
-    //clsSourceTable.def("getCentroidDefinition", &SourceTable::getCentroidDefinition);
-    //clsSourceTable.def("hasCentroidSlot", &SourceTable::hasCentroidSlot);
-    //clsSourceTable.def("getCentroidKey", &SourceTable::getCentroidKey);
-    //clsSourceTable.def("getCentroidErrKey", &SourceTable::getCentroidErrKey);
-    //clsSourceTable.def("getCentroidFlagKey", &SourceTable::getCentroidFlagKey);
-
-    //clsSourceTable.def("getShapeSlot", &SourceTable::getShapeSlot);
-    //clsSourceTable.def("defineShape", &SourceTable::defineShape, "name"_a);
-    //clsSourceTable.def("getShapeDefinition", &SourceTable::getShapeDefinition);
-    //clsSourceTable.def("hasShapeSlot", &SourceTable::hasShapeSlot);
-    //clsSourceTable.def("getShapeKey", &SourceTable::getShapeKey);
-    //clsSourceTable.def("getShapeErrKey", &SourceTable::getShapeErrKey);
-    //clsSourceTable.def("getShapeFlagKey", &SourceTable::getShapeFlagKey);
-
-    declareSourceColumnView<SourceRecord>(mod);
-
-    clsSourceRecord.def("getFootprint", &SourceRecord::getFootprint);
-    clsSourceRecord.def("setFootprint", &SourceRecord::setFootprint);
-    clsSourceRecord.def("getTable", &SourceRecord::getTable);
-
-    //clsSourceRecord.def("getParent", &SourceRecord::getParent);
-    //clsSourceRecord.def("setParent", &SourceRecord::setParent, "id"_a);
-
-    //clsSourceRecord.def("getPsfFlux", &SourceRecord::getPsfFlux);
-    //clsSourceRecord.def("getPsfFluxErr", &SourceRecord::getPsfFluxErr);
-    //clsSourceRecord.def("getPsfFluxFlag", &SourceRecord::getPsfFluxFlag);
-
-    //clsSourceRecord.def("getModelFlux", &SourceRecord::getModelFlux);
-    //clsSourceRecord.def("getModelFluxErr", &SourceRecord::getModelFluxErr);
-    //clsSourceRecord.def("getModelFluxFlag", &SourceRecord::getModelFluxFlag);
-
-    //clsSourceRecord.def("getApFlux", &SourceRecord::getApFlux);
-    //clsSourceRecord.def("getApFluxErr", &SourceRecord::getApFluxErr);
-    //clsSourceRecord.def("getApFluxFlag", &SourceRecord::getApFluxFlag);
-
-    //clsSourceRecord.def("getInstFlux", &SourceRecord::getInstFlux);
-    //clsSourceRecord.def("getInstFluxErr", &SourceRecord::getInstFluxErr);
-    //clsSourceRecord.def("getInstFluxFlag", &SourceRecord::getInstFluxFlag);
-
-    //clsSourceRecord.def("getCalibFlux", &SourceRecord::getCalibFlux);
-    //clsSourceRecord.def("getCalibFluxErr", &SourceRecord::getCalibFluxErr);
-    //clsSourceRecord.def("getCalibFluxFlag", &SourceRecord::getCalibFluxFlag);
-
-    clsSourceRecord.def("getCentroid", &SourceRecord::getCentroid);
-    clsSourceRecord.def("getCentroidErr", &SourceRecord::getCentroidErr);
-    //clsSourceRecord.def("getCentroidFlag", &SourceRecord::getCentroidFlag);
-
-    //clsSourceRecord.def("getShape", &SourceRecord::getShape);
-    //clsSourceRecord.def("getShapeErr", &SourceRecord::getShapeErr);
-    //clsSourceRecord.def("getShapeFlag", &SourceRecord::getShapeFlag);
-
-    //clsSourceRecord.def("getX", &SourceRecord::getX);
-    //clsSourceRecord.def("getY", &SourceRecord::getY);
-    //clsSourceRecord.def("getIxx", &SourceRecord::getIxx);
-    //clsSourceRecord.def("getIyy", &SourceRecord::getIyy);
-    //clsSourceRecord.def("getIxy", &SourceRecord::getIxy);
+    clsSourceCatalog.attr("Record") = clsSourceRecord;
+    clsSourceCatalog.attr("Table") = clsSourceTable;
 
     return mod.ptr();
 }
