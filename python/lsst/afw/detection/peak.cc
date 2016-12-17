@@ -24,13 +24,41 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "lsst/afw/detection/Peak.h"
+#include "lsst/afw/table/pybind11/catalog.h"
 
-using namespace lsst::afw::detection;
+namespace py = pybind11;
+using namespace py::literals;
+
+namespace lsst {
+namespace afw {
+namespace detection {
 
 PYBIND11_PLUGIN(_peak) {
     py::module mod("_peak", "Python wrapper for afw _peak library");
 
+    py::class_<PeakRecord, std::shared_ptr<PeakRecord>> clsPeakRecord(mod, "PeakRecord");
+
+    clsPeakRecord.def("getTable", &PeakRecord::getTable);
+    clsPeakRecord.def("getId", &PeakRecord::getId);
+    clsPeakRecord.def("setId", &PeakRecord::setId);
+    clsPeakRecord.def("getIx", &PeakRecord::getIx);
+    clsPeakRecord.def("getIy", &PeakRecord::getIy);
+    clsPeakRecord.def("setIx", &PeakRecord::setIx);
+    clsPeakRecord.def("setIy", &PeakRecord::setIy);
+    clsPeakRecord.def("getI", &PeakRecord::getI);
+    clsPeakRecord.def("getCentroid", (afw::geom::Point2I (PeakRecord::*)(bool) const) &PeakRecord::getCentroid);
+    clsPeakRecord.def("getCentroid", (afw::geom::Point2D (PeakRecord::*)() const) &PeakRecord::getCentroid);
+    clsPeakRecord.def("getFx", &PeakRecord::getFx);
+    clsPeakRecord.def("getFy", &PeakRecord::getFy);
+    clsPeakRecord.def("setFx", &PeakRecord::setFx);
+    clsPeakRecord.def("setFy", &PeakRecord::setFy);
+    clsPeakRecord.def("getF", &PeakRecord::getF);
+    clsPeakRecord.def("getPeakValue", &PeakRecord::getPeakValue);
+    clsPeakRecord.def("setPeakValue", &PeakRecord::setPeakValue);
+
+    py::class_<table::CatalogT<PeakRecord>, std::shared_ptr<table::CatalogT<PeakRecord>>> clsPeakRecordCatalog(mod, "PeakRecordCatalog");
+    declareCatalog(clsPeakRecordCatalog);
     /* Module level */
 
     /* Member types and enums */
@@ -43,3 +71,4 @@ PYBIND11_PLUGIN(_peak) {
 
     return mod.ptr();
 }
+}}} // lsst::afw::detection
