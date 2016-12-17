@@ -22,24 +22,54 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/detection/Threshold.h"
 
 namespace py = pybind11;
+using namespace py::literals;
 
-using namespace lsst::afw::detection;
+namespace lsst {
+namespace afw {
+namespace detection {
 
 PYBIND11_PLUGIN(_threshold) {
     py::module mod("_threshold", "Python wrapper for afw _threshold library");
 
-    /* Module level */
+    py::class_<Threshold> clsThreshold(mod, "Threshold");
 
     /* Member types and enums */
+    py::enum_<Threshold::ThresholdType>(clsThreshold, "ThresholdType")
+        .value("VALUE", Threshold::ThresholdType::VALUE)
+        .value("BITMASK", Threshold::ThresholdType::BITMASK)
+        .value("STDEV", Threshold::ThresholdType::STDEV)
+        .value("VARIANCE", Threshold::ThresholdType::VARIANCE)
+        .value("PIXEL_STDEV", Threshold::ThresholdType::PIXEL_STDEV)
+        .export_values();
 
     /* Constructors */
-
-    /* Operators */
+    clsThreshold.def(py::init<double const, typename Threshold::ThresholdType const, bool const, double const>(),
+            "value"_a, "type"_a=Threshold::VALUE, "polarity"_a=true, "includeMultiplier"_a=1.0);
 
     /* Members */
+    clsThreshold.def("getType", &Threshold::getType);
+    clsThreshold.def_static("parseTypeString", Threshold::parseTypeString);
+    clsThreshold.def_static("getTypeString", Threshold::getTypeString);
+    clsThreshold.def("getValue", (double (Threshold::*)(const double) const) &Threshold::getValue,
+            "param"_a=-1);
+//
+//    template<typename ImageT>
+//    double getValue(ImageT const& image) const;
+//
+    clsThreshold.def("getPolarity", &Threshold::getPolarity);
+    clsThreshold.def("setPolarity", &Threshold::setPolarity);
+    clsThreshold.def("getIncludeMultiplier", &Threshold::getIncludeMultiplier);
+    clsThreshold.def("setIncludeMultiplier", &Threshold::setIncludeMultiplier);
+
+    /* Module level */
+    mod.def("createThreshold", createThreshold,
+            "value"_a, "type"_a="value", "polarity"_a=true);
 
     return mod.ptr();
 }
+}}} // lsst::afw::detection

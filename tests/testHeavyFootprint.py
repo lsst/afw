@@ -143,12 +143,10 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         omi = self.mi.Factory(self.mi.getDimensions())
 
         for foot in fs.getFootprints():
-            self.assertNotEqual(afwDetect.cast_HeavyFootprint(foot, self.mi), None)
-            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+            foot.insert(omi)
 
         for foot in fs.getFootprints():
-            self.assertNotEqual(afwDetect.HeavyFootprintF.cast(foot), None)
-            afwDetect.HeavyFootprintF.cast(foot).insert(omi)
+            foot.insert(omi)
 
         self.assertFloatsEqual(self.mi.getImage().getArray(), omi.getImage().getArray())
 
@@ -163,7 +161,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         omi.set((0, 0x0, 0))
 
         for foot in fs.getFootprints():
-            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+#            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+            foot.insert(omi)
 
         if display:
             ds9.mtv(self.mi, frame=0, title="input")
@@ -172,6 +171,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
         self.assertFloatsEqual(submi.getImage().getArray(), omi.getImage().getArray())
 
+    @unittest.skip("pybind11 does not need casting")
     def testCast_HeavyFootprint(self):
         """Test that we can cast a Footprint to a HeavyFootprint"""
 
@@ -210,7 +210,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         hfoot1.normalize()
         hfoot2.normalize()
-        hsum = afwDetect.mergeHeavyFootprintsF(hfoot1, hfoot2)
+        hsum = afwDetect.mergeHeavyFootprints(hfoot1, hfoot2)
 
         bb = hsum.getBBox()
         self.assertEquals(bb.getMinX(), 9)
