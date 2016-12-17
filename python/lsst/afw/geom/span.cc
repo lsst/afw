@@ -22,6 +22,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
+#include <pybind11/stl.h>
 
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
@@ -57,7 +58,7 @@ PYBIND11_PLUGIN(_span) {
     clsSpanIterator.def("__iter__", [](SpanIterator &it) -> SpanIterator& { return it; });
     clsSpanIterator.def("__next__", &SpanIterator::next);
 
-    py::class_<Span> clsSpan(mod, "Span");
+    py::class_<Span, std::shared_ptr<Span>> clsSpan(mod, "Span");
 
     /* Constructors */
     clsSpan.def(py::init<int, int, int>());
