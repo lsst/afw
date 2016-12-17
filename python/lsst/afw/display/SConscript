@@ -1,4 +1,4 @@
-## -*- python -*-
-#from lsst.sconsUtils import scripts
-#scripts.BasicSConscript.python(['displayLib'],
-#                               swigSrc={"displayLib": ["saturated.cc", "scaling.cc", "simpleFits.cc"]})
+# -*- python -*-
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(['rgb'],
+	extraSrc={"rgb": ["saturated.cc", "scaling.cc", "simpleFits.cc"]})
