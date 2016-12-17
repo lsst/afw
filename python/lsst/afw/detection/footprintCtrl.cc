@@ -22,24 +22,50 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/detection/FootprintCtrl.h"
 
 namespace py = pybind11;
 
 using namespace lsst::afw::detection;
+using namespace py::literals;
+
+namespace lsst {
+namespace afw {
+namespace detection {
 
 PYBIND11_PLUGIN(_footprintCtrl) {
     py::module mod("_footprintCtrl", "Python wrapper for afw _footprintCtrl library");
+
+    py::class_<FootprintControl> clsFootprintControl(mod, "FootprintControl");
+
+    /* Constructors */
+    clsFootprintControl.def(py::init<>());
+    clsFootprintControl.def(py::init<bool, bool>(),
+            "circular"_a, "isotropic"_a=false);
+    clsFootprintControl.def(py::init<bool, bool, bool, bool>(),
+            "left"_a, "right"_a, "up"_a, "down"_a);
+
+    /* Members */
+    clsFootprintControl.def("growCircular", &FootprintControl::growCircular);
+    clsFootprintControl.def("growIsotropic", &FootprintControl::growIsotropic);
+    clsFootprintControl.def("growLeft", &FootprintControl::growLeft);
+    clsFootprintControl.def("growRight", &FootprintControl::growRight);
+    clsFootprintControl.def("growUp", &FootprintControl::growUp);
+    clsFootprintControl.def("growDown", &FootprintControl::growDown);
+
+    clsFootprintControl.def("isCircular", &FootprintControl::isCircular);
+    clsFootprintControl.def("isIsotropic", &FootprintControl::isIsotropic);
+    clsFootprintControl.def("isLeft", &FootprintControl::isLeft);
+    clsFootprintControl.def("isRight", &FootprintControl::isRight);
+    clsFootprintControl.def("isUp", &FootprintControl::isUp);
+    clsFootprintControl.def("isDown", &FootprintControl::isDown);
 
     /* Module level */
 
     /* Member types and enums */
 
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
-
     return mod.ptr();
 }
+}}} // lsst::afw::detection

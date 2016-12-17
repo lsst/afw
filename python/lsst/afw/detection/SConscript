@@ -4,4 +4,5 @@ scripts.BasicSConscript.pybind11(['psf',
                                   'footprintSet',
                                   'threshold',
                                   'peak',
+                                  'footprintCtrl',
                                   'footprint'])

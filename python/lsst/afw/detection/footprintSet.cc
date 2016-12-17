@@ -96,7 +96,8 @@ PYBIND11_PLUGIN(_footprintSet)
     //        std::string const& planeName   ///< Here's the name of the mask plane to fit
     //    )
     //
-    clsFootprintSet.def("merge", &FootprintSet::merge);
+    clsFootprintSet.def("merge", &FootprintSet::merge,
+            "rhs"_a, "tGrow"_a=0, "rGrow"_a=0, "isotropic"_a=true);
     //
     //    template <typename ImagePixelT, typename MaskPixelT>
     //    void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
