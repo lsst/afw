@@ -78,6 +78,8 @@ PYBIND11_PLUGIN(_psf) {
             "radius"_a, "position"_a=NullPoint, "color"_a=image::Color());
     cls.def("computeShape", &Psf::computeShape,
             "position"_a=NullPoint, "color"_a=image::Color());
+    cls.def("computeBBox", &Psf::computeBBox,
+            "position"_a=NullPoint, "color"_a=image::Color());
     cls.def("getLocalKernel", &Psf::getLocalKernel,
             "position"_a=NullPoint, "color"_a=image::Color());
     cls.def("getAverageColor", &Psf::getAverageColor);
