@@ -41,6 +41,7 @@ from ._ampInfo import *
 from .ampInfo import *
 from ._exposure import *
 from .exposure import *
+from ._idFactory import *
 
 # In order for some of the module to be imported, lsst.afw.geom.ellipses is required
 # Even though the modules themselves are wrapped using ellipses, it must still be

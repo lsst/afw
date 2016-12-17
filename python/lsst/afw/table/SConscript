@@ -24,4 +24,5 @@ scripts.BasicSConscript.pybind11(['misc',
                                   'match',
                                   'ampInfo',
                                   'exposure',
+                                  'idFactory',
                                   ])
