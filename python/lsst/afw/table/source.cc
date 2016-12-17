@@ -134,6 +134,10 @@ PYBIND11_PLUGIN(_source) {
 
     declareSourceColumnView<SourceRecord>(mod);
 
+    clsSourceRecord.def("getFootprint", &SourceRecord::getFootprint);
+    clsSourceRecord.def("setFootprint", &SourceRecord::setFootprint);
+    clsSourceRecord.def("getTable", &SourceRecord::getTable);
+
     //clsSourceRecord.def("getParent", &SourceRecord::getParent);
     //clsSourceRecord.def("setParent", &SourceRecord::setParent, "id"_a);
 

@@ -22,28 +22,30 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
 
-#include "lsst/afw/table/IdFactory.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "Rgb.h"
 
 namespace py = pybind11;
-using namespace py::literals;
+using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
-namespace table {
+namespace display {
 
-PYBIND11_PLUGIN(_idFactory) {
-    py::module mod("_idFactory", "Python wrapper for afw _idFactory library");
+PYBIND11_PLUGIN(_rgb) {
+    py::module mod("_rgb", "Python wrapper for afw _rgb library");
 
-    py::class_<IdFactory, std::shared_ptr<IdFactory>> clsIdFactory(mod, "IdFactory");
-
-    /* Members */
-    clsIdFactory.def_static("makeSimple", IdFactory::makeSimple);
-    clsIdFactory.def_static("makeSource", IdFactory::makeSource,
-            "expId"_a, "reserved"_a);
+    /* Module level */
+    mod.def("replaceSaturatedPixels", replaceSaturatedPixels<lsst::afw::image::MaskedImage<float>>,
+            "rim"_a, "gim"_a, "bim"_a, "borderWidth"_a=2, "saturatedPixelValue"_a=65535);
+    mod.def("getZScale", getZScale<std::uint16_t>,
+            "image"_a, "nsamples"_a=1000, "contrast"_a=0.25);
+    mod.def("getZScale", getZScale<float>,
+            "image"_a, "nsamples"_a=1000, "contrast"_a=0.25);
 
     return mod.ptr();
 }
-
-}}}  // namespace lsst::afw::table
+}}}
