@@ -24,7 +24,10 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/table/IdFactory.h"
+
 namespace py = pybind11;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
@@ -33,15 +36,12 @@ namespace table {
 PYBIND11_PLUGIN(_idFactory) {
     py::module mod("_idFactory", "Python wrapper for afw _idFactory library");
 
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
+    py::class_<IdFactory, std::shared_ptr<IdFactory>> clsIdFactory(mod, "IdFactory");
 
     /* Members */
+    clsIdFactory.def_static("makeSimple", IdFactory::makeSimple);
+    clsIdFactory.def_static("makeSource", IdFactory::makeSource,
+            "expId"_a, "reserved"_a);
 
     return mod.ptr();
 }

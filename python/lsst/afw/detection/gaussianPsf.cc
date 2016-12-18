@@ -24,22 +24,35 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
+#include "lsst/afw/detection/GaussianPsf.h"
 
-using namespace lsst::afw::detection;
+namespace py = pybind11;
+using namespace py::literals;
+
+namespace lsst {
+namespace afw {
+namespace detection {
 
 PYBIND11_PLUGIN(_gaussianPsf) {
     py::module mod("_gaussianPsf", "Python wrapper for afw _gaussianPsf library");
 
-    /* Module level */
+    table::io::declarePersistableFacade<GaussianPsf>(mod, "GaussianPsf");
 
-    /* Member types and enums */
+    py::class_<GaussianPsf, afw::table::io::PersistableFacade<GaussianPsf>, Psf> clsGaussianPsf(mod, "GaussianPsf");
 
     /* Constructors */
-
-    /* Operators */
+    clsGaussianPsf.def(py::init<int, int, double>(),
+            "width"_a, "height"_a, "sigma"_a);
+    clsGaussianPsf.def(py::init<geom::Extent2I const &, double>(),
+            "dimensions"_a, "sigma"_a);
 
     /* Members */
+    clsGaussianPsf.def("clone", &GaussianPsf::clone);
+    clsGaussianPsf.def("getDimensions", &GaussianPsf::getDimensions);
+    clsGaussianPsf.def("getSigma", &GaussianPsf::getSigma);
+    clsGaussianPsf.def("isPersistable", &GaussianPsf::isPersistable);
 
     return mod.ptr();
 }
+}}} // lsst::afw::detection

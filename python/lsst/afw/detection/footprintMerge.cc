@@ -22,24 +22,38 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/detection/FootprintMerge.h"
 
 namespace py = pybind11;
+using namespace py::literals;
+
+namespace lsst {
+namespace afw {
+namespace detection {
 
 using namespace lsst::afw::detection;
 
 PYBIND11_PLUGIN(_footprintMerge) {
     py::module mod("_footprintMerge", "Python wrapper for afw _footprintMerge library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<FootprintMergeList> clsFootprintMergeList(mod, "FootprintMergeList");
 
     /* Constructors */
-
-    /* Operators */
+    clsFootprintMergeList.def(py::init<afw::table::Schema &, std::vector<std::string> const &, afw::table::Schema const &>(),
+            "sourceSchema"_a, "filterList"_a, "initialPeakSchema"_a);
+    clsFootprintMergeList.def(py::init<afw::table::Schema &, std::vector<std::string> const &>(),
+           "sourceSchema"_a, "filterList"_a); 
 
     /* Members */
+    clsFootprintMergeList.def("getPeakSchema", &FootprintMergeList::getPeakSchema);
+    clsFootprintMergeList.def("addCatalog", &FootprintMergeList::addCatalog,
+            "sourceTable"_a, "inputCat"_a, "filter"_a, "minNewPeakDist"_a=-1., "doMerge"_a=true, "maxSamePeakDist"_a=-1.);
+    clsFootprintMergeList.def("clearCatalog", &FootprintMergeList::clearCatalog);
+    clsFootprintMergeList.def("getFinalSources", &FootprintMergeList::getFinalSources,
+            "outputCat"_a, "doNorm"_a=true);
 
     return mod.ptr();
 }
+}}} // lsst::afw::detection
