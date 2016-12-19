@@ -39,7 +39,7 @@ PYBIND11_PLUGIN(_gaussianPsf) {
 
     table::io::declarePersistableFacade<GaussianPsf>(mod, "GaussianPsf");
 
-    py::class_<GaussianPsf, afw::table::io::PersistableFacade<GaussianPsf>, Psf> clsGaussianPsf(mod, "GaussianPsf");
+    py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, afw::table::io::PersistableFacade<GaussianPsf>, Psf> clsGaussianPsf(mod, "GaussianPsf");
 
     /* Constructors */
     clsGaussianPsf.def(py::init<int, int, double>(),
