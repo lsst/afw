@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
-from lsst.afw.table.io import Persistable
-from lsst.afw.geom import Span
-from lsst.afw.image import Color
+import lsst.afw.table.io
+import lsst.afw.geom
+import lsst.afw.image
 
 from ._psf import *
 from ._footprint import *
@@ -14,3 +14,4 @@ from ._footprintCtrl import *
 from ._gaussianPsf import *
 from ._footprintMerge import *
 from .footprintMerge import *
+from ._heavyFootprint import *

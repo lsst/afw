@@ -35,20 +35,34 @@ namespace detection {
 
 namespace {
 template <typename PixelT, typename PyClass>
-void declareConstructors(PyClass &cls)
+void declareMakeHeavy(PyClass & cls) {
+//    cls.def("makeHeavy", [](FootprintSet & self, image::MaskedImage<PixelT, image::MaskPixel> const& mimg) {
+//            return self.makeHeavy(mimg);
+//            });
+//    cls.def("makeHeavy", [](FootprintSet & self, image::MaskedImage<PixelT, image::MaskPixel> const& mimg, HeavyFootprintCtrl const* ctrl) {
+//            return self.makeHeavy(mimg, ctrl);
+//            });
+    cls.def("makeHeavy", (void (FootprintSet::*)(image::MaskedImage<PixelT, image::MaskPixel> const&, HeavyFootprintCtrl const*)) &FootprintSet::makeHeavy<PixelT, image::MaskPixel>,
+            "mimg"_a, "ctrl"_a=nullptr);
+}
+
+template <typename PixelT, typename PyClass>
+void declareTemplatedMembers(PyClass &cls)
 {
+    /* Constructors */
     cls.def(py::init<image::Image<PixelT> const &, Threshold const &, int const, bool const>(), "img"_a,
             "threshold"_a, "npixMin"_a = 1, "setPeaks"_a = true);
     cls.def(py::init<image::MaskedImage<PixelT, image::MaskPixel> const &, Threshold const &,
                      std::string const &, int const, bool const>(),
             "img"_a, "threshold"_a, "planeName"_a = "", "npixMin"_a = 1, "setPeaks"_a = true);
-}
 
-//    template <typename ImagePixelT, typename MaskPixelT>
-//    void declareConstructors2(PyClass & cls) {
-//    cls.def(py::init<image::Mask<PixelT> const&, Threshold const&, int const>(), "img"_a, "threshold"_a,
-//            "npixMin"_a = 1);
-//    }
+    /* Members */
+    declareMakeHeavy<int>(cls);
+    declareMakeHeavy<float>(cls);
+    declareMakeHeavy<double>(cls);
+    declareMakeHeavy<std::uint16_t>(cls);
+//    declareMakeHeavy<std::uint64_t>(cls);
+}
 }
 
 PYBIND11_PLUGIN(_footprintSet)
@@ -57,11 +71,10 @@ PYBIND11_PLUGIN(_footprintSet)
 
     py::class_<FootprintSet, lsst::daf::base::Citizen> clsFootprintSet(mod, "FootprintSet");
 
-    /* Constructors */
-    declareConstructors<std::uint16_t>(clsFootprintSet);
-    declareConstructors<int>(clsFootprintSet);
-    declareConstructors<float>(clsFootprintSet);
-    declareConstructors<double>(clsFootprintSet);
+    declareTemplatedMembers<std::uint16_t>(clsFootprintSet);
+    declareTemplatedMembers<int>(clsFootprintSet);
+    declareTemplatedMembers<float>(clsFootprintSet);
+    declareTemplatedMembers<double>(clsFootprintSet);
 
     clsFootprintSet.def(py::init<image::Mask<image::MaskPixel> const &, Threshold const &, int const>(),
                         "img"_a, "threshold"_a, "npixMin"_a = 1);
@@ -98,11 +111,7 @@ PYBIND11_PLUGIN(_footprintSet)
     //
     clsFootprintSet.def("merge", &FootprintSet::merge,
             "rhs"_a, "tGrow"_a=0, "rGrow"_a=0, "isotropic"_a=true);
-    //
-    //    template <typename ImagePixelT, typename MaskPixelT>
-    //    void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
-    //                   HeavyFootprintCtrl const* ctrl=NULL
-    //                  );
+
     /* Module level */
 
     /* Member types and enums */

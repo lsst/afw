@@ -62,6 +62,25 @@ PYBIND11_PLUGIN(_footprintCtrl) {
     clsFootprintControl.def("isUp", &FootprintControl::isUp);
     clsFootprintControl.def("isDown", &FootprintControl::isDown);
 
+    py::class_<HeavyFootprintCtrl> clsHeavyFootprintCtrl(mod, "HeavyFootprintCtrl");
+
+    py::enum_<HeavyFootprintCtrl::ModifySource>(clsHeavyFootprintCtrl, "ModifySource")
+        .value("NONE", HeavyFootprintCtrl::ModifySource::NONE)
+        .value("SET", HeavyFootprintCtrl::ModifySource::SET)
+        .export_values();
+
+    clsHeavyFootprintCtrl.def(py::init<HeavyFootprintCtrl::ModifySource>(),
+            "modifySource"_a=HeavyFootprintCtrl::ModifySource::NONE);
+
+    clsHeavyFootprintCtrl.def("getModifySource", &HeavyFootprintCtrl::getModifySource);
+    clsHeavyFootprintCtrl.def("setModifySource", &HeavyFootprintCtrl::setModifySource);
+    clsHeavyFootprintCtrl.def("getImageVal", &HeavyFootprintCtrl::getImageVal);
+    clsHeavyFootprintCtrl.def("setImageVal", &HeavyFootprintCtrl::setImageVal);
+    clsHeavyFootprintCtrl.def("getMaskVal", &HeavyFootprintCtrl::getMaskVal);
+    clsHeavyFootprintCtrl.def("setMaskVal", &HeavyFootprintCtrl::setMaskVal);
+    clsHeavyFootprintCtrl.def("getVarianceVal", &HeavyFootprintCtrl::getVarianceVal);
+    clsHeavyFootprintCtrl.def("setVarianceVal", &HeavyFootprintCtrl::setVarianceVal);
+
     /* Module level */
 
     /* Member types and enums */
