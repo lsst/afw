@@ -24,6 +24,7 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/table/pybind11/catalog.h"
 
@@ -37,7 +38,7 @@ namespace detection {
 PYBIND11_PLUGIN(_peak) {
     py::module mod("_peak", "Python wrapper for afw _peak library");
 
-    py::class_<PeakRecord, std::shared_ptr<PeakRecord>> clsPeakRecord(mod, "PeakRecord");
+    py::class_<PeakRecord, std::shared_ptr<PeakRecord>, lsst::afw::table::BaseRecord> clsPeakRecord(mod, "PeakRecord");
 
     clsPeakRecord.def("getTable", &PeakRecord::getTable);
     clsPeakRecord.def("getId", &PeakRecord::getId);
