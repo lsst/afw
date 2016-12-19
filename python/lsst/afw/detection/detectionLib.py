@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
 import lsst.afw.table.io
-import lsst.afw.geom
 import lsst.afw.image
+from lsst.afw.geom import Span
 
 from ._psf import *
 from ._footprint import *
