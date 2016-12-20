@@ -43,6 +43,10 @@ PYBIND11_PLUGIN(_axes) {
     clsAxes.def(py::init<Axes const &>());
     clsAxes.def(py::init<BaseCore const &>());
 
+    /* Operators */
+    clsAxes.def("__eq__", [](Axes & self, Axes & other) { return self == other; }, py::is_operator());
+    clsAxes.def("__neq__", [](Axes & self, Axes & other) { return self != other; }, py::is_operator());
+
     /* Members */
     clsAxes.def("getA", &Axes::getA);
     clsAxes.def("setA", &Axes::setA);
