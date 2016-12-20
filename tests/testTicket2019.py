@@ -29,9 +29,7 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
         # This used to segfault
         catalog[0].setFootprint(heavy)
 
-        # However, we still have to up-cast
         fp = catalog[0].getFootprint()
-        hfp = afwDet.cast_HeavyFootprintF(fp)
         # change one pixel...
         self.assertEqual(mi.getImage().get(50, 50), 42)
         self.assertEqual(mi.getMask().get(50, 50), 0)
@@ -43,7 +41,7 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
         self.assertEqual(mi.getMask().get(51, 50), 2)
         # reinsert the heavy footprint; it should reset the pixel value.
         # insert(MaskedImage)
-        hfp.insert(mi)
+        fp.insert(mi)
         self.assertEqual(mi.getImage().get(50, 50), 42)
         self.assertEqual(mi.getMask().get(50, 50), 1)
         self.assertEqual(mi.getMask().get(51, 50), 0)
@@ -55,7 +53,7 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
         self.assertEqual(im.get(50, 50), 100)
         self.assertEqual(mi.getImage().get(50, 50), 100)
         # reinsert the heavy footprint; it should reset the pixel value.
-        hfp.insert(im)
+        fp.insert(im)
         self.assertEqual(im.get(50, 50), 42)
         self.assertEqual(mi.getImage().get(50, 50), 42)
         self.assertEqual(mi.getMask().get(50, 50), 1)

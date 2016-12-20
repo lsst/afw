@@ -2,7 +2,7 @@ import os.path
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog
 from .cameraGeomLib import FOCAL_PLANE, PUPIL, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    Detector, Orientation, CameraTransformMap
+    Detector, DetectorType, Orientation, CameraTransformMap
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 
@@ -39,7 +39,7 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil):
     return Detector(
         detectorConfig.name,
         detectorConfig.id,
-        detectorConfig.detectorType,
+        DetectorType(detectorConfig.detectorType),
         detectorConfig.serial,
         bbox,
         ampInfoCatalog,

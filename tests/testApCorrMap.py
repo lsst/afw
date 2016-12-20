@@ -70,9 +70,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
             value2 = b.get(name)
             self.assertIsNotNone(value2)
             self.assertEqual(value.getBBox(), value2.getBBox())
-            self.assertClose(lsst.afw.math.ChebyshevBoundedField.cast(value).getCoefficients(),
-                             lsst.afw.math.ChebyshevBoundedField.cast(value2).getCoefficients(),
-                             rtol=0.0)
+            self.assertClose(value.getCoefficients(), value2.getCoefficients(), rtol=0.0)
 
     def testAccessors(self):
         """Test the accessors and other custom Swig code we've added to make ApCorrMap behave like a Python
@@ -125,6 +123,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.compare(self.map, map2)
         os.remove(filename)
 
+    @unittest.skip("requires afw::table::ExposureCatalog and PersistableFacade<ExposureCatalog>")
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
         filename = os.path.join(os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")

@@ -55,8 +55,8 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         schema = lsst.afw.table.Schema()
-        self.k1 = schema.addField("a1", type=float, units="meter", doc="a1 (meter)")
-        self.k2 = schema.addField("a2", type=int, doc="a2 (unitless)")
+        self.k1 = schema.addField("a1", type=np.float64, units="meter", doc="a1 (meter)")
+        self.k2 = schema.addField("a2", type=np.int32, doc="a2 (unitless)")
         self.k3 = schema.addField("a3", type="ArrayF", size=3, units="count", doc="a3 (array, counts)")
         self.k4 = schema.addField("a4", type="Flag", doc="a4 (flag)")
         self.k5 = lsst.afw.table.CoordKey.addFields(schema, "a5", "a5 coordinate")

@@ -95,8 +95,7 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
         storageList = dafPers.StorageList([storage])
 
         # Let's do the retrieval!
-        persPtr = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
-        image2 = afwImage.ImageF.swigConvert(persPtr)
+        image2 = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
 
         # Check the resulting Image
         self.checkImages(self.image, image2)
@@ -112,8 +111,7 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
             # Retrieve it again
             storage = self.persistence.getRetrieveStorage("BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
-            pers2Ptr = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
-            image2 = afwImage.ImageF.swigConvert(pers2Ptr)
+            image2 = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
 
             # Check the resulting Image
             self.checkImages(self.image, image2)
@@ -133,8 +131,7 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
             # Retrieve it again
             storage = self.persistence.getRetrieveStorage("BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
-            pers2Ptr = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
-            image2 = afwImage.ImageF.swigConvert(pers2Ptr)
+            image2 = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
 
             # Check the resulting Image
             self.checkImages(self.image, image2)

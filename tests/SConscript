@@ -3,14 +3,23 @@ import os
 
 from lsst.sconsUtils import scripts, env, targets
 
+pybind11_test_modules = ['testTableArchivesLib']
+
+scripts.BasicSConscript.pybind11(pybind11_test_modules)
+
 afwdataDir = env.ProductDir("afwdata")
 
+with open('test.txt', 'r') as f:
+    tests = f.readlines()
+# Load the tests that have been wrapped (ignoring the "test/" preceeding the test name)
+pybind11_ported_tests = [t[6:].strip() for t in tests if not t.startswith('#')]
+
 if not afwdataDir:
-	testArgs = dict(statistics = "--run_test=!StatisticsTestImages", background = "--run_test=!BackgroundTestImages",)
-	scripts.BasicSConscript.tests(args=testArgs)
+        testArgs = dict(statistics = "--run_test=!StatisticsTestImages", background = "--run_test=!BackgroundTestImages",)
+        scripts.BasicSConscript.tests(pyList=pybind11_ported_tests, noBuildList=[name + '.cc' for name in pybind11_test_modules], args=testArgs)
 else:
-	# copy AFWDATA_DIR to the test's environment
-	env["ENV"]["AFWDATA_DIR"] = afwdataDir
-	scripts.BasicSConscript.tests()
+        # copy AFWDATA_DIR to the test's environment
+        env["ENV"]["AFWDATA_DIR"] = afwdataDir
+        scripts.BasicSConscript.tests(pyList=pybind11_ported_tests, noBuildList=[name + '.cc' for name in pybind11_test_modules])
 
 env.Clean(targets["tests"], "#testTable.fits")

@@ -70,6 +70,7 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
             self.assertEqual(box.getMax(), pmax)
             box = geom.Box2I(pmax, pmin, False)
             self.assertTrue(box.isEmpty() or pmax == pmin)
+            self.assertEqual(box, geom.Box2I(box))
             # min/dim constructor
             dim = geom.Extent2I(1) + pmax - pmin
             if any(dim.eq(0)):
@@ -182,7 +183,8 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
 
     def testRelations(self):
         box = geom.Box2I(geom.Point2I(-2, -3), geom.Point2I(2, 1), True)
-        self.assertNotEqual(box, (3, 4, 5))  # should not throw
+# TODO: decide if we want lists and boxes to compare equal
+#        self.assertNotEqual(box, (3, 4, 5))  # should not throw
         self.assertTrue(box.contains(geom.Point2I(0, 0)))
         self.assertTrue(box.contains(geom.Point2I(-2, -3)))
         self.assertTrue(box.contains(geom.Point2I(2, -3)))
@@ -274,6 +276,7 @@ class Box2DTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(box.getMax(), pmax)
             box = geom.Box2D(pmax, pmin, False)
             self.assertTrue(box.isEmpty())
+            self.assertEqual(box, geom.Box2D(box))
             # min/dim constructor
             dim = pmax - pmin
             if any(dim.eq(0)):

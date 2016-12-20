@@ -616,7 +616,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         # create three kernels with some non-overlapping pixels
         # (non-zero pixels in one kernel vs. zero pixels in other kernels);
         # note: the extreme example of this is delta function kernels, but this is less extreme
-        basisKernelList = afwMath.KernelList()
+        basisKernelList = []
         kImArr = numpy.zeros([5, 5], dtype=float)
         kImArr[1:4, 1:4] = 0.5
         kImArr[2, 2] = 1.0

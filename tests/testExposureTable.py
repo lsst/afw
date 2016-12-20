@@ -89,14 +89,12 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             lsst.afw.coord.Coord(134.5*degrees, 33.3*degrees),
             1.73,
             73.2*degrees,
-            lsst.afw.image.RotType_SKY,
+            lsst.afw.image.RotType.SKY,
             lsst.afw.coord.Observatory(11.1*degrees, 22.2*degrees, 0.333),
             lsst.afw.coord.Weather(1.1, 2.2, 34.5),
         )
 
     def comparePsfs(self, psf1, psf2):
-        psf1 = DummyPsf.swigConvert(psf1)
-        psf2 = DummyPsf.swigConvert(psf2)
         self.assertIsNotNone(psf1)
         self.assertIsNotNone(psf2)
         self.assertEqual(psf1.getValue(), psf2.getValue())
@@ -104,8 +102,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         schema = lsst.afw.table.ExposureTable.makeMinimalSchema()
-        self.ka = schema.addField("a", type=float, doc="doc for a")
-        self.kb = schema.addField("b", type=int, doc="doc for b")
+        self.ka = schema.addField("a", type=np.float64, doc="doc for a")
+        self.kb = schema.addField("b", type=np.int64, doc="doc for b")
         self.cat = lsst.afw.table.ExposureCatalog(schema)
         self.wcs = self.createWcs()
         self.psf = DummyPsf(2.0)

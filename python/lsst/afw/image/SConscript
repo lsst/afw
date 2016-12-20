@@ -1,11 +1,32 @@
-# -*- python -*-
-from lsst.sconsUtils import env, targets
+## -*- python -*-
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(['image',
+                                  'apCorrMap',
+                                  'calib',
+                                  'color',
+                                  'coaddInputs',
+                                  'filter',
+                                  'wcs',
+                                  'tanWcs',
+                                  'distortedTanWcs',
+                                  'exposure',
+                                  'exposureInfo',
+                                  'mask',
+                                  'maskedImage',
+                                  'imageUtils',
+                                  'imageSlice',
+                                  'utils',
+                                  'imagePca',
+                                  'visitInfo'])
 
-# We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS
-targets["python"].extend(
-    env.SwigLoadableModule(
-        "_imageLib", ["imageLib.i"],
-        SWIGFLAGS=(env["SWIGFLAGS"] + ["-DIMPORT_FUNCTION_I"]),
-        LIBS=env.getLibs("main python")
-    )
-)
+## -*- python -*-
+#from lsst.sconsUtils import env, targets
+#
+## We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS
+#targets["python"].extend(
+#    env.SwigLoadableModule(
+#        "_imageLib", ["imageLib.i"],
+#        SWIGFLAGS=(env["SWIGFLAGS"] + ["-DIMPORT_FUNCTION_I"]),
+#        LIBS=env.getLibs("main python")
+#    )
+#)

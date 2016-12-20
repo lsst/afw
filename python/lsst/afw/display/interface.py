@@ -407,23 +407,23 @@ class Display(object):
         else:
             self._xy0 = None
 
-        if re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
+        if isinstance(data, afwImage.Exposure): # it's an Exposure; display the MaskedImage with the WCS
             if wcs:
                 raise RuntimeError("You may not specify a wcs with an Exposure")
             data, wcs = data.getMaskedImage(), data.getWcs()
-        elif re.search("::DecoratedImage<", repr(data)): # it's a DecoratedImage; display it
+        elif isinstance(data, afwImage.DecoratedImage): # it's a DecoratedImage; display it
             data, wcs = data.getImage(), afwImage.makeWcs(data.getMetadata())
             self._xy0 = data.getXY0()   # DecoratedImage doesn't have getXY0()
 
-        if re.search("::Image<", repr(data)): # it's an Image; display it
+        if isinstance(data, afwImage.Image): # it's an Image; display it
             self._impl._mtv(data, None, wcs, title)
-        elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
+        elif isinstance(data, afwImage.Mask): # it's a Mask; display it, bitplane by bitplane
             #
             # Some displays can't display a Mask without an image; so display an Image too,
             # with pixel values set to the mask
             #
             self._impl._mtv(afwImage.ImageU(data.getArray()), data, wcs, title)
-        elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
+        elif isinstance(data, afwImage.MaskedImage): # it's a MaskedImage; display Image and overlay Mask
             self._impl._mtv(data.getImage(), data.getMask(True), wcs, title)
         else:
             raise RuntimeError("Unsupported type %s" % repr(data))
