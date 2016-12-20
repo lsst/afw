@@ -29,3 +29,20 @@ for floatCls in (Extent2D, Extent3D):
 ExtentI = Extent2I
 ExtentD = Extent2D
 Extent = {(int, 2): Extent2I, (float, 2): Extent2D, (int, 3): Extent3I, (float, 3): Extent3D}
+
+def __reduce__(self):
+    return (Extent2D, (self.getX(), self.getY()))
+Extent2D.__reduce__ = __reduce__
+
+def __reduce__(self):
+    return (Extent3D, (self.getX(), self.getY(), self.getZ()))
+Extent3D.__reduce__ = __reduce__
+
+def __reduce__(self):
+    return (Extent2I, (self.getX(), self.getY()))
+Extent2I.__reduce__ = __reduce__
+
+def __reduce__(self):
+    return (Extent3I, (self.getX(), self.getY(), self.getZ()))
+Extent3I.__reduce__ = __reduce__
+

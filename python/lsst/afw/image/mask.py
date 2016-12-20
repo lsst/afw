@@ -15,3 +15,8 @@ for cls in (MaskU, ):
     Mask.register(cls)
     supportSlicing(cls)
 
+    def __reduce__(self):
+        from lsst.afw.fits import reduceToFits
+        return reduceToFits(self)
+    cls.__reduce__ = __reduce__
+
