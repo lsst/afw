@@ -17,8 +17,7 @@ scripts.BasicSConscript.pybind11(['image',
                                   'imageSlice',
                                   'utils',
                                   'imagePca',
-                                  'visitInfo',
-                                  'utils'])
+                                  'visitInfo'])
 
 ## -*- python -*-
 #from lsst.sconsUtils import env, targets
