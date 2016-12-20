@@ -1,2 +1,2 @@
-from .fitsLib import FitsError, FitsTypeError, MemFileManager
+from .fitsLib import *
 from .pickleFits import reduceToFits, unreduceFromFits
