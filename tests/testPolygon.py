@@ -110,7 +110,6 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertEqual(abs(p2.getY()), size)
             self.assertNotEqual(p1, p2)
 
-    @unittest.skip("Pickling does not fully work yet")
     def testPickle(self):
         for num in range(3, 30):
             poly = self.polygon(num)

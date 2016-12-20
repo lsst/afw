@@ -65,12 +65,13 @@ def clone(self):
     return self.__class__(self.first, self.second, self.distance)
 
 
-def __getstate__(self):
-    return self.first, self.second, self.distance
-
-
-def __setstate__(self, state):
-    self.__init__(*state)
+# Pickling support disabled for this type (see testSourceMatch comment for reasoning)
+#def __getstate__(self):
+#    return self.first, self.second, self.distance
+#
+#
+#def __setstate__(self, state):
+#    self.__init__(*state)
 
 
 for matchCls in (SimpleMatch, ReferenceMatch, SourceMatch):
@@ -80,8 +81,8 @@ for matchCls in (SimpleMatch, ReferenceMatch, SourceMatch):
     matchCls.__setitem__ = __setitem__
     matchCls.__len__ = __len__
     matchCls.clone = clone
-    matchCls.__getstate__ = __getstate__
-    matchCls.__setstate__ = __setstate__
+#    matchCls.__getstate__ = __getstate__
+#    matchCls.__setstate__ = __setstate__
 
 
 def packMatches(matches):
