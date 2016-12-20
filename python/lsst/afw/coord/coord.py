@@ -51,21 +51,23 @@ TopocentricCoord.__len__ = __len__
 
 del __len__
 
-# Add __reduce__ for Coord subclasses that take 3 arguments
-def __reduce3__(self):
-    return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
+def _reduceCoord(self):
+    return (Coord, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
+Coord.__reduce__ = _reduceCoord
 
-Coord.__reduce__ = __reduce3__
-Fk5Coord.__reduce__ = __reduce3__
-EclipticCoord.__reduce__ = __reduce3__
+def _reduceFk5Coord(self):
+    return (Fk5Coord, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
+Fk5Coord.__reduce__ = _reduceFk5Coord
 
-del __reduce3__
+def _reduceEclipticCoord(self):
+    return (EclipticCoord, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
+EclipticCoord.__reduce__ = _reduceEclipticCoord
 
-# Add __reduce__ for Coord subclasses that take 2 arguments
-def __reduce2__(self):
-    return (TYPE, (self.getLongitude(), self.getLatitude()))
+def _reduceGalacticCoord(self):
+    return (GalacticCoord, (self.getLongitude(), self.getLatitude()))
+GalacticCoord.__reduce__ = _reduceGalacticCoord
 
-IcrsCoord.__reduce__ = __reduce2__
-GalacticCoord.__reduce__ = __reduce2__
+def _reduceIcrsCoord(self):
+    return (IcrsCoord, (self.getLongitude(), self.getLatitude()))
+IcrsCoord.__reduce__ = _reduceIcrsCoord
 
-del __reduce2__

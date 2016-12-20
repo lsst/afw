@@ -195,9 +195,9 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 testval = backobj.getPixel(xpix, ypix)
                 self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
 
-#        # Test pickle
-#        new = pickle.loads(pickle.dumps(backobj))
-#        self.assertBackgroundEqual(backobj, new)
+        # Test pickle
+        new = pickle.loads(pickle.dumps(backobj))
+        self.assertBackgroundEqual(backobj, new)
 
         # Check creation of sub-image
         box = afwGeom.Box2I(afwGeom.Point2I(123, 45), afwGeom.Extent2I(45, 123))
@@ -672,13 +672,13 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         assertBackgroundList(backgroundList)
 
-#        # Check pickling
-#        new = pickle.loads(pickle.dumps(backgroundList))
-#        assertBackgroundList(new)
-#        self.assertEqual(len(new), len(backgroundList))
-#        for i, j in zip(new, backgroundList):
-#            self.assertBackgroundEqual(i[0], j[0])
-#            self.assertEqual(i[1:], j[1:])
+        # Check pickling
+        new = pickle.loads(pickle.dumps(backgroundList))
+        assertBackgroundList(new)
+        self.assertEqual(len(new), len(backgroundList))
+        for i, j in zip(new, backgroundList):
+            self.assertBackgroundEqual(i[0], j[0])
+            self.assertEqual(i[1:], j[1:])
 
     def assertBackgroundEqual(self, lhs, rhs):
         lhsStats, rhsStats = lhs.getStatsImage(), rhs.getStatsImage()
