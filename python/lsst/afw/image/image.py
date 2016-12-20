@@ -16,6 +16,11 @@ for cls in (ImageI, ImageF, ImageD, ImageU, ImageL):
     Image.register(cls)
     supportSlicing(cls)
 
+    def __reduce__(self):
+        from lsst.afw.fits import reduceToFits
+        return reduceToFits(self)
+    cls.__reduce__ = __reduce__
+
 class DecoratedImage(with_metaclass(ABCMeta, object)):
     pass
 
