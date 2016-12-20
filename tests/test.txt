@@ -42,7 +42,7 @@ tests/testImageIo1.py
 tests/testImageIo2.py
 tests/testImagePca.py
 tests/testImagePersistence1.py
-#tests/testImagePickle.py
+tests/testImagePickle.py
 tests/testImageTestUtils.py
 tests/testInterpolate.py
 tests/testKernel.py
@@ -60,7 +60,7 @@ tests/testMethods.py
 tests/testMinimize.py
 tests/testOffsetImage.py
 tests/testOrientation.py
-#tests/testPickles.py
+tests/testPickles.py
 tests/testPolygon.py
 tests/testRandom1.py
 tests/testRaWrap.py
@@ -70,7 +70,7 @@ tests/testScaledPlus.py
 tests/testSchema.py
 tests/testSeparableXYTransform.py
 tests/testSimpleTable.py
-#tests/testSourceMatch.py
+tests/testSourceMatch.py
 tests/testSourceTable.py
 tests/testSpatialCell.py
 tests/testSpline.py
@@ -87,7 +87,7 @@ tests/testTableUtils.py
 tests/testTicket2019.py
 tests/testTicket2026.py
 tests/testTicket2162.py
-#tests/testTicket2233.py
+tests/testTicket2233.py
 tests/testTicket2352.py
 tests/testTicket2707.py
 tests/testTicket2905.py
