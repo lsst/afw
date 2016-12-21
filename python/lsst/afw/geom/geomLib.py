@@ -17,3 +17,4 @@ from ._affineTransform import *
 from .affineTransform import *
 from ._linearTransform import *
 from .linearTransform import *
+from ._spanSet import *
