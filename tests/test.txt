@@ -19,7 +19,7 @@ tests/testCoordptr.py
 tests/testDetector.py
 tests/testDisplay.py
 tests/testDistortedTanWcs.py
-#tests/testDs9.py
+tests/testDs9.py
 tests/testEllipse.py
 #tests/testExecutables.py
 tests/testExposure.py
