@@ -36,6 +36,7 @@ using namespace pybind11::literals;
 namespace lsst {
 namespace afw {
 namespace table {
+namespace pybind11 {
 
 /**
 Declare member and static functions for a given instantiation of lsst::afw::table::CatalogT<RecordT>
@@ -66,23 +67,27 @@ template <typename RecordT>
 void declareSortedCatalog(
     py::class_<SortedCatalogT<RecordT>, std::shared_ptr<SortedCatalogT<RecordT>>, CatalogT<RecordT>> & cls
 ) {
-    typedef SortedCatalogT<RecordT> Catalog;
-    typedef typename RecordT::Table Table;
+    using Catalog = SortedCatalogT<RecordT>;
+    using Table = typename RecordT::Table;
 
     /* Constructors */
     cls.def(py::init<Schema const &>());
     cls.def(py::init<PTR(Table) const &>(), "table"_a=PTR(Table)());
     cls.def(py::init<Catalog const &>());
 
-    /* Methods */
-
-    /* Overridden Methods */
+    /* Overridden and Variant Methods */
+    cls.def_static("readFits",
+                   (Catalog (*)(std::string const &, int, int)) &Catalog::readFits,
+                   "filename"_a, "hdu"_a=0, "flags"_a=0);
+    cls.def_static("readFits",
+                   (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
+                   "manager"_a, "hdu"_a=0, "flags"_a=0);
     cls.def("subset",
             (Catalog (Catalog::*)(ndarray::Array<bool const,1> const &) const) &Catalog::subset);
     cls.def("subset",
             (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &Catalog::subset);
 };
 
-}}} // lsst::afw::table
+}}}} // lsst::afw::table::pybind11
 
 #endif // !AFW_TABLE_PYBIND11_CATALOG_H_INCLUDED

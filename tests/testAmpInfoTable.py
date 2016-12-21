@@ -146,6 +146,9 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEquals(rec1.getName(), rec2.getName())
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
 
+        self.assertEqual(self.catalog.table.schema, self.schema)
+        self.assertEqual(self.catalog.schema, self.schema)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

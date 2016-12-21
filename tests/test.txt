@@ -71,7 +71,7 @@ tests/testSchema.py
 tests/testSeparableXYTransform.py
 tests/testSimpleTable.py
 #tests/testSourceMatch.py
-#tests/testSourceTable.py
+tests/testSourceTable.py
 tests/testSpatialCell.py
 tests/testSpline.py
 tests/testStacker.py
