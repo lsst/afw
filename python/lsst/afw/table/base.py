@@ -17,7 +17,7 @@ def addBaseRecordMethods(cls):
     """
     addRecordMethods(cls)
 
-    # The leading underscore avoids shadowing the standard Python `set` class.
+    # The trailing underscore avoids shadowing the standard Python `set` class.
     def set_(self, key, value):
         """Given a string or `lsst.afw.table.Key`, set the value of the field.
         """
