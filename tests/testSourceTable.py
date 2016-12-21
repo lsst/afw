@@ -231,11 +231,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def testColumnView(self):
         cols1 = self.catalog.getColumnView()
-        self.assertEqual(cols1.schema, self.schema)
-        self.assertEqual(cols1.table, self.table)
         cols2 = self.catalog.columns
-        self.assertEqual(cols2.schema, self.schema)
-        self.assertEqual(cols2.table, self.table)
+        self.assertIs(cols1, cols2)
         self.assertIsInstance(cols1, lsst.afw.table.SourceColumnView)
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
@@ -317,6 +314,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
             r2 = cat2[-2]
             h2 = r2.getFootprint()
+            self.assertTrue(h2.isHeavy())
             mim3 = lsst.afw.image.MaskedImageF(W, H)
             h2.insert(mim3)
 
