@@ -12,6 +12,7 @@ scripts.BasicSConscript.pybind11([
     'spherePoint',
     'separableXYTransform',
     'span',
+    'spanSet',
     'linearTransform',
     'xYTransform',
 ])
