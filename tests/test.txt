@@ -91,7 +91,7 @@ tests/testTicket2233.py
 tests/testTicket2352.py
 tests/testTicket2707.py
 tests/testTicket2905.py
-#tests/testTicketDM-433.py
+tests/testTicketDM-433.py
 tests/testValidPolygon.py
 tests/testVisitInfo.py
 tests/testWarper.py
