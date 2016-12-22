@@ -302,20 +302,31 @@ class SourceMatchTestCase(unittest.TestCase):
 
         Also checks that the slots survive pickling, if checkSlots is True.
         """
-        orig = matches[:]
-        unpickled = pickle.loads(pickle.dumps(orig))
-        self.assertEqual(len(orig), len(unpickled))
-        for m1, m2 in zip(orig, unpickled):
-            self.assertEqual(m1.first.getId(), m2.first.getId())
-            self.assertEqual(m1.first.getRa(), m2.first.getRa())
-            self.assertEqual(m1.first.getDec(), m2.first.getDec())
-            self.assertEqual(m1.second.getId(), m2.second.getId())
-            self.assertEqual(m1.second.getRa(), m2.second.getRa())
-            self.assertEqual(m1.second.getDec(), m2.second.getDec())
-            self.assertEqual(m1.distance, m2.distance)
-            if checkSlots:
-                self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
-                self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
+        # Disable pickling test with pybind11
+        #
+        # With Swig MatchList is a list-like type which has a __getstate__, __setstate
+        # pair that pickles lists of match objects by creating a catalog and pickling
+        # that.
+        # Because in pybind11 a standard Python list is returned we cannot follow the
+        # same approach, and pickling single objects doesn't make much sense.
+        # Therefore per suggestion from @jbosch we will not implement this now and
+        # revisit it if needed. If not pickling support for this type should just
+        # be removed.
+        pass
+#        orig = matches[:]
+#        unpickled = pickle.loads(pickle.dumps(orig))
+#        self.assertEqual(len(orig), len(unpickled))
+#        for m1, m2 in zip(orig, unpickled):
+#            self.assertEqual(m1.first.getId(), m2.first.getId())
+#            self.assertEqual(m1.first.getRa(), m2.first.getRa())
+#            self.assertEqual(m1.first.getDec(), m2.first.getDec())
+#            self.assertEqual(m1.second.getId(), m2.second.getId())
+#            self.assertEqual(m1.second.getRa(), m2.second.getRa())
+#            self.assertEqual(m1.second.getDec(), m2.second.getDec())
+#            self.assertEqual(m1.distance, m2.distance)
+#            if checkSlots:
+#                self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
+#                self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
 
     def checkMatchToFromCatalog(self, matches, catalog):
         """Check the conversion of matches to and from a catalog
