@@ -162,6 +162,11 @@ def addCatalogMethods(cls):
                     self._append(record.cast(self.Record))
     cls.extend = extend
 
+    def __reduce__(self):
+        import lsst.afw.fits
+        return lsst.afw.fits.reduceToFits(self)
+    cls.__reduce__ = __reduce__
+
     def find(self, value, key):
         """Return the record for which record.get(key) == value
 
