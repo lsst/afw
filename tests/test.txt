@@ -21,7 +21,7 @@ tests/testDisplay.py
 tests/testDistortedTanWcs.py
 tests/testDs9.py
 tests/testEllipse.py
-#tests/testExecutables.py
+tests/testExecutables.py
 tests/testExposure.py
 tests/testExposureTable.py
 tests/testFluxFromABMag.py
