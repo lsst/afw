@@ -123,7 +123,6 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.compare(self.map, map2)
         os.remove(filename)
 
-    @unittest.skip("requires afw::table::ExposureCatalog and PersistableFacade<ExposureCatalog>")
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
         filename = os.path.join(os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
