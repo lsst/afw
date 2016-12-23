@@ -182,7 +182,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.defineShape("c")
         self.checkCanonical()
 
-    @unittest.skip("TODO support pickling with pybind11")
     def testPickle(self):
         p = pickle.dumps(self.catalog)
         new = pickle.loads(p)
