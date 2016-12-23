@@ -285,7 +285,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
         self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in cell1])
 
-@unittest.skip("temporary skip until afw Image is wrapped")
+@unittest.skip("TO DO enable once TestImageCandidate is wrapped")
 class TestImageCandidateCase(unittest.TestCase):
     """A test case for TestImageCandidate"""
 
@@ -300,7 +300,7 @@ class TestImageCandidateCase(unittest.TestCase):
         """Test that we can use SpatialCellMaskedImageCandidate"""
 
         flux = 10
-        self.cellSet.insertCandidate(afwMath.TestImageCandidate(0, 0, flux))
+        self.cellSet.insertCandidate(testLib.TestImageCandidate(0, 0, flux))
 
         cand = self.cellSet.getCellList()[0][0]
         #
@@ -309,7 +309,7 @@ class TestImageCandidateCase(unittest.TestCase):
         # pointer to SpatialCellMaskedImageCandidate<Image<float> > and all will be well;
         #
 
-        cand = afwmath.TestImageCandidate.cast(cand)
+        cand = testLib.TestImageCandidate.cast(cand)
 
         width, height = 15, 21
         cand.setWidth(width)
