@@ -65,14 +65,6 @@ void declareBaseColumnViewFlagOverloads(py::class_<BaseColumnView> clsBaseColumn
     });
 };
 
-template <typename RecordT>
-void declareColumnViewT(py::module & mod) {
-    py::class_<ColumnViewT<RecordT>, BaseColumnView> cls(mod, "ColumnViewT");
-
-    cls.def("getTable", &ColumnViewT<RecordT>::getTable);
-    cls.def_property_readonly("table", &ColumnViewT<RecordT>::getTable);
-};
-
 } // namespace lsst::afw::table::<anonymous>
 
 
@@ -142,8 +134,6 @@ PYBIND11_PLUGIN(_baseColumnView) {
     declareBaseColumnViewArrayOverloads<int>(clsBaseColumnView);
     declareBaseColumnViewArrayOverloads<float>(clsBaseColumnView);
     declareBaseColumnViewArrayOverloads<double>(clsBaseColumnView);
-    
-    declareColumnViewT<SourceRecord>(mod);
 
     return mod.ptr();
 }
