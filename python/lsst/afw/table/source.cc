@@ -36,6 +36,7 @@
 #include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/columnView.h"
 #include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace py = pybind11;
@@ -49,6 +50,9 @@ namespace {
 
 using PySourceRecord = py::class_<SourceRecord, std::shared_ptr<SourceRecord>, SimpleRecord>;
 using PySourceTable = py::class_<SourceTable, std::shared_ptr<SourceTable>, SimpleTable>;
+using PyBaseSourceColumnView = py::class_<ColumnViewT<SourceRecord>,
+                                          std::shared_ptr<ColumnViewT<SourceRecord>>,
+                                          BaseColumnView>;
 using PySourceColumnView = py::class_<SourceColumnViewT<SourceRecord>,
                                       std::shared_ptr<SourceColumnViewT<SourceRecord>>,
                                       ColumnViewT<SourceRecord>>;
@@ -229,6 +233,7 @@ PYBIND11_PLUGIN(_source) {
     /* Module level */
     PySourceRecord clsSourceRecord(mod, "SourceRecord");
     PySourceTable clsSourceTable(mod, "SourceTable");
+    PyBaseSourceColumnView clsBaseSourceColumnView(mod, "_BaseSourceColumnView");
     PySourceColumnView clsSourceColumnView(mod, "SourceColumnView");
     PyBaseSourceCatalog clsBaseSourceCatalog(mod, "_BaseSourceCatalog");
     PySourceCatalog clsSourceCatalog(mod, "SourceCatalog", py::dynamic_attr());
@@ -236,12 +241,20 @@ PYBIND11_PLUGIN(_source) {
     /* Members */
     declareSourceRecord(clsSourceRecord);
     declareSourceTable(clsSourceTable);
+    table::pybind11::declareColumnView(clsBaseSourceColumnView);
     declareSourceColumnView(clsSourceColumnView);
-    pybind11::declareCatalog<SourceRecord>(clsBaseSourceCatalog);
-    pybind11::declareSortedCatalog<SourceRecord>(clsSourceCatalog);
+    table::pybind11::declareCatalog(clsBaseSourceCatalog);
+    table::pybind11::declareSortedCatalog(clsSourceCatalog);
 
+    clsSourceRecord.attr("Table") = clsSourceTable;
+    clsSourceRecord.attr("ColumnView") = clsSourceColumnView;
+    clsSourceRecord.attr("Catalog") = clsSourceCatalog;
+    clsSourceTable.attr("Record") = clsSourceRecord;
+    clsSourceTable.attr("ColumnView") = clsSourceColumnView;
+    clsSourceTable.attr("Catalog") = clsSourceCatalog;
     clsSourceCatalog.attr("Record") = clsSourceRecord;
     clsSourceCatalog.attr("Table") = clsSourceTable;
+    clsSourceCatalog.attr("ColumnView") = clsSourceColumnView;
 
     return mod.ptr();
 }

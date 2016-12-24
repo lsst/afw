@@ -29,6 +29,7 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/columnView.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -41,6 +42,9 @@ namespace {
 
 using PyPeakRecord = py::class_<PeakRecord, std::shared_ptr<PeakRecord>, table::BaseRecord>;
 using PyPeakTable = py::class_<PeakTable, std::shared_ptr<PeakTable>, table::BaseTable>;
+using PyPeakColumnView = py::class_<table::ColumnViewT<PeakRecord>,
+                                    std::shared_ptr<table::ColumnViewT<PeakRecord>>,
+                                    table::BaseColumnView>;
 using PyPeakCatalog = py::class_<table::CatalogT<PeakRecord>,
                                  std::shared_ptr<table::CatalogT<PeakRecord>>>;
 
@@ -97,15 +101,24 @@ PYBIND11_PLUGIN(_peak) {
     /* Module level */
     PyPeakRecord clsPeakRecord(mod, "PeakRecord");
     PyPeakTable clsPeakTable(mod, "PeakTable");
+    PyPeakColumnView clsPeakColumnView(mod, "PeakColumnView");
     PyPeakCatalog clsPeakCatalog(mod, "PeakCatalog", py::dynamic_attr());
 
     /* Members */
     declarePeakRecord(clsPeakRecord);
     declarePeakTable(clsPeakTable);
+    table::pybind11::declareColumnView(clsPeakColumnView);
     table::pybind11::declareCatalog(clsPeakCatalog);
 
+    clsPeakRecord.attr("Table") = clsPeakTable;
+    clsPeakRecord.attr("ColumnView") = clsPeakColumnView;
+    clsPeakRecord.attr("Catalog") = clsPeakCatalog;
+    clsPeakTable.attr("Record") = clsPeakRecord;
+    clsPeakTable.attr("ColumnView") = clsPeakColumnView;
+    clsPeakTable.attr("Catalog") = clsPeakCatalog;
     clsPeakCatalog.attr("Record") = clsPeakRecord;
     clsPeakCatalog.attr("Table") = clsPeakTable;
+    clsPeakCatalog.attr("ColumnView") = clsPeakColumnView;
 
     return mod.ptr();
 }

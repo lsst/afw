@@ -38,6 +38,7 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/columnView.h"
 
 namespace py = pybind11;
 
@@ -57,6 +58,9 @@ and makes wrapping Base catalogs more similar to all other types of catalog.
 
 using PyBaseRecord = py::class_<BaseRecord, std::shared_ptr<BaseRecord>>;
 using PyBaseTable = py::class_<BaseTable, std::shared_ptr<BaseTable>>;
+using PyBaseColumnView = py::class_<ColumnViewT<BaseRecord>,
+                                    std::shared_ptr<ColumnViewT<BaseRecord>>,
+                                    BaseColumnView>;
 using BaseCatalog = CatalogT<BaseRecord>;
 using PyBaseCatalog = py::class_<BaseCatalog, std::shared_ptr<BaseCatalog>>;
 
@@ -187,14 +191,23 @@ PYBIND11_PLUGIN(_base) {
 
     PyBaseRecord clsBaseRecord(mod, "BaseRecord");
     PyBaseTable clsBaseTable(mod, "BaseTable");
+    PyBaseColumnView clsBaseColumnView(mod, "BaseColumnView");
     PyBaseCatalog clsBaseCatalog(mod, "BaseCatalog", py::dynamic_attr());
 
     declareBaseTable(clsBaseTable);
     declareBaseRecord(clsBaseRecord);
-    lsst::afw::table::pybind11::declareCatalog<BaseRecord>(clsBaseCatalog);
+    table::pybind11::declareColumnView(clsBaseColumnView);
+    table::pybind11::declareCatalog(clsBaseCatalog);
 
+    clsBaseRecord.attr("Table") = clsBaseTable;
+    clsBaseRecord.attr("ColumnView") = clsBaseColumnView;
+    clsBaseRecord.attr("Catalog") = clsBaseCatalog;
+    clsBaseTable.attr("Record") = clsBaseRecord;
+    clsBaseTable.attr("ColumnView") = clsBaseColumnView;
+    clsBaseTable.attr("Catalog") = clsBaseCatalog;
     clsBaseCatalog.attr("Record") = clsBaseRecord;
     clsBaseCatalog.attr("Table") = clsBaseTable;
+    clsBaseCatalog.attr("ColumnView") = clsBaseColumnView;
 
     return mod.ptr();
 }

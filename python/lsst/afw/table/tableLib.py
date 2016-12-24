@@ -22,10 +22,10 @@ from .aliasMap import *
 from ._schema import *
 from .schema import *
 from ._schemaMapper import *
-from ._base import *
-from .base import *
 from ._baseColumnView import *
 from .baseColumnView import *
+from ._base import *
+from .base import *
 from ._slots import *
 from ._simple import *
 from ._source import *
@@ -41,3 +41,4 @@ from ._exposure import *
 from .exposure import *
 from ._idFactory import *
 from .catalogMatches import *
+from .multiMatch import *

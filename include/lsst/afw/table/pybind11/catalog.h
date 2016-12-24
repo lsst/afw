@@ -149,12 +149,12 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
         self.push_back(rec);
     });
     cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
-        self.erase(self.begin() + utils::cppIndex(self, i));
+        self.erase(self.begin() + utils::cppIndex(self.size(), i));
     });
  
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
-        return self.get(utils::cppIndex(self, i));
+        return self.get(utils::cppIndex(self.size(), i));
     });
     cls.def("isContiguous", &Catalog::isContiguous);
     cls.def("writeFits",

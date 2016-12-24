@@ -76,7 +76,7 @@ void declareFunctions(py::module & mod, const std::string & suffix){
     clsNullFunction2.def(py::init<>());
 
     /* NullFunction2 Members */
-    clsNullFunction2.def("clone", &NullFunction1<ReturnT>::clone);
+    clsNullFunction2.def("clone", &NullFunction2<ReturnT>::clone);
 };
 
 PYBIND11_PLUGIN(_function) {
