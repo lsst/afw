@@ -74,7 +74,8 @@ PYBIND11_PLUGIN(_schemaMapper) {
     /* Members */
     clsSchemaMapper.def("getInputSchema", &SchemaMapper::getInputSchema);
     clsSchemaMapper.def("getOutputSchema", &SchemaMapper::getOutputSchema);
-    clsSchemaMapper.def("editOutputSchema", &SchemaMapper::editOutputSchema);
+    clsSchemaMapper.def("editOutputSchema", &SchemaMapper::editOutputSchema,
+                        py::return_value_policy::reference_internal);
     clsSchemaMapper.def("addMinimalSchema", &SchemaMapper::addMinimalSchema,
                         "minimal"_a, "doMap"_a=true);
     clsSchemaMapper.def_static("removeMinimalSchema", &SchemaMapper::removeMinimalSchema);

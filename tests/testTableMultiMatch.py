@@ -38,6 +38,8 @@ import os
 import re
 import unittest
 
+import numpy as np
+
 import lsst.afw.table as afwTable
 import lsst.afw.geom as afwGeom
 import lsst.pex.exceptions as pexExcept
@@ -56,8 +58,8 @@ class TestGroupView(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.schema = afwTable.SourceTable.makeMinimalSchema()
-        self.schema.addField("flux_flux", type=float)
-        self.schema.addField("flux_fluxSigma", type=float)
+        self.schema.addField("flux_flux", type=np.float64)
+        self.schema.addField("flux_fluxSigma", type=np.float64)
         self.schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(self.schema)
         self.table.definePsfFlux("flux")
@@ -112,7 +114,7 @@ class TestGroupView(lsst.utils.tests.TestCase):
                 s.set(afwTable.SourceTable.getCoordKey().getDec(), dec * afwGeom.degrees)
                 s.set(self.table.getPsfFluxKey(), flux[0])
 
-        m = afwTable.MultiMatch(self.schema, dict(visit=int), RecordClass=afwTable.SimpleRecord)
+        m = afwTable.MultiMatch(self.schema, dict(visit=np.int64), RecordClass=afwTable.SimpleRecord)
         m.add(sdss, {'visit': 1})
         m.add(template, {'visit': 2})
 

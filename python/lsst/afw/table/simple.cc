@@ -30,9 +30,11 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/columnView.h"
 #include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace py = pybind11;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
@@ -41,6 +43,9 @@ namespace {
 
 using PySimpleTable = py::class_<SimpleTable, std::shared_ptr<SimpleTable>, BaseTable>;
 using PySimpleRecord = py::class_<SimpleRecord, std::shared_ptr<SimpleRecord>, BaseRecord>;
+using PySimpleColumnView = py::class_<ColumnViewT<SimpleRecord>,
+                                      std::shared_ptr<ColumnViewT<SimpleRecord>>,
+                                      BaseColumnView>;
 using PyBaseSimpleCatalog = py::class_<CatalogT<SimpleRecord>, std::shared_ptr<CatalogT<SimpleRecord>>>;
 using PySimpleCatalog = py::class_<SimpleCatalog, std::shared_ptr<SimpleCatalog>, CatalogT<SimpleRecord>>;
 
@@ -92,17 +97,26 @@ PYBIND11_PLUGIN(_simple) {
     /* Module level */
     PySimpleTable clsSimpleTable(mod, "SimpleTable");
     PySimpleRecord clsSimpleRecord(mod, "SimpleRecord");
+    PySimpleColumnView clsSimpleColumnView(mod, "SimpleColumnView");
     PyBaseSimpleCatalog clsBaseSimpleCatalog(mod, "_BaseSimpleCatalog");
     PySimpleCatalog clsSimpleCatalog(mod, "SimpleCatalog", py::dynamic_attr());
 
     /* Members */
     declareSimpleRecord(clsSimpleRecord);
     declareSimpleTable(clsSimpleTable);
-    pybind11::declareCatalog<SimpleRecord>(clsBaseSimpleCatalog);
-    pybind11::declareSortedCatalog<SimpleRecord>(clsSimpleCatalog);
+    table::pybind11::declareColumnView(clsSimpleColumnView);
+    table::pybind11::declareCatalog(clsBaseSimpleCatalog);
+    table::pybind11::declareSortedCatalog(clsSimpleCatalog);
 
+    clsSimpleRecord.attr("Table") = clsSimpleTable;
+    clsSimpleRecord.attr("ColumnView") = clsSimpleColumnView;
+    clsSimpleRecord.attr("Catalog") = clsSimpleCatalog;
+    clsSimpleTable.attr("Record") = clsSimpleRecord;
+    clsSimpleTable.attr("ColumnView") = clsSimpleColumnView;
+    clsSimpleTable.attr("Catalog") = clsSimpleCatalog;
     clsSimpleCatalog.attr("Record") = clsSimpleRecord;
     clsSimpleCatalog.attr("Table") = clsSimpleTable;
+    clsSimpleCatalog.attr("ColumnView") = clsSimpleColumnView;
 
     return mod.ptr();
 }
