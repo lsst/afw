@@ -43,6 +43,7 @@ using namespace pybind11::literals;
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/columnView.h"
 #include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace lsst {
@@ -53,6 +54,9 @@ namespace {
 
 using PyExposureRecord = py::class_<ExposureRecord, std::shared_ptr<ExposureRecord>, BaseRecord>;
 using PyExposureTable = py::class_<ExposureTable, std::shared_ptr<ExposureTable>, BaseTable>;
+using PyExposureColumnView = py::class_<ColumnViewT<ExposureRecord>,
+                                      std::shared_ptr<ColumnViewT<ExposureRecord>>,
+                                      BaseColumnView>;
 using PyBaseExposureCatalog = py::class_<CatalogT<ExposureRecord>,
                                          std::shared_ptr<CatalogT<ExposureRecord>>>;
 using PySortedBaseExposureCatalog =  py::class_<SortedCatalogT<ExposureRecord>,
@@ -181,6 +185,7 @@ PYBIND11_PLUGIN(_exposure) {
     /* Module level */
     PyExposureRecord clsExposureRecord(mod, "ExposureRecord");
     PyExposureTable clsExposureTable(mod, "ExposureTable");
+    PyExposureColumnView clsExposureColumnView(mod, "ExposureColumnView");
     PyBaseExposureCatalog clsBaseExposureCatalog(mod, "_BaseExposureCatalog");
     PySortedBaseExposureCatalog clsSortedBaseExposureCatalog(mod, "_SortedBaseExposureCatalog");
     PyExposureCatalog clsExposureCatalog(mod, "ExposureCatalog", py::dynamic_attr());
@@ -188,12 +193,20 @@ PYBIND11_PLUGIN(_exposure) {
     /* Members */
     declareExposureRecord(clsExposureRecord);
     declareExposureTable(clsExposureTable);
-    lsst::afw::table::pybind11::declareCatalog<ExposureRecord>(clsBaseExposureCatalog);
-    lsst::afw::table::pybind11::declareSortedCatalog<ExposureRecord>(clsSortedBaseExposureCatalog);
+    table::pybind11::declareColumnView(clsExposureColumnView);
+    table::pybind11::declareCatalog(clsBaseExposureCatalog);
+    table::pybind11::declareSortedCatalog(clsSortedBaseExposureCatalog);
     declareExposureCatalog(clsExposureCatalog);
 
+    clsExposureRecord.attr("Table") = clsExposureTable;
+    clsExposureRecord.attr("ColumnView") = clsExposureColumnView;
+    clsExposureRecord.attr("Catalog") = clsExposureCatalog;
+    clsExposureTable.attr("Record") = clsExposureRecord;
+    clsExposureTable.attr("ColumnView") = clsExposureColumnView;
+    clsExposureTable.attr("Catalog") = clsExposureCatalog;
     clsExposureCatalog.attr("Record") = clsExposureRecord;
     clsExposureCatalog.attr("Table") = clsExposureTable;
+    clsExposureCatalog.attr("ColumnView") = clsExposureColumnView;
 
     return mod.ptr();
 }
