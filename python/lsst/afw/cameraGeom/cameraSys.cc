@@ -52,8 +52,8 @@ namespace {
         cls.def("__ne__",
                 [](CppClass const & self, CppClass const & other) { return self != other; },
                 py::is_operator());
-        cls.def("__str__", [](CppClass &e){std::ostringstream os; os << e; return os.str();});
-        cls.def("__repr__", [](CppClass &e){std::ostringstream os; os << e; return os.str();});
+        cls.def("__str__", [](CppClass const & self) { std::ostringstream os; os << self; return os.str(); });
+        cls.def("__repr__", [](CppClass const & self) { std::ostringstream os; os << self; return os.str(); });
 
         /* Methods */
         cls.def("getSysName", &CppClass::getSysName);

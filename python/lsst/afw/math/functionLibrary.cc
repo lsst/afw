@@ -157,6 +157,17 @@ void declareGaussianFunctions(py::module &mod, const std::string & suffix) {
 
 template <typename ReturnT>
 void declareIntegerDeltaFunctions(py::module &mod, const std::string & suffix) {
+    /* IntegerDeltaFunction1 */
+    py::class_<IntegerDeltaFunction1<ReturnT>,
+               std::shared_ptr<IntegerDeltaFunction1<ReturnT>>,
+               Function1<ReturnT>>
+                   clsIntegerDeltaFunction1(mod, ("IntegerDeltaFunction1" + suffix).c_str());
+    /* IntegerDeltaFunction1 Constructors */
+    clsIntegerDeltaFunction1.def(py::init<double>());
+    /* IntegerDeltaFunction1 Members */
+    clsIntegerDeltaFunction1.def("__call__", &IntegerDeltaFunction1<ReturnT>::operator());
+    clsIntegerDeltaFunction1.def("clone", &IntegerDeltaFunction1<ReturnT>::clone);
+
     /* IntegerDeltaFunction2 */
     py::class_<IntegerDeltaFunction2<ReturnT>,
                std::shared_ptr<IntegerDeltaFunction2<ReturnT>>,

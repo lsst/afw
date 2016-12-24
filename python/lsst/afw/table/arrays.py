@@ -2,8 +2,10 @@ from __future__ import absolute_import, division, print_function
 
 from ._arrays import ArrayFKey, ArrayDKey
 
+__all__ = []  # import this module only for its side effects
 
-def _getitem_(self, index):
+
+def __getitem__(self, index):
     """
     operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
     array. To make the code more python we automatically check for a slice and return either
@@ -16,5 +18,5 @@ def _getitem_(self, index):
         return self.slice(start, stop)
     return self._get_(index)
 
-ArrayFKey.__getitem__ = _getitem_
-ArrayDKey.__getitem__ = _getitem_
+ArrayFKey.__getitem__ = __getitem__
+ArrayDKey.__getitem__ = __getitem__

@@ -177,6 +177,11 @@ PYBIND11_PLUGIN(_schema) {
                                            std::string const &,
                                            std::string const &) const) &Schema::join,
                   "a"_a, "b"_a, "c"_a, "d"_a);
+    clsSchema.def("__repr__", [](Schema const & self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
 
     declareSchemaOverloads<std::uint16_t>(clsSchema, "U");
     declareSchemaOverloads<std::int32_t>(clsSchema, "I");
