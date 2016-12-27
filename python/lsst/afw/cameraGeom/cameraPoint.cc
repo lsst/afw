@@ -50,8 +50,10 @@ PYBIND11_PLUGIN(_cameraPoint) {
     cls.def("__ne__",
             [](CameraPoint const & self, CameraPoint const & other) { return self != other; },
             py::is_operator());
-    cls.def("__str__", [](CameraPoint &e){std::ostringstream os; os << e; return os.str();});
-    cls.def("__repr__", [](CameraPoint &e){std::ostringstream os; os << e; return os.str();});
+    cls.def("__str__",
+            [](CameraPoint const & self) { std::ostringstream os; os << self; return os.str(); });
+    cls.def("__repr__",
+            [](CameraPoint & self) { std::ostringstream os; os << self; return os.str(); });
 
     /* Members */
     cls.def("getPoint", &CameraPoint::getPoint);

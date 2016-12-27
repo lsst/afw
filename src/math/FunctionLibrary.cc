@@ -274,10 +274,17 @@ void Chebyshev1Function2<ReturnT>::write(table::io::OutputArchiveHandle & handle
 
 // Explicit instantiation
 #define INSTANTIATE(TYPE) \
+    template class IntegerDeltaFunction1<TYPE>; \
+    template class IntegerDeltaFunction2<TYPE>; \
+    template class GaussianFunction1<TYPE>; \
     template class GaussianFunction2<TYPE>; \
     template class DoubleGaussianFunction2<TYPE>; \
+    template class PolynomialFunction1<TYPE>; \
     template class PolynomialFunction2<TYPE>; \
-    template class Chebyshev1Function2<TYPE>;
+    template class Chebyshev1Function1<TYPE>; \
+    template class Chebyshev1Function2<TYPE>; \
+    template class LanczosFunction1<TYPE>; \
+    template class LanczosFunction2<TYPE>;
 
 INSTANTIATE(float);
 INSTANTIATE(double);

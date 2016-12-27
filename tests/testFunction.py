@@ -628,43 +628,6 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
 
             self.assertAlmostEqual(f(x, y), sum([params[i]*dFdC[i] for i in range(len(params))]))
 
-    @unittest.skip("temporary skip while wrapping")
-    def testCast(self):
-        for instance in (afwMath.Chebyshev1Function1F(2), afwMath.GaussianFunction1F(1.0),
-                         afwMath.LanczosFunction1F(3), afwMath.NullFunction1F(),
-                         afwMath.PolynomialFunction1F(2)):
-            Class = type(instance)
-            base = instance.clone()
-            self.assertEqual(type(base), afwMath.Function1F)
-            derived = Class.cast(base)
-            self.assertEqual(type(derived), Class)
-        for instance in (afwMath.Chebyshev1Function1D(2), afwMath.GaussianFunction1D(1.0),
-                         afwMath.LanczosFunction1D(3), afwMath.NullFunction1D(),
-                         afwMath.PolynomialFunction1D(2)):
-            Class = type(instance)
-            base = instance.clone()
-            self.assertEqual(type(base), afwMath.Function1D)
-            derived = Class.cast(base)
-            self.assertEqual(type(derived), Class)
-        for instance in (afwMath.Chebyshev1Function2F(2), afwMath.GaussianFunction2F(1.0, 1.0),
-                         afwMath.DoubleGaussianFunction2F(1.0),
-                         afwMath.LanczosFunction2F(3), afwMath.NullFunction2F(),
-                         afwMath.PolynomialFunction2F(2)):
-            Class = type(instance)
-            base = instance.clone()
-            self.assertEqual(type(base), afwMath.Function2F)
-            derived = Class.cast(base)
-            self.assertEqual(type(derived), Class)
-        for instance in (afwMath.Chebyshev1Function2D(2), afwMath.GaussianFunction2D(1.0, 1.0),
-                         afwMath.DoubleGaussianFunction2D(1.0),
-                         afwMath.LanczosFunction2D(3), afwMath.NullFunction2D(),
-                         afwMath.PolynomialFunction2D(2)):
-            Class = type(instance)
-            base = instance.clone()
-            self.assertEqual(type(base), afwMath.Function2D)
-            derived = Class.cast(base)
-            self.assertEqual(type(derived), Class)
-
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

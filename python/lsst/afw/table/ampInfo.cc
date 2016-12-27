@@ -32,6 +32,7 @@ using namespace pybind11::literals;
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/columnView.h"
 
 namespace lsst {
 namespace afw {
@@ -40,6 +41,9 @@ namespace {
 
 using PyAmpInfoRecord = py::class_<AmpInfoRecord, std::shared_ptr<AmpInfoRecord>, BaseRecord>;
 using PyAmpInfoTable = py::class_<AmpInfoTable, std::shared_ptr<AmpInfoTable>, BaseTable>;
+using PyAmpInfoColumnView = py::class_<ColumnViewT<AmpInfoRecord>,
+                                       std::shared_ptr<ColumnViewT<AmpInfoRecord>>,
+                                       BaseColumnView>;
 using PyAmpInfoCatalog =  py::class_<CatalogT<AmpInfoRecord>, std::shared_ptr<AmpInfoCatalog>>;
 
 void declareAmpInfoRecord(PyAmpInfoRecord & cls) {
@@ -141,6 +145,7 @@ PYBIND11_PLUGIN(_ampInfo) {
     /* Module level */
     PyAmpInfoRecord clsAmpInfoRecord(mod, "AmpInfoRecord");
     PyAmpInfoTable clsAmpInfoTable(mod, "AmpInfoTable");
+    PyAmpInfoColumnView clsAmpInfoColumnView(mod, "AmpInfoColumnView");
     PyAmpInfoCatalog clsAmpInfoCatalog(mod, "AmpInfoCatalog", py::dynamic_attr());
 
     /* Member types and enums */
@@ -154,10 +159,18 @@ PYBIND11_PLUGIN(_ampInfo) {
     /* Members */
     declareAmpInfoRecord(clsAmpInfoRecord);
     declareAmpInfoTable(clsAmpInfoTable);
-    lsst::afw::table::pybind11::declareCatalog<AmpInfoRecord>(clsAmpInfoCatalog);
+    table::pybind11::declareColumnView(clsAmpInfoColumnView);
+    table::pybind11::declareCatalog(clsAmpInfoCatalog);
 
+    clsAmpInfoRecord.attr("Table") = clsAmpInfoTable;
+    clsAmpInfoRecord.attr("ColumnView") = clsAmpInfoColumnView;
+    clsAmpInfoRecord.attr("Catalog") = clsAmpInfoCatalog;
+    clsAmpInfoTable.attr("Record") = clsAmpInfoRecord;
+    clsAmpInfoTable.attr("ColumnView") = clsAmpInfoColumnView;
+    clsAmpInfoTable.attr("Catalog") = clsAmpInfoCatalog;
     clsAmpInfoCatalog.attr("Record") = clsAmpInfoRecord;
     clsAmpInfoCatalog.attr("Table") = clsAmpInfoTable;
+    clsAmpInfoCatalog.attr("ColumnView") = clsAmpInfoColumnView;
 
     return mod.ptr();
 }

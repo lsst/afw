@@ -8,6 +8,8 @@ from .point import *
 from .box import *
 from ._functor import *
 from ._span import *
+from ._spherePoint import *
+from .spherePoint import *
 from ._xYTransform import *
 from ._separableXYTransform import *
 from ._affineTransform import *
