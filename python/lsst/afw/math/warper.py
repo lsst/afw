@@ -21,7 +21,8 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import math; import pdb
+import math
+import pdb
 
 import lsst.pex.config as pexConfig
 import lsst.afw.geom as afwGeom
