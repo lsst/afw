@@ -341,6 +341,19 @@ class SubSchema {
     typedef detail::SchemaImpl Impl;
 public:
 
+    //@{
+    /// Join strings using the field delimiter appropriate for this Schema
+    std::string join(std::string const & a, std::string const & b) const;
+    std::string join(std::string const & a, std::string const & b, std::string const & c) const {
+        return join(join(a, b), c);
+    }
+    std::string join(
+        std::string const & a, std::string const & b, std::string const & c, std::string const & d
+    ) const {
+        return join(join(a, b), join(c, d));
+    }
+    //@}
+
     /// @brief Find a nested SchemaItem by name.
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;

@@ -791,17 +791,22 @@ std::ostream & operator<<(std::ostream & os, Schema const & schema) {
 //----- SubSchema implementation ----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
+std::string SubSchema::join(std::string const & a, std::string const & b) const {
+    // delegate to utility funcs at top of this file
+    return afw::table::join(a, b, getDelimiter());
+}
+
 SubSchema::SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & name) :
     _impl(impl), _aliases(aliases), _name(name)
 {}
 
 template <typename T>
 SchemaItem<T> SubSchema::find(std::string const & name) const {
-    return _impl->find<T>(_aliases->apply(join(_name, name, getDelimiter())));
+    return _impl->find<T>(_aliases->apply(join(_name, name)));
 }
 
 SubSchema SubSchema::operator[](std::string const & name) const {
-    return SubSchema(_impl, _aliases, join(_name, name, getDelimiter()));
+    return SubSchema(_impl, _aliases, join(_name, name));
 }
 
 std::set<std::string> SubSchema::getNames(bool topOnly) const {
