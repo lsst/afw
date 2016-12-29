@@ -100,6 +100,19 @@ public:
     SchemaItem<T> find(Key<T> const & key) const;
 
     /**
+     *  @brief Find a SchemaItem by name and run a functor on it.
+     *
+     *  Names corresponding to named subfields are not accepted.
+     *  The given functor must have an overloaded function call
+     *  operator that accepts any SchemaItem type (the same as
+     *  a functor provided to forEach).
+     */
+    template <typename F>
+    void findAndApply(std::string const & name, F && func) const {
+        _impl->findAndApply(_aliases->apply(name), std::forward<F>(func));
+    }
+
+    /**
      *  @brief Look up a (possibly incomplete) name in the Schema.
      *
      *  See SubSchema for more information.
@@ -357,6 +370,35 @@ public:
     /// @brief Find a nested SchemaItem by name.
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
+
+    /**
+     *  @brief Find a nested SchemaItem by name and run a functor on it.
+     *
+     *  Names corresponding to named subfields are not accepted.
+     *  The given functor must have an overloaded function call
+     *  operator that accepts any SchemaItem type (the same as
+     *  a functor provided to apply or Schema::forEach).
+     */
+    template <typename F>
+    void findAndApply(std::string const & name, F && func) const {
+        _impl->findAndApply(_aliases->apply(join(_name, name)), std::forward<F>(func));
+    }
+
+    /**
+     *  @brief Run functor on the SchemaItem represented by this SubSchema
+     *
+     *  The given functor must have an overloaded function call operator that
+     *  accepts any SchemaItem type (the same as a functor provided to apply
+     *  or Schema::forEach).
+     *
+     *  @throws Throws pex::exceptions::NotFoundError if the SubSchemas prefix
+     *          does not correspond to the full name of a regular field (not a
+     *          named subfield).
+     */
+    template <typename F>
+    void apply(F && func) const {
+        _impl->findAndApply(_aliases->apply(_name), std::forward<F>(func));
+    }
 
     /// @brief Return a nested proxy.
     SubSchema operator[](std::string const & name) const;
