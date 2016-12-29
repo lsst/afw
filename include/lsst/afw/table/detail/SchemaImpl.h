@@ -102,6 +102,20 @@ public:
     /// Find an item by key (used to implement Schema::find).
     SchemaItem<Flag> find(Key<Flag> const & key) const;
 
+    /// Find an item by name and run the given functor on it.
+    template <typename F>
+    void findAndApply(std::string const & name, F && func) const {
+        auto iter = _names.find(name);
+        if (iter == _names.end()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::NotFoundError,
+                (boost::format("Field with name '%s' not found") % name).str()
+            );
+        }
+        VisitorWrapper<F> visitor(std::forward<F>(func));
+        visitor(_items[iter->second]);
+    }
+
     /// Return a set of field names (used to implement Schema::getNames).
     std::set<std::string> getNames(bool topOnly) const;
 
