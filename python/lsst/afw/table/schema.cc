@@ -138,6 +138,7 @@ PYBIND11_PLUGIN(_schema) {
                  py::is_operator());
 
     /* Members */
+    clsSchema.def("getCitizen", &Schema::getCitizen, py::return_value_policy::reference_internal);
     clsSchema.def("getRecordSize", &Schema::getRecordSize);
     clsSchema.def("getFieldCount", &Schema::getFieldCount);
     clsSchema.def("getFlagFieldCount", &Schema::getFlagFieldCount);
