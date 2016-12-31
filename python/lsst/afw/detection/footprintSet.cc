@@ -47,6 +47,12 @@ void declareMakeHeavy(PyClass & cls) {
 }
 
 template <typename PixelT, typename PyClass>
+void declareSetMask(PyClass & cls) {
+    cls.def("setMask", (void (FootprintSet::*)(image::Mask<PixelT> *, std::string const &)) &FootprintSet::setMask<PixelT>,
+            "mask"_a, "planeName"_a);
+}
+
+template <typename PixelT, typename PyClass>
 void declareTemplatedMembers(PyClass &cls)
 {
     /* Constructors */
@@ -62,6 +68,7 @@ void declareTemplatedMembers(PyClass &cls)
     declareMakeHeavy<double>(cls);
     declareMakeHeavy<std::uint16_t>(cls);
 //    declareMakeHeavy<std::uint64_t>(cls);
+    declareSetMask<image::MaskPixel>(cls);
 }
 } // namespace
 
@@ -97,18 +104,6 @@ PYBIND11_PLUGIN(_footprintSet)
     clsFootprintSet.def("setRegion", &FootprintSet::setRegion);
     clsFootprintSet.def("getRegion", &FootprintSet::getRegion);
     clsFootprintSet.def("insertIntoImage", &FootprintSet::insertIntoImage);
-    //
-    //    template <typename MaskPixelT>
-    //    void setMask(
-    //        image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
-    //        std::string const& planeName   ///< Here's the name of the mask plane to fit
-    //    )
-    //    template <typename MaskPixelT>
-    //    void setMask(
-    //        PTR(image::Mask<MaskPixelT>) mask, ///< Set bits in the mask
-    //        std::string const& planeName   ///< Here's the name of the mask plane to fit
-    //    )
-    //
     clsFootprintSet.def("merge", &FootprintSet::merge,
             "rhs"_a, "tGrow"_a=0, "rGrow"_a=0, "isotropic"_a=true);
 
