@@ -57,6 +57,10 @@ PYBIND11_PLUGIN(_linearTransform) {
     clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>());
 
     /* Operators */
+    clsLinearTransform.def("__mul__", [](LinearTransform const & self,
+                                         LinearTransform const & other) {
+            return self*other;
+        }, py::is_operator());
 
     /* Members */
     clsLinearTransform.def_static("makeScaling", (LinearTransform (*)(double)) LinearTransform::makeScaling);
