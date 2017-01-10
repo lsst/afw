@@ -36,6 +36,7 @@ aliases = {
     np.int64: "L",
     np.float32: "F",
     np.float64: "D",
+    float: "D",
     Angle: "Angle",
 }
 

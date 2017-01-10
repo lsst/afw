@@ -47,7 +47,7 @@ PYBIND11_PLUGIN(_linearTransform) {
     py::class_<LinearTransform> clsLinearTransform(mod, "LinearTransform");
 
     /* Member types and enums */
-    py::enum_<LinearTransform::Parameters>(clsLinearTransform, "Parameters")
+    py::enum_<LinearTransform::Parameters>(clsLinearTransform, "Parameters", py::arithmetic())
         .value("XX", LinearTransform::Parameters::XX)
         .value("YX", LinearTransform::Parameters::YX)
         .value("XY", LinearTransform::Parameters::XY)
@@ -59,10 +59,6 @@ PYBIND11_PLUGIN(_linearTransform) {
     clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>());
 
     /* Operators */
-    clsLinearTransform.def("__mul__", [](LinearTransform const & self,
-                                         LinearTransform const & other) {
-            return self*other;
-        }, py::is_operator());
     clsLinearTransform.def("__getitem__", [](LinearTransform const & self, int i) {
             return self[lsst::utils::cppIndex(4, i)];
         }, py::is_operator());
@@ -71,6 +67,12 @@ PYBIND11_PLUGIN(_linearTransform) {
             auto col = lsst::utils::cppIndex(2, i.second);
             return self.getMatrix()(row, col);
         }, py::is_operator());
+
+    clsLinearTransform.def("__mul__", &LinearTransform::operator*, py::is_operator());
+    clsLinearTransform.def("__add__", &LinearTransform::operator+, py::is_operator());
+    clsLinearTransform.def("__sub__", &LinearTransform::operator-, py::is_operator());
+    clsLinearTransform.def("__iadd__", &LinearTransform::operator+=, py::is_operator());
+    clsLinearTransform.def("__isub__", &LinearTransform::operator-=, py::is_operator());
 
     /* Members */
     clsLinearTransform.def_static("makeScaling", (LinearTransform (*)(double)) LinearTransform::makeScaling);
@@ -81,6 +83,13 @@ PYBIND11_PLUGIN(_linearTransform) {
     clsLinearTransform.def("invert", &LinearTransform::invert);
     clsLinearTransform.def("computeDeterminant", &LinearTransform::computeDeterminant);
     clsLinearTransform.def("isIdentity", &LinearTransform::isIdentity);
+
+    clsLinearTransform.def("set", [](LinearTransform & self, double xx, double yx, double xy, double yy) {
+        self[lsst::afw::geom::LinearTransform::XX] = xx;
+        self[lsst::afw::geom::LinearTransform::XY] = xy;
+        self[lsst::afw::geom::LinearTransform::YX] = yx;
+        self[lsst::afw::geom::LinearTransform::YY] = yy;
+    });
 
     return mod.ptr();
 }

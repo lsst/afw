@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from ._angle import *
 from .angle import *
 from ._coordinateBase import *
 from .coordinateExpr import *

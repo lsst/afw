@@ -82,6 +82,7 @@ namespace {
         cls.def("end", (SpatialCellCandidateIterator (SpatialCell::*)()) &SpatialCell::end);
         cls.def("end", (SpatialCellCandidateIterator (SpatialCell::*)(bool)) &SpatialCell::end);
         cls.def("insertCandidate", &SpatialCell::insertCandidate);
+        cls.def("removeCandidate", &SpatialCell::removeCandidate);
         cls.def("size", &SpatialCell::size);
         cls.def("setIgnoreBad", &SpatialCell::setIgnoreBad);
         cls.def("getCandidateById", &SpatialCell::getCandidateById, "id"_a, "noThrow"_a=false);
