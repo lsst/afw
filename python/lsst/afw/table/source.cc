@@ -122,6 +122,7 @@ void declareSourceTable(PySourceTable & cls) {
     table::pybind11::addCastFrom<BaseTable>(cls);
     table::pybind11::addCastFrom<SimpleTable>(cls);
 
+    cls.def("clone", &SourceTable::clone);
     cls.def_static("make",
                    (std::shared_ptr<SourceTable> (*)(Schema const &, std::shared_ptr<IdFactory> const &))
                         &SourceTable::make);

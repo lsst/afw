@@ -90,6 +90,7 @@ void declareSchemaOverloads<std::string>(py::class_<Schema> & clsSchema, std::st
     clsSchema.def("contains",
                   (int (Schema::*)(SchemaItem<std::string> const &, int) const) &Schema::contains,
                   "item"_a, "flags"_a=Schema::ComparisonFlags::EQUAL_KEYS);
+    clsSchema.def("getCitizen", &Schema::getCitizen, py::return_value_policy::reference);
 };
 
 template <typename T>
