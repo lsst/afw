@@ -24,22 +24,37 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "lsst/afw/image/Defect.h"
 
-using namespace lsst::afw::image;
+namespace py = pybind11;
+using namespace pybind11::literals;
+
+namespace lsst {
+namespace afw {
+namespace image {
 
 PYBIND11_PLUGIN(_defect) {
     py::module mod("_defect", "Python wrapper for afw _defect library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<DefectBase, std::shared_ptr<DefectBase>> clsDefectBase(mod, "DefectBase");
 
     /* Constructors */
-
-    /* Operators */
+    clsDefectBase.def(py::init<const geom::Box2I &>(),
+            "bbox"_a);
 
     /* Members */
+    clsDefectBase.def("getBBox", &DefectBase::getBBox);
+    clsDefectBase.def("getX0", &DefectBase::getX0);
+    clsDefectBase.def("getX1", &DefectBase::getX1);
+    clsDefectBase.def("getY0", &DefectBase::getY0);
+    clsDefectBase.def("getY1", &DefectBase::getY1);
+    clsDefectBase.def("clip", &DefectBase::clip);
+    clsDefectBase.def("shift", (void (DefectBase::*)(int, int)) &DefectBase::shift,
+            "dx"_a, "dy"_a);
+    clsDefectBase.def("shift", (void (DefectBase::*)(geom::Extent2I const &)) &DefectBase::shift,
+            "d"_a);
 
     return mod.ptr();
 }
+
+}}} // lsst::afw::image
