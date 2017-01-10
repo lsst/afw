@@ -120,6 +120,7 @@ void declareBaseRecord(PyBaseRecord & cls) {
     cls.def("assign", (void (BaseRecord::*)(BaseRecord const &, SchemaMapper const &)) &BaseRecord::assign);
     cls.def("getSchema", &BaseRecord::getSchema);
     cls.def("getTable", &BaseRecord::getTable);
+    cls.def_property_readonly("table", &BaseRecord::getTable);
 
     declareBaseRecordOverloads<std::uint16_t>(cls, "U");
     declareBaseRecordOverloads<std::int32_t>(cls, "I");
@@ -146,6 +147,8 @@ void declareBaseRecord(PyBaseRecord & cls) {
     declareBaseRecordSetArray<int>(cls, "ArrayI");
     declareBaseRecordSetArray<float>(cls, "ArrayF");
     declareBaseRecordSetArray<double>(cls, "ArrayD");
+
+    cls.def_property_readonly("table", &BaseRecord::getTable);
 }
 
 /**
