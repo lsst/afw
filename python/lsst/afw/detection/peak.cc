@@ -55,6 +55,7 @@ void declarePeakRecord(PyPeakRecord & cls) {
     table::pybind11::addCastFrom<table::BaseRecord>(cls);
 
     cls.def("getTable", &PeakRecord::getTable);
+    cls.def_property_readonly("table", &PeakRecord::getTable);
     cls.def("getId", &PeakRecord::getId);
     cls.def("setId", &PeakRecord::setId);
     cls.def("getIx", &PeakRecord::getIx);
