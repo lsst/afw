@@ -69,6 +69,7 @@ void declareSourceRecord(PySourceRecord & cls) {
     cls.def("getFootprint", &SourceRecord::getFootprint);
     cls.def("setFootprint", &SourceRecord::setFootprint);
     cls.def("getTable", &SourceRecord::getTable);
+    cls.def_property_readonly("table", &SourceRecord::getTable);
 
     cls.def("getParent", &SourceRecord::getParent);
     cls.def("setParent", &SourceRecord::setParent, "id"_a);
