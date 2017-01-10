@@ -24,12 +24,17 @@
 Tests for displaying devices
 
 Run with:
-   display.py [backend]
+   python testDisplay.py [backend]
 or
    python
-   >>> import display
-   >>> display.backend = "ds9"   # optional
-   >>> display.run()
+   >>> import testDisplay
+   >>> testDisplay.backend = "ds9"   # optional
+   >>> testCase = testDisplay.DisplayTestCase()
+   >>> testCase.setUp()
+   >>> testCase.testMtv()
+   >>> testCase.testShowCentroids()
+   ...
+   >>> testCase.tearDown()
 """
 from __future__ import absolute_import, division, print_function
 import os
@@ -38,8 +43,13 @@ import unittest
 from builtins import next
 from builtins import range
 
+import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
+import lsst.afw.coord as afwCoord
+import lsst.afw.table as afwTable
 import lsst.afw.display as afwDisplay
 
 try:
@@ -53,6 +63,8 @@ class DisplayTestCase(unittest.TestCase):
     """A test case for Display"""
 
     def setUp(self):
+        np.random.seed(10)
+
         global oldBackend
         if backend != oldBackend:
             afwDisplay.setDefaultBackend(backend)
@@ -120,6 +132,29 @@ class DisplayTestCase(unittest.TestCase):
                         (214, 220), (200, 220)]
             self.display0.line(vertices, ctype=afwDisplay.CYAN)
             self.display0.line(vertices[:-1], symbs="+x+x", size=3)
+
+    def testOverlayCatalog(self):
+        schema = afwTable.SimpleTable.makeMinimalSchema()
+        catalog = afwTable.SimpleCatalog(schema)
+        for i, x in enumerate(np.random.random((25, 2))):
+            record = catalog.table.makeRecord()
+            record.setId(i+1)
+            rad = (x[0]*0.005 + 151.404)*afwGeom.degrees
+            decd = (x[1]*0.005 + 1.648)*afwGeom.degrees
+            record.setCoord(afwCoord.IcrsCoord(rad, decd))
+            catalog.append(record)
+        self.display0.overlayCatalog(catalog)
+
+    def testShowCentroids(self):
+        schema = afwTable.SimpleTable.makeMinimalSchema()
+        centroidKey = afwTable.Point2DKey.addFields(schema, 'centroid', 'a fake centroid', 'pixel')
+        schema.getAliasMap().set('slot_Centroid', 'centroid')
+        catalog = afwTable.SimpleCatalog(schema)
+        for i, x in enumerate(np.random.random((25, 2))*100 + 150):
+            record = catalog.addNew()
+            record.setId(i+1)
+            record.set(centroidKey, afwGeom.Point2D(x[0], x[1]))
+        self.display0.showCentroids(catalog)
 
     def testStretch(self):
         """Test playing with the lookup table"""
