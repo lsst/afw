@@ -50,6 +50,9 @@ PYBIND11_PLUGIN(_quadrupole) {
                       "matrix"_a, "normalize"_a=true);
     clsQuadrupole.def(py::init<Quadrupole const &>());
     clsQuadrupole.def(py::init<BaseCore const &>());
+    clsQuadrupole.def(py::init<BaseCore::Convolution const &>());
+
+    py::implicitly_convertible<BaseCore::Convolution, Quadrupole>();
 
     /* Operators */
     clsQuadrupole.def("__eq__", [](Quadrupole & self, Quadrupole & other) { return self == other; }, py::is_operator());
@@ -69,6 +72,11 @@ PYBIND11_PLUGIN(_quadrupole) {
     });
     clsQuadrupole.def("transformInPlace", [](Quadrupole & self, lsst::afw::geom::LinearTransform const & t) {
        self.transform(t).inPlace();
+    });
+    // TODO: pybind11 based on swig wrapper for now. Hopefully can be removed once pybind11 gets smarter
+    // handling of implicit conversions
+    clsQuadrupole.def("convolve", [](Quadrupole & self, BaseCore const & other) {
+        return Quadrupole(self.convolve(other));
     });
 
     return mod.ptr();

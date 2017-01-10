@@ -28,6 +28,7 @@
 #include "ndarray/converter.h"
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 
 namespace py = pybind11;
@@ -46,7 +47,8 @@ PYBIND11_PLUGIN(_baseCore) {
     py::class_<BaseCore, std::shared_ptr<BaseCore>> clsBaseCore(mod, "BaseCore");
 
     /* Member types and enums */
-    py::class_<typename BaseCore::Transformer> clsBaseCoreTransformer(mod, "Transformer");
+    py::class_<BaseCore::Convolution> clsBaseCoreConvolution(clsBaseCore, "Convolution");
+    py::class_<BaseCore::Transformer> clsBaseCoreTransformer(clsBaseCore, "Transformer");
 
 //    clsBaseCoreTransformer.def(py::init<BaseCore &, LinearTransform const &>());
 //
@@ -75,7 +77,7 @@ PYBIND11_PLUGIN(_baseCore) {
     clsBaseCore.def("getTraceRadius", &BaseCore::getTraceRadius);
 //    clsBaseCore.def("transform", (typename BaseCore::Transformer const (BaseCore::*)(lsst::afw::geom::LinearTransform const &) const) &BaseCore::transform);
 //    clsBaseCore.def("getGridTransform", &BaseCore::getGridTransform);
-//    clsBaseCore.def("convolve", (Convolution const (BaseCore::*)(BaseCore const &) const) &BaseCore::convolve);
+    clsBaseCore.def("convolve", (BaseCore::Convolution (BaseCore::*)(BaseCore const &)) &BaseCore::convolve);
     clsBaseCore.def("computeDimensions", &BaseCore::computeDimensions);
     clsBaseCore.def("getParameterVector", &BaseCore::getParameterVector);
     clsBaseCore.def("setParameterVector", &BaseCore::setParameterVector);
