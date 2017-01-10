@@ -22,6 +22,7 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+"""Support for talking to image displays from python."""
 
 ##
 # \file
@@ -45,9 +46,7 @@ __all__ = (
     "getDisplay", "delAllDisplays",
 )
 
-#
-# Symbolic names for mask/line colours.  N.b. ds9 supports any X11 colour for masks
-#
+# Symbolic names for mask/line colours. ds9 supports any X11 colour for masks
 WHITE = "white"
 BLACK = "black"
 RED = "red"
@@ -238,9 +237,7 @@ class Display(object):
     def __str__(self):
         return "Display[%s]" % (self.frame)
 
-    #
     # Handle Displays, including the default one (the frame to use when a user specifies None)
-    #
     @staticmethod
     def setDefaultBackend(backend):
         try:
@@ -295,9 +292,7 @@ class Display(object):
             for k, v in name.items():
                 setDefaultMaskPlaneColor(k, v)
             return
-        #
         # Set the individual colour values
-        #
         Display._defaultMaskPlaneColor[name] = color
 
     @staticmethod
@@ -447,9 +442,8 @@ class Display(object):
             self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
         else:
             raise RuntimeError("Unsupported type %s" % repr(data))
-    #
+
     # Graphics commands
-    #
 
     class _Buffering(object):
         """A class intended to be used with python's with statement"""
@@ -485,19 +479,21 @@ class Display(object):
         """!Draw a symbol onto the specified DISPLAY frame at (col,row) = (c,r)
         [0-based coordinates]
 
-        Possible values are:
+        Possible values for symb are:
             +                Draw a +
             x                Draw an x
             *                Draw a *
             o                Draw a circle
             @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
             An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
-    Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be
-    extended with other characteristics, e.g. "times bold italic".  Text will be drawn rotated by
-    textAngle (textAngle is ignored otherwise).
 
-    N.b. objects derived from BaseCore include Axes and Quadrupole.
-    """
+            Any other value is interpreted as a string to be drawn. Strings obey the
+            fontFamily (which may be extended with other characteristics, e.g. "times
+            bold italic".  Text will be drawn rotated by textAngle (textAngle is ignored
+            otherwise).
+
+            N.b. objects derived from BaseCore include Axes and Quadrupole.
+        """
         if isinstance(symb, int):
             symb = "%d" % (symb)
 
@@ -522,11 +518,11 @@ class Display(object):
 
     def line(self, points, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
         """!Draw a set of symbols or connect the points, a list of (col,row)
-    If symbs is True, draw points at the specified points using the desired symbol,
-    otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')
+        If symbs is True, draw points at the specified points using the desired symbol,
+                otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')
 
-    If symbs supports indexing (which includes a string -- caveat emptor) the
-    elements are used to label the points
+        If symbs supports indexing (which includes a string -- caveat emptor) the
+        elements are used to label the points
         """
         if symbs:
             try:
@@ -546,9 +542,6 @@ class Display(object):
                     points = _points
 
                 self._impl._drawLines(points, ctype)
-    #
-    # Set gray scale
-    #
 
     def scale(self, algorithm, min, max=None, unit=None, *args, **kwargs):
         """!Set the range of the scaling from DN in the image to the image display
@@ -566,9 +559,6 @@ class Display(object):
             raise RuntimeError("Please specify max")
 
         self._impl._scale(algorithm, min, max, unit, *args, **kwargs)
-    #
-    # Zoom and Pan
-    #
 
     def zoom(self, zoomfac=None, colc=None, rowc=None, origin=afwImage.PARENT):
         """!Zoom frame by specified amount, optionally panning also"""
@@ -642,9 +632,8 @@ class Display(object):
         return sorted([k for k, func in self._callbacks.items() if
                        not (onlyActive and func == noop_callback)])
 
-#
+
 # Callbacks for display events
-#
 
 
 class Event(object):
@@ -657,9 +646,6 @@ class Event(object):
 
     def __str__(self):
         return "%s (%.2f, %.2f)" % (self.k, self.x, self.y)
-#
-# Default fallback function
-#
 
 
 def noop_callback(k, x, y):
@@ -671,11 +657,9 @@ def h_callback(k, x, y):
     print("Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback")
     return False
 
-#
+
 # Handle Displays, including the default one (the frame to use when a user specifies None)
-#
 # If the default frame is None, image display is disabled
-#
 
 
 def setDefaultBackend(backend):
