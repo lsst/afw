@@ -487,6 +487,30 @@ class Display(object):
 
         self._impl._dot(symb, c, r, size, ctype, **kwargs)
 
+    def showCoords(self, sourceCat, symb="o", **kwargs):
+        """
+        !Plot the RA/Dec coordinates of a source catalog as symbols.
+
+        kwargs are passed as-is to dot().
+        """
+        # TODO: does displaying ra/dec even work? Can we display images in sky-coordinates?
+        with self.Buffering():
+            for src in sourceCat:
+                self.dot(symb, *src.getCoord(), **kwargs)
+
+    def showCentroids(self, sourceCat, symb="o", centroidField="slot_Centroid", **kwargs):
+        """
+        !Plot the x/y centroids of a source catalog as symbols.
+
+        symb and kwargs are passed as-is to dot().
+        """
+        # TODO: what to do about reference catalogs?
+        centroidXKey = sourceCat.schema[centroidField+"_x"].asKey()
+        centroidYKey = sourceCat.schema[centroidField+"_y"].asKey()
+        with self.Buffering():
+            for src in sourceCat:
+                self.dot(symb, src.get(centroidXKey), src.get(centroidYKey), **kwargs)
+
     def line(self, points, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
         """!Draw a set of symbols or connect the points, a list of (col,row)
         If symbs is True, draw points at the specified points using the desired symbol,
