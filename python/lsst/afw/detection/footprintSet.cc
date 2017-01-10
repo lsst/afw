@@ -1,4 +1,4 @@
-/*
+ /*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
  *
@@ -104,6 +104,8 @@ PYBIND11_PLUGIN(_footprintSet)
     clsFootprintSet.def("setRegion", &FootprintSet::setRegion);
     clsFootprintSet.def("getRegion", &FootprintSet::getRegion);
     clsFootprintSet.def("insertIntoImage", &FootprintSet::insertIntoImage);
+    clsFootprintSet.def("setMask", (void (FootprintSet::*)(image::Mask<lsst::afw::image::MaskPixel> *, std::string const&)) &FootprintSet::setMask<lsst::afw::image::MaskPixel>);
+    clsFootprintSet.def("setMask", (void (FootprintSet::*)(PTR(image::Mask<lsst::afw::image::MaskPixel>), std::string const&)) &FootprintSet::setMask<lsst::afw::image::MaskPixel>);
     clsFootprintSet.def("merge", &FootprintSet::merge,
             "rhs"_a, "tGrow"_a=0, "rGrow"_a=0, "isotropic"_a=true);
 
