@@ -52,6 +52,8 @@ void declareAmpInfoRecord(PyAmpInfoRecord & cls) {
     cls.def("getName", &AmpInfoRecord::getName);
     cls.def("setName", &AmpInfoRecord::setName, "name"_a,
                          "Set name of amplifier location in camera");
+    cls.def("getTable", &AmpInfoRecord::getTable);
+    cls.def_property_readonly("table", &AmpInfoRecord::getTable);
     cls.def("getBBox", &AmpInfoRecord::getBBox);
     cls.def("setBBox", &AmpInfoRecord::setBBox, "bbox"_a);
     cls.def("getGain", &AmpInfoRecord::getGain);

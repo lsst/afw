@@ -76,6 +76,8 @@ void declareExposureRecord(PyExposureRecord & cls) {
     cls.def("setId", &ExposureRecord::setId, "id"_a);
     cls.def("getBBox", &ExposureRecord::getBBox);
     cls.def("setBBox", &ExposureRecord::setBBox, "bbox"_a);
+    cls.def("getTable", &ExposureRecord::getTable);
+    cls.def_property_readonly("table", &ExposureRecord::getTable);
 
     //cls.def("writeFits",
     //        (void (Catalog::*)(std::string const &, std::string const &, int) const) &Catalog::writeFits,

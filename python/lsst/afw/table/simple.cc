@@ -54,6 +54,8 @@ void declareSimpleRecord(PySimpleRecord & cls) {
 
     cls.def("getId", &SimpleRecord::getId);
     cls.def("setId", &SimpleRecord::setId);
+    cls.def("getTable", &SimpleRecord::getTable);
+    cls.def_property_readonly("table", &SimpleRecord::getTable);
     cls.def("getCoord", &SimpleRecord::getCoord);
     cls.def("setCoord", (void (SimpleRecord::*)(IcrsCoord const &)) &SimpleRecord::setCoord);
     cls.def("setCoord", (void (SimpleRecord::*)(Coord const &)) &SimpleRecord::setCoord);
