@@ -29,6 +29,7 @@
 #include "ndarray/converter.h"
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
@@ -65,6 +66,9 @@ PYBIND11_PLUGIN(_ellipse) {
     /* Constructors */
     clsEllipse.def(py::init<BaseCore const &, Point2D const &>(), "core"_a, "center"_a=Point2D());
     clsEllipse.def(py::init<Ellipse const &>());
+    clsEllipse.def(py::init<Ellipse::Convolution const &>());
+
+    py::implicitly_convertible<Ellipse::Convolution, Ellipse>();
 
     /* Operators */
 
