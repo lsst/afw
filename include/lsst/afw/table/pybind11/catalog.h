@@ -151,6 +151,7 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
     cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
         self.erase(self.begin() + utils::cppIndex(self.size(), i));
     });
+    cls.def("_clear", &Catalog::clear);
  
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
