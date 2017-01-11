@@ -28,6 +28,8 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
+#include "lsst/utils/pybind11.h"
+
 #include "lsst/afw/geom/LinearTransform.h"
 
 namespace py = pybind11;
@@ -60,6 +62,14 @@ PYBIND11_PLUGIN(_linearTransform) {
     clsLinearTransform.def("__mul__", [](LinearTransform const & self,
                                          LinearTransform const & other) {
             return self*other;
+        }, py::is_operator());
+    clsLinearTransform.def("__getitem__", [](LinearTransform const & self, int i) {
+            return self[lsst::utils::cppIndex(4, i)];
+        }, py::is_operator());
+    clsLinearTransform.def("__getitem__", [](LinearTransform const & self, std::pair<int, int> i) {
+            auto row = lsst::utils::cppIndex(2, i.first);
+            auto col = lsst::utils::cppIndex(2, i.second);
+            return self.getMatrix()(row, col);
         }, py::is_operator());
 
     /* Members */
