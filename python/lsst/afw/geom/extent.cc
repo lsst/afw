@@ -74,20 +74,20 @@ py::class_<Extent<T,N>> declareExtent(py::module &mod, const std::string & suffi
     /* Operators */
     cls.def(-py::self);
     cls.def(+py::self);
-    cls.def("__mul__", [](Extent<T,N> &e, int val) { return e * val; });
-    cls.def("__mul__", [](Extent<T,N> &e, double val) { return e * val; });
-    cls.def("__rmul__", [](Extent<T,N> &e, int val) { return e * val; });
-    cls.def("__rmul__", [](Extent<T,N> &e, double val) { return e * val; });
-    cls.def("__add__", [](Extent<T,N> &e, Extent<int,N> &o) { return e + o; });
-    cls.def("__add__", [](Extent<T,N> &e, Extent<double,N> &o) { return e + o; });
-    cls.def("__add__", [](Extent<T,N> &e, Point<int,N> &o) { return e + Point<T,N>(o); });
-    cls.def("__add__", [](Extent<T,N> &e, Point<double,N> &o) { return e + o; });
-    cls.def("__sub__", [](Extent<T,N> &e, Extent<int,N> &o) { return e - Extent<T,N>(o); });
-    cls.def("__sub__", [](Extent<T,N> &e, Extent<double,N> &o) { return e - o; });
-    cls.def("__eq__", [](Extent<T,N> &e, Extent<T,N> &o) { return e == o; });
-    cls.def("__eq__", [](Extent<T,N> &e, py::none) { return false; });
-    cls.def("__ne__", [](Extent<T,N> &e, Extent<T,N> &o) { return e != o; });
-    cls.def("__ne__", [](Extent<T,N> &e, py::none) { return true; });
+    cls.def("__mul__", [](Extent<T,N> &e, int val) { return e * val; }, py::is_operator());
+    cls.def("__mul__", [](Extent<T,N> &e, double val) { return e * val; }, py::is_operator());
+    cls.def("__rmul__", [](Extent<T,N> &e, int val) { return e * val; }, py::is_operator());
+    cls.def("__rmul__", [](Extent<T,N> &e, double val) { return e * val; }, py::is_operator());
+    cls.def("__add__", [](Extent<T,N> &e, Extent<int,N> &o) { return e + o; }, py::is_operator());
+    cls.def("__add__", [](Extent<T,N> &e, Extent<double,N> &o) { return e + o; }, py::is_operator());
+    cls.def("__add__", [](Extent<T,N> &e, Point<int,N> &o) { return e + Point<T,N>(o); }, py::is_operator());
+    cls.def("__add__", [](Extent<T,N> &e, Point<double,N> &o) { return e + o; }, py::is_operator());
+    cls.def("__sub__", [](Extent<T,N> &e, Extent<int,N> &o) { return e - Extent<T,N>(o); }, py::is_operator());
+    cls.def("__sub__", [](Extent<T,N> &e, Extent<double,N> &o) { return e - o; }, py::is_operator());
+    cls.def("__eq__", [](Extent<T,N> &e, Extent<T,N> &o) { return e == o; }, py::is_operator());
+    cls.def("__eq__", [](Extent<T,N> &e, py::none) { return false; }, py::is_operator());
+    cls.def("__ne__", [](Extent<T,N> &e, Extent<T,N> &o) { return e != o; }, py::is_operator());
+    cls.def("__ne__", [](Extent<T,N> &e, py::none) { return true; }, py::is_operator());
 
     /* Members */
     cls.def("clone", [](Extent<T,N> &p) {return Extent<T,N>{p};});
