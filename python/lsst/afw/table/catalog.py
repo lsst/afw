@@ -85,6 +85,11 @@ def addCatalogMethods(cls):
         self._insert(key, value)
     cls.insert = insert
 
+    def clear(self):
+        self._columns = None
+        self._clear()
+    cls.clear = clear
+
     def addNew(self):
         self._columns = None
         return self._addNew()
