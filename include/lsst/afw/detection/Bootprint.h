@@ -278,6 +278,14 @@ public:
      * @brief Remove peaks from the PeakCatlog that fall ouside the area of the Bootprint
      */
     void removeOrphanPeaks();
+
+    /**
+    * @brief equality operator
+    *
+    * @param other - The Bootprint for which equality will be computed
+    */
+    bool operator==(Bootprint const & other) const;
+
  protected:
 
     /*
