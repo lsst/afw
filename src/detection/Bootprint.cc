@@ -129,6 +129,33 @@ void Bootprint::removeOrphanPeaks() {
     }
 }
 
+bool Bootprint::operator==(Bootprint const & other) const {
+    /* If the peakCatalogs are not the same length the Bootprints can't be equal */
+    if (getPeaks().size() != other.getPeaks().size()) {
+        return false;
+    }
+    /* Check that for every peak in the PeakCatalog there is a corresponding peak
+     * in the other, and if not return false
+     */
+    for (auto const & selfPeak : getPeaks()) {
+        bool match = false;
+        for (auto const & otherPeak : other.getPeaks()) {
+            if (selfPeak.getI() == otherPeak.getI() &&
+                selfPeak.getF() == otherPeak.getF() &&
+                selfPeak.getPeakValue() == otherPeak.getPeakValue()) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) {
+            return false;
+        }
+    }
+    /* At this point the PeakCatalogs have evaluated true, compare the SpanSets
+     */
+    return getSpans() == other.getSpans();
+}
+
 namespace {
 std::string getBootprintPersistenceName() { return "Bootprint"; }
 
