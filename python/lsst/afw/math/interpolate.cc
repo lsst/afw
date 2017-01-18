@@ -71,25 +71,16 @@ PYBIND11_PLUGIN(_interpolate) {
                        (ndarray::Array<double, 1> (Interpolate::*) (ndarray::Array<double const, 1> const&)
                            const) &Interpolate::interpolate);
 
-    mod.def("makeInterpolate", 
-                       (PTR(Interpolate) (*)(std::vector<double> const &,
-                                             std::vector<double> const &,
-                                             Interpolate::Style const)) makeInterpolate,
-                       "x"_a, "y"_a, "style"_a=Interpolate::AKIMA_SPLINE);
-    mod.def("makeInterpolate", 
-                       (PTR(Interpolate) (*)(ndarray::Array<double const, 1> const &,
-                                             ndarray::Array<double const, 1> const &y,
-                                             Interpolate::Style const)) makeInterpolate,
-                       "x"_a, "y"_a, "style"_a=Interpolate::AKIMA_SPLINE);
-    /* Module level */
+    mod.def("makeInterpolate",
+            (std::shared_ptr<Interpolate>(*)(std::vector<double> const &, std::vector<double> const &,
+                                             Interpolate::Style const))makeInterpolate,
+            "x"_a, "y"_a, "style"_a = Interpolate::AKIMA_SPLINE);
+    mod.def("makeInterpolate", (std::shared_ptr<Interpolate>(*)(ndarray::Array<double const, 1> const &,
+                                                                ndarray::Array<double const, 1> const &y,
+                                                                Interpolate::Style const))makeInterpolate,
+            "x"_a, "y"_a, "style"_a = Interpolate::AKIMA_SPLINE);
 
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    mod.def("stringToInterpStyle", stringToInterpStyle, "style"_a);
 
     return mod.ptr();
 }
