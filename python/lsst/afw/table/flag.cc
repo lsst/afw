@@ -56,6 +56,7 @@ PYBIND11_PLUGIN(_flag) {
     /* Members */
     clsFieldBase.def_static("getTypeString", &FieldBase<Flag>::getTypeString);
     clsKey.def("getBit", &Key<Flag>::getBit);
+    clsKey.def("isValid", &Key<Flag>::isValid);
 
     return mod.ptr();
 }

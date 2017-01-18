@@ -21,17 +21,63 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
 
-using namespace lsst::afw::detection;
+#include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/FootprintArray.cc"     // FootprintArray.h does not define the templates
+
+namespace py = pybind11;
+using namespace pybind11::literals;
+
+namespace lsst {
+namespace afw {
+namespace detection {
+
+namespace {
+    template <typename T>
+    void declareTemplates(py::module & mod) {
+        namespace afwGeom = lsst::afw::geom;
+
+        mod.def("flattenArray", (void (*)(Footprint const &,
+                                          ndarray::Array<T const, 2, 0> const &,
+                                          ndarray::Array<T, 1, 0> const &,
+                                          afwGeom::Point2I const &)) &flattenArray<T const, T, 2, 0, 0>,
+                "fp"_a, "src"_a, "dest"_a, "xy0"_a=afwGeom::Point2I());
+        mod.def("flattenArray", (void (*)(Footprint const &,
+                                          ndarray::Array<T const, 3, 0> const &,
+                                          ndarray::Array<T, 2, 0> const &,
+                                          afwGeom::Point2I const &)) &flattenArray<T const, T, 3, 0, 0>,
+                "fp"_a, "src"_a, "dest"_a, "xy0"_a=afwGeom::Point2I());
+        mod.def("expandArray", (void (*)(Footprint const &,
+                                          ndarray::Array<T const, 1, 0> const &,
+                                          ndarray::Array<T, 2, 0> const &,
+                                          afwGeom::Point2I const &)) &expandArray<T const, T, 1, 0, 0>,
+                "fp"_a, "src"_a, "dest"_a, "xy0"_a=afwGeom::Point2I());
+        mod.def("expandArray", (void (*)(Footprint const &,
+                                          ndarray::Array<T const, 2, 0> const &,
+                                          ndarray::Array<T, 3, 0> const &,
+                                          afwGeom::Point2I const &)) &expandArray<T const, T, 2, 0, 0>,
+                "fp"_a, "src"_a, "dest"_a, "xy0"_a=afwGeom::Point2I());
+    }
+}
 
 PYBIND11_PLUGIN(_footprintArray) {
     py::module mod("_footprintArray", "Python wrapper for afw _footprintArray library");
 
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
+
     /* Module level */
+    declareTemplates<std::uint16_t>(mod);
+    declareTemplates<int>(mod);
+    declareTemplates<float>(mod);
+    declareTemplates<double>(mod);
 
     /* Member types and enums */
 
@@ -43,3 +89,5 @@ PYBIND11_PLUGIN(_footprintArray) {
 
     return mod.ptr();
 }
+
+}}}     // lsst::afw::detection

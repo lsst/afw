@@ -74,6 +74,9 @@ PYBIND11_PLUGIN(_boundedField) {
     clsBoundedField.def("evaluate", (ndarray::Array<double,1,1>
         (BoundedField::*)(ndarray::Array<double const,1> const &,
                           ndarray::Array<double const,1> const &) const) &BoundedField::evaluate);
+    clsBoundedField.def("evaluate", (double (BoundedField::*)
+        (lsst::afw::geom::Point2D const &) const) &BoundedField::evaluate);
+
     clsBoundedField.def("getBBox", &BoundedField::getBBox);
 
     // Pybind11 resolves overloads by picking the first one that might work
