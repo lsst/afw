@@ -631,6 +631,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     bool isPersistable() const override { return true; }
 
+    /**
+     * @brief Select pixels within the SpanSet which touch its edge
+     *
+     */
+     std::shared_ptr<geom::SpanSet> findEdgePixels() const;
+
 private:
     /* Returns the name used by the persistence layer to identify the SpanSet class
      */
