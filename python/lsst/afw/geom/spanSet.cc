@@ -183,6 +183,7 @@ PYBIND11_PLUGIN(_spanSet) {
     clsSpanSet.def_static("spanSetFromShape",
                           (std::shared_ptr<SpanSet> (*)(int, Stencil)) &SpanSet::spanSetFromShape);
     clsSpanSet.def("split", &SpanSet::split);
+    clsSpanSet.def("findEdgePixels", &SpanSet::findEdgePixels);
 
     /* SpanSet Operators */
     clsSpanSet.def("__eq__",
