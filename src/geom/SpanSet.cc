@@ -761,7 +761,9 @@ namespace {
             spanSetSchema(),
             spanY(spanSetSchema.addField<int>("y", "The row of the span", "pixel")),
             spanX0(spanSetSchema.addField<int>("x0", "First column of span (inclusive)", "pixel")),
-            spanX1(spanSetSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel")) {}
+            spanX1(spanSetSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel")) {
+                spanSetSchema.getCitizen().markPersistent();
+            }
     };
 
 std::string getSpanSetPersistenceName() { return "SpanSet"; }
