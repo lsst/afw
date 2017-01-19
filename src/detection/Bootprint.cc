@@ -153,7 +153,7 @@ bool Bootprint::operator==(Bootprint const & other) const {
     }
     /* At this point the PeakCatalogs have evaluated true, compare the SpanSets
      */
-    return getSpans() == other.getSpans();
+    return *(getSpans()) == *(other.getSpans());
 }
 
 namespace {
@@ -185,7 +185,7 @@ private:
         spanY(spanSchema.addField<int>("y", "The row of the span", "pixel")),
         spanX0(spanSchema.addField<int>("x0", "First column of span (inclusive)", "pixel")),
         spanX1(spanSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel"))
-        {}
+        {spanSchema.getCitizen().markPersistent();}
 };
 
 std::pair<afw::table::Schema&, table::Key<int>&> spanSetPersistenceHelper() {
@@ -195,6 +195,7 @@ std::pair<afw::table::Schema&, table::Key<int>&> spanSetPersistenceHelper() {
     if (initialize) {
         idKey = spanSetIdSchema.addField<int>("id", "id of the SpanSet catalog");
         initialize = false;
+        spanSetIdSchema.getCitizen().markPersistent();
     }
     std::pair<afw::table::Schema&, table::Key<int>&> returnPair(spanSetIdSchema, idKey);
     return returnPair;
@@ -229,7 +230,7 @@ std::string Bootprint::getPersistenceName() const { return getBootprintPersisten
 
 void Bootprint::write(afw::table::io::OutputArchiveHandle & handle) const {
     // get the span schema and key
-    auto const & keys = spanSetPersistenceHelper();
+    auto const keys = spanSetPersistenceHelper();
     // create the output catalog
     afw::table::BaseCatalog spanSetCat = handle.makeCatalog(keys.first);
     // create a record that will hold the ID of the recursively saved SpanSet
@@ -249,7 +250,7 @@ std::unique_ptr<Bootprint> Bootprint::readSpanSet(afw::table::BaseCatalog const 
     std::shared_ptr<geom::SpanSet> loadedSpanSet;
     if (fieldCount == 1) {
         // This is a new style footprint with a SpanSet as a member, treat accordingly
-        auto const & schemaAndKey = spanSetPersistenceHelper();
+        auto const schemaAndKey = spanSetPersistenceHelper();
         int persistedSpanSetId = catalog.front().get(schemaAndKey.second);
         loadedSpanSet = std::dynamic_pointer_cast<geom::SpanSet>(archive.get(persistedSpanSetId));
     } else {
@@ -277,8 +278,8 @@ void Bootprint::readPeaks(afw::table::BaseCatalog const & peakCat, Bootprint & l
         mapper.addMapping(oldX, "f.x");
         mapper.addMapping(oldY, "f.y");
         mapper.addMapping(oldPeakValue, "peakValue");
+        loadedBootprint.setPeakSchema(mapper.getOutputSchema());
         auto peaks = loadedBootprint.getPeaks();
-        peaks = PeakCatalog(mapper.getOutputSchema());
         peaks.reserve(peakCat.size());
         for (auto const & peak : peakCat) {
             auto newPeak = peaks.addNew();
@@ -288,8 +289,8 @@ void Bootprint::readPeaks(afw::table::BaseCatalog const & peakCat, Bootprint & l
         }
         return;
     }
-    auto peaks = loadedBootprint.getPeaks();
-    peaks = PeakCatalog(peakCat.getSchema());
+    loadedBootprint.setPeakSchema(peakCat.getSchema());
+    auto & peaks = loadedBootprint.getPeaks();
     peaks.reserve(peakCat.size());
     for (auto const & peak : peakCat) {
         peaks.addNew()->assign(peak);
