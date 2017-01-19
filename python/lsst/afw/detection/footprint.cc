@@ -149,8 +149,10 @@ PYBIND11_PLUGIN(_footprint) {
     mod.def("mergeFootprints", (PTR(Footprint) (*)(Footprint const&, Footprint const&)) mergeFootprints);
     mod.def("mergeFootprints", (PTR(Footprint) (*)(Footprint&, Footprint&)) mergeFootprints);
     mod.def("shrinkFootprint", shrinkFootprint);
-    mod.def("growFootprint", (PTR(Footprint) (*)(Footprint const&, int, bool)) growFootprint);
-    mod.def("growFootprint", (PTR(Footprint) (*)(PTR(Footprint) const&, int, bool)) growFootprint);
+    mod.def("growFootprint", (PTR(Footprint) (*)(Footprint const&, int, bool)) growFootprint,
+            "foot"_a, "nGrow"_a, "isotropic"_a=true);
+    mod.def("growFootprint", (PTR(Footprint) (*)(PTR(Footprint) const&, int, bool)) growFootprint,
+            "foot"_a, "nGrow"_a, "isotropic"_a=true);
     mod.def("growFootprint", (PTR(Footprint) (*)(Footprint const&, int, bool, bool, bool, bool)) growFootprint);
     mod.def("footprintToBBoxList", footprintToBBoxList);
 //
