@@ -34,6 +34,7 @@
 #include "lsst/afw/geom/LinearTransform.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
@@ -59,7 +60,7 @@ PYBIND11_PLUGIN(_linearTransform) {
 
     /* Constructors */
     clsLinearTransform.def(py::init<>());
-    clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>());
+    clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>(), "matrix"_a);
 
     /* Operators */
     clsLinearTransform.def("__call__",
@@ -85,10 +86,12 @@ PYBIND11_PLUGIN(_linearTransform) {
     clsLinearTransform.def("__isub__", &LinearTransform::operator-=, py::is_operator());
 
     /* Members */
-    clsLinearTransform.def_static("makeScaling", (LinearTransform(*)(double))LinearTransform::makeScaling);
+    clsLinearTransform.def_static("makeScaling", (LinearTransform(*)(double))LinearTransform::makeScaling,
+                                  "scale"_a);
     clsLinearTransform.def_static("makeScaling",
                                   (LinearTransform(*)(double, double))LinearTransform::makeScaling);
-    clsLinearTransform.def_static("makeRotation", (LinearTransform(*)(Angle t))LinearTransform::makeRotation);
+    clsLinearTransform.def_static("makeRotation", (LinearTransform(*)(Angle t))LinearTransform::makeRotation,
+                                  "angle"_a);
     clsLinearTransform.def("getParameterVector", &LinearTransform::getParameterVector);
     clsLinearTransform.def(
         "getMatrix",
@@ -102,7 +105,7 @@ PYBIND11_PLUGIN(_linearTransform) {
         self[LinearTransform::XY] = xy;
         self[LinearTransform::YX] = yx;
         self[LinearTransform::YY] = yy;
-    });
+    }, "xx"_a, "yx"_a, "xy"_a, "yy"_a);
 
     return mod.ptr();
 }
