@@ -91,6 +91,7 @@ std::shared_ptr<geom::SpanSet> maskToSpanSet(image::Mask<T> const & mask,
     std::size_t startValue{0};
     bool started{false};
     auto const & maskArray = mask.getArray();
+    auto const & minPoint = mask.getBBox().getMin();
     auto dimensions = maskArray.getShape();
     for (size_t y = 0; y < dimensions[0]; ++y) {
         startValue = 0;
@@ -104,16 +105,22 @@ std::shared_ptr<geom::SpanSet> maskToSpanSet(image::Mask<T> const & mask,
             }
             // If a span has been started, and the functor condition is false, that means the
             // Span being created should be stopped, and appended to the Span vector
+            // Offset the x, y position by the minimum point of the mask
             else if (started && !p(maskArray[y][x])) {
-                tempVec.push_back(Span(y, startValue, x-1));
+                tempVec.push_back(Span(y + minPoint.getY(),
+                                       startValue + minPoint.getX(),
+                                       x-1+minPoint.getX()));
                 started = false;
             }
-            // If this is the last value in the Span's x range, and started is still true
-            // that means the last value does not evaluate false in the functor and should be
-            // included in the Span under construction. The Span should be completed and added
-            // to the Span Vector before the next span is concidered.
-            if (started && x == dimensions[1]) {
-                tempVec.push_back(Span(y, startValue, x));
+            // If this is the last value in the Span's x range (dimension minux one), and started
+            // is still true that means the last value does not evaluate false in the functor
+            // and should be included in the Span under construction. The Span should be completed
+            // and added to the Span Vector before the next span is concidered.
+            // offset the x, y position by the minimum point of the mask
+            if (started && x == dimensions[1] - 1) {
+                tempVec.push_back(Span(y + minPoint.getY(),
+                                       startValue + minPoint.getX(),
+                                       x + minPoint.getX()));
             }
         }
     }
@@ -498,12 +505,13 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     void setMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
         // Use a lambda to set bits in a mask at the locations given by SpanSet
         auto targetArray = target.getArray();
+        auto xy0 = target.getBBox().getMin();
         auto maskFunctor = []
                            (Point2I const & point,
                             typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
                             T bitmask)
                            {maskVal |= bitmask;};
-        applyFunctor(maskFunctor, ndarray::ndImage(targetArray), bitmask);
+        applyFunctor(maskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
     }
 
     /** @brief Unset a Maks at pixels defined by the SpanSet
@@ -517,12 +525,13 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     void clearMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
         // Use a lambda to clear bits in a mask at the locations given by SpanSet
         auto targetArray = target.getArray();
+        auto xy0 = target.getBBox().getMin();
         auto clearMaskFunctor = []
                                 (Point2I const & point,
                                  typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
                                  T bitmask)
                                 {maskVal &= ~bitmask;};
-        applyFunctor(clearMaskFunctor, ndarray::ndImage(targetArray), bitmask);
+        applyFunctor(clearMaskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
     }
 
     // SpanSet functions
@@ -619,6 +628,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     /** @brief Split a discontinuous SpanSet into multiple SpanSets which are contiguous
      */
     std::vector<std::shared_ptr<geom::SpanSet>> split() const;
+
+    /**
+     * @brief Select pixels within the SpanSet which touch its edge
+     *
+     */
+     std::shared_ptr<geom::SpanSet> findEdgePixels() const;
 
     bool isPersistable() const { return true; }
 

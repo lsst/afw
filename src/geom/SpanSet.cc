@@ -315,6 +315,13 @@ std::vector<std::shared_ptr<geom::SpanSet>> geom::SpanSet::split() const {
     return subRegions;
 }
 
+std::shared_ptr<geom::SpanSet> geom::SpanSet::findEdgePixels() const {
+    image::Mask<image::MaskPixel> tempMask(getBBox());
+    setMask(tempMask, static_cast<image::MaskPixel>(1));
+    auto erodedSpanSet = erode(1, geom::Stencil::CIRCLE);
+    erodedSpanSet->clearMask(tempMask, static_cast<image::MaskPixel>(1));
+    return geom::maskToSpanSet(tempMask);
+}
 
 std::shared_ptr<geom::SpanSet> geom::SpanSet::shiftedBy(int x, int y) const {
     // Function to create a new SpanSet which is a copy of this, shifted by x and y
