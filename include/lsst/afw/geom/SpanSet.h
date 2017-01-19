@@ -629,6 +629,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      */
     std::vector<std::shared_ptr<geom::SpanSet>> split() const;
 
+    /**
+     * @brief Select pixels within the SpanSet which touch its edge
+     *
+     */
+     std::shared_ptr<geom::SpanSet> findEdgePixels() const;
+
     bool isPersistable() const { return true; }
 
 private:
