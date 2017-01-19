@@ -21,7 +21,6 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "numpy/arrayobject.h"
@@ -30,19 +29,24 @@
 
 #include "lsst/utils/pybind11.h"
 
+#include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/LinearTransform.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst {
+namespace afw {
+namespace geom {
 
 PYBIND11_PLUGIN(_linearTransform) {
     py::module mod("_linearTransform", "Python wrapper for afw _linearTransform library");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
-        }
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
 
     py::class_<LinearTransform> clsLinearTransform(mod, "LinearTransform");
 
@@ -56,18 +60,25 @@ PYBIND11_PLUGIN(_linearTransform) {
 
     /* Constructors */
     clsLinearTransform.def(py::init<>());
-    clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>());
+    clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>(), "matrix"_a);
 
     /* Operators */
-    clsLinearTransform.def("__getitem__", [](LinearTransform const & self, int i) {
-            return self[lsst::utils::cppIndex(4, i)];
-        }, py::is_operator());
-    clsLinearTransform.def("__getitem__", [](LinearTransform const & self, std::pair<int, int> i) {
-            auto row = lsst::utils::cppIndex(2, i.first);
-            auto col = lsst::utils::cppIndex(2, i.second);
-            return self.getMatrix()(row, col);
-        }, py::is_operator());
-
+    clsLinearTransform.def("__call__",
+                           (Point2D(LinearTransform::*)(Point2D const &) const) & LinearTransform::operator(),
+                           py::is_operator());
+    clsLinearTransform.def(
+        "__call__", (Extent2D(LinearTransform::*)(Extent2D const &) const) & LinearTransform::operator(),
+        py::is_operator());
+    clsLinearTransform.def(
+        "__getitem__", [](LinearTransform const &self, int i) { return self[lsst::utils::cppIndex(4, i)]; },
+        py::is_operator());
+    clsLinearTransform.def("__getitem__",
+                           [](LinearTransform const &self, std::pair<int, int> i) {
+                               auto row = lsst::utils::cppIndex(2, i.first);
+                               auto col = lsst::utils::cppIndex(2, i.second);
+                               return self.getMatrix()(row, col);
+                           },
+                           py::is_operator());
     clsLinearTransform.def("__mul__", &LinearTransform::operator*, py::is_operator());
     clsLinearTransform.def("__add__", &LinearTransform::operator+, py::is_operator());
     clsLinearTransform.def("__sub__", &LinearTransform::operator-, py::is_operator());
@@ -75,21 +86,29 @@ PYBIND11_PLUGIN(_linearTransform) {
     clsLinearTransform.def("__isub__", &LinearTransform::operator-=, py::is_operator());
 
     /* Members */
-    clsLinearTransform.def_static("makeScaling", (LinearTransform (*)(double)) LinearTransform::makeScaling);
-    clsLinearTransform.def_static("makeScaling", (LinearTransform (*)(double, double)) LinearTransform::makeScaling);
-    clsLinearTransform.def_static("makeRotation", (LinearTransform (*)(Angle t)) LinearTransform::makeRotation);
-//    clsLinearTransform.def("getParameterVector", (ParameterVector const (LinearTransform::*)() const) &LinearTransform::getParameterVector);
-    clsLinearTransform.def("getMatrix", (typename LinearTransform::Matrix const & (LinearTransform::*)() const) &LinearTransform::getMatrix);
+    clsLinearTransform.def_static("makeScaling", (LinearTransform(*)(double))LinearTransform::makeScaling,
+                                  "scale"_a);
+    clsLinearTransform.def_static("makeScaling",
+                                  (LinearTransform(*)(double, double))LinearTransform::makeScaling);
+    clsLinearTransform.def_static("makeRotation", (LinearTransform(*)(Angle t))LinearTransform::makeRotation,
+                                  "angle"_a);
+    clsLinearTransform.def("getParameterVector", &LinearTransform::getParameterVector);
+    clsLinearTransform.def(
+        "getMatrix",
+        (typename LinearTransform::Matrix const &(LinearTransform::*)() const) & LinearTransform::getMatrix);
     clsLinearTransform.def("invert", &LinearTransform::invert);
     clsLinearTransform.def("computeDeterminant", &LinearTransform::computeDeterminant);
     clsLinearTransform.def("isIdentity", &LinearTransform::isIdentity);
 
-    clsLinearTransform.def("set", [](LinearTransform & self, double xx, double yx, double xy, double yy) {
-        self[lsst::afw::geom::LinearTransform::XX] = xx;
-        self[lsst::afw::geom::LinearTransform::XY] = xy;
-        self[lsst::afw::geom::LinearTransform::YX] = yx;
-        self[lsst::afw::geom::LinearTransform::YY] = yy;
-    });
+    clsLinearTransform.def("set", [](LinearTransform &self, double xx, double yx, double xy, double yy) {
+        self[LinearTransform::XX] = xx;
+        self[LinearTransform::XY] = xy;
+        self[LinearTransform::YX] = yx;
+        self[LinearTransform::YY] = yy;
+    }, "xx"_a, "yx"_a, "xy"_a, "yy"_a);
 
     return mod.ptr();
 }
+}
+}
+}  // namespace lsst::afw::geom
