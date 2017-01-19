@@ -22,6 +22,9 @@
  */
 
 #include <cstdint>
+#include <sstream>
+#include <string>
+#include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "numpy/arrayobject.h"
@@ -201,6 +204,38 @@ PYBIND11_PLUGIN(_spanSet) {
                    [](SpanSet & self, SpanSet const & other)->bool {return self.contains(other); });
     clsSpanSet.def("__contains__",
                    [](SpanSet & self, Point2I & other)->bool {return self.contains(other); });
+    clsSpanSet.def("__repr__",
+                   []
+                   (SpanSet const & self)-> std::string
+                   {
+                       std::ostringstream os;
+                       lsst::afw::image::Mask<MaskPixel> tempMask(self.getBBox());
+                       self.setMask(tempMask, static_cast<MaskPixel>(1));
+                       auto array = tempMask.getArray();
+                       auto dims = array.getShape();
+                       for (std::size_t i = 0; i < dims[0]; ++i){
+                           os << "[";
+                           for (std::size_t j = 0; j< dims[1]; ++j) {
+                               os << array[i][j];
+                               if (j != dims[1] - 1){
+                                   os << ", ";
+                               }
+                           }
+                           os << "]" << std::endl;
+                       }
+                       return os.str();
+                   });
+    clsSpanSet.def("__str__",
+                   []
+                   (SpanSet const & self)->std::string
+                   {
+                       std::ostringstream os;
+                       for (auto const & span : self) {
+                           os << span.getY() << ": " << span.getMinX()
+                              << ".." << span.getMaxX() << std::endl;
+                       }
+                       return os.str();
+                   });
     // Instantiate all the templates
     declareFlattenMethod<uint16_t>(clsSpanSet);
     declareFlattenMethod<uint64_t>(clsSpanSet);
