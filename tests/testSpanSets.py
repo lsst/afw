@@ -285,6 +285,37 @@ class SpanSetTestCase(unittest.TestCase):
         self.assertTrue(firstSpanSet == secondSpanSetShift)
         self.assertFalse(firstSpanSet != secondSpanSetShift)
 
+    def testFindEdgePixels(self):
+        spanSet = afwGeom.SpanSet.spanSetFromShape(6, afwGeom.Stencil.CIRCLE)
+        spanSetEdge = spanSet.findEdgePixels()
+
+        truthSpans = [afwGeom.Span(-6, 0, 0),
+                      afwGeom.Span(-5, -3, -1),
+                      afwGeom.Span(-5, 1, 3),
+                      afwGeom.Span(-4, -4, -4),
+                      afwGeom.Span(-4, 4, 4),
+                      afwGeom.Span(-3, -5, -5),
+                      afwGeom.Span(-3, 5, 5),
+                      afwGeom.Span(-2, -5, -5),
+                      afwGeom.Span(-2, 5, 5),
+                      afwGeom.Span(-1, -5, -5),
+                      afwGeom.Span(-1, 5, 5),
+                      afwGeom.Span(0, -6, -6),
+                      afwGeom.Span(0, 6, 6),
+                      afwGeom.Span(1, -5, -5),
+                      afwGeom.Span(1, 5, 5),
+                      afwGeom.Span(2, -5, -5),
+                      afwGeom.Span(2, 5, 5),
+                      afwGeom.Span(3, -5, -5),
+                      afwGeom.Span(3, 5, 5),
+                      afwGeom.Span(4, -4, -4),
+                      afwGeom.Span(4, 4, 4),
+                      afwGeom.Span(5, -3, -1),
+                      afwGeom.Span(5, 1, 3),
+                      afwGeom.Span(6, 0, 0)]
+        truthSpanSet = afwGeom.SpanSet(truthSpans)
+        self.assertEqual(spanSetEdge, truthSpanSet)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
