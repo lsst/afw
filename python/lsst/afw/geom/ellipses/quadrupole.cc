@@ -56,7 +56,7 @@ PYBIND11_PLUGIN(_quadrupole) {
 
     /* Operators */
     clsQuadrupole.def("__eq__", [](Quadrupole & self, Quadrupole & other) { return self == other; }, py::is_operator());
-    clsQuadrupole.def("__neq__", [](Quadrupole & self, Quadrupole & other) { return self != other; }, py::is_operator());
+    clsQuadrupole.def("__ne__", [](Quadrupole & self, Quadrupole & other) { return self != other; }, py::is_operator());
 
     /* Members */
     clsQuadrupole.def("getIxx", &Quadrupole::getIxx);
