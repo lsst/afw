@@ -22,6 +22,9 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
@@ -72,6 +75,7 @@ py::class_<Point<T,N>> declarePoint(py::module &mod, const std::string & suffix)
     cls.def(py::init<Point<double,N> const &>());
     cls.def(py::init<Point<int,N> const &>());
     cls.def(py::init<Extent<T,N> const &>());
+    cls.def(py::init<typename Point<T, N>::EigenVector>());
 
     /* Operators */
     cls.def(py::self + Extent<double,N>());
@@ -139,6 +143,11 @@ py::class_<Point<T,3>> declarePoint3(py::module &mod, const std::string & suffix
 
 PYBIND11_PLUGIN(_point) {
     py::module mod("_point", "Python wrapper for afw _point library");
+
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    };
 
     // First declare the bases
     auto clsPointBase2I = declarePointBase<int, 2>(mod, "2I");
