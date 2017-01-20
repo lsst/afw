@@ -21,84 +21,98 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst {
+namespace afw {
+namespace geom {
+
+namespace {
 
 template <typename T, int N>
-py::class_<ExtentBase<T,N>> declareExtentBase(py::module &mod, const std::string & suffix) {
+py::class_<ExtentBase<T, N>> declareExtentBase(py::module &mod, const std::string &suffix) {
     const std::string name = "ExtentBase" + suffix;
-    py::class_<ExtentBase<T,N>, CoordinateBase<Extent<T,N>,T,N>> cls(mod, name.c_str());
+    py::class_<ExtentBase<T, N>, CoordinateBase<Extent<T, N>, T, N>> cls(mod, name.c_str());
 
     /* Operators */
-    cls.def("eq", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.eq(value); });
-    cls.def("ne", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.ne(value); });
-    cls.def("lt", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.lt(value); });
-    cls.def("le", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.le(value); });
-    cls.def("gt", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.gt(value); });
-    cls.def("ge", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.ge(value); });
-    cls.def("eq", [](ExtentBase<T,N> &p, T value) { return p.eq(value); });
-    cls.def("ne", [](ExtentBase<T,N> &p, T value) { return p.ne(value); });
-    cls.def("lt", [](ExtentBase<T,N> &p, T value) { return p.lt(value); });
-    cls.def("le", [](ExtentBase<T,N> &p, T value) { return p.le(value); });
-    cls.def("gt", [](ExtentBase<T,N> &p, T value) { return p.gt(value); });
-    cls.def("ge", [](ExtentBase<T,N> &p, T value) { return p.ge(value); });
+    cls.def("eq", [](ExtentBase<T, N> &self, Extent<T, N> other) { return self.eq(other); });
+    cls.def("ne", [](ExtentBase<T, N> &self, Extent<T, N> other) { return self.ne(other); });
+    cls.def("lt", [](ExtentBase<T, N> &self, Extent<T, N> other) { return self.lt(other); });
+    cls.def("le", [](ExtentBase<T, N> &self, Extent<T, N> other) { return self.le(other); });
+    cls.def("gt", [](ExtentBase<T, N> &self, Extent<T, N> other) { return self.gt(other); });
+    cls.def("ge", [](ExtentBase<T, N> &self, Extent<T, N> other) { return self.ge(other); });
+    cls.def("eq", [](ExtentBase<T, N> &self, T other) { return self.eq(other); });
+    cls.def("ne", [](ExtentBase<T, N> &self, T other) { return self.ne(other); });
+    cls.def("lt", [](ExtentBase<T, N> &self, T other) { return self.lt(other); });
+    cls.def("le", [](ExtentBase<T, N> &self, T other) { return self.le(other); });
+    cls.def("gt", [](ExtentBase<T, N> &self, T other) { return self.gt(other); });
+    cls.def("ge", [](ExtentBase<T, N> &self, T other) { return self.ge(other); });
 
     /* Members */
-    cls.def("asPoint", &ExtentBase<T,N>::asPoint);
-    cls.def("computeNorm", &ExtentBase<T,N>::computeNorm);
-    cls.def("computeSquaredNorm", &ExtentBase<T,N>::computeSquaredNorm);
+    cls.def("asPoint", &ExtentBase<T, N>::asPoint);
+    cls.def("computeNorm", &ExtentBase<T, N>::computeNorm);
+    cls.def("computeSquaredNorm", &ExtentBase<T, N>::computeSquaredNorm);
 
     return cls;
 }
 
 // Common functionality
 template <typename T, int N>
-py::class_<Extent<T,N>> declareExtent(py::module &mod, const std::string & suffix) {
+py::class_<Extent<T, N>> declareExtent(py::module &mod, const std::string &suffix) {
     const std::string name = "Extent" + suffix;
-    py::class_<Extent<T,N>, ExtentBase<T, N>> cls(mod, name.c_str());
+    py::class_<Extent<T, N>, ExtentBase<T, N>> cls(mod, name.c_str());
 
     /* Constructors */
-    cls.def(py::init<T>(),
-        py::arg("val")=static_cast<T>(0));
-    cls.def(py::init<Point<int,N> const &>());
-    cls.def(py::init<Point<T,N> const &>());
-    cls.def(py::init<Extent<int,N> const &>());
-    cls.def(py::init<Extent<T,N> const &>());
+    cls.def(py::init<T>(), "value"_a=static_cast<T>(0));
+    cls.def(py::init<Point<int, N> const &>());
+    cls.def(py::init<Point<T, N> const &>());
+    cls.def(py::init<Extent<int, N> const &>());
+    cls.def(py::init<Extent<T, N> const &>());
+    cls.def(py::init<typename Extent<T, N>::EigenVector>());
 
     /* Operators */
-    cls.def(-py::self);
-    cls.def(+py::self);
-    cls.def("__mul__", [](Extent<T,N> &e, int val) { return e * val; }, py::is_operator());
-    cls.def("__mul__", [](Extent<T,N> &e, double val) { return e * val; }, py::is_operator());
-    cls.def("__rmul__", [](Extent<T,N> &e, int val) { return e * val; }, py::is_operator());
-    cls.def("__rmul__", [](Extent<T,N> &e, double val) { return e * val; }, py::is_operator());
-    cls.def("__add__", [](Extent<T,N> &e, Extent<int,N> &o) { return e + o; }, py::is_operator());
-    cls.def("__add__", [](Extent<T,N> &e, Extent<double,N> &o) { return e + o; }, py::is_operator());
-    cls.def("__add__", [](Extent<T,N> &e, Point<int,N> &o) { return e + Point<T,N>(o); }, py::is_operator());
-    cls.def("__add__", [](Extent<T,N> &e, Point<double,N> &o) { return e + o; }, py::is_operator());
-    cls.def("__sub__", [](Extent<T,N> &e, Extent<int,N> &o) { return e - Extent<T,N>(o); }, py::is_operator());
-    cls.def("__sub__", [](Extent<T,N> &e, Extent<double,N> &o) { return e - o; }, py::is_operator());
-    cls.def("__eq__", [](Extent<T,N> &e, Extent<T,N> &o) { return e == o; }, py::is_operator());
-    cls.def("__eq__", [](Extent<T,N> &e, py::none) { return false; }, py::is_operator());
-    cls.def("__ne__", [](Extent<T,N> &e, Extent<T,N> &o) { return e != o; }, py::is_operator());
-    cls.def("__ne__", [](Extent<T,N> &e, py::none) { return true; }, py::is_operator());
+    cls.def("__neg__", [](Extent<T, N> &self) { return -self; });
+    cls.def("__pos__", [](Extent<T, N> &self) { return self; });
+    cls.def("__mul__", [](Extent<T, N> &self, int other) { return self * other; }, py::is_operator());
+    cls.def("__mul__", [](Extent<T, N> &self, double other) { return self * other; }, py::is_operator());
+    cls.def("__rmul__", [](Extent<T, N> &self, int other) { return self * other; }, py::is_operator());
+    cls.def("__rmul__", [](Extent<T, N> &self, double other) { return self * other; }, py::is_operator());
+    cls.def("__add__", [](Extent<T, N> &self, Extent<int, N> &other) { return self + other; },
+            py::is_operator());
+    cls.def("__add__", [](Extent<T, N> &self, Extent<double, N> &other) { return self + other; },
+            py::is_operator());
+    cls.def("__add__", [](Extent<T, N> &self, Point<int, N> &other) { return self + Point<T, N>(other); },
+            py::is_operator());
+    cls.def("__add__", [](Extent<T, N> &self, Point<double, N> &other) { return self + other; },
+            py::is_operator());
+    cls.def("__sub__", [](Extent<T, N> &self, Extent<int, N> &other) { return self - Extent<T, N>(other); },
+            py::is_operator());
+    cls.def("__sub__", [](Extent<T, N> &self, Extent<double, N> &other) { return self - other; },
+            py::is_operator());
+    cls.def("__eq__", [](Extent<T, N> &self, Extent<T, N> &other) { return self == other; },
+            py::is_operator());
+    cls.def("__eq__", [](Extent<T, N> &self, py::none) { return false; }, py::is_operator());
+    cls.def("__ne__", [](Extent<T, N> &self, Extent<T, N> &other) { return self != other; },
+            py::is_operator());
+    cls.def("__ne__", [](Extent<T, N> &self, py::none) { return true; }, py::is_operator());
 
     /* Members */
-    cls.def("clone", [](Extent<T,N> &p) {return Extent<T,N>{p};});
+    cls.def("clone", [](Extent<T, N> &self) { return Extent<T, N>{self}; });
 
     return cls;
 }
 
 // Add functionality only found in N=2 Extents
 template <typename T>
-py::class_<Extent<T,2>> declareExtent2(py::module &mod, const std::string & suffix) {
-    auto cls = declareExtent<T,2>(mod, std::string("2") + suffix);
+py::class_<Extent<T, 2>> declareExtent2(py::module &mod, const std::string &suffix) {
+    auto cls = declareExtent<T, 2>(mod, std::string("2") + suffix);
 
     /* Members types and enums */
     cls.def_property_readonly_static("dimensions", [](py::object /* self */) { return 2; });
@@ -108,18 +122,18 @@ py::class_<Extent<T,2>> declareExtent2(py::module &mod, const std::string & suff
     cls.def(py::init<double, double>());
 
     /* Members */
-    cls.def("getX", [](Extent<T,2> &e) { return e[0]; });
-    cls.def("getY", [](Extent<T,2> &e) { return e[1]; });
-    cls.def("setX", [](Extent<T,2> &e, T value) { e[0] = value; });
-    cls.def("setY", [](Extent<T,2> &e, T value) { e[1] = value; });
+    cls.def("getX", [](Extent<T, 2> &self) { return self[0]; });
+    cls.def("getY", [](Extent<T, 2> &self) { return self[1]; });
+    cls.def("setX", [](Extent<T, 2> &self, T other) { self[0] = other; });
+    cls.def("setY", [](Extent<T, 2> &self, T other) { self[1] = other; });
 
     return cls;
 }
 
 // Add functionality only found in N=3 Extents
 template <typename T>
-py::class_<Extent<T,3>> declareExtent3(py::module &mod, const std::string & suffix) {
-    auto cls = declareExtent<T,3>(mod, std::string("3") + suffix);
+py::class_<Extent<T, 3>> declareExtent3(py::module &mod, const std::string &suffix) {
+    auto cls = declareExtent<T, 3>(mod, std::string("3") + suffix);
 
     /* Member types and enums */
     cls.def_property_readonly_static("dimensions", [](py::object /* self */) { return 3; });
@@ -129,18 +143,25 @@ py::class_<Extent<T,3>> declareExtent3(py::module &mod, const std::string & suff
     cls.def(py::init<double, double, double>());
 
     /* Members */
-    cls.def("getX", [](Extent<T,3> &e) { return e[0]; });
-    cls.def("getY", [](Extent<T,3> &e) { return e[1]; });
-    cls.def("getZ", [](Extent<T,3> &e) { return e[2]; });
-    cls.def("setX", [](Extent<T,3> &e, T value) { e[0] = value; });
-    cls.def("setY", [](Extent<T,3> &e, T value) { e[1] = value; });
-    cls.def("setZ", [](Extent<T,3> &e, T value) { e[2] = value; });
+    cls.def("getX", [](Extent<T, 3> &self) { return self[0]; });
+    cls.def("getY", [](Extent<T, 3> &self) { return self[1]; });
+    cls.def("getZ", [](Extent<T, 3> &self) { return self[2]; });
+    cls.def("setX", [](Extent<T, 3> &self, T other) { self[0] = other; });
+    cls.def("setY", [](Extent<T, 3> &self, T other) { self[1] = other; });
+    cls.def("setZ", [](Extent<T, 3> &self, T other) { self[2] = other; });
 
     return cls;
 }
 
+}  // namespace lsst::afw::geom::<anonymous>
+
 PYBIND11_PLUGIN(_extent) {
     py::module mod("_extent", "Python wrapper for afw _extent library");
+
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    };
 
     // First declare the bases
     auto clsExtentBase2I = declareExtentBase<int, 2>(mod, "2I");
@@ -161,60 +182,158 @@ PYBIND11_PLUGIN(_extent) {
     // Therefore one needs to be carefull in the definition of division operators.
     // Also note that pybind11 tries operators (like any overload) `in order'. So int has
     // to come before double if specialization is needed.
-    clsExtent2I.def("__floordiv__", [](Extent<int,2> &e, int val) -> Extent<int,2> { return floor(e / static_cast<double>(val)); });
-    clsExtent3I.def("__floordiv__", [](Extent<int,3> &e, int val) -> Extent<int,3> { return floor(e / static_cast<double>(val)); });
+    clsExtent2I.def("__floordiv__",
+                    [](Extent<int, 2> &self, int other) -> Extent<int, 2> {
+                        return floor(self / static_cast<double>(other));
+                    },
+                    py::is_operator());
+    clsExtent3I.def("__floordiv__",
+                    [](Extent<int, 3> &self, int other) -> Extent<int, 3> {
+                        return floor(self / static_cast<double>(other));
+                    },
+                    py::is_operator());
 
-    clsExtent2I.def("__div__", [](Extent<int,2> &e, int val) { return floor(e / static_cast<double>(val)); });
-    clsExtent3I.def("__div__", [](Extent<int,3> &e, int val) { return floor(e / static_cast<double>(val)); });
-    clsExtent2I.def("__div__", [](Extent<int,2> &e, double val) { return e / val; });
-    clsExtent3I.def("__div__", [](Extent<int,3> &e, double val) { return e / val; });
-    clsExtent2D.def("__div__", [](Extent<double,2> &e, double val) { return e / val; });
-    clsExtent3D.def("__div__", [](Extent<double,3> &e, double val) { return e / val; });
+    clsExtent2I.def("__div__",
+                    [](Extent<int, 2> &self, int other) { return floor(self / static_cast<double>(other)); },
+                    py::is_operator());
+    clsExtent3I.def("__div__",
+                    [](Extent<int, 3> &self, int other) { return floor(self / static_cast<double>(other)); },
+                    py::is_operator());
+    clsExtent2I.def("__div__", [](Extent<int, 2> &self, double other) { return self / other; },
+                    py::is_operator());
+    clsExtent3I.def("__div__", [](Extent<int, 3> &self, double other) { return self / other; },
+                    py::is_operator());
+    clsExtent2D.def("__div__", [](Extent<double, 2> &self, double other) { return self / other; },
+                    py::is_operator());
+    clsExtent3D.def("__div__", [](Extent<double, 3> &self, double other) { return self / other; },
+                    py::is_operator());
 
-    clsExtent2I.def("__truediv__", [](Extent<int,2> &e, double val) { return e / val; });
-    clsExtent3I.def("__truediv__", [](Extent<int,3> &e, double val) { return e / val; });
-    clsExtent2D.def("__truediv__", [](Extent<double,2> &e, double val) { return e / val; });
-    clsExtent3D.def("__truediv__", [](Extent<double,3> &e, double val) { return e / val; });
+    clsExtent2I.def("__truediv__", [](Extent<int, 2> &self, double other) { return self / other; },
+                    py::is_operator());
+    clsExtent3I.def("__truediv__", [](Extent<int, 3> &self, double other) { return self / other; },
+                    py::is_operator());
+    clsExtent2D.def("__truediv__", [](Extent<double, 2> &self, double other) { return self / other; },
+                    py::is_operator());
+    clsExtent3D.def("__truediv__", [](Extent<double, 3> &self, double other) { return self / other; },
+                    py::is_operator());
 
-    clsExtent2I.def("__ifloordiv__", [](Extent<int,2> &e, int val) -> Extent<int,2>& {  e = floor(e / static_cast<double>(val)); return e;});
-    clsExtent3I.def("__ifloordiv__", [](Extent<int,3> &e, int val) -> Extent<int,3>& {  e = floor(e / static_cast<double>(val)); return e;});
+    clsExtent2I.def("__ifloordiv__", [](Extent<int, 2> &self, int other) -> Extent<int, 2> & {
+        self = floor(self / static_cast<double>(other));
+        return self;
+    });
+    clsExtent3I.def("__ifloordiv__", [](Extent<int, 3> &self, int other) -> Extent<int, 3> & {
+        self = floor(self / static_cast<double>(other));
+        return self;
+    });
 
-    clsExtent2I.def("__idiv__", [](Extent<int,2> &e, int val) -> Extent<int,2>& {  e = floor(e / static_cast<double>(val)); return e;});
-    clsExtent3I.def("__idiv__", [](Extent<int,3> &e, int val) -> Extent<int,3>& {  e = floor(e / static_cast<double>(val)); return e;});
-    clsExtent2D.def("__idiv__", [](Extent<double,2> &e, double val) -> Extent<double,2>& {  e /= val; return e;});
-    clsExtent3D.def("__idiv__", [](Extent<double,3> &e, double val) -> Extent<double,3>& {  e /= val; return e;});
+    clsExtent2I.def("__idiv__", [](Extent<int, 2> &self, int other) -> Extent<int, 2> & {
+        self = floor(self / static_cast<double>(other));
+        return self;
+    });
+    clsExtent3I.def("__idiv__", [](Extent<int, 3> &self, int other) -> Extent<int, 3> & {
+        self = floor(self / static_cast<double>(other));
+        return self;
+    });
+    clsExtent2D.def("__idiv__", [](Extent<double, 2> &self, double other) -> Extent<double, 2> & {
+        self /= other;
+        return self;
+    });
+    clsExtent3D.def("__idiv__", [](Extent<double, 3> &self, double other) -> Extent<double, 3> & {
+        self /= other;
+        return self;
+    });
 
-    clsExtent2I.def("__itruediv__", [](Extent<int,2> &e, double val) {
+    clsExtent2I.def("__itruediv__", [](Extent<int, 2> &self, double other) {
         PyErr_SetString(PyExc_TypeError, "In-place true division not supported for Extent<int,N>.");
         throw py::error_already_set();
     });
-    clsExtent3I.def("__itruediv__", [](Extent<int,3> &e, double val) {
+    clsExtent3I.def("__itruediv__", [](Extent<int, 3> &self, double other) {
         PyErr_SetString(PyExc_TypeError, "In-place true division not supported for Extent<int,N>.");
         throw py::error_already_set();
     });
-    clsExtent2D.def("__itruediv__", [](Extent<double,2> &e, double val) -> Extent<double,2>& {  e /= val; return e;});
-    clsExtent3D.def("__itruediv__", [](Extent<double,3> &e, double val) -> Extent<double,3>& {  e /= val; return e;});
+    clsExtent2D.def("__itruediv__", [](Extent<double, 2> &self, double other) -> Extent<double, 2> & {
+        self /= other;
+        return self;
+    });
+    clsExtent3D.def("__itruediv__", [](Extent<double, 3> &self, double other) -> Extent<double, 3> & {
+        self /= other;
+        return self;
+    });
 
-    clsExtent2I.def("__iadd__", [](Extent<int,2> &lhs, Extent<int,2> &rhs) -> Extent<int,2>& { lhs += rhs; return lhs; });
-    clsExtent3I.def("__iadd__", [](Extent<int,3> &lhs, Extent<int,3> &rhs) -> Extent<int,3>& { lhs += rhs; return lhs; });
-    clsExtent2D.def("__iadd__", [](Extent<double,2> &lhs, Extent<double,2> &rhs) -> Extent<double,2>& { lhs += rhs; return lhs; });
-    clsExtent3D.def("__iadd__", [](Extent<double,3> &lhs, Extent<double,3> &rhs) -> Extent<double,3>& { lhs += rhs; return lhs; });
-    clsExtent2D.def("__iadd__", [](Extent<double,2> &lhs, Extent<int,2> &rhs) -> Extent<double,2>& { lhs += rhs; return lhs; });
-    clsExtent3D.def("__iadd__", [](Extent<double,3> &lhs, Extent<int,3> &rhs) -> Extent<double,3>& { lhs += rhs; return lhs; });
+    clsExtent2I.def("__iadd__", [](Extent<int, 2> &self, Extent<int, 2> &other) -> Extent<int, 2> & {
+        self += other;
+        return self;
+    });
+    clsExtent3I.def("__iadd__", [](Extent<int, 3> &self, Extent<int, 3> &other) -> Extent<int, 3> & {
+        self += other;
+        return self;
+    });
+    clsExtent2D.def("__iadd__", [](Extent<double, 2> &self, Extent<double, 2> &other) -> Extent<double, 2> & {
+        self += other;
+        return self;
+    });
+    clsExtent3D.def("__iadd__", [](Extent<double, 3> &self, Extent<double, 3> &other) -> Extent<double, 3> & {
+        self += other;
+        return self;
+    });
+    clsExtent2D.def("__iadd__", [](Extent<double, 2> &self, Extent<int, 2> &other) -> Extent<double, 2> & {
+        self += other;
+        return self;
+    });
+    clsExtent3D.def("__iadd__", [](Extent<double, 3> &self, Extent<int, 3> &other) -> Extent<double, 3> & {
+        self += other;
+        return self;
+    });
 
-    clsExtent2I.def("__isub__", [](Extent<int,2> &lhs, Extent<int,2> &rhs) -> Extent<int,2>& { lhs -= rhs; return lhs; });
-    clsExtent3I.def("__isub__", [](Extent<int,3> &lhs, Extent<int,3> &rhs) -> Extent<int,3>& { lhs -= rhs; return lhs; });
-    clsExtent2D.def("__isub__", [](Extent<double,2> &lhs, Extent<double,2> &rhs) -> Extent<double,2>& { lhs -= rhs; return lhs; });
-    clsExtent3D.def("__isub__", [](Extent<double,3> &lhs, Extent<double,3> &rhs) -> Extent<double,3>& { lhs -= rhs; return lhs; });
-    clsExtent2D.def("__isub__", [](Extent<double,2> &lhs, Extent<int,2> &rhs) -> Extent<double,2>& { lhs -= rhs; return lhs; });
-    clsExtent3D.def("__isub__", [](Extent<double,3> &lhs, Extent<int,3> &rhs) -> Extent<double,3>& { lhs -= rhs; return lhs; });
+    clsExtent2I.def("__isub__", [](Extent<int, 2> &self, Extent<int, 2> &other) -> Extent<int, 2> & {
+        self -= other;
+        return self;
+    });
+    clsExtent3I.def("__isub__", [](Extent<int, 3> &self, Extent<int, 3> &other) -> Extent<int, 3> & {
+        self -= other;
+        return self;
+    });
+    clsExtent2D.def("__isub__", [](Extent<double, 2> &self, Extent<double, 2> &other) -> Extent<double, 2> & {
+        self -= other;
+        return self;
+    });
+    clsExtent3D.def("__isub__", [](Extent<double, 3> &self, Extent<double, 3> &other) -> Extent<double, 3> & {
+        self -= other;
+        return self;
+    });
+    clsExtent2D.def("__isub__", [](Extent<double, 2> &self, Extent<int, 2> &other) -> Extent<double, 2> & {
+        self -= other;
+        return self;
+    });
+    clsExtent3D.def("__isub__", [](Extent<double, 3> &self, Extent<int, 3> &other) -> Extent<double, 3> & {
+        self -= other;
+        return self;
+    });
 
-    clsExtent2I.def("__imul__", [](Extent<int,2> &lhs, int rhs) -> Extent<int,2>& { lhs *= rhs; return lhs; });
-    clsExtent3I.def("__imul__", [](Extent<int,3> &lhs, int rhs) -> Extent<int,3>& { lhs *= rhs; return lhs; });
-    clsExtent2D.def("__imul__", [](Extent<double,2> &lhs, int rhs) -> Extent<double,2>& { lhs *= rhs; return lhs; });
-    clsExtent2D.def("__imul__", [](Extent<double,2> &lhs, double rhs) -> Extent<double,2>&  { lhs *= rhs; return lhs; });
-    clsExtent3D.def("__imul__", [](Extent<double,3> &lhs, int rhs) -> Extent<double,3>&  { lhs *= rhs; return lhs; });
-    clsExtent3D.def("__imul__", [](Extent<double,3> &lhs, double rhs) -> Extent<double,3>&  { lhs *= rhs; return lhs; });
+    clsExtent2I.def("__imul__", [](Extent<int, 2> &self, int other) -> Extent<int, 2> & {
+        self *= other;
+        return self;
+    });
+    clsExtent3I.def("__imul__", [](Extent<int, 3> &self, int other) -> Extent<int, 3> & {
+        self *= other;
+        return self;
+    });
+    clsExtent2D.def("__imul__", [](Extent<double, 2> &self, int other) -> Extent<double, 2> & {
+        self *= other;
+        return self;
+    });
+    clsExtent2D.def("__imul__", [](Extent<double, 2> &self, double other) -> Extent<double, 2> & {
+        self *= other;
+        return self;
+    });
+    clsExtent3D.def("__imul__", [](Extent<double, 3> &self, int other) -> Extent<double, 3> & {
+        self *= other;
+        return self;
+    });
+    clsExtent3D.def("__imul__", [](Extent<double, 3> &self, double other) -> Extent<double, 3> & {
+        self *= other;
+        return self;
+    });
 
     /* Members */
     mod.def("truncate", truncate<2>);
@@ -226,3 +345,6 @@ PYBIND11_PLUGIN(_extent) {
 
     return mod.ptr();
 }
+}
+}
+}  // namespace lsst::afw::geom
