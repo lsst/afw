@@ -53,8 +53,13 @@ namespace {
 
         cls.def("getXCenter", &SpatialCellCandidate::getXCenter);
         cls.def("getYCenter", &SpatialCellCandidate::getYCenter);
-        cls.def("setStatus", &SpatialCellCandidate::setStatus);
+        cls.def("instantiate", &SpatialCellCandidate::instantiate);
+        cls.def("getCandidateRating", &SpatialCellCandidate::getCandidateRating);
+        cls.def("setCandidateRating", &SpatialCellCandidate::setCandidateRating);
         cls.def("getId", &SpatialCellCandidate::getId);
+        cls.def("getStatus", &SpatialCellCandidate::getStatus);
+        cls.def("setStatus", &SpatialCellCandidate::setStatus);
+        cls.def("isBad", &SpatialCellCandidate::isBad);
     }
 
     // Wrap SpatialCellCandidateIterator
