@@ -84,8 +84,8 @@ py::class_<Point<T,N>> declarePoint(py::module &mod, const std::string & suffix)
     cls.def("__sub__", [](Point<T,N> &p, Extent<int,N> &o) { return p - o; });
     cls.def("__eq__", [](Point<T,N> &p, Point<T,N> &o) { return p == o; });
     cls.def("__eq__", [](Point<T,N> &p, py::none) { return false; });
-    cls.def("__neq__", [](Point<T,N> &p, Point<T,N> &o) { return p != o; });
-    cls.def("__neq__", [](Point<T,N> &p, py::none) { return true; });
+    cls.def("__ne__", [](Point<T,N> &p, Point<T,N> &o) { return p != o; });
+    cls.def("__ne__", [](Point<T,N> &p, py::none) { return true; });
 
     /* Members */
     cls.def("clone", [](Point<T,N> &p) {return Point<T,N>{p};});
