@@ -71,9 +71,9 @@ class CoordinateTestCase(object):
             self.assertEqual(p1 == p2, all(p1.eq(p2)))
             self.assertEqual(p1 != p2, any(p1.ne(p2)))
             self.assertIsNotNone(p1)  # should not throw
-            # temporarily disabled for pybind11 until I understand why this should
+            # TODO temporarily disabled for pybind11 until I understand why this should
             # compare as False rather than throw
-            #self.assertNotEqual(p1, tuple(p1))  # should not throw
+            # self.assertNotEqual(p1, tuple(p1))  # should not throw
 
             self.assertEqual(tuple(p1.eq(p2)), tuple([v1 == v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(tuple(p1.ne(p2)), tuple([v1 != v2 for v1, v2 in zip(vector1, vector2)]))
@@ -398,12 +398,6 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.floordiv, eI, float, TypeError)
 
     def testInPlaceOperators(self):
-        # Note: I have no idea why Swig throws NotImplementedError sometimes for in-place operators
-        # that don't match rather than TypeError (which is what it throws for regular binary operators,
-        # and what it should be throwing consistently here, if the Python built-ins are any indication).
-        # However, I've determined that it's not worth my time to fix it, as the only approach
-        # I could think of was to use %feature("shadow"), which I tried, and Swig simply ignored it
-        # (the code I put in those blocks never appeared in the .py file).
         for n in (2, 3):
             pD = geom.Point[float, n]
             pI = geom.Point[int, n]
