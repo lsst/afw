@@ -11,7 +11,7 @@ def spatialCellCandidateIter(self):
         try:
             yield self.__deref__()
         except NotFoundError:
-            raise StopIteration
+            return
         self.__incr__()
 SpatialCellCandidateIterator.__iter__ = spatialCellCandidateIter
 
