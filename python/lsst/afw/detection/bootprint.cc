@@ -108,21 +108,7 @@ PYBIND11_PLUGIN(_bootprint) {
     clsBootprint.def_property_readonly("peaks", (PeakCatalog & (Bootprint::*)()) &Bootprint::getPeaks,
                                        py::return_value_policy::reference);
     clsBootprint.def_property_readonly("isHeavy", &Bootprint::isHeavy);
-    clsBootprint.def_property_readonly("center",
-                                       []
-                                       (Bootprint const & self)->geom::Point2D {
-                                           return self.getCentroid();
-                                       });
-    clsBootprint.def_property_readonly("shape",
-                                       []
-                                       (Bootprint const & self)->geom::ellipses::Quadrupole {
-                                           return self.getShape();
-                                       });
-    clsBootprint.def_property_readonly("bbox",
-                                       []
-                                       (Bootprint const & self)->geom::Box2I {
-                                           return self.getBBox();
-                                       });
+
 
     /* Python Operators functions */
     clsBootprint.def("__contains__", []

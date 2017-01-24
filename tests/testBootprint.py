@@ -126,10 +126,6 @@ class BootprintTestCase(unittest.TestCase):
                                shape, places)
         self.assertEqual(self.footprint.getShape().getIxy(), covShape)
 
-        # Check if the properties are the same as what they refer to
-        self.assertEqual(self.footprint.center, self.footprint.getCentroid())
-        self.assertEqual(self.footprint.shape, self.footprint.getShape())
-
         # Shift the footprint back
         self.footprint.shift(afwGeom.ExtentI(-offsetX, -offsetY))
 
@@ -162,7 +158,7 @@ class BootprintTestCase(unittest.TestCase):
                                 afwGeom.Point2I(clipRad, clipRad))
         self.footprint.clipTo(clipBox)
         # Fetch the bounding box using the property notation
-        bBox = self.footprint.bbox
+        bBox = self.footprint.getBBox()
         # Check the bounding box is now at the bounds which were clipped to
         self.assertEqual(bBox.getMinX(), -clipRad)
         self.assertEqual(bBox.getMinY(), -clipRad)
@@ -179,7 +175,7 @@ class BootprintTestCase(unittest.TestCase):
         self.footprint.erode(kernel)
 
         # Verify the eroded dimensions
-        bBox = self.footprint.bbox
+        bBox = self.footprint.getBBox()
         self.assertEqual(bBox.getMinX(), -3)
         self.assertEqual(bBox.getMinY(), -3)
         self.assertEqual(bBox.getMaxX(), 3)
@@ -193,7 +189,7 @@ class BootprintTestCase(unittest.TestCase):
         self.footprint.erode(1, afwGeom.Stencil.BOX)
 
         # verify the eroded dimensions
-        bBox = self.footprint.bbox
+        bBox = self.footprint.getBBox()
         self.assertEqual(bBox.getMinX(), -3)
         self.assertEqual(bBox.getMinY(), -3)
         self.assertEqual(bBox.getMaxX(), 3)
