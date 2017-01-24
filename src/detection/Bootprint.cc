@@ -30,7 +30,9 @@ namespace lsst { namespace afw { namespace detection {
 Bootprint::Bootprint(std::shared_ptr<geom::SpanSet> inputSpans,
           geom::Box2I const & region): lsst::daf::base::Citizen(typeid(this)),
                                        _spans(inputSpans),
-                                       _region(region) {}
+                                       _region(region) {
+    setPeakSchema(PeakTable::makeMinimalSchema());
+}
 
 Bootprint::Bootprint(std::shared_ptr<geom::SpanSet> inputSpans,
           afw::table::Schema const & peakSchema,
@@ -127,6 +129,25 @@ void Bootprint::removeOrphanPeaks() {
             --iter;
         }
     }
+}
+
+std::vector<std::unique_ptr<Bootprint>> Bootprint::split() const {
+    auto splitSpanSets = getSpans()->split();
+    std::vector<std::unique_ptr<Bootprint>> footprintList;
+    footprintList.reserve(splitSpanSets.size());
+    for (auto & spanPtr : splitSpanSets) {
+        std::unique_ptr<Bootprint> tmpBootprintPointer(new Bootprint(spanPtr,
+                                                                     getPeaks().getSchema(),
+                                                                     getRegion()));
+        tmpBootprintPointer->_peaks = getPeaks();
+        // No need to remove any peaks, as there is only one Footprint, so it will
+        // simply be a copy of the original
+        if (splitSpanSets.size() > 1) {
+            tmpBootprintPointer->removeOrphanPeaks();
+        }
+        footprintList.push_back(std::move(tmpBootprintPointer));
+    }
+    return footprintList;
 }
 
 bool Bootprint::operator==(Bootprint const & other) const {

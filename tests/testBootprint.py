@@ -203,6 +203,36 @@ class BootprintTestCase(unittest.TestCase):
         self.footprint.dilate(1, afwGeom.Stencil.BOX)
         self.assertEqual(self.footprint.spans, self.spans)
 
+    def testSplit(self):
+        spanList = [afwGeom.Span(0, 2, 4),
+                    afwGeom.Span(1, 2, 4),
+                    afwGeom.Span(2, 2, 4),
+                    afwGeom.Span(10, 4, 7),
+                    afwGeom.Span(11, 4, 7),
+                    afwGeom.Span(12, 4, 7)]
+
+        spans = afwGeom.SpanSet(spanList)
+        region = afwGeom.Box2I(afwGeom.PointI(-6, -6), afwGeom.PointI(20, 20))
+        multiFoot = afwDet.Bootprint(spans, region)
+
+        records = [multiFoot.addPeak(3, 1, 100),
+                   multiFoot.addPeak(5, 11, 100)]
+
+        # Verify that the footprint is multi-component
+        self.assertFalse(multiFoot.isContiguous())
+
+        footprintList = multiFoot.split()
+
+        self.assertEqual(len(footprintList), 2)
+        for i, fp in enumerate(footprintList):
+            # check that the correct Spans are populated for each
+            tempSpan = afwGeom.SpanSet(spanList[i*3:i*3+3])
+            self.assertEqual(fp.spans, tempSpan)
+
+            # check that the peaks are split properly
+            self.assertEqual(len(fp.peaks), 1)
+            self.assertEqual(fp.peaks[0], records[i])
+
     def testPersistence(self):
         # populate the peaks for the peak tests
         self.testPeakFunctionality()
