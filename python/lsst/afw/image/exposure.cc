@@ -25,6 +25,7 @@
 #include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Filter.h"
@@ -61,7 +62,7 @@ py::class_<Exposure<PixelT, MaskPixel, VariancePixel>,
     using ExposureT = Exposure<PixelT, MaskPixel, VariancePixel>;
     using MaskedImageT = typename ExposureT::MaskedImageT;
 
-    py::class_<ExposureT, std::shared_ptr<ExposureT>> cls(mod, ("Exposure" + suffix).c_str());
+    py::class_<ExposureT, std::shared_ptr<ExposureT>, lsst::daf::base::Persistable> cls(mod, ("Exposure" + suffix).c_str());
 
     mod.def("makeExposure", &makeExposure<PixelT, MaskPixel, VariancePixel>,
             "maskedImage"_a, "wcs"_a=std::shared_ptr<Wcs const>());
