@@ -19,82 +19,139 @@
  * the GNU General Public License along with this program.  If not, 
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+#include <memory>
+#include <string>
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
 #include "lsst/afw/math/Function.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::math;
+namespace lsst {
+namespace afw {
+namespace math {
 
-template<typename ReturnT>
-void declareFunctions(py::module & mod, const std::string & suffix){
-    /* Function */
-    py::class_<Function<ReturnT>> clsFunction(mod, ("Function"+suffix).c_str());
-    /* Function Constructors */
-    clsFunction.def(py::init<unsigned int>());
-    clsFunction.def(py::init<std::vector<double> const &>());
-    /* Function Members */
-    clsFunction.def("getNParameters", &Function<ReturnT>::getNParameters);
-    clsFunction.def("setParameters", &Function<ReturnT>::setParameters);
+namespace {
 
-    /* Function1 */
-    py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>, Function<ReturnT>> clsFunction1(mod, ("Function1"+suffix).c_str());
+template <typename ReturnT>
+void declareFunction(py::module &mod, std::string const &suffix) {
+    auto const name = "Function" + suffix;
 
-    /* Function2 */
-    py::class_<Function2<ReturnT>, Function<ReturnT>> clsFunction2(mod, ("Function2"+suffix).c_str());
+    table::io::declarePersistableFacade<Function<ReturnT>>(mod, name.c_str());
 
-    /* BasePolynomialFunction2 */
-    py::class_<BasePolynomialFunction2<ReturnT>,
-               std::shared_ptr<BasePolynomialFunction2<ReturnT>>,
+    py::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>,
+               table::io::PersistableFacade<Function<ReturnT>>, table::io::Persistable>
+        cls(mod, name.c_str());
+
+    cls.def(py::init<unsigned int>(), "nParams"_a);
+    cls.def(py::init<std::vector<double> const &>(), "params"_a);
+
+    cls.def("getNParameters", &Function<ReturnT>::getNParameters);
+    cls.def("getParameters", &Function<ReturnT>::getParameters, py::return_value_policy::copy);
+    cls.def("getParameter", &Function<ReturnT>::getParameter, "index"_a);
+    cls.def("isLinearCombination", &Function<ReturnT>::isLinearCombination);
+    cls.def("setParameter", &Function<ReturnT>::setParameter, "index"_a, "value"_a);
+    cls.def("setParameters", &Function<ReturnT>::setParameters);
+    cls.def("toString", &Function<ReturnT>::toString, "prefix"_a = "");
+}
+
+template <typename ReturnT>
+void declareFunction1(py::module &mod, const std::string &suffix) {
+    auto const name = "Function1" + suffix;
+
+    table::io::declarePersistableFacade<Function1<ReturnT>>(mod, name.c_str());
+
+    py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>,
+               table::io::PersistableFacade<Function1<ReturnT>>, Function<ReturnT>>
+        cls(mod, name.c_str());
+
+    cls.def("clone", &Function1<ReturnT>::clone);
+    cls.def("__call__", &Function1<ReturnT>::operator(), "x"_a);
+    cls.def("toString", &Function1<ReturnT>::toString, "prefix"_a = "");
+    cls.def("computeCache", &Function1<ReturnT>::computeCache, "n"_a);
+}
+
+template <typename ReturnT>
+void declareFunction2(py::module &mod, const std::string &suffix) {
+    auto const name = "Function2" + suffix;
+
+    table::io::declarePersistableFacade<Function2<ReturnT>>(mod, name.c_str());
+
+    py::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>,
+               table::io::PersistableFacade<Function2<ReturnT>>, Function<ReturnT>>
+        cls(mod, name.c_str());
+
+    cls.def("clone", &Function2<ReturnT>::clone);
+    cls.def("__call__", &Function2<ReturnT>::operator(), "x"_a, "y"_a);
+    cls.def("toString", &Function2<ReturnT>::toString, "prefix"_a = "");
+    cls.def("getDFuncDParameters", &Function2<ReturnT>::getDFuncDParameters, "x"_a, "y"_a);
+}
+
+template <typename ReturnT>
+void declareBasePolynomialFunction2(py::module &mod, const std::string &suffix) {
+    auto const name = "BasePolynomialFunction2" + suffix;
+
+    py::class_<BasePolynomialFunction2<ReturnT>, std::shared_ptr<BasePolynomialFunction2<ReturnT>>,
                Function2<ReturnT>>
-                   clsBasePolynomialFunction2(mod, ("BasePolynomialFunction2" + suffix).c_str());
-    clsBasePolynomialFunction2.def_static("nParametersFromOrder",
-                                   BasePolynomialFunction2<ReturnT>::nParametersFromOrder);
-    /* NullFunction1 */
-    py::class_<NullFunction1<ReturnT>,
-               std::shared_ptr<NullFunction1<ReturnT>>,
-               Function1<ReturnT>> 
-                   clsNullFunction1(mod, ("NullFunction1" + suffix).c_str());
+        cls(mod, name.c_str());
 
-    /* NullFunction1 Constructors */
-    clsNullFunction1.def(py::init<>());
+    cls.def("getOrder", &BasePolynomialFunction2<ReturnT>::getOrder);
+    cls.def("isLinearCombination", &BasePolynomialFunction2<ReturnT>::isLinearCombination);
+    cls.def_static("nParametersFromOrder", &BasePolynomialFunction2<ReturnT>::nParametersFromOrder, "order"_a);
+    cls.def_static("orderFromNParameters", &BasePolynomialFunction2<ReturnT>::orderFromNParameters, "nParameters"_a);
+    cls.def("getDFuncDParameters", &BasePolynomialFunction2<ReturnT>::getDFuncDParameters, "x"_a, "y"_a);
+}
 
-    /* NullFunction1 Members */
-    clsNullFunction1.def("clone", &NullFunction1<ReturnT>::clone);
+template <typename ReturnT>
+void declareNullFunction1(py::module &mod, const std::string &suffix) {
+    auto const name = "NullFunction1" + suffix;
 
-    /* NullFunction2 */
-    py::class_<NullFunction2<ReturnT>,
-               std::shared_ptr<NullFunction2<ReturnT>>,
-               Function2<ReturnT>> 
-                   clsNullFunction2(mod, ("NullFunction2" + suffix).c_str());
+    py::class_<NullFunction1<ReturnT>, std::shared_ptr<NullFunction1<ReturnT>>, Function1<ReturnT>> cls(
+        mod, name.c_str());
 
-    /* NullFunction2 Constructors */
-    clsNullFunction2.def(py::init<>());
+    cls.def(py::init<>());
 
-    /* NullFunction2 Members */
-    clsNullFunction2.def("clone", &NullFunction2<ReturnT>::clone);
+    cls.def("clone", &NullFunction1<ReturnT>::clone);
+}
+
+template <typename ReturnT>
+void declareNullFunction2(py::module &mod, const std::string &suffix) {
+    auto const name = "NullFunction2" + suffix;
+
+    py::class_<NullFunction2<ReturnT>, std::shared_ptr<NullFunction2<ReturnT>>, Function2<ReturnT>> cls(
+        mod, name.c_str());
+
+    cls.def(py::init<>());
+
+    cls.def("clone", &NullFunction2<ReturnT>::clone);
+}
+
+template <typename ReturnT>
+void declareAllFunctions(py::module &mod, const std::string &suffix) {
+    declareFunction<ReturnT>(mod, suffix);
+    declareFunction1<ReturnT>(mod, suffix);
+    declareFunction2<ReturnT>(mod, suffix);
+    declareBasePolynomialFunction2<ReturnT>(mod, suffix);
+    declareNullFunction1<ReturnT>(mod, suffix);
+    declareNullFunction2<ReturnT>(mod, suffix);
 };
+
+}  // namespace <anonymous>
 
 PYBIND11_PLUGIN(_function) {
     py::module mod("_function", "Python wrapper for afw _function library");
-    
-    declareFunctions<float>(mod, "F");
-    declareFunctions<double>(mod, "D");
-    
 
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    declareAllFunctions<float>(mod, "F");
+    declareAllFunctions<double>(mod, "D");
 
     return mod.ptr();
 }
+
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

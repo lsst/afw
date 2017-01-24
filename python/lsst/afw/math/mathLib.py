@@ -8,6 +8,7 @@ from ._function import *
 from ._functionLibrary import *
 from ._interpolate import *
 from ._gaussianProcess import *
+from ._spatialCell import *
 from .spatialCell import *
 from ._boundedField import *
 from ._chebyshevBoundedField import *
