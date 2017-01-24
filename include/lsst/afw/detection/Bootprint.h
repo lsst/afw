@@ -280,6 +280,20 @@ public:
     void removeOrphanPeaks();
 
     /**
+     * @brief Reports if the Bootprint is simply connected or has multiple components
+     */
+    bool isContiguous() const { return getSpans()->isContiguous(); };
+
+    /**
+    * @brief Split a multi-component Bootprint into a vector of contiguous Bootprints
+    *
+    * Split a multi-component Bootprint such that each Bootprint in the output vector
+    * is contiguous and contains only peaks that can be found within the bounds of the
+    * Bootprint
+    */
+    std::vector<std::unique_ptr<Bootprint>> split() const;
+
+    /**
     * @brief equality operator
     *
     * @param other - The Bootprint for which equality will be computed
