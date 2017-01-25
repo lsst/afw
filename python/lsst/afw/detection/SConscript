@@ -1,7 +1,7 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['psf',
-                                  'bootprint',
+                                  'footprint',
                                   'footprintSet',
                                   'threshold',
                                   'peak',
@@ -9,5 +9,4 @@ scripts.BasicSConscript.pybind11(['psf',
                                   'footprintCtrl',
                                   'gaussianPsf',
                                   'footprintMerge',
-                                  'heavyFootprint',
-                                  'footprint'])
+                                  'heavyFootprint'])

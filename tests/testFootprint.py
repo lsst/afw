@@ -1,3 +1,4 @@
+
 #
 # Copyright 2008-2017  AURA/LSST.
 #
@@ -29,7 +30,7 @@ import lsst.afw.detection as afwDet
 import lsst.afw.table as afwTable
 
 
-class BootprintTestCase(unittest.TestCase):
+class FootprintTestCase(unittest.TestCase):
     def setUp(self):
         self.spanRad = 4
         self.regionRad = 10
@@ -39,7 +40,7 @@ class BootprintTestCase(unittest.TestCase):
         maxPoint = afwGeom.Point2I(self.regionRad, self.regionRad)
         self.region = afwGeom.Box2I(minPoint, maxPoint)
         self.schema = afwDet.PeakTable.makeMinimalSchema()
-        # Run the the constructors test to ensure the Bootprints are setUp
+        # Run the the constructors test to ensure the Footprints are setUp
         self.testConstructors()
 
     def tearDown(self):
@@ -54,17 +55,17 @@ class BootprintTestCase(unittest.TestCase):
 
     def testConstructors(self):
         '''
-        Test that each of the constructors constructs a valid Bootprint,
+        Test that each of the constructors constructs a valid Footprint,
         if any of these fails, an exception will be raised and the test
         will fail.
         '''
-        self.footprint = afwDet.Bootprint(self.spans)
-        self.footprintWithRegion = afwDet.Bootprint(self.spans, self.region)
-        self.footprintWithSchema = afwDet.Bootprint(self.spans, self.schema)
-        self.footprintWithSchemaRegion = afwDet.Bootprint(self.spans,
+        self.footprint = afwDet.Footprint(self.spans)
+        self.footprintWithRegion = afwDet.Footprint(self.spans, self.region)
+        self.footprintWithSchema = afwDet.Footprint(self.spans, self.schema)
+        self.footprintWithSchemaRegion = afwDet.Footprint(self.spans,
                                                           self.schema,
                                                           self.region)
-        self.emptyFootprint = afwDet.Bootprint()
+        self.emptyFootprint = afwDet.Footprint()
         self.assertEqual(len(self.emptyFootprint.spans), 0)
         self.assertEqual(len(self.emptyFootprint.peaks), 0)
 
@@ -73,7 +74,7 @@ class BootprintTestCase(unittest.TestCase):
 
     def testGetSetSpans(self):
         '''
-        Test getting and setting the SpanSet member of the Bootprint with both
+        Test getting and setting the SpanSet member of the Footprint with both
         the getters and setters and the python property accessor
         '''
         self.assertEqual(self.footprint.getSpans(), self.spans)
@@ -104,7 +105,7 @@ class BootprintTestCase(unittest.TestCase):
         for i, peak in enumerate(self.footprint.peaks):
             self.assertEqual(peak['i_x'], i)
 
-        # Test that peaks outside the Bootprint are removed
+        # Test that peaks outside the Footprint are removed
         self.footprint.removeOrphanPeaks()
         self.assertEqual(len(self.footprint.peaks), 2)
         for peak in self.footprint.peaks:
@@ -139,7 +140,7 @@ class BootprintTestCase(unittest.TestCase):
         self.assertEqual(bBox.getMaxX(), self.spanRad)
         self.assertEqual(bBox.getMaxY(), self.spanRad)
 
-        # Test the point membership in a Bootprint
+        # Test the point membership in a Footprint
         memberPoint = afwGeom.Point2I(1, 1)
         self.assertTrue(self.footprint.contains(memberPoint))
         self.assertIn(memberPoint, self.footprint)
@@ -170,7 +171,7 @@ class BootprintTestCase(unittest.TestCase):
         self.assertEqual(bBox.getMaxY(), clipRad)
 
         # Set the footprint back to what it was
-        self.footprint = afwDet.Bootprint(self.spans)
+        self.footprint = afwDet.Footprint(self.spans)
 
         # Test erode
         kernelRad = 1
@@ -213,7 +214,7 @@ class BootprintTestCase(unittest.TestCase):
 
         spans = afwGeom.SpanSet(spanList)
         region = afwGeom.Box2I(afwGeom.PointI(-6, -6), afwGeom.PointI(20, 20))
-        multiFoot = afwDet.Bootprint(spans, region)
+        multiFoot = afwDet.Footprint(spans, region)
 
         records = [multiFoot.addPeak(3, 1, 100),
                    multiFoot.addPeak(5, 11, 100)]
@@ -238,20 +239,20 @@ class BootprintTestCase(unittest.TestCase):
         self.testPeakFunctionality()
 
         with tempfile.NamedTemporaryFile() as f:
-            # Persist the Bootprint to file and read it back
+            # Persist the Footprint to file and read it back
             self.footprint.writeFits(f.name)
-            footprintFromFile = afwDet.Bootprint.readFits(f.name)
+            footprintFromFile = afwDet.Footprint.readFits(f.name)
 
-        # Check that the Bootprint before and after saving are the same
+        # Check that the Footprint before and after saving are the same
         self.assertEqual(self.footprint, footprintFromFile)
 
         # Clean up after ourselves
         del footprintFromFile
 
-    @unittest.skip("Skip until Bootprint to Footprint Rename")
+    @unittest.skip("Skip until Footprint to Footprint Rename")
     def testLegacyFootprints(self):
         fileName = 'tests/data/preSpanSetsFootprint.fits'
-        legacyFootprint = afwDet.Bootprint.readFits(fileName)
+        legacyFootprint = afwDet.Footprint.readFits(fileName)
 
         # Calculate some quantifying numbers from the legacy Footprint to ensure
         # it loaded properly
