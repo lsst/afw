@@ -91,10 +91,13 @@ PYBIND11_PLUGIN(_kernel) {
 
     py::class_<AnalyticKernel, std::shared_ptr<AnalyticKernel>, Kernel> clsAnalyticKernel(mod, "AnalyticKernel");
     clsAnalyticKernel.def(py::init<>());
+    // Workaround for NullSpatialFunction and py::arg not playing well with Citizen
+    clsAnalyticKernel.def(py::init<int, int, AnalyticKernel::KernelFunction const &>(),
+                          "width"_a, "height"_a, "kernelFunction"_a);
     clsAnalyticKernel.def(py::init<int, int, AnalyticKernel::KernelFunction const &, Kernel::SpatialFunction const &>(),
-                          "widht"_a, "height"_a, "kernelFunction"_a, "specialFuction"_a=Kernel::NullSpatialFunction());
+                          "width"_a, "height"_a, "kernelFunction"_a, "spatialFunction"_a);
     clsAnalyticKernel.def(py::init<int, int, AnalyticKernel::KernelFunction const &, std::vector<Kernel::SpatialFunctionPtr> const &>(),
-                          "widht"_a, "height"_a, "kernelFunction"_a, "specialFuctionList"_a);
+                          "width"_a, "height"_a, "kernelFunction"_a, "spatialFunctionList"_a);
     clsAnalyticKernel.def("clone", &AnalyticKernel::clone);
     clsAnalyticKernel.def("computeImage", &AnalyticKernel::computeImage,
                           "image"_a, "doNormalize"_a, "x"_a=0.0, "y"_a=0.0);
@@ -135,8 +138,11 @@ PYBIND11_PLUGIN(_kernel) {
     py::class_<SeparableKernel, std::shared_ptr<SeparableKernel>, Kernel> clsSeparableKernel(mod, "SeparableKernel");
 
     clsSeparableKernel.def(py::init<>());
+    // Workaround for NullSpatialFunction and py::arg not playing well with Citizen
+    clsSeparableKernel.def(py::init<int, int, SeparableKernel::KernelFunction const&, SeparableKernel::KernelFunction const&>(),
+                           "width"_a, "height"_a, "kernelColFunction"_a, "kernelRowFunction"_a);
     clsSeparableKernel.def(py::init<int, int, SeparableKernel::KernelFunction const&, SeparableKernel::KernelFunction const&, Kernel::SpatialFunction const&>(),
-                           "width"_a, "height"_a, "kernelColFunction"_a, "kernelRowFunction"_a, "spatialFunction"_a=Kernel::NullSpatialFunction());
+                           "width"_a, "height"_a, "kernelColFunction"_a, "kernelRowFunction"_a, "spatialFunction"_a);
     clsSeparableKernel.def(py::init<int, int, SeparableKernel::KernelFunction const&, SeparableKernel::KernelFunction const&, std::vector<Kernel::SpatialFunctionPtr> const&>(),
                            "width"_a, "height"_a, "kernelColFunction"_a, "kernelRowFunction"_a, "spatialFunctionList"_a);
     clsSeparableKernel.def("clone", &SeparableKernel::clone);
