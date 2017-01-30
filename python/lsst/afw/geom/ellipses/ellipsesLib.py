@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from ._baseCore import *
 from ._ellipse import *
+from .ellipse import *
 from ._pixelRegion import *
 from ._axes import *
 from .axes import *
