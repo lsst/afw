@@ -344,99 +344,123 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      */
     std::shared_ptr<SpanSet> erode(SpanSet const & other) const;
 
-    /** @brief Create 1d array at points given by SpanSet
+    /** @brief Reduce the pixel dimensionality from 2 to 1 of an array at points given by SpanSet
      *
-     * Take values from an array at points defined by SpanSet and use them to populate a new 1D ndarray
+     * Take values from an array at points defined by SpanSet and use them to populate a new array
+     * where the x,y coordinates of the SpanSet have been flattened to one dimension. First two
+     * dimensions of the input array must be the h,w which correspond to the SpanSet coordinates. Any
+     * number of remaining dimensions is permissable.
      *
      * @param input - The ndarray from which the values will be taken
      * @param xy0 - A point object with is used as the origin point for the SpanSet coordinate system
      *
      * @tparam Pixel - The datatype for the ndarray
+     * @tparam inN - The number of dimensions in the array object
      * @tparam inC - Number of guaranteed row-major contiguous dimensions, starting from the end
      */
-    template <typename Pixel, int inC>
-    ndarray::Array<Pixel, 1, 1> flatten(ndarray::Array<Pixel, 2, inC>  & input,
+    template <typename Pixel, int inN, int inC>
+    ndarray::Array<Pixel, inN-1, inN-1> flatten(ndarray::Array<Pixel, inN, inC>  const & input,
                                         Point2I const & xy0 = Point2I()) const {
-        // Populate a one dimensional array with the values from input taken at the points of SpanSet
-        ndarray::Array<Pixel, 1, 1> outputArray = ndarray::allocate(ndarray::makeVector(getArea()));
+        // Populate a lower dimensional array with the values from input taken at the points of SpanSet
+        auto outputShape = ndarray::concatenate(ndarray::makeVector(getArea()),
+                                                input.getShape().template last<inN-2>());
+        ndarray::Array<Pixel, inN-1, inN-1> outputArray = ndarray::allocate(outputShape);
         outputArray.deep() = 0;
         flatten(outputArray, input, xy0);
         return outputArray;
     }
 
-    /** @brief Populate 1d array at points given by SpanSet
+    /** @brief Reduce the pixel dimensionality from 2 to 1 of an array at points given by SpanSet
      *
-     * Take values from an array at points defined by SpanSet and use them to populate a new 1D ndarray
+     * Take values from an array at points defined by SpanSet and use them to populate a new array
+     * where the x,y coordinates of the SpanSet have been flattened to one dimension. First two
+     * dimensions of the input array must be the h,w which correspond to the SpanSet coordinates. Any
+     * number of remaining dimensions is permissable.
      *
      * @param output - The 1d ndarray which will be populated with output parameters, will happen in place
      * @param input - The ndarray from which the values will be taken
      * @param xy0 - A point object which is used as the origin point for the SpanSet coordinate system
      *
-     * @tparam Pixel - The data-type for the ndarray
+     * @tparam PixelOut - The data-type for the output ndarray
+     * @tparam PixelIn - The data-type for the input ndarray
+     * @tparam inA - The number of dimensions in the input array
      * @tparam outC - Number of guaranteed row-major contiguous dimensions in the output array,
                       starting from the end
      * @tparam inC - Number of guaranteed row-major contiguous dimensions in the input array,
                      starting from the end
      */
-    template <typename Pixel, int outC, int inC>
+    template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void flatten(
-            ndarray::Array<Pixel, 1, outC> const & output,
-            ndarray::Array<Pixel, 2, inC> const & input,
+            ndarray::Array<PixelOut, inA-1, outC> const & output,
+            ndarray::Array<PixelIn, inA, inC> const & input,
             Point2I const & xy0 =  Point2I()) const {
         auto ndAssigner = []
                           (Point2I const & point,
-                           typename details::FlatNdGetter<Pixel>::Reference out,
-                           typename details::ImageNdGetter<Pixel, 2, inC>::Reference in)
+                           typename details::FlatNdGetter<PixelOut, inA-1, outC>::Reference out,
+                           typename details::ImageNdGetter<PixelIn, inA, inC>::Reference in)
                           {out = in;};
         // Populate array output with values from input at positions given by SpanSet
         applyFunctor(ndAssigner, ndarray::ndFlat(output), ndarray::ndImage(input, xy0));
     }
 
-    /** @brief Create 2d array at pionts given by SpanSet
+    /** @brief Expand an array by One spatial dimension at pionts given by SpanSet
      *
-     * Take values from a 1d array and insert them in a new 2D array at points defined by the SpanSet,
-     * offset by the lower left hand corner of the bounding box of the SpanSet
+     * Take values from a lower dimensional array and insert them in an output array with one additional
+     * dimension at points defined by the SpanSet, offset by the lower left hand corner of the
+     * bounding box of the SpanSet. The first two dimensions of the output array will correspond with the
+     * y,x dimensions of the SpanSet
      *
      * @param input - The ndarray from which the values will be taken
      *
      * @tparam Pixel - The data-type for the ndarray
+     * @tparam inA - Number of dimension of the input array
      * @tparam inC - Number of guaranteed row-major contiguous dimensions, starting from the end
      */
-    template <typename Pixel, int inC>
-    ndarray::Array<Pixel, 2, 2> unflatten(ndarray::Array<Pixel, 1, inC> & input) const {
-        // Create a two dimensional array the size of the bounding box. Populate values from input, placed at
-        // locations corresponding to SpanSet, offset by the lower corner of the bounding box
-        ndarray::Array<Pixel, 2, 2> outputArray = ndarray::allocate(_bBox.getHeight(), _bBox.getWidth());
+    template <typename Pixel, int inA, int inC>
+    ndarray::Array<Pixel, inA+1, inA+1> unflatten(ndarray::Array<Pixel, inA, inC> const & input) const {
+        // Create a higher dimensional array the size of the bounding box and extra dimensions of input.
+        // Populate values from input, placed at locations corresponding to SpanSet, offset by the
+        // lower corner of the bounding box
+        auto existingShape = input.getShape();
+        typename decltype(existingShape)::Element height = _bBox.getHeight();
+        typename decltype(existingShape)::Element width = _bBox.getWidth();
+        auto outputShape = ndarray::concatenate(ndarray::makeVector(height, width),
+                                                input.getShape().template last<inA-1>());
+        ndarray::Array<Pixel, inA+1, inA+1> outputArray = ndarray::allocate(outputShape);
         outputArray.deep() = 0;
         unflatten(outputArray, input, Point2I(_bBox.getMinX(), _bBox.getMinY()));
         return outputArray;
     }
 
-    /** @brief Populate 2d array at points given by SpanSet
+     /** @brief Expand an array by One spatial dimension at pionts given by SpanSet
      *
-     * Take values from a 1d array and insert them in a new 2D array at points defined by the SpanSet,
-     * offset by the xy0 parameter
+     * Take values from a lower dimensional array and insert them in an output array with one additional
+     * dimension at points defined by the SpanSet, offset by the lower left hand corner of the
+     * bounding box of the SpanSet. The first two dimensions of the output array will correspond with the
+     * y,x dimensions of the SpanSet
      *
      * @param output - The 1d ndarray which will be populated with output parameters, will happen in place
      * @param input - The ndarray from which the values will be taken
      * @param xy0 - A point object with is used as the origin point for the SpanSet coordinate system
      *
-     * @tparam Pixel - The datatype for the ndarray
+     * @tparam PixelOut - The datatype for the output ndarray
+     * @tparam PixelIn - The datatype for the input ndarray
+     * @tparam inA - Number of dimensions of the input ndarray
      * @tparam outC - Number of guaranteed row-major contiguous dimensions in the output array,
                       starting from the end
      * @tparam inC - Number of guaranteed row-major contiguous dimensions in the input array,
                      starting from the end
      */
-    template <typename Pixel, int outC, int inC>
-    void unflatten(ndarray::Array<Pixel, 2, outC> & output,
-                                  ndarray::Array<Pixel, 1, inC> & input,
-                                  Point2I const & xy0 = Point2I()) const {
+    template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
+    void unflatten(ndarray::Array<PixelOut, inA+1, outC> const & output,
+                   ndarray::Array<PixelIn, inA, inC> const & input,
+                   Point2I const & xy0 = Point2I()) const {
         // Populate 2D ndarray output with values from input, at locations defined by SpanSet, optionally
         // offset by xy0
         auto ndAssigner = []
                           (Point2I const & point,
-                           typename details::ImageNdGetter<Pixel, 2, outC>::Reference out,
-                           typename details::FlatNdGetter<Pixel>::Reference in)
+                           typename details::ImageNdGetter<PixelOut, inA+1, outC>::Reference out,
+                           typename details::FlatNdGetter<PixelIn, inA, inC>::Reference in)
                           {out = in;};
         applyFunctor(ndAssigner, ndarray::ndImage(output, xy0), ndarray::ndFlat(input));
     }
