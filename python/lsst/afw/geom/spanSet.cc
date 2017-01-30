@@ -42,14 +42,25 @@ namespace lsst { namespace afw { namespace geom {
 namespace {
     template <typename pixel, typename PyClass>
     void declareFlattenMethod(PyClass & cls) {
-        cls.def("flatten", (ndarray::Array<pixel, 1, 1> (SpanSet::*)(ndarray::Array<pixel, 2, 2> &,
+        cls.def("flatten", (ndarray::Array<pixel, 1, 1> (SpanSet::*)(ndarray::Array<pixel, 2, 0> const &,
                                                                      Point2I const &) const)
-                                                                     &SpanSet::flatten<pixel, 2>,
+                                                                     &SpanSet::flatten<pixel, 2, 0>,
                                                                      py::arg("input"),
                                                                      py::arg("xy0") = Point2I());
-        cls.def("flatten", (void (SpanSet::*)(ndarray::Array<pixel, 1, 1> const &,
-                                              ndarray::Array<pixel, 2, 2> const &,
-                                              Point2I const &) const) &SpanSet::flatten<pixel, 1, 2>,
+        cls.def("flatten", (ndarray::Array<pixel, 2, 2> (SpanSet::*)(ndarray::Array<pixel, 3, 0> const &,
+                                                                     Point2I const &) const)
+                                                                     &SpanSet::flatten<pixel, 3, 0>,
+                                                                     py::arg("input"),
+                                                                     py::arg("xy0") = Point2I());
+        cls.def("flatten", (void (SpanSet::*)(ndarray::Array<pixel, 1, 0> const &,
+                                              ndarray::Array<pixel, 2, 0> const &,
+                                              Point2I const &) const) &SpanSet::flatten<pixel, pixel, 2, 0, 0>,
+                                              py::arg("output"),
+                                              py::arg("input"),
+                                              py::arg("xy0") = Point2I());
+        cls.def("flatten", (void (SpanSet::*)(ndarray::Array<pixel, 2, 0> const &,
+                                              ndarray::Array<pixel, 3, 0> const &,
+                                              Point2I const &) const) &SpanSet::flatten<pixel, pixel, 3, 0, 0>,
                                               py::arg("output"),
                                               py::arg("input"),
                                               py::arg("xy0") = Point2I());
@@ -58,11 +69,20 @@ namespace {
     template <typename pixel, typename PyClass>
     void declareUnflattenMethod(PyClass & cls) {
         cls.def("unflatten",
-                (ndarray::Array<pixel, 2, 2> (SpanSet::*)(ndarray::Array<pixel, 1, 1> & input) const)
-                &SpanSet::unflatten<pixel, 1>);
-        cls.def("unflatten", (void (SpanSet::*)(ndarray::Array<pixel, 2, 2> & ,
-                                                ndarray::Array<pixel, 1, 1> & ,
-                                                Point2I const &) const) &SpanSet::unflatten<pixel, 2, 1>,
+                (ndarray::Array<pixel, 2, 2> (SpanSet::*)(ndarray::Array<pixel, 1, 0> const & input) const)
+                &SpanSet::unflatten<pixel, 1, 0>);
+        cls.def("unflatten",
+                (ndarray::Array<pixel, 3, 3> (SpanSet::*)(ndarray::Array<pixel, 2, 0> const & input) const)
+                &SpanSet::unflatten<pixel, 2, 0>);
+        cls.def("unflatten", (void (SpanSet::*)(ndarray::Array<pixel, 2, 0> const & ,
+                                                ndarray::Array<pixel, 1, 0> const & ,
+                                                Point2I const &) const) &SpanSet::unflatten<pixel, pixel, 1, 0, 0>,
+                                                py::arg("output"),
+                                                py::arg("input"),
+                                                py::arg("xy0") = Point2I());
+        cls.def("unflatten", (void (SpanSet::*)(ndarray::Array<pixel, 3, 0> const & ,
+                                                ndarray::Array<pixel, 2, 0> const & ,
+                                                Point2I const &) const) &SpanSet::unflatten<pixel, pixel, 2, 0, 0>,
                                                 py::arg("output"),
                                                 py::arg("input"),
                                                 py::arg("xy0") = Point2I());
