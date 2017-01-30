@@ -33,7 +33,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 
 
-class SpanSetTestCase(unittest.TestCase):
+class SpanSetTestCase(lsst.utils.tests.TestCase):
     '''
     This is a python level unit test of the SpanSets class. It is mean to work in conjuction
     with the c++ unit test. The C++ test has much more coverage, and tests some features which
@@ -161,6 +161,16 @@ class SpanSetTestCase(unittest.TestCase):
 
         self.assertEqual(flatArr.size, inputSpanSet.getArea())
 
+        # Test flatttening a 3D array
+        spanSetArea = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX)
+        spanSetArea = spanSetArea.shiftedBy(2, 2)
+
+        testArray = np.arange(5*5*3).reshape(5, 5, 3)
+        flattened2DArray = spanSetArea.flatten(testArray)
+
+        truthArray = np.arange(5*5*3).reshape(5*5, 3)
+        self.assertFloatsAlmostEqual(flattened2DArray, truthArray)
+
     def testUnflatten(self):
         inputArray = np.ones(6) * 4
         inputSpanSet = afwGeom.SpanSet([afwGeom.Span(9, 2, 3),
@@ -172,6 +182,16 @@ class SpanSetTestCase(unittest.TestCase):
         bBox = inputSpanSet.getBBox()
         self.assertEqual(arrayShape[0], bBox.getHeight())
         self.assertEqual(arrayShape[1], bBox.getWidth())
+
+        # Test unflattening a 2D array
+        spanSetArea = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX)
+        spanSetArea = spanSetArea.shiftedBy(2, 2)
+
+        testArray = np.arange(5*5*3).reshape(5*5, 3)
+        unflattened3DArray = spanSetArea.unflatten(testArray)
+
+        truthArray = np.arange(5*5*3).reshape(5, 5, 3)
+        self.assertFloatsAlmostEqual(unflattened3DArray, truthArray)
 
     def populateMask(self):
         msk = afwImage.MaskU(10, 10, 1)
