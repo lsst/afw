@@ -68,6 +68,9 @@ template <typename T>
 void declareBaseRecordOverloads(PyBaseRecord & clsBaseRecord, std::string const & suffix) {
     clsBaseRecord.def(("_get_"+suffix).c_str(),
                       (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
+    // TODO: pybind11 backwards compatibility with Swig
+    clsBaseRecord.def(("get"+suffix).c_str(),
+                      (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
     clsBaseRecord.def("_getitem_", [](BaseRecord & self, Key<T> const & key)->typename Field<T>::Reference {
         /*
         Define the python __getitem__ method in python to return a baserecord for the requested key
@@ -81,6 +84,9 @@ void declareBaseRecordArrayOverloads(PyBaseRecord clsBaseRecord, std::string con
     typedef lsst::afw::table::Array<U> T;
     clsBaseRecord.def(("_get_"+suffix).c_str(),
                       (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
+    // TODO: pybind11 backwards compatibility with Swig
+    clsBaseRecord.def(("get"+suffix).c_str(),
+                      (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
     clsBaseRecord.def("_getitem_", [](BaseRecord & self, Key<T> const & key)->ndarray::Array<U,1,1> {
         /*
         Define the python __getitem__ method in python to return a baserecord for the requested key
@@ -92,6 +98,9 @@ void declareBaseRecordArrayOverloads(PyBaseRecord clsBaseRecord, std::string con
 template <typename T>
 void declareBaseRecordOverloadsFlag(PyBaseRecord clsBaseRecord, std::string const & suffix) {
     clsBaseRecord.def(("_get_"+suffix).c_str(),
+                      (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
+    // TODO: pybind11 backwards compatibility with Swig
+    clsBaseRecord.def(("get"+suffix).c_str(),
                       (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
 }
 
