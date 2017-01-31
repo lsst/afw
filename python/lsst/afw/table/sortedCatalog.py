@@ -21,10 +21,11 @@ def addSortedCatalogMethods(cls):
         return type(self).__base__.isSorted(self, key)
     cls.isSorted = isSorted
 
+    # emulate sort() using sort(key) to simplify python argument lookup
     def sort(self, key=None):
         if key is None:
             key = self.table.getIdKey()
-        type(self).__base__.sort(self, key)
+        self._sort(key)
     cls.sort = sort
 
     def find(self, value, key=None):
