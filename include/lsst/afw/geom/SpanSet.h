@@ -74,15 +74,15 @@ class SpanSet;
  * bits set. More complex selection/filtering of bit patterns can be done by supplying a comparator
  * function.
  *
- * @param mask - mask to convert to a SpanSet
- * @param comparator - Functor object to use in the decision to include pixel in SpanSet. Should return
- *                     true when a given pixel in the mask should be part of the SpanSet, and false
- *                     otherwise. The functor takes a single value taken from the mask at the
- *                     pixel under consideration. Defaults to evaluating true if the mask has bits set,
- *                     and false otherwise.
+ * @param mask mask to convert to a SpanSet
+ * @param comparator Functor object to use in the decision to include pixel in SpanSet. Should return
+ *                   true when a given pixel in the mask should be part of the SpanSet, and false
+ *                   otherwise. The functor takes a single value taken from the mask at the
+ *                   pixel under consideration. Defaults to evaluating true if the mask has bits set,
+ *                   and false otherwise.
  *
- * @tparam T - Pixel type of the Mask
- * @tparam F - Type of the functor
+ * @tparam T Pixel type of the Mask
+ * @tparam F Type of the functor
  */
 template <typename T, typename UnaryPredicate = details::AnyBitSetFunctor<T>>
 std::shared_ptr<geom::SpanSet> maskToSpanSet(image::Mask<T> const & mask,
@@ -162,7 +162,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** @brief Construct a SpanSet from a box
      *
-     * @param box - A integer box that defines the shape for which a span set should be created
+     * @param box A integer box that defines the shape for which a span set should be created
      */
     explicit SpanSet(Box2I const & box);
 
@@ -172,12 +172,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * of a container which contains previously created Spans. These Spans are
      * used to construct the SpanSet.
      *
-     * @param begin - Beginning iterator of a container of Spans
-     * @param end - End iterator of a container of Spans
-     * @param normalize - Controls if the constructor attempts to merge connected or
-                          overlapping spans. Defaults to true. Set to false to save
-                          computational time when the container is sure to already
-                          be normalized.
+     * @param begin Beginning iterator of a container of Spans
+     * @param end End iterator of a container of Spans
+     * @param normalize Controls if the constructor attempts to merge connected or
+                        overlapping spans. Defaults to true. Set to false to save
+                        computational time when the container is sure to already
+                        be normalized.
      */
     template <typename iter>
     SpanSet(iter begin, iter end, bool normalize = true):_spanVector(begin, end) {
@@ -198,11 +198,11 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * This constructor accepts a standard vector which contains already created
      * Spans. These Spans are copied into the internal container of spans.
      *
-     * @param vec - Standard vector containing Spans
-     * @param normalize - Controls if the constructor attempts to merge connected or
-                          overlapping spans. Defaults to true. Set to false to save
-                          computational time when the container is sure to already
-                          be normalized.
+     * @param vec Standard vector containing Spans
+     * @param normalize Controls if the constructor attempts to merge connected or
+                        overlapping spans. Defaults to true. Set to false to save
+                        computational time when the container is sure to already
+                        be normalized.
     */
     explicit SpanSet(const std::vector<Span> & vec, bool normalize = true);
 
@@ -212,11 +212,11 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * This constructor accepts a standard vector r-reference which contains already
      * created Spans. These Spans become the internal container of spans.
      *
-     * @param vec - Standard vector containing Spans
-     * @param normalize - Controls if the constructor attempts to merge connected or
-                          overlapping spans. Defaults to true. Set to false to save
-                          computational time when the container is sure to already
-                          be normalized.
+     * @param vec Standard vector containing Spans
+     * @param normalize Controls if the constructor attempts to merge connected or
+                        overlapping spans. Defaults to true. Set to false to save
+                        computational time when the container is sure to already
+                        be normalized.
     */
     explicit SpanSet(std::vector<Span> && vec, bool normalize = true);
 
@@ -245,58 +245,58 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** @brief Return a new SpanSet shifted by specified amount
      *
-     * @param x - number of pixels to shift in x dimension
-     * @param y - number of pixels to shift in y dimension
+     * @param x number of pixels to shift in x dimension
+     * @param y number of pixels to shift in y dimension
      */
     std::shared_ptr<SpanSet> shiftedBy(int x, int y) const;
     /** @brief Return a new SpanSet shifted by specified amount
      *
-     * @param offset - integer extent which specifies amount to offset in x and y
+     * @param offset integer extent which specifies amount to offset in x and y
      */
     std::shared_ptr<SpanSet> shiftedBy(Extent2I const & offset) const;
 
     /** @brief Return a new SpanSet which has all pixel values inside specified box
      *
-     * @param box - Integer box specifying the bounds for which all pixels must be within
+     * @param box Integer box specifying the bounds for which all pixels must be within
      */
     std::shared_ptr<SpanSet> clippedTo(Box2I const & box) const;
 
     /** @brief Return a new SpanSet who's pixels are the product of applying the specified
                transformation
      *
-     * @param t - A linear transform object which will be used to map the pixels
+     * @param t A linear transform object which will be used to map the pixels
      */
     std::shared_ptr<SpanSet> transformedBy(LinearTransform const & t) const;
 
     /** @brief Return a new SpanSet who's pixels are the product of applying the specified
                transformation
      *
-     * @param t - An affine transform object which will be used to map the pixels
+     * @param t An affine transform object which will be used to map the pixels
      */
     std::shared_ptr<SpanSet> transformedBy(AffineTransform const & t) const;
 
     /** @brief Return a new SpanSet who's pixels are the product of applying the specified
                transformation
      *
-     * @param t - A XY transform object which will be used to map the pixels
+     * @param t A XY transform object which will be used to map the pixels
      */
     std::shared_ptr<SpanSet> transformedBy(XYTransform const & t) const;
 
     /** @brief Specifies if this SpanSet overlaps with another SpanSet
      *
-     * @param other - A SpanSet for which overlapping comparison will be made
+     * @param other A SpanSet for which overlapping comparison will be made
      */
     bool overlaps(SpanSet const & other) const;
 
     /** @brief Check if a SpanSet instance entirely contains another SpanSet
      *
-     * @param other - The SpanSet who's membership is to be tested for
+     * @param other The SpanSet who's membership is to be tested for
      */
     bool contains(SpanSet const & other) const;
 
     /** @brief Check if a point is contained within the SpanSet instance
      *
-     * @param point - An integer point object for which membership is to be tested
+     * @param point An integer point object for which membership is to be tested
      */
     bool contains(Point2I const & point) const;
 
@@ -312,9 +312,9 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *
      * Dilate a SpanSet with a kernel specified with the stencil parameter
      *
-     * @param r - radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
-     * @param s - must be an enumeration of type geom::Stencil. Specifies the shape of the
-                  dilation kernel. May be CIRCLE, MANHATTAN, or BOX
+     * @param r radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
+     * @param s must be an enumeration of type geom::Stencil. Specifies the shape of the
+                dilation kernel. May be CIRCLE, MANHATTAN, or BOX
      */
     std::shared_ptr<SpanSet> dilate(int r, Stencil s = Stencil::CIRCLE) const;
 
@@ -322,7 +322,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *
      * Dilate a SpanSet with a kernel specified by another SpanSet
      *
-     * @param other - A SpanSet which specifies the kernel to use for dilation
+     * @param other A SpanSet which specifies the kernel to use for dilation
      */
     std::shared_ptr<SpanSet> dilate(SpanSet const & other) const;
 
@@ -330,9 +330,9 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *
      * Erode a SpanSet with a kernel specified with the stencil parameter
      *
-     * @param r - radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
-     * @param s - must be an enumeration of type geom::Stencil. Specifies the shape of the
-                  erosion kernel. May be CIRCLE, MANHATTAN, or BOX
+     * @param r radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
+     * @param s must be an enumeration of type geom::Stencil. Specifies the shape of the
+                erosion kernel. May be CIRCLE, MANHATTAN, or BOX
      */
     std::shared_ptr<SpanSet> erode(int r, Stencil s = Stencil::CIRCLE) const;
 
@@ -340,7 +340,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *
      * Erode a SpanSet with a kernel specified by another SpanSet
      *
-     * @param other - A SpanSet which specifies the kernel to use for erosion
+     * @param other A SpanSet which specifies the kernel to use for erosion
      */
     std::shared_ptr<SpanSet> erode(SpanSet const & other) const;
 
@@ -351,12 +351,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * dimensions of the input array must be the h,w which correspond to the SpanSet coordinates. Any
      * number of remaining dimensions is permissable.
      *
-     * @param input - The ndarray from which the values will be taken
-     * @param xy0 - A point object with is used as the origin point for the SpanSet coordinate system
+     * @param input The ndarray from which the values will be taken
+     * @param xy0 A point object with is used as the origin point for the SpanSet coordinate system
      *
-     * @tparam Pixel - The datatype for the ndarray
-     * @tparam inN - The number of dimensions in the array object
-     * @tparam inC - Number of guaranteed row-major contiguous dimensions, starting from the end
+     * @tparam Pixel The datatype for the ndarray
+     * @tparam inN The number of dimensions in the array object
+     * @tparam inC Number of guaranteed row-major contiguous dimensions, starting from the end
      */
     template <typename Pixel, int inN, int inC>
     ndarray::Array<Pixel, inN-1, inN-1> flatten(ndarray::Array<Pixel, inN, inC>  const & input,
@@ -377,23 +377,23 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * dimensions of the input array must be the h,w which correspond to the SpanSet coordinates. Any
      * number of remaining dimensions is permissable.
      *
-     * @param output - The 1d ndarray which will be populated with output parameters, will happen in place
-     * @param input - The ndarray from which the values will be taken
-     * @param xy0 - A point object which is used as the origin point for the SpanSet coordinate system
+     * @param output The 1d ndarray which will be populated with output parameters, will happen in place
+     * @param input The ndarray from which the values will be taken
+     * @param xy0 A point object which is used as the origin point for the SpanSet coordinate system
      *
-     * @tparam PixelOut - The data-type for the output ndarray
-     * @tparam PixelIn - The data-type for the input ndarray
-     * @tparam inA - The number of dimensions in the input array
-     * @tparam outC - Number of guaranteed row-major contiguous dimensions in the output array,
-                      starting from the end
-     * @tparam inC - Number of guaranteed row-major contiguous dimensions in the input array,
-                     starting from the end
+     * @tparam PixelOut The data-type for the output ndarray
+     * @tparam PixelIn The data-type for the input ndarray
+     * @tparam inA The number of dimensions in the input array
+     * @tparam outC Number of guaranteed row-major contiguous dimensions in the output array,
+                    starting from the end
+     * @tparam inC Number of guaranteed row-major contiguous dimensions in the input array,
+                   starting from the end
      */
     template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void flatten(
             ndarray::Array<PixelOut, inA-1, outC> const & output,
             ndarray::Array<PixelIn, inA, inC> const & input,
-            Point2I const & xy0 =  Point2I()) const {
+            Point2I const & xy0 = Point2I()) const {
         auto ndAssigner = []
                           (Point2I const & point,
                            typename details::FlatNdGetter<PixelOut, inA-1, outC>::Reference out,
@@ -403,18 +403,18 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         applyFunctor(ndAssigner, ndarray::ndFlat(output), ndarray::ndImage(input, xy0));
     }
 
-    /** @brief Expand an array by One spatial dimension at pionts given by SpanSet
+    /** @brief Expand an array by one spatial dimension at pionts given by SpanSet
      *
      * Take values from a lower dimensional array and insert them in an output array with one additional
      * dimension at points defined by the SpanSet, offset by the lower left hand corner of the
-     * bounding box of the SpanSet. The first two dimensions of the output array will correspond with the
+     * bounding box of the SpanSet. The first two dimensions of the output array will correspond to the
      * y,x dimensions of the SpanSet
      *
-     * @param input - The ndarray from which the values will be taken
+     * @param input The ndarray from which the values will be taken
      *
-     * @tparam Pixel - The data-type for the ndarray
-     * @tparam inA - Number of dimension of the input array
-     * @tparam inC - Number of guaranteed row-major contiguous dimensions, starting from the end
+     * @tparam Pixel The data-type for the ndarray
+     * @tparam inA Number of dimension of the input array
+     * @tparam inC Number of guaranteed row-major contiguous dimensions, starting from the end
      */
     template <typename Pixel, int inA, int inC>
     ndarray::Array<Pixel, inA+1, inA+1> unflatten(ndarray::Array<Pixel, inA, inC> const & input) const {
@@ -432,24 +432,24 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         return outputArray;
     }
 
-     /** @brief Expand an array by One spatial dimension at pionts given by SpanSet
+     /** @brief Expand an array by one spatial dimension at pionts given by SpanSet
      *
      * Take values from a lower dimensional array and insert them in an output array with one additional
      * dimension at points defined by the SpanSet, offset by the lower left hand corner of the
-     * bounding box of the SpanSet. The first two dimensions of the output array will correspond with the
+     * bounding box of the SpanSet. The first two dimensions of the output array will correspond to the
      * y,x dimensions of the SpanSet
      *
-     * @param output - The 1d ndarray which will be populated with output parameters, will happen in place
-     * @param input - The ndarray from which the values will be taken
-     * @param xy0 - A point object with is used as the origin point for the SpanSet coordinate system
+     * @param output The 1d ndarray which will be populated with output parameters, will happen in place
+     * @param input The ndarray from which the values will be taken
+     * @param xy0 A point object with is used as the origin point for the SpanSet coordinate system
      *
-     * @tparam PixelOut - The datatype for the output ndarray
-     * @tparam PixelIn - The datatype for the input ndarray
-     * @tparam inA - Number of dimensions of the input ndarray
-     * @tparam outC - Number of guaranteed row-major contiguous dimensions in the output array,
-                      starting from the end
-     * @tparam inC - Number of guaranteed row-major contiguous dimensions in the input array,
-                     starting from the end
+     * @tparam PixelOut The datatype for the output ndarray
+     * @tparam PixelIn The datatype for the input ndarray
+     * @tparam inA Number of dimensions of the input ndarray
+     * @tparam outC Number of guaranteed row-major contiguous dimensions in the output array,
+                    starting from the end
+     * @tparam inC Number of guaranteed row-major contiguous dimensions in the input array,
+                   starting from the end
      */
     template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void unflatten(ndarray::Array<PixelOut, inA+1, outC> const & output,
@@ -495,11 +495,11 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * the data-type must be at least that length. The order of the parameters supplied to the functor will
      * be the same order as they are passed to the applyFunctor method.
      *
-     * @param ...args - Variadic arguments, may be of type Image, MaskedImage, ndarrays, numeric values
-     *                  and iterators. ndarrays must be specified as either image or vector with the
-     *                  ndarray::ndImage or ndarray::ndFlat functions
+     * @param ...args Variadic arguments, may be of type Image, MaskedImage, ndarrays, numeric values
+     *                and iterators. ndarrays must be specified as either image or vector with the
+     *                ndarray::ndImage or ndarray::ndFlat functions
      *
-     * @tparam ...Args - Variadic type specification
+     * @tparam ...Args Variadic type specification
      */
     template <typename Functor, typename...Args>
     // Normally std::forward would be used with a universal reference, however
@@ -520,10 +520,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** @brief Set a Mask at pixels defined by the SpanSet
      *
-     * @param target - Mask in which values will be set
-     * @param bitmask - The bit pattern to set in the mask
+     * @param target Mask in which values will be set
+     * @param bitmask The bit pattern to set in the mask
      *
-     * @tparam T - data-type of a pixel in the Mask plane
+     * @tparam T data-type of a pixel in the Mask plane
      */
     template <typename T>
     void setMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
@@ -540,10 +540,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** @brief Unset a Maks at pixels defined by the SpanSet
      *
-     * @param target - Mask in which a bit pattern will be unset
-     * @param bitmask - The bit pattern to clear in the mask
+     * @param target Mask in which a bit pattern will be unset
+     * @param bitmask The bit pattern to clear in the mask
      *
-     * @tparam T - data-type of a pixel in the Mask plane
+     * @tparam T data-type of a pixel in the Mask plane
      */
     template <typename T>
     void clearMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
@@ -561,16 +561,16 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     // SpanSet functions
     /** @brief Determine the common points between two SpanSets, and create a new SpanSet
      *
-     * @param other - The other SpanSet with which to intersect with
+     * @param other The other SpanSet with which to intersect with
      */
     std::shared_ptr<SpanSet> intersect(SpanSet const & other) const;
 
     /** @brief Determine the common points between a SpanSet and a Mask with a given bit pattern
      *
-     * @param other - Mask with which to calculate intersection
-     * @param bitmask - The bit value to concider when intersecting
+     * @param other Mask with which to calculate intersection
+     * @param bitmask The bit value to concider when intersecting
      *
-     * @tparam T - Pixel type of the Mask
+     * @tparam T Pixel type of the Mask
      */
     template <typename T>
     std::shared_ptr<SpanSet> intersect(image::Mask<T> const & other, T const & bitmask) const {
@@ -584,17 +584,17 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     /** @brief Determine the common points between a SpanSet and the logical inverse of a second SpanSet
      *         and return them in a new SpanSet.
      *
-     * @param other - The spanset which will be logically inverted when computing the intersection
+     * @param other The spanset which will be logically inverted when computing the intersection
      */
     std::shared_ptr<SpanSet> intersectNot(SpanSet const & other) const;
 
     /** @brief Determine the common points between a SpanSet and the logical inverse of a Mask for a
                given bit pattern
      *
-     * @param other - Mask with which to calculate instersection
-     * @param bitmask - The bit value to concider when intersecting
+     * @param other Mask with which to calculate instersection
+     * @param bitmask The bit value to concider when intersecting
      *
-     * @tparam T - Pixel type of the Mask
+     * @tparam T Pixel type of the Mask
      */
     template <typename T>
     std::shared_ptr<SpanSet> intersectNot(image::Mask<T> const & other, T const & bitmask) const {
@@ -607,17 +607,17 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** @brief Create a new SpanSet that contains all points from two SpanSets
      *
-     * @param other - The SpanSet from which the union will be calculated
+     * @param other The SpanSet from which the union will be calculated
      */
     std::shared_ptr<SpanSet> union_(SpanSet const & other) const;
 
 
     /** @brief Determine the union between a SpanSet and a Mask for a given bit pattern
      *
-     * @param other - Mask with which to calculate instersection
-     * @param bitmask - The bit value to concider when intersecting
+     * @param other Mask with which to calculate instersection
+     * @param bitmask The bit value to concider when intersecting
      *
-     * @tparam T - Pixel type of the Mask
+     * @tparam T Pixel type of the Mask
      */
     template <typename T>
     std::shared_ptr<SpanSet> union_(image::Mask<T> const & other, T const & bitmask) const {
@@ -631,21 +631,21 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     // Comparison Operators
     /** @brief Compute equality between two SpanSets
      *
-     * @param other - The SpanSet for which equality will be computed
+     * @param other The SpanSet for which equality will be computed
      */
     bool operator==(SpanSet const & other) const;
 
     /* @brief Compute inequality between two SpanSets
      *
-     * @param other - The SpanSet for which inequality will be computed
+     * @param other The SpanSet for which inequality will be computed
      */
     bool operator!=(SpanSet const & other) const;
 
     /** @brief Factory function for creating SpanSets from a Stencil
      *
-     * @param r - radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
-     * @param s - must be an enumeration of type geom::Stencil. Specifies the shape of the
-                  newly created SpanSet. May be CIRCLE, MANHATTAN, or BOX
+     * @param r radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
+     * @param s must be an enumeration of type geom::Stencil. Specifies the shape of the
+                newly created SpanSet. May be CIRCLE, MANHATTAN, or BOX
     */
     static std::shared_ptr<geom::SpanSet> spanSetFromShape(int r, Stencil s = Stencil::CIRCLE);
 
@@ -694,9 +694,9 @@ private:
 
     /* Determine if two spans overlap
      *
-     * a - First Span in comparison
-     * b - Second Span in comparison
-     * compareY - a boolean to control if the comparison takes into account the y position of the spans
+     * a First Span in comparison
+     * b Second Span in comparison
+     * compareY a boolean to control if the comparison takes into account the y position of the spans
      */
     inline bool spansOverlap(Span const & a, Span const & b, bool compareY = true) const {
         bool yTruth(true);
@@ -712,9 +712,9 @@ private:
     /* Determine if two spans are contiguous, that is they can overlap or the end of one span is
      * one pixel before the beginning of the next
      *
-     * a - First Span in comparison
-     * b - Second Span in comparison
-     * compareY - a boolean to control if the comparison takes into account the y position of the spans
+     * a First Span in comparison
+     * b Second Span in comparison
+     * compareY a boolean to control if the comparison takes into account the y position of the spans
      */
     inline bool spansContiguous(Span const & a, Span const & b, bool compareY = true) const {
         bool yTruth(true);
