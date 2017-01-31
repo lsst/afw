@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
-from .catalog import addCatalogMethods
-from ._exposure import ExposureCatalog
+from .sortedCatalog import addSortedCatalogMethods
+from ._exposure import _SortedBaseExposureCatalog
 
 __all__ = []  # import this module only for its side effects
 
-addCatalogMethods(ExposureCatalog)
+addSortedCatalogMethods(_SortedBaseExposureCatalog)
