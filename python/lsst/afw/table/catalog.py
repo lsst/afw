@@ -172,6 +172,10 @@ def addCatalogMethods(cls):
         return lsst.afw.fits.reduceToFits(self)
     cls.__reduce__ = __reduce__
 
+    # sort is renamed so that it can be shadowed for sorted catalogs
+    # use the default implementation for unsorted catalogs
+    cls.sort = cls._sort
+
     def find(self, value, key):
         """Return the record for which record.get(key) == value
 
