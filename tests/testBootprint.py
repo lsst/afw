@@ -50,6 +50,7 @@ class BootprintTestCase(unittest.TestCase):
         del self.footprintWithRegion
         del self.footprintWithSchema
         del self.footprintWithSchemaRegion
+        del self.emptyFootprint
 
     def testConstructors(self):
         '''
@@ -63,6 +64,9 @@ class BootprintTestCase(unittest.TestCase):
         self.footprintWithSchemaRegion = afwDet.Bootprint(self.spans,
                                                           self.schema,
                                                           self.region)
+        self.emptyFootprint = afwDet.Bootprint()
+        self.assertEqual(len(self.emptyFootprint.spans), 0)
+        self.assertEqual(len(self.emptyFootprint.peaks), 0)
 
     def testIsHeavy(self):
         self.assertFalse(self.footprint.isHeavy)
