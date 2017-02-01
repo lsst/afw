@@ -74,6 +74,10 @@ public:
     explicit Bootprint(std::shared_ptr<geom::SpanSet> inputSpans,
                        afw::table::Schema const & peakSchema,
                        geom::Box2I const & region=geom::Box2I());
+    explicit Bootprint(): lsst::daf::base::Citizen(typeid(this)),
+                          _spans(std::make_shared<geom::SpanSet>()),
+                          _peaks(PeakTable::makeMinimalSchema()),
+                          _region(geom::Box2I()) {}
 
     Bootprint(Bootprint const & other) = default;
     Bootprint(Bootprint && ) = default;
