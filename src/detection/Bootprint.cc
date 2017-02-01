@@ -30,9 +30,8 @@ namespace lsst { namespace afw { namespace detection {
 Bootprint::Bootprint(std::shared_ptr<geom::SpanSet> inputSpans,
           geom::Box2I const & region): lsst::daf::base::Citizen(typeid(this)),
                                        _spans(inputSpans),
-                                       _region(region) {
-    setPeakSchema(PeakTable::makeMinimalSchema());
-}
+                                       _region(region),
+                                       _peaks(PeakTable::makeMinimalSchema()) {}
 
 Bootprint::Bootprint(std::shared_ptr<geom::SpanSet> inputSpans,
           afw::table::Schema const & peakSchema,
