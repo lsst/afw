@@ -62,6 +62,8 @@ PYBIND11_PLUGIN(_bootprint) {
                               geom::Box2I const &>(),
                      "inputSpans"_a, "peakSchema"_a, "region"_a = geom::Box2I());
 
+    clsBootprint.def(py::init<>());
+
     /* Bootprint Methods */
     clsBootprint.def("getSpans", &Bootprint::getSpans);
     clsBootprint.def("setSpans", &Bootprint::setSpans);
