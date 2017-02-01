@@ -77,7 +77,7 @@ void declareCatalogOverloads(
     typedef CatalogT<RecordT> Catalog;
 
     cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) &Catalog::isSorted);
-    cls.def("sort", (void (Catalog::*)(Key<T> const &)) &Catalog::sort);
+    cls.def("_sort", (void (Catalog::*)(Key<T> const &)) &Catalog::sort);
     cls.def(("_find_" + suffix).c_str(),
             [](Catalog & self, T const & value, Key<T> const & key)->std::shared_ptr<RecordT> {
         typename Catalog::const_iterator iter = self.find(value, key);
