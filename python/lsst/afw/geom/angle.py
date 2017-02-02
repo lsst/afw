@@ -1,34 +1,33 @@
 from __future__ import absolute_import
 
-from ._angle import *
+from lsst.utils import continueClass
+from ._angle import Angle, AngleUnit, radians
 
 __all__ = []
 
-def _Angle__abs__(self): 
-    return abs(self.asRadians())*radians
-Angle.__abs__ = _Angle__abs__
+
+@continueClass
+class Angle:
+
+    def __abs__(self):
+        return abs(self.asRadians())*radians
+
+    def __reduce__(self):
+        return (Angle, (self.asRadians(),))
 
 
-def _AngleUnit__mul__(self, other):
-    if isinstance(other, (Angle, AngleUnit)):
-        raise NotImplementedError
-    return AngleUnit._mul(self, other)
-AngleUnit.__mul__ = _AngleUnit__mul__
+@continueClass
+class AngleUnit:
 
+    def __mul__(self, other):
+        if isinstance(other, (Angle, AngleUnit)):
+            raise NotImplementedError
+        return AngleUnit._mul(self, other)
 
-def _AngleUnit__rmul__(self, other):
-    if isinstance(other, (Angle, AngleUnit)):
-        raise NotImplementedError
-    return AngleUnit._rmul(self, other)
-AngleUnit.__rmul__ = _AngleUnit__rmul__
+    def __rmul__(self, other):
+        if isinstance(other, (Angle, AngleUnit)):
+            raise NotImplementedError
+        return AngleUnit._rmul(self, other)
 
- 
-def _Angle__reduce__(self): 
-    return (Angle, (self.asRadians(),))
-Angle.__reduce__ = _Angle__reduce__
-
-
-def _AngleUnit__reduce__(self):
-    return (AngleUnit, (1.0*self,))
-AngleUnit.__reduce__ = _AngleUnit__reduce__
-
+    def __reduce__(self):
+        return (AngleUnit, (1.0*self,))
