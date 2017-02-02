@@ -2,10 +2,8 @@ from __future__ import absolute_import
 
 from ._angle import *
 from .angle import *
-from ._coordinateBase import *
-from .coordinateExpr import *
-from .extent import *
-from .point import *
+from ._coordinates import *
+from .coordinates import *
 from .box import *
 from ._functor import *
 from ._span import *

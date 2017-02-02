@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
-from .point import Point2I, Point2D
-from .extent import Extent2I, Extent2D
+from .coordinates import Point2I, Point2D, Extent2I, Extent2D
 from ._box import *
 
 def _Box2I__repr__(self):
