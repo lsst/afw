@@ -20,7 +20,7 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/geom/Angle.h"
 
@@ -29,66 +29,80 @@ namespace py = pybind11;
 namespace lsst {
 namespace afw {
 namespace geom {
-
 namespace {
-    template <typename OtherT>
-    void declareAngleComparisonOperators(py::class_<Angle> & cls) {
-        cls.def("__eq__", [](Angle const & self, OtherT const & other) { return self == other; }, py::is_operator());
-        cls.def("__ne__", [](Angle const & self, OtherT const & other) { return self != other; }, py::is_operator());
-        cls.def("__le__", [](Angle const & self, OtherT const & other) { return self <= other; }, py::is_operator());
-        cls.def("__ge__", [](Angle const & self, OtherT const & other) { return self >= other; }, py::is_operator());
-        cls.def("__lt__", [](Angle const & self, OtherT const & other) { return self < other; }, py::is_operator());
-        cls.def("__gt__", [](Angle const & self, OtherT const & other) { return self > other; }, py::is_operator());
-    }
+
+using PyAngle = py::class_<Angle>;
+using PyAngleUnit py::class_<AngleUnit>;
+
+template <typename OtherT>
+void declareAngleComparisonOperators(PyAngle & cls) {
+    cls.def("__eq__", [](Angle const& self, OtherT const& other) { return self == other; },
+            py::is_operator());
+    cls.def("__ne__", [](Angle const& self, OtherT const& other) { return self != other; },
+            py::is_operator());
+    cls.def("__le__", [](Angle const& self, OtherT const& other) { return self <= other; },
+            py::is_operator());
+    cls.def("__ge__", [](Angle const& self, OtherT const& other) { return self >= other; },
+            py::is_operator());
+    cls.def("__lt__", [](Angle const& self, OtherT const& other) { return self < other; }, py::is_operator());
+    cls.def("__gt__", [](Angle const& self, OtherT const& other) { return self > other; }, py::is_operator());
 }
 
 PYBIND11_PLUGIN(_angle) {
     py::module mod("_angle", "Python wrapper for afw _angle library");
 
-    py::class_<AngleUnit> clsAngleUnit(mod, "AngleUnit");
+    /* AngleUnit */
 
-    /* Operators */
-    clsAngleUnit.def("__eq__", [](AngleUnit const & self, AngleUnit const & other) { return self == other; }, py::is_operator());
-    clsAngleUnit.def("__ne__", [](AngleUnit const & self, AngleUnit const & other) { return !(self == other); }, py::is_operator());
-    clsAngleUnit.def("_mul", [](AngleUnit const & self, double other) { return other * self; }, py::is_operator());
-    clsAngleUnit.def("_rmul", [](AngleUnit const & self, double other) { return other * self; }, py::is_operator());
+    PyAngleUnit clsAngleUnit(mod, "AngleUnit");
 
-    /* Members */
+    clsAngleUnit.def("__eq__", [](AngleUnit const& self, AngleUnit const& other) { return self == other; },
+                     py::is_operator());
+    clsAngleUnit.def("__ne__", [](AngleUnit const& self, AngleUnit const& other) { return !(self == other); },
+                     py::is_operator());
+    clsAngleUnit.def("_mul", [](AngleUnit const& self, double other) { return other * self; },
+                     py::is_operator());
+    clsAngleUnit.def("_rmul", [](AngleUnit const& self, double other) { return other * self; },
+                     py::is_operator());
     mod.attr("radians") = py::cast(radians);
     mod.attr("degrees") = py::cast(degrees);
     mod.attr("hours") = py::cast(hours);
     mod.attr("arcminutes") = py::cast(arcminutes);
     mod.attr("arcseconds") = py::cast(arcseconds);
 
-    py::class_<Angle> clsAngle(mod, "Angle");
+    /* Angle */
 
-    /* Constructors */
+    PyAngle clsAngle(mod, "Angle");
+
     clsAngle.def(py::init<double, AngleUnit>(), py::arg("val"), py::arg("units")=radians);
     clsAngle.def(py::init<>());
 
-    /* Operators */
     declareAngleComparisonOperators<Angle>(clsAngle);
     declareAngleComparisonOperators<double>(clsAngle);
     declareAngleComparisonOperators<int>(clsAngle);
 
-    clsAngle.def("__mul__", [](Angle const & self, double other) { return self * other; }, py::is_operator());
-    clsAngle.def("__mul__", [](Angle const & self, int other) { return self * other; }, py::is_operator());
-    clsAngle.def("__rmul__", [](Angle const & self, double other) { return self * other; }, py::is_operator());
-    clsAngle.def("__rmul__", [](Angle const & self, int other) { return self * other; }, py::is_operator());
-    clsAngle.def("__imul__", [](Angle & self, double other) { return self *= other; }, py::is_operator());
-    clsAngle.def("__imul__", [](Angle & self, int other) { return self *= other; }, py::is_operator());
-    clsAngle.def("__add__", [](Angle const & self, Angle const & other) { return self + other; }, py::is_operator());
-    clsAngle.def("__sub__", [](Angle const & self, Angle const & other) { return self - other; }, py::is_operator());
-    clsAngle.def("__iadd__", [](Angle & self, Angle const & other) { return self += other; }, py::is_operator());
-    clsAngle.def("__isub__", [](Angle & self, Angle const & other) { return self -= other; }, py::is_operator());
-    clsAngle.def("__truediv__", [](Angle const & self, double other) { return self / other; }, py::is_operator());
-    clsAngle.def("__floordiv__", [](Angle const & self, double other) { return floor(self / other); }, py::is_operator());
-    clsAngle.def("__div__", [](Angle const & self, double other) { return self / other; }, py::is_operator());
-    clsAngle.def("__rdiv__", [](Angle const & self, double other) { return self / other; }, py::is_operator());
+    clsAngle.def("__mul__", [](Angle const& self, double other) { return self * other; }, py::is_operator());
+    clsAngle.def("__mul__", [](Angle const& self, int other) { return self * other; }, py::is_operator());
+    clsAngle.def("__rmul__", [](Angle const& self, double other) { return self * other; }, py::is_operator());
+    clsAngle.def("__rmul__", [](Angle const& self, int other) { return self * other; }, py::is_operator());
+    clsAngle.def("__imul__", [](Angle& self, double other) { return self *= other; }, py::is_operator());
+    clsAngle.def("__imul__", [](Angle& self, int other) { return self *= other; }, py::is_operator());
+    clsAngle.def("__add__", [](Angle const& self, Angle const& other) { return self + other; },
+                 py::is_operator());
+    clsAngle.def("__sub__", [](Angle const& self, Angle const& other) { return self - other; },
+                 py::is_operator());
+    clsAngle.def("__iadd__", [](Angle& self, Angle const& other) { return self += other; },
+                 py::is_operator());
+    clsAngle.def("__isub__", [](Angle& self, Angle const& other) { return self -= other; },
+                 py::is_operator());
+    clsAngle.def("__truediv__", [](Angle const& self, double other) { return self / other; },
+                 py::is_operator());
+    clsAngle.def("__floordiv__", [](Angle const& self, double other) { return floor(self / other); },
+                 py::is_operator());
+    clsAngle.def("__div__", [](Angle const& self, double other) { return self / other; }, py::is_operator());
+    clsAngle.def("__rdiv__", [](Angle const& self, double other) { return self / other; }, py::is_operator());
 
     clsAngle.def("__float__", &Angle::operator double, py::is_operator());
 
-    /* Members */
     clsAngle.def("asAngularUnits", &Angle::asAngularUnits);
     clsAngle.def("asRadians", &Angle::asRadians);
     clsAngle.def("asDegrees", &Angle::asDegrees);
@@ -101,7 +115,8 @@ PYBIND11_PLUGIN(_angle) {
     clsAngle.def("wrapCtr", &Angle::wrapCtr);
     clsAngle.def("wrapNear", &Angle::wrapNear);
 
-    /* Non members */
+    /* Non-members */
+
     mod.attr("PI") = py::float_(PI);
     mod.attr("TWOPI") = py::float_(TWOPI);
     mod.attr("HALFPI") = py::float_(HALFPI);
@@ -122,4 +137,5 @@ PYBIND11_PLUGIN(_angle) {
 
     return mod.ptr();
 }
-}}} // lsst::afw::geom
+
+}}}} // lsst::afw::geom::<anonymous>
