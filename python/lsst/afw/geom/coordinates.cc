@@ -170,10 +170,8 @@ PyExtent<T,N> declareExtent(py::module & mod, std::string const & suffix) {
             py::is_operator());
     cls.def("__eq__", [](Extent<T, N> const &self, Extent<T, N> const &other) { return self == other; },
             py::is_operator());
-    cls.def("__eq__", [](Extent<T, N> const &self, py::none) { return false; }, py::is_operator());
     cls.def("__ne__", [](Extent<T, N> const &self, Extent<T, N> const &other) { return self != other; },
             py::is_operator());
-    cls.def("__ne__", [](Extent<T, N> const &self, py::none) { return true; }, py::is_operator());
 
     /* Members */
     cls.def("clone", [](Extent<T, N> const & self) { return Extent<T, N>{self}; });
@@ -389,10 +387,8 @@ PyPoint<T,N> declarePoint(py::module &mod, std::string const &suffix) {
             py::is_operator());
     cls.def("__eq__", [](Point<T, N> const &self, Point<T, N> const &other) { return self == other; },
             py::is_operator());
-    cls.def("__eq__", [](Point<T, N> const &self, py::none) { return false; }, py::is_operator());
     cls.def("__ne__", [](Point<T, N> const &self, Point<T, N> const &other) { return self != other; },
             py::is_operator());
-    cls.def("__ne__", [](Point<T, N> const &self, py::none) { return true; }, py::is_operator());
 
     /* Members */
     cls.def("clone", [](Point<T, N> const &self) { return Point<T, N>{self}; });
