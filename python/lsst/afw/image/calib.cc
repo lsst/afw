@@ -52,7 +52,7 @@ using PyCalib =
     >;
 
 PYBIND11_PLUGIN(_calib) {
-    py::module mod("_calib", "Python wrapper for afw _calib library");
+    py::module mod("_calib");
 
     if (_import_array() < 0) {
             PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
