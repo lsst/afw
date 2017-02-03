@@ -21,29 +21,17 @@
 #
 
 from ._spherePoint import SpherePoint
+from lsst.utils import continueClass
 
 __all__ = []  # import this module only for its side effects
 
+@continueClass
+class SpherePoint:
 
-def addSpherePointMethods(cls):
-    """Add methods to the pybind11-wrapped SpherePoint class
-    """
     def __iter__(self):
         for i in (0, 1):
             yield self[i]
-    cls.__iter__ = __iter__
-
-    def __len__(self):
-        return 2
-    cls.__len__ = __len__
 
     def __repr__(self):
         argList = ["%r*afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
         return "SpherePoint(%s)" % (", ".join(argList))
-    cls.__repr__ = __repr__
-
-    def __reduce__(self):
-        return (SpherePoint, (self.getLongitude(), self.getLatitude()))
-    cls.__reduce__ = __reduce__
-
-addSpherePointMethods(SpherePoint)
