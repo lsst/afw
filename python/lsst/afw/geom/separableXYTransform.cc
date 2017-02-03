@@ -20,22 +20,25 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/geom/Functor.h"
 #include "lsst/afw/geom/SeparableXYTransform.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom { namespace {
+
+using PySeparableXYTransform = py::class_<SeparableXYTransform, XYTransform>;
 
 PYBIND11_PLUGIN(_separableXYTransform) {
-    py::module mod("_separableXYTransform", "Python wrapper for afw _separableXYTransform library");
+    py::module mod("_separableXYTransform");
 
-    py::class_<SeparableXYTransform, std::shared_ptr<SeparableXYTransform>, XYTransform> clsSeparableXYTransform(mod, "SeparableXYTransform");
+    PySeparableXYTransform clsSeparableXYTransform(mod, "SeparableXYTransform");
 
     /* Constructors */
-    clsSeparableXYTransform.def(py::init<Functor const &, Functor const &>());
+    clsSeparableXYTransform.def(py::init<Functor const &, Functor const &>(), "xfunctor"_a, "yfunctor"_a);
 
     /* Members */
     clsSeparableXYTransform.def("clone", &SeparableXYTransform::clone);
@@ -44,5 +47,7 @@ PYBIND11_PLUGIN(_separableXYTransform) {
     clsSeparableXYTransform.def("getXfunctor", &SeparableXYTransform::getXfunctor);
     clsSeparableXYTransform.def("getYfunctor", &SeparableXYTransform::getYfunctor);
 
-return mod.ptr();
+    return mod.ptr();
 }
+
+}}}} // namespace lsst::afw::geom::<anonymous>
