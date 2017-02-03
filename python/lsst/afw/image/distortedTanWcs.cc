@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,24 +9,20 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <memory>
-
-#include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/geom/XYTransform.h"
-#include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/image/DistortedTanWcs.h"
 
 namespace py = pybind11;
@@ -35,21 +31,18 @@ using namespace py::literals;
 namespace lsst {
 namespace afw {
 namespace image {
+namespace {
+
+using PyDistortedTanWcs = py::class_<DistortedTanWcs, std::shared_ptr<DistortedTanWcs>, TanWcs>;
 
 PYBIND11_PLUGIN(_distortedTanWcs) {
-    py::module mod("_distortedTanWcs", "Python wrapper for afw _distortedTanWcs library");
+    py::module mod("_distortedTanWcs");
 
     /* Module level */
-    py::class_<DistortedTanWcs,
-               std::shared_ptr<DistortedTanWcs>,
-               TanWcs> cls(mod, "DistortedTanWcs");
-
-    /* Member types and enums */
+    PyDistortedTanWcs cls(mod, "DistortedTanWcs");
 
     /* Constructors */
     cls.def(py::init<TanWcs const &, geom::XYTransform const &>(), "tanWcs"_a, "pixelsToTanPixels"_a);
-
-    /* Operators */
 
     /* Members */
     cls.def("clone", &DistortedTanWcs::clone);
@@ -63,4 +56,4 @@ PYBIND11_PLUGIN(_distortedTanWcs) {
     return mod.ptr();
 }
 
-}}}  // namespace lsst::afw::image
+}}}}  // namespace lsst::afw::image::<anonymous>
