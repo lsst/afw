@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,27 +9,26 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
-#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
 
 namespace py = pybind11;
 
-using namespace lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom { namespace {
 
 // A thin wrapper around SpanPixelIterator.
 // Unfortunately we cannot use py::make_iterator here, as we normally
@@ -48,6 +47,7 @@ class SpanIterator {
         Span::Iterator _it;
         Span::Iterator _end;
 };
+using PySpan = py::class_<Span, std::shared_ptr<Span>>;
 
 PYBIND11_PLUGIN(_span) {
     py::module mod("_span", "Python wrapper for afw _span library");
@@ -58,16 +58,16 @@ PYBIND11_PLUGIN(_span) {
     clsSpanIterator.def("__iter__", [](SpanIterator &it) -> SpanIterator& { return it; });
     clsSpanIterator.def("__next__", &SpanIterator::next);
 
-    py::class_<Span, std::shared_ptr<Span>> clsSpan(mod, "Span");
+    PySpan clsSpan(mod, "Span");
 
     /* Constructors */
     clsSpan.def(py::init<int, int, int>());
     clsSpan.def(py::init<>());
 
     /* Operators */
-    clsSpan.def(py::self == py::self);
-    clsSpan.def(py::self != py::self);
-    clsSpan.def(py::self < py::self);
+    clsSpan.def("__eq__", &Span::operator==, py::is_operator());
+    clsSpan.def("__ne__", &Span::operator!=, py::is_operator());
+    clsSpan.def("__lt__", &Span::operator<, py::is_operator());
     clsSpan.def("__len__", &Span::getWidth);
     clsSpan.def("__str__", &Span::toString);
     clsSpan.def("__iter__", [](const Span &s) { return SpanIterator(s); },
@@ -94,3 +94,4 @@ PYBIND11_PLUGIN(_span) {
     return mod.ptr();
 }
 
+}}}} // namespace lsst::afw::geom::<anonymous>
