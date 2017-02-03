@@ -11,7 +11,6 @@ from ._spherePoint import *
 from .spherePoint import *
 from ._xYTransform import *
 from ._separableXYTransform import *
-from ._affineTransform import *
 from ._linearTransform import *
-from .linearTransform import *
+from ._affineTransform import *
 from ._spanSet import *
