@@ -26,33 +26,31 @@
 #include "lsst/afw/geom/Functor.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom { namespace {
+
+using PyFunctor = py::class_<Functor>;
+using PyLinearFunctor = py::class_<LinearFunctor,Functor>;
 
 PYBIND11_PLUGIN(_functor) {
-    py::module mod("_functor", "Python wrapper for afw _functor library");
+    py::module mod("_functor");
 
-    py::class_<Functor> clsFunctor(mod, "Functor");
+    /* Functor */
 
-    /* Operators */
+    PyFunctor clsFunctor(mod, "Functor");
     clsFunctor.def("__call__", &Functor::operator());
-
-    /* Members */
-    clsFunctor.def("inverse", &Functor::inverse,
-        py::arg("y"), py::arg("tol")=1e-10, py::arg("maxiter")=1000);
+    clsFunctor.def("inverse", &Functor::inverse, "y"_a, "tol"_a=1e-10, "maxiter"_a=1000);
     clsFunctor.def("derivative", &Functor::derivative);
 
-    py::class_<LinearFunctor, Functor> clsLinearFunctor(mod, "LinearFunctor");
+    /* LinearFunctor */
 
-    /* Constructors */
-    clsLinearFunctor.def(py::init<double, double>());
-
-    /* Operators */
+    PyLinearFunctor clsLinearFunctor(mod, "LinearFunctor");
+    clsLinearFunctor.def(py::init<double, double>(), "slope"_a, "intercept"_a);
     clsLinearFunctor.def("__call__", &LinearFunctor::operator());
-
-    /* Members */
     clsLinearFunctor.def("derivative", &LinearFunctor::derivative);
 
     return mod.ptr();
 }
 
+}}}} // namespace lsst::afw::geom::<anonymous>
