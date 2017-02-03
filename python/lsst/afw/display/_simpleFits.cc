@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,13 +19,13 @@
  * the GNU General Public License along with this program.  If not, 
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+#include <cstdint>
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/MaskedImage.h"
-#include "Rgb.h"
+#include "lsst/afw/image/Mask.h"
+#include "simpleFits.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -34,17 +34,35 @@ namespace lsst {
 namespace afw {
 namespace display {
 
-PYBIND11_PLUGIN(_rgb) {
-    py::module mod("_rgb", "Python wrapper for afw _rgb library");
+namespace {
 
-    /* Module level */
-    mod.def("replaceSaturatedPixels", replaceSaturatedPixels<lsst::afw::image::MaskedImage<float>>,
-            "rim"_a, "gim"_a, "bim"_a, "borderWidth"_a=2, "saturatedPixelValue"_a=65535);
-    mod.def("getZScale", getZScale<std::uint16_t>,
-            "image"_a, "nsamples"_a=1000, "contrast"_a=0.25);
-    mod.def("getZScale", getZScale<float>,
-            "image"_a, "nsamples"_a=1000, "contrast"_a=0.25);
+template <typename ImageT>
+void declareAll(py::module &mod) {
+    mod.def("writeFitsImage",
+            (void (*)(int, ImageT const &, image::Wcs const *, char const *)) & writeBasicFits<ImageT>,
+            "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+
+    mod.def("writeFitsImage",
+            (void (*)(std::string const &, ImageT const &, image::Wcs const *, char const *)) &
+                writeBasicFits<ImageT>,
+            "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
+}
+
+}  // <anonymous>
+
+PYBIND11_PLUGIN(_simpleFits) {
+    py::module mod("_simpleFits", "");
+
+    declareAll<image::Image<std::uint16_t>>(mod);
+    declareAll<image::Image<std::uint64_t>>(mod);
+    declareAll<image::Image<int>>(mod);
+    declareAll<image::Image<float>>(mod);
+    declareAll<image::Image<double>>(mod);
+    declareAll<image::Mask<std::uint16_t>>(mod);
 
     return mod.ptr();
 }
-}}}
+
+}  // display
+}  // afw
+}  // lsst
