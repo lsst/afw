@@ -20,10 +20,10 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <memory>
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <memory>
 
 #include "lsst/utils/python.h"
 #include "lsst/afw/geom/Angle.h"
@@ -37,11 +37,13 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
+using PySpherePoint = py::class_<SpherePoint, std::shared_ptr<SpherePoint>>;
+
 PYBIND11_PLUGIN(_spherePoint) {
-    py::module mod("_spherePoint", "Python wrapper for afw _spherePoint library");
+    py::module mod("_spherePoint");
 
     /* Module level */
-    py::class_<SpherePoint, std::shared_ptr<SpherePoint>> cls(mod, "SpherePoint");
+    PySpherePoint cls(mod, "SpherePoint");
 
     /* Constructors */
     cls.def(py::init<Angle const &, Angle const &>(), "longitude"_a, "latitude"_a);
@@ -51,8 +53,8 @@ PYBIND11_PLUGIN(_spherePoint) {
     /* Operators */
     cls.def("__getitem__",
             [](SpherePoint const & self, std::ptrdiff_t i) {
-                return self[utils::python::cppIndex(2, i)];
-            }, py::is_operator());
+                return self[utils::cppIndex(2, i)];
+            });
     cls.def("__eq__", &SpherePoint::operator==, py::is_operator());
     cls.def("__ne__", &SpherePoint::operator!=, py::is_operator());
 
@@ -71,6 +73,19 @@ PYBIND11_PLUGIN(_spherePoint) {
         os << std::fixed << self;
         return os.str();
     });
+    cls.def("__len__", [](SpherePoint const &) { return 2; });
+    cls.def(
+        "__reduce__",
+        [cls](SpherePoint const & self) {
+            return py::make_tuple(
+                cls,
+                py::make_tuple(
+                    py::cast(self.getLongitude()),
+                    py::cast(self.getLatitude())
+                )
+            );
+        }
+    );
 
     return mod.ptr();
 }
