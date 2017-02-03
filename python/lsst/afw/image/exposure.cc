@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,21 +9,18 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <memory>
-
-#include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -39,8 +36,13 @@ using namespace pybind11::literals;
 namespace lsst {
 namespace afw {
 namespace image {
+namespace {
 
-/**
+template <typename PixelT>
+using PyExposure =
+    py::class_<Exposure<PixelT>, std::shared_ptr<Exposure<PixelT>>, lsst::daf::base::Persistable>;
+
+/*
 Declare a constructor that takes an Exposure of FromPixelT and returns an Exposure cast to ToPixelT
 
 The mask and variance must be of the standard types.
@@ -48,21 +50,18 @@ The mask and variance must be of the standard types.
 @param[in] cls  The pybind11 class to which add the constructor
 */
 template <typename FromPixelT, typename ToPixelT>
-void declareCastConstructor(py::class_<Exposure<ToPixelT, MaskPixel, VariancePixel>,
-                                       std::shared_ptr<Exposure<ToPixelT, MaskPixel, VariancePixel>>> & cls) {
-    cls.def(py::init<Exposure<FromPixelT, MaskPixel, VariancePixel> const &, bool const>(),
+void declareCastConstructor(PyExposure<ToPixelT> & cls) {
+    cls.def(py::init<Exposure<FromPixelT> const &, bool const>(),
             "src"_a, "deep"_a);
 }
 
 
 template <typename PixelT>  // only the image type varies; mask and variance are fixed
-py::class_<Exposure<PixelT, MaskPixel, VariancePixel>,
-           std::shared_ptr<Exposure<PixelT, MaskPixel, VariancePixel>>>
-                declareExposure(py::module & mod, const std::string & suffix) {
-    using ExposureT = Exposure<PixelT, MaskPixel, VariancePixel>;
+PyExposure<PixelT> declareExposure(py::module & mod, const std::string & suffix) {
+    using ExposureT = Exposure<PixelT>;
     using MaskedImageT = typename ExposureT::MaskedImageT;
 
-    py::class_<ExposureT, std::shared_ptr<ExposureT>, lsst::daf::base::Persistable> cls(mod, ("Exposure" + suffix).c_str());
+    PyExposure<PixelT> cls(mod, ("Exposure" + suffix).c_str());
 
     mod.def("makeExposure", &makeExposure<PixelT, MaskPixel, VariancePixel>,
             "maskedImage"_a, "wcs"_a=std::shared_ptr<Wcs const>());
@@ -152,7 +151,7 @@ py::class_<Exposure<PixelT, MaskPixel, VariancePixel>,
 }
 
 PYBIND11_PLUGIN(_exposure) {
-    py::module mod("_exposure", "Python wrapper for afw _exposure library");
+    py::module mod("_exposure");
 
     auto clsExposureF = declareExposure<float>(mod, "F");
     auto clsExposureD = declareExposure<double>(mod, "D");
@@ -175,17 +174,7 @@ PYBIND11_PLUGIN(_exposure) {
     declareCastConstructor<std::uint64_t, float>(clsExposureF);
     declareCastConstructor<std::uint64_t, double>(clsExposureD);
 
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
-
     return mod.ptr();
 }
 
-}}}  // namespace image
+}}}}  // namespace lsst::afw::image::<anonymous>
