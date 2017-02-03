@@ -51,64 +51,70 @@ PYBIND11_PLUGIN(_linearTransform) {
         return nullptr;
     }
 
-    PyLinearTransform clsLinearTransform(mod, "LinearTransform");
+    PyLinearTransform cls(mod, "LinearTransform");
 
-    /* Member types and enums */
-    py::enum_<LinearTransform::Parameters>(clsLinearTransform, "Parameters", py::arithmetic())
-        .value("XX", LinearTransform::Parameters::XX)
-        .value("YX", LinearTransform::Parameters::YX)
-        .value("XY", LinearTransform::Parameters::XY)
-        .value("YY", LinearTransform::Parameters::YY)
-        .export_values();
+    // Parameters enum is really only used as integer constants.
+    cls.attr("XX") = py::cast(int(LinearTransform::Parameters::XX));
+    cls.attr("YX") = py::cast(int(LinearTransform::Parameters::YX));
+    cls.attr("XY") = py::cast(int(LinearTransform::Parameters::XY));
+    cls.attr("YY") = py::cast(int(LinearTransform::Parameters::YY));
 
     /* Constructors */
-    clsLinearTransform.def(py::init<>());
-    clsLinearTransform.def(py::init<typename LinearTransform::Matrix const &>(), "matrix"_a);
+    cls.def(py::init<>());
+    cls.def(py::init<LinearTransform::Matrix const &>(), "matrix"_a);
 
     /* Operators */
-    clsLinearTransform.def("__call__",
-                           (Point2D(LinearTransform::*)(Point2D const &) const) & LinearTransform::operator(),
-                           py::is_operator());
-    clsLinearTransform.def(
-        "__call__", (Extent2D(LinearTransform::*)(Extent2D const &) const) & LinearTransform::operator(),
-        py::is_operator());
-    clsLinearTransform.def(
-        "__getitem__", [](LinearTransform const &self, int i) { return self[lsst::utils::cppIndex(4, i)]; },
-        py::is_operator());
-    clsLinearTransform.def("__getitem__",
-                           [](LinearTransform const &self, std::pair<int, int> i) {
-                               auto row = lsst::utils::cppIndex(2, i.first);
-                               auto col = lsst::utils::cppIndex(2, i.second);
-                               return self.getMatrix()(row, col);
-                           },
-                           py::is_operator());
-    clsLinearTransform.def("__mul__", &LinearTransform::operator*, py::is_operator());
-    clsLinearTransform.def("__add__", &LinearTransform::operator+, py::is_operator());
-    clsLinearTransform.def("__sub__", &LinearTransform::operator-, py::is_operator());
-    clsLinearTransform.def("__iadd__", &LinearTransform::operator+=, py::is_operator());
-    clsLinearTransform.def("__isub__", &LinearTransform::operator-=, py::is_operator());
+    cls.def("__call__",
+        (Point2D(LinearTransform::*)(Point2D const &) const) & LinearTransform::operator());
+    cls.def(
+        "__call__", (Extent2D(LinearTransform::*)(Extent2D const &) const) & LinearTransform::operator());
+    cls.def(
+        "__getitem__", [](LinearTransform const &self, int i) { return self[lsst::utils::cppIndex(4, i)]; });
+    cls.def(
+        "__getitem__",
+        [](LinearTransform const &self, std::pair<int, int> i) {
+            auto row = lsst::utils::cppIndex(2, i.first);
+            auto col = lsst::utils::cppIndex(2, i.second);
+            return self.getMatrix()(row, col);
+        }
+    );
+    cls.def("__mul__", &LinearTransform::operator*, py::is_operator());
+    cls.def("__add__", &LinearTransform::operator+, py::is_operator());
+    cls.def("__sub__", &LinearTransform::operator-, py::is_operator());
+    cls.def("__iadd__", &LinearTransform::operator+=);
+    cls.def("__isub__", &LinearTransform::operator-=);
 
     /* Members */
-    clsLinearTransform.def_static("makeScaling", (LinearTransform(*)(double))LinearTransform::makeScaling,
-                                  "scale"_a);
-    clsLinearTransform.def_static("makeScaling",
-                                  (LinearTransform(*)(double, double))LinearTransform::makeScaling);
-    clsLinearTransform.def_static("makeRotation", (LinearTransform(*)(Angle t))LinearTransform::makeRotation,
-                                  "angle"_a);
-    clsLinearTransform.def("getParameterVector", &LinearTransform::getParameterVector);
-    clsLinearTransform.def(
+    cls.def_static("makeScaling", (LinearTransform(*)(double))LinearTransform::makeScaling, "scale"_a);
+    cls.def_static("makeScaling", (LinearTransform(*)(double, double))LinearTransform::makeScaling);
+    cls.def_static("makeRotation", (LinearTransform(*)(Angle t))LinearTransform::makeRotation, "angle"_a);
+    cls.def("getParameterVector", &LinearTransform::getParameterVector);
+    cls.def(
         "getMatrix",
-        (typename LinearTransform::Matrix const &(LinearTransform::*)() const) & LinearTransform::getMatrix);
-    clsLinearTransform.def("invert", &LinearTransform::invert);
-    clsLinearTransform.def("computeDeterminant", &LinearTransform::computeDeterminant);
-    clsLinearTransform.def("isIdentity", &LinearTransform::isIdentity);
+        (LinearTransform::Matrix const & (LinearTransform::*)() const) &LinearTransform::getMatrix);
+    cls.def("invert", &LinearTransform::invert);
+    cls.def("computeDeterminant", &LinearTransform::computeDeterminant);
+    cls.def("isIdentity", &LinearTransform::isIdentity);
 
-    clsLinearTransform.def("set", [](LinearTransform &self, double xx, double yx, double xy, double yy) {
-        self[LinearTransform::XX] = xx;
-        self[LinearTransform::XY] = xy;
-        self[LinearTransform::YX] = yx;
-        self[LinearTransform::YY] = yy;
-    }, "xx"_a, "yx"_a, "xy"_a, "yy"_a);
+    cls.def(
+        "set",
+        [](LinearTransform &self, double xx, double yx, double xy, double yy) {
+            self[LinearTransform::XX] = xx;
+            self[LinearTransform::XY] = xy;
+            self[LinearTransform::YX] = yx;
+            self[LinearTransform::YY] = yy;
+        }, "xx"_a, "yx"_a, "xy"_a, "yy"_a
+    );
+
+    cls.def("__str__", [](LinearTransform const & self) {
+        return py::str(py::cast(self.getMatrix()));
+    });
+    cls.def("__repr__", [](LinearTransform const & self) {
+        return py::str("LinearTransform(\n{}\n)").format(py::cast(self.getMatrix()));
+    });
+    cls.def("__reduce__", [cls](LinearTransform const & self) {
+        return py::make_tuple(cls, py::make_tuple(py::cast(self.getMatrix())));
+    });
 
     return mod.ptr();
 }
