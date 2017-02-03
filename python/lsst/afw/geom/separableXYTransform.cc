@@ -44,8 +44,13 @@ PYBIND11_PLUGIN(_separableXYTransform) {
     clsSeparableXYTransform.def("clone", &SeparableXYTransform::clone);
     clsSeparableXYTransform.def("forwardTransform", &SeparableXYTransform::forwardTransform);
     clsSeparableXYTransform.def("reverseTransform", &SeparableXYTransform::reverseTransform);
-    clsSeparableXYTransform.def("getXfunctor", &SeparableXYTransform::getXfunctor);
-    clsSeparableXYTransform.def("getYfunctor", &SeparableXYTransform::getYfunctor);
+    // These return const references, but the Functor classes are immutable, so it's okay
+    // to return them by reference (and impossible to just let pybind11 copy them, because
+    // that would require a call to clone()).
+    clsSeparableXYTransform.def("getXfunctor", &SeparableXYTransform::getXfunctor,
+                                py::return_value_policy::reference_internal);
+    clsSeparableXYTransform.def("getYfunctor", &SeparableXYTransform::getYfunctor,
+                                py::return_value_policy::reference_internal);
 
     return mod.ptr();
 }
