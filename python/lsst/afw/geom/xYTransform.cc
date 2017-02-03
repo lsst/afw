@@ -20,23 +20,37 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "lsst/afw/geom/XYTransform.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom { namespace {
 
-PYBIND11_DECLARE_HOLDER_TYPE(XYTransformType, std::shared_ptr<XYTransformType>);
+using PyXYTransform = py::class_<XYTransform, std::shared_ptr<XYTransform>>;
+
+using PyIdentityXYTransform =
+    py::class_<IdentityXYTransform, std::shared_ptr<IdentityXYTransform>, XYTransform>;
+
+using PyInvertedXYTransform =
+    py::class_<InvertedXYTransform, std::shared_ptr<InvertedXYTransform>, XYTransform>;
+
+using PyMultiXYTransform =
+    py::class_<MultiXYTransform, std::shared_ptr<MultiXYTransform>, XYTransform>;
+
+using PyAffineXYTransfrom =
+    py::class_<AffineXYTransform, std::shared_ptr<AffineXYTransform>, XYTransform>;
+
+using PyRadialXYTransform =
+    py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>, XYTransform>;
 
 PYBIND11_PLUGIN(_xYTransform) {
-    py::module mod("_xYTransform", "Python wrapper for afw _xYTransform library");
+    py::module mod("_xYTransform");
 
-    py::class_<XYTransform, std::shared_ptr<XYTransform>> clsXYTransform(mod, "XYTransform");
-
-    /* Members */
+    PyXYTransform clsXYTransform(mod, "XYTransform");
     clsXYTransform.def("clone", &XYTransform::clone);
     clsXYTransform.def("invert", &XYTransform::invert);
     clsXYTransform.def("forwardTransform", &XYTransform::forwardTransform);
@@ -44,35 +58,23 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsXYTransform.def("linearizeForwardTransform", &XYTransform::linearizeForwardTransform);
     clsXYTransform.def("linearizeReverseTransform", &XYTransform::linearizeReverseTransform);
 
-    py::class_<IdentityXYTransform, std::shared_ptr<IdentityXYTransform>, XYTransform> clsIdentityXYTransform(mod, "IdentityXYTransform");
-
-    /* Constructors */
+    PyIdentityXYTransform clsIdentityXYTransform(mod, "IdentityXYTransform");
     clsIdentityXYTransform.def(py::init<>());
-
-    /* Members */
     clsIdentityXYTransform.def("forwardTransform", &IdentityXYTransform::forwardTransform);
     clsIdentityXYTransform.def("reverseTransform", &IdentityXYTransform::reverseTransform);
     clsIdentityXYTransform.def("linearizeForwardTransform", &IdentityXYTransform::linearizeForwardTransform);
     clsIdentityXYTransform.def("linearizeReverseTransform", &IdentityXYTransform::linearizeReverseTransform);
 
-    py::class_<InvertedXYTransform, std::shared_ptr<InvertedXYTransform>, XYTransform> clsInvertedXYTransform(mod, "InvertedXYTransform");
-
-    /* Constructors */
-    clsInvertedXYTransform.def(py::init<CONST_PTR(XYTransform)>());
-
-    /* Members */
+    PyInvertedXYTransform clsInvertedXYTransform(mod, "InvertedXYTransform");
+    clsInvertedXYTransform.def(py::init<std::shared_ptr<XYTransform const>>());
     clsInvertedXYTransform.def("invert", &InvertedXYTransform::invert);
     clsInvertedXYTransform.def("forwardTransform", &InvertedXYTransform::forwardTransform);
     clsInvertedXYTransform.def("reverseTransform", &InvertedXYTransform::reverseTransform);
     clsInvertedXYTransform.def("linearizeForwardTransform", &InvertedXYTransform::linearizeForwardTransform);
     clsInvertedXYTransform.def("linearizeReverseTransform", &InvertedXYTransform::linearizeReverseTransform);
 
-    py::class_<MultiXYTransform, std::shared_ptr<MultiXYTransform>, XYTransform> clsMultiXYTransform(mod, "MultiXYTransform");
-
-    /* Constructors */
+    PyMultiXYTransform clsMultiXYTransform(mod, "MultiXYTransform");
     clsMultiXYTransform.def(py::init<MultiXYTransform::TransformList const &>());
-
-    /* Members */
     clsMultiXYTransform.def("clone", &MultiXYTransform::clone);
     clsMultiXYTransform.def("forwardTransform", &MultiXYTransform::forwardTransform);
     clsMultiXYTransform.def("reverseTransform", &MultiXYTransform::reverseTransform);
@@ -80,12 +82,9 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsMultiXYTransform.def("linearizeReverseTransform", &MultiXYTransform::linearizeReverseTransform);
     clsMultiXYTransform.def("getTransformList", &MultiXYTransform::getTransformList);
 
-    py::class_<AffineXYTransform, std::shared_ptr<AffineXYTransform>, XYTransform> clsAffineXYTransform(mod, "AffineXYTransform");
-
-    /* Constructors */
+    PyAffineXYTransfrom clsAffineXYTransform(mod, "AffineXYTransform");
     clsAffineXYTransform.def(py::init<AffineTransform const &>());
 
-    /* Members */
     clsAffineXYTransform.def("clone", &AffineXYTransform::clone);
     clsAffineXYTransform.def("forwardTransform", &AffineXYTransform::forwardTransform);
     clsAffineXYTransform.def("reverseTransform", &AffineXYTransform::reverseTransform);
@@ -94,12 +93,8 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsAffineXYTransform.def("getForwardTransform", &AffineXYTransform::getForwardTransform);
     clsAffineXYTransform.def("getReverseTransform", &AffineXYTransform::getReverseTransform);
 
-    py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>, XYTransform> clsRadialXYTransform(mod, "RadialXYTransform");
-
-    /* Constructors */
+    PyRadialXYTransform clsRadialXYTransform(mod, "RadialXYTransform");
     clsRadialXYTransform.def(py::init<std::vector<double> const &>());
-
-    /* Members */
     clsRadialXYTransform.def("clone", &RadialXYTransform::clone);
     clsRadialXYTransform.def("invert", &RadialXYTransform::invert);
     clsRadialXYTransform.def("forwardTransform", &RadialXYTransform::forwardTransform);
@@ -108,14 +103,23 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsRadialXYTransform.def("linearizeReverseTransform", &RadialXYTransform::linearizeReverseTransform);
     clsRadialXYTransform.def("getCoeffs", &RadialXYTransform::getCoeffs);
     clsRadialXYTransform.def_static("polyInvert", &RadialXYTransform::polyInvert);
-    clsRadialXYTransform.def_static("polyEval", (double (*)(std::vector<double> const &, double)) &RadialXYTransform::polyEval);
-    clsRadialXYTransform.def_static("polyEval", (Point2D (*)(std::vector<double> const &, Point2D const &)) &RadialXYTransform::polyEval);
+    clsRadialXYTransform.def_static(
+        "polyEval", (double (*)(std::vector<double> const &, double)) & RadialXYTransform::polyEval);
+    clsRadialXYTransform.def_static(
+        "polyEval", (Point2D(*)(std::vector<double> const &, Point2D const &)) & RadialXYTransform::polyEval);
     clsRadialXYTransform.def_static("polyEvalDeriv", &RadialXYTransform::polyEvalDeriv);
     clsRadialXYTransform.def_static("polyEvalJacobian", &RadialXYTransform::polyEvalJacobian);
-    clsRadialXYTransform.def_static("polyEvalInverse", (double (*)(std::vector<double> const &, std::vector<double> const &, double)) &RadialXYTransform::polyEvalInverse);
-    clsRadialXYTransform.def_static("polyEvalInverse", (Point2D (*)(std::vector<double> const &, std::vector<double> const &, Point2D const &)) &RadialXYTransform::polyEvalInverse);
+    clsRadialXYTransform.def_static(
+        "polyEvalInverse", (double (*)(std::vector<double> const &, std::vector<double> const &, double)) &
+                               RadialXYTransform::polyEvalInverse);
+    clsRadialXYTransform.def_static(
+        "polyEvalInverse",
+        (Point2D(*)(std::vector<double> const &, std::vector<double> const &, Point2D const &)) &
+            RadialXYTransform::polyEvalInverse);
     clsRadialXYTransform.def_static("polyEvalInverseJacobian", &RadialXYTransform::polyEvalInverseJacobian);
     clsRadialXYTransform.def_static("makeAffineTransform", &RadialXYTransform::makeAffineTransform);
 
     return mod.ptr();
 }
+
+}}}} // namespace lsst::afw::geom::<anonymous>
