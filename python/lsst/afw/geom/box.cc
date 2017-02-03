@@ -39,9 +39,15 @@ using PyBox2D = py::class_<Box2D>;
 PYBIND11_PLUGIN(_box) {
     py::module mod("_box", "Python wrapper for afw _box library");
 
+    py::object modCoordinates;
+    modCoordinates = py::module::import("lsst.afw.geom._coordinates");
+
     /* Box2UI */
 
     PyBox2I clsBox2I(mod, "Box2I");
+
+    clsBox2I.attr("Point") = modCoordinates.attr("Point2I");
+    clsBox2I.attr("Extent") = modCoordinates.attr("Extent2I");
 
     py::enum_<Box2I::EdgeHandlingEnum>(clsBox2I, "EdgeHandlingEnum")
         .value("EXPAND", Box2I::EdgeHandlingEnum::EXPAND)
@@ -95,10 +101,49 @@ PYBIND11_PLUGIN(_box) {
     clsBox2I.def("clip", &Box2I::clip);
     clsBox2I.def("getCorners", &Box2I::getCorners);
     clsBox2I.def("toString", &Box2I::toString);
+    clsBox2I.def(
+        "__repr__",
+        [](Box2I const & self) {
+            return py::str("Box2D(minimum={}, dimensions={})").format(
+                py::repr(py::cast(self.getMin())),
+                py::repr(py::cast(self.getDimensions()))
+            );
+        }
+    );
+    clsBox2I.def(
+        "__str__",
+        [](Box2I const & self) {
+            return py::str("(minimum={}, maximum={})").format(
+                py::str(py::cast(self.getMin())),
+                py::str(py::cast(self.getMax()))
+            );
+        }
+    );
+    clsBox2I.def(
+        "__reduce__",
+        [clsBox2I](Box2I const & self) {
+            return py::make_tuple(
+                clsBox2I,
+                make_tuple(py::cast(self.getMin()), py::cast(self.getMax()))
+            );
+        }
+    );
+    clsBox2I.def(
+        "getSlices",
+        [](Box2I const & self) {
+            return py::make_tuple(
+                py::slice(self.getBeginY(), self.getEndY(), 1),
+                py::slice(self.getBeginX(), self.getEndX(), 1)
+            );
+        }
+    );
 
     /* Box2D */
 
     PyBox2D clsBox2D(mod, "Box2D");
+
+    clsBox2I.attr("Point") = modCoordinates.attr("Point2D");
+    clsBox2I.attr("Extent") = modCoordinates.attr("Extent2D");
 
     clsBox2D.attr("EPSILON") = py::float_(Box2D::EPSILON);
     clsBox2D.attr("INVALID") = py::float_(Box2D::INVALID);
@@ -147,6 +192,35 @@ PYBIND11_PLUGIN(_box) {
     clsBox2D.def("clip", &Box2D::clip);
     clsBox2D.def("getCorners", &Box2D::getCorners);
     clsBox2D.def("toString", &Box2D::toString);
+    clsBox2D.def(
+        "__repr__", [](Box2D const & self) {
+            return py::str("Box2D(minimum={}, dimensions={})").format(
+                py::repr(py::cast(self.getMin())),
+                py::repr(py::cast(self.getDimensions()))
+            );
+        }
+    );
+    clsBox2D.def(
+        "__str__", [](Box2D const & self) {
+            return py::str("(minimum={}, maximum={})").format(
+                py::str(py::cast(self.getMin())),
+                py::str(py::cast(self.getMax()))
+            );
+        }
+    );
+    clsBox2D.def(
+        "__reduce__",
+        [clsBox2D](Box2D const & self) {
+            return py::make_tuple(
+                clsBox2D,
+                make_tuple(py::cast(self.getMin()), py::cast(self.getMax()))
+            );
+        }
+    );
+
+    /* module-level typedefs */
+    mod.attr("BoxI") = clsBox2I;
+    mod.attr("BoxD") = clsBox2D;
 
     return mod.ptr();
 }

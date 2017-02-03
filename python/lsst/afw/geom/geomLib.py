@@ -4,7 +4,7 @@ from ._angle import *
 from .angle import *
 from ._coordinates import *
 from .coordinates import *
-from .box import *
+from ._box import *
 from ._functor import *
 from ._span import *
 from ._spherePoint import *
