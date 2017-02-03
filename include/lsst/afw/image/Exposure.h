@@ -150,9 +150,9 @@ public:
 
     // Get Members
     /// Return the MaskedImage
-    MaskedImageT getMaskedImage() { return _maskedImage; }
+    MaskedImageT & getMaskedImage() { return _maskedImage; }
     /// Return the MaskedImage
-    MaskedImageT getMaskedImage() const { return _maskedImage; }
+    MaskedImageT const & getMaskedImage() const { return _maskedImage; }
 
     CONST_PTR(Wcs) getWcs() const { return _info->getWcs(); }
     PTR(Wcs) getWcs() { return _info->getWcs(); }
