@@ -56,7 +56,7 @@ void declareCastConstructor(PyExposure<ToPixelT> & cls) {
 }
 
 
-template <typename PixelT>  // only the image type varies; mask and variance are fixed
+template <typename PixelT>  // only the image type varies; mask and variance are fixed to default tparams
 PyExposure<PixelT> declareExposure(py::module & mod, const std::string & suffix) {
     using ExposureT = Exposure<PixelT>;
     using MaskedImageT = typename ExposureT::MaskedImageT;
@@ -65,9 +65,6 @@ PyExposure<PixelT> declareExposure(py::module & mod, const std::string & suffix)
 
     mod.def("makeExposure", &makeExposure<PixelT, MaskPixel, VariancePixel>,
             "maskedImage"_a, "wcs"_a=std::shared_ptr<Wcs const>());
-
-    // TODO: Commented-out code is waiting until needed and is untested.
-    // Add tests for it and enable it or remove it before the final pybind11 merge.
 
     /* Constructors */
     cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<Wcs const>>(),
@@ -82,35 +79,12 @@ PyExposure<PixelT> declareExposure(py::module & mod, const std::string & suffix)
             "maskedImage"_a, "exposureInfo"_a);
     cls.def(py::init<std::string const &, geom::Box2I const&, ImageOrigin, bool>(),
             "fileName"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
-    //cls.def(py::init<fits::MemFileManager &, geom::Box2I const &, ImageOrigin, bool>(),
-    //        "manager"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
-    //cls.def(py::init<fits::Fits &, geom::Box2I const &, ImageOrigin, bool>(),
-    //        "fitsFile"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
+    cls.def(py::init<fits::MemFileManager &, geom::Box2I const &, ImageOrigin, bool>(),
+            "manager"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
     cls.def(py::init<ExposureT const &, bool>(),
             "other"_a, "deep"_a=false);
     cls.def(py::init<ExposureT const &, geom::Box2I const&, ImageOrigin, bool>(),
            "other"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
-// TODO: I can't spot the differences between the constructors above and below,
-// keep them for now but remove them if not needed.
-//    cls.def(py::init<unsigned int, unsigned int, CONST_PTR(Wcs)>(),
-//            py::arg("width"), py::arg("height"), py::arg("wcs")=CONST_PTR(Wcs)());
-//    cls.def(py::init<lsst::afw::geom::Extent2I const &, CONST_PTR(Wcs)>(),
-//            py::arg("dimensions")=lsst::afw::geom::Extent2I(), py::arg("wcs")=CONST_PTR(Wcs)());
-//    cls.def(py::init<lsst::afw::geom::Box2I const &, CONST_PTR(Wcs)>(),
-//            py::arg("bbox"), py::arg("wcs")=CONST_PTR(Wcs)());
-//    cls.def(py::init<typename Exposure<PixelT>::MaskedImageT &, CONST_PTR(Wcs)>(),
-//            py::arg("maskedImage"), py::arg("wcs")=CONST_PTR(Wcs)());
-//    cls.def(py::init<std::string const &, lsst::afw::geom::Box2I const&, ImageOrigin, bool>(),
-//            py::arg("fileName"), py::arg("bbox")=lsst::afw::geom::Box2I(), py::arg("origin")=PARENT, py::arg("conformMasks")=false);
-////    cls.def(py::init<lsst::afw::fits::MemFileManager &, lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
-////            py::arg("manager"), py::arg("bbox")=lsst::afw::geom::Box2I(), py::arg("origin")=PARENT, py::arg("conformMasks")=false);
-////    cls.def(py::init<lsst::afw::fits::Fits &, lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
-////            py::arg("fitsFile"), py::arg("bbox")=lsst::afw::geom::Box2I(), py::arg("origin")=PARENT, py::arg("conformMasks")=false);
-//    cls.def(py::init<Exposure<PixelT> const &, bool>(),
-//            py::arg("other"), py::arg("deep")=false);
-//    cls.def(py::init<Exposure<PixelT> const &, lsst::afw::geom::Box2I const&, ImageOrigin, bool>(),
-//            py::arg("other"), py::arg("bbox"), py::arg("origin")=PARENT, py::arg("deep")=false);
-
 
     /* Members */
     cls.def("getMaskedImage", (MaskedImageT & (ExposureT::*)()) &ExposureT::getMaskedImage,
