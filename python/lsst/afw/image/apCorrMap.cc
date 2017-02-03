@@ -20,12 +20,11 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
 #include <string>
 #include <vector>
-
-#include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-#include <pybind11/stl.h>
 
 #include "lsst/afw/table/io/python.h"
 
@@ -33,69 +32,56 @@
 #include "lsst/afw/table/io/Persistable.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::image;
+namespace lsst { namespace afw { namespace image { namespace {
+
+using PyApCorrMap =
+    py::class_<
+        ApCorrMap,
+        std::shared_ptr<ApCorrMap>,
+        table::io::PersistableFacade<ApCorrMap>,
+        table::io::Persistable
+    >;
 
 PYBIND11_PLUGIN(_apCorrMap) {
-    py::module mod("_apCorrMap", "Python wrapper for afw _apCorrMap library");
+    py::module mod("_apCorrMap");
 
-    /* Module level */
-    lsst::afw::table::io::python::declarePersistableFacade<ApCorrMap>(mod, "ApCorrMap");
-    py::class_<ApCorrMap,
-               std::shared_ptr<ApCorrMap>,
-               lsst::afw::table::io::PersistableFacade<ApCorrMap>,
-               lsst::afw::table::io::Persistable>
-        clsApCorrMap(mod, "ApCorrMap");
+    /* Declare CRTP base class. */
+    table::io::declarePersistableFacade<ApCorrMap>(mod, "ApCorrMap");
 
-    /* Member types and enums */
+    PyApCorrMap cls(mod, "ApCorrMap");
 
     /* Constructors */
-    clsApCorrMap.def(py::init<>());
+    cls.def(py::init<>());
 
     /* Operators */
-    // TODO: pybind11 ApCorrMap's C++ operators should return ApCorrMap &
-    clsApCorrMap.def("__imul__", [](ApCorrMap & self, double const scale) {
-        self *= scale;
-        return self;
-    });
-    clsApCorrMap.def("__idiv__", [](ApCorrMap & self, double const scale) {
-        self /= scale;
-        return self;
-    });
-    clsApCorrMap.def("__itruediv__", [](ApCorrMap & self, double const scale) {
-        self /= scale;
-        return self;
-    });
+    cls.def("__imul__", &ApCorrMap::operator*=);
+    cls.def("__idiv__", &ApCorrMap::operator/=);
+    cls.def("__itruediv__", &ApCorrMap::operator/=);
 
     /* Members */
-    clsApCorrMap.def("get", &ApCorrMap::get);
-    clsApCorrMap.def("set", &ApCorrMap::set);
-
-    // I couldn't figure out how to get Swig to expose the C++ iterators using std_map.i and (e.g.)
-    // code in utils.i; it kept wrapping the iterators as opaque objects I couldn't deference, probably
-    // due to some weirdness with the typedefs.  I don't want to sink time into debugging that.
-    // So I just wrote this function to return a list of names, and I'll base the Python iterators on
-    // that. -- Russell Owen
-    // TODO: pybind11 replace this with pybind11's support for iterators/slicing/etc.
-    clsApCorrMap.def("keys", [](ApCorrMap const & self) {
-        // Can't create a vector of const element type, not sure why
-        using KeyType = std::remove_const<ApCorrMap::Iterator::value_type::first_type>::type;
-        auto r = std::vector<KeyType>();
-        r.reserve(self.size());
-        for (ApCorrMap::Iterator i = self.begin(); i != self.end(); ++i) {
-            r.push_back(i->first);
-        }
-        return r;
+    cls.def("get", &ApCorrMap::get);
+    cls.def("set", &ApCorrMap::set);
+    cls.def(
+        "items",
+        [](ApCorrMap const & self) {
+            return py::make_iterator(self.begin(), self.end());
+        },
+        py::keep_alive<0, 1>()
+    );
+    cls.def("keys", [](ApCorrMap const & self) {
     });
-    // values, items, and __iter__ defined in apCorrMap.py
+    // values, keys, and __iter__ defined in apCorrMap.py
 
-    clsApCorrMap.def("__len__", &ApCorrMap::size);
-    clsApCorrMap.def("__getitem__", &ApCorrMap::operator[]);
-    clsApCorrMap.def("__setitem__", &ApCorrMap::set);
-    clsApCorrMap.def("__contains__", [](ApCorrMap const & self, std::string name) {
-        // Test for empty pointer, which is not the same as null pointer
-        return self.get(name).use_count() > 0;
+    cls.def("__len__", &ApCorrMap::size);
+    cls.def("__getitem__", &ApCorrMap::operator[]);
+    cls.def("__setitem__", &ApCorrMap::set);
+    cls.def("__contains__", [](ApCorrMap const & self, std::string name) {
+        return static_cast<bool>(self.get(name));
     });
 
     return mod.ptr();
 }
+
+}}}} // namespace lsst::afw::geom::<anonymous>
