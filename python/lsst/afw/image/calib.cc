@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,25 +9,25 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
 #include <memory>
 #include <vector>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 #include "ndarray_fwd.h"
 
 #include "lsst/daf/base/PropertySet.h"
@@ -41,6 +41,15 @@ using namespace pybind11::literals;
 namespace lsst {
 namespace afw {
 namespace image {
+namespace {
+
+using PyCalib =
+    py::class_<
+        Calib,
+        std::shared_ptr<Calib>,
+        table::io::PersistableFacade<Calib>,
+        table::io::Persistable
+    >;
 
 PYBIND11_PLUGIN(_calib) {
     py::module mod("_calib", "Python wrapper for afw _calib library");
@@ -49,9 +58,6 @@ PYBIND11_PLUGIN(_calib) {
             PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
             return nullptr;
     };
-
-    // TODO: Commented-out code is waiting until needed and is untested.
-    // Add tests for it and enable it or remove it before the final pybind11 merge.
 
     /* Module level */
     mod.def("abMagFromFlux", &abMagFromFlux, "flux"_a);
@@ -62,9 +68,7 @@ PYBIND11_PLUGIN(_calib) {
 
     table::io::python::declarePersistableFacade<Calib>(mod, "Calib");
 
-    py::class_<Calib, std::shared_ptr<Calib>,
-               table::io::PersistableFacade<Calib>,
-               table::io::Persistable> cls(mod, "Calib");
+    PyCalib cls(mod, "Calib");
 
     /* Constructors */
     cls.def(py::init<>());
@@ -75,9 +79,9 @@ PYBIND11_PLUGIN(_calib) {
     /* Operators */
     cls.def("__eq__", &Calib::operator==, py::is_operator());
     cls.def("__ne__", &Calib::operator!=, py::is_operator());
-    cls.def("__imul__", &Calib::operator*=, py::is_operator());
-    cls.def("__itruediv__", &Calib::operator/=, py::is_operator());
-    cls.def("__idiv__", &Calib::operator/=, py::is_operator());
+    cls.def("__imul__", &Calib::operator*=);
+    cls.def("__itruediv__", &Calib::operator/=);
+    cls.def("__idiv__", &Calib::operator/=);
 
     // /* Members */
     cls.def("setFluxMag0", (void (Calib::*)(double, double)) &Calib::setFluxMag0,
@@ -111,9 +115,9 @@ PYBIND11_PLUGIN(_calib) {
             "flux"_a, "fluxMag"_a);
     cls.def_static("setThrowOnNegativeFlux", Calib::setThrowOnNegativeFlux, "raiseException"_a);
     cls.def_static("getThrowOnNegativeFlux", Calib::getThrowOnNegativeFlux);
-    // cls.def("isPersistable", &Calib::isPersistable);
+    cls.def("isPersistable", &Calib::isPersistable);
 
     return mod.ptr();
 }
 
-}}}  // namespace lsst::afw::image
+}}}}  // namespace lsst::afw::image::<anonymous>
