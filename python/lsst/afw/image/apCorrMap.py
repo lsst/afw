@@ -1,7 +1,17 @@
 from __future__ import absolute_import, division, print_function
 
+from lsst.utils import continueClass
 from ._apCorrMap import ApCorrMap
 
-ApCorrMap.values = lambda self: [self[name] for name in self.keys()]
-ApCorrMap.items = lambda self: [(name, self[name]) for name in self.keys()]
-ApCorrMap.__iter__ = lambda self: iter(self.keys())
+@continueClass
+class ApCorrMap:
+
+    def keys(self):
+        for item in self.items():
+            yield item[0]
+
+    def values(self):
+        for item in self.items():
+            yield item[1]
+
+    __iter__ = keys
