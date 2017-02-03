@@ -113,7 +113,8 @@ PyExposure<PixelT> declareExposure(py::module & mod, const std::string & suffix)
 
 
     /* Members */
-    cls.def("getMaskedImage", (MaskedImageT (ExposureT::*)()) &ExposureT::getMaskedImage);
+    cls.def("getMaskedImage", (MaskedImageT & (ExposureT::*)()) &ExposureT::getMaskedImage,
+            py::return_value_policy::reference_internal);
     cls.def("setMaskedImage", &ExposureT::setMaskedImage, "maskedImage"_a);
     cls.def("getMetadata", &ExposureT::getMetadata);
     cls.def("setMetadata", &ExposureT::setMetadata, "metadata"_a);
