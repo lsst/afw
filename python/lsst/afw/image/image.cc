@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,24 +9,21 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
 
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageSlice.h"
@@ -41,6 +38,17 @@ namespace image {
 
 namespace {
 
+template <typename PixelT>
+using PyImageBase = py::class_<ImageBase<PixelT>, std::shared_ptr<ImageBase<PixelT>>, daf::base::Persistable,
+                               daf::base::Citizen>;
+
+template <typename PixelT>
+using PyImage = py::class_<Image<PixelT>, std::shared_ptr<Image<PixelT>>, ImageBase<PixelT>>;
+
+template <typename PixelT>
+using PyDecoratedImage = py::class_<DecoratedImage<PixelT>, std::shared_ptr<DecoratedImage<PixelT>>,
+                                    daf::base::Persistable>;
+
 /**
 Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
 
@@ -49,60 +57,49 @@ The mask and variance must be of the standard types.
 @param[in] cls  The pybind11 class to which add the constructor
 */
 template <typename FromPixelT, typename ToPixelT>
-void declareCastConstructor(py::class_<Image<ToPixelT>,
-                                       std::shared_ptr<Image<ToPixelT>>,
-                                       ImageBase<ToPixelT>> & cls) {
-    cls.def(py::init<Image<FromPixelT> const &, bool const>(),
-            "src"_a, "deep"_a);
+static void declareCastConstructor(PyImage<ToPixelT> & cls) {
+    cls.def(py::init<Image<FromPixelT> const &, bool const>(), "src"_a, "deep"_a);
 }
 
 template <typename PixelT>
-void declareImageBase(py::module & mod, const std::string & suffix) {
-    py::class_<ImageBase<PixelT>,
-               std::shared_ptr<ImageBase<PixelT>>,
-               daf::base::Persistable,
-               daf::base::Citizen> cls(mod, ("ImageBase" + suffix).c_str());
+static void declareImageBase(py::module & mod, std::string const & suffix) {
+    PyImageBase<PixelT> cls(mod, ("ImageBase" + suffix).c_str());
 
-    cls.def(py::init<const geom::Extent2I>(),
+    using Array = typename ImageBase<PixelT>::Array;
+
+    cls.def(py::init<geom::Extent2I const &>(),
             "dimensions"_a=geom::Extent2I());
-    cls.def(py::init<const ImageBase<PixelT>&, const bool>(),
+    cls.def(py::init<ImageBase<PixelT> const&, bool>(),
             "src"_a, "deep"_a=false);
-    cls.def(py::init<const ImageBase<PixelT>&, const geom::Box2I&, const ImageOrigin, bool>(),
+    cls.def(py::init<ImageBase<PixelT> const &, geom::Box2I const &, ImageOrigin, bool>(),
             "src"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
-    cls.def(py::init<typename ImageBase<PixelT>::Array const &, bool, geom::Point2I const &>(),
+    cls.def(py::init<Array const &, bool, geom::Point2I const &>(),
             "array"_a, "deep"_a=false, "xy0"_a=geom::Point2I());
 
-    cls.def("assign", &ImageBase<PixelT>::assign,
-            "rhs"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT, py::is_operator());
+    cls.def("assign", &ImageBase<PixelT>::assign, "rhs"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT,
+            py::is_operator());  // py::is_operator is a workaround for code in slicing.py
+                                 // that expects NotImplemented to be returned on failure.
     cls.def("getWidth", &ImageBase<PixelT>::getWidth);
     cls.def("getHeight", &ImageBase<PixelT>::getHeight);
     cls.def("getX0", &ImageBase<PixelT>::getX0);
     cls.def("getY0", &ImageBase<PixelT>::getY0);
     cls.def("getXY0", &ImageBase<PixelT>::getXY0);
-    cls.def("positionToIndex", &ImageBase<PixelT>::positionToIndex,
-            "position"_a, "xOrY"_a);
-    cls.def("indexToPosition", &ImageBase<PixelT>::indexToPosition,
-            "index"_a, "xOrY"_a);
+    cls.def("positionToIndex", &ImageBase<PixelT>::positionToIndex, "position"_a, "xOrY"_a);
+    cls.def("indexToPosition", &ImageBase<PixelT>::indexToPosition, "index"_a, "xOrY"_a);
     cls.def("getDimensions", &ImageBase<PixelT>::getDimensions);
-    cls.def("getArray",
-            (typename ImageBase<PixelT>::Array (ImageBase<PixelT>::*)()) &ImageBase<PixelT>::getArray);
+    cls.def("getArray", (Array (ImageBase<PixelT>::*)()) &ImageBase<PixelT>::getArray);
     cls.def("setXY0",
             (void (ImageBase<PixelT>::*)(geom::Point2I const)) &ImageBase<PixelT>::setXY0,
             "xy0"_a);
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) &ImageBase<PixelT>::setXY0,
             "x0"_a, "y0"_a);
-    cls.def("getBBox", &ImageBase<PixelT>::getBBox,
-            "origin"_a=PARENT);
+    cls.def("getBBox", &ImageBase<PixelT>::getBBox, "origin"_a=PARENT);
 }
 
 template <typename PixelT>
-py::class_<Image<PixelT>,
-           std::shared_ptr<Image<PixelT>>,
-           ImageBase<PixelT>> declareImage(py::module & mod, const std::string & suffix) {
+static PyImage<PixelT> declareImage(py::module & mod, const std::string & suffix) {
 
-    py::class_<Image<PixelT>,
-               std::shared_ptr<Image<PixelT>>,
-               ImageBase<PixelT>> cls(mod, ("Image" + suffix).c_str());
+    PyImage<PixelT> cls(mod, ("Image" + suffix).c_str());
 
     /* Constructors */
     cls.def(py::init<unsigned int, unsigned int, PixelT>(),
@@ -131,34 +128,34 @@ py::class_<Image<PixelT>,
     /* Operators */
     cls.def("__iadd__", [](Image<PixelT> & self, PixelT const & other) {
                 return self += other;
-            }, py::is_operator());
+            });
     cls.def("__iadd__", [](Image<PixelT> & self, Image<PixelT> const & other) {
                 return self += other;
-            }, py::is_operator());
+            });
     cls.def("__iadd__", [](Image<PixelT> & self, lsst::afw::math::Function2<double> const & other) {
                 return self += other;
-            }, py::is_operator());
+            });
     cls.def("__isub__", [](Image<PixelT> & self, PixelT const & other) {
                 return self -= other;
-            }, py::is_operator());
+            });
     cls.def("__isub__", [](Image<PixelT> & self, Image<PixelT> const & other) {
                 return self -= other;
-            }, py::is_operator());
+            });
     cls.def("__isub__", [](Image<PixelT> & self, lsst::afw::math::Function2<double> const & other) {
                 return self -= other;
-            }, py::is_operator());
+            });
     cls.def("__imul__", [](Image<PixelT> & self, PixelT const & other) {
                 return self *= other;
-            }, py::is_operator());
+            });
     cls.def("__imul__", [](Image<PixelT> & self, Image<PixelT> const & other) {
                 return self *= other;
-            }, py::is_operator());
+            });
     cls.def("__itruediv__", [](Image<PixelT> & self, PixelT const & other) {
                 return self /= other;
-            }, py::is_operator());
+            });
     cls.def("__itruediv__", [](Image<PixelT> & self, Image<PixelT> const & other) {
                 return self /= other;
-            }, py::is_operator());
+            });
 
     /* Members */
     cls.def("scaledPlus", &Image<PixelT>::scaledPlus);
@@ -188,20 +185,26 @@ py::class_<Image<PixelT>,
     cls.def("sqrt", &Image<PixelT>::sqrt);
 
     /* Add-ons for Python interface only */
-    cls.def("set", [](Image<PixelT> &img, double val) { img=val; });
-    cls.def("set", [](Image<PixelT> &img, int x, int y, double val) { img(x, y, lsst::afw::image::CheckIndices(true))=val; });
-    cls.def("get", [](Image<PixelT> &img, int x, int y) { return img(x, y, lsst::afw::image::CheckIndices(true)); });
-    cls.def("set0", [](Image<PixelT> &img, int x, int y, double val) { img.set0(x, y, val, lsst::afw::image::CheckIndices(true)); });
-    cls.def("get0", [](Image<PixelT> &img, int x, int y) { return img.get0(x, y, lsst::afw::image::CheckIndices(true)); });
+    cls.def("set", [](Image<PixelT> &img, double val) { img = val; });
+    cls.def("set", [](Image<PixelT> &img, int x, int y, double val) {
+        img(x, y, lsst::afw::image::CheckIndices(true)) = val;
+    });
+    cls.def("get",
+            [](Image<PixelT> &img, int x, int y) { return img(x, y, lsst::afw::image::CheckIndices(true)); });
+    cls.def("set0", [](Image<PixelT> &img, int x, int y, double val) {
+        img.set0(x, y, val, lsst::afw::image::CheckIndices(true));
+    });
+    cls.def("get0", [](Image<PixelT> &img, int x, int y) {
+        return img.get0(x, y, lsst::afw::image::CheckIndices(true));
+    });
 
     return cls;
 }
 
 template <typename PixelT>
-void declareDecoratedImage(py::module & mod, std::string const & suffix) {
-    using Class = DecoratedImage<PixelT>;
+static void declareDecoratedImage(py::module & mod, std::string const & suffix) {
 
-    py::class_<Class, std::shared_ptr<Class>, lsst::daf::base::Persistable> cls(mod, ("DecoratedImage" + suffix).c_str());
+    PyDecoratedImage<PixelT> cls(mod, ("DecoratedImage" + suffix).c_str());
 
     cls.def(py::init<const lsst::afw::geom::Extent2I &>(),
             "dimensions"_a=lsst::afw::geom::Extent2I());
@@ -209,7 +212,7 @@ void declareDecoratedImage(py::module & mod, std::string const & suffix) {
             "bbox"_a);
     cls.def(py::init<PTR(Image<PixelT>)>(),
             "rhs"_a);
-    cls.def(py::init<Class const&, const bool>(),
+    cls.def(py::init<DecoratedImage<PixelT> const&, const bool>(),
             "rhs"_a, "deep"_a=false);
     cls.def(py::init<std::string const&,
             const int,
@@ -220,24 +223,28 @@ void declareDecoratedImage(py::module & mod, std::string const & suffix) {
             "bbox"_a=lsst::afw::geom::Box2I(),
             "origin"_a=PARENT);
 
-    cls.def("getMetadata", &Class::getMetadata);
-    cls.def("setMetadata", &Class::setMetadata);
-    cls.def("getWidth", &Class::getWidth);
-    cls.def("getHeight", &Class::getHeight);
-    cls.def("getX0", &Class::getX0);
-    cls.def("getY0", &Class::getY0);
-    cls.def("getDimensions", &Class::getDimensions);
-    cls.def("swap", &Class::swap);
-    cls.def("writeFits", &Class::writeFits,
+    cls.def("getMetadata", &DecoratedImage<PixelT>::getMetadata);
+    cls.def("setMetadata", &DecoratedImage<PixelT>::setMetadata);
+    cls.def("getWidth", &DecoratedImage<PixelT>::getWidth);
+    cls.def("getHeight", &DecoratedImage<PixelT>::getHeight);
+    cls.def("getX0", &DecoratedImage<PixelT>::getX0);
+    cls.def("getY0", &DecoratedImage<PixelT>::getY0);
+    cls.def("getDimensions", &DecoratedImage<PixelT>::getDimensions);
+    cls.def("swap", &DecoratedImage<PixelT>::swap);
+    cls.def("writeFits", &DecoratedImage<PixelT>::writeFits,
             "fileName"_a, "metadata"_a=CONST_PTR(lsst::daf::base::PropertySet)(), "mode"_a="w");
-    cls.def("getImage", (typename Class::ImagePtr (Class::*)()) &Class::getImage);
-    cls.def("getGain", &Class::getGain);
-    cls.def("setGain", &Class::setGain);
+    cls.def(
+        "getImage",
+        (typename DecoratedImage<PixelT>::ImagePtr (DecoratedImage<PixelT>::*)())
+            &DecoratedImage<PixelT>::getImage
+    );
+    cls.def("getGain", &DecoratedImage<PixelT>::getGain);
+    cls.def("setGain", &DecoratedImage<PixelT>::setGain);
 }
 
 /* Declare ImageSlice operators separately since they are only instantiated for float double */
 template <typename PixelT>
-void addImageSliceOperators(py::class_<Image<PixelT>,
+static void addImageSliceOperators(py::class_<Image<PixelT>,
                                        std::shared_ptr<Image<PixelT>>,
                                        ImageBase<PixelT>> & cls) {
     cls.def("__add__",
@@ -253,46 +260,40 @@ void addImageSliceOperators(py::class_<Image<PixelT>,
             [](Image<PixelT> const & self, ImageSlice<PixelT> const & other) { return self / other; },
             py::is_operator());
     cls.def("__iadd__",
-            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self += other; return self; },
-            py::is_operator());
+            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self += other; return self; });
     cls.def("__isub__",
-            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self -= other; return self; },
-            py::is_operator());
+            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self -= other; return self; });
     cls.def("__imul__",
-            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self *= other; return self; },
-            py::is_operator());
+            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self *= other; return self; });
     cls.def("__itruediv__",
-            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self /= other; return self; },
-            py::is_operator());
+            [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self /= other; return self; });
 }
 
 template <typename PixelT, typename PyClass>
-void addGeneralizedCopyConstructors(PyClass & cls) {
+static void addGeneralizedCopyConstructors(PyClass & cls) {
     cls.def(py::init<Image<int> const &, const bool>(), "rhs"_a, "deep"_a=false);
     cls.def(py::init<Image<float> const &, const bool>(), "rhs"_a, "deep"_a=false);
     cls.def(py::init<Image<double> const &, const bool>(), "rhs"_a, "deep"_a=false);
     cls.def(py::init<Image<std::uint16_t> const &, const bool>(), "rhs"_a, "deep"_a=false);
     cls.def(py::init<Image<std::uint64_t> const &, const bool>(), "rhs"_a, "deep"_a=false);
 
-	cls.def("convertI", [](Image<PixelT> const & self) { return Image<int>(self, true); });
-	cls.def("convertF", [](Image<PixelT> const & self) { return Image<float>(self, true); });
-	cls.def("convertD", [](Image<PixelT> const & self) { return Image<double>(self, true); });
-	cls.def("convertU", [](Image<PixelT> const & self) { return Image<std::uint16_t>(self, true); });
-	cls.def("convertL", [](Image<PixelT> const & self) { return Image<std::uint64_t>(self, true); });
+    cls.def("convertI", [](Image<PixelT> const & self) { return Image<int>(self, true); });
+    cls.def("convertF", [](Image<PixelT> const & self) { return Image<float>(self, true); });
+    cls.def("convertD", [](Image<PixelT> const & self) { return Image<double>(self, true); });
+    cls.def("convertU", [](Image<PixelT> const & self) { return Image<std::uint16_t>(self, true); });
+    cls.def("convertL", [](Image<PixelT> const & self) { return Image<std::uint64_t>(self, true); });
 
-	cls.def("convertFloat", [](Image<PixelT> const & self) { return Image<float>(self, true); });
-	cls.def("convertDouble", [](Image<PixelT> const & self) { return Image<double>(self, true); });
+    cls.def("convertFloat", [](Image<PixelT> const & self) { return Image<float>(self, true); });
+    cls.def("convertDouble", [](Image<PixelT> const & self) { return Image<double>(self, true); });
 }
 
-}  // anonymous namespace
-
 PYBIND11_PLUGIN(_image) {
-    py::module mod("_image", "Python wrapper for afw _image library");
+    py::module mod("_image");
 
-    if (_import_array() < 0) { 
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import"); 
-        return nullptr; 
-    } 
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
 
     py::enum_<ImageOrigin>(mod, "ImageOrigin")
         .value("PARENT", ImageOrigin::PARENT)
@@ -346,4 +347,4 @@ PYBIND11_PLUGIN(_image) {
     return mod.ptr();
 }
 
-}}}  // namespae image
+}}}}  // namespace lsst::afw::image::<anonymous>
