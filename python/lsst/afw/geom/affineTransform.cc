@@ -41,6 +41,9 @@ using PyAffineTransform = py::class_<AffineTransform>;
 PYBIND11_PLUGIN(_affineTransform) {
     py::module mod("_affineTransform");
 
+    py::module::import("lsst.afw.geom._LinearTransform");
+    py::module::import("lsst.afw.geom._coordinates");
+
     // Need to import numpy for ndarray and eigen conversions
     if (_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");

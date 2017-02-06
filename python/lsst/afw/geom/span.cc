@@ -52,6 +52,8 @@ using PySpan = py::class_<Span, std::shared_ptr<Span>>;
 PYBIND11_PLUGIN(_span) {
     py::module mod("_span", "Python wrapper for afw _span library");
 
+    py::module::import("lsst.afw.geom._coordinates");
+
     py::class_<SpanIterator> clsSpanIterator(mod, "SpanIterator");
 
     /* Operators */

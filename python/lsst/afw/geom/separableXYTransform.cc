@@ -35,6 +35,9 @@ using PySeparableXYTransform = py::class_<SeparableXYTransform, XYTransform>;
 PYBIND11_PLUGIN(_separableXYTransform) {
     py::module mod("_separableXYTransform");
 
+    py::module::import("lsst.afw.geom._Functor");
+    py::module::import("lsst.afw.geom._XYTransform");
+
     PySeparableXYTransform clsSeparableXYTransform(mod, "SeparableXYTransform");
 
     /* Constructors */

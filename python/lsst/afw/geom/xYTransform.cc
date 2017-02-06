@@ -50,6 +50,9 @@ using PyRadialXYTransform =
 PYBIND11_PLUGIN(_xYTransform) {
     py::module mod("_xYTransform");
 
+    py::module::import("lsst.afw.geom._coordinates");
+    py::module::import("lsst.afw.geom._AffineTransform");
+
     PyXYTransform clsXYTransform(mod, "XYTransform");
     clsXYTransform.def("clone", &XYTransform::clone);
     clsXYTransform.def("invert", &XYTransform::invert);
