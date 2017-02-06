@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
 from lsst.utils import continueClass
-from ._angle import Angle, AngleUnit, radians
+from ._Angle_pre import *  # noqa
+from ._Angle_pre import Angle, AngleUnit, radians
+from . import _Angle_pre
 
-__all__ = []
+__all__ = dir(_Angle_pre)
 
 
 @continueClass

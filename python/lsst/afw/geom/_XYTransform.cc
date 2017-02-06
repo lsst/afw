@@ -47,8 +47,8 @@ using PyAffineXYTransfrom =
 using PyRadialXYTransform =
     py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>, XYTransform>;
 
-PYBIND11_PLUGIN(_xYTransform) {
-    py::module mod("_xYTransform");
+PYBIND11_PLUGIN(_XYTransform) {
+    py::module mod("_XYTransform");
 
     py::module::import("lsst.afw.geom._coordinates");
     py::module::import("lsst.afw.geom._AffineTransform");

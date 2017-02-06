@@ -473,8 +473,8 @@ void declarePointOperators(py::module & mod, PyPoint<int,N> & clsI, PyPoint<doub
 }
 
 
-PYBIND11_PLUGIN(_coordinates) {
-    py::module mod("_coordinates");
+PYBIND11_PLUGIN(_coordinates_pre) {
+    py::module mod("_coordinates_pre");
 
     if (_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");

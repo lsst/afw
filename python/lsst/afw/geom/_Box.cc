@@ -36,8 +36,8 @@ namespace {
 using PyBox2I = py::class_<Box2I>;
 using PyBox2D = py::class_<Box2D>;
 
-PYBIND11_PLUGIN(_box) {
-    py::module mod("_box", "Python wrapper for afw _box library");
+PYBIND11_PLUGIN(_Box) {
+    py::module mod("_Box");
 
     py::object modCoordinates = py::module::import("lsst.afw.geom._coordinates");
 

@@ -20,10 +20,12 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from ._spherePoint import SpherePoint
+from ._SpherePoint_pre import * # noqa
+from ._SpherePoint_pre import SpherePoint
+from . import _SpherePoint_pre
 from lsst.utils import continueClass
 
-__all__ = []  # import this module only for its side effects
+__all__ = dir(_SpherePoint_pre)
 
 @continueClass
 class SpherePoint:

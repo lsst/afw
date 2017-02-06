@@ -48,8 +48,8 @@ void declareAngleComparisonOperators(PyAngle & cls) {
     cls.def("__gt__", [](Angle const& self, OtherT const& other) { return self > other; }, py::is_operator());
 }
 
-PYBIND11_PLUGIN(_angle) {
-    py::module mod("_angle");
+PYBIND11_PLUGIN(_Angle_pre) {
+    py::module mod("_Angle_pre");
 
     /* AngleUnit */
 
