@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from lsst.utils import continueClass
-from ._angle import Angle, AngleUnit, radians
+from .wrap import Angle, AngleUnit, radians
 
 __all__ = []
 

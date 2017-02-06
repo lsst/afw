@@ -38,8 +38,8 @@ namespace {
 
 using PyAffineTransform = py::class_<AffineTransform>;
 
-PYBIND11_PLUGIN(_affineTransform) {
-    py::module mod("_affineTransform");
+PYBIND11_PLUGIN(_AffineTransform) {
+    py::module mod("_AffineTransform");
 
     py::module::import("lsst.afw.geom._LinearTransform");
     py::module::import("lsst.afw.geom._coordinates");

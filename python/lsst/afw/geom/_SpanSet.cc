@@ -140,9 +140,9 @@ void declareMaskMethods(PyClass & cls) {
 
 } // end anonymous namespace
 
-PYBIND11_PLUGIN(_spanSet) {
+PYBIND11_PLUGIN(_SpanSet) {
     using MaskPixel = lsst::afw::image::MaskPixel;
-    py::module mod("_spanSet");
+    py::module mod("_SpanSet");
 
     py::module::import("lsst.afw.geom._Span");
 

@@ -39,8 +39,8 @@ namespace geom {
 
 using PySpherePoint = py::class_<SpherePoint, std::shared_ptr<SpherePoint>>;
 
-PYBIND11_PLUGIN(_spherePoint) {
-    py::module mod("_spherePoint");
+PYBIND11_PLUGIN(wrap) {
+    py::module mod("wrap");
 
     py::module::import("lsst.afw.geom._Angle");
     py::module::import("lsst.afw.geom._coordinates");

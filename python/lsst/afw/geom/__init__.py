@@ -22,7 +22,20 @@
 
 """Application Framework geometry code including Point, Extent, and ellipses
 """
-from .geomLib import *
+from __future__ import absolute_import
+
+from ._Angle import *
+from ._coordinates import *
+from ._Box import *
+from ._Functor import *
+from ._Span import *
+from ._SpherePoint import *
+from ._XYTransform import *
+from ._SeparableXYTransform import *
+from ._LinearTransform import *
+from ._AffineTransform import *
+from ._SpanSet import *
+
 from .xyTransformFactory import *
 from .transformConfig import *
 from .transformMap import *
