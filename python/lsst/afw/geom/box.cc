@@ -39,8 +39,7 @@ using PyBox2D = py::class_<Box2D>;
 PYBIND11_PLUGIN(_box) {
     py::module mod("_box", "Python wrapper for afw _box library");
 
-    py::object modCoordinates;
-    modCoordinates = py::module::import("lsst.afw.geom._coordinates");
+    py::object modCoordinates = py::module::import("lsst.afw.geom._coordinates");
 
     /* Box2UI */
 

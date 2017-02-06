@@ -42,6 +42,9 @@ using PySpherePoint = py::class_<SpherePoint, std::shared_ptr<SpherePoint>>;
 PYBIND11_PLUGIN(_spherePoint) {
     py::module mod("_spherePoint");
 
+    py::module::import("lsst.afw.geom._Angle");
+    py::module::import("lsst.afw.geom._coordinates");
+
     /* Module level */
     PySpherePoint cls(mod, "SpherePoint");
 

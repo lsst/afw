@@ -46,6 +46,8 @@ using PyLinearTransform = py::class_<LinearTransform>;
 PYBIND11_PLUGIN(_linearTransform) {
     py::module mod("_linearTransform");
 
+    py::module::import("lsst.afw.geom._coordinates");
+
     if (_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
         return nullptr;

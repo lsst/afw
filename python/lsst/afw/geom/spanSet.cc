@@ -144,6 +144,8 @@ PYBIND11_PLUGIN(_spanSet) {
     using MaskPixel = lsst::afw::image::MaskPixel;
     py::module mod("_spanSet");
 
+    py::module::import("lsst.afw.geom._Span");
+
     if(_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
         return nullptr;
