@@ -1,15 +1,15 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11([
-    'affineTransform',
-    'angle',
-    'box',
-    'coordinates',
-    'functor',
-    'spherePoint',
-    'separableXYTransform',
-    'span',
-    'spanSet',
-    'linearTransform',
-    'xYTransform',
+    '_AffineTransform',
+    '_Angle/wrap',
+    '_Box',
+    '_coordinates/wrap',
+    '_Functor',
+    '_SpherePoint/wrap',
+    '_SeparableXYTransform',
+    '_Span',
+    '_SpanSet',
+    '_LinearTransform',
+    '_XYTransform',
 ])

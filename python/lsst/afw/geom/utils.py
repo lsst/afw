@@ -28,12 +28,13 @@ In the case of the assert functions, importing them makes them available in lsst
 import math
 
 import lsst.utils.tests
-from . import geomLib
+from . import _Angle
+
 
 __all__ = ["assertAnglesNearlyEqual", "assertPairsNearlyEqual", "assertBoxesNearlyEqual"]
 
 @lsst.utils.tests.inTestCase
-def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*geomLib.arcseconds,
+def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*_Angle.arcseconds,
         ignoreWrap=True, msg="Angles differ"):
     """!Assert that two angles are nearly equal, ignoring wrap differences by default
 

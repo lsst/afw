@@ -19,11 +19,14 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import
 
-from ._spherePoint import SpherePoint
 from lsst.utils import continueClass
 
-__all__ = []  # import this module only for its side effects
+from .wrap import SpherePoint
+
+__all__ = []
+
 
 @continueClass
 class SpherePoint:

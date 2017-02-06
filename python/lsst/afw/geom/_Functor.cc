@@ -33,8 +33,8 @@ namespace lsst { namespace afw { namespace geom { namespace {
 using PyFunctor = py::class_<Functor>;
 using PyLinearFunctor = py::class_<LinearFunctor,Functor>;
 
-PYBIND11_PLUGIN(_functor) {
-    py::module mod("_functor");
+PYBIND11_PLUGIN(_Functor) {
+    py::module mod("_Functor");
 
     /* Functor */
 

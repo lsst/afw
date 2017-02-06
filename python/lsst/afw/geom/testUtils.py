@@ -24,7 +24,7 @@ from builtins import object
 #
 import numpy as np
 
-from .geomLib import Box2I, Box2D
+from ._Box import Box2I, Box2D
 
 __all__ = ["BoxGrid"]
 

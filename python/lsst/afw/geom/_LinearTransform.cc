@@ -43,8 +43,8 @@ namespace {
 
 using PyLinearTransform = py::class_<LinearTransform>;
 
-PYBIND11_PLUGIN(_linearTransform) {
-    py::module mod("_linearTransform");
+PYBIND11_PLUGIN(_LinearTransform) {
+    py::module mod("_LinearTransform");
 
     py::module::import("lsst.afw.geom._coordinates");
 

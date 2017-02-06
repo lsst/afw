@@ -32,8 +32,8 @@ namespace lsst { namespace afw { namespace geom { namespace {
 
 using PySeparableXYTransform = py::class_<SeparableXYTransform, XYTransform>;
 
-PYBIND11_PLUGIN(_separableXYTransform) {
-    py::module mod("_separableXYTransform");
+PYBIND11_PLUGIN(_SeparableXYTransform) {
+    py::module mod("_SeparableXYTransform");
 
     py::module::import("lsst.afw.geom._Functor");
     py::module::import("lsst.afw.geom._XYTransform");
