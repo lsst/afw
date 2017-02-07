@@ -113,8 +113,8 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
         wcs = afwImg::Wcs::Ptr(new afwImg::Wcs(metadata));
     }
 
-    //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
-    //we should shift the wcs to allow for this.
+    // If keywords LTV[1,2] are present, the image on disk is already a subimage, so
+    // we should shift the wcs to allow for this.
     std::string key = "LTV1";
     if (metadata->exists(key)) {
         wcs->shiftReferencePixel(-metadata->getAsDouble(key), 0);
