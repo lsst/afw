@@ -126,7 +126,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     }
 
     if (stripMetadata) {
-        afwImg::detail::stripWcsKeywords(metadata, wcs);
+        afwImg::detail::stripWcsKeywords(_metadata, wcs);
     }
 
     return wcs;
