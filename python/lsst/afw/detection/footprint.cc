@@ -86,8 +86,15 @@ PYBIND11_PLUGIN(_footprint) {
 
     clsFootprint.def("assign", &Footprint::operator=);
 
-    // No good way to wrap the bitmask, not sure if it is needed
-    clsFootprint.def("intersectMask", [](Footprint & self, image::Mask<image::MaskPixel> const & mask) { return self.intersectMask(mask); });
+    // Default argument for bitmask doesn't work here, presumably because the Python `int`
+    // generated doesn't cast to the image::MaskPixel type. But I am not 100% sure.
+    // Therefore, this workaround until it can be investigated in more detail (DM-9401).
+    clsFootprint.def("intersectMask", [](Footprint &self, image::Mask<image::MaskPixel> const &mask) {
+        return self.intersectMask(mask);
+    });
+    clsFootprint.def("intersectMask",
+                     [](Footprint &self, image::Mask<image::MaskPixel> const &mask,
+                        image::MaskPixel bitmask) { return self.intersectMask(mask, bitmask); });
     clsFootprint.def("isHeavy", &Footprint::isHeavy);
     clsFootprint.def("getId", &Footprint::getId);
     clsFootprint.def("getSpans", (typename Footprint::SpanList& (Footprint::*)()) &Footprint::getSpans);
