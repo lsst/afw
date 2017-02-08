@@ -90,8 +90,8 @@ Property stringToStatisticsProperty(std::string const property);
  *
  */
 class StatisticsControl {
-    typedef enum { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE } WeightsBoolean; // initial state is NONE
 public:
+    enum WeightsBoolean { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE }; // initial state is NONE
 
     typedef std::shared_ptr<StatisticsControl> Ptr;
     typedef std::shared_ptr<StatisticsControl> const ConstPtr;
@@ -101,14 +101,14 @@ public:
         int numIter = 3,           ///< Number of iterations
         lsst::afw::image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
         bool isNanSafe = true,     ///< flag NaNs & Infs
-        int useWeights = WEIGHTS_NONE      ///< use weighted statistics (via a vector or an inverse variance)
+        WeightsBoolean useWeights = WEIGHTS_NONE      ///< use weighted statistics (via a vector or an inverse variance)
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
         _noGoodPixelsMask(0x0),
         _isNanSafe(isNanSafe),
-        _useWeights(useWeights == 0 ? WEIGHTS_FALSE : (useWeights == 1) ? WEIGHTS_TRUE : WEIGHTS_NONE),
+        _useWeights(useWeights),
         _calcErrorFromInputVariance(false),
         _maskPropagationThresholds()
     {

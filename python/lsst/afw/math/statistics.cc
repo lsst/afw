@@ -93,10 +93,16 @@ PYBIND11_PLUGIN(_statistics) {
     py::class_<StatisticsControl, std::shared_ptr<StatisticsControl>> clsStatisticsControl(
         mod, "StatisticsControl");
 
-    // omit the final `useWeights` argument because the default value is private;
-    // and no existing Python or C++ code specifies the argument, so omission is simplest
-    clsStatisticsControl.def(py::init<double, int, image::MaskPixel, bool>(), "numNumSigmaClip"_a = 3.0,
-                             "numIter"_a = 3, "andMask"_a = 0x0, "isNanSafe"_a = true);
+    py::enum_<StatisticsControl::WeightsBoolean>(clsStatisticsControl, "WeightsBoolean")
+        .value("WEIGHTS_FALSE", StatisticsControl::WeightsBoolean::WEIGHTS_FALSE)
+        .value("WEIGHTS_TRUE", StatisticsControl::WeightsBoolean::WEIGHTS_TRUE)
+        .value("WEIGHTS_NONE", StatisticsControl::WeightsBoolean::WEIGHTS_NONE)
+        .export_values();
+
+    clsStatisticsControl.def(py::init<double, int, lsst::afw::image::MaskPixel, bool,
+                                      typename StatisticsControl::WeightsBoolean>(),
+                             "numSigmaClip"_a = 3.0, "numIter"_a = 3, "andMask"_a = 0x0, "isNanSafe"_a = true,
+                             "useWeights"_a = StatisticsControl::WEIGHTS_NONE);
 
     clsStatisticsControl.def("getMaskPropagationThreshold", &StatisticsControl::getMaskPropagationThreshold);
     clsStatisticsControl.def("setMaskPropagationThreshold", &StatisticsControl::setMaskPropagationThreshold);
