@@ -63,7 +63,8 @@ void declarePointKey(py::module &mod, std::string const & suffix) {
     cls.def("getX", &PointKey<T>::getX);
     cls.def("getY", &PointKey<T>::getY);
     cls.def("isValid", &PointKey<T>::isValid);
-    cls.def_static("addFields", &PointKey<T>::addFields);
+    cls.def_static("addFields", &PointKey<T>::addFields,
+            "schema"_a, "name"_a, "doc"_a, "unit"_a);
     cls.def("set",
                     [](PointKey<T> & self, BaseRecord & record, lsst::afw::geom::Point<T,2> const & value) {
         return self.set(record, value);
@@ -170,7 +171,8 @@ PYBIND11_PLUGIN(_aggregates) {
     clsEllipseKey.def("__nq__", &EllipseKey::operator!=, py::is_operator());
 
     /* Members */
-    clsCoordKey.def_static("addFields", &CoordKey::addFields);
+    clsCoordKey.def_static("addFields", &CoordKey::addFields,
+        "schema"_a, "name"_a, "doc"_a);
     clsCoordKey.def("getRa", &CoordKey::getRa);
     clsCoordKey.def("getDec", &CoordKey::getDec);
     clsCoordKey.def("isValid", &CoordKey::isValid);
@@ -184,7 +186,8 @@ PYBIND11_PLUGIN(_aggregates) {
                     (void (CoordKey::*)(BaseRecord & record,
                                         lsst::afw::coord::IcrsCoord const & value) const) &CoordKey::set);
 
-    clsQuadrupoleKey.def_static("addFields", &QuadrupoleKey::addFields);
+    clsQuadrupoleKey.def_static("addFields", &QuadrupoleKey::addFields,
+        "schema"_a, "name"_a, "doc"_a, "coordType"_a=CoordinateType::PIXEL);
     clsQuadrupoleKey.def("getIxx", &QuadrupoleKey::getIxx);
     clsQuadrupoleKey.def("getIyy", &QuadrupoleKey::getIyy);
     clsQuadrupoleKey.def("getIxy", &QuadrupoleKey::getIxy);
@@ -192,7 +195,8 @@ PYBIND11_PLUGIN(_aggregates) {
     clsQuadrupoleKey.def("set", &QuadrupoleKey::set);
     clsQuadrupoleKey.def("get", &QuadrupoleKey::get);
     
-    clsEllipseKey.def_static("addFields", &EllipseKey::addFields);
+    clsEllipseKey.def_static("addFields", &EllipseKey::addFields,
+        "schema"_a, "name"_a, "doc"_a, "unit"_a);
     clsEllipseKey.def("get", &EllipseKey::get);
     clsEllipseKey.def("set", &EllipseKey::set);
     clsEllipseKey.def("isValid", &EllipseKey::isValid);
