@@ -78,6 +78,7 @@ void declareMask(py::module & mod, std::string const & suffix) {
     cls.def("__ixor__", [](Mask<MaskPixelT> & self, int other) { return self ^= other; }, py::is_operator());
 
     /* Members */
+    cls.def("swap", (void (Mask<MaskPixelT>::*)(Mask<MaskPixelT>&)) &Mask<MaskPixelT>::swap);
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(std::string const &, CONST_PTR(lsst::daf::base::PropertySet), std::string const &) const) &Mask<MaskPixelT>::writeFits,
             "fileName"_a, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "mode"_a="w");
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(lsst::afw::fits::MemFileManager &, CONST_PTR(lsst::daf::base::PropertySet), std::string const &) const) &Mask<MaskPixelT>::writeFits,
