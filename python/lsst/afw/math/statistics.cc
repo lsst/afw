@@ -21,45 +21,56 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/math/Statistics.h"
 
 namespace py = pybind11;
-
 using namespace pybind11::literals;
 
-using namespace lsst::afw::math;
+namespace lsst {
+namespace afw {
+namespace math {
 
 template <typename Pixel>
-void declareStatistics(py::module & mod) {
-    mod.def("makeStatistics", (Statistics (*)(lsst::afw::image::Image<Pixel> const &, lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &, int const, StatisticsControl const&)) makeStatistics<Pixel>,
-            "img"_a, "msk"_a, "flags"_a, "sctrl"_a=StatisticsControl());
-    mod.def("makeStatistics", (Statistics (*)(lsst::afw::image::MaskedImage<Pixel> const &, int const, StatisticsControl const&)) makeStatistics<Pixel>,
-            "mimg"_a, "flags"_a, "sctrl"_a=StatisticsControl());
-    mod.def("makeStatistics", (Statistics (*)(lsst::afw::image::MaskedImage<Pixel> const &, lsst::afw::image::Image<WeightPixel> const &, int const, StatisticsControl const&)) makeStatistics<Pixel>,
-            "mimg"_a, "weights"_a, "flags"_a, "sctrl"_a=StatisticsControl());
-    mod.def("makeStatistics", (Statistics (*)(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &, int const, StatisticsControl const&)) makeStatistics, // this is not a template, just a regular overload
-            "msk"_a, "flags"_a, "sctrl"_a=StatisticsControl());
-    mod.def("makeStatistics", (Statistics (*)(lsst::afw::image::Image<Pixel> const &, int const, StatisticsControl const&)) makeStatistics<Pixel>,
-            "img"_a, "flags"_a, "sctrl"_a=StatisticsControl());
+void declareStatistics(py::module &mod) {
+    mod.def("makeStatistics",
+            (Statistics(*)(image::Image<Pixel> const &, image::Mask<image::MaskPixel> const &, int const,
+                           StatisticsControl const &))makeStatistics<Pixel>,
+            "img"_a, "msk"_a, "flags"_a, "sctrl"_a = StatisticsControl());
+    mod.def("makeStatistics", (Statistics(*)(image::MaskedImage<Pixel> const &, int const,
+                                             StatisticsControl const &))makeStatistics<Pixel>,
+            "mimg"_a, "flags"_a, "sctrl"_a = StatisticsControl());
+    mod.def("makeStatistics",
+            (Statistics(*)(image::MaskedImage<Pixel> const &, image::Image<WeightPixel> const &, int const,
+                           StatisticsControl const &))makeStatistics<Pixel>,
+            "mimg"_a, "weights"_a, "flags"_a, "sctrl"_a = StatisticsControl());
+    mod.def("makeStatistics",
+            (Statistics(*)(image::Mask<image::MaskPixel> const &, int const, StatisticsControl const &))
+                makeStatistics,  // this is not a template, just a regular overload
+            "msk"_a,
+            "flags"_a, "sctrl"_a = StatisticsControl());
+    mod.def("makeStatistics", (Statistics(*)(image::Image<Pixel> const &, int const,
+                                             StatisticsControl const &))makeStatistics<Pixel>,
+            "img"_a, "flags"_a, "sctrl"_a = StatisticsControl());
 }
 
 template <typename Pixel>
-void declareStatisticsVectorOverloads(py::module & mod) {
-    mod.def("makeStatistics", (Statistics (*)(std::vector<Pixel> const &, int const, StatisticsControl const&)) makeStatistics<Pixel>,
-            "v"_a, "flags"_a, "sctrl"_a=StatisticsControl());
-    mod.def("makeStatistics", (Statistics (*)(std::vector<Pixel> const &, std::vector<WeightPixel> const &, int const, StatisticsControl const&)) makeStatistics<Pixel>,
-            "v"_a, "vweights"_a, "flags"_a, "sctrl"_a=StatisticsControl());
+void declareStatisticsVectorOverloads(py::module &mod) {
+    mod.def("makeStatistics", (Statistics(*)(std::vector<Pixel> const &, int const,
+                                             StatisticsControl const &))makeStatistics<Pixel>,
+            "v"_a, "flags"_a, "sctrl"_a = StatisticsControl());
+    mod.def("makeStatistics", (Statistics(*)(std::vector<Pixel> const &, std::vector<WeightPixel> const &,
+                                             int const, StatisticsControl const &))makeStatistics<Pixel>,
+            "v"_a, "vweights"_a, "flags"_a, "sctrl"_a = StatisticsControl());
 }
 
 PYBIND11_PLUGIN(_statistics) {
     py::module mod("_statistics", "Python wrapper for afw _statistics library");
 
     /* Module level */
-    py::enum_<Property> clsProperty(mod, "Property", py::arithmetic());
-    clsProperty.value("NOTHING", Property::NOTHING)
+    py::enum_<Property>(mod, "Property", py::arithmetic())
+        .value("NOTHING", Property::NOTHING)
         .value("ERRORS", Property::ERRORS)
         .value("NPOINT", Property::NPOINT)
         .value("MEAN", Property::MEAN)
@@ -76,17 +87,16 @@ PYBIND11_PLUGIN(_statistics) {
         .value("MEANSQUARE", Property::MEANSQUARE)
         .value("ORMASK", Property::ORMASK)
         .export_values();
-    // TODO: pybind11 explicit operator is not needed once DM-7974 is merged
-    clsProperty.def("__or__",
-        [](Property const & self, Property const & rhs) {
-            return static_cast<Property>(self | rhs);
-        });
 
     mod.def("stringToStatisticsProperty", stringToStatisticsProperty);
 
-    py::class_<StatisticsControl, std::shared_ptr<StatisticsControl>> clsStatisticsControl(mod, "StatisticsControl");
+    py::class_<StatisticsControl, std::shared_ptr<StatisticsControl>> clsStatisticsControl(
+        mod, "StatisticsControl");
 
-    clsStatisticsControl.def(py::init<>());
+    // omit the final `useWeights` argument because the default value is private;
+    // and no existing Python or C++ code specifies the argument, so omission is simplest
+    clsStatisticsControl.def(py::init<double, int, image::MaskPixel, bool>(), "numNumSigmaClip"_a = 3.0,
+                             "numIter"_a = 3, "andMask"_a = 0x0, "isNanSafe"_a = true);
 
     clsStatisticsControl.def("getMaskPropagationThreshold", &StatisticsControl::getMaskPropagationThreshold);
     clsStatisticsControl.def("setMaskPropagationThreshold", &StatisticsControl::setMaskPropagationThreshold);
@@ -97,23 +107,22 @@ PYBIND11_PLUGIN(_statistics) {
     clsStatisticsControl.def("getNanSafe", &StatisticsControl::getNanSafe);
     clsStatisticsControl.def("getWeighted", &StatisticsControl::getWeighted);
     clsStatisticsControl.def("getWeightedIsSet", &StatisticsControl::getWeightedIsSet);
-    clsStatisticsControl.def("getCalcErrorFromInputVariance", &StatisticsControl::getCalcErrorFromInputVariance);
+    clsStatisticsControl.def("getCalcErrorFromInputVariance",
+                             &StatisticsControl::getCalcErrorFromInputVariance);
     clsStatisticsControl.def("setNumSigmaClip", &StatisticsControl::setNumSigmaClip);
     clsStatisticsControl.def("setNumIter", &StatisticsControl::setNumIter);
     clsStatisticsControl.def("setAndMask", &StatisticsControl::setAndMask);
     clsStatisticsControl.def("setNoGoodPixelsMask", &StatisticsControl::setNoGoodPixelsMask);
     clsStatisticsControl.def("setNanSafe", &StatisticsControl::setNanSafe);
     clsStatisticsControl.def("setWeighted", &StatisticsControl::setWeighted);
-    clsStatisticsControl.def("setCalcErrorFromInputVariance", &StatisticsControl::setCalcErrorFromInputVariance);
+    clsStatisticsControl.def("setCalcErrorFromInputVariance",
+                             &StatisticsControl::setCalcErrorFromInputVariance);
 
     py::class_<Statistics> clsStatistics(mod, "Statistics");
 
-    clsStatistics.def("getResult", &Statistics::getResult,
-                      "prop"_a=Property::NOTHING);
-    clsStatistics.def("getError", &Statistics::getError,
-                      "prop"_a=Property::NOTHING);
-    clsStatistics.def("getValue", &Statistics::getValue,
-                      "prop"_a=Property::NOTHING);
+    clsStatistics.def("getResult", &Statistics::getResult, "prop"_a = Property::NOTHING);
+    clsStatistics.def("getError", &Statistics::getError, "prop"_a = Property::NOTHING);
+    clsStatistics.def("getValue", &Statistics::getValue, "prop"_a = Property::NOTHING);
     clsStatistics.def("getOrMask", &Statistics::getOrMask);
 
     declareStatistics<unsigned short>(mod);
@@ -129,13 +138,9 @@ PYBIND11_PLUGIN(_statistics) {
     declareStatisticsVectorOverloads<float>(mod);
     declareStatisticsVectorOverloads<int>(mod);
 
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
-
     return mod.ptr();
 }
+
+}  // math
+}  // afw
+}  // lsst
