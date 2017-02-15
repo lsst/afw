@@ -95,7 +95,7 @@ def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targe
 def matchesToCatalog(matches, matchMeta):
     """Denormalise matches into a Catalog of "unpacked matches"
 
-    \param[in] matches    unpacked matches, i.e. a std::vector of Match objects whose schema
+    \param[in] matches    unpacked matches, i.e. a list of Match objects whose schema
                           has "first" and "second" attributes which, resepectively, contain the
                           reference and source catalog entries, and a "distance" field (the
                           measured distance between the reference and source objects)

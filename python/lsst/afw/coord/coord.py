@@ -7,7 +7,6 @@ def __repr__(self):
     coordSystem = self.getCoordSystem()
     argList = ["%r*afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
     if coordSystem == TOPOCENTRIC:
-#        topoCoord = TopocentricCoord.cast(self)
         argList += [
             repr(self.getEpoch()),
             "(%r)" % (self.getObservatory(),),

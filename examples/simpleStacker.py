@@ -43,7 +43,7 @@ def main():
     nImg = 10
     nX, nY = 64, 64
 
-    imgList = afwImage.vectorImageF()
+    imgList = []
     for iImg in range(nImg):
         imgList.push_back(afwImage.ImageF(afwGeom.Extent2I(nX, nY), iImg))
 
