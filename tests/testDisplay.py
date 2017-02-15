@@ -155,6 +155,7 @@ class DisplayTestCase(unittest.TestCase):
             record = catalog.addNew()
             record.setId(i+1)
             record.set(centroidKey, afwGeom.Point2D(x[0], x[1]))
+        import ipdb; ipdb.set_trace()
         self.display0.showCentroids(catalog)
 
     def testStretch(self):
@@ -211,7 +212,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run the image display test suite")
 
-    parser.add_argument('backend', type=str, nargs="?", default="virtualDevice",
+    parser.add_argument('backend', type=str, nargs="?", default="ds9",
                         help="The backend to use, e.g. ds9.  You may need to have the device setup")
     args = parser.parse_args()
 
