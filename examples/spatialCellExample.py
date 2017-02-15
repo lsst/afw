@@ -62,7 +62,7 @@ def readImage(filename=None):
         except Exception:
             raise RuntimeError("You must provide a filename or setup afwdata to run these examples")
 
-        filename = os.path.join(afwDataDir, "CFHT", "D4", "cal-53535-i-797722_1")
+        filename = os.path.join(afwDataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(270, 2530), afwGeom.Extent2I(512, 512))
     else:

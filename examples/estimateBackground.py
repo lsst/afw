@@ -38,7 +38,7 @@ except NameError:
 
 def getImage():
     imagePath = os.path.join(lsst.utils.getPackageDir("afwdata"),
-                             "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci_img.fits")
+                             "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
     return afwImage.MaskedImageF(imagePath)
 
 def simpleBackground(image):
