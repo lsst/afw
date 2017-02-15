@@ -62,13 +62,13 @@ def readImage(filename=None):
         except Exception:
             raise RuntimeError("You must provide a filename or setup afwdata to run these examples")
 
-        filename = os.path.join(afwDataDir, "CFHT", "D4", "cal-53535-i-797722_1")
+        filename = os.path.join(afwDataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(270, 2530), afwGeom.Extent2I(512, 512))
     else:
         bbox = None
 
-    mi = afwImage.MaskedImageF(filename, 0, None, bbox, afwImage.LOCAL)
+    mi = afwImage.MaskedImageF(filename, bbox=bbox, origin=afwImage.LOCAL)
     mi.setXY0(afwGeom.Point2I(0, 0))
     #
     # Subtract the background.  We'd use a canned procedure, but that's in meas/utils/sourceDetection.py. We
@@ -154,11 +154,7 @@ def SpatialCellSetDemo(filename=None):
 
         j = 0
         for cand in cell:
-            #
-            # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
-            # a SpatialCellCandidate so we need an explicit (dynamic) cast
-            #
-            cand = testSpatialCellLib.cast_ExampleCandidate(cand)
+            cand = cand
 
             w, h = cand.getBBox().getDimensions()
             if w*h < 75:

@@ -38,7 +38,7 @@ except NameError:
 
 def getImage():
     imagePath = os.path.join(lsst.utils.getPackageDir("afwdata"),
-                             "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci_img.fits")
+                             "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
     return afwImage.MaskedImageF(imagePath)
 
 def simpleBackground(image):
@@ -49,7 +49,7 @@ def simpleBackground(image):
 
     bkgd = afwMath.makeBackground(image, bctrl)
 
-    statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+    statsImage = bkgd.getStatsImage()
 
     image  -= bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE)
 
@@ -74,7 +74,7 @@ def complexBackground(image):
 
     bkgd = afwMath.makeBackground(image, bctrl)
 
-    statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+    statsImage = bkgd.getStatsImage()
     ds9.mtv(statsImage.getVariance())
 
     bkdgImages = dict(SPLINE = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE),
@@ -94,7 +94,7 @@ def main():
 
     if display:
         ds9.mtv(image, frame=1)
-        ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=2)
+        ds9.mtv(bkgd.getStatsImage(), frame=2)
 
     order = 2
     actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order, order)
