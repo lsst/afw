@@ -42,12 +42,20 @@ except NameError:
         # Let's define a version of getDisplay() which will throw an exception.
         e.args = ["%s (is display_ds9 setup?)" % e]
 
-        def getDisplay(*args, **kwargs):
-            raise e
+        # TODO: once we abandon Python 2 use the following simpler code:
+        # def getDisplay(*args, exception=e, **kwargs):
+        #     raise exception
+        class _RaiseException(object):
+            def __init__(self, exception):
+                self.exception = exception
+
+            def __call__(self, *args, **kwargs):
+                raise self.exception
+
+        getDisplay = _RaiseException(e)
 
         class DisplayImpl(object):
-            def __init__(self, *args, **kwargs):
-                raise e
+            __init__ = getDisplay
 
         loaded = False
     else:
