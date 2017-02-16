@@ -7,6 +7,7 @@ scripts.BasicSConscript.pybind11(
      'color',
      'coaddInputs',
      'filter',
+     'photoCalib',
      'wcs/wcs',
      'tanWcs',
      'distortedTanWcs',
