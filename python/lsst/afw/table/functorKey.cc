@@ -32,22 +32,13 @@
 #include "lsst/afw/table/arrays.h"
 #include "lsst/afw/table/FunctorKey.h"
 
+#include "lsst/afw/table/pybind11/functorKey.h"
+
 namespace py = pybind11;
 
 namespace lsst {
 namespace afw {
 namespace table {
-
-template <typename T>
-void declareFunctorKeys(py::module & mod, std::string const & suffix) {
-    py::class_<OutputFunctorKey<T>, std::shared_ptr<OutputFunctorKey<T>>>
-        clsOutputFunctorKey(mod, ("OutputFunctorKey"+suffix).c_str());
-    py::class_<InputFunctorKey<T>, std::shared_ptr<InputFunctorKey<T>>>
-        clsInputFunctorKey(mod, ("InputFunctorKey"+suffix).c_str());
-    py::class_<FunctorKey<T>, std::shared_ptr<FunctorKey<T>>, OutputFunctorKey<T>, InputFunctorKey<T>>
-        clsFunctorKey(mod, ("FunctorKey"+suffix).c_str());
-    
-};
 
 PYBIND11_PLUGIN(_functorKey) {
     py::module mod("_functorKey", "Python wrapper for afw _functorKey library");
@@ -58,9 +49,9 @@ PYBIND11_PLUGIN(_functorKey) {
     };
 
     /* Module level */
-    declareFunctorKeys<lsst::afw::coord::IcrsCoord>(mod, "Coord");
-    declareFunctorKeys<ndarray::Array<float const,1,1>>(mod, "ArrayF");
-    declareFunctorKeys<ndarray::Array<double const,1,1>>(mod, "ArrayD");
+    pybind11::declareFunctorKeys<lsst::afw::coord::IcrsCoord>(mod, "Coord");
+    pybind11::declareFunctorKeys<ndarray::Array<float const,1,1>>(mod, "ArrayF");
+    pybind11::declareFunctorKeys<ndarray::Array<double const,1,1>>(mod, "ArrayD");
 
     /* Member types and enums */
 
