@@ -107,9 +107,6 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(m1.second.getId(), c["second"])
             self.assertEqual(m1.distance, c["distance"])
 
-        self.checkPickle(mat, checkSlots=False)
-        self.checkPickle(mat2, checkSlots=False)
-
         self.checkMatchToFromCatalog(mat, cat)
 
         if False:
@@ -137,7 +134,6 @@ class SourceMatchTestCase(unittest.TestCase):
         mc.findOnlyClosest = False
         mat = afwTable.matchRaDec(ss1, ss2, 1.0*afwGeom.arcseconds, mc)
         self.assertEqual(len(mat), 1)
-        self.checkPickle(mat)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testPhotometricCalib(self):
@@ -213,7 +209,6 @@ class SourceMatchTestCase(unittest.TestCase):
         matches = afwTable.matchRaDec(sdss, template, 1.0*afwGeom.arcseconds, mc)
 
         self.assertEqual(len(matches), 901)
-        self.checkPickle(matches)
 
         if False:
             for mat in matches:
@@ -231,7 +226,6 @@ class SourceMatchTestCase(unittest.TestCase):
         matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds, mc)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
-        self.checkPickle(matches)
 
         # Find the one that didn't match
         if False:
@@ -246,7 +240,6 @@ class SourceMatchTestCase(unittest.TestCase):
 
         matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
-        self.checkPickle(matches)
 
         if False:
             for mat in matches:
