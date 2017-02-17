@@ -146,8 +146,8 @@ class ImageNdGetter {
 
     void checkExtents(Box2I const & bbox, int area) const {
         // If the bounding box lays outside the are of the image, throw an error
-        geom::Box2I arrayBBox(_xy0, _xy0+geom::Extent2I(_array.template getSize<1>(),
-                                                        _array.template getSize<0>()));
+        geom::Box2I arrayBBox(_xy0, geom::Extent2I(_array.template getSize<1>(),
+                                                   _array.template getSize<0>()));
         if (!arrayBBox.contains(bbox)) {
             throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                               "SpanSet bounding box lands outside array");

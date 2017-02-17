@@ -30,6 +30,7 @@ from builtins import range
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
+import lsst.afw.geom.ellipses as afwGeomEllipses
 import lsst.afw.image as afwImage
 
 
@@ -304,6 +305,20 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(firstSpanSet != secondSpanSet)
         self.assertTrue(firstSpanSet == secondSpanSetShift)
         self.assertFalse(firstSpanSet != secondSpanSetShift)
+
+    def testSpanSetFromEllipse(self):
+        axes = afwGeomEllipses.Axes(6, 6, 0)
+        ellipse = afwGeomEllipses.Ellipse(axes, afwGeom.Point2D(5, 6))
+        spanSet = afwGeom.SpanSet.spanSetFromShape(ellipse)
+        for ss, es in zip(spanSet, afwGeomEllipses.PixelRegion(ellipse)):
+            self.assertEqual(ss, es)
+
+    def testSpanSetFromShapeOffset(self):
+        shift = afwGeom.Point2I(2, 2)
+        spanSetShifted = afwGeom.SpanSet.spanSetFromShape(2, offset=shift)
+        bbox = spanSetShifted.getBBox()
+        self.assertEqual(bbox.getMinX(), 0)
+        self.assertEqual(bbox.getMinY(), 0)
 
     def testFindEdgePixels(self):
         spanSet = afwGeom.SpanSet.spanSetFromShape(6, afwGeom.Stencil.CIRCLE)
