@@ -70,7 +70,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(len(self.emptyFootprint.peaks), 0)
 
     def testIsHeavy(self):
-        self.assertFalse(self.footprint.isHeavy)
+        self.assertFalse(self.footprint.isHeavy())
 
     def testGetSetSpans(self):
         '''

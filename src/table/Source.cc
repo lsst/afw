@@ -226,7 +226,7 @@ public:
         PTR(io::InputArchive) const & archive
     ) const {
         SourceRecord & record = static_cast<SourceRecord&>(baseRecord);
-        PTR(Footprint) fp = std::make_shared<Footprint>();
+        std::vector<geom::Span> spansVector;
 
         // Load a regular Footprint from the span and peak columns.
         int spanElementCount = fits.getTableArraySize(row, _spanCol);
@@ -249,9 +249,11 @@ public:
                 int y = *j++;
                 int x0 = *j++;
                 int x1 = *j++;
-                fp->addSpan(y, x0, x1);
+                spansVector.push_back(geom::Span(y, x0, x1));
             }
         }
+        PTR(Footprint) fp = std::make_shared<detection::Footprint>(
+                                std::make_shared<geom::SpanSet>(std::move(spansVector)));
         if (peakElementCount) {
             if (peakElementCount % 3) {
                 throw LSST_EXCEPT(

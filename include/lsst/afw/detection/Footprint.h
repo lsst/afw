@@ -1,4 +1,5 @@
 
+
 /*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
@@ -77,7 +78,7 @@ public:
     explicit Footprint(): lsst::daf::base::Citizen(typeid(this)),
                           _spans(std::make_shared<geom::SpanSet>()),
                           _peaks(PeakTable::makeMinimalSchema()),
-			  _region(geom::Box2I()) {}
+			              _region(geom::Box2I()) {}
 
 
     Footprint(Footprint const & other) = default;
@@ -144,6 +145,24 @@ public:
         }
         // this syntax doesn't work in Python, which is why this method has to exist
         getPeaks() = PeakCatalog(peakSchema);
+    }
+
+    /** @brief Set the peakCatalog to a copy of the supplied catalog
+     *
+     * PeakCatalog will be copied into the Footprint, but a PeakCatalog is a shallow
+     * copy, so records will not be duplicated. This function will throw an error if
+     * the PeakCatalog of *this is not empty.
+     *
+     * @param otherPeaks The PeakCatalog to copy
+     */
+    void setPeakCatalog(PeakCatalog const & otherPeaks) {
+        if (!getPeaks().empty()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicError,
+                "Cannot change the PeakCatalog unless it is empty"
+            );
+        }
+        getPeaks() = otherPeaks;
     }
 
     /**
@@ -225,7 +244,7 @@ public:
      *                  NOT the same as the footprint's bounding box.
      *  @param doClip - If true, clip the new footprint to the region bbox before returning it.
      */
-    std::unique_ptr<Footprint> transform(
+    std::shared_ptr<Footprint> transform(
         std::shared_ptr<image::Wcs> source,
         std::shared_ptr<image::Wcs> target,
         geom::Box2I const & region,
@@ -296,7 +315,7 @@ public:
     * is contiguous and contains only peaks that can be found within the bounds of the
     * Footprint
     */
-    std::vector<std::unique_ptr<Footprint>> split() const;
+    std::vector<std::shared_ptr<Footprint>> split() const;
 
     /**
     * @brief equality operator
@@ -324,10 +343,6 @@ public:
 
     friend class FootprintFactory;
 
- private:
-
-    friend class FootprintMerge;
-
     /*
      * Static method used to unpersist the SpanSet member of the Footprint class
      */
@@ -338,10 +353,30 @@ public:
      */
     static void readPeaks(afw::table::BaseCatalog const &, Footprint &);
 
+ private:
+
+    friend class FootprintMerge;
+
     std::shared_ptr<geom::SpanSet> _spans;    //!< The SpanSet representing area on image
     PeakCatalog _peaks;                 //!< The peaks lying in this footprint
     geom::Box2I _region;     //!< The corners of the MaskedImage the footprints live in
 };
+
+/**
+ * Merges two Footprints -- appends their peaks, and unions their
+ * spans, returning a new Footprint. Region is not preserved.
+ */
+std::shared_ptr<Footprint> mergeFootprints(Footprint const& foot1, Footprint const& foot2);
+
+/**
+ * @brief Return a list of BBox%s, whose union contains exactly the pixels in
+ * foot, neither more nor less
+ *
+ * Useful in generating sets of meas::algorithms::Defects for the ISR
+ *
+ * @param foot Footprint to turn into bounding box list
+ */
+std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 
 }}} // Close namespace lsst::afw::detection
 

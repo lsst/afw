@@ -56,7 +56,7 @@ class FootprintSet : public lsst::daf::base::Citizen {
 public:
 
     /// The FootprintSet's set of Footprint%s
-    typedef std::vector<Footprint::Ptr> FootprintList;
+    typedef std::vector<std::shared_ptr<Footprint>> FootprintList;
 
 #ifndef SWIG
     template <typename ImagePixelT>
@@ -183,11 +183,9 @@ public:
         image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
     ) {
-        setMaskFromFootprintList(
-            mask,
-            _footprints,                // calling getFootprints() confuses clang++ 3.0 and leaks memory
-            image::Mask<MaskPixelT>::getPlaneBitMask(planeName)
-        );
+        for (auto const & foot : *_footprints) {
+            foot->getSpans()->setMask(*mask, image::Mask<MaskPixelT>::getPlaneBitMask(planeName));
+        }
     }
 
     template <typename MaskPixelT>

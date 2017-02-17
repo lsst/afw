@@ -30,8 +30,8 @@ namespace lsst { namespace afw { namespace detection {
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
           geom::Box2I const & region): lsst::daf::base::Citizen(typeid(this)),
                                        _spans(inputSpans),
-                                       _region(region),
-                                       _peaks(PeakTable::makeMinimalSchema()) {}
+                                       _peaks(PeakTable::makeMinimalSchema()),
+                                       _region(region) {}
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
           afw::table::Schema const & peakSchema,
@@ -81,7 +81,7 @@ bool Footprint::contains(geom::Point2I const & pix) const {
     return getSpans()->contains(pix);
 }
 
-std::unique_ptr<Footprint> Footprint::transform(std::shared_ptr<image::Wcs> source,
+std::shared_ptr<Footprint> Footprint::transform(std::shared_ptr<image::Wcs> source,
                                      std::shared_ptr<image::Wcs> target,
                                      geom::Box2I const & region,
                                      bool doClip) const {
@@ -90,7 +90,8 @@ std::unique_ptr<Footprint> Footprint::transform(std::shared_ptr<image::Wcs> sour
     // Transfrom the SpanSet first
     auto transformedSpan = getSpans()->transformedBy(transform);
     // Use this new SpanSet and the peakSchema to create a new Footprint
-    std::unique_ptr<Footprint> newFootprint(new Footprint(transformedSpan, getPeaks().getSchema(), region));
+    auto newFootprint = std::make_shared<Footprint>(transformedSpan, getPeaks().getSchema(), region);
+    //auto newFootprint = std::make_shared<Footprint>();
     // now populate the new Footprint with transformed Peaks
     for (auto const & peak : getPeaks()) {
         // Transform the x y Point
@@ -130,21 +131,21 @@ void Footprint::removeOrphanPeaks() {
     }
 }
 
-std::vector<std::unique_ptr<Footprint>> Footprint::split() const {
+std::vector<std::shared_ptr<Footprint>> Footprint::split() const {
     auto splitSpanSets = getSpans()->split();
-    std::vector<std::unique_ptr<Footprint>> footprintList;
+    std::vector<std::shared_ptr<Footprint>> footprintList;
     footprintList.reserve(splitSpanSets.size());
     for (auto & spanPtr : splitSpanSets) {
-        std::unique_ptr<Footprint> tmpFootprintPointer(new Footprint(spanPtr,
-                                                                     getPeaks().getSchema(),
-                                                                     getRegion()));
+        auto tmpFootprintPointer = std::make_shared<Footprint>(spanPtr,
+                                                               getPeaks().getSchema(),
+                                                               getRegion());
         tmpFootprintPointer->_peaks = getPeaks();
         // No need to remove any peaks, as there is only one Footprint, so it will
         // simply be a copy of the original
         if (splitSpanSets.size() > 1) {
             tmpFootprintPointer->removeOrphanPeaks();
         }
-        footprintList.push_back(std::move(tmpFootprintPointer));
+        footprintList.push_back(tmpFootprintPointer);
     }
     return footprintList;
 }
@@ -315,6 +316,96 @@ void Footprint::readPeaks(afw::table::BaseCatalog const & peakCat, Footprint & l
     for (auto const & peak : peakCat) {
         peaks.addNew()->assign(peak);
     }
+}
+
+std::shared_ptr<Footprint> mergeFootprints(Footprint const & foot1, Footprint const & foot2) {
+    // Bail out early if the schemas are not the same
+    if (!(foot1.getPeaks().getSchema() == foot2.getPeaks().getSchema()) ) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                          "Cannot merge Footprints with different Schemas");
+    }
+
+    // Merge the SpanSets
+    auto unionedSpanSet = foot1.getSpans()->union_(*(foot2.getSpans()));
+
+    // Construct merged Footprint
+    auto mergedFootprint = std::make_shared<Footprint>(unionedSpanSet, foot1.getPeaks().getSchema());
+    // Copy over the peaks from both footprints
+    mergedFootprint->setPeakCatalog(PeakCatalog(foot1.getPeaks().getTable()));
+    PeakCatalog & peaks = mergedFootprint->getPeaks();
+    peaks.reserve(foot1.getPeaks().size() + foot2.getPeaks().size());
+    peaks.insert(peaks.end(), foot1.getPeaks().begin(), foot1.getPeaks().end(), true);
+    peaks.insert(peaks.end(), foot2.getPeaks().begin(), foot2.getPeaks().end(), true);
+
+    // Sort the PeaksCatalog according to value
+    mergedFootprint->sortPeaks();
+
+    return mergedFootprint;
+}
+
+std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
+    typedef std::uint16_t ImageT;
+    geom::Box2I fpBBox = foot.getBBox();
+    image::Image<ImageT>::Ptr idImage(
+        new image::Image<ImageT>(fpBBox)
+    );
+    *idImage = 0;
+    int const height = fpBBox.getHeight();
+    geom::Extent2I shift(fpBBox.getMinX(), fpBBox.getMinY());
+    foot.getSpans()->setImage(*idImage, static_cast<ImageT>(1), fpBBox, true);
+
+    std::vector<geom::Box2I> bboxes;
+    /*
+     * Our strategy is to find a row of pixels in the Footprint and interpret it as the first
+     * row of a rectangular set of pixels.  We then extend this rectangle upwards as far as it
+     * will go, and define that as a BBox.  We clear all those pixels, and repeat until there
+     * are none left.  I.e. a Footprint will get cut up like this:
+     *
+     *       .555...
+     *       22.3314
+     *       22.331.
+     *       .000.1.
+     * (as shown in Footprint_1.py)
+     */
+
+    int y0 = 0;                         // the first row with non-zero pixels in it
+    while (y0 < height) {
+        geom::Box2I bbox;            // our next BBox
+        for (int y = y0; y != height; ++y) {
+            // Look for a set pixel in this row
+            image::Image<ImageT>::x_iterator begin = idImage->row_begin(y), end = idImage->row_end(y);
+            image::Image<ImageT>::x_iterator first = std::find(begin, end, 1);
+
+            if (first != end) {                     // A pixel is set in this row
+                image::Image<ImageT>::x_iterator last = std::find(first, end, 0) - 1;
+                int const x0 = first - begin;
+                int const x1 = last  - begin;
+
+                std::fill(first, last + 1, 0);       // clear pixels; we don't want to see them again
+
+                bbox.include(geom::Point2I(x0, y));     // the LLC
+                bbox.include(geom::Point2I(x1, y));     // the LRC; initial guess for URC
+
+                // we found at least one pixel so extend the BBox upwards
+                for (++y; y != height; ++y) {
+                    if (std::find(idImage->at(x0, y), idImage->at(x1 + 1, y), 0) != idImage->at(x1 + 1, y)) {
+                        break;  // some pixels weren't set, so the BBox stops here, (actually in previous row)
+                    }
+                    std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
+
+                    bbox.include(geom::Point2I(x1, y)); // the new URC
+                }
+
+                bbox.shift(shift);
+                bboxes.push_back(bbox);
+            } else {
+                y0 = y + 1;
+            }
+            break;
+        }
+    }
+
+    return bboxes;
 }
 
 }}} // End lsst::afw::detection namespace
