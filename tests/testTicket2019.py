@@ -1,3 +1,4 @@
+
 from __future__ import absolute_import, division, print_function
 import unittest
 
@@ -13,7 +14,8 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
     def test1(self):
         im = afwImage.ImageF(100, 100)
         im += 42.
-        fp = afwDet.Footprint(afwGeom.Point2I(50, 50), 10.)
+        spanSet = afwGeom.SpanSet.fromShape(10).shiftedBy(50, 50)
+        fp = afwDet.Footprint(spanSet)
         mi = afwImage.MaskedImageF(im)
         # set a mask bit before grabbing the heavyfootprint
         mi.getMask().set(50, 50, 1)

@@ -15,14 +15,16 @@
 #include "boost/filesystem.hpp"
 
 #include "lsst/afw/table/Source.h"
+#include "lsst/afw/geom/Span.h"
+#include "lsst/afw/geom/SpanSet.h"
 
 struct EqualityCompare {
 
     bool operator()(
-        lsst::afw::detection::Span::Ptr const & a,
-        lsst::afw::detection::Span::Ptr const & b
+        lsst::afw::geom::Span const & a,
+        lsst::afw::geom::Span const & b
     ) const {
-        return a->getY() == b->getY() && a->getX0() == b->getX0() && a->getX1() == b->getX1();
+        return a.getY() == b.getY() && a.getX0() == b.getX0() && a.getX1() == b.getX1();
     }
 
     bool operator()(float a, float b) const {
@@ -78,9 +80,11 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     {
         PTR(Footprint) fp1 = std::make_shared<Footprint>();
-        fp1->addSpan(0, 5, 8);
-        fp1->addSpan(1, 4, 9);
-        fp1->addSpan(2, 6, 7);
+        std::vector<lsst::afw::geom::Span> tempSpanList1 = {lsst::afw::geom::Span(0, 5, 8),
+                                                            lsst::afw::geom::Span(1, 4, 9),
+                                                            lsst::afw::geom::Span(2, 6, 7)};
+        auto tempSpanSet1 = std::make_shared<lsst::afw::geom::SpanSet>(std::move(tempSpanList1));
+        fp1->setSpans(tempSpanSet1);
         fp1->addPeak(4.5f, 1.2f, 25.6f);
         fp1->addPeak(6.8f, 0.8f, 23.2f);
         PTR(SourceRecord) r1 = vector.getTable()->makeRecord();
@@ -106,8 +110,10 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r2->set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
         r2->set(a_s, "bar");
         PTR(Footprint) fp2 = std::make_shared<Footprint>();
-        fp2->addSpan(3, 2, 7);
-        fp2->addSpan(4, 3, 5);
+        std::vector<lsst::afw::geom::Span> tempSpanList2 = {lsst::afw::geom::Span(3, 2, 7),
+                                                            lsst::afw::geom::Span(4, 3, 5)};
+        auto tempSpanSet2 = std::make_shared<lsst::afw::geom::SpanSet>(std::move(tempSpanList2));
+        fp2->setSpans(tempSpanSet2);
         fp2->addPeak(4.2f, 3.3f, 32.1f);
         r2->setFootprint(fp2);
         vector.push_back(r2);
@@ -149,7 +155,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_b_p.getY()), b1.get(a_b_p.getY()), 1E-8 );
         Footprint const & fp1a = *a1.getFootprint();
         Footprint const & fp1b = *b1.getFootprint();
-        BOOST_CHECK( std::equal(fp1a.getSpans().begin(), fp1a.getSpans().end(), fp1b.getSpans().begin(),
+        BOOST_CHECK( std::equal(fp1a.getSpans()->begin(), fp1a.getSpans()->end(), fp1b.getSpans()->begin(),
                                 EqualityCompare()) );
         BOOST_CHECK( std::equal(fp1a.getPeaks().begin(), fp1a.getPeaks().end(), fp1b.getPeaks().begin(),
                                 EqualityCompare()) );
@@ -168,7 +174,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_b_p.getY()), b2.get(a_b_p.getY()), 1E-8 );
         Footprint const & fp2a = *a2.getFootprint();
         Footprint const & fp2b = *b2.getFootprint();
-        BOOST_CHECK( std::equal(fp2a.getSpans().begin(), fp2a.getSpans().end(), fp2b.getSpans().begin(),
+        BOOST_CHECK( std::equal(fp2a.getSpans()->begin(), fp2a.getSpans()->end(), fp2b.getSpans()->begin(),
                                 EqualityCompare()) );
         BOOST_CHECK( std::equal(fp2a.getPeaks().begin(), fp2a.getPeaks().end(), fp2b.getPeaks().begin(),
                                 EqualityCompare()) );
