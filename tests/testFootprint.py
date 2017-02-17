@@ -88,7 +88,7 @@ class FootprintTestCase(unittest.TestCase):
 
     def testPeakFunctionality(self):
         newSchema = afwDet.PeakTable.makeMinimalSchema()
-        newField = afwTable.Field_I("extra", "doc", "na")
+        newField = afwTable.FieldI("extra", "doc", "na")
         newSchema.addField(newField)
         self.footprint.setPeakSchema(newSchema)
         names = self.footprint.getPeaks().getSchema().getNames()
@@ -249,7 +249,6 @@ class FootprintTestCase(unittest.TestCase):
         # Clean up after ourselves
         del footprintFromFile
 
-    @unittest.skip("Skip until Footprint to Footprint Rename")
     def testLegacyFootprints(self):
         fileName = 'tests/data/preSpanSetsFootprint.fits'
         legacyFootprint = afwDet.Footprint.readFits(fileName)

@@ -59,13 +59,14 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         self.mi = afwImage.MaskedImageF(20, 10)
         self.objectPixelVal = (10, 0x1, 100)
 
-        self.foot = afwDetect.Footprint()
+        spanList = []
         for y, x0, x1 in [(2, 10, 13),
                           (3, 11, 14)]:
-            self.foot.addSpan(y, x0, x1)
+            spanList.append(afwGeom.Span(y, x0, x1))
 
             for x in range(x0, x1 + 1):
                 self.mi.set(x, y, self.objectPixelVal)
+        self.foot = afwDetect.Footprint(afwGeom.SpanSet(spanList))
 
     def tearDown(self):
         del self.foot
@@ -98,16 +99,13 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         # Check that we can call getImageArray(), etc
         arr = hfoot.getImageArray()
-        print(arr)
         # Check that it's iterable
         for x in arr:
             pass
         arr = hfoot.getMaskArray()
-        print(arr)
         for x in arr:
             pass
         arr = hfoot.getVarianceArray()
-        print(arr)
         # Check that it's iterable
         for x in arr:
             pass
@@ -174,19 +172,19 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         mi = afwImage.MaskedImageF(20, 10)
         objectPixelVal = (42, 0x9, 400)
 
-        foot = afwDetect.Footprint()
+        spanList = []
         for y, x0, x1 in [(1, 9, 12),
                           (2, 12, 13),
                           (3, 11, 15)]:
-            foot.addSpan(y, x0, x1)
+            spanList.append(afwGeom.Span(y, x0, x1))
             for x in range(x0, x1 + 1):
                 mi.set(x, y, objectPixelVal)
+
+        foot = afwDetect.Footprint(afwGeom.SpanSet(spanList))
 
         hfoot1 = afwDetect.makeHeavyFootprint(self.foot, self.mi)
         hfoot2 = afwDetect.makeHeavyFootprint(foot, mi)
 
-        hfoot1.normalize()
-        hfoot2.normalize()
         hsum = afwDetect.mergeHeavyFootprints(hfoot1, hfoot2)
 
         bb = hsum.getBBox()
@@ -261,23 +259,25 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             mi1.set(0)
             mi2.set(0)
 
-            fp1 = afwDetect.Footprint()
-            fp2 = afwDetect.Footprint()
+            spanList1 = []
+            spanList2 = []
             for y, x0, x1 in [(5, 3, 7),
                               (6, 3, 4),
                               (6, 6, 7),
                               (7, 3, 7), ]:
-                fp1.addSpan(y, x0, x1)
-                fp2.addSpan(y + yOffset, x0 + xOffset, x1 + xOffset)
+                spanList1.append(afwGeom.Span(y, x0, x1))
+                spanList2.append(afwGeom.Span(y + yOffset, x0 + xOffset,
+                                              x1 + xOffset))
                 for x in range(x0, x1 + 1):
                     value = (x + y, 0, 1.0)
                     mi1.set(x, y, value)
                     mi2.set(x + xOffset, y + yOffset, value)
 
+            fp1 = afwDetect.Footprint(afwGeom.SpanSet(spanList1))
+            fp2 = afwDetect.Footprint(afwGeom.SpanSet(spanList2))
+
             hfp1 = afwDetect.makeHeavyFootprint(fp1, mi1)
             hfp2 = afwDetect.makeHeavyFootprint(fp2, mi2)
-            hfp1.normalize()
-            hfp2.normalize()
 
             dot = np.vdot(mi1.getImage().getArray(), mi2.getImage().getArray())
             self.assertEqual(hfp1.dot(hfp2), dot)

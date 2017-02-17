@@ -642,13 +642,13 @@ BOOST_AUTO_TEST_CASE(ArchiveImporter) {
     std::cerr << "--------------------------------------------------------------------------------------\n";
     std::cerr << "The following warning is expected, and is an indication the test has passed.\n";
     std::cerr << "--------------------------------------------------------------------------------------\n";
-    
+
     boost::filesystem::path testFilePath (lsst::utils::getPackageDir("afw"));
     boost::filesystem::path testsDir ("tests");
     boost::filesystem::path dataDir ("data");
     boost::filesystem::path filename ("archiveImportTest.fits");
     boost::filesystem::path testPath = testFilePath / testsDir / dataDir / filename;
-    
+
     lsst::afw::image::Exposure<float> exposure(testPath.string());
     BOOST_CHECK(!exposure.getPsf());
 }
@@ -662,9 +662,12 @@ BOOST_AUTO_TEST_CASE(ArchiveMetadata) {
     using namespace lsst::afw::detection;
     using namespace lsst::afw::geom;
     OutputArchive outArchive;
-    outArchive.put(std::make_shared<Footprint>(Box2I(Point2I(2, 3), Point2I(5, 4))));
-    outArchive.put(std::make_shared<Footprint>(Box2I(Point2I(1, 2), Point2I(7, 6))));
-    outArchive.put(std::make_shared<HeavyFootprint<float>>(Footprint(Box2I(Point2I(1, 2), Point2I(7, 6)))));
+    outArchive.put(std::make_shared<Footprint>(std::make_shared<SpanSet>(Box2I(Point2I(2, 3),
+                                                                               Point2I(5, 4)))));
+    outArchive.put(std::make_shared<Footprint>(std::make_shared<SpanSet>(Box2I(Point2I(1, 2),
+                                                                               Point2I(7, 6)))));
+    outArchive.put(std::make_shared<HeavyFootprint<float>>(
+                   Footprint(std::make_shared<SpanSet>(Box2I(Point2I(1, 2), Point2I(7, 6))))));
     MemFileManager manager;
     Fits outFits(manager, "w", Fits::AUTO_CHECK);
     outArchive.writeFits(outFits);

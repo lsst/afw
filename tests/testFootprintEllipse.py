@@ -38,22 +38,24 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         xc, yc = 30, 50
         radius = 10
 
-        test = afwDet.Footprint(afwGeom.Point2I(xc, yc), radius)
+        spanSet = afwGeom.SpanSet.spanSetFromShape(radius).shiftedBy(xc, yc)
+        test = afwDet.Footprint(spanSet)
 
         # Here's how it used to be done using circles, before #1556
         r2 = int(radius**2 + 0.5)
         r = int(math.sqrt(r2))
-        control = afwDet.Footprint()
+        spanList = []
         for i in range(-r, r+1):
             hlen = int(math.sqrt(r2 - i**2))
-            control.addSpan(yc + i, xc - hlen, xc + hlen)
+            spanList.append(afwGeom.Span(yc + i, xc - hlen, xc + hlen))
+        control = afwDet.Footprint(afwGeom.SpanSet(spanList))
 
         self.assertEqual(len(test.getSpans()), len(control.getSpans()))
         for s0, s1 in zip(test.getSpans(), control.getSpans()):
             self.assertEqual(s0.getX0(), s1.getX0())
             self.assertEqual(s0.getX1(), s1.getX1())
             self.assertEqual(s0.getY(), s1.getY())
-        self.assertEqual(test.getNpix(), control.getNpix())
+        self.assertEqual(test.getArea(), control.getArea())
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
