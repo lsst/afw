@@ -38,7 +38,10 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/geom/SpanSetFunctorGetters.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace lsst { namespace afw { namespace geom { namespace details {
     /* Functor object to be used with maskToSpanSet function
@@ -465,6 +468,99 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         applyFunctor(ndAssigner, ndarray::ndImage(output, xy0), ndarray::ndFlat(input));
     }
 
+    /** @brief Copy contentes of source Image into destination image at the positions defined in the SpanSet
+     *
+     * @param src The Image that pixel values will be taken from
+     * @param dest The Image where pixels will be copied
+     *
+     * @tparam ImageT The pixel type of the Image
+     */
+    template <typename ImageT>
+    void copyImage(image::Image<ImageT> const & src, image::Image<ImageT> & dest) {
+        auto copyFunc = []
+                        (
+                        lsst::afw::geom::Point2I const & point,
+                        ImageT const & srcPix,
+                        ImageT & destPix)
+                        {
+                            destPix = srcPix;
+                        };
+        applyFunctor(copyFunc, src, dest);
+    }
+
+    /** @brief Copy contentes of source MaskedImage into destination image at the positions defined in the SpanSet
+     *
+     * @param src The MaskedImage that pixel values will be taken from
+     * @param dest The MaskedImage where pixels will be copied
+     *
+     * @tparam ImageT The pixel type of the MaskedImage's Image
+     * @tparam MaskT The pixel type of the MaskedImage's Mask
+     * @tparam VarT The Pixel type of the MaskedImage's Variance Image
+     */
+    template <typename ImageT, typename MaskT, typename VarT>
+    void copyMaskedImage(image::MaskedImage<ImageT, MaskT, VarT> const & src,
+                         image::MaskedImage<ImageT, MaskT, VarT> & dest) {
+         auto copyFunc = []
+                 (
+                   lsst::afw::geom::Point2I const & point,
+                   ImageT const & srcPix,
+                   MaskT const & srcMask,
+                   VarT const & srcVar,
+                   ImageT & destPix,
+                   MaskT & destMask,
+                   VarT & destVar
+                 )
+                 {
+                     destPix = srcPix;
+                     destMask = srcMask;
+                     destVar = srcVar;
+                 };
+        applyFunctor(copyFunc, *(src.getImage()), *(src.getMask()), *(src.getVariance()),
+                          *(dest.getImage()), *(dest.getMask()), *(dest.getVariance()));
+    }
+
+    /** @brief Set the values of an Image at points defined by the SpanSet
+     *
+     * @param image The Image in which pixels will be set
+     * @param val The value to set
+     * @param region A bounding box limiting the scope of the SpanSet, points defined
+                     in the SpanSet which fall outside this box will be ignored if
+                     the doClip parameter is set to true, defaults to the bounding
+                     box of the image
+     * @param doClip Limit the copy operation to pixels in the SpanSet that lie within
+                     the region parameter defaults to false
+     *
+     * @tparam ImageT The pixel type of the Image to be set
+     */
+    template <typename ImageT>
+    void setImage(image::Image<ImageT> & image, ImageT val,
+                  geom::Box2I const & region=geom::Box2I(), bool doClip = false) {
+        geom::Box2I bbox;
+        if (region.isEmpty()) {
+            bbox = image.getBBox();
+        } else {
+            bbox = region;
+        }
+        auto setterFunc = []
+                  (lsst::afw::geom::Point2I const & point,
+                   ImageT & out,
+                   ImageT in)
+                  {
+                      out = in;
+                  };
+        try {
+            if (doClip) {
+                auto tmpSpan = this->clippedTo(bbox);
+                tmpSpan->applyFunctor(setterFunc, image, val);
+            } else {
+                applyFunctor(setterFunc, image, val);
+            }
+        } catch (lsst::pex::exceptions::OutOfRangeError e) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
+                "Footprint Bounds Outside image, set doClip to true");
+          }
+    }
+
     /** @brief Apply functor on individual elements from the supplied parameters
      *
      * Use a variadic template to take a functor object, and an arbitrary number of parameters.
@@ -645,9 +741,20 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *
      * @param r radius of the stencil, the length is inclusive i.e. 3 ranges from -3 to 3
      * @param s must be an enumeration of type geom::Stencil. Specifies the shape of the
-                newly created SpanSet. May be CIRCLE, MANHATTAN, or BOX
+     *          newly created SpanSet. May be CIRCLE, MANHATTAN, or BOX
+     * @param offset This function usually creates a SpanSet centered about zero. This
+                     parameter is a point2I object which specifies an offset from zero
+                     to apply when creating the SpanSet.
     */
-    static std::shared_ptr<geom::SpanSet> spanSetFromShape(int r, Stencil s = Stencil::CIRCLE);
+    static std::shared_ptr<geom::SpanSet> spanSetFromShape(int r,
+                                                           Stencil s = Stencil::CIRCLE,
+                                                           Point2I offset = Point2I());
+
+    /** @brief Factory function for creating SpanSets from an ellipse object
+     *
+     * @param ellipse An ellipse defining the region to create a SpanSet from
+     */
+    static std::shared_ptr<geom::SpanSet> spanSetFromShape(geom::ellipses::Ellipse const & ellipse);
 
     /** @brief Split a discontinuous SpanSet into multiple SpanSets which are contiguous
      */
@@ -728,7 +835,7 @@ private:
     std::shared_ptr<SpanSet> makeShift(int x, int y) const;
 
     template <typename F, typename ...T>
-    void applyFunctorImpl(F f, T... args) const {
+    void applyFunctorImpl(F && f, T... args) const {
         /* Implementation for applying functors, loop over each of the spans, and then
          * each point. Use the get method in the getters to fetch the value and pass
          * the point, and the values to the functor
@@ -738,7 +845,8 @@ private:
         for (auto const & spn : _spanVector) {
             // Set the current span in the getter, useful for optimizing value lookups
             details::variadicSpanSetter(spn, args...);
-            for (auto point : spn) {
+            for (int x = spn.getX0(); x<=spn.getX1(); ++x) {
+                Point2I point(x, spn.getY());
                 f(point, args.get()...);
                 details::variadicIncrementPosition(args...);
             }

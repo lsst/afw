@@ -26,6 +26,7 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include <algorithm>
 #include <iterator>
 
@@ -591,7 +592,7 @@ bool geom::SpanSet::operator!=(SpanSet const & other) const {
     return _spanVector != other._spanVector;
 }
 
-std::shared_ptr<geom::SpanSet> geom::SpanSet::spanSetFromShape(int r, Stencil s) {
+std::shared_ptr<geom::SpanSet> geom::SpanSet::spanSetFromShape(int r, Stencil s, Point2I offset) {
     // Create a SpanSet from a given Stencil
     std::vector<Span> tempVec;
     tempVec.reserve(2*r + 1);
@@ -599,23 +600,28 @@ std::shared_ptr<geom::SpanSet> geom::SpanSet::spanSetFromShape(int r, Stencil s)
         case Stencil::CIRCLE:
             for (auto dy = -r; dy <= r; ++dy) {
                 int dx = static_cast<int>(sqrt(r*r - dy*dy));
-                tempVec.push_back(geom::Span(dy, -dx, dx));
+                tempVec.push_back(geom::Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
             }
             break;
         case Stencil::MANHATTAN:
             for (auto dy = -r; dy <= r; ++dy) {
                 int dx = r - abs(dy);
-                tempVec.push_back(geom::Span(dy, -dx, dx));
+                tempVec.push_back(geom::Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
             }
             break;
         case Stencil::BOX:
             for (auto dy = -r; dy <= r; ++dy) {
                 int dx = r;
-                tempVec.push_back(geom::Span(dy, -dx, dx));
+                tempVec.push_back(geom::Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
             }
             break;
     }
     return std::make_shared<geom::SpanSet>(std::move(tempVec), false);
+}
+
+std::shared_ptr<geom::SpanSet> geom::SpanSet::spanSetFromShape(geom::ellipses::Ellipse const & ellipse) {
+    geom::ellipses::PixelRegion pr(ellipse);
+    return std::make_shared<geom::SpanSet>(pr.begin(), pr.end());
 }
 
 std::shared_ptr<geom::SpanSet> geom::SpanSet::intersect(geom::SpanSet const & other) const {
