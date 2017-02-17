@@ -160,7 +160,7 @@ tests/testTableArchives
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageRamOut.fit
 tests/testSimpleTable
 tests/testDistortion
-tests/testPoint2DList
+tests/testNdArrayConverter
 tests/testSchema
 tests/testFitsTables
 tests/testTableAliases
