@@ -264,7 +264,7 @@ def BaseCatalog_asAstropy(self, cls=None, copy=False, unviewable="copy"):
         columns.append(
             astropy.table.Column(
                 data,
-                name=item.field.getName(),
+                name=name,
                 unit=unit,
                 description=item.field.getDoc()
             )
