@@ -36,7 +36,7 @@ namespace afw {
 namespace geom {
 
 /**
- * @brief Point in an unspecified spherical coordinate system.
+ * Point in an unspecified spherical coordinate system.
  *
  * This class represents a point on a sphere in the mathematical rather
  * than the astronomical sense. It does not refer to any astronomical
@@ -64,40 +64,37 @@ class SpherePoint
 {
 public:
     /**
-     * @brief Construct a SpherePoint from a longitude and latitude.
+     * Construct a SpherePoint from a longitude and latitude.
      *
      * @param longitude The longitude of the point.
      * @param latitude The latitude of the point. Must be in the
      *                 interval [-&pi;/2, &pi;/2] radians.
      *
-     * @throws InvalidParameterError Thrown if @c latitude is out of range.
+     * @throws InvalidParameterError Thrown if `latitude` is out of range.
      *
-     * @exceptsafe The program state shall be unchanged in the event of an
-     *             exception.
+     * @exceptsafe Provides strong exception guarantee.
      */
     SpherePoint(Angle const& longitude, Angle const& latitude);
 
     /**
-     * @brief Construct a SpherePoint from a vector representing a direction.
+     * Construct a SpherePoint from a vector representing a direction.
      *
      * @param vector A position whose direction will be stored as a SpherePoint.
      *               Must not be the zero vector. Need not be normalized,
      *               and the norm will not affect the value of the point.
      *
-     * @throws InvalidParameterError Thrown if @c vector is the zero vector.
+     * @throws InvalidParameterError Thrown if `vector` is the zero vector.
      *
-     * @exceptsafe The program state shall be unchanged in the event of an
-     *             exception.
+     * @exceptsafe Provides strong exception guarantee.
      */
     explicit SpherePoint(Point3D const& vector);
 
     /**
-     * @brief Create a copy of a SpherePoint.
+     * Create a copy of a SpherePoint.
      *
      * @param other The point to copy.
      *
-     * @exceptsafe The program state shall be unchanged in the event of an
-     *             exception.
+     * @exceptsafe Provides strong exception guarantee.
      */
     SpherePoint(SpherePoint const& other) = default;
 
@@ -111,7 +108,7 @@ public:
      * @param other The object with which to overwrite this one.
      * @return a reference to this object.
      *
-     * @exceptsafe This operator shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     SpherePoint& operator=(SpherePoint const& other) = default;
 
@@ -120,7 +117,7 @@ public:
      */
 
     /**
-     * @brief The longitude of this point.
+     * The longitude of this point.
      *
      * If this point is at a coordinate pole, the longitude is undefined, and
      * this method may return any value. If the SpherePoint implementation
@@ -129,51 +126,50 @@ public:
      *
      * @return the longitude, in the interval [0, 2&pi;) radians.
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     Angle getLongitude() const noexcept { return _longitude * radians; };
 
     /**
-     * @brief The latitude of this point.
+     * The latitude of this point.
      *
      * @return the latitude, in the interval [-&pi;/2, &pi;/2] radians.
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     Angle getLatitude() const noexcept { return _latitude * radians; };
 
     /**
-     * @brief A unit vector representation of this point.
+     * A unit vector representation of this point.
      *
      * @return a unit vector whose direction corresponds to this point
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     Point3D getVector() const noexcept;
 
     /**
-     * @brief Longitude and latitude by index.
+     * Longitude and latitude by index.
      *
      * @param index the index of the spherical coordinate to return. Must
      *              be either 0 or 1.
      *
-     * @return @ref getLongitude() if @c index = 0, or @ref getLatitude()
-     *         if @c index = 1
+     * @return @ref getLongitude() if `index` = 0, or @ref getLatitude()
+     *         if `index` = 1
      *
-     * @throws OutOfRangeError Thrown if @c index is neither 0 nor 1.
+     * @throws OutOfRangeError Thrown if `index` is neither 0 nor 1.
      *
-     * @exceptsafe The program state shall be unchanged in the event of an
-     *             exception.
+     * @exceptsafe Provides strong exception guarantee.
      */
     Angle operator[](size_t index) const;
 
     /**
-     * @brief @c true if this point is either coordinate pole.
+     * `true` if this point is either coordinate pole.
      *
-     * @return @c true if this point is at the north or south pole,
-     *         @c false otherwise
+     * @return `true` if this point is at the north or south pole,
+     *         `false` otherwise
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     bool atPole() const noexcept {
         // Unit tests indicate we don't need to worry about epsilon-errors
@@ -184,13 +180,13 @@ public:
     }
 
     /**
-     * @brief @c true if this point is a well-defined position.
+     * `true` if this point is a well-defined position.
      *
-     * @return @c true if @ref getLongitude(), @ref getLatitude(), and
+     * @return `true` if @ref getLongitude(), @ref getLatitude(), and
      *         @ref getVector() return finite floating-point values;
-     *         @c false if any return NaN or infinity.
+     *         `false` if any return NaN or infinity.
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     bool isFinite() const noexcept;
 
@@ -199,7 +195,7 @@ public:
      */
 
     /**
-     * @brief Return @c true if two points represent the same position.
+     * `true` if two points represent the same position.
      *
      * Points are considered equal if and only if they represent the same
      * location, regardless of how they were constructed. In particular,
@@ -207,12 +203,12 @@ public:
      * are considered equal.
      *
      * @param other the point to test for equality
-     * @return true if this point matches @c other exactly, false otherwise
+     * @return true if this point matches `other` exactly, false otherwise
      *
-     * @exceptsafe This operator shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      *
      * @warning Points whose @ref getLongitude(), @ref getLatitude(), or
-     *          @ref getVector() methods return @c NaN shall not compare
+     *          @ref getVector() methods return `NaN` shall not compare
      *          equal to any point, including themselves. This may break
      *          algorithms that assume object equality is reflexive; use
      *          @ref isFinite() to filter objects if necessary.
@@ -220,15 +216,15 @@ public:
     bool operator==(SpherePoint const& other) const noexcept;
 
     /**
-     * @brief Return @c false if two points represent the same position.
+     * `false` if two points represent the same position.
      *
-     * This operator shall always return the logical negation of @c ==; see
-     * its documentation for a detailed specification.
+     * This operator shall always return the logical negation of operator==;
+     * see its documentation for a detailed specification.
      */
     bool operator!=(SpherePoint const& other) const noexcept;
 
     /**
-     * @brief Direction from one point to another.
+     * Direction from one point to another.
      *
      * This method finds the shortest (great-circle) arc between two
      * points, and characterizes its direction by the angle between
@@ -239,24 +235,23 @@ public:
      * @param other the point to which to measure the bearing
      * @return the direction, as defined above, in the interval [0, 2&pi;).
      *
-     * @throws DomainError Thrown if <tt>this.atPole()</tt>.
+     * @throws DomainError Thrown if `this.atPole()`.
      *
-     * @exceptsafe The program state shall be unchanged in the event of an
-     *             exception.
+     * @exceptsafe Provides strong exception guarantee.
      *
-     * @note For two points @c A and @c B, <tt>A.bearingTo(B)</tt> will in
-     *       general not be 180 degrees away from <tt>B.bearingTo(A)</tt>
+     * @note For two points `A` and `B`, `A.bearingTo(B)` will in
+     *       general not be 180 degrees away from `B.bearingTo(A)`.
      */
     Angle bearingTo(SpherePoint const& other) const;
 
     /**
-     * @brief Angular distance between two points.
+     * Angular distance between two points.
      *
      * @param other the point to which to measure the separation
      * @return the length of the shortest (great circle) arc between the
      *         two points. Shall not be negative.
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     Angle separation(SpherePoint const& other) const noexcept;
 
@@ -265,35 +260,34 @@ public:
      */
 
     /**
-     * @brief Return a point rotated from this one around an axis.
+     * Return a point rotated from this one around an axis.
      *
      * @param axis a point defining the north pole of the rotation axis.
      * @param amount the amount of rotation, where positive values
-     *               represent right-handed rotations around @c axis.
+     *               represent right-handed rotations around `axis`.
      * @return a new point created by rotating this point
      *
-     * @exceptsafe This method shall not throw exceptions.
+     * @exceptsafe Shall not throw exceptions.
      */
     SpherePoint rotated(SpherePoint const& axis, Angle const& amount) const noexcept;
 
     /**
-     * @brief Return a point offset from this one along a great circle.
+     * Return a point offset from this one along a great circle.
      *
-     * For any point @c A not at a coordinate pole, and any two angles @c b
-     * and @c delta, <tt>A.bearingTo(A.offset(b, delta))</tt> = @c b and
-     * <tt>A.separationTo(A.offset(b, delta))</tt> = @c delta.
+     * For any point `A` not at a coordinate pole, and any two angles `b`
+     * and `delta`, `A.bearingTo(A.offset(b, delta))` = `b` and
+     * `A.separationTo(A.offset(b, delta))` = `delta`.
      *
      * @param bearing the direction in which to move this point, following
      *                the conventions described in @ref bearingTo.
      * @param amount the distance by which to move along the great
-     *               circle defined by @c bearing
+     *               circle defined by `bearing`
      * @return a new point created by shifting this point
      *
-     * @throws DomainError Thrown if <tt>this.atPole()</tt>.
-     * @throws InvalidParameterError Thrown if @c amount is negative.
+     * @throws DomainError Thrown if `this.atPole()`.
+     * @throws InvalidParameterError Thrown if `amount` is negative.
      *
-     * @exceptsafe The program state shall be unchanged in the event of an
-     *             exception.
+     * @exceptsafe Provides strong exception guarantee.
      */
     SpherePoint offset(Angle const& bearing, Angle const& amount) const;
 
@@ -310,22 +304,21 @@ private:
  */
 
 /**
- * @brief Print the value of a point to a stream.
+ * Print the value of a point to a stream.
  *
  * The exact details of the string representation are unspecified and
  * subject to change, but the following may be regarded as typical:
- * <tt>"(10.543250, +32.830583)"</tt>.
+ * `"(10.543250, +32.830583)"`.
  *
- * @param os the stream to which to print @c point
+ * @param os the stream to which to print `point`
  * @param point the point to print to the stream
- * @return a reference to @c os
+ * @return a reference to `os`
  *
  * @throws std::ostream::failure Thrown if an I/O state flag was set that
- *      was registered with <tt>os.exceptions()</tt>. See the documentation
+ *      was registered with `os.exceptions()`. See the documentation
  *      of std::ostream for more details.
  *
- * @exceptsafe All objects shall be left in valid states, with no resource
- *             leaks, in the event of an exception.
+ * @exceptsafe Provides basic exception guarantee.
  *
  * @relatesalso SpherePoint
  */

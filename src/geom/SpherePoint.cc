@@ -43,8 +43,8 @@ namespace {
  * Wraps an angle to the interval [0, 2&pi;).
  *
  * @param angle the angle to be wrapped
- * @return an angle equivalent to @c angle, but forced into the
- *         interval [0, 2&pi;). May be the same object as @c angle if
+ * @return an angle equivalent to `angle`, but forced into the
+ *         interval [0, 2&pi;). May be the same object as `angle` if
  *         no wrapping was required.
  */
 Angle wrap(Angle const& angle) {
@@ -62,7 +62,7 @@ Angle wrap(Angle const& angle) {
  *
  * @param deltaLon Difference between longitudes.
  * @param deltaLat Difference between latitudes. Must be in the same
- *                 sense as @c deltaLon.
+ *                 sense as `deltaLon`.
  * @param cosLat1, cosLat2 Cosines of the two points' latitudes.
  * @return the distance between the two points
  */
