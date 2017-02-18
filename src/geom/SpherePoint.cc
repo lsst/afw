@@ -85,7 +85,7 @@ namespace geom {
                     _longitude(wrap(longitude).asRadians()),
                     _latitude(latitude.asRadians()) {
         if (fabs(_latitude) > HALFPI) {
-            throw pexExcept::OutOfRangeError("Angle " + to_string(latitude.asDegrees()) +
+            throw pexExcept::InvalidParameterError("Angle " + to_string(latitude.asDegrees()) +
                 " is not a valid latitude.");
         }
     }
@@ -189,6 +189,12 @@ namespace geom {
             buffer << "Cannot define offset direction from pole " << *this << ".";
             throw pexExcept::DomainError(buffer.str());
         }
+        if (amount < 0.0) {
+            stringstream buffer;
+            buffer << "Negative offset of " << amount.asDegrees() << " degrees is not allowed.";
+            throw pexExcept::InvalidParameterError(buffer.str());
+        }
+
 
         // let v = vector in the direction bearing points (tangent to surface of sphere)
         // To do the rotation, use rotate() method.

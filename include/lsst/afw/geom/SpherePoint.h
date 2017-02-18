@@ -70,7 +70,7 @@ namespace geom {
          * @param latitude The latitude of the point. Must be in the
          *                 interval [-&pi;/2, &pi;/2] radians.
          *
-         * @throws OutOfRangeError Thrown if @c latitude is out of range.
+         * @throws InvalidParameterError Thrown if @c latitude is out of range.
          *
          * @exceptsafe The program state shall be unchanged in the event of an
          *             exception.
@@ -291,7 +291,7 @@ namespace geom {
          * @return a new point created by shifting this point
          *
          * @throws DomainError Thrown if <tt>this.atPole()</tt>.
-         * @throws OutOfRangeError Thrown if @c amount is negative.
+         * @throws InvalidParameterError Thrown if @c amount is negative.
          *
          * @exceptsafe The program state shall be unchanged in the event of an
          *             exception.

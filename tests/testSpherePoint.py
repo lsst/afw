@@ -97,9 +97,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """
         # Latitude should be checked for out-of-range.
         for lat in self._poleLatitudes:
-            with self.assertRaises(pexEx.OutOfRangeError):
+            with self.assertRaises(pexEx.InvalidParameterError):
                 SpherePoint(0.0*degrees, self.nextUp(lat))
-            with self.assertRaises(pexEx.OutOfRangeError):
+            with self.assertRaises(pexEx.InvalidParameterError):
                 SpherePoint(0.0*degrees, self.nextDown(0.0*radians - lat))
 
         # Longitude should not be checked for out of range.
@@ -108,9 +108,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         SpherePoint(391.0*degrees, 45.0*degrees)
 
         # Infinite latitude is not allowed.
-        with self.assertRaises(pexEx.OutOfRangeError):
+        with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(-42.0*degrees, inf*degrees)
-        with self.assertRaises(pexEx.OutOfRangeError):
+        with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(-42.0*degrees, -inf*degrees)
 
     def testInit1ArgErrors(self):
@@ -680,11 +680,14 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """
         northPole = SpherePoint(0.0*degrees, 90.0*degrees)
         southPole = SpherePoint(0.0*degrees, -90.0*degrees)
+        nonSingularity = SpherePoint(0.0*degrees, 45.0*degrees)
 
         with self.assertRaises(pexEx.DomainError):
             northPole.offset(-90.0*degrees, 10.0*degrees)
         with self.assertRaises(pexEx.DomainError):
             southPole.offset(90.0*degrees, 0.1*degrees)
+        with self.assertRaises(pexEx.InvalidParameterError):
+            nonSingularity.offset(90.0*degrees, -0.1*degrees)
 
     def testOffsetValue(self):
         """Test if offset() returns the expected value.
