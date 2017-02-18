@@ -37,203 +37,189 @@ using namespace std;
 namespace lsst {
 namespace afw {
 namespace geom {
-    /** Static implementation details for SpherePoint. */
-    namespace {
-        /**
-         * Wraps an angle to the interval [0, 2&pi;).
-         *
-         * @param angle the angle to be wrapped
-         * @return an angle equivalent to @c angle, but forced into the
-         *         interval [0, 2&pi;). May be the same object as @c angle if
-         *         no wrapping was required.
-         */
-        Angle wrap(Angle const & angle) {
-            Angle copy(angle);
-            copy.wrap();
-            return copy;
-        }
+/** Static implementation details for SpherePoint. */
+namespace {
+/**
+ * Wraps an angle to the interval [0, 2&pi;).
+ *
+ * @param angle the angle to be wrapped
+ * @return an angle equivalent to @c angle, but forced into the
+ *         interval [0, 2&pi;). May be the same object as @c angle if
+ *         no wrapping was required.
+ */
+Angle wrap(Angle const& angle) {
+    Angle copy(angle);
+    copy.wrap();
+    return copy;
+}
 
-        /**
-         * Angular distance between two points using the Haversine formula.
-         *
-         * Besides the differences between the two coordinates, we also input the
-         * cosine of the two declinations, so as to be thrifty with the use of
-         * trigonometric functions.
-         *
-         * @param deltaLon Difference between longitudes.
-         * @param deltaLat Difference between latitudes. Must be in the same
-         *                 sense as @c deltaLon.
-         * @param cosLat1, cosLat2 Cosines of the two points' latitudes.
-         * @return the distance between the two points
-         */
-        Angle haversine(Angle const & deltaLon,
-                        Angle const & deltaLat,
-                        double cosLat1,
-                        double cosLat2
-        ) {
-            double const sinLat = sin(deltaLat/2.0);
-            double const sinLon = sin(deltaLon/2.0);
-            double const havDDelta = sinLat * sinLat;
-            double const havDAlpha = sinLon * sinLon;
-            double const havD = havDDelta + cosLat1 * cosLat2 * havDAlpha;
-            double const sinDHalf = sqrt(havD);
-            return (2.0 * asin(sinDHalf)) * radians;
-        }
+/**
+ * Angular distance between two points using the Haversine formula.
+ *
+ * Besides the differences between the two coordinates, we also input the
+ * cosine of the two declinations, so as to be thrifty with the use of
+ * trigonometric functions.
+ *
+ * @param deltaLon Difference between longitudes.
+ * @param deltaLat Difference between latitudes. Must be in the same
+ *                 sense as @c deltaLon.
+ * @param cosLat1, cosLat2 Cosines of the two points' latitudes.
+ * @return the distance between the two points
+ */
+Angle haversine(Angle const& deltaLon, Angle const& deltaLat, double cosLat1, double cosLat2) {
+    double const sinLat = sin(deltaLat / 2.0);
+    double const sinLon = sin(deltaLon / 2.0);
+    double const havDDelta = sinLat * sinLat;
+    double const havDAlpha = sinLon * sinLon;
+    double const havD = havDDelta + cosLat1 * cosLat2 * havDAlpha;
+    double const sinDHalf = sqrt(havD);
+    return (2.0 * asin(sinDHalf)) * radians;
+}
+}
+
+SpherePoint::SpherePoint(Angle const& longitude, Angle const& latitude)
+        : _longitude(wrap(longitude).asRadians()), _latitude(latitude.asRadians()) {
+    if (fabs(_latitude) > HALFPI) {
+        throw pexExcept::InvalidParameterError("Angle " + to_string(latitude.asDegrees()) +
+                                               " is not a valid latitude.");
+    }
+}
+
+SpherePoint::SpherePoint(Point3D const& vector) {
+    double norm = vector.asEigen().norm();
+    if (norm <= 0.0) {
+        stringstream buffer;
+        buffer << "Vector " << vector << " has zero norm and cannot be normalized.";
+        throw pexExcept::InvalidParameterError(buffer.str());
+    }
+    // To avoid unexpected behavior from mixing finite elements and infinite norm
+    if (!isfinite(norm)) {
+        norm = NAN;
     }
 
-    SpherePoint::SpherePoint(Angle const & longitude, Angle const & latitude) :
-                    _longitude(wrap(longitude).asRadians()),
-                    _latitude(latitude.asRadians()) {
-        if (fabs(_latitude) > HALFPI) {
-            throw pexExcept::InvalidParameterError("Angle " + to_string(latitude.asDegrees()) +
-                " is not a valid latitude.");
-        }
-    }
+    double const x = vector.getX() / norm;
+    double const y = vector.getY() / norm;
+    double const z = vector.getZ() / norm;
 
-    SpherePoint::SpherePoint(Point3D const & vector) {
-        double norm = vector.asEigen().norm();
-        if (norm <= 0.0) {
-            stringstream buffer;
-            buffer << "Vector " << vector << " has zero norm and cannot be normalized.";
-            throw pexExcept::InvalidParameterError(buffer.str());
-        }
-        // To avoid unexpected behavior from mixing finite elements and infinite norm
-        if (!isfinite(norm)) {
-            norm = NAN;
-        }
+    // Need to convert to Angle, Angle::wrap, and convert back to radians
+    //     to handle _longitude = -1e-16 without code duplication
+    _longitude = wrap(atan2(y, x) * radians).asRadians();
+    _latitude = asin(z);
+}
 
-        double const x = vector.getX() / norm;
-        double const y = vector.getY() / norm;
-        double const z = vector.getZ() / norm;
+Point3D SpherePoint::getVector() const noexcept {
+    return Point3D(cos(_longitude) * cos(_latitude), sin(_longitude) * cos(_latitude), sin(_latitude));
+}
 
-        // Need to convert to Angle, Angle::wrap, and convert back to radians
-        //     to handle _longitude = -1e-16 without code duplication
-        _longitude = wrap(atan2(y, x) * radians).asRadians();
-        _latitude = asin(z);
-    }
-
-    Point3D SpherePoint::getVector() const noexcept {
-        return Point3D(cos(_longitude)*cos(_latitude),
-                       sin(_longitude)*cos(_latitude),
-                                       sin(_latitude));
-    }
-
-    Angle SpherePoint::operator[](size_t index) const {
-        switch (index) {
-          case 0:
+Angle SpherePoint::operator[](size_t index) const {
+    switch (index) {
+        case 0:
             return getLongitude();
-          case 1:
+        case 1:
             return getLatitude();
-          default:
+        default:
             throw pexExcept::OutOfRangeError("Index " + to_string(index) + " must be 0 or 1.");
-        }
+    }
+}
+
+bool SpherePoint::isFinite() const noexcept { return isfinite(_longitude) && isfinite(_latitude); }
+
+bool SpherePoint::operator==(SpherePoint const& other) const noexcept {
+    // Deliberate override of Style Guide 5-12
+    // Approximate FP comparison would make object equality intransitive
+    if (atPole()) {
+        return _latitude == other._latitude;
+    } else {
+        return _longitude == other._longitude && _latitude == other._latitude;
+    }
+}
+
+bool SpherePoint::operator!=(SpherePoint const& other) const noexcept { return !(*this == other); }
+
+Angle SpherePoint::bearingTo(SpherePoint const& other) const {
+    if (atPole()) {
+        stringstream buffer;
+        buffer << "Cannot calculate offset from pole " << *this << ".";
+        throw pexExcept::DomainError(buffer.str());
     }
 
-    bool SpherePoint::isFinite() const noexcept {
-        return isfinite(_longitude) && isfinite(_latitude);
+    Angle const deltaLon = other.getLongitude() - this->getLongitude();
+
+    double const sinDelta1 = sin(getLatitude().asRadians());
+    double const sinDelta2 = sin(other.getLatitude().asRadians());
+    double const cosDelta1 = cos(getLatitude().asRadians());
+    double const cosDelta2 = cos(other.getLatitude().asRadians());
+
+    // Adapted from http://www.movable-type.co.uk/scripts/latlong.html
+    double const y = sin(deltaLon) * cosDelta2;
+    double const x = cosDelta1 * sinDelta2 - sinDelta1 * cosDelta2 * cos(deltaLon);
+    return wrap(90.0 * degrees - atan2(y, x) * radians);
+}
+
+Angle SpherePoint::separation(SpherePoint const& other) const noexcept {
+    return haversine(getLongitude() - other.getLongitude(), getLatitude() - other.getLatitude(),
+                     cos(getLatitude().asRadians()), cos(other.getLatitude().asRadians()));
+}
+
+SpherePoint SpherePoint::rotated(SpherePoint const& axis, Angle const& amount) const noexcept {
+    auto const rotation = Eigen::AngleAxisd(amount.asRadians(), axis.getVector().asEigen()).matrix();
+    auto const x = getVector().asEigen();
+    auto const xprime = rotation * x;
+    return SpherePoint(Point3D(xprime));
+}
+
+SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const {
+    double const phi = bearing.asRadians();
+    if (atPole()) {
+        stringstream buffer;
+        buffer << "Cannot define offset direction from pole " << *this << ".";
+        throw pexExcept::DomainError(buffer.str());
+    }
+    if (amount < 0.0) {
+        stringstream buffer;
+        buffer << "Negative offset of " << amount.asDegrees() << " degrees is not allowed.";
+        throw pexExcept::InvalidParameterError(buffer.str());
     }
 
-    bool SpherePoint::operator==(SpherePoint const & other) const noexcept {
-        // Deliberate override of Style Guide 5-12
-        // Approximate FP comparison would make object equality intransitive
-        if (atPole()) {
-            return _latitude == other._latitude;
-        } else {
-            return _longitude == other._longitude && _latitude == other._latitude;
-        }
-    }
+    // let v = vector in the direction bearing points (tangent to surface of sphere)
+    // To do the rotation, use rotate() method.
+    // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
-    bool SpherePoint::operator!=(SpherePoint const & other) const noexcept {
-        return !(*this == other);
-    }
+    Eigen::Vector3d r = getVector().asEigen();
 
-    Angle SpherePoint::bearingTo(SpherePoint const & other) const {
-        if (atPole()) {
-            stringstream buffer;
-            buffer << "Cannot calculate offset from pole " << *this << ".";
-            throw pexExcept::DomainError(buffer.str());
-        }
+    // Get the vector v:
+    //  let u = unit vector lying on a parallel of declination
+    //  let w = unit vector along line of longitude = r x u
+    // the vector v must satisfy the following:
+    //  r . v = 0
+    //  u . v = cos(phi)
+    //  w . v = sin(phi)
 
-        Angle const deltaLon = other.getLongitude()- this->getLongitude();
+    // v is a linear combination of u and w
+    // v = cos(phi)*u + sin(phi)*w
+    auto u = Eigen::Vector3d(-sin(_longitude), cos(_longitude), 0.0);
+    auto w = r.cross(u);
+    Eigen::Vector3d v = cos(phi) * u + sin(phi) * w;
 
-        double const sinDelta1 = sin(      getLatitude().asRadians());
-        double const sinDelta2 = sin(other.getLatitude().asRadians());
-        double const cosDelta1 = cos(      getLatitude().asRadians());
-        double const cosDelta2 = cos(other.getLatitude().asRadians());
+    // take r x v to get the axis
+    SpherePoint axis = SpherePoint(Point3D(r.cross(v)));
 
-        // Adapted from http://www.movable-type.co.uk/scripts/latlong.html
-        double const y = sin(deltaLon)*cosDelta2;
-        double const x = cosDelta1*sinDelta2 - sinDelta1*cosDelta2*cos(deltaLon);
-        return wrap(90.0*degrees - atan2(y, x)*radians);
-    }
+    return rotated(axis, amount);
+}
 
-    Angle SpherePoint::separation(SpherePoint const & other) const noexcept {
-        return haversine(getLongitude() - other.getLongitude(),
-                         getLatitude()  - other.getLatitude(),
-                         cos(getLatitude().asRadians()),
-                         cos(other.getLatitude().asRadians())
-        );
-    }
+ostream& operator<<(ostream& os, SpherePoint const& point) {
+    // Can't provide atomic guarantee anyway for I/O, so ok to be sloppy.
+    auto oldFlags = os.setf(ostream::fixed);
+    auto oldPrecision = os.precision(6);
 
-    SpherePoint SpherePoint::rotated(SpherePoint const & axis, Angle const & amount) const noexcept {
-        auto const rotation = Eigen::AngleAxisd(amount.asRadians(), axis.getVector().asEigen()).matrix();
-        auto const x = getVector().asEigen();
-        auto const xprime = rotation * x;
-        return SpherePoint(Point3D(xprime));
-    }
+    os << "(" << point.getLongitude().asDegrees() << ", ";
+    os.setf(ostream::showpos);
+    os << point.getLatitude().asDegrees() << ")";
 
-    SpherePoint SpherePoint::offset(Angle const & bearing, Angle const & amount) const {
-        double const phi = bearing.asRadians();
-        if (atPole()) {
-            stringstream buffer;
-            buffer << "Cannot define offset direction from pole " << *this << ".";
-            throw pexExcept::DomainError(buffer.str());
-        }
-        if (amount < 0.0) {
-            stringstream buffer;
-            buffer << "Negative offset of " << amount.asDegrees() << " degrees is not allowed.";
-            throw pexExcept::InvalidParameterError(buffer.str());
-        }
-
-
-        // let v = vector in the direction bearing points (tangent to surface of sphere)
-        // To do the rotation, use rotate() method.
-        // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
-
-        Eigen::Vector3d r = getVector().asEigen();
-
-        // Get the vector v:
-        //  let u = unit vector lying on a parallel of declination
-        //  let w = unit vector along line of longitude = r x u
-        // the vector v must satisfy the following:
-        //  r . v = 0
-        //  u . v = cos(phi)
-        //  w . v = sin(phi)
-
-        // v is a linear combination of u and w
-        // v = cos(phi)*u + sin(phi)*w
-        auto u = Eigen::Vector3d(-sin(_longitude), cos(_longitude), 0.0);
-        auto w = r.cross(u);
-        Eigen::Vector3d v = cos(phi)*u + sin(phi)*w;
-
-        // take r x v to get the axis
-        SpherePoint axis = SpherePoint(Point3D(r.cross(v)));
-
-        return rotated(axis, amount);
-    }
-
-    ostream& operator <<(ostream & os, SpherePoint const & point) {
-        // Can't provide atomic guarantee anyway for I/O, so ok to be sloppy.
-        auto oldFlags = os.setf(ostream::fixed);
-        auto oldPrecision = os.precision(6);
-
-        os << "(" << point.getLongitude().asDegrees() << ", ";
-        os.setf(ostream::showpos);
-        os << point.getLatitude().asDegrees() << ")";
-
-        os.flags(oldFlags);
-        os.precision(oldPrecision);
-        return os;
-    }
-
-}}} /* namespace lsst::afw::geom */
+    os.flags(oldFlags);
+    os.precision(oldPrecision);
+    return os;
+}
+}
+}
+} /* namespace lsst::afw::geom */
