@@ -12,6 +12,7 @@ scripts.BasicSConscript.pybind11([
     'spanSet',
     'linearTransform',
     'xyTransform',
+	'endpoint',
     ],
     addUnderscore=False
 )
