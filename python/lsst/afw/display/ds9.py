@@ -40,14 +40,18 @@ except NameError:
     except Exception as e:
         # No usable version of display_ds9.
         # Let's define a version of getDisplay() which will throw an exception.
-        e.args = ["%s (is display_ds9 setup?)" % e]
 
-        # TODO: once we abandon Python 2 use the following simpler code:
-        # def getDisplay(*args, exception=e, **kwargs):
-        #     raise exception
+        # Prior to DM-9433, we used a closure to implicitly capture the
+        # exception being thrown for future reference. Following changes to
+        # exception scope rules in Python 3 (see PEP 3110), it's now regarded
+        # as clearer to make the capture explicit using the following class.
         class _RaiseException(object):
             def __init__(self, exception):
-                self.exception = exception
+                # The exception being caught above may have a bulky context which we
+                # don't want to capture in a closure for all time: see DM-9504 for a
+                # full discussion. We therefore define a new exception of the same
+                # type, which just encodes the error text.
+                self.exception = type(e)("%s (is display_d9 setup?)" % e)
 
             def __call__(self, *args, **kwargs):
                 raise self.exception
