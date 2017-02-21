@@ -53,18 +53,18 @@ void declareMask(py::module & mod, std::string const & suffix) {
             "bbox"_a, "planeDefs"_a=typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<lsst::afw::geom::Box2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "bbox"_a, "initialValue"_a, "planeDefs"_a=typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<std::string const &, int, PTR(lsst::daf::base::PropertySet), lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
-            "fileName"_a, "hdu"_a=0, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
-    cls.def(py::init<lsst::afw::fits::MemFileManager &, int, PTR(lsst::daf::base::PropertySet), lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
-            "manager"_a, "hdu"_a=0, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
-    cls.def(py::init<lsst::afw::fits::Fits &, PTR(lsst::daf::base::PropertySet), lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
-            "fitsFile"_a, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
     cls.def(py::init<const Mask<MaskPixelT>&, const bool>(),
             "src"_a, "deep"_a=false);
     cls.def(py::init<const Mask<MaskPixelT>&, const lsst::afw::geom::Box2I &, ImageOrigin const, const bool>(),
             "src"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
     cls.def(py::init<ndarray::Array<MaskPixelT,2,1> const &, bool, lsst::afw::geom::Point2I const &>(),
             "array"_a, "deep"_a=false, "xy0"_a=lsst::afw::geom::Point2I());
+    cls.def(py::init<std::string const &, int, PTR(lsst::daf::base::PropertySet), lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
+            "fileName"_a, "hdu"_a=0, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
+    cls.def(py::init<lsst::afw::fits::MemFileManager &, int, PTR(lsst::daf::base::PropertySet), lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
+            "manager"_a, "hdu"_a=0, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
+    cls.def(py::init<lsst::afw::fits::Fits &, PTR(lsst::daf::base::PropertySet), lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
+            "fitsFile"_a, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
 
     /* Operators */
     cls.def("__ior__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self |= other; }, py::is_operator());
