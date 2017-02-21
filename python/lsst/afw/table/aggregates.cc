@@ -48,7 +48,8 @@ namespace {
 
 template <typename T>
 void declarePointKey(py::module &mod, std::string const & suffix) {
-    py::class_<PointKey<T>> cls(mod, ("Point"+suffix+"Key").c_str());
+    using Class = PointKey<T>;
+    py::class_<Class, std::shared_ptr<Class>> cls(mod, ("Point"+suffix+"Key").c_str());
 
     /* Constructors */
     cls.def(py::init<>());
@@ -139,9 +140,9 @@ PYBIND11_PLUGIN(_aggregates) {
     declareCovarianceMatrixKey<double,4>(mod, "4d");
     declareCovarianceMatrixKey<double,Eigen::Dynamic>(mod, "Xd");
 
-    py::class_<CoordKey, FunctorKey<lsst::afw::coord::IcrsCoord>> clsCoordKey(mod, "CoordKey");
+    py::class_<CoordKey, std::shared_ptr<CoordKey>, FunctorKey<lsst::afw::coord::IcrsCoord>> clsCoordKey(mod, "CoordKey");
     
-    py::class_<QuadrupoleKey> clsQuadrupoleKey(mod, "QuadrupoleKey");
+    py::class_<QuadrupoleKey, std::shared_ptr<QuadrupoleKey>> clsQuadrupoleKey(mod, "QuadrupoleKey");
     
     py::class_<EllipseKey, std::shared_ptr<EllipseKey>> clsEllipseKey(mod, "EllipseKey");
 

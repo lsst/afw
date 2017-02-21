@@ -37,8 +37,8 @@
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/pybind11/catalog.h"
-#include "lsst/afw/table/pybind11/columnView.h"
+#include "lsst/afw/table/python/catalog.h"
+#include "lsst/afw/table/python/columnView.h"
 
 namespace py = pybind11;
 
@@ -121,7 +121,7 @@ void declareBaseRecordSetArray(PyBaseRecord clsBaseRecord, std::string const & s
 Declare member and static functions for a pybind11 wrapper of BaseRecord
 */
 void declareBaseRecord(PyBaseRecord & cls) {
-    table::pybind11::addCastFrom<BaseRecord>(cls);
+    table::python::addCastFrom<BaseRecord>(cls);
 
     utils::addSharedPtrEquality<BaseRecord>(cls);
 
@@ -164,7 +164,7 @@ void declareBaseRecord(PyBaseRecord & cls) {
 Declare member and static functions for a pybind11 wrapper of BaseTable
 */
 void declareBaseTable(PyBaseTable & cls) {
-    table::pybind11::addCastFrom<BaseTable>(cls);
+    table::python::addCastFrom<BaseTable>(cls);
 
     utils::addSharedPtrEquality<BaseTable>(cls);
 
@@ -208,8 +208,8 @@ PYBIND11_PLUGIN(_base) {
 
     declareBaseTable(clsBaseTable);
     declareBaseRecord(clsBaseRecord);
-    table::pybind11::declareColumnView(clsBaseColumnView);
-    table::pybind11::declareCatalog(clsBaseCatalog);
+    table::python::declareColumnView(clsBaseColumnView);
+    table::python::declareCatalog(clsBaseCatalog);
 
     clsBaseRecord.attr("Table") = clsBaseTable;
     clsBaseRecord.attr("ColumnView") = clsBaseColumnView;

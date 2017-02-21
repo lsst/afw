@@ -28,8 +28,8 @@
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/detection/Peak.h"
-#include "lsst/afw/table/pybind11/catalog.h"
-#include "lsst/afw/table/pybind11/columnView.h"
+#include "lsst/afw/table/python/catalog.h"
+#include "lsst/afw/table/python/columnView.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -52,7 +52,7 @@ using PyPeakCatalog = py::class_<table::CatalogT<PeakRecord>,
 Declare constructors and member and static functions for a pybind11 PeakRecord
 */
 void declarePeakRecord(PyPeakRecord & cls) {
-    table::pybind11::addCastFrom<table::BaseRecord>(cls);
+    table::python::addCastFrom<table::BaseRecord>(cls);
 
     cls.def("getTable", &PeakRecord::getTable);
     cls.def_property_readonly("table", &PeakRecord::getTable);
@@ -78,7 +78,7 @@ void declarePeakRecord(PyPeakRecord & cls) {
 Declare constructors and member and static functions for a pybind11 PeakTable
 */
 void declarePeakTable(PyPeakTable & cls) {
-    table::pybind11::addCastFrom<table::BaseTable>(cls);
+    table::python::addCastFrom<table::BaseTable>(cls);
 
     cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a=false);
     cls.def_static("makeMinimalSchema", &PeakTable::makeMinimalSchema);
@@ -112,8 +112,8 @@ PYBIND11_PLUGIN(_peak) {
     /* Members */
     declarePeakRecord(clsPeakRecord);
     declarePeakTable(clsPeakTable);
-    table::pybind11::declareColumnView(clsPeakColumnView);
-    table::pybind11::declareCatalog(clsPeakCatalog);
+    table::python::declareColumnView(clsPeakColumnView);
+    table::python::declareCatalog(clsPeakCatalog);
 
     clsPeakRecord.attr("Table") = clsPeakTable;
     clsPeakRecord.attr("ColumnView") = clsPeakColumnView;

@@ -42,9 +42,9 @@ using namespace pybind11::literals;
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/Exposure.h"
-#include "lsst/afw/table/pybind11/catalog.h"
-#include "lsst/afw/table/pybind11/columnView.h"
-#include "lsst/afw/table/pybind11/sortedCatalog.h"
+#include "lsst/afw/table/python/catalog.h"
+#include "lsst/afw/table/python/columnView.h"
+#include "lsst/afw/table/python/sortedCatalog.h"
 
 namespace lsst {
 namespace afw {
@@ -70,7 +70,7 @@ using PyExposureCatalog = py::class_<ExposureCatalogT<ExposureRecord>,
 Declare constructors and member and static functions for a pybind11 ExposureRecord
 */
 void declareExposureRecord(PyExposureRecord & cls) {
-    table::pybind11::addCastFrom<BaseRecord>(cls);
+    table::python::addCastFrom<BaseRecord>(cls);
 
     cls.def("getId", &ExposureRecord::getId);
     cls.def("setId", &ExposureRecord::setId, "id"_a);
@@ -107,7 +107,7 @@ void declareExposureRecord(PyExposureRecord & cls) {
 Declare constructors and member and static functions for a pybind11 ExposureTable
 */
 void declareExposureTable(PyExposureTable & cls) {
-    table::pybind11::addCastFrom<BaseTable>(cls);
+    table::python::addCastFrom<BaseTable>(cls);
 
     cls.def_static("make", &ExposureTable::make);
     cls.def_static("makeMinimalSchema", &ExposureTable::makeMinimalSchema);
@@ -195,9 +195,9 @@ PYBIND11_PLUGIN(_exposure) {
     /* Members */
     declareExposureRecord(clsExposureRecord);
     declareExposureTable(clsExposureTable);
-    table::pybind11::declareColumnView(clsExposureColumnView);
-    table::pybind11::declareCatalog(clsBaseExposureCatalog);
-    table::pybind11::declareSortedCatalog(clsSortedBaseExposureCatalog);
+    table::python::declareColumnView(clsExposureColumnView);
+    table::python::declareCatalog(clsBaseExposureCatalog);
+    table::python::declareSortedCatalog(clsSortedBaseExposureCatalog);
     declareExposureCatalog(clsExposureCatalog);
 
     clsExposureRecord.attr("Table") = clsExposureTable;

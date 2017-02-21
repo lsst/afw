@@ -31,8 +31,8 @@ using namespace pybind11::literals;
 
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/AmpInfo.h"
-#include "lsst/afw/table/pybind11/catalog.h"
-#include "lsst/afw/table/pybind11/columnView.h"
+#include "lsst/afw/table/python/catalog.h"
+#include "lsst/afw/table/python/columnView.h"
 
 namespace lsst {
 namespace afw {
@@ -47,7 +47,7 @@ using PyAmpInfoColumnView = py::class_<ColumnViewT<AmpInfoRecord>,
 using PyAmpInfoCatalog =  py::class_<CatalogT<AmpInfoRecord>, std::shared_ptr<AmpInfoCatalog>>;
 
 void declareAmpInfoRecord(PyAmpInfoRecord & cls) {
-    table::pybind11::addCastFrom<BaseRecord>(cls);
+    table::python::addCastFrom<BaseRecord>(cls);
 
     cls.def("getName", &AmpInfoRecord::getName);
     cls.def("setName", &AmpInfoRecord::setName, "name"_a,
@@ -95,7 +95,7 @@ void declareAmpInfoRecord(PyAmpInfoRecord & cls) {
 }
 
 void declareAmpInfoTable(PyAmpInfoTable & cls) {
-    table::pybind11::addCastFrom<BaseTable>(cls);
+    table::python::addCastFrom<BaseTable>(cls);
 
     cls.def_static("make", &AmpInfoTable::make);
     cls.def_static("makeMinimalSchema", &AmpInfoTable::makeMinimalSchema);
@@ -161,8 +161,8 @@ PYBIND11_PLUGIN(_ampInfo) {
     /* Members */
     declareAmpInfoRecord(clsAmpInfoRecord);
     declareAmpInfoTable(clsAmpInfoTable);
-    table::pybind11::declareColumnView(clsAmpInfoColumnView);
-    table::pybind11::declareCatalog(clsAmpInfoCatalog);
+    table::python::declareColumnView(clsAmpInfoColumnView);
+    table::python::declareCatalog(clsAmpInfoCatalog);
 
     clsAmpInfoRecord.attr("Table") = clsAmpInfoTable;
     clsAmpInfoRecord.attr("ColumnView") = clsAmpInfoColumnView;
