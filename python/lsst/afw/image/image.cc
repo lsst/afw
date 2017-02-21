@@ -113,6 +113,8 @@ py::class_<Image<PixelT>,
             "bbox"_a, "initialValue"_a=0);
     cls.def(py::init<Image<PixelT> const &, geom::Box2I const &, ImageOrigin const, const bool>(),
             "rhs"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
+    cls.def(py::init<ndarray::Array<PixelT,2,1> const &, bool, geom::Point2I const &>(),
+            "array"_a, "deep"_a=false, "xy0"_a=geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin>(),
             "fileName"_a, "hdu"_a=0, "metadata"_a=std::shared_ptr<daf::base::PropertySet>(),
@@ -125,8 +127,6 @@ py::class_<Image<PixelT>,
                      geom::Box2I const &, ImageOrigin>(),
             "fitsFile"_a, "metadata"_a=std::shared_ptr<daf::base::PropertySet>(),
             "bbox"_a=geom::Box2I(), "origin"_a=PARENT);
-    cls.def(py::init<ndarray::Array<PixelT,2,1> const &, bool, geom::Point2I const &>(),
-            "array"_a, "deep"_a=false, "xy0"_a=geom::Point2I());
 
     /* Operators */
     cls.def("__iadd__", [](Image<PixelT> & self, PixelT const & other) {
