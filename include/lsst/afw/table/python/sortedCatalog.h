@@ -36,7 +36,7 @@ using namespace pybind11::literals;
 namespace lsst {
 namespace afw {
 namespace table {
-namespace pybind11 {
+namespace python {
 
 /**
 Declare member and static functions for a given instantiation of lsst::afw::table::CatalogT<RecordT>
@@ -88,6 +88,6 @@ void declareSortedCatalog(
             (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &Catalog::subset);
 };
 
-}}}} // lsst::afw::table::pybind11
+}}}} // lsst::afw::table::python
 
 #endif // !AFW_TABLE_PYBIND11_CATALOG_H_INCLUDED

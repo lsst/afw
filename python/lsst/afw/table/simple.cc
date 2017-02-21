@@ -29,9 +29,9 @@
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Simple.h"
-#include "lsst/afw/table/pybind11/catalog.h"
-#include "lsst/afw/table/pybind11/columnView.h"
-#include "lsst/afw/table/pybind11/sortedCatalog.h"
+#include "lsst/afw/table/python/catalog.h"
+#include "lsst/afw/table/python/columnView.h"
+#include "lsst/afw/table/python/sortedCatalog.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -50,7 +50,7 @@ using PyBaseSimpleCatalog = py::class_<CatalogT<SimpleRecord>, std::shared_ptr<C
 using PySimpleCatalog = py::class_<SimpleCatalog, std::shared_ptr<SimpleCatalog>, CatalogT<SimpleRecord>>;
 
 void declareSimpleRecord(PySimpleRecord & cls) {
-    table::pybind11::addCastFrom<BaseRecord>(cls);
+    table::python::addCastFrom<BaseRecord>(cls);
 
     cls.def("getId", &SimpleRecord::getId);
     cls.def("setId", &SimpleRecord::setId);
@@ -66,7 +66,7 @@ void declareSimpleRecord(PySimpleRecord & cls) {
 }
 
 void declareSimpleTable(PySimpleTable & cls) {
-    table::pybind11::addCastFrom<BaseTable>(cls);
+    table::python::addCastFrom<BaseTable>(cls);
 
     cls.def_static("make",
                    (std::shared_ptr<SimpleTable> (*)(Schema const &, std::shared_ptr<IdFactory> const &))
@@ -106,9 +106,9 @@ PYBIND11_PLUGIN(_simple) {
     /* Members */
     declareSimpleRecord(clsSimpleRecord);
     declareSimpleTable(clsSimpleTable);
-    table::pybind11::declareColumnView(clsSimpleColumnView);
-    table::pybind11::declareCatalog(clsBaseSimpleCatalog);
-    table::pybind11::declareSortedCatalog(clsSimpleCatalog);
+    table::python::declareColumnView(clsSimpleColumnView);
+    table::python::declareCatalog(clsBaseSimpleCatalog);
+    table::python::declareSortedCatalog(clsSimpleCatalog);
 
     clsSimpleRecord.attr("Table") = clsSimpleTable;
     clsSimpleRecord.attr("ColumnView") = clsSimpleColumnView;

@@ -76,7 +76,7 @@ PYBIND11_PLUGIN(_footprintSet)
 {
     py::module mod("_footprintSet", "Python wrapper for afw _footprintSet library");
 
-    py::class_<FootprintSet, lsst::daf::base::Citizen> clsFootprintSet(mod, "FootprintSet");
+    py::class_<FootprintSet, std::shared_ptr<FootprintSet>, lsst::daf::base::Citizen> clsFootprintSet(mod, "FootprintSet");
 
     declareTemplatedMembers<std::uint16_t>(clsFootprintSet);
     declareTemplatedMembers<int>(clsFootprintSet);

@@ -36,7 +36,7 @@ namespace detection {
 PYBIND11_PLUGIN(_threshold) {
     py::module mod("_threshold", "Python wrapper for afw _threshold library");
 
-    py::class_<Threshold> clsThreshold(mod, "Threshold");
+    py::class_<Threshold, std::shared_ptr<Threshold>> clsThreshold(mod, "Threshold");
 
     /* Member types and enums */
     py::enum_<Threshold::ThresholdType>(clsThreshold, "ThresholdType")
