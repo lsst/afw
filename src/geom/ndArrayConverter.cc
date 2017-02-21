@@ -28,6 +28,21 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
+template <typename T, int N>
+ndarray::Array<T, 2, 2> pointToNdArray(Point<T, N> const &point) {
+    throw std::runtime_error("Not yet implemented");
+}
+
+template <typename T, int M>
+std::vector<Point<T, 2>> ndArrayToPoint2(ndarray::Array<T, 2, M> const &array) {
+    throw std::runtime_error("Not yet implemented");
+}
+
+template <typename T, int M>
+std::vector<Point<T, 3>> ndArrayToPoint3(ndarray::Array<T, 2, M> const &array) {
+    throw std::runtime_error("Not yet implemented");
+}
+
 ndarray::Array<double, 2, 2> spherePointToNdArray(SpherePoint const &point) {
     throw std::runtime_error("Not yet implemented");
 }
@@ -35,6 +50,21 @@ ndarray::Array<double, 2, 2> spherePointToNdArray(SpherePoint const &point) {
 std::vector<SpherePoint> ndArrayToSpherePoint(ndarray::Array<double, 2, 0> const &array) {
     throw std::runtime_error("Not yet implemented");
 }
+
+//
+// Explicit instantiations
+//
+template ndarray::Array<int, 2, 2> pointToNdArray<int, 2>(Point2I const &point);
+template ndarray::Array<int, 2, 2> pointToNdArray<int, 3>(Point3I const &point);
+template ndarray::Array<double, 2, 2> pointToNdArray<double, 2>(Point2D const &point);
+template ndarray::Array<double, 2, 2> pointToNdArray<double, 3>(Point3D const &point);
+
+template std::vector<Point<int, 2>> ndArrayToPoint2<int, 2>(ndarray::Array<int, 2, 2> const &array);
+template std::vector<Point<double, 2>> ndArrayToPoint2<double, 2>(ndarray::Array<double, 2, 2> const &array);
+
+template std::vector<Point<int, 3>> ndArrayToPoint3<int, 2>(ndarray::Array<int, 2, 2> const &array);
+template std::vector<Point<double, 3>> ndArrayToPoint3<double, 2>(ndarray::Array<double, 2, 2> const &array);
+
 }
 }
 } /* namespace lsst::afw::geom */

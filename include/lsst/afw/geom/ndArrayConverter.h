@@ -55,9 +55,7 @@ namespace geom {
  * @exceptsafe Provides strong exception guarantee.
  */
 template <typename T, int N>
-ndarray::Array<T, 2, 2> pointToNdArray(Point<T, N> const &point) {
-    throw std::runtime_error("Not yet implemented");
-}
+ndarray::Array<T, 2, 2> pointToNdArray(Point<T, N> const &point);
 
 /**
  * Converts a container of Point to a multidimensional array of coordinates.
@@ -108,9 +106,7 @@ ndarray::Array<typename std::iterator_traits<ForwardIterator>::value_type::Eleme
 // Template parameter M is needed because C++11 template type deduction
 // ignores the implicit conversion of Array<T, 2, X> to Array<T, 2, 0>
 template <typename T, int M>
-std::vector<Point<T, 2>> ndArrayToPoint2(ndarray::Array<T, 2, M> const &array) {
-    throw std::runtime_error("Not yet implemented");
-}
+std::vector<Point<T, 2>> ndArrayToPoint2(ndarray::Array<T, 2, M> const &array);
 
 /**
  * @copybrief ndArrayToPoint2(ndarray::Array<T, 2, 0> const &)
@@ -119,9 +115,7 @@ std::vector<Point<T, 2>> ndArrayToPoint2(ndarray::Array<T, 2, M> const &array) {
  * three-dimensional points.
  */
 template <typename T, int M>
-std::vector<Point<T, 3>> ndArrayToPoint3(ndarray::Array<T, 2, M> const &array) {
-    throw std::runtime_error("Not yet implemented");
-}
+std::vector<Point<T, 3>> ndArrayToPoint3(ndarray::Array<T, 2, M> const &array);
 
 /*
  * Conversion methods for SpherePoint.
