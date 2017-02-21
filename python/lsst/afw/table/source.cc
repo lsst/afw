@@ -35,9 +35,9 @@
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/Source.h"
-#include "lsst/afw/table/pybind11/catalog.h"
-#include "lsst/afw/table/pybind11/columnView.h"
-#include "lsst/afw/table/pybind11/sortedCatalog.h"
+#include "lsst/afw/table/python/catalog.h"
+#include "lsst/afw/table/python/columnView.h"
+#include "lsst/afw/table/python/sortedCatalog.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -63,8 +63,8 @@ using PySourceCatalog = py::class_<SourceCatalog, std::shared_ptr<SourceCatalog>
 Declare member and static functions for a pybind11 wrapper of SourceRecord
 */
 void declareSourceRecord(PySourceRecord & cls) {
-    table::pybind11::addCastFrom<BaseRecord>(cls);
-    table::pybind11::addCastFrom<SimpleRecord>(cls);
+    table::python::addCastFrom<BaseRecord>(cls);
+    table::python::addCastFrom<SimpleRecord>(cls);
 
     cls.def("getFootprint", &SourceRecord::getFootprint);
     cls.def("setFootprint", &SourceRecord::setFootprint);
@@ -119,8 +119,8 @@ void declareSourceRecord(PySourceRecord & cls) {
 Declare member and static functions for a pybind11 wrapper of SourceTable
 */
 void declareSourceTable(PySourceTable & cls) {
-    table::pybind11::addCastFrom<BaseTable>(cls);
-    table::pybind11::addCastFrom<SimpleTable>(cls);
+    table::python::addCastFrom<BaseTable>(cls);
+    table::python::addCastFrom<SimpleTable>(cls);
 
     cls.def("clone", &SourceTable::clone);
     cls.def_static("make",
@@ -243,10 +243,10 @@ PYBIND11_PLUGIN(_source) {
     /* Members */
     declareSourceRecord(clsSourceRecord);
     declareSourceTable(clsSourceTable);
-    table::pybind11::declareColumnView(clsBaseSourceColumnView);
+    table::python::declareColumnView(clsBaseSourceColumnView);
     declareSourceColumnView(clsSourceColumnView);
-    table::pybind11::declareCatalog(clsBaseSourceCatalog);
-    table::pybind11::declareSortedCatalog(clsSourceCatalog);
+    table::python::declareCatalog(clsBaseSourceCatalog);
+    table::python::declareSortedCatalog(clsSourceCatalog);
 
     clsSourceRecord.attr("Table") = clsSourceTable;
     clsSourceRecord.attr("ColumnView") = clsSourceColumnView;

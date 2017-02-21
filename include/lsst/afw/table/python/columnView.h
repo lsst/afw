@@ -32,7 +32,7 @@ using namespace py::literals;
 namespace lsst {
 namespace afw {
 namespace table {
-namespace pybind11 {
+namespace python {
 
 /**
 Declare member and static functions for a given instantiation of lsst::afw::table::ColumnViewT<RecordT>.
@@ -49,5 +49,5 @@ void declareColumnView(py::class_<ColumnViewT<RecordT>,
     cls.def_property_readonly("table", &ColumnViewT<RecordT>::getTable);
 };
 
-}}}}  // namespace lsst::afw::table::pybind11
+}}}}  // namespace lsst::afw::table::python
 #endif
