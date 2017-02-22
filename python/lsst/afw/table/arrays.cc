@@ -47,8 +47,8 @@ void declareArrayKey(py::module & mod, std::string const & suffix) {
     
     clsArrayKey.def(py::init<>());
     clsArrayKey.def(py::init<Key<Array<T>> const &>());
-    clsArrayKey.def(py::init<std::vector< Key<T> > const &>());
     clsArrayKey.def(py::init<SubSchema const &>());
+    clsArrayKey.def(py::init<std::vector< Key<T> > const &>());
     
     clsArrayKey.def_static("addFields", (ArrayKey<T> (*)(
         Schema &,
