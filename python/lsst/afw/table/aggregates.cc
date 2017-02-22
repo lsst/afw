@@ -81,9 +81,9 @@ void declareCovarianceMatrixKey(py::module &mod, const::std::string & suffix) {
     py::class_<CovarianceMatrixKey<T,N>> cls(mod, ("CovarianceMatrix"+suffix+"Key").c_str());
     
     cls.def(py::init<>());
+    cls.def(py::init<SubSchema const &, NameArray const &>());
     cls.def(py::init<SigmaKeyArray const &, CovarianceKeyArray const &>(),
             "sigma"_a, "cov"_a=CovarianceKeyArray());
-    cls.def(py::init<SubSchema const &, NameArray const &>());
 
     cls.def("__eq__", &CovarianceMatrixKey<T,N>::operator==, py::is_operator());
     cls.def("__ne__", &CovarianceMatrixKey<T,N>::operator!=, py::is_operator());
