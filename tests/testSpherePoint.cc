@@ -22,15 +22,13 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <iostream>
-#include <sstream>
-
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE SpherePointCpp
 
 #include "boost/test/unit_test.hpp"
 
 #include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/pex/exceptions/Exception.h"
 
 /*
  * Unit tests for C++-only functionality in SpherePoint.
@@ -42,7 +40,7 @@ namespace afw {
 namespace geom {
 
     /**
-     * @brief Tests whether the result of SpherePoint::SpherePoint(SpherePoint const &)
+     * Tests whether the result of SpherePoint::SpherePoint(SpherePoint const &)
      * makes an identical but independent copy.
      */
     BOOST_AUTO_TEST_CASE(SpherePointCopyResult, *boost::unit_test::tolerance(1e-14))
@@ -61,6 +59,18 @@ namespace geom {
         BOOST_TEST(original != copy);
         BOOST_TEST(copy.getLongitude().asDegrees() == copyLon);
         BOOST_TEST(copy.getLatitude() .asDegrees() == copyLat);
+    }
+
+    /**
+     * Tests whether SpherePoint::operator[](size_t) handles invalid indices
+     * correctly.
+     */
+    BOOST_AUTO_TEST_CASE(getItemError)
+    {
+        SpherePoint point(Point3D(1.0, 1.0, 1.0));
+
+        BOOST_CHECK_THROW(point[2], pex::exceptions::OutOfRangeError);
+        BOOST_CHECK_THROW(point[-1], pex::exceptions::OutOfRangeError);
     }
 
     // TODO: add a test for propagation of ostream errors
