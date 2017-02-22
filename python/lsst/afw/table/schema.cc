@@ -200,6 +200,7 @@ PYBIND11_PLUGIN(_schema) {
     
     clsSubSchema.def("getNames", &SubSchema::getNames, "topOnly"_a=false);
     clsSubSchema.def("getPrefix", &SubSchema::getPrefix);
+    clsSubSchema.def("__getitem__", &SubSchema::operator[]);
     
     declareSubSchemaOverloads<std::uint16_t>(clsSubSchema, "U");
     declareSubSchemaOverloads<std::int32_t>(clsSubSchema, "I");
