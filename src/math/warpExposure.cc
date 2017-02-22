@@ -612,8 +612,8 @@ namespace {
                 if (warpAtOnePoint._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
                     warpAtOnePoint._setFracIndex(srcIndFracX.second, srcIndFracY.second);
                     typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
-                    for (int destAdjRow = destRow; destAdjRow < destRow + destKernelWidth; ++destAdjRow) {
-                        for (int destAdjCol = destCol; destAdjCol < destCol + destKernelHeight; ++destAdjCol) {
+                    for (int destAdjRow = destRow; destAdjRow < std::min(destRow + destKernelHeight, destHeight); ++destAdjRow) {
+                        for (int destAdjCol = destCol; destAdjCol < std::min(destCol + destKernelWidth, destWidth); ++destAdjCol) {
                             afwGeom::Point2D srcAdjPos = computeSrcPos(destAdjCol, destAdjRow);
                             std::pair<int, double> srcAdjIndFracX = srcImage.positionToIndex(srcAdjPos[0], lsst::afw::image::X);
                             std::pair<int, double> srcAdjIndFracY = srcImage.positionToIndex(srcAdjPos[1], lsst::afw::image::Y);

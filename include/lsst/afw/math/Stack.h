@@ -91,6 +91,21 @@ void statisticsStack(
         std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
     );
 
+/**
+ * @ brief compute statistical stack of MaskedImage.  Write to output image in-situ
+ */
+template<typename PixelT>
+void statisticsStack(
+    lsst::afw::image::MaskedImage<PixelT>& out, ///< Output image
+    lsst::afw::image::Image<double>& outCov, ///< Output covariance
+    std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &images,///< MaskedImages to process
+    std::vector<typename lsst::afw::image::Image<double>::Ptr > &covars,///< Corresponding covariances
+    Property flags, ///< statistics requested
+    StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
+    std::vector<lsst::afw::image::VariancePixel> const& wvector=
+        std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
+    );
+
 
 /**
  * @brief A function to compute some statistics of a stack of std::vectors

@@ -21,7 +21,9 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import math; import pdb
+import math
+import numpy as np
+import pdb
 
 import lsst.pex.config as pexConfig
 import lsst.afw.geom as afwGeom
@@ -211,9 +213,11 @@ class Warper(object):
         destExposure = srcExposure.Factory(destBBox, destWcs)
         if multX is None or multY is None:
             multX, multY = self.getKernelSizeDest(srcExposure, destExposure)
-        covWidth = multX*destExposure.getWidth()
-        covHeight = multY*destExposure.getHeight()
-        covImage = afwImage.ImageD(covWidth, covHeight, 0.0)
+        destCovBBox = afwGeom.Box2I(afwGeom.Point2I(destBBox.getBegin().getX()*multX,
+                                                    destBBox.getBegin().getY()*multY),
+                                    afwGeom.Extent2I(destBBox.getWidth()*multX,
+                                                     destBBox.getHeight()*multY))
+        covImage = afwImage.ImageD(destCovBBox, np.inf)
         mathLib.warpExposure(destExposure, srcExposure, self._warpingControl, covImage)
         return destExposure, covImage
 
