@@ -33,6 +33,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
+#include "lsst/afw/geom/ellipses/Transformer.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -85,7 +86,13 @@ PYBIND11_PLUGIN(_ellipse) {
     clsEllipse.def("shift", &Ellipse::shift);
     clsEllipse.def("getParameterVector", &Ellipse::getParameterVector);
     clsEllipse.def("setParameterVector", &Ellipse::setParameterVector);
-//    clsEllipse.def("transform", (Transformer const (Ellipse::*)(AffineTransform const &) const) &Ellipse::transform);
+    clsEllipse.def(
+        "transform",
+        [](Ellipse const & self, AffineTransform const & t) -> Ellipse {
+            return self.transform(t);
+        },
+        "transform"_a
+    );
 //    clsEllipse.def("convolve", (Convolution const (Ellipse::*)(Ellipse const &) const) &Ellipse::convolve);
     clsEllipse.def("getGridTransform", [](Ellipse & self) -> AffineTransform {
         return self.getGridTransform(); // delibarate conversion to AffineTransform
