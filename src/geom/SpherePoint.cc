@@ -75,7 +75,7 @@ Angle haversine(Angle const& deltaLon, Angle const& deltaLat, double cosLat1, do
     double const sinDHalf = sqrt(havD);
     return (2.0 * asin(sinDHalf)) * radians;
 }
-}
+}  // end namespace
 
 SpherePoint::SpherePoint(Angle const& longitude, Angle const& latitude)
         : _longitude(wrap(longitude).asRadians()), _latitude(latitude.asRadians()) {
@@ -106,6 +106,14 @@ SpherePoint::SpherePoint(Point3D const& vector) {
     _longitude = wrap(atan2(y, x) * radians).asRadians();
     _latitude = asin(z);
 }
+
+SpherePoint::SpherePoint(SpherePoint const& other) noexcept = default;
+
+SpherePoint::SpherePoint(SpherePoint&& other) noexcept = default;
+
+SpherePoint& SpherePoint::operator=(SpherePoint const& other) noexcept = default;
+
+SpherePoint& SpherePoint::operator=(SpherePoint&& other) noexcept = default;
 
 Point3D SpherePoint::getVector() const noexcept {
     return Point3D(cos(_longitude) * cos(_latitude), sin(_longitude) * cos(_latitude), sin(_latitude));
