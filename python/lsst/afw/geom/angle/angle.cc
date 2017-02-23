@@ -35,7 +35,7 @@ using PyAngle = py::class_<Angle>;
 using PyAngleUnit = py::class_<AngleUnit>;
 
 template <typename OtherT>
-void declareAngleComparisonOperators(PyAngle & cls) {
+void declareAngleComparisonOperators(PyAngle& cls) {
     cls.def("__eq__", [](Angle const& self, OtherT const& other) { return self == other; },
             py::is_operator());
     cls.def("__ne__", [](Angle const& self, OtherT const& other) { return self != other; },
@@ -73,7 +73,7 @@ PYBIND11_PLUGIN(angle) {
 
     PyAngle clsAngle(mod, "Angle");
 
-    clsAngle.def(py::init<double, AngleUnit>(), py::arg("val"), py::arg("units")=radians);
+    clsAngle.def(py::init<double, AngleUnit>(), py::arg("val"), py::arg("units") = radians);
     clsAngle.def(py::init<>());
 
     declareAngleComparisonOperators<Angle>(clsAngle);
@@ -96,14 +96,11 @@ PYBIND11_PLUGIN(angle) {
                  py::is_operator());
 
     clsAngle.def("__float__", &Angle::operator double);
-    clsAngle.def("__abs__", [](Angle const & self) { return std::abs(self.asRadians())*radians; });
+    clsAngle.def("__abs__", [](Angle const& self) { return std::abs(self.asRadians()) * radians; });
 
-    clsAngle.def(
-        "__reduce__",
-        [clsAngle](Angle const & self) {
-            return py::make_tuple(clsAngle, py::make_tuple(py::cast(self.asRadians())));
-        }
-    );
+    clsAngle.def("__reduce__", [clsAngle](Angle const& self) {
+        return py::make_tuple(clsAngle, py::make_tuple(py::cast(self.asRadians())));
+    });
 
     auto streamStr = [](Angle const& self) {
         std::stringstream buffer;
@@ -142,10 +139,12 @@ PYBIND11_PLUGIN(angle) {
     mod.def("radToMas", radToMas);
     mod.def("arcsecToRad", arcsecToRad);
     mod.def("masToRad", masToRad);
-    mod.def("isAngle", (bool (*)(Angle const&)) isAngle);
+    mod.def("isAngle", (bool (*)(Angle const&))isAngle);
     mod.def("isAngle", isAngle<double>);
 
     return mod.ptr();
 }
-
-}}}} // lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // lsst::afw::geom::<anonymous>
