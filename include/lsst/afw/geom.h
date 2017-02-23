@@ -39,10 +39,11 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
+#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/Functor.h"
 #include "lsst/afw/geom/SeparableXYTransform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/TransformMap.h"
 
-#endif // LSST_GEOM_H
+#endif  // LSST_GEOM_H
