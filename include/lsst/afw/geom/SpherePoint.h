@@ -94,9 +94,17 @@ public:
      *
      * @param other The point to copy.
      *
-     * @exceptsafe Provides strong exception guarantee.
+     * @exceptsafe Shall not throw exceptions.
      */
-    SpherePoint(SpherePoint const& other) = default;
+    SpherePoint(SpherePoint const& other) noexcept;
+
+    /**
+     * @copybrief SpherePoint(SpherePoint const&)
+     *
+     * As SpherePoint(SpherePoint const&), except that `other` may be left
+     * in an unspecified but valid state.
+     */
+    SpherePoint(SpherePoint&& other) noexcept;
 
     /**
      * Overwrite this object with the value of another SpherePoint.
@@ -110,7 +118,15 @@ public:
      *
      * @exceptsafe Shall not throw exceptions.
      */
-    SpherePoint& operator=(SpherePoint const& other) = default;
+    SpherePoint& operator=(SpherePoint const& other) noexcept;
+
+    /**
+     * @copybrief operator=(SpherePoint const&)
+     *
+     * As operator=(SpherePoint const&), except that `other` may be left
+     * in an unspecified but valid state.
+     */
+    SpherePoint& operator=(SpherePoint&& other) noexcept;
 
     /*
      * Accessors
@@ -218,7 +234,7 @@ public:
     /**
      * `false` if two points represent the same position.
      *
-     * This operator shall always return the logical negation of operator==;
+     * This operator shall always return the logical negation of operator==();
      * see its documentation for a detailed specification.
      */
     bool operator!=(SpherePoint const& other) const noexcept;
