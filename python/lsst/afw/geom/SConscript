@@ -13,6 +13,7 @@ scripts.BasicSConscript.pybind11([
     'linearTransform',
     'xyTransform',
 	'endpoint',
+	'transform',
     ],
     addUnderscore=False
 )
