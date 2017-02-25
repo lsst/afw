@@ -34,7 +34,7 @@ namespace lsst { namespace afw { namespace image {
 namespace {
 template <typename ImageT>
 static void declareImagePca(py::module & mod, std::string const & suffix) {
-    py::class_<ImagePca<ImageT>> cls(mod, ("ImagePca" + suffix).c_str());
+    py::class_<ImagePca<ImageT>, std::shared_ptr<ImagePca<ImageT>>> cls(mod, ("ImagePca" + suffix).c_str());
 
     cls.def(py::init<bool>(),
             "constantWeight"_a=true);
