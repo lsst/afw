@@ -84,31 +84,36 @@ class Angle {
 public:
     /** Construct an Angle with the specified value (interpreted in the given units) */
     explicit Angle(double val, AngleUnit units = radians) : _val(val * units._val) {}
+
     Angle() : _val(0) {}
+
     /** Copy constructor. */
     Angle(Angle const& other) : _val(other._val) {}
+
     /** Convert an Angle to a double in radians*/
     operator double() const { return _val; }
 
     /** Return an Angle's value as a double in the specified units (e.g.\ ::degrees) */
     double asAngularUnits(AngleUnit const& units) const { return _val / units._val; }
+
     /** Return an Angle's value as a double in radians */
     double asRadians() const { return asAngularUnits(radians); }
+
     /** Return an Angle's value as a double in degrees */
     double asDegrees() const { return asAngularUnits(degrees); }
+
     /** Return an Angle's value as a double in hours */
     double asHours() const { return asAngularUnits(hours); }
+
     /** Return an Angle's value as a double in arcminutes */
     double asArcminutes() const { return asAngularUnits(arcminutes); }
+
     /** Return an Angle's value as a double in arcseconds */
     double asArcseconds() const { return asAngularUnits(arcseconds); }
 
-    double toUnitSphereDistanceSquared() const { return 2. * (1. - std::cos(asRadians())); }
-    // == 4.0 * pow(std::sin(0.5 * asRadians()), 2.0)
-    static Angle fromUnitSphereDistanceSquared(double d2) {
-        return (std::acos(1. - d2 / 2.)) * radians;
-        // == 2.0 * asin(0.5 * sqrt(d2))
-    }
+    double toUnitSphereDistanceSquared() const;
+
+    static Angle fromUnitSphereDistanceSquared(double d2);
 
     /**
      * Wraps this angle to the range [0, 2 pi)
@@ -118,13 +123,7 @@ public:
      * there are any violations is unknown; please update this comment if you
      * can prove that the limits are or are not valid for all supported units.
      */
-    void wrap() {
-        _val = std::fmod(_val, TWOPI);
-        // _val is now in the range (-TWOPI, TWOPI)
-        if (_val < 0.0) _val += TWOPI;
-        // if _val is small enough, adding 2 pi gives 2 pi
-        if (_val >= TWOPI) _val = 0.0;
-    }
+    void wrap();
 
     /**
      * Wrap this angle to the range [-pi, pi)
@@ -134,23 +133,7 @@ public:
      * any violations is unknown; please update this comment if you can prove
      * that the limits are or are not valid for all supported units.
      */
-    void wrapCtr() {
-        _val = std::fmod(_val, TWOPI);
-        // _val is now in the range [-TWOPI, TWOPI]
-        if (_val < -PI) {
-            _val += TWOPI;
-            if (_val >= PI) {
-                // handle roundoff error, however unlikely
-                _val = -PI;
-            }
-        } else if (_val >= PI) {
-            _val -= TWOPI;
-            if (_val < -PI) {
-                // handle roundoff error, however unlikely
-                _val = -PI;
-            }
-        }
-    }
+    void wrapCtr();
 
     /**
      * Wrap this angle such that pi <= this - refAng < pi
@@ -160,23 +143,7 @@ public:
      * violations that are demonstrated in testWrap in tests/angle.py.
      */
     void wrapNear(Angle const& refAng  ///< reference angle to match
-                  ) {
-        // compute this = (this - refAng).wrapCtr() + refAng
-        // which is correct except for roundoff error at the edges
-        double refAngRad = refAng.asRadians();
-        *this -= refAng;
-        wrapCtr();
-        _val += refAngRad;
-
-        // roundoff can cause slightly out-of-range values; fix those
-        if (_val - refAngRad >= PI) {
-            _val -= TWOPI;
-        }
-        // maximum relative roundoff error for subtraction is 2 epsilon
-        if (_val - refAngRad < -PI) {
-            _val -= _val * 2.0 * std::numeric_limits<double>::epsilon();
-        }
-    }
+                  );
 
 #define ANGLE_OPUP_TYPE(OP, TYPE)       \
     Angle& operator OP(TYPE const& d) { \
@@ -244,6 +211,13 @@ inline Angle operator/(Angle a, double d) { return Angle(static_cast<double>(a) 
 template <typename T>
 double operator/(T const lhs, Angle rhs);
 
+/**
+ * Output operator for an Angle
+ */
+std::ostream& operator<<(std::ostream& s,  ///< The output stream
+                         Angle a           ///< The angle
+                         );
+
 /************************************************************************************************************/
 /**
  * Allow a user to check if they have an angle (yes; they could do this themselves via trivial TMP)
@@ -268,12 +242,62 @@ inline Angle operator*(T lhs,         ///< the value to convert
     return Angle(lhs * rhs._val);
 }
 
-/**
- * Output operator for an Angle
- */
-std::ostream& operator<<(std::ostream& s,  ///< The output stream
-                         Angle a           ///< The angle
-                         );
+/************************************************************************************************************/
+// Inline method definitions, placed last in order to benefit from Angle's full API
+
+inline double Angle::toUnitSphereDistanceSquared() const {
+    return 2. * (1. - std::cos(asRadians()));
+    // == 4.0 * pow(std::sin(0.5 * asRadians()), 2.0)
+}
+
+inline Angle Angle::fromUnitSphereDistanceSquared(double d2) {
+    return (std::acos(1. - d2 / 2.)) * radians;
+    // == 2.0 * asin(0.5 * sqrt(d2))
+}
+
+inline void Angle::wrap() {
+    _val = std::fmod(_val, TWOPI);
+    // _val is now in the range (-TWOPI, TWOPI)
+    if (_val < 0.0) _val += TWOPI;
+    // if _val is small enough, adding 2 pi gives 2 pi
+    if (_val >= TWOPI) _val = 0.0;
+}
+
+inline void Angle::wrapCtr() {
+    _val = std::fmod(_val, TWOPI);
+    // _val is now in the range [-TWOPI, TWOPI]
+    if (_val < -PI) {
+        _val += TWOPI;
+        if (_val >= PI) {
+            // handle roundoff error, however unlikely
+            _val = -PI;
+        }
+    } else if (_val >= PI) {
+        _val -= TWOPI;
+        if (_val < -PI) {
+            // handle roundoff error, however unlikely
+            _val = -PI;
+        }
+    }
+}
+
+inline void Angle::wrapNear(Angle const& refAng) {
+    // compute this = (this - refAng).wrapCtr() + refAng
+    // which is correct except for roundoff error at the edges
+    double refAngRad = refAng.asRadians();
+    *this -= refAng;
+    wrapCtr();
+    _val += refAngRad;
+
+    // roundoff can cause slightly out-of-range values; fix those
+    if (_val - refAngRad >= PI) {
+        _val -= TWOPI;
+    }
+    // maximum relative roundoff error for subtraction is 2 epsilon
+    if (_val - refAngRad < -PI) {
+        _val -= _val * 2.0 * std::numeric_limits<double>::epsilon();
+    }
+}
 }
 }
 }
