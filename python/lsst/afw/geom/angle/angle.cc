@@ -121,6 +121,7 @@ PYBIND11_PLUGIN(angle) {
     clsAngle.def("wrap", &Angle::wrap);
     clsAngle.def("wrapCtr", &Angle::wrapCtr);
     clsAngle.def("wrapNear", &Angle::wrapNear);
+    clsAngle.def("separation", &Angle::separation);
 
     /* Non-members */
 

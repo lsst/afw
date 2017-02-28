@@ -124,6 +124,43 @@ class AngleTestCase(unittest.TestCase):
         thirty = 30.*afwGeom.degrees
         self.assertAlmostEqual(math.sin(thirty), 0.5, places=15)
 
+    def testSeparation(self):
+        """Tests whether angle differences are computed as expected.
+
+        Wrapping accuracy is assumed tested by testWrap.
+        """
+        angleBase = 0.0*afwGeom.degrees
+        angleWrap = 360.0*afwGeom.degrees
+        angleHalf = -180.0*afwGeom.degrees
+        angleOdd = 32.0*afwGeom.degrees
+
+        self.checkWrappedAngle(angleBase.separation(angleWrap),
+                               0.0*afwGeom.degrees)
+        self.checkWrappedAngle(angleWrap.separation(angleBase),
+                               0.0*afwGeom.degrees)
+
+        self.checkWrappedAngle(angleBase.separation(angleHalf), angleHalf)
+        self.checkWrappedAngle(angleHalf.separation(angleBase), angleHalf)
+
+        self.checkWrappedAngle(angleWrap.separation(angleHalf), angleHalf)
+        self.checkWrappedAngle(angleHalf.separation(angleWrap), angleHalf)
+
+        self.checkWrappedAngle(angleOdd.separation(angleBase), angleOdd)
+        self.checkWrappedAngle(angleBase.separation(angleOdd), -1.0*angleOdd)
+
+        self.checkWrappedAngle(angleOdd.separation(angleWrap), angleOdd)
+        self.checkWrappedAngle(angleWrap.separation(angleOdd), -1.0*angleOdd)
+
+    def checkWrappedAngle(self, observed, expected):
+        """Tests whether an angle wrapped to [-pi, pi) both matches its expected
+        value and strictly satisfies its range restriction.
+        """
+        obs = observed.asRadians()
+        exp = expected.asRadians()
+        self.assertAlmostEqual(obs, exp, delta=np.finfo(float).eps)
+        self.assertGreaterEqual(obs, -math.pi)
+        self.assertLess(obs, math.pi)
+
     def testWrap(self):
         eps = np.finfo(float).eps
         oneEightyWithSlop = 180 * (1 + eps)

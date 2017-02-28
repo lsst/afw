@@ -159,6 +159,16 @@ public:
      */
     Angle wrapNear(Angle const& refAng) const noexcept;
 
+    /**
+     * The signed difference between two Angles.
+     *
+     * @param other the angle to which this angle will be compared
+     * @return `*this - other`, wrapped to the range [-&pi;, &pi;)
+     *
+     * @exceptsafe Shall not throw exceptions.
+     */
+    Angle separation(Angle const& other) const noexcept;
+
 #define ANGLE_OPUP_TYPE(OP, TYPE)       \
     Angle& operator OP(TYPE const& d) { \
         _val OP d;                      \
@@ -313,6 +323,8 @@ inline Angle Angle::wrapNear(Angle const& refAng) const noexcept {
     }
     return wrapped * radians;
 }
+
+inline Angle Angle::separation(Angle const& other) const noexcept { return (*this - other).wrapCtr(); }
 }
 }
 }
