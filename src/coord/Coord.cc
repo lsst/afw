@@ -208,8 +208,7 @@ afwGeom::Angle pointToLongitude(lsst::afw::geom::Point3D const &p3d, double cons
     if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
         lon = afwGeom::Angle(0.0);
     } else {
-        lon = std::atan2(p3d.getY(), p3d.getX()) * afwGeom::radians;
-        lon.wrap();
+        lon = (std::atan2(p3d.getY(), p3d.getX()) * afwGeom::radians).wrap();
     }
     return lon;
 }
@@ -234,8 +233,7 @@ std::pair<afwGeom::Angle, afwGeom::Angle> pointToLonLat(lsst::afw::geom::Point3D
             lonLat.first = 0.0 * afwGeom::radians;
             lonLat.second = ((z >= 0) ? 1.0 : -1.0) * afwGeom::HALFPI * afwGeom::radians;
         } else {
-            lonLat.first = atan2(y, x) * afwGeom::radians;
-            lonLat.first.wrap();
+            lonLat.first = (atan2(y, x) * afwGeom::radians).wrap();
             lonLat.second = asin(z) * afwGeom::radians;
         }
     } else {
@@ -243,8 +241,7 @@ std::pair<afwGeom::Angle, afwGeom::Angle> pointToLonLat(lsst::afw::geom::Point3D
             lonLat.first = 0.0 * afwGeom::radians;
             lonLat.second = ((p3d.getZ() >= 0) ? 1.0 : -1.0) * afwGeom::HALFPI * afwGeom::radians;
         } else {
-            lonLat.first = atan2(p3d.getY(), p3d.getX()) * afwGeom::radians;
-            lonLat.first.wrap();
+            lonLat.first = (atan2(p3d.getY(), p3d.getX()) * afwGeom::radians).wrap();
             lonLat.second = asin(p3d.getZ()) * afwGeom::radians;
         }
     }
@@ -376,8 +373,7 @@ afwCoord::Coord::Coord(
                        double const epoch               ///< epoch of coordinate
                       ) :
     _longitude(NaN), _latitude(NaN), _epoch(epoch) {
-    _longitude = afwGeom::Angle(p2d.getX(), unit);
-    _longitude.wrap();
+    _longitude = afwGeom::Angle(p2d.getX(), unit).wrap();
     _latitude  = afwGeom::Angle(p2d.getY(), unit);
     _verifyValues();
 }
@@ -410,8 +406,7 @@ afwCoord::Coord::Coord(
                        afwGeom::Angle const dec,  ///< Declination, decimal degrees
                        double const epoch ///< epoch of coordinate
                       ) :
-    _longitude(ra), _latitude(dec), _epoch(epoch) {
-    _longitude.wrap();
+    _longitude(ra.wrap()), _latitude(dec), _epoch(epoch) {
     _verifyValues();
 }
 
@@ -424,10 +419,9 @@ afwCoord::Coord::Coord(
                        std::string const dec, ///< Declination, dd:mm:ss.s format
                        double const epoch     ///< epoch of coordinate
                       ) :
-    _longitude(hmsStringToAngle(ra)),
+    _longitude(hmsStringToAngle(ra).wrap()),
     _latitude(dmsStringToAngle(dec)),
     _epoch(epoch) {
-    _longitude.wrap();
     _verifyValues();
 }
 
@@ -462,9 +456,8 @@ void afwCoord::Coord::reset(
     afwGeom::Angle const latitude,  ///< Latitude coord (eg. Declination for Fk5)
     double const epoch         ///< epoch of coordinate
     ) {
-    _longitude = longitude;
+    _longitude = longitude.wrap();
     _latitude  = latitude;
-    _longitude.wrap();
     _epoch = epoch;
     _verifyValues();
 }
@@ -918,8 +911,7 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     Fk5Coord fk5 = precess(obsDate.get(dafBase::DateTime::EPOCH));
 
     // greenwich sidereal time
-    afwGeom::Angle theta0 = meanSiderealTimeGreenwich(obsDate.get(dafBase::DateTime::JD));
-    theta0.wrap();
+    afwGeom::Angle theta0 = meanSiderealTimeGreenwich(obsDate.get(dafBase::DateTime::JD)).wrap();
 
     // lat/long of the observatory
     afwGeom::Angle const phi             = obs.getLatitude();
@@ -941,8 +933,7 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
 
     // Equations used here assume azimuth is with respect to South
     // but we use the North as our origin ... must add 180 deg
-    afwGeom::Angle A = (180.0*afwGeom::degrees) + atan2(tanAnumerator, tanAdenominator)* afwGeom::radians;
-    A.wrap();
+    afwGeom::Angle A = ((180.0*afwGeom::degrees) + atan2(tanAnumerator, tanAdenominator)* afwGeom::radians).wrap();
 
     return TopocentricCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
 }
@@ -1156,16 +1147,14 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
 
     // Equations used here assume azimuth is with respect to South
     // but we use the North as our origin.
-    afwGeom::Angle A              = getAzimuth() + 180.0*afwGeom::degrees;
-    A.wrap();
+    afwGeom::Angle A              = (getAzimuth() + 180.0*afwGeom::degrees).wrap();
     afwGeom::Angle const h        = getAltitude();
 
 
     double const jd       = dafBase::DateTime(epoch,
                                               dafBase::DateTime::EPOCH,
                                               dafBase::DateTime::TAI).get(dafBase::DateTime::JD);
-    afwGeom::Angle theta0   = meanSiderealTimeGreenwich(jd);
-    theta0.wrap();
+    afwGeom::Angle theta0   = meanSiderealTimeGreenwich(jd).wrap();
 
     double const tanHnum     = std::sin(A);
     double const tanHdenom   = std::cos(A)*std::sin(phi) + std::tan(h)*std::cos(phi);

@@ -76,7 +76,8 @@ AngleUnit const arcseconds = AngleUnit(PI / 180.0 / 3600.0);  ///< constant with
  * A class representing an Angle
  *
  * Angles may be manipulated like doubles, and automatically converted to doubles, but they may not be
- * constructed from doubles without calling a constructor or multiplying by an AngleUnit
+ * constructed from doubles without calling a constructor or multiplying by an AngleUnit. Angles can be
+ * modified only by assignment; all other operations that transform an Angle return a new Angle instead.
  */
 class Angle {
     friend class AngleUnit;
@@ -116,34 +117,47 @@ public:
     static Angle fromUnitSphereDistanceSquared(double d2);
 
     /**
-     * Wraps this angle to the range [0, 2 pi)
+     * Wrap this angle to the range [0, 2&pi;).
+     *
+     * @returns an angle in the normalized interval.
+     *
+     * @exceptsafe Shall not throw exceptions.
      *
      * @warning The upper limit is only guaranteed for radians; the upper limit
      * may be slightly squishy for other units, due to roundoff errors. Whether
      * there are any violations is unknown; please update this comment if you
      * can prove that the limits are or are not valid for all supported units.
      */
-    void wrap();
+    Angle wrap() const noexcept;
 
     /**
-     * Wrap this angle to the range [-pi, pi)
+     * Wrap this angle to the range [-&pi;, &pi;).
+     *
+     * @returns an angle in the normalized interval.
+     *
+     * @exceptsafe Shall not throw exceptions.
      *
      * @warning Exact limits are only guaranteed for radians; limits for other
      * units may be slightly squishy, due to roundoff errors. Whether there are
      * any violations is unknown; please update this comment if you can prove
      * that the limits are or are not valid for all supported units.
      */
-    void wrapCtr();
+    Angle wrapCtr() const noexcept;
 
     /**
-     * Wrap this angle such that pi <= this - refAng < pi
+     * Wrap this angle to a value `x` such that -&pi; &le; `x - refAng` < &pi;.
+     *
+     * @param refAng reference angle to match
+     *
+     * @returns an angle in the custom normalized interval.
+     *
+     * @exceptsafe Shall not throw exceptions.
      *
      * @warning Exact limits are only guaranteed for radians; limits for other
      * units may be slightly squishy due to roundoff errors. There are known
      * violations that are demonstrated in testWrap in tests/angle.py.
      */
-    void wrapNear(Angle const& refAng  ///< reference angle to match
-                  );
+    Angle wrapNear(Angle const& refAng) const noexcept;
 
 #define ANGLE_OPUP_TYPE(OP, TYPE)       \
     Angle& operator OP(TYPE const& d) { \
@@ -255,48 +269,49 @@ inline Angle Angle::fromUnitSphereDistanceSquared(double d2) {
     // == 2.0 * asin(0.5 * sqrt(d2))
 }
 
-inline void Angle::wrap() {
-    _val = std::fmod(_val, TWOPI);
-    // _val is now in the range (-TWOPI, TWOPI)
-    if (_val < 0.0) _val += TWOPI;
-    // if _val is small enough, adding 2 pi gives 2 pi
-    if (_val >= TWOPI) _val = 0.0;
+inline Angle Angle::wrap() const noexcept {
+    double wrapped = std::fmod(_val, TWOPI);
+    // wrapped is in the range (-TWOPI, TWOPI)
+    if (wrapped < 0.0) wrapped += TWOPI;
+    // if wrapped is small enough, adding 2 pi gives 2 pi
+    if (wrapped >= TWOPI) wrapped = 0.0;
+    return wrapped * radians;
 }
 
-inline void Angle::wrapCtr() {
-    _val = std::fmod(_val, TWOPI);
-    // _val is now in the range [-TWOPI, TWOPI]
-    if (_val < -PI) {
-        _val += TWOPI;
-        if (_val >= PI) {
+inline Angle Angle::wrapCtr() const noexcept {
+    double wrapped = std::fmod(_val, TWOPI);
+    // wrapped is in the range [-TWOPI, TWOPI]
+    if (wrapped < -PI) {
+        wrapped += TWOPI;
+        if (wrapped >= PI) {
             // handle roundoff error, however unlikely
-            _val = -PI;
+            wrapped = -PI;
         }
-    } else if (_val >= PI) {
-        _val -= TWOPI;
-        if (_val < -PI) {
+    } else if (wrapped >= PI) {
+        wrapped -= TWOPI;
+        if (wrapped < -PI) {
             // handle roundoff error, however unlikely
-            _val = -PI;
+            wrapped = -PI;
         }
     }
+    return wrapped * radians;
 }
 
-inline void Angle::wrapNear(Angle const& refAng) {
-    // compute this = (this - refAng).wrapCtr() + refAng
+inline Angle Angle::wrapNear(Angle const& refAng) const noexcept {
+    // compute (this - refAng).wrapCtr() + refAng
     // which is correct except for roundoff error at the edges
-    double refAngRad = refAng.asRadians();
-    *this -= refAng;
-    wrapCtr();
-    _val += refAngRad;
+    double const refAngRad = refAng.asRadians();
+    double wrapped = (*this - refAng).wrapCtr().asRadians() + refAngRad;
 
     // roundoff can cause slightly out-of-range values; fix those
-    if (_val - refAngRad >= PI) {
-        _val -= TWOPI;
+    if (wrapped - refAngRad >= PI) {
+        wrapped -= TWOPI;
     }
     // maximum relative roundoff error for subtraction is 2 epsilon
-    if (_val - refAngRad < -PI) {
-        _val -= _val * 2.0 * std::numeric_limits<double>::epsilon();
+    if (wrapped - refAngRad < -PI) {
+        wrapped -= wrapped * 2.0 * std::numeric_limits<double>::epsilon();
     }
+    return wrapped * radians;
 }
 }
 }

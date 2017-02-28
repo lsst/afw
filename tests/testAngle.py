@@ -138,8 +138,7 @@ class AngleTestCase(unittest.TestCase):
                     sinAng = math.sin(angRad)
                     cosAng = math.cos(angRad)
 
-                    posAng = angRad * afwGeom.radians
-                    posAng.wrap()
+                    posAng = (angRad * afwGeom.radians).wrap()
                     posAngRad = posAng.asRadians()
                     posAngDeg = posAng.asDegrees()
                     posAngArcmin = posAng.asArcminutes()
@@ -156,15 +155,14 @@ class AngleTestCase(unittest.TestCase):
                     self.assertLess(posAngArcmin, 360 * 60)
                     self.assertLess(posAngArcsec, 360 * 3600)
                     # prove that posAngDeg and angDeg are the same angle
-                    posErrAng = (posAngDeg - angDeg) * afwGeom.degrees
-                    posErrAng.wrapCtr()
+                    posErrAng = ((posAngDeg - angDeg) * afwGeom.degrees) \
+                        .wrapCtr()
                     self.assertAlmostEqual(posErrAng.asDegrees(), 0)
                     # a sanity check in case wrapCtr gives the wrong answer
                     self.assertAlmostEqual(math.sin(posAngRad), sinAng)
                     self.assertAlmostEqual(math.cos(posAngRad), cosAng)
 
-                    ctrAng = angRad * afwGeom.radians
-                    ctrAng.wrapCtr()
+                    ctrAng = (angRad * afwGeom.radians).wrapCtr()
                     ctrAngRad = ctrAng.asRadians()
                     ctrAngDeg = ctrAng.asDegrees()
                     ctrAngArcmin = ctrAng.asArcminutes()
@@ -180,8 +178,8 @@ class AngleTestCase(unittest.TestCase):
                     self.assertLess(ctrAngArcmin, 180 * 60)
                     self.assertLess(ctrAngArcsec, 180 * 3600)
                     # prove that ctrAngDeg and ang are the same angle
-                    ctrErrAng = (ctrAngDeg - angDeg) * afwGeom.degrees
-                    ctrErrAng.wrapCtr()
+                    ctrErrAng = ((ctrAngDeg - angDeg) * afwGeom.degrees) \
+                        .wrapCtr()
                     self.assertAlmostEqual(ctrErrAng.asDegrees(), 0)
                     self.assertAlmostEqual(math.sin(ctrAngRad), sinAng)
                     self.assertAlmostEqual(math.cos(ctrAngRad), cosAng)
@@ -193,8 +191,8 @@ class AngleTestCase(unittest.TestCase):
                             refAngDeg = refAng.asDegrees()
                             refAngArcmin = refAng.asArcminutes()
                             refAngArcsec = refAng.asArcseconds()
-                            nearAng = angRad * afwGeom.radians
-                            nearAng.wrapNear(refAng)
+                            nearAng = (angRad * afwGeom.radians) \
+                                .wrapNear(refAng)
                             nearAngRad = nearAng.asRadians()
                             nearAngDeg = nearAng.asDegrees()
                             nearAngArcmin = nearAng.asArcminutes()
@@ -224,8 +222,8 @@ class AngleTestCase(unittest.TestCase):
                             self.assertLess(nearAngArcsec - refAngArcsec,
                                             oneEightyWithSlop * 3600)
                             # prove that nearAng and ang are the same angle
-                            nearErrAng = (nearAngRad - angRad)*afwGeom.radians
-                            nearErrAng.wrapCtr()
+                            nearErrAng = ((nearAngRad - angRad) *
+                                          afwGeom.radians).wrapCtr()
                             self.assertAlmostEqual(nearErrAng.asRadians(), 0)
                             self.assertAlmostEqual(math.sin(nearAngRad),
                                                    sinAng)
