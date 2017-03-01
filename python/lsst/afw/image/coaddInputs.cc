@@ -25,7 +25,7 @@
 //#include <pybind11/stl.h>
 
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/pybind11.h"
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/image/CoaddInputs.h"
@@ -42,7 +42,7 @@ PYBIND11_PLUGIN(_coaddInputs) {
 
     /* Module level */
 
-    table::io::declarePersistableFacade<CoaddInputs>(mod, "CoaddInputs");
+    table::io::python::declarePersistableFacade<CoaddInputs>(mod, "CoaddInputs");
 
     py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>,
                table::io::PersistableFacade<CoaddInputs>,

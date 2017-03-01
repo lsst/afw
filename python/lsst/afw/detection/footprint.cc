@@ -24,7 +24,7 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 
 #include <iostream>
 #include "lsst/afw/detection/Footprint.h"
@@ -66,7 +66,7 @@ namespace {
 PYBIND11_PLUGIN(_footprint) {
     py::module mod("_footprint", "Python wrapper for afw _footprint library");
 
-    table::io::declarePersistableFacade<Footprint>(mod, "Footprint");
+    table::io::python::declarePersistableFacade<Footprint>(mod, "Footprint");
 
     py::class_<Footprint, std::shared_ptr<Footprint>, lsst::daf::base::Citizen, afw::table::io::PersistableFacade<Footprint>, afw::table::io::Persistable> clsFootprint(mod, "Footprint");
 

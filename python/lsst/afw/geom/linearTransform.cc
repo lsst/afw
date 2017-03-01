@@ -27,7 +27,7 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
-#include "lsst/utils/pybind11.h"
+#include "lsst/utils/python.h"
 
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/Point.h"
@@ -70,12 +70,12 @@ PYBIND11_PLUGIN(_linearTransform) {
         "__call__", (Extent2D(LinearTransform::*)(Extent2D const &) const) & LinearTransform::operator(),
         py::is_operator());
     clsLinearTransform.def(
-        "__getitem__", [](LinearTransform const &self, int i) { return self[lsst::utils::cppIndex(4, i)]; },
+        "__getitem__", [](LinearTransform const &self, int i) { return self[lsst::utils::python::cppIndex(4, i)]; },
         py::is_operator());
     clsLinearTransform.def("__getitem__",
                            [](LinearTransform const &self, std::pair<int, int> i) {
-                               auto row = lsst::utils::cppIndex(2, i.first);
-                               auto col = lsst::utils::cppIndex(2, i.second);
+                               auto row = lsst::utils::python::cppIndex(2, i.first);
+                               auto col = lsst::utils::python::cppIndex(2, i.second);
                                return self.getMatrix()(row, col);
                            },
                            py::is_operator());

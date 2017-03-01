@@ -37,7 +37,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 #include "lsst/afw/image/Wcs.h"
 
 namespace py = pybind11;
@@ -51,7 +51,7 @@ namespace {
 
 /// Create the pybind11 wrapper for Wcs
 void declareWcs(py::module & mod) {
-    table::io::declarePersistableFacade<Wcs>(mod, "Wcs");
+    table::io::python::declarePersistableFacade<Wcs>(mod, "Wcs");
 
     /* Module level */
     py::class_<Wcs,

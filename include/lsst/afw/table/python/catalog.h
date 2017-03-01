@@ -34,7 +34,7 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
-#include "lsst/utils/pybind11.h"
+#include "lsst/utils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
@@ -149,13 +149,13 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
         self.push_back(rec);
     });
     cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
-        self.erase(self.begin() + utils::cppIndex(self.size(), i));
+        self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
     });
     cls.def("_clear", &Catalog::clear);
  
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
-        return self.get(utils::cppIndex(self.size(), i));
+        return self.get(utils::python::cppIndex(self.size(), i));
     });
     cls.def("isContiguous", &Catalog::isContiguous);
     cls.def("writeFits",

@@ -27,7 +27,7 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "lsst/afw/table/io/pybind11.h"
+#include "lsst/afw/table/io/python.h"
 
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -40,7 +40,7 @@ PYBIND11_PLUGIN(_apCorrMap) {
     py::module mod("_apCorrMap", "Python wrapper for afw _apCorrMap library");
 
     /* Module level */
-    lsst::afw::table::io::declarePersistableFacade<ApCorrMap>(mod, "ApCorrMap");
+    lsst::afw::table::io::python::declarePersistableFacade<ApCorrMap>(mod, "ApCorrMap");
     py::class_<ApCorrMap,
                std::shared_ptr<ApCorrMap>,
                lsst::afw::table::io::PersistableFacade<ApCorrMap>,
