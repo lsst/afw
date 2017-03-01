@@ -82,6 +82,11 @@ class AngleTestCase(unittest.TestCase):
         self.assertEqual((self.pi*2).asArcseconds(), 360*60*60)
         self.assertEqual((-self.pi).asRadians(), -math.pi)
 
+        with self.assertRaises(TypeError):
+            2.0 / self.pi           # dividing a float by an Angle
+        with self.assertRaises(TypeError):
+            self.pi / self.pi
+
         # automatic conversion to double
         self.assertEqual(math.sin(self.pi/2), 1.0)
 

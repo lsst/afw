@@ -95,6 +95,10 @@ PYBIND11_PLUGIN(angle) {
     clsAngle.def("__isub__", [](Angle& self, Angle const& other) { return self -= other; });
     clsAngle.def("__truediv__", [](Angle const& self, double other) { return self / other; },
                  py::is_operator());
+    // Without an explicit wrapper, Python lets Angle / Angle -> Angle
+    clsAngle.def("__truediv__", [](Angle const& self, Angle const& other) {
+        throw py::type_error("unsupported operand type(s) for /: 'Angle' and 'Angle'");
+    });
 
     clsAngle.def("__float__", &Angle::operator double);
     clsAngle.def("__abs__", [](Angle const& self) { return std::abs(self.asRadians()) * radians; });
@@ -140,7 +144,7 @@ PYBIND11_PLUGIN(angle) {
     mod.def("radToMas", radToMas);
     mod.def("arcsecToRad", arcsecToRad);
     mod.def("masToRad", masToRad);
-    mod.def("isAngle", (bool (*)(Angle const&))isAngle);
+    mod.def("isAngle", isAngle<Angle>);
     mod.def("isAngle", isAngle<double>);
 
     return mod.ptr();

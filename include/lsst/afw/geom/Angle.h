@@ -3,8 +3,11 @@
 
 #include <limits>
 #include <iostream>
-#include <boost/math/constants/constants.hpp>
+#include <type_traits>
+
 #include <cmath>
+
+#include "boost/math/constants/constants.hpp"
 
 namespace lsst {
 namespace afw {
@@ -12,28 +15,29 @@ namespace geom {
 
 /************************************************************************************************************/
 /*
- * None of C99, C++98, and C++0x define M_PI, so we'll do it ourselves
+ * None of C99, C++98, and C++11 define M_PI, so we'll do it ourselves
  */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 /// The ratio of a circle's circumference to diameter
-double const PI = boost::math::constants::pi<double>();
-double const TWOPI = boost::math::constants::pi<double>() * 2.0;
-double const HALFPI = boost::math::constants::pi<double>() * 0.5;
-double const ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
+double constexpr PI = boost::math::constants::pi<double>();
+double constexpr TWOPI = boost::math::constants::pi<double>() * 2.0;
+double constexpr HALFPI = boost::math::constants::pi<double>() * 0.5;
+double constexpr ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
+// sqrt is not a constexpr on OS X
 double const SQRTPI = sqrt(boost::math::constants::pi<double>());
 double const INVSQRTPI = 1.0 / sqrt(boost::math::constants::pi<double>());
-double const ROOT2 = boost::math::constants::root_two<double>();  // sqrt(2)
+double constexpr ROOT2 = boost::math::constants::root_two<double>();  // sqrt(2)
 #pragma clang diagnostic pop
 
 // These shouldn't be necessary if the Angle class is used, but sometimes you just need
 // them.  Better to define them once here than have *180/PI throughout the code...
-inline double degToRad(double x) { return x * PI / 180.; }
-inline double radToDeg(double x) { return x * 180. / PI; }
-inline double radToArcsec(double x) { return x * 3600. * 180. / PI; }
-inline double radToMas(double x) { return x * 1000. * 3600. * 180. / PI; }
-inline double arcsecToRad(double x) { return (x / 3600.) * PI / 180.; }
-inline double masToRad(double x) { return (x / (1000. * 3600.)) * PI / 180.; }
+inline constexpr double degToRad(double x) noexcept { return x * PI / 180.; }
+inline constexpr double radToDeg(double x) noexcept { return x * 180. / PI; }
+inline constexpr double radToArcsec(double x) noexcept { return x * 3600. * 180. / PI; }
+inline constexpr double radToMas(double x) noexcept { return x * 1000. * 3600. * 180. / PI; }
+inline constexpr double arcsecToRad(double x) noexcept { return (x / 3600.) * PI / 180.; }
+inline constexpr double masToRad(double x) noexcept { return (x / (1000. * 3600.)) * PI / 180.; }
 
 /************************************************************************************************************/
 
@@ -49,27 +53,29 @@ class Angle;
  *
  *     Angle pi(180, degrees);
  */
-class AngleUnit {
+class AngleUnit final {
     friend class Angle;
     template <typename T>
-    friend Angle operator*(T lhs, AngleUnit rhs);
+    friend constexpr Angle operator*(T lhs, AngleUnit rhs) noexcept;
 
 public:
-    explicit AngleUnit(double val) : _val(val) {}
+    explicit constexpr AngleUnit(double val) noexcept : _val(val) {}
 
-    bool operator==(AngleUnit const& rhs) const;
+    constexpr bool operator==(AngleUnit const& rhs) const noexcept;
 
 private:
     double _val;
 };
 
-inline bool AngleUnit::operator==(AngleUnit const& rhs) const { return (_val == rhs._val); }
+inline constexpr bool AngleUnit::operator==(AngleUnit const& rhs) const noexcept {
+    return (_val == rhs._val);
+}
 
-AngleUnit const radians = AngleUnit(1.0);                     ///< constant with units of radians
-AngleUnit const degrees = AngleUnit(PI / 180.0);              ///< constant with units of degrees
-AngleUnit const hours = AngleUnit(PI * 15.0 / 180.0);         ///< constant with units of hours
-AngleUnit const arcminutes = AngleUnit(PI / 60 / 180.0);      ///< constant with units of arcminutes
-AngleUnit const arcseconds = AngleUnit(PI / 180.0 / 3600.0);  ///< constant with units of arcseconds
+AngleUnit constexpr radians = AngleUnit(1.0);                     ///< constant with units of radians
+AngleUnit constexpr degrees = AngleUnit(PI / 180.0);              ///< constant with units of degrees
+AngleUnit constexpr hours = AngleUnit(PI * 15.0 / 180.0);         ///< constant with units of hours
+AngleUnit constexpr arcminutes = AngleUnit(PI / 60 / 180.0);      ///< constant with units of arcminutes
+AngleUnit constexpr arcseconds = AngleUnit(PI / 180.0 / 3600.0);  ///< constant with units of arcseconds
 
 /************************************************************************************************************/
 /**
@@ -79,42 +85,51 @@ AngleUnit const arcseconds = AngleUnit(PI / 180.0 / 3600.0);  ///< constant with
  * constructed from doubles without calling a constructor or multiplying by an AngleUnit. Angles can be
  * modified only by assignment; all other operations that transform an Angle return a new Angle instead.
  */
-class Angle {
+class Angle final {
     friend class AngleUnit;
 
 public:
     /** Construct an Angle with the specified value (interpreted in the given units) */
-    explicit Angle(double val, AngleUnit units = radians) : _val(val * units._val) {}
+    explicit constexpr Angle(double val, AngleUnit units = radians) noexcept : _val(val* units._val) {}
 
-    Angle() : _val(0) {}
+    constexpr Angle() noexcept : _val(0) {}
 
     /** Copy constructor. */
-    Angle(Angle const& other) : _val(other._val) {}
+    constexpr Angle(Angle const& other) noexcept = default;
+
+    /** Move constructor. */
+    constexpr Angle(Angle&& other) noexcept = default;
+
+    /** Copy assignment. */
+    Angle& operator=(Angle const& other) noexcept = default;
+
+    /** Move assignment. */
+    Angle& operator=(Angle&& other) noexcept = default;
 
     /** Convert an Angle to a double in radians*/
-    operator double() const { return _val; }
+    constexpr operator double() const noexcept { return _val; }
 
     /** Return an Angle's value as a double in the specified units (e.g.\ ::degrees) */
-    double asAngularUnits(AngleUnit const& units) const { return _val / units._val; }
+    constexpr double asAngularUnits(AngleUnit const& units) const noexcept { return _val / units._val; }
 
     /** Return an Angle's value as a double in radians */
-    double asRadians() const { return asAngularUnits(radians); }
+    constexpr double asRadians() const noexcept { return asAngularUnits(radians); }
 
     /** Return an Angle's value as a double in degrees */
-    double asDegrees() const { return asAngularUnits(degrees); }
+    constexpr double asDegrees() const noexcept { return asAngularUnits(degrees); }
 
     /** Return an Angle's value as a double in hours */
-    double asHours() const { return asAngularUnits(hours); }
+    constexpr double asHours() const noexcept { return asAngularUnits(hours); }
 
     /** Return an Angle's value as a double in arcminutes */
-    double asArcminutes() const { return asAngularUnits(arcminutes); }
+    constexpr double asArcminutes() const noexcept { return asAngularUnits(arcminutes); }
 
     /** Return an Angle's value as a double in arcseconds */
-    double asArcseconds() const { return asAngularUnits(arcseconds); }
+    constexpr double asArcseconds() const noexcept { return asAngularUnits(arcseconds); }
 
-    double toUnitSphereDistanceSquared() const;
+    double toUnitSphereDistanceSquared() const noexcept;
 
-    static Angle fromUnitSphereDistanceSquared(double d2);
+    static Angle fromUnitSphereDistanceSquared(double d2) noexcept;
 
     /**
      * Wrap this angle to the range [0, 2&pi;).
@@ -169,10 +184,10 @@ public:
      */
     Angle separation(Angle const& other) const noexcept;
 
-#define ANGLE_OPUP_TYPE(OP, TYPE)       \
-    Angle& operator OP(TYPE const& d) { \
-        _val OP d;                      \
-        return *this;                   \
+#define ANGLE_OPUP_TYPE(OP, TYPE)                \
+    Angle& operator OP(TYPE const& d) noexcept { \
+        _val OP d;                               \
+        return *this;                            \
     }
 
     ANGLE_OPUP_TYPE(*=, double)
@@ -185,7 +200,7 @@ public:
 #undef ANGLE_OPUP_TYPE
 
 #define ANGLE_COMP(OP) \
-    bool operator OP(const Angle& rhs) { return _val OP rhs._val; }
+    constexpr bool operator OP(const Angle& rhs) const noexcept { return _val OP rhs._val; }
 
     ANGLE_COMP(==)
     ANGLE_COMP(!=)
@@ -205,16 +220,20 @@ private:
  * Operators for Angles.
  */
 #define ANGLE_OP(OP)                                                    \
-    inline Angle operator OP(Angle a, Angle d) {                        \
+    inline constexpr Angle operator OP(Angle a, Angle d) noexcept {     \
         return Angle(static_cast<double>(a) OP static_cast<double>(d)); \
     }
 
 // We need both int and double versions to avoid ambiguous overloading due to
 // implicit conversion of Angle to double
-#define ANGLE_OP_TYPE(OP, TYPE)                                                              \
-    inline Angle operator OP(Angle a, TYPE d) { return Angle(static_cast<double>(a) OP d); } \
-                                                                                             \
-    inline Angle operator OP(TYPE d, Angle a) { return Angle(d OP static_cast<double>(a)); }
+#define ANGLE_OP_TYPE(OP, TYPE)                                    \
+    inline constexpr Angle operator OP(Angle a, TYPE d) noexcept { \
+        return Angle(static_cast<double>(a) OP d);                 \
+    }                                                              \
+                                                                   \
+    inline constexpr Angle operator OP(TYPE d, Angle a) noexcept { \
+        return Angle(d OP static_cast<double>(a));                 \
+    }
 
 ANGLE_OP(+)
 ANGLE_OP(-)
@@ -225,15 +244,15 @@ ANGLE_OP_TYPE(*, int)
 #undef ANGLE_OP
 #undef ANGLE_OP_TYPE
 
-inline const Angle operator-(Angle const angle) { return Angle(-static_cast<double>(angle)); }
+inline constexpr Angle operator-(Angle angle) { return Angle(-static_cast<double>(angle)); }
 
 // Division is different.  Don't allow division by an Angle
-inline Angle operator/(Angle a, int d) { return Angle(static_cast<double>(a) / d); }
+inline constexpr Angle operator/(Angle a, int d) noexcept { return Angle(static_cast<double>(a) / d); }
 
-inline Angle operator/(Angle a, double d) { return Angle(static_cast<double>(a) / d); }
+inline constexpr Angle operator/(Angle a, double d) noexcept { return Angle(static_cast<double>(a) / d); }
 
 template <typename T>
-double operator/(T const lhs, Angle rhs);
+constexpr double operator/(T const lhs, Angle rhs) noexcept = delete;
 
 /**
  * Output operator for an Angle
@@ -243,38 +262,36 @@ std::ostream& operator<<(std::ostream& s,  ///< The output stream
                          );
 
 /************************************************************************************************************/
-/**
- * Allow a user to check if they have an angle (yes; they could do this themselves via trivial TMP)
- */
-template <typename T>
-inline bool isAngle(T) {
-    return false;
-};
 
-inline bool isAngle(Angle const&) { return true; };
+/// Allow a user to check if they have an angle.
+template <typename T>
+inline constexpr bool isAngle(T) noexcept {
+    return std::is_base_of<Angle, T>::value;
+};
 
 /************************************************************************************************************/
 /**
  * Use AngleUnit to convert a POD (e.g.\ int, double) to an Angle; e.g.\ 180*::degrees.
  */
 template <typename T>
-inline Angle operator*(T lhs,         ///< the value to convert
-                       AngleUnit rhs  ///< the conversion coefficient
-                       ) {
-    static_assert(std::numeric_limits<T>::is_specialized,
-                  "Only numeric types may be converted to Angles using degrees/radians!");
+inline constexpr Angle operator*(T lhs,         ///< the value to convert
+                                 AngleUnit rhs  ///< the conversion coefficient
+                                 ) noexcept {
+    static_assert(std::is_arithmetic<T>::value,
+                  "Only numeric types may be multiplied by an AngleUnit to create an Angle!");
     return Angle(lhs * rhs._val);
 }
 
 /************************************************************************************************************/
 // Inline method definitions, placed last in order to benefit from Angle's full API
 
-inline double Angle::toUnitSphereDistanceSquared() const {
+inline double Angle::toUnitSphereDistanceSquared() const noexcept {
     return 2. * (1. - std::cos(asRadians()));
     // == 4.0 * pow(std::sin(0.5 * asRadians()), 2.0)
 }
 
-inline Angle Angle::fromUnitSphereDistanceSquared(double d2) {
+// not constexpr b/c std::acos is not constexpr on OS X
+inline Angle Angle::fromUnitSphereDistanceSquared(double d2) noexcept {
     return (std::acos(1. - d2 / 2.)) * radians;
     // == 2.0 * asin(0.5 * sqrt(d2))
 }
