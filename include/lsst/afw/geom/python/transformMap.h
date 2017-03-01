@@ -1,5 +1,5 @@
-#ifndef AFW_GEOM_PYBIND11_TRANSFORMMAP_H_INCLUDED
-#define AFW_GEOM_PYBIND11_TRANSFORMMAP_H_INCLUDED
+#ifndef AFW_GEOM_PYTHON_TRANSFORMMAP_H_INCLUDED
+#define AFW_GEOM_PYTHON_TRANSFORMMAP_H_INCLUDED
 /*
  * LSST Data Management System
  * Copyright 2016  AURA/LSST.
@@ -21,23 +21,23 @@
  * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/TransformMap.h"
-
-namespace py = pybind11;
-using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
 namespace geom {
-namespace pybind11 {
+namespace python {
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 /**
 Declare an instantiation of TransformMap
@@ -79,6 +79,6 @@ py::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT>>>
     return cls;
 };
 
-}}}} // lsst::afw::geom::pybind11
+}}}} // lsst::afw::geom::python
 
 #endif

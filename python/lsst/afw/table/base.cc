@@ -29,7 +29,7 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
-#include "lsst/utils/pybind11.h"
+#include "lsst/utils/python.h"
 #include "lsst/afw/table/Flag.h"
 #include "lsst/afw/table/Field.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -123,7 +123,7 @@ Declare member and static functions for a pybind11 wrapper of BaseRecord
 void declareBaseRecord(PyBaseRecord & cls) {
     table::python::addCastFrom<BaseRecord>(cls);
 
-    utils::addSharedPtrEquality<BaseRecord>(cls);
+    utils::python::addSharedPtrEquality<BaseRecord>(cls);
 
     cls.def("assign", (void (BaseRecord::*)(BaseRecord const &)) &BaseRecord::assign);
     cls.def("assign", (void (BaseRecord::*)(BaseRecord const &, SchemaMapper const &)) &BaseRecord::assign);
@@ -166,7 +166,7 @@ Declare member and static functions for a pybind11 wrapper of BaseTable
 void declareBaseTable(PyBaseTable & cls) {
     table::python::addCastFrom<BaseTable>(cls);
 
-    utils::addSharedPtrEquality<BaseTable>(cls);
+    utils::python::addSharedPtrEquality<BaseTable>(cls);
 
     cls.def_static("make", &BaseTable::make);
 

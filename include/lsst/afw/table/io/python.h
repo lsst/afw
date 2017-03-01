@@ -21,14 +21,13 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_TABLE_IO_PYBIND11_H
-#define LSST_AFW_TABLE_IO_PYBIND11_H
+#ifndef LSST_AFW_TABLE_IO_PYTHON_H
+#define LSST_AFW_TABLE_IO_PYTHON_H
+
+#include "pybind11/pybind11.h"
 
 #include <memory>
 #include <string>
-
-#include <pybind11/pybind11.h>
-using namespace pybind11::literals;
 
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -36,6 +35,9 @@ namespace lsst {
 namespace afw {
 namespace table {
 namespace io {
+namespace python {
+
+using namespace pybind11::literals;
 
     /**
      * @brief Wraps an instantiation of @ref PersistableFacade.
@@ -63,7 +65,7 @@ namespace io {
                              "fileName"_a, "hdu"_a=0);
     }
 
-}}}}     // lsst::afw::table::io
+}}}}}     // lsst::afw::table::io::python
 
 #endif
 

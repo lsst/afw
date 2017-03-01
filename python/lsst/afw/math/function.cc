@@ -26,7 +26,7 @@
 #include <pybind11/stl.h>
 
 #include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 #include "lsst/afw/math/Function.h"
 
 namespace py = pybind11;
@@ -42,7 +42,7 @@ template <typename ReturnT>
 void declareFunction(py::module &mod, std::string const &suffix) {
     auto const name = "Function" + suffix;
 
-    table::io::declarePersistableFacade<Function<ReturnT>>(mod, name.c_str());
+    table::io::python::declarePersistableFacade<Function<ReturnT>>(mod, name.c_str());
 
     py::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>,
                table::io::PersistableFacade<Function<ReturnT>>, table::io::Persistable>
@@ -64,7 +64,7 @@ template <typename ReturnT>
 void declareFunction1(py::module &mod, const std::string &suffix) {
     auto const name = "Function1" + suffix;
 
-    table::io::declarePersistableFacade<Function1<ReturnT>>(mod, name.c_str());
+    table::io::python::declarePersistableFacade<Function1<ReturnT>>(mod, name.c_str());
 
     py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>,
                table::io::PersistableFacade<Function1<ReturnT>>, Function<ReturnT>>
@@ -80,7 +80,7 @@ template <typename ReturnT>
 void declareFunction2(py::module &mod, const std::string &suffix) {
     auto const name = "Function2" + suffix;
 
-    table::io::declarePersistableFacade<Function2<ReturnT>>(mod, name.c_str());
+    table::io::python::declarePersistableFacade<Function2<ReturnT>>(mod, name.c_str());
 
     py::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>,
                table::io::PersistableFacade<Function2<ReturnT>>, Function<ReturnT>>

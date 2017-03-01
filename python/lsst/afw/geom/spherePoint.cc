@@ -25,7 +25,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/utils/pybind11.h"
+#include "lsst/utils/python.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/SpherePoint.h"
@@ -51,7 +51,7 @@ PYBIND11_PLUGIN(_spherePoint) {
     /* Operators */
     cls.def("__getitem__",
             [](SpherePoint const & self, std::ptrdiff_t i) {
-                return self[utils::cppIndex(2, i)];
+                return self[utils::python::cppIndex(2, i)];
             }, py::is_operator());
     cls.def("__eq__", &SpherePoint::operator==, py::is_operator());
     cls.def("__ne__", &SpherePoint::operator!=, py::is_operator());

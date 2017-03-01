@@ -30,7 +30,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 #include "lsst/afw/detection/Psf.h"
 
 namespace py = pybind11;
@@ -48,7 +48,7 @@ PYBIND11_PLUGIN(_psf) {
     py::module mod("_psf", "Python wrapper for afw _psf library");
 
     /* Module level */
-    table::io::declarePersistableFacade<Psf>(mod, "Psf");
+    table::io::python::declarePersistableFacade<Psf>(mod, "Psf");
     py::class_<Psf,
                std::shared_ptr<Psf>,
                daf::base::Persistable,
