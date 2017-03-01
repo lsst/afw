@@ -90,6 +90,7 @@ PYBIND11_PLUGIN(angle) {
                  py::is_operator());
     clsAngle.def("__sub__", [](Angle const& self, Angle const& other) { return self - other; },
                  py::is_operator());
+    clsAngle.def("__neg__", [](Angle const& self) { return -self; }, py::is_operator());
     clsAngle.def("__iadd__", [](Angle& self, Angle const& other) { return self += other; });
     clsAngle.def("__isub__", [](Angle& self, Angle const& other) { return self -= other; });
     clsAngle.def("__truediv__", [](Angle const& self, double other) { return self / other; },

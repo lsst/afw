@@ -80,6 +80,7 @@ class AngleTestCase(unittest.TestCase):
         self.assertEqual((self.pi/2).asDegrees(), 90)
         self.assertEqual((self.pi*2).asArcminutes(), 360*60)
         self.assertEqual((self.pi*2).asArcseconds(), 360*60*60)
+        self.assertEqual((-self.pi).asRadians(), -math.pi)
 
         # automatic conversion to double
         self.assertEqual(math.sin(self.pi/2), 1.0)
@@ -146,10 +147,10 @@ class AngleTestCase(unittest.TestCase):
         self.checkWrappedAngle(angleHalf.separation(angleWrap), angleHalf)
 
         self.checkWrappedAngle(angleOdd.separation(angleBase), angleOdd)
-        self.checkWrappedAngle(angleBase.separation(angleOdd), -1.0*angleOdd)
+        self.checkWrappedAngle(angleBase.separation(angleOdd), -angleOdd)
 
         self.checkWrappedAngle(angleOdd.separation(angleWrap), angleOdd)
-        self.checkWrappedAngle(angleWrap.separation(angleOdd), -1.0*angleOdd)
+        self.checkWrappedAngle(angleWrap.separation(angleOdd), -angleOdd)
 
     def checkWrappedAngle(self, observed, expected):
         """Tests whether an angle wrapped to [-pi, pi) both matches its expected

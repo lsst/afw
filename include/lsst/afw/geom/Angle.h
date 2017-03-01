@@ -227,6 +227,8 @@ ANGLE_OP_TYPE(*, int)
 #undef ANGLE_OP
 #undef ANGLE_OP_TYPE
 
+inline const Angle operator-(Angle const angle) { return Angle(-static_cast<double>(angle)); }
+
 // Division is different.  Don't allow division by an Angle
 inline Angle operator/(Angle a, int d) { return Angle(static_cast<double>(a) / d); }
 
