@@ -32,7 +32,7 @@
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/pybind11.h"
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/image/Calib.h"
 
 namespace py = pybind11;
@@ -60,7 +60,7 @@ PYBIND11_PLUGIN(_calib) {
     mod.def("fluxErrFromABMagErr", &fluxErrFromABMagErr, "magErr"_a, "mag"_a);
     mod.def("stripCalibKeywords", &detail::stripCalibKeywords, "metadata"_a);
 
-    table::io::declarePersistableFacade<Calib>(mod, "Calib");
+    table::io::python::declarePersistableFacade<Calib>(mod, "Calib");
 
     py::class_<Calib, std::shared_ptr<Calib>,
                table::io::PersistableFacade<Calib>,

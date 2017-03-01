@@ -24,7 +24,7 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "lsst/pex/config/pybind11.h"  // for LSST_DECLARE_CONTROL_FIELD
+#include "lsst/pex/config/python.h"  // for LSST_DECLARE_CONTROL_FIELD
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Match.h"

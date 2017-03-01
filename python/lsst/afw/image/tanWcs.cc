@@ -32,7 +32,7 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-#include "lsst/afw/table/io/pybind11.h"
+#include "lsst/afw/table/io/python.h"
 
 namespace py = pybind11;
 
@@ -50,7 +50,7 @@ PYBIND11_PLUGIN(_tanWcs) {
             return nullptr;
         }
 
-    lsst::afw::table::io::declarePersistableFacade<TanWcs>(mod, "TanWcs");
+    lsst::afw::table::io::python::declarePersistableFacade<TanWcs>(mod, "TanWcs");
 
     py::class_<TanWcs, std::shared_ptr<TanWcs>, PersistableFacade<TanWcs>, lsst::afw::image::Wcs> clsTanWcs(mod, "TanWcs");
 

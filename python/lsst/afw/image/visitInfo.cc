@@ -31,7 +31,7 @@
 #include "lsst/afw/coord/Weather.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/pybind11.h"
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/image/VisitInfo.h"
 
@@ -51,7 +51,7 @@ PYBIND11_PLUGIN(_visitInfo) {
     py::module mod("_visitInfo", "Python wrapper for afw _visitInfo library");
 
     /* Module level */
-    table::io::declarePersistableFacade<VisitInfo>(mod, "VisitInfo");
+    table::io::python::declarePersistableFacade<VisitInfo>(mod, "VisitInfo");
 
     py::class_<VisitInfo, std::shared_ptr<VisitInfo>,
                table::io::PersistableFacade<VisitInfo>,
