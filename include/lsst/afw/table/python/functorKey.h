@@ -22,7 +22,7 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/table/FunctorKey.h"
 
@@ -32,7 +32,7 @@ using namespace py::literals;
 namespace lsst {
 namespace afw {
 namespace table {
-namespace pybind11 {
+namespace python {
 
 /**
 Declare OutputFunctorKey<T>, InputFunctorKey<T> and FunctorKey<T> bases for a given type T.
@@ -53,5 +53,5 @@ void declareFunctorKeys(py::module & mod, std::string const & suffix) {
     
 };
 
-}}}}  // namespace lsst::afw::table::pybind11
+}}}}  // namespace lsst::afw::table::python
 #endif

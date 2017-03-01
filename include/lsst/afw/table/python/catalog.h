@@ -45,7 +45,7 @@ using namespace pybind11::literals;
 namespace lsst {
 namespace afw {
 namespace table {
-namespace pybind11 {
+namespace python {
 
 /**
 Add a _castFrom method to a table or record class
@@ -177,6 +177,6 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
     declareCatalogOverloads<RecordT, lsst::afw::geom::Angle>(cls, "Angle");
 };
 
-}}}} // lsst::afw::table::pybind11
+}}}} // lsst::afw::table::python
 
 #endif

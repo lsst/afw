@@ -43,7 +43,8 @@ void declareMatch2(py::module & mod, std::string const & prefix) {
     typedef typename Catalog2::Record Record2;
     typedef std::vector<Match<typename Catalog1::Record, typename Catalog2::Record>> MatchList;
 
-    py::class_<Match<Record1, Record2>> clsMatch(mod, (prefix + "Match").c_str());
+    using Class = Match<Record1, Record2>;
+    py::class_<Class, std::shared_ptr<Class>> clsMatch(mod, (prefix + "Match").c_str());
     clsMatch.def(py::init<>());
     clsMatch.def(py::init<PTR(Record1) const &, PTR(Record2) const &, double>(),
                  "first"_a, "second"_a, "distance"_a);

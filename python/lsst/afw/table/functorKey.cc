@@ -32,7 +32,7 @@
 #include "lsst/afw/table/arrays.h"
 #include "lsst/afw/table/FunctorKey.h"
 
-#include "lsst/afw/table/pybind11/functorKey.h"
+#include "lsst/afw/table/python/functorKey.h"
 
 namespace py = pybind11;
 
@@ -49,9 +49,9 @@ PYBIND11_PLUGIN(_functorKey) {
     };
 
     /* Module level */
-    pybind11::declareFunctorKeys<lsst::afw::coord::IcrsCoord>(mod, "Coord");
-    pybind11::declareFunctorKeys<ndarray::Array<float const,1,1>>(mod, "ArrayF");
-    pybind11::declareFunctorKeys<ndarray::Array<double const,1,1>>(mod, "ArrayD");
+    python::declareFunctorKeys<lsst::afw::coord::IcrsCoord>(mod, "Coord");
+    python::declareFunctorKeys<ndarray::Array<float const,1,1>>(mod, "ArrayF");
+    python::declareFunctorKeys<ndarray::Array<double const,1,1>>(mod, "ArrayD");
 
     /* Member types and enums */
 

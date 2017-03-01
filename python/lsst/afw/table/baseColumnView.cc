@@ -44,21 +44,22 @@ namespace table {
 
 namespace {
 
-template <typename T>
-void declareBaseColumnViewOverloads(py::class_<BaseColumnView> clsBaseColumnView) {
+template <typename T, typename PyClass>
+void declareBaseColumnViewOverloads(PyClass & clsBaseColumnView) {
     clsBaseColumnView.def("_basicget", [](BaseColumnView & self, Key<T> const & key)
                           ->typename ndarray::Array<T,1> const {
         return self[key];
     });
 };
-template <typename U>
-void declareBaseColumnViewArrayOverloads(py::class_<BaseColumnView> clsBaseColumnView) {
+template <typename U, typename PyClass>
+void declareBaseColumnViewArrayOverloads(PyClass & clsBaseColumnView) {
     clsBaseColumnView.def("_basicget", [](BaseColumnView & self, Key<lsst::afw::table::Array<U>> const & key)
                           ->typename ndarray::Array<U,2,1> const {
         return self[key];
     });
 };
-void declareBaseColumnViewFlagOverloads(py::class_<BaseColumnView> clsBaseColumnView) {
+template <typename PyClass>
+void declareBaseColumnViewFlagOverloads(PyClass & clsBaseColumnView) {
     clsBaseColumnView.def("_basicget", [](BaseColumnView & self, Key<Flag> const & key)
                           ->ndarray::Array<bool const,1,1> const {
         return ndarray::copy(self[key]);
@@ -79,9 +80,9 @@ PYBIND11_PLUGIN(_baseColumnView) {
         }
 
     /* Module level */
-    py::class_<BaseColumnView> clsBaseColumnView(mod, "BaseColumnView");
-    py::class_<BitsColumn> clsBitsColumn(mod, "BitsColumn");
-    py::class_<detail::FlagExtractor> clsFlagExtractor(mod, "FlagExtractor");
+    py::class_<BaseColumnView, std::shared_ptr<BaseColumnView>> clsBaseColumnView(mod, "BaseColumnView");
+    py::class_<BitsColumn, std::shared_ptr<BitsColumn>> clsBitsColumn(mod, "BitsColumn");
+    py::class_<detail::FlagExtractor, std::shared_ptr<detail::FlagExtractor>> clsFlagExtractor(mod, "FlagExtractor");
 
     /* Member types and enums */
 

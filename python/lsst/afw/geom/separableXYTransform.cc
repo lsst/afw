@@ -32,7 +32,7 @@ using namespace lsst::afw::geom;
 PYBIND11_PLUGIN(_separableXYTransform) {
     py::module mod("_separableXYTransform", "Python wrapper for afw _separableXYTransform library");
 
-    py::class_<SeparableXYTransform, XYTransform> clsSeparableXYTransform(mod, "SeparableXYTransform");
+    py::class_<SeparableXYTransform, std::shared_ptr<SeparableXYTransform>, XYTransform> clsSeparableXYTransform(mod, "SeparableXYTransform");
 
     /* Constructors */
     clsSeparableXYTransform.def(py::init<Functor const &, Functor const &>());
