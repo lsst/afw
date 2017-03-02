@@ -19,11 +19,6 @@ namespace lsst { namespace afw { namespace table {
  */
 typedef std::int64_t RecordId;
 
-enum class CoordinateType {
-    PIXEL,
-    CELESTIAL
-};
-
 //@{
 /**
  *  @brief Tag types used to declare specialized field types.

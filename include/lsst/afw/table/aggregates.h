@@ -182,6 +182,12 @@ bool operator==(CoordKey const & lhs, CoordKey const & rhs);
 bool operator!=(CoordKey const & lhs, CoordKey const & rhs);
 //@}
 
+/// Enum used to set units for geometric FunctorKeys
+enum class CoordinateType {
+    PIXEL,
+    CELESTIAL
+};
+
 /**
  *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from a tuple of constituent Keys.
  */
