@@ -26,9 +26,6 @@
 
 #include "lsst/afw/table/BaseColumnView.h"
 
-namespace py = pybind11;
-using namespace py::literals;
-
 namespace lsst {
 namespace afw {
 namespace table {
@@ -42,7 +39,7 @@ Declare member and static functions for a given instantiation of lsst::afw::tabl
 @param[in] cls  Catalog pybind11 class.
 */
 template <typename RecordT>
-void declareColumnView(py::class_<ColumnViewT<RecordT>,
+void declareColumnView(pybind11::class_<ColumnViewT<RecordT>,
                        std::shared_ptr<ColumnViewT<RecordT>>,
                        BaseColumnView> & cls) {
     cls.def("getTable", &ColumnViewT<RecordT>::getTable);

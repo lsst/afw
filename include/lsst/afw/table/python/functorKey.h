@@ -26,9 +26,6 @@
 
 #include "lsst/afw/table/FunctorKey.h"
 
-namespace py = pybind11;
-using namespace py::literals;
-
 namespace lsst {
 namespace afw {
 namespace table {
@@ -43,12 +40,12 @@ Declare OutputFunctorKey<T>, InputFunctorKey<T> and FunctorKey<T> bases for a gi
 @param[in] suffix suffix for class name in Python.
 */
 template <typename T>
-void declareFunctorKeys(py::module & mod, std::string const & suffix) {
-    py::class_<OutputFunctorKey<T>, std::shared_ptr<OutputFunctorKey<T>>>
+void declareFunctorKeys(pybind11::module & mod, std::string const & suffix) {
+    pybind11::class_<OutputFunctorKey<T>, std::shared_ptr<OutputFunctorKey<T>>>
         clsOutputFunctorKey(mod, ("OutputFunctorKey"+suffix).c_str());
-    py::class_<InputFunctorKey<T>, std::shared_ptr<InputFunctorKey<T>>>
+    pybind11::class_<InputFunctorKey<T>, std::shared_ptr<InputFunctorKey<T>>>
         clsInputFunctorKey(mod, ("InputFunctorKey"+suffix).c_str());
-    py::class_<FunctorKey<T>, std::shared_ptr<FunctorKey<T>>, OutputFunctorKey<T>, InputFunctorKey<T>>
+    pybind11::class_<FunctorKey<T>, std::shared_ptr<FunctorKey<T>>, OutputFunctorKey<T>, InputFunctorKey<T>>
         clsFunctorKey(mod, ("FunctorKey"+suffix).c_str());
     
 };
