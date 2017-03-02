@@ -182,6 +182,12 @@ private:
     Key<geom::Angle> _dec;
 };
 
+/// Enum used to set units for geometric FunctorKeys
+enum class CoordinateType {
+    PIXEL,
+    CELESTIAL
+};
+
 /**
  *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from a tuple of constituent Keys.
  */
