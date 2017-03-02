@@ -37,8 +37,6 @@ namespace table {
 namespace io {
 namespace python {
 
-using namespace pybind11::literals;
-
     /**
      * @brief Wraps an instantiation of @ref PersistableFacade.
      *
@@ -57,6 +55,8 @@ using namespace pybind11::literals;
      */
     template <typename T>
     void declarePersistableFacade(pybind11::module & module, std::string const & suffix) {
+        using namespace pybind11::literals;
+
         // shared_ptr is used by subclasses of PersistableFacade
         pybind11::class_<PersistableFacade<T>, std::shared_ptr<PersistableFacade<T>>>
                 clsFacade(module, ("PersistableFacade" + suffix).c_str());

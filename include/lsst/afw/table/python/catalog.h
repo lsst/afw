@@ -39,9 +39,6 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 namespace lsst {
 namespace afw {
 namespace table {
@@ -71,7 +68,7 @@ Declare field-type-specific overloaded catalog member functions for one field ty
 */
 template <typename RecordT, typename T>
 void declareCatalogOverloads(
-    py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls,
+    pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls,
     const std::string suffix
 ) {
     typedef CatalogT<RecordT> Catalog;
@@ -110,14 +107,16 @@ Declare member and static functions for a given instantiation of lsst::afw::tabl
 @param[in] cls  Catalog pybind11 class.
 */
 template <typename RecordT>
-void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls) {
+void declareCatalog(pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls) {
+    using namespace pybind11::literals;
+
     using Catalog = CatalogT<RecordT>;
     using Table = typename RecordT::Table;
 
     /* Constructors */
-    cls.def(py::init<Schema const &>());
-    cls.def(py::init<std::shared_ptr<Table> const &>());
-    cls.def(py::init<Catalog const &>());
+    cls.def(pybind11::init<Schema const &>());
+    cls.def(pybind11::init<std::shared_ptr<Table> const &>());
+    cls.def(pybind11::init<Catalog const &>());
 
     /* Static Methods */
     cls.def_static("readFits",
