@@ -36,9 +36,6 @@ namespace afw {
 namespace geom {
 namespace python {
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 /**
 Declare an instantiation of TransformMap
 
@@ -46,17 +43,19 @@ Declare an instantiation of TransformMap
 @param[in] prefix  Prefix for python class name; full name = prefix + "TransformMap"
 */
 template <typename CoordSysT>
-py::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT>>>
-    declareTransformMap(py::module & mod, std::string const & prefix)
+pybind11::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT>>>
+    declareTransformMap(pybind11::module & mod, std::string const & prefix)
 {
+    using namespace pybind11::literals;
+
     using Map = TransformMap<CoordSysT>;
 
     const std::string className = prefix + "TransformMap";
-    py::class_<Map, std::shared_ptr<Map>> cls(mod, className.c_str());
+    pybind11::class_<Map, std::shared_ptr<Map>> cls(mod, className.c_str());
 
     /* Constructors */
-    cls.def(py::init<>());
-    cls.def(py::init<CoordSysT const &, typename Map::Transforms const &>(),
+    cls.def(pybind11::init<>());
+    cls.def(pybind11::init<CoordSysT const &, typename Map::Transforms const &>(),
             "nativeCoordSys"_a, "transforms"_a);
 
     /* Operators */

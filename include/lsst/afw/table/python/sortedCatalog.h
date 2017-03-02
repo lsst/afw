@@ -30,9 +30,6 @@
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/SortedCatalog.h"
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 namespace lsst {
 namespace afw {
 namespace table {
@@ -65,15 +62,17 @@ returning instances of the hidden base class.
 */
 template <typename RecordT>
 void declareSortedCatalog(
-    py::class_<SortedCatalogT<RecordT>, std::shared_ptr<SortedCatalogT<RecordT>>, CatalogT<RecordT>> & cls
+    pybind11::class_<SortedCatalogT<RecordT>, std::shared_ptr<SortedCatalogT<RecordT>>, CatalogT<RecordT>> & cls
 ) {
+    using namespace pybind11::literals;
+
     using Catalog = SortedCatalogT<RecordT>;
     using Table = typename RecordT::Table;
 
     /* Constructors */
-    cls.def(py::init<Schema const &>());
-    cls.def(py::init<PTR(Table) const &>(), "table"_a=PTR(Table)());
-    cls.def(py::init<Catalog const &>());
+    cls.def(pybind11::init<Schema const &>());
+    cls.def(pybind11::init<PTR(Table) const &>(), "table"_a=PTR(Table)());
+    cls.def(pybind11::init<Catalog const &>());
 
     /* Overridden and Variant Methods */
     cls.def_static("readFits",
