@@ -150,7 +150,9 @@ public:
 
 protected:
 
-    AmpInfoRecord(PTR(AmpInfoTable) const & table);
+    friend class AmpInfoTable;
+
+    explicit AmpInfoRecord(PTR(AmpInfoTable) const & table);
 
 };
 
@@ -250,9 +252,13 @@ public:
 
 protected:
 
-    AmpInfoTable(Schema const & schema);
+    explicit AmpInfoTable(Schema const & schema);
 
-    AmpInfoTable(AmpInfoTable const & other);
+    explicit AmpInfoTable(AmpInfoTable const & other);
+
+    std::shared_ptr<BaseTable> _clone() const override;
+
+    std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
 
@@ -292,7 +298,7 @@ private:
     friend class io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 };
 
 }}} // namespace lsst::afw::table

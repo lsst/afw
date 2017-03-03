@@ -29,50 +29,6 @@
 namespace lsst { namespace afw { namespace detection {
 
 //-----------------------------------------------------------------------------------------------------------
-//----- Private PeakTable/Record classes ---------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------
-
-// These private derived classes are what you actually get when you do PeakTable::make; like the
-// private classes in BaseTable.cc, it's more convenient to have an extra set of trivial derived
-// classes than to do a lot of friending.
-
-namespace {
-
-class PeakTableImpl;
-
-class PeakRecordImpl : public PeakRecord {
-public:
-
-    explicit PeakRecordImpl(PTR(PeakTable) const & table) : PeakRecord(table) {}
-
-};
-
-class PeakTableImpl : public PeakTable {
-public:
-
-    explicit PeakTableImpl(afw::table::Schema const & schema, PTR(afw::table::IdFactory) const & idFactory) :
-        PeakTable(schema, idFactory)
-    {}
-
-    PeakTableImpl(PeakTableImpl const & other) : PeakTable(other) {}
-
-private:
-
-    virtual PTR(afw::table::BaseTable) _clone() const {
-        return std::make_shared<PeakTableImpl>(*this);
-    }
-
-    virtual PTR(afw::table::BaseRecord) _makeRecord() {
-        PTR(PeakRecord) record = std::make_shared<PeakRecordImpl>(getSelf<PeakTableImpl>());
-        if (getIdFactory()) record->setId((*getIdFactory())());
-        return record;
-    }
-
-};
-
-} // anonymous
-
-//-----------------------------------------------------------------------------------------------------------
 //----- PeakFitsWriter ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
@@ -164,7 +120,7 @@ PTR(PeakTable) PeakTable::make(
         );
     }
     if (forceNewTable) {
-        return std::make_shared<PeakTableImpl>(schema, afw::table::IdFactory::makeSimple());
+        return std::shared_ptr<PeakTable>(new PeakTable(schema, afw::table::IdFactory::makeSimple()));
     }
     CachedTableList::iterator iter = cache.begin();
     while (iter != cache.end()) {
@@ -185,9 +141,7 @@ PTR(PeakTable) PeakTable::make(
         }
     }
     // No match: we create a new table and put it in the cache
-    PTR(PeakTable) newTable = std::make_shared<PeakTableImpl>(
-        schema, afw::table::IdFactory::makeSimple()
-    );
+    std::shared_ptr<PeakTable> newTable(new PeakTable(schema, afw::table::IdFactory::makeSimple()));
     cache.push_front(newTable);
     return newTable;
 }
@@ -217,6 +171,16 @@ PeakTable::MinimalSchema & PeakTable::getMinimalSchema() {
 PTR(afw::table::io::FitsWriter)
 PeakTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<PeakFitsWriter>(fitsfile, flags);
+}
+
+std::shared_ptr<afw::table::BaseTable> PeakTable::_clone() const {
+    return std::shared_ptr<PeakTable>(new PeakTable(*this));
+}
+
+std::shared_ptr<afw::table::BaseRecord> PeakTable::_makeRecord() {
+    std::shared_ptr<PeakRecord> record(new PeakRecord(getSelf<PeakTable>()));
+    if (getIdFactory()) record->setId((*getIdFactory())());
+    return record;
 }
 
 } // namespace detection

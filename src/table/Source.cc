@@ -15,52 +15,8 @@
 namespace lsst { namespace afw { namespace table {
 
 //-----------------------------------------------------------------------------------------------------------
-//----- Private SourceTable/Record classes ------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------
-
-// These private derived classes are what you actually get when you do SourceTable::make; like the
-// private classes in BaseTable.cc, it's more convenient to have an extra set of trivial derived
-// classes than to do a lot of friending.
-
-namespace {
-
-class SourceTableImpl;
-
-class SourceRecordImpl : public SourceRecord {
-public:
-
-    explicit SourceRecordImpl(PTR(SourceTable) const & table) : SourceRecord(table) {}
-
-};
-
-class SourceTableImpl : public SourceTable {
-public:
-
-    explicit SourceTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) :
-        SourceTable(schema, idFactory) {}
-
-    SourceTableImpl(SourceTableImpl const & other) : SourceTable(other) {}
-
-private:
-
-    virtual PTR(BaseTable) _clone() const {
-        return std::make_shared<SourceTableImpl>(*this);
-    }
-
-    virtual PTR(BaseRecord) _makeRecord() {
-        PTR(SourceRecord) record = std::make_shared<SourceRecordImpl>(getSelf<SourceTableImpl>());
-        if (getIdFactory()) record->setId((*getIdFactory())());
-        return record;
-    }
-
-};
-
-} // anonymous
-
-//-----------------------------------------------------------------------------------------------------------
 //----- PersistenceHelpers ----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
-
 
 namespace {
 
@@ -469,7 +425,7 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
             "Schema for Source must contain at least the keys defined by getMinimalSchema()."
         );
     }
-    return std::make_shared<SourceTableImpl>(schema, idFactory);
+    return std::shared_ptr<SourceTable>(new SourceTable(schema, idFactory));
 }
 
 SourceTable::SourceTable(
@@ -503,6 +459,16 @@ PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags
     return std::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
 
+
+std::shared_ptr<BaseTable> SourceTable::_clone() const {
+    return std::shared_ptr<SourceTable>(new SourceTable(*this));
+}
+
+std::shared_ptr<BaseRecord> SourceTable::_makeRecord() {
+    std::shared_ptr<SourceRecord> record(new SourceRecord(getSelf<SourceTable>()));
+    if (getIdFactory()) record->setId((*getIdFactory())());
+    return record;
+}
 
 template class CatalogT<SourceRecord>;
 template class CatalogT<SourceRecord const>;

@@ -9,50 +9,6 @@
 namespace lsst { namespace afw { namespace table {
 
 //-----------------------------------------------------------------------------------------------------------
-//----- Private SimpleTable/Record classes ---------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------
-
-// These private derived classes are what you actually get when you do SimpleTable::make; like the
-// private classes in BaseTable.cc, it's more convenient to have an extra set of trivial derived
-// classes than to do a lot of friending.
-
-namespace {
-
-class SimpleTableImpl;
-
-class SimpleRecordImpl : public SimpleRecord {
-public:
-
-    explicit SimpleRecordImpl(PTR(SimpleTable) const & table) : SimpleRecord(table) {}
-
-};
-
-class SimpleTableImpl : public SimpleTable {
-public:
-
-    explicit SimpleTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) :
-        SimpleTable(schema, idFactory)
-    {}
-
-    SimpleTableImpl(SimpleTableImpl const & other) : SimpleTable(other) {}
-
-private:
-
-    virtual PTR(BaseTable) _clone() const {
-        return std::make_shared<SimpleTableImpl>(*this);
-    }
-
-    virtual PTR(BaseRecord) _makeRecord() {
-        PTR(SimpleRecord) record = std::make_shared<SimpleRecordImpl>(getSelf<SimpleTableImpl>());
-        if (getIdFactory()) record->setId((*getIdFactory())());
-        return record;
-    }
-
-};
-
-} // anonymous
-
-//-----------------------------------------------------------------------------------------------------------
 //----- SimpleFitsWriter ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
@@ -131,7 +87,7 @@ PTR(SimpleTable) SimpleTable::make(Schema const & schema, PTR(IdFactory) const &
             "Schema for Simple must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return std::make_shared<SimpleTableImpl>(schema, idFactory);
+    return std::shared_ptr<SimpleTable>(new SimpleTable(schema, idFactory));
 }
 
 SimpleTable::SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory) :
@@ -154,6 +110,16 @@ SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
 PTR(io::FitsWriter)
 SimpleTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<SimpleFitsWriter>(fitsfile, flags);
+}
+
+std::shared_ptr<BaseTable> SimpleTable::_clone() const {
+    return std::shared_ptr<SimpleTable>(new SimpleTable(*this));
+}
+
+std::shared_ptr<BaseRecord> SimpleTable::_makeRecord() {
+    std::shared_ptr<SimpleRecord> record(new SimpleRecord(getSelf<SimpleTable>()));
+    if (getIdFactory()) record->setId((*getIdFactory())());
+    return record;
 }
 
 template class CatalogT<SimpleRecord>;
