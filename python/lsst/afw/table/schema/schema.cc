@@ -62,6 +62,12 @@ using PyKey = py::class_<Key<T>, KeyBase<T>, FieldBase<T>>;
 template <typename T>
 using PySchemaItem = py::class_<SchemaItem<T>>;
 
+template <typename T>
+std::string streamStr(T const &self) {
+    std::ostringstream os;
+    os << self;
+    return os.str();
+}
 
 // Specializations for FieldBase
 
@@ -249,14 +255,8 @@ void declareSchemaType(py::module & mod) {
     clsField.def("getDoc", &Field<T>::getDoc);
     clsField.def("getUnits", &Field<T>::getUnits);
     clsField.def("copyRenamed", &Field<T>::copyRenamed);
-    clsField.def(
-        "__repr__",
-        [](Field<T> const & self) -> std::string {
-            std::ostringstream os;
-            os << self;
-            return os.str();
-        }
-    );
+    clsField.def("__str__", &streamStr<Field<T>>);
+    clsField.def("__repr__", &streamStr<Field<T>>);
 
     // Key
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
@@ -274,14 +274,8 @@ void declareSchemaType(py::module & mod) {
     );
     clsKey.def("isValid", &Key<T>::isValid);
     clsKey.def("getOffset", &Key<T>::getOffset);
-    clsKey.def(
-        "__repr__",
-        [](Key<T> const & self) -> std::string {
-            std::ostringstream os;
-            os << self;
-            return os.str();
-        }
-    );
+    clsKey.def("__str__", &streamStr<Key<T>>);
+    clsKey.def("__repr__", &streamStr<Key<T>>);
     // The Key methods below actually wrap templated methods on Schema and
     // SchemaMapper.  Rather than doing many-type overload resolution by
     // wrapping those methods directly, we use the visitor pattern by having
@@ -337,6 +331,12 @@ void declareSchemaType(py::module & mod) {
         "__len__",
         [](py::object const & self) -> int {
             return 2;
+        }
+    );
+    clsSchemaItem.def(
+        "__str__",
+        [](py::object const & self) -> py::str {
+            return py::str(py::tuple(self));
         }
     );
     clsSchemaItem.def(
@@ -448,11 +448,8 @@ void declareSchema(py::module & mod) {
                                      std::string const &,
                                      std::string const &) const) &Schema::join,
             "a"_a, "b"_a, "c"_a, "d"_a);
-    cls.def("__repr__", [](Schema const & self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
+    cls.def("__str__", &streamStr<Schema>);
+    cls.def("__repr__", &streamStr<Schema>);
 }
 
 void declareSubSchema(py::module & mod) {
