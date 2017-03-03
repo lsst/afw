@@ -14,43 +14,6 @@
 
 namespace lsst { namespace afw { namespace table {
 
-// =============== BaseTableImpl and BaseRecordImpl =========================================================
-
-//  These are a private table/record pair -- they're what you actually get when you do TableBase::make(),
-//  but we hide them here to avoid a giant nest of friending that would be necessary if they had to make
-//  their constructors private or protected.
-
-namespace {
-
-class BaseRecordImpl;
-
-class BaseTableImpl : public BaseTable {
-public:
-
-    explicit BaseTableImpl(Schema const & schema) : BaseTable(schema) {}
-
-    BaseTableImpl(BaseTableImpl const & other) : BaseTable(other) {}
-
-private:
-    virtual PTR(BaseTable) _clone() const;
-    virtual PTR(BaseRecord) _makeRecord();
-};
-
-class BaseRecordImpl : public BaseRecord {
-public:
-    explicit BaseRecordImpl(PTR(BaseTable) const & table) : BaseRecord(table) {}
-};
-
-PTR(BaseTable) BaseTableImpl::_clone() const {
-    return std::make_shared<BaseTableImpl>(*this);
-}
-
-PTR(BaseRecord) BaseTableImpl::_makeRecord() {
-    return std::make_shared<BaseRecordImpl>(shared_from_this());
-}
-
-} // anonymous
-
 // =============== Block ====================================================================================
 
 //  This is a block of memory that doles out record-sized chunks when a table asks for them.
@@ -165,7 +128,7 @@ std::size_t BaseTable::getBufferSize() const {
 }
 
 PTR(BaseTable) BaseTable::make(Schema const & schema) {
-    return std::make_shared<BaseTableImpl>(schema);
+    return std::shared_ptr<BaseTable>(new BaseTable(schema));
 }
 
 PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input) {
@@ -182,6 +145,14 @@ PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper con
 
 PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<io::FitsWriter>(fitsfile, flags);
+}
+
+std::shared_ptr<BaseTable> BaseTable::_clone() const {
+    return std::shared_ptr<BaseTable>(new BaseTable(*this));
+}
+
+std::shared_ptr<BaseRecord> BaseTable::_makeRecord() {
+    return std::shared_ptr<BaseRecord>(new BaseRecord(shared_from_this()));
 }
 
 BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema) {

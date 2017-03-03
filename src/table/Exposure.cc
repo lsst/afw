@@ -47,39 +47,6 @@ int getTableVersion(daf::base::PropertySet &metadata) {
     return metadata.exists(EXPOSURE_TABLE_VERSION_KEY) ? metadata.get<int>(EXPOSURE_TABLE_VERSION_KEY) : 1;
 }
 
-class ExposureTableImpl;
-
-class ExposureRecordImpl : public ExposureRecord {
-public:
-
-    explicit ExposureRecordImpl(PTR(ExposureTable) const & table) : ExposureRecord(table) {
-        // Want to make default bbox empty, not a single pixel at 0,0
-        this->set(ExposureTable::getBBoxMaxKey(), geom::Point2I(-1,-1));
-    }
-
-};
-
-class ExposureTableImpl : public ExposureTable {
-public:
-
-    explicit ExposureTableImpl(Schema const & schema) :
-        ExposureTable(schema)
-    {}
-
-    ExposureTableImpl(ExposureTableImpl const & other) : ExposureTable(other) {}
-
-private:
-
-    virtual PTR(BaseTable) _clone() const {
-        return std::make_shared<ExposureTableImpl>(*this);
-    }
-
-    virtual PTR(BaseRecord) _makeRecord() {
-        return std::make_shared<ExposureRecordImpl>(getSelf<ExposureTableImpl>());
-    }
-
-};
-
 /**
  * Helper class for for persisting ExposureRecord
  *
@@ -417,7 +384,7 @@ PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
             "Schema for Exposure must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return std::make_shared<ExposureTableImpl>(schema);
+    return std::shared_ptr<ExposureTable>(new ExposureTable(schema));
 }
 
 ExposureTable::ExposureTable(Schema const & schema) :
@@ -446,6 +413,14 @@ ExposureTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
 PTR(io::FitsWriter)
 ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags) const {
     return std::make_shared<ExposureFitsWriter>(fitsfile, archive, flags);
+}
+
+std::shared_ptr<BaseTable> ExposureTable::_clone() const {
+    return std::shared_ptr<ExposureTable>(new ExposureTable(*this));
+}
+
+std::shared_ptr<BaseRecord> ExposureTable::_makeRecord() {
+    return std::shared_ptr<ExposureRecord>(new ExposureRecord(getSelf<ExposureTable>()));
 }
 
 //-----------------------------------------------------------------------------------------------------------
