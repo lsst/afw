@@ -425,8 +425,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSetMask) {
     // Verify the mask was populated with the value 2
     auto mskArray = mask.getArray();
     auto mskShape = mskArray.getShape();
-    for (int i=0; i < mskShape[0]; ++i) {
-        for (int j=0; j<mskShape[1]; ++j){
+    for (std::size_t i=0; i < mskShape[0]; ++i) {
+        for (std::size_t j=0; j<mskShape[1]; ++j){
             if (spnSt->contains(afwGeom::Point2I(i,j))) {
                 BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(3));
             } else {
@@ -452,8 +452,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testClearMask) {
     // Verify the mask is now zero
     auto mskArray = mask.getArray();
     auto mskShape = mskArray.getShape();
-    for (int i=0; i < mskShape[0]; ++i) {
-        for (int j=0; j < mskShape[1]; ++j) {
+    for (size_t i=0; i < mskShape[0]; ++i) {
+        for (size_t j=0; j < mskShape[1]; ++j) {
             BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(1));
         }
     }
