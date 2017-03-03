@@ -23,6 +23,7 @@
 #include "pybind11/pybind11.h"
 
 #include <memory>
+#include <sstream>
 
 //#include <pybind11/stl.h>
 
@@ -66,6 +67,13 @@ void declarePeakRecord(PyPeakRecord & cls) {
     cls.def("getF", &PeakRecord::getF);
     cls.def("getPeakValue", &PeakRecord::getPeakValue);
     cls.def("setPeakValue", &PeakRecord::setPeakValue);
+    auto streamStr = [](PeakRecord const &self) {
+        std::stringstream buffer;
+        buffer << self;
+        return buffer.str();
+    };
+    cls.def("__str__", streamStr);
+    cls.def("__repr__", streamStr);
 }
 
 /**
