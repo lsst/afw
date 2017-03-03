@@ -177,11 +177,11 @@ protected:
 
     virtual void handleAliasChange(std::string const & alias) {}
 
-    /// @brief Clone implementation with noncovariant return types.
-    virtual PTR(BaseTable) _clone() const = 0;
+    /// Clone implementation with noncovariant return types.
+    virtual std::shared_ptr<BaseTable> _clone() const;
 
-    /// @brief Default-construct an associated record (protected implementation).
-    virtual PTR(BaseRecord) _makeRecord() = 0;
+    /// Default-construct an associated record (protected implementation).
+    virtual std::shared_ptr<BaseRecord> _makeRecord();
 
     /// @brief Construct from a schema.
     explicit BaseTable(Schema const & schema);

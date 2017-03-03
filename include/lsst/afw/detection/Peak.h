@@ -74,7 +74,11 @@ public:
 
 protected:
 
-    PeakRecord(PTR(PeakTable) const & table);
+    explicit PeakRecord(PTR(PeakTable) const & table);
+
+private:
+
+    friend class PeakTable;
 
 };
 
@@ -173,6 +177,10 @@ protected:
 
     PeakTable(PeakTable const & other);
 
+    std::shared_ptr<afw::table::BaseTable> _clone() const override;
+
+    std::shared_ptr<afw::table::BaseRecord> _makeRecord() override;
+
 private:
 
     // Struct that holds the minimal schema and the special keys we've added to it.
@@ -194,7 +202,7 @@ private:
     friend class afw::table::io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(afw::table::io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    std::shared_ptr<afw::table::io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 
     PTR(afw::table::IdFactory) _idFactory;        // generates IDs for new records
 };

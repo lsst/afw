@@ -231,11 +231,14 @@ public:
 
 protected:
 
-    SourceRecord(PTR(SourceTable) const & table);
+    explicit SourceRecord(PTR(SourceTable) const & table);
 
     virtual void _assign(BaseRecord const & other);
 
 private:
+
+    friend class SourceTable;
+
     PTR(Footprint) _footprint;
 };
 
@@ -332,7 +335,11 @@ protected:
 
     SourceTable(SourceTable const & other);
 
-    virtual void handleAliasChange(std::string const & alias);
+    void handleAliasChange(std::string const & alias) override;
+
+    std::shared_ptr<BaseTable> _clone() const override;
+
+    std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
 
@@ -351,7 +358,7 @@ private:
     friend class SourceRecord;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 
     SlotSuite _slots;
 };

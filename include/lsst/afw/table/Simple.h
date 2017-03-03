@@ -73,7 +73,9 @@ public:
 
 protected:
 
-    SimpleRecord(PTR(SimpleTable) const & table);
+    friend class SimpleTable;
+
+    explicit SimpleRecord(PTR(SimpleTable) const & table);
 
 };
 
@@ -175,7 +177,11 @@ protected:
 
     SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory);
 
-    SimpleTable(SimpleTable const & other);
+    explicit SimpleTable(SimpleTable const & other);
+
+    std::shared_ptr<BaseTable> _clone() const override;
+
+    std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
 
@@ -194,7 +200,7 @@ private:
     friend class io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 
     PTR(IdFactory) _idFactory;        // generates IDs for new records
 };
