@@ -620,7 +620,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      */
     std::vector<std::shared_ptr<geom::SpanSet>> split() const;
 
-    bool isPersistable() const { return true; }
+    bool isPersistable() const override { return true; }
 
 private:
     /* Returns the name used by the persistence layer to identify the SpanSet class

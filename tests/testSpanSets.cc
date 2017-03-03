@@ -1,4 +1,24 @@
-
+/*
+ * LSST Data Management System
+ * Copyright 2008-2016  AURA/LSST.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <https://www.lsstcorp.org/LegalNotices/>.
+ */
 
 
 #include <iostream>
@@ -425,8 +445,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSetMask) {
     // Verify the mask was populated with the value 2
     auto mskArray = mask.getArray();
     auto mskShape = mskArray.getShape();
-    for (int i=0; i < mskShape[0]; ++i) {
-        for (int j=0; j<mskShape[1]; ++j){
+    for (std::size_t i=0; i < mskShape[0]; ++i) {
+        for (std::size_t j=0; j<mskShape[1]; ++j){
             if (spnSt->contains(afwGeom::Point2I(i,j))) {
                 BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(3));
             } else {
@@ -452,8 +472,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testClearMask) {
     // Verify the mask is now zero
     auto mskArray = mask.getArray();
     auto mskShape = mskArray.getShape();
-    for (int i=0; i < mskShape[0]; ++i) {
-        for (int j=0; j < mskShape[1]; ++j) {
+    for (size_t i=0; i < mskShape[0]; ++i) {
+        for (size_t j=0; j < mskShape[1]; ++j) {
             BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(1));
         }
     }
