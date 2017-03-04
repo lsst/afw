@@ -116,13 +116,11 @@ public:
     /// Set an array in the given record
     virtual void set(BaseRecord & record, ndarray::Array<T const,1,1> const & value) const;
 
-#ifndef SWIG
     /// Get non-const reference array from the given record
     virtual ndarray::ArrayRef<T,1,1> getReference(BaseRecord & record) const;
 
     /// Get const reference array from the given record
     virtual ndarray::ArrayRef<T const,1,1> getConstReference(BaseRecord const & record) const;
-#endif
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying scalar Keys

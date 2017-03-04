@@ -23,16 +23,13 @@ class SubSchema;
  */
 template <typename T>
 struct SchemaItem {
-#ifndef SWIG  // see comment block in tableLib.i; workaround to avoid dangling references
     Key<T> key;
     Field<T> field;
-#endif
+
     SchemaItem(Key<T> const & key_, Field<T> const & field_) : key(key_), field(field_) {}
 };
 
 namespace detail {
-
-#ifndef SWIG
 
 class Access;
 
@@ -207,8 +204,6 @@ private:
     OffsetMap _offsets;   // Offset to vector-index map for regular fields.
     FlagMap _flags;       // Offset to vector-index map for flags.
 };
-
-#endif
 
 }}}} // namespace lsst::afw::table::detail
 
