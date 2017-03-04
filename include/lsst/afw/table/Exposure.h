@@ -252,7 +252,6 @@ private:
     ) const;
 };
 
-#ifndef SWIG
 
 /**
  *  @brief Custom catalog class for ExposureRecord/Table.
@@ -431,7 +430,6 @@ typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
 inline RecordId ExposureRecord::getId() const { return get(ExposureTable::getIdKey()); }
 inline void ExposureRecord::setId(RecordId id) { set(ExposureTable::getIdKey(), id); }
 
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

@@ -50,9 +50,7 @@ public:
     IntT getMask(Key<Flag> const & key) const { return IntT(1) << getBit(key); }
     IntT getMask(std::string const & name) const { return IntT(1) << getBit(name); }
 
-#ifndef SWIG
     std::vector< SchemaItem<Flag> > const & getSchemaItems() const { return _items; }
-#endif
 
 private:
 

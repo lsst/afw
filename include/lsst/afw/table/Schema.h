@@ -46,7 +46,7 @@ class Schema {
 public:
 
     // This variable is defined in SchemaImpl, but is replicated here as
-    // a static so that it is available to SWIG.
+    // so that it is available to Python.
     static int const VERSION = detail::SchemaImpl::VERSION;
 
     /**
@@ -417,8 +417,9 @@ public:
     /**
      *  @brief Implicit conversion to the appropriate Key type.
      *
-     *  Implicit conversion operators cannot be translated to Python.  Instead, the SWIG
-     *  wrappers provide an equivalent asKey() method.
+     *  Implicit conversion operators that are invoked via assignment cannot
+     *  be translated to Python.  Instead, the Python wrappers provide an
+     *  equivalent asKey() method.
      */
     template <typename T>
     operator Key<T>() const { return _impl->find<T>(_aliases->apply(_name)).key; }
@@ -426,8 +427,9 @@ public:
     /**
      *  @brief Implicit conversion to the appropriate Key type.
      *
-     *  Implicit conversion operators cannot be translated to Python.  Instead, the SWIG
-     *  wrappers provide an equivalent asField() method.
+     *  Implicit conversion operators that are invoked via assignment cannot
+     *  be translated to Python.  Instead, the Python wrappers provide an
+     *  equivalent asField() method.
      */
     template <typename T>
     operator Field<T>() const { return _impl->find<T>(_aliases->apply(_name)).field; }
