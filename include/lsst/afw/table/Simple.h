@@ -205,8 +205,6 @@ private:
     PTR(IdFactory) _idFactory;        // generates IDs for new records
 };
 
-#ifndef SWIG
-
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }
 inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id); }
 
@@ -219,8 +217,6 @@ inline void SimpleRecord::setRa(Angle ra) { set(SimpleTable::getCoordKey().getRa
 
 inline Angle SimpleRecord::getDec() const { return get(SimpleTable::getCoordKey().getDec()); }
 inline void SimpleRecord::setDec(Angle dec) { set(SimpleTable::getCoordKey().getDec(), dec); }
-
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

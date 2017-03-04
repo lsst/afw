@@ -40,12 +40,7 @@ namespace table {
  *  Each table class should be associated with a particular record class (1-to-1).  Each table instance may
  *  be associated with many record instances.
  */
-class BaseTable
-#ifndef SWIG // swig complains about these not being %shared_ptrs, but it doesn't need to know about them
-: public std::enable_shared_from_this<BaseTable>,
-  public daf::base::Citizen
-#endif
-{
+class BaseTable : public std::enable_shared_from_this<BaseTable>, public daf::base::Citizen {
 public:
 
     /// The associated record class.

@@ -10,7 +10,6 @@
 
 #include "lsst/afw/table/Schema.h"
 
-#ifndef SWIG
 
 namespace lsst { namespace afw { namespace table {
 
@@ -94,7 +93,5 @@ private:
 };
 
 }}}} // namespace lsst::afw::table::detail
-
-#endif // !SWIG
 
 #endif // !AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED

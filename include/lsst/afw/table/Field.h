@@ -72,23 +72,6 @@ struct Field : public FieldBase<T> {
         FieldBase<T> const & size
     ) : FieldBase<T>(size), _name(name), _doc(doc), _units() {}
 
-#ifdef SWIG
-    // SWIG doesn't understand implicit conversions from int to FieldBase, even with %implicitconv.
-    // We don't need to define these, because when SWIG calls them in its implementation, the
-    // implicit conversion *will* work.
-    Field(
-        std::string const & name,
-        std::string const & doc,
-        std::string const & units,
-        int size
-    );
-    Field(
-        std::string const & name,
-        std::string const & doc,
-        int size
-    );
-#endif
-
     /// @brief Return the name of the field.
     std::string const & getName() const { return _name; }
 

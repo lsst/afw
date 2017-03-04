@@ -90,16 +90,12 @@ public:
      */
     void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const;
 
-#ifndef SWIG // only expose the higher-level interfaces to Python
-
     /**
      *  @brief Write the object to an already-open FITS object.
      *
      *  @param[in] fitsfile     Open FITS object to write to.
      */
     void writeFits(fits::Fits & fitsfile) const;
-
-#endif // !SWIG
 
     /// @brief Return true if this particular object can be persisted using afw::table::io.
     virtual bool isPersistable() const { return false; }
@@ -180,8 +176,6 @@ template <typename T>
 class PersistableFacade {
 public:
 
-#ifndef SWIG
-
     /**
      *  @brief Read an object from an already open FITS object.
      *
@@ -190,8 +184,6 @@ public:
     static PTR(T) readFits(fits::Fits & fitsfile) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
     }
-
-#endif // !SWIG
 
     /**
      *  @brief Read an object from a regular FITS file.
@@ -216,8 +208,6 @@ public:
     }
 
 };
-
-#ifndef SWIG
 
 /**
  *  @brief A base class for factory classes used to reconstruct objects from records.
@@ -267,8 +257,6 @@ public:
     PersistableFactory (PersistableFactory&&) = delete;
     PersistableFactory& operator=(PersistableFactory&&) = delete;
 };
-
-#endif // !SWIG
 
 }}}} // namespace lsst::afw::table::io
 

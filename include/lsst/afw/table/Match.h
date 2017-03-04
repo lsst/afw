@@ -145,8 +145,6 @@ SourceMatchVector matchXy(
  */
 SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetric);
 
-#ifndef SWIG // swig will be confused by the nested names below; repeated with typedefs in match.i
-
 /************************************************************************************************************/
 /**
  * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
@@ -256,8 +254,6 @@ BaseCatalog packMatches(std::vector< Match<Record1,Record2> > const & matches);
 template <typename Cat1, typename Cat2>
 std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
 unpackMatches(BaseCatalog const & matches, Cat1 const & cat1, Cat2 const & cat2);
-
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 
