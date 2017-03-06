@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import lsst.afw.geom as afwGeom
-from ._image import LOCAL
+from .image import LOCAL
 
 __all__ = ["supportSlicing"]
 

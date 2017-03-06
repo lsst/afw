@@ -22,9 +22,9 @@ from __future__ import absolute_import, division
 #
 import numpy
 from lsst.pex.config import Config, ListField, makeRegistry, ConfigDictField, ConfigurableField
-from ._XYTransform import IdentityXYTransform, InvertedXYTransform, RadialXYTransform, \
+from .xyTransform import IdentityXYTransform, InvertedXYTransform, RadialXYTransform, \
     MultiXYTransform, AffineXYTransform
-from ._AffineTransform import AffineTransform
+from .affineTransform import AffineTransform
 
 __all__ = ["xyTransformRegistry", "OneXYTransformConfig"]
 

@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,11 +19,11 @@
  * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+
+#include "pybind11/pybind11.h"
+
 #include <memory>
 #include <limits>
-
-#include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/coord/Coord.h"
@@ -43,12 +43,14 @@ namespace afw {
 namespace image {
 
 namespace {
-    double const nan(std::numeric_limits<double>::quiet_NaN());
-    geom::Angle const nanAngle(nan);
-}
 
-PYBIND11_PLUGIN(_visitInfo) {
-    py::module mod("_visitInfo", "Python wrapper for afw _visitInfo library");
+static double const nan(std::numeric_limits<double>::quiet_NaN());
+static geom::Angle const nanAngle(nan);
+
+} // anonymous
+
+PYBIND11_PLUGIN(visitInfo) {
+    py::module mod("visitInfo");
 
     /* Module level */
     table::io::python::declarePersistableFacade<VisitInfo>(mod, "VisitInfo");

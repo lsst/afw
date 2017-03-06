@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -34,10 +34,10 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyColor = py::class_<Color>;
+using PyColor = py::class_<Color, std::shared_ptr<Color>>;
 
-PYBIND11_PLUGIN(_color) {
-    py::module mod("_color");
+PYBIND11_PLUGIN(color) {
+    py::module mod("color");
 
     /* Module level */
     PyColor cls(mod, "Color");

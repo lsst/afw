@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -28,7 +28,6 @@
 
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray_fwd.h"
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -51,8 +50,8 @@ using PyCalib =
         table::io::Persistable
     >;
 
-PYBIND11_PLUGIN(_calib) {
-    py::module mod("_calib");
+PYBIND11_PLUGIN(calib) {
+    py::module mod("calib");
 
     if (_import_array() < 0) {
             PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");

@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -20,10 +20,30 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""Application Framework image-related classes including Image, Mask and MaskedImage
-"""
-import numpy
-from .imageLib import *
+from __future__ import absolute_import
+
+from . import pixel
+
+from .apCorrMap import *
+from .calib import *
+from .coaddInputs import *
+from .color import *
+from .defect import *
+from .filter import *
+from .image import *
+from .imageSlice import *
+from .mask import *
+from .maskedImage import *
+from .visitInfo import *
+from .wcs import *
+from .exposureInfo import *
+from .exposure import *
+from .tanWcs import *
+from .distortedTanWcs import *
+from .imagePca import *
+from .imageUtils import *
+from .readMetadata import *
+
 from .basicUtils import *
 from .testUtils import *
 from .makeVisitInfo import makeVisitInfo

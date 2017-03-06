@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -20,6 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""Application Framework image-related classes including Image, Mask and MaskedImage
-"""
-from ._pixel import *
+from __future__ import absolute_import
+
+from .pixel import *

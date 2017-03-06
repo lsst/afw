@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division
-from builtins import range
-from builtins import object
 #
 # LSST Data Management System
 # Copyright 2016 LSST Corporation.
@@ -22,11 +19,17 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import numpy as np
-
-from ._Box import Box2I, Box2D
+from __future__ import absolute_import, division
 
 __all__ = ["BoxGrid"]
+
+from builtins import range
+from builtins import object
+
+import numpy as np
+
+from .box import Box2I, Box2D
+
 
 class BoxGrid(object):
     """!Divide a box into nx by ny sub-boxes that tile the region

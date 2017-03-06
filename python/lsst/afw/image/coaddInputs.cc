@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -39,8 +39,8 @@ namespace {
 using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>,
                                  table::io::PersistableFacade<CoaddInputs>, table::io::Persistable>;
 
-PYBIND11_PLUGIN(_coaddInputs) {
-    py::module mod("_coaddInputs", "Python wrapper for afw _coaddInputs library");
+PYBIND11_PLUGIN(coaddInputs) {
+    py::module mod("coaddInputs");
 
     /* Module level */
 

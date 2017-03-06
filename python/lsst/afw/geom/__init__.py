@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -24,20 +24,19 @@
 """
 from __future__ import absolute_import
 
-from ._Angle import *
-from ._coordinates import *
-from ._Box import *
-from ._Functor import *
-from ._Span import *
-from ._SpherePoint import *
-from ._XYTransform import *
-from ._SeparableXYTransform import *
-from ._LinearTransform import *
-from ._AffineTransform import *
-from ._SpanSet import *
+from .angle import *
+from .coordinates import *
+from .box import *
+from .functor import *
+from .span import *
+from .spherePoint import *
+from .xyTransform import *
+from .separableXYTransform import *
+from .linearTransform import *
+from .affineTransform import *
+from .spanSet import *
 
 from .xyTransformFactory import *
 from .transformConfig import *
 from .transformMap import *
 from .utils import *
-

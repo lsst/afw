@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -44,8 +44,16 @@ namespace {
 
 using PyExposureInfo = py::class_<ExposureInfo, std::shared_ptr<ExposureInfo>>;
 
-PYBIND11_PLUGIN(_exposureInfo) {
-    py::module mod("_exposureInfo");
+PYBIND11_PLUGIN(exposureInfo) {
+    py::module mod("exposureInfo");
+
+    py::module::import("lsst.daf.base");
+    py::module::import("lsst.afw.image.wcs");
+    py::module::import("lsst.afw.image.calib");
+    py::module::import("lsst.afw.image.apCorrMap");
+    py::module::import("lsst.afw.image.coaddInputs");
+    py::module::import("lsst.afw.image.filter");
+    py::module::import("lsst.afw.image.visitInfo");
 
     /* Module level */
     PyExposureInfo cls(mod, "ExposureInfo");

@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -34,8 +34,10 @@ namespace {
 
 using PyDefectBase = py::class_<DefectBase, std::shared_ptr<DefectBase>>;
 
-PYBIND11_PLUGIN(_defect) {
-    py::module mod("_defect");
+PYBIND11_PLUGIN(defect) {
+    py::module mod("defect");
+
+    py::module::import("lsst.afw.geom");
 
     PyDefectBase cls(mod, "DefectBase");
 

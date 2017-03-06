@@ -35,7 +35,7 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import PropertySet
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9

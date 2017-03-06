@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -35,8 +35,11 @@ namespace {
 
 using PyDistortedTanWcs = py::class_<DistortedTanWcs, std::shared_ptr<DistortedTanWcs>, TanWcs>;
 
-PYBIND11_PLUGIN(_distortedTanWcs) {
-    py::module mod("_distortedTanWcs");
+PYBIND11_PLUGIN(distortedTanWcs) {
+    py::module mod("distortedTanWcs");
+
+    py::module::import("lsst.afw.geom");
+    py::module::import("lsst.afw.image.tanWcs");
 
     /* Module level */
     PyDistortedTanWcs cls(mod, "DistortedTanWcs");

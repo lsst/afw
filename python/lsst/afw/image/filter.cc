@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2008-2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -37,10 +37,13 @@ namespace {
 
 using PyFilterProperty = py::class_<FilterProperty, std::shared_ptr<FilterProperty>>;
 
-using PyFilter = py::class_<Filter>;
+using PyFilter = py::class_<Filter, std::shared_ptr<Filter>>;
 
-PYBIND11_PLUGIN(_filter) {
-    py::module mod("_filter");
+PYBIND11_PLUGIN(filter) {
+    py::module mod("filter");
+
+    py::module::import("lsst.daf.base");
+    py::module::import("lsst.pex.policy");
 
     mod.def("stripFilterKeywords", &detail::stripFilterKeywords, "metadata"_a);
 
