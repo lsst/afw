@@ -20,17 +20,23 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import absolute_import, division, print_function
+
+__all__ = ["makeMergedSchema", "copyIntoCatalog", "matchesToCatalog", "matchesFromCatalog"]
+
 import os.path
 
 from builtins import zip
 from builtins import range
 import numpy as np
 
-from .tableLib import (BaseCatalog, SimpleCatalog, SourceCatalog, SimpleTable, SourceTable,
-                       Schema, SchemaMapper, ReferenceMatch)
-from lsst.utils import getPackageDir
+from .schema import Schema
+from .schemaMapper import SchemaMapper
+from .base import BaseCatalog
+from .simple import SimpleCatalog, SimpleTable
+from .source import SourceCatalog, SourceTable
+from .match import ReferenceMatch
 
-__all__ = ["makeMergedSchema", "copyIntoCatalog", "matchesToCatalog", "matchesFromCatalog"]
+from lsst.utils import getPackageDir
 
 
 def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):

@@ -1,5 +1,3 @@
-#ifndef AFW_TABLE_PYBIND11_CATALOG_H_INCLUDED
-#define AFW_TABLE_PYBIND11_CATALOG_H_INCLUDED
 /*
  * LSST Data Management System
  * Copyright 2016  AURA/LSST.
@@ -21,22 +19,13 @@
  * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <utility>
+#ifndef AFW_TABLE_PYTHON_CATALOG_H_INCLUDED
+#define AFW_TABLE_PYTHON_CATALOG_H_INCLUDED
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "numpy/arrayobject.h"
-#include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
+#include "pybind11/pybind11.h"
 
 #include "lsst/utils/python.h"
 #include "lsst/afw/table/BaseColumnView.h"
-#include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
 
 namespace lsst {
@@ -44,79 +33,104 @@ namespace afw {
 namespace table {
 namespace python {
 
-/**
-Add a _castFrom method to a table or record class
-*/
-template <typename FromT, typename ClassT>
-void addCastFrom(ClassT & cls) {
-    using ToT = typename ClassT::type;
-    cls.def_static("_castFrom",
-                   [](std::shared_ptr<FromT> from) {
-                        return std::dynamic_pointer_cast<ToT>(from);
-                   });
-}
+template <typename Record>
+using PyCatalog = pybind11::class_<CatalogT<Record>, std::shared_ptr<CatalogT<Record>>>;
 
 /**
 Declare field-type-specific overloaded catalog member functions for one field type
 
-@tparam RecordT  Record type, e.g. BaseRecord or SimpleRecord.
 @tparam T  Field type.
-
-@param[in] cls  Catalog pybind11 class.
-@param[in] suffix  Field type suffix, such as "I" for int, "L" for long,
-    "F" for float, "D" for double, or "Angle" for afw::geom::Angle.
-*/
-template <typename RecordT, typename T>
-void declareCatalogOverloads(
-    pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls,
-    const std::string suffix
-) {
-    typedef CatalogT<RecordT> Catalog;
-
-    cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) &Catalog::isSorted);
-    cls.def("_sort", (void (Catalog::*)(Key<T> const &)) &Catalog::sort);
-    cls.def(("_find_" + suffix).c_str(),
-            [](Catalog & self, T const & value, Key<T> const & key)->std::shared_ptr<RecordT> {
-        typename Catalog::const_iterator iter = self.find(value, key);
-        if (iter == self.end()) {
-            return std::shared_ptr<RecordT>();
-        };
-        return iter;
-    });
-    cls.def(("_upper_bound_" + suffix).c_str(),
-            [](Catalog & self, T const & value, Key<T> const & key)->int {
-        return self.upper_bound(value, key) - self.begin();
-    });
-    cls.def(("_lower_bound_" + suffix).c_str(),
-            [](Catalog & self, T const & value, Key<T> const & key)->int {
-        return self.lower_bound(value, key) - self.begin();
-    });
-    cls.def(("_equal_range_" + suffix).c_str(),
-            [](Catalog & self, T const & value, Key<T> const & key)->std::pair<int,int> {
-        std::pair<typename Catalog::const_iterator, typename Catalog::const_iterator> p
-            = self.equal_range(value, key);
-        return std::pair<int,int>(p.first - self.begin(), p.second - self.begin());
-    });
-};
-
-/**
-Declare member and static functions for a given instantiation of lsst::afw::table::CatalogT<RecordT>.
-
-@tparam RecordT  Record type, e.g. BaseRecord or SimpleRecord.
+@tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
 
 @param[in] cls  Catalog pybind11 class.
 */
-template <typename RecordT>
-void declareCatalog(pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<RecordT>>> & cls) {
+
+template <typename T, typename Record>
+void declareCatalogOverloads(PyCatalog<Record> & cls) {
+
+    namespace py = pybind11;
     using namespace pybind11::literals;
 
-    using Catalog = CatalogT<RecordT>;
-    using Table = typename RecordT::Table;
+    typedef CatalogT<Record> Catalog;
+    typedef typename Field<T>::Value Value;
+
+    cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) &Catalog::isSorted);
+    cls.def("sort", (void (Catalog::*)(Key<T> const &)) &Catalog::sort);
+    cls.def(
+        "find",
+        [](Catalog & self, Value const & value, Key<T> const & key) -> std::shared_ptr<Record>
+        {
+            auto iter = self.find(value, key);
+            if (iter == self.end()) {
+                return nullptr;
+            };
+            return iter;
+        }
+    );
+    cls.def(
+        "upper_bound",
+        [](Catalog & self, Value const & value, Key<T> const & key) -> std::ptrdiff_t {
+            return self.upper_bound(value, key) - self.begin();
+        }
+    );
+    cls.def(
+        "lower_bound",
+        [](Catalog & self, Value const & value, Key<T> const & key) -> std::ptrdiff_t {
+            return self.lower_bound(value, key) - self.begin();
+        }
+    );
+    cls.def(
+        "equal_range",
+        [](Catalog & self, Value const & value, Key<T> const & key) {
+            auto p = self.equal_range(value, key);
+            return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
+        }
+    );
+    cls.def(
+        "between",
+        [](Catalog & self, Value const & lower, Value const & upper, Key<T> const & key) {
+            std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
+            std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
+            return py::slice(a, b, 1);
+        }
+    );
+}
+
+/**
+Wrap an instantiation of lsst::afw::table::CatalogT<Record>.
+
+In addition to calling this method you must call addCatalogMethods on the
+class object in Python.
+
+@tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
+
+@param[in] mod    Module object class will be added to.
+@param[in] name   Name prefix of the record type, e.g. "Base" or "Simple".
+@param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
+*/
+template <typename Record>
+PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & name, bool isBase=false) {
+
+    namespace py = pybind11;
+    using namespace pybind11::literals;
+
+    using Catalog = CatalogT<Record>;
+    using Table = typename Record::Table;
+
+    std::string fullName;
+    if (isBase) {
+        fullName = "_" + name + "CatalogBase";
+    } else {
+        fullName = name + "Catalog";
+    }
+
+    // We need py::dynamic_attr() below to support our Python-side caching of the associated ColumnView.
+    PyCatalog<Record> cls(mod, fullName.c_str(), py::dynamic_attr());
 
     /* Constructors */
-    cls.def(pybind11::init<Schema const &>());
-    cls.def(pybind11::init<std::shared_ptr<Table> const &>());
-    cls.def(pybind11::init<Catalog const &>());
+    cls.def(py::init<Schema const &>(), "schema"_a);
+    cls.def(py::init<std::shared_ptr<Table> const &>(), "table"_a);
+    cls.def(py::init<Catalog const &>(), "other"_a);
 
     /* Static Methods */
     cls.def_static("readFits",
@@ -125,6 +139,7 @@ void declareCatalog(pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT
     cls.def_static("readFits",
                    (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
                    "manager"_a, "hdu"_a=0, "flags"_a=0);
+    // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
 
     /* Methods */
     cls.def("getTable", &Catalog::getTable);
@@ -144,17 +159,22 @@ void declareCatalog(pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT
     cls.def("_extend", [](Catalog & self, Catalog const & other, SchemaMapper const & mapper) {
         self.insert(mapper, self.end(), other.begin(), other.end());
     });
-    cls.def("_append", [](Catalog & self, std::shared_ptr<RecordT> const & rec) {
+    cls.def("_append", [](Catalog & self, std::shared_ptr<Record> const & rec) {
         self.push_back(rec);
     });
     cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
         self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
     });
     cls.def("_clear", &Catalog::clear);
- 
+
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
-        return self.get(utils::python::cppIndex(self.size(), i));
+        try { // try/catch is a workaround for DM-9715
+            return self.get(utils::python::cppIndex(self.size(), i));
+        } catch (pex::exceptions::OutOfRangeError & err) {
+            PyErr_SetString(PyExc_IndexError, err.what());
+            throw py::error_already_set();
+        }
     });
     cls.def("isContiguous", &Catalog::isContiguous);
     cls.def("writeFits",
@@ -163,19 +183,20 @@ void declareCatalog(pybind11::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT
     cls.def("writeFits",
             (void (Catalog::*)(fits::MemFileManager &, std::string const &, int) const) &Catalog::writeFits,
             "manager"_a, "mode"_a="w", "flags"_a=0);
-    //cls.def("writeFits", (void (Catalog::*)() const) &Catalog::writeFits);
     cls.def("reserve", &Catalog::reserve);
     cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const,1> const &) const) &Catalog::subset);
     cls.def("subset",
             (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &Catalog::subset);
 
-    declareCatalogOverloads<RecordT, std::int32_t>(cls, "I");
-    declareCatalogOverloads<RecordT, std::int64_t>(cls, "L");
-    declareCatalogOverloads<RecordT, float>(cls, "F");
-    declareCatalogOverloads<RecordT, double>(cls, "D");
-    declareCatalogOverloads<RecordT, lsst::afw::geom::Angle>(cls, "Angle");
+    declareCatalogOverloads<std::int32_t>(cls);
+    declareCatalogOverloads<std::int64_t>(cls);
+    declareCatalogOverloads<float>(cls);
+    declareCatalogOverloads<double>(cls);
+    declareCatalogOverloads<lsst::afw::geom::Angle>(cls);
+
+    return cls;
 };
 
 }}}} // lsst::afw::table::python
 
-#endif
+#endif // !LSST_AFW_TABLE_PYTHON_CATALOG_H_INCLUDED

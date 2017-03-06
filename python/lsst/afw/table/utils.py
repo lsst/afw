@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
-from .tableLib import CoordKey, Point2DKey
+from .aggregates import CoordKey, Point2DKey
 
 __all__ = ["updateRefCentroids", "updateSourceCoords"]
 
