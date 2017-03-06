@@ -252,18 +252,11 @@ class SchemaMapperTestCase(unittest.TestCase):
         k2 = mapper.addOutputField(lsst.afw.table.Field[np.float32]("a2", "doc for a2"))
         self.assertNotIn(k2, out1)
         self.assertIn(k2, mapper.getOutputSchema())
-        # There is some error with pybind11 causing this problem. Need to find it
-        for o in out2:
-            print('before', o)
-        for o in mapper.getOutputSchema():
-            print('after', o)
-        #self.assertIn(k2, out2)
+        self.assertIn(k2, out2)
         k3 = out2.addField("a3", type=np.float32, doc="doc for a3")
         self.assertNotIn(k3, out1)
         self.assertIn(k3, mapper.getOutputSchema())
         self.assertIn(k3, out2)
-        for o in out2:
-            print('way after',o)
         self.assertIn(k2, out2)
 
     def testDoReplace(self):

@@ -106,7 +106,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
 
         self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(self.schema,
-                                                               "c", "", lsst.afw.table.CoordinateType_PIXEL)
+                                                               "c", "", lsst.afw.table.CoordinateType.PIXEL)
         self.xxErrKey = self.schema.addField("c_xxSigma", type="F")
         self.xyErrKey = self.schema.addField("c_xySigma", type="F")
         self.yyErrKey = self.schema.addField("c_yySigma", type="F")
@@ -473,7 +473,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         filename = os.path.join(testPath, "data", "old-footprint-persistence.fits")
         catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
         self.assertEqual(len(catalog1), 2)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(LookupError):
             catalog1.schema.find("footprint")
         fp1 = catalog1[0].getFootprint()
         fp2 = catalog1[1].getFootprint()
