@@ -20,9 +20,10 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "pybind11/pybind11.h"
+
 #include <memory>
 
-#include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
 #include "lsst/afw/table/BaseRecord.h"
@@ -42,18 +43,11 @@ namespace {
 
 using PyPeakRecord = py::class_<PeakRecord, std::shared_ptr<PeakRecord>, table::BaseRecord>;
 using PyPeakTable = py::class_<PeakTable, std::shared_ptr<PeakTable>, table::BaseTable>;
-using PyPeakColumnView = py::class_<table::ColumnViewT<PeakRecord>,
-                                    std::shared_ptr<table::ColumnViewT<PeakRecord>>,
-                                    table::BaseColumnView>;
-using PyPeakCatalog = py::class_<table::CatalogT<PeakRecord>,
-                                 std::shared_ptr<table::CatalogT<PeakRecord>>>;
 
 /**
 Declare constructors and member and static functions for a pybind11 PeakRecord
 */
 void declarePeakRecord(PyPeakRecord & cls) {
-    table::python::addCastFrom<table::BaseRecord>(cls);
-
     cls.def("getTable", &PeakRecord::getTable);
     cls.def_property_readonly("table", &PeakRecord::getTable);
     cls.def("getId", &PeakRecord::getId);
@@ -78,8 +72,6 @@ void declarePeakRecord(PyPeakRecord & cls) {
 Declare constructors and member and static functions for a pybind11 PeakTable
 */
 void declarePeakTable(PyPeakTable & cls) {
-    table::python::addCastFrom<table::BaseTable>(cls);
-
     cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a=false);
     cls.def_static("makeMinimalSchema", &PeakTable::makeMinimalSchema);
     cls.def_static("checkSchema", &PeakTable::checkSchema, "schema"_a);
@@ -106,14 +98,12 @@ PYBIND11_PLUGIN(_peak) {
     /* Module level */
     PyPeakRecord clsPeakRecord(mod, "PeakRecord");
     PyPeakTable clsPeakTable(mod, "PeakTable");
-    PyPeakColumnView clsPeakColumnView(mod, "PeakColumnView");
-    PyPeakCatalog clsPeakCatalog(mod, "PeakCatalog", py::dynamic_attr());
 
     /* Members */
     declarePeakRecord(clsPeakRecord);
     declarePeakTable(clsPeakTable);
-    table::python::declareColumnView(clsPeakColumnView);
-    table::python::declareCatalog(clsPeakCatalog);
+    auto clsPeakColumnView = table::python::declareColumnView<PeakRecord>(mod, "Peak");
+    auto clsPeakCatalog = table::python::declareCatalog<PeakRecord>(mod, "Peak");
 
     clsPeakRecord.attr("Table") = clsPeakTable;
     clsPeakRecord.attr("ColumnView") = clsPeakColumnView;

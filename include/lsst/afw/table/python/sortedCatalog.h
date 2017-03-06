@@ -1,9 +1,9 @@
 #ifndef AFW_TABLE_PYBIND11_SORTEDCATALOG_H_INCLUDED
 #define AFW_TABLE_PYBIND11_SORTEDCATALOG_H_INCLUDED
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
- * 
+ * Copyright 2008-2017  AURA/LSST.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,63 +11,67 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
 
-#include "lsst/afw/table/Source.h"
-#include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/SortedCatalog.h"
+#include "lsst/afw/table/python/catalog.h"
 
 namespace lsst {
 namespace afw {
 namespace table {
 namespace python {
 
+template <typename Record>
+using PySortedCatalog = pybind11::class_<SortedCatalogT<Record>, std::shared_ptr<SortedCatalogT<Record>>,
+                                         CatalogT<Record>>;
+
 /**
-Declare member and static functions for a given instantiation of lsst::afw::table::CatalogT<RecordT>
-that supplement or override methods of lsst::afw::table::CatalogT<RecordT>
+Wrap an instantiation of lsst::afw::table::SortedCatalogT<Record>.
 
-To use this:
-- Instantiate a hidden CatalogT<RecordT> unsorted base class, using a name with a leading underscore.
-- Call `declareCatalog` to add methods to the hidden unsorted base class.
-- Instantiate a SortedCatalogT<RecordT> as the class of interest.
-- Call `declareSortedCatalog` to add methods to it.
-- In a python module:
+In addition to calling this method (which also instantiates and wraps the CatalogT base class),
+you must call addCatalogMethods on the class object in Python.
 
-    from lsst.afw.table.catalog import addCatalogMethods
-    from lsst.afw.table.sortedCatalog import addSortedCatalogMethods
-    from *yourmodule* import *YourCatalogClass*
-    addCatalogMethods(*YourCatalogClass*)
-    addSortedCatalogMethods(*YourCatalogClass*)
+@tparam Record  Record type, e.g. BaseRecord or SimpleRecord.
 
-@tparam RecordT  Record type, e.g. BaseRecord or SimpleRecord.
+@param[in] mod    Module object class will be added to.
+@param[in] name   Name prefix of the record type, e.g. "Base" or "Simple".
+@param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
 
-@param[in] cls  Catalog pybind11 class.
-
-@warning It is crucial to specify all methods that SortedCatalogT overloads here.
-Otherwise the wrong version will be called, which can lead to issues such as
-returning instances of the hidden base class.
 */
-template <typename RecordT>
-void declareSortedCatalog(
-    pybind11::class_<SortedCatalogT<RecordT>, std::shared_ptr<SortedCatalogT<RecordT>>, CatalogT<RecordT>> & cls
+template <typename Record>
+PySortedCatalog<Record> declareSortedCatalog(
+    pybind11::module & mod,
+    std::string const & name,
+    bool isBase=false
 ) {
+    namespace py = pybind11;
     using namespace pybind11::literals;
 
-    using Catalog = SortedCatalogT<RecordT>;
-    using Table = typename RecordT::Table;
+    using Catalog = SortedCatalogT<Record>;
+    using Table = typename Record::Table;
+
+    auto clsBase = declareCatalog<Record>(mod, name, true);
+
+    std::string fullName;
+    if (isBase) {
+        fullName = "_" + name + "SortedCatalogBase";
+    } else {
+        fullName = name + "Catalog";
+    }
+
+    // We need py::dynamic_attr() below to support our Python-side caching of the associated ColumnView.
+    PySortedCatalog<Record> cls(mod, fullName.c_str(), py::dynamic_attr());
 
     /* Constructors */
     cls.def(pybind11::init<Schema const &>());
@@ -81,10 +85,49 @@ void declareSortedCatalog(
     cls.def_static("readFits",
                    (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
                    "manager"_a, "hdu"_a=0, "flags"_a=0);
+    // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
+
     cls.def("subset",
             (Catalog (Catalog::*)(ndarray::Array<bool const,1> const &) const) &Catalog::subset);
     cls.def("subset",
             (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &Catalog::subset);
+
+    // The following three methods shadow those in the base class in C++ (unlike the base class versions,
+    // they do not require a ley argument because we assume it's the ID key).  In Python, we make that appear
+    // as though the key argument is available but has a default value.  If that key is not None, we delegate
+    // to the base class.
+    cls.def(
+        "isSorted",
+        [clsBase](py::object const & self, py::object key) -> py::object {
+            if (key == py::none()) {
+                key = self.attr("table").attr("getIdKey")();
+            }
+            return clsBase.attr("isSorted")(self, key);
+        },
+        "key"_a=py::none()
+    );
+    cls.def(
+        "sort",
+        [clsBase](py::object const & self, py::object key) -> py::object {
+            if (key == py::none()) {
+                key = self.attr("table").attr("getIdKey")();
+            }
+            return clsBase.attr("sort")(self, key);
+        },
+        "key"_a=py::none()
+    );
+    cls.def(
+        "find",
+        [clsBase](py::object const & self, py::object const & value, py::object key) -> py::object {
+            if (key == py::none()) {
+                key = self.attr("table").attr("getIdKey")();
+            }
+            return clsBase.attr("find")(self, value, key);
+        },
+        "value"_a, "key"_a=py::none()
+    );
+
+    return cls;
 };
 
 }}}} // lsst::afw::table::python

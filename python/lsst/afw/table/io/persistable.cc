@@ -20,37 +20,35 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/fits.h"
 
 namespace py = pybind11;
-
 using namespace py::literals;
 
-using namespace lsst::afw::table::io;
+namespace lsst { namespace afw { namespace table { namespace io {
 
-PYBIND11_PLUGIN(_persistable) {
-    py::module mod("_persistable", "Python wrapper for afw _persistable library");
+using PyPersistable = py::class_<Persistable, std::shared_ptr<Persistable>>;
 
-    /* Module level */
-    py::class_<Persistable, std::shared_ptr<Persistable>> clsPersistable(mod, "Persistable");
+PYBIND11_PLUGIN(persistable) {
+    py::module mod("persistable");
+    py::module::import("lsst.afw.fits");
 
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
-    clsPersistable.def("writeFits", (void (Persistable::*)(std::string const &, std::string const &) const) &Persistable::writeFits,
-                       "fileName"_a, "mode"_a="w");
-    clsPersistable.def("writeFits", (void (Persistable::*)(lsst::afw::fits::MemFileManager &, std::string const &) const) &Persistable::writeFits,
-                       "manager"_a, "mode"_a="w");
-    clsPersistable.def("isPersistable", &Persistable::isPersistable);
+    PyPersistable cls(mod, "Persistable");
+    cls.def(
+        "writeFits",
+        (void (Persistable::*)(std::string const &, std::string const &) const) &Persistable::writeFits,
+        "fileName"_a, "mode"_a="w");
+    cls.def(
+        "writeFits",
+        (void (Persistable::*)(fits::MemFileManager &, std::string const &) const) &Persistable::writeFits,
+        "manager"_a, "mode"_a="w"
+    );
+    cls.def("isPersistable", &Persistable::isPersistable);
 
     return mod.ptr();
 }
+
+}}}} // namespace lsst::afw::table::io

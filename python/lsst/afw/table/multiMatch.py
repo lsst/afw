@@ -6,7 +6,9 @@ from builtins import object
 import numpy
 
 import lsst.afw.geom
-from .tableLib import SchemaMapper, CoordKey, SourceRecord
+from .schemaMapper import SchemaMapper
+from .aggregates import CoordKey
+from .source import SourceRecord
 
 
 class MultiMatch(object):

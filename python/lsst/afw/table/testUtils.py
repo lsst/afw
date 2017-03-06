@@ -23,7 +23,7 @@ from __future__ import absolute_import, division, print_function
 
 import lsst.utils.tests
 import difflib
-from .tableLib import Schema
+from .schema import Schema
 
 __all__ = ["assertSchemasEqual", "diffSchemas", "joinWords"]
 
