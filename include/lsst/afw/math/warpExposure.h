@@ -357,7 +357,8 @@ namespace math {
          * @brief set mask bits to grow to full width of image/variance kernel
          */
         void setGrowFullMask(
-            lsst::afw::image::MaskPixel growFullMask  ///< device preference
+            lsst::afw::image::MaskPixel growFullMask  ///< mask bits to grow to full width
+                                                      ///< of image/variance kernel
         ) { _growFullMask = growFullMask; }
 
     private:
