@@ -84,6 +84,8 @@ public:
     std::string getLongitudeStr() const;
     /// get telescope latitude as a dd:mm:ss.s string
     std::string getLatitudeStr() const;
+    /// get string representation
+    std::string toString() const;
 
     bool operator==(Observatory const& rhs) const {
         auto deltaLongitude = _latitude - rhs.getLatitude();

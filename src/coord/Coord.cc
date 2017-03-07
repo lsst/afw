@@ -1027,6 +1027,15 @@ afwCoord::IcrsCoord afwCoord::IcrsCoord::toIcrs() const {
     return IcrsCoord(getLongitude(), getLatitude());
 }
 
+/**
+ * @brief Get string representation
+ */
+std::string afwCoord::IcrsCoord::toString() const {
+    return (boost::format("%s(%.7f, %.7f)")
+            % getClassName()
+            % (*this)[0].asDegrees()
+            % (*this)[1].asDegrees()).str();
+}
 
 
 
@@ -1064,6 +1073,16 @@ afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5() const {
  */
 afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() const {
     return GalacticCoord(getLongitude(), getLatitude());
+}
+
+/**
+ * @brief Get string representation
+ */
+std::string afwCoord::GalacticCoord::toString() const {
+    return (boost::format("%s(%.7f, %.7f)")
+            % getClassName()
+            % (*this)[0].asDegrees()
+            % (*this)[1].asDegrees()).str();
 }
 
 
@@ -1193,6 +1212,18 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
  */
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric() const {
     return TopocentricCoord(getLongitude(), getLatitude(), getEpoch(), _obs);
+}
+
+/**
+ * @brief Get string representation
+ */
+std::string afwCoord::TopocentricCoord::toString() const {
+    return (boost::format("%s(%.7f, %.7f, %.12f, (%s))")
+            % getClassName()
+            % (*this)[0].asDegrees()
+            % (*this)[1].asDegrees()
+            % getEpoch()
+            % getObservatory()).str();
 }
 
 
@@ -1424,21 +1455,19 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     }
 }
 
+/**
+ * @brief Get string representation
+ */
+std::string afwCoord::Coord::toString() const {
+    return (boost::format("%s(%.7f, %.7f, %.2f)")
+            % getClassName()
+            % (*this)[0].asDegrees()
+            % (*this)[1].asDegrees()
+            % getEpoch()).str();
+}
+
 std::ostream & afwCoord::operator<<(std::ostream & os, afwCoord::Coord const & coord) {
-    auto const className = coord.getClassName();
-    auto const coordSystem = coord.getCoordSystem();
-    os << (boost::format("%s(%.7f, %.7f")
-            % className
-            % coord[0].asDegrees()
-            % coord[1].asDegrees()).str();
-    if (coordSystem == TOPOCENTRIC) {
-        os << (boost::format(", %.12f, (%s)")
-                % coord.getEpoch()
-                % dynamic_cast<afwCoord::TopocentricCoord const &>(coord).getObservatory()).str();
-    } else if (coordSystem != ICRS && coordSystem != GALACTIC) {
-        os << (boost::format(", %.2f") % coord.getEpoch()).str();
-    }
-    os << ")";
+    os << coord.toString();
     return os;
 }
 
