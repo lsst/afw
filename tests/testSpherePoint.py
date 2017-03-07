@@ -308,9 +308,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """
         point = SpherePoint(afwGeom.Point3D(1.0, 1.0, 1.0))
 
-        with self.assertRaises(pexEx.OutOfRangeError):
+        with self.assertRaises(pexEx.IndexError):
             point[2]
-        with self.assertRaises(pexEx.OutOfRangeError):
+        with self.assertRaises(pexEx.IndexError):
             point[-3]
 
     def testGetItemValue(self):
