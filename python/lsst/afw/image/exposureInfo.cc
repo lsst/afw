@@ -88,7 +88,17 @@ PYBIND11_PLUGIN(exposureInfo) {
 
     cls.def("hasDetector", &ExposureInfo::hasDetector);
     cls.def("getDetector", &ExposureInfo::getDetector);
-    cls.def("setDetector", &ExposureInfo::setDetector, "detector"_a);
+    cls.def(
+        "setDetector",
+        [](ExposureInfo & self, py::object detector) {
+            if (detector == py::none()) {
+                self.setDetector(nullptr);
+            } else {
+                self.setDetector(py::cast<std::shared_ptr<afw::cameraGeom::Detector>>(detector));
+            }
+        },
+        "detector"_a
+    );
 
     cls.def("getFilter", &ExposureInfo::getFilter);
     cls.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
@@ -102,11 +112,31 @@ PYBIND11_PLUGIN(exposureInfo) {
 
     cls.def("hasPsf", &ExposureInfo::hasPsf);
     cls.def("getPsf", &ExposureInfo::getPsf);
-    cls.def("setPsf", &ExposureInfo::setPsf, "psf"_a);
+    cls.def(
+        "setPsf",
+        [](ExposureInfo & self, py::object psf) {
+            if (psf == py::none()) {
+                self.setPsf(nullptr);
+            } else {
+                self.setPsf(py::cast<std::shared_ptr<afw::detection::Psf>>(psf));
+            }
+        },
+        "psf"_a
+    );
 
     cls.def("hasValidPolygon", &ExposureInfo::hasValidPolygon);
     cls.def("getValidPolygon", &ExposureInfo::getValidPolygon);
-    cls.def("setValidPolygon", &ExposureInfo::setValidPolygon, "polygon"_a);
+    cls.def(
+        "setValidPolygon",
+        [](ExposureInfo & self, py::object polygon) {
+            if (polygon == py::none()) {
+                self.setValidPolygon(nullptr);
+            } else {
+                self.setValidPolygon(py::cast<std::shared_ptr<afw::geom::polygon::Polygon>>(polygon));
+            }
+        },
+        "polygon"_a
+    );
 
     cls.def("hasApCorrMap", &ExposureInfo::hasApCorrMap);
     cls.def("getApCorrMap",
