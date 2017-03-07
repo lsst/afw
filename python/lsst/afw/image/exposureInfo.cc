@@ -77,6 +77,7 @@ PYBIND11_PLUGIN(exposureInfo) {
         "coaddInputs"_a = std::shared_ptr<CoaddInputs>(),
         "apCorrMap"_a = std::shared_ptr<ApCorrMap>(),
         "visitInfo"_a = std::shared_ptr<VisitInfo const>());
+    cls.def(py::init<>());
     cls.def(py::init<ExposureInfo>(), "other"_a);
     cls.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
 
