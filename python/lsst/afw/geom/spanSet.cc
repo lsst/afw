@@ -45,6 +45,26 @@ namespace {
 
 using PySpanSet = py::class_<SpanSet, std::shared_ptr<SpanSet>, table::io::PersistableFacade<SpanSet>>;
 
+// SpanSet's inheritance from afw::table::io::Persistable is not exposed to
+// Python because doing so introduces a circular dependency between afw.table
+// and afw.geom.  Luckily, Python code doesn't really care about the
+// Persistable interface most of the time, and we can add Persistable's
+// methods directly to SpanSet using this function.  In the long term, this
+// should be fixed by moving afw.table.io out of afw.table, since it actually
+// has a much more lightweight set of dependencies than afw.table.
+void declarePersistable(PySpanSet & cls) {
+    cls.def(
+        "writeFits",
+        (void (SpanSet::*)(std::string const &, std::string const &) const) &SpanSet::writeFits,
+        "fileName"_a, "mode"_a="w");
+    cls.def(
+        "writeFits",
+        (void (SpanSet::*)(fits::MemFileManager &, std::string const &) const) &SpanSet::writeFits,
+        "manager"_a, "mode"_a="w"
+    );
+    cls.def("isPersistable", &SpanSet::isPersistable);
+}
+
 template <typename Pixel, typename PyClass>
 void declareFlattenMethod(PyClass &cls) {
     cls.def("flatten", (ndarray::Array<Pixel, 1, 1>(SpanSet::*)(ndarray::Array<Pixel, 2, 0> const &,
@@ -228,6 +248,9 @@ PYBIND11_PLUGIN(spanSet) {
     cls.def(py::init<>());
     cls.def(py::init<Box2I>(), "box"_a);
     cls.def(py::init<std::vector<Span>, bool>(), "spans"_a, "normalize"_a = true);
+
+    /* Mimic Persistable interface (see comment on declarePersitable above) */
+    declarePersistable(cls);
 
     /* SpanSet Methods */
     cls.def("getArea", &SpanSet::getArea);
