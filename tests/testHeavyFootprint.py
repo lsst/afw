@@ -143,12 +143,10 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         omi = self.mi.Factory(self.mi.getDimensions())
 
         for foot in fs.getFootprints():
-            self.assertNotEqual(afwDetect.cast_HeavyFootprint(foot, self.mi), None)
-            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+            foot.insert(omi)
 
         for foot in fs.getFootprints():
-            self.assertNotEqual(afwDetect.HeavyFootprintF.cast(foot), None)
-            afwDetect.HeavyFootprintF.cast(foot).insert(omi)
+            foot.insert(omi)
 
         self.assertFloatsEqual(self.mi.getImage().getArray(), omi.getImage().getArray())
 
@@ -163,7 +161,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         omi.set((0, 0x0, 0))
 
         for foot in fs.getFootprints():
-            afwDetect.cast_HeavyFootprint(foot, self.mi).insert(omi)
+            foot.insert(omi)
 
         if display:
             ds9.mtv(self.mi, frame=0, title="input")
@@ -171,27 +169,6 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
         self.assertFloatsEqual(submi.getImage().getArray(), omi.getImage().getArray())
-
-    def testCast_HeavyFootprint(self):
-        """Test that we can cast a Footprint to a HeavyFootprint"""
-
-        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
-
-        ctrl = afwDetect.HeavyFootprintCtrl(afwDetect.HeavyFootprintCtrl.NONE)
-        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
-        #
-        # This isn't quite a full test, as hfoot is already a HeavyFootprint,
-        # the complete test is in testMakeHeavy
-        #
-        self.assertNotEqual(afwDetect.cast_HeavyFootprint(hfoot, self.mi), None,
-                            "Cast to the right sort of HeavyFootprint")
-        self.assertNotEqual(afwDetect.HeavyFootprintF.cast(hfoot), None,
-                            "Cast to the right sort of HeavyFootprint")
-
-        self.assertEqual(afwDetect.cast_HeavyFootprint(self.foot, self.mi), None,
-                         "Can't cast a Footprint to a HeavyFootprint")
-        self.assertEqual(afwDetect.HeavyFootprintI.cast(hfoot), None,
-                         "Cast to the wrong sort of HeavyFootprint")
 
     def testMergeHeavyFootprints(self):
         mi = afwImage.MaskedImageF(20, 10)
@@ -210,7 +187,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         hfoot1.normalize()
         hfoot2.normalize()
-        hsum = afwDetect.mergeHeavyFootprintsF(hfoot1, hfoot2)
+        hsum = afwDetect.mergeHeavyFootprints(hfoot1, hfoot2)
 
         bb = hsum.getBBox()
         self.assertEquals(bb.getMinX(), 9)

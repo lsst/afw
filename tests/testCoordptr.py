@@ -62,9 +62,7 @@ class CoordPtrTestCase(unittest.TestCase):
         for CoordClass in (coord.IcrsCoord, coord.Fk5Coord, coord.GalacticCoord, coord.EclipticCoord):
             derived1 = CoordClass(1 * afwGeom.degrees, 2 * afwGeom.degrees)
             self.assertEqual(type(derived1), CoordClass)
-            base = derived1.clone()
-            self.assertEqual(type(base), coord.Coord)
-            derived2 = CoordClass.cast(base)
+            derived2 = derived1.clone()
             self.assertEqual(type(derived2), CoordClass)
 
 

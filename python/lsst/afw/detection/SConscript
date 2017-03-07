@@ -1,3 +1,12 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.python(['detectionLib'])
+scripts.BasicSConscript.pybind11(['psf',
+                                  'footprintSet',
+                                  'threshold',
+                                  'peak',
+                                  'footprintArray',
+                                  'footprintCtrl',
+                                  'gaussianPsf',
+                                  'footprintMerge',
+                                  'heavyFootprint',
+                                  'footprint'])

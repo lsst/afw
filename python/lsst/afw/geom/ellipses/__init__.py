@@ -23,10 +23,7 @@
 """lsst.afw.geom.ellipses
 """
 from __future__ import absolute_import
-from builtins import object
 from .ellipsesLib import *
-import weakref
-import numpy
 
 Separable = {
     (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
@@ -38,8 +35,6 @@ Separable = {
     (ConformalShear, LogDeterminantRadius):SeparableConformalShearLogDeterminantRadius,
     (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius
 }
-
-BaseCore.cast = lambda self: globals()[self.getName()].cast(self)
 
 class EllipseMatplotlibInterface(object):
     """An interface for drawing the ellipse using matplotlib.
@@ -110,5 +105,5 @@ def Ellipse_plot(self, axes=None, scale=1.0, show=True, rescale=True, **kwds):
     return self.matplotlib.patch
 
 
-Ellipse.MatplotlibInterface = EllipseMatplotlibInterface
-Ellipse.plot = Ellipse_plot
+#Ellipse.MatplotlibInterface = EllipseMatplotlibInterface
+#Ellipse.plot = Ellipse_plot

@@ -123,16 +123,21 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         SpherePoint(afwGeom.Point3D(0.0, 0.0, 1.0))
         SpherePoint(afwGeom.Point3D(42.78, -46.29, 38.27))
 
+    def testCopyConstructor(self):
+        sp = SpherePoint(-42.0*degrees, 45.0*degrees)
+        spcopy = SpherePoint(sp)
+        self.assertEqual(sp, spcopy)
+
     def testInitNArgFail(self):
         """Tests if only 1- or 2-argument initializers are allowed.
         """
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(TypeError):
             SpherePoint()
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(TypeError):
             SpherePoint("Rotund", "Bovine")
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(TypeError):
             SpherePoint(42)
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(TypeError):
             SpherePoint("ICRS", 34.0, -56.0)
 
     def testGetLongitudeValue(self):
@@ -303,9 +308,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """
         point = SpherePoint(afwGeom.Point3D(1.0, 1.0, 1.0))
 
-        with self.assertRaises(IndexError):
+        with self.assertRaises(pexEx.OutOfRangeError):
             point[2]
-        with self.assertRaises(IndexError):
+        with self.assertRaises(pexEx.OutOfRangeError):
             point[-3]
 
     def testGetItemValue(self):
@@ -776,9 +781,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             self.assertIn("degrees", pointRepr)
             self.assertEqual(2, len(pointRepr.split(",")))
 
-            copy = eval(pointRepr)
-            self.assertAnglesNearlyEqual(point.getLongitude(), copy.getLongitude())
-            self.assertAnglesNearlyEqual(point.getLatitude(), copy.getLatitude())
+            spcopy = eval(pointRepr)
+            self.assertAnglesNearlyEqual(point.getLongitude(), spcopy.getLongitude())
+            self.assertAnglesNearlyEqual(point.getLatitude(), spcopy.getLatitude())
 
     def nextUp(self, angle):
         """Returns the smallest angle that is larger than the argument.

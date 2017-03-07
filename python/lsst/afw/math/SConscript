@@ -1,3 +1,20 @@
-# -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.python(['mathLib'])
+scripts.BasicSConscript.pybind11(['function',
+                                  'functionLibrary',
+                                  'minimize',
+                                  'interpolate',
+                                  'gaussianProcess',
+                                  'spatialCell',
+                                  'boundedField',
+                                  'chebyshevBoundedField',
+                                  'leastSquares',
+                                  'random',
+                                  'convolveImage',
+                                  'offsetImage',
+                                  'statistics',
+                                  'stack',
+                                  'approximate',
+                                  'background',
+                                  'warpExposure',
+                                  'kernel'])
+

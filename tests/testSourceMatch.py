@@ -59,8 +59,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
-        schema.addField("flux_flux", type=float)
-        schema.addField("flux_fluxSigma", type=float)
+        schema.addField("flux_flux", type=np.float64)
+        schema.addField("flux_fluxSigma", type=np.float64)
         schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(schema)
         self.table.definePsfFlux("flux")
@@ -90,10 +90,6 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0010001*i) * afwGeom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0010001*i) * afwGeom.degrees)
 
-        # Old API (pre DM-855)
-        mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
-        self.assertEqual(len(mat), nobj)
-        # New API
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
         mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0*afwGeom.arcseconds, mc)
@@ -110,9 +106,6 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(m1.first.getId(), c["first"])
             self.assertEqual(m1.second.getId(), c["second"])
             self.assertEqual(m1.distance, c["distance"])
-
-        self.checkPickle(mat, checkSlots=False)
-        self.checkPickle(mat2, checkSlots=False)
 
         self.checkMatchToFromCatalog(mat, cat)
 
@@ -141,7 +134,6 @@ class SourceMatchTestCase(unittest.TestCase):
         mc.findOnlyClosest = False
         mat = afwTable.matchRaDec(ss1, ss2, 1.0*afwGeom.arcseconds, mc)
         self.assertEqual(len(mat), 1)
-        self.checkPickle(mat)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testPhotometricCalib(self):
@@ -217,7 +209,6 @@ class SourceMatchTestCase(unittest.TestCase):
         matches = afwTable.matchRaDec(sdss, template, 1.0*afwGeom.arcseconds, mc)
 
         self.assertEqual(len(matches), 901)
-        self.checkPickle(matches)
 
         if False:
             for mat in matches:
@@ -235,7 +226,6 @@ class SourceMatchTestCase(unittest.TestCase):
         matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds, mc)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
-        self.checkPickle(matches)
 
         # Find the one that didn't match
         if False:
@@ -250,7 +240,6 @@ class SourceMatchTestCase(unittest.TestCase):
 
         matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
-        self.checkPickle(matches)
 
         if False:
             for mat in matches:
@@ -300,26 +289,6 @@ class SourceMatchTestCase(unittest.TestCase):
             mc.includeMismatches = False
             noMatches = afwTable.matchRaDec(catMismatches, cat2, 1.0*afwGeom.arcseconds, mc)
             self.assertEqual(len(noMatches), 0)
-
-    def checkPickle(self, matches, checkSlots=True):
-        """Check that a match list pickles
-
-        Also checks that the slots survive pickling, if checkSlots is True.
-        """
-        orig = afwTable.SourceMatchVector(matches)
-        unpickled = pickle.loads(pickle.dumps(orig))
-        self.assertEqual(len(orig), len(unpickled))
-        for m1, m2 in zip(orig, unpickled):
-            self.assertEqual(m1.first.getId(), m2.first.getId())
-            self.assertEqual(m1.first.getRa(), m2.first.getRa())
-            self.assertEqual(m1.first.getDec(), m2.first.getDec())
-            self.assertEqual(m1.second.getId(), m2.second.getId())
-            self.assertEqual(m1.second.getRa(), m2.second.getRa())
-            self.assertEqual(m1.second.getDec(), m2.second.getDec())
-            self.assertEqual(m1.distance, m2.distance)
-            if checkSlots:
-                self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
-                self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
 
     def checkMatchToFromCatalog(self, matches, catalog):
         """Check the conversion of matches to and from a catalog

@@ -19,17 +19,19 @@
 # the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+import os.path
+
 from builtins import zip
 from builtins import range
-
-import os.path
+import numpy as np
 
 from .tableLib import (BaseCatalog, SimpleCatalog, SourceCatalog, SimpleTable, SourceTable,
                        Schema, SchemaMapper, ReferenceMatch)
 from lsst.utils import getPackageDir
 
 __all__ = ["makeMergedSchema", "copyIntoCatalog", "matchesToCatalog", "matchesFromCatalog"]
+
 
 def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
     """Create a SchemaMapper between the input source and target schemas
@@ -52,6 +54,7 @@ def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None)
         m.addMapping(key, (targetPrefix or "") + keyName)
     return m
 
+
 def makeMergedSchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
     """Return a schema that is a deep copy of a mapping between source and target schemas
     \param[in]  sourceSchema  input source schema that fields will be mapped from
@@ -62,6 +65,7 @@ def makeMergedSchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix
     \return     schema        schema that is the result of the mapping between source and target schemas
     """
     return makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix).getOutputSchema()
+
 
 def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targetPrefix=None):
     """Copy entries from one Catalog into another
@@ -87,10 +91,11 @@ def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targe
     for rFrom, rTo in zip(catalog, target):
         rTo.assign(rFrom, m)
 
+
 def matchesToCatalog(matches, matchMeta):
     """Denormalise matches into a Catalog of "unpacked matches"
 
-    \param[in] matches    unpacked matches, i.e. a std::vector of Match objects whose schema
+    \param[in] matches    unpacked matches, i.e. a list of Match objects whose schema
                           has "first" and "second" attributes which, resepectively, contain the
                           reference and source catalog entries, and a "distance" field (the
                           measured distance between the reference and source objects)
@@ -107,7 +112,7 @@ def matchesToCatalog(matches, matchMeta):
 
     mergedSchema = makeMergedSchema(refSchema, Schema(), targetPrefix="ref_")
     mergedSchema = makeMergedSchema(srcSchema, mergedSchema, targetPrefix="src_")
-    distKey = mergedSchema.addField("distance", type=float, doc="Distance between ref and src")
+    distKey = mergedSchema.addField("distance", type=np.float64, doc="Distance between ref and src")
 
     mergedCatalog = BaseCatalog(mergedSchema)
     copyIntoCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref_")
@@ -124,6 +129,7 @@ def matchesToCatalog(matches, matchMeta):
     mergedCatalog.getTable().setMetadata(matchMeta)
 
     return mergedCatalog
+
 
 def matchesFromCatalog(catalog, sourceSlotConfig=None):
     """Generate a list of ReferenceMatches from a Catalog of "unpacked matches"

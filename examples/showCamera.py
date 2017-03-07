@@ -51,12 +51,12 @@ def main(camera, sample=20, showDistortion=True):
         dist = camera.getDistortion()
 
     for raft in camera:
-        raft = cameraGeom.cast_Raft(raft)
+        raft = raft
         for ccd in raft:
             if False and ccd.getId().getSerial() not in (0, 3):
                 continue
 
-            ccd = cameraGeom.cast_Ccd(ccd)
+            ccd = ccd
             ccd.setTrimmed(True)
 
             width, height = ccd.getAllPixels(True).getDimensions()

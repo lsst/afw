@@ -96,8 +96,6 @@ class PolygonTest(lsst.utils.tests.TestCase):
                 perimeter += np.hypot(p1.getX() - p2.getX(), p1.getY() - p2.getY())
             self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
 
-            self.assertEqual(pickle.loads(pickle.dumps(poly)), poly)
-
         size = 3.0
         poly = self.square(size=size)
         self.assertEqual(poly.calculateArea(), (2*size)**2)
@@ -111,6 +109,11 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertEqual(abs(p2.getX()), size)
             self.assertEqual(abs(p2.getY()), size)
             self.assertNotEqual(p1, p2)
+
+    def testPickle(self):
+        for num in range(3, 30):
+            poly = self.polygon(num)
+            self.assertEqual(pickle.loads(pickle.dumps(poly)), poly)
 
     def testFromBox(self):
         size = 1.0
@@ -285,6 +288,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertEqual(len(poly), num)
             points1 = [p for p in poly]
             points2 = poly.getVertices()
+            self.assertEqual(len(points1), num + 1)
+            self.assertEqual(len(points2), num + 1)
             self.assertEqual(points2[0], points2[-1])  # Closed representation
             for p1, p2 in zip(points1, points2):
                 self.assertEqual(p1, p2)

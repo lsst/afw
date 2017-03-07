@@ -1,5 +1,4 @@
+from __future__ import absolute_import, division, print_function
+
 from .tableLib import *
-from .tableEnumDicts import *
-from .multiMatch import *
-from .catalogMatches import *
 from .utils import *
