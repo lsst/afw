@@ -108,7 +108,9 @@ private:
 class Filter
 {
 public :
-    enum { AUTO=-1, UNKNOWN=-1 };
+    static int const AUTO; 
+    static int const UNKNOWN; 
+
     /*!
      * Creates a Filter with the given name
      */
