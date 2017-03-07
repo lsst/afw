@@ -38,7 +38,7 @@ namespace {
 
 /// Declare match code templated on two types of catalog
 template <typename Catalog1, typename Catalog2>
-static void declareMatch2(py::module & mod, std::string const & prefix) {
+void declareMatch2(py::module & mod, std::string const & prefix) {
     typedef typename Catalog1::Record Record1;
     typedef typename Catalog2::Record Record2;
     typedef std::vector<Match<typename Catalog1::Record, typename Catalog2::Record>> MatchList;
@@ -67,7 +67,7 @@ static void declareMatch2(py::module & mod, std::string const & prefix) {
 };
 
 /// Declare match code templated on one type of catalog
-static template <typename Catalog>
+template <typename Catalog>
 void declareMatch1(py::module &mod) {
     typedef std::vector<Match<typename Catalog::Record, typename Catalog::Record>> MatchList;
     mod.def("matchRaDec",
@@ -78,6 +78,8 @@ void declareMatch1(py::module &mod) {
     //         (MatchList (*)(Catalog const &, geom::Angle, bool))
     //          &matchRaDec<Catalog1>, "cat"_a, "radius"_a, "symmetric"_a);
 }
+
+}  // <anonymous>
 
 PYBIND11_PLUGIN(match) {
     py::module mod("match", "Python wrapper for afw _match library");
@@ -113,4 +115,4 @@ PYBIND11_PLUGIN(match) {
     return mod.ptr();
 }
 
-}}}}  // namespace lsst::afw::table::<anonymous>
+}}}  // namespace lsst::afw::table::<anonymous>
