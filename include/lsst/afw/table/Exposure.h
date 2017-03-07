@@ -126,11 +126,14 @@ public:
 
 protected:
 
-    ExposureRecord(PTR(ExposureTable) const & table);
+    explicit ExposureRecord(PTR(ExposureTable) const & table);
 
     virtual void _assign(BaseRecord const & other);
 
 private:
+
+    friend class ExposureTable;
+
     CONST_PTR(image::Wcs) _wcs;
     CONST_PTR(detection::Psf) _psf;
     CONST_PTR(image::Calib) _calib;
@@ -214,9 +217,13 @@ public:
 
 protected:
 
-    ExposureTable(Schema const & schema);
+    explicit ExposureTable(Schema const & schema);
 
     ExposureTable(ExposureTable const & other);
+
+    std::shared_ptr<BaseTable> _clone() const override;
+
+    std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
 
@@ -238,13 +245,13 @@ private:
     template <typename RecordT> friend class ExposureCatalogT;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+
     PTR(io::FitsWriter) makeFitsWriter(
         fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags
     ) const;
 };
 
-#ifndef SWIG
 
 /**
  *  @brief Custom catalog class for ExposureRecord/Table.
@@ -423,7 +430,6 @@ typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
 inline RecordId ExposureRecord::getId() const { return get(ExposureTable::getIdKey()); }
 inline void ExposureRecord::setId(RecordId id) { set(ExposureTable::getIdKey(), id); }
 
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

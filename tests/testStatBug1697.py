@@ -66,7 +66,7 @@ class weightedStatsBugTestCase(unittest.TestCase):
 
         for weight in (300.0, 10.0, 1.0):
             print("Testing with weight=%0.1f" % (weight,))
-            maskedImageList = afwImage.vectorMaskedImageF()  # [] is rejected by afwMath.statisticsStack
+            maskedImageList = []
             weightList = []
 
             nx, ny = 256, 256

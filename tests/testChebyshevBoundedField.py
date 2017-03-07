@@ -41,6 +41,7 @@ import numpy as np
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom
+import lsst.afw.image
 import lsst.afw.math
 
 try:
@@ -108,7 +109,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             z2 = np.array([np.dot(ty[:, i], np.dot(coefficients, tx[:, i])) for i in range(nPoints)])
             self.assertFloatsAlmostEqual(z1, z2, rtol=1E-12)
 
-            scaled = lsst.afw.math.ChebyshevBoundedField.cast(field*factor)
+            scaled = field*factor
             self.assertFloatsAlmostEqual(scaled.evaluate(x, y), factor*z2, rtol=factor*1E-13)
             self.assertFloatsEqual(scaled.getCoefficients(), factor*field.getCoefficients())
 

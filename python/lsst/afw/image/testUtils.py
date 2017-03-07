@@ -1,7 +1,6 @@
-from __future__ import absolute_import, division
 #
 # LSST Data Management System
-# Copyright 2008-2016 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -20,22 +19,19 @@ from __future__ import absolute_import, division
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
-"""
-@file
-@brief Utilities to help write tests, mostly using numpy
-"""
-import math
-import numpy as np
-
-import lsst.utils.tests
-from .imageLib import ImageF
-from .basicUtils import makeMaskedImageFromArrays
+from __future__ import absolute_import, division, print_function
 
 # the asserts are automatically imported so unit tests can find them without special imports;
 # the other functions are hidden unless explicitly asked for
 __all__ = ["assertImagesNearlyEqual", "assertMasksEqual", "assertMaskedImagesNearlyEqual",
            "assertImagesEqual", "assertMaskedImagesEqual"]
+
+import numpy as np
+
+import lsst.utils.tests
+from .image import ImageF
+from .basicUtils import makeMaskedImageFromArrays
+
 
 def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     """Make a gaussian noise MaskedImageF

@@ -24,14 +24,9 @@ namespace lsst { namespace afw { namespace table {
  *
  *  Records are noncopyable, and are hence usually passed by shared_ptr or [const-]reference.
  */
-class BaseRecord
-#ifndef SWIG // swig complains about these not being %shared_ptr, and it doesn't need to know about them
-    : public daf::base::Citizen
-#endif
-{
+class BaseRecord : public daf::base::Citizen {
 public:
 
-#ifndef SWIG
     // No copying
     BaseRecord (const BaseRecord&) = delete;
     BaseRecord& operator=(const BaseRecord&) = delete;
@@ -39,7 +34,6 @@ public:
     // No moving
     BaseRecord (BaseRecord&&) = delete;
     BaseRecord& operator=(BaseRecord&&) = delete;
-#endif
 
     /// The associated table class.
     typedef BaseTable Table;
@@ -146,8 +140,6 @@ public:
         key.setValue(getElement(key), _manager, value);
     }
 
-#ifndef SWIG
-
     /**
      *  @brief Compute a calculated or aggregate field.
      */
@@ -173,8 +165,6 @@ public:
     ConstRef operator[](ConstReferenceFunctorKey<ConstRef> const & key) const {
         return key.getConstReference(*this);
     }
-
-#endif // !SWIG
 
     /// @brief Copy all field values from other to this, requiring that they have equal schemas.
     void assign(BaseRecord const & other);

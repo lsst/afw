@@ -70,13 +70,16 @@ public:
     typedef _MaskPixelT MaskPixelT;
     typedef _VariancePixelT VariancePixelT;
 
-    SinglePixel(double const image, int mask=0, double const variance=0) :
-        _image(image), _mask(mask), _variance(variance) {}
-    SinglePixel(int const image, int mask=0, double const variance=0) :
+    SinglePixel(ImagePixelT image, MaskPixelT mask=0, VariancePixelT variance=0) :
         _image(image), _mask(mask), _variance(variance) {}
 
-    template<typename rhsExpr>
-    SinglePixel(rhsExpr const& rhs) : _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {}
+    template <typename rhsExpr>
+    SinglePixel(
+        rhsExpr const& rhs,
+        // ensure this ctor isn't invoked for simple numeric types, which should use
+        // the overload above.
+        typename std::enable_if<!std::is_fundamental<rhsExpr>::value, void*>::type dummy=nullptr
+    ) : _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {}
 
     ImagePixelT image() const { return _image; }
     MaskPixelT mask() const { return _mask; }

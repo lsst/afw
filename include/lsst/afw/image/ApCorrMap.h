@@ -67,8 +67,8 @@ public:
     virtual bool isPersistable() const;
 
     /// Scale all fields by a constant
-    void operator*=(double const scale);
-    void operator/=(double const scale) { *this *= 1.0/scale; }
+    ApCorrMap & operator*=(double const scale);
+    ApCorrMap & operator/=(double const scale) { return *this *= 1.0/scale; }
 
 private:
 

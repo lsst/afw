@@ -8,48 +8,6 @@
 namespace lsst { namespace afw { namespace table {
 
 //-----------------------------------------------------------------------------------------------------------
-//----- Private AmpInfoTable/Record classes ---------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------
-
-// These private derived classes are what you actually get when you do AmpInfoTable::make; like the
-// private classes in BaseTable.cc, it's more convenient to have an extra set of trivial derived
-// classes than to do a lot of friending.
-
-namespace {
-
-class AmpInfoTableImpl;
-
-class AmpInfoRecordImpl : public AmpInfoRecord {
-public:
-
-    explicit AmpInfoRecordImpl(PTR(AmpInfoTable) const & table) : AmpInfoRecord(table) {}
-
-};
-
-class AmpInfoTableImpl : public AmpInfoTable {
-public:
-
-    explicit AmpInfoTableImpl(Schema const & schema) :
-        AmpInfoTable(schema)
-    {}
-
-    AmpInfoTableImpl(AmpInfoTableImpl const & other) : AmpInfoTable(other) {}
-
-private:
-
-    virtual PTR(BaseTable) _clone() const {
-        return std::make_shared<AmpInfoTableImpl>(*this);
-    }
-
-    virtual PTR(BaseRecord) _makeRecord() {
-        return std::make_shared<AmpInfoRecordImpl>(getSelf<AmpInfoTableImpl>());
-    }
-
-};
-
-} // anonymous
-
-//-----------------------------------------------------------------------------------------------------------
 //----- AmpInfoFitsWriter ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
@@ -127,7 +85,7 @@ PTR(AmpInfoTable) AmpInfoTable::make(Schema const & schema) {
             "Schema for AmpInfo must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return std::make_shared<AmpInfoTableImpl>(schema);
+    return std::shared_ptr<AmpInfoTable>(new AmpInfoTable(schema));
 }
 
 AmpInfoTable::AmpInfoTable(Schema const & schema) :
@@ -245,6 +203,15 @@ PTR(io::FitsWriter)
 AmpInfoTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<AmpInfoFitsWriter>(fitsfile, flags);
 }
+
+std::shared_ptr<BaseTable> AmpInfoTable::_clone() const {
+    return std::shared_ptr<AmpInfoTable>(new AmpInfoTable(*this));
+}
+
+std::shared_ptr<BaseRecord> AmpInfoTable::_makeRecord() {
+    return std::shared_ptr<AmpInfoRecord>(new AmpInfoRecord(getSelf<AmpInfoTable>()));
+}
+
 //-------------------------------------------------------------------------------------------------
 // Getters and Setters
 //-------------------------------------------------------------------------------------------------

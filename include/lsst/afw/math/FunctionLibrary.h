@@ -79,7 +79,7 @@ using boost::serialization::make_nvp;
             return Function1Ptr(new IntegerDeltaFunction1(_xo));
         }
 
-        virtual ReturnT operator() (double x, double y) const {
+        virtual ReturnT operator() (double x) const {
             return static_cast<ReturnT>(x == _xo);
         }
 

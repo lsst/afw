@@ -1,3 +1,20 @@
-# -*- python -*-
+## -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.python(['tableLib'])
+scripts.BasicSConscript.pybind11(
+    ['aliasMap/aliasMap',
+     'schema/schema',
+     'schemaMapper/schemaMapper',
+     'base/base',
+     'baseColumnView/baseColumnView',
+     'arrays/arrays',
+     'aggregates/aggregates',
+     'slots',
+     'simple/simple',
+     'source/source',
+     'match/match',
+     'ampInfo/ampInfo',
+     'exposure/exposure',
+     'idFactory',
+    ],
+    addUnderscore=False,
+)

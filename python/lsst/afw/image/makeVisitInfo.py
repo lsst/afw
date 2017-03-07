@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2016 LSST Corporation.
+# Copyright 2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -19,36 +19,16 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-from lsst.daf.base import DateTime
-from lsst.afw.coord import Coord, IcrsCoord, Observatory, Weather
-from lsst.afw.geom import Angle
-from .imageLib import VisitInfo, RotType_UNKNOWN
+from __future__ import absolute_import, division, print_function
 
 __all__ = ["makeVisitInfo"]
 
-nanFloat = float("nan")
-nanAngle = Angle(nanFloat)
+import warnings
+
+from .visitInfo import VisitInfo
 
 
-def makeVisitInfo(
-    exposureId=0,
-    exposureTime=nanFloat,
-    darkTime=nanFloat,
-    date=DateTime(),
-    ut1=nanFloat,
-    era=nanAngle,
-    boresightRaDec=IcrsCoord(nanAngle, nanAngle),
-    boresightAzAlt=Coord(nanAngle, nanAngle),
-    boresightAirmass=nanFloat,
-    boresightRotAngle=nanAngle,
-    rotType=RotType_UNKNOWN,
-    observatory=Observatory(nanAngle, nanAngle, nanFloat),
-    weather=Weather(nanFloat, nanFloat, nanFloat),
-):
+def makeVisitInfo(**kwargs):
     """Make a VisitInfo from keyword arguments
 
     This function will be replaced by a VisitInfo constructor once we switch to pybind11
@@ -73,25 +53,12 @@ def makeVisitInfo(
     @param[in] boresightRotAngle  rotation angle at boresight at middle of exposure;
                     see getBoresightRotAngle for details
                     (lsst.afw.geom.Angle, defaults to Angle(Nan))
-    @param[in] rotType  rotation type; one of the lsst.afw.image.RotType_ constants,
-                    defaults to RotType_UNKNOWN
+    @param[in] rotType  rotation type; one of the lsst.afw.image.RotType constants,
+                    defaults to RotType.UNKNOWN
     @param[in] observatory  observatory longitude, latitude and altitude,
                     (lsst.afw.coord.Observatory, defaults to Observatory(Angle(Nan), Angle(Nan), Nan))
     @param[in] weather  basic weather information for computing air mass,
                     (lsst.afw.coord.Weather, defaults to Weather(NaN, NaN, NaN))
     """
-    return VisitInfo(
-        exposureId,
-        exposureTime,
-        darkTime,
-        date,
-        ut1,
-        era,
-        boresightRaDec.toIcrs(),
-        boresightAzAlt,
-        boresightAirmass,
-        boresightRotAngle,
-        rotType,
-        observatory,
-        weather,
-    )
+    warnings.warn("makeVisitInfo is deprecated; use VisitInfo directly, instead", DeprecationWarning)
+    return VisitInfo(**kwargs)

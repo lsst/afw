@@ -46,7 +46,7 @@ class Schema {
 public:
 
     // This variable is defined in SchemaImpl, but is replicated here as
-    // a static so that it is available to SWIG.
+    // so that it is available to Python.
     static int const VERSION = detail::SchemaImpl::VERSION;
 
     /**
@@ -98,6 +98,19 @@ public:
      */
     template <typename T>
     SchemaItem<T> find(Key<T> const & key) const;
+
+    /**
+     *  @brief Find a SchemaItem by name and run a functor on it.
+     *
+     *  Names corresponding to named subfields are not accepted.
+     *  The given functor must have an overloaded function call
+     *  operator that accepts any SchemaItem type (the same as
+     *  a functor provided to forEach).
+     */
+    template <typename F>
+    void findAndApply(std::string const & name, F && func) const {
+        _impl->findAndApply(_aliases->apply(name), std::forward<F>(func));
+    }
 
     /**
      *  @brief Look up a (possibly incomplete) name in the Schema.
@@ -341,9 +354,51 @@ class SubSchema {
     typedef detail::SchemaImpl Impl;
 public:
 
+    //@{
+    /// Join strings using the field delimiter appropriate for this Schema
+    std::string join(std::string const & a, std::string const & b) const;
+    std::string join(std::string const & a, std::string const & b, std::string const & c) const {
+        return join(join(a, b), c);
+    }
+    std::string join(
+        std::string const & a, std::string const & b, std::string const & c, std::string const & d
+    ) const {
+        return join(join(a, b), join(c, d));
+    }
+    //@}
+
     /// @brief Find a nested SchemaItem by name.
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
+
+    /**
+     *  @brief Find a nested SchemaItem by name and run a functor on it.
+     *
+     *  Names corresponding to named subfields are not accepted.
+     *  The given functor must have an overloaded function call
+     *  operator that accepts any SchemaItem type (the same as
+     *  a functor provided to apply or Schema::forEach).
+     */
+    template <typename F>
+    void findAndApply(std::string const & name, F && func) const {
+        _impl->findAndApply(_aliases->apply(join(_name, name)), std::forward<F>(func));
+    }
+
+    /**
+     *  @brief Run functor on the SchemaItem represented by this SubSchema
+     *
+     *  The given functor must have an overloaded function call operator that
+     *  accepts any SchemaItem type (the same as a functor provided to apply
+     *  or Schema::forEach).
+     *
+     *  @throws Throws pex::exceptions::NotFoundError if the SubSchemas prefix
+     *          does not correspond to the full name of a regular field (not a
+     *          named subfield).
+     */
+    template <typename F>
+    void apply(F && func) const {
+        _impl->findAndApply(_aliases->apply(_name), std::forward<F>(func));
+    }
 
     /// @brief Return a nested proxy.
     SubSchema operator[](std::string const & name) const;
@@ -362,8 +417,9 @@ public:
     /**
      *  @brief Implicit conversion to the appropriate Key type.
      *
-     *  Implicit conversion operators cannot be translated to Python.  Instead, the SWIG
-     *  wrappers provide an equivalent asKey() method.
+     *  Implicit conversion operators that are invoked via assignment cannot
+     *  be translated to Python.  Instead, the Python wrappers provide an
+     *  equivalent asKey() method.
      */
     template <typename T>
     operator Key<T>() const { return _impl->find<T>(_aliases->apply(_name)).key; }
@@ -371,8 +427,9 @@ public:
     /**
      *  @brief Implicit conversion to the appropriate Key type.
      *
-     *  Implicit conversion operators cannot be translated to Python.  Instead, the SWIG
-     *  wrappers provide an equivalent asField() method.
+     *  Implicit conversion operators that are invoked via assignment cannot
+     *  be translated to Python.  Instead, the Python wrappers provide an
+     *  equivalent asField() method.
      */
     template <typename T>
     operator Field<T>() const { return _impl->find<T>(_aliases->apply(_name)).field; }

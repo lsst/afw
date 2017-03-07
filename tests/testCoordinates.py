@@ -377,13 +377,6 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.mul, float, eD, eD)
             self.checkOperator(operator.mul, int, eI, eI)
             self.checkOperator(operator.mul, float, eI, eD)
-            # Old-Style Division (note that operator.div doesn't obey the future statement; it just calls
-            # __div__ directly.
-            if hasattr(operator, "div"):
-                self.checkOperator(operator.div, eD, int, eD)
-                self.checkOperator(operator.div, eD, float, eD)
-                self.checkOperator(operator.div, eI, int, eI)
-                self.checkOperator(operator.div, eI, float, eD)
             # New-Style Division
             self.checkOperator(operator.truediv, eD, int, eD)
             self.checkOperator(operator.truediv, eD, float, eD)
@@ -396,28 +389,22 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.floordiv, eI, float, TypeError)
 
     def testInPlaceOperators(self):
-        # Note: I have no idea why Swig throws NotImplementedError sometimes for in-place operators
-        # that don't match rather than TypeError (which is what it throws for regular binary operators,
-        # and what it should be throwing consistently here, if the Python built-ins are any indication).
-        # However, I've determined that it's not worth my time to fix it, as the only approach
-        # I could think of was to use %feature("shadow"), which I tried, and Swig simply ignored it
-        # (the code I put in those blocks never appeared in the .py file).
         for n in (2, 3):
             pD = geom.Point[float, n]
             pI = geom.Point[int, n]
             eD = geom.Extent[float, n]
             eI = geom.Extent[int, n]
             # Addition
-            self.checkOperator(operator.iadd, pD, pD, NotImplementedError)
-            self.checkOperator(operator.iadd, pD, pI, NotImplementedError)
+            self.checkOperator(operator.iadd, pD, pD, TypeError)
+            self.checkOperator(operator.iadd, pD, pI, TypeError)
             self.checkOperator(operator.iadd, pD, eD, pD, inPlace=True)
             self.checkOperator(operator.iadd, pD, eI, pD, inPlace=True)
             self.checkOperator(operator.iadd, pI, pD, TypeError)
             self.checkOperator(operator.iadd, pI, pI, TypeError)
             self.checkOperator(operator.iadd, pI, eD, TypeError)
             self.checkOperator(operator.iadd, pI, eI, pI, inPlace=True)
-            self.checkOperator(operator.iadd, eD, pD, NotImplementedError)
-            self.checkOperator(operator.iadd, eD, pI, NotImplementedError)
+            self.checkOperator(operator.iadd, eD, pD, TypeError)
+            self.checkOperator(operator.iadd, eD, pI, TypeError)
             self.checkOperator(operator.iadd, eD, eI, eD, inPlace=True)
             self.checkOperator(operator.iadd, eD, eD, eD, inPlace=True)
             self.checkOperator(operator.iadd, eI, pD, TypeError)
@@ -425,16 +412,16 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.iadd, eI, eD, TypeError)
             self.checkOperator(operator.iadd, eI, eI, eI, inPlace=True)
             # Subtraction
-            self.checkOperator(operator.isub, pD, pD, NotImplementedError)
-            self.checkOperator(operator.isub, pD, pI, NotImplementedError)
+            self.checkOperator(operator.isub, pD, pD, TypeError)
+            self.checkOperator(operator.isub, pD, pI, TypeError)
             self.checkOperator(operator.isub, pD, eD, pD, inPlace=True)
             self.checkOperator(operator.isub, pD, eI, pD, inPlace=True)
             self.checkOperator(operator.isub, pI, pD, TypeError)
             self.checkOperator(operator.isub, pI, pI, TypeError)
             self.checkOperator(operator.isub, pI, eD, TypeError)
             self.checkOperator(operator.isub, pI, eI, pI, inPlace=True)
-            self.checkOperator(operator.isub, eD, pD, NotImplementedError)
-            self.checkOperator(operator.isub, eD, pI, NotImplementedError)
+            self.checkOperator(operator.isub, eD, pD, TypeError)
+            self.checkOperator(operator.isub, eD, pI, TypeError)
             self.checkOperator(operator.isub, eD, eD, eD, inPlace=True)
             self.checkOperator(operator.isub, eD, eI, eD, inPlace=True)
             self.checkOperator(operator.isub, eI, pD, TypeError)
@@ -446,13 +433,6 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.imul, eD, float, eD, inPlace=True)
             self.checkOperator(operator.imul, eI, int, eI, inPlace=True)
             self.checkOperator(operator.imul, eI, float, TypeError)
-            # Old-Style Division (note that operator.div doesn't obey the future statement; it just calls
-            # __div__ directly).
-            if hasattr(operator, "idiv"):
-                self.checkOperator(operator.idiv, eD, int, eD, inPlace=True)
-                self.checkOperator(operator.idiv, eD, float, eD, inPlace=True)
-                self.checkOperator(operator.idiv, eI, int, eI, inPlace=True)
-                self.checkOperator(operator.idiv, eI, float, TypeError)
             # New-Style Division
             self.checkOperator(operator.itruediv, eD, int, eD, inPlace=True)
             self.checkOperator(operator.itruediv, eD, float, eD, inPlace=True)

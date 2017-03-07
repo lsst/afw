@@ -106,7 +106,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
 
         self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(self.schema,
-                                                               "c", "", lsst.afw.table.CoordinateType_PIXEL)
+                                                               "c", "", lsst.afw.table.CoordinateType.PIXEL)
         self.xxErrKey = self.schema.addField("c_xxSigma", type="F")
         self.xyErrKey = self.schema.addField("c_xySigma", type="F")
         self.yyErrKey = self.schema.addField("c_yySigma", type="F")
@@ -312,9 +312,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
             cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
             r2 = cat2[-2]
-            f2 = r2.getFootprint()
-            self.assertTrue(f2.isHeavy())
-            h2 = lsst.afw.detection.cast_HeavyFootprintF(f2)
+            h2 = r2.getFootprint()
+            self.assertTrue(h2.isHeavy())
             mim3 = lsst.afw.image.MaskedImageF(W, H)
             h2.insert(mim3)
 
@@ -460,7 +459,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testSlotUndefine(self):
         """Test that we can correctly define and undefine a slot after a SourceTable has been created"""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        key = schema.addField("a_flux", type=float, doc="flux field")
+        key = schema.addField("a_flux", type=np.float64, doc="flux field")
         table = lsst.afw.table.SourceTable.make(schema)
         table.definePsfFlux("a")
         self.assertEqual(table.getPsfFluxKey(), key)
@@ -474,7 +473,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         filename = os.path.join(testPath, "data", "old-footprint-persistence.fits")
         catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
         self.assertEqual(len(catalog1), 2)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(LookupError):
             catalog1.schema.find("footprint")
         fp1 = catalog1[0].getFootprint()
         fp2 = catalog1[1].getFootprint()
@@ -490,7 +489,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                          lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(129, 2), lsst.afw.geom.Extent2I(25, 29)))
         self.assertEqual(fp2.getBBox(),
                          lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(1184, 2), lsst.afw.geom.Extent2I(78, 38)))
-        hfp = lsst.afw.detection.cast_HeavyFootprintF(fp2)
+        hfp = lsst.afw.detection.HeavyFootprintF(fp2)
         self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
         self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())
         self.assertEqual(len(hfp.getVarianceArray()), fp2.getArea())
@@ -508,8 +507,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Demonstrate that we can create & use the named Flux slot."""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         baseName = "afw_Test"
-        fluxKey = schema.addField("%s_flux" % (baseName,), type=float, doc="flux")
-        errKey = schema.addField("%s_fluxSigma" % (baseName,), type=float, doc="flux uncertainty")
+        fluxKey = schema.addField("%s_flux" % (baseName,), type=np.float64, doc="flux")
+        errKey = schema.addField("%s_fluxSigma" % (baseName,), type=np.float64, doc="flux uncertainty")
         flagKey = schema.addField("%s_flag" % (baseName,), type="Flag", doc="flux flag")
         table = lsst.afw.table.SourceTable.make(schema)
 

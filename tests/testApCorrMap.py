@@ -70,9 +70,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
             value2 = b.get(name)
             self.assertIsNotNone(value2)
             self.assertEqual(value.getBBox(), value2.getBBox())
-            self.assertClose(lsst.afw.math.ChebyshevBoundedField.cast(value).getCoefficients(),
-                             lsst.afw.math.ChebyshevBoundedField.cast(value2).getCoefficients(),
-                             rtol=0.0)
+            self.assertClose(value.getCoefficients(), value2.getCoefficients(), rtol=0.0)
 
     def testAccessors(self):
         """Test the accessors and other custom Swig code we've added to make ApCorrMap behave like a Python

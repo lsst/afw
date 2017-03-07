@@ -210,7 +210,7 @@ namespace image {
         virtual ~ImageBase() { }
         ImageBase& operator=(const ImageBase& rhs);
         ImageBase& operator=(const PixelT rhs);
-        void operator<<=(const ImageBase& rhs);
+        ImageBase& operator<<=(const ImageBase& rhs);
 
         void assign(ImageBase const &rsh, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
         //
@@ -572,19 +572,19 @@ namespace image {
         //
         // Operators etc.
         //
-        void operator+=(PixelT const rhs);
-        virtual void operator+=(Image<PixelT>const & rhs);
-        void operator+=(lsst::afw::math::Function2<double> const& function);
+        Image& operator+=(PixelT const rhs);
+        virtual Image& operator+=(Image<PixelT>const & rhs);
+        Image& operator+=(lsst::afw::math::Function2<double> const& function);
         void scaledPlus(double const c, Image<PixelT>const & rhs);
-        void operator-=(PixelT const rhs);
-        void operator-=(Image<PixelT> const& rhs);
-        void operator-=(lsst::afw::math::Function2<double> const& function);
+        Image& operator-=(PixelT const rhs);
+        Image& operator-=(Image<PixelT> const& rhs);
+        Image& operator-=(lsst::afw::math::Function2<double> const& function);
         void scaledMinus(double const c, Image<PixelT>const & rhs);
-        void operator*=(PixelT const rhs);
-        void operator*=(Image<PixelT> const& rhs);
+        Image& operator*=(PixelT const rhs);
+        Image& operator*=(Image<PixelT> const& rhs);
         void scaledMultiplies(double const c, Image<PixelT>const & rhs);
-        void operator/=(PixelT const rhs);
-        void operator/=(Image<PixelT> const& rhs);
+        Image& operator/=(PixelT const rhs);
+        Image& operator/=(Image<PixelT> const& rhs);
         void scaledDivides(double const c, Image<PixelT>const & rhs);
 
         // In-place per-pixel sqrt().  Useful when handling variance planes.
@@ -596,13 +596,13 @@ namespace image {
     };
 
     template<typename LhsPixelT, typename RhsPixelT>
-    void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    Image<LhsPixelT>& operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
     template<typename LhsPixelT, typename RhsPixelT>
-    void operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    Image<LhsPixelT>& operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
     template<typename LhsPixelT, typename RhsPixelT>
-    void operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    Image<LhsPixelT>& operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
     template<typename LhsPixelT, typename RhsPixelT>
-    void operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    Image<LhsPixelT>& operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
 
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);

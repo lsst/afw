@@ -104,7 +104,7 @@ def getDeltaLinearCombinationKernel(kSize, imSize, spOrder):
     @param kSize: kernel size (scalar; height = width)
     @param x, y imSize: image size
     """
-    kernelList = afwMath.KernelList()
+    kernelList = []
     for ctrX in range(kSize):
         for ctrY in range(kSize):
             kernelList.append(afwMath.DeltaFunctionKernel(kSize, kSize, afwGeom.Point2I(ctrX, ctrY)))
@@ -122,7 +122,7 @@ def getGaussianLinearCombinationKernel(kSize, imSize, spOrder):
     @param kSize: kernel size (scalar; height = width)
     @param x, y imSize: image size
     """
-    kernelList = afwMath.KernelList()
+    kernelList = []
     for fwhmX, fwhmY, angle in (
         (2.0, 2.0, 0.0),
         (0.5, 4.0, 0.0),

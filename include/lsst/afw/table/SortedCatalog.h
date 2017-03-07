@@ -28,8 +28,6 @@
 
 namespace lsst { namespace afw { namespace table {
 
-#ifndef SWIG
-
 /**
  *  @brief Custom catalog class for record/table subclasses that are guaranteed to have an ID,
  *         and should generally be sorted by that ID.
@@ -163,8 +161,6 @@ public:
 protected:
     explicit SortedCatalogT(Base const & other) : Base(other) {}
 };
-
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

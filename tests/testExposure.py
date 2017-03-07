@@ -212,6 +212,17 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(exposure.hasWcs())
         self.assertFalse(exposure.hasPsf())
 
+    def testExposureInfoSetNone(self):
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setDetector(None)
+        exposureInfo.setValidPolygon(None)
+        exposureInfo.setPsf(None)
+        exposureInfo.setWcs(None)
+        exposureInfo.setCalib(None)
+        exposureInfo.setCoaddInputs(None)
+        exposureInfo.setVisitInfo(None)
+        exposureInfo.setApCorrMap(None)
+
     def testSetExposureInfo(self):
         exposureInfo = afwImage.ExposureInfo()
         exposureInfo.setWcs(self.wcs)
@@ -236,7 +247,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureTime = 12.3
         boresightRotAngle = 45.6 * afwGeom.degrees
         weather = afwCoord.Weather(1.1, 2.2, 0.3)
-        visitInfo = afwImage.makeVisitInfo(
+        visitInfo = afwImage.VisitInfo(
             exposureId = exposureId,
             exposureTime = exposureTime,
             boresightRotAngle = boresightRotAngle,
@@ -407,10 +418,14 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Check scaling of Calib
         scale = 2.0
         calib = mainExposure.getCalib()
+        self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
+        self.assertEqual((fluxMag0, fluxMag0Err), mainExposure.getCalib().getFluxMag0())
         calib *= scale
         self.assertEqual((fluxMag0*scale, fluxMag0Err*scale), calib.getFluxMag0())
+        self.assertEqual((fluxMag0*scale, fluxMag0Err*scale), mainExposure.getCalib().getFluxMag0())
         calib /= scale
         self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
+        self.assertEqual((fluxMag0, fluxMag0Err), mainExposure.getCalib().getFluxMag0())
 
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             mainExposure.writeFits(tmpFile)
@@ -426,9 +441,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
             psf = readExposure.getPsf()
             self.assertIsNotNone(psf)
-            dummyPsf = DummyPsf.swigConvert(psf)
-            self.assertIsNotNone(dummyPsf)
-            self.assertEqual(dummyPsf.getValue(), self.psf.getValue())
+            self.assertEqual(psf.getValue(), self.psf.getValue())
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
@@ -465,9 +478,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
         else:
-            psf1 = DummyPsf.swigConvert(e1.getPsf())
-            psf2 = DummyPsf.swigConvert(e2.getPsf())
-            self.assertEqual(psf1.getValue(), psf2.getValue())
+            self.assertEqual(e1.getPsf().getValue(), e2.getPsf().getValue())
 
     def testCopyExposure(self):
         """Copy an Exposure (maybe changing type)"""

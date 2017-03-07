@@ -147,12 +147,13 @@ void ApCorrMap::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
-void ApCorrMap::operator*=(double const scale) {
+ApCorrMap & ApCorrMap::operator*=(double const scale) {
     Internal replacement;
     for (Iterator i = begin(); i != end(); ++i) {
         replacement[i->first] = (*i->second)*scale;
     }
     _internal = replacement;
+    return *this;
 }
 
 }}} // namespace lsst::afw::image

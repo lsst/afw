@@ -1,4 +1,17 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.python(['geomLib'])
-
+scripts.BasicSConscript.pybind11([
+    'affineTransform',
+    'angle/angle',
+    'box',
+    'coordinates/coordinates',
+    'functor',
+    'spherePoint/spherePoint',
+    'separableXYTransform',
+    'span',
+    'spanSet',
+    'linearTransform',
+    'xyTransform',
+    ],
+    addUnderscore=False
+)

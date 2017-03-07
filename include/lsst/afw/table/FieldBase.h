@@ -58,18 +58,16 @@ struct FieldBase {
     /// @brief Return a string description of the field type.
     static std::string getTypeString();
 
-#ifndef SWIG_BUG_3465431_FIXED
-    // SWIG uses this template to define the interface for the other specializations.
-    // We can add other methods to full specializations using %extend, but we can't add
-    // constructors that way.
+    // Only the first of these constructors is valid for this specializations, but
+    // it's convenient to be able to instantiate both, since the other is used
+    // by other specializations.
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
-            "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
+            "Constructor disabled (this Field type is not sized)."
         );
     }
-#endif
 
 protected:
 

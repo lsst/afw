@@ -83,9 +83,7 @@ template <typename T>
 class ReferenceFunctorKey {
 public:
 
-#ifndef SWIG
     virtual T getReference(BaseRecord & record) const = 0;
-#endif
 
     virtual ~ReferenceFunctorKey() {}
 
@@ -105,9 +103,7 @@ template <typename T>
 class ConstReferenceFunctorKey {
 public:
 
-#ifndef SWIG
     virtual T getConstReference(BaseRecord const & record) const = 0;
-#endif
 
     virtual ~ConstReferenceFunctorKey() {}
 

@@ -115,7 +115,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.assertEquals(saturation, record.getSaturation())
             self.assertEquals(readNoise, record.getReadNoise())
             self.assertEquals(readoutCorner, record.getReadoutCorner())
-            self.assertEquals(linearityCoeffs, record.getLinearityCoeffs())
+            self.assertEquals(list(linearityCoeffs), record.getLinearityCoeffs())
             self.assertEquals(linearityType, record.getLinearityType())
             self.assertEquals(bbox, record.getBBox())
             self.assertEquals(hasRawInfo, record.getHasRawInfo())
@@ -145,6 +145,9 @@ class AmpInfoTableTestCase(unittest.TestCase):
             for rec1, rec2 in zip(self.catalog, catCopy):
                 self.assertEquals(rec1.getName(), rec2.getName())
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
+
+        self.assertEqual(self.catalog.table.schema, self.schema)
+        self.assertEqual(self.catalog.schema, self.schema)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

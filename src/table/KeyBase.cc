@@ -14,6 +14,14 @@ Key<FieldBase<Flag>::Element> KeyBase<Flag>::getStorage() const {
     return detail::Access::extractElement(*this, 0);
 }
 
+bool const KeyBase<Flag>::HAS_NAMED_SUBFIELDS;
+
+template <typename T>
+bool const KeyBase<T>::HAS_NAMED_SUBFIELDS;
+
+template <typename U>
+bool const KeyBase<Array<U>>::HAS_NAMED_SUBFIELDS;
+
 template <typename U>
 std::vector<U> KeyBase< Array<U> >::extractVector(BaseRecord const & record) const {
     Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);

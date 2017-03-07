@@ -146,8 +146,8 @@ class ImageNdGetter {
 
     void checkExtents(Box2I const & bbox, int area) const {
         // If the bounding box lays outside the are of the image, throw an error
-        geom::Box2I arrayBBox(_xy0, _xy0+geom::Extent2I(_array.template getSize<1>(),
-                                                        _array.template getSize<0>()));
+        geom::Box2I arrayBBox(_xy0, geom::Extent2I(_array.template getSize<1>(),
+                                                   _array.template getSize<0>()));
         if (!arrayBBox.contains(bbox)) {
             throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                               "SpanSet bounding box lands outside array");
@@ -167,16 +167,16 @@ class ImageNdGetter {
  private:
     ndarray::Array<T, N, C>  _array;
     geom::Point2I _xy0;
-    typename ndarray::Array<T, N, C>::Reference::Iterator _iterX = nullptr;
+    typename ndarray::Array<T, N, C>::Reference::Iterator _iterX;
 };
 
-template <typename T>
+template <typename T, int inA, int inC>
 class FlatNdGetter {
     // Getter class to manage iterating though an ndarray which is interpreted as a 2D image
  public:
-    using Reference = typename ndarray::Array<T, 1, 1>::Reference;
+    using Reference = typename ndarray::Array<T, inA, inC>::Reference;
 
-    explicit FlatNdGetter(ndarray::Array<T, 1, 1> const & array): _array(array), _iter(_array.begin()) {}
+    explicit FlatNdGetter(ndarray::Array<T, inA, inC> const & array): _array(array), _iter(_array.begin()) {}
 
     void checkExtents(Box2I const & bbox, int area) const {
         // If the area of the array is greater than the size of the array, throw an error
@@ -196,8 +196,8 @@ class FlatNdGetter {
         return *_iter;}
 
  private:
-    ndarray::Array<T, 1, 1>  _array;
-    typename ndarray::Array<T, 1, 1>::Iterator _iter;
+    ndarray::Array<T, inA, inC>  _array;
+    typename ndarray::Array<T, inA, inC>::Iterator _iter;
 };
 
 /*
@@ -209,8 +209,8 @@ class FlatNdGetter {
  * the same. (aka they all correspond to the same duck-type)
  */
 
-template <typename T>
-FlatNdGetter<T> makeGetter(FlatNdGetter<T> & getter) {
+template <typename T, int inA, int inC>
+FlatNdGetter<T, inA, inC> makeGetter(FlatNdGetter<T, inA, inC> & getter) {
     // This function simply passes through any FlatNdGetter passed to it
     return getter;
 }
@@ -286,9 +286,9 @@ namespace ndarray {
      * @tparam inA - The number of dimensions of the array
      * @tparam inB - Number of guaranteed row-major contiguous dimensions, starting from the end
      */
-    details::FlatNdGetter<T> ndFlat(ndarray::Array<T, inA, inB> const & array) {
+    details::FlatNdGetter<T, inA, inB> ndFlat(ndarray::Array<T, inA, inB> const & array) {
         // Function to mark a ndarray to be treated as a flat vector by the applyFunctor method
-        return details::FlatNdGetter<T>(array);
+        return details::FlatNdGetter<T, inA, inB>(array);
     }
 
     /** @brief Marks a ndarray to be interpreted as an image when applying a functor from a SpanSet

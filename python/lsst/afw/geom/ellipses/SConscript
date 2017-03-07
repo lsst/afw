@@ -1,3 +1,13 @@
-# -*- python -*-
+## -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.python(['ellipsesLib'])
+scripts.BasicSConscript.pybind11(['quadrupole',
+                                  'ellipse',
+                                  'pixelRegion',
+                                  'baseCore',
+                                  'axes',
+                                  'radii',
+                                  'ellipticityBase',
+                                  'distortion',
+                                  'conformalShear',
+                                  'reducedShear',
+                                  'separable'])

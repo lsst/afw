@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -22,20 +22,21 @@
 
 """Application Framework geometry code including Point, Extent, and ellipses
 """
-from .geomLib import *
+from __future__ import absolute_import
+
+from .angle import *
+from .coordinates import *
+from .box import *
+from .functor import *
+from .span import *
+from .spherePoint import *
+from .xyTransform import *
+from .separableXYTransform import *
+from .linearTransform import *
+from .affineTransform import *
+from .spanSet import *
+
 from .xyTransformFactory import *
 from .transformConfig import *
+from .transformMap import *
 from .utils import *
-
-BoxI = Box2I
-BoxD = Box2D
-
-PointI = Point2I
-PointD = Point2D
-
-ExtentI = Extent2I
-ExtentD = Extent2D
-
-Point = {(int, 2):Point2I, (float, 2):Point2D, (int, 3):Point3I, (float, 3):Point3D}
-Extent = {(int, 2):Extent2I, (float, 2):Extent2D, (int, 3):Extent3I, (float, 3):Extent3D}
-CoordinateExpr = {2:CoordinateExpr2, 3:CoordinateExpr3}

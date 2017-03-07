@@ -155,7 +155,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema()
         fKey0 = lsst.afw.table.QuadrupoleKey.addFields(
-            schema, "a", "moments", lsst.afw.table.CoordinateType_PIXEL)
+            schema, "a", "moments", lsst.afw.table.CoordinateType.PIXEL)
         xxKey = schema.find("a_xx").key
         yyKey = schema.find("a_yy").key
         xyKey = schema.find("a_xy").key
@@ -375,7 +375,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         b2 = schema.addField("b_2", type=fieldType, doc="invalid out-of-order array element")
         b1 = schema.addField("b_1", type=fieldType, doc="invalid out-of-order array element")
         c = schema.addField("c", type="Array%s" % fieldType, doc="old-style array", size=4)
-        k1 = FunctorKeyType([a0, a1, a2])  # construct from a vector of keys
+        k1 = FunctorKeyType([a0, a1, a2])  # construct from a list of keys
         k2 = FunctorKeyType(schema["a"])   # construct from SubSchema
         k3 = FunctorKeyType(c)             # construct from old-style Key<Array<T>>
         k4 = FunctorKeyType.addFields(schema, "d", "doc for d", "barn", 4)
