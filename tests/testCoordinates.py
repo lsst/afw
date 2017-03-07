@@ -377,13 +377,6 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.mul, float, eD, eD)
             self.checkOperator(operator.mul, int, eI, eI)
             self.checkOperator(operator.mul, float, eI, eD)
-            # Old-Style Division (note that operator.div doesn't obey the future statement; it just calls
-            # __div__ directly.
-            if hasattr(operator, "div"):
-                self.checkOperator(operator.div, eD, int, eD)
-                self.checkOperator(operator.div, eD, float, eD)
-                self.checkOperator(operator.div, eI, int, eI)
-                self.checkOperator(operator.div, eI, float, eD)
             # New-Style Division
             self.checkOperator(operator.truediv, eD, int, eD)
             self.checkOperator(operator.truediv, eD, float, eD)
@@ -446,13 +439,6 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             self.checkOperator(operator.imul, eD, float, eD, inPlace=True)
             self.checkOperator(operator.imul, eI, int, eI, inPlace=True)
             self.checkOperator(operator.imul, eI, float, TypeError)
-            # Old-Style Division (note that operator.div doesn't obey the future statement; it just calls
-            # __div__ directly).
-            if hasattr(operator, "idiv"):
-                self.checkOperator(operator.idiv, eD, int, eD, inPlace=True)
-                self.checkOperator(operator.idiv, eD, float, eD, inPlace=True)
-                self.checkOperator(operator.idiv, eI, int, eI, inPlace=True)
-                self.checkOperator(operator.idiv, eI, float, TypeError)
             # New-Style Division
             self.checkOperator(operator.itruediv, eD, int, eD, inPlace=True)
             self.checkOperator(operator.itruediv, eD, float, eD, inPlace=True)
