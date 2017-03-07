@@ -487,6 +487,9 @@ class Display(object):
 
         self._impl._dot(symb, c, r, size, ctype, **kwargs)
 
+    def showCatalog(self, sourceCat):
+        self._impl._showCatalog(sourceCat)
+
     def showCoords(self, sourceCat, symb="o", **kwargs):
         """
         !Plot the RA/Dec coordinates of a source catalog as symbols.
