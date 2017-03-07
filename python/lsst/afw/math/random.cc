@@ -93,7 +93,9 @@ PYBIND11_PLUGIN(_random) {
     // thus use the same solution as employed with Swig
     clsRandom.def("getState", [](Random & self) -> py::object {
         std::string state = self.getState();
-        return py::object{PyBytes_FromStringAndSize(state.data(), state.size()), false};
+        return py::reinterpret_steal<py::object>(
+            PyBytes_FromStringAndSize(state.data(), state.size())
+        );
     });
     clsRandom.def("setState", [](Random & self, py::bytes const & state) {
         self.setState(state);

@@ -92,18 +92,12 @@ void declareArrayKey(py::module & mod, std::string const & suffix) {
                 bool valid = slice.compute(self.getSize(), &start, &stop, &step, &length);
                 if (!valid) throw py::error_already_set();
                 if (step != 1) {
-                    PyErr_SetString(PyExc_IndexError, "Step for ArrayKey must be 1.");
-                    throw py::error_already_set();
+                    throw py::index_error("Step for ArrayKey must be 1.");
                 }
                 return py::cast(self.slice(start, stop));
             } else {
-                try {
-                    std::size_t n = utils::python::cppIndex(self.getSize(), py::cast<std::ptrdiff_t>(index));
-                    return py::cast(self[n]);
-                } catch (pex::exceptions::OutOfRangeError & err) {
-                    PyErr_SetString(PyExc_IndexError, err.what());
-                    throw py::error_already_set();
-                }
+                std::size_t n = utils::python::cppIndex(self.getSize(), py::cast<std::ptrdiff_t>(index));
+                return py::cast(self[n]);
             }
         }
     );

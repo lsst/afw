@@ -1,8 +1,6 @@
-from __future__ import absolute_import, division
-from builtins import str
 #
 # LSST Data Management System
-# Copyright 2008-2016 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -21,9 +19,12 @@ from builtins import str
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 
-"""Application Framework image-related classes including Image, Mask and MaskedImage
-"""
+__all__ = ["makeImageFromArray", "makeMaskFromArray", "makeMaskedImageFromArrays",
+           "wcsNearlyEqualOverBBox", "assertWcsNearlyEqualOverBBox"]
+
+from builtins import str
 import itertools
 import math
 
@@ -31,39 +32,39 @@ import numpy
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
-from . import imageLib
+from .image import Image
+from .mask import Mask
+from .maskedImage import MaskedImage
 
-__all__ = ["makeImageFromArray", "makeMaskFromArray", "makeMaskedImageFromArrays",
-    "wcsNearlyEqualOverBBox", "assertWcsNearlyEqualOverBBox"]
-
-suffixes = {str(numpy.uint16): "U", str(numpy.int32): "I", str(numpy.float32): "F", str(numpy.float64): "D"}
 
 def makeImageFromArray(array):
-    """Construct an Image from a NumPy array, inferring the Image type from the NumPy type.
-    Return None if input is None.
+    """Construct an Image from a NumPy array, inferring the Image type from
+    the NumPy type. Return None if input is None.
     """
     if array is None:
         return None
-    cls = getattr(imageLib, "Image%s" % (suffixes[str(array.dtype.type)],))
-    return cls(array)
+    return Image(array, dtype=array.dtype.type)
+
 
 def makeMaskFromArray(array):
-    """Construct an Mask from a NumPy array, inferring the Mask type from the NumPy type.
-    Return None if input is None.
+    """Construct an Mask from a NumPy array, inferring the Mask type from the
+    NumPy type. Return None if input is None.
     """
     if array is None:
         return None
-    cls = getattr(imageLib, "Mask%s" % (suffixes[str(array.dtype.type)],))
-    return cls(array)
+    return Mask(array, dtype=array.dtype.type)
+
 
 def makeMaskedImageFromArrays(image, mask=None, variance=None):
-    """Construct a MaskedImage from three NumPy arrays, inferring the MaskedImage types from the NumPy types.
+    """Construct a MaskedImage from three NumPy arrays, inferring the
+    MaskedImage types from the NumPy types.
     """
-    cls = getattr(imageLib, "MaskedImage%s" % (suffixes[str(image.dtype.type)],))
-    return cls(makeImageFromArray(image), makeMaskFromArray(mask), makeImageFromArray(variance))
+    return MaskedImage(makeImageFromArray(image), makeMaskFromArray(mask),
+                       makeImageFromArray(variance), dtype=image.dtype.type)
+
 
 def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
-    maxDiffPix=0.01, nx=5, ny=5, doShortCircuit=True):
+                        maxDiffPix=0.01, nx=5, ny=5, doShortCircuit=True):
     """!Compare two WCS over a rectangular grid of pixel positions
 
     @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)

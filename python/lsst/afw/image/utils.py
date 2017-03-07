@@ -1,9 +1,6 @@
-from __future__ import absolute_import, division
-from past.builtins import basestring
-from builtins import object
 #
 # LSST Data Management System
-# Copyright 2008-2016 LSST Corporation.
+# Copyright 2008-2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -22,20 +19,31 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 
-import re
+__all__ = ["clipImage", "getDistortedWcs", "resetFilters", "defineFilter",
+           "defineFiltersFromPolicy", "CalibNoThrow"]
+
+from past.builtins import basestring
+from builtins import object
+
 import lsst.pex.policy as pexPolicy
 from lsst.afw.cameraGeom import TAN_PIXELS
 import lsst.afw.detection as afwDetect
-from . import imageLib as afwImage
+from .maskedImage import MaskedImage, makeMaskedImage
+from .mask import MaskU
+from .tanWcs import TanWcs
+from .distortedTanWcs import DistortedTanWcs
+from .filter import Filter, FilterProperty
+from .calib import Calib
+
 
 def clipImage(im, minClip, maxClip):
     """Clip an image to lie between minClip and maxclip (None to ignore)"""
-
-    if re.search("::MaskedImage<", im.__repr__()):
+    if isinstance(im, MaskedImage):
         mi = im
     else:
-        mi = afwImage.makeMaskedImage(im, afwImage.MaskU(im.getDimensions()))
+        mi = makeMaskedImage(im, MaskU(im.getDimensions()))
 
     if minClip is not None:
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
@@ -69,7 +77,7 @@ def getDistortedWcs(exposureInfo, log=None):
         if not wcs.hasDistortion() and exposureInfo.hasDetector():
             # warn and return original Wcs the initial WCS is not a TanWcs or TAN_PIXELS not present;
             # other errors indicate a bug that should raise an exception
-            if not isinstance(wcs, afwImage.TanWcs):
+            if not isinstance(wcs, TanWcs):
                 if log:
                     log.warn("Could not create a DistortedTanWcs:"
                              "exposure's Wcs is a %r isntead of a TanWcs" % (wcs,))
@@ -82,30 +90,32 @@ def getDistortedWcs(exposureInfo, log=None):
                 return wcs
 
             pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
-            return afwImage.DistortedTanWcs(wcs, pixelsToTanPixels)
+            return DistortedTanWcs(wcs, pixelsToTanPixels)
         return wcs
 
 def resetFilters():
     """Reset registry of filters and filter properties"""
-    afwImage.Filter.reset()
-    afwImage.FilterProperty.reset()
+    Filter.reset()
+    FilterProperty.reset()
+
 
 def defineFilter(name, lambdaEff, alias=[], force=False):
     """Define a filter and its properties in the filter registry"""
-    prop = afwImage.FilterProperty(name, lambdaEff, force)
-    afwImage.Filter.define(prop)
+    prop = FilterProperty(name, lambdaEff, force)
+    Filter.define(prop)
     if isinstance(alias, basestring):
-        afwImage.Filter.defineAlias(name, alias)
+        Filter.defineAlias(name, alias)
     else:
         for a in alias:
-            afwImage.Filter.defineAlias(name, a)
+            Filter.defineAlias(name, a)
+
 
 def defineFiltersFromPolicy(filterPolicy, reset=False):
     """Process a Policy and define the filters"""
 
     if reset:
-        afwImage.Filter.reset()
-        afwImage.FilterProperty.reset()
+        Filter.reset()
+        FilterProperty.reset()
     #
     # Process the Policy and define the filters
     #
@@ -115,10 +125,11 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
     filterPolicy.mergeDefaults(defPolicy.getDictionary())
 
     for p in filterPolicy.getArray("Filter"):
-        afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p))
+        Filter.define(FilterProperty(p.get("name"), p))
         if p.exists("alias"):
             for a in p.getArray("alias"):
-                afwImage.Filter.defineAlias(p.get("name"), a)
+                Filter.defineAlias(p.get("name"), a)
+
 
 class CalibNoThrow(object):
     """A class intended to be used with python's with statement, to return NaNs for negative fluxes
@@ -129,8 +140,8 @@ E.g.
          ax.plot([exposure.getCalib().getMagnitude(a) for a in candAmps], zGood[:,k], 'b+')
     """
     def __enter__(self):
-        self._throwOnNegative = afwImage.Calib.getThrowOnNegativeFlux()
-        afwImage.Calib.setThrowOnNegativeFlux(False)
+        self._throwOnNegative = Calib.getThrowOnNegativeFlux()
+        Calib.setThrowOnNegativeFlux(False)
 
     def __exit__(self, *args):
-        afwImage.Calib.setThrowOnNegativeFlux(self._throwOnNegative)
+        Calib.setThrowOnNegativeFlux(self._throwOnNegative)

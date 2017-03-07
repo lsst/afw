@@ -330,8 +330,7 @@ void declareSchemaType(py::module & mod) {
             }
             // Have to raise IndexError not some LSST exception to get the
             // right behavior when unpacking.
-            PyErr_SetString(PyExc_IndexError, "Index to SchemaItem must be 0 or 1.");
-            throw py::error_already_set();
+            throw py::index_error("Index to SchemaItem must be 0 or 1.");
         }
     );
     clsSchemaItem.def(

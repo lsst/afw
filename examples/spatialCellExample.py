@@ -40,7 +40,7 @@ import sys
 
 import lsst.utils
 import lsst.afw.detection as afwDetect
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
 import lsst.afw.math.mathLib as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9

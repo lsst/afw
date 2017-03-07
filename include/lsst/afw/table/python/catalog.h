@@ -169,12 +169,7 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
 
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
-        try { // try/catch is a workaround for DM-9715
-            return self.get(utils::python::cppIndex(self.size(), i));
-        } catch (pex::exceptions::OutOfRangeError & err) {
-            PyErr_SetString(PyExc_IndexError, err.what());
-            throw py::error_already_set();
-        }
+        return self.get(utils::python::cppIndex(self.size(), i));
     });
     cls.def("isContiguous", &Catalog::isContiguous);
     cls.def("writeFits",

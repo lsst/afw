@@ -2,17 +2,16 @@
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11([
     'affineTransform',
-    'angle',
+    'angle/angle',
     'box',
-    'coordinateBase',
-    'coordinateExpr',
-    'extent',
+    'coordinates/coordinates',
     'functor',
-    'point',
-    'spherePoint',
+    'spherePoint/spherePoint',
     'separableXYTransform',
     'span',
     'spanSet',
     'linearTransform',
-    'xYTransform',
-])
+    'xyTransform',
+    ],
+    addUnderscore=False
+)

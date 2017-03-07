@@ -20,29 +20,42 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/geom/Functor.h"
 #include "lsst/afw/geom/SeparableXYTransform.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom { namespace {
 
-PYBIND11_PLUGIN(_separableXYTransform) {
-    py::module mod("_separableXYTransform", "Python wrapper for afw _separableXYTransform library");
+using PySeparableXYTransform =
+    py::class_<SeparableXYTransform, std::shared_ptr<SeparableXYTransform>, XYTransform>;
 
-    py::class_<SeparableXYTransform, std::shared_ptr<SeparableXYTransform>, XYTransform> clsSeparableXYTransform(mod, "SeparableXYTransform");
+PYBIND11_PLUGIN(separableXYTransform) {
+    py::module mod("separableXYTransform");
+ py::module::import("lsst.afw.geom.functor");
+    py::module::import("lsst.afw.geom.xyTransform");
+
+    PySeparableXYTransform cls(mod, "SeparableXYTransform");
 
     /* Constructors */
-    clsSeparableXYTransform.def(py::init<Functor const &, Functor const &>());
+    cls.def(py::init<Functor const &, Functor const &>(), "xfunctor"_a, "yfunctor"_a);
 
     /* Members */
-    clsSeparableXYTransform.def("clone", &SeparableXYTransform::clone);
-    clsSeparableXYTransform.def("forwardTransform", &SeparableXYTransform::forwardTransform);
-    clsSeparableXYTransform.def("reverseTransform", &SeparableXYTransform::reverseTransform);
-    clsSeparableXYTransform.def("getXfunctor", &SeparableXYTransform::getXfunctor);
-    clsSeparableXYTransform.def("getYfunctor", &SeparableXYTransform::getYfunctor);
+    cls.def("clone", &SeparableXYTransform::clone);
+    cls.def("forwardTransform", &SeparableXYTransform::forwardTransform);
+    cls.def("reverseTransform", &SeparableXYTransform::reverseTransform);
+    // These return const references, but the Functor classes are immutable, so it's okay
+    // to return them by reference (and impossible to just let pybind11 copy them, because
+    // that would require a call to clone()).
+    cls.def("getXfunctor", &SeparableXYTransform::getXfunctor,
+             py::return_value_policy::reference_internal);
+    cls.def("getYfunctor", &SeparableXYTransform::getYfunctor,
+             py::return_value_policy::reference_internal);
 
-return mod.ptr();
+    return mod.ptr();
 }
+
+}}}} // namespace lsst::afw::geom::<anonymous>

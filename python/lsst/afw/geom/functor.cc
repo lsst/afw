@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,50 +9,47 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
+#include "pybind11/pybind11.h"
 
 #include "lsst/afw/geom/Functor.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom { namespace {
 
-PYBIND11_PLUGIN(_functor) {
-    py::module mod("_functor", "Python wrapper for afw _functor library");
+using PyFunctor = py::class_<Functor, std::shared_ptr<Functor>>;
+using PyLinearFunctor = py::class_<LinearFunctor, std::shared_ptr<LinearFunctor>, Functor>;
 
-    py::class_<Functor> clsFunctor(mod, "Functor");
+PYBIND11_PLUGIN(functor) {
+    py::module mod("functor");
 
-    /* Operators */
+    /* Functor */
+
+    PyFunctor clsFunctor(mod, "Functor");
     clsFunctor.def("__call__", &Functor::operator());
-
-    /* Members */
-    clsFunctor.def("inverse", &Functor::inverse,
-        py::arg("y"), py::arg("tol")=1e-10, py::arg("maxiter")=1000);
+    clsFunctor.def("inverse", &Functor::inverse, "y"_a, "tol"_a=1e-10, "maxiter"_a=1000);
     clsFunctor.def("derivative", &Functor::derivative);
 
-    py::class_<LinearFunctor, Functor> clsLinearFunctor(mod, "LinearFunctor");
+    /* LinearFunctor */
 
-    /* Constructors */
-    clsLinearFunctor.def(py::init<double, double>());
-
-    /* Operators */
+    PyLinearFunctor clsLinearFunctor(mod, "LinearFunctor");
+    clsLinearFunctor.def(py::init<double, double>(), "slope"_a, "intercept"_a);
     clsLinearFunctor.def("__call__", &LinearFunctor::operator());
-
-    /* Members */
     clsLinearFunctor.def("derivative", &LinearFunctor::derivative);
 
     return mod.ptr();
 }
 
+}}}} // namespace lsst::afw::geom::<anonymous>
