@@ -1,3 +1,4 @@
+
 // -*- lsst-c++ -*-
 
 /*
@@ -362,12 +363,13 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * @tparam inC Number of guaranteed row-major contiguous dimensions, starting from the end
      */
     template <typename Pixel, int inN, int inC>
-    ndarray::Array<Pixel, inN-1, inN-1> flatten(ndarray::Array<Pixel, inN, inC>  const & input,
-                                        Point2I const & xy0 = Point2I()) const {
+    ndarray::Array<typename std::remove_const<Pixel>::type, inN-1, inN-1>
+    flatten(ndarray::Array<Pixel, inN, inC>  const & input, Point2I const & xy0 = Point2I()) const {
         // Populate a lower dimensional array with the values from input taken at the points of SpanSet
         auto outputShape = ndarray::concatenate(ndarray::makeVector(getArea()),
                                                 input.getShape().template last<inN-2>());
-        ndarray::Array<Pixel, inN-1, inN-1> outputArray = ndarray::allocate(outputShape);
+        ndarray::Array<typename std::remove_const<Pixel>::type, inN-1, inN-1> outputArray =
+                                                                              ndarray::allocate(outputShape);
         outputArray.deep() = 0;
         flatten(outputArray, input, xy0);
         return outputArray;
@@ -420,7 +422,8 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * @tparam inC Number of guaranteed row-major contiguous dimensions, starting from the end
      */
     template <typename Pixel, int inA, int inC>
-    ndarray::Array<Pixel, inA+1, inA+1> unflatten(ndarray::Array<Pixel, inA, inC> const & input) const {
+    ndarray::Array<typename std::remove_const<Pixel>::type, inA+1, inA+1>
+    unflatten(ndarray::Array<Pixel, inA, inC> const & input) const {
         // Create a higher dimensional array the size of the bounding box and extra dimensions of input.
         // Populate values from input, placed at locations corresponding to SpanSet, offset by the
         // lower corner of the bounding box
@@ -429,7 +432,8 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         typename decltype(existingShape)::Element width = _bBox.getWidth();
         auto outputShape = ndarray::concatenate(ndarray::makeVector(height, width),
                                                 input.getShape().template last<inA-1>());
-        ndarray::Array<Pixel, inA+1, inA+1> outputArray = ndarray::allocate(outputShape);
+        ndarray::Array<typename std::remove_const<Pixel>::type, inA+1, inA+1> outputArray =
+                                                                              ndarray::allocate(outputShape);
         outputArray.deep() = 0;
         unflatten(outputArray, input, Point2I(_bBox.getMinX(), _bBox.getMinY()));
         return outputArray;
@@ -672,7 +676,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     std::shared_ptr<SpanSet> intersect(image::Mask<T> const & other, T const & bitmask) const {
         auto comparator = [bitmask]
                           (T pixelValue)
-                          {return (pixelValue & bitmask) == bitmask;};
+                          {return (pixelValue & bitmask);};
         auto spanSetFromMask = geom::maskToSpanSet(other, comparator);
         return intersect(*spanSetFromMask);
     }
@@ -696,7 +700,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     std::shared_ptr<SpanSet> intersectNot(image::Mask<T> const & other, T const & bitmask) const {
         auto comparator = [bitmask]
                           (T pixelValue)
-                          {return (pixelValue & bitmask) == bitmask;};
+                          {return (pixelValue & bitmask);};
         auto spanSetFromMask = geom::maskToSpanSet(other, comparator);
         return intersectNot(*spanSetFromMask);
     }
@@ -719,7 +723,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
     std::shared_ptr<SpanSet> union_(image::Mask<T> const & other, T const & bitmask) const {
         auto comparator = [bitmask]
                           (T pixelValue)
-                          {return (pixelValue & bitmask) == bitmask;};
+                          {return (pixelValue & bitmask);};
         auto spanSetFromMask = geom::maskToSpanSet(other, comparator);
         return union_(*spanSetFromMask);
     }
