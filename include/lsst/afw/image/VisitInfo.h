@@ -42,10 +42,12 @@ namespace lsst { namespace afw { namespace image {
 enum class RotType {
     UNKNOWN,    ///< Rotation angle is unknown. Note: if there is no instrument rotator then it is better
                 ///< to compute SKY or HORIZON and use that rotation type rather than specify UNKNOWN.
-    SKY,        ///< Orientation of E,N with respected to detector X,Y;
-                ///< X is flipped, if necessary, to match the handedness of E,N.
-    HORIZON,    ///< orientation of Az/Alt with respect to detector X,Y;
-                ///< X is flipped, if necessary, to match the handedness of Az,Alt.
+    SKY,        ///< Position angle of focal plane +Y, measured from N through E.
+                ///< At 0 degrees, +Y is along N and +X is along E/W depending on handedness.
+                ///< At 90 degrees, +Y is along E and +X is along S/N depending on handedness.
+    HORIZON,    ///< Position angle of focal plane +Y, measured from +Alt through +Az.
+                ///< At 0 degrees, +Y is along +Alt and +X is along +/-Az, depending on handedness.
+                ///< At 90 degrees, +Y is along +Az and +X is along -/+Alt, depending on handedness.
     MOUNT       ///< The position sent to the instrument rotator; the details depend on the rotator.
 };
 
@@ -160,9 +162,8 @@ public:
     /**
     * Get rotation angle at boresight at middle of exposure
     *
-    * Rotation angle is angle of coordinate system specified by boresightRotType with respect to detector.
-    * For example if boresightRotType is SKY then at a rotation angle of 0 North is along detector Y axis
-    * (never flipped) and East is along the detector X axis (flipped if necessary)
+    * The meaning of rotation angle depends on @ref RotType "rotType".  For example, if `rotType` is SKY
+    * the angle is the position angle of the focal plane +Y with respect to North.
     */
     geom::Angle getBoresightRotAngle() const { return _boresightRotAngle; }
 
