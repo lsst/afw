@@ -133,7 +133,6 @@ PYBIND11_PLUGIN(angle) {
     mod.attr("SQRTPI") = py::float_(SQRTPI);
     mod.attr("INVSQRTPI") = py::float_(INVSQRTPI);
     mod.attr("ROOT2") = py::float_(ROOT2);
-    mod.attr("NullAngle") = py::cast(NullAngle);
 
     mod.def("degToRad", degToRad);
     mod.def("radToDeg", radToDeg);
