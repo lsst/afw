@@ -49,6 +49,9 @@ PYBIND11_PLUGIN(_distortion) {
     cls.def("getAxisRatio", &Distortion::getAxisRatio);
     cls.def("normalize", &Distortion::normalize);
     cls.def("getName", &Distortion::getName);
+    cls.def("__repr__", [](Distortion const& self) {
+        return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
+    });
 
     return mod.ptr();
 }

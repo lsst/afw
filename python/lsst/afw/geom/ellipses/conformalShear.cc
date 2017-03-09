@@ -49,6 +49,9 @@ PYBIND11_PLUGIN(_conformalShear) {
     cls.def("getAxisRatio", &ConformalShear::getAxisRatio);
     cls.def("normalize", &ConformalShear::normalize);
     cls.def("getName", &ConformalShear::getName);
+    cls.def("__repr__", [](ConformalShear const& self) {
+        return py::str("%s(%g, %g)").format(self.getName(), self.getE1(), self.getE2());
+    });
 
     return mod.ptr();
 }

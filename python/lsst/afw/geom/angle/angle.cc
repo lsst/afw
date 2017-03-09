@@ -105,6 +105,14 @@ PYBIND11_PLUGIN(angle) {
         }
     );
 
+    auto streamStr = [](Angle const& self) {
+        std::stringstream buffer;
+        buffer << self;
+        return buffer.str();
+    };
+    clsAngle.def("__str__", streamStr);
+    clsAngle.def("__repr__", streamStr);
+
     clsAngle.def("asAngularUnits", &Angle::asAngularUnits);
     clsAngle.def("asRadians", &Angle::asRadians);
     clsAngle.def("asDegrees", &Angle::asDegrees);

@@ -51,6 +51,9 @@ PYBIND11_PLUGIN(_ellipticityBase) {
     cls.def("getE2", &detail::EllipticityBase::getE2);
     cls.def("setE2", &detail::EllipticityBase::setE2);
     cls.def("getTheta", &detail::EllipticityBase::getTheta);
+    cls.def("__str__", [](detail::EllipticityBase const& self) {
+        return py::str("(%g, %g)").format(self.getE1(), self.getE2());
+    });
 
     return mod.ptr();
 }

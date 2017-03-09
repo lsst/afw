@@ -20,6 +20,8 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <sstream>
+
 #include <pybind11/pybind11.h>
 
 #include "lsst/afw/coord/Weather.h"
@@ -50,6 +52,13 @@ PYBIND11_PLUGIN(_weather) {
     cls.def("getAirPressure", &lsst::afw::coord::Weather::getAirPressure);
     cls.def("getAirTemperature", &lsst::afw::coord::Weather::getAirTemperature);
     cls.def("getHumidity", &lsst::afw::coord::Weather::getHumidity);
+    auto streamStr = [](Weather const &self) {
+        std::stringstream buffer;
+        buffer << self;
+        return buffer.str();
+    };
+    cls.def("__str__", streamStr);
+    cls.def("__repr__", streamStr);
 
     return mod.ptr();
 }
