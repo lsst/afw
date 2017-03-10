@@ -156,25 +156,6 @@ public:
     constexpr double asArcseconds() const noexcept { return asAngularUnits(arcseconds); }
 
     /**
-     * Return the squared distance between two unit vectors separated by this angle.
-     *
-     * This distance is given by @f$ |\vec{u} - \vec{v}| = 2 \sin(\theta/2) @f$.
-     *
-     * @return the squared distance between the two vectors
-     */
-    double toUnitSphereDistanceSquared() const noexcept;
-
-    /**
-     * Return the angle between two unit vectors.
-     *
-     * This angle is given by @f$ \sin(\theta/2) = |\vec{u} - \vec{v}|/2 @f$.
-     *
-     * @param d2 the squared distance between two unit vectors
-     * @return the angle between the two vectors
-     */
-    static Angle fromUnitSphereDistanceSquared(double d2) noexcept;
-
-    /**
      * Wrap this angle to the range [0, 2&pi;).
      *
      * @returns an angle in the normalized interval.
@@ -396,17 +377,6 @@ inline constexpr Angle operator*(T lhs, AngleUnit rhs) noexcept {
 
 /************************************************************************************************************/
 // Inline method definitions, placed last in order to benefit from Angle's full API
-
-inline double Angle::toUnitSphereDistanceSquared() const noexcept {
-    return 2. * (1. - std::cos(asRadians()));
-    // == 4.0 * pow(std::sin(0.5 * asRadians()), 2.0)
-}
-
-// not constexpr b/c std::acos is not constexpr on OS X
-inline Angle Angle::fromUnitSphereDistanceSquared(double d2) noexcept {
-    return (std::acos(1. - d2 / 2.)) * radians;
-    // == 2.0 * asin(0.5 * sqrt(d2))
-}
 
 inline Angle Angle::wrap() const noexcept {
     double wrapped = std::fmod(_val, TWOPI);

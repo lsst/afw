@@ -121,6 +121,32 @@ bool doSelfMatchIfSame(
     return false;
 }
 
+/**
+ * Return the squared distance between two unit vectors separated by an angle.
+ *
+ * This distance is given by @f$ |\vec{u} - \vec{v}| = 2 \sin(\theta/2) @f$.
+ *
+ * @param theta the angle between two unit vectors
+ * @return the squared distance between the two vectors
+ */
+double toUnitSphereDistanceSquared(afw::geom::Angle theta) noexcept {
+    return 2. * (1. - std::cos(theta.asRadians()));
+    // == 4.0 * pow(std::sin(0.5 * theta.asRadians()), 2.0)
+}
+
+/**
+ * Return the angle between two unit vectors.
+ *
+ * This angle is given by @f$ \sin(\theta/2) = |\vec{u} - \vec{v}|/2 @f$.
+ *
+ * @param d2 the squared distance between two unit vectors
+ * @return the angle between the two vectors
+ */
+Angle fromUnitSphereDistanceSquared(double d2) noexcept {
+    return (std::acos(1. - d2 / 2.)) * afw::geom::radians;
+    // == 2.0 * asin(0.5 * sqrt(d2))
+}
+
 } // anonymous
 
 
@@ -152,7 +178,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
         return matches;
     }
     // setup match parameters
-    double const d2Limit = radius.toUnitSphereDistanceSquared();
+    double const d2Limit = toUnitSphereDistanceSquared(radius);
 
     // Build position lists
     size_t len1 = cat1.size();
@@ -189,7 +215,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
                     found = true;
                 } else {
                     matches.push_back(
-                        MatchT(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
+                        MatchT(pos1[i].src, pos2[j].src, fromUnitSphereDistanceSquared(d2))
                     );
                 }
                 ++nMatches;
@@ -201,7 +227,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
         if (mc.findOnlyClosest && found) {
             matches.push_back(
                 MatchT(pos1[i].src, pos2[closestIndex].src,
-                       geom::Angle::fromUnitSphereDistanceSquared(d2Include))
+                       fromUnitSphereDistanceSquared(d2Include))
             );
         }
     }
@@ -245,7 +271,7 @@ matchRaDec(Cat const &cat, geom::Angle radius,
         return matches;
     }
     // setup match parameters
-    double const d2Limit = radius.toUnitSphereDistanceSquared();
+    double const d2Limit = toUnitSphereDistanceSquared(radius);
 
     // Build position list
     size_t len = cat.size();
@@ -261,7 +287,7 @@ matchRaDec(Cat const &cat, geom::Angle radius,
             double dz = pos[i].z - pos[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Limit) {
-                Angle d = Angle::fromUnitSphereDistanceSquared(d2);
+                Angle d = fromUnitSphereDistanceSquared(d2);
                 matches.push_back(MatchT(pos[i].src, pos[j].src, d));
                 if (mc.symmetricMatch) {
                     matches.push_back(MatchT(pos[j].src, pos[i].src, d));

@@ -121,8 +121,6 @@ PYBIND11_PLUGIN(angle) {
     clsAngle.def("asHours", &Angle::asHours);
     clsAngle.def("asArcminutes", &Angle::asArcminutes);
     clsAngle.def("asArcseconds", &Angle::asArcseconds);
-    clsAngle.def("toUnitSphereDistanceSquared", &Angle::toUnitSphereDistanceSquared);
-    clsAngle.def("fromUnitSphereDistanceSquared", &Angle::fromUnitSphereDistanceSquared);
     clsAngle.def("wrap", &Angle::wrap);
     clsAngle.def("wrapCtr", &Angle::wrapCtr);
     clsAngle.def("wrapNear", &Angle::wrapNear);
