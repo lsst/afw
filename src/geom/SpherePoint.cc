@@ -40,20 +40,6 @@ namespace geom {
 /** Static implementation details for SpherePoint. */
 namespace {
 /**
- * Wraps an angle to the interval [0, 2&pi;).
- *
- * @param angle the angle to be wrapped
- * @return an angle equivalent to `angle`, but forced into the
- *         interval [0, 2&pi;). May be the same object as `angle` if
- *         no wrapping was required.
- */
-Angle wrap(Angle const& angle) {
-    Angle copy(angle);
-    copy.wrap();
-    return copy;
-}
-
-/**
  * Angular distance between two points using the Haversine formula.
  *
  * Besides the differences between the two coordinates, we also input the
@@ -78,7 +64,7 @@ Angle haversine(Angle const& deltaLon, Angle const& deltaLat, double cosLat1, do
 }  // end namespace
 
 SpherePoint::SpherePoint(Angle const& longitude, Angle const& latitude)
-        : _longitude(wrap(longitude).asRadians()), _latitude(latitude.asRadians()) {
+        : _longitude(longitude.wrap().asRadians()), _latitude(latitude.asRadians()) {
     if (fabs(_latitude) > HALFPI) {
         throw pexExcept::InvalidParameterError("Angle " + to_string(latitude.asDegrees()) +
                                                " is not a valid latitude.");
@@ -103,7 +89,7 @@ SpherePoint::SpherePoint(Point3D const& vector) {
 
     // Need to convert to Angle, Angle::wrap, and convert back to radians
     //     to handle _longitude = -1e-16 without code duplication
-    _longitude = wrap(atan2(y, x) * radians).asRadians();
+    _longitude = (atan2(y, x) * radians).wrap().asRadians();
     _latitude = asin(z);
 }
 
@@ -161,7 +147,7 @@ Angle SpherePoint::bearingTo(SpherePoint const& other) const {
     // Adapted from http://www.movable-type.co.uk/scripts/latlong.html
     double const y = sin(deltaLon) * cosDelta2;
     double const x = cosDelta1 * sinDelta2 - sinDelta1 * cosDelta2 * cos(deltaLon);
-    return wrap(90.0 * degrees - atan2(y, x) * radians);
+    return (90.0 * degrees - atan2(y, x) * radians).wrap();
 }
 
 Angle SpherePoint::separation(SpherePoint const& other) const noexcept {

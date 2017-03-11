@@ -88,10 +88,8 @@ public:
     std::string toString() const;
 
     bool operator==(Observatory const& rhs) const {
-        auto deltaLongitude = _latitude - rhs.getLatitude();
-        deltaLongitude.wrapCtr();
-        auto deltaLatitude = _longitude - rhs.getLongitude();
-        deltaLatitude.wrapCtr();
+        auto deltaLongitude = (_latitude - rhs.getLatitude()).wrapCtr();
+        auto deltaLatitude = (_longitude - rhs.getLongitude()).wrapCtr();
         return
             (deltaLongitude == 0.0*lsst::afw::geom::degrees) &&
             (deltaLatitude == 0.0*lsst::afw::geom::degrees) &&

@@ -3,232 +3,250 @@
 
 #include <limits>
 #include <iostream>
-#include <boost/math/constants/constants.hpp>
+#include <type_traits>
+
 #include <cmath>
 
-namespace lsst { namespace afw { namespace geom {
+#include "boost/math/constants/constants.hpp"
+
+namespace lsst {
+namespace afw {
+namespace geom {
 
 /************************************************************************************************************/
 /*
- * None of C99, C++98, and C++0x define M_PI, so we'll do it ourselves
+ * None of C99, C++98, and C++11 define M_PI, so we'll do it ourselves
  */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-double const PI = boost::math::constants::pi<double>(); ///< The ratio of a circle's circumference to diameter
-double const TWOPI = boost::math::constants::pi<double>() * 2.0;
-double const HALFPI = boost::math::constants::pi<double>() * 0.5;
-double const ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
+/// The ratio of a circle's circumference to diameter
+double constexpr PI = boost::math::constants::pi<double>();
+double constexpr TWOPI = boost::math::constants::pi<double>() * 2.0;
+double constexpr HALFPI = boost::math::constants::pi<double>() * 0.5;
+double constexpr ONE_OVER_PI = 1.0 / boost::math::constants::pi<double>();
+// sqrt is not a constexpr on OS X
 double const SQRTPI = sqrt(boost::math::constants::pi<double>());
-double const INVSQRTPI = 1.0/sqrt(boost::math::constants::pi<double>());
-double const ROOT2 = boost::math::constants::root_two<double>(); // sqrt(2)
+double const INVSQRTPI = 1.0 / sqrt(boost::math::constants::pi<double>());
+double constexpr ROOT2 = boost::math::constants::root_two<double>();  // sqrt(2)
 #pragma clang diagnostic pop
 
 // These shouldn't be necessary if the Angle class is used, but sometimes you just need
 // them.  Better to define them once here than have *180/PI throughout the code...
-inline double degToRad(double x) {
-	return x * PI / 180.;
-}
-inline double radToDeg(double x) {
-	return x * 180. / PI;
-}
-inline double radToArcsec(double x) {
-	return x * 3600. * 180. / PI;
-}
-inline double radToMas(double x) {
-	return x * 1000. * 3600. * 180. / PI;
-}
-inline double arcsecToRad(double x) {
-	return (x / 3600.) * PI / 180.;
-}
-inline double masToRad(double x) {
-	return (x / (1000. * 3600.)) * PI / 180.;
-}
-
-// NOTE, if you add things here, you must also add them to
-//    python/lsst/afw/geom/__init__.py
-// (if you want them to accessible from python)
-
-#if 0 && !defined(M_PI)                 // a good idea, but with ramifications
-#   define M_PI ::lsst::afw::geom::PI
-#endif
+inline constexpr double degToRad(double x) noexcept { return x * PI / 180.; }
+inline constexpr double radToDeg(double x) noexcept { return x * 180. / PI; }
+inline constexpr double radToArcsec(double x) noexcept { return x * 3600. * 180. / PI; }
+inline constexpr double radToMas(double x) noexcept { return x * 1000. * 3600. * 180. / PI; }
+inline constexpr double arcsecToRad(double x) noexcept { return (x / 3600.) * PI / 180.; }
+inline constexpr double masToRad(double x) noexcept { return (x / (1000. * 3600.)) * PI / 180.; }
 
 /************************************************************************************************************/
 
 class Angle;
 /**
- * \brief A class used to convert scalar POD types such as double to Angle
+ * A class used to convert scalar POD types such as `double` to Angle.
  *
- * For example:
- * \code
- *    Angle pi = 180*degrees;
- * \endcode
+ * For example, given the predefined %AngleUnit ::degrees:
+ *
+ *     Angle pi = 180*degrees;
+ *
  * is equivalent to
- * \code
- *    Angle pi(180, degrees);
- * \endcode
+ *
+ *     Angle pi(180, degrees);
  */
-class AngleUnit {
+class AngleUnit final {
     friend class Angle;
-    template<typename T> friend const Angle operator *(T lhs, AngleUnit const rhs);
-public:
-    explicit AngleUnit(double val) : _val(val) {}
+    template <typename T>
+    friend constexpr Angle operator*(T lhs, AngleUnit rhs) noexcept;
 
-	bool operator==(AngleUnit const &rhs) const;
+public:
+    /**
+     * Define a new angle unit.
+     *
+     * @param val the number of radians in one unit. See ::degrees for an example.
+     *
+     * @exceptsafe Provides strong exception safety.
+     */
+    // Current implementation does not throw exceptions, but somebody may want
+    // to add input validation later
+    explicit constexpr AngleUnit(double val) : _val(val) {}
+
+    /**
+     * Test if two units are the same.
+     *
+     * @param rhs the unit to compare `this` to
+     * @return `true` if the two units have the same size, `false` otherwise.
+     *
+     * @exceptsafe Shall not throw exceptions.
+     */
+    constexpr bool operator==(AngleUnit const& rhs) const noexcept;
+
 private:
     double _val;
 };
 
-inline bool lsst::afw::geom::AngleUnit::operator==(lsst::afw::geom::AngleUnit const &rhs) const {
-	return (_val == rhs._val);
+inline constexpr bool AngleUnit::operator==(AngleUnit const& rhs) const noexcept {
+    return (_val == rhs._val);
 }
 
-// NOTE, if you add things here, remember to also add them to
-//    python/lsst/afw/geom/__init__.py
-
-// swig likes this way of initialising the constant, so don't mess with it;
-// N.b. swig 1.3 doesn't like PI/(60*180)
-AngleUnit const radians =    AngleUnit(1.0); ///< constant with units of radians
-AngleUnit const degrees =    AngleUnit(PI/180.0); // constant with units of degrees
-AngleUnit const hours   =    AngleUnit(PI*15.0/180.0); // constant with units of hours
-AngleUnit const arcminutes = AngleUnit(PI/60/180.0); // constant with units of arcminutes
-AngleUnit const arcseconds = AngleUnit(PI/180.0/3600.0); // constant with units of arcseconds
+AngleUnit constexpr radians = AngleUnit(1.0);                     ///< constant with units of radians
+AngleUnit constexpr degrees = AngleUnit(PI / 180.0);              ///< constant with units of degrees
+AngleUnit constexpr hours = AngleUnit(PI * 15.0 / 180.0);         ///< constant with units of hours
+AngleUnit constexpr arcminutes = AngleUnit(PI / 60 / 180.0);      ///< constant with units of arcminutes
+AngleUnit constexpr arcseconds = AngleUnit(PI / 180.0 / 3600.0);  ///< constant with units of arcseconds
 
 /************************************************************************************************************/
 /**
- * A class representing an Angle
+ * A class representing an angle.
  *
  * Angles may be manipulated like doubles, and automatically converted to doubles, but they may not be
- * constructed from doubles without calling a constructor or multiplying by an AngleUnit
+ * constructed from doubles without calling a constructor or multiplying by an AngleUnit. Angles can be
+ * modified only by assignment; all other operations that transform an Angle return a new Angle instead.
+ *
+ * Unless otherwise specified, all methods and associated operators shall not throw exceptions.
  */
-class Angle {
+class Angle final {
     friend class AngleUnit;
+
 public:
-    /** Construct an Angle with the specified value (interpreted in the given units) */
-    explicit Angle(double val, AngleUnit units=radians) : _val(val*units._val) {}
-	Angle() : _val(0) {}
-    /** Copy constructor. */
-    Angle(Angle const& other) : _val(other._val) {}
-    /** Convert an Angle to a double in radians*/
-    operator double() const { return _val; }
-    /** Convert an Angle to a float in radians*/
-    //operator float() const { return _val; }
+    /** Construct an Angle with the specified value (interpreted in the given units).
+     *
+     * @param val the size of the angle
+     * @param units the units in which `val` is measured
+     */
+    explicit constexpr Angle(double val, AngleUnit units = radians) noexcept : _val(val* units._val) {}
 
-    /** Return an Angle's value as a double in the specified units (i.e. afwGeom::degrees) */
-    double asAngularUnits(AngleUnit const& units) const {
-        return _val/units._val;
+    /// Construct the zero angle.
+    constexpr Angle() noexcept : _val(0) {}
+
+    /// Copy constructor.
+    constexpr Angle(Angle const& other) noexcept = default;
+
+    /// Move constructor.
+    constexpr Angle(Angle&& other) noexcept = default;
+
+    /// Copy assignment.
+    Angle& operator=(Angle const& other) noexcept = default;
+
+    /// Move assignment.
+    Angle& operator=(Angle&& other) noexcept = default;
+
+    /// Convert an Angle to a double in radians.
+    constexpr operator double() const noexcept { return _val; }
+
+    /**
+     * Return an Angle's value in the specified units.
+     *
+     * @param units the units in which the angle's value is desired (e.g.\ ::degrees).
+     */
+    constexpr double asAngularUnits(AngleUnit const& units) const noexcept { return _val / units._val; }
+
+    /// Return an Angle's value in radians.
+    constexpr double asRadians() const noexcept { return asAngularUnits(radians); }
+
+    /// Return an Angle's value in degrees.
+    constexpr double asDegrees() const noexcept { return asAngularUnits(degrees); }
+
+    /// Return an Angle's value in hours.
+    constexpr double asHours() const noexcept { return asAngularUnits(hours); }
+
+    /// Return an Angle's value in arcminutes.
+    constexpr double asArcminutes() const noexcept { return asAngularUnits(arcminutes); }
+
+    /// Return an Angle's value in arcseconds.
+    constexpr double asArcseconds() const noexcept { return asAngularUnits(arcseconds); }
+
+    /**
+     * Wrap this angle to the range [0, 2&pi;).
+     *
+     * @returns an angle in the normalized interval.
+     *
+     * @exceptsafe Shall not throw exceptions.
+     *
+     * @warning The upper limit is only guaranteed for radians; the upper limit
+     * may be slightly squishy for other units, due to roundoff errors. Whether
+     * there are any violations is unknown; please update this comment if you
+     * can prove that the limits are or are not valid for all supported units.
+     */
+    Angle wrap() const noexcept;
+
+    /**
+     * Wrap this angle to the range [-&pi;, &pi;).
+     *
+     * @returns an angle in the normalized interval.
+     *
+     * @exceptsafe Shall not throw exceptions.
+     *
+     * @warning Exact limits are only guaranteed for radians; limits for other
+     * units may be slightly squishy, due to roundoff errors. Whether there are
+     * any violations is unknown; please update this comment if you can prove
+     * that the limits are or are not valid for all supported units.
+     */
+    Angle wrapCtr() const noexcept;
+
+    /**
+     * Wrap this angle to a value `x` such that -&pi; &le; `x - refAng` < &pi;.
+     *
+     * @param refAng reference angle to match
+     *
+     * @returns an angle in the custom normalized interval.
+     *
+     * @exceptsafe Shall not throw exceptions.
+     *
+     * @warning Exact limits are only guaranteed for radians; limits for other
+     * units may be slightly squishy due to roundoff errors. There are known
+     * violations that are demonstrated in testWrap in tests/angle.py.
+     */
+    Angle wrapNear(Angle const& refAng) const noexcept;
+
+    /**
+     * The signed difference between two Angles.
+     *
+     * @param other the angle to which this angle will be compared
+     * @return `*this - other`, wrapped to the range [-&pi;, &pi;)
+     *
+     * @exceptsafe Shall not throw exceptions.
+     */
+    Angle separation(Angle const& other) const noexcept;
+
+#define ANGLE_OPUP_TYPE(OP, TYPE)                \
+    Angle& operator OP(TYPE const& d) noexcept { \
+        _val OP d;                               \
+        return *this;                            \
     }
-    /** Return an Angle's value as a double in radians */
-    double asRadians() const { return asAngularUnits(radians); }
-    /** Return an Angle's value as a double in degrees */
-    double asDegrees() const { return asAngularUnits(degrees); }
-    /** Return an Angle's value as a double in hours */
-    double asHours() const { return asAngularUnits(hours); }
-    /** Return an Angle's value as a double in arcminutes */
-    double asArcminutes() const { return asAngularUnits(arcminutes); }
-    /** Return an Angle's value as a double in arcseconds */
-    double asArcseconds() const { return asAngularUnits(arcseconds); }
 
-	double toUnitSphereDistanceSquared() const { return 2. * (1. - std::cos(asRadians())); }
-	// == 4.0 * pow(std::sin(0.5 * asRadians()), 2.0)
-	static Angle fromUnitSphereDistanceSquared(double d2) {
-		return (std::acos(1. - d2/2.)) * radians;
-		// == 2.0 * asin(0.5 * sqrt(d2))
-	}
-
-	/** Wraps this angle to the range [0, 2 pi)
-
-	@warning The upper limit is only guaranteed for radians;
-	the upper limit may be slightly squishy for other units, due to roundoff errors.
-    Whether there are any violations is unknown; please update this comment if you can prove
-    that the limits are or are not valid for all supported units.
-    */
-	void wrap() {
-		_val = std::fmod(_val, TWOPI);
-		// _val is now in the range (-TWOPI, TWOPI)
-		if (_val < 0.0)
-			_val += TWOPI;
-		// if _val is small enough, adding 2 pi gives 2 pi
-		if (_val >= TWOPI)
-			_val = 0.0;
-	}
-
-	/** Wrap this angle to the range [-pi, pi)
-
-	@warning Exact limits are only guaranteed for radians; limits for other units
-	may be slightly squishy, due to roundoff errors. Whether there are any violations is unknown;
-	please update this comment if you can prove that the limits are or are not valid for all supported units.
-	*/
-	void wrapCtr() {
-		_val = std::fmod(_val, TWOPI);
-		// _val is now in the range [-TWOPI, TWOPI]
-        if (_val < -PI) {
-            _val += TWOPI;
-            if (_val >= PI) {
-                // handle roundoff error, however unlikely
-                _val = -PI;
-            }
-        } else if (_val >= PI) {
-            _val -= TWOPI;
-            if (_val < -PI) {
-                // handle roundoff error, however unlikely
-                _val = -PI;
-            }
-        }
-	}
-
-	/** Wrap this angle such that pi <= this - refAng < pi
-
-	@warning Exact limits are only guaranteed for radians; limits for other units
-	may be slightly squishy due to roundoff errors. There are known violations
-	that are demonstrated in testWrap in tests/angle.py.
-	*/
-	void wrapNear(
-	    Angle const & refAng ///< reference angle to match
-	) {
-	    // compute this = (this - refAng).wrapCtr() + refAng
-	    // which is correct except for roundoff error at the edges
-	    double refAngRad = refAng.asRadians();
-	    *this -= refAng;
-	    wrapCtr();
-        _val += refAngRad;
-
-        // roundoff can cause slightly out-of-range values; fix those
-        if (_val - refAngRad >= PI) {
-            _val -= TWOPI;
-        }
-        // maximum relative roundoff error for subtraction is 2 epsilon
-        if (_val - refAngRad < -PI) {
-            _val -= _val * 2.0 * std::numeric_limits<double>::epsilon();
-        }
-	}
-
-
-#define ANGLE_OPUP_TYPE(OP, TYPE)                             \
-    Angle& operator OP(TYPE const& d) {						  \
-		_val OP d;											  \
-        return *this;										  \
-    }
-
-ANGLE_OPUP_TYPE(*=, double)
-ANGLE_OPUP_TYPE(*=, int)
-ANGLE_OPUP_TYPE(+=, double)
-ANGLE_OPUP_TYPE(+=, int)
-ANGLE_OPUP_TYPE(-=, double)
-ANGLE_OPUP_TYPE(-=, int)
+    //@{
+    /// Multiply this angle by the given factor.
+    ANGLE_OPUP_TYPE(*=, double)
+    ANGLE_OPUP_TYPE(*=, int)
+    //@}
+    //@{
+    /// Increase this angle by the given number of radians.
+    ANGLE_OPUP_TYPE(+=, double)
+    ANGLE_OPUP_TYPE(+=, int)
+    //@}
+    //@{
+    /// Decrease this angle by the given number of radians.
+    ANGLE_OPUP_TYPE(-=, double)
+    ANGLE_OPUP_TYPE(-=, int)
+//@}
 
 #undef ANGLE_OPUP_TYPE
 
-#define ANGLE_COMP(OP)                          \
-    bool operator OP ( const Angle& rhs ) {     \
-        return _val OP rhs._val;                \
-    }
+#define ANGLE_COMP(OP) \
+    constexpr bool operator OP(const Angle& rhs) const noexcept { return _val OP rhs._val; }
 
-ANGLE_COMP(==)
-ANGLE_COMP(!=)
-ANGLE_COMP(<=)
-ANGLE_COMP(>=)
-ANGLE_COMP(<)
-ANGLE_COMP(>)
+    //@{
+    /// Test if two Angles represent the same angle (without wrapping).
+    ANGLE_COMP(==)
+    ANGLE_COMP(!=)
+    //@}
+    //@{
+    /// Compare the sizes of two Angles (without wrapping).
+    ANGLE_COMP(<=)
+    ANGLE_COMP(>=)
+    ANGLE_COMP(<)
+    ANGLE_COMP(>)
+//@}
 
 #undef ANGLE_COMP
 
@@ -236,83 +254,177 @@ private:
     double _val;
 };
 
-Angle const NullAngle = Angle(-1000000., degrees);
-
-
 /************************************************************************************************************/
 /*
  * Operators for Angles.
- *
- * N.b. We need both int and double versions to avoid ambiguous overloading due to implicit conversion of
- * Angle to double
  */
-#define ANGLE_OP(OP)													\
-    inline const Angle operator OP(Angle const a, Angle const d) {		\
-        return Angle(static_cast<double>(a) OP static_cast<double>(d));	\
+#define ANGLE_OP(OP)                                                    \
+    inline constexpr Angle operator OP(Angle a, Angle d) noexcept {     \
+        return Angle(static_cast<double>(a) OP static_cast<double>(d)); \
     }
 
-#define ANGLE_OP_TYPE(OP, TYPE)                             \
-    inline const Angle operator OP(Angle const a, TYPE d) {	\
-        return Angle(static_cast<double>(a) OP d);          \
-    }                                                       \
-															\
-    inline const Angle operator OP(TYPE d, Angle const a) {	\
-        return Angle(d OP static_cast<double>(a));          \
+// We need both int and double versions to avoid ambiguous overloading due to
+// implicit conversion of Angle to double
+#define ANGLE_OP_TYPE(OP, TYPE)                                    \
+    inline constexpr Angle operator OP(Angle a, TYPE d) noexcept { \
+        return Angle(static_cast<double>(a) OP d);                 \
+    }                                                              \
+                                                                   \
+    inline constexpr Angle operator OP(TYPE d, Angle a) noexcept { \
+        return Angle(d OP static_cast<double>(a));                 \
     }
 
+/**
+ * Sum of two angles.
+ *
+ * @relatesalso Angle
+ */
 ANGLE_OP(+)
+/**
+ * Difference of two angles.
+ *
+ * @relatesalso Angle
+ */
 ANGLE_OP(-)
+/**
+ * Product of two angles.
+ *
+ * @warning The result will be treated like an planar angle, not a solid angle.
+ *
+ * @relatesalso Angle
+ */
 ANGLE_OP(*)
+//@{
+/**
+ * Product of an angle and a scalar.
+ *
+ * @relatesalso Angle
+ */
 ANGLE_OP_TYPE(*, double)
 ANGLE_OP_TYPE(*, int)
+//@}
 
 #undef ANGLE_OP
 #undef ANGLE_OP_TYPE
 
+/**
+ * An angle in the opposite sense.
+ *
+ * @relatesalso Angle
+ */
+inline constexpr Angle operator-(Angle angle) { return Angle(-static_cast<double>(angle)); }
+
+// Apparently @relatesalso doesn't work with grouping
+/**
+ * Ratio of an angle and a scalar.
+ *
+ * @relatesalso Angle
+ */
+inline constexpr Angle operator/(Angle a, int d) noexcept { return Angle(static_cast<double>(a) / d); }
+
+/**
+ * Ratio of an angle and a scalar.
+ *
+ * @relatesalso Angle
+ */
+inline constexpr Angle operator/(Angle a, double d) noexcept { return Angle(static_cast<double>(a) / d); }
+
 // Division is different.  Don't allow division by an Angle
-inline const Angle operator /(Angle const a, int d) {
-    return Angle(static_cast<double>(a)/d);
-}
+template <typename T>
+constexpr double operator/(T const lhs, Angle rhs) noexcept = delete;
 
-inline const Angle operator /(Angle const a, double d) {
-    return Angle(static_cast<double>(a)/d);
-}
+/**
+ * Print an Angle to a stream.
+ *
+ * The exact details of the string representation are unspecified and
+ * subject to change, but the following may be regarded as typical:
+ * `"0.567 rad"`.
+ *
+ * @param s The output stream.
+ * @param a The angle.
+ *
+ * @exceptsafe Provides basic exception guarantee.
+ *
+ * @relatesalso Angle
+ */
+std::ostream& operator<<(std::ostream& s, Angle a);
 
-template<typename T>
-	double operator /(T const lhs, Angle const rhs);
+/************************************************************************************************************/
+
+/// Allow a user to check if they have an angle.
+template <typename T>
+inline constexpr bool isAngle(T) noexcept {
+    return std::is_base_of<Angle, T>::value;
+};
 
 /************************************************************************************************************/
 /**
- * \brief Allow a user to check if they have an angle (yes; they could do this themselves via trivial TMP)
+ * Use AngleUnit to convert a POD (e.g.\ int, double) to an Angle; e.g.\ 180*::degrees.
+ *
+ * @param lhs the value to convert
+ * @param rhs the conversion coefficient
+ *
+ * @exceptsafe Shall not throw exceptions.
+ *
+ * @relatesalso Angle
  */
-template<typename T>
-inline bool isAngle(T) {
-    return false;
-};
-
-inline bool isAngle(Angle const&) {
-    return true;
-};
+template <typename T>
+inline constexpr Angle operator*(T lhs, AngleUnit rhs) noexcept {
+    static_assert(std::is_arithmetic<T>::value,
+                  "Only numeric types may be multiplied by an AngleUnit to create an Angle!");
+    return Angle(lhs * rhs._val);
+}
 
 /************************************************************************************************************/
-/**
- * \brief Use AngleUnit to convert a POD (e.g. int, double) to an Angle; e.g. 180*afwGeom::degrees
- */
-template<typename T>
-inline
-const Angle operator *(T lhs,              ///< the value to convert
-                       AngleUnit const rhs ///< the conversion coefficient
-                      ) {
-    static_assert(std::numeric_limits<T>::is_specialized,
-                            "Only numeric types may be converted to Angles using degrees/radians!");
-    return Angle(lhs*rhs._val);
-}
-/**
- * Output operator for an Angle
- */
-std::ostream& operator<<(std::ostream &s, ///< The output stream
-                         Angle const a    ///< The angle
-						 );
+// Inline method definitions, placed last in order to benefit from Angle's full API
 
-}}}
-#endif // if !defined(LSST_AFW_GEOM_ANGLE_H)
+inline Angle Angle::wrap() const noexcept {
+    double wrapped = std::fmod(_val, TWOPI);
+    // wrapped is in the range (-TWOPI, TWOPI)
+    if (wrapped < 0.0) wrapped += TWOPI;
+    // if wrapped is small enough, adding 2 pi gives 2 pi
+    if (wrapped >= TWOPI) wrapped = 0.0;
+    return wrapped * radians;
+}
+
+inline Angle Angle::wrapCtr() const noexcept {
+    double wrapped = std::fmod(_val, TWOPI);
+    // wrapped is in the range [-TWOPI, TWOPI]
+    if (wrapped < -PI) {
+        wrapped += TWOPI;
+        if (wrapped >= PI) {
+            // handle roundoff error, however unlikely
+            wrapped = -PI;
+        }
+    } else if (wrapped >= PI) {
+        wrapped -= TWOPI;
+        if (wrapped < -PI) {
+            // handle roundoff error, however unlikely
+            wrapped = -PI;
+        }
+    }
+    return wrapped * radians;
+}
+
+inline Angle Angle::wrapNear(Angle const& refAng) const noexcept {
+    // compute (this - refAng).wrapCtr() + refAng
+    // which is correct except for roundoff error at the edges
+    double const refAngRad = refAng.asRadians();
+    double wrapped = (*this - refAng).wrapCtr().asRadians() + refAngRad;
+
+    // roundoff can cause slightly out-of-range values; fix those
+    if (wrapped - refAngRad >= PI) {
+        wrapped -= TWOPI;
+    }
+    // maximum relative roundoff error for subtraction is 2 epsilon
+    if (wrapped - refAngRad < -PI) {
+        wrapped -= wrapped * 2.0 * std::numeric_limits<double>::epsilon();
+    }
+    return wrapped * radians;
+}
+
+inline Angle Angle::separation(Angle const& other) const noexcept { return (*this - other).wrapCtr(); }
+}
+}
+}
+#endif  // if !defined(LSST_AFW_GEOM_ANGLE_H)

@@ -52,7 +52,7 @@ def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
     """
     measDiff = ang1 - ang0
     if ignoreWrap:
-        measDiff.wrapCtr()
+        measDiff = measDiff.wrapCtr()
     if abs(measDiff) > maxDiff:
         testCase.fail("%s: measured difference %s arcsec > max allowed %s arcsec" %
             (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
