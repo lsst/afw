@@ -222,10 +222,12 @@ PYBIND11_PLUGIN(source) {
             return nullptr;
     };
 
-    py::enum_<SourceFitsFlags>(mod, "SourceFitsFlags")
-        .value("SOURCE_IO_NO_FOOTPRINTS", SourceFitsFlags::SOURCE_IO_NO_FOOTPRINTS)
-        .value("SOURCE_IO_NO_HEAVY_FOOTPRINTS", SourceFitsFlags::SOURCE_IO_NO_HEAVY_FOOTPRINTS)
-        .export_values();
+    // SourceFitsFlags enum values are used as integer masks, so wrap as attributes instead of an enum
+    // static_cast is required to avoid an import error (py::cast and py::int_ do not work by themselves
+    // and are not required with the static_cast)
+    mod.attr("SOURCE_IO_NO_FOOTPRINTS") = static_cast<int>(SourceFitsFlags::SOURCE_IO_NO_FOOTPRINTS);
+    mod.attr("SOURCE_IO_NO_HEAVY_FOOTPRINTS") =
+            static_cast<int>(SourceFitsFlags::SOURCE_IO_NO_HEAVY_FOOTPRINTS);
 
     auto clsSourceRecord = declareSourceRecord(mod);
     auto clsSourceTable = declareSourceTable(mod);
