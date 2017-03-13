@@ -77,6 +77,17 @@ public:
     SpherePoint(Angle const& longitude, Angle const& latitude);
 
     /**
+     * Construct a SpherePoint from a two-element array of radians
+     *
+     * @param lonLatRad Longitude, latitude, both in radians.
+     *
+     * @throws InvalidParameterError Thrown if latitude is out of range.
+     *
+     * @exceptsafe Provides strong exception guarantee.
+     */
+    explicit SpherePoint(double const lonLatRad[2]);
+
+    /**
      * Construct a SpherePoint from a vector representing a direction.
      *
      * @param vector A position whose direction will be stored as a SpherePoint.
