@@ -22,6 +22,7 @@
 #include <ostream>
 #include <memory>
 #include <string>
+#include <typeinfo>
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -88,6 +89,29 @@ void addMakeFrame(PyClass& cls) {
     });
 }
 
+// Comparison of different Endpoints useful in Python but counterproductive
+//     in C++: point2Endpoint == spherePoint should not compile instead of
+//     returning `false`. Therefore, implemented only on the Python side.
+// Two Endpoints are defined to be equal if and only if they have the same
+//     implementation type and the same number of dimensions
+template <typename SelfClass, typename OtherClass, typename PyClass>
+void addEquals(PyClass& cls) {
+    auto pyEquals = [](SelfClass const& self, OtherClass const& other) {
+        return self.getNAxes() == other.getNAxes() && typeid(self) == typeid(other);
+    };
+    cls.def("__eq__", pyEquals);
+    cls.def("__ne__",
+            [pyEquals](SelfClass const& self, OtherClass const& other) { return !pyEquals(self, other); });
+}
+
+template <typename SelfClass, typename PyClass>
+void addAllEquals(PyClass& cls) {
+    addEquals<SelfClass, GenericEndpoint>(cls);
+    addEquals<SelfClass, PointEndpoint<2>>(cls);
+    addEquals<SelfClass, PointEndpoint<3>>(cls);
+    addEquals<SelfClass, SpherePointEndpoint>(cls);
+}
+
 /*
 * Declare BaseVectorEndpoint<Point, Array>;
 * this is meant to be called by other `declare...` functions;
@@ -103,6 +127,7 @@ void declareBaseEndpoint(py::module& mod, std::string const& suffix) {
     addDataConverters(cls);
     addMakeFrame(cls);
     cls.def("normalizeFrame", &Class::normalizeFrame);
+    addAllEquals<Class>(cls);
 }
 
 // Declare BaseVectorEndpoint and all subclasses (the corresponding BaseEndpoint)
