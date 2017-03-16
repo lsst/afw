@@ -45,8 +45,9 @@ In the case of a FrameSet the transformation is from the `BASE` frame to the `CU
 The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
 
 Depending on the astshim::FrameSet or astshim::Mapping used to define it, a Transform may
-provide either a forward transform, an inverse transform, or both. The @ref hasForward
-and @ref hasInverse methods can be used to check which transforms are available.
+provide either a forward transform, an inverse transform, or both. In particular, the
+@ref getInverse "inverse" of a forward-only transform is an inverse-only transform. The
+@ref hasForward and @ref hasInverse methods can be used to check which transforms are available.
 
 Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
 internal errors within AST.
@@ -155,6 +156,16 @@ public:
     Transform an array of points in the inverse direction ("to" to "from")
     */
     FromArray tranInverse(ToArray const & array) const;
+
+    /**
+     * The inverse of this Transform.
+     *
+     * @returns a Transform whose `tranForward` is equivalent to this Transform's
+     *          `tranInverse`, and vice versa.
+     *
+     * @exceptsafe Provides basic exception safety.
+     */
+    Transform<ToEndpoint, FromEndpoint> getInverse() const;
 
 private:
     FromEndpoint const _fromEndpoint;

@@ -323,6 +323,71 @@ class TransformTestCase(lsst.utils.tests.TestCase):
         else:
             self.assertFalse(transform.hasInverse())
 
+    def checkInverseTransformation(self, forward, inverse, msg=""):
+        """Check that two Transforms are each others' inverses.
+
+        Parameters
+        ----------
+        forward : Transform
+            the reference Transform to test
+        inverse : Transform
+            the transform that should be the inverse of `forward`
+        msg : string
+            error message suffix describing test parameters
+        """
+        fromEndpoint = forward.getFromEndpoint()
+        toEndpoint = forward.getToEndpoint()
+        frameSet = forward.getFrameSet()
+        invFrameSet = inverse.getFrameSet()
+
+        # properties
+        self.assertEqual(forward.getFromEndpoint(),
+                         inverse.getToEndpoint(), msg=msg)
+        self.assertEqual(forward.getToEndpoint(),
+                         inverse.getFromEndpoint(), msg=msg)
+        self.assertEqual(forward.hasForward(), inverse.hasInverse(), msg=msg)
+        self.assertEqual(forward.hasInverse(), inverse.hasForward(), msg=msg)
+
+        # transformations of one point
+        # we don't care about whether the transformation itself is correct
+        # (see checkTransformation), so inPoint/outPoint need not be related
+        rawInPoint = makeRawPointData(fromEndpoint.getNAxes())
+        inPoint = fromEndpoint.pointFromData(rawInPoint)
+        rawOutPoint = makeRawPointData(toEndpoint.getNAxes())
+        outPoint = toEndpoint.pointFromData(rawOutPoint)
+
+        # transformations of arrays of points
+        nPoints = 7  # arbitrary
+        rawInArray = makeRawArrayData(nPoints, fromEndpoint.getNAxes())
+        inArray = fromEndpoint.arrayFromData(rawInArray)
+        rawOutArray = makeRawArrayData(nPoints, toEndpoint.getNAxes())
+        outArray = toEndpoint.arrayFromData(rawOutArray)
+
+        if forward.hasForward():
+            self.assertEqual(forward.tranForward(inPoint),
+                             inverse.tranInverse(inPoint), msg=msg)
+            self.assertEqual(frameSet.tranForward(rawInPoint),
+                             invFrameSet.tranInverse(rawInPoint), msg=msg)
+            # Assertions must work with both lists and numpy arrays
+            np.testing.assert_array_equal(forward.tranForward(inArray),
+                                          inverse.tranInverse(inArray),
+                                          err_msg=msg)
+            np.testing.assert_array_equal(frameSet.tranForward(rawInArray),
+                                          invFrameSet.tranInverse(rawInArray),
+                                          err_msg=msg)
+
+        if forward.hasInverse():
+            self.assertEqual(forward.tranInverse(outPoint),
+                             inverse.tranForward(outPoint), msg=msg)
+            self.assertEqual(frameSet.tranInverse(rawOutPoint),
+                             invFrameSet.tranForward(rawOutPoint), msg=msg)
+            np.testing.assert_array_equal(forward.tranInverse(outArray),
+                                          inverse.tranForward(outArray),
+                                          err_msg=msg)
+            np.testing.assert_array_equal(frameSet.tranInverse(rawOutArray),
+                                          invFrameSet.tranForward(rawOutArray),
+                                          err_msg=msg)
+
     def checkTransformFromMapping(self, fromName, toName):
         """Check a Transform_<fromName>_<toName> using the Mapping constructor
 
@@ -449,11 +514,108 @@ class TransformTestCase(lsst.utils.tests.TestCase):
 
                     self.checkTransformation(permTransform, mapping=polyMap, msg=msg)
 
+    def checkGetInverse(self, fromName, toName):
+        """Test Transform<fromName>To<toName>.getInverse
+
+        Parameters
+        ----------
+        fromName, toName : string
+            the prefixes of the transform's endpoints (e.g., "Point2" for a
+            Point2Endpoint)
+        """
+        transformClassName = "Transform{}To{}".format(fromName, toName)
+        transformClass = getattr(afwGeom, transformClassName)
+        baseMsg = "transformClass={}".format(transformClass.__name__)
+        for nIn in self.goodNaxes[fromName]:
+            for nOut in self.goodNaxes[toName]:
+                msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
+                self.checkInverseMapping(
+                    transformClass,
+                    makeTwoWayPolyMap(nIn, nOut),
+                    "{}, Map={}".format(msg, "TwoWay"))
+                self.checkInverseMapping(
+                    transformClass,
+                    makeForwardPolyMap(nIn, nOut),
+                    "{}, Map={}".format(msg, "Forward"))
+                self.checkInverseMapping(
+                    transformClass,
+                    makeForwardPolyMap(nOut, nIn).getInverse(),
+                    "{}, Map={}".format(msg, "Inverse"))
+
+                self.checkInverseFrameSet(transformClass,
+                                          makeGoodFrame(fromName, nIn),
+                                          makeGoodFrame(toName, nOut))
+
+    def checkInverseMapping(self, clsTransform, mapping, msg):
+        """Test Transform<fromName>To<toName>.getInverse for a specific mapping.
+
+        Parameters
+        ----------
+        clsTransform : type
+            the transform to test
+        mapping : Mapping
+            the map to test `clsTransform` with
+        msg : string
+            a suffix for error messages, distinguishing this test from others
+        """
+        transform = clsTransform(mapping)
+        inverse = transform.getInverse()
+        inverseInverse = inverse.getInverse()
+
+        self.checkInverseTransformation(transform, inverse, msg=msg)
+        self.checkInverseTransformation(inverse, inverseInverse, msg=msg)
+        self.checkTransformation(inverseInverse, mapping, msg=msg)
+
+    def checkInverseFrameSet(self, clsTransform, frameIn, frameOut):
+        """Test whether inverting a Transform preserves all information
+           in its FrameSet.
+
+        Parameters
+        ----------
+        clsTransform : type
+            the transform to test
+        frameIn, frameOut : Frame
+            the frames to between which `clsTransform` shall convert. Must be
+            compatible with `clsTransform`.
+        """
+        frameSet = makeFrameSet(frameIn, frameOut)
+        self.assertEqual(frameSet.getNframe(), 4)
+
+        baseMsg = "transformClass={}, nIn={}, nOut={}".format(
+            clsTransform.__name__, frameIn.getNaxes(), frameOut.getNaxes())
+        transform = clsTransform(frameSet)
+        forwardFrames = transform.getFrameSet()
+        self.assertFalse(forwardFrames.isInverted())
+        self.assertEqual(forwardFrames.getNframe(), frameSet.getNframe(),
+                         msg=baseMsg)
+        self.assertEqual(forwardFrames.getFrame(1).getIdent(), "baseFrame",
+                         msg=baseMsg)
+        self.assertEqual(forwardFrames.getFrame(2).getIdent(), "frame2",
+                         msg=baseMsg)
+        self.assertEqual(forwardFrames.getFrame(3).getIdent(), "frame3",
+                         msg=baseMsg)
+        self.assertEqual(forwardFrames.getFrame(4).getIdent(), "currFrame",
+                         msg=baseMsg)
+
+        reverseFrames = transform.getInverse().getFrameSet()
+        self.assertTrue(reverseFrames.isInverted())
+        self.assertEqual(reverseFrames.getNframe(), frameSet.getNframe(),
+                         msg=baseMsg)
+        self.assertEqual(reverseFrames.getFrame(1).getIdent(), "baseFrame",
+                         msg=baseMsg)
+        self.assertEqual(reverseFrames.getFrame(2).getIdent(), "frame2",
+                         msg=baseMsg)
+        self.assertEqual(reverseFrames.getFrame(3).getIdent(), "frame3",
+                         msg=baseMsg)
+        self.assertEqual(reverseFrames.getFrame(4).getIdent(), "currFrame",
+                         msg=baseMsg)
+
     def testTransforms(self):
         for fromName in NameList:
             for toName in NameList:
                 self.checkTransformFromMapping(fromName, toName)
                 self.checkTransformFromFrameSet(fromName, toName)
+                self.checkGetInverse(fromName, toName)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

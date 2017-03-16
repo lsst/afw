@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <vector>
 
 #include "astshim.h"
@@ -102,6 +103,18 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranInverse(
     auto const rawFromData = _toEndpoint.dataFromArray(array);
     auto rawToData = _frameSet->tranInverse(rawFromData);
     return _fromEndpoint.arrayFromData(rawToData);
+}
+
+template <typename FromEndpoint, typename ToEndpoint>
+Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
+    auto inverse = std::dynamic_pointer_cast<ast::FrameSet>(_frameSet->getInverse());
+    if (!inverse) {
+        // don't throw std::bad_cast because it doesn't let you provide debugging info
+        std::ostringstream buffer;
+        buffer << "FrameSet.getInverse() does not return a FrameSet. Called from: " << _frameSet;
+        throw std::logic_error(buffer.str());
+    }
+    return Transform<ToEndpoint, FromEndpoint>(*inverse);
 }
 
 template <typename FromEndpoint, typename ToEndpoint>
