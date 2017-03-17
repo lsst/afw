@@ -32,7 +32,7 @@ def makeVisitInfo(**kwargs):
     """Make a VisitInfo from keyword arguments
 
     @deprecated This function is superseded by a VisitInfo constructor with the same call signature.
-    Calling this function will create a VisitInfo but it will print a deprecation warning.
+    Calling this function will create a VisitInfo, but it will also print a deprecation warning.
 
     @param[in] exposureId  exposure ID (int, defaults to 0)
     @param[in] exposureTime  exposure duration (shutter open time); (float, sec, defaults to NaN)
