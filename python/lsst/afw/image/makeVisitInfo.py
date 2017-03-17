@@ -31,8 +31,8 @@ from .visitInfo import VisitInfo
 def makeVisitInfo(**kwargs):
     """Make a VisitInfo from keyword arguments
 
-    This function will be replaced by a VisitInfo constructor once we switch to pybind11
-    (it is too much hassle with SWIG).
+    @deprecated This function is superseded by a VisitInfo constructor with the same call signature.
+    Calling this function will create a VisitInfo, but it will also print a deprecation warning.
 
     @param[in] exposureId  exposure ID (int, defaults to 0)
     @param[in] exposureTime  exposure duration (shutter open time); (float, sec, defaults to NaN)
