@@ -55,8 +55,8 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
     // and normalize the frame set as a frame (i.e. normalize the frame "in situ").
     // The obvious alternative of normalizing a shallow copy of the frame does not work;
     // the frame is altered but not the associated mapping!
-    auto frameSetCopy = simplify ? std::dynamic_pointer_cast<ast::FrameSet>(frameSet.simplify())
-                                 : frameSet.copy();
+    auto frameSetCopy =
+            simplify ? std::dynamic_pointer_cast<ast::FrameSet>(frameSet.simplify()) : frameSet.copy();
 
     // Normalize the current frame by normalizing the frameset as a frame
     _toEndpoint.normalizeFrame(frameSetCopy);
@@ -124,10 +124,10 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
     return os;
 };
 
-#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint) \
-    template class Transform<FromEndpoint, ToEndpoint>; \
-    template std::ostream &operator<< <FromEndpoint, ToEndpoint> \
-        (std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
+#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)          \
+    template class Transform<FromEndpoint, ToEndpoint>;          \
+    template std::ostream &operator<<<FromEndpoint, ToEndpoint>( \
+            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
 // explicit instantiations
 INSTANTIATE_TRANSFORM(GenericEndpoint, GenericEndpoint);

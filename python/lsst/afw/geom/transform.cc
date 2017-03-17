@@ -42,8 +42,8 @@ namespace {
 
 // Return a string consisting of "_pythonClassName_[_fromNAxes_->_toNAxes_]",
 // for example "TransformGenericToPoint3[4->3]"
-template<typename Class>
-std::string formatStr(Class const & self, std::string const & pyClassName) {
+template <typename Class>
+std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
     os << pyClassName;
     auto const frameSet = self.getFrameSet();
@@ -55,7 +55,7 @@ std::string formatStr(Class const & self, std::string const & pyClassName) {
 // where <X> and <Y> are the name of the from endpoint and to endpoint class, respectively,
 // for example TransformFromGenericToPoint3
 template <typename FromEndpoint, typename ToEndpoint>
-void declareTransform(py::module& mod, std::string const & fromName, std::string const & toName) {
+void declareTransform(py::module &mod, std::string const &fromName, std::string const &toName) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
     using ToPoint = typename ToEndpoint::Point;
     using ToArray = typename ToEndpoint::Array;
@@ -66,8 +66,8 @@ void declareTransform(py::module& mod, std::string const & fromName, std::string
 
     py::class_<Class, std::shared_ptr<Class>> cls(mod, pyClassName.c_str());
 
-    cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a=true);
-    cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a=true);
+    cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a = true);
+    cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a = true);
 
     cls.def("hasForward", &Class::hasForward);
     cls.def("hasInverse", &Class::hasInverse);
@@ -76,19 +76,16 @@ void declareTransform(py::module& mod, std::string const & fromName, std::string
     cls.def("getFrameSet", &Class::getFrameSet);
     cls.def("getToEndpoint", &Class::getToEndpoint);
 
-    cls.def("tranForward", (ToArray (Class::*)(FromArray const &) const) &Class::tranForward, "array"_a);
-    cls.def("tranForward", (ToPoint (Class::*)(FromPoint const &) const) &Class::tranForward, "point"_a);
-    cls.def("tranInverse", (FromArray (Class::*)(ToArray const &) const) &Class::tranInverse, "array"_a);
-    cls.def("tranInverse", (FromPoint (Class::*)(ToPoint const &) const) &Class::tranInverse, "point"_a);
+    cls.def("tranForward", (ToArray (Class::*)(FromArray const &) const) & Class::tranForward, "array"_a);
+    cls.def("tranForward", (ToPoint (Class::*)(FromPoint const &) const) & Class::tranForward, "point"_a);
+    cls.def("tranInverse", (FromArray (Class::*)(ToArray const &) const) & Class::tranInverse, "array"_a);
+    cls.def("tranInverse", (FromPoint (Class::*)(ToPoint const &) const) & Class::tranInverse, "point"_a);
     cls.def("getInverse", &Class::getInverse);
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
-    cls.def("__str__", [pyClassName](Class const & self) {
-        return formatStr(self, pyClassName);
-    });
+    cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
     // repr(self) = "lsst.afw.geom.<Python class name>[<nIn>-><nOut>]"
-    cls.def("__repr__", [pyClassName](Class const & self) {
-        return "lsst.afw.geom." + formatStr(self, pyClassName);
-    });
+    cls.def("__repr__",
+            [pyClassName](Class const &self) { return "lsst.afw.geom." + formatStr(self, pyClassName); });
 }
 
 PYBIND11_PLUGIN(transform) {

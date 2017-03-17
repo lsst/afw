@@ -69,8 +69,8 @@ public:
 
     Transform(Transform const &) = delete;
     Transform(Transform &&) = default;
-    Transform & operator=(Transform const &) = delete;
-    Transform & operator=(Transform &&) = default;
+    Transform &operator=(Transform const &) = delete;
+    Transform &operator=(Transform &&) = default;
 
     /**
     Construct a Transform from a deep copy of an ast::Mapping
@@ -82,7 +82,7 @@ public:
     @param[in] simplify  Simplify the mapping? This combines component mappings
         and removes redundant components where possible.
     */
-    explicit Transform(ast::Mapping const &mapping, bool simplify=true);
+    explicit Transform(ast::Mapping const &mapping, bool simplify = true);
 
     /**
     Constructor a Transform from a deep copy of a FrameSet.
@@ -104,7 +104,7 @@ public:
                          redundant components where possible. However it
                          does not remove any frames.
     */
-    explicit Transform(ast::FrameSet const & frameSet, bool simplify=true);
+    explicit Transform(ast::FrameSet const &frameSet, bool simplify = true);
 
     ~Transform(){};
 
@@ -140,7 +140,7 @@ public:
     /**
     Transform one point in the forward direction ("from" to "to")
     */
-    ToPoint tranForward(FromPoint const & point) const;
+    ToPoint tranForward(FromPoint const &point) const;
 
     /**
     Transform an array of points in the forward direction ("from" to "to")
@@ -150,12 +150,12 @@ public:
     /**
     Transform one point in the inverse direction ("to" to "from")
     */
-    FromPoint tranInverse(ToPoint const & point) const;
+    FromPoint tranInverse(ToPoint const &point) const;
 
     /**
     Transform an array of points in the inverse direction ("to" to "from")
     */
-    FromArray tranInverse(ToArray const & array) const;
+    FromArray tranInverse(ToArray const &array) const;
 
     /**
      * The inverse of this Transform.
@@ -181,7 +181,7 @@ where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to th
 for example "Transform<GenericEndpoint(4), Point3Endpoint()>"
 */
 template <typename FromEndpoint, typename ToEndpoint>
-std::ostream & operator<<(std::ostream & os, Transform<FromEndpoint, ToEndpoint> const & transform);
+std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
 }  // geom
 }  // afw

@@ -83,7 +83,7 @@ template <typename PyClass>
 void addMakeFrame(PyClass& cls) {
     using Class = typename PyClass::type;  // C++ class associated with pybind11 wrapper class
     // return a deep copy so Python cannot modify the internal state
-    cls.def("makeFrame", [](Class const & self) {
+    cls.def("makeFrame", [](Class const& self) {
         auto frame = self.makeFrame();
         return frame->copy();
     });

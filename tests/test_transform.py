@@ -68,7 +68,6 @@ def makeBadFrames(name):
     """Return a list of 0 or more frames that are not a valid match for the named endpoint
 
     @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
-    @param[in] nAxes  number of input axes
     """
     if name == "Generic":
         return []
@@ -260,11 +259,11 @@ class TransformTestCase(lsst.utils.tests.TestCase):
     def checkTransformation(self, transform, mapping, msg=""):
         """Check tranForward and tranInverse for a transform
 
+        @param[in] transform  The transform to check
         @param[in] mapping  The mapping the transform should use. This mapping
                             must contain valid forward or inverse transformations,
                             but they need not match if both present. Hence the
                             mappings returned by make*PolyMap are acceptable.
-        @param[in] transform  The transform to check
         @param[in] msg  Error message suffix describing test parameters
         """
         fromEndpoint = transform.getFromEndpoint()
