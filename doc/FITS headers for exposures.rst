@@ -31,11 +31,9 @@ BORE-ALT          float      deg      VisitInfo.getBoreAzAlt()       Position of
 BORE-ROTANG       float      deg      VisitInfo.getBoreRotAngle()    Orientation of rotator at boresight.
 ROTTYPE           str                 VisitInfo.getRotType()         Type of rotation; one of:
 \                                                                    - UNKNOWN
-\                                                                    - SKY   Orientation of E,N with respected to detector X,Y;
-                                                                       X is flipped, if necessary, to match the handedness of E,N.
-\                                                                    - HORIZON orientation of Az/Alt with respect to detector X,Y;
-                                                                       X is flipped, if necessary, to match the handedness of Az,Alt.
-\                                                                    - MOUNT the position sent to the instrument rotator; the details depend on the  rotator.
+\                                                                    - SKY   Position angle of focal plane +Y measured from N through E.
+\                                                                    - HORIZON  Position angle of focal plane +Y measured from +Alt through +Az.
+\                                                                    - MOUNT the position sent to the instrument rotator; the details depend on the rotator.
 OBS-LONG          float      deg      VisitInfo.getObservatory()     Longitude of telescope.
 OBS-LAT           float      deg      VisitInfo.getObservatory()     Latitude of telescope (positive eastward).
 OBS-ELEV          float      m        VisitInfo.getObservatory()     Geodetic elevation of telescope (meters above reference spheroid).
