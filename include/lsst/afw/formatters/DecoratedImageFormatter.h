@@ -46,12 +46,12 @@ public:
     virtual ~DecoratedImageFormatter(void);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
-                       std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                       std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
-    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
+    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                                                std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
     virtual void update(lsst::daf::base::Persistable* persistable,
-                        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                         std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(

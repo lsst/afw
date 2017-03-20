@@ -175,7 +175,7 @@ static void setColumn(dafPersist::DbStorage* db,                       ///< Dest
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
-        dafBase::Persistable const* persistable, std::shared_ptr<dafPersist::Storage> storage,
+        dafBase::Persistable const* persistable, std::shared_ptr<dafPersist::FormatterStorage> storage,
         std::shared_ptr<daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ExposureFormatter write start");
     image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
@@ -283,12 +283,12 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized Storage for Exposure");
+    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-        std::shared_ptr<dafPersist::Storage> storage,
+        std::shared_ptr<dafPersist::FormatterStorage> storage,
         std::shared_ptr<daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ExposureFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
@@ -389,7 +389,7 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
         }
         db->finishQuery();
 
-        // @todo Should really have FITS be a separate Storage.
+        // @todo Should really have FITS be a separate FormatterStorage.
         // - KTL - 2007-11-29
 
         // Restore image from FITS...
@@ -412,12 +412,12 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
         LOGL_DEBUG(_log, "ExposureFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized Storage for Exposure");
+    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
-        dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+        dafBase::Persistable*, std::shared_ptr<dafPersist::FormatterStorage>,
         std::shared_ptr<daf::base::PropertySet>) {
     /// @todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29

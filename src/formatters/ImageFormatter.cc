@@ -58,7 +58,7 @@ using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::XmlStorage;
 using lsst::daf::persistence::FitsStorage;
-using lsst::daf::persistence::Storage;
+using lsst::daf::persistence::FormatterStorage;
 using lsst::afw::image::Image;
 
 namespace afwImg = lsst::afw::image;
@@ -117,7 +117,7 @@ namespace afwImage = lsst::afw::image;
 }
 
 template <typename ImagePixelT>
-void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::shared_ptr<Storage> storage,
+void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
                                         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
@@ -148,11 +148,11 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::sha
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Image");
 }
 
 template <typename ImagePixelT>
-Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
+Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage> storage,
                                                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -208,11 +208,11 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Image");
 }
 
 template <typename ImagePixelT>
-void ImageFormatter<ImagePixelT>::update(Persistable*, std::shared_ptr<Storage>,
+void ImageFormatter<ImagePixelT>::update(Persistable*, std::shared_ptr<FormatterStorage>,
                                          std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Image");
 }

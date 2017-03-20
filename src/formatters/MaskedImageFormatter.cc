@@ -56,7 +56,7 @@ LOG_LOGGER _log = LOG_GET("afw.MaskedImageFormatter");
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
-using lsst::daf::persistence::Storage;
+using lsst::daf::persistence::FormatterStorage;
 using lsst::afw::image::MaskedImage;
 using lsst::afw::image::MaskPixel;
 using lsst::afw::image::VariancePixel;
@@ -113,7 +113,7 @@ MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~MaskedImageForma
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
-        Persistable const* persistable, std::shared_ptr<Storage> storage,
+        Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
@@ -134,12 +134,12 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         LOGL_DEBUG(_log, "MaskedImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for MaskedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-        std::shared_ptr<Storage> storage, std::shared_ptr<lsst::daf::base::PropertySet>) {
+        std::shared_ptr<FormatterStorage> storage, std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         LOGL_DEBUG(_log, "MaskedImageFormatter read BoostStorage");
@@ -155,12 +155,12 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read
         LOGL_DEBUG(_log, "MaskedImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for MaskedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
-        Persistable*, std::shared_ptr<Storage>, std::shared_ptr<lsst::daf::base::PropertySet>) {
+        Persistable*, std::shared_ptr<FormatterStorage>, std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for MaskedImage");
 }
 
