@@ -205,6 +205,12 @@ public:
 
     using BoundedField::evaluate;
 
+    /// @copydoc BoundedField::integrate
+    virtual double integrate() const;
+
+    /// @copydoc BoundedField::mean
+    virtual double mean() const;
+
     /// ChebyshevBoundedField is always persistable.
     virtual bool isPersistable() const { return true; }
 

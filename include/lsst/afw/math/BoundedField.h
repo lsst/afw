@@ -89,6 +89,20 @@ public:
     ) const;
 
     /**
+     * Compute the integral of this function over its bounding-box.
+     *
+     * @return The value of the integral.
+     */
+    virtual double integrate() const;
+
+    /**
+     * Compute the mean of this function over its bounding-box.
+     *
+     * @return The value of the mean.
+     */
+    virtual double mean() const;
+
+    /**
      *  Return the bounding box that defines the region where the field is valid
      *
      *  Because this is an integer bounding box, its minimum and maximum positions are the
