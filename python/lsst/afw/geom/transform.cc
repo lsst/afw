@@ -66,8 +66,8 @@ void declareTransform(py::module& mod, std::string const & fromName, std::string
 
     py::class_<Class, std::shared_ptr<Class>> cls(mod, pyClassName.c_str());
 
-    cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a=true);
     cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a=true);
+    cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a=true);
 
     cls.def("getFromEndpoint", &Class::getFromEndpoint);
     cls.def("getFrameSet", &Class::getFrameSet);
