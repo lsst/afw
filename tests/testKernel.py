@@ -707,9 +707,9 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         # test a range of numbers of parameters, including both valid and invalid sized tuples.
         for nsp in range(nSpatialParams + 2):
-            spatialParamsForOneKernel = [1.0,]*nsp
+            spatialParamsForOneKernel = [1.0]*nsp
             for nkp in range(nKernelParams + 2):
-                spatialParams = [spatialParamsForOneKernel,]*nkp
+                spatialParams = [spatialParamsForOneKernel]*nkp
                 if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
                     if nsp == 0:
@@ -819,6 +819,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
