@@ -161,6 +161,18 @@ public:
         Eigen::MatrixXd const & sipBp
     );
 
+    /// Return the SIP forward distortion matrix for the 1st intermediate world coordinate system axis.
+    Eigen::MatrixXd const & getSipA() const { return _sipA; }
+
+    /// Return the SIP forward distortion matrix for the 2st intermediate world coordinate system axis.
+    Eigen::MatrixXd const & getSipB() const { return _sipB; }
+
+    /// Return the SIP reverse distortion matrix for x pixel coordinates.
+    Eigen::MatrixXd const & getSipAp() const { return _sipAp; }
+
+    /// Return the SIP reverse distortion matrix for y pixel coordinates.
+    Eigen::MatrixXd const & getSipBp() const { return _sipBp; }
+
     /// @brief Whether the object is persistable using afw::table::io archives.
     virtual bool isPersistable() const;
 
