@@ -26,6 +26,7 @@ import unittest
 
 from builtins import range
 import numpy as np
+from numpy.testing import assert_allclose
 
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
@@ -489,7 +490,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kim2 = afwImage.ImageD(kernel2.getDimensions())
         kernel2.computeImage(kim2, True)
 
-        self.assertTrue(np.allclose(kim.getArray(), kim2.getArray()))
+        assert_allclose(kim.getArray(), kim2.getArray())
 
     def testSVLinearCombinationKernelFixed(self):
         """Test a spatially varying LinearCombinationKernel whose bases are FixedKernels"""
