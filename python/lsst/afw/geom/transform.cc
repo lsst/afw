@@ -69,6 +69,9 @@ void declareTransform(py::module& mod, std::string const & fromName, std::string
     cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a=true);
     cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a=true);
 
+    cls.def("hasForward", &Class::hasForward);
+    cls.def("hasInverse", &Class::hasInverse);
+
     cls.def("getFromEndpoint", &Class::getFromEndpoint);
     cls.def("getFrameSet", &Class::getFrameSet);
     cls.def("getToEndpoint", &Class::getToEndpoint);

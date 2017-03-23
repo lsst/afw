@@ -44,6 +44,13 @@ and an astshim::FrameSet or astshim::Mapping to specify the transformation.
 In the case of a FrameSet the transformation is from the `BASE` frame to the `CURRENT` frame.
 The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
 
+Depending on the astshim::FrameSet or astshim::Mapping used to define it, a Transform may
+provide either a forward transform, an inverse transform, or both. The @ref hasForward
+and @ref hasInverse methods can be used to check which transforms are available.
+
+Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
+internal errors within AST.
+
 @note You gain some safety by constructing a Transform from an astshim::FrameSet,
 since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
 
@@ -99,6 +106,20 @@ public:
     explicit Transform(ast::FrameSet const & frameSet, bool simplify=true);
 
     ~Transform(){};
+
+    /**
+     * Test if this method has a forward transform.
+     *
+     * @exceptsafe Provides basic exception safety.
+     */
+    bool hasForward() const { return _frameSet->hasForward(); }
+
+    /**
+     * Test if this method has an inverse transform.
+     *
+     * @exceptsafe Provides basic exception safety.
+     */
+    bool hasInverse() const { return _frameSet->hasInverse(); }
 
     /**
     Get the "from" endpoint

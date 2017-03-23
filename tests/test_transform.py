@@ -107,14 +107,14 @@ def makeFrameSet(baseFrame, currFrame):
     where:
     - nIn = baseFrame.getNaxes()
     - nOut = currFrame.getNaxes()
-    - polyMap = makePolyMap(nIn, nOut)
+    - polyMap = makeTwoWayPolyMap(nIn, nOut)
 
     @param[in] baseFrame  base frame
     @param[in] currFrame  current frame
     """
     nIn = baseFrame.getNaxes()
     nOut = currFrame.getNaxes()
-    polyMap = makePolyMap(nIn, nOut)
+    polyMap = makeTwoWayPolyMap(nIn, nOut)
 
     # The only to set the Ident of a frame in a FrameSet is to set it in advance,
     # and I don't want to modify the inputs, so replace the input frames with copies
@@ -189,7 +189,7 @@ def makeCoeffs(nIn, nOut):
     return np.array(forwardCoeffs, dtype=float)
 
 
-def makePolyMap(nIn, nOut):
+def makeTwoWayPolyMap(nIn, nOut):
     """Make an astShim.PolyMap suitable for testing
 
     The forward transform is as follows:
@@ -208,6 +208,29 @@ def makePolyMap(nIn, nOut):
     polyMap = astshim.PolyMap(forwardCoeffs, reverseCoeffs)
     assert polyMap.getNin() == nIn
     assert polyMap.getNout() == nOut
+    assert polyMap.hasForward()
+    assert polyMap.hasInverse()
+    return polyMap
+
+
+def makeForwardPolyMap(nIn, nOut):
+    """Make an astShim.PolyMap suitable for testing
+
+    The forward transform is as follows:
+    fj(x) = C0j x0 + C1j x1 + C2j x2... where Cij = 0.001 i (j+1)
+
+    This map does not have a reverse transform.
+
+    The equation is chosen for the following reasons:
+    - It is well defined for any value of nIn, nOut
+    - It stays small for small x, to avoid wraparound of angles for SpherePoint endpoints
+    """
+    forwardCoeffs = makeCoeffs(nIn, nOut)
+    polyMap = astshim.PolyMap(forwardCoeffs, nOut, "IterInverse=0")
+    assert polyMap.getNin() == nIn
+    assert polyMap.getNout() == nOut
+    assert polyMap.hasForward()
+    assert not polyMap.hasInverse()
     return polyMap
 
 
@@ -238,9 +261,9 @@ class TransformTestCase(lsst.utils.tests.TestCase):
         """Check tranForward and tranInverse for a transform
 
         @param[in] mapping  The mapping the transform should use. This mapping
-                            must contain valid forward and inverse transformations,
-                            but they need not match. Hence the mapping returned
-                            by makePolyMap is acceptable.
+                            must contain valid forward or inverse transformations,
+                            but they need not match if both present. Hence the
+                            mappings returned by make*PolyMap are acceptable.
         @param[in] transform  The transform to check
         @param[in] msg  Error message suffix describing test parameters
         """
@@ -256,33 +279,49 @@ class TransformTestCase(lsst.utils.tests.TestCase):
         # forward transformation of one point
         rawInPoint = makeRawPointData(nIn)
         inPoint = fromEndpoint.pointFromData(rawInPoint)
-        outPoint = transform.tranForward(inPoint)
-        rawOutPoint = toEndpoint.dataFromPoint(outPoint)
-        assert_allclose(rawOutPoint, mapping.tranForward(rawInPoint), err_msg=msg)
-        assert_allclose(rawOutPoint, frameSet.tranForward(rawInPoint), err_msg=msg)
-
-        # inverse transformation of one point;
-        # remember that the inverse will not give the original values!
-        inversePoint = transform.tranInverse(outPoint)
-        rawInversePoint = fromEndpoint.dataFromPoint(inversePoint)
-        assert_allclose(rawInversePoint, mapping.tranInverse(rawOutPoint), err_msg=msg)
-        assert_allclose(rawInversePoint, frameSet.tranInverse(rawOutPoint), err_msg=msg)
 
         # forward transformation of an array of points
         nPoints = 7  # arbitrary
         rawInArray = makeRawArrayData(nPoints, nIn)
         inArray = fromEndpoint.arrayFromData(rawInArray)
-        outArray = transform.tranForward(inArray)
-        rawOutArray = toEndpoint.dataFromArray(outArray)
-        self.assertFloatsAlmostEqual(rawOutArray, mapping.tranForward(rawInArray), msg=msg)
-        self.assertFloatsAlmostEqual(rawOutArray, frameSet.tranForward(rawInArray), msg=msg)
 
-        # inverse transformation of an array of points;
-        # remember that the inverse will not give the original values!
-        inverseArray = transform.tranInverse(outArray)
-        rawInverseArray = fromEndpoint.dataFromArray(inverseArray)
-        self.assertFloatsAlmostEqual(rawInverseArray, mapping.tranInverse(rawOutArray), msg=msg)
-        self.assertFloatsAlmostEqual(rawInverseArray, frameSet.tranInverse(rawOutArray), msg=msg)
+        if mapping.hasForward():
+            self.assertTrue(transform.hasForward())
+            outPoint = transform.tranForward(inPoint)
+            rawOutPoint = toEndpoint.dataFromPoint(outPoint)
+            assert_allclose(rawOutPoint, mapping.tranForward(rawInPoint), err_msg=msg)
+            assert_allclose(rawOutPoint, frameSet.tranForward(rawInPoint), err_msg=msg)
+
+            outArray = transform.tranForward(inArray)
+            rawOutArray = toEndpoint.dataFromArray(outArray)
+            self.assertFloatsAlmostEqual(rawOutArray, mapping.tranForward(rawInArray), msg=msg)
+            self.assertFloatsAlmostEqual(rawOutArray, frameSet.tranForward(rawInArray), msg=msg)
+        else:
+            # Need outPoint, but don't need it to be consistent with inPoint
+            rawOutPoint = makeRawPointData(nOut)
+            outPoint = toEndpoint.pointFromData(rawOutPoint)
+            rawOutArray = makeRawArrayData(nPoints, nOut)
+            outArray = toEndpoint.arrayFromData(rawOutArray)
+
+            self.assertFalse(transform.hasForward())
+
+        if mapping.hasInverse():
+            self.assertTrue(transform.hasInverse())
+            # inverse transformation of one point;
+            # remember that the inverse will not give the original values!
+            inversePoint = transform.tranInverse(outPoint)
+            rawInversePoint = fromEndpoint.dataFromPoint(inversePoint)
+            assert_allclose(rawInversePoint, mapping.tranInverse(rawOutPoint), err_msg=msg)
+            assert_allclose(rawInversePoint, frameSet.tranInverse(rawOutPoint), err_msg=msg)
+
+            # inverse transformation of an array of points;
+            # remember that the inverse will not give the original values!
+            inverseArray = transform.tranInverse(outArray)
+            rawInverseArray = fromEndpoint.dataFromArray(inverseArray)
+            self.assertFloatsAlmostEqual(rawInverseArray, mapping.tranInverse(rawOutArray), msg=msg)
+            self.assertFloatsAlmostEqual(rawInverseArray, frameSet.tranInverse(rawOutArray), msg=msg)
+        else:
+            self.assertFalse(transform.hasInverse())
 
     def checkTransformFromMapping(self, fromName, toName):
         """Check a Transform_<fromName>_<toName> using the Mapping constructor
@@ -298,7 +337,7 @@ class TransformTestCase(lsst.utils.tests.TestCase):
         for nIn in self.goodNaxes[fromName]:
             # check invalid numbers of output for the given toName
             for badNout in self.badNaxes[toName]:
-                badPolyMap = makePolyMap(nIn, badNout)
+                badPolyMap = makeTwoWayPolyMap(nIn, badNout)
                 msg = "{}, nIn={}, badNout={}".format(baseMsg, nIn, badNout)
                 with self.assertRaises(InvalidParameterError, msg=msg):
                     transformClass(badPolyMap)
@@ -306,7 +345,7 @@ class TransformTestCase(lsst.utils.tests.TestCase):
             # check valid numbers of outputs for the given toName
             for nOut in self.goodNaxes[toName]:
                 msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
-                polyMap = makePolyMap(nIn, nOut)
+                polyMap = makeTwoWayPolyMap(nIn, nOut)
                 transform = transformClass(polyMap)
 
                 desStr = "{}[{}->{}]".format(transformClassName, nIn, nOut)
@@ -315,10 +354,20 @@ class TransformTestCase(lsst.utils.tests.TestCase):
 
                 self.checkTransformation(transform, polyMap, msg=msg)
 
+                # Forward transform but no inverse
+                polyMap = makeForwardPolyMap(nIn, nOut)
+                transform = transformClass(polyMap)
+                self.checkTransformation(transform, polyMap, msg=msg)
+
+                # Inverse transform but no forward
+                polyMap = makeForwardPolyMap(nOut, nIn).getInverse()
+                transform = transformClass(polyMap)
+                self.checkTransformation(transform, polyMap, msg=msg)
+
         # check invalid numbers of inputs with valid and invalid #s of inputs
         for badNin in self.badNaxes[fromName]:
             for nOut in self.goodNaxes[toName] + self.badNaxes[toName]:
-                badPolyMap = makePolyMap(badNin, nOut)
+                badPolyMap = makeTwoWayPolyMap(badNin, nOut)
                 msg = "{}, badNin={}, nOut={}".format(baseMsg, nIn, nOut)
                 with self.assertRaises(InvalidParameterError, msg=msg):
                     transformClass(badPolyMap)
@@ -364,7 +413,7 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(frameSet.getFrame(3).getIdent(), "frame3")
                 self.assertEqual(frameSet.getFrame(4).getIdent(), "currFrame")
 
-                polyMap = makePolyMap(nIn, nOut)
+                polyMap = makeTwoWayPolyMap(nIn, nOut)
 
                 self.checkTransformation(transform, mapping=polyMap, msg=msg)
 
