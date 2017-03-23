@@ -33,6 +33,22 @@
 namespace lsst {
 namespace afw {
 namespace geom {
+namespace {
+
+/*
+Get a pointer to a frame
+
+If frame is a FrameSet then return a copy of its current frame, else return the original argument
+*/
+std::shared_ptr<ast::Frame> getCurrentFrame(std::shared_ptr<ast::Frame> framePtr) {
+    auto frameSetPtr = std::dynamic_pointer_cast<ast::FrameSet>(framePtr);
+    if (frameSetPtr) {
+        return frameSetPtr->getFrame(ast::FrameSet::CURRENT);
+    }
+    return framePtr;
+}
+
+}  // <anonymous>
 
 template <typename Point, typename Array>
 std::shared_ptr<ast::Frame> BaseEndpoint<Point, Array>::makeFrame() const {
@@ -122,9 +138,11 @@ PointEndpoint<N>::PointEndpoint(int nAxes) : BaseVectorEndpoint<Point<double, N>
 
 template <int N>
 void PointEndpoint<N>::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
-    if (framePtr->getClass() != "Frame") {
+    // use getCurrentFrame because if framePtr points to a FrameSet we want the name of its current frame
+    std::string className = getCurrentFrame(framePtr)->getClass();
+    if (className != "Frame") {
         std::ostringstream os;
-        os << "frame is a \"" << framePtr->getClass() << "\", not a Frame";
+        os << "frame is a " << className << ", not a Frame";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 }
@@ -142,16 +160,20 @@ std::shared_ptr<ast::Frame> SpherePointEndpoint::makeFrame() const {
 }
 
 void SpherePointEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
-    auto skyFramePtr = std::dynamic_pointer_cast<ast::SkyFrame>(framePtr);
+    // use getCurrentFrame because if framePtr points to a FrameSet we want its current frame
+    auto currentFramePtr = getCurrentFrame(framePtr);
+    auto skyFramePtr = std::dynamic_pointer_cast<ast::SkyFrame>(currentFramePtr);
     if (!skyFramePtr) {
         std::ostringstream os;
-        os << "frame is a \"" << framePtr->getClass() << "\", not a SkyFrame";
+        os << "frame is a " << currentFramePtr->getClass() << ", not a SkyFrame";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     if (skyFramePtr->getLonAxis() != 1) {
         // axes are swapped to Lat, Lon; swap them back to the usual Lon, Lat
+        // warning: be sure to call permAxes on the original framePtr argument,
+        // as otherwise it will have no effect if framePtr points to a FrameSet
         std::vector<int> perm = {2, 1};
-        skyFramePtr->permAxes(perm);
+        framePtr->permAxes(perm);
     }
 }
 

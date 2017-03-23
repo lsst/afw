@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 import unittest
 
 import numpy as np
+from numpy.testing import assert_allclose
 import astshim
 
 import lsst.utils.tests
@@ -155,8 +156,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
                 self.assertAlmostEqual(point[axis], pointData[axis], msg=msg)
 
         pointDataRoundTrip = endpoint.dataFromPoint(point)
-        # TODO replace with assertFloatsAlmostEqual once DM-9707 is fixed
-        self.assertTrue(np.allclose(pointData, pointDataRoundTrip), msg=baseMsg)
+        assert_allclose(pointData, pointDataRoundTrip, err_msg=baseMsg)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
