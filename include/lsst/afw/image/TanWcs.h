@@ -124,7 +124,7 @@ public:
     virtual ~TanWcs() {};
 
     /// Polymorphic deep-copy.
-    virtual PTR(Wcs) clone() const;
+    PTR(Wcs) clone() const override;
 
     /// Returns the pixel scale, in Angle/pixel.
     geom::Angle pixelScale() const;
@@ -137,9 +137,13 @@ public:
     // NOTE that this accepts and returns FITS-style 1-indexed pixel coords, NOT LSST style 0-indexed
     geom::Point2D undistortPixel(geom::Point2D const & pixel) const;
 
-    bool hasDistortion() const { return _hasDistortion;};
+    bool hasDistortion() const override { return _hasDistortion;};
 
-    PTR(daf::base::PropertyList) getFitsMetadata() const;
+    void flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const override;
+
+    void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const override;
+
+    PTR(daf::base::PropertyList) getFitsMetadata() const override;
 
 
     /**
@@ -174,14 +178,14 @@ public:
     Eigen::MatrixXd const & getSipBp() const { return _sipBp; }
 
     /// @brief Whether the object is persistable using afw::table::io archives.
-    virtual bool isPersistable() const;
+    bool isPersistable() const override;
 
 protected:
 
     TanWcs(TanWcs const & rhs);
 
-    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
-    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
+    void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const override;
+    geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const override;
 
 private:
 
@@ -189,11 +193,11 @@ private:
 
     friend class TanWcsFactory;
 
-    virtual std::string getPersistenceName() const;
+    std::string getPersistenceName() const override;
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    void write(OutputArchiveHandle & handle) const override;
 
-    virtual bool _isSubset(Wcs const &) const;
+    bool _isSubset(Wcs const &) const override;
 
     // Create an empty, invalid TanWcs.  Only used by TanWcsFormatter.
     TanWcs();
