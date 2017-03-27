@@ -29,9 +29,11 @@ import math
 
 import lsst.utils.tests
 from .angle import arcseconds
+from .endpoint import GenericEndpoint, Point2Endpoint, Point3Endpoint, SpherePointEndpoint
 
 
-__all__ = ["assertAnglesNearlyEqual", "assertPairsNearlyEqual", "assertBoxesNearlyEqual"]
+__all__ = ["assertAnglesNearlyEqual", "assertPairsNearlyEqual",
+           "assertBoxesNearlyEqual", "makeEndpoints"]
 
 @lsst.utils.tests.inTestCase
 def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
@@ -99,3 +101,17 @@ def assertBoxesNearlyEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ
     """
     assertPairsNearlyEqual(testCase, box0.getMin(), box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
     assertPairsNearlyEqual(testCase, box0.getMax(), box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
+
+
+@lsst.utils.tests.inTestCase
+def makeEndpoints(testCase):
+    """Generate a representative sample of Endpoints.
+
+    Returns
+    -------
+    x : `list`
+        List of endpoints with enough diversity to exercise Endpoint-related
+        code. Each invocation of this method shall return independent objects.
+    """
+    return [GenericEndpoint(n) for n in range(1, 6)] + \
+           [Point2Endpoint(), Point3Endpoint(), SpherePointEndpoint()]
