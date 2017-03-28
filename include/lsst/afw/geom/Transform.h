@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "astshim.h"
+#include "Eigen/Core"
 #include "ndarray.h"
 
 #include "lsst/afw/geom/Endpoint.h"
@@ -166,6 +167,27 @@ public:
      * @exceptsafe Provides basic exception safety.
      */
     Transform<ToEndpoint, FromEndpoint> getInverse() const;
+
+    /**
+     * The Jacobian matrix of this Transform.
+     *
+     * The matrix is defined only if this object has a forward transform.
+     *
+     * @param x the position at which the Jacobian shall be evaluated
+     * @returns a matrix `J` with `getToEndpoint().getNAxes()` rows and
+     *          `getFromEndpoint().getNAxes()` columns. `J(i,j)` shall be the
+     *          rate of change of the `i`th output coordinate with respect to
+     *          the `j`th input coordinate, or `NaN` if the derivative cannot
+     *          be calculated.
+     *
+     * @exceptsafe Provides basic exception safety.
+     *
+     * @note The derivatives may be estimated by sampling and interpolating
+     *       this Transform in the neighborhood of `x`. If the implementation
+     *       requires interpolation, computation of the Jacobian may require
+     *       hundreds of evaluations of @ref tranForward.
+     */
+    Eigen::MatrixXd getJacobian(FromPoint const &x) const;
 
 private:
     FromEndpoint const _fromEndpoint;
