@@ -22,21 +22,13 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_FORMATTERS_DECORATEDIMAGEFORMATTER_H
-#define LSST_AFW_FORMATTERS_DECORATEDIMAGEFORMATTER_H
+#ifndef LSST_AFW_FORMATTERS_PROPERTYLISTFORMATTER_H
+#define LSST_AFW_FORMATTERS_PROPERTYLISTFORMATTER_H
 
-/** @file
+/**
  * @brief Interface for PropertyListFormatter class
  *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
- */
-
-/** @class lsst::afw::formatters::PropertyListFormatter
+ * @class lsst::afw::formatters::PropertyListFormatter
  * @brief Class implementing persistence and retrieval for PropertyLists.
  *
  * @ingroup afw
@@ -50,40 +42,42 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-class PropertyListFormatter : public lsst::daf::persistence::Formatter {
+class PropertyListFormatter : public daf::persistence::Formatter {
 public:
-    virtual ~PropertyListFormatter(void);
+    virtual ~PropertyListFormatter() {}
 
     virtual void write(
-        lsst::daf::base::Persistable const* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
-    );
-    virtual lsst::daf::base::Persistable* read(
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
-    );
-    virtual void update(
-        lsst::daf::base::Persistable* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
+        daf::base::Persistable const* persistable,
+        daf::persistence::Storage::Ptr storage,
+        daf::base::PropertySet::Ptr additionalData
     );
 
-    static lsst::daf::persistence::Formatter::Ptr createInstance(
-        lsst::pex::policy::Policy::Ptr policy
+    virtual daf::base::Persistable* read(
+        daf::persistence::Storage::Ptr storage,
+        daf::base::PropertySet::Ptr additionalData
+    );
+
+    virtual void update(
+        daf::base::Persistable* persistable,
+        daf::persistence::Storage::Ptr storage,
+        daf::base::PropertySet::Ptr additionalData
+    );
+
+    static daf::persistence::Formatter::Ptr createInstance(
+        pex::policy::Policy::Ptr policy
     );
 
     template <class Archive>
     static void delegateSerialize(
         Archive& ar,
         int const version,
-        lsst::daf::base::Persistable* persistable
+        daf::base::Persistable* persistable
     );
 
 private:
-    explicit PropertyListFormatter(PTR(lsst::pex::policy::Policy) policy);
+    explicit PropertyListFormatter(PTR(pex::policy::Policy) policy);
 
-    static lsst::daf::persistence::FormatterRegistration registration;
+    static daf::persistence::FormatterRegistration registration;
 };
 
 }}} // namespace lsst::afw::formatters
