@@ -22,26 +22,17 @@
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["unpickleWcs"]
+__all__ = []
 
 from lsst.utils import continueClass
 
-from ..exposure import ExposureU
 from .wcs import Wcs
-
-
-def unpickleWcs(pick):
-    import pickle
-    exposure = pickle.loads(pick)
-    return exposure.getWcs()
 
 
 @continueClass
 class Wcs:
 
     def __reduce__(self):
-        import pickle
-        exposure = ExposureU(1, 1)
-        exposure.setWcs(self)
-        return (unpickleWcs, (pickle.dumps(exposure),))
+        from lsst.afw.fits import reduceToFits
+        return reduceToFits(self)
 
