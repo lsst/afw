@@ -28,13 +28,6 @@
  *
  * @ingroup afw
  */
-
-#ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
-#endif
-static char const* SVNid __attribute__((unused)) =
-    "$Id$";
-
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -58,20 +51,17 @@ lsst::daf::persistence::FormatterRegistration PropertyListFormatter::registratio
     "PropertyList", typeid(lsst::daf::base::PropertyList), createInstance);
 
 PropertyListFormatter::PropertyListFormatter(
-        lsst::pex::policy::Policy::Ptr
-                                                             )
+    lsst::pex::policy::Policy::Ptr
+)
     : lsst::daf::persistence::Formatter(typeid(this))
 {
 }
 
-PropertyListFormatter::~PropertyListFormatter(void) {
-}
-
 void PropertyListFormatter::write(
-        lsst::daf::base::Persistable const* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
-                                                )
+    lsst::daf::base::Persistable const* persistable,
+    lsst::daf::persistence::Storage::Ptr storage,
+    lsst::daf::base::PropertySet::Ptr
+)
 {
     LOGL_DEBUG(_log, "PropertyListFormatter write start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList const*>(persistable);
@@ -80,31 +70,36 @@ void PropertyListFormatter::write(
     }
     if (typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Writing a PropertyList to FitsStorage is not supported");
+                      "FitsStorage for PropertyList read-only (writing is not supported)");
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unrecognized Storage for PropertyList");
 }
 
 namespace {
-    daf::base::PropertyList *readMetadataAsBarePtr(std::string const & fileName, int hdu, bool strip) {
+    // I'd use a unique_ptr, except that PropertyList won't allow me to merge non-shared_ptrs
+    std::unique_ptr<daf::base::PropertyList>
+    readMetadataAsUniquePtr(std::string const & fileName, int hdu, bool strip)
+    {
+        auto metadata = std::unique_ptr<daf::base::PropertyList>(new lsst::daf::base::PropertyList);
+        //
+        // We need a shared_ptr to be able to call PropertyList.combine()
+        //
+        auto inheritedMetadata = std::shared_ptr<daf::base::PropertyList>(new daf::base::PropertyList);
+
         fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
         fitsfile.setHdu(hdu);
-        
-        auto metadata = new lsst::daf::base::PropertyList;
-        fitsfile.readMetadata(*metadata, strip);
-        // if INHERIT=T, we want to also include header entries from the primary HDU
-        if (fitsfile.getHdu() != 0 && metadata->exists("INHERIT")) {
-            LOGLS_WARN(_log, "Ignoring \"INHERIT\" keyword in " << fileName);
-        }
+        fitsfile.readMetadata(*inheritedMetadata, strip);
+        metadata->combine(inheritedMetadata);
+
         return metadata;
     }
 }
 
 lsst::daf::base::Persistable* PropertyListFormatter::read(
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
-                                                       )
+    lsst::daf::persistence::Storage::Ptr storage,
+    lsst::daf::base::PropertySet::Ptr
+)
 {
     LOGL_DEBUG(_log, "PropertyListFormatter read start");
     if(typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
@@ -112,20 +107,20 @@ lsst::daf::base::Persistable* PropertyListFormatter::read(
         LOGL_DEBUG(_log, "PropertyListFormatter read FitsStorage");
 
         auto fits = dynamic_cast<lsst::daf::persistence::FitsStorage*>(storage.get());
-        auto ip = readMetadataAsBarePtr(fits->getPath(), fits->getHdu(), false);
+        auto ip = readMetadataAsUniquePtr(fits->getPath(), fits->getHdu(), false);
 
         LOGL_DEBUG(_log, "PropertyListFormatter read end");
-        return ip;
+        return ip.release();
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unrecognized Storage for PropertyList");
 }
 
 void PropertyListFormatter::update(
-        lsst::daf::base::Persistable*,
-        lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::PropertySet::Ptr
-                                                 )
+    lsst::daf::base::Persistable*,
+    lsst::daf::persistence::Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr
+)
 {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unexpected call to update for PropertyList");
@@ -133,10 +128,10 @@ void PropertyListFormatter::update(
 
 template <class Archive>
 void PropertyListFormatter::delegateSerialize(
-        Archive&,
-        int const,
-        lsst::daf::base::Persistable* persistable
-                                                            )
+    Archive&,
+    int const,
+    lsst::daf::base::Persistable* persistable
+)
 {
     LOGL_DEBUG(_log, "PropertyListFormatter delegateSerialize start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList*>(persistable);
@@ -148,8 +143,8 @@ void PropertyListFormatter::delegateSerialize(
 }
 
 lsst::daf::persistence::Formatter::Ptr PropertyListFormatter::createInstance(
-        lsst::pex::policy::Policy::Ptr policy
-                                                                                           )
+    lsst::pex::policy::Policy::Ptr policy
+)
 {
     return lsst::daf::persistence::Formatter::Ptr(new PropertyListFormatter(policy));
 }
