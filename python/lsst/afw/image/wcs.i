@@ -48,20 +48,11 @@
 %lsst_persistable(lsst::afw::image::Wcs);
 %lsst_persistable(lsst::afw::image::TanWcs);
 
-%pythoncode %{
-    def unpickleWcs(pick):
-        import pickle
-        exposure = pickle.loads(pick)
-        return exposure.getWcs()
-%}
-
 %extend lsst::afw::image::Wcs {
     %pythoncode %{
          def __reduce__(self):
-             import pickle
-             exposure = ExposureU(1, 1)
-             exposure.setWcs(self)
-             return (unpickleWcs, (pickle.dumps(exposure),))
+             from lsst.afw.fits import reduceToFits
+             return reduceToFits(self)
     %}
  }
 
