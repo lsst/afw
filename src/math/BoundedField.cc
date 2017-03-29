@@ -38,6 +38,14 @@ ndarray::Array<double,1,1> BoundedField::evaluate(
     return out;
 }
 
+double BoundedField::integrate() const {
+   throw LSST_EXCEPT(pex::exceptions::LogicError, "Not Implemented");
+}
+
+double BoundedField::mean() const {
+   throw LSST_EXCEPT(pex::exceptions::LogicError, "Not Implemented");
+}
+
 namespace {
 
 // We use these operator-based functors to implement the various image-modifying routines

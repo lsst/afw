@@ -56,6 +56,15 @@ public:
 /**
  *  @brief A BoundedField based on 2-d Chebyshev polynomials of the first kind.
  *
+ *  The 2-d Chebyshev polynomial used here is defined as:
+ *
+ *  @f[
+ *  f(x,y) = \sum_i \sum_j a_{i,j} T_i(x) T_j(y)
+ *  @f]
+ *
+ *  where @f$T_n(x)@f$ is the n-th order Chebyshev polynomial of @f$x@f$ and
+ *  @f$a_{i,j}@f$ is the corresponding coefficient of the (i,j) polynomial term.
+ *
  *  ChebyshevBoundedField supports fitting to gridded and non-gridded data,
  *  as well coefficient matrices with different x- and y-order.
  *
@@ -90,6 +99,25 @@ public:
      *  The coefficients are ordered [y,x], so the shape is (orderY+1, orderX+1),
      *  and the arguments to the Chebyshev functions are transformed such that
      *  the region Box2D(bbox) is mapped to [-1, 1]x[-1, 1].
+     *
+     *  Example:
+     *
+     *  @code
+     *      bbox = geom::Box2I(geom::Point2I(10, 20), geom::Point2I(30, 40));
+     *      ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(2, 2));
+     *      coeffs[0][0] = 1;
+     *      coeffs[1][0] = 2;
+     *      coeffs[0][1] = 3;
+     *      coeffs[1][1] = 4;
+     *      ndarray::Array<double, 2, 2> coeffs = ndarray::external(data);
+     *      poly = ChebyshevBoundedField(bbox, coeffs);
+     *  @endcode
+     *
+     *  will result in the following polynomial:
+     *
+     *  @f[
+     *  f(x,y) = 1 T_0(x) T_0(y) + 2 T_0(x) T_1(y) + 3 T_1(x) T_0(y) + 4 T_1(x) T_1(y)
+     *  @f]
      */
     ChebyshevBoundedField(
         afw::geom::Box2I const & bbox,
@@ -176,6 +204,12 @@ public:
     virtual double evaluate(geom::Point2D const & position) const;
 
     using BoundedField::evaluate;
+
+    /// @copydoc BoundedField::integrate
+    virtual double integrate() const;
+
+    /// @copydoc BoundedField::mean
+    virtual double mean() const;
 
     /// ChebyshevBoundedField is always persistable.
     virtual bool isPersistable() const { return true; }
