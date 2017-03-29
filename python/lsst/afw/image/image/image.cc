@@ -114,11 +114,11 @@ static PyImage<PixelT> declareImage(py::module & mod, const std::string & suffix
             "array"_a, "deep"_a=false, "xy0"_a=geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin>(),
-            "fileName"_a, "hdu"_a=0, "metadata"_a=nullptr,
+            "fileName"_a, "hdu"_a=INT_MIN, "metadata"_a=nullptr,
             "bbox"_a=geom::Box2I(), "origin"_a=PARENT);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin>(),
-            "manager"_a, "hdu"_a=0, "metadata"_a=nullptr,
+            "manager"_a, "hdu"_a=INT_MIN, "metadata"_a=nullptr,
             "bbox"_a=geom::Box2I(), "origin"_a=PARENT);
     cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin>(),
@@ -178,10 +178,10 @@ static PyImage<PixelT> declareImage(py::module & mod, const std::string & suffix
                 &Image<PixelT>::writeFits,
             "fitsfile"_a, "metadata"_a=std::shared_ptr<daf::base::PropertySet const>());
     cls.def_static("readFits", (Image<PixelT> (*)(std::string const &, int)) Image<PixelT>::readFits,
-                   "filename"_a, "hdu"_a=0);
+                   "filename"_a, "hdu"_a=INT_MIN);
     cls.def_static("readFits",
                    (Image<PixelT> (*)(fits::MemFileManager &, int)) Image<PixelT>::readFits,
-                   "manager"_a, "hdu"_a=0);
+                   "manager"_a, "hdu"_a=INT_MIN);
     cls.def("sqrt", &Image<PixelT>::sqrt);
 
     /* Add-ons for Python interface only */
@@ -219,7 +219,7 @@ static void declareDecoratedImage(py::module & mod, std::string const & suffix) 
             lsst::afw::geom::Box2I const&,
             ImageOrigin const>(),
             "fileName"_a,
-            "hdu"_a=0,
+            "hdu"_a=INT_MIN,
             "bbox"_a=lsst::afw::geom::Box2I(),
             "origin"_a=PARENT);
 

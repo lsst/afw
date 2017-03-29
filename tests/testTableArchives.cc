@@ -296,7 +296,7 @@ roundtripAndCompare(
     outArchive.writeFits(outFits2);
     outFits2.closeFile();
     fits::Fits inFits2(manager, "r", fits::Fits::AUTO_CHECK);
-    inFits2.setHdu(0);
+    inFits2.setHdu(INT_MIN);
     InputArchive inArchive2 = InputArchive::readFits(inFits2);
     inFits2.closeFile();
     for (int i = 0; i < M; ++i) {
@@ -448,7 +448,7 @@ PTR(T) roundtrip(T const * input) {
     outArchive.writeFits(outFits);
     outFits.closeFile();
     Fits inFits(manager, "r", Fits::AUTO_CHECK);
-    inFits.setHdu(0);
+    inFits.setHdu(INT_MIN);
     InputArchive inArchive = InputArchive::readFits(inFits);
     inFits.closeFile();
     return std::dynamic_pointer_cast<T>(inArchive.get(id));
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(ArchiveMetadata) {
     outArchive.writeFits(outFits);
     outFits.closeFile();
     Fits inFits(manager, "r", Fits::AUTO_CHECK);
-    inFits.setHdu(3);
+    inFits.setHdu(2);
     lsst::daf::base::PropertyList metadata;
     inFits.readMetadata(metadata);
     inFits.closeFile();
