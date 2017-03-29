@@ -6,7 +6,7 @@ from .cameraGeomLib import FOCAL_PLANE, PUPIL, PIXELS, TAN_PIXELS, ACTUAL_PIXELS
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 
-__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs", "makeDetector"]
+__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs", "makeDetector", "copyDetector"]
 
 cameraSysList = [PUPIL, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
@@ -47,6 +47,28 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil):
         pixelSizeMm,
         transforms,
     )
+
+def copyDetector(detector, ampInfoCatalog=None):
+    """!Return a copy of a Detector
+
+    @param detector        The Detector to clone
+    @param ampInfoCatalog  The ampInfoCatalog to use; default use original
+
+    N.b. No deep copies are made;  the input transformDict is used unmodified
+    """
+    if ampInfoCatalog is None:
+        ampInfoCatalog = detector.getAmpInfoCatalog()
+
+    tm = detector.getTransformMap()
+    transformDict = dict()
+    for cs in tm.getCoordSysList():
+        if cs != tm.getNativeCoordSys():
+            transformDict[cs] = tm.get(cs)
+
+    return Detector(detector.getName(), detector.getId(), detector.getType(),
+                    detector.getSerial(), detector.getBBox(),
+                    ampInfoCatalog, detector.getOrientation(), detector.getPixelSize(),
+                    transformDict)
 
 def makeOrientation(detectorConfig):
     """!Make an Orientation instance from a detector config
