@@ -38,6 +38,7 @@
 #include <functional>
 
 #include "boost/mpl/bool.hpp"
+#include <climits>
 #include <memory>
 
 #include "lsst/afw/geom/Extent.h"
@@ -443,8 +444,8 @@ namespace image {
          *  @brief Construct an Image by reading a regular FITS file.
          *
          *  @param[in]      fileName    File to read.
-         *  @param[in]      hdu         HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-         *                              of 0 reads the Primary HDU unless it is empty, in which case it
+         *  @param[in]      hdu         HDU to read, 0-indexed (i.e. 0=Primary HDU).  The special value
+         *                              of INT_MIN reads the Primary HDU unless it is empty, in which case it
          *                              reads the first extension HDU.
          *  @param[in,out]  metadata    Metadata read from the header (may be null).
          *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
@@ -452,7 +453,7 @@ namespace image {
          *                              should take into account the xy0 saved with the image.
          */
         explicit Image(
-            std::string const & fileName, int hdu=0,
+            std::string const & fileName, int hdu=INT_MIN,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
@@ -462,8 +463,8 @@ namespace image {
          *  @brief Construct an Image by reading a FITS image in memory.
          *
          *  @param[in]      manager     An object that manages the memory buffer to read.
-         *  @param[in]      hdu         HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-         *                              of 0 reads the Primary HDU unless it is empty, in which case it
+         *  @param[in]      hdu         HDU to read, 0-indexed (i.e. 0=Primary HDU).  The special value
+         *                              of INT_MIN reads the Primary HDU unless it is empty, in which case it
          *                              reads the first extension HDU.
          *  @param[in,out]  metadata    Metadata read from the header (may be null).
          *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
@@ -471,7 +472,7 @@ namespace image {
          *                              should take into account the xy0 saved with the image.
          */
         explicit Image(
-            fits::MemFileManager & manager, int hdu=0,
+            fits::MemFileManager & manager, int hdu=INT_MIN,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
@@ -550,10 +551,11 @@ namespace image {
          *  @brief Read an Image from a regular FITS file.
          *
          *  @param[in] filename    Name of the file to read.
-         *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
-         *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+         *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
+         *                         The default value of INT_MIN is interpreted as "the first HDU with
+         *                         NAXIS != 0".
          */
-        static Image readFits(std::string const & filename, int hdu=0) {
+        static Image readFits(std::string const & filename, int hdu=INT_MIN) {
             return Image<PixelT>(filename, hdu);
         }
 
@@ -561,10 +563,11 @@ namespace image {
          *  @brief Read an Image from a FITS RAM file.
          *
          *  @param[in] manager     Object that manages the memory to be read.
-         *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
-         *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+         *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
+         *                         The default value of INT_MIN is interpreted as "the first HDU with
+         *                         NAXIS != 0".
          */
-        static Image readFits(fits::MemFileManager & manager, int hdu=0) {
+        static Image readFits(fits::MemFileManager & manager, int hdu=INT_MIN) {
             return Image<PixelT>(manager, hdu);
         }
 
@@ -630,7 +633,7 @@ namespace image {
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
             std::string const& fileName,
-            const int hdu=0,
+            const int hdu=INT_MIN,
             geom::Box2I const& bbox=geom::Box2I(),
             ImageOrigin const origin = PARENT
         );

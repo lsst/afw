@@ -160,8 +160,12 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     data.metadata->combine(getMetadata());
 
     // In the future, we might not have exactly three image HDUs, but we always do right now,
-    // so 1=primary, 2=image, 3=mask, 4=variance, 5+=archive
-    data.metadata->set("AR_HDU", 5, "HDU containing the archive used to store ancillary objects");
+    // so 0=primary, 1=image, 2=mask, 3=variance, 4+=archive
+    //
+    // Historically the AR_HDU keyword was 1-indexed (see RFC-304), and to maintain file compatibility
+    // this is still the case so we're setting AR_HDU to 5 == 4 + 1
+    //
+    data.metadata->set("AR_HDU", 5, "One more than HDU containing the archive used to store ancillary objects");
     if (hasCoaddInputs()) {
         int coaddInputsId = data.archive.put(getCoaddInputs());
         data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
@@ -264,6 +268,8 @@ void ExposureInfo::_readFits(
     int archiveHdu = popInt(*metadata, "AR_HDU");
 
     if (archiveHdu) {
+        --archiveHdu;                   // see note above in _startWriteFits;  AR_HDU is *one* indexed
+
         fitsfile.setHdu(archiveHdu);
         table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
         // Load the Psf and Wcs from the archive; id=0 results in a null pointer.
