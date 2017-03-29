@@ -171,7 +171,7 @@ def permFrameSetIter(frameSet):
 def makeCoeffs(nIn, nOut):
     """Make an array of coefficients for astshim.PolyMap for the following equation:
 
-    fj(x) = C0j x0 + C1j x1 + C2j x2...
+    fj(x) = C0j x0^2 + C1j x1^2 + C2j x2^2...
     where:
     * i ranges from 0 to nIn-1
     * j ranges from 0 to nOut-1,
@@ -183,16 +183,45 @@ def makeCoeffs(nIn, nOut):
         coeffOffset = baseCoeff * out_ind
         for in_ind in range(nIn):
             coeff = baseCoeff * (in_ind + 1) + coeffOffset
-            coeffArr = [coeff, out_ind + 1] + [1 if i == in_ind else 0 for i in range(nIn)]
+            coeffArr = [coeff, out_ind + 1] + [2 if i == in_ind else 0 for i in range(nIn)]
             forwardCoeffs.append(coeffArr)
     return np.array(forwardCoeffs, dtype=float)
+
+
+def makeJacobian(nIn, nOut, inArray):
+    """Make a Jacobian matrix for the equation described by makeCoeffs.
+
+    Parameters
+    ----------
+    nIn, nOut : integers
+        the dimensions of the input and output data; see makeCoeffs
+    inArray : ndarray
+        an array of size `nIn` representing the point at which the Jacobian
+        is measured
+
+    Returns
+    ----------
+    J : numpy.ndarray
+        an nOut x nIn array of first derivatives
+    """
+    baseCoeff = 2.0 * 0.001
+    coeffs = np.empty((nOut, nIn))
+    for iOut in range(nOut):
+        coeffOffset = baseCoeff * iOut
+        for iIn in range(nIn):
+            coeffs[iOut, iIn] = baseCoeff * (iIn + 1) + coeffOffset
+            coeffs[iOut, iIn] *= inArray[iIn]
+    assert coeffs.ndim == 2
+    assert coeffs.shape == (nOut, nIn)
+    # Avoid spurious errors when comparing to a simplified array
+    return coeffs
 
 
 def makeTwoWayPolyMap(nIn, nOut):
     """Make an astShim.PolyMap suitable for testing
 
     The forward transform is as follows:
-    fj(x) = C0j x0 + C1j x1 + C2j x2... where Cij = 0.001 i (j+1)
+    fj(x) = C0j x0^2 + C1j x1^2 + C2j x2^2... where Cij = 0.001 i (j+1)
 
     The reverse transform is the same equation with i and j reversed
     thus it is NOT the inverse of the forward direction,
@@ -215,9 +244,7 @@ def makeTwoWayPolyMap(nIn, nOut):
 def makeForwardPolyMap(nIn, nOut):
     """Make an astShim.PolyMap suitable for testing
 
-    The forward transform is as follows:
-    fj(x) = C0j x0 + C1j x1 + C2j x2... where Cij = 0.001 i (j+1)
-
+    The forward transform is the same as for `makeTwoWayPolyMap`.
     This map does not have a reverse transform.
 
     The equation is chosen for the following reasons:
@@ -609,12 +636,45 @@ class TransformTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(reverseFrames.getFrame(4).getIdent(), "currFrame",
                          msg=baseMsg)
 
+    def checkGetJacobian(self, fromName, toName):
+        """Test Transform<fromName>To<toName>.getJacobian
+
+        Parameters
+        ----------
+        fromName, toName : string
+            the prefixes of the transform's endpoints (e.g., "Point2" for a
+            Point2Endpoint)
+        """
+        transformClassName = "Transform{}To{}".format(fromName, toName)
+        transformClass = getattr(afwGeom, transformClassName)
+        baseMsg = "transformClass={}".format(transformClass.__name__)
+        for nIn in self.goodNaxes[fromName]:
+            for nOut in self.goodNaxes[toName]:
+                msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
+                polyMap = makeForwardPolyMap(nIn, nOut)
+                transform = transformClass(polyMap)
+                fromEndpoint = transform.getFromEndpoint()
+
+                # Test multiple points to ensure correct functional form
+                rawInPoint = makeRawPointData(nIn)
+                inPoint = fromEndpoint.pointFromData(rawInPoint)
+                jacobian = transform.getJacobian(inPoint)
+                assert_allclose(jacobian, makeJacobian(nIn, nOut, rawInPoint),
+                                err_msg=msg)
+
+                rawInPoint = makeRawPointData(nIn, 0.111)
+                inPoint = fromEndpoint.pointFromData(rawInPoint)
+                jacobian = transform.getJacobian(inPoint)
+                assert_allclose(jacobian, makeJacobian(nIn, nOut, rawInPoint),
+                                err_msg=msg)
+
     def testTransforms(self):
         for fromName in NameList:
             for toName in NameList:
                 self.checkTransformFromMapping(fromName, toName)
                 self.checkTransformFromFrameSet(fromName, toName)
                 self.checkGetInverse(fromName, toName)
+                self.checkGetJacobian(fromName, toName)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

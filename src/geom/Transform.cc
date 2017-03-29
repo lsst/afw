@@ -20,6 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <exception>
 #include <memory>
 #include <ostream>
 #include <sstream>
@@ -30,6 +31,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Transform.h"
+#include "lsst/pex/exceptions/Exception.h"
 
 namespace lsst {
 namespace afw {
@@ -112,9 +114,28 @@ Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInve
         // don't throw std::bad_cast because it doesn't let you provide debugging info
         std::ostringstream buffer;
         buffer << "FrameSet.getInverse() does not return a FrameSet. Called from: " << _frameSet;
-        throw std::logic_error(buffer.str());
+        throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
     }
     return Transform<ToEndpoint, FromEndpoint>(*inverse);
+}
+
+template <typename FromEndpoint, typename ToEndpoint>
+Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const &x) const {
+    try {
+        int const nIn = _fromEndpoint.getNAxes();
+        int const nOut = _toEndpoint.getNAxes();
+        std::vector<double> const point = _fromEndpoint.dataFromPoint(x);
+
+        Eigen::MatrixXd jacobian(nOut, nIn);
+        for (int i = 0; i < nOut; ++i) {
+            for (int j = 0; j < nIn; ++j) {
+                jacobian(i, j) = _frameSet->rate(point, i + 1, j + 1);
+            }
+        }
+        return jacobian;
+    } catch (std::bad_alloc const &e) {
+        std::throw_with_nested(LSST_EXCEPT(pex::exceptions::MemoryError, "Could not allocate Jacobian."));
+    }
 }
 
 template <typename FromEndpoint, typename ToEndpoint>

@@ -136,6 +136,7 @@ tests/statistics
 tests/statisticsSpeed
 tests/testLib.py
 tests/testSpherePoint
+tests/test_transform
 tests/testTrapezoidalPacker
 tests/testWcs
 tests/testWarpGpu

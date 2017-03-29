@@ -81,6 +81,7 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     cls.def("tranInverse", (FromArray (Class::*)(ToArray const &) const) & Class::tranInverse, "array"_a);
     cls.def("tranInverse", (FromPoint (Class::*)(ToPoint const &) const) & Class::tranInverse, "point"_a);
     cls.def("getInverse", &Class::getInverse);
+    cls.def("_getJacobian", &Class::getJacobian);
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
     cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
     // repr(self) = "lsst.afw.geom.<Python class name>[<nIn>-><nOut>]"
