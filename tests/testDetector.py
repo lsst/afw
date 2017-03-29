@@ -217,6 +217,36 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 if cameraSys == cameraGeom.PIXELS:
                     self.assertAlmostEquals(ctrPixPoint[i], ctrPoint[i])
 
+    def testCopyDetector(self):
+        """Test copyDetector() method
+        """
+        #
+        # Make a copy without any modifications
+        #
+        detector  = DetectorWrapper().detector
+        ndetector = cameraGeom.copyDetector(detector)
+
+        assert detector.getName() == ndetector.getName()
+        assert detector.getBBox() == ndetector.getBBox()
+        for amp, namp in zip(detector, ndetector):
+            assert amp.getBBox() == namp.getBBox()
+            assert amp.getRawXYOffset() == namp.getRawXYOffset()
+        #
+        # Now make a copy with a hacked-up set of amps
+        #
+        ampInfoCatalog = detector.getAmpInfoCatalog().copy(deep=True)
+        for i, amp in enumerate(ampInfoCatalog, 1):
+            amp.setRawXYOffset(i*afwGeom.ExtentI(1, 1))
+
+        ndetector = cameraGeom.copyDetector(detector, ampInfoCatalog=ampInfoCatalog)
+
+        assert detector.getName() == ndetector.getName()
+        assert detector.getBBox() == ndetector.getBBox()
+        for i, (amp, namp) in enumerate(zip(detector, ndetector), 1):
+            assert amp.getBBox() == namp.getBBox()
+            assert amp.getRawXYOffset() != namp.getRawXYOffset()
+            assert namp.getRawXYOffset()[0] == i
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
