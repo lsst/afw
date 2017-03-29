@@ -34,7 +34,7 @@ PYBIND11_PLUGIN(readMetadata) { // wraps code in Utils.h, but there's an unrelat
 
     /* Module level */
     mod.def("readMetadata", readMetadata,
-            "fileName"_a, "hdu"_a=0, "strip"_a=false);
+            "fileName"_a, "hdu"_a=INT_MIN, "strip"_a=false);
 
     return mod.ptr();
 }

@@ -19,6 +19,9 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+# This ticket results from
+#   https://dev.lsstcorp.org/trac/ticket/2352
+# "Support multi-extension input FITS files"
 
 from __future__ import absolute_import, division, print_function
 import os
@@ -51,15 +54,18 @@ class ReadMefTest(unittest.TestCase):
         self.checkExtName("THREE", 3, 4)
 
     def checkExtNum(self, hdu, extNum):
+        if hdu is None:
+            hdu = -(1 << 31)            # == INT_MIN
         header = afwImage.readMetadata(DATA, hdu)
         self.assertEqual(header.get("EXT_NUM"), extNum)
 
     def testExtNum(self):
-        self.checkExtNum(0, 2)  # Should skip PHU
-        self.checkExtNum(1, 1)
-        self.checkExtNum(2, 2)
-        self.checkExtNum(3, 3)
-        self.checkExtNum(4, 4)
+        # N.b.  The test file was written with 1-indexed EXT_NUMs
+        self.checkExtNum(None, 2)  # Should skip PHU
+        self.checkExtNum(0, 1)
+        self.checkExtNum(1, 2)
+        self.checkExtNum(2, 3)
+        self.checkExtNum(3, 4)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
