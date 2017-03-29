@@ -123,15 +123,15 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
 
-            for hdu in range(1, 5):
+            for hdu in range(4):
                 im.set(100*hdu)
-                if hdu == 1:
+                if hdu == 0:
                     mode = "w"
                 else:
                     mode = "a"
                 im.writeFits(tmpFile, None, mode)
 
-            for hdu in range(1, 5):
+            for hdu in range(4):
                 im = afwImage.ImageF(tmpFile, hdu)
                 self.assertEqual(im.get(0, 0), 100*hdu)
 

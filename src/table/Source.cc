@@ -92,11 +92,14 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         } else {
             metadata.reset(new daf::base::PropertyList());
         }
-        // HDU 1 is empty (primary HDU can't be a table)
-        // HDU 2 is the SourceCatalog's records
-        // HDU 3 is the index for the afw::table::io archive that holds more complex objects
+        // HDU 0 is empty (primary HDU can't be a table)
+        // HDU 1 is the SourceCatalog's records
+        // HDU 2 is the index for the afw::table::io archive that holds more complex objects
+        //
+        // Historically the AR_HDU keyword was 1-indexed (see RFC-304), and to maintain file compatibility
+        // this is still the case so we're setting AR_HDU to 3 == 2 + 1
         metadata->set(
-            "AR_HDU", 3, "HDU containing the archive index for non-record data (e.g. Footprints)"
+            "AR_HDU", 3, "HDU (1-indexed) containing the archive index for non-record data (e.g. Footprints)"
         );
         _outTable->setMetadata(metadata);
         _outRecord = _outTable->makeRecord(); // make temporary record to use as a workspace

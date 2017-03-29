@@ -31,6 +31,7 @@
 #ifndef LSST_AFW_IMAGE_UTILS_H
 #define LSST_AFW_IMAGE_UTILS_H
 
+#include <climits>
 #include <list>
 #include <map>
 #include <string>
@@ -54,12 +55,13 @@ namespace lsst { namespace afw { namespace image {
  *  @deprecated Use lsst::afw::fits::readMetadata instead.
  *
  *  @param[in]    fileName            File to read.
- *  @param[in]    hdu                 HDU to read, 1-indexed.  The special value of 0 will read the
+ *  @param[in]    hdu                 HDU to read, 0-indexed.  The special value of INT_MIN will read the
  *                                    first non-empty HDU.
  *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
  *                                    (e.g. NAXIS).
  */
-inline PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=0, bool strip=false) {
+inline PTR(daf::base::PropertyList) readMetadata(std::string const & fileName,
+                                                 int hdu=INT_MIN, bool strip=false) {
     return afw::fits::readMetadata(fileName, hdu, strip);
 }
 

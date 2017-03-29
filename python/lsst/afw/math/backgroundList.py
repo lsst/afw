@@ -152,6 +152,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
         self = BackgroundList()
 
+        hdu -= 1  # we want to start at 0 (post RFC-304), but are about to increment
         while True:
             hdu += 1
 

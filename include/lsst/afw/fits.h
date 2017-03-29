@@ -15,6 +15,7 @@
  *  of eliminating a lot of code between the two.
  */
 
+#include <climits>
 #include <string>
 
 #include <boost/format.hpp>
@@ -214,14 +215,14 @@ public:
     /// @brief Return the file name associated with the FITS object or "<unknown>" if there is none.
     std::string getFileName() const;
 
-    /// @brief Return the current HDU (1-indexed; 1 is the Primary HDU).
+    /// @brief Return the current HDU (0-indexed; 0 is the Primary HDU).
     int getHdu();
 
     /**
      *  @brief Set the current HDU.
      *
-     *  @param[in] hdu                 The HDU to move to (1-indexed; 1 is the Primary HDU).
-     *                                 The special value of 0 moves to the first extension
+     *  @param[in] hdu                 The HDU to move to (0-indexed; 0 is the Primary HDU).
+     *                                 The special value of INT_MIN moves to the first extension
      *                                 if the Primary HDU is empty (has NAXIS==0) and the
      *                                 the Primary HDU is the current one.
      *  @param[in] relative            If true, move relative to the current HDU.
@@ -519,8 +520,8 @@ public:
 ///
 /// Includes support for the INHERIT convention: if 'INHERIT = T' is in the header, the
 /// PHU will be read as well, and nominated HDU will override any duplicated values.
-PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=0, bool strip=false);
-PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hdu=0, bool strip=false);
+PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=INT_MIN, bool strip=false);
+PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hdu=INT_MIN, bool strip=false);
 PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip=false);
 //@}
 
