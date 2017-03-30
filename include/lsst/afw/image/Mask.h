@@ -134,8 +134,8 @@ public:
      *  @brief Construct a Mask by reading a regular FITS file.
      *
      *  @param[in]      fileName      File to read.
-     *  @param[in]      hdu           HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *  @param[in]      hdu           HDU to read, 0-indexed (i.e. 0=Primary HDU).  The special value
+     *                                of INT_MIN reads the Primary HDU unless it is empty, in which case it
      *                                reads the first extension HDU.
      *  @param[in,out]  metadata      Metadata read from the header (may be null).
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
@@ -149,7 +149,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(
-        std::string const & fileName, int hdu=0,
+        std::string const & fileName, int hdu=INT_MIN,
         PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
@@ -160,8 +160,8 @@ public:
      *  @brief Construct a Mask by reading a FITS image in memory.
      *
      *  @param[in]      manager       An object that manages the memory buffer to read.
-     *  @param[in]      hdu           HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *  @param[in]      hdu           HDU to read, 0-indexed (i.e. 0=Primary HDU).  The special value
+     *                                of INT_MIN reads the Primary HDU unless it is empty, in which case it
      *                                reads the first extension HDU.
      *  @param[in,out]  metadata      Metadata read from the header (may be null).
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
@@ -175,7 +175,7 @@ public:
      *  on-disk version.
      */
     explicit Mask(
-        fits::MemFileManager & manager, int hdu=0,
+        fits::MemFileManager & manager, int hdu=INT_MIN,
         PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
@@ -287,10 +287,10 @@ public:
      *  @brief Read a Mask from a regular FITS file.
      *
      *  @param[in] filename    Name of the file to read.
-     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
-     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
+     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
      */
-    static Mask readFits(std::string const & filename, int hdu=0) {
+    static Mask readFits(std::string const & filename, int hdu=INT_MIN) {
         return Mask<MaskPixelT>(filename, hdu);
     }
 
@@ -298,10 +298,10 @@ public:
      *  @brief Read a Mask from a FITS RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
-     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
-     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
+     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
      */
-    static Mask readFits(fits::MemFileManager & manager, int hdu=0) {
+    static Mask readFits(fits::MemFileManager & manager, int hdu=INT_MIN) {
         return Mask<MaskPixelT>(manager, hdu);
     }
 
