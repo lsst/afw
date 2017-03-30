@@ -58,10 +58,7 @@ class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):
         # Let's do the retrieval!
         propertyList = self.persistence.unsafeRetrieve("PropertyList", storageList, None)
 
-        if False:                       # this test requires that DM-9952 be merged
-            self.assertEqual(propertyList.get("AR_HDU"), 5)
-        else:
-            self.assertEqual(propertyList.get("EXTTYPE"), "IMAGE")
+        self.assertEqual(propertyList.get("AR_HDU"), 5)
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
