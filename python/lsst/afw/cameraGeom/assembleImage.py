@@ -21,8 +21,10 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from builtins import zip
+import lsst.afw.geom as afwGeom
+from . import copyDetector
 
-__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage']
+__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage', 'updateAmpGeometryForAssembledCcd']
 
 # dict of doFlip: slice
 _SliceDict = {
@@ -97,3 +99,35 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     outView = destImage.Factory(destImage, outBBox)
 
     _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
+
+def makeUpdatedDetector(ccd):
+    """Return a Detector that has had the definitions of amplifier geometry updated post assembly
+    """
+    ampInfoCatalog = ccd.getAmpInfoCatalog().copy(deep=True)
+
+    for amp in ampInfoCatalog:
+        assert amp.getHasRawInfo()
+        awidth, aheight = amp.getRawBBox().getDimensions()
+        for bboxName in ("",
+                         "HorizontalOverscan",
+                         "Data",
+                         "VerticalOverscan",
+                         "Prescan"):
+            bbox = getattr(amp, "getRaw%sBBox" % bboxName)()
+            if amp.getRawFlipX():
+                x0 = bbox.getBeginX()
+                bbox.flipLR(awidth)
+            if amp.getRawFlipY():
+                y0 = bbox.getBeginY()
+                bbox.flipTB(aheight)
+            bbox.shift(amp.getRawXYOffset())
+
+            getattr(amp, "setRaw%sBBox" % bboxName)(bbox)
+        #
+        # All of these have now been transferred to the per-amp geometry
+        #
+        amp.setRawXYOffset(afwGeom.ExtentI(0, 0))
+        amp.setRawFlipX(False)
+        amp.setRawFlipY(False)
+
+    return copyDetector(ccd, ampInfoCatalog)
