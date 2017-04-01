@@ -44,7 +44,7 @@ public:
     LSST_CONTROL_FIELD(orderY, int, "maximum Chebyshev function order in y");
 
     LSST_CONTROL_FIELD(triangular, bool,
-                       "if true, only include terms where the sum of the x and y order "
+        "if true, only include terms where the sum of the x and y order "
                        "is less than or equal to max(orderX, orderY)");
 
     /// Return the number of nonzero coefficients in the Chebyshev function defined by this object
@@ -126,9 +126,9 @@ public:
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
     static std::shared_ptr<ChebyshevBoundedField> fit(afw::geom::Box2I const& bbox,
-                                                      ndarray::Array<double const, 1> const& x,
-                                                      ndarray::Array<double const, 1> const& y,
-                                                      ndarray::Array<double const, 1> const& z,
+        ndarray::Array<double const,1> const & x,
+        ndarray::Array<double const,1> const & y,
+        ndarray::Array<double const,1> const & z,
                                                       Control const& ctrl);
 
     /**
@@ -144,10 +144,10 @@ public:
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
     static std::shared_ptr<ChebyshevBoundedField> fit(afw::geom::Box2I const& bbox,
-                                                      ndarray::Array<double const, 1> const& x,
-                                                      ndarray::Array<double const, 1> const& y,
-                                                      ndarray::Array<double const, 1> const& z,
-                                                      ndarray::Array<double const, 1> const& w,
+        ndarray::Array<double const,1> const & x,
+        ndarray::Array<double const,1> const & y,
+        ndarray::Array<double const,1> const & z,
+        ndarray::Array<double const,1> const & w,
                                                       Control const& ctrl);
 
     /**
@@ -171,7 +171,7 @@ public:
      *
      *  The coefficients are ordered [y,x], so the shape is (orderY+1, orderX+1).
      */
-    ndarray::Array<double const, 2, 2> getCoefficients() const { return _coefficients; }
+    ndarray::Array<double const,2,2> getCoefficients() const { return _coefficients; }
 
     /// Return a new ChebyshevBoudedField with maximum orders set by the given control object.
     std::shared_ptr<ChebyshevBoundedField> truncate(Control const& ctrl) const;
@@ -185,7 +185,7 @@ public:
     std::shared_ptr<ChebyshevBoundedField> relocate(geom::Box2I const& bbox) const;
 
     /// @copydoc BoundedField::evaluate
-    virtual double evaluate(geom::Point2D const& position) const;
+    virtual double evaluate(geom::Point2D const & position) const;
 
     using BoundedField::evaluate;
 
@@ -206,18 +206,20 @@ protected:
 
     virtual std::string getPythonModule() const;
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    virtual void write(OutputArchiveHandle & handle) const;
 
 private:
     // Internal constructor for fit() routines: just initializes the transform,
     // leaves coefficients empty.
-    explicit ChebyshevBoundedField(afw::geom::Box2I const& bbox);
+    explicit ChebyshevBoundedField(afw::geom::Box2I const & bbox);
 
-    geom::AffineTransform _toChebyshevRange;           // maps points from the bbox to [-1,1]x[-1,1]
-    ndarray::Array<double const, 2, 2> _coefficients;  // shape=(orderY+1, orderX+1)
+    geom::AffineTransform _toChebyshevRange; // maps points from the bbox to [-1,1]x[-1,1]
+    ndarray::Array<double const,2,2> _coefficients;  // shape=(orderY+1, orderX+1)
+
+    virtual std::string toString() const;
 };
 }
 }
 }  // namespace lsst::afw::math
 
-#endif  // !LSST_AFW_MATH_ChebyshevBoundedField_h_INCLUDED
+#endif // !LSST_AFW_MATH_ChebyshevBoundedField_h_INCLUDED

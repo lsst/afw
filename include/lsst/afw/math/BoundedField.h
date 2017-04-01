@@ -174,11 +174,17 @@ public:
 
     virtual ~BoundedField() {}
 
+    friend std::ostream & operator<<(std::ostream & os, BoundedField const & bf)
+    { return os << bf.toString() << " on " << bf.getBBox(); }
+
 protected:
     explicit BoundedField(geom::Box2I const& bbox) : _bbox(bbox) {}
 
 private:
     geom::Box2I const _bbox;
+
+    // String form of the mathematical component (not including the bbox)
+    virtual std::string toString() const = 0;
 };
 
 std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf);

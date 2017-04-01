@@ -82,6 +82,17 @@ PYBIND11_PLUGIN(_boundedField) {
     declareTemplates<double>(cls);
     declareTemplates<float>(cls);
 
+    cls.def("__str__", [](BoundedField const &self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
+    cls.def("__repr__", [](BoundedField const &self) {
+        std::ostringstream os;
+        os << "BoundedField(" << self << ")";
+        return os.str();
+    });
+
     return mod.ptr();
 }
 

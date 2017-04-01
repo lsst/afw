@@ -374,6 +374,12 @@ std::shared_ptr<BoundedField> ChebyshevBoundedField::operator*(double const scal
     return std::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients() * scale));
 }
 
+std::string ChebyshevBoundedField::toString() const {
+    std::ostringstream os;
+    os << "ChebyshevBoundedField (" << _coefficients.getShape() << " coefficients in y,x)";
+    return os.str();
+}
+
 // ------------------ explicit instantiation ----------------------------------------------------------------
 
 #ifndef DOXYGEN
