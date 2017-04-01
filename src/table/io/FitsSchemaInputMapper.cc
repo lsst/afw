@@ -111,8 +111,11 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
 
     // Find a key that indicates an Archive stored on other HDUs
     _impl->archiveHdu = metadata.get("AR_HDU", -1);
-    if (stripMetadata && _impl->archiveHdu > 0) {
-        metadata.remove("AR_HDU");
+    if (_impl->archiveHdu > 0) {
+        --_impl->archiveHdu;            // AR_HDU is 1-indexed for historical reasons (RFC-304; see Source.cc)
+        if (stripMetadata) {
+            metadata.remove("AR_HDU");
+        }
     }
 
     // Read aliases, stored as header entries with key 'ALIAS'

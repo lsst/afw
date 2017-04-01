@@ -108,12 +108,12 @@ public:
      *  @brief Read a FITS binary table from a regular file.
      *
      *  @param[in] filename    Name of the file to read.
-     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
-     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
+     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(std::string const & filename, int hdu=0, int flags=0) {
+    static SortedCatalogT readFits(std::string const & filename, int hdu=INT_MIN, int flags=0) {
         return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags);
     }
 
@@ -121,12 +121,12 @@ public:
      *  @brief Read a FITS binary table from a RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
-     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
-     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
+     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0) {
+    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=INT_MIN, int flags=0) {
         return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags);
     }
 

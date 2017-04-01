@@ -170,9 +170,9 @@ std::string Fits::getFileName() const {
 }
 
 int Fits::getHdu() {
-    int n = 0;
+    int n = 1;
     fits_get_hdu_num(reinterpret_cast<fitsfile*>(fptr), &n);
-    return n;
+    return n - 1;
 }
 
 void Fits::setHdu(int hdu, bool relative) {
@@ -182,10 +182,10 @@ void Fits::setHdu(int hdu, bool relative) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Incrementing HDU by %d") % hdu);
         }
     } else {
-        if (hdu != 0) {
-            fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+        if (hdu != INT_MIN) {
+            fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu + 1, 0, &status);
         }
-        if (hdu == 0 && getHdu() == 1 && getImageDim() == 0) {
+        if (hdu == INT_MIN && getHdu() == 0 && getImageDim() == 0) {
             // want a silent failure here
             int tmpStatus = status;
             fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &tmpStatus);
@@ -1145,7 +1145,7 @@ PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip) {
     auto metadata = std::make_shared<lsst::daf::base::PropertyList>();
     fitsfile.readMetadata(*metadata, strip);
     // if INHERIT=T, we want to also include header entries from the primary HDU
-    if (fitsfile.getHdu() != 1 && metadata->exists("INHERIT")) {
+    if (fitsfile.getHdu() != 0 && metadata->exists("INHERIT")) {
         bool inherit = false;
         if (metadata->typeOf("INHERIT") == typeid(std::string)) {
             inherit = (metadata->get<std::string>("INHERIT") == "T");
@@ -1154,7 +1154,7 @@ PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip) {
         }
         if (strip) metadata->remove("INHERIT");
         if (inherit) {
-            fitsfile.setHdu(1);
+            fitsfile.setHdu(0);
             // We don't want to just just call fitsfile.readMetadata to append the new keys,
             // because PropertySet::get will return the last value added when multiple values
             // are present and a scalar is requested; in that case, we want the non-inherited
