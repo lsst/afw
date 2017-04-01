@@ -473,10 +473,13 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
         raise RuntimeError("Please specify a display")
 
     if untrimmedCcdBbox is None:
-        untrimmedCcdBbox = afwGeom.Box2I()
-        for a in ccd.getAmpInfoCatalog():
-            bbox = a.getRawBBox()
-            untrimmedCcdBbox.include(bbox)
+        if isTrimmed:
+            untrimmedCcdBbox = ccd.getBBox()
+        else:
+            untrimmedCcdBbox = afwGeom.Box2I()
+            for a in ccd.getAmpInfoCatalog():
+                bbox = a.getRawBBox()
+                untrimmedCcdBbox.include(bbox)
 
     with display.Buffering():
         ccdDim = untrimmedCcdBbox.getDimensions()
