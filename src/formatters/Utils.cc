@@ -286,16 +286,16 @@ void dropAllSliceTables(
 }
 
 
-std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& prop) {
+std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop) {
     typedef std::vector<std::string> NameList;
     std::string sout;
 
-    NameList paramNames = prop->paramNames(false);
+    NameList paramNames = prop.paramNames(false);
 
     for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
        std::size_t lastPeriod = i->rfind(char('.'));
        std::string name = (lastPeriod == std::string::npos) ? *i : i->substr(lastPeriod + 1);
-       std::type_info const & type = prop->typeOf(*i);
+       std::type_info const & type = prop.typeOf(*i);
 
        std::string out = "";
        if (name.size() > 8) {           // Oh dear; too long for a FITS keyword
@@ -305,11 +305,11 @@ std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& 
        }
 
        if (type == typeid(int)) {
-           out += (boost::format("%20d") % prop->get<int>(*i)).str();
+           out += (boost::format("%20d") % prop.get<int>(*i)).str();
        } else if (type == typeid(double)) {
-           out += (boost::format("%20.15g") % prop->get<double>(*i)).str();
+           out += (boost::format("%20.15g") % prop.get<double>(*i)).str();
        } else if (type == typeid(std::string)) {
-           out += (boost::format("'%-67s' ") % prop->get<std::string>(*i)).str();
+           out += (boost::format("'%-67s' ") % prop.get<std::string>(*i)).str();
        }
 
        int const len = out.size();
@@ -326,8 +326,8 @@ std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& 
 }
 
 
-int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) const& prop) {
-    return prop->paramNames(false).size();
+int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {
+    return prop.paramNames(false).size();
 }
 
 
