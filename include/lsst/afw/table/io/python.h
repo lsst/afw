@@ -63,12 +63,12 @@ void declarePersistableFacade(pybind11::module & module, std::string const & suf
     cls.def_static(
         "readFits",
         (std::shared_ptr<T> (*)(std::string const &, int)) &PersistableFacade<T>::readFits,
-        "fileName"_a, "hdu"_a=0
+        "fileName"_a, "hdu"_a=INT_MIN
     );
     cls.def_static(
         "readFits",
         (std::shared_ptr<T> (*)(fits::MemFileManager &, int)) &PersistableFacade<T>::readFits,
-        "manager"_a, "hdu"_a=0
+        "manager"_a, "hdu"_a=INT_MIN
     );
 }
 

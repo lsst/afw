@@ -429,10 +429,10 @@ void declareSchema(py::module & mod) {
     );
     cls.def_static("readFits",
                    (Schema (*)(std::string const &, int)) &Schema::readFits,
-                   "filename"_a, "hdu"_a=0);
+                   "filename"_a, "hdu"_a=INT_MIN);
     cls.def_static("readFits",
                    (Schema (*)(fits::MemFileManager &, int)) &Schema::readFits,
-                   "manager"_a, "hdu"_a=0);
+                   "manager"_a, "hdu"_a=INT_MIN);
 
     cls.def("join",
             (std::string (Schema::*)(std::string const &, std::string const &) const) &Schema::join,

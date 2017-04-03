@@ -349,10 +349,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                         self.assertEqual(ma3.get(x, y), 0.)
                         self.assertEqual(va3.get(x, y), 0.)
 
-            cat3 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+            cat3 = lsst.afw.table.SourceCatalog.readFits(fn,
+                                                         flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
             for src in cat3:
                 self.assertFalse(src.getFootprint().isHeavy())
-            cat4 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+            cat4 = lsst.afw.table.SourceCatalog.readFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
             for src in cat4:
                 self.assertIsNone(src.getFootprint())
 
@@ -493,13 +494,13 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
         self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())
         self.assertEqual(len(hfp.getVarianceArray()), fp2.getArea())
-        catalog2 = lsst.afw.table.SourceCatalog.readFits(filename, 0,
-                                                         lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+        catalog2 = lsst.afw.table.SourceCatalog.readFits(filename,
+                                                         flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
         self.assertEqual(list(fp1.getSpans()), list(catalog2[0].getFootprint().getSpans()))
         self.assertEqual(list(fp2.getSpans()), list(catalog2[1].getFootprint().getSpans()))
         self.assertFalse(catalog2[1].getFootprint().isHeavy())
-        catalog3 = lsst.afw.table.SourceCatalog.readFits(filename, 0,
-                                                         lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+        catalog3 = lsst.afw.table.SourceCatalog.readFits(filename,
+                                                         flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
         self.assertEqual(catalog3[0].getFootprint(), None)
         self.assertEqual(catalog3[1].getFootprint(), None)
 
