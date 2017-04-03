@@ -77,6 +77,9 @@ PYBIND11_PLUGIN(_boundedField) {
     clsBoundedField.def("evaluate", (double (BoundedField::*)
         (lsst::afw::geom::Point2D const &) const) &BoundedField::evaluate);
 
+    clsBoundedField.def("integrate", &BoundedField::integrate);
+    clsBoundedField.def("mean", &BoundedField::mean);
+
     clsBoundedField.def("getBBox", &BoundedField::getBBox);
 
     // Pybind11 resolves overloads by picking the first one that might work

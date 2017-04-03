@@ -158,6 +158,18 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
         pointDataRoundTrip = endpoint.dataFromPoint(point)
         assert_allclose(pointData, pointDataRoundTrip, err_msg=baseMsg)
 
+    def testEndpointEquals(self):
+        """Test Endpoint == Endpoint
+        """
+        for i1, point1 in enumerate(self.makeEndpoints()):
+            for i2, point2 in enumerate(self.makeEndpoints()):
+                if i1 == i2:
+                    self.assertTrue(point1 == point2)
+                    self.assertFalse(point1 != point2)
+                else:
+                    self.assertFalse(point1 == point2)
+                    self.assertTrue(point1 != point2)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

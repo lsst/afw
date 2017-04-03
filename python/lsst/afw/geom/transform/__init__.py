@@ -20,19 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
 
-__all__ = []
-
-from lsst.utils import continueClass
-
-from .wcs import Wcs
-
-
-@continueClass
-class Wcs:
-
-    def __reduce__(self):
-        from lsst.afw.fits import reduceToFits
-        return reduceToFits(self)
-
+from .transform import *
+from .transformContinued import *

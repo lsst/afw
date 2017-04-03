@@ -37,6 +37,10 @@ namespace lsst { namespace afw { namespace math {
 /**
  *  @brief An abstract base class for 2-d functions defined on an integer bounding boxes
  *
+ *  Integer bounding boxes (afw.geom.Box2I) are inclusive of the end pixels (integer positions correspond
+ *  to the centers of the pixels and include the entirety of those pixels). Thus a BoundedField defined on
+ *  the box [x0, x1] x [y0, y1] actually covers the range [x0 - 0.5, x1 + 0.5] x [y0 - 0.5, y1 + 0.5].
+ *
  *  BoundedField provides a number of ways of accessing the function, all delegating to a single
  *  evaluate-at-a-point implementation.  The base class does not mandate anything about how the field
  *  is constructed, so it's appropriate for use with e.g. model-fitting results, interpolation results
@@ -83,6 +87,20 @@ public:
         ndarray::Array<double const,1> const & x,
         ndarray::Array<double const,1> const & y
     ) const;
+
+    /**
+     * Compute the integral of this function over its bounding-box.
+     *
+     * @return The value of the integral.
+     */
+    virtual double integrate() const;
+
+    /**
+     * Compute the mean of this function over its bounding-box.
+     *
+     * @return The value of the mean.
+     */
+    virtual double mean() const;
 
     /**
      *  Return the bounding box that defines the region where the field is valid

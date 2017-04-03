@@ -113,6 +113,123 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             self.assertFloatsAlmostEqual(scaled.evaluate(x, y), factor*z2, rtol=factor*1E-13)
             self.assertFloatsEqual(scaled.getCoefficients(), factor*field.getCoefficients())
 
+    def _testIntegrateBox(self, bbox, coeffs, expect):
+        field = lsst.afw.math.ChebyshevBoundedField(bbox, coeffs)
+        self.assertFloatsAlmostEqual(field.integrate(), expect, rtol=1E-14)
+
+    def testIntegrateTrivialBox(self):
+        """Test integrating over a "trivial" [-1,1] box.
+
+        NOTE: a "trivial" BBox can't be constructed exactly, given that Box2I
+        is inclusive, but the [0,1] box has the same area (because it is
+        actually (-0.5, 1.5) when converted to a Box2D), and the translation
+        doesn't affect the integral.
+        """
+        bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(0, 0), lsst.afw.geom.Point2I(1, 1))
+
+        # 0th order polynomial
+        coeffs = np.array([[5.0]])
+        self._testIntegrateBox(bbox, coeffs, 4.0*coeffs[0, 0])
+
+        # 1st order polynomial: odd orders drop out of integral
+        coeffs = np.array([[5.0, 2.0], [3.0, 4.0]])
+        self._testIntegrateBox(bbox, coeffs, 4.0*coeffs[0, 0])
+
+        # 2nd order polynomial in x, 0th in y
+        coeffs = np.array([[5.0, 0.0, 7.0]])
+        self._testIntegrateBox(bbox, coeffs, 4.0*coeffs[0, 0] - (4.0/3.0)*coeffs[0, 2])
+
+        # 2nd order polynomial in y, 0th in x
+        coeffs = np.zeros((3, 3))
+        coeffs[0, 0] = 5.0
+        coeffs[2, 0] = 7.0
+        self._testIntegrateBox(bbox, coeffs, 4.0*coeffs[0, 0] - (4.0/3.0)*coeffs[2, 0])
+
+        # 2nd order polynomial in x and y, no cross-term
+        coeffs = np.zeros((3, 3))
+        coeffs[0, 0] = 5.0
+        coeffs[1, 0] = 7.0
+        coeffs[0, 2] = 3.0
+        self._testIntegrateBox(bbox, coeffs, 4.0*coeffs[0, 0] -
+                               (4.0/3.0)*coeffs[2, 0] - (4.0/3.0)*coeffs[0, 2])
+
+    def testIntegrateBox(self):
+        """Test integrating over an "interesting" box.
+
+        The values of these integrals were checked in Mathematica. The code
+        block below can be pasted into Mathematica to re-do those calculations.
+
+        ::
+
+            f[x_, y_, n_, m_] := \!\(
+                \*UnderoverscriptBox[\(\[Sum]\), \(i = 0\), \(n\)]\(
+                \*UnderoverscriptBox[\(\[Sum]\), \(j = 0\), \(m\)]
+                \*SubscriptBox[\(a\), \(i, j\)]*ChebyshevT[i, x]*ChebyshevT[j, y]\)\)
+            integrate2dBox[n_, m_, x0_, x1_, y0_, y1_] := \!\(
+                \*SubsuperscriptBox[\(\[Integral]\), \(y0\), \(y1\)]\(
+                \*SubsuperscriptBox[\(\[Integral]\), \(x0\), \(x1\)]f[
+                \*FractionBox[\(2  x - x0 - x1\), \(x1 - x0\)],
+                \*FractionBox[\(2  y - y0 - y1\), \(y1 - y0\)], n,
+                     m] \[DifferentialD]x \[DifferentialD]y\)\)
+            integrate2dBox[0, 0, -2.5, 5.5, -3.5, 7.5]
+            integrate2dBox[1, 0, -2.5, 5.5, -3.5, 7.5]
+            integrate2dBox[0, 1, -2.5, 5.5, -3.5, 7.5]
+            integrate2dBox[1, 1, -2.5, 5.5, -3.5, 7.5]
+            integrate2dBox[1, 2, -2.5, 5.5, -3.5, 7.5]
+            integrate2dBox[2, 2, -2.5, 5.5, -3.5, 7.5]
+        """
+        bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-2, -3), lsst.afw.geom.Point2I(5, 7))
+
+        # 0th order polynomial
+        coeffs = np.array([[5.0]])
+        self._testIntegrateBox(bbox, coeffs, 88.0*coeffs[0, 0])
+
+        # 1st order polynomial: odd orders drop out of integral
+        coeffs = np.array([[5.0, 2.0], [3.0, 4.0]])
+        self._testIntegrateBox(bbox, coeffs, 88.0*coeffs[0, 0])
+
+        # 2nd order polynomial in x, 0th in y
+        coeffs = np.array([[5.0, 0.0, 7.0]])
+        self._testIntegrateBox(bbox, coeffs, 88.0*coeffs[0, 0] - (88.0/3.0)*coeffs[0, 2])
+
+        # 2nd order polynomial in y, 0th in x
+        coeffs = np.zeros((3, 3))
+        coeffs[0, 0] = 5.0
+        coeffs[2, 0] = 7.0
+        self._testIntegrateBox(bbox, coeffs, 88.0*coeffs[0, 0] - (88.0/3.0)*coeffs[2, 0])
+
+        # 2nd order polynomial in x,y
+        coeffs = np.zeros((3, 3))
+        coeffs[2, 2] = 11.0
+        self._testIntegrateBox(bbox, coeffs, (88.0/9.0)*coeffs[2, 2])
+
+    def testMean(self):
+        """
+        The mean of the nth 1d Chebyshev (a_n*T_n(x)) on [-1,1] is
+            0 for odd n
+            a_n / (1-n^2) for even n
+        Similarly, the mean of the (n,m)th 2d Chebyshev is the appropriate
+        product of the above.
+        """
+        bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-2, -3), lsst.afw.geom.Point2I(5, 7))
+
+        coeffs = np.array([[5.0]])
+        field = lsst.afw.math.ChebyshevBoundedField(bbox, coeffs)
+        self.assertEqual(field.mean(), coeffs[0, 0])
+
+        coeffs = np.array([[5.0, 0.0, 3.0]])
+        field = lsst.afw.math.ChebyshevBoundedField(bbox, coeffs)
+        self.assertEqual(field.mean(), coeffs[0, 0] - coeffs[0, 2]/3.0)
+
+        # 2nd order polynomial in x,y
+        coeffs = np.zeros((3, 3))
+        coeffs[0, 0] = 7.0
+        coeffs[1, 0] = 31.0
+        coeffs[0, 2] = 13.0
+        coeffs[2, 2] = 11.0
+        field = lsst.afw.math.ChebyshevBoundedField(bbox, coeffs)
+        self.assertFloatsAlmostEqual(field.mean(), coeffs[0, 0] - coeffs[0, 2]/3.0 + coeffs[2, 2]/9.0)
+
     def testImageFit(self):
         """Test that we can fit an image produced by a ChebyshevBoundedField and
         get the same coefficients back.

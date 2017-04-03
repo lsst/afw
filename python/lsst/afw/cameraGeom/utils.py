@@ -278,14 +278,14 @@ class FakeImageDataSource(object):
         self.scaleGain = scaleGain
 
     def getCcdImage(self, det, imageFactory, binSize):
-        """!Return a CCD image for the detector
+        """!Return a CCD image for the detector and the (possibly updated) Detector
 
         @param[in] det: Detector to use for making the image
         @param[in] imageFactory: image constructor for making the image
         @param[in] binSize: number of pixels per bin axis
         """
         return makeImageFromCcd(det, isTrimmed=self.isTrimmed, showAmpGain=self.showAmpGain,
-                                imageFactory=imageFactory, binSize=binSize)
+                                imageFactory=imageFactory, binSize=binSize), det
 
     def getAmpImage(self, amp, imageFactory):
         """!Return an amp segment image
@@ -304,7 +304,8 @@ class ButlerImage(FakeImageDataSource):
     """A class to return an Image of a given Ccd using the butler"""
 
     def __init__(self, butler=None, type="raw",
-                 isTrimmed=True, verbose=False, background=numpy.nan, gravity=None, *args, **kwargs):
+                 isTrimmed=True, verbose=False, background=numpy.nan, gravity=None,
+                 callback=None, *args, **kwargs):
         """!Create an object that knows how to prepare images for showCamera using the butler
 
         \param butler  The butler to use.  If no butler is provided an empty image is returned
@@ -314,7 +315,13 @@ class ButlerImage(FakeImageDataSource):
         \param background  The value of any pixels that lie outside the CCDs
         \param  gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
                  Specify how to fit the image into the available space; N => align top, W => align left
+        \param callback A function called with (image, ccd, butler) for every image, which returns the image
+                  to be displayed (e.g. rawCallback).  The image must be of the correct size, allowing
+                  for the value of isTrimmed
         \param *args, *kwargs Passed to the butler
+
+        N.b. You can use a lambda as a callback, e.g.
+            callback=lambda im, ccd, imageSource : cgUtils.rawCallback(im, ccd, imageSource, correctGain=True)
         """
         super(ButlerImage, self).__init__(*args)
         self.isTrimmed = isTrimmed
@@ -325,6 +332,7 @@ class ButlerImage(FakeImageDataSource):
         self.gravity = gravity
         self.background = background
         self.verbose = verbose
+        self.callback = callback
 
     def _prepareImage(self, ccd, im, binSize, allowRotate=True):
         if binSize > 1:
@@ -336,74 +344,147 @@ class ButlerImage(FakeImageDataSource):
         return im
 
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1):
-        """Return an image of the specified amp in the specified ccd"""
+        """Return an image of the specified ccd, and also the (possibly updated) ccd"""
 
         if self.isTrimmed:
-             bbox = ccd.getBBox()
+            bbox = ccd.getBBox()
         else:
-             bbox = calcRawCcdBBox(ccd)
+            bbox = calcRawCcdBBox(ccd)
 
         im = None
         if self.butler is not None:
             e = None
             if self.type == "calexp":    # reading the exposure can die if the PSF's unknown
-                try:
+                try:                     # need to switch to cid as below.  RHL has no calexp to test with
                     fileName = self.butler.get(self.type + "_filename", ccd=ccd.getId(),
                                                     **self.kwargs)[0]
                     im = imageFactory(fileName)
                 except Exception as e:
                     pass
             else:
-                try:
-                    im = self.butler.get(self.type, ccd=ccd.getId(),
-                                         **self.kwargs).getMaskedImage().getImage()
-                except Exception as e:
-                    pass
+                im = None
+                for cid in [ccd.getId(), ccd.getName()]:
+                    try:
+                        im = self.butler.get(self.type, ccd=cid, **self.kwargs)
+                        ccd = im.getDetector() # possibly modified by assembleCcdTask
+                        e = None
+                        break
+                    except Exception as e:
+                        continue
+
+                if im:
+                    im = im.getMaskedImage().getImage()
+                else:
+                    raise e
 
             if e:
                 if self.verbose:
                     print("Reading %s: %s" % (ccd.getId(), e))
 
         if im is None:
-            return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize)
+            return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
 
         if self.type == "raw":
+            allowRotate = True          # all other images were rotated by the ISR
             if hasattr(im, 'convertF'):
                 im = im.convertF()
-        else:
-            return self._prepareImage(ccd, im, binSize, allowRotate=False) # calexps were rotated by the ISR
+            if False and self.callback == None:   # we need to trim the raw image
+                self.callback = rawCallback
 
-        ccdImage = im.Factory(bbox)
+        if self.callback:
+            try:
+                im = self.callback(im, ccd, imageSource=self)
+            except Exception, e:
+                if self.verbose:
+                    print("callback failed: %s" % e)
+                im = imageFactory(*bbox.getDimensions())
 
-        ampImages = []
-        for a in ccd:
-            bias = im[a.getRawHorizontalOverscanBBox()]
+        return self._prepareImage(ccd, im, binSize, allowRotate=allowRotate), ccd
+
+def rawCallback(im, ccd=None, imageSource=None,
+                correctGain=False, subtractBias=False, convertToFloat=False):
+    """!A callback function that may or may not subtract bias/correct gain/trim a raw image
+
+    @param im   An image of a chip, ready to be binned and maybe rotated.  Maybe an Exposure,
+                a MaskedImage or an Image
+    @param ccd  The Detector; if None assume that im is an exposure and extract it's Detector
+    @param imageSource  An object derived from FakeImageDataSource (typically ButlerImage)
+    @param correctGain  Correct each amplifier for its gain
+    @param subtractBias Subtract the bias from each amplifier
+    @param convertToFloat  Convert im to floating point if possible
+
+    N.b. if imageSource is derived from ButlerImage, imageSource.butler is available
+    """
+    if ccd is None:
+        ccd = cameraGeom.cast_Ccd(im.getDetector())
+    if hasattr(im, "getMaskedImage"):
+        im = im.getMaskedImage()
+    if convertToFloat and hasattr(im, "convertF"):
+        im = im.convertF()
+
+    isTrimmed = imageSource.isTrimmed
+    if isTrimmed:
+        bbox = ccd.getBBox()
+    else:
+        bbox = calcRawCcdBBox(ccd)
+
+    ampImages = []
+    for a in ccd:
+        if isTrimmed:
             data = im[a.getRawDataBBox()]
+        else:
+            data = im
+
+        if subtractBias:
+            bias = im[a.getRawHorizontalOverscanBBox()]
             data -= afwMath.makeStatistics(bias, afwMath.MEANCLIP).getValue()
+        if correctGain:
             data *= a.getGain()
 
-            ampImages.append(data)
+        ampImages.append(data)
 
-        ccdImage = imageFactory(bbox)
-        for ampImage, amp in zip(ampImages, ccd):
-            if self.isTrimmed:
-                assembleAmplifierImage(ccdImage, ampImage, amp)
-            else:
-                assembleAmplifierRawImage(ccdImage, ampImage, amp)
+    ccdImage = im.Factory(bbox)
+    for ampImage, amp in zip(ampImages, ccd):
+        if isTrimmed:
+            assembleAmplifierImage(ccdImage, ampImage, amp)
+        else:
+            assembleAmplifierRawImage(ccdImage, ampImage, amp)
 
-        return ccdImage
+    return ccdImage
 
-def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, display, binSize):
+def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
+                    isTrimmed=False, ccdOrigin=(0,0), display=None, binSize=1):
     """!Overlay bounding boxes on an image display
 
     @param[in] ccd  Detector to iterate for the amp bounding boxes
     @param[in] untrimmedCcdBbox  Bounding box of the un-trimmed Detector
-    @param[in] nQuarter  number of 90 degree rotations to apply to the bounding boxes
+    @param[in] nQuarter  number of 90 degree rotations to apply to the bounding boxes (used for rotated chips)
     @param[in] isTrimmed  Is the Detector image over which the boxes are layed trimmed?
     @param[in] ccdOrigin  Detector origin relative to the  parent origin if in a larger pixel grid
     @param[in] display image display to display on
     @param[in] binSize  binning factor
+
+    The colours are:
+       Entire detector        GREEN
+       All data for amp       GREEN
+       HorizontalPrescan      YELLOW
+       HorizontalOverscan     RED
+       Data                   BLUE
+       VerticalOverscan       MAGENTA
+       VerticalOverscan       MAGENTA
     """
+    if not display:                     # should be second parameter, and not defaulted!!
+        raise RuntimeError("Please specify a display")
+
+    if untrimmedCcdBbox is None:
+        if isTrimmed:
+            untrimmedCcdBbox = ccd.getBBox()
+        else:
+            untrimmedCcdBbox = afwGeom.Box2I()
+            for a in ccd.getAmpInfoCatalog():
+                bbox = a.getRawBBox()
+                untrimmedCcdBbox.include(bbox)
+
     with display.Buffering():
         ccdDim = untrimmedCcdBbox.getDimensions()
         ccdBbox = rotateBBoxBy90(untrimmedCcdBbox, nQuarter, ccdDim)
@@ -412,7 +493,6 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, displ
                 ampbbox = amp.getBBox()
             else:
                 ampbbox = amp.getRawBBox()
-                ampbbox.shift(amp.getRawXYOffset())
             if nQuarter != 0:
                 ampbbox = rotateBBoxBy90(ampbbox, nQuarter, ccdDim)
 
@@ -424,15 +504,6 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, displ
                                     (amp.getRawDataBBox(), afwDisplay.BLUE),
                                     (amp.getRawVerticalOverscanBBox(), afwDisplay.MAGENTA),
                                     (amp.getRawPrescanBBox(), afwDisplay.YELLOW)):
-                    if amp.getRawFlipX():
-                        x0 = bbox.getBeginX()
-                        bbox.flipLR(amp.getRawBBox().getDimensions().getX())
-                        bbox.shift(afwGeom.ExtentI(x0 - bbox.getBeginX(), 0))
-                    if amp.getRawFlipY():
-                        y0 = bbox.getBeginY()
-                        bbox.flipTB(amp.getRawBBox().getDimensions().getY())
-                        bbox.shift(afwGeom.ExtentI(0, y0 - bbox.getBeginY()))
-                    bbox.shift(amp.getRawXYOffset())
                     if nQuarter != 0:
                         bbox = rotateBBoxBy90(bbox, nQuarter, ccdDim)
                     displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49, ctype=ctype,
@@ -522,7 +593,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
 
     ccdOrigin = afwGeom.Point2I(0,0)
     nQuarter = 0
-    ccdImage = imageSource.getCcdImage(ccd, imageFactory=imageFactory, binSize=binSize)
+    ccdImage, ccd = imageSource.getCcdImage(ccd, imageFactory=imageFactory, binSize=binSize)
 
     ccdBbox = ccdImage.getBBox()
     if ccdBbox.getDimensions() == ccd.getBBox().getDimensions():
@@ -631,22 +702,24 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
     for det, bbox in zip(ccdList, boxList):
-        im = imageSource.getCcdImage(det, imageFactory, binSize)
+        im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
 
         nQuarter = det.getOrientation().getNQuarter()
         im = afwMath.rotateImageBy90(im, nQuarter)
 
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
+        import lsst.pex.exceptions as pexExceptions
         try:
             imView[:] = im
-        except Exception:
-            pass
+        except pexExceptions.LengthError as e:
+            print("Unable to fit image for detector \"%s\" into image of camera" % (det.getName()))
 
     return camIm
 
 def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageF,
                detectorNameList=None, binSize=10, bufferSize=10, frame=None, overlay=True, title="",
-               ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None, **kwargs):
+               showWcs=None, ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None,
+               **kwargs):
     """!Show a Camera on display, with the specified display
 
     The rotation of the sensors is snapped to the nearest multiple of 90 deg.
@@ -691,15 +764,19 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
     pixelSize = ccdList[0].getPixelSize()
-    if originAtCenter:
-        #Can't divide SWIGGED extent type things when division is imported
-        #from future.  This is DM-83
-        ext = cameraImage.getBBox().getDimensions()
 
-        wcsReferencePixel = afwGeom.PointI(ext.getX()//2, ext.getY()//2)
+    if showWcs:
+        if originAtCenter:
+            #Can't divide SWIGGED extent type things when division is imported
+            #from future.  This is DM-83
+            ext = cameraImage.getBBox().getDimensions()
+
+            wcsReferencePixel = afwGeom.PointI(ext.getX()//2, ext.getY()//2)
+        else:
+            wcsReferencePixel = afwGeom.Point2I(0,0)
+        wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
     else:
-        wcsReferencePixel = afwGeom.Point2I(0,0)
-    wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
+        wcs = None
 
     if display:
         if title == "":

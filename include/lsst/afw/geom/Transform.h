@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "astshim.h"
+#include "Eigen/Core"
 #include "ndarray.h"
 
 #include "lsst/afw/geom/Endpoint.h"
@@ -43,6 +44,14 @@ This class contains two Endpoints, to specify the "from" and "to" LSST data type
 and an astshim::FrameSet or astshim::Mapping to specify the transformation.
 In the case of a FrameSet the transformation is from the `BASE` frame to the `CURRENT` frame.
 The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
+
+Depending on the astshim::FrameSet or astshim::Mapping used to define it, a Transform may
+provide either a forward transform, an inverse transform, or both. In particular, the
+@ref getInverse "inverse" of a forward-only transform is an inverse-only transform. The
+@ref hasForward and @ref hasInverse methods can be used to check which transforms are available.
+
+Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
+internal errors within AST.
 
 @note You gain some safety by constructing a Transform from an astshim::FrameSet,
 since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
@@ -61,8 +70,8 @@ public:
 
     Transform(Transform const &) = delete;
     Transform(Transform &&) = default;
-    Transform & operator=(Transform const &) = delete;
-    Transform & operator=(Transform &&) = default;
+    Transform &operator=(Transform const &) = delete;
+    Transform &operator=(Transform &&) = default;
 
     /**
     Construct a Transform from a deep copy of an ast::Mapping
@@ -74,7 +83,7 @@ public:
     @param[in] simplify  Simplify the mapping? This combines component mappings
         and removes redundant components where possible.
     */
-    explicit Transform(ast::Mapping const &mapping, bool simplify=true);
+    explicit Transform(ast::Mapping const &mapping, bool simplify = true);
 
     /**
     Constructor a Transform from a deep copy of a FrameSet.
@@ -96,9 +105,23 @@ public:
                          redundant components where possible. However it
                          does not remove any frames.
     */
-    explicit Transform(ast::FrameSet const & frameSet, bool simplify=true);
+    explicit Transform(ast::FrameSet const &frameSet, bool simplify = true);
 
     ~Transform(){};
+
+    /**
+     * Test if this method has a forward transform.
+     *
+     * @exceptsafe Provides basic exception safety.
+     */
+    bool hasForward() const { return _frameSet->hasForward(); }
+
+    /**
+     * Test if this method has an inverse transform.
+     *
+     * @exceptsafe Provides basic exception safety.
+     */
+    bool hasInverse() const { return _frameSet->hasInverse(); }
 
     /**
     Get the "from" endpoint
@@ -118,7 +141,7 @@ public:
     /**
     Transform one point in the forward direction ("from" to "to")
     */
-    ToPoint tranForward(FromPoint const & point) const;
+    ToPoint tranForward(FromPoint const &point) const;
 
     /**
     Transform an array of points in the forward direction ("from" to "to")
@@ -128,12 +151,43 @@ public:
     /**
     Transform one point in the inverse direction ("to" to "from")
     */
-    FromPoint tranInverse(ToPoint const & point) const;
+    FromPoint tranInverse(ToPoint const &point) const;
 
     /**
     Transform an array of points in the inverse direction ("to" to "from")
     */
-    FromArray tranInverse(ToArray const & array) const;
+    FromArray tranInverse(ToArray const &array) const;
+
+    /**
+     * The inverse of this Transform.
+     *
+     * @returns a Transform whose `tranForward` is equivalent to this Transform's
+     *          `tranInverse`, and vice versa.
+     *
+     * @exceptsafe Provides basic exception safety.
+     */
+    Transform<ToEndpoint, FromEndpoint> getInverse() const;
+
+    /**
+     * The Jacobian matrix of this Transform.
+     *
+     * The matrix is defined only if this object has a forward transform.
+     *
+     * @param x the position at which the Jacobian shall be evaluated
+     * @returns a matrix `J` with `getToEndpoint().getNAxes()` rows and
+     *          `getFromEndpoint().getNAxes()` columns. `J(i,j)` shall be the
+     *          rate of change of the `i`th output coordinate with respect to
+     *          the `j`th input coordinate, or `NaN` if the derivative cannot
+     *          be calculated.
+     *
+     * @exceptsafe Provides basic exception safety.
+     *
+     * @note The derivatives may be estimated by sampling and interpolating
+     *       this Transform in the neighborhood of `x`. If the implementation
+     *       requires interpolation, computation of the Jacobian may require
+     *       hundreds of evaluations of @ref tranForward.
+     */
+    Eigen::MatrixXd getJacobian(FromPoint const &x) const;
 
 private:
     FromEndpoint const _fromEndpoint;
@@ -149,7 +203,7 @@ where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to th
 for example "Transform<GenericEndpoint(4), Point3Endpoint()>"
 */
 template <typename FromEndpoint, typename ToEndpoint>
-std::ostream & operator<<(std::ostream & os, Transform<FromEndpoint, ToEndpoint> const & transform);
+std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
 }  // geom
 }  // afw

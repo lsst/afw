@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008-2017 LSST/AURA.
+# Copyright 2017 LSST/AURA.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -19,20 +19,24 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
 from __future__ import absolute_import, division, print_function
+
+from . import transform
 
 __all__ = []
 
-from lsst.utils import continueClass
 
-from .wcs import Wcs
+def getJacobian(self, x):
+    # Force 2D matrix over numpy's protests
+    matrix = self._getJacobian(x)
+    matrix.shape = (self.getToEndpoint().getNAxes(),
+                    self.getFromEndpoint().getNAxes())
+    return matrix
 
+endpoints = ("Generic", "Point2", "Point3", "SpherePoint")
 
-@continueClass
-class Wcs:
-
-    def __reduce__(self):
-        from lsst.afw.fits import reduceToFits
-        return reduceToFits(self)
-
+for fromPoint in endpoints:
+    for toPoint in endpoints:
+        name = "Transform" + fromPoint + "To" + toPoint
+        cls = getattr(transform, name)
+        cls.getJacobian = getJacobian

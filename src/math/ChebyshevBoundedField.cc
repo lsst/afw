@@ -288,7 +288,7 @@ double evaluateFunction1d(
 
 // This class imitates a 1-d array, by running evaluateFunction1d on a nested dimension;
 // this lets us reuse the logic in evaluateFunction1d for both dimensions.  Essentially,
-// we run evaluateFunction1d on a column of coefficients to evaluate T_j(x), then pass
+// we run evaluateFunction1d on a column of coefficients to evaluate T_i(x), then pass
 // the result of that to evaluateFunction1d with the results as the "coefficients" associated
 // with the T_j(y) functions.
 struct RecursionArrayImitator {
@@ -311,6 +311,30 @@ double ChebyshevBoundedField::evaluate(geom::Point2D const & position) const {
     geom::Point2D p = _toChebyshevRange(position);
     return evaluateFunction1d(RecursionArrayImitator(_coefficients, p.getX()),
                               p.getY(), _coefficients.getSize<0>());
+}
+
+// The integral of T_n(x) over [-1,1]:
+// https://en.wikipedia.org/wiki/Chebyshev_polynomials#Differentiation_and_integration
+double integrateTn(int n) {
+    if (n % 2 == 1)
+        return 0;
+    else
+        return 2.0/(1.0 - double(n*n));
+}
+
+double ChebyshevBoundedField::integrate() const {
+    double result = 0;
+    double determinant = getBBox().getArea() / 4.0;
+    for (ndarray::Size j=0; j < _coefficients.getSize<0>(); j++){
+        for (ndarray::Size i=0; i < _coefficients.getSize<1>(); i++){
+            result += _coefficients[j][i] * integrateTn(i) * integrateTn(j);
+        }
+    }
+    return result * determinant;
+}
+
+double ChebyshevBoundedField::mean() const {
+    return integrate() / getBBox().getArea();
 }
 
 // ------------------ persistence ---------------------------------------------------------------------------
