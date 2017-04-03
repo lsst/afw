@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_IO_Persistable_h_INCLUDED
 #define AFW_TABLE_IO_Persistable_h_INCLUDED
 
+#include <climits>
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 
@@ -146,9 +147,9 @@ private:
 
     template <typename T> friend class PersistableFacade;
 
-    static PTR(Persistable) _readFits(std::string const & fileName, int hdu=0);
+    static PTR(Persistable) _readFits(std::string const & fileName, int hdu=INT_MIN);
 
-    static PTR(Persistable) _readFits(fits::MemFileManager & manager, int hdu=0);
+    static PTR(Persistable) _readFits(fits::MemFileManager & manager, int hdu=INT_MIN);
 
     static PTR(Persistable) _readFits(fits::Fits & fitsfile);
 
@@ -189,10 +190,10 @@ public:
      *  @brief Read an object from a regular FITS file.
      *
      *  @param[in]  fileName     Name of the file to read.
-     *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
+     *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
      *                           skips the primary HDU if it is empty.
      */
-    static PTR(T) readFits(std::string const & fileName, int hdu=0) {
+    static PTR(T) readFits(std::string const & fileName, int hdu=INT_MIN) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
     }
 
@@ -200,10 +201,10 @@ public:
      *  @brief Read an object from a FITS file in memory.
      *
      *  @param[in]  manager      Manager for the memory to read from.
-     *  @param[in]  hdu          HDU to read, where 1 is the primary.  The special value of 0
+     *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
      *                           skips the primary HDU if it is empty.
      */
-    static PTR(T) readFits(fits::MemFileManager & manager, int hdu=0) {
+    static PTR(T) readFits(fits::MemFileManager & manager, int hdu=INT_MIN) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
     }
 

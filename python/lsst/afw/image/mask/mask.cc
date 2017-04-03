@@ -63,12 +63,12 @@ static void declareMask(py::module & mod, std::string const & suffix) {
             "deep"_a = false, "xy0"_a = geom::Point2I());
     cls.def(py::init<std::string const &, int, PTR(lsst::daf::base::PropertySet), geom::Box2I const &,
                      ImageOrigin, bool>(),
-            "fileName"_a, "hdu"_a = 0, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
-            "conformMasks"_a = false);
+            "fileName"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(py::init<fits::MemFileManager &, int, PTR(lsst::daf::base::PropertySet), geom::Box2I const &,
                      ImageOrigin, bool>(),
-            "manager"_a, "hdu"_a = 0, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
-            "conformMasks"_a = false);
+            "manager"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(
         py::init<fits::Fits &, PTR(lsst::daf::base::PropertySet), geom::Box2I const &, ImageOrigin, bool>(),
         "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
@@ -102,10 +102,10 @@ static void declareMask(py::module & mod, std::string const & suffix) {
                              Mask<MaskPixelT>::writeFits,
             "fitsfile"_a, "metadata"_a = CONST_PTR(lsst::daf::base::PropertySet)());
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
-                   "filename"_a, "hdu"_a = 0);
+                   "filename"_a, "hdu"_a = INT_MIN);
     cls.def_static("readFits",
                    (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
-                   "manager"_a, "hdu"_a = 0);
+                   "manager"_a, "hdu"_a = INT_MIN);
     cls.def_static("interpret", Mask<MaskPixelT>::interpret);
     cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
     cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);

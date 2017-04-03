@@ -175,10 +175,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     _image(), _mask(), _variance()
 {
     // When reading a standard Masked Image, we expect four HDUs:
-    // * The primary (HDU 1) is empty;
-    // * The first extension (HDU 2) contains the image data;
-    // * The second extension (HDU 3) contains mask data;
-    // * The third extension (HDU 4) contains the variance.
+    // * The primary (HDU 0) is empty;
+    // * The first extension (HDU 1) contains the image data;
+    // * The second extension (HDU 2) contains mask data;
+    // * The third extension (HDU 3) contains the variance.
     //
     // If the image HDU is unreadable, we will throw.
     //
@@ -192,7 +192,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     LOG_LOGGER _log = LOG_GET("afw.image.MaskedImage");
 
     enum class Hdu {
-        Primary = 1,
+        Primary = 0,
         Image,
         Mask,
         Variance
@@ -213,9 +213,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         fitsfile.setHdu(prevHdu);
     }
 
-    // setHdu(0) jumps to the first extension iff the primary HDU is both
+    // setHdu(INT_MIN) jumps to the first extension iff the primary HDU is both
     // empty and currently selected.
-    fitsfile.setHdu(0);
+    fitsfile.setHdu(INT_MIN);
     ensureMetadata(imageMetadata);
     _image.reset(new Image(fitsfile, imageMetadata, bbox, origin));
     checkExtType(fitsfile, imageMetadata, "IMAGE");
@@ -655,11 +655,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
             "MaskedImage::writeFits can only write to an empty file"
         );
     }
-    if (fitsfile.getHdu() <= 1) {
+    if (fitsfile.getHdu() < 1) {
         // Don't ever write images to primary; instead we make an empty primary.
         fitsfile.createEmpty();
     } else {
-        fitsfile.setHdu(1);
+        fitsfile.setHdu(0);
     }
     fitsfile.writeMetadata(*hdr);
 

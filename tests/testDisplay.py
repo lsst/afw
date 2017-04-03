@@ -157,7 +157,7 @@ class DisplayTestCase(unittest.TestCase):
                 im = imageType(self.fileName)
                 dummy.mtv(im)
 
-            im = afwImage.MaskU(self.fileName, 3)
+            im = afwImage.MaskU(self.fileName, hdu=2)
             dummy.mtv(im)
 
     def testInteract(self):
