@@ -222,13 +222,13 @@ class MaskTestCase(utilsTests.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
-        mask = self.Mask(self.maskFile, 3)  # will shift any unrecognised mask planes into unused slots
+        mask = self.Mask(self.maskFile, hdu=2)  # will shift any unrecognised mask planes into unused slots
 
         self.assertMasksEqual(mask, self.expect << nMaskPlanes0)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFitsConform(self):
-        hdu = 3
+        hdu = 2
         mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
         self.assertMasksEqual(mask, self.expect)
@@ -236,7 +236,7 @@ class MaskTestCase(utilsTests.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testWriteFits(self):
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
-        mask = self.Mask(self.maskFile, 3)
+        mask = self.Mask(self.maskFile, hdu=2)
 
         self.assertMasksEqual(mask, self.expect << nMaskPlanes0)
 

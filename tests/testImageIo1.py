@@ -79,10 +79,10 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testF32(self):
         """Test reading F32 image"""
-        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI.fits"), 4)
+        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI.fits"), 3)
 
         col, row, val = 32, 1, 39.11672
-        self.assertAlmostEqual(im.get(col, row), val, 5)
+        self.assertAlmostEqual(im.get(col, row), val, 4)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testF64(self):
@@ -103,7 +103,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSubimage(self):
         """Test reading a subimage image"""
-        fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 4
+        fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 3
         im = afwImage.ImageF(fileName, hdu)
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))

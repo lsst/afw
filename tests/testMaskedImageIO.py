@@ -143,7 +143,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadNoConform2(self):
         """Check that reading a mask doesn't invalidate the plane dictionary"""
 
-        testMask = afwImage.MaskU(self.fileName, 3)
+        testMask = afwImage.MaskU(self.fileName, hdu=2)
 
         mask = self.mi.getMask()
         mask |= testMask
@@ -152,7 +152,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform2(self):
         """Check that conforming a mask invalidates the plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 3, None, afwGeom.Box2I(), True
+        hdu, metadata, bbox, conformMasks = 2, None, afwGeom.Box2I(), True
         testMask = afwImage.MaskU(self.fileName,
                                   hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 

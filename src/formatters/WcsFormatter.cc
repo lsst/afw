@@ -120,7 +120,7 @@ dafBase::Persistable* afwForm::WcsFormatter::read(
     else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
         LOGL_DEBUG(_log, "WcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
-        int hdu = additionalData->get<int>("hdu", 0);
+        int hdu = additionalData->get<int>("hdu", INT_MIN);
         dafBase::PropertySet::Ptr md =
             afw::fits::readMetadata(fits->getPath(), hdu);
         afwImg::Wcs* ip = new afwImg::Wcs(md);
