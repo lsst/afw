@@ -424,7 +424,7 @@ def rawCallback(im, ccd=None, imageSource=None,
     N.b. if imageSource is derived from ButlerImage, imageSource.butler is available
     """
     if ccd is None:
-        ccd = cameraGeom.cast_Ccd(im.getDetector())
+        ccd = im.getDetector()
     if hasattr(im, "getMaskedImage"):
         im = im.getMaskedImage()
     if convertToFloat and hasattr(im, "convertF"):
