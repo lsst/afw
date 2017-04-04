@@ -117,10 +117,10 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     msgList = []
     if measDiffSky[0] > maxDiffSky:
         msgList.append("%s arcsec max measured sky error > %s arcsec max allowed sky error at pix pos=%s" %
-            (measDiffSky[0].asArcseconds(), maxDiffSky.asArcseconds(), measDiffSky[1]))
+                       (measDiffSky[0].asArcseconds(), maxDiffSky.asArcseconds(), measDiffSky[1]))
     if measDiffPix[0] > maxDiffPix:
         msgList.append("%s max measured pix error > %s max allowed pix error at sky pos=%s" %
-                (measDiffPix[0], maxDiffPix, measDiffPix[1]))
+                       (measDiffPix[0], maxDiffPix, measDiffPix[1]))
 
     return "; ".join(msgList)
 

@@ -35,9 +35,10 @@ from .endpoint import GenericEndpoint, Point2Endpoint, Point3Endpoint, SpherePoi
 __all__ = ["assertAnglesNearlyEqual", "assertPairsNearlyEqual",
            "assertBoxesNearlyEqual", "makeEndpoints"]
 
+
 @lsst.utils.tests.inTestCase
 def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
-        ignoreWrap=True, msg="Angles differ"):
+                            ignoreWrap=True, msg="Angles differ"):
     """!Assert that two angles are nearly equal, ignoring wrap differences by default
 
     @param[in] testCase  unittest.TestCase instance the test is part of;
@@ -57,7 +58,8 @@ def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
         measDiff = measDiff.wrapCtr()
     if abs(measDiff) > maxDiff:
         testCase.fail("%s: measured difference %s arcsec > max allowed %s arcsec" %
-            (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
+                      (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
+
 
 @lsst.utils.tests.inTestCase
 def assertPairsNearlyEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs differ"):
@@ -83,6 +85,7 @@ def assertPairsNearlyEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs diff
     measDiff = math.hypot(*pairDiff)
     if measDiff > maxDiff:
         testCase.fail("%s: measured radial distance = %s > maxDiff = %s" % (msg, measDiff, maxDiff))
+
 
 @lsst.utils.tests.inTestCase
 def assertBoxesNearlyEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ"):

@@ -24,10 +24,11 @@ from __future__ import absolute_import, division
 
 In the case of the assert functions, importing them makes them available in lsst.utils.tests.TestCase
 """
+__all__ = ["assertCoordsNearlyEqual"]
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 
-__all__ = ["assertCoordsNearlyEqual"]
 
 @lsst.utils.tests.inTestCase
 def assertCoordsNearlyEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcseconds, msg="Coords differ"):
@@ -48,4 +49,4 @@ def assertCoordsNearlyEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcs
     measDiff = coord0.toIcrs().angularSeparation(coord1.toIcrs())
     if measDiff > maxDiff:
         testCase.fail("%s: measured angular separation %s arcsec > max allowed %s arcsec" %
-            (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
+                      (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
