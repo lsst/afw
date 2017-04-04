@@ -77,19 +77,12 @@ void PropertyListFormatter::write(
 }
 
 namespace {
-    // I'd use a unique_ptr, except that PropertyList won't allow me to merge non-shared_ptrs
     std::unique_ptr<daf::base::PropertyList>
     readMetadataAsUniquePtr(std::string const & fileName, int hdu, bool strip)
     {
         auto metadata = std::unique_ptr<daf::base::PropertyList>(new lsst::daf::base::PropertyList);
-        //
-        // We need a shared_ptr to be able to call PropertyList.combine()
-        //
-        auto inheritedMetadata = std::shared_ptr<daf::base::PropertyList>(new daf::base::PropertyList);
 
-        fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-        fitsfile.setHdu(hdu);
-        fitsfile.readMetadata(*inheritedMetadata, strip);
+        auto inheritedMetadata = fits::readMetadata(fileName, hdu, strip);
         metadata->combine(inheritedMetadata);
 
         return metadata;
