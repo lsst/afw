@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -51,18 +51,18 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             detRadius = det**0.25
             traceRadius = (0.5 * trace)**0.5
             area = np.pi * det**0.5
-            self.assertClose(core.getDeterminantRadius(), detRadius)
-            self.assertClose(core.getTraceRadius(), traceRadius)
-            self.assertClose(core.getArea(), area)
+            self.assertFloatsAlmostEqual(core.getDeterminantRadius(), detRadius)
+            self.assertFloatsAlmostEqual(core.getTraceRadius(), traceRadius)
+            self.assertFloatsAlmostEqual(core.getArea(), area)
             for cls in self.classes:
                 conv = cls(core)
-                self.assertClose(conv.getDeterminantRadius(), detRadius)
-                self.assertClose(conv.getTraceRadius(), traceRadius)
-                self.assertClose(conv.getArea(), area)
+                self.assertFloatsAlmostEqual(conv.getDeterminantRadius(), detRadius)
+                self.assertFloatsAlmostEqual(conv.getTraceRadius(), traceRadius)
+                self.assertFloatsAlmostEqual(conv.getArea(), area)
                 conv.scale(3.0)
-                self.assertClose(conv.getDeterminantRadius(), detRadius * 3)
-                self.assertClose(conv.getTraceRadius(), traceRadius * 3)
-                self.assertClose(conv.getArea(), area * 9)
+                self.assertFloatsAlmostEqual(conv.getDeterminantRadius(), detRadius * 3)
+                self.assertFloatsAlmostEqual(conv.getTraceRadius(), traceRadius * 3)
+                self.assertFloatsAlmostEqual(conv.getArea(), area * 9)
 
     def testAccessors(self):
         for core in self.cores:
@@ -71,7 +71,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             self.assertImagesEqual(core.getParameterVector(), vec)
             center = lsst.afw.geom.Point2D(*np.random.randn(2))
             ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
-            self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
+            self.assertFloatsAlmostEqual(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
             newcore = lsst.afw.geom.ellipses.Axes(1, 2, 3)
@@ -79,10 +79,10 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             core.assign(newcore)
             ellipse.setCore(core)
             np.testing.assert_allclose(core.getParameterVector(), ellipse.getCore().getParameterVector())
-            self.assertClose(core.clone().getParameterVector(), core.getParameterVector())
+            self.assertFloatsAlmostEqual(core.clone().getParameterVector(), core.getParameterVector())
             self.assertIsNot(core, core.clone())
-            self.assertClose(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
-                             ellipse.getParameterVector())
+            self.assertFloatsAlmostEqual(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
+                                         ellipse.getParameterVector())
             self.assertIsNot(ellipse, lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):
@@ -91,7 +91,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assertIsNot(t1, core)
-            self.assertClose(t1.getParameterVector(), core.getParameterVector())
+            self.assertFloatsAlmostEqual(t1.getParameterVector(), core.getParameterVector())
 
     def testPixelRegion(self):
         for core in self.cores:

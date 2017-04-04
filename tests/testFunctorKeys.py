@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -230,18 +230,21 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         record.set(pKey, lsst.afw.geom.Point2D(5, 6))
         # test that the return type and value is correct
         self.assertIsInstance(record.get(fKey1), lsst.afw.geom.ellipses.Ellipse)
-        self.assertClose(record.get(fKey1).getCore().getIxx(), record.get(qKey).getIxx(), rtol=1E-14)
-        self.assertClose(record.get(fKey1).getCore().getIyy(), record.get(qKey).getIyy(), rtol=1E-14)
-        self.assertClose(record.get(fKey1).getCore().getIxy(), record.get(qKey).getIxy(), rtol=1E-14)
+        self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxx(),
+                                     record.get(qKey).getIxx(), rtol=1E-14)
+        self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIyy(),
+                                     record.get(qKey).getIyy(), rtol=1E-14)
+        self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxy(),
+                                     record.get(qKey).getIxy(), rtol=1E-14)
         self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
         self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
         # test that we can set using the functor key
         e = lsst.afw.geom.ellipses.Ellipse(lsst.afw.geom.ellipses.Quadrupole(8, 16, 4),
                                            lsst.afw.geom.Point2D(5, 6))
         record.set(fKey1, e)
-        self.assertClose(record.get(fKey1).getCore().getIxx(), e.getCore().getIxx(), rtol=1E-14)
-        self.assertClose(record.get(fKey1).getCore().getIyy(), e.getCore().getIyy(), rtol=1E-14)
-        self.assertClose(record.get(fKey1).getCore().getIxy(), e.getCore().getIxy(), rtol=1E-14)
+        self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxx(), e.getCore().getIxx(), rtol=1E-14)
+        self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIyy(), e.getCore().getIyy(), rtol=1E-14)
+        self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxy(), e.getCore().getIxy(), rtol=1E-14)
         self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
         self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
 
@@ -269,9 +272,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
         record.set(fKey1, m)
-        self.assertClose(record.get(fKey1), m, rtol=1E-6)
+        self.assertFloatsAlmostEqual(record.get(fKey1), m, rtol=1E-6)
         record.set(fKey2, m*2)
-        self.assertClose(record.get(fKey2), m*2, rtol=1E-6)
+        self.assertFloatsAlmostEqual(record.get(fKey2), m*2, rtol=1E-6)
 
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
@@ -330,26 +333,26 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # test that the return type and value is correct
         matrix1 = record.get(fKey1)
         matrix2 = record.get(fKey2)
-        # we use assertClose because it can handle matrices, and because square root
+        # we use assertFloatsAlmostEqual because it can handle matrices, and because square root
         # in Python might not be exactly reversible with squaring in C++ (with possibly
         # different precision).
-        self.assertClose(matrix1, matrix2)
+        self.assertFloatsAlmostEqual(matrix1, matrix2)
         k = 0
         for i in range(len(parameterNames)):
-            self.assertClose(matrix1[i, i], (i+1)*10 + (i+1), rtol=1E-7)
+            self.assertFloatsAlmostEqual(matrix1[i, i], (i+1)*10 + (i+1), rtol=1E-7)
             if varianceOnly:
                 continue
             for j in range(i):
                 if covKeys[k].isValid():
-                    self.assertClose(matrix1[i, j], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(matrix2[i, j], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(matrix1[j, i], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(matrix2[j, i], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(fKey1.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(fKey2.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertFloatsAlmostEqual(matrix1[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertFloatsAlmostEqual(matrix2[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertFloatsAlmostEqual(matrix1[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertFloatsAlmostEqual(matrix2[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertFloatsAlmostEqual(fKey1.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertFloatsAlmostEqual(fKey2.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
                     v = numpy.random.randn()
                     fKey1.setElement(record, i, j, v)
-                    self.assertClose(fKey2.getElement(record, i, j), v, rtol=1E-7)
+                    self.assertFloatsAlmostEqual(fKey2.getElement(record, i, j), v, rtol=1E-7)
                     fKey2.setElement(record, i, j, (i+1)*10 + (j+1))
                 else:
                     self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError,
@@ -410,9 +413,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         record = table.makeRecord()
         array = numpy.random.randn(3).astype(numpyType)
         record.set(k1, array)
-        self.assertClose(record.get(k1), array)
-        self.assertClose(record.get(k2), array)
-        self.assertClose(record[k1], array)
+        self.assertFloatsAlmostEqual(record.get(k1), array)
+        self.assertFloatsAlmostEqual(record.get(k2), array)
+        self.assertFloatsAlmostEqual(record[k1], array)
         self.assertEqual(record.get(k1).dtype, numpy.dtype(numpyType))
 
     def testArrayKey(self):
@@ -426,6 +429,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

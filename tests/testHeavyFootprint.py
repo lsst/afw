@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -247,9 +247,12 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(heavy1.getArea(), heavy2.getArea())
         self.assertEqual(list(heavy1.getSpans()), list(heavy2.getSpans()))
         self.assertEqual(list(heavy1.getPeaks()), list(heavy2.getPeaks()))
-        self.assertClose(heavy1.getImageArray(), heavy2.getImageArray(), rtol=0.0, atol=0.0)
-        self.assertClose(heavy1.getMaskArray(), heavy2.getMaskArray(), rtol=0.0, atol=0.0)
-        self.assertClose(heavy1.getVarianceArray(), heavy2.getVarianceArray(), rtol=0.0, atol=0.0)
+        self.assertFloatsAlmostEqual(heavy1.getImageArray(),
+                                     heavy2.getImageArray(), rtol=0.0, atol=0.0)
+        self.assertFloatsAlmostEqual(heavy1.getMaskArray(),
+                                     heavy2.getMaskArray(), rtol=0.0, atol=0.0)
+        self.assertFloatsAlmostEqual(heavy1.getVarianceArray(),
+                                     heavy2.getVarianceArray(), rtol=0.0, atol=0.0)
         os.remove(filename)
 
     def testDot(self):
@@ -290,6 +293,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
