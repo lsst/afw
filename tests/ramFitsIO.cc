@@ -108,7 +108,7 @@ void test6()
 
 	//Read FITS file from disk into an Image
 	PTR(dafBase::PropertySet) miMetadata(new dafBase::PropertySet);
-	PTR(ImageF) image(new ImageF(gFilename, 0, miMetadata));
+	PTR(ImageF) image(new ImageF(gFilename, INT_MIN, miMetadata));
 
 	//Write the Image to a RAM FITS file
 	image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
@@ -133,7 +133,7 @@ void test7()
 
 	//Read FITS file from disk into an Exposure
 	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
-	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, 0, miMetadata));
+	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, INT_MIN, miMetadata));
 	MaskedImageF maskedImage(image);
 	afwImage::Wcs::Ptr wcsFromFITS = afwImage::makeWcs(miMetadata);
 	ExposureF exposure(maskedImage, wcsFromFITS);

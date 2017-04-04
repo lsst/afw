@@ -588,9 +588,9 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         """Test reading FITS files"""
 
         hdus = {}
-        hdus["img"] = 2  # an S16 fits HDU
-        hdus["msk"] = 3  # an U8 fits HDU
-        hdus["var"] = 4  # an F32 fits HDU
+        hdus["img"] = 1  # an S16 fits HDU
+        hdus["msk"] = 2  # an U8 fits HDU
+        hdus["var"] = 3  # an F32 fits HDU
 
         imgU = afwImage.DecoratedImageU(self.fileForMetadata, hdus["img"])  # read as unsigned short
         imgF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["img"])  # read as float
