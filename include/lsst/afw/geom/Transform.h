@@ -41,11 +41,11 @@ namespace geom {
 Transform LSST spatial data, such as Point2D and SpherePoint, using an AST transform.
 
 This class contains two Endpoints, to specify the "from" and "to" LSST data type,
-and an astshim::FrameSet or astshim::Mapping to specify the transformation.
+and an ast::FrameSet or ast::Mapping to specify the transformation.
 In the case of a FrameSet the transformation is from the `BASE` frame to the `CURRENT` frame.
 The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
 
-Depending on the astshim::FrameSet or astshim::Mapping used to define it, a Transform may
+Depending on the ast::FrameSet or ast::Mapping used to define it, a Transform may
 provide either a forward transform, an inverse transform, or both. In particular, the
 @ref getInverse "inverse" of a forward-only transform is an inverse-only transform. The
 @ref hasForward and @ref hasInverse methods can be used to check which transforms are available.
@@ -53,7 +53,7 @@ provide either a forward transform, an inverse transform, or both. In particular
 Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
 internal errors within AST.
 
-@note You gain some safety by constructing a Transform from an astshim::FrameSet,
+@note You gain some safety by constructing a Transform from an ast::FrameSet,
 since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
 
 @note "In place" versions of `tranForward` and `tranInverse` are not available
@@ -86,7 +86,7 @@ public:
     explicit Transform(ast::Mapping const &mapping, bool simplify = true);
 
     /**
-    Constructor a Transform from a deep copy of a FrameSet.
+    Construct a Transform from a deep copy of a FrameSet.
 
     The result transforms from the "base" frame to the "current" frame.
     The "from" endpoint is used to normalize the "base" frame
