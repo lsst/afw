@@ -156,6 +156,58 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             coord2 = afwCoord.IcrsCoord(raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
             self.assertCoordsNearlyEqual(coord0, coord2, maxDiff=1e-7*afwGeom.arcseconds)
 
+    def testAssertSpherePointsAlmostEqual(self):
+        """Test assertSpherePointsAlmostEqual"""
+        for raDecDeg in ((45, 45), (-70, 89), (130, -89.5)):
+            raDecDeg = [val*afwGeom.degrees for val in raDecDeg]
+            sp0 = afwGeom.SpherePoint(*raDecDeg)
+            self.assertSpherePointsAlmostEqual(sp0, sp0, maxSep=1e-7*afwGeom.arcseconds)
+            # make sure specifying msg is acceptable
+            self.assertSpherePointsAlmostEqual(sp0, sp0, maxSep=1e-7*afwGeom.arcseconds, msg="any")
+
+            for offAng in (0, 45, 90):
+                offAng = offAng*afwGeom.degrees
+                for offDist in (0.001, 0.1):
+                    offDist = offDist*afwGeom.arcseconds
+                    sp1 = sp0.offset(bearing=offAng, amount=offDist)
+                    self.assertSpherePointsAlmostEqual(sp0, sp1, maxSep=offDist*1.00001)
+                    with self.assertRaises(AssertionError):
+                        self.assertSpherePointsAlmostEqual(sp0, sp1, maxSep=offDist*0.99999)
+
+                    # make sure msg is appended
+                    try:
+                        self.assertSpherePointsAlmostEqual(sp0, sp1, maxSep=offDist*0.99999, msg="boo")
+                        self.fail("Sphere point lists should be unequal")
+                    except AssertionError as e:
+                        errMsg = e.args[0]
+                    self.assertTrue(errMsg.endswith("boo"))
+
+            # test wraparound in RA
+            sp2 = afwGeom.SpherePoint(raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
+            self.assertSpherePointsAlmostEqual(sp0, sp2, maxSep=1e-7*afwGeom.arcseconds)
+
+    def testAssertSpherePointListsAlmostEqual(self):
+        """Test assertSpherePointListsAlmostEqual
+        """
+        splist0 = [afwGeom.SpherePoint(val[0]*afwGeom.degrees, val[1]*afwGeom.degrees)
+                   for val in ((45, 45), (-70, 89), (130, -89.5))]
+        self.assertSpherePointListsAlmostEqual(splist0, splist0)
+
+        offDist = 1.1 * afwGeom.arcseconds
+        splist1 = [sp0.offset(bearing=bearDeg*afwGeom.degrees, amount=offDist)
+                   for sp0, bearDeg in zip(splist0, (-10, 78, 123))]
+        self.assertSpherePointListsAlmostEqual(splist0, splist1, maxSep=offDist*1.00001)
+        with self.assertRaises(AssertionError):
+            self.assertSpherePointListsAlmostEqual(splist0, splist1, maxSep=offDist*0.99999)
+
+        # make sure msg is appended
+        try:
+            self.assertSpherePointListsAlmostEqual(splist0, splist1, maxSep=offDist*0.99999, msg="boo")
+            self.fail("Sphere point lists should be unequal")
+        except AssertionError as e:
+            errMsg = e.args[0]
+        self.assertTrue(errMsg.endswith("boo"))
+
     def testAssertPairsNearlyEqual(self):
         """Test assertPairsNearlyEqual"""
         for pair0 in ((-5, 4), (-5, 0.001), (0, 0), (49, 0.1)):
