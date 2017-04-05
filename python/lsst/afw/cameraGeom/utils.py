@@ -394,7 +394,7 @@ class ButlerImage(FakeImageDataSource):
         if self.callback:
             try:
                 im = self.callback(im, ccd, imageSource=self)
-            except Exception, e:
+            except Exception as e:
                 if self.verbose:
                     print("callback failed: %s" % e)
                 im = imageFactory(*bbox.getDimensions())
