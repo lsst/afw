@@ -206,7 +206,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         noDataMask = afwWarpedMask.getArray() & noDataBitMask
 
         msg = "afw and swarp %s-warped %s (ignoring bad pixels)"
-        self.assertImagesNearlyEqual(afwWarpedMaskedImage.getImage(), swarpedImage,
+        self.assertImagesAlmostEqual(afwWarpedMaskedImage.getImage(), swarpedImage,
                                      skipMask=noDataMask, rtol=rtol, atol=atol, msg=msg)
 
 

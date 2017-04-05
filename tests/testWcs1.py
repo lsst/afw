@@ -208,7 +208,7 @@ class WcsTestCase(lsst.utils.tests.TestCase):
 
                     desCoord2 = localMakeCoord(
                         coordSys2, (coord1[0].asDegrees(), coord1[1].asDegrees()), equinox2)
-                    self.assertCoordsNearlyEqual(coord2, desCoord2)
+                    self.assertCoordsAlmostEqual(coord2, desCoord2)
 
     def testGetCoordSys(self):
         """Test getCoordSystem, getEquinox"""

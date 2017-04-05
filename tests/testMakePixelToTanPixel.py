@@ -66,9 +66,9 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
         # pupil center should be pixel position 0, 0 and tan pixel position 0, 0
         pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
-        self.assertPairsNearlyEqual(pixAtPupilCtr, [0, 0])
+        self.assertPairsAlmostEqual(pixAtPupilCtr, [0, 0])
         tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
-        self.assertPairsNearlyEqual(tanPixAtPupilCr, [0, 0])
+        self.assertPairsAlmostEqual(tanPixAtPupilCr, [0, 0])
 
         # build same camera geometry transforms without optical distortion
         focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
@@ -90,7 +90,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
                 # - undistorted pupil to pixels gives tanPixPos
                 pupilPos = pixelToPupil.forwardTransform(pixPos)
                 desTanPixPos = pixelToPupilNoDistortion.reverseTransform(pupilPos)
-                self.assertPairsNearlyEqual(desTanPixPos, tanPixPos)
+                self.assertPairsAlmostEqual(desTanPixPos, tanPixPos)
 
     def testCurvedFocalPlane(self):
         """Test a curved focal plane (with rectangular pixels)
@@ -121,7 +121,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         # the center point of the pupil frame should not move
         pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
         tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
-        self.assertPairsNearlyEqual(pixAtPupilCtr, tanPixAtPupilCr)
+        self.assertPairsAlmostEqual(pixAtPupilCtr, tanPixAtPupilCr)
 
         # build same camera geometry transforms without optical distortion
         focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
@@ -138,7 +138,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
                 # - undistorted pupil to pixels gives tanPixPos
                 pupilPos = pixelToPupil.forwardTransform(pixPos)
                 desTanPixPos = pixelToPupilNoDistortion.reverseTransform(pupilPos)
-                self.assertPairsNearlyEqual(desTanPixPos, tanPixPos)
+                self.assertPairsAlmostEqual(desTanPixPos, tanPixPos)
 
     def testFlatFocalPlane(self):
         """Test an undistorted focal plane (with rectangular pixels)
@@ -171,7 +171,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             afwGeom.Point2D(-100.5, 27.23),
         ):
             pointTanPix = pixelToTanPixel.forwardTransform(pointPix)
-            self.assertPairsNearlyEqual(pointTanPix, pointPix)
+            self.assertPairsAlmostEqual(pointTanPix, pointPix)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

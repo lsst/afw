@@ -24,15 +24,17 @@ from __future__ import absolute_import, division
 
 In the case of the assert functions, importing them makes them available in lsst.utils.tests.TestCase
 """
-__all__ = ["assertCoordsNearlyEqual"]
+__all__ = ["assertCoordsAlmostEqual", "assertCoordsNearlyEqual"]
+
+import warnings
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 
 
 @lsst.utils.tests.inTestCase
-def assertCoordsNearlyEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcseconds, msg="Coords differ"):
-    """!Assert that two coords represent nearly the same point on the sky
+def assertCoordsAlmostEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcseconds, msg="Coords differ"):
+    """!Assert that two coords represent almost the same point on the sky
 
     @warning the coordinate systems are not compared; instead both angles are converted to ICRS
     and the angular separation measured.
@@ -50,3 +52,9 @@ def assertCoordsNearlyEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcs
     if measDiff > maxDiff:
         testCase.fail("%s: measured angular separation %s arcsec > max allowed %s arcsec" %
                       (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
+
+
+@lsst.utils.tests.inTestCase
+def assertCoordsNearlyEqual(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertCoordsAlmostEqual", DeprecationWarning)
+    assertCoordsAlmostEqual(*args, **kwargs)

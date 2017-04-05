@@ -76,9 +76,9 @@ class ScaledPlus(lsst.utils.tests.TestCase):
                            coeff1, self.maskedImage1.getImage())
 
         msg = "scaledPlus failed for images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)
-        self.assertImagesNearlyEqual(actImage, desMaskedImage.getImage(), msg=msg)
+        self.assertImagesAlmostEqual(actImage, desMaskedImage.getImage(), msg=msg)
         msg = "scaledPlus failed for masked images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)
-        self.assertMaskedImagesNearlyEqual(actMaskedImage, desMaskedImage, msg=msg)
+        self.assertMaskedImagesAlmostEqual(actMaskedImage, desMaskedImage, msg=msg)
 
     def testScaledPlus(self):
         for coeff0 in (0.0, -0.1e-5, 0.1e-5, 1.0e3):

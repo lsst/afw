@@ -28,7 +28,7 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
                     predArr = np.arange(start, predStop+1)
                     self.assertEqual(len(predArr), numPix)
                     predArr.shape = (dim[1], dim[0])
-                    self.assertImagesNearlyEqual(rampImage, predArr)
+                    self.assertImagesAlmostEqual(rampImage, predArr)
 
     def testNonUnitIntervals(self):
         """!Test a small ramp image with non-integer increments
@@ -45,7 +45,7 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
                     dtype = rampImage.getArray().dtype
                     predArr = np.linspace(start, stop, num=numPix, endpoint=True, dtype=dtype)
                     predArr.shape = (dim[1], dim[0])
-                    self.assertImagesNearlyEqual(rampImage, predArr)
+                    self.assertImagesAlmostEqual(rampImage, predArr)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

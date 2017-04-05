@@ -155,12 +155,12 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         # because of minor noise introduced by bad pixels
         noDataMaskArr = afwWarpedMaskArr & noDataBitMask
         msg = "afw null-warped MaskedImage (all pixels, relaxed tolerance)"
-        self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
+        self.assertMaskedImagesAlmostEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
                                            doMask=False, skipMask=noDataMaskArr, atol=1e-5, msg=msg)
 
         # compare good pixels (mask=0) of image, mask and variance using full tolerance
         msg = "afw null-warped MaskedImage (good pixels, max tolerance)"
-        self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
+        self.assertMaskedImagesAlmostEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
                                            skipMask=afwWarpedMask, msg=msg)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
@@ -181,7 +181,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         noDataMaskArr = np.isnan(afwWarpedImageArr)
         # relax specs a bit because of minor noise introduced by bad pixels
         msg = "afw null-warped Image"
-        self.assertImagesNearlyEqual(originalImage, afwWarpedImage, skipMask=noDataMaskArr,
+        self.assertImagesAlmostEqual(originalImage, afwWarpedImage, skipMask=noDataMaskArr,
                                      atol=1e-5, msg=msg)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
@@ -402,10 +402,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             noDataMaskArr = np.isnan(afwWarpedImageArr)
             if changeEquinox:
                 with self.assertRaises(AssertionError):
-                    self.assertImagesNearlyEqual(afwWarpedImage, swarpedImage,
+                    self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
                                                  skipMask=noDataMaskArr, rtol=rtol, atol=atol)
             else:
-                self.assertImagesNearlyEqual(afwWarpedImage, swarpedImage,
+                self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
                                              skipMask=noDataMaskArr, rtol=rtol, atol=atol)
 
     def testTicket2441(self):
@@ -550,7 +550,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         msg = "Separate mask warping failed; warpingKernel=%s; maskWarpingKernel=%s" % \
             (kernelName, maskKernelName)
-        self.assertMaskedImagesNearlyEqual(destExposure.getMaskedImage(), predExposure,
+        self.assertMaskedImagesAlmostEqual(destExposure.getMaskedImage(), predExposure,
                                            doImage=True, doMask=True, doVariance=True,
                                            rtol=rtol, atol=atol, msg=msg)
 
@@ -621,7 +621,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             msg = "afw and swarp %s-warped differ (ignoring bad pixels)" % (kernelName,)
             try:
-                self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, swarpedMaskedImage,
+                self.assertMaskedImagesAlmostEqual(afwWarpedMaskedImage, swarpedMaskedImage,
                                                    doImage=True, doMask=False, doVariance=False,
                                                    skipMask=afwWarpedMask, rtol=rtol, atol=atol, msg=msg)
             except Exception:
@@ -653,7 +653,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             msg = "afw and swarp %s-warped images do not match (ignoring NaN pixels)" % \
                 (kernelName,)
             try:
-                self.assertImagesNearlyEqual(afwWarpedImage, swarpedImage,
+                self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
                                              skipMask=noDataMaskArr, rtol=rtol, atol=atol, msg=msg)
             except Exception:
                 if SAVE_FAILED_FITS_FILES:
@@ -667,7 +667,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             afwMath.warpImage(afwWarpedImage2, originalImage, xyTransform, warpingControl)
             msg = "afw xyTransform-based and WCS-based %s-warped images do not match" % (kernelName,)
             try:
-                self.assertImagesNearlyEqual(afwWarpedImage2, afwWarpedImage,
+                self.assertImagesAlmostEqual(afwWarpedImage2, afwWarpedImage,
                                              rtol=rtol, atol=atol, msg=msg)
             except Exception:
                 if SAVE_FAILED_FITS_FILES:

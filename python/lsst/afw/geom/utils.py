@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-from builtins import range
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -25,17 +24,21 @@ from builtins import range
 
 In the case of the assert functions, importing them makes them available in lsst.utils.tests.TestCase
 """
+__all__ = ["assertAnglesAlmostEqual", "assertPairsAlmostEqual",
+           "assertPairListsAlmostEqual", "assertSpherePointsAlmostEqual",
+           "assertSpherePointListsAlmostEqual", "assertBoxesAlmostEqual",
+           "makeEndpoints", "assertAnglesNearlyEqual", "assertPairsNearlyEqual",
+           "assertBoxesNearlyEqual"]
+
+from builtins import range
+import warnings
 import math
+
 import numpy as np
 
 import lsst.utils.tests
 from .angle import arcseconds
 from .endpoint import GenericEndpoint, Point2Endpoint, Point3Endpoint, SpherePointEndpoint
-
-
-__all__ = ["assertAnglesNearlyEqual", "assertPairsNearlyEqual", "assertPairListsAlmostEqual",
-           "assertSpherePointsAlmostEqual", "assertSpherePointListsAlmostEqual", "assertBoxesNearlyEqual",
-           "makeEndpoints"]
 
 
 def extraMsg(msg):
@@ -47,9 +50,9 @@ def extraMsg(msg):
 
 
 @lsst.utils.tests.inTestCase
-def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
+def assertAnglesAlmostEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
                             ignoreWrap=True, msg="Angles differ"):
-    """!Assert that two angles are nearly equal, ignoring wrap differences by default
+    """!Assert that two angles are almost equal, ignoring wrap differences by default
 
     @param[in] testCase  unittest.TestCase instance the test is part of;
                         an object supporting one method: fail(self, msgStr)
@@ -72,8 +75,11 @@ def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
 
 
 @lsst.utils.tests.inTestCase
-def assertPairsNearlyEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs differ"):
-    """!Assert that two planar pairs (e.g. Point2D or Extent2D) are nearly equal
+def assertPairsAlmostEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs differ"):
+    """!Assert that two Cartesian points are almost equal.
+
+    Each point can be any indexable pair of two floats, including
+    Point2D or Extent2D, a list or a tuple.
 
     @warning Does not compare types, just compares values.
 
@@ -169,8 +175,8 @@ def assertSpherePointListsAlmostEqual(testCase, splist0, splist1, maxSep=0.001*a
 
 
 @lsst.utils.tests.inTestCase
-def assertBoxesNearlyEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ"):
-    """!Assert that two boxes (Box2D or Box2I) are nearly equal
+def assertBoxesAlmostEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ"):
+    """!Assert that two boxes (Box2D or Box2I) are almost equal
 
     @warning Does not compare types, just compares values.
 
@@ -183,8 +189,8 @@ def assertBoxesNearlyEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ
 
     @throw AssertionError if the radial difference of the min points or max points is greater than maxDiff
     """
-    assertPairsNearlyEqual(testCase, box0.getMin(), box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
-    assertPairsNearlyEqual(testCase, box0.getMax(), box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
+    assertPairsAlmostEqual(testCase, box0.getMin(), box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
+    assertPairsAlmostEqual(testCase, box0.getMax(), box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
 
 
 @lsst.utils.tests.inTestCase
@@ -199,3 +205,21 @@ def makeEndpoints(testCase):
     """
     return [GenericEndpoint(n) for n in range(1, 6)] + \
            [Point2Endpoint(), Point3Endpoint(), SpherePointEndpoint()]
+
+
+@lsst.utils.tests.inTestCase
+def assertAnglesNearlyEqual(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertAnglesAlmostEqual", DeprecationWarning)
+    assertAnglesAlmostEqual(*args, **kwargs)
+
+
+@lsst.utils.tests.inTestCase
+def assertPairsNearlyEqual(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertPairsAlmostEqual", DeprecationWarning)
+    assertPairsAlmostEqual(*args, **kwargs)
+
+
+@lsst.utils.tests.inTestCase
+def assertBoxesNearlyEqual(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertBoxesAlmostEqual", DeprecationWarning)
+    assertBoxesAlmostEqual(*args, **kwargs)
