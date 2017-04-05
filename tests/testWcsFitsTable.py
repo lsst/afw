@@ -192,6 +192,32 @@ class WcsFitsTableTestCase(unittest.TestCase):
             exp2 = lsst.afw.image.ExposureF(fileName)
             self.assertEqual(exp.getWcs(), exp2.getWcs())
 
+    def testSkyOriginPrecision(self):
+        """Test that we don't lose precision in CRVAL when round-tripping
+        (DM-10105), using a WCS in which we previously did.
+        """
+        metadata = lsst.daf.base.PropertyList()
+        metadata.add('CD1_1', -4.66666666666667e-05)
+        metadata.add('CD1_2', 0.0)
+        metadata.add('CD2_1', 0.0)
+        metadata.add('CD2_2', 4.66666666666667e-05)
+        metadata.add('CRPIX1', 18000.0)
+        metadata.add('CRPIX2', 18000.0)
+        metadata.add('CRVAL1', 247.5)
+        metadata.add('CRVAL2', -87.0247933884297)
+        metadata.add('CTYPE1', 'RA---TAN')
+        metadata.add('CTYPE2', 'DEC--TAN')
+        metadata.add('CUNIT1', 'deg')
+        metadata.add('CUNIT2', 'deg')
+        metadata.add('NAXIS', 2)
+        metadata.add('RADESYS', 'ICRS')
+        wcs1 = lsst.afw.image.makeWcs(metadata)
+        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
+            wcs1.writeFits(fileName)
+            wcs2 = lsst.afw.image.Wcs.readFits(fileName)
+            self.assertEqual(wcs1, wcs2)
+
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

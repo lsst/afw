@@ -1082,7 +1082,8 @@ void Wcs::write(OutputArchiveHandle & handle) const {
     WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
-    record->set(keys.crval, getSkyOrigin()->getPosition(afw::geom::degrees));
+    record->set(keys.crval.getX(), _wcsInfo[0].crval[0]);
+    record->set(keys.crval.getY(), _wcsInfo[0].crval[1]);
     record->set(keys.crpix, getPixelOrigin());
     Eigen::Matrix2d cdIn = getCDMatrix();
     Eigen::Map<Eigen::Matrix2d> cdOut((*record)[keys.cd].getData());
