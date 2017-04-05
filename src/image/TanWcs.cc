@@ -463,6 +463,27 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const
 
 /************************************************************************************************************/
 
+
+void TanWcs::flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const {
+    if (hasDistortion()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "flipImage is not implemented for TAN-SIP"
+        );
+    }
+    Wcs::flipImage(flipLR, flipTB, dimensions);
+}
+
+void TanWcs::rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const {
+    if (hasDistortion()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "rotateImageBy90 is not implemented for TAN-SIP"
+        );
+    }
+    Wcs::rotateImageBy90(nQuarter, dimensions);
+}
+
 PTR(daf::base::PropertyList) TanWcs::getFitsMetadata() const {
     return formatters::TanWcsFormatter::generatePropertySet(*this);
 }
