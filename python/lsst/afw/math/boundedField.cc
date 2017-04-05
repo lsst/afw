@@ -65,7 +65,6 @@ PYBIND11_PLUGIN(_boundedField) {
 
     /* Operators */
     clsBoundedField.def("__mul__", &BoundedField::operator*);
-    clsBoundedField.def("__div__", &BoundedField::operator/);
     clsBoundedField.def("__truediv__", &BoundedField::operator/);
 
     /* Members */
