@@ -781,11 +781,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
     if showWcs:
         if originAtCenter:
-            # Can't divide SWIGGED extent type things when division is imported
-            # from future.  This is DM-83
-            ext = cameraImage.getBBox().getDimensions()
-
-            wcsReferencePixel = afwGeom.PointI(ext.getX()//2, ext.getY()//2)
+            wcsReferencePixel = afwGeom.Box2D(cameraImage.getBBox()).getCenter()
         else:
             wcsReferencePixel = afwGeom.Point2I(0, 0)
         wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
