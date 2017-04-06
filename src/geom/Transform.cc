@@ -37,7 +37,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool simplify)
         : _fromEndpoint(mapping.getNin()), _frameSet(), _toEndpoint(mapping.getNout()) {
     auto fromFrame = _fromEndpoint.makeFrame();
@@ -49,7 +49,7 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool
     }
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bool simplify)
         : _fromEndpoint(frameSet.getNin()), _frameSet(), _toEndpoint(frameSet.getNout()) {
     // Normalize the base and current frame in a way that affects its behavior as a mapping.
@@ -75,7 +75,7 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
     _frameSet = frameSetCopy;
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranForward(
         typename FromEndpoint::Point const &point) const {
     auto const rawFromData = _fromEndpoint.dataFromPoint(point);
@@ -83,7 +83,7 @@ typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranForward(
     return _toEndpoint.pointFromData(rawToData);
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranForward(
         typename FromEndpoint::Array const &array) const {
     auto const rawFromData = _fromEndpoint.dataFromArray(array);
@@ -91,7 +91,7 @@ typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranForward(
     return _toEndpoint.arrayFromData(rawToData);
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranInverse(
         typename ToEndpoint::Point const &point) const {
     auto const rawFromData = _toEndpoint.dataFromPoint(point);
@@ -99,7 +99,7 @@ typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranInverse(
     return _fromEndpoint.pointFromData(rawToData);
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranInverse(
         typename ToEndpoint::Array const &array) const {
     auto const rawFromData = _toEndpoint.dataFromArray(array);
@@ -107,7 +107,7 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranInverse(
     return _fromEndpoint.arrayFromData(rawToData);
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
     auto inverse = std::dynamic_pointer_cast<ast::FrameSet>(_frameSet->getInverse());
     if (!inverse) {
@@ -119,7 +119,7 @@ Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInve
     return Transform<ToEndpoint, FromEndpoint>(*inverse);
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const &x) const {
     try {
         int const nIn = _fromEndpoint.getNAxes();
@@ -138,7 +138,7 @@ Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const
     }
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 template <class FirstFromEndpoint>
 Transform<FirstFromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of(
         Transform<FirstFromEndpoint, FromEndpoint> const &first) const {
@@ -151,7 +151,7 @@ Transform<FirstFromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of
     }
 }
 
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform) {
     auto const frameSet = transform.getFrameSet();
     os << "Transform<" << transform.getFromEndpoint() << ", " << transform.getToEndpoint() << ">";

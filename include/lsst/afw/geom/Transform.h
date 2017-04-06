@@ -60,7 +60,7 @@ since the base and current frames in the FrameSet can be checked against by the 
 because data must be copied when converting from LSST data types to the type used by astshim,
 so it didn't seem worth the bother.
 */
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 class Transform {
 public:
     using FromArray = typename FromEndpoint::Array;
@@ -225,7 +225,7 @@ The format is "Transform<_fromEndpoint_, _toEndpoint_>"
 where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to the ostream;
 for example "Transform<GenericEndpoint(4), Point3Endpoint()>"
 */
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
 }  // geom

@@ -42,7 +42,7 @@ namespace {
 
 // Return a string consisting of "_pythonClassName_[_fromNAxes_->_toNAxes_]",
 // for example "TransformGenericToPoint3[4->3]"
-template <typename Class>
+template <class Class>
 std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
     os << pyClassName;
@@ -65,7 +65,7 @@ void declareMethodTemplates(PyClass &cls) {
 // Declare Transform<FromEndpoint, ToEndpoint> using python class name TransformFrom<X>To<Y>
 // where <X> and <Y> are the name of the from endpoint and to endpoint class, respectively,
 // for example TransformFromGenericToPoint3
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 void declareTransform(py::module &mod, std::string const &fromName, std::string const &toName) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
     using ToPoint = typename ToEndpoint::Point;
