@@ -25,8 +25,7 @@
 """
 Support for cameraGeom
 """
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 from builtins import zip
 from builtins import next
 from builtins import str
