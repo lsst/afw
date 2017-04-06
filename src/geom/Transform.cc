@@ -139,15 +139,35 @@ Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const
 }
 
 template <typename FromEndpoint, typename ToEndpoint>
+template <class FirstFromEndpoint>
+Transform<FirstFromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of(
+        Transform<FirstFromEndpoint, FromEndpoint> const &first) const {
+    if (_fromEndpoint.getNAxes() == first.getToEndpoint().getNAxes()) {
+        return Transform<FirstFromEndpoint, ToEndpoint>(*ast::prepend(*_frameSet, *(first.getFrameSet())));
+    } else {
+        auto message = "Cannot match " + std::to_string(first.getToEndpoint().getNAxes()) +
+                       "-D to-endpoint to " + std::to_string(_fromEndpoint.getNAxes()) + "-D from-endpoint.";
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, message);
+    }
+}
+
+template <typename FromEndpoint, typename ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform) {
     auto const frameSet = transform.getFrameSet();
     os << "Transform<" << transform.getFromEndpoint() << ", " << transform.getToEndpoint() << ">";
     return os;
 };
 
-#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)          \
-    template class Transform<FromEndpoint, ToEndpoint>;          \
-    template std::ostream &operator<<<FromEndpoint, ToEndpoint>( \
+#define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, ExtraEndpoint)                                    \
+    template Transform<ExtraEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of<ExtraEndpoint>( \
+            Transform<ExtraEndpoint, FromEndpoint> const &) const;
+#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                  \
+    template class Transform<FromEndpoint, ToEndpoint>;                  \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)     \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)      \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point3Endpoint)      \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, SpherePointEndpoint) \
+    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(         \
             std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
 // explicit instantiations

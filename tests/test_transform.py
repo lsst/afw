@@ -23,7 +23,7 @@ from __future__ import absolute_import, division, print_function
 import unittest
 
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 import astshim
 from astshim.test import makeForwardPolyMap, makeTwoWayPolyMap
 
@@ -333,24 +333,24 @@ class TransformTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(frameSet.tranForward(rawInPoint),
                              invFrameSet.tranInverse(rawInPoint), msg=msg)
             # Assertions must work with both lists and numpy arrays
-            np.testing.assert_array_equal(forward.tranForward(inArray),
-                                          inverse.tranInverse(inArray),
-                                          err_msg=msg)
-            np.testing.assert_array_equal(frameSet.tranForward(rawInArray),
-                                          invFrameSet.tranInverse(rawInArray),
-                                          err_msg=msg)
+            assert_array_equal(forward.tranForward(inArray),
+                               inverse.tranInverse(inArray),
+                               err_msg=msg)
+            assert_array_equal(frameSet.tranForward(rawInArray),
+                               invFrameSet.tranInverse(rawInArray),
+                               err_msg=msg)
 
         if forward.hasInverse():
             self.assertEqual(forward.tranInverse(outPoint),
                              inverse.tranForward(outPoint), msg=msg)
             self.assertEqual(frameSet.tranInverse(rawOutPoint),
                              invFrameSet.tranForward(rawOutPoint), msg=msg)
-            np.testing.assert_array_equal(forward.tranInverse(outArray),
-                                          inverse.tranForward(outArray),
-                                          err_msg=msg)
-            np.testing.assert_array_equal(frameSet.tranInverse(rawOutArray),
-                                          invFrameSet.tranForward(rawOutArray),
-                                          err_msg=msg)
+            assert_array_equal(forward.tranInverse(outArray),
+                               inverse.tranForward(outArray),
+                               err_msg=msg)
+            assert_array_equal(frameSet.tranInverse(rawOutArray),
+                               invFrameSet.tranForward(rawOutArray),
+                               err_msg=msg)
 
     def checkTransformFromMapping(self, fromName, toName):
         """Check a Transform_<fromName>_<toName> using the Mapping constructor
@@ -606,6 +606,106 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                 assert_allclose(jacobian, makeJacobian(nIn, nOut, rawInPoint),
                                 err_msg=msg)
 
+    def checkOf(self, fromName, midName, toName):
+        """Test Transform<midName>To<toName>.of(Transform<fromName>To<midName>)
+
+        Parameters
+        ----------
+        fromName : string
+            the prefix of the starting endpoint (e.g., "Point2" for a
+            Point2Endpoint) for the final, concatenated Transform
+        midName : string
+            the prefix for the shared endpoint where two Transforms will be
+            concatenated
+        toName : string
+            the prefix of the ending endpoint for the final, concatenated
+            Transform
+        """
+        transform1Class = getattr(afwGeom,
+                                  "Transform{}To{}".format(fromName, midName))
+        transform2Class = getattr(afwGeom,
+                                  "Transform{}To{}".format(midName, toName))
+        baseMsg = "{}.of({})".format(transform2Class.__name__,
+                                     transform1Class.__name__)
+        for nIn in self.goodNaxes[fromName]:
+            for nMid in self.goodNaxes[midName]:
+                for nOut in self.goodNaxes[toName]:
+                    msg = "{}, nIn={}, nMid={}, nOut={}".format(
+                        baseMsg, nIn, nMid, nOut)
+                    polyMap = makeTwoWayPolyMap(nIn, nMid)
+                    transform1 = transform1Class(polyMap)
+                    polyMap = makeTwoWayPolyMap(nMid, nOut)
+                    transform2 = transform2Class(polyMap)
+                    transform = transform2.of(transform1)
+
+                    fromEndpoint = transform1.getFromEndpoint()
+                    toEndpoint = transform2.getToEndpoint()
+
+                    inPoint = fromEndpoint.pointFromData(makeRawPointData(nIn))
+                    outPointMerged = transform.tranForward(inPoint)
+                    outPointSeparate = transform2.tranForward(
+                        transform1.tranForward(inPoint))
+                    assert_allclose(toEndpoint.dataFromPoint(outPointMerged),
+                                    toEndpoint.dataFromPoint(outPointSeparate),
+                                    err_msg=msg)
+
+                    outPoint = toEndpoint.pointFromData(makeRawPointData(nOut))
+                    inPointMerged = transform.tranInverse(outPoint)
+                    inPointSeparate = transform1.tranInverse(
+                        transform2.tranInverse(outPoint))
+                    assert_allclose(
+                        fromEndpoint.dataFromPoint(inPointMerged),
+                        fromEndpoint.dataFromPoint(inPointSeparate),
+                        err_msg=msg)
+
+        # Mismatched number of axes should fail
+        if midName == "Generic":
+            nIn = self.goodNaxes[fromName][0]
+            nOut = self.goodNaxes[toName][0]
+            polyMap = makeTwoWayPolyMap(nIn, 3)
+            transform1 = transform1Class(polyMap)
+            polyMap = makeTwoWayPolyMap(2, nOut)
+            transform2 = transform2Class(polyMap)
+            with self.assertRaises(InvalidParameterError):
+                transform = transform2.of(transform1)
+
+        # Mismatched types of endpoints should fail
+        if fromName != midName:
+            # Use transform1Class for both args to keep test logic simple
+            outName = midName
+            joinNaxes = set(self.goodNaxes[fromName]).intersection(
+                self.goodNaxes[outName])
+            for nIn in self.goodNaxes[fromName]:
+                for nMid in joinNaxes:
+                    for nOut in self.goodNaxes[outName]:
+                        polyMap = makeTwoWayPolyMap(nIn, nMid)
+                        transform1 = transform1Class(polyMap)
+                        polyMap = makeTwoWayPolyMap(nMid, nOut)
+                        transform2 = transform1Class(polyMap)
+                        with self.assertRaises(InvalidParameterError):
+                            transform = transform2.of(transform1)
+
+    def checkOfChaining(self):
+        """Test that both conventions for chaining Transform*To*.of give
+        the same result
+        """
+        transform1 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(2, 3))
+        transform2 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(3, 4))
+        transform3 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(4, 1))
+
+        merged1 = transform3.of(transform2).of(transform1)
+        merged2 = transform3.of(transform2.of(transform1))
+
+        fromEndpoint = transform1.getFromEndpoint()
+        toEndpoint = transform3.getToEndpoint()
+
+        inPoint = fromEndpoint.pointFromData(makeRawPointData(2))
+        assert_allclose(toEndpoint.dataFromPoint(merged1.tranForward(inPoint)),
+                        toEndpoint.dataFromPoint(merged2.tranForward(inPoint)))
+
     def testTransforms(self):
         for fromName in NameList:
             for toName in NameList:
@@ -613,6 +713,9 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                 self.checkTransformFromFrameSet(fromName, toName)
                 self.checkGetInverse(fromName, toName)
                 self.checkGetJacobian(fromName, toName)
+                for midName in NameList:
+                    self.checkOf(fromName, midName, toName)
+        self.checkOfChaining()
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

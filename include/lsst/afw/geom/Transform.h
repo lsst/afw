@@ -189,6 +189,29 @@ public:
      */
     Eigen::MatrixXd getJacobian(FromPoint const &x) const;
 
+    /**
+     * Concatenate two Transforms.
+     *
+     * @tparam FirstFromEndpoint the starting Endpoint of `first`
+     * @param first the Transform to apply before this one
+     * @returns a Transform that first applies `first` to its input, and then
+     *          this Transform to the result. Its inverse shall first apply the
+     *          inverse of this Transform, then the inverse of `first`.
+     *
+     * @throws InvalidParameterErrror Thrown if `first.getToEndpoint()` and
+     *                                `this->getFromEndpoint()` do not have
+     *                                the same number of axes.
+     * @exceptsafe Provides basic exception safety.
+     *
+     * More than two Transforms can be combined in series. For example:
+     *
+     *     auto skyFromPixels = skyFromPupil.of(pupilFromFp)
+     *                                      .of(fpFromPixels);
+     */
+    template <class FirstFromEndpoint>
+    Transform<FirstFromEndpoint, ToEndpoint> of(
+            Transform<FirstFromEndpoint, FromEndpoint> const &first) const;
+
 private:
     FromEndpoint const _fromEndpoint;
     std::shared_ptr<const ast::FrameSet> _frameSet;
