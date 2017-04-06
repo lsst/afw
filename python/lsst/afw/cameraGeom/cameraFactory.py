@@ -5,6 +5,7 @@ from .cameraGeomLib import FOCAL_PLANE, PUPIL, PIXELS, TAN_PIXELS, ACTUAL_PIXELS
     Detector, DetectorType, Orientation, CameraTransformMap
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
+from .pupil import PupilFactory
 
 __all__ = ["makeCameraFromPath", "makeCameraFromCatalogs", "makeDetector", "copyDetector"]
 
@@ -94,10 +95,11 @@ def makeTransformDict(transformConfigDict):
     if transformConfigDict is not None:
         for key in transformConfigDict:
             transform = transformConfigDict[key].transform.apply()
-            resMap[CameraSys(key)] =  transform
+            resMap[CameraSys(key)] = transform
     return resMap
 
-def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc):
+def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
+                       pupilFactoryClass=PupilFactory):
     """!Make a Camera instance from a directory of ampInfo files
 
     The directory must contain one ampInfo fits file for each detector in cameraConfig.detectorList.
@@ -106,6 +108,7 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc):
     @param[in] cameraConfig  an instance of CameraConfig
     @param[in] ampInfoPath  path to ampInfo data files
     @param[in] shortNameFunc  a function that converts a long detector name to a short one
+    @param[in] pupilFactoryClass class to attach to camera; default afw.cameraGeom.PupilFactory
     @return camera (an lsst.afw.cameraGeom.Camera)
     """
     ampInfoCatDict = dict()
@@ -115,13 +118,15 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc):
         ampInfoCatalog = AmpInfoCatalog.readFits(ampCatPath)
         ampInfoCatDict[detectorConfig.name] = ampInfoCatalog
 
-    return makeCameraFromCatalogs(cameraConfig, ampInfoCatDict)
+    return makeCameraFromCatalogs(cameraConfig, ampInfoCatDict, pupilFactoryClass)
 
-def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict):
+def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
+                           pupilFactoryClass=PupilFactory):
     """!Construct a Camera instance from a dictionary of detector name: AmpInfoCatalog
 
     @param[in] cameraConfig  an instance of CameraConfig
     @param[in] ampInfoCatDict  a dictionary of detector name: AmpInfoCatalog
+    @param[in] pupilFactoryClass class to attach to camera; default afw.cameraGeom.PupilFactory
     @return camera (an lsst.afw.cameraGeom.Camera)
     """
     nativeSys = cameraSysMap[cameraConfig.transformDict.nativeSys]
@@ -139,4 +144,4 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict):
             focalPlaneToPupil = focalPlaneToPupil,
         ))
 
-    return Camera(cameraConfig.name, detectorList, transformMap)
+    return Camera(cameraConfig.name, detectorList, transformMap, pupilFactoryClass)
