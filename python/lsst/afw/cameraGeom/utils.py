@@ -25,8 +25,7 @@
 """
 Support for cameraGeom
 """
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 from builtins import zip
 from builtins import next
 from builtins import str
@@ -48,6 +47,7 @@ from lsst.afw.display.utils import _getDisplayFromDisplayOrFrame
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
 
+
 def prepareWcsData(wcs, amp, isTrimmed=True):
     """!Put Wcs from an Amp image into CCD coordinates
 
@@ -62,13 +62,14 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     else:
         ampBox = amp.getRawBBox()
     wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampBox.getDimensions())
-    #Shift WCS for trimming
+    # Shift WCS for trimming
     if isTrimmed:
         trim_shift = ampBox.getMin() - amp.getBBox().getMin()
         wcs.shiftReferencePixel(-trim_shift.getX(), -trim_shift.getY())
-    #Account for shift of amp data in larger ccd matrix
+    # Account for shift of amp data in larger ccd matrix
     offset = amp.getRawXYOffset()
     wcs.shiftReferencePixel(offset.getX(), offset.getY())
+
 
 def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
                    useIds=False, showFig=True, savePath=None):
@@ -96,7 +97,7 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
             pupilSizeDeg_y = pupilSizeDeg_x
 
         pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2.,
-                                                  numpy.arange(0., pupilSizeDeg_y+dy, dy) -  pupilSizeDeg_y/2.)
+                                                  numpy.arange(0., pupilSizeDeg_y+dy, dy) - pupilSizeDeg_y/2.)
         pupil_gridx, pupil_gridy = pupil_gridx.flatten(), pupil_gridy.flatten()
     else:
         pupil_gridx, pupil_gridy = [], []
@@ -116,8 +117,7 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
         else:
             pcolors.append('k')
 
-
-    colorMap = {0:'b', 1:'y', 2:'g', 3:'r'}
+    colorMap = {0: 'b', 1: 'y', 2: 'g', 3: 'r'}
 
     patches = []
     colors = []
@@ -148,6 +148,7 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
     if showFig:
         plt.show()
 
+
 def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0,
                      scaleGain = lambda gain: (gain*1000)//10):
     """!Make an image from an amp object
@@ -172,7 +173,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
         img.set(scaleGain(amp.getGain()))
     else:
         img.set(imValue)
-    #Set the first pixel read to a different value
+    # Set the first pixel read to a different value
     markbbox = afwGeom.Box2I()
     if amp.getReadoutCorner() == 0:
         markbbox.include(dbbox.getMin())
@@ -195,6 +196,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     mimg.set(markValue)
     return img
 
+
 def calcRawCcdBBox(ccd):
     """!Calculate the raw ccd bounding box
 
@@ -211,6 +213,7 @@ def calcRawCcdBBox(ccd):
         bbox.include(tbbox)
     return bbox
 
+
 def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImage.ImageU, rcMarkSize=10,
                      binSize=1):
     """!Make an Image of a Ccd
@@ -226,9 +229,9 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     ampImages = []
     index = 0
     if isTrimmed:
-         bbox = ccd.getBBox()
+        bbox = ccd.getBBox()
     else:
-         bbox = calcRawCcdBBox(ccd)
+        bbox = calcRawCcdBBox(ccd)
     for amp in ccd:
         if amp.getHasRawInfo():
             if showAmpGain:
@@ -252,8 +255,10 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     ccdImage = afwMath.binImage(ccdImage, binSize)
     return ccdImage
 
+
 class FakeImageDataSource(object):
     """A class to retrieve synthetic images for display by the show* methods"""
+
     def __init__(self, isTrimmed=True, verbose=False, background=numpy.nan,
                  showAmpGain=True, markSize=10, markValue=0,
                  ampImValue=None, scaleGain=lambda gain: (gain*1000)//10):
@@ -294,11 +299,12 @@ class FakeImageDataSource(object):
         @param[in] imageFactory  image constructor fo making the imag
         """
         ampImage = makeImageFromAmp(amp, imValue=self.ampImValue, imageFactory=imageFactory,
-                                    markSize=self.markSize,
-                markValue=self.markValue, scaleGain=self.scaleGain)
+                                    markSize=self.markSize, markValue=self.markValue,
+                                    scaleGain=self.scaleGain)
         if self.isTrimmed:
             ampImage = ampImage.Factory(ampImage, amp.getRawDataBBox())
         return ampImage
+
 
 class ButlerImage(FakeImageDataSource):
     """A class to return an Image of a given Ccd using the butler"""
@@ -357,7 +363,7 @@ class ButlerImage(FakeImageDataSource):
             if self.type == "calexp":    # reading the exposure can die if the PSF's unknown
                 try:                     # need to switch to cid as below.  RHL has no calexp to test with
                     fileName = self.butler.get(self.type + "_filename", ccd=ccd.getId(),
-                                                    **self.kwargs)[0]
+                                               **self.kwargs)[0]
                     im = imageFactory(fileName)
                 except Exception as e:
                     pass
@@ -366,7 +372,7 @@ class ButlerImage(FakeImageDataSource):
                 for cid in [ccd.getId(), ccd.getName()]:
                     try:
                         im = self.butler.get(self.type, ccd=cid, **self.kwargs)
-                        ccd = im.getDetector() # possibly modified by assembleCcdTask
+                        ccd = im.getDetector()  # possibly modified by assembleCcdTask
                         e = None
                         break
                     except Exception as e:
@@ -388,7 +394,7 @@ class ButlerImage(FakeImageDataSource):
             allowRotate = True          # all other images were rotated by the ISR
             if hasattr(im, 'convertF'):
                 im = im.convertF()
-            if False and self.callback == None:   # we need to trim the raw image
+            if False and self.callback is None:   # we need to trim the raw image
                 self.callback = rawCallback
 
         if self.callback:
@@ -400,6 +406,7 @@ class ButlerImage(FakeImageDataSource):
                 im = imageFactory(*bbox.getDimensions())
 
         return self._prepareImage(ccd, im, binSize, allowRotate=allowRotate), ccd
+
 
 def rawCallback(im, ccd=None, imageSource=None,
                 correctGain=False, subtractBias=False, convertToFloat=False):
@@ -416,7 +423,7 @@ def rawCallback(im, ccd=None, imageSource=None,
     N.b. if imageSource is derived from ButlerImage, imageSource.butler is available
     """
     if ccd is None:
-        ccd = cameraGeom.cast_Ccd(im.getDetector())
+        ccd = im.getDetector()
     if hasattr(im, "getMaskedImage"):
         im = im.getMaskedImage()
     if convertToFloat and hasattr(im, "convertF"):
@@ -452,8 +459,9 @@ def rawCallback(im, ccd=None, imageSource=None,
 
     return ccdImage
 
+
 def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
-                    isTrimmed=False, ccdOrigin=(0,0), display=None, binSize=1):
+                    isTrimmed=False, ccdOrigin=(0, 0), display=None, binSize=1):
     """!Overlay bounding boxes on an image display
 
     @param[in] ccd  Detector to iterate for the amp bounding boxes
@@ -510,7 +518,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
                                           display=display, bin=binSize)
             # Label each Amp
             xc, yc = (ampbbox.getMin()[0] + ampbbox.getMax()[0])//2, (ampbbox.getMin()[1] +
-                    ampbbox.getMax()[1])//2
+                                                                      ampbbox.getMax()[1])//2
             #
             # Rotate the amp labels too
             #
@@ -538,6 +546,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
         displayUtils.drawBBox(ccdBbox, origin=ccdOrigin,
                               borderWidth=0.49, ctype=afwDisplay.MAGENTA, display=display, bin=binSize)
 
+
 def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None, overlay=True,
             imageFactory=afwImage.ImageU):
     """!Show an amp in an image display
@@ -559,14 +568,14 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
     if overlay:
         with display.Buffering():
             if amp.getHasRawInfo() and ampImSize == amp.getRawBBox().getDimensions():
-                bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN),]
+                bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN), ]
                 xy0 = bboxes[0][0].getMin()
                 bboxes.append((amp.getRawHorizontalOverscanBBox(), 0.49, afwDisplay.RED))
                 bboxes.append((amp.getRawDataBBox(), 0.49, afwDisplay.BLUE))
                 bboxes.append((amp.getRawPrescanBBox(), 0.49, afwDisplay.YELLOW))
                 bboxes.append((amp.getRawVerticalOverscanBBox(), 0.49, afwDisplay.MAGENTA))
             else:
-                bboxes = [(amp.getBBox(), 0.49, None),]
+                bboxes = [(amp.getBBox(), 0.49, None), ]
                 xy0 = bboxes[0][0].getMin()
 
             for bbox, borderWidth, ctype in bboxes:
@@ -575,6 +584,7 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
                 bbox = afwGeom.Box2I(bbox)
                 bbox.shift(-afwGeom.ExtentI(xy0))
                 displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, display=display)
+
 
 def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, overlay=True,
             imageFactory=afwImage.ImageF, binSize=1, inCameraCoords=False):
@@ -591,7 +601,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
     """
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
-    ccdOrigin = afwGeom.Point2I(0,0)
+    ccdOrigin = afwGeom.Point2I(0, 0)
     nQuarter = 0
     ccdImage, ccd = imageSource.getCcdImage(ccd, imageFactory=imageFactory, binSize=binSize)
 
@@ -615,6 +625,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
             overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, display, binSize)
 
     return ccdImage
+
 
 def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
     """!Get the bounding boxes of a list of Detectors within a camera sized pixel grid
@@ -647,6 +658,7 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
         boxList.append(bbox)
     return boxList
 
+
 def getCameraImageBBox(camBbox, pixelSize, bufferSize):
     """!Get the bounding box of a camera sized image in pixels
 
@@ -662,6 +674,7 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
     retBox = afwGeom.Box2I(pixMin, pixMax)
     retBox.grow(bufferSize)
     return retBox
+
 
 def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10,
                         imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, binSize=1):
@@ -716,6 +729,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     return camIm
 
+
 def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageF,
                detectorNameList=None, binSize=10, bufferSize=10, frame=None, overlay=True, title="",
                showWcs=None, ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None,
@@ -767,13 +781,9 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
     if showWcs:
         if originAtCenter:
-            #Can't divide SWIGGED extent type things when division is imported
-            #from future.  This is DM-83
-            ext = cameraImage.getBBox().getDimensions()
-
-            wcsReferencePixel = afwGeom.PointI(ext.getX()//2, ext.getY()//2)
+            wcsReferencePixel = afwGeom.Box2D(cameraImage.getBBox()).getCenter()
         else:
-            wcsReferencePixel = afwGeom.Point2I(0,0)
+            wcsReferencePixel = afwGeom.Point2I(0, 0)
         wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
     else:
         wcs = None
@@ -797,6 +807,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
     return cameraImage
 
+
 def makeFocalPlaneWcs(pixelSize, referencePixel):
     """!Make a WCS for the focal plane geometry (i.e. returning positions in "mm")
 
@@ -807,7 +818,7 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
 
     md = dafBase.PropertySet()
     if referencePixel is None:
-        referencePixel = afwGeom.PointD(0,0)
+        referencePixel = afwGeom.PointD(0, 0)
     for i in range(2):
         md.set("CRPIX%d"%(i+1), referencePixel[i])
         md.set("CRVAL%d"%(i+1), 0.)
@@ -819,6 +830,7 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
     md.set("CUNIT2", "mm")
 
     return afwImage.makeWcs(md)
+
 
 def findAmp(ccd, pixelPosition):
     """!Find the Amp with the specified pixel position within the composite

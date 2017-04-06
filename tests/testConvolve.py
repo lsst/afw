@@ -247,8 +247,8 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                     print("Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
                                                      self.cnvMaskedImage.getMask().get(x, y)))
 
-        self.assertImagesNearlyEqual(self.cnvImage, refMaskedImage.getImage(), atol=atol, rtol=rtol)
-        self.assertMaskedImagesNearlyEqual(self.cnvMaskedImage, refMaskedImage, atol=atol, rtol=rtol)
+        self.assertImagesAlmostEqual(self.cnvImage, refMaskedImage.getImage(), atol=atol, rtol=rtol)
+        self.assertMaskedImagesAlmostEqual(self.cnvMaskedImage, refMaskedImage, atol=atol, rtol=rtol)
 
         if not sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage):
             self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
@@ -324,7 +324,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         # assert that these two are equal
         msg = "basicConvolve(MaskedImage, kernel=%s) wrote to edge pixels" % (kernelDescr,)
         try:
-            self.assertMaskedImagesNearlyEqual(cnvMaskedImage, cnvMaskedImageCopy,
+            self.assertMaskedImagesAlmostEqual(cnvMaskedImage, cnvMaskedImageCopy,
                                                doVariance=True, rtol=0, atol=0, msg=msg)
         except Exception:
             # write out the images, then fail
@@ -370,9 +370,9 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         skipMaskArr = numpy.array(numpy.isnan(cnvImMaskVarArr[0]), dtype=numpy.uint16)
 
         kernelDescr = "Centered DeltaFunctionKernel (testing unity convolution)"
-        self.assertImagesNearlyEqual(self.cnvImage, self.maskedImage.getImage(),
+        self.assertImagesAlmostEqual(self.cnvImage, self.maskedImage.getImage(),
                                      skipMask=skipMaskArr, msg=kernelDescr)
-        self.assertMaskedImagesNearlyEqual(self.cnvMaskedImage, self.maskedImage,
+        self.assertMaskedImagesAlmostEqual(self.cnvMaskedImage, self.maskedImage,
                                            skipMask=skipMaskArr, msg=kernelDescr)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")

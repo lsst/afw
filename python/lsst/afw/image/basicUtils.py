@@ -22,11 +22,12 @@
 from __future__ import absolute_import, division, print_function
 
 __all__ = ["makeImageFromArray", "makeMaskFromArray", "makeMaskedImageFromArrays",
+           "wcsAlmostEqualOverBBox", "assertWcsAlmostEqualOverBBox",
            "wcsNearlyEqualOverBBox", "assertWcsNearlyEqualOverBBox"]
 
-from builtins import str
 import itertools
 import math
+import warnings
 
 import numpy
 
@@ -94,8 +95,8 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     xList = numpy.linspace(bboxd.getMinX(), bboxd.getMaxX(), nx)
     yList = numpy.linspace(bboxd.getMinY(), bboxd.getMaxY(), ny)
     # we don't care about measured error unless it is too large, so initialize to max allowed
-    measDiffSky = (maxDiffSky, "?") # (sky diff, pix pos)
-    measDiffPix = (maxDiffPix, "?") # (pix diff, sky pos)
+    measDiffSky = (maxDiffSky, "?")  # (sky diff, pix pos)
+    measDiffPix = (maxDiffPix, "?")  # (pix diff, sky pos)
     for x, y in itertools.product(xList, yList):
         fromPixPos = afwGeom.Point2D(x, y)
         sky0 = wcs0.pixelToSky(fromPixPos)
@@ -117,16 +118,17 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     msgList = []
     if measDiffSky[0] > maxDiffSky:
         msgList.append("%s arcsec max measured sky error > %s arcsec max allowed sky error at pix pos=%s" %
-            (measDiffSky[0].asArcseconds(), maxDiffSky.asArcseconds(), measDiffSky[1]))
+                       (measDiffSky[0].asArcseconds(), maxDiffSky.asArcseconds(), measDiffSky[1]))
     if measDiffPix[0] > maxDiffPix:
         msgList.append("%s max measured pix error > %s max allowed pix error at sky pos=%s" %
-                (measDiffPix[0], maxDiffPix, measDiffPix[1]))
+                       (measDiffPix[0], maxDiffPix, measDiffPix[1]))
 
     return "; ".join(msgList)
 
-def wcsNearlyEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
-    maxDiffPix=0.01, nx=5, ny=5):
-    """!Return True if two WCS are nearly equal over a grid of pixel positions, else False
+
+def wcsAlmostEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
+                           maxDiffPix=0.01, nx=5, ny=5):
+    """!Return True if two WCS are almost equal over a grid of pixel positions, else False
 
     @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)
     @param[in] wcs1  WCS 1 (an lsst.afw.image.Wcs)
@@ -148,14 +150,16 @@ def wcsNearlyEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
         doShortCircuit = True,
     ))
 
-@lsst.utils.tests.inTestCase
-def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
-    maxDiffPix=0.01, nx=5, ny=5, msg="WCSs differ"):
-    """!Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions
 
-    If the WCS are too divergent, call testCase.fail; the message describes the largest error measured
-    in pixel coordinates (if sky to pixel error was excessive) and sky coordinates (if pixel to sky error
-    was excessive) across the entire pixel grid.
+@lsst.utils.tests.inTestCase
+def assertWcsAlmostEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
+                                 maxDiffPix=0.01, nx=5, ny=5, msg="WCSs differ"):
+    """!Assert that two WCS are almost equal over a grid of pixel positions
+
+    Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions.
+    If the WCS are too divergent at any point, call testCase.fail; the message describes
+    the largest error measured in pixel coordinates (if sky to pixel error was excessive)
+    and sky coordinates (if pixel to sky error was excessive) across the entire pixel grid.
 
     @param[in] testCase  unittest.TestCase instance the test is part of;
                         an object supporting one method: fail(self, msgStr)
@@ -181,3 +185,14 @@ def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afw
     )
     if errMsg:
         testCase.fail("%s: %s" % (msg, errMsg))
+
+
+def wcsNearlyEqualOverBBox(*args, **kwargs):
+    warnings.warn("Deprecated. Use wcsAlmostEqualOverBBox", DeprecationWarning)
+    return wcsAlmostEqualOverBBox(*args, **kwargs)
+
+
+@lsst.utils.tests.inTestCase
+def assertWcsNearlyEqualOverBBox(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertWcsAlmostEqualOverBBox", DeprecationWarning)
+    assertWcsAlmostEqualOverBBox(*args, **kwargs)

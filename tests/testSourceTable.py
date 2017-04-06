@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008-2014 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -132,18 +132,18 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.centroidKey.get(self.record), self.record.getCentroid())
-        self.assertClose(math.fabs(self.record.get(self.xErrKey)),
-                         math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
-        self.assertClose(math.fabs(self.record.get(self.yErrKey)),
-                         math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xErrKey)),
+                                     math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yErrKey)),
+                                     math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.shapeKey.get(self.record), self.record.getShape())
-        self.assertClose(math.fabs(self.record.get(self.xxErrKey)),
-                         math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
-        self.assertClose(math.fabs(self.record.get(self.yyErrKey)),
-                         math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
-        self.assertClose(math.fabs(self.record.get(self.xyErrKey)),
-                         math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xxErrKey)),
+                                     math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yyErrKey)),
+                                     math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xyErrKey)),
+                                     math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
 
     def testPersisted(self):
         self.table.definePsfFlux("a")
@@ -162,19 +162,19 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(table.getCentroidDefinition(), "b")
             centroid = self.centroidKey.get(self.record)
             self.assertEqual(centroid, record.getCentroid())
-            self.assertClose(math.fabs(self.record.get(self.xErrKey)),
-                             math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
-            self.assertClose(math.fabs(self.record.get(self.yErrKey)),
-                             math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xErrKey)),
+                                         math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yErrKey)),
+                                         math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
             shape = self.shapeKey.get(self.record)
             self.assertEqual(table.getShapeDefinition(), "c")
             self.assertEqual(shape, record.getShape())
-            self.assertClose(math.fabs(self.record.get(self.xxErrKey)),
-                             math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
-            self.assertClose(math.fabs(self.record.get(self.yyErrKey)),
-                             math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
-            self.assertClose(math.fabs(self.record.get(self.xyErrKey)),
-                             math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xxErrKey)),
+                                         math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yyErrKey)),
+                                         math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xyErrKey)),
+                                         math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
 
     def testCanonical2(self):
         self.table.definePsfFlux("a")

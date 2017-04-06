@@ -99,7 +99,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         # computed centroid should be crpix
         afwTable.updateRefCentroids(self.wcs, self.refCat)
         refCentroid = self.refCat[0].get(self.refCentroidKey)
-        self.assertPairsNearlyEqual(refCentroid, self.crpix)
+        self.assertPairsAlmostEqual(refCentroid, self.crpix)
 
         # coord should not be changed
         self.assertEqual(self.refCat[0].get(self.refCoordKey), self.crval)
@@ -117,7 +117,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         # compute coord should be crval
         afwTable.updateSourceCoords(self.wcs, self.sourceCat)
         srcCoord = self.sourceCat[0].get(self.srcCoordKey)
-        self.assertPairsNearlyEqual(srcCoord, self.crval)
+        self.assertPairsAlmostEqual(srcCoord, self.crval)
 
         # centroid should not be changed; also make sure that getCentroid words
         self.assertEqual(self.sourceCat[0].getCentroid(), self.crpix)
@@ -156,11 +156,11 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         for src, refObj in zip(self.sourceCat, self.refCat):
             srcCentroid = src.get(self.srcCentroidKey)
             refCentroid = refObj.get(self.refCentroidKey)
-            self.assertPairsNearlyEqual(srcCentroid, refCentroid, maxDiff=maxPixDiff)
+            self.assertPairsAlmostEqual(srcCentroid, refCentroid, maxDiff=maxPixDiff)
 
             srcCoord = src.get(self.srcCoordKey)
             refCoord = refObj.get(self.refCoordKey)
-            self.assertCoordsNearlyEqual(srcCoord, refCoord, maxDiff=maxSkyDiff)
+            self.assertCoordsAlmostEqual(srcCoord, refCoord, maxDiff=maxSkyDiff)
 
     def setCatalogs(self, maxPix, numPoints):
         """Set the source centroids and reference object coords

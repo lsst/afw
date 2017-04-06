@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -319,9 +319,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(stack1.get(1, 0)[1], 0x0)
         self.assertEqual(stack1.get(2, 0)[1], 1 << propagatedBit)
         self.assertEqual(stack1.get(3, 0)[1], 0x0)
-        self.assertClose(stack1.getImage().getArray(),
-                         (partialSum + finalImage) / np.array([5.0, 4.0, 5.0, 4.0]),
-                         rtol=1E-7)
+        self.assertFloatsAlmostEqual(stack1.getImage().getArray(),
+                                     (partialSum + finalImage) / np.array([5.0, 4.0, 5.0, 4.0]), rtol=1E-7)
 
         # Give the masked image more weight: we should see pixel 2 and pixel 3 set with propagatedBit,
         # pixel 2 because it's not rejected, and pixel 3 because the weight of the rejection (0.3333)
@@ -333,9 +332,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(stack2.get(1, 0)[1], 0x0)
         self.assertEqual(stack2.get(2, 0)[1], 1 << propagatedBit)
         self.assertEqual(stack2.get(3, 0)[1], 1 << propagatedBit)
-        self.assertClose(stack2.getImage().getArray(),
-                         (partialSum + 2*finalImage) / np.array([6.0, 4.0, 6.0, 4.0]),
-                         rtol=1E-7)
+        self.assertFloatsAlmostEqual(stack2.getImage().getArray(),
+                                     (partialSum + 2*finalImage) / np.array([6.0, 4.0, 6.0, 4.0]), rtol=1E-7)
 
 #################################################################
 # Test suite boiler plate
@@ -348,6 +346,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

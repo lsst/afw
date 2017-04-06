@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2016 AURA/LSST
+# Copyright 2016-2017 AURA/LSST
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -94,11 +94,11 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         """
         v1 = self.catalog.asAstropy(cls=astropy.table.Table, unviewable="skip")
         self.assertEqual(v1["a1"].unit, astropy.units.Unit("m"))
-        self.assertClose(v1["a1"], self.catalog["a1"])
+        self.assertFloatsAlmostEqual(v1["a1"], self.catalog["a1"])
         self.assertNotIsInstance(v1["a1"], astropy.units.Quantity)
         v2 = self.catalog.asAstropy(cls=astropy.table.QTable, unviewable="skip")
         self.assertEqual(v2["a1"].unit, astropy.units.Unit("m"))
-        self.assertClose(v2["a1"]/astropy.units.Quantity(self.catalog["a1"]*100, "cm"), 1.0)
+        self.assertFloatsAlmostEqual(v2["a1"]/astropy.units.Quantity(self.catalog["a1"]*100, "cm"), 1.0)
         self.assertIsInstance(v2["a1"], astropy.units.Quantity)
 
     def testUnitlessColumn(self):
@@ -106,40 +106,42 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         """
         v1 = self.catalog.asAstropy(cls=astropy.table.Table, unviewable="skip")
         self.assertEqual(v1["a2"].unit, None)
-        self.assertClose(v1["a2"], self.catalog["a2"])  # use assertClose just because it handles arrays
+        self.assertFloatsAlmostEqual(v1["a2"], self.catalog["a2"])
         v2 = self.catalog.asAstropy(cls=astropy.table.QTable, unviewable="skip")
         self.assertEqual(v2["a2"].unit, None)
-        self.assertClose(v2["a2"], self.catalog["a2"])
+        self.assertFloatsAlmostEqual(v2["a2"], self.catalog["a2"])
 
     def testArrayColumn(self):
         """Test that an array column appears as a 2-d array with the expected shape.
         """
         v = self.catalog.asAstropy(unviewable="skip")
-        self.assertClose(v["a3"], self.catalog["a3"])
+        self.assertFloatsAlmostEqual(v["a3"], self.catalog["a3"])
 
     def testFlagColumn(self):
         """Test that Flag columns can be viewed if copy=True or unviewable="copy".
         """
         v1 = self.catalog.asAstropy(unviewable="copy")
-        self.assertClose(v1["a4"], self.catalog["a4"])
+        self.assertFloatsAlmostEqual(v1["a4"], self.catalog["a4"])
         v2 = self.catalog.asAstropy(copy=True)
-        self.assertClose(v2["a4"], self.catalog["a4"])
+        self.assertFloatsAlmostEqual(v2["a4"], self.catalog["a4"])
 
     def testCoordColumn(self):
         """Test that Coord columns appears as a pair of columns with correct angle units.
         """
         v1 = self.catalog.asAstropy(cls=astropy.table.Table, unviewable="skip")
-        self.assertClose(v1["a5_ra"], self.catalog["a5_ra"])
+        self.assertFloatsAlmostEqual(v1["a5_ra"], self.catalog["a5_ra"])
         self.assertEqual(v1["a5_ra"].unit, astropy.units.Unit("rad"))
         self.assertNotIsInstance(v1["a5_ra"], astropy.units.Quantity)
-        self.assertClose(v1["a5_dec"], self.catalog["a5_dec"])
+        self.assertFloatsAlmostEqual(v1["a5_dec"], self.catalog["a5_dec"])
         self.assertEqual(v1["a5_dec"].unit, astropy.units.Unit("rad"))
         self.assertNotIsInstance(v1["a5_dec"], astropy.units.Quantity)
         v2 = self.catalog.asAstropy(cls=astropy.table.QTable, unviewable="skip")
-        self.assertClose(v2["a5_ra"]/astropy.units.Quantity(self.catalog["a5_ra"], unit="rad"), 1.0)
+        self.assertFloatsAlmostEqual(v2["a5_ra"]/astropy.units.Quantity(self.catalog["a5_ra"], unit="rad"),
+                                     1.0)
         self.assertEqual(v2["a5_ra"].unit, astropy.units.Unit("rad"))
         self.assertIsInstance(v2["a5_ra"], astropy.units.Quantity)
-        self.assertClose(v2["a5_dec"]/astropy.units.Quantity(self.catalog["a5_dec"], unit="rad"), 1.0)
+        self.assertFloatsAlmostEqual(v2["a5_dec"]/astropy.units.Quantity(self.catalog["a5_dec"], unit="rad"),
+                                     1.0)
         self.assertEqual(v2["a5_dec"].unit, astropy.units.Unit("rad"))
         self.assertIsInstance(v2["a5_dec"], astropy.units.Quantity)
 
@@ -182,6 +184,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

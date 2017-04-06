@@ -23,8 +23,11 @@ from __future__ import absolute_import, division, print_function
 
 # the asserts are automatically imported so unit tests can find them without special imports;
 # the other functions are hidden unless explicitly asked for
-__all__ = ["assertImagesNearlyEqual", "assertMasksEqual", "assertMaskedImagesNearlyEqual",
-           "assertImagesEqual", "assertMaskedImagesEqual"]
+__all__ = ["assertImagesAlmostEqual", "assertImagesEqual", "assertMasksEqual",
+           "assertMaskedImagesAlmostEqual", "assertMaskedImagesEqual",
+           "assertImagesNearlyEqual", "assertMaskedImagesNearlyEqual"]
+
+import warnings
 
 import numpy as np
 
@@ -70,9 +73,9 @@ def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
 
 
 @lsst.utils.tests.inTestCase
-def assertImagesNearlyEqual(testCase, image0, image1, skipMask=None,
+def assertImagesAlmostEqual(testCase, image0, image1, skipMask=None,
                             rtol=1.0e-05, atol=1e-08, msg="Images differ"):
-    """!Assert that two images are nearly equal, including non-finite values
+    """!Assert that two images are almost equal, including non-finite values
 
     @param[in] testCase  unittest.TestCase instance the test is part of;
                         an object supporting one method: fail(self, msgStr)
@@ -115,10 +118,10 @@ def assertImagesNearlyEqual(testCase, image0, image1, skipMask=None,
 def assertImagesEqual(*args, **kwds):
     """!Assert that two images are exactly equal, including non-finite values.
 
-    All arguments are forwarded to assertImagesNearlyEqual aside from atol and rtol,
+    All arguments are forwarded to assertAnglesAlmostEqual aside from atol and rtol,
     which are set to zero.
     """
-    return assertImagesNearlyEqual(*args, atol=0, rtol=0, **kwds)
+    return assertImagesAlmostEqual(*args, atol=0, rtol=0, **kwds)
 
 
 @lsst.utils.tests.inTestCase
@@ -151,7 +154,7 @@ def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
 
 
 @lsst.utils.tests.inTestCase
-def assertMaskedImagesNearlyEqual(
+def assertMaskedImagesAlmostEqual(
     testCase, maskedImage0, maskedImage1,
     doImage=True, doMask=True, doVariance=True, skipMask=None,
     rtol=1.0e-05, atol=1e-08, msg="Masked images differ",
@@ -241,10 +244,10 @@ def assertMaskedImagesNearlyEqual(
 def assertMaskedImagesEqual(*args, **kwds):
     """!Assert that two masked images are exactly equal, including non-finite values.
 
-    All arguments are forwarded to assertMaskedImagesNearlyEqual aside from atol and rtol,
+    All arguments are forwarded to assertMaskedImagesAlmostEqual aside from atol and rtol,
     which are set to zero.
     """
-    return assertMaskedImagesNearlyEqual(*args, atol=0, rtol=0, **kwds)
+    return assertMaskedImagesAlmostEqual(*args, atol=0, rtol=0, **kwds)
 
 
 def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
@@ -362,3 +365,15 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
         errStrList.insert(0, errStr)
 
     return "; ".join(errStrList)
+
+
+@lsst.utils.tests.inTestCase
+def assertImagesNearlyEqual(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertImagesAlmostEqual", DeprecationWarning)
+    assertImagesAlmostEqual(*args, **kwargs)
+
+
+@lsst.utils.tests.inTestCase
+def assertMaskedImagesNearlyEqual(*args, **kwargs):
+    warnings.warn("Deprecated. Use assertMaskedImagesAlmostEqual", DeprecationWarning)
+    assertMaskedImagesAlmostEqual(*args, **kwargs)

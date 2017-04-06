@@ -153,8 +153,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
 
                 # Longitude not guaranteed to match input at pole
                 if not point.atPole():
-                    # assertAnglesNearlyEqual handles angle wrapping internally
-                    self.assertAnglesNearlyEqual(lon, point.getLongitude())
+                    # assertAnglesAlmostEqual handles angle wrapping internally
+                    self.assertAnglesAlmostEqual(lon, point.getLongitude())
 
         # Vector construction should return valid longitude even in edge cases.
         point = SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0))
@@ -184,7 +184,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             if point.isFinite():
                 self.assertGreaterEqual(point.getLatitude().asDegrees(), -90.0)
                 self.assertLessEqual(point.getLatitude().asDegrees(), 90.0)
-                self.assertAnglesNearlyEqual(lat, point.getLatitude())
+                self.assertAnglesAlmostEqual(lat, point.getLatitude())
 
     def testGetVectorValue(self):
         """Test if getVector() returns the expected value.
@@ -252,8 +252,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         sep2 = refPoint.separation(point2)
         sepTrue = 54.735610317245339*degrees
 
-        self.assertAnglesNearlyEqual(sepTrue, sep1)
-        self.assertAnglesNearlyEqual(sepTrue, sep2)
+        self.assertAnglesAlmostEqual(sepTrue, sep1)
+        self.assertAnglesAlmostEqual(sepTrue, sep2)
 
     def testAtPoleValue(self):
         """Test if atPole() returns the expected value.
@@ -495,8 +495,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         # Don't let it be on exactly the opposite side.
         northPoleOpposite = SpherePoint(180.0*degrees, self.nextDown(northPoleSame.getLatitude()))
 
-        self.assertAnglesNearlyEqual(southPole.bearingTo(northPoleSame), afwGeom.HALFPI*afwGeom.radians)
-        self.assertAnglesNearlyEqual(southPole.bearingTo(northPoleOpposite),
+        self.assertAnglesAlmostEqual(southPole.bearingTo(northPoleSame), afwGeom.HALFPI*afwGeom.radians)
+        self.assertAnglesAlmostEqual(southPole.bearingTo(northPoleOpposite),
                                      (afwGeom.PI + afwGeom.HALFPI)*afwGeom.radians)
 
     def testSeparationValueGeneric(self):
@@ -523,7 +523,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                     self.assertGreaterEqual(sep.asDegrees(), 0.0)
                     self.assertLessEqual(sep.asDegrees(), 180.0)
                     self.assertAlmostEqual(expected, sep.asRadians())
-                    self.assertAnglesNearlyEqual(sep, point2.separation(point1))
+                    self.assertAnglesAlmostEqual(sep, point2.separation(point1))
                 else:
                     self.assertTrue(math.isnan(sep.asRadians()))
                     self.assertTrue(math.isnan(point2.separation(point1).asRadians()))
@@ -542,7 +542,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         epsilon = 1.0*afwGeom.arcseconds
         spicaPlus = SpherePoint(spica.getLongitude(), spica.getLatitude() + epsilon)
 
-        self.assertAnglesNearlyEqual(epsilon, spicaPlus.separation(spica))
+        self.assertAnglesAlmostEqual(epsilon, spicaPlus.separation(spica))
 
     def testSeparationPoles(self):
         """White-box test: all representations of a pole should have the same distance to another point.
@@ -552,10 +552,10 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         regularPoint = SpherePoint(42.0*degrees, 45.0*degrees)
         expectedSep = (45.0+90.0)*degrees
 
-        self.assertAnglesNearlyEqual(expectedSep, southPole1.separation(regularPoint))
-        self.assertAnglesNearlyEqual(expectedSep, regularPoint.separation(southPole1))
-        self.assertAnglesNearlyEqual(expectedSep, southPole2.separation(regularPoint))
-        self.assertAnglesNearlyEqual(expectedSep, regularPoint.separation(southPole2))
+        self.assertAnglesAlmostEqual(expectedSep, southPole1.separation(regularPoint))
+        self.assertAnglesAlmostEqual(expectedSep, regularPoint.separation(southPole1))
+        self.assertAnglesAlmostEqual(expectedSep, southPole2.separation(regularPoint))
+        self.assertAnglesAlmostEqual(expectedSep, regularPoint.separation(southPole2))
 
     @staticmethod
     def toVector(longitude, latitude):
@@ -629,7 +629,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
 
             self.assertNotAlmostEqual(point.getLongitude().asDegrees(), newPoint.getLongitude().asDegrees())
             self.assertNotAlmostEqual(point.getLatitude().asDegrees(), newPoint.getLatitude().asDegrees())
-            self.assertAnglesNearlyEqual(dist, newPoint.separation(pole))
+            self.assertAnglesAlmostEqual(dist, newPoint.separation(pole))
 
         # Non-finite values give undefined rotations
         for latitude in latitudes:
@@ -713,8 +713,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                 self.assertIsInstance(newPoint, SpherePoint)
                 if point1.isFinite() and point2.isFinite():
                     if not point2.atPole():
-                        self.assertAnglesNearlyEqual(point2.getLongitude(), newPoint.getLongitude())
-                    self.assertAnglesNearlyEqual(point2.getLatitude(), newPoint.getLatitude())
+                        self.assertAnglesAlmostEqual(point2.getLongitude(), newPoint.getLongitude())
+                    self.assertAnglesAlmostEqual(point2.getLatitude(), newPoint.getLatitude())
                 else:
                     self.assertTrue(math.isnan(newPoint.getLongitude().asRadians()))
                     self.assertTrue(math.isnan(newPoint.getLatitude().asRadians()))
@@ -723,11 +723,11 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         lon = 123.0*degrees
         almostPole = SpherePoint(lon, self.nextDown(90.0*degrees))
         goSouth = almostPole.offset(-90.0*degrees, 90.0*degrees)
-        self.assertAnglesNearlyEqual(lon, goSouth.getLongitude())
-        self.assertAnglesNearlyEqual(0.0*degrees, goSouth.getLatitude())
+        self.assertAnglesAlmostEqual(lon, goSouth.getLongitude())
+        self.assertAnglesAlmostEqual(0.0*degrees, goSouth.getLatitude())
         goEast = almostPole.offset(0.0*degrees, 90.0*degrees)
-        self.assertAnglesNearlyEqual(lon + 90.0*degrees, goEast.getLongitude())
-        self.assertAnglesNearlyEqual(0.0*degrees, goEast.getLatitude())
+        self.assertAnglesAlmostEqual(lon + 90.0*degrees, goEast.getLongitude())
+        self.assertAnglesAlmostEqual(0.0*degrees, goEast.getLatitude())
 
     def testIterResult(self):
         """Test if iteration returns the expected values.
@@ -782,8 +782,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             self.assertEqual(2, len(pointRepr.split(",")))
 
             spcopy = eval(pointRepr)
-            self.assertAnglesNearlyEqual(point.getLongitude(), spcopy.getLongitude())
-            self.assertAnglesNearlyEqual(point.getLatitude(), spcopy.getLatitude())
+            self.assertAnglesAlmostEqual(point.getLongitude(), spcopy.getLongitude())
+            self.assertAnglesAlmostEqual(point.getLatitude(), spcopy.getLatitude())
 
     def nextUp(self, angle):
         """Returns the smallest angle that is larger than the argument.

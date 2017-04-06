@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008-2015 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -1043,7 +1043,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         afwDetect.setMaskFromFootprint(mask123a, child3, 1)
         afwDetect.setMaskFromFootprint(mask123b, merge123, 1)
         self.assertEqual(mask123a.getArray().sum(), merge123.getArea())
-        self.assertClose(mask123a.getArray(), mask123b.getArray(), rtol=0, atol=0)
+        self.assertFloatsAlmostEqual(mask123a.getArray(), mask123b.getArray(), rtol=0, atol=0)
 
         # Test that ignoreSelf=True works for include
         ignoreParent = True

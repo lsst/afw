@@ -218,7 +218,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
 
                 actImage = region.getImage(location)
                 msg = "exact image(%s) incorrect" % (LocNameDict[location],)
-                self.assertImagesNearlyEqual(actImage, desImage, msg=msg)
+                self.assertImagesAlmostEqual(actImage, desImage, msg=msg)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008-2014 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -157,10 +157,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
             self.assertEqual(table.getCentroidDefinition(), "b")
             self.assertEqual(record.get(self.centroidKey), record.getCentroid())
-            self.assertClose(record.get(self.centroidErrKey), record.getCentroidErr())
+            self.assertFloatsAlmostEqual(record.get(self.centroidErrKey), record.getCentroidErr())
             self.assertEqual(table.getShapeDefinition(), "c")
             self.assertEqual(record.get(self.shapeKey), record.getShape())
-            self.assertClose(record.get(self.shapeErrKey), record.getShapeErr())
+            self.assertFloatsAlmostEqual(record.get(self.shapeErrKey), record.getShapeErr())
 
     def testDefiner1(self):
         self.table.definePsfFlux("a")
@@ -171,10 +171,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assertClose(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
+        self.assertFloatsAlmostEqual(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assertClose(self.record.get(self.shapeErrKey), self.record.getShapeErr())
+        self.assertFloatsAlmostEqual(self.record.get(self.shapeErrKey), self.record.getShapeErr())
 
     def testCoordUpdate(self):
         self.table.defineCentroid("b")
@@ -207,6 +207,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

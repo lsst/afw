@@ -136,7 +136,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
                 msg = "{}, endpoint={}, i={}, point={}".format(baseMsg, endpoint, i, point)
                 if isAngle:
                     desAngle = rawData[i, axis] * afwGeom.radians
-                    self.assertAnglesNearlyEqual(point[axis], desAngle, msg=msg)
+                    self.assertAnglesAlmostEqual(point[axis], desAngle, msg=msg)
                 else:
                     self.assertAlmostEqual(point[axis], rawData[i, axis], msg=msg)
 
@@ -151,7 +151,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
             msg = "{}, axis={}".format(baseMsg, axis)
             if isAngle:
                 desAngle = pointData[axis] * afwGeom.radians
-                self.assertAnglesNearlyEqual(point[axis], desAngle, msg=msg)
+                self.assertAnglesAlmostEqual(point[axis], desAngle, msg=msg)
             else:
                 self.assertAlmostEqual(point[axis], pointData[axis], msg=msg)
 
