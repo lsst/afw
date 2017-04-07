@@ -88,8 +88,8 @@ AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) c
 
 // --- Note: all subsequent RadialXYTransform member functions are static
 
-/*
- * @brief Invert the coefficients for the polynomial.
+/**
+ * @internal Invert the coefficients for the polynomial.
  *
  * We'll need the coeffs for the inverse of the input polynomial
  * handle up to 6th order

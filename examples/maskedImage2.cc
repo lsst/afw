@@ -20,7 +20,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/// \file
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;

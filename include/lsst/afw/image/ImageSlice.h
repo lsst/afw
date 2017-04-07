@@ -24,11 +24,8 @@
 
 #if !defined(LSST_AFW_IMAGE_SLICE_H)
 #define LSST_AFW_IMAGE_SLICE_H
-/**
- * @file ImageSlice.h
- * @brief Define a single column or row of an Image
- * @ingroup afw
- * @author Steve Bickerton
+/*
+ * Define a single column or row of an Image
  *
  * The purpose of this class is to make it possible to add/sub/mult/div an Image by a row or column.
  *    We overload operators + - * / to do this.  The original motivation was to facilitate subtraction
@@ -45,16 +42,18 @@ namespace image {
 
 
 /**
- * @class ImageSlice
- * @brief A class to specify a slice of an image
- * @ingroup afw
- *
+ * A class to specify a slice of an image
  */
 template<typename PixelT>
 class ImageSlice : public Image<PixelT> {
 public:
     enum ImageSliceType {ROW, COLUMN};
 
+    /**
+     * Constructor for ImageSlice
+     *
+     * @param img The image to represent as a slice.
+     */
     explicit ImageSlice(Image<PixelT> const &img);
     ~ImageSlice() {}
     ImageSliceType getImageSliceType() const { return _sliceType; }
@@ -85,7 +84,7 @@ struct Div      { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { 
 
 
 /**
- * @brief A function to loop over pixels and perform the requested operation
+ * A function to loop over pixels and perform the requested operation
  *
  */
 template<typename OperatorT, typename PixelT>
@@ -119,42 +118,122 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
+/**
+ * Overload operator+()
+ *
+ * We require two of these, one for image+slice (this one) and one for slice+image (next one down)
+ *
+ * @param img The Image
+ * @param slc The ImageSlice
+ */
 template<typename PixelT>
 typename Image<PixelT>::Ptr operator+(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
+/**
+ * Overload operator+()
+ *
+ * @param slc The ImageSlice
+ * @param img The Image
+ *
+ * We require two of these, one for image+slice (previous one) and one for slice+image (this)
+ */
 template<typename PixelT>
 typename Image<PixelT>::Ptr operator+(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
+/**
+ * Overload operator+=()
+ *
+ * We'll only allow 'image += slice'.  It doesn't make sense to add an image to a slice.
+ *
+ * @param[in, out] img The Image
+ * @param[in] slc The ImageSlice
+ */
 template<typename PixelT>
 void operator+=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
 
 // -----------------------------------------------------------------
 // overload -
+/**
+ * Overload operator-()
+ *
+ * We'll only allow 'image - slice', as 'slice - image' doesn't make sense.
+ *
+ * @param img The Image
+ * @param slc The ImageSlice
+ */
 template<typename PixelT>
 typename Image<PixelT>::Ptr operator-(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
+/**
+ * Overload operator-=()
+ *
+ * Only 'image -= slice' is defined.  'slice -= image' wouldn't make sense.
+ *
+ * @param[in, out] img The Image
+ * @param[in] slc The ImageSlice
+ */
 template<typename PixelT>
 void operator-=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
 
 // ******************************************************************
 // overload *
+/**
+ * Overload operator*()
+ *
+ * We'll define both 'image*slice' (this one) and 'slice*image' (next one down).
+ *
+ * @param img The Image
+ * @param slc The ImageSlice
+ */
 template<typename PixelT>
 typename Image<PixelT>::Ptr operator*(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
+/**
+ * Overload operator*()
+ *
+ * We'll define both 'image*slice' (this one) and 'slice*image' (next one down).
+ *
+ * @param slc The Image
+ * @param img The ImageSlice
+ */
 template<typename PixelT>
 typename Image<PixelT>::Ptr operator*(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
+/**
+ * Overload operator*=()
+ *
+ * Only 'image *= slice' is defined, as 'slice *= image' doesn't make sense.
+ *
+ * @param[in, out] img The Image
+ * @param[in] slc The ImageSlice
+ */
 template<typename PixelT>
 void operator*=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
 
 // ///////////////////////////////////////////////////////////////////
 // overload /
+/**
+ * Overload operator/()
+ *
+ * Only 'image / slice' is defined, as 'slice / image' doesn't make sense.
+ *
+ * @param img The Image
+ * @param slc The ImageSlice
+ */
 template<typename PixelT>
 typename Image<PixelT>::Ptr operator/(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
+/**
+ * Overload operator/=()
+ *
+ * Only 'image /= slice' is defined, as 'slice /= image' doesn't make sense.
+ *
+ * @param[in, out] img The Image
+ * @param[in] slc The ImageSlice
+ */
 template<typename PixelT>
 void operator/=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 

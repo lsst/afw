@@ -1,13 +1,6 @@
 // -*- LSST-C++ -*-
-/** \file
- * \brief Implementation of PsfFormatter class
- *
- * \version $Revision: 2151 $
- * \date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * \ingroup afw
+/*
+ * Implementation of PsfFormatter class
  */
 #include <stdexcept>
 #include <string>
@@ -39,21 +32,13 @@ namespace pexPolicy = lsst::pex::policy;
 
 using boost::serialization::make_nvp;
 
-/** Register this Formatter subclass through a static instance of
- * FormatterRegistration.
- */
 dafPersist::FormatterRegistration
 afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
 
-/** Constructor.
- * \param[in] policy Policy for configuring this Formatter
- */
 afwDetect::PsfFormatter::PsfFormatter(
     pexPolicy::Policy::Ptr policy) :
     dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-/** Minimal destructor.
- */
 afwDetect::PsfFormatter::~PsfFormatter(void) {}
 
 void afwDetect::PsfFormatter::write(
@@ -113,14 +98,11 @@ void afwDetect::PsfFormatter::update(dafBase::Persistable* ,
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Psf");
 }
 
-/** Serialize a Psf to a Boost archive.  Handles text or XML
- * archives, input or output.
- */
 template <class Archive>
 void afwDetect::PsfFormatter::delegateSerialize(
-        Archive& ar,                    ///< Boost archive
-        unsigned int const,             ///< Version of the Psf class
-        dafBase::Persistable* persistable ///< persistable Pointer to the Psf as a Persistable
+        Archive& ar,
+        unsigned int const,
+        dafBase::Persistable* persistable
                                                ) {
     LOGL_DEBUG(_log, "PsfFormatter delegateSerialize start");
     afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
@@ -135,10 +117,6 @@ void afwDetect::PsfFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "PsfFormatter delegateSerialize end");
 }
 
-/** Factory method for PsfFormatter.
- * \param[in] policy Policy for configuring the PsfFormatter
- * \return Shared pointer to a new instance
- */
 dafPersist::Formatter::Ptr afwDetect::PsfFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {
     return dafPersist::Formatter::Ptr(new afwDetect::PsfFormatter(policy));

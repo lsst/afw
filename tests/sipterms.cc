@@ -52,9 +52,9 @@ namespace afwCoord = lsst::afw::coord;
 
 double calculateDistortion( Eigen::MatrixXd sip, double u, double v)
 {
-    ///Computes all terms in the matrix, which the sip standard tells you not to do.
-    ///At least the standard says they are not used. Does this mean set to zero or not
-    ///computed?
+    // Computes all terms in the matrix, which the sip standard tells you not to do.
+    // At least the standard says they are not used. Does this mean set to zero or not
+    // computed?
     assert(sip.rows() == sip.cols());
 
     int i, j;
@@ -250,9 +250,9 @@ BOOST_AUTO_TEST_CASE(basic)
     sipA(1,1) = 0;
 
 
-    ///
+    //
     //Test reverse coeff.
-    ///
+    //
 	printf("inverse 1\n");
     sipAp(2,0) = 1.e-4;
     afwImg::TanWcs sipWcs7(crval, crpix, CD, sipA, sipB, sipAp, sipBp);

@@ -18,7 +18,7 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
- *  @brief Iterator class for CatalogT.
+ *  Iterator class for CatalogT.
  *
  *  Iterators dereference to record references or const references, even though the CatalogT container
  *  is based on a vector of shared_ptr internally.  This is usually very convenient (and is one of
@@ -61,7 +61,7 @@ private:
 };
 
 /**
- *  @brief A custom container class for records, based on std::vector.
+ *  A custom container class for records, based on std::vector.
  *
  *  CatalogT wraps a std::vector<PTR(RecordT)> in an interface that looks more
  *  like a std::vector<RecordT>; its iterators and accessors return references
@@ -108,25 +108,25 @@ public:
     typedef CatalogIterator<typename Internal::iterator> iterator;
     typedef CatalogIterator<typename Internal::const_iterator> const_iterator;
 
-    /// @brief Return the table associated with the catalog.
+    /// Return the table associated with the catalog.
     PTR(Table) getTable() const { return _table; }
 
-    /// @brief Return the schema associated with the catalog's table.
+    /// Return the schema associated with the catalog's table.
     Schema getSchema() const { return _table->getSchema(); }
 
     /**
-     *  @brief Construct a catalog from a table (or nothing).
+     *  Construct a catalog from a table (or nothing).
      *
      *  A catalog with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
     explicit CatalogT(PTR(Table) const & table = PTR(Table)()) : _table(table), _internal() {}
 
-    /// @brief Construct a catalog from a schema, creating a table with Table::make(schema).
+    /// Construct a catalog from a schema, creating a table with Table::make(schema).
     explicit CatalogT(Schema const & schema) : _table(Table::make(schema)), _internal() {}
 
     /**
-     *  @brief Construct a catalog from a table and an iterator range.
+     *  Construct a catalog from a table and an iterator range.
      *
      *  If deep is true, new records will be created using table->copyRecord before being inserted.
      *  If deep is false, records will be not be copied, but they must already be associated with
@@ -146,7 +146,7 @@ public:
     CatalogT(CatalogT const & other) : _table(other._table), _internal(other._internal) {}
 
     /**
-     *  @brief Shallow copy constructor from a container containing a related record type.
+     *  Shallow copy constructor from a container containing a related record type.
      *
      *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
      *  convertible to Table.
@@ -166,7 +166,7 @@ public:
     }
 
     /**
-     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *  Return the subset of a catalog corresponding to the True values of the given mask array.
      *
      *  The returned array's records are shallow copies, and hence will not in general be contiguous.
      */
@@ -293,7 +293,7 @@ public:
     }
 
     /**
-     *  @brief Write a FITS binary table to a regular file.
+     *  Write a FITS binary table to a regular file.
      *
      *  @param[in] filename    Name of the file to write.
      *  @param[in] mode        "a" to append a new HDU, "w" to overwrite any existing file.
@@ -305,7 +305,7 @@ public:
     }
 
     /**
-     *  @brief Write a FITS binary table to a RAM file.
+     *  Write a FITS binary table to a RAM file.
      *
      *  @param[in,out] manager Object that manages the memory to write to.
      *  @param[in] mode        "a" to append a new HDU, "w" to overwrite any existing file.
@@ -317,7 +317,7 @@ public:
     }
 
     /**
-     *  @brief Write a FITS binary table to an open file object.
+     *  Write a FITS binary table to an open file object.
      *
      *  @param[in,out] fitsfile Fits file object to write to.
      *  @param[in] flags        Table-subclass-dependent bitflags that control the details of how to
@@ -328,7 +328,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a regular file.
+     *  Read a FITS binary table from a regular file.
      *
      *  @param[in] filename    Name of the file to read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -341,7 +341,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a RAM file.
+     *  Read a FITS binary table from a RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -354,7 +354,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *  Read a FITS binary table from a file object already at the correct extension.
      *
      *  @param[in] fitsfile    Fits file object to read from.
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
@@ -365,7 +365,7 @@ public:
     }
 
     /**
-     *  @brief Return a ColumnView of this catalog's records.
+     *  Return a ColumnView of this catalog's records.
      *
      *  Will throw RuntimeError if records are not contiguous.
      */
@@ -380,14 +380,14 @@ public:
         return ColumnView::make(_table, begin(), end());
     }
 
-    /// @brief Return true if all records are contiguous.
+    /// Return true if all records are contiguous.
     bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }
 
     //@{
     /**
      *  Iterator access.
      *
-     *  @sa CatalogIterator
+     *  @see CatalogIterator
      */
     iterator begin() { return iterator(_internal.begin()); }
     iterator end() { return iterator(_internal.end()); }
@@ -405,7 +405,7 @@ public:
     size_type max_size() const { return _internal.max_size(); }
 
     /**
-     *  @brief Return the capacity of the catalog.
+     *  Return the capacity of the catalog.
      *
      *  This is computed as the sum of the current size and the unallocated space in the table.  It
      *  does not reflect the size of the internal vector, and hence cannot be used to judge when
@@ -414,7 +414,7 @@ public:
     size_type capacity() const { return _internal.size() + _table->getBufferSize(); }
 
     /**
-     *  @brief Increase the capacity of the catalog to the given size.
+     *  Increase the capacity of the catalog to the given size.
      *
      *  This can be used to guarantee that the catalog will be contiguous, but it only affects
      *  records constructed after reserve().
@@ -445,7 +445,7 @@ public:
     }
 
     /**
-     *  @brief Replace the contents of the table with an iterator range.
+     *  Replace the contents of the table with an iterator range.
      *
      *  Delegates to insert(); look there for more information.
      */
@@ -455,32 +455,32 @@ public:
         insert(end(), first, last, deep);
     }
 
-    /// @brief Add a copy of the given record to the end of the catalog.
+    /// Add a copy of the given record to the end of the catalog.
     void push_back(Record const & r) {
         PTR(RecordT) p = _table->copyRecord(r);
         _internal.push_back(p);
     }
 
-    /// @brief Add the given record to the end of the catalog without copying.
+    /// Add the given record to the end of the catalog without copying.
     void push_back(PTR(RecordT) const & p) {
         _internal.push_back(p);
     }
 
-    /// @brief Create a new record, add it to the end of the catalog, and return a pointer to it.
+    /// Create a new record, add it to the end of the catalog, and return a pointer to it.
     PTR(RecordT) addNew() {
         PTR(RecordT) r = _table->makeRecord();
         _internal.push_back(r);
         return r;
     }
 
-    /// @brief Remove the last record in the catalog
+    /// Remove the last record in the catalog
     void pop_back() { _internal.pop_back(); }
 
-    /// @brief Deep-copy the catalog using a cloned table.
+    /// Deep-copy the catalog using a cloned table.
     CatalogT copy() const { return CatalogT(getTable()->clone(), begin(), end(), true); }
 
     /**
-     *  @brief Insert an iterator range into the table.
+     *  Insert an iterator range into the table.
      *
      *  InputIterator must dereference to a record reference that is convertible to the record type
      *  held by the catalog, and must be implicitly convertible to a shared_ptr to a record.
@@ -515,7 +515,7 @@ public:
         }
     }
 
-    /// @brief Insert a range of records into the catalog by copying them with a SchemaMapper.
+    /// Insert a range of records into the catalog by copying them with a SchemaMapper.
     template <typename InputIterator>
     void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
         if (!_table->getSchema().contains(mapper.getOutputSchema())) {
@@ -562,24 +562,24 @@ public:
     /// Remove all records from the catalog.
     void clear() { _internal.clear(); }
 
-    /// @brief Return true if the catalog is in ascending order according to the given key.
+    /// Return true if the catalog is in ascending order according to the given key.
     template <typename T>
     bool isSorted(Key<T> const & key) const;
 
     /**
-     *  @brief Return true if the catalog is in ascending order according to the given predicate.
+     *  Return true if the catalog is in ascending order according to the given predicate.
      *
      *  cmp(a, b) should return true if record a is less than record b, and false otherwise.
      */
     template <typename Compare>
     bool isSorted(Compare cmp) const;
 
-    /// @brief Sort the catalog in-place by the field with the given key.
+    /// Sort the catalog in-place by the field with the given key.
     template <typename T>
     void sort(Key<T> const & key);
 
     /**
-     *  @brief Sort the catalog in-place by the field with the given predicate.
+     *  Sort the catalog in-place by the field with the given predicate.
      *
      *  cmp(a, b) should return true if record a is less than record b, and false otherwise.
      */
@@ -588,7 +588,7 @@ public:
 
     //@{
     /**
-     *  @brief Return an iterator to the record with the given value.
+     *  Return an iterator to the record with the given value.
      *
      *  When the field being searched is not unique, which matching record will be returned
      *  is not defined.  In these cases, lower_bound, upper_bound, or equal_range should be
@@ -610,7 +610,7 @@ public:
 
     //@{
     /**
-     *  @brief Performed binary searches on sorted fields.
+     *  Performed binary searches on sorted fields.
      *
      *  These methods perform binary searches analogous to the STL algorithms of the same
      *  name; they simply create a comparison functor using the given value and Key.
@@ -645,7 +645,7 @@ public:
 
     //@{
     /**
-     *  @brief Return a reference to the internal vector-of-shared_ptr
+     *  Return a reference to the internal vector-of-shared_ptr
      *
      *  While in most cases it is more convenient to use the Catalog's iterators, which dereference
      *  directly to Record objects (and hence allow iter->method() rather than (**iter).method()),

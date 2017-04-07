@@ -42,7 +42,7 @@ using PyMaskedImage =
                daf::base::Persistable, daf::base::Citizen>;
 
 /**
-Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
+@internal Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
 
 The mask and variance must be of the standard types.
 

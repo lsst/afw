@@ -20,10 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- *
- * \brief Image iterator tutorial.
+/*
+ * Image iterator tutorial.
  */
 
 // Include the necessary headers;

@@ -99,7 +99,7 @@ string stripHierarchyFromPath(string filepath)
 }
 
 /**
- Read a FITS file into an Image, write the Image to a RAM FITS file, then write the RAM FITS file to disk.
+ @internal Read a FITS file into an Image, write the Image to a RAM FITS file, then write the RAM FITS file to disk.
  */
 void test6()
 {
@@ -124,7 +124,7 @@ void test6()
 }
 
 /**
- Read a FITS file into an Exposure, write the Exposure to a RAM FITS file, then write the RAM FITS file to disk.
+ @internal Read a FITS file into an Exposure, write the Exposure to a RAM FITS file, then write the RAM FITS file to disk.
  */
 void test7()
 {
@@ -154,7 +154,7 @@ void test7()
 //test entry point
 
 /**
- Run one test as specified by ftn.
+ @internal Run one test as specified by ftn.
  */
 int test(void(*ftn)(void), string label)
 {

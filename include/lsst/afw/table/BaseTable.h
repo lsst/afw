@@ -20,7 +20,7 @@ class Fits;
 namespace table {
 
 /**
- *  @brief Base class for all tables.
+ *  Base class for all tables.
  *
  *  Tables have two largely distinct purposes:
  *   - They serve as factories for records, allocating their field data in blocks.
@@ -55,16 +55,16 @@ public:
     /// Template of CatalogT used to hold const records of the associated type.
     typedef CatalogT<Record const> ConstCatalog;
 
-    /// @brief Number of records in each memory block.
+    /// Number of records in each memory block.
     static int nRecordsPerBlock;
 
-    /// @brief Return the flexible metadata associated with the table.  May be null.
+    /// Return the flexible metadata associated with the table.  May be null.
     PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
 
-    /// @brief Set the flexible metadata associated with the table.  May be null.
+    /// Set the flexible metadata associated with the table.  May be null.
     void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
 
-    /// @brief Return the metadata and set the internal metadata to a null pointer.
+    /// Return the metadata and set the internal metadata to a null pointer.
     PTR(daf::base::PropertyList) popMetadata() {
         PTR(daf::base::PropertyList) tmp;
         _metadata.swap(tmp);
@@ -72,7 +72,7 @@ public:
     }
 
     /**
-     *  @brief Return a polymorphic deep copy of the table.
+     *  Return a polymorphic deep copy of the table.
      *
      *  Derived classes should reimplement by static-casting the output of _clone to a
      *  pointer-to-derived to simulate covariant return types.
@@ -83,7 +83,7 @@ public:
     PTR(BaseTable) clone() const { return _clone(); }
 
     /**
-     *  @brief Default-construct an associated record.
+     *  Default-construct an associated record.
      *
      *  Derived classes should reimplement by static-casting the output of _makeRecord to the
      *  appropriate BaseRecord subclass to simulate covariant return types.
@@ -91,7 +91,7 @@ public:
     PTR(BaseRecord) makeRecord() { return _makeRecord(); }
 
     /**
-     *  @brief Deep-copy a record, requiring that it have the same schema as this table.
+     *  Deep-copy a record, requiring that it have the same schema as this table.
      *
      *  Regardless of the type or associated table of the input record, the type of the output record
      *  will be the type associated with this table and the record instance will be associated with
@@ -110,17 +110,17 @@ public:
     PTR(BaseRecord) copyRecord(BaseRecord const & input);
 
     /**
-     *  @brief Deep-copy a record, using a mapper to relate two schemas.
+     *  Deep-copy a record, using a mapper to relate two schemas.
      *
      *  @copydetails BaseTable::copyRecord(BaseRecord const &)
      */
     PTR(BaseRecord) copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
 
-    /// @brief Return the table's schema.
+    /// Return the table's schema.
     Schema getSchema() const { return _schema; }
 
     /**
-     *  @brief Allocate contiguous space for new records in advance.
+     *  Allocate contiguous space for new records in advance.
      *
      *  If a contiguous memory block for at least n additional records has already been allocated,
      *  this is a no-op.  If not, a new block will be allocated, and any remaining space on the old
@@ -134,14 +134,14 @@ public:
     void preallocate(std::size_t nRecords);
 
     /**
-     *  @brief Return the number of additional records space has been already been allocated for.
+     *  Return the number of additional records space has been already been allocated for.
      *
      *  Unlike std::vector::capacity, this does not factor in existing records in any way.
      */
     std::size_t getBufferSize() const;
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  Because BaseTable is an abstract class, this actually returns a hidden trivial subclass
      *  (which is associated with a hidden trivial subclass of BaseRecord).
@@ -158,13 +158,13 @@ public:
 
 protected:
 
-    /// @brief Convenience function for static-casting shared_from_this for use by derived classes.
+    /// Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     PTR(Derived) getSelf() {
         return std::static_pointer_cast<Derived>(shared_from_this());
     }
 
-    /// @brief Convenience function for static-casting shared_from_this for use by derived classes.
+    /// Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     CONST_PTR(Derived) getSelf() const {
         return std::static_pointer_cast<Derived const>(shared_from_this());
@@ -178,10 +178,10 @@ protected:
     /// Default-construct an associated record (protected implementation).
     virtual std::shared_ptr<BaseRecord> _makeRecord();
 
-    /// @brief Construct from a schema.
+    /// Construct from a schema.
     explicit BaseTable(Schema const & schema);
 
-    /// @brief Copy construct.
+    /// Copy construct.
     BaseTable(BaseTable const & other) :
         daf::base::Citizen(other), _schema(other._schema),
         _metadata(other._metadata)

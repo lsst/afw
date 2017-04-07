@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * @brief Class representing an invertible 2D transform
+/*
+ * Class representing an invertible 2D transform
  */
 
 #ifndef LSST_AFW_GEOM_XYTRANSFORM_H
@@ -43,7 +42,7 @@ namespace geom {
 
 
 /**
- * @brief Virtual base class for 2D transforms
+ * Virtual base class for 2D transforms
  */
 class XYTransform : public daf::base::Citizen
 {
@@ -57,11 +56,13 @@ public:
     /// returns a deep copy
     virtual PTR(XYTransform) clone() const = 0;
 
-    /// returns a "deep inverse" in this sense that the forward+inverse transforms do not share state
+    /** returns a "deep inverse" in this sense that the forward+inverse transforms do not share state
+     * default implementation; subclass may override
+     */
     virtual PTR(XYTransform) invert() const;
 
     /**
-     * @brief virtuals for forward and reverse transforms
+     * virtuals for forward and reverse transforms
      *
      * These routines are responsible for throwing exceptions if the 'point' arg
      * is outside the domain of the transform.
@@ -70,7 +71,7 @@ public:
     virtual Point2D reverseTransform(Point2D const &point) const = 0;
 
     /**
-     * @brief linearized forward and reversed transforms
+     * linearized forward and reversed transforms
      *
      * These are virtual but not pure virtual; there is a default implementation which
      * calls forwardTransform() or reverseTransform() and takes finite differences with step
@@ -78,15 +79,17 @@ public:
      *
      * The following should always be satisfied for an arbitrary Point2D p
      * (and analogously for the reverse transform)
-     *    this->forwardTransform(p) == this->linearizeForwardTransform(p)(p);
+     *     this->forwardTransform(p) == this->linearizeForwardTransform(p)(p);
      */
+    /// default implementation; subclass may override
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
+    /// default implementation; subclass may override
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
 };
 
 
 /**
- * @brief A trivial XYTransform satisfying f(x)=x.
+ * A trivial XYTransform satisfying f(x)=x.
  */
 class IdentityXYTransform : public XYTransform
 {
@@ -102,7 +105,7 @@ public:
 
 
 /**
- * @brief Wrap an XYTransform, swapping forward and reverse transforms.
+ * Wrap an XYTransform, swapping forward and reverse transforms.
  */
 class InvertedXYTransform : public XYTransform
 {
@@ -110,7 +113,7 @@ public:
     InvertedXYTransform(CONST_PTR(XYTransform) base);
 
     virtual PTR(XYTransform) clone() const;
-    /** @brief Return the wrapped XYTransform */
+    /** Return the wrapped XYTransform */
     virtual PTR(XYTransform) invert() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
@@ -123,12 +126,12 @@ protected:
 
 
 /**
- * @brief Wrap a sequence of multiple XYTransforms
+ * Wrap a sequence of multiple XYTransforms
  *
  * forwardTransform executes transformList[i].forwardTransform in order 0, 1, 2..., e.g.
  *
- * MultiXYTransform.forwardTransform(p) =
- *   transformList[n].forwardTransform(...(transformList[1].forwardTransform(transformList[0].forwardTransform(p))...)
+ *     MultiXYTransform.forwardTransform(p) =
+ *         transformList[n].forwardTransform(...(transformList[1].forwardTransform(transformList[0].forwardTransform(p))...)
  */
 class MultiXYTransform : public XYTransform
 {
@@ -146,7 +149,7 @@ private:
 };
 
 /**
- * @brief Wrap an AffineTransform
+ * Wrap an AffineTransform
  *
  */
 class AffineXYTransform : public XYTransform
@@ -171,7 +174,7 @@ protected:
 
 
 /**
- * @brief A purely radial polynomial distortion, up to 6th order.
+ * A purely radial polynomial distortion, up to 6th order.
  *
  * forwardTransform(pt) = pt * scale
  * where:
@@ -180,16 +183,20 @@ protected:
  *
  * @warning reverseTransform will fail if the polynomial is too far from linear (ticket #3152)
  *
- * @throw lsst::pex::exceptions::InvalidParameterError if coeffs.size() > 0 and any of
+ * @throws lsst::pex::exceptions::InvalidParameterError if coeffs.size() > 0 and any of
  * the following are true: coeffs.size() == 1, coeffs[0] != 0 or coeffs[1] == 0
  */
 class RadialXYTransform : public XYTransform
 {
 public:
+    /**
+     * @param coeffs radial polynomial coefficients; if size == 0 then gives the identity transformation;
+     *               otherwise must satisfy: size > 1, coeffs[0] == 0, and coeffs[1] != 0
+     */
     RadialXYTransform(
-        std::vector<double> const &coeffs   ///< radial polynomial coefficients;
-            ///< if size == 0 then gives the identity transformation;
-            ///< otherwise must satisfy: size > 1, coeffs[0] == 0, and coeffs[1] != 0
+        std::vector<double> const &coeffs
+
+
     );
 
     virtual PTR(XYTransform) clone() const;
@@ -201,7 +208,7 @@ public:
     std::vector<double> getCoeffs() const { return _coeffs; }
 
     /**
-     * @brief These static member functions operate on polynomials represented by vector<double>.
+     * These static member functions operate on polynomials represented by vector<double>.
      *
      * They are intended mainly as helpers for the virtual member functions above, but are declared
      * public since there are also some unit tests which call them.

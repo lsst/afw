@@ -39,10 +39,8 @@ template <typename> struct variance_divides;
 template <typename> struct variance_multiplies;
 template <typename> struct variance_plus;
 
-/************************************************************************************************************/
-/**
- * \file
- * \brief Classes to provide utility functions for a "Pixel" to get at image/mask/variance operators
+/*
+ * Classes to provide utility functions for a "Pixel" to get at image/mask/variance operators
  *
  * These classes allow us to manipulate the tuples returned by MaskedImage iterators/locators as if they were
  * POD.  This provides convenient syntactic sugar, but it also permits us to write generic algorithms to
@@ -86,9 +84,10 @@ public:
     VariancePixelT variance() const { return _variance; }
 
 private:
-    /// Default Ctor
-    ///
-    /// Can be called by PixelTypeTraits<SinglePixel>::padValue()
+    /** Default Ctor
+     *
+     * Can be called by PixelTypeTraits<SinglePixel>::padValue()
+     */
     SinglePixel() :
         _image(std::numeric_limits<_ImagePixelT>::has_quiet_NaN ?
                std::numeric_limits<_ImagePixelT>::quiet_NaN() : 0),
@@ -127,10 +126,11 @@ struct PixelTypeTraits<SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT> >
     }
 };
 
-/// Return a SinglePixel
-///
-/// This function is useful as function overloading will choose the correct return type
-/// (cf. std::make_pair()
+/** Return a SinglePixel
+ *
+ * This function is useful as function overloading will choose the correct return type
+ * (cf. std::make_pair()
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> makeSinglePixel(ImagePixelT x, MaskPixelT m, VariancePixelT v) {
     return SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>(x, m, v);
@@ -169,10 +169,11 @@ public:
 
         return *this;
     }
-    /// Assign a Pixel by evaluating an expression
-    ///
-    /// We use C++ template expressions to build a compile-time parse tree to evaluate
-    /// Pixel expressions;  this is where we evaluate the rhs and set the Pixel's values
+    /** Assign a Pixel by evaluating an expression
+     *
+     * We use C++ template expressions to build a compile-time parse tree to evaluate
+     * Pixel expressions;  this is where we evaluate the rhs and set the Pixel's values
+     */
     template<typename rhsExpr>
     Pixel operator=(rhsExpr const& rhs) {
         _variance = rhs.variance();     // evaluate before we update image()
@@ -266,7 +267,6 @@ private:
     VariancePixelT& _variance;
 };
 
-/************************************************************************************************************/
 /// A traits class to return the types of the %image/mask/variance
 template <typename ExprT>
 struct exprTraits {
@@ -276,7 +276,7 @@ struct exprTraits {
     typedef typename ExprT::VariancePixelT VariancePixelT;
 };
 
-/// A specialisation of exprTraits for \c double
+/// A specialisation of exprTraits for `double`
 template <>
 struct exprTraits<double> {
     typedef double ImagePixelT;
@@ -285,7 +285,7 @@ struct exprTraits<double> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
-/// A specialisation of exprTraits for \c float
+/// A specialisation of exprTraits for `float`
 template <>
 struct exprTraits<float> {
     typedef float ImagePixelT;
@@ -294,7 +294,7 @@ struct exprTraits<float> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
-/// A specialisation of exprTraits for \c int
+/// A specialisation of exprTraits for `int`
 template <>
 struct exprTraits<int> {
     typedef int ImagePixelT;
@@ -303,7 +303,7 @@ struct exprTraits<int> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
-/// A specialisation of exprTraits for \c unsigned short
+/// A specialisation of exprTraits for `unsigned short`
 template <>
 struct exprTraits<unsigned short> {
     typedef int ImagePixelT;
@@ -312,10 +312,7 @@ struct exprTraits<unsigned short> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
-/************************************************************************************************************/
-///
-/// \brief A noop functor (useful for e.g. masks and variances when changing the sign of the image)
-///
+/// A noop functor (useful for e.g. masks and variances when changing the sign of the image)
 template <typename T1>
 struct noop : public std::unary_function<T1, T1> {
     T1 operator()(const T1& x) const {
@@ -323,12 +320,11 @@ struct noop : public std::unary_function<T1, T1> {
     }
 };
 
-///
-/// \brief bitwise_or doesn't seem to be in std::
-///
-/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
-/// masked pixel,
-///
+/** bitwise_or doesn't seem to be in std::
+ *
+ * @note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+ * masked pixel,
+ */
 template <typename T1>
 struct bitwise_or : public std::binary_function<T1, T1, T1> {
     T1 operator()(const T1& x, const T1& y) const {
@@ -339,12 +335,11 @@ struct bitwise_or : public std::binary_function<T1, T1, T1> {
     }
 };
 
-///
-/// \brief Calculate the variance when we divide two Pixels
-///
-/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
-/// masked pixel,
-///
+/** Calculate the variance when we divide two Pixels
+ *
+ * @note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+ * masked pixel,
+ */
 template <typename T1>
 struct variance_divides {
     T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
@@ -358,12 +353,12 @@ struct variance_divides {
         return vx/(y*y);
     }
 };
-///
-/// \brief Calculate the variance when we multiply two Pixels
-///
-/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
-/// masked pixel,
-///
+
+/** Calculate the variance when we multiply two Pixels
+ *
+ * @note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+ * masked pixel,
+ */
 template <typename T1>
 struct variance_multiplies {
     T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
@@ -376,12 +371,12 @@ struct variance_multiplies {
         return vx*y*y;
     }
 };
-///
-/// \brief Calculate the variance when we add (or subtract) two Pixels
-///
-/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
-/// masked pixel,
-///
+
+/** Calculate the variance when we add (or subtract) two Pixels
+ *
+ * @note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+ * masked pixel,
+ */
 template <typename T1>
 struct variance_plus {
     T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
@@ -392,14 +387,14 @@ struct variance_plus {
         return vx;
     }
 };
-///
-/// \brief The variance of the sum of a pair of correlated pixels
-///
-/// The covariance is modelled as alpha*sqrt(var_x*var_y)
-///
-/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
-/// masked pixel,
-///
+
+/** The variance of the sum of a pair of correlated pixels
+ *
+ * The covariance is modelled as alpha*sqrt(var_x*var_y)
+ *
+ * @note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+ * masked pixel,
+ */
 template <typename T1>
 struct variance_plus_covar {
     variance_plus_covar(double alpha=0) : _alpha(alpha) {}
@@ -414,7 +409,6 @@ private:
     double _alpha;
 };
 
-/************************************************************************************************************/
 /// Class for representing Unary operations
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
 class UnaryExpr {
@@ -486,9 +480,10 @@ private:
     VarianceBinOp _varOp;
 };
 
-/// Partial specialization of BinaryExpr when ExprT2 is a double (i.e no mask/variance part)
-///
-/// \todo Could use a traits class to handle all scalar types
+/** Partial specialization of BinaryExpr when ExprT2 is a double (i.e no mask/variance part)
+ *
+ * @todo Could use a traits class to handle all scalar types
+ */
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
 class BinaryExpr<ExprT1, double, ImageBinOp, MaskBinOp, VarianceBinOp> {
 public:
@@ -526,7 +521,6 @@ private:
     VarianceBinOp _varOp;
 };
 
-/************************************************************************************************************/
 /// Template for -e1
 template <typename ExprT1>
 UnaryExpr<ExprT1,
@@ -588,7 +582,7 @@ namespace {
     }
 }
 
-/// \brief Like operator+(), but assume that covariance's 2*alpha*sqrt(vx*vy)
+/// Like operator+(), but assume that covariance's 2*alpha*sqrt(vx*vy)
 template<typename ExprT1, typename ExprT2>
 inline ExprT1 plus(ExprT1& lhs,          ///< Left hand value
                    ExprT2 const& rhs,    ///< Right hand value
@@ -666,7 +660,6 @@ ExprT1 operator/=(ExprT1& e1, ExprT2 e2) {
     return e1;
 }
 
-/************************************************************************************************************/
 /// Print a SinglePixel
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::ostream& operator<<(std::ostream &os, SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> const& v) {

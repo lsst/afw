@@ -38,8 +38,7 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
- * @class MatchControl
- * @brief Pass parameters to algorithms that match list of sources
+ * Pass parameters to algorithms that match list of sources
  */
 class MatchControl {
 public:
@@ -57,7 +56,7 @@ public:
 };
 
 /**
- *  @brief Lightweight representation of a geometric match between two records.
+ *  Lightweight representation of a geometric match between two records.
  *
  *  This is a template so it can hold derived record classes without a lot of
  *  casting and properly use Angle for the distance when we do spherical coordinate
@@ -88,9 +87,9 @@ typedef std::vector<ReferenceMatch> ReferenceMatchVector;
 typedef std::vector<SourceMatch> SourceMatchVector;
 
 /**
- * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
- * d, the distance between s1 and s2, in pixels, is at most @a radius. If cat1 and
- * cat2 are identical, then this call is equivalent to @c matchXy(cat1,radius).
+ * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
+ * d, the distance between s1 and s2, in pixels, is at most `radius`. If cat1 and
+ * cat2 are identical, then this call is equivalent to `matchXy(cat1,radius)`.
  * The match is performed in pixel space (2d cartesian).
  */
 SourceMatchVector matchXy(
@@ -101,8 +100,8 @@ SourceMatchVector matchXy(
 );
 
 /**
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
- * and d, the distance between s1 and s2, in pixels, is at most @a radius. The
+ * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
+ * and d, the distance between s1 and s2, in pixels, is at most `radius`. The
  * match is performed in pixel space (2d cartesian).
  */
 SourceMatchVector matchXy(
@@ -112,9 +111,9 @@ SourceMatchVector matchXy(
 );
 
 /**
- * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
- * d, the distance between s1 and s2, in pixels, is at most @a radius. If cat1 and
- * cat2 are identical, then this call is equivalent to @c matchXy(cat1,radius).
+ * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
+ * d, the distance between s1 and s2, in pixels, is at most `radius`. If cat1 and
+ * cat2 are identical, then this call is equivalent to `matchXy(cat1,radius)`.
  * The match is performed in pixel space (2d cartesian).
  *
  * @deprecated  Please use the matchXy(..., MatchControl const&) API
@@ -132,24 +131,23 @@ SourceMatchVector matchXy(
 );
 
 /**
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
- * and d, the distance between s1 and s2, in pixels, is at most @a radius. The
+ * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
+ * and d, the distance between s1 and s2, in pixels, is at most `radius`. The
  * match is performed in pixel space (2d cartesian).
  *
  * @deprecated  Please use the matchXy(..., MatchControl const&) API
  *
  * @param[in] cat          the catalog to self-match
  * @param[in] radius       match radius (pixels)
- * @param[in] symmetric    if cat to @c true symmetric matches are produced: i.e.
+ * @param[in] symmetric    if cat to `true` symmetric matches are produced: i.e.
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
  */
 SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetric);
 
-/************************************************************************************************************/
 /**
- * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
- * d, the distance between s1 and s2, is at most @a radius. If cat1 and
- * cat2 are identical, then this call is equivalent to @c matchRaDec(cat1,radius).
+ * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
+ * d, the distance between s1 and s2, is at most `radius`. If cat1 and
+ * cat2 are identical, then this call is equivalent to `matchRaDec(cat1,radius)`.
  * The match is performed in ra, dec space.
  *
  * This is instantiated for Simple-Simple, Simple-Source, and Source-Source catalog combinations.
@@ -163,8 +161,8 @@ std::vector< Match< typename Cat1::Record, typename Cat2::Record> > matchRaDec(
 );
 
 /*
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
- * and d, the distance between s1 and s2, is at most @a radius. The
+ * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
+ * and d, the distance between s1 and s2, is at most `radius`. The
  * match is performed in ra, dec space.
  *
  * This is instantiated for Simple and Source catalogs.
@@ -176,11 +174,10 @@ std::vector< Match< typename Cat::Record, typename Cat::Record> > matchRaDec(
     MatchControl const& mc=MatchControl() ///< how to do the matching (obeys MatchControl::symmetricMatch)
 );
 
-/************************************************************************************************************/
 /**
- * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
- * d, the distance between s1 and s2, is at most @a radius. If cat1 and
- * cat2 are identical, then this call is equivalent to @c matchRaDec(cat1,radius).
+ * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
+ * d, the distance between s1 and s2, is at most `radius`. If cat1 and
+ * cat2 are identical, then this call is equivalent to `matchRaDec(cat1,radius)`.
  * The match is performed in ra, dec space.
  *
  * @deprecated.  Use the matchRaDec(..., MatchControl) version
@@ -199,18 +196,17 @@ std::vector< Match< typename Cat1::Record, typename Cat2::Record> > matchRaDec(
     Angle radius, bool closest
 );
 
-/*
- * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
- * and d, the distance between s1 and s2, is at most @a radius. The
+/**
+ * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
+ * and d, the distance between s1 and s2, is at most `radius`. The
  * match is performed in ra, dec space.
  *
  * @deprecated.  Use the matchRaDec(..., MatchControl) version
  *
  * @param[in] cat          the catalog to self-match
  * @param[in] radius       match radius
- * @param[in] symmetric    if cat to @c true symmetric matches are produced: i.e.
+ * @param[in] symmetric    if cat to `true` symmetric matches are produced: i.e.
  *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
- * @param[in] key          key used to extract the center
  *
  * This is instantiated for Simple and Source catalogs.
  */
@@ -222,7 +218,7 @@ std::vector< Match< typename Cat::Record, typename Cat::Record> > matchRaDec(
 );
 
 /**
- *  @brief Return a table representation of a MatchVector that can be used to persist it.
+ *  Return a table representation of a MatchVector that can be used to persist it.
  *
  *  The schema of the returned object has "first" (RecordId), "second" (RecordID), and "distance"
  *  (double) fields.

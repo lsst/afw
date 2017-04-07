@@ -34,7 +34,7 @@ namespace detail {
 class Access;
 
 /**
- *  @brief A private implementation class to hide the messy details of Schema.
+ *  A private implementation class to hide the messy details of Schema.
  *
  *  This can't be a real pimpl class, because some of the most important functionality
  *  is in the forEach function, a templated function we can't explicitly instantiate
@@ -138,7 +138,7 @@ public:
     void replaceField(Key<T> const & key, Field<T> const & field);
 
     /**
-     *  @brief Return the vector of SchemaItem variants.
+     *  Return the vector of SchemaItem variants.
      *
      *  Fields are in the order they are added.  That means they're also ordered with increasing
      *  Key offsets, except for Flag fields, which are in increasing order of (offset, bit) relative
@@ -153,7 +153,7 @@ public:
     {}
 
     /**
-     *  @brief A functor-wrapper used in the implementation of Schema::forEach.
+     *  A functor-wrapper used in the implementation of Schema::forEach.
      *
      *  Visitor functors used with Boost.Variant (see the Boost.Variant docs)
      *  must inherit from boost::static_visitor<> to declare their return type
@@ -169,7 +169,7 @@ public:
         void operator()(SchemaItem<T> const & x) const { _func(x); };
 
         /**
-         *  @brief Invoke the visitation.
+         *  Invoke the visitation.
          *
          *  The call to boost::apply_visitor will call the appropriate template of operator().
          *
@@ -181,7 +181,7 @@ public:
             boost::apply_visitor(*this, v);
         }
 
-        /// @brief Construct the wrapper.
+        /// Construct the wrapper.
         template <typename T>
         explicit VisitorWrapper(T&& func) : _func(std::forward<T>(func)) {}
 

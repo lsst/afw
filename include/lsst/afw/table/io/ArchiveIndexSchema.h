@@ -2,9 +2,7 @@
 #ifndef AFW_TABLE_IO_ArchiveInputSchema_h_INCLUDED
 #define AFW_TABLE_IO_ArchiveInputSchema_h_INCLUDED
 
-/**
- *  @file lsst/afw/table/io/ArchiveIndexSchema.h
- *
+/*
  *  Private singleton shared by the two archive classes; should only be included in their definition
  *  source files.
  */

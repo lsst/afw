@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -43,7 +43,7 @@ namespace math {
 
 namespace {
     /**
-    Declare a warping kernel class with no constructor
+    @internal Declare a warping kernel class with no constructor
 
     @tparam KernelT  class of warping kernel, e.g. LanczosWarpingKernel
     @param[in] mod  pybind11 module to which to add the kernel
@@ -64,7 +64,7 @@ namespace {
     }
 
     /**
-    Declare a warping kernel class with a defaut constructor
+    @internal Declare a warping kernel class with a defaut constructor
 
     @tparam KernelT  class of warping kernel, e.g. LanczosWarpingKernel
     @param[in] mod  pybind11 module to which to add the kernel
@@ -83,7 +83,7 @@ namespace {
     }
 
     /**
-    Declare wrappers for warpImage and warpCenteredImage
+    @internal Declare wrappers for warpImage and warpCenteredImage
     for a particular pair of image or masked image types
 
     @tparam DestImageT  Desination image type, e.g. Image<int> or MaskedImage<float, MaskType, VarianceType>
@@ -117,7 +117,7 @@ namespace {
     }
 
     /**
-    Declare wrappers for warpExposure, warpImage and warpCenteredImage
+    @internal Declare wrappers for warpExposure, warpImage and warpCenteredImage
     for a particular pair of source and destination pixel types.
 
     Declares both image and masked image variants of warpImage and warpCenteredImage.

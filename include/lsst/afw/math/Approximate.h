@@ -38,21 +38,28 @@ namespace math {
 template<typename T> class Approximate;
 
  /**
-  * @brief Control how to make an approximation
+  * Control how to make an approximation
   *
-  * \note the x- and y-order must be the same, due to a limitation of Chebyshev1Function2
+  * @note the x- and y-order must be the same, due to a limitation of Chebyshev1Function2
   *
   * @ingroup afw
   */
 class ApproximateControl {
 public:
-    /// \brief Choose the type of approximation to use
+    /// Choose the type of approximation to use
     enum Style {
         UNKNOWN = -1,
         CHEBYSHEV,                      ///< Use a 2-D Chebyshev polynomial
         NUM_STYLES
     };
 
+    /** ctor
+     *
+     * @param style Type of approximation
+     * @param orderX Order of approximation to use in x-direction
+     * @param orderY Order of approximation to use in y-direction
+     * @param weighting Use inverse variance weighting?
+     */
     ApproximateControl(Style style, int orderX, int orderY=-1, bool weighting=true);
     /// Return the Style
     Style getStyle() const { return _style; }
@@ -78,7 +85,13 @@ private:
 };
 
 /**
- *  @brief Construct a new Approximate object, inferring the type from the type of the given MaskedImage.
+ * Construct a new Approximate object, inferring the type from the type of the given MaskedImage.
+ *
+ * @param x the x-values of points
+ * @param y the y-values of points
+ * @param im The values at (x, y)
+ * @param bbox Range where approximation should be valid
+ * @param ctrl desired approximation algorithm
  */
 template<typename PixelT>
 PTR(Approximate<PixelT>)
@@ -87,8 +100,7 @@ makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
                 ApproximateControl const& ctrl);
 
 /**
- * @brief Approximate values for a MaskedImage
- * @ingroup afw
+ * Approximate values for a MaskedImage
  */
 template<typename PixelT>
 class Approximate {
@@ -99,19 +111,19 @@ public:
     makeApproximate<>(std::vector<double> const &x, std::vector<double> const &y,
                     image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                     ApproximateControl const& ctrl);
-    /// \brief dtor
+    /// dtor
     virtual ~Approximate() {}
-    /// \brief Return the approximate %image as a Image
+    /// Return the approximate %image as a Image
     PTR(image::Image<OutPixelT>) getImage(int orderX=-1, int orderY=-1) const {
         return doGetImage(orderX, orderY);
     }
-    /// \brief Return the approximate %image as a MaskedImage
+    /// Return the approximate %image as a MaskedImage
     PTR(image::MaskedImage<OutPixelT>) getMaskedImage(int orderX=-1, int orderY=-1) const {
         return doGetMaskedImage(orderX, orderY);
     }
 protected:
     /**
-     * \brief Base class ctor
+     * Base class ctor
      */
     Approximate(std::vector<double> const &x,         ///< the x-values of points
                 std::vector<double> const &y,         ///< the y-values of points

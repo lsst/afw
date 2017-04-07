@@ -29,22 +29,12 @@
 
 namespace afwGeom = lsst::afw::geom;
 
-/**
- * Return the transform matrix elements as a parameter vector
- *
- * The elements will be ordered XX, YX, XY, YY
- */
 afwGeom::LinearTransform::ParameterVector const afwGeom::LinearTransform::getParameterVector() const {
     ParameterVector r;
     r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY];
     return r;
 }
 
-/**
- * Set the transform matrix elements from a parameter vector
- *
- * The parameter vector is ordered XX, YX, XY, YY
- */
 void afwGeom::LinearTransform::setParameterVector(
     LinearTransform::ParameterVector const & vector
 ) {
@@ -52,11 +42,6 @@ void afwGeom::LinearTransform::setParameterVector(
     (*this)[YX] = vector[YX];  (*this)[YY] = vector[YY];
 }
 
-/**
- * Return the inverse transform.
- *
- * @throws lsst::afw::geom::SingularTransformException
- */
 afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
     Eigen::FullPivLU<Matrix> lu(getMatrix());
     if (!lu.isInvertible()) {
@@ -69,17 +54,11 @@ afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
     return LinearTransform(inv);
 }
 
-/**
- * Return the determinant of the 2x2 matrix
- */
 double afwGeom::LinearTransform::computeDeterminant() const {
     Eigen::MatrixXd const & m = getMatrix();
     return m(0, 0)*m(1,1) - m(0,1)*m(1,0);
 }
 
-/**
- * Derivative of (*this)(input) with respect to the transform elements (for Point).
- */
 afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dTransform(
     Point2D const & input
 ) const {

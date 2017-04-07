@@ -22,11 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file simpleStacker.cc
- * @author Steve Bickerton
- * @brief An example executible which calls the example 'stack' code
- *
+/*
+ * An example executible which calls the example 'stack' code
  */
 #include <iostream>
 

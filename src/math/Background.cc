@@ -22,12 +22,8 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file Background.cc
- * @ingroup afw
- * @brief Background estimation class code
- * @author Steve Bickerton
- * @date Jan 26, 2009
+/*
+ * Background estimation class code
  */
 #include <iostream>
 #include <limits>
@@ -44,19 +40,9 @@ namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
 
-/**
- * @brief Constructor for Background
- *
- * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
- * getImage() to interpolate those values, creating an image the same size as the original
- *
- * @note The old and deprecated API specified the interpolation style as part of the BackgroundControl
- * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
- * method is called
- */
 template<typename ImageT>
-Background::Background(ImageT const& img,              ///< ImageT (or MaskedImage) whose properties we want
-                       BackgroundControl const& bgCtrl ///< Control how the Background is estimated
+Background::Background(ImageT const& img,
+                       BackgroundControl const& bgCtrl
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(img.getBBox()),
@@ -79,16 +65,9 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
     _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), bgCtrl.getNxSample(), bgCtrl.getNySample());
 }
 
-/************************************************************************************************************/
-/**
- * Create a Background without any values in it
- *
- * \note This ctor is mostly used to create a Background given its sample values, and that (in turn)
- * is mostly used to implement persistence.
- */
-Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image to be created by getImage()
-                       int const nx,                ///< Number of samples in x-direction
-                       int const ny                 ///< Number of samples in y-direction
+Background::Background(geom::Box2I const imageBBox,
+                       int const nx,
+                       int const ny
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(imageBBox),
@@ -111,11 +90,6 @@ Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image 
     _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), nx, ny);
 }
 
-/************************************************************************************************************/
-/**
- * Compute the centers, origins, and sizes of the patches used to compute image statistics
- * when estimating the Background
- */
 void
 Background::_setCenOrigSize(int const width, int const height,
                             int const nxSample, int const nySample)
@@ -140,10 +114,6 @@ Background::_setCenOrigSize(int const width, int const height,
     }
 }
 
-/************************************************************************************************************/
-/**
- * @brief Conversion function to switch a string to an UndersampleStyle
- */
 UndersampleStyle stringToUndersampleStyle(std::string const &style) {
     static std::map<std::string, UndersampleStyle> undersampleStrings;
     if (undersampleStrings.size() == 0) {
@@ -157,7 +127,7 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
     }
     return undersampleStrings[style];
 }
-/// \cond
+/// @cond
 /*
  * Explicit instantiations
  *
@@ -173,5 +143,5 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
 
 INSTANTIATE_BACKGROUND(float)
 
-/// \endcond
+/// @endcond
 }}} // lsst::afw::math

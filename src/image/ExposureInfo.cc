@@ -225,7 +225,7 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
         detail::setVisitInfoMetadata(*(data.metadata), *visitInfoPtr);
     }
 
-    /**
+    /*
      * We need to define these keywords properly! XXX
      */
     data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);

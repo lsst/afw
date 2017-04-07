@@ -33,7 +33,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 namespace detail {
 
 /**
- *  @brief EllipticityBase is a base class for complex ellipticity types.
+ *  EllipticityBase is a base class for complex ellipticity types.
  *
  *  EllipticityBase does not have a virtual destructor, and only exists
  *  for code reuse purposes.  The ellipticity classes are not polymorphic

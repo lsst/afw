@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -46,7 +46,7 @@ using PyPeakRecord = py::class_<PeakRecord, std::shared_ptr<PeakRecord>, table::
 using PyPeakTable = py::class_<PeakTable, std::shared_ptr<PeakTable>, table::BaseTable>;
 
 /**
-Declare constructors and member and static functions for a pybind11 PeakRecord
+@internal Declare constructors and member and static functions for a pybind11 PeakRecord
 */
 void declarePeakRecord(PyPeakRecord & cls) {
     cls.def("getTable", &PeakRecord::getTable);
@@ -77,7 +77,7 @@ void declarePeakRecord(PyPeakRecord & cls) {
 }
 
 /**
-Declare constructors and member and static functions for a pybind11 PeakTable
+@internal Declare constructors and member and static functions for a pybind11 PeakTable
 */
 void declarePeakTable(PyPeakTable & cls) {
     cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a=false);

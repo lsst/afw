@@ -65,7 +65,7 @@ int main() {
 
                 // add the noise on the last pass
                 if (iS == nStar - 1) {
-                    /// \todo Change to a Poisson variate
+                    // @todo Change to a Poisson variate
                     *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5);
                 }
                 ++iX;

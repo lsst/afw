@@ -24,14 +24,8 @@
 
 #ifndef LSST_AFW_MATH_DETAIL_CONVOLVE_H
 #define LSST_AFW_MATH_DETAIL_CONVOLVE_H
-/**
- * @file
- *
- * @brief Convolution support
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Convolution support
  */
 #include <memory>
 #include <sstream>
@@ -50,6 +44,26 @@ namespace afw {
 namespace math {
 
 namespace detail {
+    /**
+     * Low-level convolution function that does not set edge pixels.
+     *
+     * convolvedImage must be the same size as inImage.
+     * convolvedImage has a border in which the output pixels are not set. This border has size:
+     * - kernel.getCtrX() along the left edge
+     * - kernel.getCtrY() along the bottom edge
+     * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
+     * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+     *
+     * @param[out] convolvedImage convolved %image
+     * @param[in] inImage %image to convolve
+     * @param[in] kernel convolution kernel
+     * @param[in] convolutionControl convolution control parameters
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+     * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+     * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+     * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+     */
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
@@ -57,6 +71,14 @@ namespace detail {
             lsst::afw::math::Kernel const& kernel,
             lsst::afw::math::ConvolutionControl const& convolutionControl);
 
+    /**
+     * A version of basicConvolve that should be used when convolving delta function kernels
+     *
+     * @param[out] convolvedImage convolved %image
+     * @param[in] inImage %image to convolve
+     * @param[in] kernel convolution kernel
+     * @param[in] convolutionControl convolution control parameters
+     */
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
@@ -64,6 +86,27 @@ namespace detail {
             lsst::afw::math::DeltaFunctionKernel const& kernel,
             lsst::afw::math::ConvolutionControl const&);
 
+    /**
+     * A version of basicConvolve that should be used when convolving a LinearCombinationKernel
+     *
+     * The Algorithm:
+     * - If the kernel is spatially varying and contains only DeltaFunctionKernels
+     *   then convolves the input Image by each basis kernel in turn, solves the spatial model
+     *   for that component and adds in the appropriate amount of the convolved %image.
+     * - In all other cases uses normal convolution
+     *
+     * @param[out] convolvedImage convolved %image
+     * @param[in] inImage %image to convolve
+     * @param[in] kernel convolution kernel
+     * @param[in] convolutionControl convolution control parameters
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+     * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+     * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+     * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+     *
+     * @ingroup afw
+     */
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
@@ -71,6 +114,14 @@ namespace detail {
             lsst::afw::math::LinearCombinationKernel const& kernel,
             lsst::afw::math::ConvolutionControl const& convolutionControl);
 
+    /**
+     * A version of basicConvolve that should be used when convolving separable kernels
+     *
+     * @param[out] convolvedImage convolved %image
+     * @param[in] inImage %image to convolve
+     * @param[in] kernel convolution kernel
+     * @param[in] convolutionControl convolution control parameters
+     */
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
@@ -78,6 +129,29 @@ namespace detail {
             lsst::afw::math::SeparableKernel const& kernel,
             lsst::afw::math::ConvolutionControl const& convolutionControl);
 
+    /**
+     * Convolve an Image or MaskedImage with a Kernel by computing the kernel image
+     * at every point. (If the kernel is not spatially varying then only compute it once).
+     *
+     * convolvedImage must be the same size as inImage.
+     * convolvedImage has a border in which the output pixels are not set. This border has size:
+     * - kernel.getCtrX() along the left edge
+     * - kernel.getCtrY() along the bottom edge
+     * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
+     * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+     *
+     * @param[out] convolvedImage convolved %image
+     * @param[in] inImage %image to convolve
+     * @param[in] kernel convolution kernel
+     * @param[in] convolutionControl convolution control parameters
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+     * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+     * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+     * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+     *
+     * @warning Low-level convolution function that does not set edge pixels.
+     */
     template <typename OutImageT, typename InImageT>
     void convolveWithBruteForce(
             OutImageT &convolvedImage,
@@ -135,11 +209,42 @@ namespace detail {
             BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
         };
 
+        /**
+         * Construct a KernelImagesForRegion
+         *
+         * @param kernelPtr kernel
+         * @param bbox bounding box of region of an image for which we want to compute kernel images
+         *             (inclusive and relative to parent image)
+         * @param xy0 xy0 of image for which we want to compute kernel images
+         * @param doNormalize normalize the kernel images?
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
+         */
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
                 lsst::afw::geom::Box2I const &bbox,
                 lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize);
+        /**
+         * Construct a KernelImagesForRegion with some or all corner images
+         *
+         * Null corner image pointers are ignored.
+         *
+         * @param kernelPtr kernel
+         * @param bbox bounding box of region of an image for which we want to compute kernel images
+         *             (inclusive and relative to parent image)
+         * @param xy0 xy0 of image
+         * @param doNormalize normalize the kernel images?
+         * @param bottomLeftImagePtr kernel image and sum at bottom left of region
+         * @param bottomRightImagePtr kernel image and sum at bottom right of region
+         * @param topLeftImagePtr kernel image and sum at top left of region
+         * @param topRightImagePtr kernel image and sum at top right of region
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
+         * @throws lsst::pex::exceptions::InvalidParameterError if an image has the wrong dimensions
+         *
+         * @warning: if any images are incorrect you will get a mess.
+         */
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
                 lsst::afw::geom::Box2I const &bbox,
@@ -162,12 +267,34 @@ namespace detail {
          * Get the doNormalize parameter
          */
         bool getDoNormalize() const { return _doNormalize; };
+        /**
+         * Return the image and sum at the specified location
+         *
+         * If the image has not yet been computed, it is computed at this time.
+         *
+         * @param location location of image
+         */
         ImagePtr getImage(Location location) const;
         /**
          * Get the kernel (as a shared pointer to const)
          */
         KernelConstPtr getKernel() const { return _kernelPtr; };
+        /**
+         * Compute pixel index of a given location, relative to the parent image
+         * (thus offset by bottom left corner of bounding box)
+         *
+         * @param location location for which to return pixel index
+         */
         lsst::afw::geom::Point2I getPixelIndex(Location location) const;
+        /**
+         * Compute next row of subregions
+         *
+         * For the first row call with a new RowOfKernelImagesForRegion (with the desired number of columns and rows).
+         * Every subequent call updates the data in the RowOfKernelImagesForRegion.
+         *
+         * @param[in, out] regionRow RowOfKernelImagesForRegion object
+         * @returns true if a new row was computed, false if supplied RowOfKernelImagesForRegion is for the last row.
+         */
         bool computeNextRow(RowOfKernelImagesForRegion &regionRow) const;
 
         /**
@@ -177,12 +304,40 @@ namespace detail {
     private:
         typedef std::vector<Location> LocationList;
 
+        /**
+         * Compute image at a particular location
+         *
+         * @throws lsst::pex::exceptions::NotFoundError if there is no pointer at that location
+         */
         void _computeImage(Location location) const;
         inline void _insertImage(Location location, ImagePtr imagePtr) const;
+        /**
+         * Move the region up one segment
+         *
+         * To avoid reallocating memory for kernel images, swap the top and bottom kernel image pointers
+         * and recompute the top images. Actually, only does this to the right-hande images if isFirst is false
+         * since it assumes the left images were already handled.
+         *
+         * Intended to support computeNextRow; as such assumes that a list of adjacent regions will be moved,
+         * left to right.
+         *
+         * @param isFirst true if the first region in a row (or the only region you are moving)
+         * @param newHeight the height of the region after moving it
+         */
         void _moveUp(bool isFirst, int newHeight);
 
         // static helper functions
         static inline int _computeNextSubregionLength(int length, int nDivisions);
+        /**
+         * Compute length of each subregion for a region divided into nDivisions pieces of approximately equal
+         * length.
+         *
+         * @param length length of region
+         * @param nDivisions number of divisions of region
+         * @returns a list of subspan lengths
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if nDivisions >= length
+         */
         static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
 
         // member variables
@@ -196,7 +351,7 @@ namespace detail {
     };
 
     /**
-     * @brief A row of KernelImagesForRegion
+     * A row of KernelImagesForRegion
      *
      * Intended for iterating over subregions of a KernelImagesForRegion using computeNextRow.
      */
@@ -206,38 +361,44 @@ namespace detail {
         typedef RegionList::iterator Iterator;
         typedef RegionList::const_iterator ConstIterator;
 
+        /**
+         * Construct a RowOfKernelImagesForRegion
+         *
+         * @param nx number of columns
+         * @param ny number of rows
+         */
         RowOfKernelImagesForRegion(int nx, int ny);
         /**
-         * @brief Return the begin iterator for the list
+         * Return the begin iterator for the list
          */
         RegionList::const_iterator begin() const { return _regionList.begin(); };
         /**
-         * @brief Return the end iterator for the list
+         * Return the end iterator for the list
          */
         RegionList::const_iterator end() const { return _regionList.end(); };
         /**
-         * @brief Return the begin iterator for the list
+         * Return the begin iterator for the list
          */
         RegionList::iterator begin() { return _regionList.begin(); };
         /**
-         * @brief Return the end iterator for the list
+         * Return the end iterator for the list
          */
         RegionList::iterator end() { return _regionList.end(); };
         /**
-         * @brief Return the first region in the list
+         * Return the first region in the list
          */
         PTR(KernelImagesForRegion) front() { return _regionList.front(); };
         /**
-         * @brief Return the last region in the list
+         * Return the last region in the list
          */
         PTR(KernelImagesForRegion) back() { return _regionList.back(); };
         int getNX() const { return _nx; };
         int getNY() const { return _ny; };
         int getYInd() const { return _yInd; };
         /**
-         * @brief get the specified region (range-checked)
+         * get the specified region (range-checked)
          *
-         * @throw std::range_error if ind out of range
+         * @throws std::range_error if ind out of range
          */
         CONST_PTR(KernelImagesForRegion) getRegion(int ind) const { return _regionList.at(ind); };
         bool hasData() const { return static_cast<bool>(_regionList[0]); };
@@ -251,6 +412,25 @@ namespace detail {
         RegionList _regionList;
     };
 
+    /**
+     * Convolve an Image or MaskedImage with a spatially varying Kernel using linear interpolation.
+     *
+     * This is a low-level convolution function that does not set edge pixels.
+     *
+     * The algorithm is as follows:
+     * - divide the image into regions whose size is no larger than maxInterpolationDistance
+     * - for each region:
+     *   - convolve it using convolveRegionWithInterpolation (which see)
+     *
+     * Note that this routine will also work with spatially invariant kernels, but not efficiently.
+     *
+     * @param[out] outImage convolved image = inImage convolved with kernel
+     * @param[in] inImage input image
+     * @param[in] kernel convolution kernel
+     * @param[in] convolutionControl convolution control parameters
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if outImage is not the same size as inImage
+     */
     template <typename OutImageT, typename InImageT>
     void convolveWithInterpolation(
             OutImageT &outImage,
@@ -259,7 +439,7 @@ namespace detail {
             ConvolutionControl const &convolutionControl);
 
     /**
-     * @brief kernel images used by convolveRegionWithInterpolation
+     * kernel images used by convolveRegionWithInterpolation
      */
     struct ConvolveWithInterpolationWorkingImages {
     public:
@@ -280,6 +460,18 @@ namespace detail {
         Image kernelImage;
     };
 
+    /**
+     * Convolve a region of an Image or MaskedImage with a spatially varying Kernel using interpolation.
+     *
+     * This is a low-level convolution function that does not set edge pixels.
+     *
+     * @param[out] outImage convolved image = inImage convolved with kernel
+     * @param[in] inImage input image
+     * @param[in] region kernel image region over which to convolve
+     * @param[in] workingImages working kernel images
+     *
+     * @warning: this is a low-level routine that performs no bounds checking.
+     */
     template <typename OutImageT, typename InImageT>
     void convolveRegionWithInterpolation(
             OutImageT &outImage,
@@ -295,7 +487,7 @@ namespace detail {
 /**
  * Compute length of next subregion if the region is to be divided into pieces of approximately equal length.
  *
- * @return length of next subregion
+ * @returns length of next subregion
  *
  * @warning: no range checking
  */
@@ -310,8 +502,8 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
 /**
  * Insert an image in the cache.
  *
- * @throw lsst::pex::exceptions::InvalidParameterError if image pointer is null
- * @throw lsst::pex::exceptions::InvalidParameterError if image has the wrong dimensions
+ * @throws lsst::pex::exceptions::InvalidParameterError if image pointer is null
+ * @throws lsst::pex::exceptions::InvalidParameterError if image has the wrong dimensions
  */
 inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
         Location location,      ///< location at which to insert image

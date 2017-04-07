@@ -18,12 +18,12 @@ namespace io {
 class CatalogVector;
 
 /**
- *  @brief A multi-catalog archive object used to load table::io::Persistable objects.
+ *  A multi-catalog archive object used to load table::io::Persistable objects.
  *
  *  An InputArchive can be constructed directly from the catalogs produced by OutputArchive,
  *  or more usefully, read from a multi-extension FITS file.
  *
- *  @sa OutputArchive
+ *  @see OutputArchive
  */
 class InputArchive {
 public:
@@ -33,7 +33,7 @@ public:
     /// Construct an empty InputArchive that contains no objects.
     InputArchive();
 
-    /// @brief Construct an archive from catalogs.
+    /// Construct an archive from catalogs.
     InputArchive(BaseCatalog const & index, CatalogVector const & dataCatalogs);
 
     /// Copy-constructor.  Does not deep-copy loaded Persistables.
@@ -45,13 +45,13 @@ public:
     ~InputArchive();
 
     /**
-     *  @brief Load the Persistable with the given ID and return it.
+     *  Load the Persistable with the given ID and return it.
      *
      *  If the object has already been loaded once, the same instance will be returned again.
      */
     PTR(Persistable) get(int id) const;
 
-    /// @brief Load an object of the given type and ID with error checking.
+    /// Load an object of the given type and ID with error checking.
     template <typename T>
     PTR(T) get(int id) const {
         PTR(T) p = std::dynamic_pointer_cast<T>(get(id));
@@ -63,7 +63,7 @@ public:
     Map const & getAll() const;
 
     /**
-     *  @brief Read an object from an already open FITS object.
+     *  Read an object from an already open FITS object.
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */

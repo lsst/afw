@@ -22,11 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file Stack.cc
- * @brief Provide functions to stack images
- * @ingroup stack
- * @author Steve Bickerton
+/*
+ * Provide functions to stack images
  *
  */
 #include <vector>
@@ -45,8 +42,8 @@ namespace pexExcept = lsst::pex::exceptions;
 
 namespace {
     typedef std::vector<afwMath::WeightPixel> WeightVector; // vector of weights (yes, really)
-/*
- * A bit counter (to make sure that only one type of statistics has been requested)
+/**
+ * @internal A bit counter (to make sure that only one type of statistics has been requested)
  */
 int bitcount(unsigned int x)
 {
@@ -59,8 +56,8 @@ int bitcount(unsigned int x)
     return b;
 }
 
-/*
- * Check that only one type of statistics has been requested.
+/**
+ * @internal Check that only one type of statistics has been requested.
  */
 void checkOnlyOneFlag(unsigned int flags) {
     if (bitcount(flags & ~afwMath::ERRORS) != 1) {
@@ -71,8 +68,8 @@ void checkOnlyOneFlag(unsigned int flags) {
 
 }
 
-    /*
-     * Check that we have objects, and the right number of weights (or none)
+    /**
+     * @internal Check that we have objects, and the right number of weights (or none)
      */
     template<typename ObjectVectorT, typename WeightVectorT>
     void checkObjectsAndWeights(ObjectVectorT const& objects,
@@ -105,13 +102,13 @@ void checkOnlyOneFlag(unsigned int flags) {
         }
     }
 
-/****************************************************************************
+/* ************************************************************************** *
  *
  * stack MaskedImages
  *
- ****************************************************************************/
-/*
- * A function to handle MaskedImage stacking
+ * ************************************************************************** */
+/**
+ * @internal A function to handle MaskedImage stacking
  *
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
  *   to handle cases when we are, or are not, weighting
@@ -200,14 +197,6 @@ void computeMaskedImageStack(
 } // end anonymous namespace
 
 
-/*
- * A function to compute some statistics of a stack of Masked Images
- *
- * If none of the input images are valid for some pixel,
- * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
- *
- * All the work is done in the function computeMaskedImageStack.
- */
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images,
@@ -251,7 +240,7 @@ void afwMath::statisticsStack(
 
 
 namespace {
-/****************************************************************************
+/* ************************************************************************** *
  *
  * stack Images
  *
@@ -259,9 +248,9 @@ namespace {
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
  *   to handle cases when we are, or are not, weighting
  *
- ****************************************************************************/
-/*
- * A function to compute some statistics of a stack of regular images
+ * ************************************************************************** */
+/**
+ * @internal A function to compute some statistics of a stack of regular images
  *
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
  *   to handle cases when we are, or are not, weighting
@@ -341,17 +330,16 @@ void afwMath::statisticsStack(
     }
 }
 
-/****************************************************************************
+/* ************************************************************************** *
  *
  * stack VECTORS
  *
- ****************************************************************************/
+ * ************************************************************************** */
 
 namespace {
 
-/**********************************************************************************/
-/*
- * A function to compute some statistics of a stack of vectors
+/**
+ * @internal A function to compute some statistics of a stack of vectors
  *
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
  *   to handle cases when we are, or are not, weighting
@@ -417,11 +405,11 @@ std::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
     }
 }
 
-/**************************************************************************
+/* ************************************************************************ *
  *
  * XY row column stacking
  *
- **************************************************************************/
+ * ************************************************************************ */
 
 template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
@@ -527,12 +515,11 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     return imgOut;
 }
 
-/************************************************************************************************************/
 /*
  * Explicit Instantiations
  *
  */
-/// \cond
+/// @cond
 #define INSTANTIATE_STACKS(TYPE) \
     template afwImage::Image<TYPE>::Ptr afwMath::statisticsStack<TYPE>( \
             std::vector<afwImage::Image<TYPE>::Ptr > &images, \
@@ -574,4 +561,4 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 
 INSTANTIATE_STACKS(double)
 INSTANTIATE_STACKS(float)
-/// \endcond
+/// @endcond

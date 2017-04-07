@@ -15,32 +15,31 @@ class Access;
 } // namespace detail
 
 /**
- *  @brief A class used as a handle to a particular field in a table.
+ *  A class used as a handle to a particular field in a table.
  *
  *  All access to table data ultimately goes through Key objects, which
  *  know (via an internal offset) how to address and cast the internal
  *  data buffer of a record or table.
  *
  *  Keys can be obtained from a Schema by name:
- *  @code
- *   schema.find("myfield").key
- *  @endcode
+ *
+ *      schema.find("myfield").key
+ *
  *  and are also returned when a new field is added.  Compound and array keys also provide
  *  accessors to retrieve scalar keys to their elements (see the
  *  documentation for the KeyBase specializations), even though these
  *  element keys do not correspond to a field that exists in any Schema.
  *  For example:
- *  @code
- *  Schema schema;
- *  Key< Array<float> > arrayKey = schema.addField< Array<float> >("array", "docs for array", 5);
- *  Key< Point<int> > pointKey = schema.addField< Point<int> >("point", "docs for point");
- *  Key<float> elementKey = arrayKey[3];
- *  Key<int> xKey = pointKey.getX();
- *  PTR(BaseTable) table = BaseTable::make(schema);
- *  PTR(BaseRecord) record = table.makeRecord();
- *  assert(&record[arrayKey][3] == &record[elementKey3]);
- *  assert(record.get(pointKey).getX() == record[xKey]);
- *  @endcode
+ *
+ *      Schema schema;
+ *      Key< Array<float> > arrayKey = schema.addField< Array<float> >("array", "docs for array", 5);
+ *      Key< Point<int> > pointKey = schema.addField< Point<int> >("point", "docs for point");
+ *      Key<float> elementKey = arrayKey[3];
+ *      Key<int> xKey = pointKey.getX();
+ *      PTR(BaseTable) table = BaseTable::make(schema);
+ *      PTR(BaseRecord) record = table.makeRecord();
+ *      assert(&record[arrayKey][3] == &record[elementKey3]);
+ *      assert(record.get(pointKey).getX() == record[xKey]);
  *
  *  Key inherits from FieldBase to allow a key for a dynamically-sized field
  *  to know its size without needing to specialize Key itself or hold a full
@@ -52,7 +51,7 @@ public:
 
     //@{
     /**
-     *  @brief Equality comparison.
+     *  Equality comparison.
      *
      *  Two keys with different types are never equal.  Keys with the same type
      *  are equal if they point to the same location in a table, regardless of
@@ -69,11 +68,11 @@ public:
     bool operator!=(Key const & other) const { return !this->operator==(other); }
     //@}
 
-    /// @brief Return the offset (in bytes) of this field within a record.
+    /// Return the offset (in bytes) of this field within a record.
     int getOffset() const { return _offset; }
 
     /**
-     *  @brief Return true if the key was initialized to valid offset.
+     *  Return true if the key was initialized to valid offset.
      *
      *  This does not guarantee that a key is valid with any particular schema, or even
      *  that any schemas still exist in which this key is valid.
@@ -83,7 +82,7 @@ public:
     bool isValid() const { return _offset >= 0; }
 
     /**
-     *  @brief Default construct a field.
+     *  Default construct a field.
      *
      *  The new field will be invalid until a valid Key is assigned to it.
      */

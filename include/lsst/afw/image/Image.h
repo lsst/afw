@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Support for 2-D images
+/*
+ * Support for 2-D images
  *
  * This file contains the basic 2-d image support for LSST
  */
@@ -82,7 +81,6 @@ namespace image {
         std::string const wcsNameForXY0 = "A"; // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
     }
 
-    /*********************************************************************************************************/
     /// A class used to request that array accesses be checked
     class CheckIndices {
     public:
@@ -92,13 +90,12 @@ namespace image {
         bool _check;
     };
 
-    /*********************************************************************************************************/
-    /// \brief metafunction to extract reference type from PixelT
+    /// metafunction to extract reference type from PixelT
     template<typename PixelT>
     struct Reference {
         typedef typename boost::gil::channel_traits<PixelT>::reference type; ///< reference type
     };
-    /// \brief metafunction to extract const reference type from PixelT
+    /// metafunction to extract const reference type from PixelT
     template<typename PixelT>
     struct ConstReference {
         typedef typename boost::gil::channel_traits<PixelT>::const_reference type; ///< const reference type
@@ -106,7 +103,7 @@ namespace image {
 
     enum ImageOrigin {PARENT, LOCAL};
 
-    /// \brief The base class for all %image classed (Image, Mask, MaskedImage, ...)
+    /// The base class for all %image classed (Image, Mask, MaskedImage, ...)
     //
     // You are not expected to use this class directly in your own code; use one of the
     // specialised subclasses
@@ -149,8 +146,9 @@ namespace image {
         typedef typename _const_view_t::reverse_iterator const_reverse_iterator;
         /// An iterator for traversing the pixels in a row
         typedef typename _view_t::x_iterator x_iterator;
-        /// A fast STL compliant iterator for contiguous images
-        /// N.b. The order of pixel access is undefined
+        /** A fast STL compliant iterator for contiguous images
+         * N.b. The order of pixel access is undefined
+         */
         typedef x_iterator fast_iterator;
         /// An iterator for traversing the pixels in a row, created from an xy_locator
         typedef typename _view_t::x_iterator xy_x_iterator;
@@ -168,9 +166,8 @@ namespace image {
         typedef typename ndarray::Array<PixelT const, 2, 1> ConstArray;
 
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
-        //
-        /// \brief Convert a type to our SinglePixel type
-        //
+
+        /// Convert a type to our SinglePixel type
         template<typename SinglePixelT>
         static SinglePixel PixelCast(SinglePixelT rhs) {
             return SinglePixel(rhs);
@@ -180,15 +177,50 @@ namespace image {
         //
         template<typename> friend class DecoratedImage;
         template<typename, typename, typename> friend class MaskedImage;
+        /**
+         * Allocator Constructor
+         *
+         * allocate a new image with the specified dimensions.
+         * Sets origin at (0,0)
+         */
         explicit ImageBase(const geom::Extent2I  & dimensions=geom::Extent2I());
+        /**
+         * Allocator Constructor
+         *
+         * allocate a new image with the specified dimensions and origin
+         */
         explicit ImageBase(const geom::Box2I &bbox);
+        /**
+         * Copy constructor.
+         *
+         * @param src Right-hand-side %image
+         * @param deep If false, new ImageBase shares storage with `src`; if true make a new, standalone, ImageBase
+         *
+         * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
+         * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
+         */
         ImageBase(const ImageBase& src, const bool deep=false);
+        /**
+         * Copy constructor to make a copy of part of an %image.
+         *
+         * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
+         *
+         * @param src Right-hand-side %image
+         * @param bbox Specify desired region
+         * @param origin Specify the coordinate system of the bbox
+         * @param deep If false, new ImageBase shares storage with `src`; if true make a new, standalone, ImageBase
+         *
+         * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
+         * this is probably what you want
+         */
         explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox,
                            const ImageOrigin origin=PARENT, const bool deep=false);
-        /// generalised copy constructor
-        ///
-        /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
-        /// ImageBase types.
+        /**
+         * generalised copy constructor
+         *
+         * defined here in the header so that the compiler can instantiate N(N-1) conversions between N
+         * ImageBase types.
+         */
         template<typename OtherPixelT>
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
             lsst::daf::base::Citizen(typeid(this)) {
@@ -204,22 +236,60 @@ namespace image {
             ImageBase<PixelT>::swap(tmp);                  // See Meyers, Effective C++, Items 11 and 43
         }
 
+        /**
+         *  Construction from ndarray::Array and NumPy.
+         *
+         *  @note ndarray and NumPy indexes are ordered (y,x), but Image indices are ordered (x,y).
+         *
+         *  Unless deep is true, the new image will share memory with the array if the the
+         *  dimension is contiguous in memory.  If the last dimension is not contiguous, the array
+         *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
+         */
         explicit ImageBase(
             Array const & array, bool deep = false, geom::Point2I const & xy0 = geom::Point2I()
         );
 
         virtual ~ImageBase() { }
+        /** Shallow assignment operator.
+         *
+         * @note that this has the effect of making the lhs share pixels with the rhs which may
+         * not be what you intended;  to copy the pixels, use assign(rhs)
+         *
+         * @note this behaviour is required to make the swig interface work, otherwise I'd
+         * declare this function private
+         */
         ImageBase& operator=(const ImageBase& rhs);
+        /// Set the %image's pixels to rhs
         ImageBase& operator=(const PixelT rhs);
+        /**
+         * Set the lhs's %pixel values to equal the rhs's
+         *
+         * @deprecated use assign(rhs) instead
+         */
         ImageBase& operator<<=(const ImageBase& rhs);
 
-        void assign(ImageBase const &rsh, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
+        /**
+         * Copy pixels from another image to a specified subregion of this image.
+         *
+         * @param[in] rhs  source image whose pixels are to be copied into this image (the destination)
+         * @param[in] bbox  subregion of this image to set; if empty (the default) then all pixels are set
+         * @param[in] origin  origin of bbox: if PARENT then the lower left pixel of this image is at xy0
+         *                    if LOCAL then the lower left pixel of this image is at 0,0
+         *
+         * @throws lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
+         * this image do not match.
+         */
+        void assign(ImageBase const &rhs, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
         //
         // Operators etc.
         //
+        /// Return a reference to the pixel `(x, y)`
         PixelReference operator()(int x, int y);
+        /// Return a reference to the pixel `(x, y)` with bounds checking
         PixelReference operator()(int x, int y, CheckIndices const&);
+        /// Return a const reference to the pixel `(x, y)`
         PixelConstReference operator()(int x, int y) const;
+        /// Return a const reference to the pixel `(x, y)` with bounds checking
         PixelConstReference operator()(int x, int y, CheckIndices const&) const;
 
         PixelConstReference get0(int x, int y) const {
@@ -243,16 +313,16 @@ namespace image {
          * Return the %image's column-origin
          *
          * This will usually be 0 except for images created using the
-         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
-         * The origin can be reset with \c setXY0
+         * `ImageBase(fileName, hdu, BBox, mode)` ctor or `ImageBase(ImageBase, BBox)` cctor
+         * The origin can be reset with `setXY0`
          */
         int getX0() const { return _origin.getX(); }
         /**
          * Return the %image's row-origin
          *
          * This will usually be 0 except for images created using the
-         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
-         * The origin can be reset with \c setXY0
+         * `ImageBase(fileName, hdu, BBox, mode)` ctor or `ImageBase(ImageBase, BBox)` cctor
+         * The origin can be reset with `setXY0`
          */
         int getY0() const { return _origin.getY(); }
 
@@ -260,15 +330,15 @@ namespace image {
          * Return the %image's origin
          *
          * This will usually be (0, 0) except for images created using the
-         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
-         * The origin can be reset with \c setXY0
+         * `ImageBase(fileName, hdu, BBox, mode)` ctor or `ImageBase(ImageBase, BBox)` cctor
+         * The origin can be reset with `setXY0`
          */
         geom::Point2I getXY0() const { return _origin; }
 
         /**
-         * @brief Convert image position to index (nearest integer and fractional parts)
+         * Convert image position to index (nearest integer and fractional parts)
          *
-         * @return std::pair(nearest integer index, fractional part)
+         * @returns std::pair(nearest integer index, fractional part)
          */
         std::pair<int, double> positionToIndex(
                 double const pos, ///< image position
@@ -281,13 +351,13 @@ namespace image {
         }
 
         /**
-         * @brief Convert image index to image position
+         * Convert image index to image position
          *
          * The LSST indexing convention is:
          * * the index of the bottom left pixel is 0,0
          * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
          *
-         * @return image position
+         * @returns image position
          */
         inline double indexToPosition(
                 double ind, ///< image index
@@ -306,50 +376,74 @@ namespace image {
         //
         // Iterators and Locators
         //
+        /** Return an STL compliant iterator to the start of the %image
+         *
+         * Note that this isn't especially efficient; see @link imageIterators@endlink for
+         * a discussion
+         */
         iterator begin() const;
+        /// Return an STL compliant iterator to the end of the %image
         iterator end() const;
+        /// Return an STL compliant reverse iterator to the start of the %image
         reverse_iterator rbegin() const;
+        /// Return an STL compliant reverse iterator to the end of the %image
         reverse_iterator rend() const;
+        /// Return an STL compliant iterator at the point `(x, y)`
         iterator at(int x, int y) const;
 
+        /** Return a fast STL compliant iterator to the start of the %image which must be contiguous
+         *
+         * @param contiguous Pixels are contiguous (must be true)
+         *
+         * @throws lsst::pex::exceptions::RuntimeError Argument `contiguous` is false, or the pixels are not in fact contiguous
+         */
         fast_iterator begin(bool) const;
+        /** Return a fast STL compliant iterator to the end of the %image which must be contiguous
+         *
+         * @param contiguous Pixels are contiguous (must be true)
+         *
+         * @throws lsst::pex::exceptions::RuntimeError Argument `contiguous` is false, or the pixels are not in fact contiguous
+         */
         fast_iterator end(bool) const;
 
-        /// Return an \c x_iterator to the start of the \c y'th row
-        ///
-        /// Incrementing an \c x_iterator moves it across the row
+        /** Return an `x_iterator` to the start of the `y`'th row
+         *
+         * Incrementing an `x_iterator` moves it across the row
+         */
         x_iterator row_begin(int y) const {
             return _gilView.row_begin(y);
         }
 
-        /// Return an \c x_iterator to the end of the \c y'th row
+        /// Return an `x_iterator` to the end of the `y`'th row
         x_iterator row_end(int y) const {
             return _gilView.row_end(y);
         }
 
-        /// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
+        /// Return an `x_iterator` to the point `(x, y)` in the %image
         x_iterator x_at(int x, int y) const { return _gilView.x_at(x, y); }
 
-        /// Return an \c y_iterator to the start of the \c y'th row
-        ///
-        /// Incrementing an \c y_iterator moves it up the column
+        /** Return an `y_iterator` to the start of the `y`'th row
+         *
+         * Incrementing an `y_iterator` moves it up the column
+         */
         y_iterator col_begin(int x) const {
             return _gilView.col_begin(x);
         }
 
-        /// Return an \c y_iterator to the end of the \c y'th row
+        /// Return an `y_iterator` to the start of the `y`'th row
         y_iterator col_end(int x) const {
             return _gilView.col_end(x);
         }
 
-        /// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
+        /// Return an `y_iterator` to the point `(x, y)` in the %image
         y_iterator y_at(int x, int y) const {
             return _gilView.y_at(x, y);
         }
 
-        /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
-        ///
-        /// Locators may be used to access a patch in an image
+        /** Return an `xy_locator` at the point `(x, y)` in the %image
+         *
+         * Locators may be used to access a patch in an image
+         */
         xy_locator xy_at(int x, int y) const {
             return xy_locator(_gilView.xy_at(x, y));
         }
@@ -358,7 +452,7 @@ namespace image {
          *
          * The origin is usually set by the constructor, so you shouldn't need this function
          *
-         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * @note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
         void setXY0(geom::Point2I const origin) {
@@ -369,7 +463,7 @@ namespace image {
          *
          * The origin is usually set by the constructor, so you shouldn't need this function
          *
-         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * @note There are use cases (e.g. memory overlays) that may want to set these values, but
          * don't do so unless you are an Expert.
          */
         void setXY0(int const x0, int const y0) {
@@ -411,7 +505,6 @@ namespace image {
     template<typename PixelT>
     void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b);
 
-    /************************************************************************************************************/
     /// A class to represent a 2-dimensional array of pixels
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
@@ -432,16 +525,63 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
 
+        /**
+         * Create an initialised Image of the specified size
+         *
+         * @param width number of columns
+         * @param height number of rows
+         * @param initialValue Initial value
+         *
+         * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
+         * which may be conveniently used to make objects of an appropriate size
+         */
         explicit Image(unsigned int width, unsigned int height, PixelT initialValue=0);
+        /**
+         * Create an initialised Image of the specified size
+         *
+         * @param dimensions Number of columns, rows
+         * @param initialValue Initial value
+         *
+         * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
+         * which may be conveniently used to make objects of an appropriate size
+         */
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
+        /**
+         * Create an initialized Image of the specified size
+         *
+         * @param bbox dimensions and origin of desired Image
+         * @param initialValue Initial value
+         */
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
+        /**
+         * Copy constructor to make a copy of part of an Image.
+         *
+         * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
+         *
+         * @param rhs Right-hand-side Image
+         * @param bbox Specify desired region
+         * @param origin Coordinate system of the bbox
+         * @param deep If false, new ImageBase shares storage with rhs; if true make a new, standalone, ImageBase
+         *
+         * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
+         * this is probably what you want
+         */
         explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=PARENT,
                        const bool deep=false);
+        /**
+         * Copy constructor.
+         *
+         * @param rhs Right-hand-side Image
+         * @param deep If false, new Image shares storage with rhs; if true make a new, standalone, ImageBase
+         *
+         * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
+         * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
+         */
         Image(const Image& rhs, const bool deep=false);
 
         /**
-         *  @brief Construct an Image by reading a regular FITS file.
+         *  Construct an Image by reading a regular FITS file.
          *
          *  @param[in]      fileName    File to read.
          *  @param[in]      hdu         HDU to read, 0-indexed (i.e. 0=Primary HDU).  The special value
@@ -460,7 +600,7 @@ namespace image {
         );
 
         /**
-         *  @brief Construct an Image by reading a FITS image in memory.
+         *  Construct an Image by reading a FITS image in memory.
          *
          *  @param[in]      manager     An object that manages the memory buffer to read.
          *  @param[in]      hdu         HDU to read, 0-indexed (i.e. 0=Primary HDU).  The special value
@@ -479,7 +619,7 @@ namespace image {
         );
 
         /**
-         *  @brief Construct an Image from an already-open FITS object.
+         *  Construct an Image from an already-open FITS object.
          *
          *  @param[in]      fitsfile    A FITS object to read from, already at the desired HDU.
          *  @param[in,out]  metadata    Metadata read from the header (may be null).
@@ -507,11 +647,19 @@ namespace image {
         //
         // Assignment operators are not inherited
         //
+        /// Set the %image's pixels to rhs
         Image& operator=(const PixelT rhs);
+        /**
+         * Assignment operator.
+         *
+         * @note that this has the effect of making the lhs share pixels with the rhs which may not be what you intended;  to copy the pixels, use assign(rhs)
+         *
+         * @note this behaviour is required to make the swig interface work, otherwise I'd declare this function private
+         */
         Image& operator=(const Image& rhs);
 
         /**
-         *  @brief Write an image to a regular FITS file.
+         *  Write an image to a regular FITS file.
          *
          *  @param[in] fileName      Name of the file to write.
          *  @param[in] metadata      Additional values to write to the header (may be null).
@@ -524,7 +672,7 @@ namespace image {
         ) const;
 
         /**
-         *  @brief Write an image to a FITS RAM file.
+         *  Write an image to a FITS RAM file.
          *
          *  @param[in] manager       Manager object for the memory block to write to.
          *  @param[in] metadata      Additional values to write to the header (may be null).
@@ -537,7 +685,7 @@ namespace image {
         ) const;
 
         /**
-         *  @brief Write an image to an open FITS file object.
+         *  Write an image to an open FITS file object.
          *
          *  @param[in] fitsfile      A FITS file already open to the desired HDU.
          *  @param[in] metadata      Additional values to write to the header (may be null).
@@ -548,7 +696,7 @@ namespace image {
         ) const;
 
         /**
-         *  @brief Read an Image from a regular FITS file.
+         *  Read an Image from a regular FITS file.
          *
          *  @param[in] filename    Name of the file to read.
          *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -560,7 +708,7 @@ namespace image {
         }
 
         /**
-         *  @brief Read an Image from a FITS RAM file.
+         *  Read an Image from a FITS RAM file.
          *
          *  @param[in] manager     Object that manages the memory to be read.
          *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -575,19 +723,45 @@ namespace image {
         //
         // Operators etc.
         //
+        /// Add scalar rhs to lhs
         Image& operator+=(PixelT const rhs);
+        /// Add Image rhs to lhs
         virtual Image& operator+=(Image<PixelT>const & rhs);
+        /**
+         * Add a Function2(x, y) to an Image
+         *
+         * @param function function to add
+         */
         Image& operator+=(lsst::afw::math::Function2<double> const& function);
+        /// Add Image c*rhs to lhs
         void scaledPlus(double const c, Image<PixelT>const & rhs);
+        /// Subtract scalar rhs from lhs
         Image& operator-=(PixelT const rhs);
+        /// Subtract Image rhs from lhs
         Image& operator-=(Image<PixelT> const& rhs);
+        /**
+         * Subtract a Function2(x, y) from an Image
+         *
+         * @param function function to add
+         */
         Image& operator-=(lsst::afw::math::Function2<double> const& function);
+        /// Subtract Image c*rhs from lhs
         void scaledMinus(double const c, Image<PixelT>const & rhs);
+        /// Multiply lhs by scalar rhs
         Image& operator*=(PixelT const rhs);
+        /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
         Image& operator*=(Image<PixelT> const& rhs);
+        /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
         void scaledMultiplies(double const c, Image<PixelT>const & rhs);
+        /**
+         * Divide lhs by scalar rhs
+         *
+         * @note Floating point types implement this by multiplying by the 1/rhs
+         */
         Image& operator/=(PixelT const rhs);
+        /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
         Image& operator/=(Image<PixelT> const& rhs);
+        /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
         void scaledDivides(double const c, Image<PixelT>const & rhs);
 
         // In-place per-pixel sqrt().  Useful when handling variance planes.
@@ -598,21 +772,24 @@ namespace image {
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
     };
 
+    /// Add lhs to Image rhs (i.e. %pixel-by-%pixel addition) where types are different
     template<typename LhsPixelT, typename RhsPixelT>
     Image<LhsPixelT>& operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    /// Subtract lhs from Image rhs (i.e. %pixel-by-%pixel subtraction) where types are different
     template<typename LhsPixelT, typename RhsPixelT>
     Image<LhsPixelT>& operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication) where types are different
     template<typename LhsPixelT, typename RhsPixelT>
     Image<LhsPixelT>& operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division) where types are different
     template<typename LhsPixelT, typename RhsPixelT>
     Image<LhsPixelT>& operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
 
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
 
-/************************************************************************************************************/
     /**
-     * \brief A container for an Image and its associated metadata
+     * A container for an Image and its associated metadata
      */
     template<typename PixelT>
     class DecoratedImage : public lsst::daf::base::Persistable,
@@ -627,10 +804,46 @@ namespace image {
         /// shared_ptr to the Image as const
         typedef CONST_PTR(Image<PixelT>) ImageConstPtr;
 
+        /**
+         * Create an %image of the specified size
+         *
+         * @param dimensions desired number of columns. rows
+         */
         explicit DecoratedImage(const geom::Extent2I & dimensions=geom::Extent2I());
+        /**
+         * Create an %image of the specified size
+         *
+         * @param bbox (width, height) and origin of the desired Image
+         *
+         * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
+         * which may be conveniently used to make objects of an appropriate size
+         */
         explicit DecoratedImage(const geom::Box2I & bbox);
+        /**
+         * Create a DecoratedImage wrapping `rhs`
+         *
+         * Note that this ctor shares pixels with the rhs; it isn't a deep copy
+         *
+         * @param rhs Image to go into DecoratedImage
+         */
         explicit DecoratedImage(PTR(Image<PixelT>) rhs);
+        /**
+         * Copy constructor
+         *
+         * Note that the lhs will share memory with the rhs unless `deep` is true
+         *
+         * @param rhs right hand side
+         * @param deep Make deep copy?
+         */
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
+        /**
+         * Create a DecoratedImage from a FITS file
+         *
+         * @param fileName File to read
+         * @param hdu The HDU to read
+         * @param bbox Only read these pixels
+         * @param origin Coordinate system of the bbox
+         */
         explicit DecoratedImage(
             std::string const& fileName,
             const int hdu=INT_MIN,
@@ -638,6 +851,11 @@ namespace image {
             ImageOrigin const origin = PARENT
         );
 
+        /**
+         * Assignment operator
+         *
+         * N.b. this is a shallow assignment; use set(src) if you want to copy the pixels
+         */
         DecoratedImage& operator=(const DecoratedImage& image);
 
         PTR(lsst::daf::base::PropertySet) getMetadata() const { return _metadata; }
@@ -658,6 +876,13 @@ namespace image {
 
         void swap(DecoratedImage &rhs);
 
+        /**
+         * Write a FITS file
+         *
+         * @param fileName the file to write
+         * @param metadata metadata to write to header; or NULL
+         * @param mode "w" to write a new file; "a" to append
+         */
         void writeFits(
             std::string const& fileName,
             CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
@@ -671,7 +896,7 @@ namespace image {
 
         /**
          * Return the DecoratedImage's gain
-         * \note This is mostly just a place holder for other properties that we might
+         * @note This is mostly just a place holder for other properties that we might
          * want to associate with a DecoratedImage
          */
         double getGain() const { return _gain; }

@@ -29,22 +29,12 @@
 
 namespace geom = lsst::afw::geom;
 
-/**
- * Return the transform matrix elements as a parameter vector
- *
- * The elements will be ordered XX, YX, XY, YY, X, Y
- */
 geom::AffineTransform::ParameterVector const geom::AffineTransform::getParameterVector() const {
     ParameterVector r;
     r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY], (*this)[X], (*this)[Y];
     return r;
 }
 
-/**
- * Set the transform matrix elements from a parameter vector
- *
- * The parameter vector is ordered XX, YX, XY, YY, X, Y
- */
 void geom::AffineTransform::setParameterVector(
     AffineTransform::ParameterVector const & vector
 ) {
@@ -52,9 +42,6 @@ void geom::AffineTransform::setParameterVector(
     (*this)[YX] = vector[YX];  (*this)[YY] = vector[YY];  (*this)[Y] = vector[Y];
 }
 
-/**
- * Return the transform as a full 3x3 matrix
- */
 geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
     Matrix r;
     r <<
@@ -64,19 +51,11 @@ geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
     return r;
 }
 
-/**
- * @brief Return the inverse transform
- *
- * @throw lsst::afw::geom::SingularTransformException is not invertible
- */
 geom::AffineTransform const geom::AffineTransform::invert() const {
     LinearTransform inv(getLinear().invert());
     return AffineTransform(inv, -inv(getTranslation()));
 }
 
-/**
- * @brief Take the derivative of (*this)(input) w.r.t the transform elements
- */
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
     Point2D const & input
 ) const {
@@ -87,9 +66,6 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
     return r;
 }
 
-/**
- * @brief Take the derivative of (*this)(input) w.r.t the transform elements
- */
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
     Extent2D const & input
 ) const {

@@ -33,7 +33,7 @@ class ConformalShear;
 class ReducedShear;
 
 /**
- *  @brief A complex ellipticity with magnitude \f$|e| = \frac{a^2 - b^2}{a^2 + b^2}\f$.
+ *  A complex ellipticity with magnitude @f$|e| = \frac{a^2 - b^2}{a^2 + b^2}@f$.
  *
  *  For a more complete definition, see Bernstein and Jarvis (2002); this the same as their
  *  distortion @f$\delta@f$ (eq. 2.7).

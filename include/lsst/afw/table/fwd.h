@@ -24,9 +24,7 @@
 #ifndef LSST_AFW_TABLE_fwd_h_INCLUDED
 #define LSST_AFW_TABLE_fwd_h_INCLUDED
 
-/**
- *  @file lsst/afw/table/fwd.h
- *
+/*
  *  Forward declarations and typedefs for afw::table
  *
  *  Because many of the types in afw::table are actually typedefs of template classes,

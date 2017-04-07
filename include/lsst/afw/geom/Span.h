@@ -48,8 +48,8 @@ class Footprint;
 
 namespace geom {
 
-/*!
- * \brief A range of pixels within one row of an Image
+/**
+ * A range of pixels within one row of an Image
  */
 class Span {
 public:
@@ -60,9 +60,9 @@ public:
     /// An iterator over points in the Span.
     typedef SpanPixelIterator Iterator;
 
-    Span(int y,                         //!< Row that Span's in
-         int x0,                        //!< Starting column (inclusive)
-         int x1)                        //!< Ending column (inclusive)
+    Span(int y,                         ///< Row that Span's in
+         int x0,                        ///< Starting column (inclusive)
+         int x1)                        ///< Ending column (inclusive)
         : _y(y), _x0(x0), _x1(x1) {}
 
     /// Construct an empty Span with zero width at the origin.
@@ -125,9 +125,9 @@ private:
             & boost::serialization::make_nvp("x1", _x1);
     }
 
-    int _y;                             //!< Row that Span's in
-    int _x0;                            //!< Starting column (inclusive)
-    int _x1;                            //!< Ending column (inclusive)
+    int _y;                             ///< Row that Span's in
+    int _x0;                            ///< Starting column (inclusive)
+    int _x1;                            ///< Ending column (inclusive)
 };
 
 }}} // lsst::afw::geom

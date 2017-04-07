@@ -1,7 +1,4 @@
-
-/**
- * \file
- *
+/*
  * Handle saturated pixels when making colour images
  */
 #include <cmath>

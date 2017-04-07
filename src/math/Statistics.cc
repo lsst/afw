@@ -22,13 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Support statistical operations on images
- *
- * @author Steve Bickerton
- * @ingroup afw
+/*
+ * Support statistical operations on images
  */
 #include <cassert>
 #include <cmath>
@@ -54,9 +49,7 @@ namespace {
     double const MAX_DOUBLE = std::numeric_limits<double>::max();
     double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
 
-    /**
-     * @brief A boolean functor which always returns true (for templated conditionals)
-     */
+    /// @internal A boolean functor which always returns true (for templated conditionals)
     class AlwaysTrue {
     public:
         template<typename T>
@@ -73,9 +66,7 @@ namespace {
         }
     };
 
-    /**
-     * @brief A boolean functor which always returns false (for templated conditionals)
-     */
+    /// @internal A boolean functor which always returns false (for templated conditionals)
     class AlwaysFalse {
     public:
         template<typename T>
@@ -92,9 +83,7 @@ namespace {
         }
     };
 
-    /**
-     * @brief A boolean functor to check for NaN or infinity (for templated conditionals)
-     */
+    /// @internal A boolean functor to check for NaN or infinity (for templated conditionals)
     class CheckFinite {
     public:
         template<typename T>
@@ -103,9 +92,7 @@ namespace {
         }
     };
 
-    /**
-     * @brief A boolean functor to test val < min (for templated conditionals)
-     */
+    /// @internal A boolean functor to test val < min (for templated conditionals)
     class CheckValueLtMin {
     public:
         template<typename Tval, typename Tmin>
@@ -114,9 +101,7 @@ namespace {
         }
     };
 
-    /**
-     * @brief A boolean functor to test val > max (for templated conditionals)
-     */
+    /// @internal A boolean functor to test val > max (for templated conditionals)
     class CheckValueGtMax {
     public:
         template<typename Tval, typename Tmax>
@@ -125,9 +110,7 @@ namespace {
         }
     };
 
-    /**
-     * @brief A boolean functor to test |val| < cliplimit  (for templated conditionals)
-     */
+    /// @internal A boolean functor to test |val| < cliplimit  (for templated conditionals)
     class CheckClipRange {
     public:
         template<typename Tval, typename Tcen, typename Tmax>
@@ -145,15 +128,15 @@ namespace {
     typedef AlwaysTrue      AlwaysT;
     typedef AlwaysFalse     AlwaysF;
 
-    // Return the variance of a variance, assuming a Gaussian
-    // There is apparently an attempt to correct for bias in the factor (n - 1)/n.  RHL
+    /** @internal Return the variance of a variance, assuming a Gaussian
+     * There is apparently an attempt to correct for bias in the factor (n - 1)/n.  RHL
+     */
     inline double varianceError(double const variance, int const n)
     {
         return 2*(n - 1)*variance*variance/static_cast<double>(n*n);
     }
 
-    /*********************************************************************************************************/
-    // return type for processPixels
+    /// @internal return type for processPixels
     typedef std::tuple<int,                        // n
                          double,                     // sum
                          afwMath::Statistics::Value, // mean
@@ -167,8 +150,8 @@ namespace {
      * Functions which convert the booleans into calls to the proper templated types, one type per
      * recursion level
      */
-    /*
-     * This function handles the inner summation loop, with tests templated
+    /**
+     * @internal This function handles the inner summation loop, with tests templated
      *
      * The idea here is to allow different conditionals in the inner loop, but avoid repeating code.
      * Each test is actually a functor which is handled through a template.  If the
@@ -398,25 +381,34 @@ namespace {
         }
     }
 
-    /** =========================================================================
-     * @brief Compute the standard stats: mean, variance, min, max
+    /** ==========================================================
+     * @internal Compute the standard stats: mean, variance, min, max
      *
      * @param img    an afw::Image to compute the stats over
+     * @param msk mask
+     * @param var variance
+     * @param weights weights to apply to each pixel
      * @param flags  an integer (bit field indicating which statistics are to be computed
+     * @param weightsAreMultiplicative weights are multiplicative (not inverse)
+     * @param andMask mask of bad pixels
+     * @param calcErrorFromInputVariance estimate errors from variance
+     * @param doCheckFinite check for NaN/Inf
+     * @param doGetWeighted use the weights
+     * @param maskPropagationThresholds
      *
      * @note An overloaded version below is used to get clipped versions
      */
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    StandardReturn getStandard(ImageT const &img,              // image
-                               MaskT const &msk,               // mask
-                               VarianceT const &var,           // variance
-                               WeightT const &weights,         // weights to apply to each pixel
-                               int const flags,                // what to measure
-                               bool const weightsAreMultiplicative,  // weights are multiplicative (not inverse)
-                               int const andMask,              // mask of bad pixels
-                               bool const calcErrorFromInputVariance, // estimate errors from variance
-                               bool doCheckFinite,             // check for NaN/Inf
-                               bool doGetWeighted,             // use the weights
+    StandardReturn getStandard(ImageT const &img,
+                               MaskT const &msk,
+                               VarianceT const &var,
+                               WeightT const &weights,
+                               int const flags,
+                               bool const weightsAreMultiplicative,
+                               int const andMask,
+                               bool const calcErrorFromInputVariance,
+                               bool doCheckFinite,
+                               bool doGetWeighted,
                                std::vector<double> const & maskPropagationThresholds
                               )
     {
@@ -473,22 +465,35 @@ namespace {
 
     /** ==========================================================
      *
-     * @brief A routine to get standard stats: mean, variance, min, max with
+     * @internal A routine to get standard stats: mean, variance, min, max with
      *   clipping on std::pair<double,double> = center, cliplimit
+     *
+     *   @param img image
+     *   @param msk mask
+     *   @param var variance
+     *   @param weights weights to apply to each pixel
+     *   @param flags what to measure
+     *   @param clipinfo the center and cliplimit for the first clip iteration
+     *   @param weightsAreMultiplicative weights are multiplicative (not inverse)
+     *   @param andMask mask of bad pixels
+     *   @param calcErrorFromInputVariance estimate errors from variance
+     *   @param doCheckFinite check for NaN/Inf
+     *   @param doGetWeighted use the weights,
+     *   @param maskPropagationThresholds
      */
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    StandardReturn getStandard(ImageT const &img,                        // image
-                               MaskT const &msk,                         // mask
-                               VarianceT const &var,                     // variance
-                               WeightT const &weights,                   // weights to apply to each pixel
-                               int const flags,                          // what to measure
-                               std::pair<double, double> const clipinfo, // the center and cliplimit for the
-                                                                         // first clip iteration
-                               bool const weightsAreMultiplicative,  // weights are multiplicative (not inverse)
-                               int const andMask,              // mask of bad pixels
-                               bool const calcErrorFromInputVariance, // estimate errors from variance
-                               bool doCheckFinite,             // check for NaN/Inf
-                               bool doGetWeighted,             // use the weights,
+    StandardReturn getStandard(ImageT const &img,
+                               MaskT const &msk,
+                               VarianceT const &var,
+                               WeightT const &weights,
+                               int const flags,
+                               std::pair<double, double> const clipinfo,
+
+                               bool const weightsAreMultiplicative,
+                               int const andMask,
+                               bool const calcErrorFromInputVariance,
+                               bool doCheckFinite,
+                               bool doGetWeighted,
                                std::vector<double> const & maskPropagationThresholds
                               )
     {
@@ -523,12 +528,11 @@ namespace {
         }
     }
 
-    /** percentile()
-     *
-     * @brief A wrapper using the nth_element() built-in to compute percentiles for an image
+    /**
+     * @internal A wrapper using the nth_element() built-in to compute percentiles for an image
      *
      * @param img       an afw::Image
-     * @param quartile  the desired percentile.
+     * @param fraction the desired percentile.
      *
      */
     template<typename Pixel>
@@ -576,16 +580,13 @@ namespace {
     }
 
 
-/** medianAndQuartiles()
- *
- * @brief A wrapper using the nth_element() built-in to compute median and Quartiles for an image
- *
- * @param img       an afw::Image
- * @param quartile  the desired percentile.
- *
- */
     typedef std::tuple<double, double, double> MedianQuartileReturn;
 
+    /**
+     * @internal A wrapper using the nth_element() built-in to compute median and Quartiles for an image
+     *
+     * @param img       an afw::Image
+     */
     template<typename Pixel>
     MedianQuartileReturn medianAndQuartiles(std::vector<Pixel> &img)
     {
@@ -653,9 +654,8 @@ namespace {
         }
     }
 
-    /*********************************************************************************************************/
     /**
-     * A function to copy an image into a vector
+     * @internal A function to copy an image into a vector
      *
      * This is used for percentile and iq_range as these must reorder the values.
      * Because it loops over the pixels, it's been templated over the NaN test to avoid
@@ -711,9 +711,6 @@ void afwMath::StatisticsControl::setMaskPropagationThreshold(int bit, double thr
 }
 
 
-/**
- * @brief Conversion function to switch a string to a Property (see Statistics.h)
- */
 afwMath::Property afwMath::stringToStatisticsProperty(std::string const property) {
     static std::map<std::string, Property> statisticsProperty;
     if (statisticsProperty.size() == 0) {
@@ -737,20 +734,13 @@ afwMath::Property afwMath::stringToStatisticsProperty(std::string const property
     return statisticsProperty[property];
 }
 
-/**
- * @brief Constructor for Statistics object
- *
- * @note Most of the actual work is done in this constructor; the results
- * are retrieved using \c getValue etc.
- *
- */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwMath::Statistics::Statistics(
-        ImageT const &img,                      ///< Image whose properties we want
-        MaskT const &msk,                       ///< Mask to control which pixels are included
-        VarianceT const &var,                   ///< Variances corresponding to values in Image
-        int const flags,                        ///< Describe what we want to calculate
-        afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+        ImageT const &img,
+        MaskT const &msk,
+        VarianceT const &var,
+        int const flags,
+        afwMath::StatisticsControl const& sctrl
                                         ) :
     _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
     _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
@@ -787,12 +777,12 @@ namespace {
 
 template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 afwMath::Statistics::Statistics(
-        ImageT const &img,                      ///< Image whose properties we want
-        MaskT const &msk,                       ///< Mask to control which pixels are included
-        VarianceT const &var,                   ///< Variances corresponding to values in Image
-        WeightT const &weights,                 ///< Weights to use corresponding to values in Image
-        int const flags,                        ///< Describe what we want to calculate
-        afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+        ImageT const &img,
+        MaskT const &msk,
+        VarianceT const &var,
+        WeightT const &weights,
+        int const flags,
+        afwMath::StatisticsControl const& sctrl
                                         ) :
     _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
     _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
@@ -811,12 +801,12 @@ afwMath::Statistics::Statistics(
 
 template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 void afwMath::Statistics::doStatistics(
-    ImageT const &img,             ///< Image whose properties we want
-    MaskT const &msk,              ///< Mask to control which pixels are included
-    VarianceT const &var,          ///< Variances corresponding to values in Image
-    WeightT const &weights,        ///< Weights to use corresponding to values in Image
-    int const flags,               ///< Describe what we want to calculate
-    afwMath::StatisticsControl const& sctrl ///< Control how things are calculated
+    ImageT const &img,
+    MaskT const &msk,
+    VarianceT const &var,
+    WeightT const &weights,
+    int const flags,
+    afwMath::StatisticsControl const& sctrl
                                )
 {
     _n = img.getWidth()*img.getHeight();
@@ -898,22 +888,11 @@ void afwMath::Statistics::doStatistics(
     }
 }
 
-/************************************************************************************************************/
-/** @brief Return the value and error in the specified statistic (e.g. MEAN)
- *
- * @note Only quantities requested in the constructor may be retrieved; in particular
- * errors may not be available if you didn't specify ERROR in the constructor
- *
- * @sa getValue and getError
- *
- * @todo uncertainties on MEANCLIP,STDEVCLIP are sketchy.  _n != _nClip
- *
- */
 std::pair<double, double> afwMath::Statistics::getResult(
-		afwMath::Property const iProp ///< the afw::math::Property to retrieve.
-                                        ///< If NOTHING (default) and you only asked for one
-                                        ///< property (and maybe its error) in the constructor,
-                                        ///< that property is returned
+		afwMath::Property const iProp
+
+
+
                                                         ) const {
 
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
@@ -1029,45 +1008,41 @@ std::pair<double, double> afwMath::Statistics::getResult(
     return ret;
 }
 
-/** @brief Return the value of the desired property (if specified in the constructor)
- */
 double afwMath::Statistics::getValue(
-		afwMath::Property const prop ///< the afw::math::Property to retrieve.
-                                        ///< If NOTHING (default) and you only asked for one
-                                        ///< property in the constructor, that property is returned
+		afwMath::Property const prop
                                      ) const {
     return getResult(prop).first;
 }
 
 
-/** @brief Return the error in the desired property (if specified in the constructor)
- */
 double afwMath::Statistics::getError(
-		afwMath::Property const prop ///< the afw::math::Property to retrieve.
-                                        ///< If NOTHING (default) and you only asked for one
-                                        ///< property in the constructor, that property's error is returned
-                                        ///< \note You may have needed to specify ERROR to the ctor
+		afwMath::Property const prop
                                      ) const {
     return getResult(prop).second;
 }
 
 
-/************************************************************************************************/
-/**
- * Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
- */
 
 namespace lsst {
 namespace afw {
 namespace math {
 
+/**
+ * @internal Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
+ *
+ * @param msk Mask whose properties we want
+ * @param msk2 A mask to control which pixels
+ * @param var A variance
+ * @param flags Describe what we want to calculate
+ * @param sctrl Control how things are calculated
+ */
 template<>
 Statistics::Statistics(
-    afwImage::Mask<afwImage::MaskPixel> const& msk, ///< Mask whose properties we want
-    afwImage::Mask<afwImage::MaskPixel> const&,     ///< A mask to control which pixels
-    afwImage::Mask<afwImage::MaskPixel> const&,     ///< A variance
-    int const flags,                                ///< Describe what we want to calculate
-    StatisticsControl const& sctrl                  ///< Control how things are calculated
+    afwImage::Mask<afwImage::MaskPixel> const& msk,
+    afwImage::Mask<afwImage::MaskPixel> const& msk2,
+    afwImage::Mask<afwImage::MaskPixel> const& var,
+    int const flags,
+    StatisticsControl const& sctrl
                       ) :
     _flags(flags),
     _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN),
@@ -1097,31 +1072,28 @@ Statistics::Statistics(
     _sum = sum;
 }
 
-/**
- * @brief Specialization to handle Masks
- * @note Although short, the definition can't be in the header as it must
+/*
+ * Although short, the definition can't be in the header as it must
  *       follow the specialization definition
  *       (g++ complained when this was in the header.)
- *
  */
 Statistics makeStatistics(
-    afwImage::Mask<afwImage::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
-    int const flags,                          ///< Describe what we want to calculate
-    StatisticsControl const& sctrl            ///< Control how things are calculated
+    afwImage::Mask<afwImage::MaskPixel> const &msk,
+    int const flags,
+    StatisticsControl const& sctrl
                          ) {
     return Statistics(msk, msk, msk, flags, sctrl);
 }
 
 }}}
 
-/****************************************************************************************************/
 /*
  * Explicit instantiations
  *
  * explicit Statistics(MaskedImage const& img, int const flags,
  *                        StatisticsControl const& sctrl=StatisticsControl());
  */
-/// \cond
+/// @cond
 //
 #define STAT afwMath::Statistics
 
@@ -1200,4 +1172,4 @@ INSTANTIATE_IMAGE_STATISTICS(int);
 INSTANTIATE_IMAGE_STATISTICS(std::uint16_t);
 INSTANTIATE_IMAGE_STATISTICS(std::uint64_t);
 
-/// \endcond
+/// @endcond

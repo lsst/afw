@@ -28,7 +28,7 @@
 
 #include "lsst/afw/math.h"
 
-/**
+/*
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.
  */
 

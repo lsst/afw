@@ -30,7 +30,7 @@ class BaseTable;
 class BaseColumnView;
 
 /**
- *  @brief A packed representation of a collection of Flag field columns.
+ *  A packed representation of a collection of Flag field columns.
  *
  *  The packing of bits here is not necessarily the same as the packing using in the actual
  *  table, as the latter may contain more than 64 bits spread across multiple integers.
@@ -63,7 +63,7 @@ private:
 };
 
 /**
- *  @brief Column-wise view into a sequence of records that have been allocated contiguously.
+ *  Column-wise view into a sequence of records that have been allocated contiguously.
  *
  *  A BaseColumnView can be created from any iterator range that dereferences to records, as long
  *  as those records' field data is contiguous in memory.  In practice, that means they must
@@ -83,22 +83,22 @@ private:
 class BaseColumnView {
 public:
 
-    /// @brief Return the table that owns the records.
+    /// Return the table that owns the records.
     PTR(BaseTable) getTable() const;
 
-    /// @brief Return the schema that defines the fields.
+    /// Return the schema that defines the fields.
     Schema getSchema() const { return getTable()->getSchema(); }
 
-    /// @brief Return a 1-d array corresponding to a scalar field (or subfield).
+    /// Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
     ndarray::ArrayRef<T,1> const operator[](Key<T> const & key) const;
 
-    /// @brief Return a 2-d array corresponding to an array field.
+    /// Return a 2-d array corresponding to an array field.
     template <typename T>
     ndarray::ArrayRef<T,2,1> const operator[](Key< Array<T> > const & key) const;
 
     /**
-     *  @brief Return a 1-d array expression corresponding to a flag bit.
+     *  Return a 1-d array expression corresponding to a flag bit.
      *
      *  In C++, the return value is a lazy ndarray expression template that performs the bitwise
      *  & operation on every element when that element is requested.  In Python, the result will
@@ -109,27 +109,27 @@ public:
     operator[](Key<Flag> const & key) const;
 
     /**
-     *  @brief Return an integer array with the given Flag fields repacked into individual bits.
+     *  Return an integer array with the given Flag fields repacked into individual bits.
      *
      *  The returned object contains both the int64 array and accessors to obtain a mask given
      *  a Key or field name.
      *
-     *  @throw pex::exceptions::LengthError if keys.size() > 64
+     *  @throws pex::exceptions::LengthError if keys.size() > 64
      */
     BitsColumn getBits(std::vector< Key<Flag> > const & keys) const;
 
     /**
-     *  @brief Return an integer array with all Flag fields repacked into individual bits.
+     *  Return an integer array with all Flag fields repacked into individual bits.
      *
      *  The returned object contains both the int64 array and accessors to obtain a mask given
      *  a Key or field name.
      *
-     *  @throw pex::exceptions::LengthError if the schema has more than 64 Flag fields.
+     *  @throws pex::exceptions::LengthError if the schema has more than 64 Flag fields.
      */
     BitsColumn getAllBits() const;
 
     /**
-     *  @brief Construct a BaseColumnView from an iterator range.
+     *  Construct a BaseColumnView from an iterator range.
      *
      *  The iterators must dereference to a reference or const reference to a record.
      *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeError.
@@ -171,10 +171,10 @@ public:
     typedef RecordT Record;
     typedef typename RecordT::Table Table;
 
-    /// @brief @copydoc BaseColumnView::getTable
+    /// @copydoc BaseColumnView::getTable
     PTR(Table) getTable() const { return std::static_pointer_cast<Table>(BaseColumnView::getTable()); }
 
-    /// @brief @copydoc BaseColumnView::make
+    /// @copydoc BaseColumnView::make
     template <typename InputIterator>
     static ColumnViewT make(PTR(Table) const & table, InputIterator first, InputIterator last) {
         return ColumnViewT(BaseColumnView::make(table, first, last));

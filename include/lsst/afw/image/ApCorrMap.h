@@ -33,7 +33,7 @@
 namespace lsst { namespace afw { namespace image {
 
 /**
- *  @brief A thin wrapper around std::map to allow aperture corrections to be attached to Exposures.
+ *  A thin wrapper around std::map to allow aperture corrections to be attached to Exposures.
  *
  *  ApCorrMap simply adds error handling accessors, persistence, and a bit of encapsulation to std::map
  *  (given the simplified interface, for instance, we could switch to unordered_map or some other

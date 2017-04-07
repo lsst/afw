@@ -31,15 +31,9 @@
 namespace except = lsst::pex::exceptions;
 namespace afwImg = lsst::afw::image;
 
-/**
- * Create a Wcs object from a fits header.
- * It examines the header and determines the
- * most suitable object to return, either a general Wcs object, or a more specific object specialised to a
- * given coordinate system (e.g TanWcs)
- */
 afwImg::Wcs::Ptr afwImg::makeWcs(
-        PTR(lsst::daf::base::PropertySet) const& _metadata, ///< input metadata
-        bool stripMetadata                              ///< Remove FITS keywords from metadata?
+        PTR(lsst::daf::base::PropertySet) const& _metadata,
+        bool stripMetadata
                                 )
 {
     //
@@ -132,16 +126,13 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     return wcs;
 }
 
-/**
- * @brief Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
- */
 afwImg::Wcs::Ptr afwImg::makeWcs(
-    lsst::afw::coord::Coord const & crval, ///< CRVAL1,2 (ie. the sky origin)
-    lsst::afw::geom::Point2D const & crpix, ///< CRPIX1,2 (ie. the pixel origin) in pixels
-    double CD11,                   ///< CD matrix element 1,1
-    double CD12,                   ///< CD matrix element 1,2
-    double CD21,                   ///< CD matrix element 2,1
-    double CD22                    ///< CD matrix element 2,2
+    lsst::afw::coord::Coord const & crval,
+    lsst::afw::geom::Point2D const & crpix,
+    double CD11,
+    double CD12,
+    double CD21,
+    double CD22
     ) {
     Eigen::Matrix2d CD;
     CD << CD11, CD12, CD21, CD22;

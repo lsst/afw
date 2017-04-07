@@ -22,10 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @brief Interpolate values for a set of x,y vector<>s
- * @ingroup afw
- * @author Steve Bickerton
+/*
+ * Interpolate values for a set of x,y vector<>s
  */
 #include <limits>
 #include <algorithm>
@@ -43,7 +41,6 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-/************************************************************************************************************/
 
 namespace {
     std::pair<std::vector<double>, std::vector<double> >
@@ -87,16 +84,16 @@ public:
     virtual ~InterpolateConstant() {}
     virtual double interpolate(double const x) const;
 private:
-    InterpolateConstant(std::vector<double> const &x, ///< the x-values of points
-                        std::vector<double> const &y, ///< the values at x[]
-                        Interpolate::Style const style ///< desired interpolator
+    InterpolateConstant(std::vector<double> const &x, ///< @internal the x-values of points
+                        std::vector<double> const &y, ///< @internal the values at x[]
+                        Interpolate::Style const style ///< @internal desired interpolator
                        ) :
         Interpolate(recenter(x, y)), _old(_x.begin()) {}
     mutable std::vector<double>::const_iterator _old; // last position we found xInterp at
 };
 
 
-/// Interpolate a constant to the point \c xInterp
+/// @internal Interpolate a constant to the point `xInterp`
 double InterpolateConstant::interpolate(double const xInterp // the value we want to interpolate to
                                        ) const
 {
@@ -139,7 +136,6 @@ double InterpolateConstant::interpolate(double const xInterp // the value we wan
     }
 }
 
-/************************************************************************************************************/
 namespace {
 /*
  * Conversion function to switch an Interpolate::Style to a gsl_interp_type.
@@ -258,12 +254,7 @@ double InterpolateGsl::interpolate(double const xInterp) const
     return ::gsl_interp_eval(_interp, &_x[0], &_y[0], xInterp, _acc);
 }
 
-/************************************************************************************************************/
-/**
- * @brief Conversion function to switch a string to an Interpolate::Style.
- *
- */
-Interpolate::Style stringToInterpStyle(std::string const &style ///< desired type of interpolation
+Interpolate::Style stringToInterpStyle(std::string const &style
                                       )
 {
     static std::map<std::string, Interpolate::Style> gslInterpTypeStrings;
@@ -283,10 +274,7 @@ Interpolate::Style stringToInterpStyle(std::string const &style ///< desired typ
     return gslInterpTypeStrings[style];
 }
 
-/**
- * @brief Get the highest order Interpolation::Style available for 'n' points.
- */
-Interpolate::Style lookupMaxInterpStyle(int const n ///< Number of points
+Interpolate::Style lookupMaxInterpStyle(int const n
                                        ) {
     if (n < 1) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "n must be greater than 0");
@@ -328,10 +316,7 @@ ndarray::Array<double, 1> Interpolate::interpolate(ndarray::Array<double const, 
     return out;
 }
 
-/**
- * @brief Get the minimum number of points needed to use the requested interpolation style
- */
-int lookupMinInterpPoints(Interpolate::Style const style ///< The style in question
+int lookupMinInterpPoints(Interpolate::Style const style
                          ) {
     static std::vector<int> minPoints;
     if (minPoints.empty()) {
@@ -354,30 +339,18 @@ int lookupMinInterpPoints(Interpolate::Style const style ///< The style in quest
     }
 }
 
-/************************************************************************************************************/
-/**
- * Base class ctor.  Note that we should use rvalue references when
- * available as the vectors in xy will typically be movable (although the
- * returned-value-optimisation might suffice for the cases we care about)
- *
- * \note this is here, not in the .h file, so as to permit the compiler
- * to avoid copying those vectors
- */
 Interpolate::Interpolate(
-        std::pair<std::vector<double>, std::vector<double> > const xy, ///< pair (x,y) where
-        /// x are the ordinates of points and y are the values at x[]
-        Interpolate::Style const style ///< desired interpolator
+        std::pair<std::vector<double>, std::vector<double> > const xy,
+
+        Interpolate::Style const style
                         ) : _x(xy.first), _y(xy.second), _style(style)
 {
     ;
 }
 
-/**
- * A factory function to make Interpolate objects
- */
-PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values of points
-                                 std::vector<double> const &y, ///< the values at x[]
-                                 Interpolate::Style const style ///< desired interpolator
+PTR(Interpolate) makeInterpolate(std::vector<double> const &x,
+                                 std::vector<double> const &y,
+                                 Interpolate::Style const style
                                 )
 {
     switch (style) {

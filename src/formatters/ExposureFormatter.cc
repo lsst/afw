@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of ExposureFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of ExposureFormatter class
  */
 
 #ifndef __GNUC__
@@ -125,11 +117,15 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter(void) {
 }
 
-/** Lookup a filter number in the database to find a filter name.
+/**
+ * @internal Lookup a filter number in the database to find a filter name.
+ *
+ * @param db Database to look in
+ * @param filterId Number of filter to lookup
  */
 static std::string lookupFilterName(
-    dafPersist::DbStorage* db,  //!< Database to look in
-    int filterId    //!< Number of filter to lookup
+    dafPersist::DbStorage* db,
+    int filterId
     ) {
     db->setTableForQuery("Filter");
     db->outColumn("filterName");
@@ -151,15 +147,21 @@ static std::string lookupFilterName(
 }
 
 
-/** Set an output column's value from a PropertySet, setting it to NULL if
+/**
+ * @internal Set an output column's value from a PropertySet, setting it to NULL if
  * the desired property does not exist.
+ *
+ * @param[out] db Destination database
+ * @param[in] colName Output column name
+ * @param[in] source Source PropertySet
+ * @param[in] propName Property name
  */
 template <typename T>
 static void setColumn(
-    dafPersist::DbStorage* db,                            //!< Destination database
-    std::string const& colName,               //!< Output column name
-    lsst::daf::base::PropertySet::Ptr source, //!< Source PropertySet
-    std::string const& propName               //!< Property name
+    dafPersist::DbStorage* db,
+    std::string const& colName,
+    lsst::daf::base::PropertySet::Ptr source,
+    std::string const& propName
     ) {
     if (!source->exists(propName)) {
         db->setColumnToNull(colName);
@@ -168,16 +170,16 @@ static void setColumn(
     }
 }
 
-/** Set an output column's value from a PropertySet, setting it to NULL if
+/** @internal Set an output column's value from a PropertySet, setting it to NULL if
  * the desired property does not exist.  Casts from PropertySet type to
  * database field type.
  */
 template <typename T1, typename T2>
 static void setColumn(
-    dafPersist::DbStorage* db,                            //!< Destination database
-    std::string const& colName,               //!< Output column name
-    lsst::daf::base::PropertySet::Ptr source, //!< Source PropertySet
-    std::string const& propName               //!< Property name
+    dafPersist::DbStorage* db,                            ///< Destination database
+    std::string const& colName,               ///< Output column name
+    lsst::daf::base::PropertySet::Ptr source, ///< Source PropertySet
+    std::string const& propName               ///< Property name
     ) {
     if (!source->exists(propName)) {
         db->setColumnToNull(colName);
@@ -261,8 +263,8 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
             db->setColumn<long long>("scienceCCDExposureId", ccdExposureId);
             db->setColumn<long long>("scienceFPAExposureId", fpaExposureId);
             db->setColumn<long long>("rawAmpExposureId", ampExposureId);
-            /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
-            /// KTL -- 2008-01-25
+            // @todo Check that rawCCDExposureId == scienceCCDExposureId --
+            // KTL -- 2008-01-25
         }
 
         db->setColumn<int>("ampId", ampId);
@@ -416,7 +418,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         }
         db->finishQuery();
 
-        //! \todo Should really have FITS be a separate Storage.
+        // @todo Should really have FITS be a separate Storage.
         // - KTL - 2007-11-29
 
         // Restore image from FITS...
@@ -432,7 +434,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         // Set the image headers.
         // Set the Wcs headers in ip->_wcs.
 
-        //! \todo Need to implement overwriting of FITS metadata PropertySet
+        // @todo Need to implement overwriting of FITS metadata PropertySet
         // with values from database. - KTL - 2007-12-18
 
         LOGL_DEBUG(_log, "ExposureFormatter read end");
@@ -448,7 +450,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update
         lsst::daf::base::PropertySet::Ptr
                                                                                 )
 {
-    //! \todo Implement update from FitsStorage, keeping DB-provided headers.
+    /// @todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Exposure");
 }
@@ -478,7 +480,7 @@ lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT,
     return FormPtr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
-/// \cond
+/// @cond
 #define INSTANTIATE(I, M, V) \
     template class afwForm::ExposureFormatter<I, M, V>; \
     template void afwForm::ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
@@ -495,4 +497,4 @@ INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)
 INSTANTIATE(uint64_t, afwImg::MaskPixel, afwImg::VariancePixel)
-/// \endcond
+/// @endcond

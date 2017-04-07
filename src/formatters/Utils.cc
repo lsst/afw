@@ -25,8 +25,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file
-//! \brief Support for formatters
+// Support for formatters
 //
 //##====----------------                                ----------------====##/
 
@@ -142,13 +141,6 @@ int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
     return ampExposureId;
 }
 
-/**
- * Extracts and returns the string-valued @c "itemName" property from the given data property object.
- *
- * @throw lsst::pex::exceptions::InvalidParameterError
- *        If the given pointer is null, or the @c PropertySet pointed
- *        to does not contain a unique property named @c "itemName".
- */
 std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
     if (!properties) {
         throw LSST_EXCEPT(ex::InvalidParameterError, "Null PropertySet::Ptr");
@@ -160,10 +152,6 @@ std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
 }
 
 
-/**
- * Returns @c true if and only if @a properties is non-null and contains a
- * unique property with the given name that has type @c bool and a value of @c true.
- */
 bool extractOptionalFlag(
     CONST_PTR(PropertySet) const& properties,
     std::string      const & name
@@ -175,21 +163,6 @@ bool extractOptionalFlag(
 }
 
 
-/**
- * Returns the name of the table that a single slice of a pipeline involved in the processing
- * of a single visit should use for persistence of a particular output. All slices can be
- * configured to use the same (per-visit) table name using policy parameters.
- *
- * @param[in] policy   The @c Policy containing the table name pattern ("${itemName}.tableNamePattern",
- *                     where ${itemName} is looked up in @a properties using the "itemName" key)
- *                     from which the the actual table name is derived. This pattern may contain
- * a set of parameters in @c %(key) format - these are interpolated by looking up @c "key" in
- * the @a properties PropertySet.
- *
- * @param[in] properties   Provides runtime specific properties necessary to construct the
- *                         output table name.
- * @return table name
- */
 std::string const getTableName(
     CONST_PTR(Policy) const& policy,
     CONST_PTR(PropertySet) const& properties
@@ -199,28 +172,6 @@ std::string const getTableName(
 }
 
 
-/**
- * Stores the name of the table that each slice of a pipeline involved in processing a visit
- * used for persistence of its outputs. If slices were configured to all use the same (per-visit)
- * table name, a single name is stored.
- *
- * @param[in] policy   The @c Policy containing the table name pattern ("${itemName}.tableNamePattern",
- *                     where ${itemName} is looked up in @a properties using the "itemName" key)
- *                     from which the the actual table name is derived. This pattern may contain
- * a set of parameters in @c %(key) format - these are interpolated by looking up @c "key" in
- * the @a properties PropertySet.
- *
- * @param[in] properties   The runtime specific properties necessary to construct the table names.
- *
- * string. The @c "visitId" property must also be present, and shall be a non-negative integer of type
- * @c int64_t uniquely identifying the current LSST visit. If the @c "${itemName}.isPerSliceTable"
- * property is present, is of type @c bool and is set to @c true, then it is assumed that
- * @c "${itemName}.numSlices" (a positive integer of type @c int) output tables exist and
- * are to be read in.
- *
- * @return a list of table names
- * @sa getTableName()
- */
 std::vector<std::string> getAllSliceTableNames(
     CONST_PTR(Policy) const& policy,
     CONST_PTR(PropertySet) const& properties
@@ -246,15 +197,6 @@ std::vector<std::string> getAllSliceTableNames(
 }
 
 
-/**
- * Creates the table identified by calling getTableName() with the given @a policy and @a properties.
- * A key named  @c "${itemName}.templateTableName" (where @c ${itemName} refers to the value of a
- * property named @c "itemName" extracted from @a properties) must be available and set to the name
- * of the template table to use for creation.
- *
- * Note that the template table must exist in the database identified by @a location, and that if
- * the desired table already exists, an exception is thrown.
- */
 void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
     CONST_PTR(lsst::pex::policy::Policy) const& policy,
@@ -270,7 +212,6 @@ void createTable(
 }
 
 
-/** Drops the database table(s) identified by getAllSliceTables(). */
 void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
     CONST_PTR(lsst::pex::policy::Policy) const& policy,

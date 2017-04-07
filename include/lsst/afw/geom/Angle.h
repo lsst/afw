@@ -13,7 +13,6 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-/************************************************************************************************************/
 /*
  * None of C99, C++98, and C++11 define M_PI, so we'll do it ourselves
  */
@@ -39,7 +38,6 @@ inline constexpr double radToMas(double x) noexcept { return x * 1000. * 3600. *
 inline constexpr double arcsecToRad(double x) noexcept { return (x / 3600.) * PI / 180.; }
 inline constexpr double masToRad(double x) noexcept { return (x / (1000. * 3600.)) * PI / 180.; }
 
-/************************************************************************************************************/
 
 class Angle;
 /**
@@ -74,7 +72,7 @@ public:
      * Test if two units are the same.
      *
      * @param rhs the unit to compare `this` to
-     * @return `true` if the two units have the same size, `false` otherwise.
+     * @returns `true` if the two units have the same size, `false` otherwise.
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -94,7 +92,6 @@ AngleUnit constexpr hours = AngleUnit(PI * 15.0 / 180.0);         ///< constant 
 AngleUnit constexpr arcminutes = AngleUnit(PI / 60 / 180.0);      ///< constant with units of arcminutes
 AngleUnit constexpr arcseconds = AngleUnit(PI / 180.0 / 3600.0);  ///< constant with units of arcseconds
 
-/************************************************************************************************************/
 /**
  * A class representing an angle.
  *
@@ -202,7 +199,7 @@ public:
      * The signed difference between two Angles.
      *
      * @param other the angle to which this angle will be compared
-     * @return `*this - other`, wrapped to the range [-&pi;, &pi;)
+     * @returns `*this - other`, wrapped to the range [-&pi;, &pi;)
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -254,7 +251,6 @@ private:
     double _val;
 };
 
-/************************************************************************************************************/
 /*
  * Operators for Angles.
  */
@@ -349,7 +345,6 @@ constexpr double operator/(T const lhs, Angle rhs) noexcept = delete;
  */
 std::ostream& operator<<(std::ostream& s, Angle a);
 
-/************************************************************************************************************/
 
 /// Allow a user to check if they have an angle.
 template <typename T>
@@ -357,7 +352,6 @@ inline constexpr bool isAngle(T) noexcept {
     return std::is_base_of<Angle, T>::value;
 };
 
-/************************************************************************************************************/
 /**
  * Use AngleUnit to convert a POD (e.g.\ int, double) to an Angle; e.g.\ 180*::degrees.
  *
@@ -375,7 +369,6 @@ inline constexpr Angle operator*(T lhs, AngleUnit rhs) noexcept {
     return Angle(lhs * rhs._val);
 }
 
-/************************************************************************************************************/
 // Inline method definitions, placed last in order to benefit from Angle's full API
 
 inline Angle Angle::wrap() const noexcept {

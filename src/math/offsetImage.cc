@@ -22,9 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
+/*
  * Offset an Image (or Mask or MaskedImage) by a constant vector (dx, dy)
  */
 #include <iterator>
@@ -41,26 +39,13 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-/**
- * @brief Return an image offset by (dx, dy) using the specified algorithm
- *
- * @note The image pixels are always offset by a fraction of a pixel and the image origin (XY0)
- * picks is modified to handle the integer portion of the offset.
- * In the special case that the offset in both x and y lies in the range (-1, 1) the origin is not changed.
- * Otherwise the pixels are shifted by (-0.5, 0.5] pixels and the origin shifted accordingly.
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if the algorithm is invalid
- */
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offset
-                                 float dx,               ///< move the %image this far in the column direction
-                                 float dy,               ///< move the %image this far in the row direction
-                                 std::string const& algorithmName,  ///< Type of resampling Kernel to use
-                                 unsigned int buffer ///< Width of buffer (border) around kernel image
-                                    ///< to allow for warping edge effects (pixels).
-                                    ///< Values < 0 are treated as 0.
-                                    ///< This is only used during computation; the final image
-                                    ///< has the same dimensions as the kernel.
+typename ImageT::Ptr offsetImage(ImageT const& inImage,
+                                 float dx,
+                                 float dy,
+                                 std::string const& algorithmName,
+                                 unsigned int buffer
+
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
 
@@ -138,11 +123,10 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     return outImage;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
                                                     std::string const&, unsigned int); \
@@ -152,6 +136,6 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 INSTANTIATE(double)
 INSTANTIATE(float)
 INSTANTIATE(int)
-/// \endcond
+/// @endcond
 
 }}}

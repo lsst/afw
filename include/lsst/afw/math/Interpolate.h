@@ -30,10 +30,8 @@ namespace lsst {
 namespace afw {
 namespace math {
 
- /**
- * @brief Interpolate values for a set of x,y vector<>s
- * @ingroup afw
- * @author Steve Bickerton
+ /*
+ * Interpolate values for a set of x,y vector<>s
  */
 class Interpolate {
 public:
@@ -64,6 +62,14 @@ protected:
                 std::vector<double> const &y, ///< the values at x[]
                 Interpolate::Style const style=UNKNOWN ///< desired interpolator
                ) : _x(x), _y(y), _style(style) {}
+    /**
+     * Base class ctor.  Note that we should use rvalue references when
+     * available as the vectors in xy will typically be movable (although the
+     * returned-value-optimisation might suffice for the cases we care about)
+     *
+     * @param xy pair (x,y) where x are the ordinates of points and y are the values at x[]
+     * @param style desired interpolator
+     */
     Interpolate(std::pair<std::vector<double>, std::vector<double> > const xy,
                 Interpolate::Style const style=UNKNOWN);
 
@@ -75,13 +81,35 @@ private:
     Interpolate& operator=(Interpolate const&);
 };
 
+/**
+ * A factory function to make Interpolate objects
+ *
+ * @param x the x-values of points
+ * @param y the values at x[]
+ * @param style desired interpolator
+ */
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
 PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
                                  ndarray::Array<double const, 1> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+/**
+ * Conversion function to switch a string to an Interpolate::Style.
+ *
+ * @param style desired type of interpolation
+ */
 Interpolate::Style stringToInterpStyle(std::string const &style);
+/**
+ * Get the highest order Interpolation::Style available for 'n' points.
+ *
+ * @param n Number of points
+ */
 Interpolate::Style lookupMaxInterpStyle(int const n);
+/**
+ * Get the minimum number of points needed to use the requested interpolation style
+ *
+ * @param style The style in question
+ */
 int lookupMinInterpPoints(Interpolate::Style const style);
 
 }}}

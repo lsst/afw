@@ -43,16 +43,11 @@ typedef math::Statistics ImgStat;
 typedef math::MaskedVector<float> MaskedVectorF;
 
 
-/**
- * @file imageStatistics.cc - an example of how to use the Statistics class
- * @author Steve Bickerton
- * @date Jan 8, 2009
- */
-
-
 /*
- *
+ * An example of how to use the Statistics class
  */
+
+
 template<typename Image>
 void printStats(Image &img, math::StatisticsControl const &sctrl) {
 

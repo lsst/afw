@@ -19,9 +19,7 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-/**
- * @file
- *
+/*
  * This file must be be included by any code that instantiates a templated version of TransformMap;
  * failure to do so will result in linker errors.
  */

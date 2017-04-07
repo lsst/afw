@@ -39,7 +39,7 @@ namespace lsst { namespace afw { namespace detection {
 class FootprintMerge;
 
 /**
- *  @brief List of Merged Footprints.
+ *  List of Merged Footprints.
  *
  *  Stores a vector of FootprintMerges and SourceRecords that contain the union of different footprints and
  *  which filters it was detected in.  Individual Footprints from a SourceCatalog can be added to
@@ -92,7 +92,7 @@ public:
     afw::table::Schema getPeakSchema() const { return _peakTable->getSchema(); }
 
     /**
-     *  @brief Add objects from a SourceCatalog in the specified filter
+     *  Add objects from a SourceCatalog in the specified filter
      *
      *  Iterate over all objects that have not been deblendend and search for an overlapping
      *  FootprintMerge in _mergeList.  If it overlaps, then it will be added to it,
@@ -112,12 +112,12 @@ public:
     );
 
     /**
-     *  @brief Clear entries in the current vector
+     *  Clear entries in the current vector
      */
     void clearCatalog() { _mergeList.clear(); }
 
     /**
-     *  @brief Get SourceCatalog with entries that contain the final Footprint and SourceRecord for each entry
+     *  Get SourceCatalog with entries that contain the final Footprint and SourceRecord for each entry
      *
      *  The resulting Footprints will be normalized, meaning that there peaks are sorted, and
      *  areas are calculated.

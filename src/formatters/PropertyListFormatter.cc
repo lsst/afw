@@ -23,10 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of PropertyListFormatter class
- *
- * @ingroup afw
+/*
+ * Implementation of PropertyListFormatter class
  */
 #include <cstdint>
 #include <memory>

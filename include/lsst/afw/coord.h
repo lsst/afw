@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::coord
+/*
+ * An include file to include the header files for lsst::afw::coord
  */
 #ifndef LSST_COORD_H
 #define LSST_COORD_H

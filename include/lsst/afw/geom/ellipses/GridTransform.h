@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED
 
-/**
- *  @file
- *  @brief Definitions for Ellipse::GridTransform and BaseCore::GridTransform.
+/*
+ *  Definitions for Ellipse::GridTransform and BaseCore::GridTransform.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include "Eigen/Eigenvalues"
@@ -49,27 +48,27 @@ public:
     /// Matrix type for derivative with respect to ellipse parameters.
     typedef Eigen::Matrix<double,4,3> DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     explicit GridTransform(BaseCore const & input);
 
-    /// @brief Convert the proxy to a LinearTransform.
+    /// Convert the proxy to a LinearTransform.
     operator LinearTransform () const;
 
-    /// @brief Return the transform matrix as an Eigen object.
+    /// Return the transform matrix as an Eigen object.
     LinearTransform::Matrix getMatrix() const;
 
-    /// @brief Return the derivative of the transform with respect to input core.
+    /// Return the derivative of the transform with respect to input core.
     DerivativeMatrix d() const;
 
-    /// @brief Return the determinant of the LinearTransform.
+    /// Return the determinant of the LinearTransform.
     double getDeterminant() const;
 
-    /// @brief Return the inverse of the LinearTransform;
+    /// Return the inverse of the LinearTransform;
     LinearTransform invert() const;
 
 private:
 
-    BaseCore const & _input; ///< \internal input core to be transformed
+    BaseCore const & _input; ///< @internal input core to be transformed
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> _eig;
 };
 
@@ -83,27 +82,27 @@ public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix<double,6,5> DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     explicit GridTransform(Ellipse const & input);
 
-    /// @brief Return the transform matrix as an Eigen object.
+    /// Return the transform matrix as an Eigen object.
     AffineTransform::Matrix getMatrix() const;
 
-    /// @brief Return the derivative of transform with respect to input ellipse.
+    /// Return the derivative of transform with respect to input ellipse.
     DerivativeMatrix d() const;
 
-    /// @brief Return the determinant of the AffineTransform.
+    /// Return the determinant of the AffineTransform.
     double getDeterminant() const;
 
-    /// @brief Convert the proxy to a AffineTransform.
+    /// Convert the proxy to a AffineTransform.
     operator AffineTransform () const;
 
-    /// @brief Return the inverse of the AffineTransform.
+    /// Return the inverse of the AffineTransform.
     AffineTransform invert() const;
 
 private:
 
-    Ellipse const & _input; ///< \internal input ellipse to be transformed
+    Ellipse const & _input; ///< @internal input ellipse to be transformed
     BaseCore::GridTransform _coreGt;
 };
 

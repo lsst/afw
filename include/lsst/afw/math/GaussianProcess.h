@@ -43,9 +43,7 @@ namespace afw {
 namespace math {
 
 /**
-  * @class GaussianProcessTimer
-  *
-  * @brief This is a structure for keeping track of how long the
+  * This is a structure for keeping track of how long the
   * interpolation methods spend on different parts of the interpolation
   *
   * _eigenTime keeps track of how much time is spent using Eigen's linear algebra packages
@@ -70,45 +68,45 @@ public:
     GaussianProcessTimer();
 
     /**
-     * @brief Resets all of the data members of GaussianProcessTimer to zero.
+     * Resets all of the data members of GaussianProcessTimer to zero.
      *
     */
     void reset();
 
     /**
-     * @brief Starts the timer for an individual call to an interpolation routine
+     * Starts the timer for an individual call to an interpolation routine
     */
     void start();
 
     /**
-     * @brief Adds time to _eigenTime
+     * Adds time to _eigenTime
     */
     void addToEigen();
 
     /**
-     * @brief Adds time to _varianceTime
+     * Adds time to _varianceTime
     */
     void addToVariance();
 
     /**
-     * @brief Adds time to _searchTime
+     * Adds time to _searchTime
     */
     void addToSearch();
 
     /**
-     * @brief Adds time to _iterationTime
+     * Adds time to _iterationTime
     */
     void addToIteration();
 
     /**
-     * @brief Adds time to _totalTime and adds counts to _interpolationCount
+     * Adds time to _totalTime and adds counts to _interpolationCount
      *
      * @param [in] i the number of counts to add to _interpolationCount
     */
     void addToTotal(int i);
 
     /**
-     * @brief Displays the current values of all times and _interpolationCount
+     * Displays the current values of all times and _interpolationCount
     */
     void display();
 
@@ -120,9 +118,7 @@ private:
 
 
 /**
-  * @class Covariogram
-  *
-  * @brief The parent class of covariogram functions for use in Gaussian Process interpolation
+  * The parent class of covariogram functions for use in Gaussian Process interpolation
   *
   * Each instantiation of a Covariogram will store its own hyper parameters
   *
@@ -143,13 +139,13 @@ public:
 #endif
 
     /**
-     * @brief construct a Covariogram assigning default values to the hyper parameters
+     * construct a Covariogram assigning default values to the hyper parameters
     */
     explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
 
 
     /**
-     * @brief Actually evaluate the covariogram function relating two points you want to interpolate from
+     * Actually evaluate the covariogram function relating two points you want to interpolate from
      *
      * @param [in] p1 the first point
      *
@@ -162,9 +158,9 @@ public:
 };
 
 /**
- * @class SquaredExpCovariogram
+ * SquaredExpCovariogram
  *
- * @brief a Covariogram that falls off as the negative exponent of the square
+ * a Covariogram that falls off as the negative exponent of the square
  * of the distance between the points
  *
  * Contains one hyper parameter (_ellSquared) encoding the square of the
@@ -194,9 +190,7 @@ private:
 };
 
 /**
-  * @class NeuralNetCovariogram
-  *
-  * @brief a Covariogram that recreates a neural network with one hidden layer
+  * a Covariogram that recreates a neural network with one hidden layer
   * and infinite units in that layer
   *
   * Contains two hyper parameters (_sigma0 and _sigma1) that characterize the expected
@@ -214,12 +208,12 @@ public:
     explicit NeuralNetCovariogram();
 
     /**
-     * @brief set the _sigma0 hyper parameter
+     * set the _sigma0 hyper parameter
     */
     void setSigma0(double sigma0);
 
     /**
-     * @brief set the _sigma1 hyper parameter
+     * set the _sigma1 hyper parameter
     */
     void setSigma1(double sigma1);
 
@@ -234,9 +228,7 @@ private:
 };
 
 /**
- *@class KdTree
- *
- * @brief The data for GaussianProcess is stored in a KD tree to facilitate nearest-neighbor searches
+ * The data for GaussianProcess is stored in a KD tree to facilitate nearest-neighbor searches
  *
  * Note: I have removed the ability to arbitrarily specify a distance function.  The KD Tree nearest neighbor
  * search algorithm only makes sense in the case of Euclidean distances, so I have forced KdTree to use
@@ -261,17 +253,17 @@ public:
 #endif
 
     /**
-     * @brief Build a KD Tree to store the data for GaussianProcess
+     * Build a KD Tree to store the data for GaussianProcess
      *
      * @param [in] dt an array, the rows of which are the data points
      * (dt[i][j] is the jth component of the ith data point)
      *
-     * @throw pex_exceptions RuntimeError if the tree is not properly constructed
+     * @throws pex::exceptions::RuntimeError if the tree is not properly constructed
     */
     void Initialize(ndarray::Array<T,2,2> const &dt);
 
     /**
-     * @brief Find the nearest neighbors of a point
+     * Find the nearest neighbors of a point
      *
      * @param [out] neighdex this is where the indices of the nearest neighbor points will be stored
      *
@@ -292,7 +284,7 @@ public:
 
 
     /**
-     * @brief Return one element of one node on the tree
+     * Return one element of one node on the tree
      *
      * @param [in] ipt the index of the node to return
      *
@@ -302,7 +294,7 @@ public:
 
 
     /**
-     * @brief Return an entire node from the tree
+     * Return an entire node from the tree
      *
      * @param [in] ipt the index of the node to return
      *
@@ -325,31 +317,31 @@ public:
     ndarray::Array<T,1,1> getData(int ipt) const;
 
     /**
-     * @brief Add a point to the tree.  Allot more space in _tree and data if needed.
+     * Add a point to the tree.  Allot more space in _tree and data if needed.
      *
      * @param [in] v the point you are adding to the tree
      *
-     * @throw pex_exceptions RuntimeError if the branch ending in the new point is not properly constructed
+     * @throws pex::exceptions::RuntimeError if the branch ending in the new point is not properly constructed
     */
     void addPoint(ndarray::Array<const T,1,1> const &v);
 
     /**
-     * @brief Remove a point from the tree.  Reorganize what remains so that the tree remains self-consistent
+     * Remove a point from the tree.  Reorganize what remains so that the tree remains self-consistent
      *
      * @param [in] dex the index of the point you want to remove from the tree
      *
-     * @throw pex_exceptions RuntimeError if the entire tree is not poperly constructed after
+     * @throws pex::exceptions::RuntimeError if the entire tree is not poperly constructed after
      * the point has been removed
     */
     void removePoint(int dex);
 
     /**
-     * @brief return the number of data points stored in the tree
+     * return the number of data points stored in the tree
     */
     int getNPoints() const;
 
    /**
-     * @brief Return the _tree information for a given data point
+     * Return the _tree information for a given data point
      *
      * @param [out] v the array in which to store the entry from _tree
      *
@@ -390,7 +382,7 @@ private:
     mutable ndarray::Array<int,1,1> _neighborCandidates;
 
     /**
-     * @brief Find the daughter point of a node in the tree and segregate the points around it
+     * Find the daughter point of a node in the tree and segregate the points around it
      *
      * @param [in] use the indices of the data points being considered as possible daughters
      *
@@ -407,7 +399,7 @@ private:
                    int dir);
 
     /**
-      * @brief Find the point already in the tree that would be the parent of a point not in the tree
+      * Find the point already in the tree that would be the parent of a point not in the tree
       *
       * @param [in] v the points whose prospective parent you want to find
     */
@@ -434,7 +426,7 @@ private:
                            int from) const;
 
     /**
-     * @brief Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
+     * Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
     */
     int _testTree() const;
 
@@ -466,21 +458,21 @@ private:
     void _count(int where,int *ct) const;
 
     /**
-     * @brief Descend the tree from a node which has been removed, reassigning severed nodes as you go
+     * Descend the tree from a node which has been removed, reassigning severed nodes as you go
      *
      * @param root the index of the node where you are currently
     */
     void _descend(int root);
 
     /**
-      * @brief Reassign nodes to the tree that were severed by a call to removePoint(int)
+      * Reassign nodes to the tree that were severed by a call to removePoint(int)
       *
       * @param target the node you are reassigning
     */
     void _reassign(int target);
 
     /**
-     * @brief calculate the Euclidean distance between the points p1 and p2
+     * calculate the Euclidean distance between the points p1 and p2
     */
     double _distance(ndarray::Array<const T,1,1> const &p1,
                      ndarray::Array<const T,1,1> const &p2) const;
@@ -488,9 +480,7 @@ private:
 
 
 /**
- * @class GaussianProcess
- *
- * @brief Stores values of a function sampled on an image and allows
+ * Stores values of a function sampled on an image and allows
  * you to interpolate the function to unsampled points
  *
  * The data will be stored in a KD Tree for easy nearest neighbor searching when interpolating.
@@ -603,7 +593,7 @@ public:
                     std::shared_ptr< Covariogram<T> > const &covarIn);
 
     /**
-     * @brief return the number of data points stored in the GaussianProcess
+     * return the number of data points stored in the GaussianProcess
     */
     int getNPoints() const;
 
@@ -614,7 +604,7 @@ public:
     int getDim() const;
 
     /**
-     * @brief Return a sub-sample the data underlying the Gaussian Process
+     * Return a sub-sample the data underlying the Gaussian Process
      *
      * @param [out] pts will contain the data points from the Gaussian Process
      *
@@ -626,7 +616,7 @@ public:
                  ndarray::Array<int, 1, 1> indices) const;
 
     /**
-     * @brief Return a sub-sample the data underlying the Gaussian Process
+     * Return a sub-sample the data underlying the Gaussian Process
      *
      * @param [out] pts will contain the data points from the Gaussian Process
      *
@@ -639,7 +629,7 @@ public:
 
 
     /**
-     * @brief Interpolate the function value at one point using a specified number of nearest neighbors
+     * Interpolate the function value at one point using a specified number of nearest neighbors
      *
      * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussian
      * process will be stored in the zeroth element
@@ -659,7 +649,7 @@ public:
                   ndarray::Array<T,1,1> const &vin,
                   int numberOfNeighbors) const;
     /**
-     * @brief This is the version of GaussianProcess::interpolate for a vector of functions.
+     * This is the version of GaussianProcess::interpolate for a vector of functions.
      *
      * @param [out] mu will store the vector of interpolated function values
      *
@@ -689,7 +679,7 @@ public:
      *
      * @param [in] numberOfNeighbors the number of nearest neighbors to be used in the interpolation
      *
-     * @throw pex_exceptions RuntimeError if the nearest neighbor search does
+     * @throws pex::exceptions::RuntimeError if the nearest neighbor search does
      * not find the data point itself as the nearest neighbor
      *
      * The interpolated value of the function will be returned at the end of this method
@@ -702,7 +692,7 @@ public:
                       int numberOfNeighbors) const;
 
     /**
-     * @brief The version of selfInterpolate called for a vector of functions
+     * The version of selfInterpolate called for a vector of functions
      *
      * @param [out] mu this is where the interpolated function values will be stored
      *
@@ -712,7 +702,7 @@ public:
      *
      * @param [in] numberOfNeighbors the number of nearest neighbors to use in the interpolation
      *
-     * @throw pex_exceptions RuntimeError if the nearest neighbor search does not find
+     * @throws pex::exceptions::RuntimeError if the nearest neighbor search does not find
      * the data point itself as the nearest neighbor
     */
     void selfInterpolate(ndarray::Array<T,1,1> mu,
@@ -721,7 +711,7 @@ public:
                          int numberOfNeighbors) const;
 
     /**
-     * @brief Interpolate a list of query points using all of the input data (rather than nearest neighbors)
+     * Interpolate a list of query points using all of the input data (rather than nearest neighbors)
      *
      * @param [out] mu a 1-dimensional ndarray where the interpolated function values will be stored
      *
@@ -782,16 +772,16 @@ public:
 
 
     /**
-     * @brief Add a point to the pool of data used by GaussianProcess for interpolation
+     * Add a point to the pool of data used by GaussianProcess for interpolation
      *
      * @param [in] vin a one-dimensional ndarray storing the point in parameter space that you are adding
      *
      * @param [in]  f the value of the function at that point
      *
-     * @throw pex_exceptions RuntimeError if you call this when you should have
+     * @throws pex::exceptions::RuntimeError if you call this when you should have
      * called the version taking a vector of functions (below)
      *
-     * @throw pex_exceptions RuntimeError if the tree does not end up properly constructed
+     * @throws pex::exceptions::RuntimeError if the tree does not end up properly constructed
      * (the exception is actually thrown by KdTree<T>::addPoint() )
      *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree,
@@ -800,9 +790,9 @@ public:
     void addPoint(ndarray::Array<T,1,1> const &vin,T f);
 
     /**
-     * @brief This is the version of addPoint that is called for a vector of functions
+     * This is the version of addPoint that is called for a vector of functions
      *
-     * @throw pex_exceptions RuntimeError if the tree does not end up properly constructed
+     * @throws pex::exceptions::RuntimeError if the tree does not end up properly constructed
      * (the exception is actually thrown by KdTree<T>::addPoint() )
      *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree,
@@ -811,11 +801,11 @@ public:
     void addPoint(ndarray::Array<T,1,1> const &vin,ndarray::Array<T,1,1> const &f);
 
     /**
-     * @brief This will remove a point from the data set
+     * This will remove a point from the data set
      *
      * @param [in] dex the index of the point you want to remove from your data set
      *
-     * @throw pex_exceptions RuntimeError if the tree does not end up properly constructed
+     * @throws pex::exceptions::RuntimeError if the tree does not end up properly constructed
      * (the exception is actually thrown by KdTree<T>::removePoint() )
      *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree,
@@ -824,7 +814,7 @@ public:
     void removePoint(int dex);
 
     /**
-     * @brief Assign a value to the Kriging paramter
+     * Assign a value to the Kriging paramter
      *
      * @param [in] kk the value assigned to the Kriging parameters
      *
@@ -832,7 +822,7 @@ public:
     void setKrigingParameter(T kk);
 
     /**
-     * @brief Assign a different covariogram to this GaussianProcess
+     * Assign a different covariogram to this GaussianProcess
      *
      * @param [in] covar the Covariogram object that you wish to assign
      *
@@ -840,7 +830,7 @@ public:
     void setCovariogram(std::shared_ptr< Covariogram<T> > const &covar);
 
     /**
-     * @brief set the value of the hyperparameter _lambda
+     * set the value of the hyperparameter _lambda
      *
      * @param [in] lambda the value you want assigned to _lambda
      *

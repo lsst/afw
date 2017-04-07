@@ -22,14 +22,9 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file   rombergPolar.cc
- * @author S. Bickerton
- * @date   May 25, 2009
- *
+/*
  * This example demonstrates how to use the romberg2D()
  * integrator (afw::math Quadrature) with a polar function.
- *
  */
 #include <iostream>
 #include <vector>
@@ -40,7 +35,7 @@
 
 namespace math = lsst::afw::math;
 
-/** =========================================================================
+/* =========================================================================
  * define a simple 2D function as a functor to be integrated.
  * I've chosen a paraboloid: f(x) = K - kr*r*r
  * as it's got an easy-to-check analytic answer.
@@ -75,7 +70,7 @@ private:
 
 
 
-/** =============================================================================
+/* =============================================================================
  * Define a normal function that does the same thing as the above functor
  *
  */
@@ -86,7 +81,7 @@ double parabola2d(double const r, double const) {
 
 
 
-/** =====================================================================
+/* =====================================================================
  *  Main body of code
  *  ======================================================================
  */

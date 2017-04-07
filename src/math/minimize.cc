@@ -22,16 +22,10 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Definition of member functions for minuit adaptors
+/*
+ * Definition of member functions for minuit adaptors
  *
  * This file is meant to be included by lsst/afw/math/minimize.h
- *
- * @author Andrew Becker and Russell Owen
- *
- * @ingroup afw
  */
 
 #include <string>
@@ -114,7 +108,7 @@ namespace {
         double _errorDef;
     };
 }
-/// \cond
+/// @cond
 template<typename ReturnT>
 MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
     lsst::afw::math::Function1<ReturnT> const &function,
@@ -181,32 +175,17 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
 
     return chi2;
 }
-/// \endcond
+/// @endcond
 
-/**
- * Find the minimum of a function(x)
- *
- * @return true if minimum is valid, false otherwise
- *
- * Uses the Minuit fitting package with a standard definition of chiSq
- * (see MinimizerFunctionBase1).
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length
- *
- * To do:
- * - Document stepSizeList better
- * - Document errorDef
- * - Compute stepSize automatically? (if so, find a different way to fix parameters)
- */
 template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
-    lsst::afw::math::Function1<ReturnT> const &function, ///< function(x) to be minimized
-    std::vector<double> const &initialParameterList,    ///< initial guess for parameters
-    std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
-    std::vector<double> const &measurementList, ///< measured values
-    std::vector<double> const &varianceList,    ///< variance for each measurement
-    std::vector<double> const &xPositionList,   ///< x position of each measurement
-    double errorDef ///< what is this?
+    lsst::afw::math::Function1<ReturnT> const &function,
+    std::vector<double> const &initialParameterList,
+    std::vector<double> const &stepSizeList,
+    std::vector<double> const &measurementList,
+    std::vector<double> const &varianceList,
+    std::vector<double> const &xPositionList,
+    double errorDef
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
@@ -267,31 +246,16 @@ afwMath::FitResults afwMath::minimize(
 }
 
 
-/**
- * Find the minimum of a function(x, y)
- *
- * Uses the Minuit fitting package with a standard definition of chiSq.
- * (see MinimizerFunctionBase2).
- *
- * @return true if minimum is valid, false otherwise
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length
- *
- * To do:
- * - Document stepSizeList better
- * - Document errorDef
- * - Compute stepSize automatically? (if so, find a different way to fix parameters)
- */
 template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
-    lsst::afw::math::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
-    std::vector<double> const &initialParameterList,    ///< initial guess for parameters
-    std::vector<double> const &stepSizeList,    ///< step size for each parameter; use 0.0 to fix a parameter
-    std::vector<double> const &measurementList, ///< measured values
-    std::vector<double> const &varianceList,    ///< variance for each measurement
-    std::vector<double> const &xPositionList,   ///< x position of each measurement
-    std::vector<double> const &yPositionList,   ///< y position of each measurement
-    double errorDef ///< what is this?
+    lsst::afw::math::Function2<ReturnT> const &function,
+    std::vector<double> const &initialParameterList,
+    std::vector<double> const &stepSizeList,
+    std::vector<double> const &measurementList,
+    std::vector<double> const &varianceList,
+    std::vector<double> const &xPositionList,
+    std::vector<double> const &yPositionList,
+    double errorDef
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
@@ -357,7 +321,7 @@ afwMath::FitResults afwMath::minimize(
 }
 
 // Explicit instantiation
-/// \cond
+/// @cond
 #define NL /* */
 #define minimizeFuncs(ReturnT) \
     template afwMath::FitResults afwMath::minimize( \
@@ -382,4 +346,4 @@ afwMath::FitResults afwMath::minimize(
 
 minimizeFuncs(float)
 minimizeFuncs(double)
-/// \endcond
+/// @endcond

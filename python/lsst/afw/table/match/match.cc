@@ -36,7 +36,7 @@ namespace afw {
 namespace table {
 namespace {
 
-/// Declare match code templated on two types of catalog
+/// @internal Declare match code templated on two types of catalog
 template <typename Catalog1, typename Catalog2>
 void declareMatch2(py::module & mod, std::string const & prefix) {
     typedef typename Catalog1::Record Record1;
@@ -66,7 +66,7 @@ void declareMatch2(py::module & mod, std::string const & prefix) {
     //          matchRaDec<Catalog1, Catalog2>, "cat1"_a, "cat2"_a, "radius"_a, "closest"_a);
 };
 
-/// Declare match code templated on one type of catalog
+/// @internal Declare match code templated on one type of catalog
 template <typename Catalog>
 void declareMatch1(py::module &mod) {
     typedef std::vector<Match<typename Catalog::Record, typename Catalog::Record>> MatchList;

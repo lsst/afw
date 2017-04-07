@@ -24,10 +24,8 @@
 
 #if !defined(LSST_AFW_MATH_BACKGROUND_H)
 #define LSST_AFW_MATH_BACKGROUND_H
-/**
- * @brief Estimate image backgrounds
- * @ingroup afw
- * @author Steve Bickerton
+/*
+ * Estimate image backgrounds
  */
 #include <boost/preprocessor/seq.hpp>
 #include <memory>
@@ -52,21 +50,30 @@ enum UndersampleStyle {
     REDUCE_INTERP_ORDER,
     INCREASE_NXNYSAMPLE
 };
+/**
+ * Conversion function to switch a string to an UndersampleStyle
+ */
 UndersampleStyle stringToUndersampleStyle(std::string const &style);
 
 /**
- * @class BackgroundControl
- * @brief Pass parameters to a Background object
+ * Pass parameters to a Background object
  */
 class BackgroundControl {
 public:
+    /**
+     * @param nxSample Num. grid samples in x
+     * @param nySample Num. grid samples in y
+     * @param sctrl Configuration for Stats to be computed
+     * @param prop statistical property to use for grid points
+     * @param actrl configuration for approx to be computed
+     */
     BackgroundControl(
-        int const nxSample,                                  ///< Num. grid samples in x
-        int const nySample,                                  ///< Num. grid samples in y
-        StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
-        Property const prop = MEANCLIP, ///< statistical property to use for grid points
+        int const nxSample,
+        int const nySample,
+        StatisticsControl const sctrl = StatisticsControl(),
+        Property const prop = MEANCLIP,
         ApproximateControl const actrl =
-            ApproximateControl(ApproximateControl::UNKNOWN, 1) ///< configuration for approx to be computed
+            ApproximateControl(ApproximateControl::UNKNOWN, 1)
                      )
         : _style(Interpolate::AKIMA_SPLINE),
           _nxSample(nxSample), _nySample(nySample),
@@ -84,14 +91,20 @@ public:
 
     /**
      * Overload constructor to handle string for statistical operator
+     *
+     * @param nxSample num. grid samples in x
+     * @param nySample num. grid samples in y
+     * @param sctrl configuration for stats to be computed
+     * @param prop statistical property to use for grid points
+     * @param actrl configuration for approx to be computed
      */
     BackgroundControl(
-        int const nxSample,             ///< num. grid samples in x
-        int const nySample,             ///< num. grid samples in y
-        StatisticsControl const &sctrl, ///< configuration for stats to be computed
-        std::string const &prop,        ///< statistical property to use for grid points
+        int const nxSample,
+        int const nySample,
+        StatisticsControl const &sctrl,
+        std::string const &prop,
         ApproximateControl const actrl =
-            ApproximateControl(ApproximateControl::UNKNOWN, 1) ///< configuration for approx to be computed
+            ApproximateControl(ApproximateControl::UNKNOWN, 1)
                      )
         : _style(Interpolate::AKIMA_SPLINE),
           _nxSample(nxSample), _nySample(nySample),
@@ -108,17 +121,25 @@ public:
     }
     // And now the two old APIs (preserved for backward compatibility)
     /**
-     * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     * @deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     *
+     * @param style Style of the interpolation
+     * @param nxSample Num. grid samples in x
+     * @param nySample Num. grid samples in y
+     * @param undersampleStyle Behaviour if there are too few points
+     * @param sctrl Configuration for Stats to be computed
+     * @param prop statistical property to use for grid points
+     * @param actrl configuration for approx to be computed
      */
     BackgroundControl(
-        Interpolate::Style const style, ///< Style of the interpolation
-        int const nxSample = 10,        ///< Num. grid samples in x
-        int const nySample = 10,        ///< Num. grid samples in y
-        UndersampleStyle const undersampleStyle = THROW_EXCEPTION, ///< Behaviour if there are too few points
-        StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
-        Property const prop = MEANCLIP, ///< statistical property to use for grid points
+        Interpolate::Style const style,
+        int const nxSample = 10,
+        int const nySample = 10,
+        UndersampleStyle const undersampleStyle = THROW_EXCEPTION,
+        StatisticsControl const sctrl = StatisticsControl(),
+        Property const prop = MEANCLIP,
         ApproximateControl const actrl =
-            ApproximateControl(ApproximateControl::UNKNOWN, 1) ///< configuration for approx to be computed
+            ApproximateControl(ApproximateControl::UNKNOWN, 1)
 
                      )
         : _style(style),
@@ -138,17 +159,25 @@ public:
     /**
      * Overload constructor to handle strings for both interp and undersample styles.
      *
-     * \deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     * @deprecated New code should specify the interpolation style in getImage, not the BackgroundControl ctor
+     *
+     * @param style Style of the interpolation
+     * @param nxSample num. grid samples in x
+     * @param nySample num. grid samples in y
+     * @param undersampleStyle behaviour if there are too few points
+     * @param sctrl configuration for stats to be computed
+     * @param prop statistical property to use for grid points
+     * @param actrl configuration for approx to be computed
      */
     BackgroundControl(
-        std::string const &style, ///< Style of the interpolation
-        int const nxSample = 10, ///< num. grid samples in x
-        int const nySample = 10, ///< num. grid samples in y
-        std::string const &undersampleStyle = "THROW_EXCEPTION", ///< behaviour if there are too few points
-        StatisticsControl const sctrl = StatisticsControl(), ///< configuration for stats to be computed
-        std::string const &prop = "MEANCLIP", ///< statistical property to use for grid points
+        std::string const &style,
+        int const nxSample = 10,
+        int const nySample = 10,
+        std::string const &undersampleStyle = "THROW_EXCEPTION",
+        StatisticsControl const sctrl = StatisticsControl(),
+        std::string const &prop = "MEANCLIP",
         ApproximateControl const actrl =
-            ApproximateControl(ApproximateControl::UNKNOWN, 1)  ///< configuration for approx to be computed
+            ApproximateControl(ApproximateControl::UNKNOWN, 1)
                      )
         : _style(math::stringToInterpStyle(style)),
           _nxSample(nxSample), _nySample(nySample),
@@ -225,14 +254,36 @@ private:
 };
 
 /**
- * @class Background
- * @brief A virtual base class to evaluate %image background levels
+ * A virtual base class to evaluate %image background levels
  */
 class Background : public daf::base::Citizen {
 protected:
+    /**
+     * Constructor for Background
+     *
+     * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
+     * getImage() to interpolate those values, creating an image the same size as the original
+     *
+     * @note The old and deprecated API specified the interpolation style as part of the BackgroundControl
+     * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
+     * method is called
+     *
+     * @param img ImageT (or MaskedImage) whose properties we want
+     * @param bgCtrl Control how the Background is estimated
+     */
     template<typename ImageT>
     explicit Background(ImageT const& img, BackgroundControl const& bgCtrl);
 
+    /**
+     * Create a Background without any values in it
+     *
+     * @param imageBBox Bounding box for image to be created by getImage()
+     * @param nx Number of samples in x-direction
+     * @param ny Number of samples in y-direction
+     *
+     * @note This ctor is mostly used to create a Background given its sample values, and that (in turn)
+     * is mostly used to implement persistence.
+     */
     explicit Background(geom::Box2I const imageBBox, int const nx, int const ny);
     /// dtor
     virtual ~Background() { }
@@ -244,51 +295,65 @@ public:
     /// Subtract a constant level from a background
     virtual Background& operator-=(float const delta) = 0;
     /**
-     * \brief Method to interpolate and return the background for entire image
+     * Method to interpolate and return the background for entire image
      *
-     * \return A boost shared-pointer to an image containing the estimated background
+     * @param interpStyle Style of the interpolation
+     * @param undersampleStyle Behaviour if there are too few points
+     * @returns A boost shared-pointer to an image containing the estimated background
      */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage(
-        Interpolate::Style const interpStyle,                   ///< Style of the interpolation
-        UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
+        Interpolate::Style const interpStyle,
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION
                                                  ) const {
         return getImage<PixelT>(_imgBBox, interpStyle, undersampleStyle);
     }
     /**
-     * \brief Method to interpolate and return the background for entire image
+     * Method to interpolate and return the background for entire image
      *
-     * \return A boost shared-pointer to an image containing the estimated background
+     * @param interpStyle Style of the interpolation
+     * @param undersampleStyle Behaviour if there are too few points
+     * @returns A boost shared-pointer to an image containing the estimated background
      */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage(
-        std::string const &interpStyle, ///< Style of the interpolation
-        std::string const &undersampleStyle="THROW_EXCEPTION"   ///< Behaviour if there are too few points
+        std::string const &interpStyle,
+        std::string const &undersampleStyle="THROW_EXCEPTION"
                                                  ) const {
         return getImage<PixelT>(math::stringToInterpStyle(interpStyle),
                                 stringToUndersampleStyle(undersampleStyle));
     }
+    /**
+     * @param bbox Bounding box for sub-image
+     * @param interpStyle Style of the interpolation
+     * @param undersampleStyle Behaviour if there are too few points
+     */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage(
-        lsst::afw::geom::Box2I const& bbox,                     ///< Bounding box for sub-image
-        Interpolate::Style const interpStyle,                   ///< Style of the interpolation
-        UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
+        lsst::afw::geom::Box2I const& bbox,
+        Interpolate::Style const interpStyle,
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION
         ) const {
         return _getImage(bbox, interpStyle, undersampleStyle, static_cast<PixelT>(0));
     }
+    /**
+     * @param bbox Bounding box for sub-image
+     * @param interpStyle Style of the interpolation
+     * @param undersampleStyle Behaviour if there are too few points
+     */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage(
-        lsst::afw::geom::Box2I const& bbox,               ///< Bounding box for sub-image
-        std::string const& interpStyle,                   ///< Style of the interpolation
-        std::string const& undersampleStyle="THROW_EXCEPTION" ///< Behaviour if there are too few points
+        lsst::afw::geom::Box2I const& bbox,
+        std::string const& interpStyle,
+        std::string const& undersampleStyle="THROW_EXCEPTION"
         ) const {
         return _getImage(bbox, math::stringToInterpStyle(interpStyle),
                          stringToUndersampleStyle(undersampleStyle), static_cast<PixelT>(0));
     }
 
     /**
-     * \brief Method to interpolate and return the background for entire image
-     * \deprecated New code should specify the interpolation style in getImage, not the ctor
+     * Method to interpolate and return the background for entire image
+     * @deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage() const {
@@ -309,11 +374,14 @@ public:
         return _asUsedUndersampleStyle;
     }
     /**
-     * \brief Method to return an approximation to the background
+     * Method to return an approximation to the background
+     *
+     * @param actrl Approximation style
+     * @param undersampleStyle Behaviour if there are too few points
      */
     PTR(math::Approximate<InternalPixelT>) getApproximate(
-        ApproximateControl const& actrl,                        ///< Approximation style
-        UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
+        ApproximateControl const& actrl,
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION
                                                  ) const {
         InternalPixelT disambiguate = 0;
         return _getApproximate(actrl, undersampleStyle, disambiguate);
@@ -372,12 +440,15 @@ protected:
 private:
     Background(Background const&);
     Background& operator=(Background const&);
+    /**
+     * Compute the centers, origins, and sizes of the patches used to compute image statistics
+     * when estimating the Background
+     */
     void _setCenOrigSize(int const width, int const height, int const nxSample, int const nySample);
 };
 
 /**
- * @class BackgroundMI
- * @brief A class to evaluate %image background levels
+ * A class to evaluate %image background levels
  *
  * Break an image up into nx*ny sub-images and use a statistical to estimate the background levels in each
  * square.  Then use a user-specified or algorithm to estimate background at a given pixel coordinate.
@@ -385,46 +456,96 @@ private:
  * Methods are available to return the background at a point (inefficiently), or an entire background image.
  * BackgroundControl contains a public StatisticsControl member to allow user control of how the backgrounds
  * are computed.
- * @code
-       math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
-       bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
-       PTR(math::Background) backobj = math::makeBackground(img, bctrl);
-       // get a whole background image
-       Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
- * @endcode
  *
- * \deprecated
+ *     math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
+ *     bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
+ *     PTR(math::Background) backobj = math::makeBackground(img, bctrl);
+ *     // get a whole background image
+ *     Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
+ *
+ * @deprecated
  * there is also
- * \code
- // get the background at a pixel at i_x,i_y
- double someValue = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
- * \endcode
+ *
+ *     // get the background at a pixel at i_x,i_y
+ *     double someValue = backobj.getPixel(math::Interpolate::LINEAR, i_x, i_y);
  */
 class BackgroundMI : public Background {
 public:
     template<typename ImageT>
+    /**
+     * Constructor for BackgroundMI
+     *
+     * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
+     * getImage() to interpolate those values, creating an image the same size as the original
+     *
+     * @param img ImageT (or MaskedImage) whose properties we want
+     * @param bgCtrl Control how the BackgroundMI is estimated
+     *
+     * @note If there are heavily masked or Nan regions in the image we may not be able to estimate
+     * all the cells in the "statsImage".  Interpolation will still work, but if you want to prevent
+     * the code wildly extrapolating, it may be better to set the values directly; e.g.
+     *
+     *     defaultValue = 10
+     *     statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+     *     sim = statsImage.getImage().getArray()
+     *     sim[np.isnan(sim)] = defaultValue # replace NaN by defaultValue
+     *     bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+     *
+     * There is a ticket (#2825) to allow getImage to specify a default value to use when interpolation fails
+     *
+     * @deprecated The old and deprecated API specified the interpolation style as part of the BackgroundControl
+     * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
+     * method is called
+     */
     explicit BackgroundMI(ImageT const& img,
                         BackgroundControl const& bgCtrl);
+    /**
+     * Recreate a BackgroundMI from the statsImage and the original Image's BBox
+     *
+     * @param imageDimensions unbinned Image's BBox
+     * @param statsImage Internal stats image
+     */
     explicit BackgroundMI(geom::Box2I const imageDimensions,
                           image::MaskedImage<InternalPixelT> const& statsImage);
 
+    /**
+     * Add a scalar to the Background (equivalent to adding a constant to the original image)
+     *
+     * @param delta Value to add
+     */
     virtual BackgroundMI& operator+=(float const delta);
+    /**
+     * Subtract a scalar from the Background (equivalent to subtracting a constant from the original image)
+     *
+     * @param delta Value to subtract
+     */
     virtual BackgroundMI& operator-=(float const delta);
 
 
+    /**
+     * Method to retrieve the background level at a pixel coord.
+     *
+     * @param style How to interpolate
+     * @param x x-pixel coordinate (column)
+     * @param y y-pixel coordinate (row)
+     * @returns an estimated background at x,y (double)
+     *
+     * @deprecated Don't call this image (not even in test code).
+     * This can be a very costly function to get a single pixel. If you want an image, use the getImage() method.
+     */
     double getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
-     * \brief Return the background value at a point
+     * Return the background value at a point
      *
-     * \warning This is very inefficient -- only use it for debugging, if then.
+     * @warning This is very inefficient -- only use it for debugging, if then.
      *
-     * \deprecated New code should specify the interpolation style in getPixel, not the ctor
+     * @deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
     double getPixel(int const x, int const y) const {
         return getPixel(_bctrl->getInterpStyle(), x, y);
     }
     /**
-     * \brief Return the image of statistical quantities extracted from the image
+     * Return the image of statistical quantities extracted from the image
      */
     lsst::afw::image::MaskedImage<InternalPixelT> getStatsImage() const {
         return _statsImage;
@@ -449,6 +570,9 @@ private:
 #undef LSST_makeBackground_getApproximate
 #endif
     // Here's the worker function for _getImage (non-virtual; it's templated in BackgroundMI, not Background)
+    /**
+     * Worker routine for getImage
+     */
     template<typename PixelT>
     PTR(image::Image<PixelT>) doGetImage(geom::Box2I const& bbox,
                                          Interpolate::Style const interpStyle_,
@@ -459,7 +583,7 @@ private:
                                               UndersampleStyle const undersampleStyle) const;
 };
 /**
- * @brief A convenience function that uses function overloading to make the correct type of Background
+ * A convenience function that uses function overloading to make the correct type of Background
  *
  * cf. std::make_pair()
  */

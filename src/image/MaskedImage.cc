@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Implementation for MaskedImage
+/*
+ * Implementation for MaskedImage
  */
 #include <cstdint>
 #include <typeinfo>
@@ -44,15 +43,11 @@
 
 namespace image = lsst::afw::image;
 
-/** Constructors
- *
- * \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    unsigned int width, ///< number of columns
-    unsigned int height, ///< number of rows
-    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+    unsigned int width,
+    unsigned int height,
+    MaskPlaneDict const& planeDict
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(width, height)),
@@ -63,14 +58,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *_variance = 0;
 }
 
-/** Constructors
- *
- * \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    geom::Extent2I const & dimensions, //!< Number of columns, rows in image
-    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+    geom::Extent2I const & dimensions,
+    MaskPlaneDict const& planeDict
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(dimensions)),
@@ -81,18 +72,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *_variance = 0;
 }
 
-/**
- * Create an MaskedImage of the specified size
- *
- * The Image, Mask, and Variance will be set to zero
- *
- * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
- * which may be conveniently used to make objects of an appropriate size
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    geom::Box2I const & bbox, //!< dimensions of image: width x height
-    MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+    geom::Box2I const & bbox,
+    MaskPlaneDict const& planeDict
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(bbox)),
@@ -259,15 +242,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     }
 }
 
-/**
- * \brief Construct from a supplied Image and optional Mask and Variance.
- * The Mask and Variance will be set to zero if omitted
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        ImagePtr image,                 ///< %Image
-        MaskPtr mask,                   ///< %Mask
-        VariancePtr variance            ///< Variance %Mask
+        ImagePtr image,
+        MaskPtr mask,
+        VariancePtr variance
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(image),
@@ -276,13 +255,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     conformSizes();
 }
 
-/**
- * \brief Copy constructor;  shallow, unless deep is true.
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    MaskedImage const& rhs, ///< %Image to copy
-    bool deep               ///< Make deep copy?
+    MaskedImage const& rhs,
+    bool deep
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
@@ -294,16 +270,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     conformSizes();
 }
 
-/**
- * \brief Copy constructor of the pixels specified by bbox;  shallow, unless deep is true.
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    MaskedImage const& rhs,     ///< MaskedImage to copy
-    const geom::Box2I& bbox,    ///< Specify desired region
-    ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
-    bool deep                   ///< If false, new ImageBase shares storage with rhs;
-                                ///< if true make a new, standalone, MaskedImage
+    MaskedImage const& rhs,
+    const geom::Box2I& bbox,
+    ImageOrigin const origin,
+    bool deep
+
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image(*rhs.getImage(), bbox, origin, deep)),
@@ -313,15 +286,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 #if defined(DOXYGEN)
-/**
- * \brief Make the lhs use the rhs's pixels
- *
- * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
- * this is probably not the function that you want to use with an %image. To copy pixel values
- * from the rhs use assign(rhs)
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(image::MaskedImage const& rhs ///< Right hand side
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(image::MaskedImage const& rhs
                       ) {}
 #endif
 
@@ -336,11 +302,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedIma
 // Use compiler generated version of:
 //    MaskedImage<ImagePixelT, MaskPixelT> &operator=(const MaskedImage<ImagePixelT, MaskPixelT>& rhs);
 
-/************************************************************************************************************/
 // Operators
-/**
- * Set the pixels in the MaskedImage to the rhs
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::Pixel const& rhs) {
@@ -351,9 +313,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
     return *this;
 }
 
-/**
- * Set the pixels in the MaskedImage to the rhs
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::SinglePixel const& rhs) {
@@ -364,13 +323,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
     return *this;
 }
 
-/**
- * Copy the pixels from the rhs to the lhs
- *
- * \deprecated use assign(rhs) instead
- *
- * \note operator=() is not equivalent to this command
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
@@ -378,17 +330,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedI
     return *this;
 }
 
-/**
- * Copy pixels from another masked image to a specified subregion of this masked image.
- *
- * \param[in] rhs  source image whose pixels are to be copied into this image (the destination)
- * \param[in] bbox  subregion of this image to set; if empty (the default) then all pixels are set
- * \param[in] origin  origin of bbox: if PARENT then the lower left pixel of this image is at xy0
- *                    if LOCAL then the lower left pixel of this image is at 0,0
- *
- * \throw lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
- * this image do not match.
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedImage const &rhs,
     geom::Box2I const &bbox, ImageOrigin origin) {
@@ -397,13 +338,6 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedI
     _variance->assign(*rhs.getVariance(), bbox, origin);
 }
 
-/// Add a MaskedImage rhs to a MaskedImage
-///
-/// The %image and variances are added; the masks are ORd together
-///
-/// \note The pixels in the two images are taken to be independent.  There is
-/// a Pixel operation (plus) which models the covariance, but this is not (yet?)
-/// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
@@ -413,13 +347,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedIm
     return *this;
 }
 
-/// Add a scaled MaskedImage c*rhs to a MaskedImage
-///
-/// The %image and variances are added; the masks are ORd together
-///
-/// \note The pixels in the two images are taken to be independent.  There is
-/// a Pixel operation (plus) which models the covariance, but this is not (yet?)
-/// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c,
                                                                              MaskedImage const& rhs) {
@@ -428,7 +355,6 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(dou
     (*_variance).scaledPlus(c*c, *rhs.getVariance());
 }
 
-/// Add a scalar rhs to a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT const rhs) {
@@ -436,11 +362,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePix
     return *this;
 }
 
-/// Subtract a MaskedImage rhs from a MaskedImage
-///
-/// The %images are subtracted; the masks are ORd together; and the variances are added
-///
-/// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
@@ -450,11 +371,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedIm
     return *this;
 }
 
-/// Subtract a scaled MaskedImage c*rhs from a MaskedImage
-///
-/// The %images are subtracted; the masks are ORd together; and the variances are added
-///
-/// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c,
                                                                               MaskedImage const& rhs) {
@@ -463,7 +379,6 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(do
     (*_variance).scaledPlus(c*c, *rhs.getVariance());
 }
 
-/// Subtract a scalar rhs from a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT const rhs) {
@@ -472,7 +387,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePix
 }
 
 namespace {
-    /// Functor to calculate the variance of the product of two independent variables
+    /// @internal Functor to calculate the variance of the product of two independent variables
     template<typename ImagePixelT, typename VariancePixelT>
     struct productVariance {
         double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
@@ -480,7 +395,7 @@ namespace {
         }
     };
 
-    /// Functor to calculate variance of the product of two independent variables, with the rhs scaled by c
+    /// @internal Functor to calculate variance of the product of two independent variables, with the rhs scaled by c
     template<typename ImagePixelT, typename VariancePixelT>
     struct scaledProductVariance {
         double _c;
@@ -532,7 +447,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(ImagePix
 
 
 namespace {
-    /// Functor to calculate the variance of the ratio of two independent variables
+    /// @internal Functor to calculate the variance of the ratio of two independent variables
     template<typename ImagePixelT, typename VariancePixelT>
     struct quotientVariance {
         double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
@@ -540,7 +455,7 @@ namespace {
             return (lhs*lhs*varRhs + rhs2*varLhs)/(rhs2*rhs2);
         }
     };
-    /// Functor to calculate the variance of the ratio of two independent variables, the second scaled by c
+    /// @internal Functor to calculate the variance of the ratio of two independent variables, the second scaled by c
     template<typename ImagePixelT, typename VariancePixelT>
     struct scaledQuotientVariance {
         double _c;
@@ -673,7 +588,6 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     _variance->writeFits(fitsfile, hdr);
 }
 
-/************************************************************************************************************/
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions
 // as Image.  If Mask and/or Variance have non-zero dimensions that conflict with the size of Image,
 // a lsst::pex::exceptions::LengthError is thrown.
@@ -712,11 +626,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     }
 }
 
-/************************************************************************************************************/
 //
 // Iterators and locators
 //
-/// Return an \c iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin() const {
 #if 0                                   // this doesn't compile; why?
@@ -730,7 +642,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
 #endif
 }
 
-/// Return an \c iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end() const {
     typename Image::iterator imageEnd = getImage()->end();
@@ -740,7 +651,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
     return iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/// Return an \c iterator at the point <tt>(x, y)</tt>
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::at(int const x, int const y) const {
     typename Image::iterator imageEnd = getImage()->at(x, y);
@@ -750,7 +660,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
     return iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/// Return a \c reverse_iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rbegin() const {
     typename Image::reverse_iterator imageBegin = _image->rbegin();
@@ -760,7 +669,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
     return reverse_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
-/// Return a \c reverse_iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rend() const {
     typename Image::reverse_iterator imageEnd = getImage()->rend();
@@ -770,7 +678,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
     return reverse_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/// Return an \c x_iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_begin(int y) const {
     typename Image::x_iterator imageBegin = _image->row_begin(y);
@@ -780,7 +687,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     return x_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
-/// Return an \c x_iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_end(int y) const {
     typename Image::x_iterator imageEnd = getImage()->row_end(y);
@@ -790,9 +696,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     return x_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/************************************************************************************************************/
 
-/// Return an \c y_iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_begin(int x) const {
     typename Image::y_iterator imageBegin = _image->col_begin(x);
@@ -802,7 +706,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     return y_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
-/// Return an \c y_iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_end(int x) const {
     typename Image::y_iterator imageEnd = getImage()->col_end(x);
@@ -812,18 +715,10 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     return y_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/************************************************************************************************************/
-/// Fast iterators to contiguous images
-///
-/// Return a fast \c iterator to the start of the %image, which must be contiguous
-/// Note that the order in which pixels are visited is undefined.
-///
-/// \exception lsst::pex::exceptions::Runtime
-/// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
     image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
-        bool contiguous         ///< Pixels are contiguous (must be true)
+        bool contiguous
                                                                       ) const {
     typename Image::fast_iterator imageBegin = _image->begin(contiguous);
     typename Mask::fast_iterator maskBegin = _mask->begin(contiguous);
@@ -832,15 +727,10 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
     return fast_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
-/// Return a fast \c iterator to the end of the %image, which must be contiguous
-/// Note that the order in which pixels are visited is undefined.
-///
-/// \exception lsst::pex::exceptions::Runtime
-/// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
     image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end(
-        bool contiguous                 ///< Pixels are contiguous (must be true)
+        bool contiguous
                                                                     ) const {
     typename Image::fast_iterator imageEnd = getImage()->end(contiguous);
     typename Mask::fast_iterator maskEnd = getMask()->end(contiguous);
@@ -849,7 +739,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
     return fast_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //

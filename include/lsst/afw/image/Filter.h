@@ -25,8 +25,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file
-//! \brief  Class encapsulating an identifier for an LSST filter.
+//         Class encapsulating an identifier for an LSST filter.
 //
 //##====----------------                                ----------------====##/
 
@@ -60,11 +59,23 @@ public:
 
     explicit FilterProperty(std::string const& name, double lambdaEff, bool force=false) :
         _name(name), _lambdaEff(lambdaEff) { _insert(force); }
+    /**
+     * @param name name of filter
+     * @param prop values describing the Filter
+     * @param force Allow this name to replace a previous one
+     */
     explicit FilterProperty(
         std::string const& name,
         lsst::daf::base::PropertySet const& prop=lsst::daf::base::PropertySet(),
         bool force=false
         );
+    /**
+     * Create a new FilterProperty, setting values from a Policy
+     *
+     * @param name name of filter
+     * @param pol values describing the Filter
+     * @param force Allow this name to replace a previous one
+     */
     explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force=false);
     /**
      * Return a filter's name
@@ -74,8 +85,10 @@ public:
      * Return the filter's effective wavelength (nm)
      */
     double getLambdaEff() const { return _lambdaEff; }
-    /*
-     * Compare two FilterProperties
+    /**
+     * Return true iff two FilterProperties are identical
+     *
+     * @param rhs Object to compare with this
      */
     bool operator==(FilterProperty const& rhs) const;
     /**
@@ -88,11 +101,24 @@ public:
      */
     static void reset() { _initRegistry(); }
 
+    /**
+     * Lookup the properties of a filter "name"
+     *
+     * @param name name of desired filter
+     */
     static FilterProperty const& lookup(std::string const& name);
 private:
     typedef std::unordered_map<std::string, FilterProperty> PropertyMap;
 
+    /**
+     * Initialise the Filter registry
+     */
     static void _initRegistry();
+    /**
+     * Insert FilterProperty into registry
+     *
+     * @param force Allow this name to replace a previous one?
+     */
     void _insert(bool force=false);
 
     std::string _name;                  // name of filter
@@ -101,17 +127,16 @@ private:
     static PropertyMap *_propertyMap;   // mapping from name -> FilterProperty
 };
 
-/************************************************************************************************************/
-/*!
- * \brief  Holds an integer identifier for an LSST filter.
+/**
+ * Holds an integer identifier for an LSST filter.
  */
 class Filter
 {
 public :
-    static int const AUTO; 
-    static int const UNKNOWN; 
+    static int const AUTO;
+    static int const UNKNOWN;
 
-    /*!
+    /**
      * Creates a Filter with the given name
      */
     explicit Filter(std::string const& name, ///< Name of filter
@@ -124,11 +149,14 @@ public :
                    ) : _id(id), _name(_lookup(id)) {}
     /**
      * Create a Filter from a PropertySet (e.g. a FITS header)
+     *
+     * @param metadata Metadata to process (e.g. a IFITS header)
+     * @param force Allow us to construct an unknown Filter
      */
     explicit Filter(CONST_PTR(lsst::daf::base::PropertySet), bool const force=false);
 
-    /*
-     * Compare two Filters
+    /**
+     * Are two filters identical?
      */
     bool operator==(Filter const& rhs) const;
     bool operator!=(Filter const& rhs) const { return !(*this == rhs); }
@@ -154,28 +182,54 @@ public :
      */
     std::vector<std::string> getAliases() const;
 
+    /**
+     * Return a Filter's FilterProperty
+     */
     FilterProperty const& getFilterProperty() const;
     /**
      * Clear all definitions
      */
     static void reset() { _initRegistry(); }
-    /*
-     * Define a filter
+    /**
+     * Define a filter name to have the specified id
+     *
+     * If id == Filter::AUTO a value will be chosen for you.
+     *
+     * It is an error to attempt to change a name's id (unless you specify force)
      */
     static int define(FilterProperty const& filterProperty, int id=AUTO, bool force=false);
-    /*
+    /**
      * Define an alias for a filter
+     *
+     * @param oldName old name for Filter
+     * @param newName new name for Filter
+     * @param force force an alias even if newName is already in use
      */
     static int defineAlias(std::string const& oldName, std::string const& newName, bool force=false);
 
+    /**
+     * Return a list of known filters
+     */
     static std::vector<std::string> getNames();
 private :
     typedef std::unordered_map<std::string, std::string const> AliasMap;
     typedef std::unordered_map<std::string, unsigned int const> NameMap;
     typedef std::unordered_map<unsigned int, std::string const> IdMap;
 
+    /**
+     * Initialise the Filter registry
+     */
     static void _initRegistry();
+    /**
+     * Lookup the ID associated with a name
+     *
+     * @param name Name of filter
+     * @param force return an invalid ID, but don't throw, if name is unknown
+     */
     static int _lookup(std::string const& name, bool const force=false);
+    /**
+     * Lookup the name associated with an ID
+     */
     static std::string const& _lookup(int id);
 
     int _id;
@@ -188,6 +242,12 @@ private :
 };
 
 namespace detail {
+    /**
+     * Remove Filter-related keywords from the metadata
+     *
+     * @param[in, out] metadata Metadata to be stripped
+     * @return Number of keywords stripped
+     */
     int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata);
 }
 

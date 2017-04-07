@@ -24,14 +24,8 @@
 
 #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H
 #define LSST_AFW_MATH_FUNCTIONLIBRARY_H
-/**
- * @file
- *
- * @brief Define a collection of useful Functions.
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Define a collection of useful Functions.
  */
 #include <algorithm>
 #include <cmath>
@@ -49,7 +43,7 @@ using boost::serialization::make_nvp;
 #endif
 
     /**
-     * @brief 1-dimensional integer delta function.
+     * 1-dimensional integer delta function.
      *
      * f(x) = 1 if x == xo, 0 otherwise.
      *
@@ -64,7 +58,7 @@ using boost::serialization::make_nvp;
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * @brief Construct an integer delta function with specified xo, yo
+         * Construct an integer delta function with specified xo, yo
          */
         explicit IntegerDeltaFunction1(
             double xo)
@@ -107,7 +101,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 2-dimensional integer delta function.
+     * 2-dimensional integer delta function.
      *
      * f(x) = 1 if x == xo and y == yo, 0 otherwise.
      *
@@ -122,7 +116,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct an integer delta function with specified xo, yo
+         * Construct an integer delta function with specified xo, yo
          */
         explicit IntegerDeltaFunction2(
             double xo,
@@ -169,7 +163,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 1-dimensional Gaussian
+     * 1-dimensional Gaussian
      *
      * f(x) = A e^(-x^2 / 2 sigma^2)
      * where:
@@ -184,7 +178,7 @@ using boost::serialization::make_nvp;
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * @brief Construct a Gaussian function with specified sigma
+         * Construct a Gaussian function with specified sigma
          */
         explicit GaussianFunction1(
             double sigma)    ///< sigma
@@ -229,7 +223,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 2-dimensional Gaussian
+     * 2-dimensional Gaussian
      *
      * f(x,y) = A e^((-pos1^2 / 2 sigma1^2) - (pos2^2 / 2 sigma2^2))
      * where:
@@ -248,7 +242,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a 2-dimensional Gaussian function
+         * Construct a 2-dimensional Gaussian function
          */
         explicit GaussianFunction2(
             double sigma1,      ///< sigma along the pos1 axis
@@ -299,7 +293,7 @@ using boost::serialization::make_nvp;
 
     private:
         /**
-        * @brief Update cached values
+        * Update cached values
         *
         * sin(angle) and cos(angle) are cached to speed computation
         * and angle is cached so one can check if an update is required
@@ -342,7 +336,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief double Guassian (sum of two Gaussians)
+     * double Guassian (sum of two Gaussians)
      *
      * Intended for use as a PSF model: the main Gaussian represents the core
      * and the second Gaussian represents the wings.
@@ -361,7 +355,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a Gaussian function with specified x and y sigma
+         * Construct a Gaussian function with specified x and y sigma
          */
         explicit DoubleGaussianFunction2(
             double sigma1,      ///< sigma of main Gaussian
@@ -425,7 +419,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 1-dimensional polynomial function.
+     * 1-dimensional polynomial function.
      *
      * f(x) = c0 + c1 x + c2 x^2 + ... cn-1 x^(n-1)
      *
@@ -437,7 +431,7 @@ using boost::serialization::make_nvp;
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * @brief Construct a polynomial function of the specified order.
+         * Construct a polynomial function of the specified order.
          *
          * The parameters are initialized to zero.
          */
@@ -448,11 +442,11 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Construct a polynomial function with the specified parameters.
+         * Construct a polynomial function with the specified parameters.
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * @throw lsst::pex::exceptions::InvalidParameter if params is empty
+         * @throws lsst::pex::exceptions::InvalidParameter if params is empty
          */
         explicit PolynomialFunction1(
             std::vector<double> params)  ///< polynomial coefficients (const, x, x^2...)
@@ -483,7 +477,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Get the polynomial order
+         * Get the polynomial order
          */
         unsigned int getOrder() const { return this->getNParameters() - 1; };
 
@@ -507,7 +501,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 2-dimensional polynomial function with cross terms
+     * 2-dimensional polynomial function with cross terms
      *
      * f(x,y) = c0                                          (0th order)
      *          + c1 x   + c2 y                             (1st order)
@@ -526,7 +520,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a polynomial function of specified order.
+         * Construct a polynomial function of specified order.
          *
          * The polynomial will have (order + 1) * (order + 2) / 2 coefficients
          *
@@ -541,14 +535,14 @@ using boost::serialization::make_nvp;
         {}
 
         /**
-         * @brief Construct a polynomial function with specified parameters.
+         * Construct a polynomial function with specified parameters.
          *
          * The order of the polynomial is determined from the length of the params vector:
          *   order = (sqrt(1 + 8 * length) - 3) / 2
          * and if this is not an integer then the length is unsuitable
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if params length is unsuitable
-         * @throw lsst::pex::exceptions::Exception if an internal sanity check fails
+         * @throws lsst::pex::exceptions::InvalidParameterError if params length is unsuitable
+         * @throws lsst::pex::exceptions::Exception if an internal sanity check fails
          */
         explicit PolynomialFunction2(
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
@@ -615,6 +609,10 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(retVal);
         }
 
+        /**
+         * Return the coefficients of the Function's parameters, evaluated at (x, y)
+         * I.e. given c0, c1, c2, c3 ... return 1, x, y, x^2 ...
+         */
         virtual std::vector<double> getDFuncDParameters(double x, double y) const;
 
         virtual std::string toString(std::string const& prefix) const {
@@ -650,7 +648,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
+     * 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
      *
      * f(x) = c0 T0(x') + c1 T1(x') + c2 T2(x') + ...
      *      = c0 + c1 T1(x') + c2 T2(x') + ...
@@ -671,7 +669,7 @@ using boost::serialization::make_nvp;
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * @brief Construct a Chebyshev polynomial of specified order and range.
+         * Construct a Chebyshev polynomial of specified order and range.
          *
          * The parameters are initialized to zero.
          */
@@ -686,11 +684,11 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Construct a Chebyshev polynomial with specified parameters and range.
+         * Construct a Chebyshev polynomial with specified parameters and range.
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if params is empty
+         * @throws lsst::pex::exceptions::InvalidParameterError if params is empty
          */
         explicit Chebyshev1Function1(
             std::vector<double> params, ///< polynomial coefficients
@@ -713,17 +711,17 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Get minimum allowed x
+         * Get minimum allowed x
          */
         double getMinX() const { return _minX; };
 
         /**
-         * @brief Get maximum allowed x
+         * Get maximum allowed x
          */
         double getMaxX() const { return _maxX; };
 
         /**
-         * @brief Get the polynomial order
+         * Get the polynomial order
          */
         unsigned int getOrder() const { return this->getNParameters() - 1; };
 
@@ -765,7 +763,7 @@ using boost::serialization::make_nvp;
         unsigned int _order;   ///< polynomial order
 
         /**
-         * @brief initialize private constants
+         * initialize private constants
          */
         void _initialize(double minX, double maxX) {
             _minX = minX;
@@ -795,7 +793,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 2-dimensional weighted sum of Chebyshev polynomials of the first kind.
+     * 2-dimensional weighted sum of Chebyshev polynomials of the first kind.
      *
      * f(x,y) = c0 T0(x') T0(y')                                        # order 0
      *        + c1 T1(x') T0(y') + c2 T0(x') T1(y')                     # order 1
@@ -825,7 +823,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a Chebyshev polynomial of specified order and range.
+         * Construct a Chebyshev polynomial of specified order and range.
          *
          * The parameters are initialized to zero.
          */
@@ -844,11 +842,11 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Construct a Chebyshev polynomial with specified parameters and range.
+         * Construct a Chebyshev polynomial with specified parameters and range.
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if params is empty
+         * @throws lsst::pex::exceptions::InvalidParameterError if params is empty
          */
         explicit Chebyshev1Function2(
             std::vector<double> params, ///< polynomial coefficients
@@ -872,7 +870,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Get x,y range
+         * Get x,y range
          */
         lsst::afw::geom::Box2D getXYRange() const {
             return lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(_minX, _minY),
@@ -880,9 +878,9 @@ using boost::serialization::make_nvp;
         };
 
         /**
-         * @brief Return a truncated copy of lower (or equal) order
+         * Return a truncated copy of lower (or equal) order
          *
-         * @throw lsst::pex::exceptions::InvalidParameter if truncated order > original order
+         * @throws lsst::pex::exceptions::InvalidParameter if truncated order > original order
          */
         virtual Chebyshev1Function2 truncate(
                 int truncOrder ///< order of truncated polynomial
@@ -991,7 +989,7 @@ using boost::serialization::make_nvp;
         double _offsetY;  ///< y' = (y + _offsetY) * _scaleY
 
         /**
-         * @brief initialize private constants
+         * initialize private constants
          */
         void _initialize(lsst::afw::geom::Box2D const &xyRange) {
             _minX = xyRange.getMinX();
@@ -1034,7 +1032,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 1-dimensional Lanczos function
+     * 1-dimensional Lanczos function
      *
      * f(x) = sinc(pi x') sinc(pi x' / n)
      * where x' = x - xOffset
@@ -1051,7 +1049,7 @@ using boost::serialization::make_nvp;
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * @brief Construct a Lanczos function of specified order and x,y offset.
+         * Construct a Lanczos function of specified order and x,y offset.
          */
         explicit LanczosFunction1(
             unsigned int n,         ///< order of Lanczos function
@@ -1080,7 +1078,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Get the order of the Lanczos function
+         * Get the order of the Lanczos function
          */
         unsigned int getOrder() const {
             return static_cast<unsigned int>(0.5 + (1.0 / _invN));
@@ -1110,13 +1108,13 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief 2-dimensional separable Lanczos function
+     * 2-dimensional separable Lanczos function
      *
      * f(x, y) = sinc(pi x') sinc(pi x' / n) sinc(pi y') sinc(pi y' / n)
      * where x' = x - xOffset and y' = y - yOffset
      * and coefficients c0 = xOffset, c1 = yOffset
      *
-     * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n or |y'| > n
+     * @warning the Lanczos function is sometimes forced to 0 if |x'| > n or |y'| > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
      * @ingroup afw
@@ -1127,7 +1125,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a Lanczos function of specified order and x,y offset.
+         * Construct a Lanczos function of specified order and x,y offset.
          */
         explicit LanczosFunction2(
             unsigned int n,         ///< order of Lanczos function
@@ -1164,7 +1162,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Get the order of Lanczos function
+         * Get the order of Lanczos function
          */
         unsigned int getOrder() const {
             return static_cast<unsigned int>(0.5 + (1.0 / _invN));

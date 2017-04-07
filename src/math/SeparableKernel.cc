@@ -260,10 +260,9 @@ double afwMath::SeparableKernel::basicComputeVectors(
     return imSum;
 }
 
-/************************************************************************************************************/
 namespace {
     /**
-     * Compute a cache of pre-computed Kernels
+     * @internal Compute a cache of pre-computed Kernels
      */
     void _computeCache(int const cacheSize,
                        std::vector<double> const& x,

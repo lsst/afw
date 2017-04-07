@@ -53,9 +53,7 @@ void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
     }
 }
 
-/************************************************************************************************************/
-
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     afwImage::DecoratedImage<float> dimg(afwGeom::Extent2I(10, 6));
     afwImage::Image<float> img(*dimg.getImage());
 

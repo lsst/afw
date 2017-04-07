@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of ImageFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of ImageFormatter class
  */
 
 #ifndef __GNUC__
@@ -160,7 +152,7 @@ void ImageFormatter<ImagePixelT>::write(
         typedef Image<ImagePixelT> Image;
 
         ip->writeFits(fits->getPath());
-        // \todo Do something with these fields?
+        // @todo Do something with these fields?
         // int _X0;
         // int _Y0;
         LOGL_DEBUG(_log, "ImageFormatter write end");
@@ -228,8 +220,8 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
             lsst::daf::base::PropertySet::Ptr(),
             box, origin
         );
-        // \note We're throwing away the metadata
-        // \todo Do something with these fields?
+        // @note We're throwing away the metadata
+        // @todo Do something with these fields?
         // int _X0;
         // int _Y0;
         LOGL_DEBUG(_log, "ImageFormatter read end");

@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
 
-/**
- *  @file
- *  @brief Forward declarations, typedefs, and definitions for BaseCore.
+/*
+ *  Forward declarations, typedefs, and definitions for BaseCore.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include <memory>
@@ -44,7 +43,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 class Parametric;
 
 /**
- *  @brief A base class for parametrizations of the "core" of an ellipse - the ellipticity and size.
+ *  A base class for parametrizations of the "core" of an ellipse - the ellipticity and size.
  *
  *  A subclass of BaseCore provides a particular interpretation of the three pointing point values that
  *  define an ellipse's size and ellipticity (including position angle).  All core subclasses
@@ -79,10 +78,10 @@ public:
     static Ptr make(std::string const & name, Convolution const & other);
 #endif
 
-    /// @brief Return a string that identifies this parametrization.
+    /// Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
 
-    /// @brief Deep-copy the Core.
+    /// Deep-copy the Core.
     Ptr clone() const { return _clone(); }
 
     /**
@@ -91,17 +90,17 @@ public:
      */
     virtual void normalize() = 0;
 
-    /// @brief Increase the major and minor radii of the ellipse core by the given buffer.
+    /// Increase the major and minor radii of the ellipse core by the given buffer.
     void grow(double buffer);
 
-    /// @brief Scale the size of the ellipse core by the given factor.
+    /// Scale the size of the ellipse core by the given factor.
     void scale(double factor);
 
-    /// @brief Return the area of the ellipse core.
+    /// Return the area of the ellipse core.
     double getArea() const;
 
     /**
-     *  @brief Return the radius defined as the 4th root of the determinant of the quadrupole matrix.
+     *  Return the radius defined as the 4th root of the determinant of the quadrupole matrix.
      *
      *  The determinant radius is equal to the standard radius for a circle,
      *  and its square times pi is the area of the ellipse.
@@ -109,7 +108,7 @@ public:
     double getDeterminantRadius() const;
 
     /**
-     *  @brief Return the radius defined as the square root of one half the trace of the quadrupole matrix.
+     *  Return the radius defined as the square root of one half the trace of the quadrupole matrix.
      *
      *  The trace radius is equal to the standard radius for a circle.
      */
@@ -128,7 +127,7 @@ public:
     //@}
 
     /**
-     *  @brief Return the transform that maps the ellipse to the unit circle.
+     *  Return the transform that maps the ellipse to the unit circle.
      *
      *  The returned proxy object is implicitly convertible to LinearTransform
      *  and also supports differentiation.
@@ -143,45 +142,45 @@ public:
     Convolution const convolve(BaseCore const & other) const;
     //@}
 
-    /// @brief Return the size of the bounding box for the ellipse core.
+    /// Return the size of the bounding box for the ellipse core.
     Extent2D computeDimensions() const;
 
     virtual void readParameters(double const * iter) = 0;
 
     virtual void writeParameters(double * iter) const = 0;
 
-    /// @brief Return the core parameters as a vector.
+    /// Return the core parameters as a vector.
     ParameterVector const getParameterVector() const;
 
-    /// @brief Set the core parameters from a vector.
+    /// Set the core parameters from a vector.
     void setParameterVector(ParameterVector const & vector);
 
     /**
-     *  @brief Compare two ellipse cores for equality.
+     *  Compare two ellipse cores for equality.
      *
      *  Ellipse cores are only equal if they have the same type.
      */
     bool operator==(BaseCore const & other) const;
 
     /**
-     *  @brief Compare two ellipse cores for inequality.
+     *  Compare two ellipse cores for inequality.
      *
      *  Ellipses are only equal if they have the same type.
      */
     bool operator!=(BaseCore const & other) const { return !operator==(other); }
 
     /**
-     *  @brief Set the parameters of this ellipse core from another.
+     *  Set the parameters of this ellipse core from another.
      *
      *  This does not change the parametrization of the ellipse core.
      */
     BaseCore & operator=(BaseCore const & other);
 
-    /// @brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
+    /// Assign other to this and return the derivative of the conversion, d(this)/d(other).
     Jacobian dAssign(BaseCore const & other);
 
     /**
-     *  @brief Convert this to the core type specified as a template parameter.
+     *  Convert this to the core type specified as a template parameter.
      */
     template <typename Output> Converter<Output> as() const;
 

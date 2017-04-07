@@ -42,7 +42,7 @@ class Quadrupole;
 namespace table {
 
 /**
- *  @brief A FunctorKey used to get or set a geom::Point from an (x,y) pair of int or double Keys.
+ *  A FunctorKey used to get or set a geom::Point from an (x,y) pair of int or double Keys.
  */
 template <typename T>
 class PointKey : public FunctorKey< lsst::afw::geom::Point<T,2> > {
@@ -71,13 +71,12 @@ public:
     PointKey(Key<T> const & x, Key<T> const & y) : _x(x), _y(y) {}
 
     /**
-     *  @brief Construct from a subschema, assuming x and y subfields
+     *  Construct from a subschema, assuming x and y subfields
      *
      *  If a schema has "a_x" and "a_y" fields, this constructor allows you to construct
      *  a PointKey via:
-     *  @code
-     *  PointKey<T> k(schema["a"]);
-     *  @endcode
+     *
+     *      PointKey<T> k(schema["a"]);
      */
     PointKey(SubSchema const & s) : _x(s["x"]), _y(s["y"]) {}
 
@@ -111,7 +110,7 @@ typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
 
 /**
- *  @brief A FunctorKey used to get or set celestial coordinates from a pair of Angle keys.
+ *  A FunctorKey used to get or set celestial coordinates from a pair of Angle keys.
  *
  *  Coords are always stored and returned in the ICRS system. Coords in other
  *  systems may be assigned, but this will result in a conversion to ICRS.
@@ -144,13 +143,12 @@ public:
     {}
 
     /**
-     *  @brief Construct from a subschema, assuming ra and dec subfields.
+     *  Construct from a subschema, assuming ra and dec subfields.
      *
      *  If a schema has "a_ra" and "a_dec" fields, this constructor allows you to
      *  construct a CoordKey via:
-     *  @code
-     *  CoordKey k(schema["a"]);
-     *  @endcode
+     *
+     *      CoordKey k(schema["a"]);
      */
     CoordKey(SubSchema const & s) : _ra(s["ra"]), _dec(s["dec"]) {}
 
@@ -195,7 +193,7 @@ enum class CoordinateType {
 };
 
 /**
- *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from a tuple of constituent Keys.
+ *  A FunctorKey used to get or set a geom::ellipses::Quadrupole from a tuple of constituent Keys.
  */
 class QuadrupoleKey : public FunctorKey< lsst::afw::geom::ellipses::Quadrupole > {
 public:
@@ -227,14 +225,12 @@ public:
     {}
 
     /**
-     *  @brief Construct from a subschema with appropriate subfields
+     *  Construct from a subschema with appropriate subfields
      *
      *  If the schema has "a_xx", "a_yy" and "a_xy" fields this constructor enables you to
      *  construct a QuadrupoleKey via:
      *
-     *  @code
-     *  QuadrupoleKey k(schema["a"], coordType);
-     *  @endcode
+     *      QuadrupoleKey k(schema["a"], coordType);
      */
     QuadrupoleKey(SubSchema const & s): _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
 
@@ -270,7 +266,7 @@ private:
 
 
 /**
- *  @brief A FunctorKey used to get or set a geom::ellipses::Ellipse from an (xx,yy,xy,x,y) tuple of Keys.
+ *  A FunctorKey used to get or set a geom::ellipses::Ellipse from an (xx,yy,xy,x,y) tuple of Keys.
  */
 class EllipseKey : public FunctorKey< lsst::afw::geom::ellipses::Ellipse > {
 public:
@@ -301,13 +297,12 @@ public:
     {}
 
     /**
-     *  @brief Construct from a subschema, assuming (xx, yy, xy, x, y) subfields
+     *  Construct from a subschema, assuming (xx, yy, xy, x, y) subfields
      *
      *  If a schema has "a_xx", "a_yy", "a_xy", "a_x", and "a_y" fields, this constructor allows you to
      *  construct an EllipseKey via:
-     *  @code
-     *  EllipseKey k(schema["a"]);
-     *  @endcode
+     *
+     *      EllipseKey k(schema["a"]);
      */
     EllipseKey(SubSchema const & s) : _qKey(s), _pKey(s) {}
 
@@ -395,19 +390,18 @@ public:
     CovarianceMatrixKey();
 
     /**
-     *  @brief Construct a from arrays of per-element Keys
+     *  Construct a from arrays of per-element Keys
      *
      *  The sigma array Keys should point to the square root of the diagonal of the
      *  covariance matrix.  The cov array Keys should point to the off-diagonal elements
      *  of the lower-triangle, packed first in rows, then in columns (or equivalently,
      *  in the upper-triangle, packed first in columns, then in rows).  For a 4x4 matrix,
      *  the order is is:
-     *  @code
-     *    sigma[0]^2   cov[0]       cov[1]       cov[3]
-     *    cov[0]       sigma[1]^2   cov[2]       cov[4]
-     *    cov[1]       cov[2]       sigma[2]^2   cov[5]
-     *    cov[3]       cov[4]       cov[5]       sigma[3]^2
-     *  @endcode
+     *
+     *      sigma[0]^2   cov[0]       cov[1]       cov[3]
+     *      cov[0]       sigma[1]^2   cov[2]       cov[4]
+     *      cov[1]       cov[2]       sigma[2]^2   cov[5]
+     *      cov[3]       cov[4]       cov[5]       sigma[3]^2
      *
      *  The cov array may also be empty, to indicate that no off-diagonal elements are
      *  stored, and should be set to zero.  If not empty, the size of the cov matrix
@@ -419,7 +413,7 @@ public:
     );
 
     /**
-     *  @brief Construct from a subschema and an array of names for each parameter of the matrix.
+     *  Construct from a subschema and an array of names for each parameter of the matrix.
      *
      *  The field names should match the following convention:
      *   - diagonal elements should have names like "p1Sigma", where "p1" is the name of the parameter,
@@ -444,7 +438,7 @@ public:
     void setElement(BaseRecord & record, int i, int j, T value) const;
 
     /**
-     *  @brief Return True if all the constituent sigma Keys are valid
+     *  Return True if all the constituent sigma Keys are valid
      *
      *  Note that if the only one or more off-diagonal keys are invalid, we assume that means those terms
      *  are zero, not that the whole FunctorKey is invalid.

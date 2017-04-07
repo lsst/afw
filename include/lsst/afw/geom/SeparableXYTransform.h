@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * @brief Class representing a 2D transform for which the pixel
+/*
+ * Class representing a 2D transform for which the pixel
  * distortions in the x- and y-directions are separable.
  */
 
@@ -39,41 +38,48 @@ namespace geom {
 
 class Functor;
 
-/// @brief A 2D transform for which the pixel distortions in the in
-/// the x- and y-directions are separable.  The transformations in
-/// each direction are implemented as separate instances of concrete
-/// subclasses of the Functor base class.
+/** @brief A 2D transform for which the pixel distortions in the in
+ *  the x- and y-directions are separable.
+ *
+ *  The transformations in each direction are implemented as separate
+ *  instances of concrete subclasses of the Functor base class.
+ */
 class SeparableXYTransform : public XYTransform {
 
 public:
 
-   /// @param xfunctor Functor describing the transformation from
-   ///        nominal pixels to actual pixels in the x-direction.
-   /// @param yfunctor Functor describing the transformation from
-   ///        nominal pixels to actual pixels in the y-direction.
+   /** @param xfunctor Functor describing the transformation from
+    *         nominal pixels to actual pixels in the x-direction.
+    *  @param yfunctor Functor describing the transformation from
+    *         nominal pixels to actual pixels in the y-direction.
+    */
    SeparableXYTransform(Functor const & xfunctor, Functor const & yfunctor);
 
    virtual ~SeparableXYTransform() {}
 
    virtual PTR(XYTransform) clone() const;
 
-   /// @return The transformed Point2D in sensor coordinates in units
-   ///         of pixels.
-   /// @param point The Point2D location in sensor coordinates in
-   ///        units of pixels.  This corresponds to the location on
-   ///        the sensor in the absence of the pixel distortions.
+   /**
+    * @param point The Point2D location in sensor coordinates in
+    *              units of pixels.  This corresponds to the location on
+    *              the sensor in the absence of the pixel distortions.
+    * @returns The transformed Point2D in sensor coordinates in units
+    *         of pixels.
+    */
    virtual Point2D forwardTransform(Point2D const & point) const;
 
-   /// @return The un-transformed Point2D in sensor coordinates.
-   /// @param point The Point2D location in sensor coordinates.  This
-   ///        corresponds to the actual location of charge deposition,
-   ///        i.e., with the pixel distortions applied.
+   /**
+    * @param point The Point2D location in sensor coordinates.  This
+    *              corresponds to the actual location of charge deposition,
+    *              i.e., with the pixel distortions applied.
+    * @returns The un-transformed Point2D in sensor coordinates.
+    */
    virtual Point2D reverseTransform(Point2D const & point) const;
 
-   /// @return Const reference to the xfunctor.
+   /// @returns Const reference to the xfunctor.
    Functor const & getXfunctor() const;
 
-   /// @return Const reference to the yfunctor.
+   /// @returns Const reference to the yfunctor.
    Functor const & getYfunctor() const;
 
 private:

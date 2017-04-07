@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief An Image with associated metadata
+/*
+ * An Image with associated metadata
  */
 #include <cstdint>
 #include <iostream>
@@ -42,64 +41,43 @@ void image::DecoratedImage<PixelT>::init() {
     _gain = 0;
 }
 
-/// Create an %image of the specified size
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    geom::Extent2I const & dimensions ///< desired number of columns. rows
+    geom::Extent2I const & dimensions
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(dimensions))
 {
     init();
 }
-/**
- * Create an %image of the specified size
- * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
- * which may be conveniently used to make objects of an appropriate size
- */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    geom::Box2I const & bbox // (width, height) and origin of the desired Image
+    geom::Box2I const & bbox
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(bbox))
 {
     init();
 }
-/**
- * Create a DecoratedImage wrapping \p rhs
- *
- * Note that this ctor shares pixels with the rhs; it isn't a deep copy
- */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    PTR(Image<PixelT>) rhs ///< Image to go into DecoratedImage
+    PTR(Image<PixelT>) rhs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(rhs)
 {
     init();
 }
-/**
- * Copy constructor
- *
- * Note that the lhs will share memory with the rhs unless \p deep is true
- */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    const DecoratedImage& src, ///< right hand side
-    const bool deep            ///< Make deep copy?
+    const DecoratedImage& src,
+    const bool deep
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain)
 {
     setMetadata(src.getMetadata());
 }
-/**
- * Assignment operator
- *
- * N.b. this is a shallow assignment; use set(src) if you want to copy the pixels
- */
 template<typename PixelT>
 image::DecoratedImage<PixelT>& image::DecoratedImage<PixelT>::operator=(const DecoratedImage& src) {
     DecoratedImage tmp(src);
@@ -121,7 +99,6 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
     a.swap(b);
 }
 
-/************************************************************************************************************/
 //
 // FITS code
 //
@@ -133,30 +110,23 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 #include "boost/gil/gil_all.hpp"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
-/**
- * Create a DecoratedImage from a FITS file
- */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
-                                              const int hdu,               ///< The HDU to read
-                                              geom::Box2I const& bbox,      ///< Only read these pixels
-                                              ImageOrigin const origin     ///< Coordinate system of the bbox
+image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName,
+                                              const int hdu,
+                                              geom::Box2I const& bbox,
+                                              ImageOrigin const origin
                                              ) :
     lsst::daf::base::Citizen(typeid(this))
-{             ///< HDU within the file
+{
     init();
     _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
 }
 
-/************************************************************************************************************/
-/**
- * Write a FITS file
- */
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
-    std::string const& fileName,                        ///< the file to write
-    CONST_PTR(daf::base::PropertySet) metadata_i, ///< metadata to write to header; or NULL
-    std::string const& mode                              ///< "w" to write a new file; "a" to append
+    std::string const& fileName,
+    CONST_PTR(daf::base::PropertySet) metadata_i,
+    std::string const& mode
 ) const {
     lsst::daf::base::PropertySet::Ptr metadata;
 
@@ -170,7 +140,6 @@ void image::DecoratedImage<PixelT>::writeFits(
     getImage()->writeFits(fileName, metadata, mode);
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //

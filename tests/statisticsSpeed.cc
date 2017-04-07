@@ -48,8 +48,8 @@ namespace geom = lsst::afw::geom;
 typedef image::Image<float> Image;
 
 
-/**
- * @brief This test verifies that turning off NanSafe will slow down the Statistics computation.
+/*
+ * This test verifies that turning off NanSafe will slow down the Statistics computation.
  *
  * It uses boost::timer to measure stats on an 8k x 8k image (ramp pixel values).
  * - The time for NanSafe = true should be slower

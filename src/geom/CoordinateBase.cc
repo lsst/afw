@@ -26,13 +26,6 @@
 
 namespace geom = lsst::afw::geom;
 
-/**
- *  \brief Floating-point comparison with tolerance.
- *
- *  Interface, naming, and default tolerances matches Numpy.
- *
- *  \relatesalso CoordinateBase
- */
 template <typename Derived, typename T, int N>
 bool geom::allclose(
     CoordinateBase<Derived,T,N> const & a,

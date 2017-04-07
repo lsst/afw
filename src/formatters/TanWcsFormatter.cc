@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of TanWcsFormatter class
- *
- * @author $Author$
- * @version $Revision$
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of TanWcsFormatter class
  */
 
 #ifndef __GNUC__
@@ -136,7 +128,7 @@ void afwForm::TanWcsFormatter::update(
 }
 
 
-/// Provide a function to serialise an Eigen::Matrix so we can persist the SIP matrices
+/// @internal Provide a function to serialise an Eigen::Matrix so we can persist the SIP matrices
 template <class Archive>
 void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& m) {
     int rows = m.rows();
@@ -154,7 +146,7 @@ void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eige
 
 
 static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
-                            std::string const& which,   ///< Either A,B, Ap or Bp
+                            std::string const& which,   ///< @internal Either A,B, Ap or Bp
                             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
     int order = m.rows();
     if (m.cols() != order) {
@@ -293,6 +285,8 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "TanWcsFormatter delegateSerialize end");
 }
 
+// Explicit template specializations confuse Doxygen, tell it to ignore them
+/// @cond
 template void afwForm::TanWcsFormatter::delegateSerialize(
     boost::archive::text_oarchive & , int, dafBase::Persistable*);
 template void afwForm::TanWcsFormatter::delegateSerialize(
@@ -301,6 +295,7 @@ template void afwForm::TanWcsFormatter::delegateSerialize(
     boost::archive::binary_oarchive & , int, dafBase::Persistable*);
 template void afwForm::TanWcsFormatter::delegateSerialize(
     boost::archive::binary_iarchive & , int, dafBase::Persistable*);
+/// @endcond
 
 dafPersist::Formatter::Ptr afwForm::TanWcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {

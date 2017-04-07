@@ -221,7 +221,7 @@ void setVisitInfoMetadata(daf::base::PropertyList &metadata, VisitInfo const &vi
  *
  * @param[in,out] metadata  FITS keyword metadata
  *
- * @return Number of keywords stripped
+ * @returns Number of keywords stripped
  */
 int stripVisitInfoKeywords(daf::base::PropertySet & metadata);
 

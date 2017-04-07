@@ -9,7 +9,7 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
- *  @brief A description of a field in a table.
+ *  A description of a field in a table.
  *
  *  Field combines a type with the field name, documentation, units,
  *  and in some cases, the size of the field.
@@ -21,11 +21,11 @@ namespace lsst { namespace afw { namespace table {
 template <typename T>
 struct Field : public FieldBase<T> {
 
-    /// @brief Type used to store field data in the table (a field may have multiple elements).
+    /// Type used to store field data in the table (a field may have multiple elements).
     typedef typename FieldBase<T>::Element Element;
 
     /**
-     *  @brief Construct a new field.
+     *  Construct a new field.
      *
      *  @param[in]  name         Name of the field.  Schemas provide extra functionality for names
      *                           whose components are separated by periods.  It may also be practical
@@ -51,7 +51,7 @@ struct Field : public FieldBase<T> {
     ) : FieldBase<T>(size), _name(name), _doc(doc), _units(units) {}
 
     /**
-     *  @brief Construct a new field.
+     *  Construct a new field.
      *
      *  @param[in]  name         Name of the field.  Schemas provide extra functionality for names
      *                           whose components are separated by periods.  It may also be practical
@@ -72,16 +72,16 @@ struct Field : public FieldBase<T> {
         FieldBase<T> const & size
     ) : FieldBase<T>(size), _name(name), _doc(doc), _units() {}
 
-    /// @brief Return the name of the field.
+    /// Return the name of the field.
     std::string const & getName() const { return _name; }
 
-    /// @brief Return the documentation for the field.
+    /// Return the documentation for the field.
     std::string const & getDoc() const { return _doc; }
 
-    /// @brief Return the units for the field.
+    /// Return the units for the field.
     std::string const & getUnits() const { return _units; }
 
-    /// @brief Stringification.
+    /// Stringification.
     inline friend std::ostream & operator<<(std::ostream & os, Field<T> const & field) {
         os << "Field['" << Field<T>::getTypeString()
            << "'](name=\"" << field.getName() << "\"";
@@ -93,7 +93,7 @@ struct Field : public FieldBase<T> {
         return os << ")";
     }
 
-    /// @brief Return a new Field with a new name and other properties the same as this.
+    /// Return a new Field with a new name and other properties the same as this.
     Field<T> copyRenamed(std::string const & newName) const {
         return Field<T>(newName, getDoc(), getUnits(), *this);
     }

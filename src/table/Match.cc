@@ -59,14 +59,14 @@ struct CmpRecordPtr {
 };
 
 /**
- * Extract source positions from @a set, convert them to cartesian coordinates
- * (for faster distance checks) and sort the resulting array of @c RecordPos
+ * @internal Extract source positions from `set`, convert them to cartesian coordinates
+ * (for faster distance checks) and sort the resulting array of `RecordPos`
  * instances by declination. Records with positions containing a NaN are skipped.
  *
  * @param[in] set          set of sources to process
- * @param[out] positions   pointer to an array of at least @c set.size()
+ * @param[out] positions   pointer to an array of at least `set.size()`
  *                         RecordPos instances
- * @return                 The number of sources with positions not containing a NaN.
+ * @returns                 The number of sources with positions not containing a NaN.
  */
 template <typename Cat>
 size_t makeRecordPositions(
@@ -122,12 +122,12 @@ bool doSelfMatchIfSame(
 }
 
 /**
- * Return the squared distance between two unit vectors separated by an angle.
+ * @internal Return the squared distance between two unit vectors separated by an angle.
  *
  * This distance is given by @f$ |\vec{u} - \vec{v}| = 2 \sin(\theta/2) @f$.
  *
  * @param theta the angle between two unit vectors
- * @return the squared distance between the two vectors
+ * @returns the squared distance between the two vectors
  */
 double toUnitSphereDistanceSquared(afw::geom::Angle theta) noexcept {
     return 2. * (1. - std::cos(theta.asRadians()));
@@ -135,12 +135,12 @@ double toUnitSphereDistanceSquared(afw::geom::Angle theta) noexcept {
 }
 
 /**
- * Return the angle between two unit vectors.
+ * @internal Return the angle between two unit vectors.
  *
  * This angle is given by @f$ \sin(\theta/2) = |\vec{u} - \vec{v}|/2 @f$.
  *
  * @param d2 the squared distance between two unit vectors
- * @return the angle between the two vectors
+ * @returns the angle between the two vectors
  */
 Angle fromUnitSphereDistanceSquared(double d2) noexcept {
     return (std::acos(1. - d2 / 2.)) * afw::geom::radians;

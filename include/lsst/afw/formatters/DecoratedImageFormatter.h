@@ -25,21 +25,8 @@
 #ifndef LSST_AFW_FORMATTERS_DECORATEDIMAGEFORMATTER_H
 #define LSST_AFW_FORMATTERS_DECORATEDIMAGEFORMATTER_H
 
-/** @file
- * @brief Interface for DecoratedImageFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
- */
-
-/** @class lsst::afw::formatters::DecoratedImageFormatter
- * @brief Class implementing persistence and retrieval for DecoratedImages.
- *
- * @ingroup afw
+/*
+ * Interface for DecoratedImageFormatter class
  */
 
 #include "lsst/daf/base.h"
@@ -50,6 +37,9 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
+/**
+ * Class implementing persistence and retrieval for DecoratedImages.
+ */
 template<typename ImagePixelT>
 class DecoratedImageFormatter : public lsst::daf::persistence::Formatter {
 public:

@@ -22,12 +22,10 @@
 
 #if !defined(LSST_DETECTION_HEAVY_FOOTPRINT_H)
 #define LSST_DETECTION_HEAVY_FOOTPRINT_H
-/**
- * \file
- * \brief Represent a set of pixels of an arbitrary shape and size,
- *        including values for those pixels; a HeavyFootprint is a
- *        Footprint that also not only a description of a region, but
- *        values within that region.
+/*
+ * Represent a set of pixels of an arbitrary shape and size, including values
+ * for those pixels; a HeavyFootprint is a Footprint that also not only a
+ * description of a region, but values within that region.
  */
 #include <algorithm>
 #include <list>
@@ -41,8 +39,8 @@ namespace detection {
 
 class HeavyFootprintCtrl;
 
-/*!
- * \brief A set of pixels in an Image, including those pixels' actual values
+/**
+ * A set of pixels in an Image, including those pixels' actual values
  */
 template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
           typename VariancePixelT=lsst::afw::image::VariancePixel>
@@ -56,12 +54,12 @@ public:
      * Create a HeavyFootprint from a regular Footprint and the image that
      * provides the pixel values
      *
-     * \note: the HeavyFootprintCtrl is passed by const* not const& so
-     * that we needn't provide a definition in the header.
+     * @param foot The Footprint defining the pixels to set
+     * @param mimage The pixel values
+     * @param ctrl Control how we manipulate HeavyFootprints
      *
-     * foot: The Footprint defining the pixels to set
-     * mimage: The pixel values
-     * ctrl: Control how we manipulate HeavyFootprints
+     * @note the HeavyFootprintCtrl is passed by const* not const& so
+     * that we needn't provide a definition in the header.
      */
     explicit HeavyFootprint(
         Footprint const& foot,
@@ -73,6 +71,9 @@ public:
      * Create a HeavyFootprint from a regular Footprint, allocating space
      * to hold foot.getArea() pixels, but not initializing them.  This is
      * used when unpersisting a HeavyFootprint.
+     *
+     * @param foot The Footprint defining the pixels to set
+     * @param ctrl Control how we manipulate HeavyFootprints
      */
     explicit HeavyFootprint(Footprint const& foot,
                             HeavyFootprintCtrl const* ctrl=NULL);
@@ -101,6 +102,8 @@ public:
 
     /**
      * Replace all the pixels in the image with the values in the HeavyFootprint.
+     *
+     * @param[out] image Image to set
      */
     void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
 
@@ -121,9 +124,10 @@ public:
         return maskbits;
     }
 
-    /// Dot product between HeavyFootprints
-    ///
-    /// The mask and variance planes are ignored.
+    /** Dot product between HeavyFootprints
+     *
+     * The mask and variance planes are ignored.
+     */
     double dot(HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& other) const;
 
 protected:

@@ -22,9 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- *
+/*
  * Classes to support calibration (e.g. photometric zero points, exposure times)
  */
 #include <cmath>
@@ -44,20 +42,9 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 
 namespace lsst { namespace afw { namespace image {
-/**
- * ctor
- */
 Calib::Calib() : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
-/**
- * ctor from a given fluxMagnitude zero point
- */
 Calib::Calib(double fluxMag0): _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
-/**
- * ctor from a vector of Calibs
- *
- * \note All the input calibs must have the same zeropoint; throw InvalidParameterError if this isn't true
- */
-Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to be merged
+Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs
             ) :
     _fluxMag0(0.0), _fluxMag0Sigma(0.0)
 {
@@ -85,9 +72,6 @@ Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to b
 
 }
 
-/**
- * ctor
- */
 Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
     double fluxMag0 = 0.0, fluxMag0Sigma = 0.0;
 
@@ -104,23 +88,14 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
     _fluxMag0 = fluxMag0;
     _fluxMag0Sigma = fluxMag0Sigma;
 }
-/**
- * Control whether we throw an exception when faced with a negative flux
- */
 bool Calib::_throwOnNegativeFlux = true;
-/**
- * Set whether Calib should throw an exception when asked to convert a flux to a magnitude
- */
 void
-Calib::setThrowOnNegativeFlux(bool raiseException ///< Should the exception be raised?
+Calib::setThrowOnNegativeFlux(bool raiseException
                              )
 {
     _throwOnNegativeFlux = raiseException;
 }
 
-/**
- * Tell me whether Calib will throw an exception if asked to convert a flux to a magnitude
- */
 bool
 Calib::getThrowOnNegativeFlux()
 {
@@ -128,12 +103,7 @@ Calib::getThrowOnNegativeFlux()
 }
 
 namespace detail {
-/**
- * Remove Calib-related keywords from the metadata
- *
- * \return Number of keywords stripped
- */
-int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata to be stripped
+int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata
                       )
 {
     int nstripped = 0;
@@ -154,37 +124,26 @@ int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata 
 }
 }
 
-/**
- * Are two Calibs identical?
- *
- * \note Maybe this should be an approximate comparison
- */
 bool Calib::operator==(Calib const& rhs) const {
     return
         _fluxMag0 == rhs._fluxMag0 &&
         _fluxMag0Sigma == rhs._fluxMag0Sigma;
 }
 
-/**
- * Set the flux of a zero-magnitude object
- */
-void Calib::setFluxMag0(double fluxMag0,      ///< The flux in question (ADUs)
-                        double fluxMag0Sigma  ///< The error in the flux (ADUs)
+void Calib::setFluxMag0(double fluxMag0,
+                        double fluxMag0Sigma
                        )
 {
     _fluxMag0 = fluxMag0;
     _fluxMag0Sigma = fluxMag0Sigma;
 }
-void Calib::setFluxMag0(std::pair<double, double> fluxMag0AndSigma ///< The flux and error (ADUs)
+void Calib::setFluxMag0(std::pair<double, double> fluxMag0AndSigma
                        )
 {
     _fluxMag0 = fluxMag0AndSigma.first;
     _fluxMag0Sigma = fluxMag0AndSigma.second;
 }
 
-/**
- * Return the flux, and error in flux, of a zero-magnitude object
- */
 std::pair<double, double> Calib::getFluxMag0() const
 {
     return std::make_pair(_fluxMag0, _fluxMag0Sigma);
@@ -238,10 +197,7 @@ inline void convertToMagWithErr(double *mag, double *magErr, double fluxMag0, do
 
 } // anonymous namespace
 
-/**
- * Return a flux (in ADUs) given a magnitude
- */
-double Calib::getFlux(double const mag ///< the magnitude of the object
+double Calib::getFlux(double const mag
                         ) const {
     checkNegativeFlux0(_fluxMag0);
     return convertToFlux(_fluxMag0, mag);
@@ -257,14 +213,9 @@ ndarray::Array<double,1> Calib::getFlux(ndarray::Array<double const,1> const & m
     return flux;
 }
 
-/**
- * Return a flux and flux error (in ADUs) given a magnitude and magnitude error
- *
- * Assumes that the errors are small and uncorrelated.
- */
 std::pair<double, double> Calib::getFlux(
-        double const mag,       ///< the magnitude of the object
-        double const magSigma   ///< the error in the magnitude
+        double const mag,
+        double const magSigma
     ) const
 {
     checkNegativeFlux0(_fluxMag0);
@@ -300,10 +251,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getFlux(
     return std::make_pair(flux, fluxErr);
 }
 
-/**
- * Return a magnitude given a flux
- */
-double Calib::getMagnitude(double const flux ///< the measured flux of the object (ADUs)
+double Calib::getMagnitude(double const flux
                          ) const
 {
     checkNegativeFlux0(_fluxMag0);
@@ -313,11 +261,8 @@ double Calib::getMagnitude(double const flux ///< the measured flux of the objec
     return convertToMag(_fluxMag0, flux);
 }
 
-/**
- * Return a magnitude and magnitude error given a flux and flux error
- */
-std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measured flux of the object (ADUs)
-                                              double const fluxErr ///< the error in the measured flux (ADUs)
+std::pair<double, double> Calib::getMagnitude(double const flux,
+                                              double const fluxErr
                                               ) const
 {
     checkNegativeFlux0(_fluxMag0);

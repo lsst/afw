@@ -330,9 +330,9 @@ geom::Point2D TanWcs::skyToPixelImpl(
 
 namespace {
 
-/// Generate a vector of polynomial elements, x^i
-///
-/// This is useful for optimising polynomial evaluations
+/** @internal Generate a vector of polynomial elements, x^i
+ *
+ * This is useful for optimising polynomial evaluations */
 std::vector<double> polynomialElements(std::size_t const order, double const value)
 {
     std::vector<double> poly(order + 1);
@@ -425,7 +425,6 @@ geom::Point2D TanWcs::distortPixel(geom::Point2D const & pix) const {
                          V + G + _wcsInfo->crpix[1]);
 }
 
-/************************************************************************************************************/
 /*
  * Worker routine for pixelToSky
  */
@@ -461,7 +460,6 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const
 	sky[1] = skyTmp[1] * geom::degrees;
 }
 
-/************************************************************************************************************/
 
 
 void TanWcs::flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const {

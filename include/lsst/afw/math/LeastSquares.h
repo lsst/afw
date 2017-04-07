@@ -31,7 +31,7 @@
 namespace lsst { namespace afw { namespace math {
 
 /**
- *  @brief Solver for linear least-squares problems.
+ *  Solver for linear least-squares problems.
  *
  *  Linear least-squares problems are defined as finding the vector @f$x@f$ that minimizes
  *  @f$\left|A x - b\right|_2@f$, with the number of rows of @f$A@f$ generally
@@ -69,7 +69,7 @@ public:
 
     enum Factorization {
         NORMAL_EIGENSYSTEM,  /**<
-                              *   @brief Use the normal equations with a symmetric Eigensystem decomposition.
+                              *   Use the normal equations with a symmetric Eigensystem decomposition.
                               *
                               *   This method is fully robust and computes the minimum-norm solution when
                               *   the problem does not have full rank.  It is affected slightly more by
@@ -77,7 +77,7 @@ public:
                               *   matrices this usually isn't a problem.
                               */
         NORMAL_CHOLESKY,     /**<
-                              *   @brief Use the normal equations with a Cholesky decomposition.
+                              *   Use the normal equations with a Cholesky decomposition.
                               *
                               *   While this method uses a robust LDL^T decomposition that does not
                               *   require square roots, it is not appropriate for problems that do
@@ -85,7 +85,7 @@ public:
                               *   problem has full rank.  It is the fastest decomposition.
                               */
         DIRECT_SVD           /**<
-                              *   @brief Use a thin singular value decomposition of the design matrix.
+                              *   Use a thin singular value decomposition of the design matrix.
                               *
                               *   This method is the most robust and computes the minimum-norm solution
                               *   the problem does not have full rank.  However, it is also the slowest
@@ -94,7 +94,7 @@ public:
                               */
     };
 
-    /// @brief Initialize from the design matrix and data vector given as ndarrays.
+    /// Initialize from the design matrix and data vector given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
     static LeastSquares fromDesignMatrix(
         ndarray::Array<T1,2,C1> const & design,
@@ -106,7 +106,7 @@ public:
         return r;
     }
 
-    /// @brief Initialize from the design matrix and data vector given as an Eigen objects.
+    /// Initialize from the design matrix and data vector given as an Eigen objects.
     template <typename D1, typename D2>
     static LeastSquares fromDesignMatrix(
         Eigen::MatrixBase<D1> const & design,
@@ -118,7 +118,7 @@ public:
         return r;
     }
 
-    /// @brief Reset the design matrix and data vector given as ndarrays; dimension must not change.
+    /// Reset the design matrix and data vector given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
     void setDesignMatrix(
         ndarray::Array<T1,2,C1> const & design,
@@ -133,7 +133,7 @@ public:
         _factor(false);
     }
 
-    /// @brief Reset the design matrix and data vector given as Eigen objects; dimension must not change.
+    /// Reset the design matrix and data vector given as Eigen objects; dimension must not change.
     template <typename D1, typename D2>
     void setDesignMatrix(
         Eigen::MatrixBase<D1> const & design,
@@ -144,21 +144,21 @@ public:
         _factor(false);
     }
 
-    /// @brief Reset the design matrix given as an ndarray; dimension and data are not changed.
+    /// Reset the design matrix given as an ndarray; dimension and data are not changed.
     template <typename T1, int C1>
     void setDesignMatrix(ndarray::Array<T1,2,C1> const & design) {
         _getDesignMatrix() = design.asEigen().template cast<double>();
         _factor(false);
     }
 
-    /// @brief Reset the design matrix given as an Eigen object; dimension and data are not changed.
+    /// Reset the design matrix given as an Eigen object; dimension and data are not changed.
     template <typename D1, typename D2>
     void setDesignMatrix(Eigen::MatrixBase<D1> const & design) {
         _getDesignMatrix() = design.template cast<double>();
         _factor(false);
     }
 
-    /// @brief Initialize from the terms in the normal equations, given as ndarrays.
+    /// Initialize from the terms in the normal equations, given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
     static LeastSquares fromNormalEquations(
         ndarray::Array<T1,2,C1> const & fisher,
@@ -170,7 +170,7 @@ public:
         return r;
     }
 
-    /// @brief Initialize from the terms in the normal equations, given as Eigen objects.
+    /// Initialize from the terms in the normal equations, given as Eigen objects.
     template <typename D1, typename D2>
     static LeastSquares fromNormalEquations(
         Eigen::MatrixBase<D1> const & fisher,
@@ -182,7 +182,7 @@ public:
         return r;
     }
 
-    /// @brief Reset the terms in the normal equations given as ndarrays; dimension must not change.
+    /// Reset the terms in the normal equations given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
     void setNormalEquations(
         ndarray::Array<T1,2,C1> const & fisher,
@@ -197,7 +197,7 @@ public:
         _factor(true);
     }
 
-    /// @brief Reset the terms in the normal equations given as Eigen objects; dimension must not change.
+    /// Reset the terms in the normal equations given as Eigen objects; dimension must not change.
     template <typename D1, typename D2>
     void setNormalEquations(
         Eigen::MatrixBase<D1> const & fisher,
@@ -213,7 +213,7 @@ public:
     }
 
     /**
-     *  @brief Set the threshold used to determine when to truncate Eigenvalues.
+     *  Set the threshold used to determine when to truncate Eigenvalues.
      *
      *  The rank of the matrix is determined by comparing the product of this threshold
      *  and the first (largest) element of the array returned by getDiagnostic() to all other
@@ -232,11 +232,11 @@ public:
      */
     void setThreshold(double threshold);
 
-    /// @brief Get the threshold used to determine when to truncate Eigenvalues.
+    /// Get the threshold used to determine when to truncate Eigenvalues.
     double getThreshold() const;
 
     /**
-     *  @brief Return the vector solution to the least squares problem.
+     *  Return the vector solution to the least squares problem.
      *
      *  The returned array is owned by the LeastSquares object and may be modified in-place
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
@@ -250,7 +250,7 @@ public:
     ndarray::Array<double const,1,1> getSolution();
 
     /**
-     *  @brief Return the covariance matrix of the least squares problem.
+     *  Return the covariance matrix of the least squares problem.
      *
      *  The returned array is owned by the LeastSquares object and may be modified in-place
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
@@ -264,7 +264,7 @@ public:
     ndarray::Array<double const,2,2> getCovariance();
 
     /**
-     *  @brief Return the Fisher matrix (inverse of the covariance) of the parameters.
+     *  Return the Fisher matrix (inverse of the covariance) of the parameters.
      *
      *  Note that the Fisher matrix is exactly the same as the matrix on the lhs of the
      *  normal equations.
@@ -304,22 +304,22 @@ public:
      */
     ndarray::Array<double const,1,1> getDiagnostic(Factorization factorization);
 
-    /// @brief Return the number of parameters.
+    /// Return the number of parameters.
     int getDimension() const;
 
     /**
-     *  @brief Return the rank of the problem (number of nonzero Eigenvalues).
+     *  Return the rank of the problem (number of nonzero Eigenvalues).
      *
      *  The returned value is always the same as getDimension() when the factorization is NORMAL_CHOLESKY
      *  (which may be incorrect, because a Cholesky decomposition is not rank-revealing).
      */
     int getRank() const;
 
-    /// @brief Retun the type of factorization used by the solver.
+    /// Retun the type of factorization used by the solver.
     Factorization getFactorization() const;
 
     /**
-     *  @brief Construct a least-squares object for the given factorization and dimensionality.
+     *  Construct a least-squares object for the given factorization and dimensionality.
      *
      *  One of the set* member functions must be called before any other operations can be
      *  performed on a LeastSquares object initialized this way.

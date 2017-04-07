@@ -34,7 +34,6 @@ using namespace std;
 
 typedef double ImagePixelT;
 
-/************************************************************************************************************/
 
 template <typename PixelT>
 void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & dst) {
@@ -74,7 +73,6 @@ void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & d
     }
 }
 
-/************************************************************************************************************/
 
 namespace {
     void printImage(image::MaskedImage<ImagePixelT> const& img, string const& title="") {
@@ -106,7 +104,6 @@ namespace {
     }
 }
 
-/************************************************************************************************************/
 
 int main() {
     image::MaskedImage<ImagePixelT> img(geom::Extent2I(3, 5));

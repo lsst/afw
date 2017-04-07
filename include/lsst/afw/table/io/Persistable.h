@@ -23,13 +23,13 @@ class OutputArchiveHandle;
 class CatalogVector;
 
 /**
- *  @brief An exception thrown when problems occur during persistence.
+ *  An exception thrown when problems occur during persistence.
  */
 LSST_EXCEPTION_TYPE(PersistenceError, lsst::pex::exceptions::IoError,
                     lsst::afw::table::io::PersistenceError)
 
 /**
- *  @brief An exception thrown when an InputArchive's contents do not make sense.
+ *  An exception thrown when an InputArchive's contents do not make sense.
  *
  *  This is the exception thrown by the LSST_ARCHIVE_ASSERT macro.
  */
@@ -37,7 +37,7 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
                     lsst::afw::table::io::MalformedArchiveError)
 
 /**
- *  @brief An assertion macro used to validate the structure of an InputArchive.
+ *  An assertion macro used to validate the structure of an InputArchive.
  *
  *  This assertion is not enabled/disabled by NDEBUG, and throws an exception rather than aborting,
  *  and should be reserved for errors that should only occur when an InputArchive is found to be
@@ -49,7 +49,7 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
         "Archive assertion failed: " # EXPR)
 
 /**
- *  @brief A base class for objects that can be persisted via afw::table::io Archive classes.
+ *  A base class for objects that can be persisted via afw::table::io Archive classes.
  *
  *  Inheriting from Persistable provides a public API for reading/writing individual objects to
  *  FITS that is fully defined in the base class, with derived classes only needing to implement
@@ -74,7 +74,7 @@ class Persistable {
 public:
 
     /**
-     *  @brief Write the object to a regular FITS file.
+     *  Write the object to a regular FITS file.
      *
      *  @param[in] fileName     Name of the file to write to.
      *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
@@ -83,7 +83,7 @@ public:
     void writeFits(std::string const & fileName, std::string const & mode="w") const;
 
     /**
-     *  @brief Write the object to a FITS image in memory.
+     *  Write the object to a FITS image in memory.
      *
      *  @param[in] manager      Name of the file to write to.
      *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
@@ -92,13 +92,13 @@ public:
     void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const;
 
     /**
-     *  @brief Write the object to an already-open FITS object.
+     *  Write the object to an already-open FITS object.
      *
      *  @param[in] fitsfile     Open FITS object to write to.
      */
     void writeFits(fits::Fits & fitsfile) const;
 
-    /// @brief Return true if this particular object can be persisted using afw::table::io.
+    /// Return true if this particular object can be persisted using afw::table::io.
     virtual bool isPersistable() const { return false; }
 
     virtual ~Persistable() {}
@@ -109,7 +109,7 @@ protected:
     typedef io::OutputArchiveHandle OutputArchiveHandle;
 
     /**
-     *  @brief Return the unique name used to persist this object and look up its factory.
+     *  Return the unique name used to persist this object and look up its factory.
      *
      *  Must be less than ArchiveIndexSchema::MAX_NAME_LENGTH characters.
      */
@@ -126,7 +126,7 @@ protected:
     virtual std::string getPythonModule() const;
 
     /**
-     *  @brief Write the object to one or more catalogs.
+     *  Write the object to one or more catalogs.
      *
      *  The handle object passed to this function provides an interface for adding new catalogs
      *  and adding nested objects to the same archive (while checking for duplicates).  See
@@ -156,15 +156,14 @@ private:
 };
 
 /**
- *  @brief A CRTP facade class for subclasses of Persistable.
+ *  A CRTP facade class for subclasses of Persistable.
  *
  *  Derived classes should generally inherit from PersistableFacade at all levels,
  *  but only inherit from Persistable via the base class of each hierarchy.  For example,
  *  with Psfs:
- *  @code
- *  class Psf: public PersistableFacade<Psf>, public Persistable { ... };
- *  class DoubleGaussianPsf: public PersistableFacade<DoubleGaussianPsf>, public Psf { ... };
- *  @endcode
+ *
+ *      class Psf: public PersistableFacade<Psf>, public Persistable { ... };
+ *      class DoubleGaussianPsf: public PersistableFacade<DoubleGaussianPsf>, public Psf { ... };
  *
  *  Inheriting from PersistableFacade is not required for any classes but the base of
  *  each hierarchy, but doing so can save users from having to do some dynamic_casts.
@@ -178,7 +177,7 @@ class PersistableFacade {
 public:
 
     /**
-     *  @brief Read an object from an already open FITS object.
+     *  Read an object from an already open FITS object.
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
@@ -187,7 +186,7 @@ public:
     }
 
     /**
-     *  @brief Read an object from a regular FITS file.
+     *  Read an object from a regular FITS file.
      *
      *  @param[in]  fileName     Name of the file to read.
      *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
@@ -198,7 +197,7 @@ public:
     }
 
     /**
-     *  @brief Read an object from a FITS file in memory.
+     *  Read an object from a FITS file in memory.
      *
      *  @param[in]  manager      Manager for the memory to read from.
      *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
@@ -211,7 +210,7 @@ public:
 };
 
 /**
- *  @brief A base class for factory classes used to reconstruct objects from records.
+ *  A base class for factory classes used to reconstruct objects from records.
  *
  *  Classes that inherit from Persistable should also subclass PersistableFactory,
  *  and instantiate exactly one instance of the derived factory with static duration (usually
@@ -224,7 +223,7 @@ protected:
 public:
 
     /**
-     *  @brief Constructor for the factory.
+     *  Constructor for the factory.
      *
      *  This should be called only once, and only on an object with static duration,
      *  as a pointer to the object will be put in a singleton registry.
@@ -236,11 +235,11 @@ public:
      */
     explicit PersistableFactory(std::string const & name);
 
-    /// @brief Construct a new object from the given InputArchive and vector of catalogs.
+    /// Construct a new object from the given InputArchive and vector of catalogs.
     virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const = 0;
 
     /**
-     *  @brief Return the factory that has been registered with the given name.
+     *  Return the factory that has been registered with the given name.
      *
      *  If the lookup fails and module is not an empty string, we will attempt to import a Python
      *  module with that name (this will only work when the C++ is being called from Python) and

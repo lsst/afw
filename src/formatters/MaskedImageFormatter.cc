@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of MaskedImageFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of MaskedImageFormatter class
  */
 
 #ifndef __GNUC__
@@ -208,7 +200,7 @@ lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT,
         new MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
-/// \cond
+/// @cond
 #define INSTANTIATE(I, M, V) \
     template class MaskedImageFormatter<I, M, V>; \
     template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
@@ -225,6 +217,6 @@ INSTANTIATE(int, MaskPixel, VariancePixel)
 INSTANTIATE(float, MaskPixel, VariancePixel)
 INSTANTIATE(double, MaskPixel, VariancePixel)
 INSTANTIATE(uint64_t, MaskPixel, VariancePixel)
-/// \endcond
+/// @endcond
 
 }}} // namespace lsst::afw::formatters

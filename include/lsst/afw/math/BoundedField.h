@@ -35,7 +35,7 @@
 namespace lsst { namespace afw { namespace math {
 
 /**
- *  @brief An abstract base class for 2-d functions defined on an integer bounding boxes
+ *  An abstract base class for 2-d functions defined on an integer bounding boxes
  *
  *  Integer bounding boxes (afw.geom.Box2I) are inclusive of the end pixels (integer positions correspond
  *  to the centers of the pixels and include the entirety of those pixels). Thus a BoundedField defined on
@@ -78,7 +78,7 @@ public:
      *
      *  @param[in]  x         array of x coordinates, same shape as y
      *  @param[in]  y         array of y coordinates, same shape as x
-     *  @return an array of output values, same shape as x and y
+     *  @returns an array of output values, same shape as x and y
      *
      *  There is no bounds-checking on the given positions; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
@@ -91,14 +91,14 @@ public:
     /**
      * Compute the integral of this function over its bounding-box.
      *
-     * @return The value of the integral.
+     * @returns The value of the integral.
      */
     virtual double integrate() const;
 
     /**
      * Compute the mean of this function over its bounding-box.
      *
-     * @return The value of the mean.
+     * @returns The value of the mean.
      */
     virtual double mean() const;
 
@@ -119,7 +119,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
@@ -133,7 +133,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
@@ -146,7 +146,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
@@ -159,7 +159,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>

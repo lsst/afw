@@ -22,10 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Utilities to support PCA analysis of a set of images
+/*
+ * Utilities to support PCA analysis of a set of images
  */
 #include <algorithm>
 #include <cmath>
@@ -45,9 +43,8 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-/// ctor
 template <typename ImageT>
-ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted equally?
+ImagePca<ImageT>::ImagePca(bool constantWeight
                           ) :
     _imageList(),
     _fluxList(),
@@ -57,14 +54,9 @@ ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted
     _eigenImages(ImageList()) {
 }
 
-/**
- * Add an image to the set to be analyzed
- *
- * @throw lsst::pex::exceptions::LengthError if all the images aren't the same size
- */
 template <typename ImageT>
-void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to set
-                                double flux               ///< Image's flux
+void ImagePca<ImageT>::addImage(typename ImageT::Ptr img,
+                                double flux
                                ) {
     if (_imageList.empty()) {
         _dimensions = img->getDimensions();
@@ -88,16 +80,11 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
     _fluxList.push_back(flux);
 }
 
-/// Return the list of images being analyzed
 template <typename ImageT>
 typename ImagePca<ImageT>::ImageList ImagePca<ImageT>::getImageList() const {
     return _imageList;
 }
 
-/************************************************************************************************************/
-/**
- * Return the mean of the images in ImagePca's list
- */
 template <typename ImageT>
 typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
     if (_imageList.empty()) {
@@ -116,13 +103,12 @@ typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
     return mean;
 }
 
-/************************************************************************************************************/
-/*
- * Analyze the images in an ImagePca, calculating the PCA decomposition (== Karhunen-Lo\`eve basis)
- *
- * The notation is that in chapter 7 of Gyula Szokoly's thesis at JHU
- */
 namespace {
+    /*
+     * Analyze the images in an ImagePca, calculating the PCA decomposition (== Karhunen-Lo\`eve basis)
+     *
+     * The notation is that in chapter 7 of Gyula Szokoly's thesis at JHU
+     */
     template<typename T>
     struct SortEvalueDecreasing : public std::binary_function<std::pair<T, int> const&,
                                                               std::pair<T, int> const&, bool> {
@@ -224,10 +210,7 @@ void ImagePca<ImageT>::analyze()
     }
 }
 
-/************************************************************************************************************/
-/*
- *
- */
+
 namespace {
 /*
  * Fit a LinearCombinationKernel to an Image, allowing the coefficients of the components to vary
@@ -284,7 +267,6 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     return bestFitImage;
 }
 
-/************************************************************************************************************/
 
 template <typename ImageT>
 double do_updateBadPixels(detail::basic_tag const&,
@@ -302,8 +284,8 @@ double do_updateBadPixels(
         typename ImagePca<ImageT>::ImageList const& imageList,
         std::vector<double> const& fluxes,   // fluxes of images
         typename ImagePca<ImageT>::ImageList const& eigenImages, // Eigen images
-        unsigned long mask, ///< Mask defining bad pixels
-        int const ncomp     ///< Number of components to use in estimate
+        unsigned long mask, ///< @internal Mask defining bad pixels
+        int const ncomp     ///< @internal Number of components to use in estimate
                                                                 )
 {
     int const nImage = imageList.size();
@@ -405,26 +387,16 @@ double do_updateBadPixels(
     return maxChange;
 }
 }
-/**
- * Update the bad pixels (i.e. those for which (value & mask) != 0) based on the current PCA decomposition;
- * if none is available, use the mean of the good pixels
- *
- * \return the maximum change made to any pixel
- *
- * N.b. the work is actually done in do_updateBadPixels as the code only makes sense and compiles when we are
- * doing a PCA on a set of MaskedImages
- */
 template <typename ImageT>
 double ImagePca<ImageT>::updateBadPixels(
-        unsigned long mask, ///< Mask defining bad pixels
-        int const ncomp     ///< Number of components to use in estimate
+        unsigned long mask,
+        int const ncomp
                                       )
 {
     return do_updateBadPixels<ImageT>(typename ImageT::image_category(),
                                       _imageList, _fluxList, _eigenImages, mask, ncomp);
 }
 
-/*******************************************************************************************************/
 namespace {
     template<typename T, typename U>
     struct IsSame {
@@ -446,15 +418,10 @@ namespace {
         return IsSame<Image1T, Image2T>(im1, im2)();
     }
 }
-/**
- * Calculate the inner product of two %images
- * @return The inner product
- * @throw lsst::pex::exceptions::LengthError if all the images aren't the same size
- */
 template <typename Image1T, typename Image2T>
-double innerProduct(Image1T const& lhs, ///< first image
-                    Image2T const& rhs, ///< Other image to dot with first
-                    int border          ///< number of pixels to ignore around the edge
+double innerProduct(Image1T const& lhs,
+                    Image2T const& rhs,
+                    int border
                    ) {
     if (lhs.getWidth() <= 2*border || lhs.getHeight() <= 2*border) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
@@ -498,11 +465,10 @@ double innerProduct(Image1T const& lhs, ///< first image
     return sum;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 #define INSTANTIATE(T) \
     template class ImagePca<Image<T> >; \
     template double innerProduct(Image<T> const&, Image<T> const&, int); \
@@ -519,6 +485,6 @@ INSTANTIATE(float)
 INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different
-/// \endcond
+/// @endcond
 
 }}}

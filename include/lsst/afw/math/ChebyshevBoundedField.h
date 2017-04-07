@@ -54,7 +54,7 @@ public:
 };
 
 /**
- *  @brief A BoundedField based on 2-d Chebyshev polynomials of the first kind.
+ *  A BoundedField based on 2-d Chebyshev polynomials of the first kind.
  *
  *  The 2-d Chebyshev polynomial used here is defined as:
  *
@@ -84,7 +84,7 @@ public:
     typedef ChebyshevBoundedFieldControl Control;
 
     /**
-     *  @brief Initialize the field from its bounding box an coefficients.
+     *  Initialize the field from its bounding box an coefficients.
      *
      *  This constructor is mostly intended for testing purposes and persistence,
      *  but it also provides a way to initialize the object from Chebyshev coefficients
@@ -102,7 +102,6 @@ public:
      *
      *  Example:
      *
-     *  @code
      *      bbox = geom::Box2I(geom::Point2I(10, 20), geom::Point2I(30, 40));
      *      ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(2, 2));
      *      coeffs[0][0] = 1;
@@ -111,7 +110,6 @@ public:
      *      coeffs[1][1] = 4;
      *      ndarray::Array<double, 2, 2> coeffs = ndarray::external(data);
      *      poly = ChebyshevBoundedField(bbox, coeffs);
-     *  @endcode
      *
      *  will result in the following polynomial:
      *
@@ -125,7 +123,7 @@ public:
     );
 
     /**
-     *  @brief Fit a Chebyshev approximation to non-gridded data with equal weights.
+     *  Fit a Chebyshev approximation to non-gridded data with equal weights.
      *
      *  @param[in]  bbox     Integer bounding box of the resulting approximation.  All
      *                       given points must lie within Box2D(bbox).
@@ -143,7 +141,7 @@ public:
     );
 
     /**
-     *  @brief Fit a Chebyshev approximation to non-gridded data with unequal weights.
+     *  Fit a Chebyshev approximation to non-gridded data with unequal weights.
      *
      *  @param[in]  bbox     Integer bounding box of the resulting approximation.  All
      *                       given points must lie within Box2D(bbox).
@@ -164,7 +162,7 @@ public:
     );
 
     /**
-     *  @brief Fit a Chebyshev approximation to gridded data with equal weights.
+     *  Fit a Chebyshev approximation to gridded data with equal weights.
      *
      *  @param[in]  image    The Image containing the data to fit.  image.getBBox(PARENT) is
      *                       used as the bounding box of the BoundedField.
@@ -183,7 +181,7 @@ public:
     );
 
     /**
-     *  @brief Return the coefficient matrix.
+     *  Return the coefficient matrix.
      *
      *  The coefficients are ordered [y,x], so the shape is (orderY+1, orderX+1).
      */

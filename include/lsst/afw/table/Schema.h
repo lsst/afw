@@ -19,7 +19,7 @@ class SubSchema;
 class BaseRecord;
 
 /**
- *  @brief Defines the fields and offsets for a table.
+ *  Defines the fields and offsets for a table.
  *
  *  Schema behaves like a container of SchemaItem objects, mapping a descriptive Field object
  *  with the Key object used to access record and ColumnView values.  A Schema is the most
@@ -50,7 +50,7 @@ public:
     static int const VERSION = detail::SchemaImpl::VERSION;
 
     /**
-     *  @brief Bit flags used when comparing schemas.
+     *  Bit flags used when comparing schemas.
      *
      *  All quantities are compared in insertion order, so if two schemas have the same
      *  fields added in opposite order, they will not be considered equal.
@@ -79,7 +79,7 @@ public:
     //@}
 
     /**
-     *  @brief Find a SchemaItem in the Schema by name.
+     *  Find a SchemaItem in the Schema by name.
      *
      *  Names corresponding to named subfields are accepted, and will
      *  return a SchemaItem whose field is copied from the parent field
@@ -89,7 +89,7 @@ public:
     SchemaItem<T> find(std::string const & name) const;
 
     /**
-     *  @brief Find a SchemaItem in the Schema by key.
+     *  Find a SchemaItem in the Schema by key.
      *
      *  Keys corresponding to named subfields are accepted, and will
      *  return a SchemaItem whose field is copied from the parent field
@@ -100,7 +100,7 @@ public:
     SchemaItem<T> find(Key<T> const & key) const;
 
     /**
-     *  @brief Find a SchemaItem by name and run a functor on it.
+     *  Find a SchemaItem by name and run a functor on it.
      *
      *  Names corresponding to named subfields are not accepted.
      *  The given functor must have an overloaded function call
@@ -113,7 +113,7 @@ public:
     }
 
     /**
-     *  @brief Look up a (possibly incomplete) name in the Schema.
+     *  Look up a (possibly incomplete) name in the Schema.
      *
      *  See SubSchema for more information.
      *
@@ -126,7 +126,7 @@ public:
     SubSchema operator[](std::string const & name) const;
 
     /**
-     *  @brief Return a set of field names in the schema.
+     *  Return a set of field names in the schema.
      *
      *  If topOnly==true, return a unique list of only the part
      *  of the names before the first period.  For example,
@@ -139,7 +139,7 @@ public:
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
-    /// @brief Return the raw size of a record in bytes.
+    /// Return the raw size of a record in bytes.
     int getRecordSize() const { return _impl->getRecordSize(); }
 
     /// The total number of fields.
@@ -152,7 +152,7 @@ public:
     int getNonFlagFieldCount() const { return _impl->getNonFlagFieldCount(); }
 
     /**
-     *  @brief Add a new field to the Schema, and return the associated Key.
+     *  Add a new field to the Schema, and return the associated Key.
      *
      *  The offsets of fields are determined by the order they are added, but
      *  may be not contiguous (the Schema may add padding to align fields, and how
@@ -165,12 +165,11 @@ public:
     Key<T> addField(Field<T> const & field, bool doReplace=false);
 
     /**
-     *  @brief Add a new field to the Schema, and return the associated Key.
+     *  Add a new field to the Schema, and return the associated Key.
      *
      *  This is simply a convenience wrapper, equivalent to:
-     *  @code
-     *  addField(Field<T>(name, doc, units, base), doReplace)
-     *  @endcode
+     *
+     *      addField(Field<T>(name, doc, units, base), doReplace)
      */
     template <typename T>
     Key<T> addField(
@@ -181,12 +180,11 @@ public:
     }
 
     /**
-     *  @brief Add a new field to the Schema, and return the associated Key.
+     *  Add a new field to the Schema, and return the associated Key.
      *
      *  This is simply a convenience wrapper, equivalent to:
-     *  @code
-     *  addField(Field<T>(name, doc, base), doReplace)
-     *  @endcode
+     *
+     *      addField(Field<T>(name, doc, base), doReplace)
      */
     template <typename T>
     Key<T> addField(
@@ -196,12 +194,12 @@ public:
         return addField(Field<T>(name, doc, base), doReplace);
     }
 
-    /// @brief Replace the Field (name/description) for an existing Key.
+    /// Replace the Field (name/description) for an existing Key.
     template <typename T>
     void replaceField(Key<T> const & key, Field<T> const & field);
 
     /**
-     *  @brief Apply a functor to each SchemaItem in the Schema.
+     *  Apply a functor to each SchemaItem in the Schema.
      *
      *  The functor must have a templated or sufficiently overloaded operator() that supports
      *  SchemaItems of all supported field types - even those that are not present in this
@@ -217,7 +215,7 @@ public:
 
     //@{
     /**
-     *  @brief Equality comparison
+     *  Equality comparison
      *
      *  Schemas are considered equal according the standard equality operator if their sequence
      *  of keys are identical (same types with the same offsets); names and descriptions of
@@ -228,7 +226,7 @@ public:
     //@}
 
     /**
-     *  @brief Do a detailed equality comparison of two schemas.
+     *  Do a detailed equality comparison of two schemas.
      *
      *  See ComparisonFlags for a description of the possible return values
      *
@@ -239,7 +237,7 @@ public:
     int compare(Schema const & other, int flags=EQUAL_KEYS) const;
 
     /**
-     *  @brief Test whether the given schema is a subset of this.
+     *  Test whether the given schema is a subset of this.
      *
      *  This function behaves very similarly to compare(), but ignores fields that are present
      *  in this but absent in other.
@@ -247,7 +245,7 @@ public:
     int contains(Schema const & other, int flags=EQUAL_KEYS) const;
 
     /**
-     *  @brief Return true if the given item is in this schema.
+     *  Return true if the given item is in this schema.
      *
      *  The flags must include the EQUAL_KEYS bit, and if the item cannot be found by key no bits
      *  will be set on return.
@@ -279,30 +277,32 @@ public:
     /// Sever the connection between this schema and any others with which it shares aliases
     void disconnectAliases();
 
-    /// @brief Construct an empty Schema.
+    /// Construct an empty Schema.
     Schema();
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Schema(Schema const & other);
 
-    /// @brief Construct from reading a FITS file.
-    ///
-    /// Reads from the nominated 'hdu' (0=PHU which cannot be a catalog,
-    /// INT_MIN is a special value meaning read from the first HDU with NAXIS != 0).
+    /** Construct from reading a FITS file.
+     *
+     * Reads from the nominated 'hdu' (0=PHU which cannot be a catalog,
+     * INT_MIN is a special value meaning read from the first HDU with NAXIS != 0).
+     */
     static Schema readFits(std::string const& filename, int hdu=INT_MIN);
     static Schema readFits(fits::MemFileManager & manager, int hdu=INT_MIN);
     static Schema readFits(fits::Fits & fitsfile);
 
-    /// @brief Construct from reading a FITS header
-    ///
-    /// If 'stripMetadata', then the header will be modified,
-    /// removing the relevant keywords.
+    /** Construct from reading a FITS header
+     *
+     * If 'stripMetadata', then the header will be modified,
+     * removing the relevant keywords.
+     */
     static Schema fromFitsMetadata(daf::base::PropertyList & header, bool stripMetadata=true);
 
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
-    /// @brief Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
+    /// Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
     daf::base::Citizen & getCitizen() { return *_impl; }
 
 private:
@@ -310,7 +310,7 @@ private:
     friend class detail::Access;
     friend class SubSchema;
 
-    /// @brief Copy on write; should be called by all mutators (except for alias mutators).
+    /// Copy on write; should be called by all mutators (except for alias mutators).
     void _edit();
 
     PTR(Impl) _impl;
@@ -318,7 +318,7 @@ private:
 };
 
 /**
- *  @brief A proxy type for name lookups in a Schema.
+ *  A proxy type for name lookups in a Schema.
  *
  *  Elements of schema names are assumed to be separated by periods ("a.b.c.d");
  *  an incomplete lookup is one that does not resolve to a field.  Not that even
@@ -336,19 +336,18 @@ private:
  *  until the proxy is used.
  *
  *  Some examples:
- *  @code
- *  Schema schema(false);
- *  Key<int> a_i = schema.addField<int>("a.i", "integer field");
- *  Key< Point<double> > a_p = schema.addField< Point<double> >("a.p", "point field");
  *
- *  assert(schema["a.i"] == a_i);
- *  SubSchema a = schema["a"];
- *  assert(a["i"] == a_i);
- *  Field<int> f_a_i = schema["a.i"];
- *  assert(f_a_i.getDoc() == "integer field");
- *  assert(schema["a.i"] == "a.i");
- *  assert(schema.find("a.p.x") == a_p.getX());
- *  @endcode
+ *      Schema schema(false);
+ *      Key<int> a_i = schema.addField<int>("a.i", "integer field");
+ *      Key< Point<double> > a_p = schema.addField< Point<double> >("a.p", "point field");
+ *
+ *      assert(schema["a.i"] == a_i);
+ *      SubSchema a = schema["a"];
+ *      assert(a["i"] == a_i);
+ *      Field<int> f_a_i = schema["a.i"];
+ *      assert(f_a_i.getDoc() == "integer field");
+ *      assert(schema["a.i"] == "a.i");
+ *      assert(schema.find("a.p.x") == a_p.getX());
  */
 class SubSchema {
     typedef detail::SchemaImpl Impl;
@@ -367,12 +366,12 @@ public:
     }
     //@}
 
-    /// @brief Find a nested SchemaItem by name.
+    /// Find a nested SchemaItem by name.
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
 
     /**
-     *  @brief Find a nested SchemaItem by name and run a functor on it.
+     *  Find a nested SchemaItem by name and run a functor on it.
      *
      *  Names corresponding to named subfields are not accepted.
      *  The given functor must have an overloaded function call
@@ -385,7 +384,7 @@ public:
     }
 
     /**
-     *  @brief Run functor on the SchemaItem represented by this SubSchema
+     *  Run functor on the SchemaItem represented by this SubSchema
      *
      *  The given functor must have an overloaded function call operator that
      *  accepts any SchemaItem type (the same as a functor provided to apply
@@ -400,22 +399,22 @@ public:
         _impl->findAndApply(_aliases->apply(_name), std::forward<F>(func));
     }
 
-    /// @brief Return a nested proxy.
+    /// Return a nested proxy.
     SubSchema operator[](std::string const & name) const;
 
-    /// @brief Return the prefix that defines this SubSchema relative to its parent Schema.
+    /// Return the prefix that defines this SubSchema relative to its parent Schema.
     std::string const & getPrefix() const { return _name; }
 
     /**
-     *  @brief Return a set of nested names that start with the SubSchema's prefix.
+     *  Return a set of nested names that start with the SubSchema's prefix.
      *
      *  Returns an instance of Python's builtin set in Python.
-     *  @sa Schema::getNames
+     *  @see Schema::getNames
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
     /**
-     *  @brief Implicit conversion to the appropriate Key type.
+     *  Implicit conversion to the appropriate Key type.
      *
      *  Implicit conversion operators that are invoked via assignment cannot
      *  be translated to Python.  Instead, the Python wrappers provide an
@@ -425,7 +424,7 @@ public:
     operator Key<T>() const { return _impl->find<T>(_aliases->apply(_name)).key; }
 
     /**
-     *  @brief Implicit conversion to the appropriate Key type.
+     *  Implicit conversion to the appropriate Key type.
      *
      *  Implicit conversion operators that are invoked via assignment cannot
      *  be translated to Python.  Instead, the Python wrappers provide an

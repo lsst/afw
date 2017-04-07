@@ -99,8 +99,8 @@ int main() {
 
     // Set img1 = 10 + Gaussian()
     float const peak = 1000.0;          // peak value
-    float const xc = 5.0;               // center of
-    float const yc = 3.0;               //           Gaussian
+    float const xc = 5.0;               // center of Gaussian
+    float const yc = 3.0;               //
     float const alpha = 1.5;            // "sigma" for Gaussian
 
     lsst::afw::image::for_each_pixel(img1, setVal<float>(10));

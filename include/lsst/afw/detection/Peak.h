@@ -35,7 +35,7 @@ class PeakRecord;
 class PeakTable;
 
 /**
- *  @brief Record class that represents a peak in a Footprint
+ *  Record class that represents a peak in a Footprint
  */
 class PeakRecord : public afw::table::BaseRecord {
 public:
@@ -50,7 +50,7 @@ public:
     }
 
     //@{
-    /// @brief Convenience accessors for the keys in the minimal schema.
+    /// Convenience accessors for the keys in the minimal schema.
     afw::table::RecordId getId() const;
     void setId(afw::table::RecordId id);
 
@@ -83,7 +83,7 @@ private:
 };
 
 /**
- *  @brief Table class for Peaks in Footprints.
+ *  Table class for Peaks in Footprints.
  */
 class PeakTable : public afw::table::BaseTable {
 public:
@@ -94,7 +94,7 @@ public:
     typedef afw::table::CatalogT<Record const> ConstCatalog;
 
     /**
-     *  @brief Obtain a table that can be used to create records with given schema
+     *  Obtain a table that can be used to create records with given schema
      *
      *  @param[in] schema     Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] forceNew   If true, guarantee that the returned PeakTable will be a new one, rather
@@ -111,7 +111,7 @@ public:
     static PTR(PeakTable) make(afw::table::Schema const & schema, bool forceNew=false);
 
     /**
-     *  @brief Return a minimal schema for Peak tables and records.
+     *  Return a minimal schema for Peak tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on PeakRecords will assume that at least the fields
@@ -120,7 +120,7 @@ public:
     static afw::table::Schema makeMinimalSchema() { return getMinimalSchema().schema; }
 
     /**
-     *  @brief Return true if the given schema is a valid PeakTable schema.
+     *  Return true if the given schema is a valid PeakTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
@@ -129,13 +129,13 @@ public:
         return other.contains(getMinimalSchema().schema);
     }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
+    /// Return the object that generates IDs for the table (may be null).
     PTR(afw::table::IdFactory) getIdFactory() { return _idFactory; }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
+    /// Return the object that generates IDs for the table (may be null).
     CONST_PTR(afw::table::IdFactory) getIdFactory() const { return _idFactory; }
 
-    /// @brief Switch to a new IdFactory -- object that generates IDs for the table (may be null).
+    /// Switch to a new IdFactory -- object that generates IDs for the table (may be null).
     void setIdFactory(PTR(afw::table::IdFactory) f) { _idFactory = f; }
 
     //@{

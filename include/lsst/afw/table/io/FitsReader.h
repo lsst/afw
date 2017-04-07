@@ -14,7 +14,7 @@
 namespace lsst { namespace afw { namespace table { namespace io {
 
 /**
- *  @brief A utility class for reading FITS binary tables.
+ *  A utility class for reading FITS binary tables.
  *
  *  FitsReader itself provides the implementation for reading standard FITS binary tables
  *  (with a limited subset of FITS column types), but it also allows subclasses to be used

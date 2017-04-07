@@ -20,11 +20,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/*****************************************************************************/
-/** \file
- *
- * \brief HeavyFootprint and associated classes
- */
 #include <cstdint>
 #include <cassert>
 #include <string>
@@ -117,7 +112,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
-    Footprint const& foot,              ///< The Footprint defining the pixels to set
+    Footprint const& foot,
     HeavyFootprintCtrl const* ctrl)
     : Footprint(foot),
       _image   (ndarray::allocate(ndarray::makeVector(foot.getArea()))),
@@ -128,7 +123,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage ///< Image to set
+        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage
                                                                     ) const
 {
     getSpans()->unflatten(mimage.getImage()->getArray(), _image, mimage.getXY0());
@@ -223,8 +218,6 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::dot(
     return sum;
 }
 
-
-/************************************************************************************************************/
 // Persistence (using afw::table::io)
 //
 
@@ -345,10 +338,8 @@ HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>::Factory::registration(
     "HeavyFootprint" + ComputeSuffix<ImagePixelT,MaskPixelT,VariancePixelT>::apply()
 );
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
-// \cond
 //
 //
 #define INSTANTIATE(TYPE) \
@@ -362,4 +353,3 @@ INSTANTIATE(float);
 INSTANTIATE(int);
 
 }}}
-// \endcond

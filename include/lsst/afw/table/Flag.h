@@ -17,7 +17,7 @@ class Access;
 } // namespace detail
 
 /**
- *  @brief Specialization for Flag fields.
+ *  Specialization for Flag fields.
  *
  *  Flag fields are handled specially in many places, because their keys have both an offset into an
  *  integer element and the bit in that element; while other fields have one or more elements per field,
@@ -28,13 +28,13 @@ class Access;
 template <>
 struct FieldBase<Flag> {
 
-    typedef bool Value;        ///< @brief the type returned by BaseRecord::get
-    typedef std::int64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
+    typedef bool Value;        ///< the type returned by BaseRecord::get
+    typedef std::int64_t Element;   ///< the actual storage type (shared by multiple flag fields)
 
-    /// @brief Return the number of subfield elements (always one for scalars).
+    /// Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }
 
-    /// @brief Return a string description of the field type.
+    /// Return a string description of the field type.
     static std::string getTypeString() { return "Flag"; }
 
     // Only the first of these constructors is valid for this specializations, but
@@ -56,7 +56,7 @@ protected:
 };
 
 /**
- *  @brief A base class for Key that allows the underlying storage field to be extracted.
+ *  A base class for Key that allows the underlying storage field to be extracted.
  */
 template <>
 class KeyBase< Flag > {
@@ -68,7 +68,7 @@ public:
 };
 
 /**
- *  @brief Key specialization for Flag.
+ *  Key specialization for Flag.
  *
  *  Flag fields are special; their keys need to contain not only the offset to the
  *  integer element they share with other Flag fields, but also their position
@@ -84,7 +84,7 @@ public:
 
     //@{
     /**
-     *  @brief Equality comparison.
+     *  Equality comparison.
      *
      *  Two keys with different types are never equal.  Keys with the same type
      *  are equal if they point to the same location in a table, regardless of
@@ -99,14 +99,14 @@ public:
     bool operator!=(Key const & other) const { return !this->operator==(other); }
     //@}
 
-    /// @brief Return the offset in bytes of the integer element that holds this field's bit.
+    /// Return the offset in bytes of the integer element that holds this field's bit.
     int getOffset() const { return _offset; }
 
-    /// @brief The index of this field's bit within the integer it shares with other Flag fields.
+    /// The index of this field's bit within the integer it shares with other Flag fields.
     int getBit() const { return _bit; }
 
     /**
-     *  @brief Return true if the key was initialized to valid offset.
+     *  Return true if the key was initialized to valid offset.
      *
      *  This does not guarantee that a key is valid with any particular schema, or even
      *  that any schemas still exist in which this key is valid.
@@ -116,7 +116,7 @@ public:
     bool isValid() const { return _offset >= 0; }
 
     /**
-     *  @brief Default construct a field.
+     *  Default construct a field.
      *
      *  The new field will be invalid until a valid Key is assigned to it.
      */

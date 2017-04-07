@@ -25,10 +25,7 @@
 #if !defined(LSST_AFW_MATH_STATISTICS_H)
 #define LSST_AFW_MATH_STATISTICS_H
 /**
- * @file Statistics.h
- * @brief Compute Image Statistics
- * @ingroup afw
- * @author Steve Bickerton
+ * Compute Image Statistics
  *
  * @note The Statistics class itself can only handle lsst::afw::image::MaskedImage() types.
  *       The philosophy has been to handle other types by making them look like
@@ -58,7 +55,7 @@ namespace math {
     typedef lsst::afw::image::VariancePixel WeightPixel; // Type used for weights
 
 /**
- * @brief control what is calculated
+ * control what is calculated
  */
 enum Property {
     NOTHING = 0x0,         ///< We don't want anything
@@ -79,12 +76,12 @@ enum Property {
     MEANSQUARE = 0x2000,   ///< find mean value of square of pixel values
     ORMASK = 0x4000        ///< get the or-mask of all pixels used.
 };
+/// Conversion function to switch a string to a Property (see Statistics.h)
 Property stringToStatisticsProperty(std::string const property);
 
 
 /**
- * @brief Pass parameters to a Statistics object
- * @ingroup afw
+ * Pass parameters to a Statistics object
  *
  * A class to pass parameters which control how the stats are calculated.
  *
@@ -177,26 +174,26 @@ private:
  * pass parameters.  The statistics currently implemented are listed in the
  * enum Properties in Statistics.h.
  *
- * @code
-        // sets NumSigclip (3.0), and NumIter (3) for clipping
-        lsst::afw::math::StatisticsControl sctrl(3.0, 3);
-
-        sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
-        sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
-        sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
-        sctrl.setNanSafe(true);                // check for NaNs & Infs, a bit slower (default=true)
-
-        lsst::afw::math::Statistics statobj =
-            lsst::afw::math::makeStatistics(*img, afwMath::NPOINT |
-                                                  afwMath::MEAN | afwMath::MEANCLIP, sctrl);
-        double const n = statobj.getValue(lsst::afw::math::NPOINT);
-        std::pair<double, double> const mean =
-                                         statobj.getResult(lsst::afw::math::MEAN); // Returns (value, error)
-        double const meanError = statobj.getError(lsst::afw::math::MEAN);                // just the error
- * @endcode
  *
- * @note Factory function: We used a helper function, \c makeStatistics, rather that the constructor
- *       directly so that the compiler could deduce the types -- cf. \c std::make_pair)
+ *      // sets NumSigclip (3.0), and NumIter (3) for clipping
+ *      lsst::afw::math::StatisticsControl sctrl(3.0, 3);
+ *
+ *      sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
+ *      sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
+ *      sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
+ *      sctrl.setNanSafe(true);                // check for NaNs & Infs, a bit slower (default=true)
+ *
+ *      lsst::afw::math::Statistics statobj =
+ *          lsst::afw::math::makeStatistics(*img, afwMath::NPOINT |
+ *                                                afwMath::MEAN | afwMath::MEANCLIP, sctrl);
+ *      double const n = statobj.getValue(lsst::afw::math::NPOINT);
+ *      std::pair<double, double> const mean =
+ *                                       statobj.getResult(lsst::afw::math::MEAN); // Returns (value, error)
+ *      double const meanError = statobj.getError(lsst::afw::math::MEAN);                // just the error
+ *
+ *
+ * @note Factory function: We used a helper function, `makeStatistics`, rather that the constructor
+ *       directly so that the compiler could deduce the types -- cf. `std::make_pair()`
  *
  * @note Inputs: The class Statistics is templated, and makeStatistics() can take either:
  *       (1) an image, (2) a maskedImage, or (3) a std::vector<>
@@ -214,6 +211,18 @@ public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> Value;
 
+    /**
+     * Constructor for Statistics object
+     *
+     * @param img Image whose properties we want
+     * @param msk Mask to control which pixels are included
+     * @param var Variances corresponding to values in Image
+     * @param flags Describe what we want to calculate
+     * @param sctrl Control how things are calculated
+     *
+     * @note Most of the actual work is done in this constructor; the results
+     * are retrieved using `getValue` etc.
+     */
     template<typename ImageT, typename MaskT, typename VarianceT>
     explicit Statistics(ImageT const &img,
                         MaskT const &msk,
@@ -221,6 +230,14 @@ public:
                         int const flags,
                         StatisticsControl const& sctrl = StatisticsControl());
 
+    /**
+     * @param img Image whose properties we want
+     * @param msk Mask to control which pixels are included
+     * @param var Variances corresponding to values in Image
+     * @param weights Weights to use corresponding to values in Image
+     * @param flags Describe what we want to calculate
+     * @param sctrl Control how things are calculated
+     */
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     explicit Statistics(ImageT const &img,
                         MaskT const &msk,
@@ -229,9 +246,34 @@ public:
                         int const flags,
                         StatisticsControl const& sctrl = StatisticsControl());
 
+    /** Return the value and error in the specified statistic (e.g. MEAN)
+     *
+     * @param prop the afw::math::Property to retrieve. If NOTHING (default) and you only asked for
+     *             one property (and maybe its error) in the constructor, that property is returned
+     *
+     * @note Only quantities requested in the constructor may be retrieved; in particular
+     * errors may not be available if you didn't specify ERROR in the constructor
+     *
+     * @see getValue and getError
+     *
+     * @todo uncertainties on MEANCLIP,STDEVCLIP are sketchy.  _n != _nClip
+     *
+     */
     Value getResult(Property const prop = NOTHING) const;
 
+    /** Return the error in the desired property (if specified in the constructor)
+     *
+     * @param prop the afw::math::Property to retrieve. If NOTHING (default) and you only
+     *             asked for one property in the constructor, that property's error is returned
+     *
+     * @note You may have needed to specify ERROR to the ctor
+     */
     double getError(Property const prop = NOTHING) const;
+    /** Return the value of the desired property (if specified in the constructor)
+     *
+     * @param prop the afw::math::Property to retrieve. If NOTHING (default) and you only
+     *             asked for one property in the constructor, that property is returned
+     */
     double getValue(Property const prop = NOTHING) const;
     lsst::afw::image::MaskPixel getOrMask() const {
         return _allPixelOrMask;
@@ -255,6 +297,14 @@ private:
     StatisticsControl _sctrl;           // the control structure
     bool _weightsAreMultiplicative;     // Multiply by weights rather than dividing by them
 
+    /**
+     * @param img Image whose properties we want
+     * @param msk Mask to control which pixels are included
+     * @param var Variances corresponding to values in Image
+     * @param weights Weights to use corresponding to values in Image
+     * @param flags Describe what we want to calculate
+     * @param sctrl Control how things are calculated
+     */
     template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
     void doStatistics(ImageT const &img,
                       MaskT const &msk,
@@ -264,7 +314,7 @@ private:
                       StatisticsControl const& sctrl);
 };
 
-/*************************************  The factory functions **********************************/
+/* ************************************  The factory functions ********************************* */
 /**
  * @brief This iterator will never increment.  It is returned by row_begin() in the MaskImposter class
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
@@ -297,8 +347,8 @@ private:
 
 
 /**
- * @brief Handle a watered-down front-end to the constructor (no variance)
- * @relates Statistics
+ * Handle a watered-down front-end to the constructor (no variance)
+ * @relatesalso Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
@@ -312,8 +362,8 @@ Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
 
 
 /**
- * @brief Handle a straight front-end to the constructor
- * @relates Statistics
+ * Handle a straight front-end to the constructor
+ * @relatesalso Statistics
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 Statistics makeStatistics(ImageT const &img,
@@ -326,8 +376,8 @@ Statistics makeStatistics(ImageT const &img,
 }
 
 /**
- * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
- * @relates Statistics
+ * Handle MaskedImages, just pass the getImage() and getMask() values right on through.
+ * @relatesalso Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(
@@ -345,8 +395,8 @@ Statistics makeStatistics(
 }
 
 /**
- * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
- * @relates Statistics
+ * Handle MaskedImages, just pass the getImage() and getMask() values right on through.
+ * @relatesalso Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(
@@ -366,9 +416,13 @@ Statistics makeStatistics(
 }
 
 /**
- * @brief Front end for specialization to handle Masks
- * @note The definition (in Statistics.cc) simply calls the specialized constructor
- * @relates Statistics
+ * Specialization to handle Masks
+ *
+ * @param msk Image (or MaskedImage) whose properties we want
+ * @param flags Describe what we want to calculate
+ * @param sctrl Control how things are calculated
+ *
+ * @relatesalso Statistics
  */
 Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &msk,
                           int const flags,
@@ -377,8 +431,8 @@ Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> co
 
 
 /**
- * @brief The makeStatistics() overload to handle regular (non-masked) Images
- * @relates Statistics
+ * The makeStatistics() overload to handle regular (non-masked) Images
+ * @relatesalso Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(
@@ -425,8 +479,8 @@ private:
 };
 
 /**
- * @brief The makeStatistics() overload to handle std::vector<>
- * @relates Statistics
+ * The makeStatistics() overload to handle std::vector<>
+ * @relatesalso Statistics
  */
 template<typename EntryT>
 Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
@@ -440,8 +494,8 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
 }
 
 /**
- * @brief The makeStatistics() overload to handle std::vector<>
- * @relates Statistics
+ * The makeStatistics() overload to handle std::vector<>
+ * @relatesalso Statistics
  */
 template<typename EntryT>
 Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
@@ -459,8 +513,8 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
 }
 
 /**
- * @brief The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
- * @relates Statistics
+ * The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
+ * @relatesalso Statistics
  */
 template<typename EntryT>
 Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< MaskedVector
@@ -476,8 +530,8 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
 }
 
 /**
- * @brief The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
- * @relates Statistics
+ * The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
+ * @relatesalso Statistics
  */
 template<typename EntryT>
 Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< MaskedVector

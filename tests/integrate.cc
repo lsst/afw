@@ -22,11 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file   Integrate.cc
- * @author S. Bickerton
- * @date   May 25, 2009
- *
+/*
  * This test evaluates the 1D and 2D integrators
  * integrators in the afw::math (Integrate) suite.
  *
@@ -116,8 +112,8 @@ double parabola2d(double const x, double const y) {
     return k - kX*x*x - kY*y*y;
 }
 
-/**
- * @brief Test the 1D integrator on a Parabola
+/*
+ * Test the 1D integrator on a Parabola
  * @note default precision is 1e-6 for integrate()
  */
 BOOST_AUTO_TEST_CASE(Parabola1D) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
@@ -140,8 +136,8 @@ BOOST_AUTO_TEST_CASE(Parabola1D) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
 }
 
 
-/**
- * @brief Test the 2d integrator on a Paraboloid
+/*
+ * Test the 2d integrator on a Paraboloid
  * @note default precision is 1e-6 from integrate2d()
  */
 BOOST_AUTO_TEST_CASE(Parabola2D) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */

@@ -24,14 +24,8 @@
 
 #ifndef LSST_AFW_MATH_KERNEL_H
 #define LSST_AFW_MATH_KERNEL_H
-/**
- * @file
- *
- * @brief Declare the Kernel class and subclasses.
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Declare the Kernel class and subclasses.
  */
 #include <memory>
 #include <type_traits>
@@ -68,7 +62,7 @@ using boost::serialization::make_nvp;
 #endif
 
     /**
-     * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
+     * Kernels are used for convolution with MaskedImages and (eventually) Images
      *
      * Kernel is a virtual base class; it cannot be instantiated. The following notes apply to
      * Kernel and to its subclasses.
@@ -145,7 +139,7 @@ using boost::serialization::make_nvp;
         typedef generic_kernel_tag kernel_fill_factor;
 
         /**
-         * @brief Construct a null Kernel of size 0,0.
+         * Construct a null Kernel of size 0,0.
          *
          * A null constructor is primarily intended for persistence.
          */
@@ -155,36 +149,43 @@ using boost::serialization::make_nvp;
          * @brief Construct a spatially invariant Kernel or a spatially varying Kernel with one spatial function
          * that is duplicated as needed.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if a spatial function is specified
+         * @param width number of columns
+         * @param height number of height
+         * @param nKernelParams number of kernel parameters
+         * @param spatialFunction spatial function, or NullSpatialFunction() if none specified
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if a spatial function is specified
          * and the kernel has no parameters.
-         * @throw lsst::pex::exceptions::InvalidParameterError if a width or height < 1
+         * @throws lsst::pex::exceptions::InvalidParameterError if a width or height < 1
          */
         explicit Kernel(
-            int width,                      ///< number of columns
-            int height,                     ///< number of height
-            unsigned int nKernelParams,     ///< number of kernel parameters
+            int width,
+            int height,
+            unsigned int nKernelParams,
             SpatialFunction const &spatialFunction=NullSpatialFunction()
-                                            ///< spatial function, or NullSpatialFunction() if none specified
         );
 
         /**
-         * @brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
+         * Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
          *
          * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if a width or height < 1
+         * @param width number of columns
+         * @param height number of height
+         * @param spatialFunctionList list of spatial function, one per kernel parameter
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if a width or height < 1
          */
         explicit Kernel(
-            int width,  ///< number of columns
-            int height, ///< number of height
+            int width,
+            int height,
             const std::vector<SpatialFunctionPtr> spatialFunctionList
-                        ///< list of spatial function, one per kernel parameter
         );
 
         virtual ~Kernel() {}
 
         /**
-         * @brief Return a pointer to a deep copy of this kernel
+         * Return a pointer to a deep copy of this kernel
          *
          * This kernel exists instead of a copy constructor
          * so one can obtain a copy of an actual kernel
@@ -192,33 +193,36 @@ using boost::serialization::make_nvp;
          *
          * Every kernel subclass must override this method.
          *
-         * @return a pointer to a deep copy of the kernel
+         * @returns a pointer to a deep copy of the kernel
          */
         virtual PTR(Kernel) clone() const = 0;
 
         /**
-         * @brief Compute an image (pixellized representation of the kernel) in place
+         * Compute an image (pixellized representation of the kernel) in place
          *
-         * x, y are ignored if there is no spatial function.
+         * @param image image whose pixels are to be set (output); xy0 of the image will be
+         *              set to -kernel.getCtr()
+         * @param doNormalize normalize the image (so sum is 1)?
+         * @param x x (column position) at which to compute spatial function
+         * @param y y (row position) at which to compute spatial function
          *
-         * @return The kernel sum
+         * @returns The kernel sum
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if the image is the wrong size
+         * @throws lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel
+         *                                              sum is exactly 0
          *
          * @note computeNewImage has been retired; it doesn't need to be a member
-         *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the image is the wrong size
-         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
-         * exactly 0
          */
         double computeImage(
-            lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output);
-                ///< xy0 of the image will be set to -kernel.getCtr()
-            bool doNormalize,   ///< normalize the image (so sum is 1)?
-            double x = 0.0, ///< x (column position) at which to compute spatial function
-            double y = 0.0  ///< y (row position) at which to compute spatial function
+            lsst::afw::image::Image<Pixel> &image,
+            bool doNormalize,
+            double x = 0.0,
+            double y = 0.0
         ) const;
 
         /**
-        * @brief Return the Kernel's dimensions (width, height)
+        * Return the Kernel's dimensions (width, height)
         */
         geom::Extent2I const getDimensions() const {
             return geom::Extent2I(_width, _height); }
@@ -232,28 +236,28 @@ using boost::serialization::make_nvp;
         inline void setHeight(int height) { _height = height; }
 
         /**
-         * @brief Return the Kernel's width
+         * Return the Kernel's width
          */
         inline int getWidth() const {
             return _width;
         }
 
         /**
-         * @brief Return the Kernel's height
+         * Return the Kernel's height
          */
         inline int getHeight() const {
             return _height;
         }
 
         /**
-         * @brief Return index of kernel's center
+         * Return index of kernel's center
          */
         inline lsst::afw::geom::Point2I getCtr() const {
             return lsst::afw::geom::Point2I(_ctrX, _ctrY);
         }
 
         /**
-         * @brief Return x index of kernel's center
+         * Return x index of kernel's center
          *
          * @deprecated Use getCtr instead
          */
@@ -262,7 +266,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return y index of kernel's center
+         * Return y index of kernel's center
          *
          * @deprecated Use getCtr instead
          */
@@ -271,7 +275,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief return parent bounding box, with XY0 = -center
+         * return parent bounding box, with XY0 = -center
          */
         inline lsst::afw::geom::Box2I getBBox() const {
             return lsst::afw::geom::Box2I(
@@ -281,37 +285,37 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return the number of kernel parameters (0 if none)
+         * Return the number of kernel parameters (0 if none)
          */
         inline unsigned int getNKernelParameters() const {
             return _nKernelParams;
         }
 
         /**
-         * @brief Return the number of spatial parameters (0 if not spatially varying)
+         * Return the number of spatial parameters (0 if not spatially varying)
          */
         inline int getNSpatialParameters() const {
             return this->isSpatiallyVarying() ? _spatialFunctionList[0]->getNParameters() : 0;
         }
 
         /**
-         * @brief Return a clone of the specified spatial function (one component of the spatial model)
+         * Return a clone of the specified spatial function (one component of the spatial model)
          *
-         * @return a shared pointer to a spatial function. The function is a deep copy, so setting its parameters
+         * @param index index of desired spatial function; must be in range [0, number spatial parameters - 1]
+         * @returns a shared pointer to a spatial function. The function is a deep copy, so setting its parameters
          * has no effect on the kernel.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if kernel not spatially varying
-         * @throw lsst::pex::exceptions::InvalidParameterError if index out of range
+         * @throws lsst::pex::exceptions::InvalidParameterError if kernel not spatially varying
+         * @throws lsst::pex::exceptions::InvalidParameterError if index out of range
          */
         SpatialFunctionPtr getSpatialFunction(
-            unsigned int index  ///< index of desired spatial function;
-                                ///< must be in range [0, number spatial parameters - 1]
+            unsigned int index
         ) const;
 
         /**
-         * @brief Return a list of clones of the spatial functions.
+         * Return a list of clones of the spatial functions.
          *
-         * @return a list of shared pointers to spatial functions. The functions are deep copies,
+         * @returns a list of shared pointers to spatial functions. The functions are deep copies,
          * so setting their parameters has no effect on the kernel.
          */
         std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
@@ -323,7 +327,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return the current kernel parameters
+         * Return the current kernel parameters
          *
          * If the kernel is spatially varying then the parameters are those last computed.
          * See also computeKernelParametersFromSpatialModel.
@@ -336,7 +340,7 @@ using boost::serialization::make_nvp;
          * return the bounding box of pixels that must be accessed on the image to be convolved.
          * Thus the box shifted by -kernel.getCtr() and its size is expanded by kernel.getDimensions()-1.
          *
-         * @return the bbox expanded by the kernel.
+         * @returns the bbox expanded by the kernel.
          */
         lsst::afw::geom::Box2I growBBox(lsst::afw::geom::Box2I const &bbox) const;
 
@@ -345,15 +349,15 @@ using boost::serialization::make_nvp;
          * return the bounding box for the region of pixels that can be computed.
          * Thus the box shifted by kernel.getCtr() and its size is reduced by kernel.getDimensions()-1.
          *
-         * @return the bbox shrunk by the kernel.
+         * @returns the bbox shrunk by the kernel.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the resulting box would have
+         * @throws lsst::pex::exceptions::InvalidParameterError if the resulting box would have
          * dimension < 1 in either axis
          */
         lsst::afw::geom::Box2I shrinkBBox(lsst::afw::geom::Box2I const &bbox) const;
 
         /**
-         * @brief Set index of kernel's center
+         * Set index of kernel's center
          */
         inline void setCtr(lsst::afw::geom::Point2I ctr) {
             _ctrX = ctr.getX();
@@ -362,7 +366,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Set x index of kernel's center
+         * Set x index of kernel's center
          *
          * @deprecated Use setCtr instead
          */
@@ -372,7 +376,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Set y index of kernel's center
+         * Set y index of kernel's center
          *
          * @deprecated Use setCtr instead
          */
@@ -382,7 +386,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return the spatial parameters parameters (an empty vector if not spatially varying)
+         * Return the spatial parameters parameters (an empty vector if not spatially varying)
          */
         inline std::vector<std::vector<double> > getSpatialParameters() const {
             std::vector<std::vector<double> > spatialParams;
@@ -394,17 +398,17 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return true iff the kernel is spatially varying (has a spatial function)
+         * Return true iff the kernel is spatially varying (has a spatial function)
          */
         inline bool isSpatiallyVarying() const {
             return _spatialFunctionList.size() != 0;
         }
 
         /**
-         * @brief Set the kernel parameters of a spatially invariant kernel.
+         * Set the kernel parameters of a spatially invariant kernel.
          *
-         * @throw lsst::pex::exceptions::RuntimeError if the kernel has a spatial function
-         * @throw lsst::pex::exceptions::InvalidParameterError if the params vector is the wrong length
+         * @throws lsst::pex::exceptions::RuntimeError if the kernel has a spatial function
+         * @throws lsst::pex::exceptions::InvalidParameterError if the params vector is the wrong length
          */
         inline void setKernelParameters(std::vector<double> const &params) {
             if (this->isSpatiallyVarying()) {
@@ -423,7 +427,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Set the kernel parameters of a 2-component spatially invariant kernel.
+         * Set the kernel parameters of a 2-component spatially invariant kernel.
          *
          * @warning This is a low-level method intended for maximum efficiency when using warping kernels.
          * No error checking is performed. Use the std::vector<double> form if you want safety.
@@ -434,17 +438,17 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Set the parameters of all spatial functions
+         * Set the parameters of all spatial functions
          *
          * Params is indexed as [kernel parameter][spatial parameter]
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if params is the wrong shape
+         * @throws lsst::pex::exceptions::InvalidParameterError if params is the wrong shape
          *  (if this exception is thrown then no parameters are changed)
          */
         void setSpatialParameters(const std::vector<std::vector<double> > params);
 
         /**
-         * @brief Compute the kernel parameters at a specified point
+         * Compute the kernel parameters at a specified point
          *
          * Warning: this is a low-level function that assumes kernelParams is the right length.
          * It will fail in unpredictable ways if that condition is not met.
@@ -453,12 +457,12 @@ using boost::serialization::make_nvp;
             std::vector<double> &kernelParams, double x, double y) const;
 
         /**
-         * @brief Return a string representation of the kernel
+         * Return a string representation of the kernel
          */
         virtual std::string toString(std::string const& prefix="") const;
 
         /**
-         * @brief Compute a cache of Kernel values, if desired
+         * Compute a cache of Kernel values, if desired
          *
          * @warning: few kernel classes actually support this,
          * in which case this is a no-op and getCacheSize always returns 0.
@@ -468,7 +472,7 @@ using boost::serialization::make_nvp;
         ) {}
 
         /**
-         * @brief Get the current size of the kernel cache (0 if none or if caches not supported)
+         * Get the current size of the kernel cache (0 if none or if caches not supported)
          */
         virtual int getCacheSize() const { return 0; };
 
@@ -483,19 +487,19 @@ using boost::serialization::make_nvp;
         virtual std::string getPythonModule() const;
 
         /**
-         * @brief Set one kernel parameter
+         * Set one kernel parameter
          *
          * Classes that have kernel parameters must subclass this function.
          *
          * This function is marked "const", despite modifying unimportant internals,
          * so that computeImage can be const.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError always (unless subclassed)
+         * @throws lsst::pex::exceptions::InvalidParameterError always (unless subclassed)
          */
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
         /**
-         * @brief Set the kernel parameters from the spatial model (if any).
+         * Set the kernel parameters from the spatial model (if any).
          *
          * This function has no effect if there is no spatial model.
          *
@@ -505,17 +509,19 @@ using boost::serialization::make_nvp;
         void setKernelParametersFromSpatialModel(double x, double y) const;
 
         /**
-         * @brief Low-level version of computeImage
+         * Low-level version of computeImage
          *
          * Before this is called the image dimensions are checked, the image's xy0 is set
          * and the kernel's parameters are set.
          * This routine sets the pixels, including normalization if requested.
          *
-         * @return The kernel sum
+         * @param image image whose pixels are to be set (output)
+         * @param doNormalize normalize the image (so sum is 1)?
+         * @returns The kernel sum
          */
         virtual double doComputeImage(
-            lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output)
-            bool doNormalize    ///< normalize the image (so sum is 1)?
+            lsst::afw::image::Image<Pixel> &image,
+            bool doNormalize
         ) const = 0;
 
         std::vector<SpatialFunctionPtr> _spatialFunctionList;
@@ -539,7 +545,7 @@ using boost::serialization::make_nvp;
     typedef std::vector<PTR(Kernel)> KernelList;
 
     /**
-     * @brief A kernel created from an Image
+     * A kernel created from an Image
      *
      * It has no adjustable parameters and so cannot be spatially varying.
      *
@@ -551,19 +557,19 @@ using boost::serialization::make_nvp;
         typedef CONST_PTR(FixedKernel) ConstPtr;
 
         /**
-         * @brief Construct an empty FixedKernel of size 0x0
+         * Construct an empty FixedKernel of size 0x0
          */
         explicit FixedKernel();
 
         /**
-         * @brief Construct a FixedKernel from an image
+         * Construct a FixedKernel from an image
          */
         explicit FixedKernel(
             lsst::afw::image::Image<Pixel> const &image     ///< image for kernel
         );
 
         /**
-         * @brief Construct a FixedKernel from a generic Kernel
+         * Construct a FixedKernel from a generic Kernel
          */
         explicit FixedKernel(
             lsst::afw::math::Kernel const& kernel,      ///< Kernel to convert to Fixed
@@ -610,7 +616,7 @@ using boost::serialization::make_nvp;
 
 
     /**
-     * @brief A kernel described by a function.
+     * A kernel described by a function.
      *
      * The function's x, y arguments are as follows:
      * * -getCtr() for the lower left corner pixel
@@ -630,7 +636,7 @@ using boost::serialization::make_nvp;
         typedef PTR(lsst::afw::math::Function2<Pixel>) KernelFunctionPtr;
 
         /**
-         * @brief Construct an empty spatially invariant AnalyticKernel of size 0x0
+         * Construct an empty spatially invariant AnalyticKernel of size 0x0
          */
         explicit AnalyticKernel();
 
@@ -638,29 +644,39 @@ using boost::serialization::make_nvp;
          * @brief Construct a spatially invariant AnalyticKernel,
          * or a spatially varying AnalyticKernel where the spatial model
          * is described by one function (that is cloned to give one per analytic function parameter).
+         *
+         * @param width width of kernel
+         * @param height height of kernel
+         * @param kernelFunction kernel function; a deep copy is made
+         * @param spatialFunction spatial function; one deep copy is made for each kernel function
+         *                        parameter; if omitted or set to Kernel::NullSpatialFunction() then
+         *                        the kernel is spatially invariant
          */
         explicit AnalyticKernel(
-            int width,  ///< width of kernel
-            int height, ///< height of kernel
-            KernelFunction const &kernelFunction,   ///< kernel function; a deep copy is made
-            Kernel::SpatialFunction const &spatialFunction=NullSpatialFunction()  ///< spatial function;
-                ///< one deep copy is made for each kernel function parameter;
-                ///< if omitted or set to Kernel::NullSpatialFunction() then the kernel is spatially invariant
+            int width,
+            int height,
+            KernelFunction const &kernelFunction,
+            Kernel::SpatialFunction const &spatialFunction=NullSpatialFunction()
         );
 
         /**
          * @brief Construct a spatially varying AnalyticKernel, where the spatial model
          * is described by a list of functions (one per analytic function parameter).
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError
+         * @param width width of kernel
+         * @param height height of kernel
+         * @param kernelFunction kernel function; a deep copy is made
+         * @param spatialFunctionList list of spatial functions, one per kernel function parameter; a
+         *                            deep copy is made of each function
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError
          *        if the length of spatialFunctionList != # kernel function parameters.
          */
         explicit AnalyticKernel(
-            int width,  ///< width of kernel
-            int height, ///< height of kernel
-            KernelFunction const &kernelFunction,   ///< kernel function; a deep copy is made
-            std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList ///< list of spatial functions,
-                    ///< one per kernel function parameter; a deep copy is made of each function
+            int width,
+            int height,
+            KernelFunction const &kernelFunction,
+            std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
 
         virtual ~AnalyticKernel() {}
@@ -669,34 +685,36 @@ using boost::serialization::make_nvp;
 
 
         /**
-         * @brief Compute an image (pixellized representation of the kernel) in place
+         * Compute an image (pixellized representation of the kernel) in place
          *
          * This special version accepts any size image (though you can get in trouble
          * if the image is large enough that the image is evaluated outside its domain).
          *
-         * x, y are ignored if there is no spatial function.
-         *
-         * @return The kernel sum
+         * @param image image whose pixels are to be set (output) xy0 of the image will be set to
+         *              -kernel.getCtr() - border, where
+         *              border = (image.getDimensions() - kernel.getDimensions()) / 2
+         * @param doNormalize normalize the image (so sum is 1)?
+         * @param x x (column position) at which to compute spatial function
+         * @param y y (row position) at which to compute spatial function
+         * @returns The kernel sum
          *
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the image is the wrong size
-         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
+         * @throws lsst::pex::exceptions::InvalidParameterError if the image is the wrong size
+         * @throws lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double computeImage(
-            lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output)
-                ///< xy0 of the image will be set to -kernel.getCtr() - border,
-                ///< where border = (image.getDimensions() - kernel.getDimensions()) / 2
-            bool doNormalize,   ///< normalize the image (so sum is 1)?
-            double x = 0.0, ///< x (column position) at which to compute spatial function
-            double y = 0.0  ///< y (row position) at which to compute spatial function
+            lsst::afw::image::Image<Pixel> &image,
+            bool doNormalize,
+            double x = 0.0,
+            double y = 0.0
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;
 
         /**
-         * @brief Get a deep copy of the kernel function
+         * Get a deep copy of the kernel function
          */
         virtual KernelFunctionPtr getKernelFunction() const;
 
@@ -732,7 +750,7 @@ using boost::serialization::make_nvp;
 
 
     /**
-     * @brief A kernel that has only one non-zero pixel (of value 1)
+     * A kernel that has only one non-zero pixel (of value 1)
      *
      * It has no adjustable parameters and so cannot be spatially varying.
      *
@@ -748,14 +766,18 @@ using boost::serialization::make_nvp;
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
         /**
-         * @brief Construct a spatially invariant DeltaFunctionKernel
+         * Construct a spatially invariant DeltaFunctionKernel
          *
-         * @throw pexExcept::InvalidParameterError if active pixel is off the kernel
+         * @param width kernel size (columns)
+         * @param height kernel size (rows)
+         * @param point index of active pixel (where 0,0 is the lower left corner)
+         *
+         * @throws pex::exceptions::InvalidParameterError if active pixel is off the kernel
          */
         explicit DeltaFunctionKernel(
-            int width,              ///< kernel size (columns)
-            int height,             ///< kernel size (rows)
-            lsst::afw::geom::Point2I const &point   ///< index of active pixel (where 0,0 is the lower left corner)
+            int width,
+            int height,
+            lsst::afw::geom::Point2I const &point
         );
 
         virtual ~DeltaFunctionKernel() {}
@@ -795,7 +817,7 @@ using boost::serialization::make_nvp;
 
 
     /**
-     * @brief A kernel that is a linear combination of fixed basis kernels.
+     * A kernel that is a linear combination of fixed basis kernels.
      *
      * Convolution may be performed by first convolving the image
      * with each fixed kernel, then adding the resulting images using the (possibly
@@ -816,38 +838,45 @@ using boost::serialization::make_nvp;
         typedef CONST_PTR(LinearCombinationKernel) ConstPtr;
 
         /**
-         * @brief Construct an empty LinearCombinationKernel of size 0x0
+         * Construct an empty LinearCombinationKernel of size 0x0
          */
         explicit LinearCombinationKernel();
 
         /**
-         * @brief Construct a spatially invariant LinearCombinationKernel
+         * Construct a spatially invariant LinearCombinationKernel
+         *
+         * @param kernelList list of (shared pointers to const) basis kernels
+         * @param kernelParameters kernel coefficients
          */
         explicit LinearCombinationKernel(
-            KernelList const &kernelList,    ///< list of (shared pointers to const) basis kernels
-            std::vector<double> const &kernelParameters ///< kernel coefficients
+            KernelList const &kernelList,
+            std::vector<double> const &kernelParameters
         );
 
         /**
          * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
          * is described by one function (that is cloned to give one per basis kernel).
+         *
+         * @param kernelList list of (shared pointers to const) basis kernels
+         * @param spatialFunction spatial function; one deep copy is made for each basis kernel
          */
         explicit LinearCombinationKernel(
-            KernelList const &kernelList,    ///< list of (shared pointers to const) basis kernels
-            Kernel::SpatialFunction const &spatialFunction  ///< spatial function;
-                ///< one deep copy is made for each basis kernel
+            KernelList const &kernelList,
+            Kernel::SpatialFunction const &spatialFunction
         );
 
         /**
          * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
          * is described by a list of functions (one per basis kernel).
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the length of spatialFunctionList != # kernels
+         * @param kernelList list of (shared pointers to const) kernels
+         * @param spatialFunctionList list of spatial functions, one per basis kernel
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError if the length of spatialFunctionList != # kernels
          */
         explicit LinearCombinationKernel(
-            KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
+            KernelList const &kernelList,
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
-                ///< list of spatial functions, one per basis kernel
         );
 
         virtual ~LinearCombinationKernel() {}
@@ -857,24 +886,24 @@ using boost::serialization::make_nvp;
         virtual std::vector<double> getKernelParameters() const;
 
         /**
-         * @brief Get the fixed basis kernels
+         * Get the fixed basis kernels
          */
         virtual KernelList const &getKernelList() const;
 
         /**
-        * @brief Get the sum of the pixels of each fixed basis kernel
+        * Get the sum of the pixels of each fixed basis kernel
         */
         std::vector<double> getKernelSumList() const;
 
         /**
-         * @brief Get the number of basis kernels
+         * Get the number of basis kernels
          */
         int getNBasisKernels() const { return static_cast<int>(_kernelList.size()); };
 
         /**
-         * @brief Check that all kernels have the same size and center and that none are spatially varying
+         * Check that all kernels have the same size and center and that none are spatially varying
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the check fails
+         * @throws lsst::pex::exceptions::InvalidParameterError if the check fails
          */
         void checkKernelList(const KernelList &kernelList) const;
 
@@ -915,7 +944,7 @@ using boost::serialization::make_nvp;
          *
          * Thanks to Kresimir Cosic for inventing or reinventing this useful technique.
          *
-         * @return a shared pointer to new kernel, or empty pointer if refactoring not possible
+         * @returns a shared pointer to new kernel, or empty pointer if refactoring not possible
          */
         PTR(Kernel) refactor() const;
 
@@ -939,13 +968,13 @@ using boost::serialization::make_nvp;
 
     private:
         /**
-         * @brief Set _kernelList by cloning each input kernel and update the kernel image cache.
+         * Set _kernelList by cloning each input kernel and update the kernel image cache.
          */
         void _setKernelList(KernelList const &kernelList);
 
         KernelList _kernelList; ///< basis kernels
+        /// image of each basis kernel (a cache)
         std::vector<PTR(lsst::afw::image::Image<Pixel>)> _kernelImagePtrList;
-            ///< image of each basis kernel (a cache)
         std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
         bool _isDeltaFunctionBasis;
@@ -968,7 +997,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief A kernel described by a pair of functions: func(x, y) = colFunc(x) * rowFunc(y)
+     * A kernel described by a pair of functions: func(x, y) = colFunc(x) * rowFunc(y)
      *
      * The function's x, y arguments are as follows:
      * * -getCtr() for the lower left corner pixel
@@ -988,59 +1017,76 @@ using boost::serialization::make_nvp;
         typedef PTR(KernelFunction) KernelFunctionPtr;
 
         /**
-         * @brief Construct an empty spatially invariant SeparableKernel of size 0x0
+         * Construct an empty spatially invariant SeparableKernel of size 0x0
          */
         explicit SeparableKernel();
 
         /**
          * @brief Construct a spatially invariant SeparableKernel, or a spatially varying SeparableKernel
          * that uses the same functional form to model each function parameter.
+         *
+         * @param width width of kernel
+         * @param height height of kernel
+         * @param kernelColFunction kernel column function
+         * @param kernelRowFunction kernel row function
+         * @param spatialFunction spatial function; one deep copy is made for each kernel column and row
+         *                        function parameter; if omitted or set to Kernel::NullSpatialFunction then
+         *                        the kernel is spatially invariant
          */
         explicit SeparableKernel(
-            int width,  ///< width of kernel
-            int height, ///< height of kernel
-            KernelFunction const& kernelColFunction,    ///< kernel column function
-            KernelFunction const& kernelRowFunction,    ///< kernel row function
-            Kernel::SpatialFunction const& spatialFunction=NullSpatialFunction()    ///< spatial function;
-                ///< one deep copy is made for each kernel column and row function parameter;
-                ///< if omitted or set to Kernel::NullSpatialFunction then the kernel is spatially invariant
+            int width,
+            int height,
+            KernelFunction const& kernelColFunction,
+            KernelFunction const& kernelRowFunction,
+            Kernel::SpatialFunction const& spatialFunction=NullSpatialFunction()
         );
 
         /**
-         * @brief Construct a spatially varying SeparableKernel
+         * Construct a spatially varying SeparableKernel
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError
+         * @param width width of kernel
+         * @param height height of kernel
+         * @param kernelColFunction kernel column function
+         * @param kernelRowFunction kernel row function
+         * @param spatialFunctionList list of spatial funcs, one per kernel column and row function
+         *                            parameter; a deep copy is made of each function
+         *
+         * @throws lsst::pex::exceptions::InvalidParameterError
          *  if the length of spatialFunctionList != # kernel function parameters.
          */
         explicit SeparableKernel(
-            int width,  ///< width of kernel
-            int height, ///< height of kernel
-             KernelFunction const& kernelColFunction,    ///< kernel column function
-             KernelFunction const& kernelRowFunction,    ///< kernel row function
-             std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList ///< list of spatial funcs,
-                ///< one per kernel column and row function parameter; a deep copy is made of each function
+            int width,
+            int height,
+             KernelFunction const& kernelColFunction,
+             KernelFunction const& kernelRowFunction,
+             std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList
         );
         virtual ~SeparableKernel() {}
 
         virtual PTR(Kernel) clone() const;
 
         /**
-         * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
+         * Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
          *
          * x, y are ignored if there is no spatial function.
          *
-         * @return the kernel sum (1.0 if doNormalize true)
+         * @param colList column vector
+         * @param rowList row vector
+         * @param doNormalize normalize the image (so sum of each is 1)?
+         * @param x x (column position) at which to compute spatial function
+         * @param y y (row position) at which to compute spatial function
+         * @returns the kernel sum (1.0 if doNormalize true)
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if colList or rowList is the wrong size
-         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
+         * @throws lsst::pex::exceptions::InvalidParameterError if colList or rowList is the wrong size
+         * @throws lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double computeVectors(
-            std::vector<Pixel> &colList,    ///< column vector
-            std::vector<Pixel> &rowList,    ///< row vector
-            bool doNormalize,   ///< normalize the image (so sum of each is 1)?
-            double x = 0.0,     ///< x (column position) at which to compute spatial function
-            double y = 0.0      ///< y (row position) at which to compute spatial function
+            std::vector<Pixel> &colList,
+            std::vector<Pixel> &rowList,
+            bool doNormalize,
+            double x = 0.0,
+            double y = 0.0
         ) const;
 
         virtual double getKernelParameter(unsigned int i) const {
@@ -1055,30 +1101,32 @@ using boost::serialization::make_nvp;
         virtual std::vector<double> getKernelParameters() const;
 
         /**
-         * @brief Get a deep copy of the col kernel function
+         * Get a deep copy of the col kernel function
          */
         KernelFunctionPtr getKernelColFunction() const;
 
         /**
-         * @brief Get a deep copy of the row kernel function
+         * Get a deep copy of the row kernel function
          */
         KernelFunctionPtr getKernelRowFunction() const;
 
         virtual std::string toString(std::string const& prefix="") const;
 
         /***
-         * @brief Compute a cache of values for the x and y kernel functions
+         * Compute a cache of values for the x and y kernel functions
          *
          * A value of 0 disables the cache for maximum accuracy.
          * 10,000 typically results in a warping error of a fraction of a count.
          * 100,000 typically results in a warping error of less than 0.01 count.
+         *
+         * @param cacheSize cache size (number of double precision array elements in the x and y caches)
          */
         virtual void computeCache(
-            int const cacheSize ///< cache size (number of double precision array elements in the x and y caches)
+            int const cacheSize
         );
 
         /**
-         * @brief Get the current cache size (0 if none)
+         * Get the current cache size (0 if none)
          */
         virtual int getCacheSize() const;
 
@@ -1092,19 +1140,22 @@ using boost::serialization::make_nvp;
 
     private:
         /**
-         * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
+         * Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
          *
-         * @return the kernel sum (1.0 if doNormalize true)
+         * @param colList column vector
+         * @param rowList row vector
+         * @param doNormalize normalize the arrays (so sum of each is 1)?
+         * @returns the kernel sum (1.0 if doNormalize true)
          *
          * Warning: the length of colList and rowList are not verified!
          *
-         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
+         * @throws lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double basicComputeVectors(
-            std::vector<Pixel> &colList,    ///< column vector
-            std::vector<Pixel> &rowList,    ///< row vector
-            bool doNormalize                ///< normalize the arrays (so sum of each is 1)?
+            std::vector<Pixel> &colList,
+            std::vector<Pixel> &rowList,
+            bool doNormalize
         ) const;
 
         KernelFunctionPtr _kernelColFunctionPtr;

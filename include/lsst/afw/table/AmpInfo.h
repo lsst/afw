@@ -46,21 +46,22 @@ class AmpInfoRecord;
 class AmpInfoTable;
 
 /**
- *  @brief Geometry and electronic information about raw amplifier images
+ *  Geometry and electronic information about raw amplifier images
  *
  * Here is a pictorial example showing the meaning of flipX and flipY:
  *
- *    CCD with 4 amps        Desired assembled output      Use these parameters
- *
- *    --x         x--            y
- *   |  amp1    amp2 |           |                               flipX       flipY
- *   y               y           |                       amp1    False       True
- *                               | CCD image             amp2    True        True
- *   y               y           |                       amp3    False       False
- *   |  amp3    amp4 |           |                       amp4    True        False
- *    --x         x--             ----------- x
- *
- * @note:
+ @verbatim
+     CCD with 4 amps        Desired assembled output      Use these parameters
+
+     --x         x--            y
+    |  amp1    amp2 |           |                               flipX       flipY
+    y               y           |                       amp1    False       True
+                                | CCD image             amp2    True        True
+    y               y           |                       amp3    False       False
+    |  amp3    amp4 |           |                       amp4    True        False
+     --x         x--             ----------- x
+ @endverbatim
+ * @note
  * * All bounding boxes are parent boxes with respect to the raw image.
  * * The overscan and underscan bounding boxes are regions containing USABLE data,
  *   NOT the entire underscan and overscan region. These bounding boxes should exclude areas
@@ -87,7 +88,7 @@ public:
     }
 
     //@{
-    /// @brief Convenience accessors for the keys in the minimal reference schema.
+    /// Convenience accessors for the keys in the minimal reference schema.
     std::string getName() const;
     void setName(std::string const &name); ///< name of amplifier location in camera
 
@@ -157,7 +158,7 @@ protected:
 };
 
 /**
- *  @brief Table of amplifier information (AmpInfoRecord records)
+ *  Table of amplifier information (AmpInfoRecord records)
  *
  *  @copydetails AmpInfoRecord
  */
@@ -173,14 +174,14 @@ public:
     static int const MAX_LINEARITY_TYPE_LENGTH = 64; // max length for linearity type
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      */
     static PTR(AmpInfoTable) make(Schema const & schema);
 
     /**
-     *  @brief Return a minimal schema for AmpInfo tables and records.
+     *  Return a minimal schema for AmpInfo tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on AmpInfoRecords will assume that at least the fields
@@ -193,7 +194,7 @@ public:
     }
 
     /**
-     *  @brief Return true if the given schema is a valid AmpInfoTable schema.
+     *  Return true if the given schema is a valid AmpInfoTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.

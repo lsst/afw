@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Implementation of the Class MaskedImage
+/*
+ * Implementation of the Class MaskedImage
  */
 
 #ifndef LSST_IMAGE_MASKEDIMAGE_H
@@ -55,9 +54,10 @@ namespace image {
         /// A class used to identify classes that represent MaskedImage pixels
         struct MaskedImagePixel_tag { };
 
-        std::string const fitsFile_RE = "\\.fits(\\.[fg]z)?$"; /// regexp to identify when MaskedImages should
-                                                           /// be written as MEFs
-        std::string const compressedFileNoMEF_RE = "(\\.gz)$";   /// regexp to identify compressed files that we can't write MEFs to
+        /// regexp to identify when MaskedImages should be written as MEFs
+        std::string const fitsFile_RE = "\\.fits(\\.[fg]z)?$";
+        /// regexp to identify compressed files that we can't write MEFs to
+        std::string const compressedFileNoMEF_RE = "(\\.gz)$";
     }
 }}}
 
@@ -105,7 +105,6 @@ public:
     };
 #endif
 
-    /************************************************************************************************************/
     /// An iterator to the MaskedImage
     template<typename, typename, typename> class MaskedImageIterator;
     /// An const iterator to the MaskedImage
@@ -115,7 +114,6 @@ public:
     /// A const locator for the MaskedImage
     template<typename, typename, typename> class const_MaskedImageLocator;
 
-    /************************************************************************************************************/
 
 #if !defined(SWIG)
     /// A Pixel in the MaskedImage
@@ -123,7 +121,6 @@ public:
     /// A single Pixel of the same type as those in the MaskedImage
     typedef lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> SinglePixel;
 
-    /************************************************************************************************************/
     /// The base class for MaskedImageIterators (const and non-const)
     template<typename ImageIterator, typename MaskIterator, typename VarianceIterator,
              template<typename> class Ref=Reference>
@@ -131,11 +128,13 @@ public:
         typedef boost::tuple<ImageIterator, MaskIterator, VarianceIterator> IMV_iterator_tuple;
 
     public:
-        /// The underlying iterator tuple
-        /// \note not really for public consumption;  could be made protected
+        /** The underlying iterator tuple
+         * @note not really for public consumption;  could be made protected
+         */
         typedef typename boost::zip_iterator<IMV_iterator_tuple>::reference IMV_tuple;
-        /// The underlying const iterator tuple
-        /// \note not really for public consumption;  could be made protected
+        /** The underlying const iterator tuple
+         * @note not really for public consumption;  could be made protected
+         */
         template<typename, typename, typename> friend class const_MaskedImageIterator;
         /// Type pointed to by the iterator
         typedef Pixel type;
@@ -159,19 +158,20 @@ public:
             return _iter->template get<2>()[0];
         }
 
-        /// Return the underlying iterator tuple
-        /// \note not really for public consumption;  could be made protected
+        /** Return the underlying iterator tuple
+         * @note not really for public consumption;  could be made protected
+         */
         const IMV_iterator_tuple get_iterator_tuple() const {
             return _iter.get_iterator_tuple();
         }
 
-        /// Increment the iterator by \c delta
+        /// Increment the iterator by `delta`
         MaskedImageIteratorBase& operator+=(std::ptrdiff_t delta ///< how far to move the iterator
                        ) {
             _iter += delta;
             return *this;
         }
-        /// Decrement the iterator by \c delta
+        /// Decrement the iterator by `delta`
         MaskedImageIteratorBase& operator-=(std::ptrdiff_t delta ///< how far to move the iterator
                        ) {
             _iter -= delta;
@@ -273,7 +273,6 @@ public:
         }
     };
 
-    /************************************************************************************************************/
     /// The base class for MaskedImageLocator%s (const and non-const)
     template<typename ImageLocator, typename MaskLocator, typename VarianceLocator,
              template<typename> class Ref=Reference>
@@ -380,7 +379,7 @@ public:
             //template<typename, typename, typename, template<typename> class> friend class MaskedImageLocatorBase;
             template<typename, typename, typename> friend class const_MaskedImageLocator;
 
-            /// Create a cached_location_t that can be used to access pixels <tt>(x, y)</tt> away from \c loc
+            /// Create a cached_location_t that can be used to access pixels `(x, y)` away from `loc`
             cached_location_t(IMVLocator const& loc, int x, int y) :
                 _imv(loc.template get<0>().cache_location(x, y),
                      loc.template get<1>().cache_location(x, y),
@@ -403,34 +402,36 @@ public:
                          _loc.template get<2>().x()[0][0]);
         }
 
-        /// Dereference a locator, returning a Pixel offset by <tt>(x, y)</tt> from the locator
+        /// Dereference a locator, returning a Pixel offset by `(x, y)` from the locator
         Pixel operator()(int x, int y) {
             return Pixel(_loc.template get<0>()(x, y)[0],
                          _loc.template get<1>()(x, y)[0],
                          _loc.template get<2>()(x, y)[0]);
         }
 
-        /// Dereference a locator, returning a Pixel offset by the amount set when we created the \c cached_location_t
+        /// Dereference a locator, returning a Pixel offset by the amount set when we created the `cached_location_t`
         Pixel operator[](cached_location_t const& cached_loc) {
             return Pixel(_loc.template get<0>()[cached_loc._imv.template get<0>()][0],
                          _loc.template get<1>()[cached_loc._imv.template get<1>()][0],
                          _loc.template get<2>()[cached_loc._imv.template get<2>()][0]);
         }
-        /// Return an iterator that can be used to move (or dereference) a locator
-        ///
-        /// \note this x_locator is xy_locator::x_locator, not MaskedImage::x_locator
+        /** Return an iterator that can be used to move (or dereference) a locator
+         *
+         * @note this x_locator is xy_locator::x_locator, not MaskedImage::x_locator
+         */
         x_iterator x() {
             return x_iterator(this);
         }
 
-        /// Return an iterator that can be used to move (or dereference) a locator
-        ///
-        /// \note this y_locator is xy_locator::y_locator, not MaskedImage::y_locator
+        /** Return an iterator that can be used to move (or dereference) a locator
+         *
+         * @note this y_locator is xy_locator::y_locator, not MaskedImage::y_locator
+         */
         y_iterator y() {
             return y_iterator(this);
         }
 
-        /// Create a cached_location_t offset by <tt>(x, y)</tt> from locator
+        /// Create a cached_location_t offset by `(x, y)` from locator
         cached_location_t cache_location(int x, int y) const {
             return cached_location_t(_loc, x, y);
         }
@@ -458,7 +459,7 @@ public:
         //
         // Use those templated classes to implement image/mask/variance
         //
-        /// Return a reference to the %image at the offset set when we created the \c cached_location_t
+        /// Return a reference to the %image at the offset set when we created the `cached_location_t`
         typename Ref<ImagePixelT>::type image(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<0> >(cached_loc);
         }
@@ -466,12 +467,12 @@ public:
         typename Ref<ImagePixelT>::type image() {
             return apply_IMV<boost::mpl::int_<0> >();
         }
-        /// Return a reference to the %image offset by <tt>(x, y)</tt> from the current position of the locator
+        /// Return a reference to the %image offset by `(x, y)` from the current position of the locator
         typename Ref<ImagePixelT>::type image(int x, int y) {
             return apply_IMV<boost::mpl::int_<0> >(x, y);
         }
 
-        /// Return a reference to the mask at the offset set when we created the \c cached_location_t
+        /// Return a reference to the mask at the offset set when we created the `cached_location_t`
         typename Ref<MaskPixelT>::type mask(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<1> >(cached_loc);
         }
@@ -479,12 +480,12 @@ public:
         typename Ref<MaskPixelT>::type mask() {
             return apply_IMV<boost::mpl::int_<1> >();
         }
-        /// Return a reference to the mask offset by <tt>(x, y)</tt> from the current position of the locator
+        /// Return a reference to the mask offset by `(x, y)` from the current position of the locator
         typename Ref<MaskPixelT>::type mask(int x, int y) {
             return apply_IMV<boost::mpl::int_<1> >(x, y);
         }
 
-        /// Return a reference to the variance at the offset set when we created the \c cached_location_t
+        /// Return a reference to the variance at the offset set when we created the `cached_location_t`
         typename Ref<VariancePixelT>::type variance(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<2> >(cached_loc);
         }
@@ -492,7 +493,7 @@ public:
         typename Ref<VariancePixelT>::type variance() {
             return apply_IMV<boost::mpl::int_<2> >();
         }
-        /// Return a reference to the variance offset by <tt>(x, y)</tt> from the current position of the locator
+        /// Return a reference to the variance offset by `(x, y)` from the current position of the locator
         typename Ref<VariancePixelT>::type variance(int x, int y) {
             return apply_IMV<boost::mpl::int_<2> >(x, y);
         }
@@ -510,12 +511,12 @@ public:
             return _loc.template get<0>() < rhs._loc.template get<0>();
         }
 
-        /// Increment the locator's \c x and \c y positions by \c p
+        /// Increment the locator's `x` and `y` positions by `p`
         MaskedImageLocatorBase& operator+=(pair2I const& p) {
             return operator+=(detail::difference_type(p.first, p.second));
         }
 
-        /// Increment the locator's \c x and \c y positions by \c p
+        /// Increment the locator's `x` and `y` positions by `p`
         MaskedImageLocatorBase& operator+=(detail::difference_type p) {
             _loc.template get<0>() += p;
             _loc.template get<1>() += p;
@@ -569,7 +570,6 @@ public:
 
 #endif  // !defined(SWIG)
 
-/************************************************************************************************************/
     // An iterator to a MaskedImage
     typedef MaskedImageIterator<typename Image::iterator,
                                 typename Mask::iterator, typename Variance::iterator> iterator;
@@ -590,8 +590,9 @@ public:
     /// A const_iterator to a row of a MaskedImage
     typedef const_MaskedImageIterator<typename Image::x_iterator,
                                 typename Mask::x_iterator, typename Variance::x_iterator> const_x_iterator;
-    /// A fast STL compliant iterator for contiguous images
-    /// N.b. The order of pixel access is undefined
+    /** A fast STL compliant iterator for contiguous images
+     * N.b. The order of pixel access is undefined
+     */
     typedef x_iterator fast_iterator;
     /// An iterator to a column of a MaskedImage
     typedef MaskedImageIterator<typename Image::y_iterator,
@@ -614,29 +615,60 @@ public:
     typedef typename MaskedImageLocator<typename Image::xy_locator,
                                typename Mask::xy_locator, typename Variance::xy_locator>::y_iterator xy_y_iterator;
 
-    /************************************************************************************************************/
 
     // Constructors
+    /**
+     * Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+     *
+     * @param width number of columns
+     * @param height number of rows
+     * @param planeDict Make Mask conform to this mask layout (ignore if empty)
+     */
     explicit MaskedImage(
         unsigned int width, unsigned int height,
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
+    /**
+     * Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+     *
+     * @param dimensions Number of columns, rows in image
+     * @param planeDict Make Mask conform to this mask layout (ignore if empty)
+     */
     explicit MaskedImage(
         geom::Extent2I const & dimensions=geom::Extent2I(),
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
+    /**
+     * Construct from a supplied Image and optional Mask and Variance.
+     * The Mask and Variance will be set to zero if omitted
+     *
+     * @param image %Image
+     * @param mask %Mask
+     * @param variance Variance %Mask
+     */
     explicit MaskedImage(
         ImagePtr image,
         MaskPtr mask = MaskPtr(),
         VariancePtr variance = VariancePtr()
     );
+    /**
+     * Create an MaskedImage of the specified size
+     *
+     * The Image, Mask, and Variance will be set to zero
+     *
+     * @param bbox dimensions of image: width x height
+     * @param planeDict Make Mask conform to this mask layout (ignore if empty)
+     *
+     * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
+     * which may be conveniently used to make objects of an appropriate size
+     */
     explicit MaskedImage(
         geom::Box2I const & bbox,
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
 
     /**
-     *  @brief Construct a MaskedImage by reading a regular FITS file.
+     *  Construct a MaskedImage by reading a regular FITS file.
      *
      *  @param[in]      fileName      File to read.
      *  @param[in,out]  metadata      Metadata read from the primary HDU header.
@@ -661,7 +693,7 @@ public:
     );
 
     /**
-     *  @brief Construct a MaskedImage by reading a FITS image in memory.
+     *  Construct a MaskedImage by reading a FITS image in memory.
      *
      *  @param[in]      manager       An object that manages the memory buffer to read.
      *  @param[in,out]  metadata      Metadata read from the primary HDU header.
@@ -686,7 +718,7 @@ public:
     );
 
     /**
-     *  @brief Construct a MaskedImage from an already-open FITS object.
+     *  Construct a MaskedImage from an already-open FITS object.
      *
      *  @param[in]      fitsfile      A FITS object to read from.  Current HDU is ignored.
      *  @param[in,out]  metadata      Metadata read from the primary HDU header.
@@ -710,25 +742,40 @@ public:
         PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
     );
 
+    /**
+     * Copy constructor;  shallow, unless deep is true.
+     *
+     * @param rhs %Image to copy
+     * @param deep Make deep copy?
+     */
     MaskedImage(
         MaskedImage const& rhs,
         bool const deep=false
     );
+    /**
+     * Copy constructor of the pixels specified by bbox;  shallow, unless deep is true.
+     *
+     * @param rhs MaskedImage to copy
+     * @param bbox Specify desired region
+     * @param origin Specify the coordinate system of the bbox
+     * @param deep If false, new ImageBase shares storage with rhs; if true make a new, standalone, MaskedImage
+     */
     MaskedImage(
         MaskedImage const & rhs,
         geom::Box2I const & bbox,
         ImageOrigin const origin=PARENT,
         bool const deep=false
     );
-    /// generalised copy constructor; defined here in the header so that the compiler can instantiate
-    /// N(N-1)/2 conversions between N ImageBase types.
-    ///
-    /// We only support converting the Image part
+    /** generalised copy constructor; defined here in the header so that the compiler can instantiate
+     * N(N-1)/2 conversions between N ImageBase types.
+     *
+     * We only support converting the Image part
+     */
     template<typename OtherPixelT>
     MaskedImage(
-        MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
+        MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, ///< Input image
 
-        const bool deep     //!< Must be true; needed to disambiguate
+        const bool deep     ///< Must be true; needed to disambiguate
     ) :
         lsst::daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
         if (!deep) {
@@ -742,6 +789,15 @@ public:
     }
 
 #if defined(DOXYGEN)
+    /**
+     * Make the lhs use the rhs's pixels
+     *
+     * If you are copying a scalar value, a simple `lhs = scalar;` is OK, but
+     * this is probably not the function that you want to use with an %image. To copy pixel values
+     * from the rhs use assign(rhs)
+     *
+     * @param rhs Right hand side
+     */
     MaskedImage& operator=(MaskedImage const& rhs);
 #endif
 
@@ -750,14 +806,44 @@ public:
     void swap(MaskedImage &rhs);
 
     // Operators
+    /// Set the pixels in the MaskedImage to the rhs
     MaskedImage& operator=(Pixel const& rhs);
+    /// Set the pixels in the MaskedImage to the rhs
     MaskedImage& operator=(SinglePixel const& rhs);
 
+    /**
+     * Copy the pixels from the rhs to the lhs
+     *
+     * @deprecated use assign(rhs) instead
+     *
+     * @note operator=() is not equivalent to this command
+     */
     MaskedImage& operator<<=(MaskedImage const& rhs);
 
-    void assign(MaskedImage const &rsh, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
+    /**
+     * Copy pixels from another masked image to a specified subregion of this masked image.
+     *
+     * @param[in] rhs  source image whose pixels are to be copied into this image (the destination)
+     * @param[in] bbox  subregion of this image to set; if empty (the default) then all pixels are set
+     * @param[in] origin  origin of bbox: if PARENT then the lower left pixel of this image is at xy0
+     *                    if LOCAL then the lower left pixel of this image is at 0,0
+     *
+     * @throws lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
+     * this image do not match.
+     */
+    void assign(MaskedImage const &rhs, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
 
+    /// Add a scalar rhs to a MaskedImage
     MaskedImage& operator+=(ImagePixelT const rhs);
+    /**
+     * Add a MaskedImage rhs to a MaskedImage
+     *
+     * The %image and variances are added; the masks are ORd together
+     *
+     * @note The pixels in the two images are taken to be independent.  There is
+     * a Pixel operation (plus) which models the covariance, but this is not (yet?)
+     * available as full-MaskedImage operators
+     */
     MaskedImage& operator+=(MaskedImage const& rhs);
     MaskedImage& operator+=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
         *_image += rhs;
@@ -767,9 +853,24 @@ public:
         *_image += function;
         return *this;
     }
+    /** Add a scaled MaskedImage c*rhs to a MaskedImage
+     *
+     * The %image and variances are added; the masks are ORd together
+     *
+     * @note The pixels in the two images are taken to be independent.  There is
+     * a Pixel operation (plus) which models the covariance, but this is not (yet?)
+     * available as full-MaskedImage operators
+     */
     void scaledPlus(double const c, MaskedImage const& rhs);
 
+    /// Subtract a scalar rhs from a MaskedImage
     MaskedImage& operator-=(ImagePixelT const rhs);
+    /** Subtract a MaskedImage rhs from a MaskedImage
+     *
+     * The %images are subtracted; the masks are ORd together; and the variances are added
+     *
+     * @note the pixels in the two images are taken to be independent
+     */
     MaskedImage& operator-=(MaskedImage const& rhs);
     MaskedImage& operator-=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
         *_image -= rhs;
@@ -779,6 +880,12 @@ public:
         *_image -= function;
         return *this;
     }
+    /** Subtract a scaled MaskedImage c*rhs from a MaskedImage
+     *
+     * The %images are subtracted; the masks are ORd together; and the variances are added
+     *
+     * @note the pixels in the two images are taken to be independent
+     */
     void scaledMinus(double const c, MaskedImage const& rhs);
 
     MaskedImage& operator*=(ImagePixelT const rhs);
@@ -802,7 +909,7 @@ public:
     void scaledDivides(double const c, MaskedImage const& rhs);
 
     /**
-     *  @brief Write a MaskedImage to a regular FITS file.
+     *  Write a MaskedImage to a regular FITS file.
      *
      *  @param[in] fileName      Name of the file to write.  When writing separate files, this is
      *                           the "base" of the filename (e.g. foo reads foo_{img.msk.var}.fits).
@@ -824,7 +931,7 @@ public:
     ) const;
 
     /**
-     *  @brief Write a MaskedImage to a FITS RAM file.
+     *  Write a MaskedImage to a FITS RAM file.
      *
      *  @param[in] manager       Manager object for the memory block to write to.
      *  @param[in] metadata      Additional values to write to the primary HDU header (may be null).
@@ -845,7 +952,7 @@ public:
     ) const;
 
     /**
-     *  @brief Write a MaskedImage to a FITS RAM file.
+     *  Write a MaskedImage to a FITS RAM file.
      *
      *  @param[in] fitsfile           An empty FITS file object.
      *  @param[in] metadata           Additional values to write to the primary HDU header (may be null).
@@ -866,7 +973,7 @@ public:
     ) const;
 
     /**
-     *  @brief Read a MaskedImage from a regular FITS file.
+     *  Read a MaskedImage from a regular FITS file.
      *
      *  @param[in] filename    Name of the file to read.
      */
@@ -875,7 +982,7 @@ public:
     }
 
     /**
-     *  @brief Read a MaskedImage from a FITS RAM file.
+     *  Read a MaskedImage from a FITS RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
      */
@@ -926,7 +1033,7 @@ public:
      * Return the %image's column-origin
      *
      * This will usually be 0 except for images created using the
-     * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
+     * `MaskedImage(fileName, hdu, BBox, mode)` ctor or `MaskedImage(ImageBase, BBox)` cctor
      * The origin can be reset with setXY0()
      */
     int getX0() const { return _image->getX0(); }
@@ -934,7 +1041,7 @@ public:
      * Return the %image's row-origin
      *
      * This will usually be 0 except for images created using the
-     * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
+     * `MaskedImage(fileName, hdu, BBox, mode)` ctor or `MaskedImage(ImageBase, BBox)` cctor
      * The origin can be reset with setXY0()
      */
     int getY0() const { return _image->getY0(); }
@@ -942,8 +1049,8 @@ public:
      * Return the %image's origin
      *
      * This will usually be (0, 0) except for images created using the
-     * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
-     * The origin can be reset with \c setXY0
+     * `MaskedImage(fileName, hdu, BBox, mode)` ctor or `MaskedImage(ImageBase, BBox)` cctor
+     * The origin can be reset with `setXY0`
      */
     geom::Point2I getXY0() const { return _image->getXY0(); }
 
@@ -952,7 +1059,7 @@ public:
      *
      * The origin is usually set by the constructor, so you shouldn't need this function
      *
-     * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+     * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
     void setXY0(int const x0, int const y0) {
@@ -964,7 +1071,7 @@ public:
      *
      * The origin is usually set by the constructor, so you shouldn't need this function
      *
-     * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+     * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
     void setXY0(geom::Point2I const origin) {
@@ -983,9 +1090,9 @@ public:
 
 
     /**
-     * @brief Convert image index to image position (see Image::indexToPosition)
+     * Convert image index to image position (see Image::indexToPosition)
      *
-     * @return image position
+     * @returns image position
      */
     inline double indexToPosition(
             double ind, ///< image index
@@ -995,9 +1102,9 @@ public:
     }
 
     /**
-     * @brief Convert image position to index  (see Image::positionToIndex)
+     * Convert image position to index  (see Image::positionToIndex)
      *
-     * @return std::pair(nearest integer index, fractional part)
+     * @returns std::pair(nearest integer index, fractional part)
      */
     std::pair<int, double> positionToIndex(
             double const pos, ///< image position
@@ -1009,19 +1116,42 @@ public:
     //
     // Iterators and Locators
     //
+    /// Return an `iterator` to the start of the %image
     iterator begin() const;
+    /// Return an `iterator` to the end of the %image
     iterator end() const;
+    /// Return an `iterator` at the point `(x, y)`
     iterator at(int const x, int const y) const;
+    /// Return a `reverse_iterator` to the start of the %image
     reverse_iterator rbegin() const;
+    /// Return a `reverse_iterator` to the end of the %image
     reverse_iterator rend() const;
 
+    /** Fast iterators to contiguous images
+     *
+     * Return a fast `iterator` to the start of the %image, which must be contiguous
+     * Note that the order in which pixels are visited is undefined.
+     *
+     * @param contiguous Pixels are contiguous (must be true)
+     *
+     * @throws lsst::pex::exceptions::RuntimeError Argument `contiguous` is false, or the pixels are not in fact contiguous
+     */
     fast_iterator begin(bool) const;
+    /** Return a fast `iterator` to the end of the %image, which must be contiguous
+     * Note that the order in which pixels are visited is undefined.
+     *
+     * @param contiguous Pixels are contiguous (must be true)
+     *
+     * @throws lsst::pex::exceptions::RuntimeError Argument `contiguous` is false, or the pixels are not in fact contiguous
+     */
     fast_iterator end(bool) const;
 
+    /// Return an `x_iterator` to the start of the %image
     x_iterator row_begin(int y) const;
+    /// Return an `x_iterator` to the end of the %image
     x_iterator row_end(int y) const;
 
-    /// Return an \c x_iterator at the point <tt>(x, y)</tt>
+    /// Return an `x_iterator` at the point `(x, y)`
     x_iterator x_at(int x, int y) const {
 #if 0
         typename Image::x_iterator imageEnd = getImage()->x_at(x, y);
@@ -1036,10 +1166,12 @@ public:
         return x_iterator(imageEnd, maskEnd, varianceEnd);
     }
 
+    /// Return an `y_iterator` to the start of the %image
     y_iterator col_begin(int x) const;
+    /// Return an `y_iterator` to the end of the %image
     y_iterator col_end(int x) const;
 
-    /// Return an \c y_iterator at the point <tt>(x, y)</tt>
+    /// Return an `y_iterator` at the point `(x, y)`
     y_iterator y_at(int x, int y) const {
 #if 0
         typename Image::y_iterator imageEnd = getImage()->y_at(x, y);
@@ -1054,7 +1186,7 @@ public:
     }
 
 
-    /// Return an \c xy_locator at the point <tt>(x, y)</tt>
+    /// Return an `xy_locator` at the point `(x, y)`
     xy_locator xy_at(int x, int y) const {
 #if 0
         typename Image::xy_locator imageEnd = getImage()->xy_at(x, y);
@@ -1070,8 +1202,9 @@ public:
     }
 
 private:
-
+#ifndef DOXYGEN
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>)
+#endif
     void conformSizes();
 
     ImagePtr _image;

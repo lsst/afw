@@ -48,7 +48,7 @@ int getTableVersion(daf::base::PropertySet &metadata) {
 }
 
 /**
- * Helper class for for persisting ExposureRecord
+ * @internal Helper class for for persisting ExposureRecord
  *
  * Contains keys for columns beyond BaseRecord, a schema mapper and and helper functions
  */

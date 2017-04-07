@@ -34,7 +34,7 @@ class Distortion;
 class ReducedShear;
 
 /**
- *  @brief A logarithmic complex ellipticity with magnitude @f$|e| = \ln (a/b) @f$.
+ *  A logarithmic complex ellipticity with magnitude @f$|e| = \ln (a/b) @f$.
  *
  *  For a more complete definition, see Bernstein and Jarvis (2002); this the same as their
  *  conformal shear @f$\eta@f$ (eq. 2.3-2.6).

@@ -45,127 +45,77 @@ namespace afwImage = lsst::afw::image;
 namespace afwDetection = lsst::afw::detection;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
-/** @brief Exposure Class Implementation for LSST: a templated framework class
-  * for creating an Exposure from a MaskedImage and a Wcs.
-  *
-  * An Exposure is required to take one afwImage::MaskedImage or a region (col,
-  * row) defining the size of a MaskedImage (this can be of size 0,0).  An
-  * Exposure can (but is not required to) contain a afwImage::Wcs.
-  *
-  * The template types should optimally be a float, double, unsigned int 16 bit,
-  * or unsigned int 32 bit for the image (pixel) type and an unsigned int 32 bit
-  * for the mask type.  These types have been explicitly instantiated for the
-  * Exposure class.  All MaskedImage and Wcs constructors are 'const' to allow
-  * for views and copying.
-  *
-  * An Exposure can get and return its MaskedImage, Wcs, and a subExposure.
-  * The getSubExposure member takes a BBox region defining the subRegion of
-  * the original Exposure to be returned.  The member retrieves the MaskedImage
-  * corresponding to the subRegion.  The MaskedImage class throws an exception
-  * for any subRegion extending beyond the original MaskedImage bounding
-  * box. This member is not yet fully implemented because it requires the Wcs
-  * class to return the Wcs metadata to the member so the CRPIX values of the
-  * Wcs can be adjusted to reflect the new subMaskedImage origin.  The
-  * getSubExposure member will eventually return a subExposure consisting of
-  * the subMAskedImage and the Wcs object with its corresponding adjusted
-  * metadata.
-  *
-  * The hasWcs member is used to determine if the Exposure has a Wcs.  It is not
-  * required to have one.
-  */
 
 // CLASS CONSTRUCTORS and DESTRUCTOR
 
 
-/** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-  * a Wcs (which may be default constructed)
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    unsigned int width,                 ///< number of columns
-    unsigned int height,                ///< number of rows
-    CONST_PTR(Wcs) wcs        ///< the Wcs
+    unsigned int width,
+    unsigned int height,
+    CONST_PTR(Wcs) wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
     _info(new ExposureInfo(wcs))
 {}
 
-/** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-  * a Wcs (which may be default constructed)
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    afwGeom::Extent2I const & dimensions, ///< desired image width/height
-    CONST_PTR(Wcs) wcs          ///< the Wcs
+    afwGeom::Extent2I const & dimensions,
+    CONST_PTR(Wcs) wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
     _info(new ExposureInfo(wcs))
 {}
 
-/** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-  * a Wcs (which may be default constructed)
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
-    CONST_PTR(Wcs) wcs ///< the Wcs
+    afwGeom::Box2I const & bbox,
+    CONST_PTR(Wcs) wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
     _info(new ExposureInfo(wcs))
 {}
 
-/** @brief Construct an Exposure from a MaskedImage and an optional Wcs
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    MaskedImageT &maskedImage, ///< the MaskedImage
-    CONST_PTR(Wcs) wcs  ///< the Wcs
+    MaskedImageT &maskedImage,
+    CONST_PTR(Wcs) wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
     _info(new ExposureInfo(wcs))
 {}
 
-/** @brief Construct an Exposure from a MaskedImage and an ExposureInfo
-  *
-  * If the ExposureInfo is an empty pointer then a new empty ExposureInfo is used
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    MaskedImageT & maskedImage, ///< the MaskedImage
-    PTR(ExposureInfo) info  ///< the ExposureInfo
+    MaskedImageT & maskedImage,
+    PTR(ExposureInfo) info
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
     _info(info ? info : std::make_shared<ExposureInfo>())
 {}
 
-/** @brief Copy an Exposure
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    Exposure const &src, ///< Parent Exposure
-    bool const deep      ///< Should we copy the pixels?
+    Exposure const &src,
+    bool const deep
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
     _info(new ExposureInfo(*src.getInfo(), deep))
 {}
 
-/** @brief Construct a subExposure given an Exposure and a bounding box
-  *
-  * @throw a lsst::pex::exceptions::InvalidParameter if the requested subRegion
-  * is not fully contained by the original MaskedImage BBox.
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    Exposure const &src, ///< Parent Exposure
-    afwGeom::Box2I const& bbox,    ///< Desired region in Exposure
-    ImageOrigin const origin,   ///< Coordinate system for bbox
-    bool const deep      ///< Should we copy the pixels?
+    Exposure const &src,
+    afwGeom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool const deep
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
@@ -220,15 +170,11 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::_readFits(
 }
 
 
-/** Destructor
- */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
 
 // SET METHODS
 
-/** @brief Set the MaskedImage of the Exposure.
-  */
 template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImage){
     _maskedImage = maskedImage;
@@ -268,10 +214,10 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits & fitsfi
 }
 
 // Explicit instantiations
-/// \cond
+/// @cond
 template class afwImage::Exposure<std::uint16_t>;
 template class afwImage::Exposure<int>;
 template class afwImage::Exposure<float>;
 template class afwImage::Exposure<double>;
 template class afwImage::Exposure<std::uint64_t>;
-/// \endcond
+/// @endcond

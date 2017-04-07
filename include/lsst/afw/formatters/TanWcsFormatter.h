@@ -25,21 +25,8 @@
 #ifndef LSST_AFW_FORMATTERS_TANWCSFORMATTER_H
 #define LSST_AFW_FORMATTERS_TANWCSFORMATTER_H
 
-/** @file
- * @brief Interface for TanWcsFormatter class
- *
- * @author $Author$
- * @version $Revision$
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
- */
-
-/** @class lsst::afw::formatters::TanWcsFormatter
- * @brief Class implementing persistence and retrieval for TanWcs objects.
- *
- * @ingroup afw
+/*
+ * Interface for TanWcsFormatter class
  */
 
 #include "lsst/daf/base.h"
@@ -53,6 +40,10 @@ namespace afw {
         class TanWcs;
     }
 namespace formatters {
+
+/**
+ * Class implementing persistence and retrieval for TanWcs objects.
+ */
 
 class TanWcsFormatter : public lsst::daf::persistence::Formatter {
 public:

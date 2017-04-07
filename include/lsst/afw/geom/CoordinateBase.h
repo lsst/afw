@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief A CRTP base class for coordinate objects, providing partial specializations for 2D and 3D.
+/*
+ * A CRTP base class for coordinate objects, providing partial specializations for 2D and 3D.
  */
 #ifndef LSST_AFW_GEOM_COORDINATEBASE_H
 #define LSST_AFW_GEOM_COORDINATEBASE_H
@@ -41,7 +40,7 @@ template <typename T, int N=2> class Point;
 template <typename T, int N=2> class Extent;
 
 /**
- *  \brief A CRTP base class for coordinate objects.
+ *  A CRTP base class for coordinate objects.
  *
  *  CoordinateBase has partial specializations for 2 and 3 dimensions so its subclasses don't have to.
  */
@@ -59,7 +58,7 @@ public:
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
 
     /**
-     *  \brief Return a fixed-size Eigen representation of the coordinate object.
+     *  Return a fixed-size Eigen representation of the coordinate object.
      *
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
@@ -71,14 +70,14 @@ public:
 protected:
 
     /**
-     *  \brief Initialize all elements to a scalar.
+     *  Initialize all elements to a scalar.
      *
      *  A public constructor with the same signature is expected for subclasses.
      */
     explicit CoordinateBase(T val = static_cast<T>(0)) : _vector(EigenVector::Constant(val)) {}
 
     /**
-     *  \brief Initialize all elements from an N-d Eigen vector.
+     *  Initialize all elements from an N-d Eigen vector.
      *
      *  A public constructor with the same signature is expected for subclasses.
      */
@@ -89,6 +88,13 @@ protected:
     EigenVector _vector;
 };
 
+/**
+ *  Floating-point comparison with tolerance.
+ *
+ *  Interface, naming, and default tolerances matches Numpy.
+ *
+ *  @relatesalso CoordinateBase
+ */
 template <typename Derived, typename T, int N>
 bool allclose(
     CoordinateBase<Derived,T,N> const & a, CoordinateBase<Derived,T,N> const & b,
@@ -97,7 +103,7 @@ bool allclose(
 );
 
 /**
- *  \brief Specialization of CoordinateBase for 2 dimensions.
+ *  Specialization of CoordinateBase for 2 dimensions.
  */
 template <typename Derived, typename T>
 class CoordinateBase<Derived,T,2> {
@@ -113,7 +119,7 @@ public:
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
 
     /**
-     *  \brief Return a fixed-size Eigen representation of the coordinate object.
+     *  Return a fixed-size Eigen representation of the coordinate object.
      *
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
@@ -128,10 +134,10 @@ public:
     void setX(T x) { _vector.x() = x; }
     void setY(T y) { _vector.y() = y; }
 
-    /// \brief Return a std::pair representation of the coordinate object.
+    /// Return a std::pair representation of the coordinate object.
     std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
 
-    /// \brief Return a std::tuple representation of the coordinate object.
+    /// Return a std::tuple representation of the coordinate object.
     std::tuple<T,T> asTuple() const { return std::make_tuple(_vector.x(),_vector.y()); }
 
 protected:
@@ -145,7 +151,7 @@ protected:
 };
 
 /**
- *  \brief Specialization of CoordinateBase for 3 dimensions.
+ *  Specialization of CoordinateBase for 3 dimensions.
  */
 template <typename Derived, typename T>
 class CoordinateBase<Derived,T,3> {
@@ -161,7 +167,7 @@ public:
     T const & coeffRef(int n) const { return const_cast<EigenVector&>(_vector).coeffRef(n); }
 
     /**
-     *  \brief Return a fixed-size Eigen representation of the coordinate object.
+     *  Return a fixed-size Eigen representation of the coordinate object.
      *
      *  The fact that this returns by const reference rather than by value should not be considered
      *  part of the API; this is merely an optimization enabled by the implementation.
@@ -180,7 +186,7 @@ public:
     void setY(T y) { _vector.y() = y; }
     void setZ(T z) { _vector.z() = z; }
 
-    /// \brief Return a std::tuple representation of the coordinate object.
+    /// Return a std::tuple representation of the coordinate object.
     std::tuple<T,T,T> asTuple() const {
         return std::make_tuple(_vector.x(), _vector.y(), _vector.z());
     }

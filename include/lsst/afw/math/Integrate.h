@@ -24,12 +24,8 @@
 
 #if !defined(LSST_AFW_MATH_INTEGRATE_H)
 #define LSST_AFW_MATH_INTEGRATE_H 1
-/**
- * @file Integrate.h
- * @brief Compute 1d and 2d integral
- * @ingroup afw
- * @author Mike Jarvis (original), included in LSST code by Steve Bickerton
- *
+/*
+ * Compute 1d and 2d integral
  */
 
 #include <functional>
@@ -297,7 +293,7 @@ inline T rescale_error (T err, T const &resabs, T const &resasc) {
 }
 
 /**
- * @brief Non-adaptive integration of the function f over the region 'reg'.
+ * Non-adaptive integration of the function f over the region 'reg'.
  *
  * @note The algorithm computes first a Gaussian quadrature value
  *       then successive Kronrod/Patterson extensions to this result.
@@ -431,7 +427,7 @@ inline bool intGKPNA(
 
 
 /**
- * @brief An adaptive integration algorithm which computes the integral of f over the region reg.
+ * An adaptive integration algorithm which computes the integral of f over the region reg.
  *
  * @note First the non-adaptive GKP algorithm is tried.
  *       If that is not accurate enough (according to the absolute and
@@ -596,7 +592,7 @@ inline void intGKP (
 
 
 /**
- * @brief Auxiliary struct 1
+ * Auxiliary struct 1
  *
  */
 template <class UF>
@@ -613,7 +609,7 @@ private:
 
 
 /**
- * @brief Auxiliary function 1
+ * Auxiliary function 1
  *
  */
 template <class UF>
@@ -634,7 +630,7 @@ private:
 
 
 /**
- * @brief Auxiliary function 2
+ * Auxiliary function 2
  *
  */
 template <class UF>
@@ -643,7 +639,7 @@ AuxFunc2<UF> inline Aux2(UF uf) { return AuxFunc2<UF>(uf); }
 
 
 /**
- * @brief Helpers for constant regions for int2d, int3d:
+ * Helpers for constant regions for int2d, int3d:
  *
  */
 template <class T>
@@ -770,7 +766,7 @@ private:
 
 
 /**
- * @brief Front end for the 1d integrator
+ * Front end for the 1d integrator
  */
 template <class UF>
 inline typename UF::result_type int1d(
@@ -831,7 +827,7 @@ inline typename UF::result_type int1d(
 
 
 /**
- * @brief Front end for the 2d integrator
+ * Front end for the 2d integrator
  */
 template <class BF, class YREG>
 inline typename BF::result_type int2d(
@@ -851,7 +847,7 @@ inline typename BF::result_type int2d(
 }
 
 /**
- * @brief Front end for the 3d integrator
+ * Front end for the 3d integrator
  */
 template <class TF, class YREG, class ZREG>
 inline typename TF::result_type int3d(
@@ -872,7 +868,7 @@ inline typename TF::result_type int3d(
 }
 
 /**
- * @brief Front end for the 2d integrator
+ * Front end for the 2d integrator
  */
 template <class BF>
 inline typename BF::result_type int2d(
@@ -886,7 +882,7 @@ inline typename BF::result_type int2d(
 }
 
 /**
- * @brief Front end for the 3d integrator
+ * Front end for the 3d integrator
  */
 template <class TF>
 inline typename TF::result_type int3d(
@@ -907,7 +903,7 @@ inline typename TF::result_type int3d(
 
 // =============================================================
 /**
- * @brief The 1D integrator
+ * The 1D integrator
  *
  * @note This simply wraps the int1d function above and handles the
  *       instantiation of the intRegion.
@@ -930,17 +926,13 @@ typename UnaryFunctionT::result_type integrate(UnaryFunctionT func,
 namespace details {
 
 /**
- * @class FunctionWrapper
- *
- * @brief Wrap an integrand in a call to a 1D integrator: romberg()
+ * Wrap an integrand in a call to a 1D integrator: romberg()
  *
  * When romberg2D() is called, it wraps the integrand it was given
  * in a FunctionWrapper functor.  This wrapper calls romberg() on the integrand
  * to get a 1D (along the x-coord, for constant y) result .
  * romberg2D() then calls romberg() with the FunctionWrapper functor as an
  * integrand.
- *
- * @author S. Bickerton (adapted from RHL's SDSS C code)
  */
 template<typename BinaryFunctionT>
 class FunctionWrapper :
@@ -968,7 +960,7 @@ private:
 
 // =============================================================
 /**
- * @brief The 2D integrator
+ * The 2D integrator
  *
  * @note Adapted from RHL's SDSS code
  */

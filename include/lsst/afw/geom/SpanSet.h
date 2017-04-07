@@ -284,14 +284,14 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * Take values from an array at points defined by SpanSet and use them to populate a new array
      * where the x,y coordinates of the SpanSet have been flattened to one dimension. First two
      * dimensions of the input array must be the h,w which correspond to the SpanSet coordinates. Any
-     * number of remaining dimensions is permissable.
-     *
-     * @param input The ndarray from which the values will be taken
-     * @param xy0 A point object with is used as the origin point for the SpanSet coordinate system
+     * number of remaining dimensions is permissible.
      *
      * @tparam Pixel The datatype for the ndarray
      * @tparam inN The number of dimensions in the array object
      * @tparam inC Number of guaranteed row-major contiguous dimensions, starting from the end
+     *
+     * @param input The ndarray from which the values will be taken
+     * @param xy0 A point object with is used as the origin point for the SpanSet coordinate system
      */
     template <typename Pixel, int inN, int inC>
     ndarray::Array<typename std::remove_const<Pixel>::type, inN-1, inN-1>
@@ -311,11 +311,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * Take values from an array at points defined by SpanSet and use them to populate a new array
      * where the x,y coordinates of the SpanSet have been flattened to one dimension. First two
      * dimensions of the input array must be the h,w which correspond to the SpanSet coordinates. Any
-     * number of remaining dimensions is permissable.
-     *
-     * @param output The 1d ndarray which will be populated with output parameters, will happen in place
-     * @param input The ndarray from which the values will be taken
-     * @param xy0 A point object which is used as the origin point for the SpanSet coordinate system
+     * number of remaining dimensions is permissible.
      *
      * @tparam PixelOut The data-type for the output ndarray
      * @tparam PixelIn The data-type for the input ndarray
@@ -324,6 +320,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
                     starting from the end
      * @tparam inC Number of guaranteed row-major contiguous dimensions in the input array,
                    starting from the end
+     *
+     * @param[out] output The 1d ndarray which will be populated with output parameters, will happen in place
+     * @param[in] input The ndarray from which the values will be taken
+     * @param[in] xy0 A point object which is used as the origin point for the SpanSet coordinate system
      */
     template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void flatten(ndarray::Array<PixelOut, inA-1, outC> const & output,
@@ -338,18 +338,18 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         applyFunctor(ndAssigner, ndarray::ndFlat(output), ndarray::ndImage(input, xy0));
     }
 
-    /** Expand an array by one spatial dimension at pionts given by SpanSet
+    /** Expand an array by one spatial dimension at points given by SpanSet
      *
      * Take values from a lower dimensional array and insert them in an output array with one additional
      * dimension at points defined by the SpanSet, offset by the lower left hand corner of the
      * bounding box of the SpanSet. The first two dimensions of the output array will correspond to the
      * y,x dimensions of the SpanSet
      *
-     * @param input The ndarray from which the values will be taken
-     *
      * @tparam Pixel The data-type for the ndarray
      * @tparam inA Number of dimension of the input array
      * @tparam inC Number of guaranteed row-major contiguous dimensions, starting from the end
+     *
+     * @param input The ndarray from which the values will be taken
      */
     template <typename Pixel, int inA, int inC>
     ndarray::Array<typename std::remove_const<Pixel>::type, inA+1, inA+1>
@@ -369,16 +369,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         return outputArray;
     }
 
-     /** Expand an array by one spatial dimension at pionts given by SpanSet
+     /** Expand an array by one spatial dimension at points given by SpanSet
      *
      * Take values from a lower dimensional array and insert them in an output array with one additional
      * dimension at points defined by the SpanSet, offset by the lower left hand corner of the
      * bounding box of the SpanSet. The first two dimensions of the output array will correspond to the
      * y,x dimensions of the SpanSet
-     *
-     * @param output The 1d ndarray which will be populated with output parameters, will happen in place
-     * @param input The ndarray from which the values will be taken
-     * @param xy0 A point object with is used as the origin point for the SpanSet coordinate system
      *
      * @tparam PixelOut The datatype for the output ndarray
      * @tparam PixelIn The datatype for the input ndarray
@@ -387,6 +383,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
                     starting from the end
      * @tparam inC Number of guaranteed row-major contiguous dimensions in the input array,
                    starting from the end
+     *
+     * @param[out] output The 1d ndarray which will be populated with output parameters, will happen in place
+     * @param[in] input The ndarray from which the values will be taken
+     * @param[in] xy0 A point object with is used as the origin point for the SpanSet coordinate system
      */
     template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void unflatten(ndarray::Array<PixelOut, inA+1, outC> const & output,
@@ -404,10 +404,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** Copy contents of source Image into destination image at the positions defined in the SpanSet
      *
-     * @param src The Image that pixel values will be taken from
-     * @param dest The Image where pixels will be copied
-     *
      * @tparam ImageT The pixel type of the Image
+     *
+     * @param[in] src The Image that pixel values will be taken from
+     * @param[out] dest The Image where pixels will be copied
      */
     template <typename ImageT>
     void copyImage(image::Image<ImageT> const & src, image::Image<ImageT> & dest) {
@@ -422,14 +422,14 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
         applyFunctor(copyFunc, src, dest);
     }
 
-    /** Copy contentes of source MaskedImage into destination image at the positions defined in the SpanSet
-     *
-     * @param src The MaskedImage that pixel values will be taken from
-     * @param dest The MaskedImage where pixels will be copied
+    /** Copy contents of source MaskedImage into destination image at the positions defined in the SpanSet
      *
      * @tparam ImageT The pixel type of the MaskedImage's Image
      * @tparam MaskT The pixel type of the MaskedImage's Mask
      * @tparam VarT The Pixel type of the MaskedImage's Variance Image
+     *
+     * @param[in] src The MaskedImage that pixel values will be taken from
+     * @param[out] dest The MaskedImage where pixels will be copied
      */
     template <typename ImageT, typename MaskT, typename VarT>
     void copyMaskedImage(image::MaskedImage<ImageT, MaskT, VarT> const & src,
@@ -453,16 +453,16 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** Set the values of an Image at points defined by the SpanSet
      *
-     * @param image The Image in which pixels will be set
-     * @param val The value to set
-     * @param region A bounding box limiting the scope of the SpanSet, points defined
+     * @tparam ImageT The pixel type of the Image to be set
+     *
+     * @param[out] image The Image in which pixels will be set
+     * @param[in] val The value to set
+     * @param[in] region A bounding box limiting the scope of the SpanSet, points defined
                      in the SpanSet which fall outside this box will be ignored if
                      the doClip parameter is set to true, defaults to the bounding
                      box of the image
-     * @param doClip Limit the copy operation to pixels in the SpanSet that lie within
+     * @param[in] doClip Limit the copy operation to pixels in the SpanSet that lie within
                      the region parameter defaults to false
-     *
-     * @tparam ImageT The pixel type of the Image to be set
      */
     template <typename ImageT>
     void setImage(image::Image<ImageT> & image, ImageT val,
@@ -498,13 +498,13 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * the data-type must be at least that length. The order of the parameters supplied to the functor will
      * be the same order as they are passed to the applyFunctor method.
      *
+     * @tparam ...Args Variadic type specification
+     *
      * @param func Functor that is to be applied on each of the values taken from ...args.
      *
      * @param ...args Variadic arguments, may be of type Image, MaskedImage, ndarrays, numeric values
      *                and iterators. ndarrays must be specified as either image or vector with the
      *                ndarray::ndImage or ndarray::ndFlat functions
-     *
-     * @tparam ...Args Variadic type specification
      */
     template <typename Functor, typename...Args>
     // Normally std::forward would be used with a universal reference, however
@@ -525,20 +525,20 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** Set a Mask at pixels defined by the SpanSet
      *
-     * @param target Mask in which values will be set
-     * @param bitmask The bit pattern to set in the mask
-     *
      * @tparam T data-type of a pixel in the Mask plane
+     *
+     * @param[in, out] target Mask in which values will be set
+     * @param[in] bitmask The bit pattern to set in the mask
      */
     template <typename T>
     void setMask(lsst::afw::image::Mask<T> & target, T bitmask) const;
 
-    /** Unset a Maks at pixels defined by the SpanSet
-     *
-     * @param target Mask in which a bit pattern will be unset
-     * @param bitmask The bit pattern to clear in the mask
+    /** Unset a Mask at pixels defined by the SpanSet
      *
      * @tparam T data-type of a pixel in the Mask plane
+     *
+     * @param[in, out] target Mask in which a bit pattern will be unset
+     * @param[in] bitmask The bit pattern to clear in the mask
      */
     template <typename T>
     void clearMask(lsst::afw::image::Mask<T> & target, T bitmask) const;
@@ -552,26 +552,26 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** Determine the common points between a SpanSet and a Mask with a given bit pattern
      *
-     * @param other Mask with which to calculate intersection
-     * @param bitmask The bit value to concider when intersecting
-     *
      * @tparam T Pixel type of the Mask
+     *
+     * @param other Mask with which to calculate intersection
+     * @param bitmask The bit value to consider when intersecting
      */
     template <typename T>
     std::shared_ptr<SpanSet> intersect(image::Mask<T> const & other, T bitmask) const;
 
-    /** Determine the common points between a SpanSet and the logical inverse of a second SpanSet
+    /** @brief Determine the common points between a SpanSet and the logical inverse of a second SpanSet
      *         and return them in a new SpanSet.
      *
      * @param other The spanset which will be logically inverted when computing the intersection
      */
     std::shared_ptr<SpanSet> intersectNot(SpanSet const & other) const;
 
-    /** Determine the common points between a SpanSet and the logical inverse of a Mask for a
+    /** @brief Determine the common points between a SpanSet and the logical inverse of a Mask for a
      *  given bit pattern
      *
-     * @param other Mask with which to calculate instersection
-     * @param bitmask The bit value to concider when intersecting
+     * @param other Mask with which to calculate intersection
+     * @param bitmask The bit value to consider when intersecting
      *
      * @tparam T Pixel type of the Mask
      */
@@ -587,10 +587,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** Determine the union between a SpanSet and a Mask for a given bit pattern
      *
-     * @param other Mask with which to calculate instersection
-     * @param bitmask The bit value to concider when intersecting
-     *
      * @tparam T Pixel type of the Mask
+     *
+     * @param other Mask with which to calculate intersection
+     * @param bitmask The bit value to consider when intersecting
      */
     template <typename T>
     std::shared_ptr<SpanSet> union_(image::Mask<T> const & other, T bitmask) const;
@@ -630,9 +630,12 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
 
     /** Create a SpanSet from a mask.
      *
-     * Create a SpanSet from a class. The default behaivor is to include any pixels which have any
+     * Create a SpanSet from a class. The default behavior is to include any pixels which have any
      * bits set. More complex selection/filtering of bit patterns can be done by supplying a comparator
      * function.
+     *
+     * @tparam T Pixel type of the Mask
+     * @tparam F Type of the functor
      *
      * @param mask mask to convert to a SpanSet
      * @param comparator Functor object to use in the decision to include pixel in SpanSet. Should return
@@ -640,9 +643,6 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *                   otherwise. The functor takes a single value taken from the mask at the
      *                   pixel under consideration. Defaults to evaluating true if the mask has bits set,
      *                   and false otherwise.
-     *
-     * @tparam T Pixel type of the Mask
-     * @tparam F Type of the functor
      */
     template <typename T, typename UnaryPredicate = details::AnyBitSetFunctor<T>>
     static std::shared_ptr<geom::SpanSet> fromMask(image::Mask<T> const & mask,
@@ -693,10 +693,10 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      *
      * Create a SpanSet from a Mask at pixels with the specified bit pattern
      *
+     * @tparam T Pixel type of the Mask
+     *
      * @param mask mask to convert to a SpanSet
      * @param bitmask bit pattern used to specify which pixel to include
-     *
-     * @tparam T Pixel type of the Mask
      */
     template <typename T>
     static std::shared_ptr<geom::SpanSet> fromMask(image::Mask<T> const & mask, T bitmask) {

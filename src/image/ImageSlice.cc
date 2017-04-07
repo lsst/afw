@@ -22,10 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file ImageSlice.cc
- * @brief Provide functions to operate on rows/columns of images
- * @author Steve Bickerton
+/*
+ * Provide functions to operate on rows/columns of images
  */
 #include <vector>
 #include <memory>
@@ -38,13 +36,9 @@ namespace afwMath       = lsst::afw::math;
 namespace ex            = lsst::pex::exceptions;
 
 
-/**
- * @brief Constructor for ImageSlice
- *
- */
 template<typename PixelT>
 afwImage::ImageSlice<PixelT>::ImageSlice(
-    image::Image<PixelT> const &img ///< The image to represent as a slice.
+    image::Image<PixelT> const &img
                                         ) :
     afwImage::Image<PixelT>(img),
     _sliceType(ROW)
@@ -70,25 +64,20 @@ afwImage::ImageSlice<PixelT>::ImageSlice(
 
 
 
-/**************************************************************************
+/* ************************************************************************ *
  *
  * column operators
  *
- **************************************************************************/
+ * ************************************************************************ */
 
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
 
-/**
- * @brief Overload operator+()
- *
- * We require two of these, one for image+slice (this one) and one for slice+image (next one down)
- */
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
-    afwImage::Image<PixelT> const &img,     ///< The Image
-    afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+    afwImage::Image<PixelT> const &img,
+    afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg += slc;
@@ -97,30 +86,20 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
 
 
 
-/**
- * @brief Overload operator+()
- *
- * We require two of these, one for image+slice (previous one) and one for slice+image (this)
- */
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
-    afwImage::ImageSlice<PixelT> const &slc, ///< The ImageSlice
-    afwImage::Image<PixelT> const &img       ///< The Image
+    afwImage::ImageSlice<PixelT> const &slc,
+    afwImage::Image<PixelT> const &img
                                                          ) {
     return afwImage::operator+(img, slc);
 }
 
 
 
-/**
- * @brief Overload operator+=()
- *
- * We'll only allow 'image += slice'.  It doesn't make sense to add an image to a slice.
- */
 template<typename PixelT>
 void afwImage::operator+=(
-                          afwImage::Image<PixelT> &img,     ///< The Image
-                          afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+                          afwImage::Image<PixelT> &img,
+                          afwImage::ImageSlice<PixelT> const &slc
                          ) {
     afwImage::details::operate<afwImage::details::Plus<PixelT> >(img, slc, slc.getImageSliceType());
 }
@@ -132,15 +111,10 @@ void afwImage::operator+=(
 
 
 
-/**
- * @brief Overload operator-()
- *
- * We'll only allow 'image - slice', as 'slice - image' doesn't make sense.
- */
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator-(
-    afwImage::Image<PixelT> const &img,     ///< The Image
-    afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+    afwImage::Image<PixelT> const &img,
+    afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg -= slc;
@@ -148,15 +122,10 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator-(
 }
 
 
-/**
- * @brief Overload operator-=()
- *
- * Only 'image -= slice' is defined.  'slice -= image' wouldn't make sense.
- */
 template<typename PixelT>
 void afwImage::operator-=(
-                          afwImage::Image<PixelT> &img,     ///< The Image
-                          afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+                          afwImage::Image<PixelT> &img,
+                          afwImage::ImageSlice<PixelT> const &slc
                          ) {
     details::operate<details::Minus<PixelT> >(img, slc, slc.getImageSliceType());
 }
@@ -166,15 +135,10 @@ void afwImage::operator-=(
 // overload *
 
 
-/**
- * @brief Overload operator*()
- *
- * We'll define both 'image*slice' (this one) and 'slice*image' (next one down).
- */
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
-    afwImage::Image<PixelT> const &img,      ///< The Image
-    afwImage::ImageSlice<PixelT> const &slc  ///< The ImageSlice
+    afwImage::Image<PixelT> const &img,
+    afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg *= slc;
@@ -182,48 +146,30 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
 }
 
 
-/**
- * @brief Overload operator*()
- *
- * We'll define both 'image*slice' (this one) and 'slice*image' (next one down).
- */
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
-    afwImage::ImageSlice<PixelT> const &slc, ///< The Image
-    afwImage::Image<PixelT> const &img       ///< The ImageSlice
+    afwImage::ImageSlice<PixelT> const &slc,
+    afwImage::Image<PixelT> const &img
                                                          ) {
     return afwImage::operator*(img, slc);
 }
 
-/**
- * @brief Overload operator*=()
- *
- * Only 'image *= slice' is defined, as 'slice *= image' doesn't make sense.
- */
 template<typename PixelT>
 void afwImage::operator*=(
-                          afwImage::Image<PixelT> &img,     ///< The Image
-                          afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+                          afwImage::Image<PixelT> &img,
+                          afwImage::ImageSlice<PixelT> const &slc
                          ) {
     details::operate<details::Mult<PixelT> >(img, slc, slc.getImageSliceType());
 }
 
 
+// overload
 
 
-// ///////////////////////////////////////////////////////////////////
-// overload /
-
-
-/**
- * @brief Overload operator/()
- *
- * Only 'image / slice' is defined, as 'slice / image' doesn't make sense.
- */
 template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator/(
-    afwImage::Image<PixelT> const &img,     ///< The Image
-    afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+    afwImage::Image<PixelT> const &img,
+    afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg /= slc;
@@ -231,15 +177,10 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator/(
 }
 
 
-/**
- * @brief Overload operator/=()
- *
- * Only 'image /= slice' is defined, as 'slice /= image' doesn't make sense.
- */
 template<typename PixelT>
 void afwImage::operator/=(
-                          afwImage::Image<PixelT> &img,     ///< The Image
-                          afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
+                          afwImage::Image<PixelT> &img,
+                          afwImage::ImageSlice<PixelT> const &slc
                          ) {
     details::operate<details::Div<PixelT> >(img, slc, slc.getImageSliceType());
 }
@@ -251,7 +192,7 @@ void afwImage::operator/=(
  * Explicit Instantiations
  *
  */
-/// \cond
+/// @cond
 #define INSTANTIATE_SLICE_OP_SYM(TYPE, OP) \
     template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> const &img, \
                                                               afwImage::ImageSlice<TYPE> const &slc); \
@@ -284,4 +225,4 @@ void afwImage::operator/=(
 
 INSTANTIATE_SLICES(double);
 INSTANTIATE_SLICES(float);
-/// \endcond
+/// @endcond

@@ -29,7 +29,7 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
- *  @brief A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
+ *  A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
  *
  *  ArrayKey operates on the convention that arrays are defined by a set of contiguous scalar fields
  *  (i.e. added to the Schema in order, with no interruption) of the same type, with a common field
@@ -97,13 +97,12 @@ public:
     explicit ArrayKey(Key< Array<T> > const & other);
 
     /**
-     *  @brief Construct from a subschema, assuming *_0, *_1, *_2, etc. subfields
+     *  Construct from a subschema, assuming *_0, *_1, *_2, etc. subfields
      *
      *  If a schema has "a_0", "a_1", and "a_2" fields, this constructor allows you to construct
      *  a 3-element ArrayKey via:
-     *  @code
-     *  ArrayKey<T> k(schema["a"]);
-     *  @endcode
+     *
+     *      ArrayKey<T> k(schema["a"]);
      */
     ArrayKey(SubSchema const & s);
 
@@ -136,7 +135,7 @@ public:
     /// Return a scalar Key for an element of the array
     Key<T> operator[](int i) const;
 
-    /// @brief Return a FunctorKey corresponding to a range of elements
+    /// Return a FunctorKey corresponding to a range of elements
     ArrayKey slice(int begin, int end) const;
 
 private:

@@ -38,7 +38,7 @@ namespace cameraGeom {
 
 namespace {
     /**
-    Declare methods common to CameraSysPrefix and CameraSys
+    @internal Declare methods common to CameraSysPrefix and CameraSys
 
     @tparam CppClass  C++ class; one of CameraSysPrefix or CameraSys
     @tparam PyClass  pybind11 class corresponding to `CppClass`

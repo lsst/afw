@@ -22,14 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Definition of convolveWithInterpolation and helper functions declared in detail/ConvolveImage.h
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Definition of convolveWithInterpolation and helper functions declared in detail/ConvolveImage.h
  */
 #include <algorithm>
 #include <cmath>
@@ -51,26 +45,12 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
-/**
- * @brief Convolve an Image or MaskedImage with a spatially varying Kernel using linear interpolation.
- *
- * This is a low-level convolution function that does not set edge pixels.
- *
- * The algorithm is as follows:
- * - divide the image into regions whose size is no larger than maxInterpolationDistance
- * - for each region:
- *   - convolve it using convolveRegionWithInterpolation (which see)
- *
- * Note that this routine will also work with spatially invariant kernels, but not efficiently.
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if outImage is not the same size as inImage
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::convolveWithInterpolation(
-        OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
-        InImageT const &inImage,    ///< input image
-        lsst::afw::math::Kernel const &kernel,  ///< convolution kernel
-        lsst::afw::math::ConvolutionControl const &convolutionControl)  ///< convolution control parameters
+        OutImageT &outImage,
+        InImageT const &inImage,
+        lsst::afw::math::Kernel const &kernel,
+        lsst::afw::math::ConvolutionControl const &convolutionControl)
 {
     if (outImage.getDimensions() != inImage.getDimensions()) {
         std::ostringstream os;
@@ -119,19 +99,12 @@ void mathDetail::convolveWithInterpolation(
     }
 }
 
-/**
- * @brief Convolve a region of an Image or MaskedImage with a spatially varying Kernel using interpolation.
- *
- * This is a low-level convolution function that does not set edge pixels.
- *
- * @warning: this is a low-level routine that performs no bounds checking.
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::convolveRegionWithInterpolation(
-        OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
-        InImageT const &inImage,    ///< input image
-        KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
-        ConvolveWithInterpolationWorkingImages &workingImages)  ///< working kernel images
+        OutImageT &outImage,
+        InImageT const &inImage,
+        KernelImagesForRegion const &region,
+        ConvolveWithInterpolationWorkingImages &workingImages)
 {
     typedef typename OutImageT::xy_locator OutLocator;
     typedef typename InImageT::const_xy_locator InConstLocator;
@@ -205,7 +178,7 @@ void mathDetail::convolveRegionWithInterpolation(
 /*
  * Explicit instantiation
  */
-/// \cond
+/// @cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
@@ -231,4 +204,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
-/// \endcond
+/// @endcond

@@ -1,7 +1,6 @@
 // -*- lsst-c++ -*-
-/**
- * \file
- * \brief Capture the colour of an object
+/*
+ * Capture the colour of an object
  */
 
 #ifndef LSST_AFW_IMAGE_COLOR_H
@@ -21,7 +20,7 @@ namespace image {
  * We need a concept of colour more general than "g - r" in order to calculate e.g. atmospheric dispersion
  * or a source's PSF
  *
- * \note This is very much just a place holder until we work out what we need.  A full SED may be required,
+ * @note This is very much just a place holder until we work out what we need.  A full SED may be required,
  * in which case a constructor from an SED name might be appropriate, or a couple of colours, or ...
  */
 class Color {

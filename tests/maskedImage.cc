@@ -45,7 +45,6 @@ using namespace std;
 typedef float PixelT;
 typedef image::MaskedImage<PixelT> ImageT;
 
-/************************************************************************************************************/
 
 template <typename PixelT>
 void y_gradient(ImageT & src, ImageT & dst) {
@@ -85,7 +84,6 @@ void y_gradient(ImageT & src, ImageT & dst) {
     }
 }
 
-/************************************************************************************************************/
 
 #define PRINT_IMAGE 0
 #if PRINT_IMAGE
@@ -256,7 +254,6 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     BOOST_CHECK_EQUAL((*img.getVariance())(0,0), 666);
 }
 
-/************************************************************************************************************/
 
 BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     using image::pixel::makeSinglePixel;
@@ -303,7 +300,6 @@ BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Lss
         endl;
 }
 
-/************************************************************************************************************/
 //
 // Iterators
 //
@@ -404,7 +400,6 @@ BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     }
 }
 
-/************************************************************************************************************/
 //
 // Locators
 //

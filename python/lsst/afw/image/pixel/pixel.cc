@@ -39,7 +39,7 @@ namespace pixel {
 namespace {
 
 /**
-Declare a SinglePixel for a MaskedImage
+@internal Declare a SinglePixel for a MaskedImage
 
 (Note that SinglePixel for Image is just the pixel type)
 

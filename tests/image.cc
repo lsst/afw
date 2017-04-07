@@ -46,7 +46,6 @@ typedef unsigned short MaskPixelT;
 typedef image::Image<PixelT> ImageT;
 typedef image::Mask<MaskPixelT> MaskT;
 
-/************************************************************************************************************/
 
 template <typename PixelT>
 void y_gradient(ImageT & src, ImageT & dst) {
@@ -80,7 +79,6 @@ void y_gradient(ImageT & src, ImageT & dst) {
     }
 }
 
-/************************************************************************************************************/
 
 #define PRINT_IMAGE 0
 #if PRINT_IMAGE
@@ -111,7 +109,6 @@ ImageT make_image(int const width=5, int const height=6) {
     return img;
 }
 
-/************************************************************************************************************/
 
 BOOST_AUTO_TEST_CASE(getset0) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
@@ -234,7 +231,6 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     BOOST_CHECK_EQUAL(mask(0,0), 0x666);
 }
 
-/************************************************************************************************************/
 //
 // Iterators
 //
@@ -336,7 +332,6 @@ BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     }
 }
 
-/************************************************************************************************************/
 //
 // Locators
 //

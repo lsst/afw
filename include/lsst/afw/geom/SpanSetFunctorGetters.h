@@ -92,7 +92,7 @@ class IterGetter {
        Also note that because this is a generic iterator, the iterator
        must always provide the next desired value when it is incremented.
        For instance when iterating over a two dimensional object should
-       automaticall wrap to the next line when the ++ operator reaches
+       automatically wrap to the next line when the ++ operator reaches
        the end of the line. In this way all generic inputs must be treated
        as 1d arrays, of length at least the number of elements in the
        SpanSet which originates the applyFunctor call
@@ -278,13 +278,13 @@ namespace ndarray {
     namespace afwGeom = lsst::afw::geom;
     template <typename T, int inA, int inB>
 
-    /** @brief Marks a ndarray to be interpreted as a 1D vector when applying a functor from a SpanSet
+    /** Marks a ndarray to be interpreted as a 1D vector when applying a functor from a SpanSet
      *
-     * @param array - ndarray which will be used in functor calls
+     * @tparam T The datatype of a pixel in the ndarray
+     * @tparam inA The number of dimensions of the array
+     * @tparam inB Number of guaranteed row-major contiguous dimensions, starting from the end
      *
-     * @tparam T - The datatype of a pixel in the ndarray
-     * @tparam inA - The number of dimensions of the array
-     * @tparam inB - Number of guaranteed row-major contiguous dimensions, starting from the end
+     * @param array ndarray which will be used in functor calls
      */
     details::FlatNdGetter<T, inA, inB> ndFlat(ndarray::Array<T, inA, inB> const & array) {
         // Function to mark a ndarray to be treated as a flat vector by the applyFunctor method
@@ -293,12 +293,12 @@ namespace ndarray {
 
     /** @brief Marks a ndarray to be interpreted as an image when applying a functor from a SpanSet
      *
-     * @param array - ndarray which will be used in functor calls
-     * @param xy0 - Origin to be used to translate between pixel coordinates and array indices
-     *
      * @tparam T - The datatype of a pixel in the ndarray
      * @tparam inA - The number of dimensions of the array
      * @tparam inB - Number of guaranteed row-major contiguous dimensions, starting from the end
+     *
+     * @param array - ndarray which will be used in functor calls
+     * @param xy0 - Origin to be used to translate between pixel coordinates and array indices
      */
     template <typename T, int inA, int inB>
     details::ImageNdGetter<T, inA, inB> ndImage(ndarray::Array<T, inA, inB> const & array,

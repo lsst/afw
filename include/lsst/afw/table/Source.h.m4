@@ -26,13 +26,13 @@ changecom(`###')dnl
 
 define(`m4def', defn(`define'))dnl
 m4def(`DECLARE_SLOT_GETTERS',
-`/// @brief Get the value of the $1$2 slot measurement.
+`/// Get the value of the $1$2 slot measurement.
     $2SlotDefinition::MeasValue get$1$2() const;
 
-    /// @brief Get the uncertainty on the $1$2 slot measurement.
+    /// Get the uncertainty on the $1$2 slot measurement.
     $2SlotDefinition::ErrValue get$1$2Err() const;
 
-    /// @brief Return true if the measurement in the $1$2 slot failed.
+    /// Return true if the measurement in the $1$2 slot failed.
     bool get$1$2Flag() const;
 ')dnl
 m4def(`DEFINE_SLOT_GETTERS',
@@ -53,7 +53,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     $2SlotDefinition const & get$1$2Slot() const { return _slots.def$1$2; }
 
     /**
-     *  @brief Set the measurement used for the $1$2 slot.
+     *  Set the measurement used for the $1$2 slot.
      *
      *  The definitions for slots are actually managed by the Schema object, and its associated
      *  AliasMap, so this simply sets the "slot_$1$2" alias
@@ -64,21 +64,20 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the name of the field used for the $1$2 slot.
+     *  Return the name of the field used for the $1$2 slot.
      *
-     *  @throw NotFoundError if the slot is not defined.
+     *  @throws pex::exceptions::NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
-     *  @code
-     *  getSchema().getAliasMap()->get("slot_$1$2")
-     *  @endcode
+     *  
+     *      getSchema().getAliasMap()->get("slot_$1$2")
      */
     std::string get$1$2Definition() const {
         return getSchema().getAliasMap()->get(get$1$2Slot().getAlias());
     }
 
     /**
-     *  @brief Return true if the $1$2 slot corresponds to a valid field.
+     *  Return true if the $1$2 slot corresponds to a valid field.
      *
      *  @deprecated in favor of get$1$2Slot().isValid().
      */
@@ -87,7 +86,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the key used for the $1$2 slot measurement value.
+     *  Return the key used for the $1$2 slot measurement value.
      *
      *  @deprecated in favor of get$1$2Slot().getMeasKey().
      */
@@ -96,7 +95,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the key used for the $1$2 slot uncertainty.
+     *  Return the key used for the $1$2 slot uncertainty.
      *
      *  @deprecated in favor of get$1$2Slot().getErrKey().
      */
@@ -105,7 +104,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the key used for the $1$2 slot failure flag.
+     *  Return the key used for the $1$2 slot failure flag.
      *
      *  @deprecated in favor of get$1$2Slot().getFlagKey().
      */
@@ -115,11 +114,11 @@ m4def(`DECLARE_SLOT_DEFINERS',
 ')dnl
 define(`m4def', defn(`define'))dnl
 m4def(`DEFINE_FLUX_COLUMN_GETTERS',
-`/// @brief Get the value of the $1Flux slot measurement.
+`/// Get the value of the $1Flux slot measurement.
     ndarray::Array<double,1> get$1Flux() const {
         return this->operator[](this->getTable()->get$1FluxSlot().getMeasKey());
     }
-    /// @brief Get the uncertainty on the $1Flux slot measurement.
+    /// Get the uncertainty on the $1Flux slot measurement.
     ndarray::Array<double,1> get$1FluxErr() const {
         return this->operator[](this->getTable()->get$1FluxSlot().getErrKey());
     }
@@ -148,7 +147,7 @@ class Wcs;
 namespace table {
 
 /**
- *  @brief Bitflags to be passed to SourceCatalog::readFits and SourceCatalog::writeFits
+ *  Bitflags to be passed to SourceCatalog::readFits and SourceCatalog::writeFits
  *
  *  Note that these flags may also be passed when reading/writing SourceCatalogs via the Butler,
  *  by passing a "flags" key/value pair as part of the data ID.
@@ -166,7 +165,7 @@ class SourceTable;
 template <typename RecordT> class SourceColumnViewT;
 
 /**
- *  @brief Record class that contains measurements made on a single exposure.
+ *  Record class that contains measurements made on a single exposure.
  *
  *  Sources provide four additions to SimpleRecord / SimpleRecord:
  *   - Specific fields that must always be present, with specialized getters.
@@ -195,7 +194,7 @@ public:
     }
 
     //@{
-    /// @brief Convenience accessors for the keys in the minimal source schema.
+    /// Convenience accessors for the keys in the minimal source schema.
     RecordId getParent() const;
     void setParent(RecordId id);
     //@}
@@ -208,25 +207,25 @@ public:
     DECLARE_SLOT_GETTERS(`', `Centroid')
     DECLARE_SLOT_GETTERS(`', `Shape')
 
-    /// @brief Return the centroid slot x coordinate.
+    /// Return the centroid slot x coordinate.
     double getX() const;
 
-    /// @brief Return the centroid slot y coordinate.
+    /// Return the centroid slot y coordinate.
     double getY() const;
 
-    /// @brief Return the shape slot Ixx value.
+    /// Return the shape slot Ixx value.
     double getIxx() const;
 
-    /// @brief Return the shape slot Iyy value.
+    /// Return the shape slot Iyy value.
     double getIyy() const;
 
-    /// @brief Return the shape slot Ixy value.
+    /// Return the shape slot Ixy value.
     double getIxy() const;
 
-    /// @brief Update the coord field using the given Wcs and the field in the centroid slot.
+    /// Update the coord field using the given Wcs and the field in the centroid slot.
     void updateCoord(image::Wcs const & wcs);
 
-    /// @brief Update the coord field using the given Wcs and the image center from the given key.
+    /// Update the coord field using the given Wcs and the image center from the given key.
     void updateCoord(image::Wcs const & wcs, PointKey<double> const & key);
 
 protected:
@@ -243,7 +242,7 @@ private:
 };
 
 /**
- *  @brief Table class that contains measurements made on a single exposure.
+ *  Table class that contains measurements made on a single exposure.
  *
  *  @copydetails SourceRecord
  */
@@ -256,7 +255,7 @@ public:
     typedef SortedCatalogT<Record const> ConstCatalog;
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
@@ -268,7 +267,7 @@ public:
     static PTR(SourceTable) make(Schema const & schema, PTR(IdFactory) const & idFactory);
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *
@@ -277,7 +276,7 @@ public:
     static PTR(SourceTable) make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
 
     /**
-     *  @brief Return a minimal schema for Source tables and records.
+     *  Return a minimal schema for Source tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on sources will assume that at least the fields
@@ -293,7 +292,7 @@ public:
     }
 
     /**
-     *  @brief Return true if the given schema is a valid SourceTable schema.
+     *  Return true if the given schema is a valid SourceTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
@@ -302,7 +301,7 @@ public:
         return other.contains(getMinimalSchema().schema);
     }
 
-    /// @brief Key for the parent ID.
+    /// Key for the parent ID.
     static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
 
     /// @copydoc BaseTable::clone
@@ -396,7 +395,7 @@ public:
         return this->operator[](this->getTable()->getShapeKey().getIxy());
     }
 
-    /// @brief @copydoc BaseColumnView::make
+    /// @copydoc BaseColumnView::make
     template <typename InputIterator>
     static SourceColumnViewT make(PTR(Table) const & table, InputIterator first, InputIterator last) {
         return SourceColumnViewT(BaseColumnView::make(table, first, last));

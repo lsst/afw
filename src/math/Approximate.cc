@@ -22,9 +22,8 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @brief Approximate values for a set of x,y vector<>s
- * @ingroup afw
+/*
+ * Approximate values for a set of x,y vector<>s
  */
 #include <limits>
 #include <algorithm>
@@ -44,11 +43,10 @@ namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
 
-/// \brief ctor
-ApproximateControl::ApproximateControl(Style style, ///< Type of approximation
-                                       int orderX,  ///< Order of approximation to use in x-direction
-                                       int orderY,  ///< Order of approximation to use in y-direction
-                                       bool weighting ///< Use inverse variance weighting?
+ApproximateControl::ApproximateControl(Style style,
+                                       int orderX,
+                                       int orderY,
+                                       bool weighting
                                        ) :
     _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY), _weighting(weighting) {
     if (_orderX != _orderY) {
@@ -59,11 +57,10 @@ ApproximateControl::ApproximateControl(Style style, ///< Type of approximation
     }
 }
 
-/************************************************************************************************************/
 
 namespace {
 /**
- * \brief Specialisation of Approximate in Chebyshev polynomials
+ * @internal Specialisation of Approximate in Chebyshev polynomials
  */
 template<typename PixelT>
 class ApproximateChebyshev : public Approximate<PixelT> {
@@ -86,7 +83,6 @@ private:
             doGetMaskedImage(int orderX, int orderY) const;
 };
 
-/************************************************************************************************************/
 
 namespace {
     // N.b. physically inlining these routines into ApproximateChebyshev
@@ -102,15 +98,15 @@ namespace {
 }
 
 /**
- * \brief Fit a grid of points to a afw::math::Chebyshev1Function2D
+ * @internal Fit a grid of points to a afw::math::Chebyshev1Function2D
  */
 template<typename PixelT>
 ApproximateChebyshev<PixelT>::ApproximateChebyshev(
-        std::vector<double> const &xVec,      ///< the x-values of points
-        std::vector<double> const &yVec,      ///< the y-values of points
-        image::MaskedImage<PixelT> const& im, ///< The values at (xVec, yVec)
-        geom::Box2I const& bbox,              ///< Range where approximation should be valid
-        ApproximateControl const& ctrl        ///< desired approximation algorithm
+        std::vector<double> const &xVec,      ///< @internal the x-values of points
+        std::vector<double> const &yVec,      ///< @internal the y-values of points
+        image::MaskedImage<PixelT> const& im, ///< @internal The values at (xVec, yVec)
+        geom::Box2I const& bbox,              ///< @internal Range where approximation should be valid
+        ApproximateControl const& ctrl        ///< @internal desired approximation algorithm
                                                   )
     : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
       _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox)))
@@ -208,22 +204,25 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
     _poly.setParameters(cvec);
 }
 
-/// \brief dtor
+/// @internal dtor
 template<typename PixelT>
 ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {
 }
 
 /**
- * \brief worker function for getImage
+ * @internal worker function for getImage
  *
  * If orderX/orderY are specified the expansion will be truncated to that order
  *
- * \note As in the ApproximateControl ctor, the x- and y-orders must be equal
+ * @param orderX Order of approximation to use in x-direction
+ * @param orderY Order of approximation to use in y-direction
+ *
+ * @note As in the ApproximateControl ctor, the x- and y-orders must be equal
  */
 template<typename PixelT>
 PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximation to use in x-direction
-                                         int orderY   ///< Order of approximation to use in y-direction
+ApproximateChebyshev<PixelT>::doGetImage(int orderX,
+                                         int orderY
                                         ) const
 {
     if (orderX < 0) orderX = Approximate<PixelT>::_ctrl.getOrderX();
@@ -251,18 +250,20 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximatio
     return im;
 }
 /**
- * \brief Return a MaskedImage
- *
+ * @internal Return a MaskedImage
  *
  * If orderX/orderY are specified the expansion will be truncated to that order
  *
- * \note As in the ApproximateControl ctor, the x- and y-orders must be equal
+ * @param orderX Order of approximation to use in x-direction
+ * @param orderY Order of approximation to use in y-direction
+ *
+ * @note As in the ApproximateControl ctor, the x- and y-orders must be equal
  */
 template<typename PixelT>
 PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
 ApproximateChebyshev<PixelT>::doGetMaskedImage(
-        int orderX,                     ///< Order of approximation to use in x-direction
-        int orderY                      ///< Order of approximation to use in y-direction
+        int orderX,
+        int orderY
                                               ) const
 {
     typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
@@ -286,17 +287,13 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(
 }
 }
 
-/************************************************************************************************************/
-/**
- * \brief A factory function to make Approximate objects
- */
 template<typename PixelT>
 PTR(Approximate<PixelT>)
-makeApproximate(std::vector<double> const &x,            ///< the x-values of points
-                std::vector<double> const &y,            ///< the y-values of points
-                image::MaskedImage<PixelT> const& im,    ///< The values at (x, y)
-                geom::Box2I const& bbox,                 ///< Range where approximation should be valid
-                ApproximateControl const& ctrl           ///< desired approximation algorithm
+makeApproximate(std::vector<double> const &x,
+                std::vector<double> const &y,
+                image::MaskedImage<PixelT> const& im,
+                geom::Box2I const& bbox,
+                ApproximateControl const& ctrl
                )
 {
     switch (ctrl.getStyle()) {
@@ -307,7 +304,7 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
                           str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
     }
 }
-/// \cond
+/// @cond
 /*
  * Explicit instantiations
  *
@@ -323,6 +320,6 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
 INSTANTIATE(float);
 //INSTANTIATE(int);
 
-/// \endcond
+/// @endcond
 
 }}} // lsst::afw::math

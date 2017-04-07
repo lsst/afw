@@ -50,7 +50,7 @@ using PyDecoratedImage = py::class_<DecoratedImage<PixelT>, std::shared_ptr<Deco
                                     daf::base::Persistable>;
 
 /**
-Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
+@internal Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
 
 The mask and variance must be of the standard types.
 

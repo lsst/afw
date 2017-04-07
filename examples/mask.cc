@@ -31,7 +31,6 @@
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
-/************************************************************************************************************/
 
 int main() {
     afwImage::Mask<afwImage::MaskPixel> img(afwGeom::Extent2I(10, 6));

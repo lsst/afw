@@ -23,10 +23,8 @@
  */
 
 
-/**
- * @file
- * @brief Fill Images with Random numbers
- * @ingroup afw
+/*
+ * Fill Images with Random numbers
  */
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
@@ -104,88 +102,65 @@ namespace {
     };
 }
 
-/************************************************************************************************************/
-/**
- * Set image to random numbers uniformly distributed in the range [0, 1)
- */
 template<typename ImageT>
-void randomUniformImage(ImageT *image,  ///< The image to set
-                        Random &rand    ///< definition of random number algorithm, seed, etc.
+void randomUniformImage(ImageT *image,
+                        Random &rand
                        ) {
     lsst::afw::image::for_each_pixel(*image, do_uniform<typename ImageT::Pixel>(rand));
 }
 
-/**
- * Set image to random numbers uniformly distributed in the range (0, 1)
- */
 template<typename ImageT>
-void randomUniformPosImage(ImageT *image,  ///< The image to set
-                           Random &rand    ///< definition of random number algorithm, seed, etc.
+void randomUniformPosImage(ImageT *image,
+                           Random &rand
                           ) {
     lsst::afw::image::for_each_pixel(*image, do_uniformPos<typename ImageT::Pixel>(rand));
 }
 
-/**
- * Set image to random integers uniformly distributed in the range 0 ... n - 1
- */
 template<typename ImageT>
-void randomUniformIntImage(ImageT *image,  ///< The image to set
-                           Random &rand,   ///< definition of random number algorithm, seed, etc.
-                           unsigned long n ///< (exclusive) upper limit for random variates
+void randomUniformIntImage(ImageT *image,
+                           Random &rand,
+                           unsigned long n
                           ) {
     lsst::afw::image::for_each_pixel(*image, do_uniformInt<typename ImageT::Pixel>(rand, n));
 }
 
-/**
- * Set image to random numbers uniformly distributed in the range [a, b)
- */
 template<typename ImageT>
-void randomFlatImage(ImageT *image,     ///< The image to set
-                     Random &rand,      ///< definition of random number algorithm, seed, etc.
-                     double const a,    ///< (inclusive) lower limit for random variates
-                     double const b     ///< (exclusive) upper limit for random variates
+void randomFlatImage(ImageT *image,
+                     Random &rand,
+                     double const a,
+                     double const b
                     ) {
     lsst::afw::image::for_each_pixel(*image, do_flat<typename ImageT::Pixel>(rand, a, b));
 }
 
-/**
- * Set image to random numbers with a gaussian N(0, 1) distribution
- */
 template<typename ImageT>
-void randomGaussianImage(ImageT *image,  ///< The image to set
-                         Random &rand    ///< definition of random number algorithm, seed, etc.
+void randomGaussianImage(ImageT *image,
+                         Random &rand
                         ) {
     lsst::afw::image::for_each_pixel(*image, do_gaussian<typename ImageT::Pixel>(rand));
 }
 
-/**
- * Set image to random numbers with a chi^2_{nu} distribution
- */
 template<typename ImageT>
-void randomChisqImage(ImageT *image,    ///< The image to set
-                      Random &rand,     ///< definition of random number algorithm, seed, etc.
-                      double const nu   ///< number of degrees of freedom
+void randomChisqImage(ImageT *image,
+                      Random &rand,
+                      double const nu
                      ) {
     lsst::afw::image::for_each_pixel(*image, do_chisq<typename ImageT::Pixel>(rand, nu));
 }
 
 
-/**
- * Set image to random numbers with a Poisson distribution with mean mu (n.b. not per-pixel)
- */
 template<typename ImageT>
-void randomPoissonImage(ImageT *image,    ///< The image to set
-                      Random &rand,     ///< definition of random number algorithm, seed, etc.
-                      double const mu   ///< mean of distribution
+void randomPoissonImage(ImageT *image,
+                      Random &rand,
+                      double const mu
                      ) {
     lsst::afw::image::for_each_pixel(*image, do_poisson<typename ImageT::Pixel>(rand, mu));
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 #define INSTANTIATE(T) \
     template void randomUniformImage(lsst::afw::image::Image<T> *image, Random &rand); \
     template void randomUniformPosImage(lsst::afw::image::Image<T> *image, Random &rand); \
@@ -198,6 +173,6 @@ void randomPoissonImage(ImageT *image,    ///< The image to set
 
 INSTANTIATE(double)
 INSTANTIATE(float)
-/// \endcond
+/// @endcond
 
 }}}

@@ -22,10 +22,6 @@
 
 """
 Test lsst.afw.image.Exposure
-
-Author: Nicole M. Silvestri, University of Washington
-Contact: nms@astro.washington.edu
-Created on: Mon Sep 10, 2007
 """
 
 from __future__ import absolute_import, division, print_function

@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Convolution_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Convolution_h_INCLUDED
 
-/**
- *  @file
- *  @brief Definitions for BaseEllipse::Convolution and BaseCore::Convolution.
+/*
+ *  Definitions for BaseEllipse::Convolution and BaseCore::Convolution.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include <boost/tuple/tuple.hpp>
@@ -39,7 +38,7 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief A temporary-only expression object for ellipse core convolution.
+ *  A temporary-only expression object for ellipse core convolution.
  */
 class BaseCore::Convolution {
 public:
@@ -47,17 +46,17 @@ public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix3d DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     Convolution(BaseCore & self, BaseCore const & other) :
         self(self), other(other) {}
 
-    /// @brief Return a new convolved ellipse core.
+    /// Return a new convolved ellipse core.
     BaseCore::Ptr copy() const;
 
-    /// @brief Convolve the ellipse core in-place.
+    /// Convolve the ellipse core in-place.
     void inPlace();
 
-    /// @brief Return the derivative of convolved core with respect to self.
+    /// Return the derivative of convolved core with respect to self.
     DerivativeMatrix d() const;
 
     void apply(BaseCore & result) const;
@@ -68,7 +67,7 @@ public:
 };
 
 /**
- *  @brief A temporary-only expression object for ellipse convolution.
+ *  A temporary-only expression object for ellipse convolution.
  */
 class Ellipse::Convolution {
 public:
@@ -76,17 +75,17 @@ public:
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix<double,5,5> DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     Convolution(Ellipse & self, Ellipse const & other) :
         self(self), other(other) {}
 
-    /// @brief Return a new convolved ellipse.
+    /// Return a new convolved ellipse.
     Ellipse::Ptr copy() const;
 
-    /// @brief Convolve the ellipse in-place.
+    /// Convolve the ellipse in-place.
     void inPlace();
 
-    /// @brief Return the derivative of convolved ellipse with respect to self.
+    /// Return the derivative of convolved ellipse with respect to self.
     DerivativeMatrix d() const;
 
     Ellipse & self;

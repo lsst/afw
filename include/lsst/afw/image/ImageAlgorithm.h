@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Support for functors over Image's pixels
+/*
+ * Support for functors over Image's pixels
  */
 #ifndef LSST_AFW_IMAGE_IMAGE_ALGORITHM_H
 #define LSST_AFW_IMAGE_IMAGE_ALGORITHM_H
@@ -94,7 +93,6 @@ namespace lsst { namespace afw { namespace image {
         virtual LhsT operator()(int x, int y, LhsT lhs, RhsT rhs) const = 0;
     };
 
-    /*******************************************************************************************************/
     /**
      * Set each pixel in an Image<LhsT> to func()
      */
@@ -151,7 +149,7 @@ namespace lsst { namespace afw { namespace image {
      */
     template<typename LhsT, typename RhsT>
     void for_each_pixel(Image<LhsT> &lhs,                ///< Image to set
-                        Image<RhsT> const& rhs,          ///< other Image to pass to @c func
+                        Image<RhsT> const& rhs,          ///< other Image to pass to `func`
                         pixelOp1<RhsT> const& func       ///< functor to call
                        )
     {
@@ -176,7 +174,7 @@ namespace lsst { namespace afw { namespace image {
      */
     template<typename LhsT, typename RhsT>
     void for_each_pixel(Image<LhsT> &lhs,                ///< Image to set
-                        Image<RhsT> const& rhs,          ///< other Image to pass to @c func
+                        Image<RhsT> const& rhs,          ///< other Image to pass to `func`
                         pixelOp2<LhsT, RhsT> const& func ///< functor to call
                        )
     {
@@ -202,7 +200,7 @@ namespace lsst { namespace afw { namespace image {
      */
    template<typename LhsT, typename RhsT>
     void for_each_pixel(Image<LhsT> &lhs,                ///< Image to set
-                        Image<RhsT> const& rhs,          ///< other Image to pass to @c func
+                        Image<RhsT> const& rhs,          ///< other Image to pass to `func`
                         pixelOp2XY<LhsT, RhsT> const& func ///< functor to call
                        )
     {

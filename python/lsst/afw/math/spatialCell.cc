@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -158,13 +158,13 @@ void wrapTestClasses(py::module &mod) {
      */
     class TestCandidate : public SpatialCellCandidate {
        public:
-        TestCandidate(float const xCenter,  ///< The object's column-centre
-                      float const yCenter,  ///< The object's row-centre
-                      float const flux      ///< The object's flux
+        TestCandidate(float const xCenter,  ///< @internal The object's column-centre
+                      float const yCenter,  ///< @internal The object's row-centre
+                      float const flux      ///< @internal The object's flux
                       )
             : SpatialCellCandidate(xCenter, yCenter), _flux(flux) {}
 
-        /// Return candidates rating
+        /// @internal Return candidates rating
         virtual double getCandidateRating() const { return _flux; }
         virtual void setCandidateRating(double flux) { _flux = flux; }
 
@@ -172,7 +172,7 @@ void wrapTestClasses(py::module &mod) {
         double _flux;
     };
 
-    /// A class to pass around to all our TestCandidates
+    /// @internal A class to pass around to all our TestCandidates
     class TestCandidateVisitor : public CandidateVisitor {
        public:
         TestCandidateVisitor() : CandidateVisitor(), _n(0) {}
@@ -193,16 +193,16 @@ void wrapTestClasses(py::module &mod) {
        public:
         typedef image::MaskedImage<float> MaskedImageT;
 
-        TestImageCandidate(float const xCenter,  ///< The object's column-centre
-                           float const yCenter,  ///< The object's row-centre
-                           float const flux      ///< The object's flux
+        TestImageCandidate(float const xCenter,  ///< @internal The object's column-centre
+                           float const yCenter,  ///< @internal The object's row-centre
+                           float const flux      ///< @internal The object's flux
                            )
             : SpatialCellImageCandidate(xCenter, yCenter), _flux(flux) {}
 
-        /// Return candidates rating
+        /// @internal Return candidates rating
         double getCandidateRating() const { return _flux; }
 
-        /// Return the %image
+        /// @internal Return the %image
         std::shared_ptr<MaskedImageT const> getMaskedImage() const {
             if (!_image) {
                 _image = std::make_shared<MaskedImageT>(geom::ExtentI(getWidth(), getHeight()));

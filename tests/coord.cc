@@ -22,11 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file sex2dec.cc
- * @author Steve Bickerton
- * @brief An example executible which calls the example sex2dec code
- *
+/*
+ * An example executible which calls the example sex2dec code
  */
 #include <iostream>
 #include <string>

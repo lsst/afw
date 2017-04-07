@@ -22,12 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Class to ensure constraints for spatial modeling
- *
- * @ingroup afw
+/*
+ * Class to ensure constraints for spatial modeling
  */
 
 #ifndef LSST_AFW_MATH_SPATIALCELL_H
@@ -54,7 +50,6 @@ namespace image {
 
 namespace math {
 
-    /********************************************************************************************************/
     /// A class to pass around to all our Candidates
     class SpatialCellCandidate;
 
@@ -67,7 +62,6 @@ namespace math {
         virtual void processCandidate(SpatialCellCandidate *) {}
     };
 
-    /************************************************************************************************************/
     /**
      * Base class for candidate objects in a SpatialCell
      */
@@ -109,6 +103,7 @@ namespace math {
         int getId() const { return _id; }
         /// Return the candidate's status
         Status getStatus() const { return _status; }
+        /// Set the candidate's status
         void setStatus(Status status);
         /// Is this candidate unacceptable?
         virtual bool isBad() const {
@@ -120,11 +115,10 @@ namespace math {
         float const _xCenter;           // The object's column-centre
         float const _yCenter;           // The object's row-centre
 
-        static int _CandidateId;        // Unique identifier for candidates; useful for preserving current candidate
-                                        // following insertion
+        /// Unique identifier for candidates; useful for preserving current candidate following insertion
+        static int _CandidateId;
     };
 
-    /************************************************************************************************************/
     /**
      * Base class for candidate objects in a SpatialCell that are able to return an Image of some sort
      * (e.g. a PSF or a DIA kernel)
@@ -166,9 +160,8 @@ namespace math {
     };
 
 
-    /************************************************************************************************************/
     /**
-     * @brief An iterator that only returns usable members of the SpatialCell
+     * An iterator that only returns usable members of the SpatialCell
      */
     class SpatialCellCandidateIterator {
         friend class SpatialCell;
@@ -176,10 +169,22 @@ namespace math {
 
     public:
         // ctors are protected
+        /**
+         * Advance the iterator, maybe skipping over candidates labelled BAD
+         */
         void operator++();
+        /**
+         * Return the number of candidate between this and rhs
+         */
         size_t operator-(SpatialCellCandidateIterator const& rhs) const;
 
+        /**
+         * Dereference the iterator to return the Candidate (if there is one)
+         *
+         * @throws lsst::pex::exceptions::NotFoundError if no candidate is available
+         */
         CONST_PTR(SpatialCellCandidate) operator*() const;
+        /// Return the CellCandidate::Ptr
         PTR(SpatialCellCandidate)       operator*();
 
         /// Are two SpatialCellCandidateIterator%s equal?
@@ -192,7 +197,19 @@ namespace math {
         }
 
     protected:
+        /** ctor; designed to be used to pass begin to SpatialCellCandidateIterator
+         *
+         * @param iterator Where this iterator should start
+         * @param end One-past-the-end of iterator's range
+         * @param ignoreBad Should we pass over bad Candidates?
+         */
         SpatialCellCandidateIterator(CandidateList::iterator iterator, CandidateList::iterator end, bool ignoreBad);
+        /** ctor; designed to be used to pass end to SpatialCellCandidateIterator
+         *
+         * @param iterator start of of iterator's range; not used
+         * @param end Where this iterator should start
+         * @param ignoreBad Should we pass over bad Candidates?
+         */
         SpatialCellCandidateIterator(CandidateList::iterator iterator, CandidateList::iterator end, bool ignoreBad, bool);
 
     private:
@@ -201,9 +218,8 @@ namespace math {
         bool _ignoreBad;
     };
 
-    /************************************************************************************************************/
     /**
-     * @brief Class to ensure constraints for spatial modeling
+     * Class to ensure constraints for spatial modeling
      *
      * A given %image is divided up into cells, with each cell represented by an instance of this class.
      * Each cell itself contains a list of instances of classes derived from SpatialCellCandidate.  One class
@@ -211,7 +227,7 @@ namespace math {
      * instance in the list will be fit for.  If all instances in a list are rejected from the spatial model,
      * the best one will be used.
      *
-     * \sa \link SpatialCellSetExample\endlink
+     * @see @link SpatialCellSetExample@endlink
      */
     class SpatialCell {
     public:
@@ -221,6 +237,10 @@ namespace math {
         typedef SpatialCellCandidateIterator iterator;
         /**
          * Constructor
+         *
+         * @param label string representing "name" of cell
+         * @param bbox Bounding box of cell in overall image
+         * @param candidateList list of candidates to represent this cell
          */
         SpatialCell(std::string const& label,
                     lsst::afw::geom::Box2I const& bbox=lsst::afw::geom::Box2I(),
@@ -231,9 +251,18 @@ namespace math {
          */
         virtual ~SpatialCell() {;};
 
+        /**
+         * Determine if cell has no usable candidates
+         */
         bool empty() const;
+        /**
+         * Return number of usable candidates in Cell
+         */
         size_t size() const;
 
+        /**
+         * Rearrange the candidates to reflect their current ratings
+         */
         void sortCandidates();
         /**
          * Return an iterator to the beginning of the Candidates
@@ -255,14 +284,17 @@ namespace math {
                                         ) {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad, true);
         }
-        //
+        /**
+         * Add a candidate to the list, preserving ranking
+         */
         void insertCandidate(PTR(SpatialCellCandidate) candidate);
 
-        /// Remove a candidate from the list
-        ///
-        /// This is not a particularly efficient operation, since we're
-        /// using a std::vector, but should not hurt too much if the number
-        /// of candidates in a cell is small.
+        /** Remove a candidate from the list
+         *
+         * This is not a particularly efficient operation, since we're
+         * using a std::vector, but should not hurt too much if the number
+         * of candidates in a cell is small.
+         */
         void removeCandidate(PTR(SpatialCellCandidate) candidate);
 
         /// Set whether we should omit BAD candidates from candidate list when traversing
@@ -270,6 +302,14 @@ namespace math {
         /// Get whether we are omitting BAD candidates from candidate list when traversing
         bool getIgnoreBad() const { return _ignoreBad; }
 
+        /**
+         * Return the SpatialCellCandidate with the specified id
+         *
+         * @param id The desired ID
+         * @param noThrow Return NULL in case of error
+         *
+         * @throws lsst::pex::exceptions::NotFoundError if no candidate matches the id
+         */
         PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
         /**
          * Get SpatialCell's label
@@ -282,12 +322,58 @@ namespace math {
         /*
          * Visit our candidates
          */
+        /**
+         * Call the visitor's processCandidate method for each Candidate in the SpatialCell
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param nMaxPerCell Visit no more than this many Candidates (<= 0: all)
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         * @param reset Reset visitor before passing it around
+         *
+         * @note This is obviously similar to the Design Patterns (Go4) Visitor pattern, but we've simplified the
+         * double dispatch (i.e. we don't call a virtual method on SpatialCellCandidate that in turn calls
+         * processCandidate(*this), but can be re-defined)
+         */
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false, bool const reset=true);
+        /**
+         * Call the visitor's processCandidate method for each Candidate in the SpatialCell (const version)
+         *
+         * This is the const version of SpatialCellSet::visitCandidates
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param nMaxPerCell Visit no more than this many Candidates (-ve: all)
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         * @param reset Reset visitor before passing it around
+         *
+         * @todo This is currently implemented via a const_cast (arghhh). The problem is that
+         * SpatialCell::begin() const isn't yet implemented
+         */
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false, bool const reset=true) const;
+        /**
+         * Call the visitor's processCandidate method for every Candidate in the SpatialCell
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param ignoreExceptions Ignore any exceptions thrown by
+         * @param reset Reset visitor before passing it around
+         *
+         * @see visitCandidates
+         */
         void visitAllCandidates(CandidateVisitor * visitor,
                                 bool const ignoreExceptions=false, bool const reset=true);
+        /**
+         * Call the visitor's processCandidate method for each Candidate in the SpatialCell (const version)
+         *
+         * This is the const version of SpatialCellSet::visitAllCandidates
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         * @param reset Reset visitor before passing it around
+         *
+         * @todo This is currently implemented via a const_cast (arghhh). The problem is that
+         * SpatialCell::begin() const isn't yet implemented
+         */
         void visitAllCandidates(CandidateVisitor * visitor,
                                 bool const ignoreExceptions=false, bool const reset=true) const;
 
@@ -299,7 +385,7 @@ namespace math {
     };
 
     /**
-     * @brief A collection of SpatialCells covering an entire %image
+     * A collection of SpatialCells covering an entire %image
      */
     class SpatialCellSet {
     public:
@@ -308,6 +394,15 @@ namespace math {
 
         typedef std::vector<PTR(SpatialCell)> CellList;
 
+        /**
+         * Constructor
+         *
+         * @param region Bounding box for %image
+         * @param xSize size of cells in the column direction
+         * @param ySize size of cells in the row direction (0: == xSize)
+         *
+         * @throws lsst::pex::exceptions::LengthError if nx or ny is non-positive
+         */
         SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize=0);
 
         /**
@@ -325,19 +420,69 @@ namespace math {
          */
         lsst::afw::geom::Box2I getBBox() const { return _region; };
 
+        /**
+         * Insert a candidate into the correct cell
+         */
         void insertCandidate(PTR(SpatialCellCandidate) candidate);
 
+        /// Rearrange the Candidates in all SpatialCells to reflect their current ratings
         void sortCandidates();
 
+        /**
+         * Call the visitor's processCandidate method for each Candidate in the SpatialCellSet
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param nMaxPerCell Visit no more than this many Candidates (<= 0: all)
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         *
+         * @note This is obviously similar to the Design Patterns (Go4) Visitor pattern, but we've simplified the
+         * double dispatch (i.e. we don't call a virtual method on SpatialCellCandidate that in turn calls
+         * processCandidate(*this), but can be re-defined)
+         */
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false);
+        /**
+         * Call the visitor's processCandidate method for each Candidate in the SpatialCellSet (const version)
+         *
+         * This is the const version of SpatialCellSet::visitCandidates
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param nMaxPerCell Visit no more than this many Candidates (-ve: all)
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         */
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false) const;
+        /**
+         * Call the visitor's processCandidate method for every Candidate in the SpatialCellSet
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         *
+         * @see visitCandidates
+         */
         void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false);
+        /**
+         * Call the visitor's processCandidate method for every Candidate in the SpatialCellSet (const version)
+         *
+         * This is the const version of SpatialCellSet::visitAllCandidates
+         *
+         * @param visitor Pass this object to every Candidate
+         * @param ignoreExceptions Ignore any exceptions thrown by the processing
+         */
         void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false) const;
 
+        /**
+         * Return the SpatialCellCandidate with the specified id
+         *
+         * @param id The desired ID
+         * @param noThrow Return NULL in case of error
+         *
+         * @throws lsst::pex::exceptions::NotFoundError if no candidate matches the id (unless noThrow
+         * is true, in which case a Ptr(NULL) is returned
+         */
         PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
 
+        /// Set whether we should omit BAD candidates from candidate list when traversing
         void setIgnoreBad(bool ignoreBad);
 
     private:

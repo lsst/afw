@@ -20,10 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- *
- * \brief MaskedImage iterator tutorial.
+/*
+ * MaskedImage iterator tutorial.
  */
 
 // Include the necessary headers;

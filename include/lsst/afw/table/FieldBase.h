@@ -24,7 +24,7 @@ namespace detail {
 class TableImpl;
 
 /**
- *  @brief Defines the ordering of packed covariance matrices.
+ *  Defines the ordering of packed covariance matrices.
  *
  *  This storage is equivalent to LAPACK 'UPLO=U'.
  */
@@ -40,22 +40,22 @@ inline int computeCovariancePackedSize(int size) {
 } // namespace detail
 
 /**
- *  @brief Field base class default implementation (used for numeric scalars and Angle).
+ *  Field base class default implementation (used for numeric scalars and Angle).
  *
  *  FieldBase is where all the implementation
  */
 template <typename T>
 struct FieldBase {
 
-    typedef T Value;        ///< @brief the type returned by BaseRecord::get
-    typedef T & Reference;  ///< @brief the type returned by BaseRecord::operator[] (non-const)
-    typedef T const & ConstReference;  ///< @brief the type returned by BaseRecord::operator[] (const)
-    typedef T Element;      ///< @brief the type of subfields (the same as the type itself for scalars)
+    typedef T Value;        ///< the type returned by BaseRecord::get
+    typedef T & Reference;  ///< the type returned by BaseRecord::operator[] (non-const)
+    typedef T const & ConstReference;  ///< the type returned by BaseRecord::operator[] (const)
+    typedef T Element;      ///< the type of subfields (the same as the type itself for scalars)
 
-    /// @brief Return the number of subfield elements (always one for scalars).
+    /// Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }
 
-    /// @brief Return a string description of the field type.
+    /// Return a string description of the field type.
     static std::string getTypeString();
 
     // Only the first of these constructors is valid for this specializations, but
@@ -92,7 +92,7 @@ protected:
 };
 
 /**
- *  @brief Field base class specialization for arrays.
+ *  Field base class specialization for arrays.
  *
  *  The Array tag is used for both fixed-length (same size in every record, accessible via ColumnView)
  *  and variable-length arrays; variable-length arrays are initialized with a negative size.  Ideally,
@@ -103,27 +103,27 @@ protected:
 template <typename U>
 struct FieldBase< Array<U> > {
 
-    typedef ndarray::Array<U const,1,1> Value; ///< @brief the type returned by BaseRecord::get
+    typedef ndarray::Array<U const,1,1> Value; ///< the type returned by BaseRecord::get
 
-    /// @brief the type returned by BaseRecord::operator[]
+    /// the type returned by BaseRecord::operator[]
     typedef ndarray::ArrayRef<U,1,1> Reference;
 
-    /// @brief the type returned by BaseRecord::operator[] (const)
+    /// the type returned by BaseRecord::operator[] (const)
     typedef ndarray::ArrayRef<U const,1,1> ConstReference;
 
-    typedef U Element;  ///< @brief the type of subfields and array elements
+    typedef U Element;  ///< the type of subfields and array elements
 
     /**
-     *  @brief Construct a FieldBase with the given size.
+     *  Construct a FieldBase with the given size.
      *
      *  A size == 0 indicates a variable-length array.  Negative sizes are not permitted.
      *
      *  This constructor is implicit with a default so it can be used in the Field
      *  constructor (as if it were an int argument) without specializing Field.  In other words,
      *  it allows one to construct a 25-element array field like this:
-     *  @code
-     *  Field< Array<float> >("name", "documentation", 25);
-     *  @endcode
+     *
+     *      Field< Array<float> >("name", "documentation", 25);
+     *
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
     FieldBase(int size=0) : _size(size) {
@@ -133,16 +133,16 @@ struct FieldBase< Array<U> > {
         );
     }
 
-    /// @brief Return a string description of the field type.
+    /// Return a string description of the field type.
     static std::string getTypeString();
 
-    /// @brief Return the number of subfield elements (equal to the size of the array).
+    /// Return the number of subfield elements (equal to the size of the array).
     int getElementCount() const { return _size; }
 
-    /// @brief Return the size of the array (equal to the number of subfield elements).
+    /// Return the size of the array (equal to the number of subfield elements).
     int getSize() const { return _size; }
 
-    /// @brief Return true if the field is variable-length (each record can have a different size array).
+    /// Return true if the field is variable-length (each record can have a different size array).
     bool isVariableLength() const { return _size == 0; }
 
 protected:
@@ -222,35 +222,35 @@ private:
 };
 
 /**
- *  @brief Field base class specialization for strings.
+ *  Field base class specialization for strings.
  */
 template <>
 struct FieldBase< std::string > {
 
-    typedef std::string Value; ///< @brief the type returned by BaseRecord::get
+    typedef std::string Value; ///< the type returned by BaseRecord::get
 
-    /// @brief the type returned by BaseRecord::operator[]
+    /// the type returned by BaseRecord::operator[]
     typedef char * Reference;
 
-    /// @brief the type returned by BaseRecord::operator[] (const)
+    /// the type returned by BaseRecord::operator[] (const)
     typedef char const * ConstReference;
 
-    typedef char Element;  ///< @brief the type of subfields and array elements
+    typedef char Element;  ///< the type of subfields and array elements
 
     /**
-     *  @brief Construct a FieldBase with the given size.
+     *  Construct a FieldBase with the given size.
      *
      *  This constructor is implicit and has an invalid default so it can be used in the Field
      *  constructor (as if it were an int argument) without specializing Field.  In other words,
      *  it allows one to construct a 25-character string field like this:
-     *  @code
-     *  Field< std::string >("name", "documentation", 25);
-     *  @endcode
+     *
+     *      Field< std::string >("name", "documentation", 25);
+     *
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
     FieldBase(int size=-1);
 
-    /// @brief Return a string description of the field type.
+    /// Return a string description of the field type.
     static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (equal to the size of the string,

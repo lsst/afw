@@ -57,7 +57,6 @@ namespace cameraGeom {
 
     }
 
-    /// Return the number of quarter turns (rounded to the closest quarter)
     int Orientation::getNQuarter() const {
         float yawDeg = _yaw.asDegrees();
         while (yawDeg < 0.) {

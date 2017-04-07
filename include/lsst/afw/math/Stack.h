@@ -24,10 +24,8 @@
 
 #if !defined(LSST_AFW_MATH_STACK_H)
 #define LSST_AFW_MATH_STACK_H
-/**
- * @file Stack.h
- * @brief Functions to stack images
- * @ingroup stack
+/*
+ * Functions to stack images
  */
 #include <vector>
 #include "lsst/afw/image/Image.h"
@@ -37,14 +35,14 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-/********************************************************************
+/* ****************************************************************** *
  *
  * z stacks
  *
- *********************************************************************/
+ * ******************************************************************* */
 
 /**
- * @brief A function to compute some statistics of a stack of Images
+ * A function to compute some statistics of a stack of Images
  */
 template<typename PixelT>
 typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
@@ -68,7 +66,12 @@ void statisticsStack(
     );
 
 /**
- * @brief A function to compute some statistics of a stack of MaskedImages
+ * A function to compute some statistics of a stack of Masked Images
+ *
+ * If none of the input images are valid for some pixel,
+ * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ *
+ * All the work is done in the function computeMaskedImageStack.
  */
 template<typename PixelT>
 typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
@@ -93,7 +96,7 @@ void statisticsStack(
 
 
 /**
- * @brief A function to compute some statistics of a stack of std::vectors
+ * A function to compute some statistics of a stack of std::vectors
  */
 template<typename PixelT>
 std::shared_ptr<std::vector<PixelT> > statisticsStack(
@@ -105,14 +108,14 @@ std::shared_ptr<std::vector<PixelT> > statisticsStack(
 
 
 
-/********************************************************************
+/* ****************************************************************** *
  *
  * x,y stacks
  *
- *********************************************************************/
+ * ******************************************************************* */
 
 /**
- * @brief A function to compute statistics on the rows or columns of an image
+ * A function to compute statistics on the rows or columns of an image
  */
 template<typename PixelT>
 typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
@@ -122,7 +125,7 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         StatisticsControl const& sctrl=StatisticsControl()
                                                                    );
 /**
- * @brief A function to compute statistics on the rows or columns of an image
+ * A function to compute statistics on the rows or columns of an image
  */
 template<typename PixelT>
 typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(

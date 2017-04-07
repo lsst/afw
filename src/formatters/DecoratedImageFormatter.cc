@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of DecoratedImageFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of DecoratedImageFormatter class
  */
 
 #ifndef __GNUC__
@@ -147,7 +139,7 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         typedef DecoratedImage<ImagePixelT> DecoratedImage;
 
         ip->writeFits(fits->getPath());
-        // \todo Do something with these fields?
+        // @todo Do something with these fields?
         // int _X0;
         // int _Y0;
         LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
@@ -184,7 +176,7 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu());
-        // \todo Do something with these fields?
+        // @todo Do something with these fields?
         // int _X0;
         // int _Y0;
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");

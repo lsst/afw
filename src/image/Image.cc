@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Implementation for ImageBase and Image
+/*
+ * Implementation for ImageBase and Image
  */
 #include <cstdint>
 #include <iostream>
@@ -47,7 +46,6 @@
 namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
 
-/************************************************************************************************************/
 template <typename PixelT>
 typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateView(
     geom::Extent2I const & dimensions,
@@ -97,12 +95,6 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
     );
 }
 
-/**
- * Allocator Constructor
- *
- * allocate a new image with the specified dimensions.
- * Sets origin at (0,0)
- */
 template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     geom::Extent2I const & dimensions
@@ -111,11 +103,6 @@ image::ImageBase<PixelT>::ImageBase(
     _gilView(_allocateView(dimensions, _manager))
 {}
 
-/**
- * Allocator Constructor
- *
- * allocate a new image with the specified dimensions and origin
- */
 template <typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
     geom::Box2I const & bbox
@@ -124,17 +111,11 @@ image::ImageBase<PixelT>::ImageBase(
     _gilView(_allocateView(bbox.getDimensions(), _manager))
 {}
 
-/**
- * Copy constructor.
- *
- * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
- */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
-    ImageBase const& rhs, ///< Right-hand-side %image
-    bool const deep       ///< If false, new ImageBase shares storage with rhs;
-                          ///< if true make a new, standalone, ImageBase
+    ImageBase const& rhs,
+    bool const deep
+
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _origin(rhs._origin),
@@ -148,21 +129,13 @@ image::ImageBase<PixelT>::ImageBase(
     }
 }
 
-/**
- * Copy constructor to make a copy of part of an %image.
- *
- * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
- *
- * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this is probably what you want
- */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
-    ImageBase const& rhs, ///< Right-hand-side %image
-    geom::Box2I const& bbox,     ///< Specify desired region
-    ImageOrigin const origin,   ///< Specify the coordinate system of the bbox
-    bool const deep       ///< If false, new ImageBase shares storage with rhs;
-                          ///< if true make a new, standalone, ImageBase
+    ImageBase const& rhs,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin,
+    bool const deep
+
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _origin((origin==PARENT) ? bbox.getMin(): rhs._origin + geom::Extent2I(bbox.getMin())),
@@ -176,15 +149,6 @@ image::ImageBase<PixelT>::ImageBase(
     }
 }
 
-/**
- *  Construction from ndarray::Array and NumPy.
- *
- *  \note ndarray and NumPy indexes are ordered (y,x), but Image indices are ordered (x,y).
- *
- *  Unless deep is true, the new image will share memory with the array if the the
- *  dimension is contiguous in memory.  If the last dimension is not contiguous, the array
- *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
- */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2I const & xy0) :
     lsst::daf::base::Citizen(typeid(this)),
@@ -204,13 +168,6 @@ image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2
     }
 }
 
-/// Shallow assignment operator.
-///
-/// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use assign(rhs)
-///
-/// \note this behaviour is required to make the swig interface work, otherwise I'd
-/// declare this function private
 template<typename PixelT>
 image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& rhs) {
     ImageBase tmp(rhs);
@@ -219,26 +176,12 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
     return *this;
 }
 
-/// Set the lhs's %pixel values to equal the rhs's
-///
-/// \deprecated use assign(rhs) instead
 template<typename PixelT>
 image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
     assign(rhs);
     return *this;
 }
 
-/**
- * Copy pixels from another image to a specified subregion of this image.
- *
- * \param[in] rhs  source image whose pixels are to be copied into this image (the destination)
- * \param[in] bbox  subregion of this image to set; if empty (the default) then all pixels are set
- * \param[in] origin  origin of bbox: if PARENT then the lower left pixel of this image is at xy0
- *                    if LOCAL then the lower left pixel of this image is at 0,0
- *
- * \throw lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
- * this image do not match.
- */
 template<typename PixelT>
 void image::ImageBase<PixelT>::assign(ImageBase const &rhs, geom::Box2I const &bbox, ImageOrigin origin) {
     auto lhsDim = bbox.isEmpty() ? getDimensions() : bbox.getDimensions();
@@ -256,7 +199,6 @@ void image::ImageBase<PixelT>::assign(ImageBase const &rhs, geom::Box2I const &b
     }
 }
 
-/// Return a reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(int x, int y) {
     return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
@@ -264,7 +206,6 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
     );
 }
 
-/// Return a reference to the pixel <tt>(x, y)</tt> with bounds checking
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(
         int x,
@@ -283,14 +224,12 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
     );
 }
 
-/// Return a const reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelConstReference
     image::ImageBase<PixelT>::operator()(int x, int y) const {
     return _gilView(x, y)[0];
 }
 
-/// Return a const reference to the pixel <tt>(x, y)</tt> with bounds checking
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelConstReference
     image::ImageBase<PixelT>::operator()(int x, int y, image::CheckIndices const& check) const {
@@ -342,46 +281,34 @@ typename image::ImageBase<PixelT>::ConstArray image::ImageBase<PixelT>::getArray
 //
 // Iterators
 //
-/// Return an STL compliant iterator to the start of the %image
-///
-/// Note that this isn't especially efficient; see \link imageIterators\endlink for
-/// a discussion
 template<typename PixelT>
 typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::begin() const {
     return _gilView.begin();
 }
 
-/// Return an STL compliant iterator to the end of the %image
 template<typename PixelT>
 typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::end() const {
     return _gilView.end();
 }
 
-/// Return an STL compliant reverse iterator to the start of the %image
 template<typename PixelT>
 typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::rbegin() const {
     return _gilView.rbegin();
 }
 
-/// Return an STL compliant reverse iterator to the end of the %image
 template<typename PixelT>
 typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::rend() const {
     return _gilView.rend();
 }
 
-/// Return an STL compliant iterator at the point <tt>(x, y)</tt>
 template<typename PixelT>
 typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, int y) const {
     return _gilView.at(x, y);
 }
 
-/// Return a fast STL compliant iterator to the start of the %image which must be contiguous
-///
-/// \exception lsst::pex::exceptions::Runtime
-/// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
 typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
-    bool contiguous         ///< Pixels are contiguous (must be true)
+    bool contiguous
 ) const {
     if (!contiguous) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -395,13 +322,9 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
     return row_begin(0);
 }
 
-/// Return a fast STL compliant iterator to the end of the %image which must be contiguous
-///
-/// \exception lsst::pex::exceptions::Runtime
-/// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
 typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
-    bool contiguous         ///< Pixels are contiguous (must be true)
+    bool contiguous
 ) const {
     if (!contiguous) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -415,8 +338,6 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
     return row_end(getHeight()-1);
 }
 
-/************************************************************************************************************/
-/// Set the %image's pixels to rhs
 template<typename PixelT>
 image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) {
     fill_pixels(_gilView, rhs);
@@ -424,83 +345,51 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
     return *this;
 }
 
-/************************************************************************************************************/
 //
 // On to Image itself.  ctors, cctors, and operator=
 //
-/**
- * Create an initialised Image of the specified size
- *
- * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
- * which may be conveniently used to make objects of an appropriate size
- */
 template<typename PixelT>
-image::Image<PixelT>::Image(unsigned int width, ///< number of columns
-                            unsigned int height, ///< number of rows
-                            PixelT initialValue ///< Initial value
+image::Image<PixelT>::Image(unsigned int width,
+                            unsigned int height,
+                            PixelT initialValue
                            ) :
     image::ImageBase<PixelT>(geom::ExtentI(width, height))
 {
     *this = initialValue;
 }
 
-/**
- * Create an initialised Image of the specified size
- *
- * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
- * which may be conveniently used to make objects of an appropriate size
- */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of columns, rows
-                            PixelT initialValue ///< Initial value
+image::Image<PixelT>::Image(geom::Extent2I const & dimensions,
+                            PixelT initialValue
                            ) :
     image::ImageBase<PixelT>(dimensions)
 {
     *this = initialValue;
 }
 
-/**
- * Create an initialized Image of the specified size
- */
 template<typename PixelT>
-image::Image<PixelT>::Image(geom::Box2I const & bbox, ///< dimensions and origin of desired Image
-                            PixelT initialValue ///< Initial value
+image::Image<PixelT>::Image(geom::Box2I const & bbox,
+                            PixelT initialValue
                            ) :
     image::ImageBase<PixelT>(bbox) {
     *this = initialValue;
 }
 
-/**
- * Copy constructor.
- *
- * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
- */
 template<typename PixelT>
-image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
-                            bool const deep       ///< If false, new Image shares storage with rhs; if true
-                                                  ///< make a new, standalone, ImageBase
+image::Image<PixelT>::Image(Image const& rhs,
+                            bool const deep
                            ) :
     image::ImageBase<PixelT>(rhs, deep) {}
 
-/**
- * Copy constructor to make a copy of part of an Image.
- *
- * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
- *
- * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this is probably what you want
- */
 template<typename PixelT>
-image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
-                            geom::Box2I const& bbox,  ///< Specify desired region
-                            ImageOrigin const origin, ///< Coordinate system of the bbox
-                            bool const deep    ///< If false, new ImageBase shares storage with rhs; if true
-                                                   ///< make a new, standalone, ImageBase
+image::Image<PixelT>::Image(Image const& rhs,
+                            geom::Box2I const& bbox,
+                            ImageOrigin const origin,
+                            bool const deep
+
                            ) :
     image::ImageBase<PixelT>(rhs, bbox, origin, deep) {}
 
-/// Set the %image's pixels to rhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
     this->ImageBase<PixelT>::operator=(rhs);
@@ -508,13 +397,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
     return *this;
 }
 
-/// Assignment operator.
-///
-/// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use assign(rhs)
-///
-/// \note this behaviour is required to make the swig interface work, otherwise I'd
-/// declare this function private
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
     this->ImageBase<PixelT>::operator=(rhs);
@@ -522,7 +404,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
     return *this;
 }
 
-/************************************************************************************************************/
 
 #ifndef DOXYGEN // doc for this section has been moved to header
 
@@ -625,7 +506,6 @@ void image::Image<PixelT>::writeFits(
 
 #endif // !DOXYGEN
 
-/************************************************************************************************************/
 
 template<typename PixelT>
 void image::Image<PixelT>::swap(Image &rhs) {
@@ -639,7 +519,6 @@ void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
     a.swap(b);
 }
 
-/************************************************************************************************************/
 
 // In-place, per-pixel, sqrt().
 template<typename PixelT>
@@ -648,7 +527,6 @@ void image::Image<PixelT>::sqrt() {
                       [](PixelT const& l) -> PixelT { return static_cast<PixelT>(std::sqrt(l)); });
 }
 
-/// Add scalar rhs to lhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator+=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
@@ -656,7 +534,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator+=(PixelT const rhs) {
     return *this;
 }
 
-/// Add Image rhs to lhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -669,12 +546,9 @@ image::Image<PixelT>& image::Image<PixelT>::operator+=(Image<PixelT> const& rhs)
     return *this;
 }
 
-/**
- * @brief Add a Function2(x, y) to an Image
- */
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator+=(
-        lsst::afw::math::Function2<double> const& function ///< function to add
+        lsst::afw::math::Function2<double> const& function
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
         double const yPos = this->indexToPosition(y, image::Y);
@@ -687,7 +561,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator+=(
     return *this;
 }
 
-/// Add Image c*rhs to lhs
 template<typename PixelT>
 void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -699,7 +572,6 @@ void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) 
                      [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + static_cast<PixelT>(c*r); });
 }
 
-/// Subtract scalar rhs from lhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator-=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
@@ -707,7 +579,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator-=(PixelT const rhs) {
     return *this;
 }
 
-/// Subtract Image rhs from lhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -720,7 +591,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator-=(Image<PixelT> const& rhs)
     return *this;
 }
 
-/// Subtract Image c*rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -732,12 +602,9 @@ void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs)
                      [&c](PixelT const& l, PixelT const& r) -> PixelT { return l - static_cast<PixelT>(c*r); });
 }
 
-/**
- * @brief Subtract a Function2(x, y) from an Image
- */
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator-=(
-        lsst::afw::math::Function2<double> const& function ///< function to add
+        lsst::afw::math::Function2<double> const& function
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
         double const yPos = this->indexToPosition(y, image::Y);
@@ -750,7 +617,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator-=(
     return *this;
 }
 
-/// Multiply lhs by scalar rhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator*=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
@@ -758,7 +624,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator*=(PixelT const rhs) {
     return *this;
 }
 
-/// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -771,7 +636,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator*=(Image<PixelT> const& rhs)
     return *this;
 }
 
-/// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
 void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -783,9 +647,6 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
                      [&c](PixelT const& l, PixelT const& r) -> PixelT { return l*static_cast<PixelT>(c*r); });
 }
 
-/// Divide lhs by scalar rhs
-///
-/// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator/=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
@@ -811,7 +672,6 @@ Image<float>& Image<float>::operator/=(float const rhs) {
 }
 }}}
 
-/// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -824,7 +684,6 @@ image::Image<PixelT>& image::Image<PixelT>::operator/=(Image<PixelT> const& rhs)
     return *this;
 }
 
-/// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
 void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -836,7 +695,6 @@ void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rh
                      [&c](PixelT const& l, PixelT const& r) -> PixelT { return l/static_cast<PixelT>(c*r); });
 }
 
-/************************************************************************************************************/
 
 namespace {
 /*
@@ -871,43 +729,34 @@ struct divideEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
 };
 }
 
-/// Add lhs to Image rhs (i.e. %pixel-by-%pixel addition) where types are different
-///
 template<typename LhsPixelT, typename RhsPixelT>
 image::Image<LhsPixelT>& image::operator+=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, plusEq<LhsPixelT, RhsPixelT>());
     return lhs;
 }
 
-/// Subtract lhs from Image rhs (i.e. %pixel-by-%pixel subtraction) where types are different
-///
 template<typename LhsPixelT, typename RhsPixelT>
 image::Image<LhsPixelT>& image::operator-=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, minusEq<LhsPixelT, RhsPixelT>());
     return lhs;
 }
 
-/// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication) where types are different
-///
 template<typename LhsPixelT, typename RhsPixelT>
 image::Image<LhsPixelT>& image::operator*=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, timesEq<LhsPixelT, RhsPixelT>());
     return lhs;
 }
 
-/// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division) where types are different
-///
 template<typename LhsPixelT, typename RhsPixelT>
 image::Image<LhsPixelT>& image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, divideEq<LhsPixelT, RhsPixelT>());
     return lhs;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 #define INSTANTIATE_OPERATOR(OP_EQ, T) \
    template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint16_t> const& rhs); \
    template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
@@ -928,4 +777,4 @@ INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
-/// \endcond
+/// @endcond

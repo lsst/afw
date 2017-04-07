@@ -129,14 +129,14 @@ static void declareMask(py::module & mod, std::string const & suffix) {
     cls.def_static("addMaskPlane", (int (*)(const std::string &))Mask<MaskPixelT>::addMaskPlane);
 
     /**
-     * Set an image to the value val
+     * @internal Set an image to the value val
      */
     cls.def("set", [](Mask<MaskPixelT> & self, MaskPixelT val) {
         self = val;
     });
 
     /**
-     * Set pixel (x,y) to val
+     * @internal Set pixel (x,y) to val
      */
     cls.def("set", [](Mask<MaskPixelT> & self, int x, int y, double val) {
         self(x, y, image::CheckIndices(true)) = val;

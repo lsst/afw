@@ -24,15 +24,8 @@
 
 
 
-/** \file
- * \brief Implementation of KernelFormatter class
- *
- * \version $Revision: 2151 $
- * \date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * \ingroup afw_math
+/*
+ * Implementation of KernelFormatter class
  */
 
 #ifndef __GNUC__
@@ -119,9 +112,6 @@ namespace pexPolicy = lsst::pex::policy;
 
 using boost::serialization::make_nvp;
 
-/** Register this Formatter subclass through a static instance of
- * FormatterRegistration.
- */
 dafPersist::FormatterRegistration
 afwForm::KernelFormatter::kernelRegistration(
     "Kernel", typeid(afwMath::Kernel), createInstance);
@@ -143,16 +133,11 @@ dafPersist::FormatterRegistration
 afwForm::KernelFormatter::separableKernelRegistration(
     "SeparableKernel", typeid(afwMath::SeparableKernel), createInstance);
 
-/** Constructor.
- * \param[in] policy Policy for configuring this Formatter
- */
 afwForm::KernelFormatter::KernelFormatter(
     pexPolicy::Policy::Ptr policy) :
     dafPersist::Formatter(typeid(this)), _policy(policy) {
 }
 
-/** Minimal destructor.
- */
 afwForm::KernelFormatter::~KernelFormatter(void) {
 }
 
@@ -214,11 +199,6 @@ void afwForm::KernelFormatter::update(dafBase::Persistable*,
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Kernel");
 }
 
-/** Serialize a Kernel to a Boost archive.  Handles text or XML
- * archives, input or output.
- * \param[in,out] ar Boost archive
- * \param[in,out] persistable Pointer to the Kernel as a Persistable
- */
 template <class Archive>
 void afwForm::KernelFormatter::delegateSerialize(
     Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
@@ -240,6 +220,8 @@ void afwForm::KernelFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "KernelFormatter delegateSerialize end");
 }
 
+// Explicit template specializations confuse Doxygen, tell it to ignore them
+/// @cond
 template void afwForm::KernelFormatter::delegateSerialize(
     boost::archive::text_oarchive& ar, unsigned int const, dafBase::Persistable*);
 template void afwForm::KernelFormatter::delegateSerialize(
@@ -252,12 +234,8 @@ template void afwForm::KernelFormatter::delegateSerialize(
     boost::archive::binary_oarchive& ar, unsigned int const, dafBase::Persistable*);
 template void afwForm::KernelFormatter::delegateSerialize(
     boost::archive::binary_iarchive& ar, unsigned int const, dafBase::Persistable*);
+/// @endcond
 
-
-/** Factory method for KernelFormatter.
- * \param[in] policy Policy for configuring the KernelFormatter
- * \return Shared pointer to a new instance
- */
 dafPersist::Formatter::Ptr afwForm::KernelFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {
     return dafPersist::Formatter::Ptr(new afwForm::KernelFormatter(policy));

@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
 
-/**
- *  \file
- *  @brief Definitions and inlines for Quadrupole.
+/*
+ *  Definitions and inlines for Quadrupole.
  *
- *  \note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -40,7 +39,7 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse core with quadrupole moments as parameters.
+ *  An ellipse core with quadrupole moments as parameters.
  */
 class Quadrupole : public BaseCore {
 public:
@@ -62,7 +61,7 @@ public:
     double const getIxy() const { return _matrix(1, 0); }
     void setIxy(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
 
-    /// @brief Deep copy the ellipse core.
+    /// Deep copy the ellipse core.
     Ptr clone() const { return std::static_pointer_cast<Quadrupole>(_clone()); }
 
     /// Return a string that identifies this parametrization.
@@ -78,39 +77,39 @@ public:
 
     virtual void writeParameters(double * iter) const;
 
-    /// @brief Return a 2x2 symmetric matrix of the parameters.
+    /// Return a 2x2 symmetric matrix of the parameters.
     Matrix const & getMatrix() const { return _matrix; }
 
-    /// @brief Return the determinant of the matrix representation.
+    /// Return the determinant of the matrix representation.
     double getDeterminant() const { return getIxx() * getIyy() - getIxy() * getIxy(); }
 
-    /// @brief Standard assignment.
+    /// Standard assignment.
     Quadrupole & operator=(Quadrupole const & other) { _matrix = other._matrix; return *this; }
 
-    /// @brief Converting assignment.
+    /// Converting assignment.
     Quadrupole & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
 
-    /// @brief Construct from parameter values.
+    /// Construct from parameter values.
     explicit Quadrupole(double ixx=1.0, double iyy=1.0, double ixy=0.0, bool normalize=false);
 
-    /// @brief Construct from a parameter vector.
+    /// Construct from a parameter vector.
     explicit Quadrupole(BaseCore::ParameterVector const & vector, bool normalize=false);
 
-    /// @brief Construct from a 2x2 matrix.
+    /// Construct from a 2x2 matrix.
     explicit Quadrupole(Matrix const & matrix, bool normalize=true);
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Quadrupole(Quadrupole const & other) : _matrix(other._matrix) {}
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Quadrupole(BaseCore const & other) { *this = other; }
 #ifndef SWIG
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Quadrupole(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Quadrupole(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }

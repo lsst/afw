@@ -37,7 +37,7 @@ Functor::Functor(std::string const & name)
 }
 
 double Functor::inverse(double y, double tol, unsigned int maxiter) const {
-   /// Sanity checks for tol and maxiter.
+   // Sanity checks for tol and maxiter.
    if (tol > 1 || tol <= 0) {
       throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                         "tol out-of-range, tol <=0 or tol > 1");
@@ -46,7 +46,7 @@ double Functor::inverse(double y, double tol, unsigned int maxiter) const {
       throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                         "maxiter out-of-range, maxiter < 1");
    }
-   /// Use Newton-Raphson method to find the inverse.
+   // Use Newton-Raphson method to find the inverse.
    double x = y;
    for (unsigned int iter=0; iter < maxiter; iter++) {
       double dx = y - operator()(x);

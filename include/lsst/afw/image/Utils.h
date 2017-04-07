@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief A set of classes of general utility in connection with images
+/*
+ * A set of classes of general utility in connection with images
  *
  * We provide representations of points, bounding boxes, circles etc.
  */
@@ -50,7 +49,7 @@
 namespace lsst { namespace afw { namespace image {
 
 /**
- *  @brief Return the metadata (header entries) from a FITS file.
+ *  Return the metadata (header entries) from a FITS file.
  *
  *  @deprecated Use lsst::afw::fits::readMetadata instead.
  *
@@ -68,9 +67,9 @@ inline PTR(daf::base::PropertyList) readMetadata(std::string const & fileName,
 /**
  * Return a value indicating a bad pixel for the given Image type
  *
- * A quiet NaN is returned for types that support it otherwise @c bad
+ * A quiet NaN is returned for types that support it otherwise `bad`
  *
- * @relates lsst::afw::image::Image
+ * @relatesalso lsst::afw::image::Image
  */
 template<typename ImageT>
 typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad value if NaN isn't supported

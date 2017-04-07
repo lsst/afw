@@ -73,7 +73,7 @@ public:
      * @note If transformMap includes a transform for nativeCoordSys
      * then it is used (without checking); if not, then a unity transform is added.
      *
-     * @throw pexExcept::InvalidParameterError if you specify the same coordSys
+     * @throws pex::exceptions::InvalidParameterError if you specify the same coordSys
      * more than once, or a transform is specified where coordSys == nativeCoordSys
      */
     explicit TransformMap(
@@ -88,9 +88,9 @@ public:
     /**
      * Convert a point from one coordinate system to another
      *
-     * @return the transformed value as a Point2D
+     * @returns the transformed value as a Point2D
      *
-     * @throw pexExcept::InvalidParameterError if toCoordSys is unknown
+     * @throws pex::exceptions::InvalidParameterError if toCoordSys is unknown
      */
     Point2D transform(
         Point2D const &fromPoint,       ///< point from which to transform
@@ -101,7 +101,7 @@ public:
     /**
      * Convert a list of Point2D from one coordinate system to another
      *
-     * @throw pexExcept::InvalidParameterError if fromCoordSys or toCoordSys is unknown
+     * @throws pex::exceptions::InvalidParameterError if fromCoordSys or toCoordSys is unknown
      */
      std::vector<Point2D> transform(
         std::vector<Point2D> const &pointList,    ///< list of points to transform
@@ -114,7 +114,7 @@ public:
     /**
      * Get a list of supported coordinate systems
      *
-     * @return a list of coordinate systems, in undefined order.
+     * @returns a list of coordinate systems, in undefined order.
      */
     std::vector<CoordSysT> getCoordSysList() const;
 
@@ -131,9 +131,9 @@ public:
     /**
      * Get an XYTransform that transforms from coordSys to nativeCoordSys in the forward direction
      *
-     * @return a shared_ptr to an XYTransform
+     * @returns a shared_ptr to an XYTransform
      *
-     * @throw pexExcept::InvalidParameterError if coordSys is unknown
+     * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
      */
     CONST_PTR(XYTransform) operator[](
         CoordSysT const &coordSys ///< coordinate system whose XYTransform is wanted

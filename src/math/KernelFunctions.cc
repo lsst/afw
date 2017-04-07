@@ -22,12 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Definitions of members of lsst::afw::math
- *
- * @ingroup afw
+/*
+ * Definitions of members of lsst::afw::math
  */
 #include <iostream>
 
@@ -35,20 +31,13 @@
 
 #include "lsst/afw/math/KernelFunctions.h"
 
-/**
- * @brief Print the pixel values of a Kernel to std::cout
- *
- * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
- *
- * @ingroup afw
- */
 void
 lsst::afw::math::printKernel(
-    lsst::afw::math::Kernel const &kernel,     ///< the kernel
-    bool doNormalize,                   ///< if true, normalize kernel
-    double xPos,                        ///< x at which to evaluate kernel
-    double yPos,                        ///< y at which to evaluate kernel
-    std::string pixelFmt                ///< format for pixel values
+    lsst::afw::math::Kernel const &kernel,
+    bool doNormalize,
+    double xPos,
+    double yPos,
+    std::string pixelFmt
 ) {
     typedef lsst::afw::math::Kernel::Pixel Pixel;
 

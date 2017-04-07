@@ -22,14 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Definition of basicConvolve and convolveWithBruteForce functions declared in detail/ConvolveImage.h
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Definition of basicConvolve and convolveWithBruteForce functions declared in detail/ConvolveImage.h
  */
 #include <algorithm>
 #include <cmath>
@@ -53,12 +47,12 @@ namespace mathDetail = lsst::afw::math::detail;
 
 namespace {
 
-    /*
-     * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
+    /**
+     * @internal Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
      *
-     * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dim.
-     * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or h.
-     * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+     * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dim.
+     * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or h.
+     * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
      *
      */
     template <typename OutImageT, typename InImageT>
@@ -90,10 +84,10 @@ namespace {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
         }
     }
-    /*
-     * @brief Compute the dot product of a kernel row or column and the overlapping portion of an %image
+    /**
+     * @internal Compute the dot product of a kernel row or column and the overlapping portion of an %image
      *
-     * @return computed dot product
+     * @returns computed dot product
      *
      * The pixel computed belongs at position imageIter + kernel center.
      *
@@ -101,7 +95,7 @@ namespace {
      * or by using iterator traits:
      *     typedef typename std::iterator_traits<KernelIterT>::value_type KernelPixel;
      * Unfortunately, in either case compilation fails with this sort of message:
-\verbatim
+@verbatim
 include/lsst/afw/image/Pixel.h: In instantiation of ‘lsst::afw::image::pixel::exprTraits<boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > > >’:
 include/lsst/afw/image/Pixel.h:385:   instantiated from ‘lsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >’
 src/math/ConvolveImage.cc:59:   instantiated from ‘OutPixelT<unnamed>::kernelDotProduct(ImageIterT, KernelIterT, int) [with OutPixelT = lsst::afw::image::pixel::SinglePixel<int, short unsigned int, float>, ImageIterT = lsst::afw::image::MaskedImage<int, short unsigned int, float>::const_MaskedImageIterator<boost::gil::gray32s_pixel_t*, boost::gil::gray16_pixel_t*, boost::gil::gray32f_noscale_pixel_t*>, KernelIterT = const boost::gil::gray64f_noscalec_pixel_t*]’
@@ -111,13 +105,13 @@ src/math/ConvolveImage.cc:587:   instantiated from here
 include/lsst/afw/image/Pixel.h:210: error: no type named ‘ImagePixelT’ in ‘struct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >’
 include/lsst/afw/image/Pixel.h:211: error: no type named ‘MaskPixelT’ in ‘struct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >’
 include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in ‘struct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >’
-\endverbatim
+@endverbatim
      */
     template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
     inline OutPixelT kernelDotProduct(
-            ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
-            KernelIterT kernelIter,     ///< start of kernel vector
-            int kWidth)                 ///< width of kernel
+            ImageIterT imageIter,    ///< @internal start of input %image that overlaps kernel vector
+            KernelIterT kernelIter,  ///< @internal start of kernel vector
+            int kWidth)              ///< @internal width of kernel
     {
         OutPixelT outPixel(0);
         for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
@@ -130,29 +124,12 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
     }
 }   // anonymous namespace
 
-/**
- * @brief Low-level convolution function that does not set edge pixels.
- *
- * convolvedImage must be the same size as inImage.
- * convolvedImage has a border in which the output pixels are not set. This border has size:
- * - kernel.getCtrX() along the left edge
- * - kernel.getCtrY() along the bottom edge
- * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
- * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- *
- * @ingroup afw
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::basicConvolve(
-        OutImageT &convolvedImage,      ///< convolved %image
-        InImageT const& inImage,        ///< %image to convolve
-        afwMath::Kernel const& kernel,  ///< convolution kernel
-        afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
+        OutImageT &convolvedImage,
+        InImageT const& inImage,
+        afwMath::Kernel const& kernel,
+        afwMath::ConvolutionControl const& convolutionControl)
 {
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
@@ -194,17 +171,12 @@ void mathDetail::basicConvolve(
     }
 }
 
-/**
- * @brief A version of basicConvolve that should be used when convolving delta function kernels
- *
- * @ingroup afw
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::basicConvolve(
-        OutImageT& convolvedImage,      ///< convolved %image
-        InImageT const& inImage,        ///< %image to convolve
-        afwMath::DeltaFunctionKernel const &kernel, ///< convolution kernel
-        afwMath::ConvolutionControl const &convolutionControl)       ///< convolution control parameters
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        afwMath::DeltaFunctionKernel const &kernel,
+        afwMath::ConvolutionControl const &convolutionControl)
 {
     assert (!kernel.isSpatiallyVarying());
     assertDimensionsOK(convolvedImage, inImage, kernel);
@@ -229,28 +201,12 @@ void mathDetail::basicConvolve(
     }
 }
 
-/**
- * @brief A version of basicConvolve that should be used when convolving a LinearCombinationKernel
- *
- * The Algorithm:
- * - If the kernel is spatially varying and contains only DeltaFunctionKernels
- *   then convolves the input Image by each basis kernel in turn, solves the spatial model
- *   for that component and adds in the appropriate amount of the convolved %image.
- * - In all other cases uses normal convolution
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- *
- * @ingroup afw
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::basicConvolve(
-    OutImageT& convolvedImage,      ///< convolved %image
-    InImageT const& inImage,        ///< %image to convolve
-    afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
-    afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+    OutImageT& convolvedImage,
+    InImageT const& inImage,
+    afwMath::LinearCombinationKernel const& kernel,
+    afwMath::ConvolutionControl const & convolutionControl)
 {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
@@ -285,17 +241,12 @@ void mathDetail::basicConvolve(
     }
 }
 
-/**
- * @brief A version of basicConvolve that should be used when convolving separable kernels
- *
- * @ingroup afw
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::basicConvolve(
-        OutImageT& convolvedImage,      ///< convolved %image
-        InImageT const& inImage,        ///< %image to convolve
-        afwMath::SeparableKernel const &kernel, ///< convolution kernel
-        afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        afwMath::SeparableKernel const &kernel,
+        afwMath::ConvolutionControl const & convolutionControl)
 {
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef typename std::vector<KernelPixel> KernelVector;
@@ -403,32 +354,12 @@ void mathDetail::basicConvolve(
     }
 }
 
-/**
- * @brief Convolve an Image or MaskedImage with a Kernel by computing the kernel image
- * at every point. (If the kernel is not spatially varying then only compute it once).
- *
- * @warning Low-level convolution function that does not set edge pixels.
- *
- * convolvedImage must be the same size as inImage.
- * convolvedImage has a border in which the output pixels are not set. This border has size:
- * - kernel.getCtrX() along the left edge
- * - kernel.getCtrY() along the bottom edge
- * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
- * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- *
- * @ingroup afw
- */
 template <typename OutImageT, typename InImageT>
 void mathDetail::convolveWithBruteForce(
-        OutImageT &convolvedImage,      ///< convolved %image
-        InImageT const& inImage,        ///< %image to convolve
-        afwMath::Kernel const& kernel,  ///< convolution kernel
-        afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+        OutImageT &convolvedImage,
+        InImageT const& inImage,
+        afwMath::Kernel const& kernel,
+        afwMath::ConvolutionControl const & convolutionControl)
 {
     bool doNormalize=convolutionControl.getDoNormalize();
 
@@ -508,7 +439,7 @@ void mathDetail::convolveWithBruteForce(
 /*
  * Explicit instantiation
  */
-/// \cond
+/// @cond
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
@@ -543,4 +474,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
-/// \endcond
+/// @endcond

@@ -34,7 +34,7 @@ namespace afwMath = lsst::afw::math;
 
 const std::string outImagePath("svcOut.fits");
 
-/**
+/*
  * Demonstrate convolution with a spatially varying kernel
  *
  * The kernel is a Gaussian that varies as follows:

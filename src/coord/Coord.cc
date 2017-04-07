@@ -22,11 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file Coord.cc
- * @brief Provide functions to handle coordinates
- * @ingroup afw
- * @author Steve Bickerton
+/*
+ * Provide functions to handle coordinates
  *
  * Most (nearly all) algorithms adapted from Astronomical Algorithms, 2nd ed. (J. Meeus)
  *
@@ -68,14 +65,20 @@ CoordSystemMap const getCoordSystemMap() {
     return idMap;
 }
 
-/// Calculate angular distance between two points using the Haversine formula
-///
-/// Besides the differences between the two coordinates, we also input the
-/// cosine of the two declinations, so as to be thrifty with the use of trig functions.
-afwGeom::Angle haversine(afwGeom::Angle const dAlpha, /// Difference between RAs (or longitudes), alpha1-alpha2
-                         afwGeom::Angle const dDelta, /// Difference between Decs (or latitudes), delta1-delta2
-                         double const cosDelta1, /// Cosine of the first Dec, cos(delta1)
-                         double const cosDelta2 /// Cosine of the second Dec, cos(delta2)
+/** @internal Calculate angular distance between two points using the Haversine formula
+ *
+ * Besides the differences between the two coordinates, we also input the
+ * cosine of the two declinations, so as to be thrifty with the use of trig functions.
+ *
+ * @param dAlpha Difference between RAs (or longitudes), alpha1-alpha2
+ * @param dDelta Difference between Decs (or latitudes), delta1-delta2
+ * @param cosDelta1 Cosine of the first Dec, cos(delta1)
+ * @param cosDelta2 Cosine of the second Dec, cos(delta2)
+ */
+afwGeom::Angle haversine(afwGeom::Angle const dAlpha,
+                         afwGeom::Angle const dDelta,
+                         double const cosDelta1,
+                         double const cosDelta2
     )
 {
     double const havDDelta = std::sin(dDelta/2.0) * std::sin(dDelta/2.0);
@@ -86,9 +89,10 @@ afwGeom::Angle haversine(afwGeom::Angle const dAlpha, /// Difference between RAs
     return dist;
 }
 
-double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed if two epochs differ by this.
+/// @internal Precession to new epoch performed if two epochs differ by this.
+double const epochTolerance = 1.0e-12;
 
-// Put a pair of coordinates in a common FK5 system
+/// @internal Put a pair of coordinates in a common FK5 system
 std::pair<afwCoord::Fk5Coord, afwCoord::Fk5Coord> commonFk5(afwCoord::Coord const& c1,
                                                             afwCoord::Coord const& c2
     )
@@ -111,9 +115,6 @@ std::pair<afwCoord::Fk5Coord, afwCoord::Fk5Coord> commonFk5(afwCoord::Coord cons
 } // end anonymous namespace
 
 
-/**
- * @brief A utility function to get the enum value of a coordinate system from a string name.
- */
 afwCoord::CoordSystem afwCoord::makeCoordEnum(std::string const system) {
     static CoordSystemMap idmap = getCoordSystemMap();
     if (idmap.find(system) != idmap.end()) {
@@ -172,7 +173,7 @@ public:
 
 
 /**
- * Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
+ * @internal Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
  *
  */
 afwCoord::Coord const& GalacticPoleInFk5()
@@ -188,7 +189,7 @@ afwCoord::Coord const& Fk5PoleInGalactic()
 }
 
 /**
- * @brief Compute the mean Sidereal Time at Greenwich
+ * @internal Compute the mean Sidereal Time at Greenwich
  *
  */
 afwGeom::Angle meanSiderealTimeGreenwich(
@@ -253,7 +254,7 @@ std::pair<afwGeom::Angle, afwGeom::Angle> pointToLonLat(lsst::afw::geom::Point3D
 
 
 
-/******************* Public functions ********************/
+/* ******************* Public functions ******************* */
 
 static std::string angleToXmsString(afwGeom::Angle const a, afwGeom::AngleUnit const unit) {
 
@@ -282,27 +283,23 @@ static std::string angleToXmsString(afwGeom::Angle const a, afwGeom::AngleUnit c
 }
 
 
-/**
- * @brief a Function to convert a coordinate in decimal degrees to a string with form dd:mm:ss
- *
- * @todo allow a user specified format
- */
 std::string afwCoord::angleToDmsString(afwGeom::Angle const a) {
     return angleToXmsString(a, afwGeom::degrees);
 }
 
-/**
- * @brief a function to convert decimal degrees to a string with form hh:mm:ss.s
- */
 std::string afwCoord::angleToHmsString(afwGeom::Angle const a) {
     return angleToXmsString(a, afwGeom::hours);
 }
 
 /**
- * @brief Convert a XX:mm:ss string to Angle
+ * @internal Convert a XX:mm:ss string to Angle
+ *
+ * @param dms Coord as a string in dd:mm:ss format
+ * @param unit the units assumed for the first part of `dms`. The second and third
+ *             parts shall be defined to be 1/60 and 1/3600 of `unit`, respectively.
  */
 static afwGeom::Angle xmsStringToAngle(
-    std::string const dms, ///< Coord as a string in dd:mm:ss format
+    std::string const dms,
     afwGeom::AngleUnit unit
     ) {
     if (dms.find(":") == std::string::npos) {
@@ -326,30 +323,20 @@ static afwGeom::Angle xmsStringToAngle(
     return ang;
 }
 
-/**
- * @brief Convert a hh:mm:ss string to Angle
- */
 afwGeom::Angle afwCoord::hmsStringToAngle(
     std::string const hms
     ){
     return xmsStringToAngle(hms, afwGeom::hours);
 }
 
-/**
- * @brief Convert a dd:mm:ss string to Angle
- */
 afwGeom::Angle afwCoord::dmsStringToAngle(
-    std::string const dms ///< Coord as a string in dd:mm:ss format
+    std::string const dms
     ) {
     return xmsStringToAngle(dms, afwGeom::degrees);
 }
 
-/**
- * @brief get the inclination of the ecliptic pole (obliquity) at epoch
- *
- */
 afwGeom::Angle afwCoord::eclipticPoleInclination(
-                                         double const epoch ///< desired epoch for inclination
+                                         double const epoch
                                         ) {
     double const T = (epoch - 2000.0)/100.0;
     return (23.0 + 26.0/60.0 + (21.448 - 46.82*T - 0.0006*T*T - 0.0018*T*T*T)/3600.0) * afwGeom::degrees;
@@ -363,14 +350,10 @@ afwGeom::Angle afwCoord::eclipticPoleInclination(
  * ============================================================*/
 
 
-/**
- * @brief Constructor for the Coord base class
- *
- */
 afwCoord::Coord::Coord(
-                       lsst::afw::geom::Point2D const &p2d,     ///< Point2D
-                       afwGeom::AngleUnit unit,        ///< Rads, Degs, or Hrs
-                       double const epoch               ///< epoch of coordinate
+                       lsst::afw::geom::Point2D const &p2d,
+                       afwGeom::AngleUnit unit,
+                       double const epoch
                       ) :
     _longitude(NaN), _latitude(NaN), _epoch(epoch) {
     _longitude = afwGeom::Angle(p2d.getX(), unit).wrap();
@@ -378,14 +361,11 @@ afwCoord::Coord::Coord(
     _verifyValues();
 }
 
-/**
- * @brief Constructor for the Coord base class
- */
 afwCoord::Coord::Coord(
-                       afwGeom::Point3D const &p3d,   ///< Point3D
-                       double const epoch,            ///< epoch of coordinate
-                       bool normalize,                 ///< normalize the p3d provided
-                       afwGeom::Angle const defaultLongitude  ///< longitude to use if x=y=0
+                       afwGeom::Point3D const &p3d,
+                       double const epoch,
+                       bool normalize,
+                       afwGeom::Angle const defaultLongitude
                       ) :
     _longitude(0. * afwGeom::radians),
     _latitude(0. * afwGeom::radians),
@@ -397,27 +377,19 @@ afwCoord::Coord::Coord(
     _epoch = epoch;
 }
 
-/**
- * @brief Constructor for the Coord base class
- *
- */
 afwCoord::Coord::Coord(
-                       afwGeom::Angle const ra,   ///< Right ascension, decimal degrees
-                       afwGeom::Angle const dec,  ///< Declination, decimal degrees
-                       double const epoch ///< epoch of coordinate
+                       afwGeom::Angle const ra,
+                       afwGeom::Angle const dec,
+                       double const epoch
                       ) :
     _longitude(ra.wrap()), _latitude(dec), _epoch(epoch) {
     _verifyValues();
 }
 
-/**
- * @brief Constructor for the Coord base class
- *
- */
 afwCoord::Coord::Coord(
-                       std::string const ra,  ///< Right ascension, hh:mm:ss.s format
-                       std::string const dec, ///< Declination, dd:mm:ss.s format
-                       double const epoch     ///< epoch of coordinate
+                       std::string const ra,
+                       std::string const dec,
+                       double const epoch
                       ) :
     _longitude(hmsStringToAngle(ra).wrap()),
     _latitude(dmsStringToAngle(dec)),
@@ -425,19 +397,9 @@ afwCoord::Coord::Coord(
     _verifyValues();
 }
 
-/**
- * @brief Default constructor for the Coord base class
- *
- * Set all values to NaN
- * Don't call _veriftyValues() method ... it'll fail.
- *
- */
 afwCoord::Coord::Coord() : _longitude(afwGeom::Angle(NaN)), _latitude(afwGeom::Angle(NaN)), _epoch(NaN) {}
 
 
-/**
- * @brief Make sure the values we've got are in the range 0 <= x < 2PI
- */
 void afwCoord::Coord::_verifyValues() const {
     if (_latitude.asRadians() < -afwGeom::HALFPI || _latitude.asRadians() > afwGeom::HALFPI) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -446,15 +408,10 @@ void afwCoord::Coord::_verifyValues() const {
     }
 }
 
-/**
- * @brief Reset our coordinates wholesale.
- *
- * This allows the user to instantiate Coords without values, and fill them later.
- */
 void afwCoord::Coord::reset(
-    afwGeom::Angle const longitude, ///< Longitude coord (eg. R.A. for Fk5)
-    afwGeom::Angle const latitude,  ///< Latitude coord (eg. Declination for Fk5)
-    double const epoch         ///< epoch of coordinate
+    afwGeom::Angle const longitude,
+    afwGeom::Angle const latitude,
+    double const epoch
     ) {
     _longitude = longitude.wrap();
     _latitude  = latitude;
@@ -463,10 +420,6 @@ void afwCoord::Coord::reset(
 }
 
 
-/**
- * @brief Return our contents in a Point2D object
- *
- */
 afwGeom::Point2D afwCoord::Coord::getPosition(afwGeom::AngleUnit unit) const {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
     if (unit == afwGeom::hours) {
@@ -477,10 +430,6 @@ afwGeom::Point2D afwCoord::Coord::getPosition(afwGeom::AngleUnit unit) const {
 }
 
 
-/**
- * @brief Return our contents in a position vector.
- *
- */
 afwGeom::Point3D afwCoord::Coord::getVector() const {
     double lng = getLongitude();
     double lat = getLatitude();
@@ -491,15 +440,9 @@ afwGeom::Point3D afwCoord::Coord::getVector() const {
 }
 
 
-/**
- * @brief Tranform our current coords to another spherical polar system
- *
- * Variable names assume an equaltorial/galactic tranform, but it works
- *  for any spherical polar system when the appropriate poles are supplied.
- */
 afwCoord::Coord afwCoord::Coord::transform(
-    Coord const &poleTo,   ///< Pole of the destination system in the current coords
-    Coord const &poleFrom  ///< Pole of the current system in the destination coords
+    Coord const &poleTo,
+    Coord const &poleFrom
                                           ) const {
     double const alphaGP  = poleFrom[0];
     double const deltaGP  = poleFrom[1];
@@ -515,13 +458,9 @@ afwCoord::Coord afwCoord::Coord::transform(
 }
 
 
-/**
- * @brief Rotate our current coords about a pole
- *
- */
 void afwCoord::Coord::rotate(
-                             Coord const &axis,   ///< axis of rotation (right handed)
-                             afwGeom::Angle const theta   ///< angle to offset in radians
+                             Coord const &axis,
+                             afwGeom::Angle const theta
                             ) {
 
     double const c = std::cos(theta);
@@ -548,17 +487,9 @@ void afwCoord::Coord::rotate(
 }
 
 
-/**
- * @brief offset our current coords along a great circle defined by an angle wrt a declination parallel
- *
- * @note At/near the pole, longitude becomes degenerate with angle-wrt-declination.  So
- *       at the pole the offset will trace a meridian with longitude = 90 + longitude0 + phi
- *
- * @return the angle wrt a declination parallel at new position
- */
 afwGeom::Angle afwCoord::Coord::offset(
-                               afwGeom::Angle const phi,    ///< angle wrt parallel to offset
-                               afwGeom::Angle const arcLen  ///< angle to offset
+                               afwGeom::Angle const phi,
+                               afwGeom::Angle const arcLen
                               ) {
 
     // let v = vector in the direction arcLen points (tangent to surface of sphere)
@@ -623,15 +554,6 @@ afwGeom::Angle afwCoord::Coord::offset(
 }
 
 
-/**
- * @brief Convert to a specified Coord type at a specified epoch.
- *
- * @param[in] system  coordinate system to which to convert
- * @param[in] epoch  epoch of coordinate system; only relevant for FK5 and Ecliptic coordinates
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if system = TOPOCENTRIC
- *         (because observatory data is required) or if system not recognized
- */
 PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) const {
 
     switch (system) {
@@ -684,12 +606,8 @@ PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) 
 }
 
 
-/**
- * @brief compute the angular separation between two Coords
- *
- */
 afwGeom::Angle afwCoord::Coord::angularSeparation(
-    Coord const &c ///< coordinate to compute our separation from
+    Coord const &c
     ) const {
 
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
@@ -704,15 +622,8 @@ afwGeom::Angle afwCoord::Coord::angularSeparation(
 }
 
 
-/**
- * @brief Compute the offset from a coordinate
- *
- * The resulting angles are suitable for input to Coord::offset
- *
- * @return pair of Angles: bearing (angle wrt a declination parallel) and distance
- */
 std::pair<afwGeom::Angle, afwGeom::Angle>
-afwCoord::Coord::getOffsetFrom(afwCoord::Coord const &c ///< Coordinate from which to compute offset
+afwCoord::Coord::getOffsetFrom(afwCoord::Coord const &c
     ) const
 {
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
@@ -739,15 +650,8 @@ afwCoord::Coord::getOffsetFrom(afwCoord::Coord const &c ///< Coordinate from whi
     return std::make_pair(bearing, separation);
 }
 
-/**
- * @brief Get the offset on the tangent plane
- *
- * This is suitable only for small angles.
- *
- * @return pair of Angles: Longitude and Latitude offsets
- */
 std::pair<afwGeom::Angle, afwGeom::Angle>
-afwCoord::Coord::getTangentPlaneOffset(afwCoord::Coord const &c ///< Coordinate from which to compute offset
+afwCoord::Coord::getTangentPlaneOffset(afwCoord::Coord const &c
     ) const
 {
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
@@ -774,53 +678,31 @@ afwCoord::Coord::getTangentPlaneOffset(afwCoord::Coord const &c ///< Coordinate 
 }
 
 
-/**
- * @brief Convert ourself to Fk5: RA, Dec (precess to new epoch)
- */
 afwCoord::Fk5Coord afwCoord::Coord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(), getLatitude(), getEpoch()).precess(epoch);
 }
-/**
- * @brief Convert ourself to Fk5: RA, Dec (use current epoch)
- */
 afwCoord::Fk5Coord afwCoord::Coord::toFk5() const {
     return Fk5Coord(getLongitude(), getLatitude(), getEpoch());
 }
 
-/**
- * @brief Convert ourself to ICRS: RA, Dec (basically J2000)
- *
- */
 afwCoord::IcrsCoord afwCoord::Coord::toIcrs() const {
     return this->toFk5().toIcrs();
 }
 
-/**
- * @brief Convert ourself to Galactic: l, b
- */
 afwCoord::GalacticCoord afwCoord::Coord::toGalactic() const {
     return this->toFk5().toGalactic();
 }
 
-/**
- * @brief Convert ourself to Ecliptic: lambda, beta (precess to new epoch)
- */
 afwCoord::EclipticCoord afwCoord::Coord::toEcliptic(double const epoch) const {
         return this->toFk5(epoch).toEcliptic();
 }
-/**
- * @brief Convert ourself to Ecliptic: lambda, beta (use existing epoch)
- */
 afwCoord::EclipticCoord afwCoord::Coord::toEcliptic() const {
         return this->toFk5().toEcliptic();
 }
 
-/**
- * @brief Convert ourself to Altitude/Azimuth: alt, az
- */
 afwCoord::TopocentricCoord afwCoord::Coord::toTopocentric(
-                                        Observatory const &obs,            ///< observatory of observation
-                                        lsst::daf::base::DateTime const &obsDate   ///< date of observation
+                                        Observatory const &obs,
+                                        lsst::daf::base::DateTime const &obsDate
                                                          ) const {
     return this->toFk5().toTopocentric(obs, obsDate);
 }
@@ -835,23 +717,13 @@ afwCoord::TopocentricCoord afwCoord::Coord::toTopocentric(
  * ============================================================*/
 
 
-/**
- * @brief Convert ourself to Fk5 (ie. a no-op): RA, Dec  (precess to new epoch)
- */
 afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(), getLatitude(), getEpoch()).precess(epoch);
 }
-/**
- * @brief Convert ourself to Fk5 (ie. a no-op): RA, Dec (keep current epoch)
- */
 afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5() const {
     return Fk5Coord(getLongitude(), getLatitude(), getEpoch());
 }
 
-/**
- * @brief Convert ourself to ICRS: RA, Dec (basically J2000)
- *
- */
 afwCoord::IcrsCoord afwCoord::Fk5Coord::toIcrs() const {
 
     // only do the precession to 2000 if we're not already there.
@@ -864,9 +736,6 @@ afwCoord::IcrsCoord afwCoord::Fk5Coord::toIcrs() const {
 }
 
 
-/**
- * @brief Convert ourself to Galactic: l, b
- */
 afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() const {
 
     // if we're epoch==2000, we can transform, otherwise we need to precess first
@@ -882,9 +751,6 @@ afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() const {
 
 }
 
-/**
- * @brief Convert ourself to Ecliptic: lambda, beta (precess to new epoch)
- */
 afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic(double const epoch) const {
     afwGeom::Angle const eclPoleIncl = eclipticPoleInclination(epoch);
     Coord const eclPoleInEquatorial(270.0 * afwGeom::degrees, (90.0 * afwGeom::degrees) - eclPoleIncl, epoch);
@@ -892,19 +758,13 @@ afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic(double const epoch) const
     Coord c = transform(equPoleInEcliptic, eclPoleInEquatorial);
     return EclipticCoord(c.getLongitude(), c.getLatitude(), epoch);
 }
-/**
- * @brief Convert ourself to Ecliptic: lambda, beta (use current epoch)
- */
 afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic() const {
     return this->toEcliptic(getEpoch());
 }
 
-/**
- * @brief Convert ourself to Altitude/Azimuth: alt, az
- */
 afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
-    Observatory const &obs,           ///< observatory
-    lsst::daf::base::DateTime const &obsDate  ///< date of obs.
+    Observatory const &obs,
+    lsst::daf::base::DateTime const &obsDate
                                                             ) const {
 
     // make sure we precess to the epoch
@@ -940,12 +800,8 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
 
 
 
-/**
- * @brief Precess ourselves from whence we are to a new epoch
- *
- */
 afwCoord::Fk5Coord afwCoord::Fk5Coord::precess(
-                                               double const epochTo ///< epoch to precess to
+                                               double const epochTo
                                               ) const {
 
     // return a copy if the epochs are the same
@@ -991,36 +847,21 @@ afwCoord::Fk5Coord afwCoord::Fk5Coord::precess(
  *
  * ============================================================*/
 
-/**
- * @brief special reset() overload to make sure no epoch can be set
- */
 void afwCoord::IcrsCoord::reset(afwGeom::Angle const longitude, afwGeom::Angle const latitude) {
     Coord::reset(longitude, latitude, 2000.0);
 }
 
-/**
- * @brief Fk5 converter for IcrsCoord. (specify epoch)
- */
 afwCoord::Fk5Coord afwCoord::IcrsCoord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(), getLatitude(), 2000.0).precess(epoch);
 }
-/**
- * @brief Fk5 converter for IcrsCoord. (no epoch specified)
- */
 afwCoord::Fk5Coord afwCoord::IcrsCoord::toFk5() const {
     return Fk5Coord(getLongitude(), getLatitude(), 2000.0);
 }
 
-/**
- * @brief Icrs converter for IcrsCoord. (ie. a no-op)
- */
 afwCoord::IcrsCoord afwCoord::IcrsCoord::toIcrs() const {
     return IcrsCoord(getLongitude(), getLatitude());
 }
 
-/**
- * @brief Get string representation
- */
 std::string afwCoord::IcrsCoord::toString() const {
     return (boost::format("%s(%.7f, %.7f)")
             % getClassName()
@@ -1036,39 +877,24 @@ std::string afwCoord::IcrsCoord::toString() const {
  *
  * ============================================================*/
 
-/**
- * @brief special reset() overload to make sure no epoch can be set
- */
 void afwCoord::GalacticCoord::reset(afwGeom::Angle const longitudeDeg, afwGeom::Angle const latitudeDeg) {
     Coord::reset(longitudeDeg, latitudeDeg, 2000.0);
 }
 
-/**
- * @brief Convert ourself from galactic to Fk5 (specify epoch)
- */
 afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5(double const epoch) const {
     // transform to fk5
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
     Coord c = transform(GalacticPoleInFk5(), Fk5PoleInGalactic());
     return Fk5Coord(c.getLongitude(), c.getLatitude(), 2000.0).precess(epoch);
 }
-/**
- * @brief Convert ourself from galactic to Fk5 (no epoch specified)
- */
 afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5() const {
     return this->toFk5(2000.0);
 }
 
-/**
- * @brief Convert ourself from Galactic to Galactic ... a no-op
- */
 afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() const {
     return GalacticCoord(getLongitude(), getLatitude());
 }
 
-/**
- * @brief Get string representation
- */
 std::string afwCoord::GalacticCoord::toString() const {
     return (boost::format("%s(%.7f, %.7f)")
             % getClassName()
@@ -1085,23 +911,14 @@ std::string afwCoord::GalacticCoord::toString() const {
  *
  * ============================================================*/
 
-/**
- * @brief Convert ourself from Ecliptic to Ecliptic ... a no-op (but precess to new epoch)
- */
 afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic(double const epoch) const {
     return EclipticCoord(getLongitude(), getLatitude(), getEpoch()).precess(epoch);
 }
-/**
- * @brief Convert ourself from Ecliptic to Ecliptic ... a no-op (use the current epoch)
- */
 afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic() const {
     return EclipticCoord(getLongitude(), getLatitude(), getEpoch());
 }
 
 
-/**
- * @brief Convert ourself from Ecliptic to Fk5 (precess to new epoch)
- */
 afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5(double const epoch) const {
     afwGeom::Angle const eclPoleIncl = eclipticPoleInclination(epoch);
     afwGeom::Angle ninety = 90. * afwGeom::degrees;
@@ -1110,21 +927,13 @@ afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5(double const epoch) const {
     Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
     return Fk5Coord(c.getLongitude(), c.getLatitude(), epoch);
 }
-/**
- * @brief Convert ourself from Ecliptic to Fk5 (use current epoch)
- */
 afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5() const {
     return this->toFk5(getEpoch());
 }
 
 
-/**
- * @brief precess to new epoch
- *
- * Do this by going through fk5
- */
 afwCoord::EclipticCoord afwCoord::EclipticCoord::precess(
-                                                         double const epochTo ///< epoch to precess to.
+                                                         double const epochTo
                                                         ) const {
     return this->toFk5().precess(epochTo).toEcliptic();
 }
@@ -1137,9 +946,6 @@ afwCoord::EclipticCoord afwCoord::EclipticCoord::precess(
  *
  * ============================================================*/
 
-/**
- * @brief Convert ourself from Topocentric to Fk5
- */
 afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
 
     afwGeom::Angle const phi      = _obs.getLatitude();
@@ -1166,20 +972,14 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
 
     return Fk5Coord(alpha, delta, epoch);
 }
-/**
- * @brief Convert outself from Topocentric to Fk5 (use current epoch)
- */
 afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() const {
     return this->toFk5(getEpoch());
 }
 
 
-/**
- * @brief Convert ourself from Topocentric to Topocentric ... a no-op
- */
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
-    lsst::afw::coord::Observatory const &obs,             ///< observatory of observation
-    lsst::daf::base::DateTime const &date        ///< date of observation
+    lsst::afw::coord::Observatory const &obs,
+    lsst::daf::base::DateTime const &date
                                                                     ) const
 {
     if (obs != _obs) {
@@ -1194,18 +994,10 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
     return TopocentricCoord(getLongitude(), getLatitude(), getEpoch(), _obs);
 }
 
-/**
- * @brief Convert ourself from Topocentric to Topocentric with no observatory or date arguments
- *
- * As this is essentially a copy-constructor, the extra info can be obtained internally.
- */
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric() const {
     return TopocentricCoord(getLongitude(), getLatitude(), getEpoch(), _obs);
 }
 
-/**
- * @brief Get string representation
- */
 std::string afwCoord::TopocentricCoord::toString() const {
     return (boost::format("%s(%.7f, %.7f, %.12f, (%s))")
             % getClassName()
@@ -1230,18 +1022,11 @@ std::string afwCoord::TopocentricCoord::toString() const {
  * ===============================================================================
  */
 
-/**
- * @brief Factory function to create a Coord of arbitrary type with decimal RA,Dec
- *
- * @note This factory allows the epoch to be specified but will throw if used with ICRS or Galactic
- * @note Most of the other factories (which accept epochs) just call this one indirectly.
- *
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-        afwGeom::Angle const ra,              ///< right ascension
-        afwGeom::Angle const dec,             ///< declination
-        double const epoch            ///< epoch of coordinate
+        CoordSystem const system,
+        afwGeom::Angle const ra,
+        afwGeom::Angle const dec,
+        double const epoch
 ) {
 
     switch (system) {
@@ -1275,16 +1060,10 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
 
 
-/**
- * @brief Factory function to create a Coord of arbitrary type with decimal RA,Dec in degrees
- *
- * @note This factory assumes a default epoch
- * @note Most of the other factories (which don't accept epoch) call this one.
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-        afwGeom::Angle const ra,              ///< right ascension
-        afwGeom::Angle const dec             ///< declination
+        CoordSystem const system,
+        afwGeom::Angle const ra,
+        afwGeom::Angle const dec
 ) {
 
     switch (system) {
@@ -1316,48 +1095,31 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
 
 
-/**
- * @brief Factory function to create a Coord of arbitrary type with a Point3D
- *
- * @note This factory accepts epoch.  There is an overloaded version which uses a default.
- *
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-        CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-        lsst::afw::geom::Point3D const &p3d,     ///< the coord in Point3D format
-        double const epoch,            ///< epoch of coordinate
-        bool normalize,                 ///< normalize the p3d provided
-        afwGeom::Angle const defaultLongitude ///< longitude to use if x=y=0
+        CoordSystem const system,
+        lsst::afw::geom::Point3D const &p3d,
+        double const epoch,
+        bool normalize,
+        afwGeom::Angle const defaultLongitude
 ) {
     Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude(), epoch);
 }
-/**
- * @brief Factory function to create a Coord of arbitrary type with a Point3D
- *
- * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
- *
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-        CoordSystem const system,             ///< the system (equ, fk5, galactic ..)
-        lsst::afw::geom::Point3D const &p3d,  ///< the coord in Point3D format
-        bool normalize,                        ///< normalize the p3d provided
-        afwGeom::Angle const defaultLongitude ///< longitude to use if x=y=0
+        CoordSystem const system,
+        lsst::afw::geom::Point3D const &p3d,
+        bool normalize,
+        afwGeom::Angle const defaultLongitude
 ) {
     Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude());
 }
 
-/**
- * @brief Factory function to create a Coord of arbitrary type with Point2D
- *
- * @note This factory accepts epoch.  There is an overloaded version which uses a default.
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-        CoordSystem const system,               ///< the system (equ, fk5, galactic ..)
-        lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
-        afwGeom::AngleUnit unit,       ///< the units (eg. degrees, radians)
-        double const epoch  ///< epoch of coordinate
+        CoordSystem const system,
+        lsst::afw::geom::Point2D const &p2d,
+        afwGeom::AngleUnit unit,
+        double const epoch
 ) {
     if (unit == afwGeom::hours) {
         return makeCoord(system, afwGeom::Angle(p2d.getX(), afwGeom::hours), afwGeom::Angle(p2d.getY(), afwGeom::degrees), epoch);
@@ -1366,16 +1128,10 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     }
 }
 
-/**
- * @brief Factory function to create a Coord of arbitrary type with Point2D
- *
- * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
- *
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-        CoordSystem const system, ///< the system (equ, fk5, galactic ..)
-        lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
-        afwGeom::AngleUnit unit        ///< the units (eg. degrees, radians)
+        CoordSystem const system,
+        lsst::afw::geom::Point2D const &p2d,
+        afwGeom::AngleUnit unit
 ) {
     if (unit == afwGeom::hours) {
         return makeCoord(system, afwGeom::Angle(p2d.getX(), afwGeom::hours), afwGeom::Angle(p2d.getY(), afwGeom::degrees));
@@ -1384,39 +1140,26 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     }
 }
 
-/**
- * @brief Factory function to create a Coord of arbitrary type with string RA [in degrees, not hours!], Dec
- *
- * @note This factory accepts epoch.  There is an overloaded version which uses a default.
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-                                   CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
-                                   std::string const ra,       ///< right ascension
-                                   std::string const dec,      ///< declination
-                                   double const epoch          ///< epoch of coordinate
+                                   CoordSystem const system,
+                                   std::string const ra,
+                                   std::string const dec,
+                                   double const epoch
                                   ) {
     return makeCoord(system, dmsStringToAngle(ra), dmsStringToAngle(dec), epoch);
 }
-/**
- * @brief Factory function to create a Coord of arbitrary type with string RA [in degrees, not hours!], Dec
- *
- * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-                                   CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
-                                   std::string const ra,       ///< right ascension
-                                   std::string const dec       ///< declination
+                                   CoordSystem const system,
+                                   std::string const ra,
+                                   std::string const dec
                                   ) {
     return makeCoord(system, dmsStringToAngle(ra), dmsStringToAngle(dec));
 }
 
 
 
-/**
- * @brief Lightweight factory to make an empty coord.
- */
 PTR(afwCoord::Coord) afwCoord::makeCoord(
-                                   CoordSystem const system ///< the system (FK5, ICRS, etc)
+                                   CoordSystem const system
                                   ) {
     switch (system) {
       case FK5:
@@ -1444,9 +1187,6 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     }
 }
 
-/**
- * @brief Get string representation
- */
 std::string afwCoord::Coord::toString() const {
     return (boost::format("%s(%.7f, %.7f, %.2f)")
             % getClassName()

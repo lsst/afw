@@ -12,7 +12,7 @@ class BaseRecord;
 
 template <typename T> class Key;
 
-/// @brief A base class for Key that allows subfield keys to be extracted for some field types.
+/// A base class for Key that allows subfield keys to be extracted for some field types.
 template <typename T>
 class KeyBase {
 public:
@@ -20,7 +20,7 @@ public:
 
 };
 
-/// @brief KeyBase specialization for Arrays.
+/// KeyBase specialization for Arrays.
 template <typename U>
 class KeyBase< Array<U> > {
 public:
@@ -30,9 +30,9 @@ public:
 
     void assignVector(BaseRecord & record, std::vector<U> const & values) const;
 
-    Key<U> operator[](int i) const; ///< @brief Return a subfield key for the i-th element of the array.
+    Key<U> operator[](int i) const; ///< Return a subfield key for the i-th element of the array.
 
-    Key< Array<U> > slice(int begin, int end) const; ///< @brief Return a key for a range of elements
+    Key< Array<U> > slice(int begin, int end) const; ///< Return a key for a range of elements
 };
 
 }}} // namespace lsst::afw::table

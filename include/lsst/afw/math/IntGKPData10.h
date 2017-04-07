@@ -26,7 +26,7 @@
 #define LSST_AFW_MATH_INTGKPDATA10_H 1
 
 /**
- * @brief Numeric constants used by the Integrate.h integrator routines.
+ *  Numeric constants used by the Integrate.h integrator routines.
  *
  * @note Gauss-Kronrod-Patterson quadrature coefficients for use in
  *       quadpack routine qng. These coefficients were calculated with

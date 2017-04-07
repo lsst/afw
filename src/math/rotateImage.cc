@@ -20,9 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
+/*
  * Rotate an Image (or Mask or MaskedImage) by a fixed angle or number of quarter turns
  */
 #include <cstdint>
@@ -36,12 +34,9 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-/**
- * Rotate an image by an integral number of quarter turns
- */
 template<typename ImageT>
-typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to rotate
-                                     int nQuarter ///< the desired number of quarter turns
+typename ImageT::Ptr rotateImageBy90(ImageT const& inImage,
+                                     int nQuarter
                                     ) {
     typename ImageT::Ptr outImage;      // output image
 
@@ -94,13 +89,10 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
     return outImage;
 }
 
-/**
- * Flip an image left--right and/or top--bottom
- */
 template<typename ImageT>
-PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
-                      bool flipLR,           ///< Flip left <--> right?
-                      bool flipTB            ///< Flip top <--> bottom?
+PTR(ImageT) flipImage(ImageT const& inImage,
+                      bool flipLR,
+                      bool flipTB
                      ) {
     typename ImageT::Ptr outImage(new ImageT(inImage, true)); // Output image
 
@@ -140,11 +132,10 @@ PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
     return outImage;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
     template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int); \
@@ -158,6 +149,6 @@ INSTANTIATE(float)
 INSTANTIATE(double)
 template afwImage::Mask<std::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int);
 template afwImage::Mask<std::uint16_t>::Ptr flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB);
-/// \endcond
+/// @endcond
 
 }}}

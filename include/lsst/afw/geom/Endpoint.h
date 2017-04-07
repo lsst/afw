@@ -90,9 +90,9 @@ public:
     Get raw data from a single point
 
     @param[in] point  data for a single point
-    @return the values in the point as a vector of size NAxess
+    @returns the values in the point as a vector of size NAxess
 
-    @throw lsst::pex::exceptions::InvalidParameterError if the point has the wrong number of axes
+    @throws lsst::pex::exceptions::InvalidParameterError if the point has the wrong number of axes
     */
     virtual std::vector<double> dataFromPoint(Point const & point) const = 0;
 
@@ -100,10 +100,10 @@ public:
     Get raw data from an array of points
     
     @param[in] arr  Array of points
-    @return the data as a 2-D ndarray array [nPoints, nAxes] in C order,
+    @returns the data as a 2-D ndarray array [nPoints, nAxes] in C order,
         so the in-memory view is, for example, x0, y0, x1, y1, x2, y2, ...
 
-    @throw lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
+    @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
     */
     virtual ndarray::Array<double, 2, 2> dataFromArray(Array const & arr) const = 0;
 
@@ -111,7 +111,7 @@ public:
     Get a single point from raw data
 
     @param[in] data  Data as a vector of length NAxes
-    @return the corresponding point
+    @returns the corresponding point
     */
     virtual Point pointFromData(std::vector<double> const & data) const = 0;
 
@@ -120,9 +120,9 @@ public:
     
     @param[in] data  Raw data for an array of points, as a 2-D ndarray array [nPoints, nAxes] in C order,
         so the in-memory view is, for example, x0, y0, x1, y1, x2, y2, ...
-    @return an array of points
+    @returns an array of points
 
-    @throw lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
+    @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
     */
     virtual Array arrayFromData(ndarray::Array<double, 2, 2> const & data) const = 0;
 

@@ -58,7 +58,7 @@ class ApCorrMap;
 class VisitInfo;
 
 /**
- *  @brief A collection of all the things that make an Exposure different from a MaskedImage
+ *  A collection of all the things that make an Exposure different from a MaskedImage
  *
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
@@ -189,7 +189,7 @@ public:
     void setVisitInfo(CONST_PTR(image::VisitInfo) const visitInfo) { _visitInfo = visitInfo; }
 
     /**
-     *  @brief Construct an ExposureInfo from its various components.
+     *  Construct an ExposureInfo from its various components.
      *
      *  If a null Calib and/or PropertySet pointer is passed (the default),
      *  a new Calib and/or PropertyList will be created.  To set these pointers
@@ -225,7 +225,7 @@ private:
     template <typename ImageT, typename MaskT, typename VarianceT> friend class Exposure;
 
     /**
-     *  @brief A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
+     *  A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
      *
      *  An ExposureInfo is generally held by an Exposure, and we implement much of Exposure persistence
      *  here in ExposureInfo.  FITS writing needs to take place in three steps:
@@ -246,17 +246,17 @@ private:
     };
 
     /**
-     *  @brief Start the process of writing an exposure to FITS.
+     *  Start the process of writing an exposure to FITS.
      *
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
      *                    install a linear offset-only WCS in the FITS header.
      *
-     *  @sa FitsWriteData
+     *  @see FitsWriteData
      */
     FitsWriteData _startWriteFits(geom::Point2I const & xy0=geom::Point2I()) const;
 
     /**
-     *  @brief Write any additional non-image HDUs to a FITS file.
+     *  Write any additional non-image HDUs to a FITS file.
      *
      *  @param[in]  fitsfile   Open FITS object to write to.  Does not need to be positioned to any
      *                         particular HDU.
@@ -266,12 +266,12 @@ private:
      *  keys included in the result of getFitsMetadata() if this is called after writing the
      *  MaskedImage HDUs.
      *
-     *  @sa FitsWriteData
+     *  @see FitsWriteData
      */
     void _finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const;
 
     /**
-     *  @brief Read from a FITS file and metadata.
+     *  Read from a FITS file and metadata.
      *
      *  This operates in-place on this instead of returning a new object, because it will usually
      *  only be called by the exposure constructor, which starts by default-constructing the

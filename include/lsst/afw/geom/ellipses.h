@@ -25,9 +25,8 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_H
 #define LSST_AFW_GEOM_ELLIPSES_H
 
-/**
- *  \file
- *  \brief Public header class for ellipse library.
+/*
+ *  Public header class for ellipse library.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"

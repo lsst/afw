@@ -71,11 +71,6 @@ std::string Threshold::getTypeString(ThresholdType const & type) {
     }
 }
 
-/**
- * return value of threshold, to be interpreted via type
- * @param param value of variance/stdev if needed
- * @return value of threshold
- */
 double Threshold::getValue(const double param) const {
     switch (_type) {
       case STDEV:
@@ -125,16 +120,6 @@ double Threshold::getValue(ImageT const& image) const {
     return getValue(param);
 }
 
-/**
- * \brief Factory method for creating Threshold objects
- *
- * @param value value of threshold
- * @param typeStr string representation of a ThresholdType. This parameter is
- *                optional. Allowed values are: "variance", "value", "stdev", "pixel_stdev"
- * @param polarity If true detect positive objects, false for negative
- *
- * @return desired Threshold
- */
 Threshold createThreshold(
     double const value,
     std::string const typeStr,

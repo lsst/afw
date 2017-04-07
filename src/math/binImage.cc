@@ -20,9 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
+/*
  * Bin an Image or MaskedImage by an integral factor (the same in x and y)
  */
 #include <cstdint>
@@ -38,19 +36,19 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
-                     int const binsize, ///< Output pixels are binsize*binsize input pixels
-                     lsst::afw::math::Property const flags ///< how to generate super-pixels
+PTR(ImageT) binImage(ImageT const& in,
+                     int const binsize,
+                     lsst::afw::math::Property const flags
                     )
 {
     return binImage(in, binsize, binsize, flags);
 }
 
 template<typename ImageT>
-PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
-                     int const binX,    ///< Output pixels are binX*binY input pixels
-                     int const binY,    ///< Output pixels are binX*binY input pixels
-                     lsst::afw::math::Property const flags ///< how to generate super-pixels
+PTR(ImageT) binImage(ImageT const& in,
+                     int const binX,
+                     int const binY,
+                     lsst::afw::math::Property const flags
                     )
 {
     if (flags != lsst::afw::math::MEAN) {
@@ -91,11 +89,10 @@ PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
     return out;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr \
              binImage(afwImage::Image<TYPE> const&, int, lsst::afw::math::Property const); \
@@ -110,6 +107,6 @@ INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-/// \endcond
+/// @endcond
 
 }}}

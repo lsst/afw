@@ -24,14 +24,8 @@
 
 #ifndef LSST_AFW_MATH_FUNCTION_H
 #define LSST_AFW_MATH_FUNCTION_H
-/**
- * @file
- *
- * @brief Define the basic Function classes.
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Define the basic Function classes.
  */
 #include <stdexcept>
 #include <sstream>
@@ -57,7 +51,7 @@ using boost::serialization::make_nvp;
 #endif
 
     /**
-     * @brief Basic Function class.
+     * Basic Function class.
      *
      * Function objects are functions whose parameters may be read and changed using
      * getParameters and setParameters. They were designed for use with the Kernel class.
@@ -92,7 +86,7 @@ using boost::serialization::make_nvp;
     {
     public:
         /**
-         * @brief Construct a Function given the number of function parameters.
+         * Construct a Function given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -105,7 +99,7 @@ using boost::serialization::make_nvp;
         {}
 
         /**
-         * @brief Construct a Function given the function parameters.
+         * Construct a Function given the function parameters.
          */
         explicit Function(
             std::vector<double> const &params)   ///< function parameters
@@ -118,18 +112,18 @@ using boost::serialization::make_nvp;
         virtual ~Function() {}
 
         /**
-         * @brief Return the number of function parameters
+         * Return the number of function parameters
          *
-         * @return the number of function parameters
+         * @returns the number of function parameters
          */
         unsigned int getNParameters() const {
             return _params.size();
         }
 
         /**
-         * @brief Get one function parameter without range checking
+         * Get one function parameter without range checking
          *
-         * @return the specified function parameter
+         * @returns the specified function parameter
          */
         virtual double getParameter(
             unsigned int ind)    ///< index of parameter
@@ -138,25 +132,25 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return all function parameters
+         * Return all function parameters
          *
-         * @return the function parameters as a vector
+         * @returns the function parameters as a vector
          */
         std::vector<double> const &getParameters() const {
             return _params;
         }
 
         /**
-         * @brief Is the function a linear combination of its parameters?
+         * Is the function a linear combination of its parameters?
          *
-         * @return true if the function can be expressed as: sum over i of parameter_i * function_i(args)
+         * @returns true if the function can be expressed as: sum over i of parameter_i * function_i(args)
          *
          * @warning: subclasses must override if true.
          */
         virtual bool isLinearCombination() const { return false; }
 
         /**
-         * @brief Set one function parameter without range checking
+         * Set one function parameter without range checking
          */
         void setParameter(
             unsigned int ind,   ///< index of parameter
@@ -167,9 +161,9 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Set all function parameters
+         * Set all function parameters
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError
+         * @throws lsst::pex::exceptions::InvalidParameterError
          *        if the wrong number of parameters is supplied.
          */
         void setParameters(
@@ -185,9 +179,9 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Return a string representation of the function
+         * Return a string representation of the function
          *
-         * @return a string representation of the function
+         * @returns a string representation of the function
          */
         virtual std::string toString(std::string const&) const {
             std::stringstream os;
@@ -219,7 +213,7 @@ using boost::serialization::make_nvp;
 
 
     /**
-     * @brief A Function taking one argument.
+     * A Function taking one argument.
      *
      * Subclass and override operator() to do useful work.
      *
@@ -233,7 +227,7 @@ using boost::serialization::make_nvp;
         typedef std::shared_ptr<Function1<ReturnT> > Ptr;
 
         /**
-         * @brief Construct a Function1 given the number of function parameters.
+         * Construct a Function1 given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -244,7 +238,7 @@ using boost::serialization::make_nvp;
         {}
 
         /**
-         * @brief Construct a Function1 given the function parameters.
+         * Construct a Function1 given the function parameters.
          */
         explicit Function1(
             std::vector<double> const &params)   ///< function parameters
@@ -255,7 +249,7 @@ using boost::serialization::make_nvp;
         virtual ~Function1() {}
 
         /**
-         * @brief Return a pointer to a deep copy of this function
+         * Return a pointer to a deep copy of this function
          *
          * This function exists instead of a copy constructor
          * so one can obtain a copy of an actual function
@@ -263,7 +257,7 @@ using boost::serialization::make_nvp;
          *
          * Every concrete subclass must override this method.
          *
-         * @return a pointer to a deep copy of the function
+         * @returns a pointer to a deep copy of the function
          */
         virtual Ptr clone() const = 0;
 
@@ -290,7 +284,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief A Function taking two arguments.
+     * A Function taking two arguments.
      *
      * Subclass and override operator() to do useful work.
      *
@@ -304,7 +298,7 @@ using boost::serialization::make_nvp;
         typedef std::shared_ptr<Function2<ReturnT> > Ptr;
 
         /**
-         * @brief Construct a Function2 given the number of function parameters.
+         * Construct a Function2 given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -315,7 +309,7 @@ using boost::serialization::make_nvp;
         {}
 
         /**
-         * @brief Construct a Function2 given the function parameters.
+         * Construct a Function2 given the function parameters.
          *
          * The number of function parameters is set to the length of params.
          */
@@ -328,7 +322,7 @@ using boost::serialization::make_nvp;
         virtual ~Function2() {}
 
         /**
-         * @brief Return a pointer to a deep copy of this function
+         * Return a pointer to a deep copy of this function
          *
          * This function exists instead of a copy constructor
          * so one can obtain a copy of an actual function
@@ -336,7 +330,7 @@ using boost::serialization::make_nvp;
          *
          * Every non-virtual function must override this method.
          *
-         * @return a pointer to a deep copy of the function
+         * @returns a pointer to a deep copy of the function
          */
         virtual Ptr clone() const = 0;
 
@@ -369,16 +363,14 @@ using boost::serialization::make_nvp;
 
 
     /**
-     * @brief Base class for 2-dimensional polynomials of the form:
+     * Base class for 2-dimensional polynomials of the form:
      *
-     * f(x,y) =   c0 f0(x) f0(y)                                        (0th order)
-     *          + c1 f1(x) f0(x) + c2 f0(x) f1(y)                       (1st order)
-     *          + c3 f2(x) f0(y) + c4 f1(x) f1(y) + c5 f0(x) f2(y)      (2nd order)
-     *          + ...
+     *     f(x,y) =   c0 f0(x) f0(y)                                        (0th order)
+     *              + c1 f1(x) f0(x) + c2 f0(x) f1(y)                       (1st order)
+     *              + c3 f2(x) f0(y) + c4 f1(x) f1(y) + c5 f0(x) f2(y)      (2nd order)
+     *              + ...
      *
      * and typically f0(x) = 1
-     *
-     * @ingroup afw
      */
     template<typename ReturnT>
     class BasePolynomialFunction2: public Function2<ReturnT> {
@@ -386,7 +378,7 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a polynomial function of specified order.
+         * Construct a polynomial function of specified order.
          *
          * The polynomial will have (order + 1) * (order + 2) / 2 coefficients
          *
@@ -400,12 +392,12 @@ using boost::serialization::make_nvp;
         {}
 
         /**
-         * @brief Construct a polynomial function with specified parameters.
+         * Construct a polynomial function with specified parameters.
          *
          * The order of the polynomial is determined from the length of the params vector
          * (see orderFromNParameters) and only certain lengths are suitable: 1, 3, 6, 10, 15...
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if params length is unsuitable
+         * @throws lsst::pex::exceptions::InvalidParameterError if params length is unsuitable
          */
         explicit BasePolynomialFunction2(
             std::vector<double> params) ///< polynomial coefficients
@@ -417,16 +409,16 @@ using boost::serialization::make_nvp;
         virtual ~BasePolynomialFunction2() {}
 
         /**
-         * @brief Get the polynomial order
+         * Get the polynomial order
          */
         int getOrder() const { return _order; }
 
         virtual bool isLinearCombination() const { return true; }
 
         /**
-         * @brief Compute number of parameters from polynomial order.
+         * Compute number of parameters from polynomial order.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if order < 0
+         * @throws lsst::pex::exceptions::InvalidParameterError if order < 0
          */
         static int nParametersFromOrder(int order) {
             if (order < 0) {
@@ -438,7 +430,7 @@ using boost::serialization::make_nvp;
         }
 
         /**
-         * @brief Compute polynomial order from the number of parameters
+         * Compute polynomial order from the number of parameters
          *
          * Only certain values of nParameters are acceptable, including:
          * nParameters order
@@ -449,7 +441,7 @@ using boost::serialization::make_nvp;
          *     15        4
          *    ...
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if nParameters is invalid
+         * @throws lsst::pex::exceptions::InvalidParameterError if nParameters is invalid
          */
         static int orderFromNParameters(int nParameters) {
             int order = static_cast<int>(
@@ -507,7 +499,7 @@ using boost::serialization::make_nvp;
 
 
     /**
-     * @brief a class used in function calls to indicate that no Function1 is being provided
+     * a class used in function calls to indicate that no Function1 is being provided
      */
     template<typename ReturnT>
     class NullFunction1 : public Function1<ReturnT> {
@@ -530,7 +522,7 @@ using boost::serialization::make_nvp;
     };
 
     /**
-     * @brief a class used in function calls to indicate that no Function2 is being provided
+     * a class used in function calls to indicate that no Function2 is being provided
      */
     template<typename ReturnT>
     class NullFunction2 : public Function2<ReturnT> {

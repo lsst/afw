@@ -22,11 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file   rombergIntegrate.cc
- * @author S. Bickerton
- * @date   May 25, 2009
- *
+/*
  * This example demonstrates how to use the romberg 1D and 2D
  * integrators in afw::math (Quadrature).
  *
@@ -40,7 +36,7 @@
 
 namespace math = lsst::afw::math;
 
-/** =========================================================================
+/* =========================================================================
  * define a simple 1D function as a functor to be integrated.
  * I've chosen a parabola here: f(x) = k + kx*x*x
  * as it's got an easy-to-check analytic answer.
@@ -71,7 +67,7 @@ private:
 
 
 
-/** =========================================================================
+/* =========================================================================
  * define a simple 2D function as a functor to be integrated.
  * I've chosen a 2D paraboloid: f(x) = k - kx*x*x - ky*y*y
  * as it's got an easy-to-check analytic answer.
@@ -105,7 +101,7 @@ private:
 
 
 
-/** =============================================================================
+/* =============================================================================
  * Define a pair of normal functions that do the same thing as the above functors
  *
  */
@@ -123,7 +119,7 @@ double parabola2d(double const x, double const y) {
 
 
 
-/** =====================================================================
+/*  =====================================================================
  *  Main body of code
  *  ======================================================================
  */

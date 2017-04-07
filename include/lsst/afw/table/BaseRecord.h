@@ -11,7 +11,7 @@
 namespace lsst { namespace afw { namespace table {
 
 /**
- *  @brief Base class for all records.
+ *  Base class for all records.
  *
  *  BaseRecord is a polymorphic base class that provides the core record interface: access to fields
  *  and links back to the table it is associated with.  Field access is provided by the templated
@@ -47,14 +47,14 @@ public:
     /// Template of CatalogT used to hold const records of this type.
     typedef CatalogT<BaseRecord const> ConstCatalog;
 
-    /// @brief Return the Schema that holds this record's fields and keys.
+    /// Return the Schema that holds this record's fields and keys.
     Schema getSchema() const { return _table->getSchema(); }
 
-    /// @brief Return the table this record is associated with.
+    /// Return the table this record is associated with.
     CONST_PTR(BaseTable) getTable() const { return _table; }
 
     /**
-     *  @brief Return a pointer to the underlying elements of a field (non-const).
+     *  Return a pointer to the underlying elements of a field (non-const).
      *
      *  This low-level access is intended mostly for use with serialization;
      *  users should generally prefer the safer get(), set() and operator[]
@@ -74,7 +74,7 @@ public:
     }
 
     /**
-     *  @brief Return a pointer to the underlying elements of a field (const).
+     *  Return a pointer to the underlying elements of a field (const).
      *
      *  This low-level access is intended mostly for use with serialization;
      *  users should generally prefer the safer get(), set() and operator[]
@@ -94,7 +94,7 @@ public:
     }
 
     /**
-     *  @brief Return a reference (or reference-like type) to the field's value.
+     *  Return a reference (or reference-like type) to the field's value.
      *
      *  Some field types (Point, Moments, Flag, Covariance, and Coord) do not support reference access.
      *
@@ -106,7 +106,7 @@ public:
     }
 
     /**
-     *  @brief Return a const reference (or const-reference-like type) to the field's value.
+     *  Return a const reference (or const-reference-like type) to the field's value.
      *
      *  Some field types (Point, Moments, Flag, Covariance, and Coord) do not support reference access.
      *
@@ -118,7 +118,7 @@ public:
     }
 
     /**
-     *  @brief Return the value of a field for the given key.
+     *  Return the value of a field for the given key.
      *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
@@ -128,7 +128,7 @@ public:
     }
 
     /**
-     *  @brief Set value of a field for the given key.
+     *  Set value of a field for the given key.
      *
      *  This method has an additional template parameter because some fields
      *  accept and convert different types to the stored field type.
@@ -141,7 +141,7 @@ public:
     }
 
     /**
-     *  @brief Compute a calculated or aggregate field.
+     *  Compute a calculated or aggregate field.
      */
     template <typename T>
     T get(OutputFunctorKey<T> const & key) const {
@@ -149,7 +149,7 @@ public:
     }
 
     /**
-     *  @brief Set a calculated or aggregate field.
+     *  Set a calculated or aggregate field.
      */
     template <typename T, typename U>
     void set(InputFunctorKey<T> const & key, U const & value) {
@@ -166,10 +166,10 @@ public:
         return key.getConstReference(*this);
     }
 
-    /// @brief Copy all field values from other to this, requiring that they have equal schemas.
+    /// Copy all field values from other to this, requiring that they have equal schemas.
     void assign(BaseRecord const & other);
 
-    /// @brief Copy field values from other to this, using a mapper.
+    /// Copy field values from other to this, using a mapper.
     void assign(BaseRecord const & other, SchemaMapper const & mapper);
 
     ndarray::Manager::Ptr getManager() const { return _manager; }
@@ -178,10 +178,10 @@ public:
 
 protected:
 
-    /// @brief Called by assign() after transferring fields to allow subclass data members to be copied.
+    /// Called by assign() after transferring fields to allow subclass data members to be copied.
     virtual void _assign(BaseRecord const & other) {}
 
-    /// @brief Construct a record with uninitialized data.
+    /// Construct a record with uninitialized data.
     BaseRecord(PTR(BaseTable) const & table) : daf::base::Citizen(typeid(this)), _table(table) {
         table->_initialize(*this);
     }

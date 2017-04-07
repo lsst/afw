@@ -38,10 +38,10 @@ namespace afw {
 namespace geom {
 
 /**
- *  \brief An affine coordinate transformation consisting of a linear transformation and an offset.
+ *  An affine coordinate transformation consisting of a linear transformation and an offset.
  *
- *  The transform is represented by a matrix \f$ \mathbf{M} \f$ such that
- *  \f[
+ *  The transform is represented by a matrix @f$ \mathbf{M} @f$ such that
+ *  @f[
  *     \left[\begin{array}{ c }
  *     x_f \\
  *     y_f \\
@@ -54,11 +54,11 @@ namespace geom {
  *     y_i \\
  *     1
  *     \end{array}\right]
- *  \f]
- *  where \f$(x_i,y_i)\f$ are the input coordinates and \f$(x_f,y_f)\f$ are the output coordinates.
+ *  @f]
+ *  where @f$(x_i,y_i)@f$ are the input coordinates and @f$(x_f,y_f)@f$ are the output coordinates.
  *
- *  If \f$ x_f(x_i,y_i) \f$ and \f$ y_f(x_i,y_i) \f$ are continuous differentiable functions, then
- *  \f[
+ *  If @f$ x_f(x_i,y_i) @f$ and @f$ y_f(x_i,y_i) @f$ are continuous differentiable functions, then
+ *  @f[
  *     \mathbf{M} = \left[\begin{array}{ c c c }
  *     \displaystyle\frac{\partial x_f}{\partial x_i} &
  *     \displaystyle\frac{\partial x_f}{\partial y_i} &
@@ -68,11 +68,11 @@ namespace geom {
  *     y_f \\
  *     \displaystyle 0 & \displaystyle 0 & \displaystyle 1
  *     \end{array}\right]
- *  \f]
- *  evaluated at \f$(x_i,y_i)\f$.
+ *  @f]
+ *  evaluated at @f$(x_i,y_i)@f$.
  *
- *  The 2x2 upper left corner of \f$ \mathbf{M} \f$ is the linear part of the transform is simply the
- *  Jacobian of the mapping between \f$(x_i,y_i)\f$ and \f$(x_f,y_f)\f$.
+ *  The 2x2 upper left corner of @f$ \mathbf{M} @f$ is the linear part of the transform is simply the
+ *  Jacobian of the mapping between @f$(x_i,y_i)@f$ and @f$(x_f,y_f)@f$.
  */
 class AffineTransform {
 public:
@@ -122,6 +122,11 @@ public:
     ) : _linear(linear), _translation(translation) {}
 
 
+    /**
+     * Return the inverse transform
+     *
+     * @throws lsst::afw::geom::SingularTransformException is not invertible
+     */
     AffineTransform const invert() const;
 
     /** Whether the transform is a no-op. */
@@ -152,9 +157,22 @@ public:
     LinearTransform const & getLinear() const {return _linear;}
     LinearTransform & getLinear() {return _linear;}
 
+    /**
+     * Return the transform as a full 3x3 matrix
+     */
     Matrix const getMatrix() const;
 
+    /**
+     * Return the transform matrix elements as a parameter vector
+     *
+     * The elements will be ordered XX, YX, XY, YY, X, Y
+     */
     ParameterVector const getParameterVector() const;
+    /**
+     * Set the transform matrix elements from a parameter vector
+     *
+     * The parameter vector is ordered XX, YX, XY, YY, X, Y
+     */
     void setParameterVector(ParameterVector const & vector);
 
     double & operator[](int i) {
@@ -205,70 +223,76 @@ public:
     }
 
     /**
-     *  \brief Construct a new AffineTransform that represents a uniform scaling.
+     *  Construct a new AffineTransform that represents a uniform scaling.
      *
-     *  \return An AffineTransform with matrix
-     *  \f$
+     *  @returns An AffineTransform with matrix
+     *  @f$
      *     \left[\begin{array}{ c c c }
      *     s & 0 & 0 \\
      *     0 & s & 0 \\
      *     0 & 0 & 1 \\
      *     \end{array}\right]
-     *  \f$
+     *  @f$
      */
     static AffineTransform makeScaling(double s) {
         return AffineTransform(LinearTransform::makeScaling(s));
     }
 
     /**
-     *  \brief Construct a new AffineTransform that represents a non-uniform
+     *  Construct a new AffineTransform that represents a non-uniform
      *  scaling.
      *
-     *  \return An AffineTransform with matrix
-     *  \f$
+     *  @returns An AffineTransform with matrix
+     *  @f$
      *     \left[\begin{array}{ c c c }
      *     s & 0 & 0 \\
      *     0 & t & 0 \\
      *     0 & 0 & 1 \\
      *     \end{array}\right]
-     *  \f$
+     *  @f$
      */
     static AffineTransform makeScaling(double s, double t) {
         return AffineTransform(LinearTransform::makeScaling(s, t));
     }
     /**
-     *  \brief Construct a new AffineTransform that represents a CCW rotation in radians.
+     *  Construct a new AffineTransform that represents a CCW rotation in radians.
      *
-     *  \return An AffineTransform with matrix
-     *  \f$
+     *  @returns An AffineTransform with matrix
+     *  @f$
      *     \left[\begin{array}{ c c c }
      *     \cos t & -\sin t & 0 \\
      *     \sin t & \cos t & 0  \\
      *     0 & 0 & 1 \\
      *     \end{array}\right]
-     *  \f$
+     *  @f$
      */
     static AffineTransform makeRotation(Angle t) {
         return AffineTransform(LinearTransform::makeRotation(t));
     }
 
     /**
-     *  \brief Construct a new AffineTransform that represents a pure translation.
+     *  Construct a new AffineTransform that represents a pure translation.
      *
-     *  \return An AffineTransform with matrix
-     *  \f$
+     *  @returns An AffineTransform with matrix
+     *  @f$
      *     \left[\begin{array}{ c c c }
      *     0 & 0 & translation.getX() \\
      *     0 & 0 & translation.getY() \\
      *     0 & 0 & 1 \\
      *     \end{array}\right]
-     *  \f$
+     *  @f$
      */
     static AffineTransform makeTranslation(Extent2D translation) {
         return AffineTransform(translation);
     }
 
+    /**
+     * Take the derivative of (*this)(input) w.r.t the transform elements
+     */
     TransformDerivativeMatrix dTransform(Point2D const & input) const;
+    /**
+     * Take the derivative of (*this)(input) w.r.t the transform elements
+     */
     TransformDerivativeMatrix dTransform(Extent2D const & input) const;
 
 private:

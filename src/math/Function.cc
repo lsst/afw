@@ -20,18 +20,13 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/** \file
- *
+/*
  * Support routines for
  */
 #include "lsst/afw/math/FunctionLibrary.h"
 
 namespace afwMath = lsst::afw::math;
 
-/**
- * Return the coefficients of the Function's parameters, evaluated at (x, y)
- * I.e. given c0, c1, c2, c3 ... return 1, x, y, x^2 ...
- */
 template<typename ReturnT>
 std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, double y) const {
     std::vector<double> coeffs(this->getNParameters());
@@ -64,12 +59,11 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
     return coeffs;
 }
 
-/************************************************************************************************************/
-/// \cond
+/// @cond
 #define INSTANTIATE(TYPE) \
     template std::vector<double> \
     afwMath::PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const
 
 INSTANTIATE(double);
 INSTANTIATE(float);
-/// \endcond
+/// @endcond

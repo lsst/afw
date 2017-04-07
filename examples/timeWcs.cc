@@ -32,7 +32,7 @@
 const unsigned DefNIter = 100000;
 
 /**
-Transform pix to sky and back again nIter times using points distributed evenly
+@internal Transform pix to sky and back again nIter times using points distributed evenly
 from bbox.getMin() to bbox.getMax() and return the max round trip pixel error
 */
 void timeWcs(

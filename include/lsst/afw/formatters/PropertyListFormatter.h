@@ -25,15 +25,6 @@
 #ifndef LSST_AFW_FORMATTERS_PROPERTYLISTFORMATTER_H
 #define LSST_AFW_FORMATTERS_PROPERTYLISTFORMATTER_H
 
-/**
- * @brief Interface for PropertyListFormatter class
- *
- * @class lsst::afw::formatters::PropertyListFormatter
- * @brief Class implementing persistence and retrieval for PropertyLists.
- *
- * @ingroup afw
- */
-
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/policy/Policy.h"
@@ -42,6 +33,9 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
+/**
+ * Class implementing persistence and retrieval for PropertyLists.
+ */
 class PropertyListFormatter : public daf::persistence::Formatter {
 public:
     virtual ~PropertyListFormatter() {}

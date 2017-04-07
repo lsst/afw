@@ -22,12 +22,8 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file Background.cc
- * @ingroup afw
- * @brief Background estimation class code
- * @author Steve Bickerton
- * @date Jan 26, 2009
+/*
+ * Background estimation class code
  */
 #include <iostream>
 #include <limits>
@@ -82,31 +78,9 @@ namespace {
     }
 }
 
-/**
- * @brief Constructor for BackgroundMI
- *
- * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
- * getImage() to interpolate those values, creating an image the same size as the original
- *
- * \note If there are heavily masked or Nan regions in the image we may not be able to estimate
- * all the cells in the "statsImage".  Interpolation will still work, but if you want to prevent
- * the code wildly extrapolating, it may be better to set the values directly; e.g.
- * \code
- * defaultValue = 10
- * statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
- * sim = statsImage.getImage().getArray()
- * sim[np.isnan(sim)] = defaultValue # replace NaN by defaultValue
- * bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
- * \endcode
- * There is a ticket (#2825) to allow getImage to specify a default value to use when interpolation fails
- *
- * \deprecated The old and deprecated API specified the interpolation style as part of the BackgroundControl
- * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
- * method is called
- */
 template<typename ImageT>
-BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
-                             BackgroundControl const& bgCtrl ///< Control how the BackgroundMI is estimated
+BackgroundMI::BackgroundMI(ImageT const& img,
+                             BackgroundControl const& bgCtrl
                             ) :
     Background(img, bgCtrl), _statsImage(image::MaskedImage<InternalPixelT>())
 {
@@ -132,11 +106,8 @@ BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose
         }
     }
 }
-/**
- * Recreate a BackgroundMI from the statsImage and the original Image's BBox
- */
-BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,                         ///< unbinned Image's BBox
-                           image::MaskedImage<InternalPixelT> const& statsImage ///< Internal stats image
+BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,
+                           image::MaskedImage<InternalPixelT> const& statsImage
                           ) :
     Background(imageBBox, statsImage.getWidth(), statsImage.getHeight()),
     _statsImage(statsImage)
@@ -201,37 +172,23 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
     }
 }
 
-/**
- * @brief Add a scalar to the Background (equivalent to adding a constant to the original image)
- */
-BackgroundMI& BackgroundMI::operator+=(float const delta ///< Value to add
+BackgroundMI& BackgroundMI::operator+=(float const delta
                                   )
 {
     _statsImage += delta;
     return *this;
 }
 
-/**
- * @brief Subtract a scalar from the Background (equivalent to subtracting a constant from the original image)
- */
-BackgroundMI& BackgroundMI::operator-=(float const delta ///< Value to subtract
+BackgroundMI& BackgroundMI::operator-=(float const delta
                                   )
 {
     _statsImage -= delta;
     return *this;
 }
 
-/**
- * @brief Method to retrieve the background level at a pixel coord.
- *
- * @return an estimated background at x,y (double)
- *
- * \deprecated Don't call this image (not even in test code).
- * This can be a very costly function to get a single pixel. If you want an image, use the getImage() method.
- */
-double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to interpolate
-                            int const x, ///< x-pixel coordinate (column)
-                            int const y ///< y-pixel coordinate (row)
+double BackgroundMI::getPixel(Interpolate::Style const interpStyle,
+                            int const x,
+                            int const y
                            ) const
 {
     (void)getImage<InternalPixelT>(interpStyle);        // setup the interpolation
@@ -253,9 +210,6 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
         throw;
     }
 }
-/*
- * Worker routine for getImage
- */
 template<typename PixelT>
 PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     geom::Box2I const& bbox,
@@ -413,7 +367,6 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     return bg;
 }
 
-/************************************************************************************************************/
 
 template<typename PixelT>
 PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
@@ -425,7 +378,7 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
     return makeApproximate(_xcen, _ycen, _statsImage, localBBox, actrl);
 }
 
-/// \cond
+/// @cond
 /*
  * Create the versions we need of _get{Approximate,Image} and Explicit instantiations
  *
@@ -459,5 +412,5 @@ PTR(Approximate<TYPE>) BackgroundMI::_getApproximate(                   \
 BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
 BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
-/// \endcond
+/// @endcond
 }}} // lsst::afw::math

@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
 
-/**
- *  \file
- *  @brief Definitions and inlines for Axes.
+/*
+ * Definitions and inlines for Axes.
  *
- *  \note Do not include directly; use the main ellipse header file.
+ * Note: do not include directly; use the main ellipse header file.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -40,7 +39,7 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
+ * An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
  */
 class Axes : public BaseCore {
 public:
@@ -59,7 +58,7 @@ public:
     double const getTheta() const { return _vector[THETA]; }
     void setTheta(double theta) { _vector[THETA] = theta; }
 
-    /// @brief Deep copy the ellipse core.
+    /// Deep copy the ellipse core.
     Ptr clone() const { return std::static_pointer_cast<Axes>(_clone()); }
 
     /// Return a string that identifies this parametrization.
@@ -75,33 +74,33 @@ public:
 
     virtual void writeParameters(double * iter) const;
 
-    /// @brief Standard assignment.
+    /// Standard assignment.
     Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
 
-    /// @brief Converting assignment.
+    /// Converting assignment.
     Axes & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
 
-    /// @brief Construct from parameter values
+    /// Construct from parameter values
     explicit Axes(double a=1.0, double b=1.0, double theta=0.0, bool normalize=false) :
         _vector(a, b, theta) { if (normalize) this->normalize(); }
 
-    /// @brief Construct from a parameter vector.
+    /// Construct from a parameter vector.
     explicit Axes(BaseCore::ParameterVector const & vector, bool normalize=false) :
         _vector(vector) { if (normalize) this->normalize(); }
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Axes(Axes const & other) : _vector(other._vector) {}
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Axes(BaseCore const & other) { *this = other; }
 
 #ifndef SWIG
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Axes(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Axes(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }

@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Write a FITS image to a file descriptor; useful for talking to DS9
+/*
+ * Write a FITS image to a file descriptor; useful for talking to DS9
  *
  * This version knows about LSST data structures
  */
@@ -31,7 +30,7 @@ namespace posix {                       // here so no-one includes them first ou
 #   include <unistd.h>
 #   include <fcntl.h>
 }
-#endif //!DOXYGEN
+#endif  // !DOXYGEN
 using namespace posix;
 #include <cstdint>
 #include <cstdlib>
@@ -51,7 +50,7 @@ using lsst::daf::base::PropertySet;
 
 #define FITS_SIZE 2880
 
-/// \cond
+/// @cond
 class Card {
 public:
     Card(const std::string &name, bool val, const char *commnt = ""
@@ -76,7 +75,6 @@ public:
     std::string comment;
 };
 
-/*****************************************************************************/
 /*
  * Write a Card
  */
@@ -124,9 +122,8 @@ int Card::write(int fd,
 
     return ncard;
 }
-/// \endcond
+/// @endcond
 
-/*****************************************************************************/
 /*
  * Utilities
  *
@@ -210,7 +207,6 @@ namespace {
         }
     }
 
-/*****************************************************************************/
 
     int write_fits_hdr(int fd,
                        int bitpix,
@@ -471,7 +467,6 @@ void writeBasicFits(int fd,                                      // file descrip
     pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
 }
 
-/******************************************************************************/
 
 template<typename ImageT>
 void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
@@ -506,7 +501,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     (void)close(fd);
 }
 
-/// \cond
+/// @cond
 #define INSTANTIATE(IMAGET)                                            \
     template void writeBasicFits(int,                IMAGET const&, image::Wcs const *, char const *); \
     template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *, char const *)
@@ -521,6 +516,6 @@ INSTANTIATE_IMAGE(double);
 INSTANTIATE_IMAGE(std::uint64_t);
 
 INSTANTIATE_MASK(std::uint16_t);
-/// \endcond
+/// @endcond
 
 }}}

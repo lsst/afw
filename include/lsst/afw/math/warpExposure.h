@@ -22,14 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- *
- * \ingroup afw
- *
- * \brief Support for warping an image to a new WCS.
- *
- * \author Nicole M. Silvestri and Russell Owen, University of Washington
+/*
+ * Support for warping an image to a new WCS.
  */
 
 #ifndef LSST_AFW_MATH_WARPEXPOSURE_H
@@ -56,7 +50,7 @@ namespace image {
 namespace math {
 
     /**
-    * \brief Lanczos warping: accurate but slow and can introduce ringing artifacts.
+    * Lanczos warping: accurate but slow and can introduce ringing artifacts.
     *
     * This kernel is the product of two 1-dimensional Lanczos functions.
     * The number of minima and maxima in the 1-dimensional Lanczos function is 2*order + 1.
@@ -81,6 +75,9 @@ namespace math {
 
         virtual PTR(Kernel) clone() const;
 
+        /**
+        * get the order of the kernel
+        */
         int getOrder() const;
 
     protected:
@@ -88,7 +85,7 @@ namespace math {
     };
 
     /**
-    * \brief Bilinear warping: fast; good for undersampled data.
+    * Bilinear warping: fast; good for undersampled data.
     *
     * The kernel size is 2 x 2.
     *
@@ -108,7 +105,7 @@ namespace math {
         virtual PTR(Kernel) clone() const;
 
         /**
-         * \brief 1-dimensional bilinear interpolation function.
+         * 1-dimensional bilinear interpolation function.
          *
          * Optimized for bilinear warping so only accepts two values: 0 and 1
          * (which is why it defined in the BilinearWarpingKernel class instead of
@@ -119,7 +116,7 @@ namespace math {
             typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
-             * \brief Construct a Bilinear interpolation function
+             * Construct a Bilinear interpolation function
              */
             explicit BilinearFunction1(
                 double fracPos)    ///< fractional position; must be >= 0 and < 1
@@ -134,8 +131,18 @@ namespace math {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
             }
 
+            /**
+             * Solve bilinear equation
+             *
+             * Only the following arguments will give reliably meaningful values:
+             * *  0.0 or 1.0 if the kernel center index is 0 in this axis
+             * * -1.0 or 0.0 if the kernel center index is 1 in this axis
+             */
             virtual Kernel::Pixel operator() (double x) const;
 
+            /**
+             * Return string representation.
+             */
             virtual std::string toString(std::string const& ="") const;
         };
 
@@ -144,7 +151,7 @@ namespace math {
     };
 
     /**
-    * \brief Nearest neighbor warping: fast; good for undersampled data.
+    * Nearest neighbor warping: fast; good for undersampled data.
     *
     * The kernel size is 2 x 2.
     *
@@ -164,7 +171,7 @@ namespace math {
         virtual PTR(Kernel) clone() const;
 
         /**
-         * \brief 1-dimensional nearest neighbor interpolation function.
+         * 1-dimensional nearest neighbor interpolation function.
          *
          * Optimized for nearest neighbor warping so only accepts two values: 0 and 1
          * (which is why it defined in the NearestWarpingKernel class instead of
@@ -175,7 +182,7 @@ namespace math {
             typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
-             * \brief Construct a Nearest interpolation function
+             * Construct a Nearest interpolation function
              */
             explicit NearestFunction1(
                 double fracPos)    ///< fractional position
@@ -190,8 +197,18 @@ namespace math {
                 return Function1Ptr(new NearestFunction1(this->_params[0]));
             }
 
+            /**
+             * Solve nearest neighbor equation
+             *
+             * Only the following arguments will give reliably meaningful values:
+             * *  0.0 or 1.0 if the kernel center index is 0 in this axis
+             * * -1.0 or 0.0 if the kernel center index is 1 in this axis
+             */
             virtual Kernel::Pixel operator() (double x) const;
 
+            /**
+             * Return string representation.
+             */
             virtual std::string toString(std::string const& ="") const;
         };
 
@@ -200,7 +217,7 @@ namespace math {
     };
 
     /**
-     * \brief Return a warping kernel given its name.
+     * Return a warping kernel given its name.
      *
      * Intended for use with warpImage() and warpExposure().
      *
@@ -226,18 +243,18 @@ namespace math {
     PTR(SeparableKernel) makeWarpingKernel(std::string name);
 
     /**
-     * \brief Parameters to control convolution
+     * Parameters to control convolution
      *
-     * \note padValue is not member of this class to avoid making this a templated class.
+     * @note padValue is not member of this class to avoid making this a templated class.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     class WarpingControl {
     public:
         /**
-         * @brief Construct a WarpingControl object
+         * Construct a WarpingControl object
          *
-         * @throw pex_exceptions InvalidParameterError if the warping kernel
+         * @throws pex::exceptions::InvalidParameterError if the warping kernel
          * is smaller than the mask warping kernel.
          */
         explicit WarpingControl(
@@ -267,12 +284,12 @@ namespace math {
         virtual ~WarpingControl() {};
 
         /**
-         * @brief get the cache size for the interpolation kernel(s)
+         * get the cache size for the interpolation kernel(s)
          */
         int getCacheSize() const { return _cacheSize; };
 
         /**
-         * @brief set the cache size for the interpolation kernel(s)
+         * set the cache size for the interpolation kernel(s)
          *
          * A value of 0 disables the cache for maximum accuracy.
          * 10,000 typically results in a warping error of a fraction of a count.
@@ -284,12 +301,12 @@ namespace math {
         ) { _cacheSize = cacheSize; };
 
         /**
-         * @brief get the interpolation length (pixels)
+         * get the interpolation length (pixels)
          */
         int getInterpLength() const { return _interpLength; };
 
         /**
-         * @brief set the interpolation length
+         * set the interpolation length
          *
          * Interpolation length is the distance over which the WCS can be linearly interpolated, in pixels:
          * * 0 means no interpolation and uses an optimized branch of the code
@@ -301,38 +318,38 @@ namespace math {
         ) { _interpLength = interpLength; };
 
         /**
-         * @brief get the warping kernel
+         * get the warping kernel
          */
         PTR(SeparableKernel) getWarpingKernel() const;
 
         /**
-         * @brief set the warping kernel by name
+         * set the warping kernel by name
          */
         void setWarpingKernelName(
             std::string const &warpingKernelName    ///< name of warping kernel
         );
 
         /**
-         * @brief set the warping kernel
+         * set the warping kernel
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if new kernel pointer is empty.
+         * @throws lsst::pex::exceptions::InvalidParameterError if new kernel pointer is empty.
          */
         void setWarpingKernel(
             SeparableKernel const &warpingKernel   ///< warping kernel
         );
 
         /**
-         * @brief get the mask warping kernel
+         * get the mask warping kernel
          */
         PTR(SeparableKernel) getMaskWarpingKernel() const;
 
         /**
-         * @brief return true if there is a mask kernel
+         * return true if there is a mask kernel
          */
         bool hasMaskWarpingKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
 
         /**
-         * @brief set or clear the mask warping kernel by name
+         * set or clear the mask warping kernel by name
          */
         void setMaskWarpingKernelName(
             std::string const &maskWarpingKernelName
@@ -340,7 +357,7 @@ namespace math {
         );
 
         /**
-         * @brief set the mask warping kernel
+         * set the mask warping kernel
          *
          * @note To clear the mask warping kernel use setMaskWarpingKernelName("").
          */
@@ -349,12 +366,12 @@ namespace math {
         );
 
         /**
-         * @brief get mask bits to grow to full width of image/variance kernel
+         * get mask bits to grow to full width of image/variance kernel
          */
         lsst::afw::image::MaskPixel getGrowFullMask() const { return _growFullMask; };
 
         /**
-         * @brief set mask bits to grow to full width of image/variance kernel
+         * set mask bits to grow to full width of image/variance kernel
          */
         void setGrowFullMask(
             lsst::afw::image::MaskPixel growFullMask  ///< mask bits to grow to full width
@@ -363,9 +380,9 @@ namespace math {
 
     private:
         /**
-         * @brief Throw an exception if the two kernels are not compatible in shape
+         * Throw an exception if the two kernels are not compatible in shape
          *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the two kernels
+         * @throws lsst::pex::exceptions::InvalidParameterError if the two kernels
          * are not compatible in shape
          */
         void _testWarpingKernels(
@@ -382,7 +399,7 @@ namespace math {
 
 
     /**
-     * \brief Warp (remap) one exposure to another.
+     * Warp (remap) one exposure to another.
      *
      * This is a convenience wrapper around warpImage().
      */
@@ -401,15 +418,15 @@ namespace math {
     );
 
     /**
-     * \brief Warp an Image or MaskedImage to a new Wcs. See also convenience function
+     * @brief Warp an Image or MaskedImage to a new Wcs. See also convenience function
      * warpExposure() to warp an Exposure.
      *
      * Edge pixels are set to padValue; these are pixels that cannot be computed because they
      * are too near the edge of srcImage or miss srcImage entirely.
      *
-     * \return the number of valid pixels in destImage (those that are not edge pixels).
+     * @returns the number of valid pixels in destImage (those that are not edge pixels).
      *
-     * \b Algorithm Without Interpolation:
+     * @b Algorithm Without Interpolation:
      *
      * For each integer pixel position in the remapped Exposure:
      * - The associated pixel position on srcImage is determined using the destination and source WCS
@@ -425,20 +442,20 @@ namespace math {
      * - The area varies slowly enough across the %image that we can get away with computing
      *   the source area shifted by half a pixel up and to the left of the true area.
      *
-     * \b Algorithm With Interpolation:
+     * @b Algorithm With Interpolation:
      *
      * Interpolation simply reduces the number of times WCS is used to map between destination and source
      * pixel position. This computation is only made at a grid of points on the destination image,
      * separated by interpLen pixels along rows and columns. All other source pixel positions are determined
      * by linear interpolation between those grid points. Everything else remains the same.
      *
-     * \throw lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
-     * \throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+     * @throws lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
+     * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
      *
-     * \todo Should support an additional color-based position correction in the remapping
+     * @todo Should support an additional color-based position correction in the remapping
      *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.
      *
-     * \todo Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
+     * @todo Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
      */
     template<typename DestImageT, typename SrcImageT>
     int warpImage(
@@ -453,7 +470,7 @@ namespace math {
     );
 
     /**
-     * \brief A variant of warpImage that uses an XYTransform instead of a pair of WCS
+     * @brief A variant of warpImage that uses an XYTransform instead of a pair of WCS
      * to describe the transformation.
      */
     template<typename DestImageT, typename SrcImageT>
@@ -470,8 +487,9 @@ namespace math {
 
 
     /**
-     * @brief Warp an image with a LinearTranform about a specified point.
-     *        This enables warping an image of e.g. a PSF without translating the centroid.
+     * Warp an image with a LinearTranform about a specified point.
+     *
+     * This enables warping an image of e.g. a PSF without translating the centroid.
      */
     template<typename DestImageT, typename SrcImageT>
     int warpCenteredImage(

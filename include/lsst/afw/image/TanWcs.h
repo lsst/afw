@@ -78,7 +78,7 @@ public:
     );
 
     /**
-     *  @brief Construct a tangent plane wcs without distortion terms
+     *  Construct a tangent plane wcs without distortion terms
      *
      *  @param crval    The sky position of the reference point
      *  @param crpix    The pixel position corresponding to crval in Lsst units
@@ -96,7 +96,7 @@ public:
     );
 
     /**
-     *  @brief Construct a tangent plane wcs with distortion terms
+     *  Construct a tangent plane wcs with distortion terms
      *
      *  @param crval    The sky position of the reference point
      *  @param crpix    The pixel position corresponding to crval in Lsst units
@@ -147,7 +147,7 @@ public:
 
 
     /**
-     *  @brief Set the distortion matrices
+     *  Set the distortion matrices
      *
      *  @param sipA  Forward distortion matrix for 1st axis
      *  @param sipB  Forward distortion matrix for 2nd axis
@@ -177,7 +177,7 @@ public:
     /// Return the SIP reverse distortion matrix for y pixel coordinates.
     Eigen::MatrixXd const & getSipBp() const { return _sipBp; }
 
-    /// @brief Whether the object is persistable using afw::table::io archives.
+    /// Whether the object is persistable using afw::table::io archives.
     bool isPersistable() const override;
 
 protected:

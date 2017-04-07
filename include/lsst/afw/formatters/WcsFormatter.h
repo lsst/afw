@@ -25,21 +25,8 @@
 #ifndef LSST_AFW_FORMATTERS_WCSFORMATTER_H
 #define LSST_AFW_FORMATTERS_WCSFORMATTER_H
 
-/** @file
- * @brief Interface for WcsFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
- */
-
-/** @class lsst::afw::formatters::WcsFormatter
- * @brief Class implementing persistence and retrieval for Wcs objects.
- *
- * @ingroup afw
+/*
+ * Interface for WcsFormatter class
  */
 
 #include "lsst/daf/base.h"
@@ -52,6 +39,9 @@ namespace afw {
     }
 namespace formatters {
 
+/**
+ * Class implementing persistence and retrieval for Wcs objects.
+ */
 class WcsFormatter : public lsst::daf::persistence::Formatter {
 public:
     virtual ~WcsFormatter(void);

@@ -750,6 +750,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     @param[in] frame  specify image display (@deprecated; new code should use display)
     @param[in] overlay  Overlay Detector IDs and boundaries?
     @param[in] title  Title in display
+    @param[in] showWcs whether to include a WCS in the display
     @param[in] ctype  Color to use when drawing Detector boundaries
     @param[in] textSize  Size of detector labels
     @param[in] originAtCenter Put origin of the camera WCS at the center of the image? Else it will be LL

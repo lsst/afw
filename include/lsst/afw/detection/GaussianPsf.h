@@ -30,7 +30,7 @@
 namespace lsst { namespace afw { namespace detection {
 
 /**
- *  @brief A circularly symmetric Gaussian Psf class with no spatial variation, intended mostly for
+ *  A circularly symmetric Gaussian Psf class with no spatial variation, intended mostly for
  *         testing purposes.
  *
  *  This class is essentially an alternate implementation of meas::algorithms::SingleGaussianPsf;
@@ -42,7 +42,7 @@ class GaussianPsf : public afw::table::io::PersistableFacade<GaussianPsf>, publi
 public:
 
     /**
-     *  @brief Constructor for a GaussianPsf
+     *  Constructor for a GaussianPsf
      *
      *  @param[in] width   Number of columns in realizations of the PSF at a point.
      *  @param[in] height  Number of rows in realizations of the PSF at a point.
@@ -51,7 +51,7 @@ public:
     GaussianPsf(int width, int height, double sigma);
 
     /**
-     *  @brief Constructor for a GaussianPsf
+     *  Constructor for a GaussianPsf
      *
      *  @param[in] dimensions     Number of columns, rows in realizations of the PSF at a point.
      *  @param[in] sigma   Radius of the Gaussian.

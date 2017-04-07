@@ -34,7 +34,6 @@ XYTransform::XYTransform()
 { }
 
 
-/// default implementation; subclass may override
 AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
 {
     Point2D px = p + Extent2D(1,0);
@@ -47,7 +46,6 @@ AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
 }
 
 
-/// default implementation; subclass may override
 AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 {
     Point2D px = p + Extent2D(1,0);
@@ -60,7 +58,6 @@ AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 }
 
 
-/// default implementation; subclass may override
 PTR(XYTransform) XYTransform::invert() const
 {
     return std::make_shared<InvertedXYTransform> (this->clone());

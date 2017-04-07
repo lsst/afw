@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Definitions to write a FITS image
+/*
+ * Definitions to write a FITS image
  */
 #if !defined(SIMPLE_FITS_H)
 #define SIMPLE_FITS_H 1

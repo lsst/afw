@@ -44,7 +44,6 @@ typedef float PixelT;
 
 std::pair<afwImage::MaskedImage<PixelT>::Ptr, PTR(afwDetect::FootprintSet)> readImage();
 
-/************************************************************************************************************/
 /*
  * A demonstration of the use of a SpatialCellSet
  */

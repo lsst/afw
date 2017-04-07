@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED
 
-/**
- *  \file
- *  @brief Definitions and inlines for Separable.
+/*
+ *  Definitions and inlines for Separable.
  *
- *  \note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -40,7 +39,7 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse core with a complex ellipticity and radius parameterization.
+ *  An ellipse core with a complex ellipticity and radius parameterization.
  *
  *
  */
@@ -70,7 +69,7 @@ public:
     Ellipticity const & getEllipticity() const { return _ellipticity; }
     Ellipticity & getEllipticity() { return _ellipticity; }
 
-    /// @brief Deep copy the ellipse core.
+    /// Deep copy the ellipse core.
     Ptr clone() const { return std::static_pointer_cast<Separable>(_clone()); }
 
     /// Return a string that identifies this parametrization.
@@ -86,38 +85,38 @@ public:
 
     virtual void writeParameters(double * iter) const;
 
-    /// @brief Standard assignment.
+    /// Standard assignment.
     Separable & operator=(Separable const & other);
 
-    /// @brief Converting assignment.
+    /// Converting assignment.
     Separable & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
 
-    /// @brief Construct from parameter values.
+    /// Construct from parameter values.
     explicit Separable(double e1=0.0, double e2=0.0, double radius=Radius(), bool normalize=true);
 
-    /// @brief Construct from parameter values.
+    /// Construct from parameter values.
     explicit Separable(std::complex<double> const & complex,
                        double radius=Radius(), bool normalize=true);
 
-    /// @brief Construct from parameter values.
+    /// Construct from parameter values.
     explicit Separable(Ellipticity const & ellipticity, double radius=Radius(), bool normalize=true);
 
-    /// @brief Construct from a parameter vector.
+    /// Construct from a parameter vector.
     explicit Separable(BaseCore::ParameterVector const & vector, bool normalize=false);
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Separable(Separable const & other) : _ellipticity(other._ellipticity), _radius(other._radius) {}
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Separable(BaseCore const & other) { *this = other; }
 
 #ifndef SWIG
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Separable(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Separable(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }

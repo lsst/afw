@@ -34,7 +34,7 @@ class Distortion;
 class ConformalShear;
 
 /**
- *  @brief A complex ellipticity with magnitude @f$|e| = \frac{a-b}{a+b} @f$.
+ *  A complex ellipticity with magnitude @f$|e| = \frac{a-b}{a+b} @f$.
  *
  *  For a more complete definition, see Bernstein and Jarvis (2002); this the same as their
  *  reduced shear @f$g@f$ (eq. 2.8).

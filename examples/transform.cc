@@ -22,13 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Example for usage of AffineTransform and LinearTransform classes
- *
- * @author Martin Dubcovsky
- * @date 3.16.2010
+/*
+ * Example for usage of AffineTransform and LinearTransform classes
  */
 
 #include <iostream>

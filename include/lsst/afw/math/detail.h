@@ -24,12 +24,8 @@
 
 #ifndef LSST_AFW_MATH_DETAIL_H
 #define LSST_AFW_MATH_DETAIL_H
-/**
- * @file
- *
- * @brief An include file to include the header files for lsst::afw::math::detail
- *
- * @ingroup afw
+/*
+ * An include file to include the header files for lsst::afw::math::detail
  */
 #include "lsst/afw/math/detail/Convolve.h"
 

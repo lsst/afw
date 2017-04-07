@@ -32,7 +32,7 @@
 namespace lsst { namespace afw { namespace geom {
 
 /**
- *  @brief An iterator that yields Point2I and increases in the x direction.
+ *  An iterator that yields Point2I and increases in the x direction.
  *
  *  This is used to iterate over the pixels in a Span, and by extension to iterate over
  *  regions like boxes and ellipses.

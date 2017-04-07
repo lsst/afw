@@ -25,7 +25,6 @@
 # -*- python -*-
 #
 # simpleStacker.py
-# Steve Bickerton
 # An example executible which calls the example 'stack' code
 #
 from __future__ import print_function

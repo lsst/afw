@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of WcsFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of WcsFormatter class
  */
 
 #ifndef __GNUC__
@@ -238,6 +230,8 @@ void afwForm::WcsFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "WcsFormatter delegateSerialize end");
 }
 
+// Explicit template specializations confuse Doxygen, tell it to ignore them
+/// @cond
 template void afwForm::WcsFormatter::delegateSerialize(
     boost::archive::text_oarchive & , int, dafBase::Persistable*);
 template void afwForm::WcsFormatter::delegateSerialize(
@@ -246,6 +240,7 @@ template void afwForm::WcsFormatter::delegateSerialize(
     boost::archive::binary_oarchive & , int, dafBase::Persistable*);
 template void afwForm::WcsFormatter::delegateSerialize(
     boost::archive::binary_iarchive & , int, dafBase::Persistable*);
+/// @endcond
 
 dafPersist::Formatter::Ptr afwForm::WcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {

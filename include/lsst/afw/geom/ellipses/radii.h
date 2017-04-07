@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_radii_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_radii_h_INCLUDED
 
-/**
- *  \file
- *  @brief Helper classes defining radii for Separable core.
+/*
+ *  Helper classes defining radii for Separable core.
  *
- *  \note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -49,10 +48,10 @@ class LogDeterminantRadius;
 class LogTraceRadius;
 
 /**
- * \brief The radius defined as the 4th root of the determinant of the quadrupole matrix.
+ * The radius defined as the 4th root of the determinant of the quadrupole matrix.
  *
  * The determinant radius is equal to the standard radius for a circle, and
- * \f$\pi R_{det}^2\f$ is the area of the ellipse.
+ * @f$\pi R_{det}^2@f$ is the area of the ellipse.
  */
 class DeterminantRadius {
 public:
@@ -110,7 +109,7 @@ private:
 };
 
 /**
- * \brief The radius defined as \f$\sqrt{0.5(I_{xx} + I_{yy})}\f$
+ * The radius defined as @f$\sqrt{0.5(I_{xx} + I_{yy})}@f$
  *
  * The trace radius is equal to the standard radius for a circle
  */
@@ -170,7 +169,7 @@ private:
 };
 
 /**
- * \brief The natural logarithm of the DeterminantRadius
+ * The natural logarithm of the DeterminantRadius
  */
 class LogDeterminantRadius {
 public:
@@ -224,7 +223,7 @@ private:
 };
 
 /**
- * \brief The natural logarithm of the TraceRadius
+ * The natural logarithm of the TraceRadius
  */
 class LogTraceRadius {
 public:

@@ -19,7 +19,7 @@ namespace detail {
 /**
  *  @internal
  *
- *  @brief Friendship-aggregation class for afw/table.
+ *  Friendship-aggregation class for afw/table.
  *
  *  Access is a collection of static member functions that provide access to internals of other
  *  classes.  It allows many classes to just declare Access as a friend rather than a long list of
@@ -29,7 +29,7 @@ namespace detail {
 class Access {
 public:
 
-    /// @internal @brief Return a sub-field key corresponding to the nth element.
+    /// @internal Return a sub-field key corresponding to the nth element.
     template <typename T>
     static Key<typename Key<T>::Element> extractElement(KeyBase<T> const & kb, int n) {
         if (!static_cast<Key<T> const &>(kb).isValid()) {
@@ -45,7 +45,7 @@ public:
         );
     }
 
-    /// @internal @brief Return a sub-field key corresponding to a range
+    /// @internal Return a sub-field key corresponding to a range
     template <typename T>
     static Key< Array<T> > extractRange(KeyBase< Array<T> > const & kb, int begin, int end) {
         if (!static_cast<Key< Array<T> > const &>(kb).isValid()) {
@@ -61,24 +61,24 @@ public:
         );
     }
 
-    /// @internal @brief Access to the private Key constructor.
+    /// @internal Access to the private Key constructor.
     template <typename T>
     static Key<T> makeKey(int offset) {
         return Key<T>(offset);
     }
 
-    /// @internal @brief Access to the private Key constructor.
+    /// @internal Access to the private Key constructor.
     template <typename T>
     static Key<T> makeKey(Field<T> const & field, int offset) {
         return Key<T>(offset, field);
     }
 
-    /// @internal @brief Access to the private Key constructor.
+    /// @internal Access to the private Key constructor.
     static Key<Flag> makeKey(int offset, int bit) {
         return Key<Flag>(offset, bit);
     }
 
-    /// @internal @brief Add some padding to a schema without adding a field.
+    /// @internal Add some padding to a schema without adding a field.
     static void padSchema(Schema & schema, int bytes) {
         schema._edit();
         schema._impl->_recordSize += bytes;

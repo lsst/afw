@@ -37,7 +37,7 @@ class SimpleRecord;
 class SimpleTable;
 
 /**
- *  @brief Record class that must contain a unique ID field and a celestial coordinate field.
+ *  Record class that must contain a unique ID field and a celestial coordinate field.
  *
  *  SimpleTable / SimpleRecord are intended to be the base class for records representing astronomical
  *  objects.  In additional to the minimal schema and the convenience accessors it allows, a SimpleTable
@@ -56,7 +56,7 @@ public:
     }
 
     //@{
-    /// @brief Convenience accessors for the keys in the minimal reference schema.
+    /// Convenience accessors for the keys in the minimal reference schema.
     RecordId getId() const;
     void setId(RecordId id);
 
@@ -80,7 +80,7 @@ protected:
 };
 
 /**
- *  @brief Table class that must contain a unique ID field and a celestial coordinate field.
+ *  Table class that must contain a unique ID field and a celestial coordinate field.
  *
  *  @copydetails SimpleRecord
  */
@@ -93,7 +93,7 @@ public:
     typedef SortedCatalogT<Record const> ConstCatalog;
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
@@ -105,7 +105,7 @@ public:
     static PTR(SimpleTable) make(Schema const & schema, PTR(IdFactory) const & idFactory);
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      *
@@ -114,7 +114,7 @@ public:
     static PTR(SimpleTable) make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
 
     /**
-     *  @brief Return a minimal schema for Simple tables and records.
+     *  Return a minimal schema for Simple tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on SimpleRecords will assume that at least the fields
@@ -127,7 +127,7 @@ public:
     }
 
     /**
-     *  @brief Return true if the given schema is a valid SimpleTable schema.
+     *  Return true if the given schema is a valid SimpleTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
@@ -136,13 +136,13 @@ public:
         return other.contains(getMinimalSchema().schema);
     }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
+    /// Return the object that generates IDs for the table (may be null).
     PTR(IdFactory) getIdFactory() { return _idFactory; }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
+    /// Return the object that generates IDs for the table (may be null).
     CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
 
-    /// @brief Switch to a new IdFactory -- object that generates IDs for the table (may be null).
+    /// Switch to a new IdFactory -- object that generates IDs for the table (may be null).
     void setIdFactory(PTR(IdFactory) f) { _idFactory = f; }
 
     //@{
@@ -151,9 +151,9 @@ public:
      *
      *  These keys are used to implement getters and setters on SimpleRecord.
      */
-    /// @brief Key for the unique ID.
+    /// Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
-    /// @brief Key for the celestial coordinates.
+    /// Key for the celestial coordinates.
     static CoordKey getCoordKey() { return getMinimalSchema().coord; }
     //@}
 

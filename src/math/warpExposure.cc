@@ -21,12 +21,8 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-/**
- * \file
- *
- * \ingroup afw
- *
- * \brief Support for warping an %image to a new Wcs.
+/*
+ * Support for warping an %image to a new Wcs.
  */
 
 #include <cassert>
@@ -99,9 +95,6 @@ PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
     return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
 }
 
-/**
-* @brief get the order of the kernel
-*/
 int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
 }
@@ -116,13 +109,6 @@ PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
     return PTR(afwMath::Kernel)(new afwMath::BilinearWarpingKernel());
 }
 
-/**
- * \brief Solve bilinear equation
- *
- * Only the following arguments will give reliably meaningful values:
- * *  0.0 or 1.0 if the kernel center index is 0 in this axis
- * * -1.0 or 0.0 if the kernel center index is 1 in this axis
- */
 afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const
 {
     //
@@ -146,9 +132,6 @@ void afwMath::BilinearWarpingKernel::setKernelParameter(unsigned int ind, double
     SeparableKernel::setKernelParameter(ind, value);
 }
 
-/**
- * \brief Return string representation.
- */
 std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << "_BilinearFunction1: ";
@@ -160,13 +143,6 @@ PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
     return PTR(afwMath::Kernel)(new afwMath::NearestWarpingKernel());
 }
 
-/**
- * \brief Solve nearest neighbor equation
- *
- * Only the following arguments will give reliably meaningful values:
- * *  0.0 or 1.0 if the kernel center index is 0 in this axis
- * * -1.0 or 0.0 if the kernel center index is 1 in this axis
- */
 afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
     // this expression is faster than using conditionals, but offers no sanity checking
     return static_cast<double>((fabs(this->_params[0]) < 0.5) == (fabs(x) < 0.5));
@@ -178,9 +154,6 @@ void afwMath::NearestWarpingKernel::setKernelParameter(unsigned int ind, double 
     SeparableKernel::setKernelParameter(ind, value);
 }
 
-/**
- * \brief Return string representation.
- */
 std::string afwMath::NearestWarpingKernel::NearestFunction1::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << "_NearestFunction1: ";
@@ -301,15 +274,14 @@ int afwMath::warpExposure(
 }
 
 
-/************************************************************************************************************/
 namespace {
 
     inline afwGeom::Point2D computeSrcPos(
-            int destCol,  ///< destination column index
-            int destRow,  ///< destination row index
-            afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
-            afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
-            afwImage::Wcs const &srcWcs)        ///< WCS of source %image
+            int destCol,  ///< @internal destination column index
+            int destRow,  ///< @internal destination row index
+            afwGeom::Point2D const &destXY0,    ///< @internal xy0 of destination image
+            afwImage::Wcs const &destWcs,       ///< @internal WCS of remapped %image
+            afwImage::Wcs const &srcWcs)        ///< @internal WCS of source %image
     {
         double const col = afwImage::indexToPosition(destCol + destXY0[0]);
         double const row = afwImage::indexToPosition(destRow + destXY0[1]);
@@ -320,9 +292,9 @@ namespace {
 
 
     inline double computeRelativeArea(
-            afwGeom::Point2D const &srcPos,     /// source position at desired destination pixel
-            afwGeom::Point2D const &leftSrcPos, /// source position one destination pixel to the left
-            afwGeom::Point2D const &upSrcPos)   /// source position one destination pixel above
+            afwGeom::Point2D const &srcPos,     /// @internal source position at desired destination pixel
+            afwGeom::Point2D const &leftSrcPos, /// @internal source position one destination pixel to the left
+            afwGeom::Point2D const &upSrcPos)   /// @internal source position one destination pixel above
     {
         afwGeom::Extent2D dSrcA = srcPos - leftSrcPos;
         afwGeom::Extent2D dSrcB = srcPos - upSrcPos;
@@ -330,14 +302,22 @@ namespace {
         return std::abs(dSrcA.getX()*dSrcB.getY() - dSrcA.getY()*dSrcB.getX());
     }
 
+    /**
+     * @internal
+     * @param destImage remapped %image
+     * @param srcImage source %image
+     * @param computeSrcPos Functor to compute source position called with dest row, column; returns
+     *                      source position (as a Point2D)
+     * @param control warping parameters
+     * @param padValue value to use for undefined pixels
+     */
     template<typename DestImageT, typename SrcImageT>
     int doWarpImage(
-        DestImageT &destImage,                      ///< remapped %image
-        SrcImageT const &srcImage,                  ///< source %image
-        afwMath::detail::PositionFunctor const &computeSrcPos,   ///< Functor to compute source position
-            ///< called with dest row, column; returns source position (as a Point2D)
-        afwMath::WarpingControl const &control,     ///< warping parameters
-        typename DestImageT::SinglePixel padValue   ///< value to use for undefined pixels
+        DestImageT &destImage,
+        SrcImageT const &srcImage,
+        afwMath::detail::PositionFunctor const &computeSrcPos,
+        afwMath::WarpingControl const &control,
+        typename DestImageT::SinglePixel padValue
     ) {
         if (afwMath::details::isSameObject(destImage, srcImage)) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError,
@@ -468,7 +448,7 @@ namespace {
                     typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
                     srcPosView[-1] += yDeltaSrcPosList[0];
                     for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                        /// Next vertical interpolation band
+                        // Next vertical interpolation band
 
                         int const prevEndCol = edgeColList[colBand-1];
                         int const endCol = edgeColList[colBand];
@@ -615,7 +595,7 @@ int afwMath::warpCenteredImage(
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 // may need to omit default params for EXPOSURE -- original code did that and it worked
 #define EXPOSURE(PIXTYPE) afwImage::Exposure<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
@@ -681,4 +661,4 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
-/// \endcond
+/// @endcond

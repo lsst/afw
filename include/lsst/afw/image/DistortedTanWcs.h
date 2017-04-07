@@ -31,7 +31,7 @@ namespace afw {
 namespace image {
 
 /**
- *  @brief Combination of a TAN WCS and a distortion model
+ *  Combination of a TAN WCS and a distortion model
  *
  * This object represents a common case for raw or minimally processed data; we have estimates for:
  * - a pure TAN WCS based on telescope pointing
@@ -49,7 +49,7 @@ namespace image {
 class DistortedTanWcs : public TanWcs {
 public:
     /**
-     * @brief Construct a DistortedTanWcs
+     * Construct a DistortedTanWcs
      *
      * @param[in] tanWcs  pure tangent-plane WCS
      * @param[in] pixelsToTanPixels  an XYTransform that converts from PIXELS to TAN_PIXELS coordinates
@@ -57,7 +57,7 @@ public:
      *                  detector = exposure.getDetector()
      *                  pixelsToTanPixels = detector.getTransformMap()[lsst.afw.cameraGeom.TAN_PIXELS]
      *
-     * @throw pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
+     * @throws pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
      */
     DistortedTanWcs(
         TanWcs const &tanWcs,

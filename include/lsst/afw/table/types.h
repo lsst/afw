@@ -19,9 +19,7 @@
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/KeyBase.h"
 
-/**
- *  @file lsst/afw/table/types.h
- *
+/*
  *  This file contains macros and MPL vectors that list the types that can be used for fields.
  *  The macros are used to do explicit instantiation in several source files.
  */

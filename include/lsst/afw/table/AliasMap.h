@@ -10,7 +10,7 @@ namespace lsst { namespace afw { namespace table {
 class BaseTable;
 
 /**
- *  @brief Mapping class that holds aliases for a Schema
+ *  Mapping class that holds aliases for a Schema
  *
  *  Aliases need not be complete, but they must match to the beginning of a field name to be useful.
  *  For example, if "a_b_c" is a true field name, "x_->a_b" is a valid alias that will cause
@@ -68,22 +68,21 @@ public:
      *  target.  The longest such alias is used.
      *
      *  For example:
-     *  @code
-     *  m = AliasMap();
-     *  m.set("q", "a");
-     *  m.set("q1", "b");
-     *  assert(m.apply("q3") == "a3");
-     *  assert(m.apply("q12") == "b2");
-     *  @endcode
+     *
+     *      m = AliasMap();
+     *      m.set("q", "a");
+     *      m.set("q1", "b");
+     *      assert(m.apply("q3") == "a3");
+     *      assert(m.apply("q12") == "b2");
      */
     std::string apply(std::string const & name) const;
 
     /**
-     *  @brief Return the target of the given alias
+     *  Return the target of the given alias
      *
      *  Unlike apply(), this will not return partial matches.
      *
-     *  @throw pex::exceptions::NotFoundError if no alias with the given name exists
+     *  @throws pex::exceptions::NotFoundError if no alias with the given name exists
      */
     std::string get(std::string const & alias) const;
 
@@ -91,9 +90,9 @@ public:
     void set(std::string const & alias, std::string const & target);
 
     /**
-     *  @brief Remove an alias from the schema if it is present.
+     *  Remove an alias from the schema if it is present.
      *
-     *  @return True if an alias was erased, and false if no such alias was found.
+     *  @returns True if an alias was erased, and false if no such alias was found.
      */
     bool erase(std::string const & alias);
 

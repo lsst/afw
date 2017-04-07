@@ -24,16 +24,8 @@
 
 #ifndef LSST_AFW_MATH_KERNELFUNCTIONS_H
 #define LSST_AFW_MATH_KERNELFUNCTIONS_H
-/**
- * @file
- *
- * @brief Utility functions for kernels
- *
- * @todo
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Utility functions for kernels
  */
 
 #include "lsst/afw/math/Kernel.h"
@@ -44,6 +36,17 @@ namespace lsst {
 namespace afw {
 namespace math {
 
+    /**
+     * Print the pixel values of a Kernel to std::cout
+     *
+     * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
+     *
+     * @param kernel the kernel
+     * @param doNormalize if true, normalize kernel
+     * @param x x at which to evaluate kernel
+     * @param y y at which to evaluate kernel
+     * @param pixelFmt format for pixel values
+     */
     void printKernel(
         lsst::afw::math::Kernel const &kernel,
         bool doNormalize,

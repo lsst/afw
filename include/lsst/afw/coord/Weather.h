@@ -42,7 +42,7 @@ public:
      * @param[in] airTemperature  outside air temperature (C)
      * @param[in] airPressure  outside air pressure (Pascal)
      * @param[in] humidity  outside relative humidity (%)
-     * @throw lsst::pex::exceptions::InvalidParameterError if humidity < 0
+     * @throws lsst::pex::exceptions::InvalidParameterError if humidity < 0
      */
     explicit Weather(double airTemperature, double airPressure, double humidity);
 
@@ -72,7 +72,7 @@ private:
 
     /**
      * Validate the values
-     * @throw lsst::pex::exceptions::InvalidParameterError if humidity < 0
+     * @throws lsst::pex::exceptions::InvalidParameterError if humidity < 0
      */
     void validate() const;
 };

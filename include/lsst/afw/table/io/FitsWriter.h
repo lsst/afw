@@ -12,7 +12,7 @@
 namespace lsst { namespace afw { namespace table { namespace io {
 
 /**
- *  @brief Writer object for FITS binary tables.
+ *  Writer object for FITS binary tables.
  *
  *  FitsWriter itself provides support for writing FITS binary tables from base containers.
  *  Derived record/base pairs should derive their own writer from FitsWriter and reimplement
@@ -25,7 +25,7 @@ public:
     typedef afw::fits::Fits Fits;
 
     /**
-     *  @brief Driver for writing FITS files.
+     *  Driver for writing FITS files.
      *
      *  A container class will usually provide a member function that calls this driver,
      *  which opens the FITS file, calls makeFitsWriter on the container's table, and
@@ -37,7 +37,7 @@ public:
         apply(fits, container, flags);
     }
 
-    /// @brief Low-level driver for writing FITS files, operating on an open FITS file.
+    /// Low-level driver for writing FITS files, operating on an open FITS file.
     template <typename ContainerT>
     static void apply(Fits & fits, ContainerT const & container, int flags) {
         PTR(FitsWriter) writer
@@ -46,7 +46,7 @@ public:
     }
 
     /**
-     *  @brief Write records in a container to disk.
+     *  Write records in a container to disk.
      *
      *  The given container must have a getTable() member function that returns a shared_ptr
      *  to a table, and the iterators returned by begin() and end() must dereference to a type
@@ -76,18 +76,18 @@ public:
         _finish();
     }
 
-    /// @brief Construct from a wrapped cfitsio pointer.
+    /// Construct from a wrapped cfitsio pointer.
     explicit FitsWriter(Fits * fits, int flags) : _fits(fits), _flags(flags) {}
 
 protected:
 
-    /// @brief Write a table and its schema.
+    /// Write a table and its schema.
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
-    /// @brief Write an individual record.
+    /// Write an individual record.
     virtual void _writeRecord(BaseRecord const & source);
 
-    /// @brief Finish writing a catalog.
+    /// Finish writing a catalog.
     virtual void _finish() {}
 
     Fits * _fits;      // wrapped cfitsio pointer

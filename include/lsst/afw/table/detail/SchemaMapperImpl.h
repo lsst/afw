@@ -18,7 +18,7 @@ class SchemaMapper;
 namespace detail {
 
 /**
- *  @brief A private implementation class to hide the messy details of SchemaMapper.
+ *  A private implementation class to hide the messy details of SchemaMapper.
  *
  *  This class is very similar in spirit to SchemaImpl, from the reason it's not a real
  *  pimpl (forEach) to Citizen; look there for more information (though SchemaMapper is
@@ -48,7 +48,7 @@ public:
     explicit SchemaMapperImpl(Schema const & input, Schema const & output) : _input(input), _output(output) {}
 
     /**
-     *  @brief A functor-wrapper used in the implementation of SchemaMapper::forEach.
+     *  A functor-wrapper used in the implementation of SchemaMapper::forEach.
      *
      *  See SchemaImpl::VisitorWrapper for discussion of the motivation.
      */
@@ -62,7 +62,7 @@ public:
         }
 
         /**
-         *  @brief Invoke the visitation.
+         *  Invoke the visitation.
          *
          *  The call to boost::apply_visitor will call the appropriate template of operator().
          *
@@ -74,7 +74,7 @@ public:
             boost::apply_visitor(*this, v);
         }
 
-        /// @brief Construct the wrappper.
+        /// Construct the wrappper.
         template <typename T>
         explicit VisitorWrapper(T&& func) : _func(std::forward<T>(func)) {}
 

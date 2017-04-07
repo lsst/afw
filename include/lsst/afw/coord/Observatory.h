@@ -24,13 +24,8 @@
 
 #if !defined(LSST_AFW_COORD_OBSERVATORY_H)
 #define LSST_AFW_COORD_OBSERVATORY_H
-/**
- * @file
- * @brief Class to hold observatory/telescope location
- * @ingroup afw
- * @author Steve Bickerton
- *
- *
+/*
+ * Class to hold observatory/telescope location
  */
 
 #include <iostream>
@@ -41,14 +36,13 @@ namespace afw {
 namespace coord {
 
 /**
- * @class Observatory
- * @brief Hold the location of an observatory
+ * Hold the location of an observatory
  */
 class Observatory {
 public:
 
     /**
-     * @brief Construct an Observatory with longitude and latitude specified as lsst::afw::geom::Angle
+     * Construct an Observatory with longitude and latitude specified as lsst::afw::geom::Angle
      *
      * @param[in] longitude  telescope longitude (positive values are E of Greenwich)
      * @param[in] latitude  telescope latitude
@@ -57,7 +51,7 @@ public:
     Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude, double const elevation);
 
     /**
-     * @brief Construct an Observatory with longitude and latitude specified as sexagesimal strings
+     * Construct an Observatory with longitude and latitude specified as sexagesimal strings
      *
      * @param[in] longitude  telescope longitude (dd:mm:ss.s, positive values are E of Greenwich)
      * @param[in] latitude  telescope latitude  (dd:mm:ss.s)
@@ -105,6 +99,12 @@ private:
     double _elevation;
 };
 
+/**
+ * Print an Observatory to the stream
+ *
+ * @param[in, out] os Stream to print to
+ * @param[in] obs the Observatory to print
+ */
 std::ostream & operator<<(std::ostream &os, Observatory const& obs);
 
 }}}

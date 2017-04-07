@@ -24,9 +24,7 @@
 
 //
 //##====----------------                                ----------------====##/
-//
-//! \file
-//! \brief  Does Wcs class in Wcs.cc correctly transform pixel coords <--> ra/dec coords
+// Does Wcs class in Wcs.cc correctly transform pixel coords <--> ra/dec coords
 //
 //##====----------------                                ----------------====##/
 

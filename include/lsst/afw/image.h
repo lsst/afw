@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::image
+/*
+ * An include file to include the header files for lsst::afw::image
  */
 #ifndef LSST_IMAGE_H
 #define LSST_IMAGE_H
@@ -41,8 +40,9 @@
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/ImageSlice.h"
-#include "lsst/afw/fits.h" // stuff here is forward-declared in headers in afw::image, but
-                           // since we need it in SWIG (and that's the only place anyone
-                           // should really be including image.h) we include it here.
+#include "lsst/afw/fits.h" /* stuff here is forward-declared in headers in afw::image, but
+                            * since we need it in SWIG (and that's the only place anyone
+                            * should really be including image.h) we include it here.
+                            */
 
 #endif // LSST_IMAGE_H

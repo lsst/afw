@@ -23,16 +23,8 @@
  */
 
 
-/** @file
- * @brief Implementation of MaskFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of MaskFormatter class
  */
 
 #ifndef __GNUC__
@@ -194,8 +186,8 @@ lsst::daf::persistence::Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance
 }
 
 template class MaskFormatter<MaskPixel>;
-//// The followings fails
-//// because the function template `delegateSerialize' is obsolete(?)
+// The followings fails
+// because the function template `delegateSerialize' is obsolete(?)
 //template void MaskFormatter<MaskPixel>::delegateSerialize(
 //    boost::archive::binary_oarchive&, int const, Persistable*);
 //template void MaskFormatter<MaskPixel>::delegateSerialize(

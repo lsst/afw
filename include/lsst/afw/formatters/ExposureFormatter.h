@@ -25,22 +25,10 @@
 #ifndef LSST_AFW_FORMATTERS_EXPOSUREFORMATTER_H
 #define LSST_AFW_FORMATTERS_EXPOSUREFORMATTER_H
 
-/** @file
- * @brief Interface for ExposureFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
+/*
+ * Interface for ExposureFormatter class
  */
 
-/** @class lsst::afw::formatters::ExposureFormatter
- * @brief Class implementing persistence and retrieval for Exposures.
- *
- * @ingroup afw
- */
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -50,6 +38,9 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
+/**
+ * Class implementing persistence and retrieval for Exposures.
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class ExposureFormatter : public lsst::daf::persistence::Formatter {
 public:

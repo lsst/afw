@@ -29,9 +29,7 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Utils.h"
 
-/**
- * @file
- *
+/*
  * Describe a Detector's orientation
  */
 namespace lsst {
@@ -83,18 +81,18 @@ public:
     int getNQuarter() const;
 
     /**
-     * @brief Generate an XYTransform from pixel to focal plane coordinates
+     * Generate an XYTransform from pixel to focal plane coordinates
      *
-     * @return lsst::afw::geom::AffineXYTransform from pixel to focal plane coordinates
+     * @returns lsst::afw::geom::AffineXYTransform from pixel to focal plane coordinates
      */
     geom::AffineXYTransform makePixelFpTransform(
             geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
     ) const;
 
     /**
-     * @brief Generate an XYTransform from focal plane to pixel coordinates
+     * Generate an XYTransform from focal plane to pixel coordinates
      *
-     * @return lsst::afw::geom::AffineXYTransform from focal plane to pixel coordinates
+     * @returns lsst::afw::geom::AffineXYTransform from focal plane to pixel coordinates
      */
     geom::AffineXYTransform makeFpPixelTransform(
             geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y

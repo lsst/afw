@@ -22,10 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file rowColumnStats.cc
- * @author Steve Bickerton
- * @brief An example executible which calls the statisticsStack function
+/*
+ * An example executible which calls the statisticsStack function
  *
  */
 #include <iostream>

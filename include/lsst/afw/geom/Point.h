@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * @brief A coordinate class intended to represent absolute positions.
+/*
+ * A coordinate class intended to represent absolute positions.
  */
 #ifndef LSST_AFW_GEOM_POINT_H
 #define LSST_AFW_GEOM_POINT_H
@@ -43,14 +42,14 @@ class PointBase : public CoordinateBase<Point<T,N>,T,N> {
 public:
 
     /**
-     *  @brief Standard equality comparison.
+     *  Standard equality comparison.
      *
      *  Returns true iff all(this->eq(other));
      */
     bool operator==(Point<T,N> const & other) const { return all(this->eq(other)); }
 
     /**
-     *  @brief Standard inequality comparison.
+     *  Standard inequality comparison.
      *
      *  Returns true iff any(this->ne(other));
      */
@@ -63,9 +62,9 @@ public:
      *
      *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
      *  for comparisons; expressions like
-     *  \code
-     *    if (all(point.gt(0))) ...
-     *  \endcode
+     *
+     *      if (all(point.gt(0))) ...
+     *
      *  are both ubiquitous and easy to interpret.
      */
     //@{
@@ -111,7 +110,7 @@ public:
     /// Cast this object to an Extent of the same numeric type and dimensionality.
     Extent<T,N> asExtent() const { return Extent<T,N>(static_cast<Point<T,N> const &>(*this)); }
 
-    /// @brief Shift the point by the given offset.
+    /// Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
 
 
@@ -144,7 +143,7 @@ protected:
 };
 
 /**
- *  @brief A coordinate class intended to represent absolute positions.
+ *  A coordinate class intended to represent absolute positions.
  *
  *  See @ref afwGeomOps for mathematical operators on Point.
  */
@@ -154,11 +153,11 @@ class Point : public PointBase<T,N> {
 public:
     typedef typename Super::EigenVector EigenVector;
 
-    /// @brief Construct a Point with all elements set to the same scalar value.
+    /// Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
 
     /**
-     *  @brief Explicit converting constructor.
+     *  Explicit converting constructor.
      *
      *  Converting from floating point to integer rounds to the nearest integer instead of truncating.
      *  This ensures that a floating-point pixel coordinate converts to the coordinate of the pixel
@@ -167,17 +166,17 @@ public:
     template <typename U>
     explicit Point(Point<U,N> const & other);
 
-    /// @brief Construct a Point from an Eigen vector.
+    /// Construct a Point from an Eigen vector.
     explicit Point(EigenVector const & vector) : Super(vector) {}
 
-    /// @brief Explicit constructor from Extent.
+    /// Explicit constructor from Extent.
     explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}
 
     void swap(Point & other) { this->_swap(other); }
 };
 
 /**
- *  @brief A coordinate class intended to represent absolute positions (2-d specialization).
+ *  A coordinate class intended to represent absolute positions (2-d specialization).
  *
  *  See @ref afwGeomOps for mathematical operators on Point.
  */
@@ -187,11 +186,11 @@ class Point<T,2> : public PointBase<T,2> {
 public:
     typedef typename Super::EigenVector EigenVector;
 
-    /// @brief Construct a Point with all elements set to the same scalar value.
+    /// Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
 
     /**
-     *  @brief Explicit converting constructor.
+     *  Explicit converting constructor.
      *
      *  Converting from floating point to integer rounds to the nearest integer instead of truncating.
      *  This ensures that a floating-point pixel coordinate converts to the coordinate of the pixel
@@ -200,22 +199,22 @@ public:
     template <typename U>
     explicit Point(Point<U,2> const & other);
 
-    /// @brief Construct a Point from an Eigen vector.
+    /// Construct a Point from an Eigen vector.
     explicit Point(EigenVector const & vector) : Super(vector) {}
 
-    /// @brief Explicit constructor from Extent.
+    /// Explicit constructor from Extent.
     explicit Point(Extent<T,2> const & other) : Super(other.asEigen()) {}
 
-    /// @brief Explicit constructor from a pair of doubles.
+    /// Explicit constructor from a pair of doubles.
     explicit Point(T x, T y) : Super(EigenVector(x,y)) {}
 
-    /// @brief Construct from a two-element array.
+    /// Construct from a two-element array.
     explicit Point(T const xy[2]) : Super(EigenVector(xy[0], xy[1])) {}
 
-    /// @brief Construct from a std::pair.
+    /// Construct from a std::pair.
     explicit Point(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
-    /// @brief Construct from std::tuple.
+    /// Construct from std::tuple.
     explicit Point(std::tuple<T,T> const & xy) :
         Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
@@ -230,7 +229,7 @@ public:
 };
 
 /**
- *  @brief A coordinate class intended to represent absolute positions (3-d specialization).
+ *  A coordinate class intended to represent absolute positions (3-d specialization).
  *
  *  See @ref afwGeomOps for mathematical operators on Point.
  */
@@ -240,11 +239,11 @@ class Point<T,3> : public PointBase<T,3> {
 public:
     typedef typename Super::EigenVector EigenVector;
 
-    /// @brief Construct a Point with all elements set to the same scalar value.
+    /// Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
 
     /**
-     *  @brief Explicit converting constructor.
+     *  Explicit converting constructor.
      *
      *  Converting from floating point to integer rounds to the nearest integer instead of truncating.
      *  This ensures that a floating-point pixel coordinate converts to the coordinate of the pixel
@@ -253,19 +252,19 @@ public:
     template <typename U>
     explicit Point(Point<U,3> const & other);
 
-    /// @brief Construct a Point from an Eigen vector.
+    /// Construct a Point from an Eigen vector.
     explicit Point(EigenVector const & vector) : Super(vector) {}
 
-    /// @brief Explicit constructor from Extent.
+    /// Explicit constructor from Extent.
     explicit Point(Extent<T,3> const & other) : Super(other.asEigen()) {}
 
-    /// @brief Explicit constructor from a sequence of doubles.
+    /// Explicit constructor from a sequence of doubles.
     explicit Point(T x, T y, T z) : Super(EigenVector(x,y,z)) {}
 
-    /// @brief Construct from a two-element array.
+    /// Construct from a two-element array.
     explicit Point(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
-    /// @brief Construct from std::tuple.
+    /// Construct from std::tuple.
     explicit Point(std::tuple<T,T,T> const & xyz) :
         Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 

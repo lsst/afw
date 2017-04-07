@@ -25,8 +25,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file
-//! \brief  Implements looking up a filter identifier by name.
+//         Implements looking up a filter identifier by name.
 //
 //##====----------------                                ----------------====##/
 #include "boost/format.hpp"
@@ -42,9 +41,9 @@ namespace lsst { namespace afw { namespace image {
 FilterProperty::PropertyMap *FilterProperty::_propertyMap = NULL;
 
 FilterProperty::FilterProperty(
-    std::string const& name, ///< name of filter
-    lsst::daf::base::PropertySet const& prop, ///< values describing the Filter
-    bool force        ///< Allow this name to replace a previous one
+    std::string const& name,
+    lsst::daf::base::PropertySet const& prop,
+    bool force
     ) : _name(name), _lambdaEff(-1)
 {
     if (prop.exists("lambdaEff")) {
@@ -54,12 +53,9 @@ FilterProperty::FilterProperty(
 }
 
 
-/**
- * Create a new FilterProperty, setting values from a Policy
- */
-FilterProperty::FilterProperty(std::string const& name, ///< name of filter
-                               lsst::pex::policy::Policy const& pol, ///< values describing the Filter
-                               bool force        ///< Allow this name to replace a previous one
+FilterProperty::FilterProperty(std::string const& name,
+                               lsst::pex::policy::Policy const& pol,
+                               bool force
                               ) : _name(name), _lambdaEff(-1)
 {
     if (pol.exists("lambdaEff")) {
@@ -68,11 +64,8 @@ FilterProperty::FilterProperty(std::string const& name, ///< name of filter
     _insert(force);
 }
 
-/**
- * Insert FilterProperty into registry
- */
 void FilterProperty::_insert(
-    bool force                   ///< Allow this name to replace a previous one?
+    bool force
     )
 {
     if (!_propertyMap) {
@@ -95,19 +88,13 @@ void FilterProperty::_insert(
     _propertyMap->insert(std::make_pair(getName(), *this));
 }
 
-/**
- * Return true iff two FilterProperties are identical
- */
-bool FilterProperty::operator==(FilterProperty const& rhs ///< Object to compare with this
+bool FilterProperty::operator==(FilterProperty const& rhs
                                ) const
 {
     return (_lambdaEff == rhs._lambdaEff);
 }
 
 
-/**
- * Initialise the Filter registry
- */
 void FilterProperty::_initRegistry()
 {
     if (_propertyMap) {
@@ -117,10 +104,7 @@ void FilterProperty::_initRegistry()
     _propertyMap = new PropertyMap;
 }
 
-/**
- * Lookup the properties of a filter "name"
- */
-FilterProperty const& FilterProperty::lookup(std::string const& name ///< name of desired filter
+FilterProperty const& FilterProperty::lookup(std::string const& name
                                             )
 {
     if (!_propertyMap) {
@@ -136,7 +120,6 @@ FilterProperty const& FilterProperty::lookup(std::string const& name ///< name o
     return keyVal->second;
 }
 
-/************************************************************************************************************/
 
 namespace {
     std::string const unknownFilter = "_unknown_";
@@ -145,11 +128,8 @@ namespace {
 int const Filter::AUTO = -1;
 int const Filter::UNKNOWN = -1;
 
-/**
- * Create a Filter from a PropertySet (e.g. a FITS header)
- */
-Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata to process (e.g. a IFITS header)
-               bool const force                         ///< Allow us to construct an unknown Filter
+Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata,
+               bool const force
               )
 {
     std::string const key = "FILTER";
@@ -161,12 +141,7 @@ Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata t
 }
 
 namespace detail {
-/**
- * Remove Filter-related keywords from the metadata
- *
- * \return Number of keywords stripped
- */
-int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata to be stripped
+int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata
                       )
 {
     int nstripped = 0;
@@ -181,11 +156,7 @@ int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata
 }
 }
 
-/*
- * Return all aliases by which this filter is known
- *
- * N.b. we cannot declare a std::vector<std::string const&> as there's no way to push the references
- */
+// N.b. we cannot declare a std::vector<std::string const&> as there's no way to push the references
 std::vector<std::string> Filter::getAliases() const
 {
     std::vector<std::string> aliases;
@@ -200,9 +171,6 @@ std::vector<std::string> Filter::getAliases() const
     return aliases;
 }
 
-/**
- * Return a list of known filters
- */
 std::vector<std::string> Filter::getNames()
 {
     if (!_nameMap) {
@@ -221,17 +189,10 @@ std::vector<std::string> Filter::getNames()
     return names;
 }
 
-/**
- * Are two filters identical?
- */
 bool Filter::operator==(Filter const& rhs) const {
     return _id != UNKNOWN && _id == rhs._id;
 }
 
-/************************************************************************************************************/
-/**
- * Initialise the Filter registry
- */
 void Filter::_initRegistry()
 {
     _id0 = UNKNOWN;
@@ -246,24 +207,14 @@ void Filter::_initRegistry()
     define(FilterProperty(unknownFilter, lsst::pex::policy::Policy(), true));
 }
 
-/************************************************************************************************************/
 
 int Filter::_id0 = Filter::UNKNOWN;
 
-Filter::AliasMap *Filter::_aliasMap = NULL; // dynamically allocated as that avoids an intel bug with static
-                                        // variables in dynamic libraries
-Filter::NameMap *Filter::_nameMap = NULL; // dynamically allocated as that avoids an intel bug with static
-                                        // variables in dynamic libraries
-Filter::IdMap *Filter::_idMap = NULL; // dynamically allocated as that avoids an intel bug with static
-                                        // variables in dynamic libraries
+// dynamically allocated as that avoids an intel bug with static variables in dynamic libraries
+Filter::AliasMap *Filter::_aliasMap = NULL;
+Filter::NameMap *Filter::_nameMap = NULL;
+Filter::IdMap *Filter::_idMap = NULL;
 
-/**
- * Define a filter name to have the specified id
- *
- * If id == Filter::AUTO a value will be chosen for you.
- *
- * It is an error to attempt to change a name's id (unless you specify force)
- */
 int Filter::define(FilterProperty const& fp, int id, bool force)
 {
     if (!_nameMap) {
@@ -298,12 +249,9 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
     return id;
 }
 
-/**
- * Define an alias for a filter
- */
-int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
-                        std::string const& newName, ///< new name for Filter
-                        bool force                  ///< force an alias even if newName is already in use
+int Filter::defineAlias(std::string const& oldName,
+                        std::string const& newName,
+                        bool force
                        )
 {
     if (!_nameMap) {
@@ -335,11 +283,8 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
     return id;
 }
 
-/**
- * Lookup the ID associated with a name
- */
-int Filter::_lookup(std::string const& name, // Name of filter
-                    bool const force         // return an invalid ID, but don't throw, if name is unknown
+int Filter::_lookup(std::string const& name,
+                    bool const force
                                )
 {
     if (!_nameMap) {
@@ -364,9 +309,6 @@ int Filter::_lookup(std::string const& name, // Name of filter
     return keyVal->second;
 }
 
-/**
- * Lookup the name associated with an ID
- */
 std::string const& Filter::_lookup(int id)
 {
     if (!_idMap) {
@@ -381,9 +323,6 @@ std::string const& Filter::_lookup(int id)
 
     return keyVal->second;
 }
-/**
- * Return a Filter's FilterProperty
- */
 FilterProperty const& Filter::getFilterProperty() const {
     //
     // Map name to its ID and back to resolve aliases

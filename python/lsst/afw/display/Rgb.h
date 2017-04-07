@@ -20,9 +20,7 @@
 // see <https://www.lsstcorp.org/LegalNotices/>.
 //
 
-/**
- * \file
- *
+/*
  * Support RGB and grey-scale images
  */
 #if !defined(LSST_AFW_DISPLAY_RGB_H)

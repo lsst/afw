@@ -85,7 +85,6 @@ const int fitsToLsstPixels = -1;
 //
 
 
-///@brief Construct an invalid Wcs given no arguments
 lsst::afw::image::Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
@@ -96,8 +95,6 @@ lsst::afw::image::Wcs::Wcs() :
 }
 
 
-///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
-///out which (if any) sub-class of Wcs is appropriate
 Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL),
@@ -114,9 +111,6 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     _initWcs();
 }
 
-/*
- * Set some internal variables that we need to refer to
- */
 void Wcs::_initWcs()
 {
     // first four characters of CTYPE1 (name of first axis)
@@ -146,20 +140,6 @@ void Wcs::_initWcs()
     }
 }
 
-///\brief Create a Wcs object with some known information.
-///
-///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval in LSST units
-///\param CD    Matrix describing transformations from pixel to sky positions
-///\param ctype1 Projection system used (see description of Wcs)
-///\param ctype2 Projection system used (see description of Wcs)
-///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
-///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
-///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
-///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-///
-///\note LSST units are zero indexed while FITs units are 1 indexed. So a value of crpix stored in a fits
-///header of 127,127 corresponds to a pixel position in LSST units of 128, 128
 Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD,
          std::string const & ctype1, std::string const & ctype2,
          double equinox, std::string const & raDecSys,
@@ -183,17 +163,18 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
 }
 
 
-///Parse a fits header, extract the relevant metadata and create a Wcs object
 void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& header){
-    /// Access control for the input header
-    ///
-    /// We want to hack up the input, and in order to do so we need to do a deep copy on it.
-    /// We only want to do that copy once, and would like to avoid doing it altogether.
+    /*
+     * Access control for the input header
+     *
+     * We want to hack up the input, and in order to do so we need to do a deep copy on it.
+     * We only want to do that copy once, and would like to avoid doing it altogether.
+     */
     class HeaderAccess {
     public:
-        /// Return a readable version of the metadata
+        // Return a readable version of the metadata
         CONST_PTR(lsst::daf::base::PropertySet) const& toRead() { return _constHeader; }
-        /// Return a writable version of the metadata
+        // Return a writable version of the metadata
         PTR(lsst::daf::base::PropertySet) const& toWrite() {
             if (!_hackHeader) {
                 _hackHeader = _constHeader->deepCopy();
@@ -202,7 +183,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             return _hackHeader;
         }
 
-        /// Ctor
+        // Ctor
         HeaderAccess(CONST_PTR(lsst::daf::base::PropertySet) const& header) :
             _constHeader(header), _hackHeader() {}
 
@@ -362,16 +343,6 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     }
 }
 
-///\brief Manually initialise a wcs struct using values passed by the constructor
-///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval in LSST units
-///\param CD    Matrix describing transformations from pixel to sky positions
-///\param ctype1 Projection system used (see description of Wcs)
-///\param ctype2 Projection system used (see description of Wcs)
-///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
-///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
-///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
-///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
 void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD,
                      std::string const & ctype1, std::string const & ctype2,
                      double equinox, std::string const & raDecSys,
@@ -464,7 +435,6 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
 }
 
 
-///Copy constructor
 Wcs::Wcs(afwImg::Wcs const & rhs) :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL),
@@ -703,7 +673,7 @@ static double square(double x) {
     return x*x;
 }
 
-double Wcs::pixArea(GeomPoint pix00     ///< The pixel point where the area is desired
+double Wcs::pixArea(GeomPoint pix00
                    ) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -740,11 +710,8 @@ afwGeom::Angle Wcs::pixelScale() const {
     return sqrt(pixArea(getPixelOrigin())) * afwGeom::degrees;
 }
 
-/*
- * Worker routine for skyToPixel
- */
-GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, longitude)
-                              afwGeom::Angle sky2  // Dec (or latitude)
+GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1,
+                              afwGeom::Angle sky2
                              ) const {
     assert(_wcsInfo);
 
@@ -852,9 +819,6 @@ bool Wcs::isSameSkySystem(Wcs const &wcs) const {
     return (getCoordSystem() == wcs.getCoordSystem()) && (getEquinox() == wcs.getEquinox());
 }
 
-/*
- * Worker routine for pixelToSky
- */
 void
 Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) const
 {
@@ -902,8 +866,6 @@ void Wcs::pixelToSky(double pixel1, double pixel2, afwGeom::Angle& sky1, afwGeom
     sky2 = skyTmp[1];
 }
 
-///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
-///sub-class of Coord
 CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const {
     auto coordSystem = getCoordSystem();
     if ((coordSystem == afwCoord::ICRS) || (coordSystem == afwCoord::GALACTIC)) {
@@ -939,10 +901,6 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
     return linearizePixelToSkyInternal(pix, *pixelToSky(pix), skyUnit);
 }
 
-/*
- * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
- * and the corresponding sky coordinate.
- */
 lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     GeomPoint const & pix00,
     lsst::afw::coord::Coord const & coord,
@@ -987,10 +945,6 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
     return linearizeSkyToPixelInternal(pix, *pixelToSky(pix), skyUnit);
 }
 
-/**
- * Implementation for the overloaded public linearizeSkyToPixel methods, requiring both a pixel coordinate
- * and the corresponding sky coordinate.
- */
 lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
     GeomPoint const & pix00,
     lsst::afw::coord::Coord const & coord,
@@ -1160,11 +1114,6 @@ WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) co
 //
 
 
-/// \brief Move the pixel reference position by (dx, dy)
-///Used when persisting and retrieving sub-images. The lsst convention is that Wcs returns pixel position
-///(which is based on position in the parent image), but the fits convention is to return pixel index
-///(which is bases on position in the sub-image). In order that the fits files we create make sense
-///to other fits viewers, we change to the fits convention when writing out images.
 void Wcs::shiftReferencePixel(double dx, double dy) {
     assert(_wcsInfo);
     _wcsInfo->crpix[0] += dx;
@@ -1174,7 +1123,6 @@ void Wcs::shiftReferencePixel(double dx, double dy) {
     _wcsInfo->flag = 0;
 }
 
-/************************************************************************************************************/
 /*
  * Now WCSA, pixel coordinates, but allowing for X0 and Y0
  */
@@ -1185,12 +1133,12 @@ namespace image {
 namespace detail {
 
 /**
- * Define a trivial WCS that maps the lower left corner (LLC) pixel of an image to a given value
+ * @internal Define a trivial WCS that maps the lower left corner (LLC) pixel of an image to a given value
  */
 PTR(lsst::daf::base::PropertyList)
-createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired WCS
-                              int const x0,               ///< Column coordinate of LLC pixel
-                              int const y0                ///< Row coordinate of LLC pixel
+createTrivialWcsAsPropertySet(std::string const& wcsName, ///< @internal Name of desired WCS
+                              int const x0,               ///< @internal Column coordinate of LLC pixel
+                              int const y0                ///< @internal Row coordinate of LLC pixel
                              ) {
     PTR(lsst::daf::base::PropertyList) wcsMetaData(new lsst::daf::base::PropertyList);
 
@@ -1206,13 +1154,16 @@ createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired W
     return wcsMetaData;
 }
 /**
- * Return a Point2I(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
+ * @internal Return a Point2I(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
  *
  * The WCS must have CRPIX[12] == 1 and CRVAL[12] must be present.  If this is true, the WCS
  * cards are removed from the metadata
+ *
+ * @param wcsName the WCS to search (E.g. "A")
+ * @param metadata the metadata, maybe containing the WCS
  */
-afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
-                                      lsst::daf::base::PropertySet *metadata ///< the metadata, maybe containing the WCS
+afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,
+                                      lsst::daf::base::PropertySet *metadata
                                      ) {
 
     int x0 = 0;                         // Our value of X0
@@ -1247,15 +1198,18 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
 }
 
 /**
- * Strip keywords from the input metadata that are related to the generated Wcs
+ * @internal Strip keywords from the input metadata that are related to the generated Wcs
  *
  * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
  * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12], LTV[12], and
  * PC00[12]00[12]
  * but there may be others
+ *
+ * @param metadata Metadata to be stripped
+ * @param wcs A Wcs with (implied) keywords
  */
-int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
-                     CONST_PTR(Wcs) const& wcs                          ///< A Wcs with (implied) keywords
+int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata,
+                     CONST_PTR(Wcs) const& wcs
                     )
 {
     PTR(lsst::daf::base::PropertySet) wcsMetadata = wcs->getFitsMetadata();

@@ -39,7 +39,7 @@ namespace lsst { namespace afw { namespace detection {
 class PsfFormatter;
 
 /**
- *  @brief A polymorphic base class for representing an image's Point Spread Function
+ *  A polymorphic base class for representing an image's Point Spread Function
  *
  *  Most of a Psf's functionality involves its evaluation at a position and color, either
  *  or both of which may be unspecified (which will result in evaluation at some average
@@ -90,7 +90,7 @@ public:
     virtual ~Psf() {}
 
     /**
-     *  @brief Polymorphic deep-copy.
+     *  Polymorphic deep-copy.
      *
      *  Because Psfs are immutable, clones should generally be unnecessary, but they may
      *  be useful in allowing Psfs to maintain separate caches for their most recently
@@ -99,7 +99,7 @@ public:
     virtual PTR(Psf) clone() const = 0;
 
     /**
-     *  @brief Return an Image of the PSF, in a form that can be compared directly with star images.
+     *  Return an Image of the PSF, in a form that can be compared directly with star images.
      *
      *  The specified position is a floating point number, and the resulting image will have a Psf
      *  centered on that point when the returned image's xy0 is taken into account.
@@ -125,7 +125,7 @@ public:
     ) const;
 
     /**
-     *  @brief Return an Image of the PSF, in a form suitable for convolution.
+     *  Return an Image of the PSF, in a form suitable for convolution.
      *
      *  While the position need not be an integer, the center of the PSF image returned by
      *  computeKernelImage will in the center of the center pixel of the image, which will be
@@ -153,7 +153,7 @@ public:
     ) const;
 
     /**
-     *  @brief  Return the peak value of the PSF image.
+     *   Return the peak value of the PSF image.
      *
      *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
@@ -169,7 +169,7 @@ public:
     ) const;
 
     /**
-     *  @brief Compute the "flux" of the Psf model within a circular aperture of the given radius.
+     *  Compute the "flux" of the Psf model within a circular aperture of the given radius.
      *
      *  @param[in]  radius       Radius of the aperture to measure.
      *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
@@ -186,7 +186,7 @@ public:
     ) const;
 
     /**
-     *  @brief Compute the ellipse corresponding to the second moments of the Psf.
+     *  Compute the ellipse corresponding to the second moments of the Psf.
      *
      *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
      *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
@@ -201,7 +201,7 @@ public:
     ) const;
 
     /**
-     *  @brief Return a FixedKernel corresponding to the Psf image at the given point.
+     *  Return a FixedKernel corresponding to the Psf image at the given point.
      *
      *  This is implemented by calling computeKernelImage, and is simply provided for
      *  convenience.
@@ -212,21 +212,21 @@ public:
     ) const;
 
     /**
-     *  @brief Return the average Color of the stars used to construct the Psf
+     *  Return the average Color of the stars used to construct the Psf
      *
      *  This is also the Color used to return an image if you don't specify a Color.
      */
     image::Color getAverageColor() const { return image::Color(); }
 
     /**
-     *  @brief Return the average position of the stars used to construct the Psf.
+     *  Return the average position of the stars used to construct the Psf.
      *
      *  This is also the position used to return an image if you don't specify a position.
      */
     virtual geom::Point2D getAveragePosition() const;
 
     /**
-     *  @brief Return the bounding box of the image returned by computeKernelImage()
+     *  Return the bounding box of the image returned by computeKernelImage()
      */
     geom::Box2I computeBBox(
         geom::Point2D position = makeNullPoint(),
@@ -237,15 +237,15 @@ public:
      * Helper function for Psf::doComputeImage(): converts a kernel image (centered at (0,0) when xy0
      * is taken into account) to an image centered at position when xy0 is taken into account.
      *
-     * @c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
+     * `warpAlgorithm` is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
      * or "lanczosN"
      *
-     * @c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear,
+     * `warpBuffer` zero-pads the image before recentering.  Recommended value is 1 for bilinear,
      * N for lanczosN (note that it would be cleaner to infer this value from the warping algorithm
      * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage()).
      *
-     * The point with integer coordinates @c (0,0) in the source image (with xy0 taken into account)
-     * corresponds to the point @c position in the destination image.  If @c position is not
+     * The point with integer coordinates `(0,0)` in the source image (with xy0 taken into account)
+     * corresponds to the point `position` in the destination image.  If `position` is not
      * integer-valued then we will need to fractionally shift the image using interpolation.
      *
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.

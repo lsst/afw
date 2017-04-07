@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED
 
-/**
- *  @file
- *  @brief Forward declarations, typedefs, and definitions for Ellipse.
+/*
+ *  Forward declarations, typedefs, and definitions for Ellipse.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 
@@ -40,7 +39,7 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse defined by an arbitrary BaseCore and a center point.
+ *  An ellipse defined by an arbitrary BaseCore and a center point.
  *
  *  An ellipse is composed of its center coordinate and its Core - a parametrization of the
  *  ellipticity and size of the ellipse.  Setting the core of an ellipse never changes the
@@ -62,46 +61,46 @@ public:
 
     enum ParameterEnum { X=3, Y=4 }; ///< Definitions for elements of an ellipse vector.
 
-    /// @brief Return the center point.
+    /// Return the center point.
     Point2D const & getCenter() const { return _center; }
 
-    /// @brief Return the center point.
+    /// Return the center point.
     Point2D & getCenter() { return _center; }
 
-    /// @brief Set the center point.
+    /// Set the center point.
     void setCenter(Point2D const & center) { _center = center; }
 
-    /// @brief Return the ellipse core.
+    /// Return the ellipse core.
     BaseCore const & getCore() const { return *_core; }
 
-    /// @brief Return the ellipse core.
+    /// Return the ellipse core.
     BaseCore & getCore() { return *_core; }
 
-    /// @brief Return the ellipse core.
+    /// Return the ellipse core.
     BaseCore::ConstPtr getCorePtr() const { return _core; }
 
-    /// @brief Return the ellipse core.
+    /// Return the ellipse core.
     BaseCore::Ptr getCorePtr() { return _core; }
 
-    /// @brief Set the ellipse core; the type of the core is not changed.
+    /// Set the ellipse core; the type of the core is not changed.
     void setCore(BaseCore const & core) { *_core = core; }
 
-    /// @brief Put the parameters in a standard form.
+    /// Put the parameters in a standard form.
     void normalize() { _core->normalize(); }
 
-    /// @brief Increase the major and minor radii of the ellipse by the given buffer.
+    /// Increase the major and minor radii of the ellipse by the given buffer.
     void grow(double buffer) { _core->grow(buffer); }
 
-    /// @brief Scale the size of the ellipse by the given factor.
+    /// Scale the size of the ellipse by the given factor.
     void scale(double factor) { _core->scale(factor); }
 
-    /// @brief Move the ellipse center by the given offset.
+    /// Move the ellipse center by the given offset.
     void shift(Extent2D const & offset) { _center += offset; }
 
-     /// @brief Return the ellipse parameters as a vector.
+     /// Return the ellipse parameters as a vector.
     ParameterVector const getParameterVector() const;
 
-    /// @brief Set the ellipse parameters from a vector.
+    /// Set the ellipse parameters from a vector.
     void setParameterVector(ParameterVector const & vector);
 
     void readParameters(double const * iter);
@@ -129,25 +128,25 @@ public:
     //@}
 
     /**
-     *  @brief Return the transform that maps the ellipse to the unit circle.
+     *  Return the transform that maps the ellipse to the unit circle.
      *
      *  The returned proxy object is implicitly convertible to AffineTransform
      *  and also supports differentiation.
      */
     GridTransform const getGridTransform() const;
 
-    /// @brief Return the bounding box of the ellipse.
+    /// Return the bounding box of the ellipse.
     Box2D computeBBox() const;
 
     /**
-     *  @brief Set the parameters of this ellipse from another.
+     *  Set the parameters of this ellipse from another.
      *
      *  This does not change the parametrization of the ellipse.
      */
     Ellipse & operator=(Ellipse const & other);
 
     /**
-     *  @brief Compare two ellipses for equality.
+     *  Compare two ellipses for equality.
      *
      *  Ellipses are only equal if they have the same Core types.
      */
@@ -156,7 +155,7 @@ public:
     }
 
     /**
-     *  @brief Compare two ellipses for inequality.
+     *  Compare two ellipses for inequality.
      *
      *  Ellipses are only equal if they have the same Core types.
      */

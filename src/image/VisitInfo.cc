@@ -43,7 +43,7 @@ using lsst::daf::base::DateTime;
 
 namespace lsst { namespace afw { namespace image {
 
-/// the following persistence-related code emulates that in Calib.cc
+// the following persistence-related code emulates that in Calib.cc
 
 namespace {
 
@@ -51,11 +51,11 @@ auto const nan = std::numeric_limits<double>::quiet_NaN();
 auto const nanAngle = nan*geom::radians;
 
 /**
- * Get a specified double from a PropertySet, or nan if not present
+ * @internal Get a specified double from a PropertySet, or nan if not present
  *
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value must be of type double if the key exists
- * @return value of metadata for the specified key, as a double,
+ * @returns value of metadata for the specified key, as a double,
  *   with a value of nan if the key is not present
  */
 double getDouble(daf::base::PropertySet const & metadata, std::string const & key) {
@@ -63,11 +63,11 @@ double getDouble(daf::base::PropertySet const & metadata, std::string const & ke
 }
 
 /**
- * Get a specified angle, as a float in degrees, from a PropertySet, or nan if not present
+ * @internal Get a specified angle, as a float in degrees, from a PropertySet, or nan if not present
  *
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value is treated as an angle in degrees, if it exists
- * @return value of metadata for the specified key, as an lsst::afw::geom::Angle,
+ * @returns value of metadata for the specified key, as an lsst::afw::geom::Angle,
  *   with a value of nan if the key is not present
  */
 geom::Angle getAngle(daf::base::PropertySet const & metadata, std::string const & key) {
@@ -75,12 +75,12 @@ geom::Angle getAngle(daf::base::PropertySet const & metadata, std::string const 
 }
 
 /**
- * Set a specified double in a PropertySet, if value is finite
+ * @internal Set a specified double in a PropertySet, if value is finite
  *
  * @param[in,out] metadata  metadata to set
  * @param[in] key  name of key to set
  * @param[in] value  value of key
- * @return true if item set, false otherwise
+ * @returns true if item set, false otherwise
  */
 bool setDouble(
     daf::base::PropertySet & metadata,
@@ -96,12 +96,12 @@ bool setDouble(
 }
 
 /**
- * Set a specified angle in a PropertySet, in degrees, if angle is finite
+ * @internal Set a specified angle in a PropertySet, in degrees, if angle is finite
  *
  * @param[in,out] metadata  metadata to set
  * @param[in] key  name of key to set
  * @param[in] angle  value of key
- * @return true if item set, false otherwise
+ * @returns true if item set, false otherwise
  */
 bool setAngle(
     daf::base::PropertySet & metadata,
@@ -113,9 +113,9 @@ bool setAngle(
 }
 
 /**
- * Get rotation type as a string to use for a for FITS keyword value, given an enum
+ * @internal Get rotation type as a string to use for a for FITS keyword value, given an enum
  *
- * @throw lsst::pex::exceptions::RuntimeError if the enum is not recognized
+ * @throws lsst::pex::exceptions::RuntimeError if the enum is not recognized
  */
 std::string rotTypeStrFromEnum(RotType rotType) {
     switch(rotType) {
@@ -134,9 +134,9 @@ std::string rotTypeStrFromEnum(RotType rotType) {
 }
 
 /**
- * Get rotation type as an enum, given the FITS keyword value string equivalent
+ * @internal Get rotation type as an enum, given the FITS keyword value string equivalent
  *
- * @throw lsst::pex::exceptions::RuntimeError if the string is not recognized
+ * @throws lsst::pex::exceptions::RuntimeError if the string is not recognized
  */
 RotType rotTypeEnumFromStr(std::string const & rotTypeName) {
     if (rotTypeName == "UNKNOWN") {

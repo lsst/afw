@@ -63,7 +63,7 @@ class InputArchive;
 } // namespace io
 
 /**
- *  @brief Record class used to store exposure metadata.
+ *  Record class used to store exposure metadata.
  */
 class ExposureRecord : public BaseRecord {
 public:
@@ -85,21 +85,25 @@ public:
 
     /**
      *  @brief Return true if the bounding box contains the given celestial coordinate point, taking
-     *         into account the Wcs of the ExposureRecord. If includeValidPolygon is true it will also check
-     *         that the point is within the validPolygon of this ExpoureRecord if it has one; otherwise,
-     *         this argument is ignored.
+     *         into account the Wcs of the ExposureRecord.
      *
-     *  @throw LogicError if the ExposureRecord has no Wcs.
+     *  If includeValidPolygon is true it will also check
+     *  that the point is within the validPolygon of this ExpoureRecord if it has one; otherwise,
+     *  this argument is ignored.
+     *
+     *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
     bool contains(Coord const & coord, bool includeValidPolygon=false) const;
 
     /**
      *  @brief Return true if the bounding box contains the given point, taking into account its Wcs
-     *         (given) and the Wcs of the ExposureRecord. If includeValidPolygon is true it will also check
+     *         (given) and the Wcs of the ExposureRecord.
+     *
+     *  If includeValidPolygon is true it will also check
      *         that the point is within the validPolygon of this ExposureRecord if present if it has one;
      *         otherwise, this argument is ignored.
      *
-     *  @throw LogicError if the ExposureRecord has no Wcs.
+     *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
     bool contains(geom::Point2D const & point, image::Wcs const & wcs, bool includeValidPolygon=false) const;
 
@@ -143,7 +147,7 @@ private:
 };
 
 /**
- *  @brief Table class used to store exposure metadata.
+ *  Table class used to store exposure metadata.
  *
  *  @copydetails ExposureRecord
  */
@@ -156,14 +160,14 @@ public:
     typedef ExposureCatalogT<Record const> ConstCatalog;
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      */
     static PTR(ExposureTable) make(Schema const & schema);
 
     /**
-     *  @brief Return a minimal schema for Exposure tables and records.
+     *  Return a minimal schema for Exposure tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on ExposureRecords will assume that at least the fields
@@ -176,7 +180,7 @@ public:
     }
 
     /**
-     *  @brief Return true if the given schema is a valid ExposureTable schema.
+     *  Return true if the given schema is a valid ExposureTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
@@ -191,11 +195,11 @@ public:
      *
      *  These keys are used to implement getters and setters on ExposureRecord.
      */
-    /// @brief Key for the unique ID.
+    /// Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
-    /// @brief Key for the minimum point of the bbox.
+    /// Key for the minimum point of the bbox.
     static PointKey<int> getBBoxMinKey() { return getMinimalSchema().bboxMin; }
-    /// @brief Key for the maximum point of the bbox.
+    /// Key for the maximum point of the bbox.
     static PointKey<int> getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
     //@}
 
@@ -254,7 +258,7 @@ private:
 
 
 /**
- *  @brief Custom catalog class for ExposureRecord/Table.
+ *  Custom catalog class for ExposureRecord/Table.
  *
  *  We don't expect to subclass ExposureRecord/Table, so unlike other Catalogs we can (and do) define
  *  some ExposureCatalogT member functions in Exposure.cc where the explicit instantiation is done.
@@ -271,18 +275,18 @@ public:
     typedef typename Base::const_iterator const_iterator;
 
     /**
-     *  @brief Construct a vector from a table (or nothing).
+     *  Construct a vector from a table (or nothing).
      *
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
     explicit ExposureCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
 
-    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
+    /// Construct a vector from a schema, creating a table with Table::make(schema).
     explicit ExposureCatalogT(Schema const & schema) : Base(schema) {}
 
     /**
-     *  @brief Construct a vector from a table and an iterator range.
+     *  Construct a vector from a table and an iterator range.
      *
      *  If deep is true, new records will be created using table->copyRecord before being inserted.
      *  If deep is false, records will be not be copied, but they must already be associated with
@@ -297,7 +301,7 @@ public:
     {}
 
     /**
-     *  @brief Shallow copy constructor from a container containing a related record type.
+     *  Shallow copy constructor from a container containing a related record type.
      *
      *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
      *  convertible to Table.
@@ -308,7 +312,7 @@ public:
     using Base::writeFits;
 
     /**
-     *  @brief Write a FITS binary table to an open file object.
+     *  Write a FITS binary table to an open file object.
      *
      *  Instead of writing nested Persistables to an internal archive and appending it
      *  to the FITS file, this overload inserts nested Persistables into the given
@@ -320,7 +324,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a regular file.
+     *  Read a FITS binary table from a regular file.
      *
      *  @param[in] filename    Name of the file to read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -333,7 +337,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a RAM file.
+     *  Read a FITS binary table from a RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -346,7 +350,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *  Read a FITS binary table from a file object already at the correct extension.
      *
      *  @param[in] fitsfile    Fits file object to read from.
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
@@ -357,7 +361,7 @@ public:
     }
 
     /**
-     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *  Read a FITS binary table from a file object already at the correct extension.
      *
      *  This overload reads nested Persistables from the given archive instead of loading
      *  a new archive from the HDUs following the catalog.
@@ -367,7 +371,7 @@ public:
     }
 
     /**
-     *  @brief Convenience output function for Persistables that contain an ExposureCatalog.
+     *  Convenience output function for Persistables that contain an ExposureCatalog.
      *
      *  Unlike writeFits, this saves main catalog to one of the tables within the archive,
      *  as part of a Persistable's set of catalogs, rather than saving it to a separate HDU
@@ -376,7 +380,7 @@ public:
     void writeToArchive(io::OutputArchiveHandle & handle, bool ignoreUnpersistable=true) const;
 
     /**
-     *  @brief Convenience input function for Persistables that contain an ExposureCatalog.
+     *  Convenience input function for Persistables that contain an ExposureCatalog.
      *
      *  Unlike the FITS read methods, this reader is not polymorphically aware - it always
      *  tries to create an ExposureTable rather than infer the type of table from the data.
@@ -384,7 +388,7 @@ public:
     static ExposureCatalogT readFromArchive(io::InputArchive const & archive, BaseCatalog const & catalog);
 
     /**
-     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *  Return the subset of a catalog corresponding to the True values of the given mask array.
      *
      *  The returned array's records are shallow copies, and hence will not in general be contiguous.
      */
@@ -401,20 +405,22 @@ public:
     }
 
     /**
-     *  @brief Return a shallow subset of the catalog with only those records that contain the given point.
-     *         If includeValidPolygon is true we check that the point is within the validPolygon of those
+     *  Return a shallow subset of the catalog with only those records that contain the given point.
+     *
+     *  If includeValidPolygon is true we check that the point is within the validPolygon of those
      *         records which have one; if they don't, this argument is ignored.
      *
-     *  @sa ExposureRecord::contains
+     *  @see ExposureRecord::contains
      */
     ExposureCatalogT subsetContaining(Coord const & coord, bool includeValidPolygon=false) const;
 
     /**
-     *  @brief Return a shallow subset of the catalog with only those records that contain the given point.
-     *         If includeValidPolygon is true we check that the point is within the validPolygon of those
+     *  Return a shallow subset of the catalog with only those records that contain the given point.
+     *
+     *  If includeValidPolygon is true we check that the point is within the validPolygon of those
      *         records which have one; if they don't, this argument is ignored.
      *
-     *  @sa ExposureRecord::contains
+     *  @see ExposureRecord::contains
      */
     ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs,
                                       bool includeValidPolygon=false) const;

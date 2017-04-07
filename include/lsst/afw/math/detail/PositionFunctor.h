@@ -22,14 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief image warping
- *
- * @author Kresimir Cosic
- *
- * @ingroup afw
+/*
+ * image warping
  */
 #ifndef LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H
 #define LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H
@@ -68,7 +62,7 @@ namespace detail {
 
 
     /**
-     * @brief Functor class that wraps an XYTransform
+     * Functor class that wraps an XYTransform
      */
     class XYTransformPositionFunctor : public PositionFunctor {
     public:

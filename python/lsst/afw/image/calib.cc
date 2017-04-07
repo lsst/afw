@@ -82,7 +82,7 @@ PYBIND11_PLUGIN(calib) {
     cls.def("__itruediv__", &Calib::operator/=);
     cls.def("__idiv__", &Calib::operator/=);
 
-    // /* Members */
+    /* Members */
     cls.def("setFluxMag0", (void (Calib::*)(double, double)) &Calib::setFluxMag0,
             "fluxMag0"_a, "fluxMag0Sigma"_a=0.0);
     cls.def("setFluxMag0", (void (Calib::*)(std::pair<double, double>)) &Calib::setFluxMag0,

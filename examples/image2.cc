@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/// \file
 #include "lsst/afw/image/Image.h"
 namespace geom=lsst::afw::geom;
 namespace image = lsst::afw::image;

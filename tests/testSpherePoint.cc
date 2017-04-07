@@ -39,7 +39,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-/**
+/*
  * Tests whether the result of SpherePoint::SpherePoint(SpherePoint const&)
  * is an identical but independent copy.
  */
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(SpherePointCopyResult, *boost::unit_test::tolerance(1e-14))
     BOOST_TEST(copy.getLatitude().asDegrees() == copyLat);
 }
 
-/**
+/*
  * Tests whether the result of SpherePoint::SpherePoint(SpherePoint&&)
  * is an identical copy.
  */
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(SpherePointMoveResult, *boost::unit_test::tolerance(1e-14))
     BOOST_TEST(copy.getLatitude().asDegrees() == oldLat);
 }
 
-/**
+/*
  * Tests whether SpherePoint::operator=(SpherePoint const&) makes an identical
  * but independent copy.
  */
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(assignCopyResult, *boost::unit_test::tolerance(1e-14)) {
     BOOST_TEST(copy.getLatitude().asDegrees() == oldLat);
 }
 
-/**
+/*
  * Tests whether SpherePoint::operator=(SpherePoint const&) makes an identical
  * copy.
  */
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(assignMoveResult, *boost::unit_test::tolerance(1e-14)) {
     BOOST_TEST(copy.getLatitude().asDegrees() == oldLat);
 }
 
-/**
+/*
  * Tests whether SpherePoint::operator[](size_t) handles invalid indices
  * correctly.
  */
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(getItemError) {
     BOOST_CHECK_THROW(point[-1], pex::exceptions::OutOfRangeError);
 }
 
-/**
+/*
  * Test the SpherePoint(double const lonLatRad[2]) constructor
  */
 BOOST_AUTO_TEST_CASE(SpherePointArrayConstructor, *boost::unit_test::tolerance(1e-14))

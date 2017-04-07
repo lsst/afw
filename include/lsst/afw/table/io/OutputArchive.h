@@ -18,7 +18,7 @@ class Persistable;
 class OutputArchiveHandle;
 
 /**
- *  @brief A multi-catalog archive object used to save table::io::Persistable objects.
+ *  A multi-catalog archive object used to save table::io::Persistable objects.
  *
  *  OutputArchive should generally be used directly only by objects that do not themselves
  *  inherit from Persistable, but contain many objects that do (such as Exposure).  It provides
@@ -85,7 +85,7 @@ public:
     int countCatalogs() const;
 
     /**
-     *  @brief Write the archive to an already-open FITS object.
+     *  Write the archive to an already-open FITS object.
      *
      *  Always appends new HDUs.
      *
@@ -101,7 +101,7 @@ private:
 };
 
 /**
- *  @brief An object passed to Persistable::write to allow it to persist itself.
+ *  An object passed to Persistable::write to allow it to persist itself.
  *
  *  OutputArchiveHandle provides an interface to add additional catalogs and save nested
  *  Persistables to the same archive.
@@ -110,7 +110,7 @@ class OutputArchiveHandle {
 public:
 
     /**
-     *  @brief Return a new, empty catalog with the given schema.
+     *  Return a new, empty catalog with the given schema.
      *
      *  All catalogs passed to saveCatalog should be originally
      *  created by makeCatalog, or at least share the same table.
@@ -118,7 +118,7 @@ public:
     BaseCatalog makeCatalog(Schema const & schema);
 
     /**
-     *  @brief Save a catalog in the archive.
+     *  Save a catalog in the archive.
      *
      *  The catalog must have been created using makeCatalog,
      *  or be a shallow copy or subset of such a catalog.
@@ -127,7 +127,7 @@ public:
 
     //@{
     /**
-     *  @brief Save a nested Persistable to the same archive.
+     *  Save a nested Persistable to the same archive.
      *
      *  @copydoc OutputArchive::put.
      */

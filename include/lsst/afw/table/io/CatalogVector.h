@@ -11,7 +11,7 @@
 namespace lsst { namespace afw { namespace table { namespace io {
 
 /**
- *  @brief A vector of catalogs used by Persistable.
+ *  A vector of catalogs used by Persistable.
  *
  *  This should really be thought of as just a typedef, but we can't forward-declare a typedef
  *  to a template class, so we use a trivial subclass instead.  That may seem like a dirty hack,

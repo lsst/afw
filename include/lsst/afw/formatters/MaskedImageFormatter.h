@@ -25,21 +25,8 @@
 #ifndef LSST_AFW_FORMATTERS_MASKEDIMAGEFORMATTER_H
 #define LSST_AFW_FORMATTERS_MASKEDIMAGEFORMATTER_H
 
-/** @file
- * @brief Interface for MaskedImageFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
- */
-
-/** @class lsst::afw::formatters::MaskedImageFormatter
- * @brief Class implementing persistence and retrieval for MaskedImages.
- *
- * @ingroup afw
+/*
+ * Interface for MaskedImageFormatter class
  */
 
 #include "lsst/daf/base.h"
@@ -50,6 +37,9 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
+/**
+ * Class implementing persistence and retrieval for MaskedImages.
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImageFormatter : public lsst::daf::persistence::Formatter {
 public:

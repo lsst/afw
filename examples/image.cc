@@ -85,7 +85,6 @@ void printT(afwImage::Image<PixelT>& src, const std::string& _title = "") {
     }
 }
 
-/************************************************************************************************************/
 
 template <typename PixelT>
 void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT>& dst) {
@@ -114,7 +113,6 @@ void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT
     }
 }
 
-/************************************************************************************************************/
 
 int main() {
     afwImage::Image<float> img(afwGeom::Extent2I(10, 6));

@@ -42,7 +42,6 @@
 #include "lsst/utils/Demangle.h"
 #include "lsst/afw/image/lsstGil.h"
 
-/************************************************************************************************************/
 
 using namespace std;
 namespace gil = boost::gil;

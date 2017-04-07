@@ -53,7 +53,7 @@ using PyWcs = py::class_<Wcs, std::shared_ptr<Wcs>, daf::base::Citizen, table::i
 using PyXYTransformFromWcsPair =
     py::class_<XYTransformFromWcsPair, std::shared_ptr<XYTransformFromWcsPair>, geom::XYTransform>;
 
-/// Create the pybind11 wrapper for Wcs
+/// @internal Create the pybind11 wrapper for Wcs
 void declareWcs(py::module & mod) {
     table::io::python::declarePersistableFacade<Wcs>(mod, "Wcs");
 
@@ -121,7 +121,7 @@ void declareWcs(py::module & mod) {
 }
 
 
-/// Create the pybind1`1 wrapper for XYTransformFromWcsPair
+/// @internal Create the pybind11 wrapper for XYTransformFromWcsPair
 void declareXYTransformFromWcsPair(py::module & mod) {
     PyXYTransformFromWcsPair cls(mod, "XYTransformFromWcsPair");
     cls.def(py::init<std::shared_ptr<Wcs const>, std::shared_ptr<Wcs const>>(), "dst"_a, "src"_a);

@@ -21,17 +21,15 @@
  */
 #if !defined(LSST_DETECTION_FOOTPRINTCTRL_H)
 #define LSST_DETECTION_FOOTPRINTCTRL_H
-/**
- * \file
- * \brief Control Footprint-related algorithms
+/*
+ * Control Footprint-related algorithms
  */
 
 namespace lsst {
 namespace afw {
 namespace detection {
-/*!
- * \brief A Control Object for Footprints, controlling e.g. how they are grown
- *
+/**
+ * A Control Object for Footprints, controlling e.g. how they are grown
  */
 class FootprintControl {
     enum TBool { FALSE_=false, TRUE_=true, NONE_ }; // ternary boolean value. N.b. _XXX is reserved
@@ -68,7 +66,7 @@ public:
     DEFINE_ACCESSORS(down, Down)
 
     /// Set whether Footprint should be grown isotropically
-    void growIsotropic(bool val         //!< Should grow be isotropic?
+    void growIsotropic(bool val         ///< Should grow be isotropic?
                       ) {
         _circular = TRUE_;
         _isotropic = val ? TRUE_ : FALSE_;
@@ -85,8 +83,8 @@ private:
     TBool _left, _right, _up, _down;    // grow in selected directions?
 };
 
-/*!
- * \brief A control object for HeavyFootprint%s
+/**
+ * A control object for HeavyFootprint%s
  */
     class HeavyFootprintCtrl {
     public:

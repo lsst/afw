@@ -22,12 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
-* @file
-* @brief Simple test code for the Wcs Class
-*        Created on:    23-Jul-2007 12:28:00 PM PDT (by NMS)
-* @author Nicole M. Silvestri
-*         Last modified: 20-Aug-2007 (by NMS)
+/*
+* Simple test code for the Wcs Class
 */
 
 #include <iostream>
@@ -42,8 +38,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
 
-/**
- * @brief This test code incorporates some very simple tests of the Wcs class and related classes.
+/*
+ * This test code incorporates some very simple tests of the Wcs class and related classes.
  */
 
 namespace afwCoord = lsst::afw::coord;

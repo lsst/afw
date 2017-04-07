@@ -70,13 +70,13 @@ template<> struct tag<LsstRing> { typedef ring_tag type; };
 
 namespace {
 
-/// Convert BoostBox to LsstBox
+/// @internal Convert BoostBox to LsstBox
 LsstBox boostBoxToLsst(BoostBox const& box)
 {
     return LsstBox(box.min_corner(), box.max_corner());
 }
 
-/// Convert box to corners
+/// @internal Convert box to corners
 std::vector<LsstPoint> boxToCorners(LsstBox const& box)
 {
     std::vector<LsstPoint> corners;
@@ -88,9 +88,11 @@ std::vector<LsstPoint> boxToCorners(LsstBox const& box)
     return corners;
 }
 
-/// Sub-sample a line
-///
-/// Add 'num' points to 'vector' between 'first' and 'second'
+/**
+ * @internal Sub-sample a line
+ *
+ * Add `num` points to `vector` between `first` and `second`
+ */
 void addSubSampledEdge(
     std::vector<LsstPoint>& vertices, // Vector of points to which to add
     LsstPoint const& first,           // First vertex defining edge
@@ -105,7 +107,7 @@ void addSubSampledEdge(
     }
 }
 
-/// Calculate area of overlap between polygon and pixel
+/// @internal Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
 {
     std::vector<BoostPolygon> overlap; // Overlap between pixel and polygon
@@ -120,7 +122,7 @@ double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
     return area;
 }
 
-/// Set each pixel in a row to the amount of overlap with polygon
+/// @internal Set each pixel in a row to the amount of overlap with polygon
 void pixelRowOverlap(PTR(lsst::afw::image::Image<float>) const image,
                      BoostPolygon const& poly, int const xStart, int const xStop, int const y)
 {
@@ -136,7 +138,7 @@ void pixelRowOverlap(PTR(lsst::afw::image::Image<float>) const image,
 
 namespace lsst { namespace afw { namespace geom { namespace polygon {
 
-/// Stream vertices
+/// @internal Stream vertices
 std::ostream& operator<<(std::ostream& os, std::vector<LsstPoint> const& vertices)
 {
     os << "[";
@@ -148,13 +150,12 @@ std::ostream& operator<<(std::ostream& os, std::vector<LsstPoint> const& vertice
     return os;
 }
 
-/// Stream BoostPolygon
+/// @internal Stream BoostPolygon
 std::ostream& operator<<(std::ostream& os, BoostPolygon const& poly)
 {
     return os << "BoostPolygon(" << poly.outer() << ")";
 }
 
-/// Stream Polygon
 std::ostream& operator<<(std::ostream& os, Polygon const& poly)
 {
     os << "Polygon(" << poly.getVertices() << ")";
@@ -176,7 +177,7 @@ struct Polygon::Impl
 
     void check() { boost::geometry::correct(poly); }
 
-    /// Convert collection of Boost polygons to our own
+    /// @internal Convert collection of Boost polygons to our own
     static std::vector<PTR(Polygon)> convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons);
 
     template <class PolyT>

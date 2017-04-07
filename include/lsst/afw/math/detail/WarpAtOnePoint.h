@@ -34,7 +34,7 @@ namespace math {
 namespace detail {
 
     /**
-     * @brief A functor that computes one warped pixel
+     * A functor that computes one warped pixel
      */
     template<typename DestImageT, typename SrcImageT>
     class WarpAtOnePoint {
@@ -188,7 +188,7 @@ namespace detail {
         /**
          * Set parameters of kernel (and mask kernel, if present) and update X and Y values
          *
-         * @return sum of kernel
+         * @returns sum of kernel
          */
         double _setFracIndex(double xFrac, double yFrac) {
             std::pair<double, double> srcFracInd(xFrac, yFrac);

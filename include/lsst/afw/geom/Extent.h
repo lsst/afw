@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief A coordinate class intended to represent offsets and dimensions.
+/*
+ * A coordinate class intended to represent offsets and dimensions.
  */
 #ifndef LSST_AFW_GEOM_EXTENT_H
 #define LSST_AFW_GEOM_EXTENT_H
@@ -64,21 +63,21 @@ class ExtentBase : public CoordinateBase<Extent<T,N>,T,N> {
     typedef CoordinateBase<Extent<T,N>,T,N> Super;
 public:
 
-    /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
+    /// Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
-    /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
+    /// Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
     T computeNorm() const { return detail::computeExtentNorm(static_cast<Extent<T,N> const &>(*this)); }
 
     /**
-     *  @brief Standard equality comparison.
+     *  Standard equality comparison.
      *
      *  Returns true iff all(this->eq(other));
      */
     bool operator==(Extent<T,N> const & other) const { return all(this->eq(other)); }
 
     /**
-     *  @brief Standard inequality comparison.
+     *  Standard inequality comparison.
      *
      *  Returns true iff any(this->ne(other));
      */
@@ -91,9 +90,9 @@ public:
      *
      *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
      *  for comparisons; expressions like
-     *  \code
-     *    if (all(extent.gt(0))) ...
-     *  \endcode
+     *
+     *      if (all(extent.gt(0))) ...
+     *
      *  are both ubiquitous and easy to interpret.
      */
     //@{
@@ -166,17 +165,17 @@ public:
 
 protected:
 
-    /// \brief Construct an Extent<T,N> with all elements set to the same scalar value.
+    /// Construct an Extent<T,N> with all elements set to the same scalar value.
     explicit ExtentBase(T val=static_cast<T>(0)) : Super(val) {}
 
-    /// \brief Construct an Extent from an Eigen vector.
+    /// Construct an Extent from an Eigen vector.
     template <typename Vector>
     explicit ExtentBase(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
 
 };
 
 /**
- *  \brief A coordinate class intended to represent offsets and dimensions.
+ *  A coordinate class intended to represent offsets and dimensions.
  *
  *  Much of the functionality of Extent is provided by its CRTP base class, ExtentBase.
  *
@@ -188,32 +187,32 @@ class Extent : public ExtentBase<T,N> {
 public:
     typedef typename Super::EigenVector EigenVector;
 
-    /// \brief Construct an Extent with all elements set to the same scalar value.
+    /// Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
-    /// \brief Construct an Extent from an Eigen vector.
+    /// Construct an Extent from an Eigen vector.
     explicit Extent(EigenVector const & vector) : Super(vector) {}
 
-    /// \brief Explicit constructor from Point.
+    /// Explicit constructor from Point.
     explicit Extent(Point<T,N> const & other);
 
-    /// \brief Explicit constructor from Extent of different type (if allowed)
+    /// Explicit constructor from Extent of different type (if allowed)
     template<typename U>
     explicit Extent(Extent<U,N> const & other);
     template<typename U>
     explicit Extent(Point<U,N> const & other);
 
-    /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
+    /// Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
-    /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
+    /// Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
     T computeNorm() const { return this->asEigen().norm(); }
 
     void swap(Extent & other) { this->_swap(other); }
 };
 
 /**
- *  \brief A coordinate class intended to represent offsets and dimensions (2-d specialization).
+ *  A coordinate class intended to represent offsets and dimensions (2-d specialization).
  *
  *  See @ref afwGeomOps for mathematical operators on Extent.
  */
@@ -223,31 +222,31 @@ class Extent<T,2> : public ExtentBase<T,2> {
 public:
     typedef typename Super::EigenVector EigenVector;
 
-    /// \brief Construct an Extent with all elements set to the same scalar value.
+    /// Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
-    /// \brief Construct an Extent from an Eigen vector.
+    /// Construct an Extent from an Eigen vector.
     explicit Extent(EigenVector const & vector) : Super(vector) {}
 
-    /// \brief Explicit constructor from Point.
+    /// Explicit constructor from Point.
     explicit Extent(Point<T,2> const & other);
 
-    /// \brief Explicit constructor from Extent of different type (if allowed)
+    /// Explicit constructor from Extent of different type (if allowed)
     template<typename U>
     explicit Extent(Extent<U,2> const & other);
     template<typename U>
     explicit Extent(Point<U,2> const & other);
 
-    /// @brief Construct from two scalars.
+    /// Construct from two scalars.
     explicit Extent(T x, T y) : Super(EigenVector(x, y)) {}
 
-    /// @brief Construct from a two-element array.
+    /// Construct from a two-element array.
     explicit Extent(T const xy[2]) : Super(EigenVector(xy[0], xy[1])) {}
 
-    /// @brief Construct from a std::pair.
+    /// Construct from a std::pair.
     explicit Extent(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
-    /// @brief Construct from std::tuple.
+    /// Construct from std::tuple.
     explicit Extent(std::tuple<T,T> const & xy) :
         Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
@@ -262,7 +261,7 @@ public:
 };
 
 /**
- *  \brief A coordinate class intended to represent offsets and dimensions (3-d specialization).
+ *  A coordinate class intended to represent offsets and dimensions (3-d specialization).
  *
  *  See @ref afwGeomOps for mathematical operators on Extent.
  */
@@ -272,28 +271,28 @@ class Extent<T,3> : public ExtentBase<T,3> {
 public:
     typedef typename Super::EigenVector EigenVector;
 
-    /// \brief Construct an Extent with all elements set to the same scalar value.
+    /// Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
-    /// \brief Construct an Extent from an Eigen vector.
+    /// Construct an Extent from an Eigen vector.
     explicit Extent(EigenVector const & vector) : Super(vector) {}
 
-    /// \brief Explicit constructor from Point.
+    /// Explicit constructor from Point.
     explicit Extent(Point<T,3> const & other);
 
-    /// \brief Explicit constructor from Extent of different type (if allowed)
+    /// Explicit constructor from Extent of different type (if allowed)
     template<typename U>
     explicit Extent(Extent<U,3> const & other);
     template<typename U>
     explicit Extent(Point<U,3> const & other);
 
-    /// @brief Construct from three scalars.
+    /// Construct from three scalars.
     explicit Extent(T x, T y, T z) : Super(EigenVector(x, y, z)) {}
 
-    /// @brief Construct from a two-element array.
+    /// Construct from a two-element array.
     explicit Extent(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
-    /// @brief Construct from std::tuple.
+    /// Construct from std::tuple.
     explicit Extent(std::tuple<T,T,T> const & xyz) :
         Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 

@@ -212,10 +212,12 @@ namespace {
 // Impl functions in the anonymous namespace do special handling for strings, bools, and IEEE fp values.
 
 
-/// Convert a double to a special string for writing FITS keyword values
-///
-/// Non-finite values are written as special strings.  If the value is finite,
-/// an empty string is returned.
+/**
+ * @internal Convert a double to a special string for writing FITS keyword values
+ *
+ * Non-finite values are written as special strings.  If the value is finite,
+ * an empty string is returned.
+ */
 std::string nonFiniteDoubleToString(double value)
 {
     if (std::isfinite(value)) {
@@ -230,10 +232,11 @@ std::string nonFiniteDoubleToString(double value)
     return "+INFINITY";
 }
 
-/// Convert a special string to double when reading FITS keyword values
-///
-/// Returns zero if the provided string is not one of the recognised special
-/// strings for doubles; otherwise, returns the mapped value.
+/** @internal Convert a special string to double when reading FITS keyword values
+ *
+ * Returns zero if the provided string is not one of the recognised special
+ * strings for doubles; otherwise, returns the mapped value.
+ */
 double stringToNonFiniteDouble(std::string const& value)
 {
     if (value == "NAN") {

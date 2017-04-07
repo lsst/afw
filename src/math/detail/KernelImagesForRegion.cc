@@ -22,14 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Definition of KernelImagesForRegion class declared in detail/ConvolveImage.h
- *
- * @author Russell Owen
- *
- * @ingroup afw
+/*
+ * Definition of KernelImagesForRegion class declared in detail/ConvolveImage.h
  */
 #include <algorithm>
 #include <cmath>
@@ -50,18 +44,11 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace mathDetail = lsst::afw::math::detail;
 
-/**
- * Construct a KernelImagesForRegion
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
- */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr kernelPtr,               ///< kernel
-        lsst::afw::geom::Box2I const &bbox,      ///< bounding box of region of an image
-                                                ///< for which we want to compute kernel images
-                                                ///< (inclusive and relative to parent image)
-        lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image for which we want to compute kernel images
-        bool doNormalize)                       ///< normalize the kernel images?
+        KernelConstPtr kernelPtr,
+        lsst::afw::geom::Box2I const &bbox,
+        lsst::afw::geom::Point2I const &xy0,
+        bool doNormalize)
 :
     lsst::daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
@@ -78,27 +65,15 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
-/**
- * Construct a KernelImagesForRegion with some or all corner images
- *
- * Null corner image pointers are ignored.
- *
- * @warning: if any images are incorrect you will get a mess.
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
- * @throw lsst::pex::exceptions::InvalidParameterError if an image has the wrong dimensions
- */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr const kernelPtr,         ///< kernel
-        lsst::afw::geom::Box2I const &bbox,      ///< bounding box of region of an image
-                                                ///< for which we want to compute kernel images
-                                                ///< (inclusive and relative to parent image)
-        lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image
-        bool doNormalize,                       ///< normalize the kernel images?
-        ImagePtr bottomLeftImagePtr,            ///< kernel image and sum at bottom left of region
-        ImagePtr bottomRightImagePtr,           ///< kernel image and sum at bottom right of region
-        ImagePtr topLeftImagePtr,               ///< kernel image and sum at top left of region
-        ImagePtr topRightImagePtr)              ///< kernel image and sum at top right of region
+        KernelConstPtr const kernelPtr,
+        lsst::afw::geom::Box2I const &bbox,
+        lsst::afw::geom::Point2I const &xy0,
+        bool doNormalize,
+        ImagePtr bottomLeftImagePtr,
+        ImagePtr bottomRightImagePtr,
+        ImagePtr topLeftImagePtr,
+        ImagePtr topRightImagePtr)
 :
     lsst::daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
@@ -119,13 +94,8 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
-/**
- * Return the image and sum at the specified location
- *
- * If the image has not yet been computed, it is computed at this time.
- */
 mathDetail::KernelImagesForRegion::ImagePtr mathDetail::KernelImagesForRegion::getImage(
-        Location location)  ///< location of image
+        Location location)
 const {
     if (_imagePtrList[location]) {
         return _imagePtrList[location];
@@ -137,12 +107,8 @@ const {
     return imagePtr;
 }
 
-/**
- * Compute pixel index of a given location, relative to the parent image
- * (thus offset by bottom left corner of bounding box)
- */
 lsst::afw::geom::Point2I mathDetail::KernelImagesForRegion::getPixelIndex(
-        Location location)  ///< location for which to return pixel index
+        Location location)
 const {
     switch (location) {
         case BOTTOM_LEFT:
@@ -165,16 +131,8 @@ const {
     }
 }
 
-/**
- * @brief Compute next row of subregions
- *
- * For the first row call with a new RowOfKernelImagesForRegion (with the desired number of columns and rows).
- * Every subequent call updates the data in the RowOfKernelImagesForRegion.
- *
- * @return true if a new row was computed, false if supplied RowOfKernelImagesForRegion is for the last row.
- */
 bool mathDetail::KernelImagesForRegion::computeNextRow(
-        RowOfKernelImagesForRegion &regionRow) ///< RowOfKernelImagesForRegion object
+        RowOfKernelImagesForRegion &regionRow)
 const {
     if (regionRow.isLastRow()) {
         return false;
@@ -241,11 +199,6 @@ const {
     return true;
 }
 
-/**
- * Compute image at a particular location
- *
- * @throw lsst::pex::exceptions::NotFoundError if there is no pointer at that location
- */
 void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
     ImagePtr imagePtr = _imagePtrList[location];
     if (!imagePtr) {
@@ -262,17 +215,9 @@ void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
         afwImage::indexToPosition(pixelIndex.getY() + _xy0[1]));
 }
 
-/**
- * Compute length of each subregion for a region divided into nDivisions pieces of approximately equal
- * length.
- *
- * @return a list of subspan lengths
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if nDivisions >= length
- */
 std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
-    int length,     ///< length of region
-    int nDivisions) ///< number of divisions of region
+    int length,
+    int nDivisions)
 {
     if ((nDivisions > length) || (nDivisions < 1)) {
         std::ostringstream os;
@@ -295,19 +240,9 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     return regionLengths;
 }
 
-/**
- * @brief Move the region up one segment
- *
- * To avoid reallocating memory for kernel images, swap the top and bottom kernel image pointers
- * and recompute the top images. Actually, only does this to the right-hande images if isFirst is false
- * since it assumes the left images were already handled.
- *
- * Intended to support computeNextRow; as such assumes that a list of adjacent regions will be moved,
- * left to right.
- */
 void mathDetail::KernelImagesForRegion::_moveUp(
-        bool isFirst,   ///< true if the first region in a row (or the only region you are moving)
-        int newHeight)  ///< new height of region
+        bool isFirst,
+        int newHeight)
 {
     // move bbox up (this must be done before recomputing the top kernel images)
     _bbox = afwGeom::Box2I(
@@ -328,12 +263,9 @@ void mathDetail::KernelImagesForRegion::_moveUp(
 
 int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 10;
 
-/**
- * @brief Construct a RowOfKernelImagesForRegion
- */
 mathDetail::RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
-        int nx, ///< number of columns
-        int ny) ///< number of rows
+        int nx,
+        int ny)
 :
     _nx(nx),
     _ny(ny),
