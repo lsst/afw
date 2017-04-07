@@ -201,6 +201,9 @@ public:
     /// @copydoc BoundedField::operator*
     virtual std::shared_ptr<BoundedField> operator*(double const scale) const;
 
+    /// @copydoc BoundedField::operator==
+    virtual bool operator==(BoundedField const& rhs) const;
+
 protected:
     virtual std::string getPersistenceName() const;
 

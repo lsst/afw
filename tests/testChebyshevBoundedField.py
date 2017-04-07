@@ -61,6 +61,7 @@ CHEBYSHEV_T = [
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        self.longMessage = True
         np.random.seed(5)
         self.bbox = lsst.afw.geom.Box2I(
             lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
@@ -301,6 +302,13 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             z1 = inField.evaluate(x, y)
             z2 = inField.evaluate(x, y)
             self.assertFloatsAlmostEqual(z1, z2, rtol=1E-13)
+
+        # test with an empty bbox
+        inField = lsst.afw.math.ChebyshevBoundedField(lsst.afw.geom.Box2I(),
+                                                      np.array([[1.0, 2.0], [3.0, 4.0]]))
+        inField.writeFits(filename)
+        outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
+        self.assertEqual(inField.getBBox(), outField.getBBox())
         os.remove(filename)
 
     def testTruncate(self):
@@ -327,6 +335,35 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                     else:
                         self.assertEqual(field3.getCoefficients()[i, j],
                                          field1.getCoefficients()[i, j])
+
+    def testEquality(self):
+        for ctrl, coefficients in self.cases:
+            field1 = lsst.afw.math.ChebyshevBoundedField(self.bbox, coefficients)
+            field2 = lsst.afw.math.ChebyshevBoundedField(self.bbox, coefficients)
+            self.assertEqual(field1, field2, msg=coefficients)
+
+        # same coefficients, instantiated from different arrays
+        field1 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0]]))
+        field2 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0]]))
+        self.assertEqual(field1, field2)
+        field1 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0, 2.0], [3., 4.]]))
+        field2 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0, 2.0], [3., 4.]]))
+        self.assertEqual(field1, field2)
+
+        # different coefficient(s)
+        field1 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0]]))
+        field2 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[2.0]]))
+        self.assertNotEqual(field1, field2)
+        field1 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0, 0.0]]))
+        field2 = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[1.0], [0.0]]))
+        self.assertNotEqual(field1, field2)
+
+        # different bbox
+        bbox1 = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-10, -10), lsst.afw.geom.Point2I(5, 5))
+        bbox2 = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
+        field1 = lsst.afw.math.ChebyshevBoundedField(bbox1, np.array([[1.0]]))
+        field2 = lsst.afw.math.ChebyshevBoundedField(bbox2, np.array([[1.0]]))
+        self.assertNotEqual(field1, field2)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
