@@ -76,7 +76,7 @@ ast::PolyMap makeForwardPolyMap(size_t nIn, size_t nOut) {
 }
 
 /**
- * Tests whether the result of SpherePoint::getJacobian(FromPoint const&)
+ * Tests whether the result of Transform::getJacobian(FromPoint const&)
  * has the specified dimensions.
  *
  * The Python version of this method follows a slightly different spec to
