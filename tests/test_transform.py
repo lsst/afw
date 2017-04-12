@@ -25,6 +25,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 import astshim
+from astshim.test import makeForwardPolyMap, makeTwoWayPolyMap
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -168,33 +169,13 @@ def permFrameSetIter(frameSet):
             yield (frameSetCopy, isBaseSkyFrame, isCurrSkyFrame, isBasePermuted, isCurrPermuted)
 
 
-def makeCoeffs(nIn, nOut):
-    """Make an array of coefficients for astshim.PolyMap for the following equation:
-
-    fj(x) = C0j x0^2 + C1j x1^2 + C2j x2^2...
-    where:
-    * i ranges from 0 to nIn-1
-    * j ranges from 0 to nOut-1,
-    * Cij = 0.001 i (j+1)
-    """
-    baseCoeff = 0.001
-    forwardCoeffs = []
-    for out_ind in range(nOut):
-        coeffOffset = baseCoeff * out_ind
-        for in_ind in range(nIn):
-            coeff = baseCoeff * (in_ind + 1) + coeffOffset
-            coeffArr = [coeff, out_ind + 1] + [2 if i == in_ind else 0 for i in range(nIn)]
-            forwardCoeffs.append(coeffArr)
-    return np.array(forwardCoeffs, dtype=float)
-
-
 def makeJacobian(nIn, nOut, inArray):
-    """Make a Jacobian matrix for the equation described by makeCoeffs.
+    """Make a Jacobian matrix for the equation described by makeTwoWayPolyMap.
 
     Parameters
     ----------
     nIn, nOut : integers
-        the dimensions of the input and output data; see makeCoeffs
+        the dimensions of the input and output data; see makeTwoWayPolyMap
     inArray : ndarray
         an array of size `nIn` representing the point at which the Jacobian
         is measured
@@ -215,49 +196,6 @@ def makeJacobian(nIn, nOut, inArray):
     assert coeffs.shape == (nOut, nIn)
     # Avoid spurious errors when comparing to a simplified array
     return coeffs
-
-
-def makeTwoWayPolyMap(nIn, nOut):
-    """Make an astShim.PolyMap suitable for testing
-
-    The forward transform is as follows:
-    fj(x) = C0j x0^2 + C1j x1^2 + C2j x2^2... where Cij = 0.001 i (j+1)
-
-    The reverse transform is the same equation with i and j reversed
-    thus it is NOT the inverse of the forward direction,
-    but is something that can be easily evaluated.
-
-    The equation is chosen for the following reasons:
-    - It is well defined for any value of nIn, nOut
-    - It stays small for small x, to avoid wraparound of angles for SpherePoint endpoints
-    """
-    forwardCoeffs = makeCoeffs(nIn, nOut)
-    reverseCoeffs = makeCoeffs(nOut, nIn)
-    polyMap = astshim.PolyMap(forwardCoeffs, reverseCoeffs)
-    assert polyMap.getNin() == nIn
-    assert polyMap.getNout() == nOut
-    assert polyMap.hasForward()
-    assert polyMap.hasInverse()
-    return polyMap
-
-
-def makeForwardPolyMap(nIn, nOut):
-    """Make an astShim.PolyMap suitable for testing
-
-    The forward transform is the same as for `makeTwoWayPolyMap`.
-    This map does not have a reverse transform.
-
-    The equation is chosen for the following reasons:
-    - It is well defined for any value of nIn, nOut
-    - It stays small for small x, to avoid wraparound of angles for SpherePoint endpoints
-    """
-    forwardCoeffs = makeCoeffs(nIn, nOut)
-    polyMap = astshim.PolyMap(forwardCoeffs, nOut, "IterInverse=0")
-    assert polyMap.getNin() == nIn
-    assert polyMap.getNout() == nOut
-    assert polyMap.hasForward()
-    assert not polyMap.hasInverse()
-    return polyMap
 
 
 class TransformTestCase(lsst.utils.tests.TestCase):
