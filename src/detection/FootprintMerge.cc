@@ -29,23 +29,6 @@
 
 namespace lsst { namespace afw { namespace detection {
 
-namespace {
-
-FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) {
-
-    geom::Box2I bbox(foot1.getBBox());
-    bbox.include(foot2.getBBox());
-
-    std::uint16_t bits = 0x1;
-    image::Mask<std::uint16_t> mask(bbox);
-    setMaskFromFootprint(&mask, foot1, bits);
-    setMaskFromFootprint(&mask, foot2, bits);
-    FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));
-    return fpSet;
-}
-
-} // anonymous namespace
-
 class FootprintMerge {
 public:
 
@@ -87,7 +70,7 @@ public:
      *  within the Footprint class in the future.
      */
     bool overlaps(Footprint const &rhs) const {
-        return mergeFootprintPair(*getMergedFootprint(), rhs).getFootprints()->size() == 1u;
+        return getMergedFootprint()->getSpans()->overlaps(*(rhs.getSpans()));
     }
 
     /*
@@ -161,10 +144,8 @@ private:
     // Implementation helper for add() methods; returns true if the Footprint actually overlapped
     // and was merged, and false otherwise.
     bool _addSpans(PTR(Footprint) footprint) {
-        FootprintSet fpSet = mergeFootprintPair(*getMergedFootprint(), *footprint);
-        if (fpSet.getFootprints()->size() != 1u) return false;
-        getMergedFootprint()->_bbox.include(footprint->getBBox());
-        getMergedFootprint()->getSpans().swap(fpSet.getFootprints()->front()->getSpans());
+        if (!getMergedFootprint()->getSpans()->overlaps(*(footprint->getSpans()))) return false;
+        getMergedFootprint()->setSpans(getMergedFootprint()->getSpans()->union_(*(footprint->getSpans())));
         return true;
     }
 
@@ -347,11 +328,10 @@ void FootprintMergeList::addCatalog(
     }
 }
 
-void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm)
+void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat)
 {
     // Now set the merged footprint as the footprint of the SourceRecord
     for (FootprintMergeVec::iterator iter = _mergeList.begin(); iter != _mergeList.end(); ++iter)  {
-        if (doNorm) (**iter).getMergedFootprint()->normalize();
         outputCat.push_back((**iter).getSource());
     }
 }
