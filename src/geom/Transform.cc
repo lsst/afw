@@ -51,28 +51,29 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool
 
 template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bool simplify)
-        : _fromEndpoint(frameSet.getNin()), _frameSet(), _toEndpoint(frameSet.getNout()) {
+        : Transform(simplify ? std::dynamic_pointer_cast<ast::FrameSet>(frameSet.simplify())
+                             : frameSet.copy()) {}
+
+template <typename FromEndpoint, typename ToEndpoint>
+Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&frameSet)
+        : _fromEndpoint(frameSet->getNin()), _frameSet(frameSet), _toEndpoint(frameSet->getNout()) {
     // Normalize the base and current frame in a way that affects its behavior as a mapping.
     // To do this one must set the current frame to the frame to be normalized
     // and normalize the frame set as a frame (i.e. normalize the frame "in situ").
     // The obvious alternative of normalizing a shallow copy of the frame does not work;
     // the frame is altered but not the associated mapping!
-    auto frameSetCopy =
-            simplify ? std::dynamic_pointer_cast<ast::FrameSet>(frameSet.simplify()) : frameSet.copy();
 
     // Normalize the current frame by normalizing the frameset as a frame
-    _toEndpoint.normalizeFrame(frameSetCopy);
+    _toEndpoint.normalizeFrame(frameSet);
 
     // Normalize the base frame by temporarily making it the current frame,
     // normalizing the frameset as a frame, then making it the base frame again
-    const int currIndex = frameSetCopy->getCurrent();
-    const int baseIndex = frameSetCopy->getBase();
-    frameSetCopy->setCurrent(baseIndex);
-    _fromEndpoint.normalizeFrame(frameSetCopy);
-    frameSetCopy->setBase(baseIndex);
-    frameSetCopy->setCurrent(currIndex);
-    // assign after modifying the frame set, since _frameSet points to a const frame set
-    _frameSet = frameSetCopy;
+    const int currIndex = frameSet->getCurrent();
+    const int baseIndex = frameSet->getBase();
+    frameSet->setCurrent(baseIndex);
+    _fromEndpoint.normalizeFrame(frameSet);
+    frameSet->setBase(baseIndex);
+    frameSet->setCurrent(currIndex);
 }
 
 template <class FromEndpoint, class ToEndpoint>
