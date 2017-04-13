@@ -212,6 +212,14 @@ public:
     Transform<FirstFromEndpoint, ToEndpoint> of(
             Transform<FirstFromEndpoint, FromEndpoint> const &first) const;
 
+protected:
+    /**
+    Construct a Transform from a shared pointer to a FrameSet
+
+    @note The FrameSet may be modified by normalizing the base and current frame.
+    */
+    explicit Transform(std::shared_ptr<ast::FrameSet> &&frameSet);
+
 private:
     FromEndpoint const _fromEndpoint;
     std::shared_ptr<const ast::FrameSet> _frameSet;
