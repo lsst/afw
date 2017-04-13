@@ -42,7 +42,7 @@ namespace {
 
 // Return a string consisting of "_pythonClassName_[_fromNAxes_->_toNAxes_]",
 // for example "TransformGenericToPoint3[4->3]"
-template <typename Class>
+template <class Class>
 std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
     os << pyClassName;
@@ -51,10 +51,21 @@ std::string formatStr(Class const &self, std::string const &pyClassName) {
     return os.str();
 }
 
+template <class ExtraEndpoint, class FromEndpoint, class ToEndpoint, class PyClass>
+void declareMethodTemplates(PyClass &cls) {
+    using FirstTransform = Transform<ExtraEndpoint, FromEndpoint>;
+    using SecondTransform = Transform<FromEndpoint, ToEndpoint>;
+    using FinalTransform = Transform<ExtraEndpoint, ToEndpoint>;
+    // Need Python-specific logic to give sensible errors for mismatched Transform types
+    cls.def("_of", (FinalTransform (SecondTransform::*)(FirstTransform const &) const) &
+                           SecondTransform::template of<ExtraEndpoint>,
+            "first"_a);
+}
+
 // Declare Transform<FromEndpoint, ToEndpoint> using python class name TransformFrom<X>To<Y>
 // where <X> and <Y> are the name of the from endpoint and to endpoint class, respectively,
 // for example TransformFromGenericToPoint3
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 void declareTransform(py::module &mod, std::string const &fromName, std::string const &toName) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
     using ToPoint = typename ToEndpoint::Point;
@@ -81,7 +92,15 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     cls.def("tranInverse", (FromArray (Class::*)(ToArray const &) const) & Class::tranInverse, "array"_a);
     cls.def("tranInverse", (FromPoint (Class::*)(ToPoint const &) const) & Class::tranInverse, "point"_a);
     cls.def("getInverse", &Class::getInverse);
+    /* Need some extra handling of ndarray return type in Python to prevent dimensions
+     * of length 1 from being deleted */
     cls.def("_getJacobian", &Class::getJacobian);
+
+    declareMethodTemplates<GenericEndpoint, FromEndpoint, ToEndpoint>(cls);
+    declareMethodTemplates<Point2Endpoint, FromEndpoint, ToEndpoint>(cls);
+    declareMethodTemplates<Point3Endpoint, FromEndpoint, ToEndpoint>(cls);
+    declareMethodTemplates<SpherePointEndpoint, FromEndpoint, ToEndpoint>(cls);
+
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
     cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
     // repr(self) = "lsst.afw.geom.<Python class name>[<nIn>-><nOut>]"

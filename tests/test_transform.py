@@ -23,8 +23,9 @@ from __future__ import absolute_import, division, print_function
 import unittest
 
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 import astshim
+from astshim.test import makeForwardPolyMap, makeTwoWayPolyMap
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -45,8 +46,12 @@ def makeRawPointData(nAxes, delta=0.123):
 def makeEndpoint(name, nAxes):
     """Make an endpoint
 
-    @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
-    @param[in] nAxes  number of axes; ignored if the name is not "Generic"
+    Parameters
+    ----------
+    name : string
+        one of "Generic", "Point2", "Point3" or "SpherePoint"
+    nAxes : integer
+        number of axes; ignored if the name is not "Generic"
     """
     endpointClassName = name + "Endpoint"
     endpointClass = getattr(afwGeom, endpointClassName)
@@ -58,8 +63,12 @@ def makeEndpoint(name, nAxes):
 def makeGoodFrame(name, nAxes):
     """Return the appropriate frame for the given name and nAxes
 
-    @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
-    @param[in] nAxes  number of axes; ignored if the name is not "Generic"
+    Parameters
+    ----------
+    name : string
+        one of "Generic", "Point2", "Point3" or "SpherePoint"
+    nAxes : integer
+        number of axes; ignored if the name is not "Generic"
     """
     return makeEndpoint(name, nAxes).makeFrame()
 
@@ -67,7 +76,10 @@ def makeGoodFrame(name, nAxes):
 def makeBadFrames(name):
     """Return a list of 0 or more frames that are not a valid match for the named endpoint
 
-    @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
+    Parameters
+    ----------
+    name : string
+        one of "Generic", "Point2", "Point3" or "SpherePoint"
     """
     if name == "Generic":
         return []
@@ -108,8 +120,12 @@ def makeFrameSet(baseFrame, currFrame):
     - nOut = currFrame.getNaxes()
     - polyMap = makeTwoWayPolyMap(nIn, nOut)
 
-    @param[in] baseFrame  base frame
-    @param[in] currFrame  current frame
+    Parameters
+    ----------
+    baseFrame : astshim.Frame
+        base frame
+    currFrame : astshim.Frame
+        current frame
     """
     nIn = baseFrame.getNaxes()
     nOut = currFrame.getNaxes()
@@ -168,33 +184,13 @@ def permFrameSetIter(frameSet):
             yield (frameSetCopy, isBaseSkyFrame, isCurrSkyFrame, isBasePermuted, isCurrPermuted)
 
 
-def makeCoeffs(nIn, nOut):
-    """Make an array of coefficients for astshim.PolyMap for the following equation:
-
-    fj(x) = C0j x0^2 + C1j x1^2 + C2j x2^2...
-    where:
-    * i ranges from 0 to nIn-1
-    * j ranges from 0 to nOut-1,
-    * Cij = 0.001 i (j+1)
-    """
-    baseCoeff = 0.001
-    forwardCoeffs = []
-    for out_ind in range(nOut):
-        coeffOffset = baseCoeff * out_ind
-        for in_ind in range(nIn):
-            coeff = baseCoeff * (in_ind + 1) + coeffOffset
-            coeffArr = [coeff, out_ind + 1] + [2 if i == in_ind else 0 for i in range(nIn)]
-            forwardCoeffs.append(coeffArr)
-    return np.array(forwardCoeffs, dtype=float)
-
-
 def makeJacobian(nIn, nOut, inArray):
-    """Make a Jacobian matrix for the equation described by makeCoeffs.
+    """Make a Jacobian matrix for the equation described by makeTwoWayPolyMap.
 
     Parameters
     ----------
     nIn, nOut : integers
-        the dimensions of the input and output data; see makeCoeffs
+        the dimensions of the input and output data; see makeTwoWayPolyMap
     inArray : ndarray
         an array of size `nIn` representing the point at which the Jacobian
         is measured
@@ -215,49 +211,6 @@ def makeJacobian(nIn, nOut, inArray):
     assert coeffs.shape == (nOut, nIn)
     # Avoid spurious errors when comparing to a simplified array
     return coeffs
-
-
-def makeTwoWayPolyMap(nIn, nOut):
-    """Make an astShim.PolyMap suitable for testing
-
-    The forward transform is as follows:
-    fj(x) = C0j x0^2 + C1j x1^2 + C2j x2^2... where Cij = 0.001 i (j+1)
-
-    The reverse transform is the same equation with i and j reversed
-    thus it is NOT the inverse of the forward direction,
-    but is something that can be easily evaluated.
-
-    The equation is chosen for the following reasons:
-    - It is well defined for any value of nIn, nOut
-    - It stays small for small x, to avoid wraparound of angles for SpherePoint endpoints
-    """
-    forwardCoeffs = makeCoeffs(nIn, nOut)
-    reverseCoeffs = makeCoeffs(nOut, nIn)
-    polyMap = astshim.PolyMap(forwardCoeffs, reverseCoeffs)
-    assert polyMap.getNin() == nIn
-    assert polyMap.getNout() == nOut
-    assert polyMap.hasForward()
-    assert polyMap.hasInverse()
-    return polyMap
-
-
-def makeForwardPolyMap(nIn, nOut):
-    """Make an astShim.PolyMap suitable for testing
-
-    The forward transform is the same as for `makeTwoWayPolyMap`.
-    This map does not have a reverse transform.
-
-    The equation is chosen for the following reasons:
-    - It is well defined for any value of nIn, nOut
-    - It stays small for small x, to avoid wraparound of angles for SpherePoint endpoints
-    """
-    forwardCoeffs = makeCoeffs(nIn, nOut)
-    polyMap = astshim.PolyMap(forwardCoeffs, nOut, "IterInverse=0")
-    assert polyMap.getNin() == nIn
-    assert polyMap.getNout() == nOut
-    assert polyMap.hasForward()
-    assert not polyMap.hasInverse()
-    return polyMap
 
 
 class TransformTestCase(lsst.utils.tests.TestCase):
@@ -286,12 +239,17 @@ class TransformTestCase(lsst.utils.tests.TestCase):
     def checkTransformation(self, transform, mapping, msg=""):
         """Check tranForward and tranInverse for a transform
 
-        @param[in] transform  The transform to check
-        @param[in] mapping  The mapping the transform should use. This mapping
-                            must contain valid forward or inverse transformations,
-                            but they need not match if both present. Hence the
-                            mappings returned by make*PolyMap are acceptable.
-        @param[in] msg  Error message suffix describing test parameters
+        Parameters
+        ----------
+        transform : Transform
+            The transform to check
+        mapping : astshim.Mapping
+            The mapping the transform should use. This mapping
+            must contain valid forward or inverse transformations,
+            but they need not match if both present. Hence the
+            mappings returned by make*PolyMap are acceptable.
+        msg : string
+            Error message suffix describing test parameters
         """
         fromEndpoint = transform.getFromEndpoint()
         toEndpoint = transform.getToEndpoint()
@@ -395,32 +353,34 @@ class TransformTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(frameSet.tranForward(rawInPoint),
                              invFrameSet.tranInverse(rawInPoint), msg=msg)
             # Assertions must work with both lists and numpy arrays
-            np.testing.assert_array_equal(forward.tranForward(inArray),
-                                          inverse.tranInverse(inArray),
-                                          err_msg=msg)
-            np.testing.assert_array_equal(frameSet.tranForward(rawInArray),
-                                          invFrameSet.tranInverse(rawInArray),
-                                          err_msg=msg)
+            assert_array_equal(forward.tranForward(inArray),
+                               inverse.tranInverse(inArray),
+                               err_msg=msg)
+            assert_array_equal(frameSet.tranForward(rawInArray),
+                               invFrameSet.tranInverse(rawInArray),
+                               err_msg=msg)
 
         if forward.hasInverse():
             self.assertEqual(forward.tranInverse(outPoint),
                              inverse.tranForward(outPoint), msg=msg)
             self.assertEqual(frameSet.tranInverse(rawOutPoint),
                              invFrameSet.tranForward(rawOutPoint), msg=msg)
-            np.testing.assert_array_equal(forward.tranInverse(outArray),
-                                          inverse.tranForward(outArray),
-                                          err_msg=msg)
-            np.testing.assert_array_equal(frameSet.tranInverse(rawOutArray),
-                                          invFrameSet.tranForward(rawOutArray),
-                                          err_msg=msg)
+            assert_array_equal(forward.tranInverse(outArray),
+                               inverse.tranForward(outArray),
+                               err_msg=msg)
+            assert_array_equal(frameSet.tranInverse(rawOutArray),
+                               invFrameSet.tranForward(rawOutArray),
+                               err_msg=msg)
 
     def checkTransformFromMapping(self, fromName, toName):
         """Check a Transform_<fromName>_<toName> using the Mapping constructor
 
-        fromName: one of Namelist
-        toName  one of NameList
-        fromAxes  number of axes in fromFrame
-        toAxes  number of axes in toFrame
+        Parameters
+        ----------
+        fromName, toName : string
+            one of NameList
+        fromAxes, toAxes : integer
+            number of axes in fromFrame and toFrame, respectively
         """
         transformClassName = "Transform{}To{}".format(fromName, toName)
         transformClass = getattr(afwGeom, transformClassName)
@@ -668,6 +628,106 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                 assert_allclose(jacobian, makeJacobian(nIn, nOut, rawInPoint),
                                 err_msg=msg)
 
+    def checkOf(self, fromName, midName, toName):
+        """Test Transform<midName>To<toName>.of(Transform<fromName>To<midName>)
+
+        Parameters
+        ----------
+        fromName : string
+            the prefix of the starting endpoint (e.g., "Point2" for a
+            Point2Endpoint) for the final, concatenated Transform
+        midName : string
+            the prefix for the shared endpoint where two Transforms will be
+            concatenated
+        toName : string
+            the prefix of the ending endpoint for the final, concatenated
+            Transform
+        """
+        transform1Class = getattr(afwGeom,
+                                  "Transform{}To{}".format(fromName, midName))
+        transform2Class = getattr(afwGeom,
+                                  "Transform{}To{}".format(midName, toName))
+        baseMsg = "{}.of({})".format(transform2Class.__name__,
+                                     transform1Class.__name__)
+        for nIn in self.goodNaxes[fromName]:
+            for nMid in self.goodNaxes[midName]:
+                for nOut in self.goodNaxes[toName]:
+                    msg = "{}, nIn={}, nMid={}, nOut={}".format(
+                        baseMsg, nIn, nMid, nOut)
+                    polyMap = makeTwoWayPolyMap(nIn, nMid)
+                    transform1 = transform1Class(polyMap)
+                    polyMap = makeTwoWayPolyMap(nMid, nOut)
+                    transform2 = transform2Class(polyMap)
+                    transform = transform2.of(transform1)
+
+                    fromEndpoint = transform1.getFromEndpoint()
+                    toEndpoint = transform2.getToEndpoint()
+
+                    inPoint = fromEndpoint.pointFromData(makeRawPointData(nIn))
+                    outPointMerged = transform.tranForward(inPoint)
+                    outPointSeparate = transform2.tranForward(
+                        transform1.tranForward(inPoint))
+                    assert_allclose(toEndpoint.dataFromPoint(outPointMerged),
+                                    toEndpoint.dataFromPoint(outPointSeparate),
+                                    err_msg=msg)
+
+                    outPoint = toEndpoint.pointFromData(makeRawPointData(nOut))
+                    inPointMerged = transform.tranInverse(outPoint)
+                    inPointSeparate = transform1.tranInverse(
+                        transform2.tranInverse(outPoint))
+                    assert_allclose(
+                        fromEndpoint.dataFromPoint(inPointMerged),
+                        fromEndpoint.dataFromPoint(inPointSeparate),
+                        err_msg=msg)
+
+        # Mismatched number of axes should fail
+        if midName == "Generic":
+            nIn = self.goodNaxes[fromName][0]
+            nOut = self.goodNaxes[toName][0]
+            polyMap = makeTwoWayPolyMap(nIn, 3)
+            transform1 = transform1Class(polyMap)
+            polyMap = makeTwoWayPolyMap(2, nOut)
+            transform2 = transform2Class(polyMap)
+            with self.assertRaises(InvalidParameterError):
+                transform = transform2.of(transform1)
+
+        # Mismatched types of endpoints should fail
+        if fromName != midName:
+            # Use transform1Class for both args to keep test logic simple
+            outName = midName
+            joinNaxes = set(self.goodNaxes[fromName]).intersection(
+                self.goodNaxes[outName])
+            for nIn in self.goodNaxes[fromName]:
+                for nMid in joinNaxes:
+                    for nOut in self.goodNaxes[outName]:
+                        polyMap = makeTwoWayPolyMap(nIn, nMid)
+                        transform1 = transform1Class(polyMap)
+                        polyMap = makeTwoWayPolyMap(nMid, nOut)
+                        transform2 = transform1Class(polyMap)
+                        with self.assertRaises(InvalidParameterError):
+                            transform = transform2.of(transform1)
+
+    def checkOfChaining(self):
+        """Test that both conventions for chaining Transform*To*.of give
+        the same result
+        """
+        transform1 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(2, 3))
+        transform2 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(3, 4))
+        transform3 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(4, 1))
+
+        merged1 = transform3.of(transform2).of(transform1)
+        merged2 = transform3.of(transform2.of(transform1))
+
+        fromEndpoint = transform1.getFromEndpoint()
+        toEndpoint = transform3.getToEndpoint()
+
+        inPoint = fromEndpoint.pointFromData(makeRawPointData(2))
+        assert_allclose(toEndpoint.dataFromPoint(merged1.tranForward(inPoint)),
+                        toEndpoint.dataFromPoint(merged2.tranForward(inPoint)))
+
     def testTransforms(self):
         for fromName in NameList:
             for toName in NameList:
@@ -675,6 +735,9 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                 self.checkTransformFromFrameSet(fromName, toName)
                 self.checkGetInverse(fromName, toName)
                 self.checkGetJacobian(fromName, toName)
+                for midName in NameList:
+                    self.checkOf(fromName, midName, toName)
+        self.checkOfChaining()
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

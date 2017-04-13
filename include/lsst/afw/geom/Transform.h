@@ -60,7 +60,7 @@ since the base and current frames in the FrameSet can be checked against by the 
 because data must be copied when converting from LSST data types to the type used by astshim,
 so it didn't seem worth the bother.
 */
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 class Transform {
 public:
     using FromArray = typename FromEndpoint::Array;
@@ -189,6 +189,29 @@ public:
      */
     Eigen::MatrixXd getJacobian(FromPoint const &x) const;
 
+    /**
+     * Concatenate two Transforms.
+     *
+     * @tparam FirstFromEndpoint the starting Endpoint of `first`
+     * @param first the Transform to apply before this one
+     * @returns a Transform that first applies `first` to its input, and then
+     *          this Transform to the result. Its inverse shall first apply the
+     *          inverse of this Transform, then the inverse of `first`.
+     *
+     * @throws InvalidParameterErrror Thrown if `first.getToEndpoint()` and
+     *                                `this->getFromEndpoint()` do not have
+     *                                the same number of axes.
+     * @exceptsafe Provides basic exception safety.
+     *
+     * More than two Transforms can be combined in series. For example:
+     *
+     *     auto skyFromPixels = skyFromPupil.of(pupilFromFp)
+     *                                      .of(fpFromPixels);
+     */
+    template <class FirstFromEndpoint>
+    Transform<FirstFromEndpoint, ToEndpoint> of(
+            Transform<FirstFromEndpoint, FromEndpoint> const &first) const;
+
 private:
     FromEndpoint const _fromEndpoint;
     std::shared_ptr<const ast::FrameSet> _frameSet;
@@ -202,7 +225,7 @@ The format is "Transform<_fromEndpoint_, _toEndpoint_>"
 where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to the ostream;
 for example "Transform<GenericEndpoint(4), Point3Endpoint()>"
 */
-template <typename FromEndpoint, typename ToEndpoint>
+template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
 }  // geom
