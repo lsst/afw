@@ -46,8 +46,12 @@ def makeRawPointData(nAxes, delta=0.123):
 def makeEndpoint(name, nAxes):
     """Make an endpoint
 
-    @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
-    @param[in] nAxes  number of axes; ignored if the name is not "Generic"
+    Parameters
+    ----------
+    name : string
+        one of "Generic", "Point2", "Point3" or "SpherePoint"
+    nAxes : integer
+        number of axes; ignored if the name is not "Generic"
     """
     endpointClassName = name + "Endpoint"
     endpointClass = getattr(afwGeom, endpointClassName)
@@ -59,8 +63,12 @@ def makeEndpoint(name, nAxes):
 def makeGoodFrame(name, nAxes):
     """Return the appropriate frame for the given name and nAxes
 
-    @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
-    @param[in] nAxes  number of axes; ignored if the name is not "Generic"
+    Parameters
+    ----------
+    name : string
+        one of "Generic", "Point2", "Point3" or "SpherePoint"
+    nAxes : integer
+        number of axes; ignored if the name is not "Generic"
     """
     return makeEndpoint(name, nAxes).makeFrame()
 
@@ -68,7 +76,10 @@ def makeGoodFrame(name, nAxes):
 def makeBadFrames(name):
     """Return a list of 0 or more frames that are not a valid match for the named endpoint
 
-    @param[in] name  one of "Generic", "Point2", "Point3" or "SpherePoint"
+    Parameters
+    ----------
+    name : string
+        one of "Generic", "Point2", "Point3" or "SpherePoint"
     """
     if name == "Generic":
         return []
@@ -109,8 +120,12 @@ def makeFrameSet(baseFrame, currFrame):
     - nOut = currFrame.getNaxes()
     - polyMap = makeTwoWayPolyMap(nIn, nOut)
 
-    @param[in] baseFrame  base frame
-    @param[in] currFrame  current frame
+    Parameters
+    ----------
+    baseFrame : astshim.Frame
+        base frame
+    currFrame : astshim.Frame
+        current frame
     """
     nIn = baseFrame.getNaxes()
     nOut = currFrame.getNaxes()
@@ -224,12 +239,17 @@ class TransformTestCase(lsst.utils.tests.TestCase):
     def checkTransformation(self, transform, mapping, msg=""):
         """Check tranForward and tranInverse for a transform
 
-        @param[in] transform  The transform to check
-        @param[in] mapping  The mapping the transform should use. This mapping
-                            must contain valid forward or inverse transformations,
-                            but they need not match if both present. Hence the
-                            mappings returned by make*PolyMap are acceptable.
-        @param[in] msg  Error message suffix describing test parameters
+        Parameters
+        ----------
+        transform : Transform
+            The transform to check
+        mapping : astshim.Mapping
+            The mapping the transform should use. This mapping
+            must contain valid forward or inverse transformations,
+            but they need not match if both present. Hence the
+            mappings returned by make*PolyMap are acceptable.
+        msg : string
+            Error message suffix describing test parameters
         """
         fromEndpoint = transform.getFromEndpoint()
         toEndpoint = transform.getToEndpoint()
@@ -355,10 +375,12 @@ class TransformTestCase(lsst.utils.tests.TestCase):
     def checkTransformFromMapping(self, fromName, toName):
         """Check a Transform_<fromName>_<toName> using the Mapping constructor
 
-        fromName: one of Namelist
-        toName  one of NameList
-        fromAxes  number of axes in fromFrame
-        toAxes  number of axes in toFrame
+        Parameters
+        ----------
+        fromName, toName : string
+            one of NameList
+        fromAxes, toAxes : integer
+            number of axes in fromFrame and toFrame, respectively
         """
         transformClassName = "Transform{}To{}".format(fromName, toName)
         transformClass = getattr(afwGeom, transformClassName)
