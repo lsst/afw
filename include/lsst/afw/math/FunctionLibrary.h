@@ -38,9 +38,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-#ifndef SWIG
 using boost::serialization::make_nvp;
-#endif
 
     /**
      * 1-dimensional integer delta function.

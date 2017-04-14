@@ -87,14 +87,12 @@ public:
 
     typedef detail::Mask_tag image_category;
 
-#if !defined(SWIG)
     /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
     template<typename MaskPT=MaskPixelT>
     struct ImageTypeFactory {
         /// Return the desired type
         typedef Mask<MaskPT> type;
     };
-#endif
 
     // Constructors
     /**

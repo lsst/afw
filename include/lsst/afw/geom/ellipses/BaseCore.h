@@ -51,12 +51,10 @@ class Parametric;
  */
 class BaseCore {
 public:
-#ifndef SWIG
     class Transformer;
     class GridTransform;
     class Convolution;
     template <typename Output> struct Converter;
-#endif
 
     typedef std::shared_ptr<BaseCore> Ptr;
     typedef std::shared_ptr<BaseCore const> ConstPtr;
@@ -72,11 +70,9 @@ public:
 
     static Ptr make(std::string const & name, BaseCore const & other);
 
-#ifndef SWIG
     static Ptr make(std::string const & name, Transformer const & other);
 
     static Ptr make(std::string const & name, Convolution const & other);
-#endif
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
@@ -187,7 +183,6 @@ public:
     virtual ~BaseCore() {}
 
 protected:
-#ifndef SWIG
     friend class Parametric;
 
     static void registerSubclass(Ptr const & example);
@@ -231,10 +226,8 @@ protected:
     virtual Jacobian _dAssignToAxes(double & a, double & b, double & theta) const = 0;
     virtual Jacobian _dAssignFromAxes(double a, double b, double theta) = 0;
 
-#endif
 };
 
-#ifndef SWIG
 template <typename Output>
 struct BaseCore::Converter {
     BaseCore const & input;
@@ -249,8 +242,6 @@ template <typename Output>
 inline BaseCore::Converter<Output> BaseCore::as() const {
     return Converter<Output>(*this);
 }
-
-#endif
 
 }}}} // namespace lsst::afw::geom::ellipses
 

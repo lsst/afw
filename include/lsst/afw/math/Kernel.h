@@ -57,9 +57,7 @@ class KernelFormatter;
 
 namespace math {
 
-#ifndef SWIG
 using boost::serialization::make_nvp;
-#endif
 
     /**
      * Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -1236,8 +1234,6 @@ inline void load_construct_data(
 
 }}
 
-#ifndef SWIG
 BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
-#endif
 
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)

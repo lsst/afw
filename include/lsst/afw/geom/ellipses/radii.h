@@ -38,9 +38,7 @@
 namespace lsst { namespace afw { namespace geom {
 namespace ellipses {
 
-#ifndef SWIG
 template <typename Ellipticity_, typename Radius_> class Separable;
-#endif
 
 class DeterminantRadius;
 class TraceRadius;

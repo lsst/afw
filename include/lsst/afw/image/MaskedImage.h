@@ -96,14 +96,12 @@ public:
 
     typedef detail::MaskedImage_tag image_category;
 
-#if !defined(SWIG)
     /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
     template<typename ImagePT=ImagePixelT, typename MaskPT=MaskPixelT, typename VarPT=VariancePixelT>
     struct ImageTypeFactory {
         /// Return the desired type
         typedef MaskedImage<ImagePT, MaskPT, VarPT> type;
     };
-#endif
 
     /// An iterator to the MaskedImage
     template<typename, typename, typename> class MaskedImageIterator;
@@ -115,7 +113,6 @@ public:
     template<typename, typename, typename> class const_MaskedImageLocator;
 
 
-#if !defined(SWIG)
     /// A Pixel in the MaskedImage
     typedef lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT> Pixel;
     /// A single Pixel of the same type as those in the MaskedImage
@@ -568,7 +565,6 @@ public:
         }
     };
 
-#endif  // !defined(SWIG)
 
     // An iterator to a MaskedImage
     typedef MaskedImageIterator<typename Image::iterator,

@@ -407,8 +407,6 @@ protected:
 
 typedef SourceColumnViewT<SourceRecord> SourceColumnView;
 
-#ifndef SWIG
-
 DEFINE_SLOT_GETTERS(`Psf', `Flux')
 DEFINE_SLOT_GETTERS(`Model', `Flux')
 DEFINE_SLOT_GETTERS(`Ap', `Flux')
@@ -434,8 +432,6 @@ inline double SourceRecord::getIyy() const {
 inline double SourceRecord::getIxy() const {
     return get(getTable()->getShapeKey().getIxy());
 }
-
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

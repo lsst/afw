@@ -46,9 +46,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-#ifndef SWIG
 using boost::serialization::make_nvp;
-#endif
 
     /**
      * Basic Function class.
@@ -275,12 +273,10 @@ using boost::serialization::make_nvp;
 
     private: // serialization
         friend class boost::serialization::access;
-#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned const int version) {
             ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
         }
-#endif
     };
 
     /**
@@ -353,12 +349,10 @@ using boost::serialization::make_nvp;
 
     private:
         friend class boost::serialization::access;
-#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned const int version) {
             ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
         }
-#endif
     };
 
 
@@ -488,13 +482,11 @@ using boost::serialization::make_nvp;
 
     private:
         friend class boost::serialization::access;
-#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned const int version) {
             ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
             ar & make_nvp("order", _order);
         }
-#endif
     };
 
 
@@ -513,12 +505,10 @@ using boost::serialization::make_nvp;
 
     private:
         friend class boost::serialization::access;
-#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
             ar & make_nvp("fn1", boost::serialization::base_object<Function1<ReturnT> >(*this));
         }
-#endif
     };
 
     /**
@@ -536,12 +526,10 @@ using boost::serialization::make_nvp;
 
     private:
         friend class boost::serialization::access;
-#ifndef SWIG // SWIG doesn't like base_object
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
             ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
         }
-#endif
     };
 
 

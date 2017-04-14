@@ -58,9 +58,7 @@ namespace geom {
  * @see @ref coord::Coord
  */
 class SpherePoint
-#ifndef SWIG
         final
-#endif
 {
 public:
     /**

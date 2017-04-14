@@ -94,7 +94,6 @@ public:
     /// Converting copy constructor.
     Axes(BaseCore const & other) { *this = other; }
 
-#ifndef SWIG
     /// Converting copy constructor.
     Axes(BaseCore::Transformer const & transformer) {
         transformer.apply(*this);
@@ -104,7 +103,6 @@ public:
     Axes(BaseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
-#endif
 protected:
 
     virtual BaseCore::Ptr _clone() const { return std::make_shared<Axes>(*this); }

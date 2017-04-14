@@ -411,7 +411,6 @@ protected:
      * is impossible.  So we'll solve the dilemma with a hack: explicitly defined
      * virtual functions for the image types we need
      */
-#if !defined(SWIG)
 // We'll evaluate LSST_makeBackground_get{Approximation,Image} for each type in
 // LSST_makeBackground_get{Approximation,Image}_types,
 // setting v to the second arg (i.e. "= 0" for the first invocation).  The first agument, m, is ignores
@@ -436,7 +435,6 @@ protected:
 
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, = 0, LSST_makeBackground_getImage_types)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, = 0, LSST_makeBackground_getApproximate_types)
-#endif
 private:
     Background(Background const&);
     Background& operator=(Background const&);
@@ -559,7 +557,7 @@ private:
                          UndersampleStyle const undersampleStyle,
                          int const iX, std::vector<int> const& ypix) const;
 
-#if !defined(SWIG) && defined(LSST_makeBackground_getImage)
+#if defined(LSST_makeBackground_getImage)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, , LSST_makeBackground_getImage_types)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, , LSST_makeBackground_getApproximate_types)
 #if 0                                   // keep for use in Background instantiations

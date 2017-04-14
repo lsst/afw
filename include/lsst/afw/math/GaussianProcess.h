@@ -128,7 +128,6 @@ class Covariogram : public lsst::daf::base::Citizen {
 public:
     virtual ~Covariogram();
 
-#ifndef SWIG
     // No copying
     Covariogram (const Covariogram&) = delete;
     Covariogram& operator=(const Covariogram&) = delete;
@@ -136,7 +135,6 @@ public:
     // No moving
     Covariogram (Covariogram&&) = delete;
     Covariogram& operator=(Covariogram&&) = delete;
-#endif
 
     /**
      * construct a Covariogram assigning default values to the hyper parameters
@@ -239,7 +237,6 @@ template <typename T>
 class KdTree {
 public:
 
-#ifndef SWIG
     // No copying
     KdTree (const KdTree&) = delete;
     KdTree& operator=(const KdTree&) = delete;
@@ -250,7 +247,6 @@ public:
 
     // Add default constructor (which is no longer generated)
     KdTree() = default;
-#endif
 
     /**
      * Build a KD Tree to store the data for GaussianProcess
@@ -505,7 +501,6 @@ class GaussianProcess {
 
 public:
 
-#ifndef SWIG
     // No copying
     GaussianProcess (const GaussianProcess&) = delete;
     GaussianProcess& operator=(const GaussianProcess&) = delete;
@@ -513,7 +508,6 @@ public:
     // No moving
     GaussianProcess (GaussianProcess&&) = delete;
     GaussianProcess& operator=(GaussianProcess&&) = delete;
-#endif
 
     /**
       * @brief This is the constructor you call if you do not wish to normalize the positions

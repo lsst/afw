@@ -250,13 +250,6 @@ public:
     explicit Extent(std::tuple<T,T> const & xy) :
         Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
-#ifdef SWIG
-    T getX() const;
-    T getY() const;
-    void setX(T x);
-    void setY(T y);
-#endif
-
     void swap(Extent & other) { this->_swap(other); }
 };
 
@@ -295,15 +288,6 @@ public:
     /// Construct from std::tuple.
     explicit Extent(std::tuple<T,T,T> const & xyz) :
         Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
-
-#ifdef SWIG
-    T getX() const;
-    T getY() const;
-    T getZ() const;
-    void setX(T x);
-    void setY(T y);
-    void setZ(T z);
-#endif
 
     void swap(Extent & other) { this->_swap(other); }
 };
@@ -384,8 +368,6 @@ Extent<int,N> floor(Extent<double,N> const & input);
 template <int N>
 Extent<int,N> ceil(Extent<double,N> const & input);
 
-#ifndef SWIG
-
 // Some operators below need to take ExtentBase arguments rather than Extent to
 // avoid ambiguous overloads (since some competing operators are defined as member
 // functions on ExtentBase).
@@ -451,8 +433,6 @@ template <int N>
 Extent<double,N> operator-(Extent<int,N> const & lhs, Extent<double,N> const & rhs) {
     return Extent<double,N>(lhs) - rhs;
 }
-
-#endif // !SWIG
 
 }}}
 

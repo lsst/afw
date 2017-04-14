@@ -56,7 +56,6 @@ public:
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<std::shared_ptr<Footprint>> FootprintList;
 
-#ifndef SWIG
     /**
      * Find a FootprintSet given an Image and a threshold
      *
@@ -105,50 +104,6 @@ public:
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
-
-#else // workaround for https://github.com/swig/swig/issues/245
-    // if that bug is fixed then you may update footprintset.i by uncommenting two lines
-    // and removing this section. However, you must continue to provide SWIG
-    // the alternate version of the template <typename MaskPixelT> constructor, because
-    // SWIG cannot disambiguate that from the template <typename ImagePixelT> constructor.
-
-    FootprintSet(image::Mask<image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1);
-
-    FootprintSet(image::Image<std::uint16_t> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<std::uint16_t, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-
-    FootprintSet(image::Image<int> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<int, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-
-    FootprintSet(image::Image<float> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<float, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-
-    FootprintSet(image::Image<double> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<double, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-
-#endif
 
     /**
      * Construct an empty FootprintSet given a region that its footprints would have lived in

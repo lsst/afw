@@ -51,7 +51,6 @@ public:
     static int const dimensions = N;
     typedef Eigen::Matrix<T,N,1,Eigen::DontAlign> EigenVector;
 
-#ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
@@ -64,8 +63,6 @@ public:
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
     EigenVector const & asEigen() const { return _vector; }
-#endif
-
 
 protected:
 
@@ -112,7 +109,6 @@ public:
     static int const dimensions = 2;
     typedef Eigen::Matrix<T,2,1,Eigen::DontAlign> EigenVector;
 
-#ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
@@ -125,7 +121,6 @@ public:
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
     EigenVector const & asEigen() const { return _vector; }
-#endif
 
     T const & getX() const { return _vector.x(); }
     T const & getY() const { return _vector.y(); }
@@ -160,7 +155,6 @@ public:
     static int const dimensions = 3;
     typedef Eigen::Matrix<T,3,1,Eigen::DontAlign> EigenVector;
 
-#ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T & coeffRef(int n) { return _vector.coeffRef(n); }
@@ -173,8 +167,6 @@ public:
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
     EigenVector const & asEigen() const { return _vector; }
-
-#endif
 
     T const & getX() const { return _vector.x(); }
     T const & getY() const { return _vector.y(); }

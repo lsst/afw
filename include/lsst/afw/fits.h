@@ -35,8 +35,6 @@ LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::IoError, lsst::afw::fits::
  */
 LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
 
-#ifndef SWIG // only want SWIG to see the exceptions; everything else is too low-level for Python.
-
 /**
  *  Base class for polymorphic functors used to iterator over FITS key headers.
  *
@@ -507,8 +505,6 @@ public:
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
     int behavior; // bitwise OR of BehaviorFlags
 };
-
-#endif // !SWIG
 
 /** Read FITS header
  *

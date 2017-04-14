@@ -207,8 +207,6 @@ private:
     PTR(afw::table::IdFactory) _idFactory;        // generates IDs for new records
 };
 
-#ifndef SWIG
-
 std::ostream & operator<<(std::ostream & os, PeakRecord const & record);
 
 inline afw::table::RecordId PeakRecord::getId() const { return get(PeakTable::getIdKey()); }
@@ -226,8 +224,6 @@ inline void PeakRecord::setFy(float fy) { set(PeakTable::getFyKey(), fy); }
 
 inline float PeakRecord::getPeakValue() const { return get(PeakTable::getPeakValueKey()); }
 inline void PeakRecord::setPeakValue(float peakValue) { set(PeakTable::getPeakValueKey(), peakValue); }
-
-#endif // !SWIG
 
 typedef afw::table::ColumnViewT<PeakRecord> PeakColumnView;
 typedef afw::table::CatalogT<PeakRecord> PeakCatalog;

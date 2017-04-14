@@ -218,13 +218,6 @@ public:
     explicit Point(std::tuple<T,T> const & xy) :
         Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
-#ifdef SWIG
-    T getX() const;
-    T getY() const;
-    void setX(T x);
-    void setY(T y);
-#endif
-
     void swap(Point & other) { this->_swap(other); }
 };
 
@@ -267,15 +260,6 @@ public:
     /// Construct from std::tuple.
     explicit Point(std::tuple<T,T,T> const & xyz) :
         Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
-
-#ifdef SWIG
-    T getX() const;
-    T getY() const;
-    T getZ() const;
-    void setX(T x);
-    void setY(T y);
-    void setZ(T z);
-#endif
 
     void swap(Point & other) { this->_swap(other); }
 };

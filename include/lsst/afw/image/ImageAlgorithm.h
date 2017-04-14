@@ -45,7 +45,6 @@
 #include "lsst/pex/exceptions.h"
 
 namespace lsst { namespace afw { namespace image {
-#if !defined(SWIG)
     /**
      * A functor class equivalent to tr1::function<ValT ()>, but with a virtual operator()
      */
@@ -219,7 +218,6 @@ namespace lsst { namespace afw { namespace image {
             }
         }
     }
-#endif
 }}}  // lsst::afw::image
 
 #endif

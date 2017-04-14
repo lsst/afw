@@ -486,7 +486,6 @@ namespace image {
 
 
     protected:
-#if !defined(SWIG)
         static _view_t _allocateView(geom::Extent2I const & dimensions, Manager::Ptr & manager);
         static _view_t _makeSubView(
             geom::Extent2I const & dimensions,
@@ -496,7 +495,6 @@ namespace image {
 
         _view_t _getRawView() const { return _gilView; }
 
-#endif
         inline bool isContiguous() const {
             return begin()+getWidth()*getHeight() == end();
         }
@@ -515,14 +513,12 @@ namespace image {
 
         typedef detail::Image_tag image_category;
 
-#if !defined(SWIG)
         /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
         template<typename ImagePT=PixelT>
         struct ImageTypeFactory {
             /// Return the desired type
             typedef Image<ImagePT> type;
         };
-#endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
 
         /**
