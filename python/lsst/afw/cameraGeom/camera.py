@@ -23,28 +23,44 @@ from __future__ import absolute_import, division
 from builtins import range
 from .cameraGeomLib import CameraPoint, CameraSysPrefix, PIXELS
 from .detectorCollection import DetectorCollection
+from .pupil import PupilFactory
 import lsst.afw.geom as afwGeom
 
 class Camera(DetectorCollection):
     """!A collection of Detectors that also supports coordinate transformation
     """
-    def __init__(self, name, detectorList, transformMap):
+    def __init__(self, name, detectorList, transformMap, pupilFactoryClass=PupilFactory):
         """!Construct a Camera
 
         @param[in] name  name of camera
         @param[in] detectorList  a sequence of detectors in index order
         @param[in] transformMap  a CameraTransformMap whose native system is FOCAL_PLANE
             and that at least supports PUPIL coordinates
+        @param[in] pupilFactoryClass  a PupilFactory class for this camera
+            [default: afw.cameraGeom.PupilFactory]
         """
         self._name = name
         self._transformMap = transformMap
         self._nativeCameraSys = self._transformMap.getNativeCoordSys()
+        self._pupilFactoryClass = pupilFactoryClass
         super(Camera, self).__init__(detectorList)
 
     def getName(self):
         """!Return the camera name
         """
         return self._name
+
+    def getPupilFactory(self, visitInfo, pupilSize, npix):
+        """!Construct a PupilFactory.
+
+        @param[in] visitInfo  VisitInfo object for a particular exposure.
+        @param[in] pupilSize  Size in meters of constructed Pupil array.
+                              Note that this may be larger than the actual
+                              diameter of the illuminated pupil to
+                              accommodate zero-padding.
+        @param[in] npix       Constructed Pupils will be npix x npix.
+        """
+        return self._pupilFactoryClass(visitInfo, pupilSize, npix)
 
     def _transformFromNativeSys(self, nativePoint, toSys):
         """!Transform a point in the native coordinate system to another coordinate system.
