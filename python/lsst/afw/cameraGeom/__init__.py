@@ -28,6 +28,7 @@ from .detectorCollection import *
 from .camera import *
 from .cameraConfig import *
 from .cameraFactory import *
+from .basicCameraFactory import *
 from .cameraGeomEnumDicts import *
 from .makePixelToTanPixel import *
 from .assembleImage import *
