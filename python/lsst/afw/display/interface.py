@@ -147,11 +147,24 @@ class Display(object):
                     setDefaultBackend("ds9")
                 except RuntimeError:
                     setDefaultBackend("virtualDevice")
+            else: # a default was set, merge optional arguments
+                try:
+                    self._args += args
+                except AttributeError:
+                    self._args = args
+                try:
+                    self._kwargs.update(kwargs)
+                except AttributeError:
+                    self._kwargs = kwargs
 
             backend = Display._defaultBackend
+        else: # a backend was specified, discard default optional arguments
+            self._args = args
+            self._kwargs = kwargs
 
         self.frame = frame
-        self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
+        
+        self._impl = _makeDisplayImpl(self, backend, *self._args, **self._kwargs)
         self.name = backend
 
         self._xy0 = None                # the data displayed on the frame's XY0
@@ -194,9 +207,23 @@ class Display(object):
     def __del__(self):
         self.close()
 
-    def __getattr__(self, name, *args, **kwargs):
-        """Try to call self._impl.name(*args, *kwargs)"""
-        
+    def __getattr__(self, name):
+        """Return the attribute of self._impl, or ._impl if it is requested
+
+        Parameters:
+        -----------
+            name : string
+                name of the attribute requested
+
+        Returns:
+        --------
+            attribute : object
+                the attribute of self._impl for the requested name
+        """
+
+        if name == '_impl':
+            return object.__getattr__(self, name)
+
         if not (hasattr(self, "_impl") and self._impl):
             raise AttributeError("Device has no _impl attached")
 
@@ -230,17 +257,22 @@ class Display(object):
     # Handle Displays, including the default one (the frame to use when a user specifies None)
     #
     @staticmethod
-    def setDefaultBackend(backend):
+    def setDefaultBackend(backend, *args, **kwargs):
+        Display._args = args
+        Display._kwargs = kwargs
         try:
-            _makeDisplayImpl(None, backend)
+            _makeDisplayImpl(None, backend, *Display._args, **Display._kwargs)
         except Exception as e:
             raise RuntimeError("Unable to set backend to %s: \"%s\"" % (backend, e))
 
         Display._defaultBackend = backend
 
     @staticmethod
-    def getDefaultBackend():
-        return Display._defaultBackend
+    def getDefaultBackend(optional_args=False):
+        if optional_args:
+            return(Display._defaultBackend, Display._args, Display._kwargs)
+        else:
+            return Display._defaultBackend
 
     @staticmethod
     def setDefaultFrame(frame=0):
@@ -642,11 +674,11 @@ def h_callback(k, x, y):
 #
 # If the default frame is None, image display is disabled
 #
-def setDefaultBackend(backend):
-    Display.setDefaultBackend(backend)
+def setDefaultBackend(backend, *args, **kwargs):
+    Display.setDefaultBackend(backend, *args, **kwargs)
 
-def getDefaultBackend():
-    return Display.getDefaultBackend()
+def getDefaultBackend(optional_args=False):
+    return Display.getDefaultBackend(optional_args)
 
 def setDefaultFrame(frame=0):
     return Display.setDefaultFrame(frame)

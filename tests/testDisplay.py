@@ -90,6 +90,36 @@ class DisplayTestCase(unittest.TestCase):
         with afwDisplay.getDisplay(0) as disp:
             self.assertIsNotNone(disp)
 
+    def testDefaultBackend(self):
+        """Test setting and getting of default backend"""
+        if (backend != 'virtualDevice'):
+            afwDisplay.setDefaultBackend(backend, host='127.0.0.1', port=80)
+            default = afwDisplay.getDefaultBackend()
+            self.assertEqual(default, backend)
+            opt_default = afwDisplay.getDefaultBackend(optional_args=True)
+            self.assertEqual(opt_default[0], backend)
+            self.assertEqual(len(opt_default[1]), 0)
+            self.assertEqual(opt_default[2]['host'], '127.0.0.1')
+            self.assertEqual(opt_default[2]['port'], 80)
+            afwDisplay.setDefaultBackend(backend)
+        else:
+            afwDisplay.setDefaultBackend(backend)
+            default = afwDisplay.getDefaultBackend()
+            self.assertEqual(default, backend)
+
+    def testClearDefaults(self):
+        """Test that optional arguments are cleared from default backend"""
+        if (backend != 'virtualDevice'):
+            afwDisplay.setDefaultBackend('ds9', host='127.0.0.1', port=80)
+            self.assertTrue(afwDisplay.Display('virtualDevice') != None)
+            afwDisplay.setDefaultBackend(backend)
+            opt_default = afwDisplay.getDefaultBackend(optional_args=True)
+            self.assertEqual(opt_default[0], backend)
+            self.assertEqual(len(opt_default[1]), 0)
+            self.assertEqual(len(opt_default[2].keys()), 0)
+        else:
+            pass
+
     def testTwoDisplays(self):
         """Test that we can do things with two frames"""
 
