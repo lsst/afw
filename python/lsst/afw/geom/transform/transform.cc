@@ -113,6 +113,7 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
 PYBIND11_PLUGIN(transform) {
     py::module mod("transform");
 
+    py::module::import("astshim");
     py::module::import("lsst.afw.geom.endpoint");
 
     // Need to import numpy for ndarray and eigen conversions
