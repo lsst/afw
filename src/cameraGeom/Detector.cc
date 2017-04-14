@@ -100,11 +100,11 @@ bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
     return hasTransform(makeCameraSys(cameraSysPrefix));
 }
 
-CONST_PTR(afw::geom::XYTransform) Detector::getTransform(CameraSys const &cameraSys) const {
+std::shared_ptr<afw::geom::XYTransform const> Detector::getTransform(CameraSys const &cameraSys) const {
     return _transformMap[cameraSys];
 }
 
-CONST_PTR(afw::geom::XYTransform) Detector::getTransform(CameraSysPrefix const &cameraSysPrefix) const {
+std::shared_ptr<afw::geom::XYTransform const> Detector::getTransform(CameraSysPrefix const &cameraSysPrefix) const {
     return getTransform(makeCameraSys(cameraSysPrefix));
 }
 

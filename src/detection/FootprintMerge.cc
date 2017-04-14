@@ -36,16 +36,16 @@ public:
     typedef FootprintMergeList::FilterMap FilterMap;
 
     explicit FootprintMerge(
-        PTR(Footprint) footprint,
-        PTR(afw::table::SourceTable) sourceTable,
-        PTR(PeakTable) peakTable,
+        std::shared_ptr<Footprint> footprint,
+        std::shared_ptr<afw::table::SourceTable> sourceTable,
+        std::shared_ptr<PeakTable> peakTable,
         afw::table::SchemaMapper const & peakSchemaMapper,
         KeyTuple const & keys
     ) :
         _footprints(1, footprint),
         _source(sourceTable->makeRecord())
     {
-        PTR(Footprint) newFootprint = std::make_shared<Footprint>(*footprint);
+        std::shared_ptr<Footprint> newFootprint = std::make_shared<Footprint>(*footprint);
 
         _source->set(keys.footprint, true);
         // Replace all the Peaks in the merged Footprint with new ones that include the origin flags
@@ -55,7 +55,7 @@ public:
             iter != footprint->getPeaks().end();
             ++iter
         ) {
-            PTR(PeakRecord) newPeak = peakTable->copyRecord(*iter, peakSchemaMapper);
+            std::shared_ptr<PeakRecord> newPeak = peakTable->copyRecord(*iter, peakSchemaMapper);
             newPeak->set(keys.peak, true);
             newFootprint->getPeaks().push_back(newPeak);
         }
@@ -87,7 +87,7 @@ public:
      *  If the footprint does not overlap it will do nothing.
      */
     void add(
-        PTR(Footprint) footprint,
+        std::shared_ptr<Footprint> footprint,
         afw::table::SchemaMapper const & peakSchemaMapper,
         KeyTuple const & keys,
         float minNewPeakDist=-1.,
@@ -135,15 +135,15 @@ public:
     // Get the bounding box of the merge
     afw::geom::Box2I getBBox() const { return getMergedFootprint()->getBBox(); }
 
-    PTR(Footprint) getMergedFootprint() const { return _source->getFootprint(); }
+    std::shared_ptr<Footprint> getMergedFootprint() const { return _source->getFootprint(); }
 
-    PTR(afw::table::SourceRecord) getSource() const { return _source; }
+    std::shared_ptr<afw::table::SourceRecord> getSource() const { return _source; }
 
 private:
 
     // Implementation helper for add() methods; returns true if the Footprint actually overlapped
     // and was merged, and false otherwise.
-    bool _addSpans(PTR(Footprint) footprint) {
+    bool _addSpans(std::shared_ptr<Footprint> footprint) {
         if (!getMergedFootprint()->getSpans()->overlaps(*(footprint->getSpans()))) return false;
         getMergedFootprint()->setSpans(getMergedFootprint()->getSpans()->union_(*(footprint->getSpans())));
         return true;
@@ -171,7 +171,7 @@ private:
         assert(peakSchemaMapper || filterMap);
 
         PeakCatalog & currentPeaks = getMergedFootprint()->getPeaks();
-        PTR(PeakRecord) nearestPeak;
+        std::shared_ptr<PeakRecord> nearestPeak;
         // Create new list of peaks
         PeakCatalog newPeaks(currentPeaks.getTable());
         float minNewPeakDist2 = minNewPeakDist*minNewPeakDist;
@@ -202,7 +202,7 @@ private:
                 }
             } else if (minDist2 > minNewPeakDist2 && !(minNewPeakDist < 0)) {
                 if (peakSchemaMapper) {
-                    PTR(PeakRecord) newPeak = newPeaks.addNew();
+                    std::shared_ptr<PeakRecord> newPeak = newPeaks.addNew();
                     newPeak->assign(*otherIter, *peakSchemaMapper);
                     newPeak->set(keys->peak, true);
                 } else {
@@ -218,8 +218,8 @@ private:
         );
     }
 
-    std::vector<PTR(Footprint)> _footprints;
-    PTR(afw::table::SourceRecord) _source;
+    std::vector<std::shared_ptr<Footprint>> _footprints;
+    std::shared_ptr<afw::table::SourceRecord> _source;
 };
 
 
@@ -263,7 +263,7 @@ void FootprintMergeList::_initialize(
 }
 
 void FootprintMergeList::addCatalog(
-    PTR(afw::table::SourceTable) sourceTable,
+    std::shared_ptr<afw::table::SourceTable> sourceTable,
     afw::table::SourceCatalog const &inputCat,
     std::string const & filter,
     float minNewPeakDist, bool doMerge, float maxSamePeakDist
@@ -285,11 +285,11 @@ void FootprintMergeList::addCatalog(
         // Only consider unblended objects
         if (srcIter->getParent() != 0) continue;
 
-        PTR(Footprint) foot = srcIter->getFootprint();
+        std::shared_ptr<Footprint> foot = srcIter->getFootprint();
 
         // Empty pointer to account for the first match in the catalog.  If there is more than one
         // match, subsequent matches will be merged with this one
-        PTR(FootprintMerge) first = PTR(FootprintMerge)();
+        std::shared_ptr<FootprintMerge> first = std::shared_ptr<FootprintMerge>();
 
         if (checkForMatches) {
             FootprintMergeVec::iterator iter = _mergeList.begin();

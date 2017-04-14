@@ -40,8 +40,8 @@ DistortedTanWcs::DistortedTanWcs(
     }
 }
 
-PTR(Wcs) DistortedTanWcs::clone() const {
-    return PTR(Wcs)(new DistortedTanWcs(*this));
+std::shared_ptr<Wcs> DistortedTanWcs::clone() const {
+    return std::shared_ptr<Wcs>(new DistortedTanWcs(*this));
 }
 
 bool DistortedTanWcs::operator==(Wcs const & rhs) const {

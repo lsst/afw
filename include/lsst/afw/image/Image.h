@@ -119,9 +119,6 @@ namespace image {
         typedef ndarray::Manager Manager;
     public:
 
-        typedef std::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
-        typedef std::shared_ptr<const ImageBase<PixelT> > ConstPtr; ///< A shared_ptr to a const ImageBase
-
         typedef detail::basic_tag image_category; ///< trait class to identify type of %image
 
         /// A single Pixel of the same type as those in the ImageBase
@@ -508,8 +505,6 @@ namespace image {
     class Image : public ImageBase<PixelT> {
     public:
         template<typename, typename, typename> friend class MaskedImage;
-        typedef std::shared_ptr<Image<PixelT> > Ptr;
-        typedef std::shared_ptr<const Image<PixelT> > ConstPtr;
 
         typedef detail::Image_tag image_category;
 
@@ -590,7 +585,7 @@ namespace image {
          */
         explicit Image(
             std::string const & fileName, int hdu=INT_MIN,
-            PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+            std::shared_ptr<lsst::daf::base::PropertySet> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
             geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
         );
@@ -609,7 +604,7 @@ namespace image {
          */
         explicit Image(
             fits::MemFileManager & manager, int hdu=INT_MIN,
-            PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+            std::shared_ptr<lsst::daf::base::PropertySet> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
             geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
         );
@@ -625,7 +620,7 @@ namespace image {
          */
         explicit Image(
             fits::Fits & fitsfile,
-            PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+            std::shared_ptr<lsst::daf::base::PropertySet> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
             geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
         );
@@ -663,7 +658,7 @@ namespace image {
          */
         void writeFits(
             std::string const& fileName,
-            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
+            std::shared_ptr<lsst::daf::base::PropertySet const> metadata = std::shared_ptr<lsst::daf::base::PropertySet const>(),
             std::string const& mode="w"
         ) const;
 
@@ -676,7 +671,7 @@ namespace image {
          */
         void writeFits(
             fits::MemFileManager & manager,
-            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
+            std::shared_ptr<lsst::daf::base::PropertySet const> metadata = std::shared_ptr<lsst::daf::base::PropertySet const>(),
             std::string const& mode="w"
         ) const;
 
@@ -688,7 +683,7 @@ namespace image {
          */
         void writeFits(
             fits::Fits & fitsfile,
-            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
+            std::shared_ptr<lsst::daf::base::PropertySet const> metadata = std::shared_ptr<lsst::daf::base::PropertySet const>()
         ) const;
 
         /**
@@ -791,15 +786,6 @@ namespace image {
     class DecoratedImage : public lsst::daf::base::Persistable,
                            public lsst::daf::base::Citizen {
     public:
-        /// shared_ptr to a DecoratedImage
-        typedef std::shared_ptr<DecoratedImage> Ptr;
-        /// shared_ptr to a const DecoratedImage
-        typedef std::shared_ptr<const DecoratedImage> ConstPtr;
-        /// shared_ptr to the Image
-        typedef PTR(Image<PixelT>) ImagePtr;
-        /// shared_ptr to the Image as const
-        typedef CONST_PTR(Image<PixelT>) ImageConstPtr;
-
         /**
          * Create an %image of the specified size
          *
@@ -822,7 +808,7 @@ namespace image {
          *
          * @param rhs Image to go into DecoratedImage
          */
-        explicit DecoratedImage(PTR(Image<PixelT>) rhs);
+        explicit DecoratedImage(std::shared_ptr<Image<PixelT>> rhs);
         /**
          * Copy constructor
          *
@@ -854,8 +840,8 @@ namespace image {
          */
         DecoratedImage& operator=(const DecoratedImage& image);
 
-        PTR(lsst::daf::base::PropertySet) getMetadata() const { return _metadata; }
-        void setMetadata(PTR(lsst::daf::base::PropertySet) metadata) { _metadata = metadata; }
+        std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _metadata; }
+        void setMetadata(std::shared_ptr<lsst::daf::base::PropertySet> metadata) { _metadata = metadata; }
 
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
@@ -881,14 +867,14 @@ namespace image {
          */
         void writeFits(
             std::string const& fileName,
-            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
+            std::shared_ptr<lsst::daf::base::PropertySet const> metadata = std::shared_ptr<lsst::daf::base::PropertySet const>(),
             std::string const& mode="w"
         ) const;
 
         /// Return a shared_ptr to the DecoratedImage's Image
-        ImagePtr      getImage()       { return _image; }
+        std::shared_ptr<Image<PixelT>>      getImage()       { return _image; }
         /// Return a shared_ptr to the DecoratedImage's Image as const
-        ImageConstPtr getImage() const { return _image; }
+        std::shared_ptr<Image<PixelT> const> getImage() const { return _image; }
 
         /**
          * Return the DecoratedImage's gain
@@ -900,8 +886,8 @@ namespace image {
         void setGain(double gain) { _gain = gain; }
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
-        PTR(Image<PixelT>) _image;
-        PTR(lsst::daf::base::PropertySet) _metadata;
+        std::shared_ptr<Image<PixelT>> _image;
+        std::shared_ptr<lsst::daf::base::PropertySet> _metadata;
 
         double _gain;
 

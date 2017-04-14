@@ -202,8 +202,8 @@ namespace detail {
         }
 
         SrcImageT _srcImage;
-        PTR(lsst::afw::math::SeparableKernel) _kernelPtr;
-        PTR(lsst::afw::math::SeparableKernel) _maskKernelPtr;
+        std::shared_ptr<lsst::afw::math::SeparableKernel> _kernelPtr;
+        std::shared_ptr<lsst::afw::math::SeparableKernel> _maskKernelPtr;
         bool _hasMaskKernel;
         lsst::afw::geom::Point2I _kernelCtr;
         lsst::afw::geom::Point2I _maskKernelCtr;

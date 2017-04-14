@@ -49,7 +49,7 @@ namespace math {
  * @throws lsst::pex::exceptions::InvalidParameterError if the algorithm is invalid
  */
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(ImageT const& image, float dx, float dy,
+std::shared_ptr<ImageT> offsetImage(ImageT const& image, float dx, float dy,
                                  std::string const& algorithmName="lanczos5", unsigned int buffer=0);
 /**
  * Rotate an image by an integral number of quarter turns
@@ -58,7 +58,7 @@ typename ImageT::Ptr offsetImage(ImageT const& image, float dx, float dy,
  * @param nQuarter the desired number of quarter turns
  */
 template<typename ImageT>
-typename ImageT::Ptr rotateImageBy90(ImageT const& image, int nQuarter);
+std::shared_ptr<ImageT> rotateImageBy90(ImageT const& image, int nQuarter);
 
 /**
  * Flip an image left--right and/or top--bottom
@@ -68,7 +68,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& image, int nQuarter);
  * @param flipTB Flip top <--> bottom?
  */
 template<typename ImageT>
-PTR(ImageT) flipImage(ImageT const& inImage,
+std::shared_ptr<ImageT> flipImage(ImageT const& inImage,
                       bool flipLR,
                       bool flipTB
                      );
@@ -79,7 +79,7 @@ PTR(ImageT) flipImage(ImageT const& inImage,
  * @param flags how to generate super-pixels
  */
 template<typename ImageT>
-PTR(ImageT) binImage(ImageT const& inImage, int const binX, int const binY,
+std::shared_ptr<ImageT> binImage(ImageT const& inImage, int const binX, int const binY,
                      lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
 /**
  * @param inImage The %image to bin
@@ -87,7 +87,7 @@ PTR(ImageT) binImage(ImageT const& inImage, int const binX, int const binY,
  * @param flags how to generate super-pixels
  */
 template<typename ImageT>
-PTR(ImageT) binImage(ImageT const& inImage, int const binsize,
+std::shared_ptr<ImageT> binImage(ImageT const& inImage, int const binsize,
                      lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
 
 

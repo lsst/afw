@@ -134,7 +134,7 @@ afwForm::KernelFormatter::separableKernelRegistration(
     "SeparableKernel", typeid(afwMath::SeparableKernel), createInstance);
 
 afwForm::KernelFormatter::KernelFormatter(
-    pexPolicy::Policy::Ptr policy) :
+    std::shared_ptr<pexPolicy::Policy> policy) :
     dafPersist::Formatter(typeid(this)), _policy(policy) {
 }
 
@@ -143,8 +143,8 @@ afwForm::KernelFormatter::~KernelFormatter(void) {
 
 void afwForm::KernelFormatter::write(
     dafBase::Persistable const* persistable,
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+    std::shared_ptr<dafPersist::Storage> storage,
+    std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter write start");
     afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
@@ -171,7 +171,7 @@ void afwForm::KernelFormatter::write(
 }
 
 dafBase::Persistable* afwForm::KernelFormatter::read(
-    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
+    std::shared_ptr<dafPersist::Storage> storage, std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter read start");
     afwMath::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
@@ -194,8 +194,8 @@ dafBase::Persistable* afwForm::KernelFormatter::read(
 }
 
 void afwForm::KernelFormatter::update(dafBase::Persistable*,
-                                   dafPersist::Storage::Ptr,
-                                   dafBase::PropertySet::Ptr) {
+                                   std::shared_ptr<dafPersist::Storage>,
+                                   std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Kernel");
 }
 
@@ -236,7 +236,7 @@ template void afwForm::KernelFormatter::delegateSerialize(
     boost::archive::binary_iarchive& ar, unsigned int const, dafBase::Persistable*);
 /// @endcond
 
-dafPersist::Formatter::Ptr afwForm::KernelFormatter::createInstance(
-    pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new afwForm::KernelFormatter(policy));
+std::shared_ptr<dafPersist::Formatter> afwForm::KernelFormatter::createInstance(
+    std::shared_ptr<pexPolicy::Policy> policy) {
+    return std::shared_ptr<dafPersist::Formatter>(new afwForm::KernelFormatter(policy));
 }

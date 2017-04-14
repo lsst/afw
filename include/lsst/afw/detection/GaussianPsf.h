@@ -59,7 +59,7 @@ public:
     GaussianPsf(geom::Extent2I const & dimensions, double sigma);
 
     /// Polymorphic deep copy; should usually be unnecessary because Psfs are immutable.
-    virtual PTR(afw::detection::Psf) clone() const;
+    virtual std::shared_ptr<afw::detection::Psf> clone() const;
 
     /// Return the dimensions of the images returned by computeImage()
     geom::Extent2I getDimensions() const { return _dimensions; }
@@ -83,12 +83,12 @@ private:
 #if 0 // We could reimplement this more efficiently than what's in the base class,
       // but it's tricky to get the position right in all corner cases, and it's
       // not actually performance-critical, so we should just wait for #3116.
-    virtual PTR(Image) doComputeImage(
+    virtual std::shared_ptr<Image> doComputeImage(
         geom::Point2D const & position, image::Color const& color
     ) const;
 #endif
 
-    virtual PTR(Image) doComputeKernelImage(
+    virtual std::shared_ptr<Image> doComputeKernelImage(
         geom::Point2D const & position, image::Color const & color
     ) const;
 

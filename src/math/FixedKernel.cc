@@ -67,8 +67,8 @@ afwMath::FixedKernel::FixedKernel(
     _sum = kernel.computeImage(_image, false, pos[0], pos[1]);
 }
 
-PTR(afwMath::Kernel) afwMath::FixedKernel::clone() const {
-    PTR(afwMath::Kernel) retPtr(new afwMath::FixedKernel(_image));
+std::shared_ptr<afwMath::Kernel> afwMath::FixedKernel::clone() const {
+    std::shared_ptr<afwMath::Kernel> retPtr(new afwMath::FixedKernel(_image));
     retPtr->setCtr(this->getCtr());
     return retPtr;
 }
@@ -136,7 +136,7 @@ struct FixedKernelPersistenceHelper : public Kernel::PersistenceHelper {
 class FixedKernel::Factory : public afw::table::io::PersistableFactory {
 public:
 
-    virtual PTR(afw::table::io::Persistable)
+    virtual std::shared_ptr<afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -146,7 +146,7 @@ public:
         ndarray::flatten<1>(
             ndarray::static_dimension_cast<2>(image.getArray())
         ) = record[keys.image];
-        PTR(FixedKernel) result = std::make_shared<FixedKernel>(image);
+        std::shared_ptr<FixedKernel> result = std::make_shared<FixedKernel>(image);
         result->setCtr(record.get(keys.center));
         return result;
     }
@@ -166,7 +166,7 @@ std::string FixedKernel::getPersistenceName() const { return getFixedKernelPersi
 
 void FixedKernel::write(OutputArchiveHandle & handle) const {
     FixedKernelPersistenceHelper const keys(getDimensions());
-    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     (*record)[keys.image] = ndarray::flatten<1>(ndarray::copy(_image.getArray()));
 }
 

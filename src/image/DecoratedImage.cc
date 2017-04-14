@@ -36,7 +36,7 @@ namespace geom = lsst::afw::geom;
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
     // safer to initialize a smart pointer as a named variable
-    PTR(daf::base::PropertySet) metadata(new daf::base::PropertyList);
+    std::shared_ptr<daf::base::PropertySet> metadata(new daf::base::PropertyList);
     setMetadata(metadata);
     _gain = 0;
 }
@@ -61,7 +61,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
 }
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
-    PTR(Image<PixelT>) rhs
+    std::shared_ptr<Image<PixelT>> rhs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _image(rhs)
@@ -119,16 +119,16 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName,
     lsst::daf::base::Citizen(typeid(this))
 {
     init();
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
+    _image = std::shared_ptr<Image<PixelT>>(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
 }
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
     std::string const& fileName,
-    CONST_PTR(daf::base::PropertySet) metadata_i,
+    std::shared_ptr<daf::base::PropertySet const> metadata_i,
     std::string const& mode
 ) const {
-    lsst::daf::base::PropertySet::Ptr metadata;
+    std::shared_ptr<lsst::daf::base::PropertySet> metadata;
 
     if (metadata_i) {
         metadata = getMetadata()->deepCopy();

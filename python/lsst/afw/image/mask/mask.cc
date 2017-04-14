@@ -61,16 +61,16 @@ static void declareMask(py::module & mod, std::string const & suffix) {
             "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
     cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = geom::Point2I());
-    cls.def(py::init<std::string const &, int, PTR(lsst::daf::base::PropertySet), geom::Box2I const &,
+    cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>, geom::Box2I const &,
                      ImageOrigin, bool>(),
             "fileName"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::MemFileManager &, int, PTR(lsst::daf::base::PropertySet), geom::Box2I const &,
+    cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>, geom::Box2I const &,
                      ImageOrigin, bool>(),
             "manager"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(
-        py::init<fits::Fits &, PTR(lsst::daf::base::PropertySet), geom::Box2I const &, ImageOrigin, bool>(),
+        py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, geom::Box2I const &, ImageOrigin, bool>(),
         "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
         "conformMasks"_a = false);
 
@@ -88,19 +88,19 @@ static void declareMask(py::module & mod, std::string const & suffix) {
     /* Members */
     cls.def("swap", (void (Mask<MaskPixelT>::*)(Mask<MaskPixelT> &)) & Mask<MaskPixelT>::swap);
     cls.def("writeFits",
-            (void (Mask<MaskPixelT>::*)(std::string const &, CONST_PTR(lsst::daf::base::PropertySet),
+            (void (Mask<MaskPixelT>::*)(std::string const &, std::shared_ptr<lsst::daf::base::PropertySet const>,
                                         std::string const &) const) &
                 Mask<MaskPixelT>::writeFits,
-            "fileName"_a, "metadata"_a = PTR(lsst::daf::base::PropertySet)(), "mode"_a = "w");
+            "fileName"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
     cls.def("writeFits",
             (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
-                                        CONST_PTR(lsst::daf::base::PropertySet), std::string const &) const) &
+                                        std::shared_ptr<lsst::daf::base::PropertySet const>, std::string const &) const) &
                 Mask<MaskPixelT>::writeFits,
-            "manager"_a, "metadata"_a = PTR(lsst::daf::base::PropertySet)(), "mode"_a = "w");
+            "manager"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(fits::Fits &,
-                                                     CONST_PTR(lsst::daf::base::PropertySet)) const) &
+                                                     std::shared_ptr<lsst::daf::base::PropertySet const>) const) &
                              Mask<MaskPixelT>::writeFits,
-            "fitsfile"_a, "metadata"_a = CONST_PTR(lsst::daf::base::PropertySet)());
+            "fitsfile"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>());
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
                    "filename"_a, "hdu"_a = INT_MIN);
     cls.def_static("readFits",

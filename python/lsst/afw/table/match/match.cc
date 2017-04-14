@@ -46,7 +46,7 @@ void declareMatch2(py::module & mod, std::string const & prefix) {
     using Class = Match<Record1, Record2>;
     py::class_<Class, std::shared_ptr<Class>> clsMatch(mod, (prefix + "Match").c_str());
     clsMatch.def(py::init<>());
-    clsMatch.def(py::init<PTR(Record1) const &, PTR(Record2) const &, double>(),
+    clsMatch.def(py::init<std::shared_ptr<Record1> const &, std::shared_ptr<Record2> const &, double>(),
                  "first"_a, "second"_a, "distance"_a);
 
     // struct fields

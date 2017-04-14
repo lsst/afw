@@ -32,10 +32,10 @@ namespace {
 class CoaddInputsFactory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2);
-        PTR(CoaddInputs) result = std::make_shared<CoaddInputs>();
+        std::shared_ptr<CoaddInputs> result = std::make_shared<CoaddInputs>();
         result->visits = table::ExposureCatalog::readFromArchive(archive, catalogs.front());
         result->ccds = table::ExposureCatalog::readFromArchive(archive, catalogs.back());
         return result;

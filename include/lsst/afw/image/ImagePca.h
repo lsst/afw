@@ -45,10 +45,7 @@ namespace image {
     template <typename ImageT>
     class ImagePca {
     public:
-        typedef typename std::shared_ptr<ImageT> Ptr;
-        typedef typename std::shared_ptr<const ImageT> ConstPtr;
-
-        typedef std::vector<typename ImageT::Ptr> ImageList;
+        typedef std::vector<std::shared_ptr<ImageT>> ImageList;
 
         /**
          * ctor
@@ -66,7 +63,7 @@ namespace image {
          *
          * @throws lsst::pex::exceptions::LengthError if all the images aren't the same size
          */
-        void addImage(typename ImageT::Ptr img, double flux=0.0);
+        void addImage(std::shared_ptr<ImageT> img, double flux=0.0);
         /// Return the list of images being analyzed
         ImageList getImageList() const;
 
@@ -76,7 +73,7 @@ namespace image {
         /**
          * Return the mean of the images in ImagePca's list
          */
-        typename ImageT::Ptr getMean() const;
+        std::shared_ptr<ImageT> getMean() const;
         virtual void analyze();
         /**
          * Update the bad pixels (i.e. those for which (value & mask) != 0) based on the current PCA decomposition;

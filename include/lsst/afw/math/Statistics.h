@@ -90,9 +90,6 @@ class StatisticsControl {
 public:
     enum WeightsBoolean { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE }; // initial state is NONE
 
-    typedef std::shared_ptr<StatisticsControl> Ptr;
-    typedef std::shared_ptr<StatisticsControl> const ConstPtr;
-
     StatisticsControl(
         double numSigmaClip = 3.0, ///< number of standard deviations to clip at
         int numIter = 3,           ///< Number of iterations

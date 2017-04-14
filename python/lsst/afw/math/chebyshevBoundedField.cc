@@ -47,7 +47,7 @@ using ClsField = py::class_<ChebyshevBoundedField,
 template <typename PixelT>
 void declareTemplates(ClsField & cls) {
     cls.def_static("fit",
-        (PTR(ChebyshevBoundedField) (*) (lsst::afw::image::Image<PixelT> const &,
+        (std::shared_ptr<ChebyshevBoundedField> (*) (lsst::afw::image::Image<PixelT> const &,
                         ChebyshevBoundedFieldControl const &))
             &ChebyshevBoundedField::fit);
 }
@@ -91,13 +91,13 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     clsChebyshevBoundedFieldControl.def("computeSize", &ChebyshevBoundedFieldControl::computeSize);
 
     clsChebyshevBoundedField.def("getCoefficients", &ChebyshevBoundedField::getCoefficients);
-    clsChebyshevBoundedField.def_static("fit", (PTR(ChebyshevBoundedField) (*)
+    clsChebyshevBoundedField.def_static("fit", (std::shared_ptr<ChebyshevBoundedField> (*)
         (lsst::afw::geom::Box2I const &,
          ndarray::Array<double const,1> const &,
          ndarray::Array<double const,1> const &,
          ndarray::Array<double const,1> const &,
          Control const &)) &ChebyshevBoundedField::fit);
-    clsChebyshevBoundedField.def_static("fit", (PTR(ChebyshevBoundedField) (*)
+    clsChebyshevBoundedField.def_static("fit", (std::shared_ptr<ChebyshevBoundedField> (*)
         (lsst::afw::geom::Box2I const &,
          ndarray::Array<double const,1> const &,
          ndarray::Array<double const,1> const &,

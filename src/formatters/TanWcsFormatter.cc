@@ -69,7 +69,7 @@ dafPersist::FormatterRegistration afwForm::TanWcsFormatter::registration(
     "TanWcs", typeid(afwImg::TanWcs), createInstance);
 
 afwForm::TanWcsFormatter::TanWcsFormatter(
-    pexPolicy::Policy::Ptr) :
+    std::shared_ptr<pexPolicy::Policy>) :
     dafPersist::Formatter(typeid(this)) {
 }
 
@@ -78,8 +78,8 @@ afwForm::TanWcsFormatter::~TanWcsFormatter(void) {
 
 void afwForm::TanWcsFormatter::write(
     dafBase::Persistable const* persistable,
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+    std::shared_ptr<dafPersist::Storage> storage,
+    std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "TamWcsFormatter write start");
     afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
     if (ip == 0) {
@@ -96,8 +96,8 @@ void afwForm::TanWcsFormatter::write(
 }
 
 dafBase::Persistable* afwForm::TanWcsFormatter::read(
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    std::shared_ptr<dafPersist::Storage> storage,
+    std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         afwImg::TanWcs* ip = new afwImg::TanWcs;
@@ -111,7 +111,7 @@ dafBase::Persistable* afwForm::TanWcsFormatter::read(
         LOGL_DEBUG(_log, "TanWcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", INT_MIN);
-        dafBase::PropertySet::Ptr md =
+        std::shared_ptr<dafBase::PropertySet> md =
             afw::fits::readMetadata(fits->getPath(), hdu);
         afwImg::TanWcs* ip = new afwImg::TanWcs(md);
         LOGL_DEBUG(_log, "TanWcsFormatter read end");
@@ -122,8 +122,8 @@ dafBase::Persistable* afwForm::TanWcsFormatter::read(
 
 void afwForm::TanWcsFormatter::update(
     dafBase::Persistable*,
-    dafPersist::Storage::Ptr,
-    dafBase::PropertySet::Ptr) {
+    std::shared_ptr<dafPersist::Storage>,
+    std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for TanWcs");
 }
 
@@ -145,7 +145,7 @@ void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eige
 }
 
 
-static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
+static void encodeSipHeader(std::shared_ptr<lsst::daf::base::PropertySet> wcsProps,
                             std::string const& which,   ///< @internal Either A,B, Ap or Bp
                             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
     int order = m.rows();
@@ -168,10 +168,10 @@ static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
     }
 }
 
-dafBase::PropertyList::Ptr
+std::shared_ptr<dafBase::PropertyList>
 afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
     // Only generates properties for the first wcsInfo.
-    dafBase::PropertyList::Ptr wcsProps(new dafBase::PropertyList());
+    std::shared_ptr<dafBase::PropertyList> wcsProps(new dafBase::PropertyList());
 
     if (wcs._wcsInfo == NULL) {                  // nothing to add
         return wcsProps;
@@ -297,8 +297,8 @@ template void afwForm::TanWcsFormatter::delegateSerialize(
     boost::archive::binary_iarchive & , int, dafBase::Persistable*);
 /// @endcond
 
-dafPersist::Formatter::Ptr afwForm::TanWcsFormatter::createInstance(
-    pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new afwForm::TanWcsFormatter(policy));
+std::shared_ptr<dafPersist::Formatter> afwForm::TanWcsFormatter::createInstance(
+    std::shared_ptr<pexPolicy::Policy> policy) {
+    return std::shared_ptr<dafPersist::Formatter>(new afwForm::TanWcsFormatter(policy));
 }
 

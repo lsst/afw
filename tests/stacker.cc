@@ -86,29 +86,29 @@ BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
 
     // ====================================================
     // regular image
-    std::vector<ImageF::Ptr> imgList;
+    std::vector<std::shared_ptr<ImageF>> imgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        ImageF::Ptr img = ImageF::Ptr (new ImageF(geom::Extent2I(nX, nY), iImg));
+        std::shared_ptr<ImageF> img = std::shared_ptr<ImageF> (new ImageF(geom::Extent2I(nX, nY), iImg));
         imgList.push_back(img);
     }
-    ImageF::Ptr imgStack = math::statisticsStack<float>(imgList, math::MEAN);
-    ImageF::Ptr wimgStack = math::statisticsStack<float>(imgList, math::MEAN, sctrl, wvec);
+    std::shared_ptr<ImageF> imgStack = math::statisticsStack<float>(imgList, math::MEAN);
+    std::shared_ptr<ImageF> wimgStack = math::statisticsStack<float>(imgList, math::MEAN, sctrl, wvec);
     BOOST_CHECK_EQUAL((*imgStack)(nX/2, nY/2), knownMean);
     BOOST_CHECK_EQUAL((*wimgStack)(nX/2, nY/2), knownWeightMean);
 
 
     // ====================================================
     // masked image
-    std::vector<MImageF::Ptr> mimgList;
+    std::vector<std::shared_ptr<MImageF>> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        MImageF::Ptr mimg = MImageF::Ptr(new MImageF(geom::Extent2I(nX, nY)));
+        std::shared_ptr<MImageF> mimg = std::shared_ptr<MImageF>(new MImageF(geom::Extent2I(nX, nY)));
         *mimg->getImage()    = iImg;
         *mimg->getMask()     = 0x0;
         *mimg->getVariance() = iImg;
         mimgList.push_back(mimg);
     }
-    MImageF::Ptr mimgStack = math::statisticsStack<float>(mimgList, math::MEAN);
-    MImageF::Ptr wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
+    std::shared_ptr<MImageF> mimgStack = math::statisticsStack<float>(mimgList, math::MEAN);
+    std::shared_ptr<MImageF> wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
     BOOST_CHECK_EQUAL((*(mimgStack->getImage()))(nX/2, nY/2), knownMean);
     BOOST_CHECK_EQUAL((*(wmimgStack->getImage()))(nX/2, nY/2), knownWeightMean);
 

@@ -67,9 +67,6 @@ namespace math {
      */
     class SpatialCellCandidate {
     public:
-        typedef std::shared_ptr<SpatialCellCandidate> Ptr;
-        typedef std::shared_ptr<const SpatialCellCandidate> ConstPtr;
-
         enum Status {BAD = 0, GOOD = 1, UNKNOWN = 2};
 
         SpatialCellCandidate(float const xCenter, ///< The object's column-centre
@@ -125,9 +122,6 @@ namespace math {
      */
     class SpatialCellImageCandidate : public SpatialCellCandidate {
     public:
-        typedef std::shared_ptr<SpatialCellImageCandidate> Ptr;
-        typedef std::shared_ptr<const SpatialCellImageCandidate> ConstPtr;
-
         /// ctor
         SpatialCellImageCandidate(float const xCenter, ///< The object's column-centre
                                   float const yCenter  ///< The object's row-centre
@@ -165,7 +159,7 @@ namespace math {
      */
     class SpatialCellCandidateIterator {
         friend class SpatialCell;
-        typedef std::vector<PTR(SpatialCellCandidate)> CandidateList;
+        typedef std::vector<std::shared_ptr<SpatialCellCandidate>> CandidateList;
 
     public:
         // ctors are protected
@@ -183,9 +177,9 @@ namespace math {
          *
          * @throws lsst::pex::exceptions::NotFoundError if no candidate is available
          */
-        CONST_PTR(SpatialCellCandidate) operator*() const;
-        /// Return the CellCandidate::Ptr
-        PTR(SpatialCellCandidate)       operator*();
+        std::shared_ptr<SpatialCellCandidate const> operator*() const;
+        /// Return the std::shared_ptr<CellCandidate>
+        std::shared_ptr<SpatialCellCandidate>       operator*();
 
         /// Are two SpatialCellCandidateIterator%s equal?
         bool operator==(SpatialCellCandidateIterator const& rhs) const {
@@ -231,9 +225,7 @@ namespace math {
      */
     class SpatialCell {
     public:
-        typedef std::shared_ptr<SpatialCell> Ptr;
-        typedef std::shared_ptr<const SpatialCell> ConstPtr;
-        typedef std::vector<PTR(SpatialCellCandidate)> CandidateList;
+        typedef std::vector<std::shared_ptr<SpatialCellCandidate>> CandidateList;
         typedef SpatialCellCandidateIterator iterator;
         /**
          * Constructor
@@ -287,7 +279,7 @@ namespace math {
         /**
          * Add a candidate to the list, preserving ranking
          */
-        void insertCandidate(PTR(SpatialCellCandidate) candidate);
+        void insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate);
 
         /** Remove a candidate from the list
          *
@@ -295,7 +287,7 @@ namespace math {
          * using a std::vector, but should not hurt too much if the number
          * of candidates in a cell is small.
          */
-        void removeCandidate(PTR(SpatialCellCandidate) candidate);
+        void removeCandidate(std::shared_ptr<SpatialCellCandidate> candidate);
 
         /// Set whether we should omit BAD candidates from candidate list when traversing
         void setIgnoreBad(bool ignoreBad) { _ignoreBad = ignoreBad; }
@@ -310,7 +302,7 @@ namespace math {
          *
          * @throws lsst::pex::exceptions::NotFoundError if no candidate matches the id
          */
-        PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
+        std::shared_ptr<SpatialCellCandidate> getCandidateById(int id, bool noThrow=false);
         /**
          * Get SpatialCell's label
          */
@@ -389,10 +381,7 @@ namespace math {
      */
     class SpatialCellSet {
     public:
-        typedef std::shared_ptr<SpatialCellSet> Ptr;
-        typedef std::shared_ptr<const SpatialCellSet> ConstPtr;
-
-        typedef std::vector<PTR(SpatialCell)> CellList;
+        typedef std::vector<std::shared_ptr<SpatialCell>> CellList;
 
         /**
          * Constructor
@@ -423,7 +412,7 @@ namespace math {
         /**
          * Insert a candidate into the correct cell
          */
-        void insertCandidate(PTR(SpatialCellCandidate) candidate);
+        void insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate);
 
         /// Rearrange the Candidates in all SpatialCells to reflect their current ratings
         void sortCandidates();
@@ -478,9 +467,9 @@ namespace math {
          * @param noThrow Return NULL in case of error
          *
          * @throws lsst::pex::exceptions::NotFoundError if no candidate matches the id (unless noThrow
-         * is true, in which case a Ptr(NULL) is returned
+         * is true, in which case a null pointer is returned
          */
-        PTR(SpatialCellCandidate) getCandidateById(int id, bool noThrow=false);
+        std::shared_ptr<SpatialCellCandidate> getCandidateById(int id, bool noThrow=false);
 
         /// Set whether we should omit BAD candidates from candidate list when traversing
         void setIgnoreBad(bool ignoreBad);

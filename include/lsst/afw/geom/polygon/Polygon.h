@@ -61,7 +61,7 @@ public:
     /// Constructors
     explicit Polygon(Box const& box);
     Polygon(Box const& box,             ///< Box to convert to polygon
-            CONST_PTR(XYTransform) const& transform ///< Transform from original to target frame
+            std::shared_ptr<XYTransform const> const& transform ///< Transform from original to target frame
         );
     Polygon(Box const& box,                  ///< Box to convert to polygon
             AffineTransform const& transform ///< Transform from original to target frame
@@ -129,16 +129,16 @@ public:
     /// Does not handle non-convex polygons (which might have multiple independent
     /// intersections), and is provided as a convenience for when the polygons are
     /// known to be convex (e.g., image borders) and overlapping.
-    PTR(Polygon) intersectionSingle(Polygon const& other) const;
-    PTR(Polygon) intersectionSingle(Box const& box) const;
+    std::shared_ptr<Polygon> intersectionSingle(Polygon const& other) const;
+    std::shared_ptr<Polygon> intersectionSingle(Box const& box) const;
     //@}
 
     //@{
     /// Returns the intersection of two polygons
     ///
     /// Handles the full range of possibilities.
-    std::vector<PTR(Polygon)> intersection(Polygon const& other) const;
-    std::vector<PTR(Polygon)> intersection(Box const& box) const;
+    std::vector<std::shared_ptr<Polygon>> intersection(Polygon const& other) const;
+    std::vector<std::shared_ptr<Polygon>> intersection(Box const& box) const;
     //@}
 
     //@{
@@ -146,8 +146,8 @@ public:
     ///
     /// Does not handle non-overlapping polygons, the union of which would be
     /// disjoint.
-    PTR(Polygon) unionSingle(Polygon const& other) const;
-    PTR(Polygon) unionSingle(Box const& box) const;
+    std::shared_ptr<Polygon> unionSingle(Polygon const& other) const;
+    std::shared_ptr<Polygon> unionSingle(Box const& box) const;
     //@}
 
     //@{
@@ -156,33 +156,33 @@ public:
     /// Handles the full range of possibilities.
     ///
     /// Note the trailing underscore in C++, due to "union" being a reserved word.
-    std::vector<PTR(Polygon)> union_(Polygon const& other) const;
-    std::vector<PTR(Polygon)> union_(Box const& box) const;
+    std::vector<std::shared_ptr<Polygon>> union_(Polygon const& other) const;
+    std::vector<std::shared_ptr<Polygon>> union_(Box const& box) const;
     //@}
 
     //@{
     /// Return the symmetric difference of two polygons
-    std::vector<PTR(Polygon)> symDifference(Polygon const& other) const;
-    std::vector<PTR(Polygon)> symDifference(Box const& box) const;
+    std::vector<std::shared_ptr<Polygon>> symDifference(Polygon const& other) const;
+    std::vector<std::shared_ptr<Polygon>> symDifference(Box const& box) const;
     //@}
 
     /// Return a simplified polygon
     ///
     /// Removes unnecessary points (using the Douglas-Peucker algorithm).
-    PTR(Polygon) simplify(double const distance) const;
+    std::shared_ptr<Polygon> simplify(double const distance) const;
 
     //@{
     /// Operators for syntactic sugar
-    std::vector<PTR(Polygon)> operator&(Polygon const& rhs) const { return intersection(rhs); }
-    std::vector<PTR(Polygon)> operator&(Box const& rhs) const { return intersection(rhs); }
-    std::vector<PTR(Polygon)> operator|(Polygon const& rhs) const { return union_(rhs); }
-    std::vector<PTR(Polygon)> operator|(Box const& rhs) const { return union_(rhs); }
-    std::vector<PTR(Polygon)> operator^(Polygon const& rhs) const { return symDifference(rhs); }
-    std::vector<PTR(Polygon)> operator^(Box const& rhs) const { return symDifference(rhs); }
+    std::vector<std::shared_ptr<Polygon>> operator&(Polygon const& rhs) const { return intersection(rhs); }
+    std::vector<std::shared_ptr<Polygon>> operator&(Box const& rhs) const { return intersection(rhs); }
+    std::vector<std::shared_ptr<Polygon>> operator|(Polygon const& rhs) const { return union_(rhs); }
+    std::vector<std::shared_ptr<Polygon>> operator|(Box const& rhs) const { return union_(rhs); }
+    std::vector<std::shared_ptr<Polygon>> operator^(Polygon const& rhs) const { return symDifference(rhs); }
+    std::vector<std::shared_ptr<Polygon>> operator^(Box const& rhs) const { return symDifference(rhs); }
     //@}
 
     /// Produce a polygon from the convex hull
-    PTR(Polygon) convexHull() const;
+    std::shared_ptr<Polygon> convexHull() const;
 
     //@{
     /// Transform the polygon
@@ -190,10 +190,10 @@ public:
     /// The transformation is only applied to the vertices.  If the transformation
     /// is non-linear, the edges will not reflect that, but simply join the vertices.
     /// Greater fidelity might be achieved by using "subSample" before transforming.
-    PTR(Polygon) transform(
-        CONST_PTR(XYTransform) const& transform ///< Transform from original to target frame
+    std::shared_ptr<Polygon> transform(
+        std::shared_ptr<XYTransform const> const& transform ///< Transform from original to target frame
         ) const;
-    PTR(Polygon) transform(
+    std::shared_ptr<Polygon> transform(
         AffineTransform const& transform ///< Transform from original to target frame
         ) const;
     //@}
@@ -202,8 +202,8 @@ public:
     /// Sub-sample each edge
     ///
     /// This should provide greater fidelity when transforming with a non-linear transform.
-    PTR(Polygon) subSample(size_t num) const;
-    PTR(Polygon) subSample(double maxLength) const;
+    std::shared_ptr<Polygon> subSample(size_t num) const;
+    std::shared_ptr<Polygon> subSample(double maxLength) const;
     //@}
 
     //@{
@@ -215,8 +215,8 @@ public:
     /// within the polygon.
     ///
     /// Note that the center of the lower-left pixel is 0,0.
-    PTR(afw::image::Image<float>) createImage(Box2I const& bbox) const;
-    PTR(afw::image::Image<float>) createImage(Extent2I const& extent) const {
+    std::shared_ptr<afw::image::Image<float>> createImage(Box2I const& bbox) const;
+    std::shared_ptr<afw::image::Image<float>> createImage(Extent2I const& extent) const {
         return createImage(Box2I(Point2I(0, 0), extent));
     }
     //@}
@@ -235,8 +235,8 @@ private:
     //@{
     /// pImpl pattern to hide implementation
     struct Impl;
-    PTR(Impl) _impl;
-    Polygon(PTR(Impl) impl) : _impl(impl) {}
+    std::shared_ptr<Impl> _impl;
+    Polygon(std::shared_ptr<Impl> impl) : _impl(impl) {}
     //@}
 };
 

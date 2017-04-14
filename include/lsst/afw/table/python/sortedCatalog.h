@@ -75,7 +75,7 @@ PySortedCatalog<Record> declareSortedCatalog(
 
     /* Constructors */
     cls.def(pybind11::init<Schema const &>());
-    cls.def(pybind11::init<PTR(Table) const &>(), "table"_a=PTR(Table)());
+    cls.def(pybind11::init<std::shared_ptr<Table> const &>(), "table"_a=std::shared_ptr<Table>());
     cls.def(pybind11::init<Catalog const &>());
 
     /* Overridden and Variant Methods */

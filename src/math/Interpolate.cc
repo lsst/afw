@@ -78,7 +78,7 @@ namespace {
 }
 
 class InterpolateConstant : public Interpolate {
-    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+    friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
 public:
     virtual ~InterpolateConstant() {}
@@ -169,7 +169,7 @@ styleToGslInterpType(Interpolate::Style const style)
 }
 
 class InterpolateGsl : public Interpolate {
-    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+    friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
 public:
     virtual ~InterpolateGsl();
@@ -348,20 +348,20 @@ Interpolate::Interpolate(
     ;
 }
 
-PTR(Interpolate) makeInterpolate(std::vector<double> const &x,
+std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x,
                                  std::vector<double> const &y,
                                  Interpolate::Style const style
                                 )
 {
     switch (style) {
       case Interpolate::CONSTANT:
-        return PTR(Interpolate)(new InterpolateConstant(x, y, style));
+        return std::shared_ptr<Interpolate>(new InterpolateConstant(x, y, style));
       default:                            // use GSL
-        return PTR(Interpolate)(new InterpolateGsl(x, y, style));
+        return std::shared_ptr<Interpolate>(new InterpolateGsl(x, y, style));
     }
 }
 
-PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
+std::shared_ptr<Interpolate> makeInterpolate(ndarray::Array<double const, 1> const &x,
                                  ndarray::Array<double const, 1> const &y,
                                  Interpolate::Style const style)
 {

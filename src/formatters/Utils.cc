@@ -49,7 +49,7 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-int extractSliceId(CONST_PTR(PropertySet) const& properties) {
+int extractSliceId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("sliceId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"sliceId\" property has multiple values");
     }
@@ -66,7 +66,7 @@ int extractSliceId(CONST_PTR(PropertySet) const& properties) {
     return sliceId;
 }
 
-int extractVisitId(CONST_PTR(PropertySet) const& properties) {
+int extractVisitId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("visitId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"visitId\" property has multiple values");
     }
@@ -77,7 +77,7 @@ int extractVisitId(CONST_PTR(PropertySet) const& properties) {
     return visitId;
 }
 
-int64_t extractFpaExposureId(CONST_PTR(PropertySet) const& properties) {
+int64_t extractFpaExposureId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("fpaExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"fpaExposureId\" property has multiple values");
     }
@@ -91,7 +91,7 @@ int64_t extractFpaExposureId(CONST_PTR(PropertySet) const& properties) {
     return fpaExposureId;
 }
 
-int extractCcdId(CONST_PTR(PropertySet) const& properties) {
+int extractCcdId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("ccdId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ccdId\" property has multiple values");
     }
@@ -105,7 +105,7 @@ int extractCcdId(CONST_PTR(PropertySet) const& properties) {
     return static_cast<int>(ccdId);
 }
 
-int extractAmpId(CONST_PTR(PropertySet) const& properties) {
+int extractAmpId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("ampId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ampId\" property has multiple values");
     }
@@ -119,7 +119,7 @@ int extractAmpId(CONST_PTR(PropertySet) const& properties) {
     return (extractCcdId(properties) << 6) + ampId;
 }
 
-int64_t extractCcdExposureId(CONST_PTR(PropertySet) const& properties) {
+int64_t extractCcdExposureId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("ccdExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ccdExposureId\" property has multiple values");
     }
@@ -130,7 +130,7 @@ int64_t extractCcdExposureId(CONST_PTR(PropertySet) const& properties) {
     return ccdExposureId;
 }
 
-int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
+int64_t extractAmpExposureId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("ampExposureId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"ampExposureId\" property has multiple values");
     }
@@ -141,9 +141,9 @@ int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
     return ampExposureId;
 }
 
-std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
+std::string const getItemName(std::shared_ptr<PropertySet const> const& properties) {
     if (!properties) {
-        throw LSST_EXCEPT(ex::InvalidParameterError, "Null PropertySet::Ptr");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Null std::shared_ptr<PropertySet>");
     }
     if (properties->isArray("itemName")) {
         throw LSST_EXCEPT(ex::InvalidParameterError, "\"itemName\" property has multiple values");
@@ -153,7 +153,7 @@ std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
 
 
 bool extractOptionalFlag(
-    CONST_PTR(PropertySet) const& properties,
+    std::shared_ptr<PropertySet const> const& properties,
     std::string      const & name
 ) {
     if (properties && properties->exists(name)) {
@@ -164,8 +164,8 @@ bool extractOptionalFlag(
 
 
 std::string const getTableName(
-    CONST_PTR(Policy) const& policy,
-    CONST_PTR(PropertySet) const& properties
+    std::shared_ptr<Policy const> const& policy,
+    std::shared_ptr<PropertySet const> const& properties
 ) {
     std::string itemName(getItemName(properties));
     return LogicalLocation(policy->getString(itemName + ".tableNamePattern"), properties).locString();
@@ -173,8 +173,8 @@ std::string const getTableName(
 
 
 std::vector<std::string> getAllSliceTableNames(
-    CONST_PTR(Policy) const& policy,
-    CONST_PTR(PropertySet) const& properties
+    std::shared_ptr<Policy const> const& policy,
+    std::shared_ptr<PropertySet const> const& properties
 ) {
     std::string itemName(getItemName(properties));
     std::string pattern(policy->getString(itemName + ".tableNamePattern"));
@@ -188,7 +188,7 @@ std::vector<std::string> getAllSliceTableNames(
     }
     std::vector<std::string> names;
     names.reserve(numSlices);
-    PTR(PropertySet) props = properties->deepCopy();
+    std::shared_ptr<PropertySet> props = properties->deepCopy();
     for (int i = 0; i < numSlices; ++i) {
         props->set("sliceId", i);
         names.push_back(LogicalLocation(pattern, props).locString());
@@ -199,8 +199,8 @@ std::vector<std::string> getAllSliceTableNames(
 
 void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) const& policy,
-    CONST_PTR(PropertySet) const& properties
+    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+    std::shared_ptr<PropertySet const> const& properties
 ) {
     std::string itemName(getItemName(properties));
     std::string name(getTableName(policy, properties));
@@ -214,8 +214,8 @@ void createTable(
 
 void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) const& policy,
-    CONST_PTR(PropertySet) const& properties
+    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+    std::shared_ptr<PropertySet const> const& properties
 ) {
     std::vector<std::string> names = getAllSliceTableNames(policy, properties);
 
@@ -227,7 +227,7 @@ void dropAllSliceTables(
 }
 
 
-std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& prop) {
+std::string formatFitsProperties(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop) {
     typedef std::vector<std::string> NameList;
     std::string sout;
 
@@ -267,7 +267,7 @@ std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& 
 }
 
 
-int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) const& prop) {
+int countFitsHeaderCards(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop) {
     return prop->paramNames(false).size();
 }
 

@@ -49,15 +49,15 @@ public:
     virtual ~KernelFormatter(void);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData);
+        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
-    virtual lsst::daf::base::Persistable* read(lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData);
+    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     virtual void update(lsst::daf::base::Persistable* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData);
+        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     /** Serialize a Kernel to a Boost archive.  Handles text or XML
      * archives, input or output.
@@ -73,16 +73,16 @@ private:
     /** Constructor.
      * @param[in] policy Policy for configuring this Formatter
      */
-    explicit KernelFormatter(lsst::pex::policy::Policy::Ptr policy);
+    explicit KernelFormatter(std::shared_ptr<lsst::pex::policy::Policy> policy);
 
-    lsst::pex::policy::Policy::Ptr _policy;
+    std::shared_ptr<lsst::pex::policy::Policy> _policy;
 
     /** Factory method for KernelFormatter.
      * @param[in] policy Policy for configuring the KernelFormatter
      * @returns Shared pointer to a new instance
      */
-    static lsst::daf::persistence::Formatter::Ptr
-        createInstance(lsst::pex::policy::Policy::Ptr policy);
+    static std::shared_ptr<lsst::daf::persistence::Formatter>
+        createInstance(std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     /** Register this Formatter subclass through a static instance of
      * FormatterRegistration.

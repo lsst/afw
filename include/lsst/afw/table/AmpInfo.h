@@ -83,7 +83,7 @@ public:
     typedef CatalogT<AmpInfoRecord> Catalog;
     typedef CatalogT<AmpInfoRecord const> ConstCatalog;
 
-    CONST_PTR(AmpInfoTable) getTable() const {
+    std::shared_ptr<AmpInfoTable const> getTable() const {
         return std::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
     }
 
@@ -153,7 +153,7 @@ protected:
 
     friend class AmpInfoTable;
 
-    explicit AmpInfoRecord(PTR(AmpInfoTable) const & table);
+    explicit AmpInfoRecord(std::shared_ptr<AmpInfoTable> const & table);
 
 };
 
@@ -178,7 +178,7 @@ public:
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      */
-    static PTR(AmpInfoTable) make(Schema const & schema);
+    static std::shared_ptr<AmpInfoTable> make(Schema const & schema);
 
     /**
      *  Return a minimal schema for AmpInfo tables and records.
@@ -236,18 +236,18 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(AmpInfoTable) clone() const { return std::static_pointer_cast<AmpInfoTable>(_clone()); }
+    std::shared_ptr<AmpInfoTable> clone() const { return std::static_pointer_cast<AmpInfoTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(AmpInfoRecord) makeRecord() { return std::static_pointer_cast<AmpInfoRecord>(_makeRecord()); }
+    std::shared_ptr<AmpInfoRecord> makeRecord() { return std::static_pointer_cast<AmpInfoRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(AmpInfoRecord) copyRecord(BaseRecord const & other) {
+    std::shared_ptr<AmpInfoRecord> copyRecord(BaseRecord const & other) {
         return std::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(AmpInfoRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<AmpInfoRecord> copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
         return std::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other, mapper));
     }
 

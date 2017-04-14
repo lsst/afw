@@ -24,12 +24,12 @@ public:
 
 protected:
 
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows);
 
 };
 
-void SimpleFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(SimpleTable) table = std::dynamic_pointer_cast<SimpleTable const>(t);
+void SimpleFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & t, std::size_t nRows) {
+    std::shared_ptr<SimpleTable const> table = std::dynamic_pointer_cast<SimpleTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -56,13 +56,13 @@ public:
 
     SimpleFitsReader() : io::FitsReader("SIMPLE") {}
 
-    virtual PTR(BaseTable) makeTable(
+    virtual std::shared_ptr<BaseTable> makeTable(
         io::FitsSchemaInputMapper & mapper,
-        PTR(daf::base::PropertyList) metadata,
+        std::shared_ptr<daf::base::PropertyList> metadata,
         int ioFlags,
         bool stripMetadata
     ) const {
-        PTR(SimpleTable) table = SimpleTable::make(mapper.finalize());
+        std::shared_ptr<SimpleTable> table = SimpleTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
     }
@@ -78,9 +78,9 @@ static SimpleFitsReader const simpleFitsReader;
 //----- SimpleTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SimpleRecord::SimpleRecord(PTR(SimpleTable) const & table) : BaseRecord(table) {}
+SimpleRecord::SimpleRecord(std::shared_ptr<SimpleTable> const & table) : BaseRecord(table) {}
 
-PTR(SimpleTable) SimpleTable::make(Schema const & schema, PTR(IdFactory) const & idFactory) {
+std::shared_ptr<SimpleTable> SimpleTable::make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterError,
@@ -90,7 +90,7 @@ PTR(SimpleTable) SimpleTable::make(Schema const & schema, PTR(IdFactory) const &
     return std::shared_ptr<SimpleTable>(new SimpleTable(schema, idFactory));
 }
 
-SimpleTable::SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory) :
+SimpleTable::SimpleTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory) :
     BaseTable(schema), _idFactory(idFactory) {}
 
 SimpleTable::SimpleTable(SimpleTable const & other) :
@@ -107,7 +107,7 @@ SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter)
+std::shared_ptr<io::FitsWriter>
 SimpleTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<SimpleFitsWriter>(fitsfile, flags);
 }

@@ -59,7 +59,7 @@ namespace lsst { namespace afw { namespace image {
  *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
  *                                    (e.g. NAXIS).
  */
-inline PTR(daf::base::PropertyList) readMetadata(std::string const & fileName,
+inline std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const & fileName,
                                                  int hdu=INT_MIN, bool strip=false) {
     return afw::fits::readMetadata(fileName, hdu, strip);
 }

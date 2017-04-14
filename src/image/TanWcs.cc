@@ -70,7 +70,7 @@ geom::Angle TanWcs::pixelScale() const {
     return sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])) * geom::degrees;
 }
 
-TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
+TanWcs::TanWcs(std::shared_ptr<daf::base::PropertySet const> const& fitsMetadata) :
     Wcs(fitsMetadata),
     _hasDistortion(false),
     _sipA(), _sipB(), _sipAp(), _sipBp() {
@@ -128,7 +128,7 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
 
             //Hide the distortion from wcslib
             //Make a copy that we can hack up
-            PTR(daf::base::PropertySet) const& hackMetadata = fitsMetadata->deepCopy();
+            std::shared_ptr<daf::base::PropertySet> const& hackMetadata = fitsMetadata->deepCopy();
             hackMetadata->set<std::string>("CTYPE1", ctype1.substr(0,8));
             hackMetadata->set<std::string>("CTYPE2", ctype2.substr(0,8));
 
@@ -278,8 +278,8 @@ bool TanWcs::_isSubset(Wcs const & rhs) const {
     return true;
 }
 
-PTR(Wcs) TanWcs::clone(void) const {
-    return PTR(Wcs)(new TanWcs(*this));
+std::shared_ptr<Wcs> TanWcs::clone(void) const {
+    return std::shared_ptr<Wcs>(new TanWcs(*this));
 }
 
 //
@@ -461,7 +461,6 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const
 }
 
 
-
 void TanWcs::flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const {
     if (hasDistortion()) {
         throw LSST_EXCEPT(
@@ -482,7 +481,7 @@ void TanWcs::rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions)
     Wcs::rotateImageBy90(nQuarter, dimensions);
 }
 
-PTR(daf::base::PropertyList) TanWcs::getFitsMetadata() const {
+std::shared_ptr<daf::base::PropertyList> TanWcs::getFitsMetadata() const {
     return formatters::TanWcsFormatter::generatePropertySet(*this);
 }
 
@@ -541,19 +540,19 @@ public:
     explicit TanWcsFactory(std::string const & name) :
         table::io::PersistableFactory(name) {}
 
-    virtual PTR(table::io::Persistable) read(
+    virtual std::shared_ptr<table::io::Persistable> read(
         InputArchive const & archive,
         CatalogVector const & catalogs
     ) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
-        CONST_PTR(table::BaseRecord) sipRecord;
+        std::shared_ptr<table::BaseRecord const> sipRecord;
         if (catalogs.size() > 1u) {
             LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
             LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
             LSST_ARCHIVE_ASSERT(catalogs.back().size() == 1u);
             sipRecord = catalogs.back().begin();
         }
-        PTR(TanWcs) result(new TanWcs(catalogs.front().front(), sipRecord));
+        std::shared_ptr<TanWcs> result(new TanWcs(catalogs.front().front(), sipRecord));
         return result;
     }
 };
@@ -593,7 +592,7 @@ void TanWcs::write(OutputArchiveHandle & handle) const {
             )
         );
         afw::table::BaseCatalog catalog = handle.makeCatalog(schema);
-        PTR(afw::table::BaseRecord) record = catalog.addNew();
+        std::shared_ptr<afw::table::BaseRecord> record = catalog.addNew();
         Eigen::Map<Eigen::MatrixXd> mapA((*record)[keyA].getData(), _sipA.rows(), _sipA.cols());
         mapA = _sipA;
         Eigen::Map<Eigen::MatrixXd> mapB((*record)[keyB].getData(), _sipB.rows(), _sipB.cols());
@@ -608,7 +607,7 @@ void TanWcs::write(OutputArchiveHandle & handle) const {
 
 TanWcs::TanWcs(
     afw::table::BaseRecord const & mainRecord,
-    CONST_PTR(afw::table::BaseRecord) sipRecord
+    std::shared_ptr<afw::table::BaseRecord const> sipRecord
 ) : Wcs(mainRecord), _hasDistortion(sipRecord)
 {
     if (_hasDistortion) {

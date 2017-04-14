@@ -110,7 +110,7 @@ public:
     Coord();
     virtual ~Coord() {}
 
-    virtual PTR(Coord) clone() const { return PTR(Coord)(new Coord(*this)); }
+    virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<Coord>(new Coord(*this)); }
 
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude) {
         double const epoch = 2000.0;
@@ -242,7 +242,7 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if `system` = `TOPOCENTRIC`
      *         (because observatory data is required) or if `system` not recognized
      */
-    PTR(Coord) convert(CoordSystem system, double epoch=2000) const;
+    std::shared_ptr<Coord> convert(CoordSystem system, double epoch=2000) const;
 
     /**
      * Convert ourself to Fk5: RA, Dec (precess to new epoch)
@@ -302,7 +302,7 @@ public:
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
-    virtual PTR(Coord) clone() const { return PTR(IcrsCoord)(new IcrsCoord(*this)); }
+    virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<IcrsCoord>(new IcrsCoord(*this)); }
 
     virtual std::string getClassName() const { return "IcrsCoord"; }
 
@@ -358,7 +358,7 @@ public:
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
 
-    virtual PTR(Coord) clone() const { return PTR(Fk5Coord)(new Fk5Coord(*this)); }
+    virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<Fk5Coord>(new Fk5Coord(*this)); }
 
     virtual std::string getClassName() const { return "Fk5Coord"; }
 
@@ -429,7 +429,7 @@ public:
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
 
-    virtual PTR(Coord) clone() const { return PTR(GalacticCoord)(new GalacticCoord(*this)); }
+    virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<GalacticCoord>(new GalacticCoord(*this)); }
 
     virtual std::string getClassName() const { return "GalacticCoord"; }
 
@@ -496,7 +496,7 @@ public:
 
     EclipticCoord() : Coord() {}
 
-    virtual PTR(Coord) clone() const { return PTR(EclipticCoord)(new EclipticCoord(*this)); }
+    virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<EclipticCoord>(new EclipticCoord(*this)); }
 
     virtual std::string getClassName() const { return "EclipticCoord"; }
 
@@ -558,7 +558,7 @@ public:
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
 
-    virtual PTR(Coord) clone() const { return PTR(TopocentricCoord)(new TopocentricCoord(*this)); }
+    virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<TopocentricCoord>(new TopocentricCoord(*this)); }
 
     virtual std::string getClassName() const { return "TopocentricCoord"; }
 
@@ -623,7 +623,7 @@ private:
  * @note Most of the other factories (which accept epochs) just call this one indirectly.
  *
  */
-PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, lsst::afw::geom::Angle const dec, double const epoch);
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, lsst::afw::geom::Angle const dec, double const epoch);
 /**
  * Factory function to create a Coord of arbitrary type with string RA [in degrees, not hours!], Dec
  *
@@ -634,7 +634,7 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, 
  *
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
-PTR(Coord) makeCoord(CoordSystem const system, std::string const ra, std::string const dec,
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, std::string const ra, std::string const dec,
                      double const epoch);
 /**
  * Factory function to create a Coord of arbitrary type with Point2D
@@ -646,7 +646,7 @@ PTR(Coord) makeCoord(CoordSystem const system, std::string const ra, std::string
  *
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
-PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit,
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit,
                      double const epoch);
 /**
  * Factory function to create a Coord of arbitrary type with a Point3D
@@ -660,7 +660,7 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  *
  */
-PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d, double const epoch,
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d, double const epoch,
                      bool normalize=true,
                      lsst::afw::geom::Angle const defaultLongitude=lsst::afw::geom::Angle(0.));
 /**
@@ -668,7 +668,7 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p
  *
  * @param system the system (FK5, ICRS, etc)
  */
-PTR(Coord) makeCoord(CoordSystem const system);
+std::shared_ptr<Coord> makeCoord(CoordSystem const system);
 
 /**
  * Factory function to create a Coord of arbitrary type with decimal RA,Dec in degrees
@@ -680,7 +680,7 @@ PTR(Coord) makeCoord(CoordSystem const system);
  * @note This factory assumes a default epoch
  * @note Most of the other factories (which don't accept epoch) call this one.
  */
-PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, lsst::afw::geom::Angle const dec);
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, lsst::afw::geom::Angle const dec);
 /**
  * Factory function to create a Coord of arbitrary type with string RA [in degrees, not hours!], Dec
  *
@@ -690,7 +690,7 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Angle const ra, 
  *
  * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
  */
-PTR(Coord) makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
 /**
  * Factory function to create a Coord of arbitrary type with Point2D
  *
@@ -701,7 +701,7 @@ PTR(Coord) makeCoord(CoordSystem const system, std::string const ra, std::string
  * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
  *
  */
-PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit);
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit);
 /**
  * Factory function to create a Coord of arbitrary type with a Point3D
  *
@@ -713,7 +713,7 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point2D const &p
  * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
  *
  */
-PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d,
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p3d,
                      bool normalize=true,
                      lsst::afw::geom::Angle const defaultLongitude=lsst::afw::geom::Angle(0.));
 
@@ -728,8 +728,8 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p
  * @throws  lsst::pex::exceptions::InvalidParameterError if system is UNKNOWN
  *          and the coords do not all have the same coordinate system
  */
-PTR(Coord) averageCoord(
-    std::vector<PTR(Coord const)> const coords,
+std::shared_ptr<Coord> averageCoord(
+    std::vector<std::shared_ptr<Coord const>> const coords,
     CoordSystem system=UNKNOWN
     );
 

@@ -127,9 +127,7 @@ using boost::serialization::make_nvp;
 
     public:
         typedef double Pixel;
-        typedef PTR(Kernel) Ptr;
-        typedef CONST_PTR(Kernel) ConstPtr;
-        typedef PTR(lsst::afw::math::Function2<double>) SpatialFunctionPtr;
+        typedef std::shared_ptr<lsst::afw::math::Function2<double>> SpatialFunctionPtr;
         typedef lsst::afw::math::Function2<double> SpatialFunction;
         typedef lsst::afw::math::NullFunction2<double> NullSpatialFunction;
 
@@ -193,7 +191,7 @@ using boost::serialization::make_nvp;
          *
          * @returns a pointer to a deep copy of the kernel
          */
-        virtual PTR(Kernel) clone() const = 0;
+        virtual std::shared_ptr<Kernel> clone() const = 0;
 
         /**
          * Compute an image (pixellized representation of the kernel) in place
@@ -540,7 +538,7 @@ using boost::serialization::make_nvp;
         virtual void _setKernelXY() {}
     };
 
-    typedef std::vector<PTR(Kernel)> KernelList;
+    typedef std::vector<std::shared_ptr<Kernel>> KernelList;
 
     /**
      * A kernel created from an Image
@@ -551,9 +549,6 @@ using boost::serialization::make_nvp;
      */
     class FixedKernel : public afw::table::io::PersistableFacade<FixedKernel>, public Kernel {
     public:
-        typedef PTR(FixedKernel) Ptr;
-        typedef CONST_PTR(FixedKernel) ConstPtr;
-
         /**
          * Construct an empty FixedKernel of size 0x0
          */
@@ -576,7 +571,7 @@ using boost::serialization::make_nvp;
 
         virtual ~FixedKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         virtual std::string toString(std::string const& prefix = "") const;
 
@@ -628,10 +623,8 @@ using boost::serialization::make_nvp;
      */
     class AnalyticKernel : public afw::table::io::PersistableFacade<AnalyticKernel>, public Kernel {
     public:
-        typedef PTR(AnalyticKernel) Ptr;
-        typedef CONST_PTR(AnalyticKernel) ConstPtr;
         typedef lsst::afw::math::Function2<Pixel> KernelFunction;
-        typedef PTR(lsst::afw::math::Function2<Pixel>) KernelFunctionPtr;
+        typedef std::shared_ptr<lsst::afw::math::Function2<Pixel>> KernelFunctionPtr;
 
         /**
          * Construct an empty spatially invariant AnalyticKernel of size 0x0
@@ -679,7 +672,7 @@ using boost::serialization::make_nvp;
 
         virtual ~AnalyticKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
 
         /**
@@ -758,8 +751,6 @@ using boost::serialization::make_nvp;
                                 public Kernel
     {
     public:
-        typedef PTR(DeltaFunctionKernel) Ptr;
-        typedef CONST_PTR(DeltaFunctionKernel) ConstPtr;
         // Traits values for this class of Kernel
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
@@ -780,7 +771,7 @@ using boost::serialization::make_nvp;
 
         virtual ~DeltaFunctionKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         lsst::afw::geom::Point2I getPixel() const { return _pixel; }
 
@@ -832,9 +823,6 @@ using boost::serialization::make_nvp;
                                     public Kernel
     {
     public:
-        typedef PTR(LinearCombinationKernel) Ptr;
-        typedef CONST_PTR(LinearCombinationKernel) ConstPtr;
-
         /**
          * Construct an empty LinearCombinationKernel of size 0x0
          */
@@ -879,7 +867,7 @@ using boost::serialization::make_nvp;
 
         virtual ~LinearCombinationKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         virtual std::vector<double> getKernelParameters() const;
 
@@ -944,7 +932,7 @@ using boost::serialization::make_nvp;
          *
          * @returns a shared pointer to new kernel, or empty pointer if refactoring not possible
          */
-        PTR(Kernel) refactor() const;
+        std::shared_ptr<Kernel> refactor() const;
 
         virtual std::string toString(std::string const& prefix="") const;
 
@@ -972,7 +960,7 @@ using boost::serialization::make_nvp;
 
         KernelList _kernelList; ///< basis kernels
         /// image of each basis kernel (a cache)
-        std::vector<PTR(lsst::afw::image::Image<Pixel>)> _kernelImagePtrList;
+        std::vector<std::shared_ptr<lsst::afw::image::Image<Pixel>>> _kernelImagePtrList;
         std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
         bool _isDeltaFunctionBasis;
@@ -1009,10 +997,8 @@ using boost::serialization::make_nvp;
      */
     class SeparableKernel : public afw::table::io::PersistableFacade<SeparableKernel>, public Kernel {
     public:
-        typedef PTR(SeparableKernel) Ptr;
-        typedef CONST_PTR(SeparableKernel) ConstPtr;
         typedef lsst::afw::math::Function1<Pixel> KernelFunction;
-        typedef PTR(KernelFunction) KernelFunctionPtr;
+        typedef std::shared_ptr<KernelFunction> KernelFunctionPtr;
 
         /**
          * Construct an empty spatially invariant SeparableKernel of size 0x0
@@ -1061,7 +1047,7 @@ using boost::serialization::make_nvp;
         );
         virtual ~SeparableKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         /**
          * Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)

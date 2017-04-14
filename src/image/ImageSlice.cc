@@ -75,11 +75,11 @@ afwImage::ImageSlice<PixelT>::ImageSlice(
 // overload +
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
+std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator+(
     afwImage::Image<PixelT> const &img,
     afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
-    typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
     *retImg += slc;
     return retImg;
 }
@@ -87,7 +87,7 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
 
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
+std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator+(
     afwImage::ImageSlice<PixelT> const &slc,
     afwImage::Image<PixelT> const &img
                                                          ) {
@@ -112,11 +112,11 @@ void afwImage::operator+=(
 
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwImage::operator-(
+std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator-(
     afwImage::Image<PixelT> const &img,
     afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
-    typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
     *retImg -= slc;
     return retImg;
 }
@@ -136,18 +136,18 @@ void afwImage::operator-=(
 
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
+std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator*(
     afwImage::Image<PixelT> const &img,
     afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
-    typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
     *retImg *= slc;
     return retImg;
 }
 
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
+std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator*(
     afwImage::ImageSlice<PixelT> const &slc,
     afwImage::Image<PixelT> const &img
                                                          ) {
@@ -167,11 +167,11 @@ void afwImage::operator*=(
 
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwImage::operator/(
+std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator/(
     afwImage::Image<PixelT> const &img,
     afwImage::ImageSlice<PixelT> const &slc
                                                          ) {
-    typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
     *retImg /= slc;
     return retImg;
 }
@@ -194,14 +194,14 @@ void afwImage::operator/=(
  */
 /// @cond
 #define INSTANTIATE_SLICE_OP_SYM(TYPE, OP) \
-    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> const &img, \
+    template std::shared_ptr<afwImage::Image<TYPE>> afwImage::operator OP(afwImage::Image<TYPE> const &img, \
                                                               afwImage::ImageSlice<TYPE> const &slc); \
-    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::ImageSlice<TYPE> const &slc, \
+    template std::shared_ptr<afwImage::Image<TYPE>> afwImage::operator OP(afwImage::ImageSlice<TYPE> const &slc, \
                                                               afwImage::Image<TYPE> const &img)
 
 
 #define INSTANTIATE_SLICE_OP_ASYM(TYPE, OP) \
-    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> const &img, \
+    template std::shared_ptr<afwImage::Image<TYPE>> afwImage::operator OP(afwImage::Image<TYPE> const &img, \
                                                               afwImage::ImageSlice<TYPE> const &slc)
 
 

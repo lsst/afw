@@ -34,7 +34,7 @@ AffineXYTransform::AffineXYTransform(AffineTransform const &affineTransform)
       _reverseAffineTransform(_forwardAffineTransform.invert())
 { }
 
-PTR(XYTransform) AffineXYTransform::clone() const
+std::shared_ptr<XYTransform> AffineXYTransform::clone() const
 {
     return std::make_shared<AffineXYTransform> (_forwardAffineTransform);
 }

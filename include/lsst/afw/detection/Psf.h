@@ -72,9 +72,6 @@ class Psf : public daf::base::Citizen, public daf::base::Persistable,
         return geom::Point2D(std::numeric_limits<double>::quiet_NaN());
     }
 public:
-    typedef std::shared_ptr<Psf> Ptr;            ///< @deprecated shared_ptr to a Psf
-    typedef std::shared_ptr<const Psf> ConstPtr; ///< @deprecated shared_ptr to a const Psf
-
     typedef math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
     typedef image::Image<Pixel> Image; ///< Image type returned by computeImage
 
@@ -96,7 +93,7 @@ public:
      *  be useful in allowing Psfs to maintain separate caches for their most recently
      *  returned images.
      */
-    virtual PTR(Psf) clone() const = 0;
+    virtual std::shared_ptr<Psf> clone() const = 0;
 
     /**
      *  Return an Image of the PSF, in a form that can be compared directly with star images.
@@ -118,7 +115,7 @@ public:
      *  @note The real work is done in the virtual private member function Psf::doComputeImage;
      *        computeImage only handles caching and default arguments.
      */
-    PTR(Image) computeImage(
+    std::shared_ptr<Image> computeImage(
         geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color(),
         ImageOwnerEnum owner=COPY
@@ -146,7 +143,7 @@ public:
      *  @note The real work is done in the virtual private member function Psf::doComputeKernelImage;
      *        computeKernelImage only handles caching and default arguments.
      */
-    PTR(Image) computeKernelImage(
+    std::shared_ptr<Image> computeKernelImage(
         geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color(),
         ImageOwnerEnum owner=COPY
@@ -206,7 +203,7 @@ public:
      *  This is implemented by calling computeKernelImage, and is simply provided for
      *  convenience.
      */
-    PTR(math::Kernel const) getLocalKernel(
+    std::shared_ptr<math::Kernel const> getLocalKernel(
         geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color()
     ) const;
@@ -251,8 +248,8 @@ public:
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
      * If not, then the original image will be returned (after setting XY0).
      */
-    static PTR(Image) recenterKernelImage(
-        PTR(Image) im,
+    static std::shared_ptr<Image> recenterKernelImage(
+        std::shared_ptr<Image> im,
         geom::Point2D const & position,
         std::string const & warpAlgorithm = "lanczos5",
         unsigned int warpBuffer = 5
@@ -278,10 +275,10 @@ private:
      *
      *  Derived classes are responsible for ensuring that returned images sum to one.
      */
-    virtual PTR(Image) doComputeImage(
+    virtual std::shared_ptr<Image> doComputeImage(
         geom::Point2D const & position, image::Color const& color
     ) const;
-    virtual PTR(Image) doComputeKernelImage(
+    virtual std::shared_ptr<Image> doComputeKernelImage(
         geom::Point2D const & position, image::Color const & color
     ) const = 0;
     virtual double doComputeApertureFlux(
@@ -296,8 +293,8 @@ private:
     //@}
 
     bool const _isFixed;
-    mutable PTR(Image) _cachedImage;
-    mutable PTR(Image) _cachedKernelImage;
+    mutable std::shared_ptr<Image> _cachedImage;
+    mutable std::shared_ptr<Image> _cachedKernelImage;
     mutable image::Color _cachedImageColor;
     mutable image::Color _cachedKernelImageColor;
     mutable geom::Point2D _cachedImagePosition;

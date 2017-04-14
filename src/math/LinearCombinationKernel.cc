@@ -106,8 +106,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::clone() const {
-    PTR(Kernel) retPtr;
+std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::clone() const {
+    std::shared_ptr<Kernel> retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
     } else {
@@ -153,13 +153,13 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() cons
     return _kernelParams;
 }
 
-PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
+std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::refactor() const {
     if (!this->isSpatiallyVarying()) {
-        return PTR(Kernel)();
+        return std::shared_ptr<Kernel>();
     }
     Kernel::SpatialFunctionPtr const firstSpFuncPtr = this->_spatialFunctionList[0];
     if (!firstSpFuncPtr->isLinearCombination()) {
-        return PTR(Kernel)();
+        return std::shared_ptr<Kernel>();
     }
 
     typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
@@ -181,7 +181,7 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     afwMath::KernelList::const_iterator const kEnd = _kernelList.end();
     for ( ; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
         if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
-            return PTR(Kernel)();
+            return std::shared_ptr<Kernel>();
         }
 
         (**kIter).computeImage(kernelImage, false);
@@ -199,7 +199,7 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     KernelImageList::iterator newKImPtrIter = newKernelImagePtrList.begin();
     KernelImageList::iterator const newKImPtrEnd = newKernelImagePtrList.end();
     for ( ; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
-        newKernelList.push_back(PTR(Kernel)(new afwMath::FixedKernel(**newKImPtrIter)));
+        newKernelList.push_back(std::shared_ptr<Kernel>(new afwMath::FixedKernel(**newKImPtrIter)));
     }
     std::vector<SpatialFunctionPtr> newSpFunctionPtrList;
     for (int i = 0; i < nSpatialParameters; ++i) {
@@ -209,7 +209,7 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
         newSpFunctionPtr->setParameters(newSpParameters);
         newSpFunctionPtrList.push_back(newSpFunctionPtr);
     }
-    PTR(LinearCombinationKernel) refactoredKernel(
+    std::shared_ptr<LinearCombinationKernel> refactoredKernel(
         new LinearCombinationKernel(newKernelList, newSpFunctionPtrList));
     refactoredKernel->setCtr(this->getCtr());
     return refactoredKernel;
@@ -241,7 +241,7 @@ double afwMath::LinearCombinationKernel::doComputeImage(
 ) const {
     image = 0.0;
     double imSum = 0.0;
-    std::vector<PTR(afwImage::Image<Pixel>)>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<std::shared_ptr<afwImage::Image<Pixel>>>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
@@ -274,12 +274,12 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
     _isDeltaFunctionBasis = true;
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
         kIter != kEnd; ++kIter) {
-        PTR(Kernel) basisKernelPtr = (*kIter)->clone();
+        std::shared_ptr<Kernel> basisKernelPtr = (*kIter)->clone();
         if (dynamic_cast<afwMath::DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);
-        PTR(afwImage::Image<Pixel>) kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
+        std::shared_ptr<afwImage::Image<Pixel>> kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
         _kernelSumList.push_back(basisKernelPtr->computeImage(*kernelImagePtr, false));
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
@@ -326,18 +326,18 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
 class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
 public:
 
-    virtual PTR(afw::table::io::Persistable)
+    virtual std::shared_ptr<afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
         geom::Extent2I dimensions(record.get(keys.dimensions));
-        std::vector<PTR(Kernel)> componentList(keys.components.getSize());
+        std::vector<std::shared_ptr<Kernel>> componentList(keys.components.getSize());
         for (std::size_t i = 0; i < componentList.size(); ++i) {
             componentList[i] = archive.get<Kernel>(record[keys.components[i]]);
         }
-        PTR(LinearCombinationKernel) result;
+        std::shared_ptr<LinearCombinationKernel> result;
         if (keys.spatialFunctions.isValid()) {
             std::vector<SpatialFunctionPtr> spatialFunctionList = keys.readSpatialFunctions(archive, record);
             result.reset(new LinearCombinationKernel(componentList, spatialFunctionList));
@@ -371,7 +371,7 @@ std::string LinearCombinationKernel::getPersistenceName() const {
 void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
     bool isVarying = isSpatiallyVarying();
     LinearCombinationKernelPersistenceHelper const keys(getNBasisKernels(), isVarying);
-    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     if (isVarying) {
         for (int n = 0; n < keys.components.getSize(); ++n) {
             record->set(keys.components[n], handle.put(_kernelList[n]));

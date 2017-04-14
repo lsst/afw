@@ -88,11 +88,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    std::string const & fileName, PTR(daf::base::PropertySet) metadata,
+    std::string const & fileName, std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
-    PTR(daf::base::PropertySet) imageMetadata,
-    PTR(daf::base::PropertySet) maskMetadata,
-    PTR(daf::base::PropertySet) varianceMetadata
+    std::shared_ptr<daf::base::PropertySet> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet> varianceMetadata
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance()
 {
@@ -103,11 +103,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    fits::MemFileManager & manager, PTR(daf::base::PropertySet) metadata,
+    fits::MemFileManager & manager, std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
-    PTR(daf::base::PropertySet) imageMetadata,
-    PTR(daf::base::PropertySet) maskMetadata,
-    PTR(daf::base::PropertySet) varianceMetadata
+    std::shared_ptr<daf::base::PropertySet> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet> varianceMetadata
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance()
 {
@@ -122,7 +122,7 @@ namespace {
 
 void checkExtType(
     lsst::afw::fits::Fits & fitsfile,
-    PTR(lsst::daf::base::PropertySet) metadata,
+    std::shared_ptr<lsst::daf::base::PropertySet> metadata,
     std::string const & expected
 ) {
     try {
@@ -138,7 +138,7 @@ void checkExtType(
     }
 }
 
-void ensureMetadata(PTR(lsst::daf::base::PropertySet) & metadata) {
+void ensureMetadata(std::shared_ptr<lsst::daf::base::PropertySet> & metadata) {
     if (!metadata) {
         metadata.reset(new lsst::daf::base::PropertyList());
     }
@@ -149,11 +149,11 @@ void ensureMetadata(PTR(lsst::daf::base::PropertySet) & metadata) {
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-    fits::Fits & fitsfile, PTR(daf::base::PropertySet) metadata,
+    fits::Fits & fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
-    PTR(daf::base::PropertySet) imageMetadata,
-    PTR(daf::base::PropertySet) maskMetadata,
-    PTR(daf::base::PropertySet) varianceMetadata
+    std::shared_ptr<daf::base::PropertySet> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet> varianceMetadata
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance()
 {
@@ -263,9 +263,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     lsst::daf::base::Citizen(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
-        _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
-        _mask =     typename Mask::Ptr(new Mask(*rhs.getMask(), deep));
-        _variance = typename Variance::Ptr(new Variance(*rhs.getVariance(), deep));
+        _image =    std::shared_ptr<Image>(new Image(*rhs.getImage(), deep));
+        _mask =     std::shared_ptr<Mask>(new Mask(*rhs.getMask(), deep));
+        _variance = std::shared_ptr<Variance>(new Variance(*rhs.getVariance(), deep));
     }
     conformSizes();
 }
@@ -509,10 +509,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(ImagePix
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     std::string const& fileName,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    CONST_PTR(daf::base::PropertySet) imageMetadata,
-    CONST_PTR(daf::base::PropertySet) maskMetadata,
-    CONST_PTR(daf::base::PropertySet) varianceMetadata
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
 ) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata, imageMetadata, maskMetadata, varianceMetadata);
@@ -521,10 +521,10 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::MemFileManager & manager,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    CONST_PTR(daf::base::PropertySet) imageMetadata,
-    CONST_PTR(daf::base::PropertySet) maskMetadata,
-    CONST_PTR(daf::base::PropertySet) varianceMetadata
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
 ) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, metadata, imageMetadata, maskMetadata, varianceMetadata);
@@ -533,8 +533,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 namespace {
 
 void processPlaneMetadata(
-    CONST_PTR(lsst::daf::base::PropertySet) metadata,
-    PTR(lsst::daf::base::PropertySet) & hdr,
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata,
+    std::shared_ptr<lsst::daf::base::PropertySet> & hdr,
     char const * exttype
 ) {
     if (metadata) {
@@ -551,13 +551,13 @@ void processPlaneMetadata(
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::Fits & fitsfile,
-    CONST_PTR(daf::base::PropertySet) metadata,
-    CONST_PTR(daf::base::PropertySet) imageMetadata,
-    CONST_PTR(daf::base::PropertySet) maskMetadata,
-    CONST_PTR(daf::base::PropertySet) varianceMetadata
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
 ) const {
 
-    PTR(daf::base::PropertySet) hdr;
+    std::shared_ptr<daf::base::PropertySet> hdr;
     if (metadata) {
         hdr = metadata->deepCopy();
     } else {

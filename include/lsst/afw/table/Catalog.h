@@ -47,10 +47,10 @@ public:
     explicit CatalogIterator(BaseT const & base) : CatalogIterator::iterator_adaptor_(base) {}
 
     template <typename RecordT>
-    operator PTR(RecordT) () const { return *this->base(); }
+    operator std::shared_ptr<RecordT> () const { return *this->base(); }
 
     template <typename RecordT>
-    CatalogIterator & operator=(PTR(RecordT) const & other) const {
+    CatalogIterator & operator=(std::shared_ptr<RecordT> const & other) const {
         *this->base() = other;
         return *this;
     }
@@ -63,7 +63,7 @@ private:
 /**
  *  A custom container class for records, based on std::vector.
  *
- *  CatalogT wraps a std::vector<PTR(RecordT)> in an interface that looks more
+ *  CatalogT wraps a std::vector<std::shared_ptr<RecordT>> in an interface that looks more
  *  like a std::vector<RecordT>; its iterators and accessors return references
  *  or const references, rather than pointers, making them easier to use.  It
  *  also holds a table, which is used to allocate new records and determine the
@@ -93,7 +93,7 @@ private:
  */
 template <typename RecordT>
 class CatalogT {
-    typedef std::vector<PTR(RecordT)> Internal;
+    typedef std::vector<std::shared_ptr<RecordT>> Internal;
 public:
 
     typedef RecordT Record;
@@ -102,14 +102,14 @@ public:
 
     typedef RecordT value_type;
     typedef RecordT & reference;
-    typedef PTR(RecordT) pointer;
+    typedef std::shared_ptr<RecordT> pointer;
     typedef typename Internal::size_type size_type;
     typedef typename Internal::difference_type difference_type;
     typedef CatalogIterator<typename Internal::iterator> iterator;
     typedef CatalogIterator<typename Internal::const_iterator> const_iterator;
 
     /// Return the table associated with the catalog.
-    PTR(Table) getTable() const { return _table; }
+    std::shared_ptr<Table> getTable() const { return _table; }
 
     /// Return the schema associated with the catalog's table.
     Schema getSchema() const { return _table->getSchema(); }
@@ -120,7 +120,7 @@ public:
      *  A catalog with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit CatalogT(PTR(Table) const & table = PTR(Table)()) : _table(table), _internal() {}
+    explicit CatalogT(std::shared_ptr<Table> const & table = std::shared_ptr<Table>()) : _table(table), _internal() {}
 
     /// Construct a catalog from a schema, creating a table with Table::make(schema).
     explicit CatalogT(Schema const & schema) : _table(Table::make(schema)), _internal() {}
@@ -136,7 +136,7 @@ public:
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      */
     template <typename InputIterator>
-    CatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    CatalogT(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last, bool deep=false) :
         _table(table), _internal()
     {
         insert(end(), first, last, deep);
@@ -437,10 +437,10 @@ public:
     reference back() const { return *_internal.back(); }
 
     /// Return a pointer to the record at index i.
-    PTR(RecordT) const get(size_type i) const { return _internal[i]; }
+    std::shared_ptr<RecordT> const get(size_type i) const { return _internal[i]; }
 
     /// Set the record at index i to a pointer.
-    void set(size_type i, PTR(RecordT) const & p) {
+    void set(size_type i, std::shared_ptr<RecordT> const & p) {
         _internal[i] = p;
     }
 
@@ -457,18 +457,18 @@ public:
 
     /// Add a copy of the given record to the end of the catalog.
     void push_back(Record const & r) {
-        PTR(RecordT) p = _table->copyRecord(r);
+        std::shared_ptr<RecordT> p = _table->copyRecord(r);
         _internal.push_back(p);
     }
 
     /// Add the given record to the end of the catalog without copying.
-    void push_back(PTR(RecordT) const & p) {
+    void push_back(std::shared_ptr<RecordT> const & p) {
         _internal.push_back(p);
     }
 
     /// Create a new record, add it to the end of the catalog, and return a pointer to it.
-    PTR(RecordT) addNew() {
-        PTR(RecordT) r = _table->makeRecord();
+    std::shared_ptr<RecordT> addNew() {
+        std::shared_ptr<RecordT> r = _table->makeRecord();
         _internal.push_back(r);
         return r;
     }
@@ -536,12 +536,12 @@ public:
 
     /// Insert a copy of the given record at the given position.
     iterator insert(iterator pos, Record const & r) {
-        PTR(RecordT) p = _table->copyRecord(r);
+        std::shared_ptr<RecordT> p = _table->copyRecord(r);
         return iterator(_internal.insert(pos.base(), p));
     }
 
     /// Insert the given record at the given position without copying.
-    iterator insert(iterator pos, PTR(RecordT) const & p) {
+    iterator insert(iterator pos, std::shared_ptr<RecordT> const & p) {
         return iterator(_internal.insert(pos.base(), p));
     }
 
@@ -676,7 +676,7 @@ private:
         std::input_iterator_tag *
     ) {}
 
-    PTR(Table) _table;
+    std::shared_ptr<Table> _table;
     Internal _internal;
 };
 
@@ -693,7 +693,7 @@ struct KeyComparisonFunctor {
 template <typename RecordT, typename Adaptee>
 struct ComparisonAdaptor {
 
-    bool operator()(PTR(RecordT) const & a, PTR(RecordT) const & b) const {
+    bool operator()(std::shared_ptr<RecordT> const & a, std::shared_ptr<RecordT> const & b) const {
         return adaptee(*a, *b);
     }
 
@@ -866,10 +866,10 @@ CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> co
  */
 
 template <typename RecordT, typename Catalog, typename T>
-PTR(RecordT) _Catalog_find(Catalog const & catalog, T const & value, Key<T> const & key) {
+std::shared_ptr<RecordT> _Catalog_find(Catalog const & catalog, T const & value, Key<T> const & key) {
     typename Catalog::const_iterator iter = catalog.find(value, key);
     if (iter == catalog.end()) {
-        return PTR(RecordT)();
+        return std::shared_ptr<RecordT>();
     }
     return iter;  // n.b. CatalogIterator is explicitly convertible to shared_ptr
 }

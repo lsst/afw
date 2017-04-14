@@ -40,9 +40,9 @@ struct RecordPos {
     double y;
     double z;
     // JFB removed extra pointer here; this may have performance implications, but hopefully not
-    // significant ones.  BaseCatalog iterators yield temporary BaseRecord PTRs, so storing
+    // significant ones.  BaseCatalog iterators yield temporary BaseRecord shared_ptrs, so storing
     // their address was no longer an option.
-    PTR(RecordT) src;
+    std::shared_ptr<RecordT> src;
 };
 
 template <typename Record1, typename Record2>
@@ -52,7 +52,7 @@ bool operator<(RecordPos<Record1> const &s1, RecordPos<Record2> const &s2) {
 
 struct CmpRecordPtr {
 
-    bool operator()(PTR(SourceRecord) const s1, PTR(SourceRecord) const s2) {
+    bool operator()(std::shared_ptr<SourceRecord> const s1, std::shared_ptr<SourceRecord> const s2) {
         return s1->getY() < s2->getY();
     }
 
@@ -190,7 +190,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
     std::unique_ptr<Pos2[]> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
-    PTR(typename Cat2::Record) nullRecord = std::shared_ptr<typename Cat2::Record>();
+    std::shared_ptr<typename Cat2::Record> nullRecord = std::shared_ptr<typename Cat2::Record>();
 
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
@@ -328,9 +328,9 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     // copy and sort array of pointers on y
     size_t len1 = cat1.size();
     size_t len2 = cat2.size();
-    std::unique_ptr<PTR(SourceRecord)[]> pos1(new PTR(SourceRecord)[len1]);
-    std::unique_ptr<PTR(SourceRecord)[]> pos2(new PTR(SourceRecord)[len2]);
-    PTR(SourceRecord) nullRecord = std::shared_ptr<SourceRecord>();
+    std::unique_ptr<std::shared_ptr<SourceRecord>[]> pos1(new std::shared_ptr<SourceRecord>[len1]);
+    std::unique_ptr<std::shared_ptr<SourceRecord>[]> pos2(new std::shared_ptr<SourceRecord>[len2]);
+    std::shared_ptr<SourceRecord> nullRecord = std::shared_ptr<SourceRecord>();
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
         if (std::isnan(i->getX()) || std::isnan(i->getY())) {
@@ -413,7 +413,7 @@ SourceMatchVector matchXy(
 
     // copy and sort array of pointers on y
     size_t len = cat.size();
-    std::unique_ptr<PTR(SourceRecord)[]> pos(new PTR(SourceRecord)[len]);
+    std::unique_ptr<std::shared_ptr<SourceRecord>[]> pos(new std::shared_ptr<SourceRecord>[len]);
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
         if (std::isnan(i->getX()) || std::isnan(i->getY())) {
@@ -461,7 +461,7 @@ BaseCatalog packMatches(
     result.reserve(matches.size());
     typedef typename std::vector< Match<Record1,Record2> >::const_iterator Iter;
     for (Iter i = matches.begin(); i != matches.end(); ++i) {
-        PTR(BaseRecord) record = result.addNew();
+        std::shared_ptr<BaseRecord> record = result.addNew();
         record->set(outKey1, i->first->getId());
         record->set(outKey2, i->second->getId());
         record->set(keyD, i->distance);

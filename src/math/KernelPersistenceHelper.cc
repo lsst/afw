@@ -56,12 +56,12 @@ Kernel::PersistenceHelper::PersistenceHelper(afw::table::Schema const & schema_)
     } catch (...) {}
 }
 
-PTR(afw::table::BaseRecord) Kernel::PersistenceHelper::write(
+std::shared_ptr<afw::table::BaseRecord> Kernel::PersistenceHelper::write(
     afw::table::io::OutputArchiveHandle & handle,
     Kernel const & kernel
 ) const {
     afw::table::BaseCatalog catalog = handle.makeCatalog(schema);
-    PTR(afw::table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<afw::table::BaseRecord> record = catalog.addNew();
     record->set(dimensions, geom::Point2I(kernel.getDimensions()));
     record->set(center, kernel.getCtr());
     if (spatialFunctions.isValid()) {
@@ -74,7 +74,7 @@ PTR(afw::table::BaseRecord) Kernel::PersistenceHelper::write(
 void Kernel::PersistenceHelper::writeSpatialFunctions(
     afw::table::io::OutputArchiveHandle & handle,
     afw::table::BaseRecord & record,
-    std::vector<PTR(Kernel::SpatialFunction)> const & spatialFunctionList
+    std::vector<std::shared_ptr<Kernel::SpatialFunction>> const & spatialFunctionList
 ) const {
     ndarray::Array<int,1,1> array = record[spatialFunctions];
     for (std::size_t n = 0; n < spatialFunctionList.size(); ++n) {
@@ -82,12 +82,12 @@ void Kernel::PersistenceHelper::writeSpatialFunctions(
     }
 }
 
-std::vector<PTR(Kernel::SpatialFunction)> Kernel::PersistenceHelper::readSpatialFunctions(
+std::vector<std::shared_ptr<Kernel::SpatialFunction>> Kernel::PersistenceHelper::readSpatialFunctions(
     afw::table::io::InputArchive const & archive,
     afw::table::BaseRecord const & record
 ) const {
     ndarray::Array<int const,1,1> array = record[spatialFunctions];
-    std::vector<PTR(Kernel::SpatialFunction)> spatialFunctionList(array.getSize<0>());
+    std::vector<std::shared_ptr<Kernel::SpatialFunction>> spatialFunctionList(array.getSize<0>());
     for (std::size_t n = 0; n < spatialFunctionList.size(); ++n) {
         spatialFunctionList[n] = archive.get<SpatialFunction>(array[n]);
         LSST_ARCHIVE_ASSERT(array[n] == 0 || (spatialFunctionList[n]));

@@ -51,7 +51,7 @@ public:
     typedef SortedCatalogT<SimpleRecord> Catalog;
     typedef SortedCatalogT<SimpleRecord const> ConstCatalog;
 
-    CONST_PTR(SimpleTable) getTable() const {
+    std::shared_ptr<SimpleTable const> getTable() const {
         return std::static_pointer_cast<SimpleTable const>(BaseRecord::getTable());
     }
 
@@ -75,7 +75,7 @@ protected:
 
     friend class SimpleTable;
 
-    explicit SimpleRecord(PTR(SimpleTable) const & table);
+    explicit SimpleRecord(std::shared_ptr<SimpleTable> const & table);
 
 };
 
@@ -102,7 +102,7 @@ public:
      *  Note that not passing an IdFactory at all will call the other override of make(), which will
      *  set the ID factory to IdFactory::makeSimple().
      */
-    static PTR(SimpleTable) make(Schema const & schema, PTR(IdFactory) const & idFactory);
+    static std::shared_ptr<SimpleTable> make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
 
     /**
      *  Construct a new table.
@@ -111,7 +111,7 @@ public:
      *
      *  This overload sets the ID factory to IdFactory::makeSimple().
      */
-    static PTR(SimpleTable) make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
+    static std::shared_ptr<SimpleTable> make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
 
     /**
      *  Return a minimal schema for Simple tables and records.
@@ -137,13 +137,13 @@ public:
     }
 
     /// Return the object that generates IDs for the table (may be null).
-    PTR(IdFactory) getIdFactory() { return _idFactory; }
+    std::shared_ptr<IdFactory> getIdFactory() { return _idFactory; }
 
     /// Return the object that generates IDs for the table (may be null).
-    CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
+    std::shared_ptr<IdFactory const> getIdFactory() const { return _idFactory; }
 
     /// Switch to a new IdFactory -- object that generates IDs for the table (may be null).
-    void setIdFactory(PTR(IdFactory) f) { _idFactory = f; }
+    void setIdFactory(std::shared_ptr<IdFactory> f) { _idFactory = f; }
 
     //@{
     /**
@@ -158,24 +158,24 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(SimpleTable) clone() const { return std::static_pointer_cast<SimpleTable>(_clone()); }
+    std::shared_ptr<SimpleTable> clone() const { return std::static_pointer_cast<SimpleTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(SimpleRecord) makeRecord() { return std::static_pointer_cast<SimpleRecord>(_makeRecord()); }
+    std::shared_ptr<SimpleRecord> makeRecord() { return std::static_pointer_cast<SimpleRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(SimpleRecord) copyRecord(BaseRecord const & other) {
+    std::shared_ptr<SimpleRecord> copyRecord(BaseRecord const & other) {
         return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(SimpleRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<SimpleRecord> copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
         return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:
 
-    SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory);
+    SimpleTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
 
     explicit SimpleTable(SimpleTable const & other);
 
@@ -202,7 +202,7 @@ private:
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 
-    PTR(IdFactory) _idFactory;        // generates IDs for new records
+    std::shared_ptr<IdFactory> _idFactory;        // generates IDs for new records
 };
 
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }

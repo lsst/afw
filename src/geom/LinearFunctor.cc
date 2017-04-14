@@ -33,7 +33,7 @@ LinearFunctor::LinearFunctor(double slope, double intercept)
    : Functor("LinearFunctor"), _slope(slope), _intercept(intercept) {
 }
 
-PTR(Functor) LinearFunctor::clone() const {
+std::shared_ptr<Functor> LinearFunctor::clone() const {
    return std::make_shared<LinearFunctor>(_slope, _intercept);
 }
 

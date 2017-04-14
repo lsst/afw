@@ -49,7 +49,7 @@ lsst::daf::persistence::FormatterRegistration PropertyListFormatter::registratio
     "PropertyList", typeid(lsst::daf::base::PropertyList), createInstance);
 
 PropertyListFormatter::PropertyListFormatter(
-    lsst::pex::policy::Policy::Ptr
+    std::shared_ptr<lsst::pex::policy::Policy>
 )
     : lsst::daf::persistence::Formatter(typeid(this))
 {
@@ -57,8 +57,8 @@ PropertyListFormatter::PropertyListFormatter(
 
 void PropertyListFormatter::write(
     lsst::daf::base::Persistable const* persistable,
-    lsst::daf::persistence::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr
+    std::shared_ptr<lsst::daf::persistence::Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet>
 )
 {
     LOGL_DEBUG(_log, "PropertyListFormatter write start");
@@ -88,8 +88,8 @@ namespace {
 }
 
 lsst::daf::base::Persistable* PropertyListFormatter::read(
-    lsst::daf::persistence::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr
+    std::shared_ptr<lsst::daf::persistence::Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet>
 )
 {
     LOGL_DEBUG(_log, "PropertyListFormatter read start");
@@ -109,8 +109,8 @@ lsst::daf::base::Persistable* PropertyListFormatter::read(
 
 void PropertyListFormatter::update(
     lsst::daf::base::Persistable*,
-    lsst::daf::persistence::Storage::Ptr,
-    lsst::daf::base::PropertySet::Ptr
+    std::shared_ptr<lsst::daf::persistence::Storage>,
+    std::shared_ptr<lsst::daf::base::PropertySet>
 )
 {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -133,11 +133,11 @@ void PropertyListFormatter::delegateSerialize(
                       "PropertyList serialization not yet implemented");
 }
 
-lsst::daf::persistence::Formatter::Ptr PropertyListFormatter::createInstance(
-    lsst::pex::policy::Policy::Ptr policy
+std::shared_ptr<lsst::daf::persistence::Formatter> PropertyListFormatter::createInstance(
+    std::shared_ptr<lsst::pex::policy::Policy> policy
 )
 {
-    return lsst::daf::persistence::Formatter::Ptr(new PropertyListFormatter(policy));
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(new PropertyListFormatter(policy));
 }
 
 }}} // namespace lsst::afw::formatters

@@ -26,14 +26,14 @@ public:
     virtual void notify(RecordId id) = 0;
 
     /// Deep-copy the IdFactory.
-    virtual PTR(IdFactory) clone() const = 0;
+    virtual std::shared_ptr<IdFactory> clone() const = 0;
 
     /**
      *  Return a simple IdFactory that simply counts from 1.
      *
      *  This is used when an empty pointer is passed to the BaseTable constructor.
      */
-    static PTR(IdFactory) makeSimple();
+    static std::shared_ptr<IdFactory> makeSimple();
 
     /**
      *  Return an IdFactory that includes another, fixed ID in the higher-order bits.
@@ -45,7 +45,7 @@ public:
      *
      *      (upper << reserved) | sequence
      */
-    static PTR(IdFactory) makeSource(RecordId expId, int reserved);
+    static std::shared_ptr<IdFactory> makeSource(RecordId expId, int reserved);
 
     virtual ~IdFactory() {}
 

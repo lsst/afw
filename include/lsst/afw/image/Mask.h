@@ -81,8 +81,6 @@ namespace detail {
 template<typename MaskPixelT=lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
 public:
-    typedef std::shared_ptr<Mask> Ptr;
-    typedef std::shared_ptr<const Mask> ConstPtr;
     typedef detail::MaskPlaneDict MaskPlaneDict;
 
     typedef detail::Mask_tag image_category;
@@ -179,7 +177,7 @@ public:
      */
     explicit Mask(
         std::string const & fileName, int hdu=INT_MIN,
-        PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+        std::shared_ptr<lsst::daf::base::PropertySet> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
         bool conformMasks=false
@@ -205,7 +203,7 @@ public:
      */
     explicit Mask(
         fits::MemFileManager & manager, int hdu=INT_MIN,
-        PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+        std::shared_ptr<lsst::daf::base::PropertySet> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
         bool conformMasks=false
@@ -228,7 +226,7 @@ public:
      */
     explicit Mask(
         fits::Fits & fitsfile,
-        PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+        std::shared_ptr<lsst::daf::base::PropertySet> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
         bool conformMasks=false
@@ -350,7 +348,7 @@ public:
      */
     void writeFits(
         std::string const& fileName,
-        CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+        std::shared_ptr<lsst::daf::base::PropertySet const> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
         std::string const& mode="w"
     ) const;
 
@@ -363,7 +361,7 @@ public:
      */
     void writeFits(
         fits::MemFileManager & manager,
-        CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+        std::shared_ptr<lsst::daf::base::PropertySet const> metadata=std::shared_ptr<lsst::daf::base::PropertySet>(),
         std::string const& mode="w"
     ) const;
 
@@ -375,7 +373,7 @@ public:
      */
     void writeFits(
         fits::Fits & fitsfile,
-        CONST_PTR(lsst::daf::base::PropertySet) metadata=CONST_PTR(lsst::daf::base::PropertySet)()
+        std::shared_ptr<lsst::daf::base::PropertySet const> metadata=std::shared_ptr<lsst::daf::base::PropertySet const>()
     ) const;
 
     /**
@@ -420,7 +418,7 @@ public:
      * @param metadata metadata from a Mask
      * @returns a dictionary of mask plane name: plane ID
      */
-    static MaskPlaneDict parseMaskPlaneMetadata(CONST_PTR(lsst::daf::base::PropertySet) metadata);
+    static MaskPlaneDict parseMaskPlaneMetadata(std::shared_ptr<lsst::daf::base::PropertySet const> metadata);
     //
     // Operations on the mask plane dictionary
     //
@@ -464,7 +462,7 @@ public:
     /**
      * Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
      */
-    static void addMaskPlanesToMetadata(PTR(lsst::daf::base::PropertySet));
+    static void addMaskPlanesToMetadata(std::shared_ptr<lsst::daf::base::PropertySet>);
     //
     // This one isn't static, it fixes up a given Mask's planes
     /**
@@ -484,9 +482,9 @@ public:
 
 private:
     //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)
-    PTR(detail::MaskDict) _maskDict;    // our bitplane dictionary
+    std::shared_ptr<detail::MaskDict> _maskDict;    // our bitplane dictionary
 
-    static PTR(detail::MaskDict) _maskPlaneDict();
+    static std::shared_ptr<detail::MaskDict> _maskPlaneDict();
     static int _setMaskPlaneDict(MaskPlaneDict const& mpd);
     static const std::string maskPlanePrefix;
 

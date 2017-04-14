@@ -57,7 +57,7 @@ public:
 
    virtual ~SeparableXYTransform() {}
 
-   virtual PTR(XYTransform) clone() const;
+   virtual std::shared_ptr<XYTransform> clone() const;
 
    /**
     * @param point The Point2D location in sensor coordinates in
@@ -84,8 +84,8 @@ public:
 
 private:
 
-   PTR(Functor) _xfunctor;
-   PTR(Functor) _yfunctor;
+   std::shared_ptr<Functor> _xfunctor;
+   std::shared_ptr<Functor> _yfunctor;
 
 };
 

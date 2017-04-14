@@ -746,7 +746,7 @@ int Schema::contains(SchemaItem<T> const & item, int flags) const {
     return _impl->contains(item, flags);
 }
 
-void Schema::setAliasMap(PTR(AliasMap) aliases) {
+void Schema::setAliasMap(std::shared_ptr<AliasMap> aliases) {
     if (!aliases) {
         aliases = std::make_shared<AliasMap>();
     }
@@ -796,7 +796,7 @@ std::string SubSchema::join(std::string const & a, std::string const & b) const 
     return afw::table::join(a, b, getDelimiter());
 }
 
-SubSchema::SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & name) :
+SubSchema::SubSchema(std::shared_ptr<Impl> impl, std::shared_ptr<AliasMap> aliases, std::string const & name) :
     _impl(impl), _aliases(aliases), _name(name)
 {}
 

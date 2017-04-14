@@ -232,25 +232,25 @@ public:
         return _style;
     }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
-    PTR(StatisticsControl) getStatisticsControl() { return _sctrl; }
-    CONST_PTR(StatisticsControl) getStatisticsControl() const { return _sctrl; }
+    std::shared_ptr<StatisticsControl> getStatisticsControl() { return _sctrl; }
+    std::shared_ptr<StatisticsControl const> getStatisticsControl() const { return _sctrl; }
 
     Property getStatisticsProperty() const { return _prop; }
     void setStatisticsProperty(Property prop) { _prop = prop; }
     void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
 
-    void setApproximateControl(PTR(ApproximateControl) actrl) { _actrl = actrl; }
-    PTR(ApproximateControl) getApproximateControl() { return _actrl; }
-    CONST_PTR(ApproximateControl) getApproximateControl() const { return _actrl; }
+    void setApproximateControl(std::shared_ptr<ApproximateControl> actrl) { _actrl = actrl; }
+    std::shared_ptr<ApproximateControl> getApproximateControl() { return _actrl; }
+    std::shared_ptr<ApproximateControl const> getApproximateControl() const { return _actrl; }
 
 private:
     Interpolate::Style _style;          // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
-    PTR(StatisticsControl) _sctrl;           // statistics control object
+    std::shared_ptr<StatisticsControl> _sctrl;           // statistics control object
     Property _prop;                          // statistics Property
-    PTR(ApproximateControl) _actrl;          // approximate control object
+    std::shared_ptr<ApproximateControl> _actrl;          // approximate control object
 };
 
 /**
@@ -302,7 +302,7 @@ public:
      * @returns A boost shared-pointer to an image containing the estimated background
      */
     template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage(
+    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage(
         Interpolate::Style const interpStyle,
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION
                                                  ) const {
@@ -316,7 +316,7 @@ public:
      * @returns A boost shared-pointer to an image containing the estimated background
      */
     template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage(
+    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage(
         std::string const &interpStyle,
         std::string const &undersampleStyle="THROW_EXCEPTION"
                                                  ) const {
@@ -329,7 +329,7 @@ public:
      * @param undersampleStyle Behaviour if there are too few points
      */
     template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage(
+    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage(
         lsst::afw::geom::Box2I const& bbox,
         Interpolate::Style const interpStyle,
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION
@@ -342,7 +342,7 @@ public:
      * @param undersampleStyle Behaviour if there are too few points
      */
     template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage(
+    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage(
         lsst::afw::geom::Box2I const& bbox,
         std::string const& interpStyle,
         std::string const& undersampleStyle="THROW_EXCEPTION"
@@ -356,7 +356,7 @@ public:
      * @deprecated New code should specify the interpolation style in getImage, not the ctor
      */
     template<typename PixelT>
-    PTR(lsst::afw::image::Image<PixelT>) getImage() const {
+    std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage() const {
         return getImage<PixelT>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle());
     }
     /**
@@ -379,7 +379,7 @@ public:
      * @param actrl Approximation style
      * @param undersampleStyle Behaviour if there are too few points
      */
-    PTR(math::Approximate<InternalPixelT>) getApproximate(
+    std::shared_ptr<math::Approximate<InternalPixelT>> getApproximate(
         ApproximateControl const& actrl,
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION
                                                  ) const {
@@ -391,12 +391,12 @@ public:
      */
     geom::Box2I getImageBBox() const { return _imgBBox; }
 
-    PTR(BackgroundControl) getBackgroundControl() { return _bctrl; }
-    CONST_PTR(BackgroundControl) getBackgroundControl() const { return _bctrl; }
+    std::shared_ptr<BackgroundControl> getBackgroundControl() { return _bctrl; }
+    std::shared_ptr<BackgroundControl const> getBackgroundControl() const { return _bctrl; }
 
 protected:
     geom::Box2I _imgBBox;                             ///< size and origin of input image
-    PTR(BackgroundControl) _bctrl;                    ///< control info set by user.
+    std::shared_ptr<BackgroundControl> _bctrl;                    ///< control info set by user.
     mutable Interpolate::Style _asUsedInterpStyle;    ///< the style we actually used
     mutable UndersampleStyle _asUsedUndersampleStyle; ///< the undersampleStyle we actually used
 
@@ -419,7 +419,7 @@ protected:
 #define LSST_makeBackground_getImage_types            (Background::InternalPixelT)
 #define LSST_makeBackground_getApproximate_types      (Background::InternalPixelT)
 #define LSST_makeBackground_getImage(m, v, T)                \
-    virtual PTR(lsst::afw::image::Image<T>) _getImage( \
+    virtual std::shared_ptr<lsst::afw::image::Image<T>> _getImage( \
         lsst::afw::geom::Box2I const& bbox, \
         Interpolate::Style const interpStyle,                     /* Style of the interpolation */ \
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION,  /* Behaviour if there are too few points */\
@@ -427,7 +427,7 @@ protected:
                                                      ) const v;
 
 #define LSST_makeBackground_getApproximate(m, v, T)           \
-    virtual PTR(Approximate<T>) _getApproximate( \
+    virtual std::shared_ptr<Approximate<T>> _getApproximate( \
         ApproximateControl const& actrl,                          /* Approximation style */ \
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION,  /* Behaviour if there are too few points */\
         T = 0                                                     /* disambiguate */ \
@@ -457,7 +457,7 @@ private:
  *
  *     math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
  *     bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
- *     PTR(math::Background) backobj = math::makeBackground(img, bctrl);
+ *     std::shared_ptr<math::Background> backobj = math::makeBackground(img, bctrl);
  *     // get a whole background image
  *     Image<PixelT> back = backobj->getImage<PixelT>(math::Interpolate::NATURAL_SPLINE);
  *
@@ -572,12 +572,12 @@ private:
      * Worker routine for getImage
      */
     template<typename PixelT>
-    PTR(image::Image<PixelT>) doGetImage(geom::Box2I const& bbox,
+    std::shared_ptr<image::Image<PixelT>> doGetImage(geom::Box2I const& bbox,
                                          Interpolate::Style const interpStyle_,
                                          UndersampleStyle const undersampleStyle) const;
     // and for _getApproximate
     template<typename PixelT>
-    PTR(Approximate<PixelT>) doGetApproximate(ApproximateControl const& actrl,
+    std::shared_ptr<Approximate<PixelT>> doGetApproximate(ApproximateControl const& actrl,
                                               UndersampleStyle const undersampleStyle) const;
 };
 /**
@@ -586,8 +586,8 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-PTR(Background) makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
-    return PTR(Background)(new BackgroundMI(img, bgCtrl));
+std::shared_ptr<Background> makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
+    return std::shared_ptr<Background>(new BackgroundMI(img, bgCtrl));
 }
 
 }}} // lsst::afw::math

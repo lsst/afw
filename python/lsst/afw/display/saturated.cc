@@ -68,10 +68,10 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
     sat.merge(detection::FootprintSet(*bim.getMask(), satThresh, npixMin));
     // go through the list of saturated regions, determining the mean colour of the surrounding pixels
     typedef detection::FootprintSet::FootprintList FootprintList;
-    PTR(FootprintList) feet = sat.getFootprints();
+    std::shared_ptr<FootprintList> feet = sat.getFootprints();
     for (FootprintList::const_iterator ptr = feet->begin(), end = feet->end(); ptr != end; ++ptr) {
-        PTR(detection::Footprint) const foot = *ptr;
-        PTR(detection::Footprint) const bigFoot =
+        std::shared_ptr<detection::Footprint> const foot = *ptr;
+        auto const bigFoot =
             std::make_shared<detection::Footprint>(foot->getSpans()->dilated(borderWidth), foot->getRegion());
 
         double sumR = 0, sumG = 0, sumB = 0; // sum of all non-saturated adjoining pixels

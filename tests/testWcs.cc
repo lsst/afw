@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(comparison) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     image::Wcs plainWcs(crval, crpix, CD);
     image::TanWcs sipWcs(crval, crpix, CD);
 
-    PTR(image::Wcs) plainWcsCopy = plainWcs.clone();
-    PTR(image::Wcs) sipWcsCopy = sipWcs.clone();
+    std::shared_ptr<image::Wcs> plainWcsCopy = plainWcs.clone();
+    std::shared_ptr<image::Wcs> sipWcsCopy = sipWcs.clone();
 
     BOOST_CHECK(!sipWcs.hasDistortion());
     BOOST_CHECK(!sipWcsCopy->hasDistortion());
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(comparison) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     BOOST_CHECK(*sipWcsCopy == sipWcs);
 
     image::TanWcs distortedWcs(crval, crpix, CD, CD, CD, CD, CD);
-    PTR(image::Wcs) distortedWcsCopy = distortedWcs.clone();
+    std::shared_ptr<image::Wcs> distortedWcsCopy = distortedWcs.clone();
 
     BOOST_CHECK(distortedWcs.hasDistortion());
     BOOST_CHECK(distortedWcsCopy->hasDistortion());

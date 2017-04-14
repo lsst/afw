@@ -185,11 +185,11 @@ public:
     typedef SortedCatalogT<SourceRecord> Catalog;
     typedef SortedCatalogT<SourceRecord const> ConstCatalog;
 
-    PTR(Footprint) getFootprint() const { return _footprint; }
+    std::shared_ptr<Footprint> getFootprint() const { return _footprint; }
 
-    void setFootprint(PTR(Footprint) const & footprint) { _footprint = footprint; }
+    void setFootprint(std::shared_ptr<Footprint> const & footprint) { _footprint = footprint; }
 
-    CONST_PTR(SourceTable) getTable() const {
+    std::shared_ptr<SourceTable const> getTable() const {
         return std::static_pointer_cast<SourceTable const>(BaseRecord::getTable());
     }
 
@@ -230,7 +230,7 @@ public:
 
 protected:
 
-    explicit SourceRecord(PTR(SourceTable) const & table);
+    explicit SourceRecord(std::shared_ptr<SourceTable> const & table);
 
     virtual void _assign(BaseRecord const & other);
 
@@ -238,7 +238,7 @@ private:
 
     friend class SourceTable;
 
-    PTR(Footprint) _footprint;
+    std::shared_ptr<Footprint> _footprint;
 };
 
 /**
@@ -264,7 +264,7 @@ public:
      *  Note that not passing an IdFactory at all will call the other override of make(), which will
      *  set the ID factory to IdFactory::makeSimple().
      */
-    static PTR(SourceTable) make(Schema const & schema, PTR(IdFactory) const & idFactory);
+    static std::shared_ptr<SourceTable> make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
 
     /**
      *  Construct a new table.
@@ -273,7 +273,7 @@ public:
      *
      *  This overload sets the ID factory to IdFactory::makeSimple().
      */
-    static PTR(SourceTable) make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
+    static std::shared_ptr<SourceTable> make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
 
     /**
      *  Return a minimal schema for Source tables and records.
@@ -305,18 +305,18 @@ public:
     static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
 
     /// @copydoc BaseTable::clone
-    PTR(SourceTable) clone() const { return std::static_pointer_cast<SourceTable>(_clone()); }
+    std::shared_ptr<SourceTable> clone() const { return std::static_pointer_cast<SourceTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(SourceRecord) makeRecord() { return std::static_pointer_cast<SourceRecord>(_makeRecord()); }
+    std::shared_ptr<SourceRecord> makeRecord() { return std::static_pointer_cast<SourceRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(SourceRecord) copyRecord(BaseRecord const & other) {
+    std::shared_ptr<SourceRecord> copyRecord(BaseRecord const & other) {
         return std::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(SourceRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<SourceRecord> copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
         return std::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other, mapper));
     }
 
@@ -330,7 +330,7 @@ public:
 
 protected:
 
-    SourceTable(Schema const & schema, PTR(IdFactory) const & idFactory);
+    SourceTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
 
     SourceTable(SourceTable const & other);
 
@@ -397,7 +397,7 @@ public:
 
     /// @copydoc BaseColumnView::make
     template <typename InputIterator>
-    static SourceColumnViewT make(PTR(Table) const & table, InputIterator first, InputIterator last) {
+    static SourceColumnViewT make(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last) {
         return SourceColumnViewT(BaseColumnView::make(table, first, last));
     }
 

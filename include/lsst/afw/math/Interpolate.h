@@ -47,7 +47,7 @@ public:
         NUM_STYLES
     };
 
-    friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+    friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
 
     virtual ~Interpolate() {}
@@ -88,9 +88,9 @@ private:
  * @param y the values at x[]
  * @param style desired interpolator
  */
-PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
+std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
-PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
+std::shared_ptr<Interpolate> makeInterpolate(ndarray::Array<double const, 1> const &x,
                                  ndarray::Array<double const, 1> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
 /**

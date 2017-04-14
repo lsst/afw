@@ -64,13 +64,13 @@ public:
  */
 template <typename Record1, typename Record2>
 struct Match {
-    PTR(Record1) first;
-    PTR(Record2) second;
+    std::shared_ptr<Record1> first;
+    std::shared_ptr<Record2> second;
     double distance; // may be pixels or radians
 
     Match() : first(), second(), distance(0.0) {}
 
-    Match(PTR(Record1) const & r1, PTR(Record2) const & r2, double dist)
+    Match(std::shared_ptr<Record1> const & r1, std::shared_ptr<Record2> const & r2, double dist)
         : first(r1), second(r2), distance(dist) {}
 
     template <typename R1, typename R2>

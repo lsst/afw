@@ -67,9 +67,6 @@ namespace image {
  */
 class TanWcs : public afw::table::io::PersistableFacade<TanWcs>, public lsst::afw::image::Wcs {
 public:
-    typedef std::shared_ptr<lsst::afw::image::TanWcs> Ptr;
-    typedef std::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;
-
     /// Decode the SIP headers for a given matrix, if present.
     static void decodeSipHeader(
         daf::base::PropertySet const & fitsMetadata,
@@ -124,7 +121,7 @@ public:
     virtual ~TanWcs() {};
 
     /// Polymorphic deep-copy.
-    PTR(Wcs) clone() const override;
+    std::shared_ptr<Wcs> clone() const override;
 
     /// Returns the pixel scale, in Angle/pixel.
     geom::Angle pixelScale() const;
@@ -143,7 +140,7 @@ public:
 
     void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const override;
 
-    PTR(daf::base::PropertyList) getFitsMetadata() const override;
+    std::shared_ptr<daf::base::PropertyList> getFitsMetadata() const override;
 
 
     /**
@@ -189,7 +186,7 @@ protected:
 
 private:
 
-    friend PTR(Wcs) makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
+    friend std::shared_ptr<Wcs> makeWcs(std::shared_ptr<daf::base::PropertySet> const& metadata, bool);
 
     friend class TanWcsFactory;
 
@@ -208,9 +205,9 @@ private:
      *  Don't call this directly. Use makeWcs() instead, which will figure out which (if any)
      *  sub-class of Wcs is appropriate.
      */
-    TanWcs(CONST_PTR(daf::base::PropertySet) const & fitsMetadata);
+    TanWcs(std::shared_ptr<daf::base::PropertySet const> const & fitsMetadata);
 
-    TanWcs(afw::table::BaseRecord const & mainRecord, CONST_PTR(afw::table::BaseRecord) sipRecord);
+    TanWcs(afw::table::BaseRecord const & mainRecord, std::shared_ptr<afw::table::BaseRecord const> sipRecord);
 
     TanWcs & operator = (const TanWcs &);
 

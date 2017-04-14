@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
             double minorSigma = (ii == 2) ? MinSigma : MaxSigma;
             double angle = 0.0;
             afwMath::GaussianFunction2<afwMath::Kernel::Pixel> gaussFunc(majorSigma, minorSigma, angle);
-            PTR(afwMath::Kernel) basisKernelPtr(
+            std::shared_ptr<afwMath::Kernel> basisKernelPtr(
                 new afwMath::AnalyticKernel(KernelCols, KernelRows, gaussFunc)
             );
             kernelList.push_back(basisKernelPtr);

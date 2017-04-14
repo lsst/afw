@@ -128,7 +128,7 @@ namespace {
 int const Filter::AUTO = -1;
 int const Filter::UNKNOWN = -1;
 
-Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata,
+Filter::Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata,
                bool const force
               )
 {
@@ -141,7 +141,7 @@ Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata,
 }
 
 namespace detail {
-int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata
+int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata
                       )
 {
     int nstripped = 0;

@@ -58,7 +58,7 @@ namespace formatters {
  * unique property with the given name that has type `bool` and a value of `true`.
  */
 bool extractOptionalFlag(
-    CONST_PTR(lsst::daf::base::PropertySet) const& properties,
+    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties,
     std::string const & name
 );
 
@@ -70,7 +70,7 @@ bool extractOptionalFlag(
  *        to does not contain a unique property named `"itemName"`.
  */
 std::string const getItemName(
-    CONST_PTR(lsst::daf::base::PropertySet) const& properties
+    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
 );
 
 /**
@@ -89,8 +89,8 @@ std::string const getItemName(
  * @returns table name
  */
 std::string const getTableName(
-    CONST_PTR(lsst::pex::policy::Policy) const& policy,
-    CONST_PTR(lsst::daf::base::PropertySet) const& properties
+    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
 );
 
 /**
@@ -116,8 +116,8 @@ std::string const getTableName(
  * @see getTableName()
  */
 std::vector<std::string> getAllSliceTableNames(
-    CONST_PTR(lsst::pex::policy::Policy) const& policy,
-    CONST_PTR(lsst::daf::base::PropertySet) const& properties
+    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
 );
 
 /**
@@ -131,27 +131,27 @@ std::vector<std::string> getAllSliceTableNames(
  */
 void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) const& policy,
-    CONST_PTR(lsst::daf::base::PropertySet) const& properties
+    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
 );
 
 /** Drops the database table(s) identified by getAllSliceTables(). */
 void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
-    CONST_PTR(lsst::pex::policy::Policy) const & policy,
-    CONST_PTR(lsst::daf::base::PropertySet) const & properties
+    std::shared_ptr<lsst::pex::policy::Policy const> const & policy,
+    std::shared_ptr<lsst::daf::base::PropertySet const> const & properties
 );
 
-int extractSliceId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
-int64_t extractFpaExposureId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
-int64_t extractCcdExposureId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
-int64_t extractAmpExposureId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
-int extractVisitId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
-int extractCcdId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
-int extractAmpId(CONST_PTR(lsst::daf::base::PropertySet) const& properties);
+int extractSliceId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int64_t extractFpaExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int64_t extractCcdExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int64_t extractAmpExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int extractVisitId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int extractCcdId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
+int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
-std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& prop);
-int countFitsHeaderCards(CONST_PTR(lsst::daf::base::PropertySet) const& prop);
+std::string formatFitsProperties(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop);
+int countFitsHeaderCards(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop);
 
 }}} // namespace lsst::afw::formatters
 

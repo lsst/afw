@@ -246,16 +246,16 @@ PYBIND11_PLUGIN(_coord) {
     clsTopocentricCoord.def("toTopocentric", (TopocentricCoord (TopocentricCoord::*)() const) &TopocentricCoord::toTopocentric);
     
     /* Non members */
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, std::string const, std::string const)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit, double const)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, lsst::afw::geom::Point3D const &, double const, bool, lsst::afw::geom::Angle const)) makeCoord,
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, std::string const, std::string const)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit, double const)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, lsst::afw::geom::Point3D const &, double const, bool, lsst::afw::geom::Angle const)) makeCoord,
         py::arg("system"), py::arg("p3d"), py::arg("epoch"), py::arg("normalize") = true, py::arg("defaultLongitude") = lsst::afw::geom::Angle(0.));
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, lsst::afw::geom::Angle const, lsst::afw::geom::Angle const)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, std::string const, std::string const)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit)) makeCoord);
-    mod.def("makeCoord", (PTR(Coord) (*)(CoordSystem const, lsst::afw::geom::Point3D const &, bool, lsst::afw::geom::Angle const)) makeCoord,
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, lsst::afw::geom::Angle const, lsst::afw::geom::Angle const)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, std::string const, std::string const)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit)) makeCoord);
+    mod.def("makeCoord", (std::shared_ptr<Coord> (*)(CoordSystem const, lsst::afw::geom::Point3D const &, bool, lsst::afw::geom::Angle const)) makeCoord,
         py::arg("system"), py::arg("p3d"), py::arg("normalize") = true, py::arg("defaultLongitude") = lsst::afw::geom::Angle(0.));
     mod.def("averageCoord", averageCoord,
         py::arg("coords"), py::arg("system") = CoordSystem::UNKNOWN);

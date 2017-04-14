@@ -103,7 +103,7 @@ inline void fits_read_array(
 template <typename ImageT>
 inline void fits_write_image(
     fits::Fits & fitsfile, const ImageT & image,
-    CONST_PTR(daf::base::PropertySet) metadata=CONST_PTR(daf::base::PropertySet)()
+    std::shared_ptr<daf::base::PropertySet const> metadata=std::shared_ptr<daf::base::PropertySet const>()
 ) {
     fitsfile.createImage<typename ImageT::Pixel>(image.getArray().getShape());
     if (metadata) {

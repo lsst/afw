@@ -217,7 +217,7 @@ void mathDetail::basicConvolve(
     } else {
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
-        PTR(afwMath::Kernel) refKernelPtr; // possibly refactored version of kernel
+        std::shared_ptr<afwMath::Kernel> refKernelPtr; // possibly refactored version of kernel
         if (static_cast<int>(kernel.getNKernelParameters()) > kernel.getNSpatialParameters()) {
             // refactoring will speed convolution, so try it
             refKernelPtr = kernel.refactor();

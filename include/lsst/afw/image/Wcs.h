@@ -108,15 +108,12 @@ class Wcs : public lsst::daf::base::Persistable,
             public afw::table::io::Persistable
 {
 public:
-    typedef std::shared_ptr<Wcs> Ptr;
-    typedef std::shared_ptr<Wcs const> ConstPtr;
-
     /**
      *  Create a Wcs of the correct class using a FITS header.
      *
      *  Set stripMetadata=true to remove processed keywords from the PropertySet.
      */
-    friend PTR(Wcs) makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
+    friend std::shared_ptr<Wcs> makeWcs(std::shared_ptr<lsst::daf::base::PropertySet> const& fitsMetadata,
                             bool stripMetadata);
 
     /** Create a Wcs object with some known information.
@@ -142,13 +139,13 @@ public:
        );
 
     virtual ~Wcs();
-    virtual Ptr clone(void) const;
+    virtual std::shared_ptr<Wcs> clone(void) const;
 
     bool operator==(Wcs const & other) const;
     bool operator!=(Wcs const & other) const { return !(*this == other); }
 
     /// Returns CRVAL. This need not be the centre of the image.
-    PTR(lsst::afw::coord::Coord) getSkyOrigin() const;
+    std::shared_ptr<lsst::afw::coord::Coord> getSkyOrigin() const;
 
     /// Returns CRPIX (corrected to LSST convention).
     lsst::afw::geom::Point2D getPixelOrigin() const;
@@ -163,7 +160,7 @@ public:
     virtual void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const;
 
     /// Return a PropertyList containing FITS header keywords that can be used to save the Wcs.x
-    virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
+    virtual std::shared_ptr<lsst::daf::base::PropertyList> getFitsMetadata() const;
 
     /**
      *  Does the Wcs follow the convention of North=Up, East=Left?
@@ -191,7 +188,7 @@ public:
      *  system depends on the values of CTYPE used to construct the object. For RA/dec, the CTYPES should
      *  be RA---TAN and DEC--TAN.
      */
-    PTR(coord::Coord) pixelToSky(double pix1, double pix2) const;
+    std::shared_ptr<coord::Coord> pixelToSky(double pix1, double pix2) const;
 
     /**
      *  Convert from pixel position to sky coordinates (e.g. RA/dec)
@@ -200,13 +197,13 @@ public:
      *  system depends on the values of CTYPE used to construct the object. For RA/dec, the CTYPES should
      *  be RA---TAN and DEC--TAN.
      */
-    PTR(coord::Coord) pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
+    std::shared_ptr<coord::Coord> pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
 
     /**
      *  Convert from pixel position to sky coordinates (e.g. RA/dec)
      *
      *  @note This routine is designed for the knowledgeable user in need of performance;
-     *  it's safer to call the version that returns a PTR(Coord).
+     *  it's safer to call the version that returns a std::shared_ptr<Coord>.
      */
     void pixelToSky(
         double pixel1, double pixel2, geom::Angle& sky1, geom::Angle& sky2
@@ -404,7 +401,7 @@ protected:
      *
      * Don't call this directly. Use makeWcs() instead, which will figure out which (if any) sub-class of Wcs is appropriate.
      */
-    Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
+    Wcs(std::shared_ptr<lsst::daf::base::PropertySet const> const& fitsMetadata);
 
     // Construct from a record; used by WcsFactory for afw::table::io persistence.
     explicit Wcs(afw::table::BaseRecord const & record);
@@ -428,13 +425,13 @@ protected:
     /**
      * Given a sky position, use the values stored in ctype and radesys to return the correct sub-class of Coord.
      */
-    PTR(afw::coord::Coord) makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
+    std::shared_ptr<afw::coord::Coord> makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
 
     /**
      *  Given a Coord (as a shared pointer), return the sky position in the correct
      *  coordinate system for this Wcs.
      */
-    PTR(afw::coord::Coord) convertCoordToSky(coord::Coord const & coord) const;
+    std::shared_ptr<afw::coord::Coord> convertCoordToSky(coord::Coord const & coord) const;
 
     /**
      * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate and the corresponding sky coordinate.
@@ -456,7 +453,7 @@ protected:
 
 
     ///Parse a fits header, extract the relevant metadata and create a Wcs object
-    void initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
+    void initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const> const& fitsMetadata);
     /**
      * Set some internal variables that we need to refer to
      */
@@ -474,7 +471,7 @@ protected:
 };
 
 namespace detail {
-    PTR(lsst::daf::base::PropertyList)
+    std::shared_ptr<lsst::daf::base::PropertyList>
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
 
     geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
@@ -489,7 +486,7 @@ namespace detail {
  * @param fitsMetadata input metadata
  * @param stripMetadata Remove FITS keywords from metadata?
  */
-PTR(Wcs) makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool stripMetadata=false);
+std::shared_ptr<Wcs> makeWcs(std::shared_ptr<lsst::daf::base::PropertySet> const& fitsMetadata, bool stripMetadata=false);
 
 /**
  * Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
@@ -503,12 +500,12 @@ PTR(Wcs) makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
  *
  * @note CD matrix elements must be in degrees/pixel.
  */
-PTR(Wcs) makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
+std::shared_ptr<Wcs> makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
 
 namespace detail {
-    int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
-                         CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords
+    int stripWcsKeywords(std::shared_ptr<lsst::daf::base::PropertySet> const& metadata, ///< Metadata to be stripped
+                         std::shared_ptr<Wcs const> const& wcs ///< A Wcs with (implied) keywords
                         );
 }
 
@@ -523,19 +520,19 @@ namespace detail {
 class XYTransformFromWcsPair : public afw::geom::XYTransform
 {
 public:
-    XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src);
+    XYTransformFromWcsPair(std::shared_ptr<Wcs const> dst, std::shared_ptr<Wcs const> src);
     virtual ~XYTransformFromWcsPair() { }
 
-    virtual PTR(afw::geom::XYTransform) invert() const;
+    virtual std::shared_ptr<afw::geom::XYTransform> invert() const;
 
     /// The following methods are needed to devirtualize the XYTransform parent class
-    virtual PTR(afw::geom::XYTransform) clone() const;
+    virtual std::shared_ptr<afw::geom::XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &pixel) const;
     virtual Point2D reverseTransform(Point2D const &pixel) const;
 
 protected:
-    CONST_PTR(Wcs) _dst;
-    CONST_PTR(Wcs) _src;
+    std::shared_ptr<Wcs const> _dst;
+    std::shared_ptr<Wcs const> _src;
     bool const _isSameSkySystem;
 };
 

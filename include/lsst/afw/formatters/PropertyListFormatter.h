@@ -42,23 +42,23 @@ public:
 
     virtual void write(
         daf::base::Persistable const* persistable,
-        daf::persistence::Storage::Ptr storage,
-        daf::base::PropertySet::Ptr additionalData
+        std::shared_ptr<daf::persistence::Storage> storage,
+        std::shared_ptr<daf::base::PropertySet> additionalData
     );
 
     virtual daf::base::Persistable* read(
-        daf::persistence::Storage::Ptr storage,
-        daf::base::PropertySet::Ptr additionalData
+        std::shared_ptr<daf::persistence::Storage> storage,
+        std::shared_ptr<daf::base::PropertySet> additionalData
     );
 
     virtual void update(
         daf::base::Persistable* persistable,
-        daf::persistence::Storage::Ptr storage,
-        daf::base::PropertySet::Ptr additionalData
+        std::shared_ptr<daf::persistence::Storage> storage,
+        std::shared_ptr<daf::base::PropertySet> additionalData
     );
 
-    static daf::persistence::Formatter::Ptr createInstance(
-        pex::policy::Policy::Ptr policy
+    static std::shared_ptr<daf::persistence::Formatter> createInstance(
+        std::shared_ptr<pex::policy::Policy> policy
     );
 
     template <class Archive>
@@ -69,7 +69,7 @@ public:
     );
 
 private:
-    explicit PropertyListFormatter(PTR(pex::policy::Policy) policy);
+    explicit PropertyListFormatter(std::shared_ptr<pex::policy::Policy> policy);
 
     static daf::persistence::FormatterRegistration registration;
 };

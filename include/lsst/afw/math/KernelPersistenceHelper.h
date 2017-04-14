@@ -43,7 +43,7 @@ struct Kernel::PersistenceHelper {
     explicit PersistenceHelper(int nSpatialFunctions);
     explicit PersistenceHelper(afw::table::Schema const & schema_);
 
-    PTR(afw::table::BaseRecord) write(
+    std::shared_ptr<afw::table::BaseRecord> write(
         afw::table::io::OutputArchiveHandle & handle,
         Kernel const & kernel
     ) const;

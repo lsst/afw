@@ -132,7 +132,7 @@ public:
      *  @param[in]  z        Array of field values to be fit at each (x,y) point.
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
-    static PTR(ChebyshevBoundedField) fit(
+    static std::shared_ptr<ChebyshevBoundedField> fit(
         afw::geom::Box2I const & bbox,
         ndarray::Array<double const,1> const & x,
         ndarray::Array<double const,1> const & y,
@@ -152,7 +152,7 @@ public:
      *                       noise, w = 1/sigma.
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
-    static PTR(ChebyshevBoundedField) fit(
+    static std::shared_ptr<ChebyshevBoundedField> fit(
         afw::geom::Box2I const & bbox,
         ndarray::Array<double const,1> const & x,
         ndarray::Array<double const,1> const & y,
@@ -175,7 +175,7 @@ public:
      *        fitting.
      */
     template <typename T>
-    static PTR(ChebyshevBoundedField) fit(
+    static std::shared_ptr<ChebyshevBoundedField> fit(
         image::Image<T> const & image,
         Control const & ctrl
     );
@@ -188,7 +188,7 @@ public:
     ndarray::Array<double const,2,2> getCoefficients() const { return _coefficients; }
 
     /// Return a new ChebyshevBoudedField with maximum orders set by the given control object.
-    PTR(ChebyshevBoundedField) truncate(Control const & ctrl) const;
+    std::shared_ptr<ChebyshevBoundedField> truncate(Control const & ctrl) const;
 
     /**
      *  Return a new ChebyshevBoundedField with domain set to the given bounding box.
@@ -196,7 +196,7 @@ public:
      *  Because this leaves the coefficients unchanged, it is equivalent to transforming the function
      *  by the affine transform that maps the old box to the new one.
      */
-    PTR(ChebyshevBoundedField) relocate(geom::Box2I const & bbox) const;
+    std::shared_ptr<ChebyshevBoundedField> relocate(geom::Box2I const & bbox) const;
 
     /// @copydoc BoundedField::evaluate
     virtual double evaluate(geom::Point2D const & position) const;
@@ -213,7 +213,7 @@ public:
     virtual bool isPersistable() const { return true; }
 
     /// @copydoc BoundedField::operator*
-    virtual PTR(BoundedField) operator*(double const scale) const;
+    virtual std::shared_ptr<BoundedField> operator*(double const scale) const;
 
 protected:
 

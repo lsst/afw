@@ -29,17 +29,17 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-InvertedXYTransform::InvertedXYTransform(CONST_PTR(XYTransform) base)
+InvertedXYTransform::InvertedXYTransform(std::shared_ptr<XYTransform const> base)
     : XYTransform(), _base(base)
 { }
 
-PTR(XYTransform) InvertedXYTransform::clone() const
+std::shared_ptr<XYTransform> InvertedXYTransform::clone() const
 {
     // deep copy
     return std::make_shared<InvertedXYTransform> (_base->clone());
 }
 
-PTR(XYTransform) InvertedXYTransform::invert() const
+std::shared_ptr<XYTransform> InvertedXYTransform::invert() const
 {
     return _base->clone();
 }

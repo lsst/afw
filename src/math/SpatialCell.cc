@@ -41,10 +41,10 @@ namespace afw {
 namespace math {
 
 namespace {
-    struct CandidatePtrMore : public std::binary_function<SpatialCellCandidate::Ptr,
-                                                          SpatialCellCandidate::Ptr,
+    struct CandidatePtrMore : public std::binary_function<std::shared_ptr<SpatialCellCandidate>,
+                                                          std::shared_ptr<SpatialCellCandidate>,
                                                           bool> {
-        bool operator()(SpatialCellCandidate::Ptr a, SpatialCellCandidate::Ptr b) {
+        bool operator()(std::shared_ptr<SpatialCellCandidate> a, std::shared_ptr<SpatialCellCandidate> b) {
             return a->getCandidateRating() > b->getCandidateRating();
         }
     };
@@ -90,13 +90,13 @@ void SpatialCell::sortCandidates()
     sort(_candidateList.begin(), _candidateList.end(), CandidatePtrMore());
 }
 
-void SpatialCell::insertCandidate(SpatialCellCandidate::Ptr candidate) {
+void SpatialCell::insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate) {
     CandidateList::iterator pos = std::lower_bound(_candidateList.begin(), _candidateList.end(),
                                                    candidate, CandidatePtrMore());
     _candidateList.insert(pos, candidate);
 }
 
-void SpatialCell::removeCandidate(SpatialCellCandidate::Ptr candidate)
+void SpatialCell::removeCandidate(std::shared_ptr<SpatialCellCandidate> candidate)
 {
     CandidateList::iterator pos = std::find(_candidateList.begin(), _candidateList.end(), candidate);
     if (pos == _candidateList.end()) {
@@ -129,7 +129,7 @@ size_t SpatialCell::size() const {
     return mthis->end() - mthis->begin();
 }
 
-SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id,
+std::shared_ptr<SpatialCellCandidate> SpatialCell::getCandidateById(int id,
                                                         bool noThrow
                                                        ) {
     for (SpatialCellCandidateIterator ptr = begin(), end = this->end(); ptr != end; ++ptr) {
@@ -139,7 +139,7 @@ SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id,
     }
 
     if (noThrow) {
-        return SpatialCellCandidate::Ptr();
+        return std::shared_ptr<SpatialCellCandidate>();
     } else {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                           (boost::format("Unable to find object with ID == %d") % id).str());
@@ -316,7 +316,7 @@ size_t SpatialCellCandidateIterator::operator-(SpatialCellCandidateIterator cons
     return n;
 }
 
-SpatialCellCandidate::ConstPtr SpatialCellCandidateIterator::operator*() const {
+std::shared_ptr<SpatialCellCandidate const> SpatialCellCandidateIterator::operator*() const {
     if (_iterator == _end) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError, "Iterator points to end");
     }
@@ -324,7 +324,7 @@ SpatialCellCandidate::ConstPtr SpatialCellCandidateIterator::operator*() const {
     return *_iterator;
 }
 
-SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
+std::shared_ptr<SpatialCellCandidate> SpatialCellCandidateIterator::operator*() {
     if (_iterator == _end) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError, "Iterator points to end");
     }
@@ -371,7 +371,7 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const& region,
             geom::Box2I bbox(geom::Point2I(x0, y0), geom::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
-            _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));
+            _cellList.push_back(std::shared_ptr<SpatialCell>(new SpatialCell(label, bbox)));
 
             x0 = x1 + 1;
         }
@@ -381,20 +381,20 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const& region,
 
 
 namespace {
-    struct CellContains : public std::unary_function<SpatialCell::Ptr,
+    struct CellContains : public std::unary_function<std::shared_ptr<SpatialCell>,
                                                      bool> {
-        CellContains(SpatialCellCandidate::Ptr candidate) : _candidate(candidate) {}
+        CellContains(std::shared_ptr<SpatialCellCandidate> candidate) : _candidate(candidate) {}
 
-        bool operator()(SpatialCell::Ptr cell) {
+        bool operator()(std::shared_ptr<SpatialCell> cell) {
             return cell->getBBox().contains(geom::Point2I(image::positionToIndex(_candidate->getXCenter()),
                                                           image::positionToIndex(_candidate->getYCenter())));
         }
     private:
-        SpatialCellCandidate::Ptr _candidate;
+        std::shared_ptr<SpatialCellCandidate> _candidate;
     };
 }
 
-void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
+void SpatialCellSet::insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate) {
     CellList::iterator pos = std::find_if(_cellList.begin(), _cellList.end(), CellContains(candidate));
 
     if (pos == _cellList.end()) {
@@ -462,11 +462,11 @@ void SpatialCellSet::visitAllCandidates(
     }
 }
 
-SpatialCellCandidate::Ptr SpatialCellSet::getCandidateById(int id,
+std::shared_ptr<SpatialCellCandidate> SpatialCellSet::getCandidateById(int id,
                                                            bool noThrow
                                                        ) {
     for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        SpatialCellCandidate::Ptr cand = (*cell)->getCandidateById(id, true);
+        std::shared_ptr<SpatialCellCandidate> cand = (*cell)->getCandidateById(id, true);
 
         if (cand) {
             return cand;
@@ -474,7 +474,7 @@ SpatialCellCandidate::Ptr SpatialCellSet::getCandidateById(int id,
     }
 
     if (noThrow) {
-        return SpatialCellCandidate::Ptr();
+        return std::shared_ptr<SpatialCellCandidate>();
     } else {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                           (boost::format("Unable to find object with ID == %d") % id).str());

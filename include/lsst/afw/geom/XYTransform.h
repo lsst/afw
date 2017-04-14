@@ -54,12 +54,12 @@ public:
     virtual ~XYTransform() { }
 
     /// returns a deep copy
-    virtual PTR(XYTransform) clone() const = 0;
+    virtual std::shared_ptr<XYTransform> clone() const = 0;
 
     /** returns a "deep inverse" in this sense that the forward+inverse transforms do not share state
      * default implementation; subclass may override
      */
-    virtual PTR(XYTransform) invert() const;
+    virtual std::shared_ptr<XYTransform> invert() const;
 
     /**
      * virtuals for forward and reverse transforms
@@ -96,7 +96,7 @@ class IdentityXYTransform : public XYTransform
 public:
     IdentityXYTransform();
 
-    virtual PTR(XYTransform) clone() const;
+    virtual std::shared_ptr<XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
@@ -110,18 +110,18 @@ public:
 class InvertedXYTransform : public XYTransform
 {
 public:
-    InvertedXYTransform(CONST_PTR(XYTransform) base);
+    InvertedXYTransform(std::shared_ptr<XYTransform const> base);
 
-    virtual PTR(XYTransform) clone() const;
+    virtual std::shared_ptr<XYTransform> clone() const;
     /** Return the wrapped XYTransform */
-    virtual PTR(XYTransform) invert() const;
+    virtual std::shared_ptr<XYTransform> invert() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
 
 protected:
-    CONST_PTR(XYTransform) _base;
+    std::shared_ptr<XYTransform const> _base;
 };
 
 
@@ -136,9 +136,9 @@ protected:
 class MultiXYTransform : public XYTransform
 {
 public:
-    typedef std::vector<CONST_PTR(XYTransform)> TransformList;
+    typedef std::vector<std::shared_ptr<XYTransform const>> TransformList;
     MultiXYTransform(TransformList const &transformList);
-    virtual PTR(XYTransform) clone() const;
+    virtual std::shared_ptr<XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
@@ -157,7 +157,7 @@ class AffineXYTransform : public XYTransform
 public:
     AffineXYTransform(AffineTransform const &affineTransform);
 
-    virtual PTR(XYTransform) clone() const;
+    virtual std::shared_ptr<XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &position) const;
     virtual Point2D reverseTransform(Point2D const &position) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &position) const;
@@ -199,8 +199,8 @@ public:
 
     );
 
-    virtual PTR(XYTransform) clone() const;
-    virtual PTR(XYTransform) invert() const;
+    virtual std::shared_ptr<XYTransform> clone() const;
+    virtual std::shared_ptr<XYTransform> invert() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;

@@ -36,7 +36,7 @@ SeparableXYTransform(Functor const & xfunctor, Functor const & yfunctor)
    : XYTransform(), _xfunctor(xfunctor.clone()), _yfunctor(yfunctor.clone()) {
 }
 
-PTR(XYTransform) SeparableXYTransform::clone() const {
+std::shared_ptr<XYTransform> SeparableXYTransform::clone() const {
    return std::make_shared<SeparableXYTransform>(*_xfunctor, *_yfunctor);
 }
 

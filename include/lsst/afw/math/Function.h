@@ -222,8 +222,6 @@ using boost::serialization::make_nvp;
                       public Function<ReturnT>
     {
     public:
-        typedef std::shared_ptr<Function1<ReturnT> > Ptr;
-
         /**
          * Construct a Function1 given the number of function parameters.
          *
@@ -257,7 +255,7 @@ using boost::serialization::make_nvp;
          *
          * @returns a pointer to a deep copy of the function
          */
-        virtual Ptr clone() const = 0;
+        virtual std::shared_ptr<Function1<ReturnT> > clone() const = 0;
 
         virtual ReturnT operator() (double x) const = 0;
 
@@ -291,8 +289,6 @@ using boost::serialization::make_nvp;
                       public Function<ReturnT>
     {
     public:
-        typedef std::shared_ptr<Function2<ReturnT> > Ptr;
-
         /**
          * Construct a Function2 given the number of function parameters.
          *
@@ -328,7 +324,7 @@ using boost::serialization::make_nvp;
          *
          * @returns a pointer to a deep copy of the function
          */
-        virtual Ptr clone() const = 0;
+        virtual std::shared_ptr<Function2<ReturnT> > clone() const = 0;
 
         virtual ReturnT operator() (double x, double y) const = 0;
 
@@ -369,8 +365,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class BasePolynomialFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct a polynomial function of specified order.
          *
@@ -460,7 +454,7 @@ using boost::serialization::make_nvp;
             unsigned int const numParams = this->getNParameters(); // Number of parameters
             std::vector<double> deriv(numParams); // Derivatives, to return
 
-            Function2Ptr dummy = this->clone(); // Dummy function to evaluate for derivatives
+            std::shared_ptr<Function2<ReturnT>> dummy = this->clone(); // Dummy function to evaluate for derivatives
             for (unsigned int i = 0; i < numParams; ++i) {
                 dummy->setParameter(i, 0.0);
             }
@@ -497,8 +491,8 @@ using boost::serialization::make_nvp;
     class NullFunction1 : public Function1<ReturnT> {
     public:
         explicit NullFunction1() : Function1<ReturnT>(0) {}
-        typename Function1<ReturnT>::Ptr clone() const {
-            return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
+        std::shared_ptr<Function1<ReturnT>> clone() const {
+            return std::shared_ptr<Function1<ReturnT>>(new NullFunction1()); }
 
     private:
         ReturnT operator() (double) const { return static_cast<ReturnT>(0); }
@@ -518,8 +512,8 @@ using boost::serialization::make_nvp;
     class NullFunction2 : public Function2<ReturnT> {
     public:
         explicit NullFunction2() : Function2<ReturnT>(0) {}
-        typename Function2<ReturnT>::Ptr clone() const {
-            return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
+        std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(new NullFunction2()); }
 
     private:
         ReturnT operator() (double, double) const { return static_cast<ReturnT>(0); }

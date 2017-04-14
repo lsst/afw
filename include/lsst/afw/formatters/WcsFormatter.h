@@ -48,24 +48,24 @@ public:
 
     virtual void write(
         lsst::daf::base::Persistable const* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
+        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
     );
     virtual lsst::daf::base::Persistable* read(
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
+        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
     );
     virtual void update(
         lsst::daf::base::Persistable* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
+        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
     );
 
-    static lsst::daf::base::PropertyList::Ptr generatePropertySet(
+    static std::shared_ptr<lsst::daf::base::PropertyList> generatePropertySet(
         lsst::afw::image::Wcs const& wcs
     );
-    static lsst::daf::persistence::Formatter::Ptr createInstance(
-        lsst::pex::policy::Policy::Ptr policy
+    static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
+        std::shared_ptr<lsst::pex::policy::Policy> policy
     );
 
     template <class Archive>
@@ -76,7 +76,7 @@ public:
     );
 
 private:
-    explicit WcsFormatter(lsst::pex::policy::Policy::Ptr policy);
+    explicit WcsFormatter(std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };

@@ -24,7 +24,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const = 0;
 
     virtual ~FitsColumnReader() {}
@@ -75,7 +75,7 @@ public:
     /**
      *  Set the Archive to an externally-provided one, overriding any that may have been read.
      */
-    void setArchive(PTR(InputArchive) archive);
+    void setArchive(std::shared_ptr<InputArchive> archive);
 
     /**
      *  Set the Archive by reading from the HDU specified by the AR_HDU header entry.
@@ -144,7 +144,7 @@ public:
 
 private:
     class Impl;
-    PTR(Impl) _impl;
+    std::shared_ptr<Impl> _impl;
 };
 
 }}}} // namespace lsst::afw::table::io

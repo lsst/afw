@@ -73,7 +73,7 @@ public:
     typedef ExposureCatalogT<ExposureRecord> Catalog;
     typedef ExposureCatalogT<ExposureRecord const> ConstCatalog;
 
-    CONST_PTR(ExposureTable) getTable() const {
+    std::shared_ptr<ExposureTable const> getTable() const {
         return std::static_pointer_cast<ExposureTable const>(BaseRecord::getTable());
     }
 
@@ -109,28 +109,28 @@ public:
 
     //@{
     /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
-    CONST_PTR(image::Wcs) getWcs() const { return _wcs; }
-    void setWcs(CONST_PTR(image::Wcs) wcs) { _wcs = wcs; }
+    std::shared_ptr<image::Wcs const> getWcs() const { return _wcs; }
+    void setWcs(std::shared_ptr<image::Wcs const> wcs) { _wcs = wcs; }
 
-    CONST_PTR(detection::Psf) getPsf() const { return _psf; }
-    void setPsf(CONST_PTR(detection::Psf) psf) { _psf = psf; }
+    std::shared_ptr<detection::Psf const> getPsf() const { return _psf; }
+    void setPsf(std::shared_ptr<detection::Psf const> psf) { _psf = psf; }
 
-    CONST_PTR(image::Calib) getCalib() const { return _calib; }
-    void setCalib(CONST_PTR(image::Calib) calib) { _calib = calib; }
+    std::shared_ptr<image::Calib const> getCalib() const { return _calib; }
+    void setCalib(std::shared_ptr<image::Calib const> calib) { _calib = calib; }
 
-    CONST_PTR(image::ApCorrMap) getApCorrMap() const { return _apCorrMap; }
-    void setApCorrMap(CONST_PTR(image::ApCorrMap) apCorrMap) { _apCorrMap = apCorrMap; }
+    std::shared_ptr<image::ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
+    void setApCorrMap(std::shared_ptr<image::ApCorrMap const> apCorrMap) { _apCorrMap = apCorrMap; }
 
-    CONST_PTR(geom::polygon::Polygon) getValidPolygon() const { return _validPolygon; }
-    void setValidPolygon(CONST_PTR(geom::polygon::Polygon) polygon) { _validPolygon = polygon; }
+    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const { return _validPolygon; }
+    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon) { _validPolygon = polygon; }
 
-    CONST_PTR(image::VisitInfo) getVisitInfo() const { return _visitInfo; }
-    void setVisitInfo(CONST_PTR(image::VisitInfo) visitInfo) { _visitInfo = visitInfo; }
+    std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
+    void setVisitInfo(std::shared_ptr<image::VisitInfo const> visitInfo) { _visitInfo = visitInfo; }
     //@}
 
 protected:
 
-    explicit ExposureRecord(PTR(ExposureTable) const & table);
+    explicit ExposureRecord(std::shared_ptr<ExposureTable> const & table);
 
     virtual void _assign(BaseRecord const & other);
 
@@ -138,12 +138,12 @@ private:
 
     friend class ExposureTable;
 
-    CONST_PTR(image::Wcs) _wcs;
-    CONST_PTR(detection::Psf) _psf;
-    CONST_PTR(image::Calib) _calib;
-    CONST_PTR(image::ApCorrMap) _apCorrMap;
-    CONST_PTR(geom::polygon::Polygon) _validPolygon;
-    CONST_PTR(image::VisitInfo) _visitInfo;
+    std::shared_ptr<image::Wcs const> _wcs;
+    std::shared_ptr<detection::Psf const> _psf;
+    std::shared_ptr<image::Calib const> _calib;
+    std::shared_ptr<image::ApCorrMap const> _apCorrMap;
+    std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
+    std::shared_ptr<image::VisitInfo const> _visitInfo;
 };
 
 /**
@@ -164,7 +164,7 @@ public:
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      */
-    static PTR(ExposureTable) make(Schema const & schema);
+    static std::shared_ptr<ExposureTable> make(Schema const & schema);
 
     /**
      *  Return a minimal schema for Exposure tables and records.
@@ -204,18 +204,18 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(ExposureTable) clone() const { return std::static_pointer_cast<ExposureTable>(_clone()); }
+    std::shared_ptr<ExposureTable> clone() const { return std::static_pointer_cast<ExposureTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(ExposureRecord) makeRecord() { return std::static_pointer_cast<ExposureRecord>(_makeRecord()); }
+    std::shared_ptr<ExposureRecord> makeRecord() { return std::static_pointer_cast<ExposureRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(ExposureRecord) copyRecord(BaseRecord const & other) {
+    std::shared_ptr<ExposureRecord> copyRecord(BaseRecord const & other) {
         return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(ExposureRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<ExposureRecord> copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
         return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other, mapper));
     }
 
@@ -249,10 +249,10 @@ private:
     template <typename RecordT> friend class ExposureCatalogT;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 
-    PTR(io::FitsWriter) makeFitsWriter(
-        fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(
+        fits::Fits * fitsfile, std::shared_ptr<io::OutputArchive> archive, int flags
     ) const;
 };
 
@@ -280,7 +280,7 @@ public:
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit ExposureCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
+    explicit ExposureCatalogT(std::shared_ptr<Table> const & table = std::shared_ptr<Table>()) : Base(table) {}
 
     /// Construct a vector from a schema, creating a table with Table::make(schema).
     explicit ExposureCatalogT(Schema const & schema) : Base(schema) {}
@@ -296,7 +296,7 @@ public:
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      */
     template <typename InputIterator>
-    ExposureCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    ExposureCatalogT(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last, bool deep=false) :
         Base(table, first, last, deep)
     {}
 
@@ -318,8 +318,8 @@ public:
      *  to the FITS file, this overload inserts nested Persistables into the given
      *  archive and does not save it, leaving it to the user to save it later.
      */
-    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive, int flags=0) const {
-        PTR(io::FitsWriter) writer = this->getTable()->makeFitsWriter(&fitsfile, archive, flags);
+    void writeFits(fits::Fits & fitsfile, std::shared_ptr<io::OutputArchive> archive, int flags=0) const {
+        std::shared_ptr<io::FitsWriter> writer = this->getTable()->makeFitsWriter(&fitsfile, archive, flags);
         writer->write(*this);
     }
 
@@ -366,7 +366,7 @@ public:
      *  This overload reads nested Persistables from the given archive instead of loading
      *  a new archive from the HDUs following the catalog.
      */
-    static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive, int flags=0) {
+    static ExposureCatalogT readFits(fits::Fits & fitsfile, std::shared_ptr<io::InputArchive> archive, int flags=0) {
         return io::FitsReader::apply<ExposureCatalogT>(fitsfile, flags, archive);
     }
 

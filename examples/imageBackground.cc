@@ -88,11 +88,11 @@ int main() {
     bgCtrl.getStatisticsControl()->setNumSigmaClip(2.5);
 
     // initialize a background object
-    PTR(math::Background) back = math::makeBackground(img, bgCtrl);
+    std::shared_ptr<math::Background> back = math::makeBackground(img, bgCtrl);
 
     // can get an individual pixel or a whole frame.
     float const MID = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
-    ImageF::Ptr bg = back->getImage<ImageF::Pixel>();
+    std::shared_ptr<ImageF> bg = back->getImage<ImageF::Pixel>();
 
     // create a background-subtracted image
     ImageF sub(img.getDimensions());

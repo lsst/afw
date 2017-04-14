@@ -262,7 +262,7 @@ public:
      *
      *  See AliasMap for more information on schema aliases.
      */
-    PTR(AliasMap) getAliasMap() const { return _aliases; }
+    std::shared_ptr<AliasMap> getAliasMap() const { return _aliases; }
 
     /**
      *  Set the alias map
@@ -272,7 +272,7 @@ public:
      *
      *  Passing a null pointer is equivalent to passing an empty map.
      */
-    void setAliasMap(PTR(AliasMap) aliases);
+    void setAliasMap(std::shared_ptr<AliasMap> aliases);
 
     /// Sever the connection between this schema and any others with which it shares aliases
     void disconnectAliases();
@@ -313,8 +313,8 @@ private:
     /// Copy on write; should be called by all mutators (except for alias mutators).
     void _edit();
 
-    PTR(Impl) _impl;
-    PTR(AliasMap) _aliases;
+    std::shared_ptr<Impl> _impl;
+    std::shared_ptr<AliasMap> _aliases;
 };
 
 /**
@@ -437,10 +437,10 @@ private:
 
     friend class Schema;
 
-    SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & name);
+    SubSchema(std::shared_ptr<Impl> impl, std::shared_ptr<AliasMap> aliases, std::string const & name);
 
-    PTR(Impl) _impl;
-    PTR(AliasMap) _aliases;
+    std::shared_ptr<Impl> _impl;
+    std::shared_ptr<AliasMap> _aliases;
     std::string _name;
 };
 

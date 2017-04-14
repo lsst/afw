@@ -130,7 +130,7 @@ math::Random::Random(std::string const & algorithm, unsigned long seed)
 }
 
 
-math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
+math::Random::Random(std::shared_ptr<lsst::pex::policy::Policy> const policy)
     : _rng(), _seed()
 {
     std::string const seed(policy->getString("rngSeed"));

@@ -43,7 +43,7 @@ public:
             iter = _catalogs.insert(_catalogs.end(), BaseCatalog(schema));
         }
         if (!iter->getTable()->getMetadata()) {
-            PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
+            std::shared_ptr<daf::base::PropertyList> metadata(new daf::base::PropertyList());
             iter->getTable()->setMetadata(metadata);
             metadata->set("EXTTYPE", "ARCHIVE_DATA");
             metadata->set("AR_CATN", catArchive, "# of this catalog relative to the start of this archive");
@@ -56,7 +56,7 @@ public:
         std::string const & name, std::string const & module,
         int catPersistable
     ) {
-        PTR(BaseRecord) indexRecord = _index.addNew();
+        std::shared_ptr<BaseRecord> indexRecord = _index.addNew();
         indexRecord->set(indexKeys.id, id);
         indexRecord->set(indexKeys.name, name);
         indexRecord->set(indexKeys.module, module);
@@ -90,7 +90,7 @@ public:
         iter->insert(iter->end(), catalog.begin(), catalog.end(), false);
     }
 
-    int put(Persistable const * obj, PTR(Impl) const & self, bool permissive) {
+    int put(Persistable const * obj, std::shared_ptr<Impl> const & self, bool permissive) {
         if (!obj) return 0;
         if (permissive && !obj->isPersistable()) return 0;
         MapItem item(obj, _nextId);
@@ -122,7 +122,7 @@ public:
     }
 
     Impl() : _nextId(1), _map(), _index(ArchiveIndexSchema::get().schema) {
-        PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
+        std::shared_ptr<daf::base::PropertyList> metadata(new daf::base::PropertyList());
         metadata->set("EXTTYPE", "ARCHIVE_INDEX");
         metadata->set("AR_CATN", 0, "# of this catalog relative to the start of this archive");
         _index.getTable()->setMetadata(metadata);
@@ -149,7 +149,7 @@ OutputArchive::~OutputArchive() {}
 
 int OutputArchive::put(Persistable const * obj, bool permissive) {
     if (!_impl.unique()) { // copy on write
-        PTR(Impl) tmp(new Impl(*_impl));
+        std::shared_ptr<Impl> tmp(new Impl(*_impl));
         _impl.swap(tmp);
     }
     return _impl->put(obj, _impl, permissive);
@@ -195,7 +195,7 @@ int OutputArchiveHandle::put(Persistable const * obj, bool permissive) {
 
 OutputArchiveHandle::OutputArchiveHandle(
     int id, std::string const & name, std::string const & module,
-    PTR(OutputArchive::Impl) impl) :
+    std::shared_ptr<OutputArchive::Impl> impl) :
     _id(id), _catPersistable(0), _name(name), _module(module), _impl(impl)
 {}
 

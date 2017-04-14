@@ -45,7 +45,7 @@ public:
     typedef afw::table::CatalogT<PeakRecord> Catalog;
     typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
 
-    CONST_PTR(PeakTable) getTable() const {
+    std::shared_ptr<PeakTable const> getTable() const {
         return std::static_pointer_cast<PeakTable const>(afw::table::BaseRecord::getTable());
     }
 
@@ -74,7 +74,7 @@ public:
 
 protected:
 
-    explicit PeakRecord(PTR(PeakTable) const & table);
+    explicit PeakRecord(std::shared_ptr<PeakTable> const & table);
 
 private:
 
@@ -108,7 +108,7 @@ public:
      *  This behavior can be disabled by setting forceNewTable=true or by cloning an existing table
      *  (in both of these cases, the new table will not be reused in the future, either)
      */
-    static PTR(PeakTable) make(afw::table::Schema const & schema, bool forceNew=false);
+    static std::shared_ptr<PeakTable> make(afw::table::Schema const & schema, bool forceNew=false);
 
     /**
      *  Return a minimal schema for Peak tables and records.
@@ -130,13 +130,13 @@ public:
     }
 
     /// Return the object that generates IDs for the table (may be null).
-    PTR(afw::table::IdFactory) getIdFactory() { return _idFactory; }
+    std::shared_ptr<afw::table::IdFactory> getIdFactory() { return _idFactory; }
 
     /// Return the object that generates IDs for the table (may be null).
-    CONST_PTR(afw::table::IdFactory) getIdFactory() const { return _idFactory; }
+    std::shared_ptr<afw::table::IdFactory const> getIdFactory() const { return _idFactory; }
 
     /// Switch to a new IdFactory -- object that generates IDs for the table (may be null).
-    void setIdFactory(PTR(afw::table::IdFactory) f) { _idFactory = f; }
+    void setIdFactory(std::shared_ptr<afw::table::IdFactory> f) { _idFactory = f; }
 
     //@{
     /**
@@ -153,18 +153,18 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(PeakTable) clone() const { return std::static_pointer_cast<PeakTable>(_clone()); }
+    std::shared_ptr<PeakTable> clone() const { return std::static_pointer_cast<PeakTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(PeakRecord) makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
+    std::shared_ptr<PeakRecord> makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(PeakRecord) copyRecord(afw::table::BaseRecord const & other) {
+    std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const & other) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(PeakRecord) copyRecord(
+    std::shared_ptr<PeakRecord> copyRecord(
         afw::table::BaseRecord const & other,
         afw::table::SchemaMapper const & mapper
     ) {
@@ -173,7 +173,7 @@ public:
 
 protected:
 
-    PeakTable(afw::table::Schema const & schema, PTR(afw::table::IdFactory) const & idFactory);
+    PeakTable(afw::table::Schema const & schema, std::shared_ptr<afw::table::IdFactory> const & idFactory);
 
     PeakTable(PeakTable const & other);
 
@@ -204,7 +204,7 @@ private:
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     std::shared_ptr<afw::table::io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
 
-    PTR(afw::table::IdFactory) _idFactory;        // generates IDs for new records
+    std::shared_ptr<afw::table::IdFactory> _idFactory;        // generates IDs for new records
 };
 
 std::ostream & operator<<(std::ostream & os, PeakRecord const & record);

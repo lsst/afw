@@ -84,7 +84,7 @@ class BaseColumnView {
 public:
 
     /// Return the table that owns the records.
-    PTR(BaseTable) getTable() const;
+    std::shared_ptr<BaseTable> getTable() const;
 
     /// Return the schema that defines the fields.
     Schema getSchema() const { return getTable()->getSchema(); }
@@ -135,7 +135,7 @@ public:
      *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeError.
      */
     template <typename InputIterator>
-    static BaseColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
+    static BaseColumnView make(std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last);
 
     /**
      *  @brief Return true if the given record iterator range is continuous and the records all belong
@@ -145,14 +145,14 @@ public:
      *  succeeds, BaseColumnView::make should as well.
      */
     template <typename InputIterator>
-    static bool isRangeContiguous(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
+    static bool isRangeContiguous(std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last);
 
     ~BaseColumnView();
 
 protected:
 
     BaseColumnView(
-        PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
+        std::shared_ptr<BaseTable> const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
     );
 
 private:
@@ -172,11 +172,11 @@ public:
     typedef typename RecordT::Table Table;
 
     /// @copydoc BaseColumnView::getTable
-    PTR(Table) getTable() const { return std::static_pointer_cast<Table>(BaseColumnView::getTable()); }
+    std::shared_ptr<Table> getTable() const { return std::static_pointer_cast<Table>(BaseColumnView::getTable()); }
 
     /// @copydoc BaseColumnView::make
     template <typename InputIterator>
-    static ColumnViewT make(PTR(Table) const & table, InputIterator first, InputIterator last) {
+    static ColumnViewT make(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last) {
         return ColumnViewT(BaseColumnView::make(table, first, last));
     }
 
@@ -187,7 +187,7 @@ protected:
 };
 
 template <typename InputIterator>
-BaseColumnView BaseColumnView::make(PTR(BaseTable) const & table, InputIterator first, InputIterator last) {
+BaseColumnView BaseColumnView::make(std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last) {
     if (first == last) {
         return BaseColumnView(table, 0, 0, ndarray::Manager::Ptr());
     }
@@ -210,7 +210,7 @@ BaseColumnView BaseColumnView::make(PTR(BaseTable) const & table, InputIterator 
 
 template <typename InputIterator>
 bool BaseColumnView::isRangeContiguous(
-    PTR(BaseTable) const & table, InputIterator first, InputIterator last
+    std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last
 ) {
     if (first == last) return true;
     Schema schema = table->getSchema();

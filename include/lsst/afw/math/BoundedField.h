@@ -170,8 +170,8 @@ public:
      *
      *  @param[in]  scale    Scaling factor
      */
-    virtual PTR(BoundedField) operator*(double const scale) const = 0;
-    PTR(BoundedField) operator/(double scale) const {
+    virtual std::shared_ptr<BoundedField> operator*(double const scale) const = 0;
+    std::shared_ptr<BoundedField> operator/(double scale) const {
         return (*this)*(1.0/scale);
     }
 
@@ -185,7 +185,7 @@ private:
     geom::Box2I const _bbox;
 };
 
-PTR(BoundedField) operator*(double const scale, CONST_PTR(BoundedField) bf);
+std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf);
 
 }}} // namespace lsst::afw::math
 

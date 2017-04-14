@@ -73,7 +73,7 @@ namespace math {
 
         virtual ~LanczosWarpingKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         /**
         * get the order of the kernel
@@ -102,7 +102,7 @@ namespace math {
 
         virtual ~BilinearWarpingKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         /**
          * 1-dimensional bilinear interpolation function.
@@ -113,7 +113,7 @@ namespace math {
          */
         class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
+            typedef std::shared_ptr<Function1<Kernel::Pixel>> Function1Ptr;
 
             /**
              * Construct a Bilinear interpolation function
@@ -168,7 +168,7 @@ namespace math {
 
         virtual ~NearestWarpingKernel() {}
 
-        virtual PTR(Kernel) clone() const;
+        virtual std::shared_ptr<Kernel> clone() const;
 
         /**
          * 1-dimensional nearest neighbor interpolation function.
@@ -179,7 +179,7 @@ namespace math {
          */
         class NearestFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
+            typedef std::shared_ptr<Function1<Kernel::Pixel>> Function1Ptr;
 
             /**
              * Construct a Nearest interpolation function
@@ -240,7 +240,7 @@ namespace math {
      *   - The pixel whose center is just above or to the right of the source position:
      *     -1.0 < fractional x and y <= 0 and the kernel center must be set to (size+1)/2.
      */
-    PTR(SeparableKernel) makeWarpingKernel(std::string name);
+    std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name);
 
     /**
      * Parameters to control convolution
@@ -320,7 +320,7 @@ namespace math {
         /**
          * get the warping kernel
          */
-        PTR(SeparableKernel) getWarpingKernel() const;
+        std::shared_ptr<SeparableKernel> getWarpingKernel() const;
 
         /**
          * set the warping kernel by name
@@ -341,7 +341,7 @@ namespace math {
         /**
          * get the mask warping kernel
          */
-        PTR(SeparableKernel) getMaskWarpingKernel() const;
+        std::shared_ptr<SeparableKernel> getMaskWarpingKernel() const;
 
         /**
          * return true if there is a mask kernel
@@ -390,8 +390,8 @@ namespace math {
             SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
         ) const;
 
-        PTR(SeparableKernel) _warpingKernelPtr;
-        PTR(SeparableKernel) _maskWarpingKernelPtr;
+        std::shared_ptr<SeparableKernel> _warpingKernelPtr;
+        std::shared_ptr<SeparableKernel> _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
         lsst::afw::image::MaskPixel _growFullMask;

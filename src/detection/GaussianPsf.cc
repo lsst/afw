@@ -74,7 +74,7 @@ private:
 class GaussianPsfFactory : public afw::table::io::PersistableFactory {
 public:
 
-    virtual PTR(afw::table::io::Persistable)
+    virtual std::shared_ptr<afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         static GaussianPsfPersistenceHelper const & keys = GaussianPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
@@ -117,7 +117,7 @@ GaussianPsf::GaussianPsf(geom::Extent2I const & dimensions, double sigma) :
     checkDimensions(_dimensions);
 }
 
-PTR(afw::detection::Psf) GaussianPsf::clone() const {
+std::shared_ptr<afw::detection::Psf> GaussianPsf::clone() const {
     return std::make_shared<GaussianPsf>(_dimensions, _sigma);
 }
 
@@ -128,17 +128,17 @@ std::string GaussianPsf::getPythonModule() const { return "lsst.afw.detection"; 
 void GaussianPsf::write(OutputArchiveHandle & handle) const {
     static GaussianPsfPersistenceHelper const & keys = GaussianPsfPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(afw::table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<afw::table::BaseRecord> record = catalog.addNew();
     (*record)[keys.dimensions.getX()] = _dimensions.getX();
     (*record)[keys.dimensions.getY()] = _dimensions.getY();
     (*record)[keys.sigma] = getSigma();
     handle.saveCatalog(catalog);
 }
 
-PTR(GaussianPsf::Image) GaussianPsf::doComputeKernelImage(
+std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(
     geom::Point2D const &, image::Color const &
 ) const {
-    PTR(Image) r(new Image(computeBBox()));
+    std::shared_ptr<Image> r(new Image(computeBBox()));
     Image::Array array = r->getArray();
     double sum = 0.0;
     for (int yIndex = 0, y = r->getY0(); yIndex < _dimensions.getY(); ++yIndex, ++y) {

@@ -61,13 +61,13 @@ public:
      *                       persistence).
      */
     template <typename ContainerT>
-    static ContainerT apply(afw::fits::Fits & fits, int ioFlags, PTR(InputArchive) archive=PTR(InputArchive)()) {
-        PTR(daf::base::PropertyList) metadata = std::make_shared<daf::base::PropertyList>();
+    static ContainerT apply(afw::fits::Fits & fits, int ioFlags, std::shared_ptr<InputArchive> archive=std::shared_ptr<InputArchive>()) {
+        std::shared_ptr<daf::base::PropertyList> metadata = std::make_shared<daf::base::PropertyList>();
         fits.readMetadata(*metadata, true);
         FitsReader const * reader = _lookupFitsReader(*metadata);
         FitsSchemaInputMapper mapper(*metadata, true);
         reader->_setupArchive(fits, mapper, archive, ioFlags);
-        PTR(BaseTable) table = reader->makeTable(mapper, metadata, ioFlags, true);
+        std::shared_ptr<BaseTable> table = reader->makeTable(mapper, metadata, ioFlags, true);
         ContainerT container(std::dynamic_pointer_cast<typename ContainerT::Table>(table));
         if (!container.getTable()) {
             throw LSST_EXCEPT(
@@ -97,7 +97,7 @@ public:
      *  a string filename or a afw::fits::MemFileManager, then calls the other apply() overload.
      */
     template <typename ContainerT, typename SourceT>
-    static ContainerT apply(SourceT & source, int hdu, int ioFlags, PTR(InputArchive) archive=PTR(InputArchive)()) {
+    static ContainerT apply(SourceT & source, int hdu, int ioFlags, std::shared_ptr<InputArchive> archive=std::shared_ptr<InputArchive>()) {
         afw::fits::Fits fits(source, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
         fits.setHdu(hdu);
         return apply<ContainerT>(fits, ioFlags, archive);
@@ -122,9 +122,9 @@ public:
      *  @param[in]  stripMetadata   If True, remove entries from the metadata that were added by the
      *                              persistence code.
      */
-    virtual PTR(BaseTable) makeTable(
+    virtual std::shared_ptr<BaseTable> makeTable(
         FitsSchemaInputMapper & mapper,
-        PTR(daf::base::PropertyList) metadata,
+        std::shared_ptr<daf::base::PropertyList> metadata,
         int ioFlags,
         bool stripMetadata
     ) const;
@@ -144,7 +144,7 @@ private:
     void _setupArchive(
         afw::fits::Fits & fits,
         FitsSchemaInputMapper & mapper,
-        PTR(InputArchive) archive,
+        std::shared_ptr<InputArchive> archive,
         int ioFlags
     ) const;
 

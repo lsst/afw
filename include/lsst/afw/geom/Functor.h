@@ -59,7 +59,7 @@ public:
 
    virtual ~Functor() {}
 
-   virtual PTR(Functor) clone() const = 0;
+   virtual std::shared_ptr<Functor> clone() const = 0;
 
    /// @returns y = f(x)
    virtual double operator()(double x) const = 0;
@@ -100,7 +100,7 @@ public:
 
    ~LinearFunctor() {}
 
-   virtual PTR(Functor) clone() const;
+   virtual std::shared_ptr<Functor> clone() const;
 
    virtual double operator()(double x) const;
 

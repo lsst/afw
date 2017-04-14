@@ -34,7 +34,7 @@ namespace lsst { namespace afw { namespace image {
 // to take its address (and Swig might).
 std::size_t const ApCorrMap::MAX_NAME_LENGTH;
 
-PTR(math::BoundedField) const ApCorrMap::operator[](std::string const & name) const {
+std::shared_ptr<math::BoundedField> const ApCorrMap::operator[](std::string const & name) const {
     Iterator i = _internal.find(name);
     if (i == _internal.end()) {
         throw LSST_EXCEPT(
@@ -45,15 +45,15 @@ PTR(math::BoundedField) const ApCorrMap::operator[](std::string const & name) co
     return i->second;
 }
 
-PTR(math::BoundedField) const ApCorrMap::get(std::string const & name) const {
+std::shared_ptr<math::BoundedField> const ApCorrMap::get(std::string const & name) const {
     Iterator i = _internal.find(name);
     if (i == _internal.end()) {
-        return PTR(math::BoundedField)();
+        return std::shared_ptr<math::BoundedField>();
     }
     return i->second;
 }
 
-void ApCorrMap::set(std::string const & name, PTR(math::BoundedField) field) {
+void ApCorrMap::set(std::string const & name, std::shared_ptr<math::BoundedField> field) {
     if (name.size() > MAX_NAME_LENGTH) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
@@ -92,12 +92,12 @@ private:
 class ApCorrMapFactory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         PersistenceHelper const & keys = PersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
-        PTR(ApCorrMap) result
+        std::shared_ptr<ApCorrMap> result
             = std::make_shared<ApCorrMap>();
         for (
             table::BaseCatalog::const_iterator i = catalogs.front().begin();
@@ -140,7 +140,7 @@ void ApCorrMap::write(OutputArchiveHandle & handle) const {
     PersistenceHelper const & keys = PersistenceHelper::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     for (Iterator i = begin(); i != end(); ++i) {
-        PTR(table::BaseRecord) record = catalog.addNew();
+        std::shared_ptr<table::BaseRecord> record = catalog.addNew();
         record->set(keys.name, i->first);
         record->set(keys.field, handle.put(i->second));
     }

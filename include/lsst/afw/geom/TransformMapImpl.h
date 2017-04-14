@@ -75,8 +75,8 @@ Point2D TransformMap<CoordSysT>::transform(
     }
 
     // transform fromSys -> nativeSys -> toSys
-    CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
-    CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
+    std::shared_ptr<XYTransform const> fromTransform = (*this)[fromCoordSys];
+    std::shared_ptr<XYTransform const> toTransform = (*this)[toCoordSys];
     return toTransform->forwardTransform(fromTransform->reverseTransform(fromPoint));
 }
 
@@ -94,7 +94,7 @@ std::vector<Point2D> TransformMap<CoordSysT>::transform(
 
     // transform pointList from fromCoordSys to native coords, filling outList
     if (fromCoordSys != _nativeCoordSys) {
-        CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
+        std::shared_ptr<XYTransform const> fromTransform = (*this)[fromCoordSys];
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
             fromPtIter != pointList.end(); ++fromPtIter) {
             outList.push_back(fromTransform->reverseTransform(*fromPtIter));
@@ -108,7 +108,7 @@ std::vector<Point2D> TransformMap<CoordSysT>::transform(
 
     // transform outList from native coords to toCoordSys, in place
     if (toCoordSys != _nativeCoordSys) {
-        CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
+        std::shared_ptr<XYTransform const> toTransform = (*this)[toCoordSys];
         for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
             nativePtIter != outList.end(); ++nativePtIter) {
             *nativePtIter = toTransform->forwardTransform(*nativePtIter);
@@ -128,7 +128,7 @@ std::vector<CoordSysT> TransformMap<CoordSysT>::getCoordSysList() const {
 }
 
 template<typename CoordSysT>
-CONST_PTR(XYTransform) TransformMap<CoordSysT>::operator[](
+std::shared_ptr<XYTransform const> TransformMap<CoordSysT>::operator[](
     CoordSysT const &coordSys
 ) const {
     typename Transforms::const_iterator const foundIter = _transforms.find(coordSys);

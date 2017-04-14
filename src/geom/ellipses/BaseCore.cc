@@ -41,7 +41,7 @@ RegistryMap & getRegistry() {
     return instance;
 }
 
-BaseCore::Ptr getRegistryCopy(std::string const & name) {
+std::shared_ptr<BaseCore> getRegistryCopy(std::string const & name) {
     RegistryMap::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
@@ -54,43 +54,43 @@ BaseCore::Ptr getRegistryCopy(std::string const & name) {
 
 } // anonymous
 
-BaseCore::Ptr BaseCore::make(std::string const & name) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const & name) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     *result = Quadrupole();
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, ParameterVector const & parameters) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const & name, ParameterVector const & parameters) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     result->setParameterVector(parameters);
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, double v1, double v2, double v3) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const & name, double v1, double v2, double v3) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     result->setParameterVector(ParameterVector(v1, v2, v3));
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, BaseCore const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const & name, BaseCore const & other) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     *result = other;
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, Transformer const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const & name, Transformer const & other) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, Convolution const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const & name, Convolution const & other) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-void BaseCore::registerSubclass(BaseCore::Ptr const & example) {
+void BaseCore::registerSubclass(std::shared_ptr<BaseCore> const & example) {
     getRegistry()[example->getName()] = example;
 }
 

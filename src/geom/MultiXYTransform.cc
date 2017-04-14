@@ -32,7 +32,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-MultiXYTransform::MultiXYTransform(std::vector<CONST_PTR(XYTransform)> const &transformList)
+MultiXYTransform::MultiXYTransform(std::vector<std::shared_ptr<XYTransform const>> const &transformList)
     : XYTransform(), _transformList(transformList)
 {
     for (TransformList::const_iterator trIter = _transformList.begin();
@@ -43,7 +43,7 @@ MultiXYTransform::MultiXYTransform(std::vector<CONST_PTR(XYTransform)> const &tr
     }
 }
 
-PTR(XYTransform) MultiXYTransform::clone() const
+std::shared_ptr<XYTransform> MultiXYTransform::clone() const
 {
     return std::make_shared<MultiXYTransform>(_transformList);
 }

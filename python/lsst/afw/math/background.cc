@@ -45,15 +45,15 @@ void declareMakeBackground(py::module & mod) {
 
 template <typename PixelT, typename PyClass>
 void declareGetImage(PyClass & cls, std::string const & suffix) {
-    cls.def(("getImage" + suffix).c_str(), (PTR(lsst::afw::image::Image<PixelT>) (BackgroundMI::*)(Interpolate::Style const, UndersampleStyle const) const) &BackgroundMI::getImage<PixelT>,
+    cls.def(("getImage" + suffix).c_str(), (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(Interpolate::Style const, UndersampleStyle const) const) &BackgroundMI::getImage<PixelT>,
             "interpStyle"_a, "undersampleStyle"_a=THROW_EXCEPTION);
-    cls.def(("getImage" + suffix).c_str(), (PTR(lsst::afw::image::Image<PixelT>) (BackgroundMI::*)(std::string const &, std::string const &) const) &BackgroundMI::getImage<PixelT>,
+    cls.def(("getImage" + suffix).c_str(), (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(std::string const &, std::string const &) const) &BackgroundMI::getImage<PixelT>,
             "interpStyle"_a, "undersampleStyle"_a="THROW_EXCEPTION");
-    cls.def(("getImage" + suffix).c_str(), (PTR(lsst::afw::image::Image<PixelT>) (BackgroundMI::*)(lsst::afw::geom::Box2I const&, Interpolate::Style const, UndersampleStyle const) const) &BackgroundMI::getImage<PixelT>,
+    cls.def(("getImage" + suffix).c_str(), (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(lsst::afw::geom::Box2I const&, Interpolate::Style const, UndersampleStyle const) const) &BackgroundMI::getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a=THROW_EXCEPTION);
-    cls.def(("getImage" + suffix).c_str(), (PTR(lsst::afw::image::Image<PixelT>) (BackgroundMI::*)(lsst::afw::geom::Box2I const&, std::string const &, std::string const &) const) &BackgroundMI::getImage<PixelT>,
+    cls.def(("getImage" + suffix).c_str(), (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(lsst::afw::geom::Box2I const&, std::string const &, std::string const &) const) &BackgroundMI::getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a="THROW_EXCEPTION");
-    cls.def(("getImage" + suffix).c_str(), (PTR(lsst::afw::image::Image<PixelT>) (BackgroundMI::*)() const) &BackgroundMI::getImage<PixelT>);
+    cls.def(("getImage" + suffix).c_str(), (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)() const) &BackgroundMI::getImage<PixelT>);
 }
 }
 
@@ -110,12 +110,12 @@ PYBIND11_PLUGIN(_background) {
     clsBackgroundControl.def("getNySample", &BackgroundControl::getNySample);
     clsBackgroundControl.def("getInterpStyle", &BackgroundControl::getInterpStyle);
     clsBackgroundControl.def("getUndersampleStyle", &BackgroundControl::getUndersampleStyle);
-    clsBackgroundControl.def("getStatisticsControl", (PTR(StatisticsControl) (BackgroundControl::*)()) &BackgroundControl::getStatisticsControl);
+    clsBackgroundControl.def("getStatisticsControl", (std::shared_ptr<StatisticsControl> (BackgroundControl::*)()) &BackgroundControl::getStatisticsControl);
     clsBackgroundControl.def("getStatisticsProperty", &BackgroundControl::getStatisticsProperty);
     clsBackgroundControl.def("setStatisticsProperty", (void (BackgroundControl::*)(Property)) &BackgroundControl::setStatisticsProperty);
     clsBackgroundControl.def("setStatisticsProperty", (void (BackgroundControl::*)(std::string)) &BackgroundControl::setStatisticsProperty);
     clsBackgroundControl.def("setApproximateControl", &BackgroundControl::setApproximateControl);
-    clsBackgroundControl.def("getApproximateControl", (PTR(ApproximateControl) (BackgroundControl::*)()) &BackgroundControl::getApproximateControl);
+    clsBackgroundControl.def("getApproximateControl", (std::shared_ptr<ApproximateControl> (BackgroundControl::*)()) &BackgroundControl::getApproximateControl);
 
     /* Note that, in this case, the holder type must be unique_ptr to enable usage
      * of py::nodelete, which in turn is needed because Background has a protected
@@ -132,7 +132,7 @@ PYBIND11_PLUGIN(_background) {
     clsBackground.def("getAsUsedUndersampleStyle", &Background::getAsUsedUndersampleStyle);
     clsBackground.def("getApproximate", &Background::getApproximate,
             "actrl"_a, "undersampleStyle"_a=THROW_EXCEPTION);
-    clsBackground.def("getBackgroundControl", (PTR(BackgroundControl) (Background::*)()) &Background::getBackgroundControl);
+    clsBackground.def("getBackgroundControl", (std::shared_ptr<BackgroundControl> (Background::*)()) &Background::getBackgroundControl);
 
     py::class_<BackgroundMI, std::shared_ptr<BackgroundMI>, Background> clsBackgroundMI(mod, "BackgroundMI");
 

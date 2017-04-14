@@ -89,7 +89,7 @@ public:
     std::vector<std::unique_ptr<FitsColumnReader>> readers;
     std::vector<Key<Flag>> flagKeys;
     std::unique_ptr<bool[]> flagWorkspace;
-    PTR(io::InputArchive) archive;
+    std::shared_ptr<io::InputArchive> archive;
     InputContainer inputs;
 };
 
@@ -301,7 +301,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     }
 }
 
-void FitsSchemaInputMapper::setArchive(PTR(InputArchive) archive) {
+void FitsSchemaInputMapper::setArchive(std::shared_ptr<InputArchive> archive) {
     _impl->archive = archive;
 }
 
@@ -386,7 +386,7 @@ public:
     virtual void readCell(
         BaseRecord & record, std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         fits.readTableArray(row, _column, _key.getElementCount(), record.getElement(_key));
     }
@@ -430,7 +430,7 @@ public:
     virtual void readCell(
         BaseRecord & record, std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         double tmp = 0;
         fits.readTableScalar(row, _column, tmp);
@@ -461,7 +461,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         std::string s;
         fits.readTableScalar(row, _column, s);
@@ -492,7 +492,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         int size = fits.getTableArraySize(row, _column);
         ndarray::Array<T,1,1> array = ndarray::allocate(size);
@@ -526,7 +526,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         std::array<T,2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
@@ -558,7 +558,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         std::array<geom::Angle,2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
@@ -591,7 +591,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         std::array<double,3> buffer;
         fits.readTableArray(row, _column, 3, buffer.data());
@@ -642,7 +642,7 @@ public:
         BaseRecord & record,
         std::size_t row,
         afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
+        std::shared_ptr<InputArchive> const & archive
     ) const {
         fits.readTableArray(row, _column, detail::computeCovariancePackedSize(_size), _buffer.get());
         for (int i = 0; i < _size; ++i) {

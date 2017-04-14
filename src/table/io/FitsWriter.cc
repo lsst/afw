@@ -106,7 +106,7 @@ void writeAliasMap(Fits & fits, AliasMap const & aliases) {
 } // anonymous
 
 // the driver for all the above machinery
-void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows) {
+void FitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows) {
     Schema schema = table->getSchema();
     _fits->createTable();
     LSST_FITS_CHECK_STATUS(*_fits, "creating table");
@@ -118,7 +118,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
     ProcessSchema::apply(*_fits, schema);
     writeAliasMap(*_fits, *schema.getAliasMap());
     // write the version number to the fits header, plus any other metadata
-    PTR(daf::base::PropertyList) metadata = table->getMetadata();
+    std::shared_ptr<daf::base::PropertyList> metadata = table->getMetadata();
     if (!metadata) {
         metadata = std::make_shared<daf::base::PropertyList>();
     }

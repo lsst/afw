@@ -104,7 +104,7 @@ lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT,
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImageFormatter(
-    lsst::pex::policy::Policy::Ptr
+    std::shared_ptr<lsst::pex::policy::Policy>
                                                                                    )
     :
     lsst::daf::persistence::Formatter(typeid(this)) {
@@ -117,8 +117,8 @@ MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~MaskedImageForma
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     Persistable const* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    std::shared_ptr<Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
@@ -144,8 +144,8 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-        Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
+        std::shared_ptr<Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet>
                                                                                 )
 {
     LOGL_DEBUG(_log, "MaskedImageFormatter read start");
@@ -170,8 +170,8 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
     Persistable*,
-    Storage::Ptr,
-    lsst::daf::base::PropertySet::Ptr
+    std::shared_ptr<Storage>,
+    std::shared_ptr<lsst::daf::base::PropertySet>
                                                                           )
 {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -192,11 +192,11 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeri
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT,
+std::shared_ptr<lsst::daf::persistence::Formatter> MaskedImageFormatter<ImagePixelT,
                                                             MaskPixelT,
                                                             VariancePixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(
+    std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(
         new MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 

@@ -516,7 +516,7 @@ public:
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=INT_MIN, bool strip=false);
+std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const & fileName, int hdu=INT_MIN, bool strip=false);
 /** Read FITS header
  *
  * Includes support for the INHERIT convention: if 'INHERIT = T' is in the header, the
@@ -527,7 +527,7 @@ PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hdu=INT_MIN, bool strip=false);
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager & manager, int hdu=INT_MIN, bool strip=false);
 /** Read FITS header
  *
  * Includes support for the INHERIT convention: if 'INHERIT = T' is in the header, the
@@ -537,7 +537,7 @@ PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hd
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip=false);
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits & fitsfile, bool strip=false);
 
 
 }}} /// namespace lsst::afw::fits

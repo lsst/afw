@@ -36,15 +36,15 @@ dafPersist::FormatterRegistration
 afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
 
 afwDetect::PsfFormatter::PsfFormatter(
-    pexPolicy::Policy::Ptr policy) :
+    std::shared_ptr<pexPolicy::Policy> policy) :
     dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
 afwDetect::PsfFormatter::~PsfFormatter(void) {}
 
 void afwDetect::PsfFormatter::write(
     dafBase::Persistable const* persistable,
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+    std::shared_ptr<dafPersist::Storage> storage,
+    std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter write start");
     afwDetect::Psf const* ps = dynamic_cast<afwDetect::Psf const*>(persistable);
     if (ps == 0) {
@@ -70,7 +70,7 @@ void afwDetect::PsfFormatter::write(
 }
 
 dafBase::Persistable* afwDetect::PsfFormatter::read(
-    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
+    std::shared_ptr<dafPersist::Storage> storage, std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter read start");
     afwDetect::Psf* ps;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
@@ -93,8 +93,8 @@ dafBase::Persistable* afwDetect::PsfFormatter::read(
 }
 
 void afwDetect::PsfFormatter::update(dafBase::Persistable* ,
-                                   dafPersist::Storage::Ptr,
-                                   dafBase::PropertySet::Ptr) {
+                                   std::shared_ptr<dafPersist::Storage>,
+                                   std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Psf");
 }
 
@@ -117,7 +117,7 @@ void afwDetect::PsfFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "PsfFormatter delegateSerialize end");
 }
 
-dafPersist::Formatter::Ptr afwDetect::PsfFormatter::createInstance(
-    pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new afwDetect::PsfFormatter(policy));
+std::shared_ptr<dafPersist::Formatter> afwDetect::PsfFormatter::createInstance(
+    std::shared_ptr<pexPolicy::Policy> policy) {
+    return std::shared_ptr<dafPersist::Formatter>(new afwDetect::PsfFormatter(policy));
 }

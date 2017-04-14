@@ -75,7 +75,7 @@ public:
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit SortedCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
+    explicit SortedCatalogT(std::shared_ptr<Table> const & table = std::shared_ptr<Table>()) : Base(table) {}
 
     /// Construct a vector from a schema, creating a table with Table::make(schema).
     explicit SortedCatalogT(Schema const & schema) : Base(schema) {}
@@ -91,7 +91,7 @@ public:
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      */
     template <typename InputIterator>
-    SortedCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
+    SortedCatalogT(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last, bool deep=false) :
         Base(table, first, last, deep)
     {}
 

@@ -44,7 +44,7 @@
 namespace lsst { namespace afw { namespace image {
 Calib::Calib() : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 Calib::Calib(double fluxMag0): _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
-Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs
+Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs
             ) :
     _fluxMag0(0.0), _fluxMag0Sigma(0.0)
 {
@@ -56,7 +56,7 @@ Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs
     double const fluxMag00 = calibs[0]->_fluxMag0;
     double const fluxMag0Sigma0 = calibs[0]->_fluxMag0Sigma;
 
-    for (std::vector<CONST_PTR(Calib)>::const_iterator ptr = calibs.begin(); ptr != calibs.end(); ++ptr) {
+    for (std::vector<std::shared_ptr<Calib const>>::const_iterator ptr = calibs.begin(); ptr != calibs.end(); ++ptr) {
         Calib const& calib = **ptr;
 
         if (::fabs(fluxMag00 - calib._fluxMag0) > std::numeric_limits<double>::epsilon() ||
@@ -72,7 +72,7 @@ Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs
 
 }
 
-Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
+Calib::Calib(std::shared_ptr<lsst::daf::base::PropertySet const> metadata) {
     double fluxMag0 = 0.0, fluxMag0Sigma = 0.0;
 
     auto key = "FLUXMAG0";
@@ -103,7 +103,7 @@ Calib::getThrowOnNegativeFlux()
 }
 
 namespace detail {
-int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata
+int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata
                       )
 {
     int nstripped = 0;
@@ -379,7 +379,7 @@ public:
 class CalibFactory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         // table version is not persisted, so we don't have a clean way to determine the version;
         // the hack is version = 1 if exptime found, else current
@@ -395,7 +395,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const & record = catalogs.front().front();
-        PTR(Calib) result(new Calib());
+        std::shared_ptr<Calib> result(new Calib());
         result->setFluxMag0(record.get(keys.fluxMag0), record.get(keys.fluxMag0Sigma));
         return result;
     }
@@ -415,7 +415,7 @@ std::string Calib::getPersistenceName() const { return getCalibPersistenceName()
 void Calib::write(OutputArchiveHandle & handle) const {
     CalibKeys const keys{};
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = cat.addNew();
+    std::shared_ptr<table::BaseRecord> record = cat.addNew();
     std::pair<double,double> fluxMag0 = getFluxMag0();
     record->set(keys.fluxMag0, fluxMag0.first);
     record->set(keys.fluxMag0Sigma, fluxMag0.second);

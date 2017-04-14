@@ -15,7 +15,7 @@ public:
 
     virtual void notify(RecordId id) { _current = id; }
 
-    virtual PTR(IdFactory) clone() const { return std::make_shared<SimpleIdFactory>(*this); }
+    virtual std::shared_ptr<IdFactory> clone() const { return std::make_shared<SimpleIdFactory>(*this); }
 
     SimpleIdFactory() : _current(0) {}
 
@@ -49,7 +49,7 @@ public:
         _lower = newLower;
     }
 
-    virtual PTR(IdFactory) clone() const { return std::make_shared<SourceIdFactory>(*this); }
+    virtual std::shared_ptr<IdFactory> clone() const { return std::make_shared<SourceIdFactory>(*this); }
 
     SourceIdFactory(RecordId expId, int reserved) :
         _upper(expId << reserved),
@@ -72,11 +72,11 @@ private:
 
 } // anonymous
 
-PTR(IdFactory) IdFactory::makeSimple() {
+std::shared_ptr<IdFactory> IdFactory::makeSimple() {
     return std::make_shared<SimpleIdFactory>();
 }
 
-PTR(IdFactory) IdFactory::makeSource(RecordId expId, int reserved) {
+std::shared_ptr<IdFactory> IdFactory::makeSource(RecordId expId, int reserved) {
     return std::make_shared<SourceIdFactory>(expId, reserved);
 }
 

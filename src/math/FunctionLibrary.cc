@@ -120,7 +120,7 @@ template <typename ReturnT>
 class GaussianFunction2Factory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -139,7 +139,7 @@ template <typename ReturnT>
 class DoubleGaussianFunction2Factory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -158,7 +158,7 @@ template <typename ReturnT>
 class PolynomialFunction2Factory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -175,7 +175,7 @@ template <typename ReturnT>
 class Chebyshev1Function2Factory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -233,7 +233,7 @@ template <typename ReturnT>
 void GaussianFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
     GaussianFunction2PersistenceHelper const & keys = GaussianFunction2PersistenceHelper::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     record->set(keys.sigma1, this->getParameters()[0]);
     record->set(keys.sigma2, this->getParameters()[1]);
     record->set(keys.angle, this->getParameters()[2]);
@@ -244,7 +244,7 @@ template <typename ReturnT>
 void DoubleGaussianFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
     DoubleGaussianFunction2PersistenceHelper const & keys = DoubleGaussianFunction2PersistenceHelper::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     record->set(keys.sigma1, this->getParameters()[0]);
     record->set(keys.sigma2, this->getParameters()[1]);
     record->set(keys.ampl2, this->getParameters()[2]);
@@ -263,7 +263,7 @@ template <typename ReturnT>
 void Chebyshev1Function2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
     Chebyshev1Function2PersistenceHelper const keys(this->getNParameters());
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     keys.coefficients.assignVector(*record, this->getParameters());
     geom::Box2D bbox = getXYRange();
     record->set(keys.min, bbox.getMin());

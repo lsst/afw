@@ -79,9 +79,6 @@ inline double fluxErrFromABMagErr(double magErr, double mag) {
 
 class Calib : public table::io::PersistableFacade<Calib>, public table::io::Persistable {
 public :
-    typedef std::shared_ptr<Calib> Ptr;
-    typedef std::shared_ptr<Calib const> ConstPtr;
-
     /**
      * ctor
      */
@@ -97,11 +94,11 @@ public :
      *
      * @note All the input calibs must have the same zeropoint; throw InvalidParameterError if this isn't true
      */
-    explicit Calib(std::vector<CONST_PTR(Calib)> const& calibs);
+    explicit Calib(std::vector<std::shared_ptr<Calib const>> const& calibs);
     /**
      * ctor
      */
-    explicit Calib(CONST_PTR(lsst::daf::base::PropertySet));
+    explicit Calib(std::shared_ptr<lsst::daf::base::PropertySet const>);
 
     /**
      * Set the flux of a zero-magnitude object
@@ -210,7 +207,7 @@ namespace detail {
      * @param[in, out] metadata Metadata to be stripped
      * @returns Number of keywords stripped
      */
-    int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata);
+    int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
 }
 
 }}}  // lsst::afw::image

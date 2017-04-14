@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -34,7 +34,7 @@ using namespace lsst::afw::math;
 
 template <typename PixelT>
 void declareStatisticsStack(py::module & mod) {
-    mod.def("statisticsStack", (typename lsst::afw::image::MaskedImage<PixelT>::Ptr (*)(
+    mod.def("statisticsStack", (std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> (*)(
         lsst::afw::image::Image<PixelT> const &,
         Property,
         char,
@@ -45,7 +45,7 @@ void declareStatisticsStack(py::module & mod) {
         "dimensions"_a,
         "sctrl"_a=StatisticsControl()
     );
-    mod.def("statisticsStack", (typename lsst::afw::image::MaskedImage<PixelT>::Ptr (*)(
+    mod.def("statisticsStack", (std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> (*)(
         lsst::afw::image::MaskedImage<PixelT> const &,
         Property,
         char,
@@ -62,7 +62,7 @@ template <typename PixelT>
 void declareStatisticsStackVectorOverloads(py::module & mod) {
     mod.def("statisticsStack", (void (*)(
         lsst::afw::image::Image<PixelT> &,
-        std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &,
+        std::vector<std::shared_ptr<lsst::afw::image::Image<PixelT>> > &,
         Property,
         StatisticsControl const &,
         std::vector<lsst::afw::image::VariancePixel> const &
@@ -75,7 +75,7 @@ void declareStatisticsStackVectorOverloads(py::module & mod) {
     );
     mod.def("statisticsStack", (void (*)(
         lsst::afw::image::MaskedImage<PixelT> &,
-        std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &,
+        std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> > &,
         Property,
         StatisticsControl const &,
         std::vector<lsst::afw::image::VariancePixel> const &
@@ -90,8 +90,8 @@ void declareStatisticsStackVectorOverloads(py::module & mod) {
 
 template <typename PixelT>
 void declareStatisticsStackVectorOverloads2(py::module & mod) {
-    mod.def("statisticsStack", (typename lsst::afw::image::Image<PixelT>::Ptr (*)(
-        std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &,
+    mod.def("statisticsStack", (std::shared_ptr<lsst::afw::image::Image<PixelT>> (*)(
+        std::vector<std::shared_ptr<lsst::afw::image::Image<PixelT>> > &,
         Property,
         StatisticsControl const &,
         std::vector<lsst::afw::image::VariancePixel> const &
@@ -101,8 +101,8 @@ void declareStatisticsStackVectorOverloads2(py::module & mod) {
         "sctrl"_a=StatisticsControl(),
         "wvector"_a=std::vector<lsst::afw::image::VariancePixel>(0)
     );
-    mod.def("statisticsStack", (typename lsst::afw::image::MaskedImage<PixelT>::Ptr (*)(
-        std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &,
+    mod.def("statisticsStack", (std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> (*)(
+        std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> > &,
         Property,
         StatisticsControl const &,
         std::vector<lsst::afw::image::VariancePixel> const &

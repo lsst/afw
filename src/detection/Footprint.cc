@@ -361,7 +361,7 @@ std::shared_ptr<Footprint> mergeFootprints(Footprint const & footprint1, Footpri
 std::vector<geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
     typedef std::uint16_t PixelT;
     geom::Box2I fpBBox = footprint.getBBox();
-    image::Image<PixelT>::Ptr idImage(
+    std::shared_ptr<image::Image<PixelT>> idImage(
         new image::Image<PixelT>(fpBBox)
     );
     *idImage = 0;

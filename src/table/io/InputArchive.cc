@@ -35,8 +35,8 @@ struct IndexSortCompare {
 class InputArchive::Impl {
 public:
 
-    PTR(Persistable) get(int id, InputArchive const & self) {
-        PTR(Persistable) empty;
+    std::shared_ptr<Persistable> get(int id, InputArchive const & self) {
+        std::shared_ptr<Persistable> empty;
         if (id == 0) return empty;
         std::pair<Map::iterator,bool> r = _map.insert(std::make_pair(id, empty));
         if (r.second) {
@@ -145,7 +145,7 @@ public:
                 "Incorrect schema for index catalog"
             );
         }
-        _map.insert(std::make_pair(0, PTR(Persistable)()));
+        _map.insert(std::make_pair(0, std::shared_ptr<Persistable>()));
         _index.sort(IndexSortCompare());
     }
 
@@ -166,7 +166,7 @@ public:
 
 InputArchive::InputArchive() : _impl(new Impl()) {}
 
-InputArchive::InputArchive(PTR(Impl) impl) : _impl(impl) {}
+InputArchive::InputArchive(std::shared_ptr<Impl> impl) : _impl(impl) {}
 
 InputArchive::InputArchive(BaseCatalog const & index, CatalogVector const & catalogs) :
     _impl(new Impl(index, catalogs))
@@ -181,13 +181,13 @@ InputArchive & InputArchive::operator=(InputArchive const & other) {
 
 InputArchive::~InputArchive() {}
 
-PTR(Persistable) InputArchive::get(int id) const { return _impl->get(id, *this); }
+std::shared_ptr<Persistable> InputArchive::get(int id) const { return _impl->get(id, *this); }
 
 InputArchive::Map const & InputArchive::getAll() const { return _impl->getAll(*this); }
 
 InputArchive InputArchive::readFits(fits::Fits & fitsfile) {
     BaseCatalog index = BaseCatalog::readFits(fitsfile);
-    PTR(daf::base::PropertyList) metadata = index.getTable()->popMetadata();
+    std::shared_ptr<daf::base::PropertyList> metadata = index.getTable()->popMetadata();
     assert(metadata); // BaseCatalog::readFits should always read metadata, even if there's nothing there
     if (metadata->get<std::string>("EXTTYPE") != "ARCHIVE_INDEX") {
         throw LSST_FITS_EXCEPT(
@@ -221,7 +221,7 @@ InputArchive InputArchive::readFits(fits::Fits & fitsfile) {
             );
         }
     }
-    PTR(Impl) impl(new Impl(index, catalogs));
+    std::shared_ptr<Impl> impl(new Impl(index, catalogs));
     return InputArchive(impl);
 }
 

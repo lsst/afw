@@ -177,7 +177,7 @@ namespace {
 class ExposureFitsWriter : public io::FitsWriter {
 public:
 
-    ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive, int flags)
+    ExposureFitsWriter(Fits * fits, std::shared_ptr<io::OutputArchive> archive, int flags)
     :
         io::FitsWriter(fits, flags),
         _doWriteArchive(false),
@@ -192,7 +192,7 @@ public:
 
 protected:
 
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows);
 
     virtual void _writeRecord(BaseRecord const & r);
 
@@ -201,14 +201,14 @@ protected:
     }
 
     bool _doWriteArchive;
-    PTR(io::OutputArchive) _archive;
-    PTR(BaseRecord) _record;
+    std::shared_ptr<io::OutputArchive> _archive;
+    std::shared_ptr<BaseRecord> _record;
     PersistenceHelper _helper;
     SchemaMapper _mapper;
 };
 
-void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(ExposureTable) inTable = std::dynamic_pointer_cast<ExposureTable const>(t);
+void ExposureFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & t, std::size_t nRows) {
+    std::shared_ptr<ExposureTable const> inTable = std::dynamic_pointer_cast<ExposureTable const>(t);
     if (!inTable) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -216,7 +216,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
         );
     }
     _mapper = _helper.makeWriteMapper(inTable->getSchema());
-    PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
+    std::shared_ptr<BaseTable> outTable = BaseTable::make(_mapper.getOutputSchema());
     io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
     _fits->writeKey(EXPOSURE_TABLE_VERSION_KEY, EXPOSURE_TABLE_CURRENT_VERSION, "Exposure table version");
@@ -238,7 +238,7 @@ void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
 // FitsColumnReader that reads a Persistable subclass T (Wcs, Psf, or Calib here) by using an int
 // column to retrieve the object from an InputArchive and attach it to an ExposureRecord via
 // the Setter member function pointer.
-template <typename T, void (ExposureRecord::*Setter)(PTR(T const))>
+template <typename T, void (ExposureRecord::*Setter)(std::shared_ptr<T const>)>
 class PersistableObjectColumnReader : public io::FitsColumnReader {
 public:
 
@@ -264,11 +264,11 @@ public:
         BaseRecord & record,
         std::size_t row,
         fits::Fits & fits,
-        PTR(io::InputArchive) const & archive
+        std::shared_ptr<io::InputArchive> const & archive
     ) const {
         int id = 0;
         fits.readTableScalar<int>(row, _column, id);
-        PTR(T) value = archive->get<T>(id);
+        std::shared_ptr<T> value = archive->get<T>(id);
         (static_cast<ExposureRecord&>(record).*(Setter))(value);
     }
 
@@ -284,9 +284,9 @@ public:
 
     ExposureFitsReader() : afw::table::io::FitsReader("EXPOSURE") {}
 
-    virtual PTR(BaseTable) makeTable(
+    virtual std::shared_ptr<BaseTable> makeTable(
         io::FitsSchemaInputMapper & mapper,
-        PTR(daf::base::PropertyList) metadata,
+        std::shared_ptr<daf::base::PropertyList> metadata,
         int ioFlags,
         bool stripMetadata
     ) const {
@@ -307,7 +307,7 @@ public:
             PersistableObjectColumnReader<image::VisitInfo, &ExposureRecord::setVisitInfo>::setup(
                 "visitInfo", mapper);
         }
-        PTR(ExposureTable) table = ExposureTable::make(mapper.finalize());
+        std::shared_ptr<ExposureTable> table = ExposureTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
     }
@@ -363,7 +363,7 @@ bool ExposureRecord::contains(geom::Point2D const & point, image::Wcs const & wc
     return contains(*wcs.pixelToSky(point), includeValidPolygon);
 }
 
-ExposureRecord::ExposureRecord(PTR(ExposureTable) const & table) : BaseRecord(table) {}
+ExposureRecord::ExposureRecord(std::shared_ptr<ExposureTable> const & table) : BaseRecord(table) {}
 
 void ExposureRecord::_assign(BaseRecord const & other) {
     try {
@@ -377,7 +377,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
     } catch (std::bad_cast&) {}
 }
 
-PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
+std::shared_ptr<ExposureTable> ExposureTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterError,
@@ -405,13 +405,13 @@ ExposureTable::MinimalSchema & ExposureTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter)
+std::shared_ptr<io::FitsWriter>
 ExposureTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return std::make_shared<ExposureFitsWriter>(fitsfile, PTR(io::OutputArchive)(), flags);
+    return std::make_shared<ExposureFitsWriter>(fitsfile, std::shared_ptr<io::OutputArchive>(), flags);
 }
 
-PTR(io::FitsWriter)
-ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags) const {
+std::shared_ptr<io::FitsWriter>
+ExposureTable::makeFitsWriter(fits::Fits * fitsfile, std::shared_ptr<io::OutputArchive> archive, int flags) const {
     return std::make_shared<ExposureFitsWriter>(fitsfile, archive, flags);
 }
 

@@ -147,11 +147,11 @@ private:
 
     template <typename T> friend class PersistableFacade;
 
-    static PTR(Persistable) _readFits(std::string const & fileName, int hdu=INT_MIN);
+    static std::shared_ptr<Persistable> _readFits(std::string const & fileName, int hdu=INT_MIN);
 
-    static PTR(Persistable) _readFits(fits::MemFileManager & manager, int hdu=INT_MIN);
+    static std::shared_ptr<Persistable> _readFits(fits::MemFileManager & manager, int hdu=INT_MIN);
 
-    static PTR(Persistable) _readFits(fits::Fits & fitsfile);
+    static std::shared_ptr<Persistable> _readFits(fits::Fits & fitsfile);
 
 };
 
@@ -181,7 +181,7 @@ public:
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
-    static PTR(T) readFits(fits::Fits & fitsfile) {
+    static std::shared_ptr<T> readFits(fits::Fits & fitsfile) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
     }
 
@@ -192,7 +192,7 @@ public:
      *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
      *                           skips the primary HDU if it is empty.
      */
-    static PTR(T) readFits(std::string const & fileName, int hdu=INT_MIN) {
+    static std::shared_ptr<T> readFits(std::string const & fileName, int hdu=INT_MIN) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
     }
 
@@ -203,7 +203,7 @@ public:
      *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
      *                           skips the primary HDU if it is empty.
      */
-    static PTR(T) readFits(fits::MemFileManager & manager, int hdu=INT_MIN) {
+    static std::shared_ptr<T> readFits(fits::MemFileManager & manager, int hdu=INT_MIN) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
     }
 
@@ -236,7 +236,7 @@ public:
     explicit PersistableFactory(std::string const & name);
 
     /// Construct a new object from the given InputArchive and vector of catalogs.
-    virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const = 0;
+    virtual std::shared_ptr<Persistable> read(InputArchive const & archive, CatalogVector const & catalogs) const = 0;
 
     /**
      *  Return the factory that has been registered with the given name.

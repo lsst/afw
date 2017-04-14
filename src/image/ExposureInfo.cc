@@ -55,43 +55,43 @@ int popInt(daf::base::PropertySet & metadata, std::string const & name) {
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
-PTR(Calib) ExposureInfo::_cloneCalib(CONST_PTR(Calib) calib) {
+std::shared_ptr<Calib> ExposureInfo::_cloneCalib(std::shared_ptr<Calib const> calib) {
     if (calib)
-        return PTR(Calib)(new Calib(*calib));
-    return PTR(Calib)();
+        return std::shared_ptr<Calib>(new Calib(*calib));
+    return std::shared_ptr<Calib>();
 }
 
-PTR(Wcs) ExposureInfo::_cloneWcs(CONST_PTR(Wcs) wcs) {
+std::shared_ptr<Wcs> ExposureInfo::_cloneWcs(std::shared_ptr<Wcs const> wcs) {
     if (wcs)
         return wcs->clone();
-    return PTR(Wcs)();
+    return std::shared_ptr<Wcs>();
 }
 
-PTR(ApCorrMap) ExposureInfo::_cloneApCorrMap(PTR(ApCorrMap const) apCorrMap) {
+std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap) {
     if (apCorrMap) {
         return std::make_shared<ApCorrMap>(*apCorrMap);
     }
-    return PTR(ApCorrMap)();
+    return std::shared_ptr<ApCorrMap>();
 }
 
 ExposureInfo::ExposureInfo(
-    CONST_PTR(Wcs) const & wcs,
-    CONST_PTR(detection::Psf) const & psf,
-    CONST_PTR(Calib) const & calib,
-    CONST_PTR(cameraGeom::Detector) const & detector,
-    CONST_PTR(geom::polygon::Polygon) const & polygon,
+    std::shared_ptr<Wcs const> const & wcs,
+    std::shared_ptr<detection::Psf const> const & psf,
+    std::shared_ptr<Calib const> const & calib,
+    std::shared_ptr<cameraGeom::Detector const> const & detector,
+    std::shared_ptr<geom::polygon::Polygon const> const & polygon,
     Filter const & filter,
-    PTR(daf::base::PropertySet) const & metadata,
-    PTR(CoaddInputs) const & coaddInputs,
-    PTR(ApCorrMap) const & apCorrMap,
-    CONST_PTR(image::VisitInfo) const & visitInfo
+    std::shared_ptr<daf::base::PropertySet> const & metadata,
+    std::shared_ptr<CoaddInputs> const & coaddInputs,
+    std::shared_ptr<ApCorrMap> const & apCorrMap,
+    std::shared_ptr<image::VisitInfo const> const & visitInfo
 ) : _wcs(_cloneWcs(wcs)),
     _psf(std::const_pointer_cast<detection::Psf>(psf)),
-    _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
+    _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
     _detector(detector),
     _validPolygon(polygon),
     _filter(filter),
-    _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
+    _metadata(metadata ? metadata : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
     _coaddInputs(coaddInputs),
     _apCorrMap(_cloneApCorrMap(apCorrMap)),
     _visitInfo(visitInfo)
@@ -193,7 +193,7 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     //In the case where this image is a parent image, the reference pixels are unchanged
     //by this transformation
     if (hasWcs()) {
-        PTR(Wcs) newWcs = getWcs()->clone(); //Create a copy
+        std::shared_ptr<Wcs> newWcs = getWcs()->clone(); //Create a copy
         newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY() );
 
         // We want the WCS to appear in all HDUs
@@ -240,8 +240,8 @@ void ExposureInfo::_finishWriteFits(fits::Fits & fitsfile, FitsWriteData const &
 
 void ExposureInfo::_readFits(
     fits::Fits & fitsfile,
-    PTR(daf::base::PropertySet) metadata,
-    PTR(daf::base::PropertySet) imageMetadata
+    std::shared_ptr<daf::base::PropertySet> metadata,
+    std::shared_ptr<daf::base::PropertySet> imageMetadata
 ) {
     // true: strip keywords that are related to the created WCS from the input metadata
     _wcs = makeWcs(imageMetadata, true);
@@ -258,10 +258,10 @@ void ExposureInfo::_readFits(
     _filter = Filter(metadata, true);
     detail::stripFilterKeywords(metadata);
 
-    _visitInfo = CONST_PTR(VisitInfo)(new VisitInfo(*metadata));
+    _visitInfo = std::shared_ptr<VisitInfo const>(new VisitInfo(*metadata));
     detail::stripVisitInfoKeywords(*metadata);
 
-    PTR(Calib) newCalib(new Calib(metadata));
+    std::shared_ptr<Calib> newCalib(new Calib(metadata));
     setCalib(newCalib);
     detail::stripCalibKeywords(metadata);
 

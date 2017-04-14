@@ -53,7 +53,7 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     unsigned int width,
     unsigned int height,
-    CONST_PTR(Wcs) wcs
+    std::shared_ptr<Wcs const> wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
@@ -63,7 +63,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions,
-    CONST_PTR(Wcs) wcs
+    std::shared_ptr<Wcs const> wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
@@ -73,7 +73,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Box2I const & bbox,
-    CONST_PTR(Wcs) wcs
+    std::shared_ptr<Wcs const> wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
@@ -83,7 +83,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage,
-    CONST_PTR(Wcs) wcs
+    std::shared_ptr<Wcs const> wcs
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
@@ -93,7 +93,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT & maskedImage,
-    PTR(ExposureInfo) info
+    std::shared_ptr<ExposureInfo> info
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
@@ -163,8 +163,8 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::_readFits(
     fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
     ImageOrigin origin, bool conformMasks
 ) {
-    PTR(daf::base::PropertySet) metadata(new lsst::daf::base::PropertyList());
-    PTR(daf::base::PropertySet) imageMetadata(new lsst::daf::base::PropertyList());
+    std::shared_ptr<daf::base::PropertySet> metadata(new lsst::daf::base::PropertyList());
+    std::shared_ptr<daf::base::PropertySet> imageMetadata(new lsst::daf::base::PropertyList());
     _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks, false, imageMetadata);
     _info->_readFits(fitsfile, metadata, imageMetadata);
 }

@@ -492,7 +492,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.cmpExposure(exposureF, nexp)
 
         # Ensure that the copy was deep.
-        # (actually this test is invalid since getDetector() returns a CONST_PTR)
+        # (actually this test is invalid since getDetector() returns a shared_ptr)
         # cen0 = exposureU.getDetector().getCenterPixel()
         # x0,y0 = cen0
         # det = exposureF.getDetector()

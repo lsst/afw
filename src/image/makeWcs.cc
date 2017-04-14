@@ -31,8 +31,8 @@
 namespace except = lsst::pex::exceptions;
 namespace afwImg = lsst::afw::image;
 
-afwImg::Wcs::Ptr afwImg::makeWcs(
-        PTR(lsst::daf::base::PropertySet) const& _metadata,
+std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
+        std::shared_ptr<lsst::daf::base::PropertySet> const& _metadata,
         bool stripMetadata
                                 )
 {
@@ -47,7 +47,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
         ctype1 = metadata->getAsString("CTYPE1");
         ctype2 = metadata->getAsString("CTYPE2");
     } else {
-        return PTR(Wcs)();
+        return std::shared_ptr<Wcs>();
     }
     //
     // SCAMP used to use PVi_j keys with a CTYPE of TAN to specify a "TPV" projection
@@ -72,9 +72,9 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
         metadata->set<std::string>("CTYPE2", ctype2);
     }
 
-    afwImg::Wcs::Ptr wcs;               // we can't use make_shared as ctor is private
+    std::shared_ptr<afwImg::Wcs> wcs;               // we can't use make_shared as ctor is private
     if (ctype1.substr(5, 3) == "TAN") {
-        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
+        wcs = std::shared_ptr<afwImg::Wcs>(new afwImg::TanWcs(metadata));
     } else if (ctype1.substr(5, 3) == "TPV") { // unfortunately we don't support TPV
         if (!modifyable) {
             metadata = _metadata->deepCopy();
@@ -102,9 +102,9 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
             }
         }
 
-        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
+        wcs = std::shared_ptr<afwImg::Wcs>(new afwImg::TanWcs(metadata));
     } else {
-        wcs = afwImg::Wcs::Ptr(new afwImg::Wcs(metadata));
+        wcs = std::shared_ptr<afwImg::Wcs>(new afwImg::Wcs(metadata));
     }
 
     // If keywords LTV[1,2] are present, the image on disk is already a subimage, so
@@ -126,7 +126,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     return wcs;
 }
 
-afwImg::Wcs::Ptr afwImg::makeWcs(
+std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
     lsst::afw::coord::Coord const & crval,
     lsst::afw::geom::Point2D const & crpix,
     double CD11,
@@ -139,5 +139,5 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     lsst::afw::geom::Point2D crvalTmp;
     crvalTmp[0] = crval.toIcrs().getLongitude().asDegrees();
     crvalTmp[1] = crval.toIcrs().getLatitude().asDegrees();
-    return afwImg::Wcs::Ptr(new lsst::afw::image::TanWcs(crvalTmp, crpix, CD));
+    return std::shared_ptr<afwImg::Wcs>(new lsst::afw::image::TanWcs(crvalTmp, crpix, CD));
 }

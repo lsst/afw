@@ -133,7 +133,7 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
     std::vector<double> ycenTmp, gridTmp;
     cullNan(_ycen, _grid, ycenTmp, gridTmp);
 
-    PTR(Interpolate) intobj;
+    std::shared_ptr<Interpolate> intobj;
     try {
         intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
     } catch(pex::exceptions::OutOfRangeError &e) {
@@ -203,7 +203,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle,
     cullNan(_xcen, bg_x, xcenTmp, bgTmp);
 
     try {
-        PTR(Interpolate) intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
+        std::shared_ptr<Interpolate> intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
         return static_cast<double>(intobj->interpolate(x));
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "in getPixel()");
@@ -211,7 +211,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle,
     }
 }
 template<typename PixelT>
-PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
+std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
     geom::Box2I const& bbox,
         Interpolate::Style const interpStyle_,   // Style of the interpolation
         UndersampleStyle const undersampleStyle // Behaviour if there are too few points
@@ -301,8 +301,8 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
 
     // create a shared_ptr to put the background image in and return to caller
     // start with xy0 = 0 and set final xy0 later
-    PTR(image::Image<PixelT>) bg =
-        PTR(image::Image<PixelT>)(new image::Image<PixelT>(bbox.getDimensions()));
+    std::shared_ptr<image::Image<PixelT>> bg =
+        std::shared_ptr<image::Image<PixelT>>(new image::Image<PixelT>(bbox.getDimensions()));
 
     // go through row by row
     // - interpolate on the gridcolumns that were pre-computed by the constructor
@@ -323,7 +323,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         }
         cullNan(_xcen, bg_x, xcenTmp, bgTmp, defaultValue);
 
-        PTR(Interpolate) intobj;
+        std::shared_ptr<Interpolate> intobj;
         try {
             intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
         } catch(pex::exceptions::OutOfRangeError &e) {
@@ -369,7 +369,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
 
 
 template<typename PixelT>
-PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
+std::shared_ptr<Approximate<PixelT>> BackgroundMI::doGetApproximate(
         ApproximateControl const& actrl,                          /* Approximation style */
         UndersampleStyle const undersampleStyle                   /* Behaviour if there are too few points */
                                     ) const
@@ -388,7 +388,7 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
                                           BackgroundControl const& bgCtrl); \
     template BackgroundMI::BackgroundMI(image::MaskedImage<TYPE> const& img, \
                                           BackgroundControl const& bgCtrl); \
-    PTR(image::Image<TYPE>)                                     \
+    std::shared_ptr<image::Image<TYPE>>                                     \
     BackgroundMI::_getImage(                                            \
         geom::Box2I const& bbox, \
         Interpolate::Style const interpStyle,                    /* Style of the interpolation */ \
@@ -400,7 +400,7 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
     }
 
 #define CREATE_getApproximate(m, v, TYPE)                               \
-PTR(Approximate<TYPE>) BackgroundMI::_getApproximate(                   \
+std::shared_ptr<Approximate<TYPE>> BackgroundMI::_getApproximate(                   \
         ApproximateControl const& actrl,                         /* Approximation style */ \
         UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
         TYPE                                                     /* disambiguate */ \

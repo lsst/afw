@@ -71,7 +71,7 @@ PYBIND11_PLUGIN(_random) {
             "algorithm"_a=Random::Algorithm::MT19937, "seed"_a=1);
     clsRandom.def(py::init<std::string const &, unsigned long>(),
             "algorithm"_a, "seed"_a=1);
-    clsRandom.def(py::init<lsst::pex::policy::Policy::Ptr const>(),
+    clsRandom.def(py::init<std::shared_ptr<lsst::pex::policy::Policy> const>(),
             "policy"_a);
 
     /* Members */

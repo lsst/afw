@@ -48,7 +48,7 @@ void declareApproximate(py::module & mod, std::string const & suffix) {
             "orderX"_a=-1, "orderY"_a=-1);
 
 
-    mod.def("makeApproximate", (PTR(Approximate<PixelT>) (*)(std::vector<double> const &, std::vector<double> const &, image::MaskedImage<PixelT> const&, geom::Box2I const&, ApproximateControl const&)) makeApproximate<PixelT>,
+    mod.def("makeApproximate", (std::shared_ptr<Approximate<PixelT>> (*)(std::vector<double> const &, std::vector<double> const &, image::MaskedImage<PixelT> const&, geom::Box2I const&, ApproximateControl const&)) makeApproximate<PixelT>,
             "x"_a, "y"_a, "im"_a, "bbox"_a, "ctrl"_a);
 
 }

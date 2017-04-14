@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     vector.getTable()->getMetadata()->add("MONKEYS", 155, "monkeys per tree");
 
     {
-        PTR(Footprint) fp1 = std::make_shared<Footprint>();
+        auto fp1 = std::make_shared<Footprint>();
         std::vector<lsst::afw::geom::Span> tempSpanList1 = {lsst::afw::geom::Span(0, 5, 8),
                                                             lsst::afw::geom::Span(1, 4, 9),
                                                             lsst::afw::geom::Span(2, 6, 7)};
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         fp1->setSpans(tempSpanSet1);
         fp1->addPeak(4.5f, 1.2f, 25.6f);
         fp1->addPeak(6.8f, 0.8f, 23.2f);
-        PTR(SourceRecord) r1 = vector.getTable()->makeRecord();
+        std::shared_ptr<SourceRecord> r1 = vector.getTable()->makeRecord();
         r1->setFootprint(fp1);
 
         r1->set(a_b_i, 314);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r1->set(a_s, "foo");
         vector.push_back(r1);
 
-        PTR(SourceRecord) r2 = vector.getTable()->makeRecord();
+        std::shared_ptr<SourceRecord> r2 = vector.getTable()->makeRecord();
         r2->set(a_b_i, 5123);
         r2->set(a_b_i_valid, true);
         r2->set(a_c_f, 44.8f);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r2->set(e_g_d_flag2, false);
         r2->set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
         r2->set(a_s, "bar");
-        PTR(Footprint) fp2 = std::make_shared<Footprint>();
+        auto fp2 = std::make_shared<Footprint>();
         std::vector<lsst::afw::geom::Span> tempSpanList2 = {lsst::afw::geom::Span(3, 2, 7),
                                                             lsst::afw::geom::Span(4, 3, 5)};
         auto tempSpanSet2 = std::make_shared<lsst::afw::geom::SpanSet>(std::move(tempSpanList2));

@@ -137,7 +137,7 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
                                         BackgroundControl const& bgCtrl); \
     template Background::Background(image::MaskedImage<TYPE> const& img, \
                                           BackgroundControl const& bgCtrl); \
-    template PTR(image::Image<TYPE>) Background::getImage<TYPE>(Interpolate::Style const, \
+    template std::shared_ptr<image::Image<TYPE>> Background::getImage<TYPE>(Interpolate::Style const, \
                                                                     UndersampleStyle const) const;
 
 

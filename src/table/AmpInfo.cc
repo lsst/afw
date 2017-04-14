@@ -23,12 +23,12 @@ public:
 
 protected:
 
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows);
 
 };
 
-void AmpInfoFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(AmpInfoTable) table = std::dynamic_pointer_cast<AmpInfoTable const>(t);
+void AmpInfoFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & t, std::size_t nRows) {
+    std::shared_ptr<AmpInfoTable const> table = std::dynamic_pointer_cast<AmpInfoTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -55,13 +55,13 @@ public:
 
     AmpInfoFitsReader() : io::FitsReader("AMPINFO") {}
 
-    virtual PTR(BaseTable) makeTable(
+    virtual std::shared_ptr<BaseTable> makeTable(
         io::FitsSchemaInputMapper & mapper,
-        PTR(daf::base::PropertyList) metadata,
+        std::shared_ptr<daf::base::PropertyList> metadata,
         int ioFlags,
         bool stripMetadata
     ) const {
-        PTR(AmpInfoTable) table = AmpInfoTable::make(mapper.finalize());
+        std::shared_ptr<AmpInfoTable> table = AmpInfoTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
     }
@@ -76,9 +76,9 @@ static AmpInfoFitsReader const ampInfoFitsReader;
 //----- AmpInfoTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-AmpInfoRecord::AmpInfoRecord(PTR(AmpInfoTable) const & table) : BaseRecord(table) {}
+AmpInfoRecord::AmpInfoRecord(std::shared_ptr<AmpInfoTable> const & table) : BaseRecord(table) {}
 
-PTR(AmpInfoTable) AmpInfoTable::make(Schema const & schema) {
+std::shared_ptr<AmpInfoTable> AmpInfoTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterError,
@@ -199,7 +199,7 @@ AmpInfoTable::MinimalSchema & AmpInfoTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter)
+std::shared_ptr<io::FitsWriter>
 AmpInfoTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<AmpInfoFitsWriter>(fitsfile, flags);
 }

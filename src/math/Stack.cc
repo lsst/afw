@@ -89,7 +89,7 @@ void checkOnlyOneFlag(unsigned int flags) {
     }
 
     template<typename ImageT>
-    void checkImageSizes(ImageT const& out, std::vector<PTR(ImageT)> const& images)
+    void checkImageSizes(ImageT const& out, std::vector<std::shared_ptr<ImageT>> const& images)
     {
         afwGeom::Extent2I const& dim = out.getDimensions();
         for (unsigned int i = 0; i < images.size(); ++i) {
@@ -118,7 +118,7 @@ void checkOnlyOneFlag(unsigned int flags) {
 template<typename PixelT, bool isWeighted, bool useVariance>
 void computeMaskedImageStack(
     afwImage::MaskedImage<PixelT> & imgStack,
-    std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > const &images,
+    std::vector<std::shared_ptr<afwImage::MaskedImage<PixelT>> > const &images,
     afwMath::Property flags,
     afwMath::StatisticsControl const& sctrl,
     WeightVector const &wvector=WeightVector()
@@ -198,8 +198,8 @@ void computeMaskedImageStack(
 
 
 template<typename PixelT>
-typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
-        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images,
+std::shared_ptr<afwImage::MaskedImage<PixelT>> afwMath::statisticsStack(
+        std::vector<std::shared_ptr<afwImage::MaskedImage<PixelT>> > &images,
         afwMath::Property flags,
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &wvector
@@ -208,7 +208,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     if (images.size() == 0) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
-    typename afwImage::MaskedImage<PixelT>::Ptr out(
+    std::shared_ptr<afwImage::MaskedImage<PixelT>> out(
         new afwImage::MaskedImage<PixelT>(images[0]->getDimensions()));
     statisticsStack(*out, images, flags, sctrl, wvector);
     return out;
@@ -216,7 +216,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 template<typename PixelT>
 void afwMath::statisticsStack(
     afwImage::MaskedImage<PixelT>& out,
-        std::vector<typename afwImage::MaskedImage<PixelT>::Ptr > &images,
+        std::vector<std::shared_ptr<afwImage::MaskedImage<PixelT>> > &images,
         afwMath::Property flags,
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &wvector
@@ -258,7 +258,7 @@ namespace {
 template<typename PixelT, bool isWeighted>
 void computeImageStack(
     afwImage::Image<PixelT> & imgStack,
-        std::vector<typename afwImage::Image<PixelT>::Ptr > &images,
+        std::vector<std::shared_ptr<afwImage::Image<PixelT>> > &images,
         afwMath::Property flags,
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &weights=WeightVector()
@@ -295,8 +295,8 @@ void computeImageStack(
 
 
 template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
-        std::vector<typename afwImage::Image<PixelT>::Ptr > &images,
+std::shared_ptr<afwImage::Image<PixelT>> afwMath::statisticsStack(
+        std::vector<std::shared_ptr<afwImage::Image<PixelT>> > &images,
         afwMath::Property flags,
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &wvector
@@ -305,7 +305,7 @@ typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
     if (images.size() == 0) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
-    typename afwImage::Image<PixelT>::Ptr out(new afwImage::Image<PixelT>(images[0]->getDimensions()));
+    std::shared_ptr<afwImage::Image<PixelT>> out(new afwImage::Image<PixelT>(images[0]->getDimensions()));
     statisticsStack(*out, images, flags, sctrl, wvector);
     return out;
 }
@@ -313,7 +313,7 @@ typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
 template<typename PixelT>
 void afwMath::statisticsStack(
     afwImage::Image<PixelT> & out,
-    std::vector<typename afwImage::Image<PixelT>::Ptr > &images,
+    std::vector<std::shared_ptr<afwImage::Image<PixelT>> > &images,
     afwMath::Property flags,
     afwMath::StatisticsControl const& sctrl,
     WeightVector const &wvector
@@ -345,7 +345,7 @@ namespace {
  *   to handle cases when we are, or are not, weighting
  */
 template<typename PixelT, bool isWeighted>
-typename std::shared_ptr<std::vector<PixelT> > computeVectorStack(
+std::shared_ptr<std::vector<PixelT> > computeVectorStack(
         std::vector<std::shared_ptr<std::vector<PixelT> > > &vectors,
         afwMath::Property flags,
         afwMath::StatisticsControl const& sctrl,
@@ -412,7 +412,7 @@ std::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
  * ************************************************************************ */
 
 template<typename PixelT>
-typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
+std::shared_ptr<afwImage::MaskedImage<PixelT>> afwMath::statisticsStack(
         afwImage::Image<PixelT> const &image,
         afwMath::Property flags,
         char dimension,
@@ -423,12 +423,12 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     int x0 = image.getX0();
     int y0 = image.getY0();
     typedef afwImage::MaskedImage<PixelT> MImage;
-    typename MImage::Ptr imgOut;
+    std::shared_ptr<MImage> imgOut;
 
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = typename MImage::Ptr(
+        imgOut = std::shared_ptr<MImage>(
             new MImage(geom::Extent2I(1, image.getHeight()))
         );
         int y = y0;
@@ -447,7 +447,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         }
 
     } else if (dimension == 'y') {
-        imgOut = typename MImage::Ptr(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
         int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
@@ -470,7 +470,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 
 
 template<typename PixelT>
-typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
+std::shared_ptr<afwImage::MaskedImage<PixelT>> afwMath::statisticsStack(
         afwImage::MaskedImage<PixelT> const &image,
         afwMath::Property flags,
         char dimension,
@@ -480,12 +480,12 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     int const x0 = image.getX0();
     int const y0 = image.getY0();
     typedef afwImage::MaskedImage<PixelT> MImage;
-    typename MImage::Ptr imgOut;
+    std::shared_ptr<MImage> imgOut;
 
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = typename MImage::Ptr(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
         int y = 0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
@@ -497,7 +497,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         }
 
     } else if (dimension == 'y') {
-        imgOut = typename MImage::Ptr(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
         int x = 0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
@@ -521,25 +521,25 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
  */
 /// @cond
 #define INSTANTIATE_STACKS(TYPE) \
-    template afwImage::Image<TYPE>::Ptr afwMath::statisticsStack<TYPE>( \
-            std::vector<afwImage::Image<TYPE>::Ptr > &images, \
+    template std::shared_ptr<afwImage::Image<TYPE>> afwMath::statisticsStack<TYPE>( \
+            std::vector<std::shared_ptr<afwImage::Image<TYPE>> > &images, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                          \
     template void afwMath::statisticsStack<TYPE>( \
             afwImage::Image<TYPE> &out, \
-            std::vector<afwImage::Image<TYPE>::Ptr > &images, \
+            std::vector<std::shared_ptr<afwImage::Image<TYPE>> > &images, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                          \
-    template afwImage::MaskedImage<TYPE>::Ptr afwMath::statisticsStack<TYPE>( \
-            std::vector<afwImage::MaskedImage<TYPE>::Ptr > &images, \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> afwMath::statisticsStack<TYPE>( \
+            std::vector<std::shared_ptr<afwImage::MaskedImage<TYPE>> > &images, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                          \
     template void afwMath::statisticsStack<TYPE>( \
             afwImage::MaskedImage<TYPE> &out, \
-            std::vector<afwImage::MaskedImage<TYPE>::Ptr > &images, \
+            std::vector<std::shared_ptr<afwImage::MaskedImage<TYPE>> > &images, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                          \
@@ -548,12 +548,12 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                               \
-    template afwImage::MaskedImage<TYPE>::Ptr afwMath::statisticsStack( \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> afwMath::statisticsStack( \
             afwImage::Image<TYPE> const &image, \
             afwMath::Property flags,                    \
             char dimension,                                     \
             afwMath::StatisticsControl const& sctrl); \
-    template afwImage::MaskedImage<TYPE>::Ptr afwMath::statisticsStack( \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> afwMath::statisticsStack( \
             afwImage::MaskedImage<TYPE> const &image, \
             afwMath::Property flags,                    \
             char dimension,                                     \

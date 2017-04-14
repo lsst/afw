@@ -35,10 +35,10 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-typename ImageT::Ptr rotateImageBy90(ImageT const& inImage,
+std::shared_ptr<ImageT> rotateImageBy90(ImageT const& inImage,
                                      int nQuarter
                                     ) {
-    typename ImageT::Ptr outImage;      // output image
+    std::shared_ptr<ImageT> outImage;      // output image
 
     while (nQuarter < 0) {
         nQuarter += 4;
@@ -90,11 +90,11 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage,
 }
 
 template<typename ImageT>
-PTR(ImageT) flipImage(ImageT const& inImage,
+std::shared_ptr<ImageT> flipImage(ImageT const& inImage,
                       bool flipLR,
                       bool flipTB
                      ) {
-    typename ImageT::Ptr outImage(new ImageT(inImage, true)); // Output image
+    std::shared_ptr<ImageT> outImage(new ImageT(inImage, true)); // Output image
 
     if (flipLR) {
         if (flipTB) {
@@ -137,18 +137,18 @@ PTR(ImageT) flipImage(ImageT const& inImage,
 //
 /// @cond
 #define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
-    template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int); \
-    template afwImage::Image<TYPE>::Ptr flipImage(afwImage::Image<TYPE> const&, bool flipLR, bool flipTB); \
-    template afwImage::MaskedImage<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB);
+    template std::shared_ptr<afwImage::Image<TYPE>> rotateImageBy90(afwImage::Image<TYPE> const&, int); \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int); \
+    template std::shared_ptr<afwImage::Image<TYPE>> flipImage(afwImage::Image<TYPE> const&, bool flipLR, bool flipTB); \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB);
 
 
 INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template afwImage::Mask<std::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int);
-template afwImage::Mask<std::uint16_t>::Ptr flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB);
+template std::shared_ptr<afwImage::Mask<std::uint16_t>> rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int);
+template std::shared_ptr<afwImage::Mask<std::uint16_t>> flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB);
 /// @endcond
 
 }}}

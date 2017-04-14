@@ -53,8 +53,8 @@ math::Random & rng() {
     return *generator;
 }
 
-PTR(afwTable::SourceTable) getGlobalTable() {
-    static PTR(afwTable::SourceTable) table;
+std::shared_ptr<afwTable::SourceTable> getGlobalTable() {
+    static std::shared_ptr<afwTable::SourceTable> table;
     if (!table) {
         afwTable::Schema schema = afwTable::SourceTable::makeMinimalSchema();
         afwTable::Point2DKey::addFields(schema, "centroid", "dummy centroid", "pixel");
@@ -68,7 +68,7 @@ PTR(afwTable::SourceTable) getGlobalTable() {
 // the unit sphere (ra/dec space) and the unit box (x,y space).
 void makeSources(afwTable::SourceCatalog &set, int n) {
     for (int i = 0; i < n; ++i) {
-        PTR(afwTable::SourceRecord) src = set.addNew();
+        std::shared_ptr<afwTable::SourceRecord> src = set.addNew();
         src->setId(i);
         src->set(set.getTable()->getCentroidKey(), afwGeom::Point2D(rng().uniform(), rng().uniform()));
         double z = rng().flat(-1.0, 1.0);
@@ -87,7 +87,7 @@ struct CmpSourceMatch {
 };
 
 struct DistRaDec {
-    double operator()(PTR(afwTable::SourceRecord) const &s1, PTR(afwTable::SourceRecord) const &s2) const {
+    double operator()(std::shared_ptr<afwTable::SourceRecord> const &s1, std::shared_ptr<afwTable::SourceRecord> const &s2) const {
         // halversine distance formula
         double sinDeltaRa = std::sin(0.5*(s2->getRa() - s1->getRa()));
         double sinDeltaDec = std::sin(0.5*(s2->getDec() - s1->getDec()));
@@ -101,7 +101,7 @@ struct DistRaDec {
 };
 
 struct DistXy {
-    double operator()(PTR(afwTable::SourceRecord) const &s1, PTR(afwTable::SourceRecord) const &s2) const {
+    double operator()(std::shared_ptr<afwTable::SourceRecord> const &s1, std::shared_ptr<afwTable::SourceRecord> const &s2) const {
         double dx = s2->getX() - s1->getX();
         double dy = s2->getY() - s1->getY();
         return std::sqrt(dx*dx + dy*dy);
@@ -276,14 +276,14 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
             afwGeom::Angle ddec2 = 2. * rad;
             afwGeom::Angle dra2 = 2. * rad / cos(dec);
 
-            PTR(afwTable::SourceRecord) src1 = set1.addNew();
+            std::shared_ptr<afwTable::SourceRecord> src1 = set1.addNew();
             src1->setId(id1);
             id1++;
             src1->set(afwTable::SourceTable::getCoordKey().getRa(), ra);
             src1->set(afwTable::SourceTable::getCoordKey().getDec(), dec);
 
             // right on top
-            PTR(afwTable::SourceRecord) src2 = set2.addNew();
+            std::shared_ptr<afwTable::SourceRecord> src2 = set2.addNew();
             src2->setId(id2);
             id2++;
             src2->set(afwTable::SourceTable::getCoordKey().getRa(), ra);

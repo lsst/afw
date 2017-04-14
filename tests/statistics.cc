@@ -275,14 +275,14 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::description("requires afwdata 
 
             // get the image and header
             DecoratedImage dimg(img_path);
-            lsst::daf::base::PropertySet::Ptr fitsHdr = dimg.getMetadata(); // the FITS header
+            std::shared_ptr<lsst::daf::base::PropertySet> fitsHdr = dimg.getMetadata(); // the FITS header
 
             // get the true values of the mean and stdev
             double const trueMean = fitsHdr->getAsDouble("MEANCOMP");
             double const trueStdev = fitsHdr->getAsDouble("SIGCOMP");
 
             // measure the mean and stdev with the Statistics class
-            Image::Ptr img = dimg.getImage();
+            std::shared_ptr<Image> img = dimg.getImage();
             math::Statistics statobj = math::makeStatistics(*img, math::MEAN | math::STDEV);
             //int n = img->getWidth() * img->getHeight();
             //double sampleToPop = 1.0; //sqrt( n/static_cast<double>(n - 1) );

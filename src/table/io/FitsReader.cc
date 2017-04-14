@@ -17,13 +17,13 @@ static FitsReader const baseFitsReader("BASE");
 
 } // anonymous
 
-PTR(BaseTable) FitsReader::makeTable(
+std::shared_ptr<BaseTable> FitsReader::makeTable(
     FitsSchemaInputMapper & mapper,
-    PTR(daf::base::PropertyList) metadata,
+    std::shared_ptr<daf::base::PropertyList> metadata,
     int ioFlags,
     bool stripMetadata
 ) const {
-    PTR(BaseTable) result = BaseTable::make(mapper.finalize());
+    std::shared_ptr<BaseTable> result = BaseTable::make(mapper.finalize());
     result->setMetadata(metadata);
     return result;
 }
@@ -47,7 +47,7 @@ FitsReader const * FitsReader::_lookupFitsReader(daf::base::PropertyList const &
 void FitsReader::_setupArchive(
     afw::fits::Fits & fits,
     FitsSchemaInputMapper & mapper,
-    PTR(InputArchive) archive,
+    std::shared_ptr<InputArchive> archive,
     int ioFlags
 ) const {
     if (usesArchive(ioFlags)) {

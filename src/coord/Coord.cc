@@ -554,7 +554,7 @@ afwGeom::Angle afwCoord::Coord::offset(
 }
 
 
-PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) const {
+std::shared_ptr<afwCoord::Coord> afwCoord::Coord::convert(CoordSystem system, double epoch) const {
 
     switch (system) {
       case FK5:
@@ -1022,7 +1022,7 @@ std::string afwCoord::TopocentricCoord::toString() const {
  * ===============================================================================
  */
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
         CoordSystem const system,
         afwGeom::Angle const ra,
         afwGeom::Angle const dec,
@@ -1060,7 +1060,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
 
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
         CoordSystem const system,
         afwGeom::Angle const ra,
         afwGeom::Angle const dec
@@ -1095,7 +1095,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
 
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
         CoordSystem const system,
         lsst::afw::geom::Point3D const &p3d,
         double const epoch,
@@ -1105,7 +1105,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude(), epoch);
 }
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
         CoordSystem const system,
         lsst::afw::geom::Point3D const &p3d,
         bool normalize,
@@ -1115,7 +1115,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     return makeCoord(system, c.getLongitude(), c.getLatitude());
 }
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
         CoordSystem const system,
         lsst::afw::geom::Point2D const &p2d,
         afwGeom::AngleUnit unit,
@@ -1128,7 +1128,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     }
 }
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
         CoordSystem const system,
         lsst::afw::geom::Point2D const &p2d,
         afwGeom::AngleUnit unit
@@ -1140,7 +1140,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
     }
 }
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
                                    CoordSystem const system,
                                    std::string const ra,
                                    std::string const dec,
@@ -1148,7 +1148,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
                                   ) {
     return makeCoord(system, dmsStringToAngle(ra), dmsStringToAngle(dec), epoch);
 }
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
                                    CoordSystem const system,
                                    std::string const ra,
                                    std::string const dec
@@ -1158,7 +1158,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
 
 
-PTR(afwCoord::Coord) afwCoord::makeCoord(
+std::shared_ptr<afwCoord::Coord> afwCoord::makeCoord(
                                    CoordSystem const system
                                   ) {
     switch (system) {
@@ -1203,8 +1203,8 @@ std::ostream & afwCoord::operator<<(std::ostream & os, afwCoord::Coord const & c
 namespace {
 
 // Heavy lifting for averageCoord
-PTR(afwCoord::Coord) doAverageCoord(
-    std::vector<PTR(afwCoord::Coord const)> const coords,
+std::shared_ptr<afwCoord::Coord> doAverageCoord(
+    std::vector<std::shared_ptr<afwCoord::Coord const>> const coords,
     afwCoord::CoordSystem system
     )
 {
@@ -1226,8 +1226,8 @@ PTR(afwCoord::Coord) doAverageCoord(
 
 } // anonymous namespace
 
-PTR(afwCoord::Coord) afwCoord::averageCoord(
-    std::vector<PTR(afwCoord::Coord const)> const coords,
+std::shared_ptr<afwCoord::Coord> afwCoord::averageCoord(
+    std::vector<std::shared_ptr<afwCoord::Coord const>> const coords,
     afwCoord::CoordSystem system
     )
 {
@@ -1249,7 +1249,7 @@ PTR(afwCoord::Coord) afwCoord::averageCoord(
     }
 
     // Convert everything to the nominated coordinate system if necessary
-    std::vector<PTR(afwCoord::Coord const)> converted;
+    std::vector<std::shared_ptr<afwCoord::Coord const>> converted;
     converted.reserve(coords.size());
     for (auto&& cc : coords) {
         converted.push_back(cc->getCoordSystem() == system ? cc : cc->convert(system));

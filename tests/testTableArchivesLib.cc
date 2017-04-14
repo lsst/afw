@@ -40,8 +40,8 @@ namespace py = pybind11;
 class DummyPsf : public lsst::afw::detection::Psf {
 public:
 
-    virtual PTR(lsst::afw::detection::Psf) clone() const {
-        return PTR(lsst::afw::detection::Psf)(new DummyPsf(_x));
+    virtual std::shared_ptr<lsst::afw::detection::Psf> clone() const {
+        return std::shared_ptr<lsst::afw::detection::Psf>(new DummyPsf(_x));
     }
 
     virtual bool isPersistable() const { return true; }
@@ -60,11 +60,11 @@ public:
 
 protected:
 
-    virtual PTR(Image) doComputeKernelImage(
+    virtual std::shared_ptr<Image> doComputeKernelImage(
         lsst::afw::geom::Point2D const & ccdXY,
         lsst::afw::image::Color const & color
     ) const {
-        return PTR(Image)();
+        return std::shared_ptr<Image>();
     }
 
     virtual double doComputeApertureFlux(
@@ -122,7 +122,7 @@ private:
 class DummyPsfFactory : public lsst::afw::table::io::PersistableFactory {
 public:
 
-    virtual PTR(lsst::afw::table::io::Persistable)
+    virtual std::shared_ptr<lsst::afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         static DummyPsfPersistenceHelper const & keys = DummyPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
@@ -145,7 +145,7 @@ DummyPsfFactory registration("DummyPsf");
 void DummyPsf::write(OutputArchiveHandle & handle) const {
     static DummyPsfPersistenceHelper const & keys = DummyPsfPersistenceHelper::get();
     lsst::afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(lsst::afw::table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<lsst::afw::table::BaseRecord> record = catalog.addNew();
     (*record).set(keys.x, _x);
     handle.saveCatalog(catalog);
 }

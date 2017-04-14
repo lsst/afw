@@ -1132,19 +1132,19 @@ void Fits::closeFile() {
 }
 
 
-PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu, bool strip) {
+std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const & fileName, int hdu, bool strip) {
     fits::Fits fp(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fp.setHdu(hdu);
     return readMetadata(fp, strip);
 }
 
-PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hdu, bool strip) {
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager & manager, int hdu, bool strip) {
     fits::Fits fp(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fp.setHdu(hdu);
     return readMetadata(fp, strip);
 }
 
-PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip) {
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits & fitsfile, bool strip) {
     auto metadata = std::make_shared<lsst::daf::base::PropertyList>();
     fitsfile.readMetadata(*metadata, strip);
     // if INHERIT=T, we want to also include header entries from the primary HDU
@@ -1162,7 +1162,7 @@ PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip) {
             // because PropertySet::get will return the last value added when multiple values
             // are present and a scalar is requested; in that case, we want the non-inherited
             // value to be added last, so it's the one that takes precedence.
-            PTR(daf::base::PropertyList) inherited(new daf::base::PropertyList);
+            std::shared_ptr<daf::base::PropertyList> inherited(new daf::base::PropertyList);
             fitsfile.readMetadata(*inherited, strip);
             inherited->combine(metadata);
             inherited.swap(metadata);

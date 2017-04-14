@@ -28,7 +28,7 @@ class CatalogVector;
 class InputArchive {
 public:
 
-    typedef std::map<int,PTR(Persistable)> Map;
+    typedef std::map<int,std::shared_ptr<Persistable>> Map;
 
     /// Construct an empty InputArchive that contains no objects.
     InputArchive();
@@ -49,12 +49,12 @@ public:
      *
      *  If the object has already been loaded once, the same instance will be returned again.
      */
-    PTR(Persistable) get(int id) const;
+    std::shared_ptr<Persistable> get(int id) const;
 
     /// Load an object of the given type and ID with error checking.
     template <typename T>
-    PTR(T) get(int id) const {
-        PTR(T) p = std::dynamic_pointer_cast<T>(get(id));
+    std::shared_ptr<T> get(int id) const {
+        std::shared_ptr<T> p = std::dynamic_pointer_cast<T>(get(id));
         LSST_ARCHIVE_ASSERT(p || id == 0);
         return p;
     }
@@ -73,9 +73,9 @@ private:
 
     class Impl;
 
-    InputArchive(PTR(Impl) impl);
+    InputArchive(std::shared_ptr<Impl> impl);
 
-    PTR(Impl) _impl;
+    std::shared_ptr<Impl> _impl;
 };
 
 }}}} // namespace lsst::afw::table::io

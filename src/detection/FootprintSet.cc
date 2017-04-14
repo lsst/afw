@@ -193,7 +193,7 @@ private:
      * Sort peaks by decreasing pixel value.  N.b. -ve peaks are sorted the same way as +ve ones
      */
     struct SortPeaks {
-	bool operator()(CONST_PTR(detection::PeakRecord) a, CONST_PTR(detection::PeakRecord) b) {
+	bool operator()(std::shared_ptr<detection::PeakRecord const> a, std::shared_ptr<detection::PeakRecord const> b) {
             if (a->getPeakValue() != b->getPeakValue()) {
                 return (a->getPeakValue() > b->getPeakValue());
             }
@@ -234,7 +234,7 @@ private:
                               boost::format("The two FootprintSets must have the same region").str());
         }
 
-        image::Image<IdPixelT>::Ptr idImage(new image::Image<IdPixelT>(region));
+        auto idImage = std::make_shared<image::Image<IdPixelT>>(region);
         idImage->setXY0(region.getMinX(), region.getMinY());
         *idImage = 0;
 
@@ -352,7 +352,7 @@ private:
         FindIdsInFootprint<IdPixelT> idFinder;
         for (FootprintList::iterator ptr = fs.getFootprints()->begin(),
                  end = fs.getFootprints()->end(); ptr != end; ++ptr) {
-            PTR(Footprint) foot = *ptr;
+            std::shared_ptr<Footprint> foot = *ptr;
 
             // find the (mangled) [lr]hsFootprint IDs that contribute to foot
             foot->getSpans()->applyFunctor(idFinder, *idImage);
@@ -440,8 +440,6 @@ private:
  */
     class IdSpan {
     public:
-        typedef std::shared_ptr<IdSpan> Ptr;
-
         explicit IdSpan(int id, int y, int x0, int x1, double good) :
             id(id), y(y), x0(x0), x1(x1), good(good) {}
         int id;                         /* ID for object */
@@ -452,8 +450,8 @@ private:
 /*
  * comparison functor; sort by ID then row
  */
-    struct IdSpanCompar : public std::binary_function<const IdSpan::Ptr, const IdSpan::Ptr, bool> {
-        bool operator()(IdSpan::Ptr const a, IdSpan::Ptr const b) {
+    struct IdSpanCompar : public std::binary_function<const std::shared_ptr<IdSpan>, const std::shared_ptr<IdSpan>, bool> {
+        bool operator()(std::shared_ptr<IdSpan> const a, std::shared_ptr<IdSpan> const b) {
             if (a->id < b->id) {
                 return true;
             } else if (a->id > b->id) {
@@ -556,7 +554,7 @@ private:
 };
 
     template<typename ImageT, typename ThresholdT>
-    void findPeaks(PTR(detection::Footprint) foot, ImageT const& img, bool polarity, ThresholdT)
+    void findPeaks(std::shared_ptr<detection::Footprint> foot, ImageT const& img, bool polarity, ThresholdT)
     {
         findPeaksInFootprint(img, polarity, foot->getPeaks(), *foot, 1);
 
@@ -575,7 +573,7 @@ private:
 
     // No need to search for peaks when processing a Mask
     template<typename ImageT>
-    void findPeaks(PTR(detection::Footprint), ImageT const&, bool, ThresholdBitmask_traits)
+    void findPeaks(std::shared_ptr<detection::Footprint>, ImageT const&, bool, ThresholdBitmask_traits)
     {
         ;
     }
@@ -660,7 +658,7 @@ static void findFootprints(
     std::vector<int> aliases;           // aliases for initially disjoint parts of Footprints
     aliases.reserve(1 + height/20);     // initial size of aliases
 
-    std::vector<IdSpan::Ptr> spans;     // y:x0,x1 for objects
+    std::vector<std::shared_ptr<IdSpan>> spans;     // y:x0,x1 for objects
     spans.reserve(aliases.capacity());  // initial size of spans
 
     aliases.push_back(0);               // 0 --> 0
@@ -692,7 +690,7 @@ static void findFootprints(
             if (isBadPixel(pixVal) ||
                 !inFootprint(pixVal, varPtr, polarity, footprintThreshold, ThresholdTraitT())) {
                 if (in_span) {
-                    IdSpan::Ptr sp(new IdSpan(in_span, y, x0, x - 1, good));
+                    auto sp = std::make_shared<IdSpan>(in_span, y, x0, x - 1, good);
                     spans.push_back(sp);
 
                     in_span = 0;
@@ -733,7 +731,7 @@ static void findFootprints(
         }
 
         if (in_span) {
-            IdSpan::Ptr sp(new IdSpan(in_span, y, x0, width - 1, good));
+            auto sp = std::make_shared<IdSpan>(in_span, y, x0, width - 1, good);
             spans.push_back(sp);
         }
     }
@@ -894,7 +892,7 @@ detection::FootprintSet::FootprintSet(
     //
     // Define the maskPlane
     //
-    const typename image::Mask<MaskPixelT>::Ptr mask = maskedImg.getMask();
+    const std::shared_ptr<image::Mask<MaskPixelT>> mask = maskedImg.getMask();
     mask->addMaskPlane(planeName);
 
     MaskPixelT const bitPlane = mask->getPlaneBitMask(planeName);
@@ -930,8 +928,6 @@ namespace {
     template<typename MaskPixelT>
     class Startspan {
     public:
-        typedef std::vector<std::shared_ptr<Startspan> > Ptr;
-
         Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
         ~Startspan() { delete _span; }
 
@@ -942,7 +938,7 @@ namespace {
         static int detectedPlane;       // The MaskPlane to use for detected pixels
         static int stopPlane;           // The MaskPlane to use for pixels that signal us to stop searching
     private:
-        geom::Span::ConstPtr _span; // The initial Span
+        std::shared_ptr<geom::Span const> _span; // The initial Span
         DIRECTION _direction;           // How to continue searching for further pixels
         bool _stop;                     // should we stop searching?
     };
@@ -984,7 +980,7 @@ namespace {
     private:
         image::Image<ImagePixelT> const *_image; // the Image we're searching
         image::Mask<MaskPixelT> *_mask;          // the mask that tells us where we've got to
-        std::vector<typename Startspan<MaskPixelT>::Ptr> _spans; // list of Startspans
+        std::vector<std::shared_ptr<Startspan<MaskPixelT>>> _spans; // list of Startspans
     };
 
     //
@@ -999,7 +995,7 @@ namespace {
                 return true;
             }
         } else {
-            typename Startspan<MaskPixelT>::Ptr sspan(new Startspan<MaskPixelT>(span, dir));
+            auto sspan = std::make_shared<MaskPixelT>(span, dir);
             if (sspan->stop()) {        // we detected a stop bit
                 return true;
             } else {
@@ -1305,7 +1301,7 @@ pmFindFootprintAtPoint(psImage const *img,      // image to search
 detection::FootprintSet::FootprintSet(geom::Box2I region
 ) :
     lsst::daf::base::Citizen(typeid(this)),
-    _footprints(PTR(FootprintList)(new FootprintList)), _region(region) {
+    _footprints(std::make_shared<FootprintList>()), _region(region) {
 }
 
 detection::FootprintSet::FootprintSet(
@@ -1317,7 +1313,7 @@ detection::FootprintSet::FootprintSet(
     _footprints->reserve(rhs._footprints->size());
     for (FootprintSet::FootprintList::const_iterator ptr = rhs._footprints->begin(),
              end = rhs._footprints->end(); ptr != end; ++ptr) {
-        _footprints->push_back(PTR(Footprint)(new Footprint(**ptr)));
+        _footprints->push_back(std::make_shared<Footprint>(**ptr));
     }
 }
 
@@ -1405,13 +1401,11 @@ detection::FootprintSet::FootprintSet(
     throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
-PTR(image::Image<detection::FootprintIdPixel>)
+std::shared_ptr<image::Image<detection::FootprintIdPixel>>
 detection::FootprintSet::insertIntoImage(
     bool const relativeIDs
 ) const {
-    PTR(image::Image<detection::FootprintIdPixel>) im(
-        new image::Image<detection::FootprintIdPixel>(_region)
-    );
+    auto im = std::make_shared<image::Image<detection::FootprintIdPixel>>(_region);
     *im = 0;
 
     detection::FootprintIdPixel id = 0;
@@ -1452,7 +1446,7 @@ void detection::FootprintSet::makeSources(
     lsst::afw::table::SourceCatalog & cat
 ) const {
     for (FootprintList::const_iterator i = _footprints->begin(); i != _footprints->end(); ++i) {
-        PTR(afw::table::SourceRecord) r = cat.addNew();
+        std::shared_ptr<afw::table::SourceRecord> r = cat.addNew();
         r->setFootprint(*i);
     }
 }
@@ -1477,7 +1471,7 @@ template detection::FootprintSet::FootprintSet(image::Mask<image::MaskPixel> con
                                                Threshold const &, int const);
 
 template void detection::FootprintSet::setMask(image::Mask<image::MaskPixel> *, std::string const &);
-template void detection::FootprintSet::setMask(PTR(image::Mask<image::MaskPixel>), std::string const &);
+template void detection::FootprintSet::setMask(std::shared_ptr<image::Mask<image::MaskPixel>>, std::string const &);
 
 INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);

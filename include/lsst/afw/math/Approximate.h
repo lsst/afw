@@ -94,7 +94,7 @@ private:
  * @param ctrl desired approximation algorithm
  */
 template<typename PixelT>
-PTR(Approximate<PixelT>)
+std::shared_ptr<Approximate<PixelT>>
 makeApproximate(std::vector<double> const &x, std::vector<double> const &y,
                 image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                 ApproximateControl const& ctrl);
@@ -107,18 +107,18 @@ class Approximate {
 public:
     typedef float OutPixelT;            ///< The pixel type of returned images
 
-    friend PTR(Approximate<PixelT>)
+    friend std::shared_ptr<Approximate<PixelT>>
     makeApproximate<>(std::vector<double> const &x, std::vector<double> const &y,
                     image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                     ApproximateControl const& ctrl);
     /// dtor
     virtual ~Approximate() {}
     /// Return the approximate %image as a Image
-    PTR(image::Image<OutPixelT>) getImage(int orderX=-1, int orderY=-1) const {
+    std::shared_ptr<image::Image<OutPixelT>> getImage(int orderX=-1, int orderY=-1) const {
         return doGetImage(orderX, orderY);
     }
     /// Return the approximate %image as a MaskedImage
-    PTR(image::MaskedImage<OutPixelT>) getMaskedImage(int orderX=-1, int orderY=-1) const {
+    std::shared_ptr<image::MaskedImage<OutPixelT>> getMaskedImage(int orderX=-1, int orderY=-1) const {
         return doGetMaskedImage(orderX, orderY);
     }
 protected:
@@ -138,8 +138,8 @@ protected:
 private:
     Approximate(Approximate const&);
     Approximate& operator=(Approximate const&);
-    virtual PTR(image::Image<OutPixelT>) doGetImage(int orderX, int orderY) const = 0;
-    virtual PTR(image::MaskedImage<OutPixelT>) doGetMaskedImage(int orderX, int orderY) const = 0;
+    virtual std::shared_ptr<image::Image<OutPixelT>> doGetImage(int orderX, int orderY) const = 0;
+    virtual std::shared_ptr<image::MaskedImage<OutPixelT>> doGetMaskedImage(int orderX, int orderY) const = 0;
 };
 
 }}} // lsst::afw::math

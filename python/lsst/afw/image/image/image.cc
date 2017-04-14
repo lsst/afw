@@ -210,7 +210,7 @@ static void declareDecoratedImage(py::module & mod, std::string const & suffix) 
             "dimensions"_a=lsst::afw::geom::Extent2I());
     cls.def(py::init<const lsst::afw::geom::Box2I &>(),
             "bbox"_a);
-    cls.def(py::init<PTR(Image<PixelT>)>(),
+    cls.def(py::init<std::shared_ptr<Image<PixelT>>>(),
             "rhs"_a);
     cls.def(py::init<DecoratedImage<PixelT> const&, const bool>(),
             "rhs"_a, "deep"_a=false);
@@ -232,10 +232,10 @@ static void declareDecoratedImage(py::module & mod, std::string const & suffix) 
     cls.def("getDimensions", &DecoratedImage<PixelT>::getDimensions);
     cls.def("swap", &DecoratedImage<PixelT>::swap);
     cls.def("writeFits", &DecoratedImage<PixelT>::writeFits,
-            "fileName"_a, "metadata"_a=CONST_PTR(lsst::daf::base::PropertySet)(), "mode"_a="w");
+            "fileName"_a, "metadata"_a=std::shared_ptr<lsst::daf::base::PropertySet const>(), "mode"_a="w");
     cls.def(
         "getImage",
-        (typename DecoratedImage<PixelT>::ImagePtr (DecoratedImage<PixelT>::*)())
+        (typename std::shared_ptr<Image<PixelT>> (DecoratedImage<PixelT>::*)())
             &DecoratedImage<PixelT>::getImage
     );
     cls.def("getGain", &DecoratedImage<PixelT>::getGain);

@@ -194,7 +194,7 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
      */
-    CONST_PTR(afw::geom::XYTransform) getTransform(CameraSys const &cameraSys) const;
+    std::shared_ptr<afw::geom::XYTransform const> getTransform(CameraSys const &cameraSys) const;
 
     /**
      * Get an XYTransform that transforms from cameraSysPrefix to the native system in the forward direction
@@ -204,7 +204,7 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
      */
-    CONST_PTR(afw::geom::XYTransform) getTransform(CameraSysPrefix const &cameraSysPrefix) const;
+    std::shared_ptr<afw::geom::XYTransform const> getTransform(CameraSysPrefix const &cameraSysPrefix) const;
 
     /**
      * Make a CameraPoint from a point and a camera system

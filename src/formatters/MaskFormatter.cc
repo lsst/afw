@@ -82,7 +82,7 @@ lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registr
 
 template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::MaskFormatter(
-    lsst::pex::policy::Policy::Ptr) :
+    std::shared_ptr<lsst::pex::policy::Policy>) :
     lsst::daf::persistence::Formatter(typeid(this)) {
 }
 
@@ -93,8 +93,8 @@ MaskFormatter<MaskPixelT>::~MaskFormatter(void) {
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    std::shared_ptr<Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -122,8 +122,8 @@ void MaskFormatter<MaskPixelT>::write(
 
 template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    std::shared_ptr<Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         LOGL_DEBUG(_log, "MaskFormatter read BoostStorage");
@@ -146,8 +146,8 @@ Persistable* MaskFormatter<MaskPixelT>::read(
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::update(
     Persistable*,
-    Storage::Ptr,
-    lsst::daf::base::PropertySet::Ptr) {
+    std::shared_ptr<Storage>,
+    std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Mask");
 }
 
@@ -180,9 +180,9 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
 }
 
 template <typename MaskPixelT>
-lsst::daf::persistence::Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new MaskFormatter<MaskPixelT>(policy));
+std::shared_ptr<lsst::daf::persistence::Formatter> MaskFormatter<MaskPixelT>::createInstance(
+    std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(new MaskFormatter<MaskPixelT>(policy));
 }
 
 template class MaskFormatter<MaskPixel>;

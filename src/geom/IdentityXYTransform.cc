@@ -33,7 +33,7 @@ IdentityXYTransform::IdentityXYTransform()
     : XYTransform()
 { }
 
-PTR(XYTransform) IdentityXYTransform::clone() const
+std::shared_ptr<XYTransform> IdentityXYTransform::clone() const
 {
     return std::make_shared<IdentityXYTransform> ();
 }

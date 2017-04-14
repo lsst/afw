@@ -158,17 +158,17 @@ public:
     /**:
      * Return the Footprint%s of detected objects
      */
-    PTR(FootprintList) getFootprints() { return _footprints; }
+    std::shared_ptr<FootprintList> getFootprints() { return _footprints; }
 
     /**:
      * Set the Footprint%s of detected objects
      */
-    void setFootprints(PTR(FootprintList) footprints) { _footprints = footprints; }
+    void setFootprints(std::shared_ptr<FootprintList> footprints) { _footprints = footprints; }
 
     /**
      * Retun the Footprint%s of detected objects
      */
-    CONST_PTR(FootprintList) const getFootprints() const { return _footprints; }
+    std::shared_ptr<FootprintList const> const getFootprints() const { return _footprints; }
 
     /**
      *  Add a new record corresponding to each footprint to a SourceCatalog.
@@ -198,9 +198,9 @@ public:
      * Return an Image with pixels set to the Footprint%s in the FootprintSet
      *
      * @param relativeIDs Use IDs starting at 0 (rather than the ones in the Footprint%s)
-     * @returns an image::Image::Ptr
+     * @returns an std::shared_ptr<image::Image>
      */
-    PTR(image::Image<FootprintIdPixel>) insertIntoImage(
+    std::shared_ptr<image::Image<FootprintIdPixel>> insertIntoImage(
         const bool relativeIDs
         ) const;
 
@@ -216,7 +216,7 @@ public:
 
     template <typename MaskPixelT>
     void setMask(
-        PTR(image::Mask<MaskPixelT>) mask, ///< Set bits in the mask
+        std::shared_ptr<image::Mask<MaskPixelT>> mask, ///< Set bits in the mask
         std::string const& planeName   ///< Here's the name of the mask plane to fit
     ) {
         setMask(mask.get(), planeName);

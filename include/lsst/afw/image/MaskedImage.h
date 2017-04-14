@@ -79,20 +79,17 @@ class MaskedImage : public lsst::daf::base::Persistable,
                     public lsst::daf::base::Citizen {
 public:
     /// shared pointer to the Image
-    typedef typename Image<ImagePixelT>::Ptr ImagePtr;
+    typedef std::shared_ptr<image::Image<ImagePixelT>> ImagePtr;
     /// shared pointer to the Mask
-    typedef typename Mask<MaskPixelT>::Ptr MaskPtr;
+    typedef std::shared_ptr<image::Mask<MaskPixelT>> MaskPtr;
     /// shared pointer to the variance Image
-    typedef typename Image<VariancePixelT>::Ptr VariancePtr;
-    /// shared pointer to a MaskedImage
-    typedef std::shared_ptr<MaskedImage> Ptr;
-    typedef std::shared_ptr<const MaskedImage> ConstPtr;
+    typedef std::shared_ptr<image::Image<VariancePixelT>> VariancePtr;
     /// The Mask's MaskPlaneDict
     typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
 
-    typedef lsst::afw::image::Image<VariancePixelT> Variance; // These need to be here, and in this order, as
-    typedef lsst::afw::image::Image<ImagePixelT> Image;       // "typedef Image::Ptr ImagePtr;" confuses swig (it can't
-    typedef lsst::afw::image::Mask<MaskPixelT> Mask;          // find ImagePtr) and we can't use Image<> after these typedefs
+    typedef lsst::afw::image::Image<VariancePixelT> Variance;
+    typedef lsst::afw::image::Image<ImagePixelT> Image;
+    typedef lsst::afw::image::Mask<MaskPixelT> Mask;
 
     typedef detail::MaskedImage_tag image_category;
 
@@ -680,12 +677,12 @@ public:
      */
     explicit MaskedImage(
         std::string const & fileName,
-        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        std::shared_ptr<daf::base::PropertySet> metadata=std::shared_ptr<daf::base::PropertySet>(),
         geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=PARENT,
         bool conformMasks=false, bool needAllHdus=false,
-        PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
-        PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
-        PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
+        std::shared_ptr<daf::base::PropertySet> imageMetadata=std::shared_ptr<daf::base::PropertySet>(),
+        std::shared_ptr<daf::base::PropertySet> maskMetadata=std::shared_ptr<daf::base::PropertySet>(),
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata=std::shared_ptr<daf::base::PropertySet>()
     );
 
     /**
@@ -705,12 +702,12 @@ public:
      */
     explicit MaskedImage(
         fits::MemFileManager & manager,
-        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        std::shared_ptr<daf::base::PropertySet> metadata=std::shared_ptr<daf::base::PropertySet>(),
         geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=PARENT,
         bool conformMasks=false, bool needAllHdus=false,
-        PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
-        PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
-        PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
+        std::shared_ptr<daf::base::PropertySet> imageMetadata=std::shared_ptr<daf::base::PropertySet>(),
+        std::shared_ptr<daf::base::PropertySet> maskMetadata=std::shared_ptr<daf::base::PropertySet>(),
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata=std::shared_ptr<daf::base::PropertySet>()
     );
 
     /**
@@ -730,12 +727,12 @@ public:
      */
     explicit MaskedImage(
         fits::Fits & fitsfile,
-        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        std::shared_ptr<daf::base::PropertySet> metadata=std::shared_ptr<daf::base::PropertySet>(),
         geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=PARENT,
         bool conformMasks=false, bool needAllHdus=false,
-        PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
-        PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
-        PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
+        std::shared_ptr<daf::base::PropertySet> imageMetadata=std::shared_ptr<daf::base::PropertySet>(),
+        std::shared_ptr<daf::base::PropertySet> maskMetadata=std::shared_ptr<daf::base::PropertySet>(),
+        std::shared_ptr<daf::base::PropertySet> varianceMetadata=std::shared_ptr<daf::base::PropertySet>()
     );
 
     /**
@@ -779,9 +776,9 @@ public:
                 "Only deep copies are permitted for MaskedImages with different pixel types");
         }
 
-        _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
-        _mask =     typename Mask::Ptr(new Mask(*rhs.getMask(), deep));
-        _variance = typename Variance::Ptr(new Variance(*rhs.getVariance(), deep));
+        _image =    ImagePtr(new Image(*rhs.getImage(), deep));
+        _mask =     MaskPtr(new Mask(*rhs.getMask(), deep));
+        _variance = VariancePtr(new Variance(*rhs.getVariance(), deep));
     }
 
 #if defined(DOXYGEN)
@@ -920,10 +917,10 @@ public:
      */
     void writeFits(
         std::string const & fileName,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) imageMetadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
+        std::shared_ptr<daf::base::PropertySet const> metadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = std::shared_ptr<daf::base::PropertySet const>()
     ) const;
 
     /**
@@ -941,10 +938,10 @@ public:
      */
     void writeFits(
         fits::MemFileManager & manager,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) imageMetadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
+        std::shared_ptr<daf::base::PropertySet const> metadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = std::shared_ptr<daf::base::PropertySet const>()
     ) const;
 
     /**
@@ -962,10 +959,10 @@ public:
      */
     void writeFits(
         fits::Fits & fitsfile,
-        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) imageMetadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
-        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
+        std::shared_ptr<daf::base::PropertySet const> metadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata = std::shared_ptr<daf::base::PropertySet const>(),
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = std::shared_ptr<daf::base::PropertySet const>()
     ) const;
 
     /**
@@ -1213,15 +1210,15 @@ private:
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
-    typename Image<ImagePixelT>::Ptr image, ///< %image
-    typename Mask<MaskPixelT>::Ptr mask = typename Mask<MaskPixelT>::Ptr(),    ///< mask
-    typename Image<VariancePixelT>::Ptr variance = typename Image<VariancePixelT>::Ptr() ///< variance
+    typename std::shared_ptr<Image<ImagePixelT>> image, ///< %image
+    typename std::shared_ptr<Mask<MaskPixelT>> mask = Mask<MaskPixelT>(),    ///< mask
+    typename std::shared_ptr<Image<VariancePixelT>> variance = Image<VariancePixelT>() ///< variance
                                                                      ) {
     return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
 }
 
 /*
- * Some metafunctions to extract an Image::Ptr from a MaskedImage::Ptr (or return the original Image::Ptr)
+ * Some metafunctions to extract an Image pointer from a MaskedImage pointer (or return the original Image pointer)
  *
  * GetImage is the public interface (it forwards the tag --- just for the sake of the UI); the real work
  * is in GetImage_ which defines a typedef for the Image and a static function, getImage
@@ -1230,17 +1227,17 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
  * In the function
  *
  * template<typename ImageT>
- * void func(typename ImageT::Ptr image) {
- *    typename GetImage<ImageT>::type::Ptr im = GetImage<ImageT>::getImage(image);
+ * void func(shared_ptr<ImageT> image) {
+ *    typename shared_ptr<GetImage<ImageT>::type> im = GetImage<ImageT>::getImage(image);
  * }
  *
- * "im" is an Image::Ptr irrespective of whether ImageT is Masked or not.
+ * "im" is a shared_ptr<Image> irrespective of whether ImageT is Masked or not.
  */
 namespace {
 template<typename ImageT, typename TagT>
 struct GetImage_ {
     typedef ImageT type;
-    static typename type::Ptr getImage(typename ImageT::Ptr image) {
+    static std::shared_ptr<type> getImage(std::shared_ptr<ImageT> image) {
         return image;
     }
 };
@@ -1248,7 +1245,7 @@ struct GetImage_ {
 template<typename ImageT>
 struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
     typedef typename ImageT::Image type;
-    static typename type::Ptr getImage(typename ImageT::Ptr image) {
+    static std::shared_ptr<type> getImage(std::shared_ptr<ImageT> image) {
         return image->getImage();
     }
 };

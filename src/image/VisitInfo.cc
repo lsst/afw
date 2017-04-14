@@ -231,14 +231,14 @@ private:
 class VisitInfoFactory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         VisitInfoSchema const & keys = VisitInfoSchema::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const & record = catalogs.front().front();
-        PTR(VisitInfo) result(new VisitInfo(
+        std::shared_ptr<VisitInfo> result(new VisitInfo(
             record.get(keys.exposureId),
             record.get(keys.exposureTime),
             record.get(keys.darkTime),
@@ -422,7 +422,7 @@ std::string VisitInfo::getPersistenceName() const {
 void VisitInfo::write(OutputArchiveHandle & handle) const {
     VisitInfoSchema const & keys = VisitInfoSchema::get();
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = cat.addNew();
+    std::shared_ptr<table::BaseRecord> record = cat.addNew();
     record->set(keys.exposureId, getExposureId());
     record->set(keys.exposureTime, getExposureTime());
     record->set(keys.darkTime, getDarkTime());

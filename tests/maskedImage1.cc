@@ -66,9 +66,9 @@ int test(int argc, char**argv) {
     //
     // We want to construct the MaskedImage within a try block, so declare a pointer outside
     //
-    MaskedImage::Ptr testMaskedImage1;
+    std::shared_ptr<MaskedImage> testMaskedImage1;
     try {
-        testMaskedImage1 = MaskedImage::Ptr(new MaskedImage(inImagePath1));
+        testMaskedImage1 = std::shared_ptr<MaskedImage>(new MaskedImage(inImagePath1));
     } catch (pexEx::Exception &e) {
         cerr << "Failed to open " << inImagePath1 << ": " << e.what() << endl;
         return EXIT_FAILURE;
@@ -85,9 +85,9 @@ int test(int argc, char**argv) {
     MaskedImage testMaskedImage2(testMaskedImage1->getDimensions()); // n.b. could just do a deep copy
     testMaskedImage2 = *testMaskedImage1;
 
-    MaskedImage::Ptr testFlat;
+    std::shared_ptr<MaskedImage> testFlat;
     try {
-        testFlat = MaskedImage::Ptr(new MaskedImage(inImagePath2));
+        testFlat = std::shared_ptr<MaskedImage>(new MaskedImage(inImagePath2));
     } catch (pexEx::Exception &e) {
         cerr << "Failed to open " << inImagePath2 << ": " << e.what() << endl;
         return EXIT_FAILURE;

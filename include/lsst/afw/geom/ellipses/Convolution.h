@@ -51,7 +51,7 @@ public:
         self(self), other(other) {}
 
     /// Return a new convolved ellipse core.
-    BaseCore::Ptr copy() const;
+    std::shared_ptr<BaseCore> copy() const;
 
     /// Convolve the ellipse core in-place.
     void inPlace();
@@ -80,7 +80,7 @@ public:
         self(self), other(other) {}
 
     /// Return a new convolved ellipse.
-    Ellipse::Ptr copy() const;
+    std::shared_ptr<Ellipse> copy() const;
 
     /// Convolve the ellipse in-place.
     void inPlace();

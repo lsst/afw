@@ -54,9 +54,6 @@ public:
 
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
 
-    typedef std::shared_ptr<Ellipse> Ptr;
-    typedef std::shared_ptr<Ellipse const> ConstPtr;
-
     enum ParameterEnum { X=3, Y=4 }; ///< Definitions for elements of an ellipse vector.
 
     /// Return the center point.
@@ -75,10 +72,10 @@ public:
     BaseCore & getCore() { return *_core; }
 
     /// Return the ellipse core.
-    BaseCore::ConstPtr getCorePtr() const { return _core; }
+    std::shared_ptr<BaseCore const> getCorePtr() const { return _core; }
 
     /// Return the ellipse core.
-    BaseCore::Ptr getCorePtr() { return _core; }
+    std::shared_ptr<BaseCore> getCorePtr() { return _core; }
 
     /// Set the ellipse core; the type of the core is not changed.
     void setCore(BaseCore const & core) { *_core = core; }
@@ -164,7 +161,7 @@ public:
     explicit Ellipse(BaseCore const & core, Point2D const & center = Point2D()) :
         _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(BaseCore::ConstPtr const & core, Point2D const & center = Point2D()) :
+    explicit Ellipse(std::shared_ptr<BaseCore const> const & core, Point2D const & center = Point2D()) :
         _core(core->clone()), _center(center) {}
 
     Ellipse(Transformer const & other);
@@ -174,7 +171,7 @@ public:
         _core(other.getCore().clone()), _center(other.getCenter()) {}
 
 private:
-    BaseCore::Ptr _core;
+    std::shared_ptr<BaseCore> _core;
     Point2D _center;
 };
 

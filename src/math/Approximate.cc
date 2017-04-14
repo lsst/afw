@@ -65,7 +65,7 @@ namespace {
 template<typename PixelT>
 class ApproximateChebyshev : public Approximate<PixelT> {
     template<typename T>
-    friend PTR(Approximate<T>)
+    friend std::shared_ptr<Approximate<T>>
     math::makeApproximate(std::vector<double> const &xVec, std::vector<double> const &yVec,
                           image::MaskedImage<T> const& im, geom::Box2I const& bbox,
                           ApproximateControl const& ctrl);
@@ -77,9 +77,9 @@ private:
     ApproximateChebyshev(std::vector<double> const &xVec, std::vector<double> const &yVec,
                          image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                          ApproximateControl const& ctrl);
-    virtual PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
+    virtual std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>>
             doGetImage(int orderX, int orderY) const;
-    virtual PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
+    virtual std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>>
             doGetMaskedImage(int orderX, int orderY) const;
 };
 
@@ -220,7 +220,7 @@ ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {
  * @note As in the ApproximateControl ctor, the x- and y-orders must be equal
  */
 template<typename PixelT>
-PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
+std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>>
 ApproximateChebyshev<PixelT>::doGetImage(int orderX,
                                          int orderY
                                         ) const
@@ -234,7 +234,7 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,
 
     typedef typename image::Image<typename Approximate<PixelT>::OutPixelT> ImageT;
 
-    PTR(ImageT) im(new ImageT(Approximate<PixelT>::_bbox));
+    std::shared_ptr<ImageT> im(new ImageT(Approximate<PixelT>::_bbox));
     for (int iy = 0; iy != im->getHeight(); ++iy) {
         double const y = iy;
 
@@ -260,7 +260,7 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,
  * @note As in the ApproximateControl ctor, the x- and y-orders must be equal
  */
 template<typename PixelT>
-PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
+std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>>
 ApproximateChebyshev<PixelT>::doGetMaskedImage(
         int orderX,
         int orderY
@@ -268,8 +268,8 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(
 {
     typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
 
-    PTR(MImageT) mi(new MImageT(Approximate<PixelT>::_bbox));
-    PTR(typename MImageT::Image) im = mi->getImage();
+    std::shared_ptr<MImageT> mi(new MImageT(Approximate<PixelT>::_bbox));
+    std::shared_ptr<typename MImageT::Image> im = mi->getImage();
 
     for (int iy = 0; iy != im->getHeight(); ++iy) {
         double const y = iy;
@@ -288,7 +288,7 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(
 }
 
 template<typename PixelT>
-PTR(Approximate<PixelT>)
+std::shared_ptr<Approximate<PixelT>>
 makeApproximate(std::vector<double> const &x,
                 std::vector<double> const &y,
                 image::MaskedImage<PixelT> const& im,
@@ -298,7 +298,7 @@ makeApproximate(std::vector<double> const &x,
 {
     switch (ctrl.getStyle()) {
       case ApproximateControl::CHEBYSHEV:
-        return PTR(Approximate<PixelT>)(new ApproximateChebyshev<PixelT>(x, y, im, bbox, ctrl));
+        return std::shared_ptr<Approximate<PixelT>>(new ApproximateChebyshev<PixelT>(x, y, im, bbox, ctrl));
       default:
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
@@ -311,7 +311,7 @@ makeApproximate(std::vector<double> const &x,
  */
 #define INSTANTIATE(PIXEL_T)                                          \
     template                                                          \
-    PTR(Approximate<PIXEL_T>) makeApproximate(                        \
+    std::shared_ptr<Approximate<PIXEL_T>> makeApproximate(                        \
         std::vector<double> const &x, std::vector<double> const &y,   \
         image::MaskedImage<PIXEL_T> const& im,                        \
         geom::Box2I const& bbox,                                      \

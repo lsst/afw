@@ -40,7 +40,7 @@ public:
     /// Low-level driver for writing FITS files, operating on an open FITS file.
     template <typename ContainerT>
     static void apply(Fits & fits, ContainerT const & container, int flags) {
-        PTR(FitsWriter) writer
+        std::shared_ptr<FitsWriter> writer
             = std::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits, flags);
         writer->write(container);
     }
@@ -54,11 +54,11 @@ public:
      */
     template <typename ContainerT>
     void write(ContainerT const & container) {
-        std::set<PTR(BaseTable const)> tables;
+        std::set<std::shared_ptr<BaseTable const>> tables;
         for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
             if (i->getTable() != container.getTable()) tables.insert(i->getTable());
         }
-        for (std::set<PTR(BaseTable const)>::iterator j = tables.begin(); j != tables.end(); ++j) {
+        for (std::set<std::shared_ptr<BaseTable const>>::iterator j = tables.begin(); j != tables.end(); ++j) {
             if (
                 (**j).getSchema().compare(container.getTable()->getSchema(), Schema::IDENTICAL)
                 != Schema::IDENTICAL
@@ -82,7 +82,7 @@ public:
 protected:
 
     /// Write a table and its schema.
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows);
 
     /// Write an individual record.
     virtual void _writeRecord(BaseRecord const & source);
@@ -99,7 +99,7 @@ private:
     struct ProcessRecords;
 
 
-    PTR(ProcessRecords) _processor; // a private Schema::forEach functor that write records
+    std::shared_ptr<ProcessRecords> _processor; // a private Schema::forEach functor that write records
 
 };
 

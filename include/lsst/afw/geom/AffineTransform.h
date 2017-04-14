@@ -76,9 +76,6 @@ namespace geom {
  */
 class AffineTransform {
 public:
-    typedef std::shared_ptr<AffineTransform> Ptr;
-    typedef std::shared_ptr<AffineTransform const> ConstPtr;
-
     enum Parameters {XX=0,YX=1,XY=2,YY=3,X=4,Y=5};
 
     typedef Eigen::Matrix3d Matrix;

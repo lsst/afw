@@ -75,8 +75,6 @@ class Exposure : public lsst::daf::base::Persistable,
                  public lsst::daf::base::Citizen {
 public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
-    typedef std::shared_ptr<Exposure> Ptr;
-    typedef std::shared_ptr<Exposure const> ConstPtr;
 
     // Class Constructors and Destructor
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
@@ -88,7 +86,7 @@ public:
       */
     explicit Exposure(
         unsigned int width, unsigned int height,
-        CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
+        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()
     );
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
@@ -99,7 +97,7 @@ public:
       */
     explicit Exposure(
         lsst::afw::geom::Extent2I const & dimensions=lsst::afw::geom::Extent2I(),
-        CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
+        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()
     );
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
@@ -110,7 +108,7 @@ public:
       */
     explicit Exposure(
         lsst::afw::geom::Box2I const & bbox,
-        CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
+        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()
     );
 
     /** Construct an Exposure from a MaskedImage and an optional Wcs
@@ -119,7 +117,7 @@ public:
      * @param wcs the Wcs
       */
     explicit Exposure(MaskedImageT & maskedImage,
-                      CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)());
+                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
 
     /** Construct an Exposure from a MaskedImage and an ExposureInfo
       *
@@ -130,7 +128,7 @@ public:
       */
     explicit Exposure(
         MaskedImageT & maskedImage,
-        PTR(ExposureInfo) info
+        std::shared_ptr<ExposureInfo> info
     );
 
     /**
@@ -230,16 +228,16 @@ public:
     /// Return the MaskedImage
     MaskedImageT getMaskedImage() const { return _maskedImage; }
 
-    CONST_PTR(Wcs) getWcs() const { return _info->getWcs(); }
-    PTR(Wcs) getWcs() { return _info->getWcs(); }
+    std::shared_ptr<Wcs const> getWcs() const { return _info->getWcs(); }
+    std::shared_ptr<Wcs> getWcs() { return _info->getWcs(); }
 
     /// Return the Exposure's Detector information
-    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _info->getDetector(); }
+    std::shared_ptr<lsst::afw::cameraGeom::Detector const> getDetector() const { return _info->getDetector(); }
     /// Return the Exposure's filter
     Filter getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
-    lsst::daf::base::PropertySet::Ptr getMetadata() const { return _info->getMetadata(); }
-    void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _info->setMetadata(metadata); }
+    std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _info->getMetadata(); }
+    void setMetadata(std::shared_ptr<lsst::daf::base::PropertySet> metadata) { _info->setMetadata(metadata); }
 
     /// Return the Exposure's width
     int getWidth() const { return _maskedImage.getWidth(); }
@@ -287,24 +285,24 @@ public:
     /** Set the MaskedImage of the Exposure.
      */
     void setMaskedImage(MaskedImageT &maskedImage);
-    void setWcs(PTR(Wcs) wcs) { _info->setWcs(wcs); }
+    void setWcs(std::shared_ptr<Wcs> wcs) { _info->setWcs(wcs); }
     /// Set the Exposure's Detector information
-    void setDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) detector) { _info->setDetector(detector); }
+    void setDetector(std::shared_ptr<lsst::afw::cameraGeom::Detector const> detector) { _info->setDetector(detector); }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _info->setFilter(filter); }
     /// Set the Exposure's Calib object
-    void setCalib(PTR(Calib) calib) { _info->setCalib(calib); }
+    void setCalib(std::shared_ptr<Calib> calib) { _info->setCalib(calib); }
     /// Return the Exposure's Calib object
-    PTR(Calib) getCalib() { return _info->getCalib(); }
+    std::shared_ptr<Calib> getCalib() { return _info->getCalib(); }
     /// Return the Exposure's Calib object
-    CONST_PTR(Calib) getCalib() const { return _info->getCalib(); }
+    std::shared_ptr<Calib const> getCalib() const { return _info->getCalib(); }
     /// Set the Exposure's Psf
-    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _info->setPsf(psf); }
+    void setPsf(std::shared_ptr<lsst::afw::detection::Psf const> psf) { _info->setPsf(psf); }
 
     /// Return the Exposure's Psf object
-    PTR(lsst::afw::detection::Psf) getPsf() { return _info->getPsf(); }
+    std::shared_ptr<lsst::afw::detection::Psf> getPsf() { return _info->getPsf(); }
     /// Return the Exposure's Psf object
-    CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _info->getPsf(); }
+    std::shared_ptr<lsst::afw::detection::Psf const> getPsf() const { return _info->getPsf(); }
 
     /// Does this Exposure have a Psf?
     bool hasPsf() const { return _info->hasPsf(); }
@@ -313,13 +311,13 @@ public:
     bool hasWcs() const { return _info->hasWcs(); }
 
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
-    PTR(ExposureInfo) getInfo() { return _info; }
+    std::shared_ptr<ExposureInfo> getInfo() { return _info; }
 
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
-    CONST_PTR(ExposureInfo) getInfo() const { return _info; }
+    std::shared_ptr<ExposureInfo const> getInfo() const { return _info; }
 
     /// Set the ExposureInfo that aggregates all the non-image components.
-    void setInfo(PTR(ExposureInfo) exposureInfo) { _info = exposureInfo; }
+    void setInfo(std::shared_ptr<ExposureInfo> exposureInfo) { _info = exposureInfo; }
 
     /**
      *  Write an Exposure to a regular multi-extension FITS file.
@@ -382,18 +380,18 @@ private:
     );
 
     MaskedImageT _maskedImage;
-    PTR(ExposureInfo) _info;
+    std::shared_ptr<ExposureInfo> _info;
 };
 
 /**
  * A function to return an Exposure of the correct type (cf. std::make_pair)
  */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename Exposure<ImagePixelT, MaskPixelT, VariancePixelT>::Ptr makeExposure(
+std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>> makeExposure(
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage, ///< the Exposure's image
-    CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)() ///< the Exposure's WCS
+    std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>() ///< the Exposure's WCS
 ) {
-    return typename Exposure<ImagePixelT, MaskPixelT, VariancePixelT>::Ptr(
+    return typename std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>>(
         new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
 }
 

@@ -54,10 +54,10 @@ static void declareFlipImage(py::module & mod) {
 
 template<typename ImageT>
 static void declareBinImage(py::module & mod) {
-    mod.def("binImage", (PTR(ImageT) (*)(ImageT const&, int const, int const, lsst::afw::math::Property const))
+    mod.def("binImage", (std::shared_ptr<ImageT> (*)(ImageT const&, int const, int const, lsst::afw::math::Property const))
             binImage<ImageT>,
             "inImage"_a, "binX"_a, "binY"_a, "flags"_a=lsst::afw::math::MEAN);
-    mod.def("binImage", (PTR(ImageT) (*)(ImageT const&, int const, lsst::afw::math::Property const))
+    mod.def("binImage", (std::shared_ptr<ImageT> (*)(ImageT const&, int const, lsst::afw::math::Property const))
             binImage<ImageT>,
             "inImage"_a, "binsize"_a, "flags"_a=lsst::afw::math::MEAN);
 }

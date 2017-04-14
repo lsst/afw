@@ -415,10 +415,10 @@ void writeBasicFits(int fd,                                      // file descrip
     if (Wcs != NULL) {
         typedef std::vector<std::string> NameList;
 
-        image::Wcs::Ptr newWcs = Wcs->clone(); //Create a copy
+        std::shared_ptr<image::Wcs> newWcs = Wcs->clone(); //Create a copy
         newWcs->shiftReferencePixel(-data.getX0(), -data.getY0());
 
-        lsst::daf::base::PropertySet::Ptr metadata = newWcs->getFitsMetadata();
+        std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata();
 
         NameList paramNames = metadata->paramNames();
 

@@ -139,12 +139,12 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
+std::shared_ptr<HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>>
 mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const& h1,
                      HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const& h2)
 {
     // Merge the Footprints (by merging the Spans)
-    PTR(Footprint) foot = mergeFootprints(h1, h2);
+    std::shared_ptr<Footprint> foot = mergeFootprints(h1, h2);
 
     // Find the union bounding-box
     geom::Box2I bbox(h1.getBBox());
@@ -159,8 +159,7 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
     im1 += im2;
 
     // Build new HeavyFootprint from the merged spans and summed pixels.
-    return PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
-        (new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
+    return std::make_shared<HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>>(*foot, im1);
 }
 
 
@@ -287,7 +286,7 @@ void HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>::write(OutputArchiveH
     Footprint::write(handle);
     // add one more catalog for pixel values
     afw::table::BaseCatalog cat = handle.makeCatalog(keys.schema);
-    PTR(afw::table::BaseRecord) record = cat.addNew();
+    std::shared_ptr<afw::table::BaseRecord> record = cat.addNew();
     // We could deep-copy the arrays instead of const-casting them, which might be marginally safer,
     // but we always save an OutputArchive to disk immediately after we create it, so there's really
     // no chance that we could get the HeavyFootprint in trouble by having this view modified.
@@ -305,7 +304,7 @@ public:
 
     explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
 
-    virtual PTR(afw::table::io::Persistable)
+    virtual std::shared_ptr<afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         HeavyFootprintPersistenceHelper<ImagePixelT,MaskPixelT,VariancePixelT> const & keys =
             HeavyFootprintPersistenceHelper<ImagePixelT,MaskPixelT,VariancePixelT>::get();
@@ -344,7 +343,7 @@ HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>::Factory::registration(
 //
 #define INSTANTIATE(TYPE) \
     template class HeavyFootprint<TYPE>; \
-    template PTR(HeavyFootprint<TYPE>) mergeHeavyFootprints<TYPE>( \
+    template std::shared_ptr<HeavyFootprint<TYPE>> mergeHeavyFootprints<TYPE>( \
         HeavyFootprint<TYPE> const&, HeavyFootprint<TYPE> const&);
 
 INSTANTIATE(std::uint16_t);

@@ -44,12 +44,12 @@ public:
 
 protected:
 
-    virtual void _writeTable(CONST_PTR(afw::table::BaseTable) const & table, std::size_t nRows);
+    virtual void _writeTable(std::shared_ptr<afw::table::BaseTable const> const & table, std::size_t nRows);
 
 };
 
-void PeakFitsWriter::_writeTable(CONST_PTR(afw::table::BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(PeakTable) table = std::dynamic_pointer_cast<PeakTable const>(t);
+void PeakFitsWriter::_writeTable(std::shared_ptr<afw::table::BaseTable const> const & t, std::size_t nRows) {
+    std::shared_ptr<PeakTable const> table = std::dynamic_pointer_cast<PeakTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -76,13 +76,13 @@ public:
 
     PeakFitsReader() : afw::table::io::FitsReader("PEAK") {}
 
-    virtual PTR(afw::table::BaseTable) makeTable(
+    virtual std::shared_ptr<afw::table::BaseTable> makeTable(
         afw::table::io::FitsSchemaInputMapper & mapper,
-        PTR(daf::base::PropertyList) metadata,
+        std::shared_ptr<daf::base::PropertyList> metadata,
         int ioFlags,
         bool stripMetadata
     ) const {
-        PTR(PeakTable) table = PeakTable::make(mapper.finalize());
+        std::shared_ptr<PeakTable> table = PeakTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
     }
@@ -98,7 +98,7 @@ static PeakFitsReader const peakFitsReader;
 //----- PeakTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-PeakRecord::PeakRecord(PTR(PeakTable) const & table) : BaseRecord(table) {}
+PeakRecord::PeakRecord(std::shared_ptr<PeakTable> const & table) : BaseRecord(table) {}
 
 std::ostream & operator<<(std::ostream & os, PeakRecord const & record) {
     return os << (boost::format("%d: (%d,%d)  (%.3f,%.3f)")
@@ -107,7 +107,7 @@ std::ostream & operator<<(std::ostream & os, PeakRecord const & record) {
                   % record.getFx() % record.getFy());
 }
 
-PTR(PeakTable) PeakTable::make(
+std::shared_ptr<PeakTable> PeakTable::make(
     afw::table::Schema const & schema,
     bool forceNewTable
 ) {
@@ -124,7 +124,7 @@ PTR(PeakTable) PeakTable::make(
     }
     CachedTableList::iterator iter = cache.begin();
     while (iter != cache.end()) {
-        PTR(PeakTable) p = iter->lock();
+        std::shared_ptr<PeakTable> p = iter->lock();
         if (!p) {
             iter = cache.erase(iter);
         } else {
@@ -146,7 +146,7 @@ PTR(PeakTable) PeakTable::make(
     return newTable;
 }
 
-PeakTable::PeakTable(afw::table::Schema const & schema, PTR(afw::table::IdFactory) const & idFactory) :
+PeakTable::PeakTable(afw::table::Schema const & schema, std::shared_ptr<afw::table::IdFactory> const & idFactory) :
     afw::table::BaseTable(schema), _idFactory(idFactory) {}
 
 PeakTable::PeakTable(PeakTable const & other) :
@@ -168,7 +168,7 @@ PeakTable::MinimalSchema & PeakTable::getMinimalSchema() {
     return it;
 }
 
-PTR(afw::table::io::FitsWriter)
+std::shared_ptr<afw::table::io::FitsWriter>
 PeakTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<PeakFitsWriter>(fitsfile, flags);
 }

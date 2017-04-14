@@ -53,8 +53,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class IntegerDeltaFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
-
         /**
          * Construct an integer delta function with specified xo, yo
          */
@@ -67,8 +65,8 @@ using boost::serialization::make_nvp;
 
         virtual ~IntegerDeltaFunction1() {};
 
-        virtual Function1Ptr clone() const {
-            return Function1Ptr(new IntegerDeltaFunction1(_xo));
+        virtual std::shared_ptr<Function1<ReturnT>> clone() const {
+            return std::shared_ptr<Function1<ReturnT>>(new IntegerDeltaFunction1(_xo));
         }
 
         virtual ReturnT operator() (double x) const {
@@ -111,8 +109,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class IntegerDeltaFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct an integer delta function with specified xo, yo
          */
@@ -127,8 +123,8 @@ using boost::serialization::make_nvp;
 
         virtual ~IntegerDeltaFunction2() {}
 
-        virtual Function2Ptr clone() const {
-            return Function2Ptr(new IntegerDeltaFunction2(_xo, _yo));
+        virtual std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(new IntegerDeltaFunction2(_xo, _yo));
         }
 
         virtual ReturnT operator() (double x, double y) const {
@@ -173,8 +169,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class GaussianFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
-
         /**
          * Construct a Gaussian function with specified sigma
          */
@@ -188,8 +182,8 @@ using boost::serialization::make_nvp;
         }
         virtual ~GaussianFunction1() {}
 
-        virtual Function1Ptr clone() const {
-            return Function1Ptr(new GaussianFunction1(this->_params[0]));
+        virtual std::shared_ptr<Function1<ReturnT>> clone() const {
+            return std::shared_ptr<Function1<ReturnT>>(new GaussianFunction1(this->_params[0]));
         }
 
         virtual ReturnT operator() (double x) const {
@@ -237,8 +231,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class GaussianFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct a 2-dimensional Gaussian function
          */
@@ -258,8 +250,8 @@ using boost::serialization::make_nvp;
 
         virtual ~GaussianFunction2() {}
 
-        virtual Function2Ptr clone() const {
-            return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
+        virtual std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(new GaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
 
         virtual ReturnT operator() (double x, double y) const {
@@ -350,8 +342,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class DoubleGaussianFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct a Gaussian function with specified x and y sigma
          */
@@ -370,8 +360,8 @@ using boost::serialization::make_nvp;
 
         virtual ~DoubleGaussianFunction2() {}
 
-        virtual Function2Ptr clone() const {
-            return Function2Ptr(
+        virtual std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(
                 new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
 
@@ -426,8 +416,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class PolynomialFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
-
         /**
          * Construct a polynomial function of the specified order.
          *
@@ -459,8 +447,8 @@ using boost::serialization::make_nvp;
 
         virtual ~PolynomialFunction1() {}
 
-        virtual Function1Ptr clone() const {
-            return Function1Ptr(new PolynomialFunction1(this->_params));
+        virtual std::shared_ptr<Function1<ReturnT>> clone() const {
+            return std::shared_ptr<Function1<ReturnT>>(new PolynomialFunction1(this->_params));
         }
 
         virtual bool isLinearCombination() const { return true; };
@@ -515,8 +503,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class PolynomialFunction2: public BasePolynomialFunction2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct a polynomial function of specified order.
          *
@@ -553,8 +539,8 @@ using boost::serialization::make_nvp;
 
         virtual ~PolynomialFunction2() {}
 
-        virtual Function2Ptr clone() const {
-            return Function2Ptr(new PolynomialFunction2(this->_params));
+        virtual std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(new PolynomialFunction2(this->_params));
         }
 
         virtual ReturnT operator() (double x, double y) const {
@@ -664,8 +650,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class Chebyshev1Function1: public Function1<ReturnT> {
     public:
-        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
-
         /**
          * Construct a Chebyshev polynomial of specified order and range.
          *
@@ -704,8 +688,8 @@ using boost::serialization::make_nvp;
 
         virtual ~Chebyshev1Function1() {}
 
-        virtual Function1Ptr clone() const {
-            return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
+        virtual std::shared_ptr<Function1<ReturnT>> clone() const {
+            return std::shared_ptr<Function1<ReturnT>>(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
 
         /**
@@ -818,8 +802,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class Chebyshev1Function2: public BasePolynomialFunction2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct a Chebyshev polynomial of specified order and range.
          *
@@ -863,8 +845,8 @@ using boost::serialization::make_nvp;
 
         virtual ~Chebyshev1Function2() {}
 
-        virtual Function2Ptr clone() const {
-            return Function2Ptr(new Chebyshev1Function2(this->_params, this->getXYRange()));
+        virtual std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(new Chebyshev1Function2(this->_params, this->getXYRange()));
         }
 
         /**
@@ -1044,8 +1026,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class LanczosFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
-
         /**
          * Construct a Lanczos function of specified order and x,y offset.
          */
@@ -1061,8 +1041,8 @@ using boost::serialization::make_nvp;
 
         virtual ~LanczosFunction1() {}
 
-        virtual Function1Ptr clone() const {
-            return Function1Ptr(new LanczosFunction1(this->getOrder(), this->_params[0]));
+        virtual std::shared_ptr<Function1<ReturnT>> clone() const {
+            return std::shared_ptr<Function1<ReturnT>>(new LanczosFunction1(this->getOrder(), this->_params[0]));
         }
 
         virtual ReturnT operator() (double x) const {
@@ -1120,8 +1100,6 @@ using boost::serialization::make_nvp;
     template<typename ReturnT>
     class LanczosFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
-
         /**
          * Construct a Lanczos function of specified order and x,y offset.
          */
@@ -1139,8 +1117,8 @@ using boost::serialization::make_nvp;
 
         virtual ~LanczosFunction2() {}
 
-        virtual Function2Ptr clone() const {
-            return Function2Ptr(new LanczosFunction2(this->getOrder(), this->_params[0], this->_params[1]));
+        virtual std::shared_ptr<Function2<ReturnT>> clone() const {
+            return std::shared_ptr<Function2<ReturnT>>(new LanczosFunction2(this->getOrder(), this->_params[0], this->_params[1]));
         }
 
         virtual ReturnT operator() (double x, double y) const {

@@ -127,23 +127,23 @@ std::size_t BaseTable::getBufferSize() const {
     }
 }
 
-PTR(BaseTable) BaseTable::make(Schema const & schema) {
+std::shared_ptr<BaseTable> BaseTable::make(Schema const & schema) {
     return std::shared_ptr<BaseTable>(new BaseTable(schema));
 }
 
-PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input) {
-    PTR(BaseRecord) output = makeRecord();
+std::shared_ptr<BaseRecord> BaseTable::copyRecord(BaseRecord const & input) {
+    std::shared_ptr<BaseRecord> output = makeRecord();
     output->assign(input);
     return output;
 }
 
-PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper const & mapper) {
-    PTR(BaseRecord) output = makeRecord();
+std::shared_ptr<BaseRecord> BaseTable::copyRecord(BaseRecord const & input, SchemaMapper const & mapper) {
+    std::shared_ptr<BaseRecord> output = makeRecord();
     output->assign(input, mapper);
     return output;
 }
 
-PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+std::shared_ptr<io::FitsWriter> BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<io::FitsWriter>(fitsfile, flags);
 }
 

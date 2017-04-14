@@ -52,8 +52,6 @@ namespace detail {
      */
     class PositionFunctor {
     public:
-        typedef std::shared_ptr<PositionFunctor> Ptr;
-
         explicit PositionFunctor() {};
         virtual ~PositionFunctor() {};
 
@@ -88,7 +86,7 @@ namespace detail {
 
     private:
         lsst::afw::geom::Point2D const _destXY0;
-        PTR(lsst::afw::geom::XYTransform const) _xyTransformPtr;
+        std::shared_ptr<lsst::afw::geom::XYTransform const> _xyTransformPtr;
     };
 
 }}}} // namespace lsst::afw::math::detail

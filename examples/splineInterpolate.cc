@@ -56,10 +56,10 @@ int main() {
     }
 
     // declare an spline interpolate object.  the constructor computes the first derivatives
-    PTR(math::Interpolate) yinterpS = math::makeInterpolate(x, y, math::Interpolate::LINEAR);
+    std::shared_ptr<math::Interpolate> yinterpS = math::makeInterpolate(x, y, math::Interpolate::LINEAR);
 
     // declare a linear interpolate object. the constructor computes the second derivatives
-    PTR(math::Interpolate) yinterpL = math::makeInterpolate(x, y, math::Interpolate::CUBIC_SPLINE);
+    std::shared_ptr<math::Interpolate> yinterpL = math::makeInterpolate(x, y, math::Interpolate::CUBIC_SPLINE);
 
     // output the interpolated y values, 1st derivatives, and 2nd derivatives.
     for (int i = 0; i < nX2; ++i) {

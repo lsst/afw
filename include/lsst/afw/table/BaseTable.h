@@ -59,14 +59,14 @@ public:
     static int nRecordsPerBlock;
 
     /// Return the flexible metadata associated with the table.  May be null.
-    PTR(daf::base::PropertyList) getMetadata() const { return _metadata; }
+    std::shared_ptr<daf::base::PropertyList> getMetadata() const { return _metadata; }
 
     /// Set the flexible metadata associated with the table.  May be null.
-    void setMetadata(PTR(daf::base::PropertyList) const & metadata) { _metadata = metadata; }
+    void setMetadata(std::shared_ptr<daf::base::PropertyList> const & metadata) { _metadata = metadata; }
 
     /// Return the metadata and set the internal metadata to a null pointer.
-    PTR(daf::base::PropertyList) popMetadata() {
-        PTR(daf::base::PropertyList) tmp;
+    std::shared_ptr<daf::base::PropertyList> popMetadata() {
+        std::shared_ptr<daf::base::PropertyList> tmp;
         _metadata.swap(tmp);
         return tmp;
     }
@@ -80,7 +80,7 @@ public:
      *  Cloning a table does not clone its associated records; the new table produced by clone()
      *  does not have any associated records.
      */
-    PTR(BaseTable) clone() const { return _clone(); }
+    std::shared_ptr<BaseTable> clone() const { return _clone(); }
 
     /**
      *  Default-construct an associated record.
@@ -88,7 +88,7 @@ public:
      *  Derived classes should reimplement by static-casting the output of _makeRecord to the
      *  appropriate BaseRecord subclass to simulate covariant return types.
      */
-    PTR(BaseRecord) makeRecord() { return _makeRecord(); }
+    std::shared_ptr<BaseRecord> makeRecord() { return _makeRecord(); }
 
     /**
      *  Deep-copy a record, requiring that it have the same schema as this table.
@@ -107,14 +107,14 @@ public:
      *  This is implemented using makeRecord and calling record.assign on the results; override those
      *  to change the behavior.
      */
-    PTR(BaseRecord) copyRecord(BaseRecord const & input);
+    std::shared_ptr<BaseRecord> copyRecord(BaseRecord const & input);
 
     /**
      *  Deep-copy a record, using a mapper to relate two schemas.
      *
      *  @copydetails BaseTable::copyRecord(BaseRecord const &)
      */
-    PTR(BaseRecord) copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
+    std::shared_ptr<BaseRecord> copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
 
     /// Return the table's schema.
     Schema getSchema() const { return _schema; }
@@ -152,7 +152,7 @@ public:
      *  In some cases it may also serve as a form of pimpl, keeping class implementation details
      *  out of header files.
      */
-    static PTR(BaseTable) make(Schema const & schema);
+    static std::shared_ptr<BaseTable> make(Schema const & schema);
 
     virtual ~BaseTable();
 
@@ -160,13 +160,13 @@ protected:
 
     /// Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
-    PTR(Derived) getSelf() {
+    std::shared_ptr<Derived> getSelf() {
         return std::static_pointer_cast<Derived>(shared_from_this());
     }
 
     /// Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
-    CONST_PTR(Derived) getSelf() const {
+    std::shared_ptr<Derived const> getSelf() const {
         return std::static_pointer_cast<Derived const>(shared_from_this());
     }
 
@@ -216,12 +216,12 @@ private:
     void operator=(BaseTable const & other);
 
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    virtual std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     Schema _schema;                 // schema that defines the table's fields
     ndarray::Manager::Ptr _manager; // current memory block to use for new records
-    PTR(daf::base::PropertyList) _metadata; // flexible metadata; may be null
+    std::shared_ptr<daf::base::PropertyList> _metadata; // flexible metadata; may be null
 };
 
 }}} // namespace lsst::afw::table

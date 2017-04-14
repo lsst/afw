@@ -57,7 +57,7 @@ public:
         input(input_), transform(transform_) {}
 
     /// Return a new transformed ellipse core.
-    BaseCore::Ptr copy() const;
+    std::shared_ptr<BaseCore> copy() const;
 
     /// %Transform the ellipse core in-place.
     void inPlace();
@@ -96,7 +96,7 @@ public:
         input(input_), transform(transform_) {}
 
     /// Return a new transformed ellipse.
-    Ellipse::Ptr copy() const;
+    std::shared_ptr<Ellipse> copy() const;
 
     /// %Transform the ellipse in-place.
     void inPlace();

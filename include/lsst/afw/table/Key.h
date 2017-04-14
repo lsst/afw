@@ -36,8 +36,8 @@ class Access;
  *      Key< Point<int> > pointKey = schema.addField< Point<int> >("point", "docs for point");
  *      Key<float> elementKey = arrayKey[3];
  *      Key<int> xKey = pointKey.getX();
- *      PTR(BaseTable) table = BaseTable::make(schema);
- *      PTR(BaseRecord) record = table.makeRecord();
+ *      std::shared_ptr<BaseTable> table = BaseTable::make(schema);
+ *      std::shared_ptr<BaseRecord> record = table.makeRecord();
  *      assert(&record[arrayKey][3] == &record[elementKey3]);
  *      assert(record.get(pointKey).getX() == record[xKey]);
  *

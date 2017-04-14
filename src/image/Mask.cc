@@ -80,7 +80,7 @@ namespace lsst { namespace afw { namespace image {
     }
 
 namespace {
-    void setInitMaskBits(PTR(detail::MaskDict) dict);
+    void setInitMaskBits(std::shared_ptr<detail::MaskDict> dict);
     /*
      * A std::map that maintains a hash value of its contents
      *
@@ -170,11 +170,11 @@ class MaskDict : public MapWithHash {
     MaskDict() : MapWithHash() {}
     MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
 public:
-    static PTR(MaskDict) makeMaskDict();
-    static PTR(MaskDict) makeMaskDict(detail::MaskPlaneDict const &dict);
-    static PTR(MaskDict) setDefaultDict(PTR(MaskDict) dict);
+    static std::shared_ptr<MaskDict> makeMaskDict();
+    static std::shared_ptr<MaskDict> makeMaskDict(detail::MaskPlaneDict const &dict);
+    static std::shared_ptr<MaskDict> setDefaultDict(std::shared_ptr<MaskDict> dict);
 
-    PTR(MaskDict) clone() const;
+    std::shared_ptr<MaskDict> clone() const;
 
     ~MaskDict();
 
@@ -187,7 +187,7 @@ public:
         }
     }
 
-    static PTR(MaskDict) incrDefaultVersion();
+    static std::shared_ptr<MaskDict> incrDefaultVersion();
     static void listMaskDicts();
 };
 }
@@ -206,7 +206,7 @@ namespace {
     public:
         DictState() {
             _dictCounter = 0;
-            _defaultMaskDict = PTR(detail::MaskDict)(new detail::MaskDict);
+            _defaultMaskDict = std::shared_ptr<detail::MaskDict>(new detail::MaskDict);
             _dicts[_defaultMaskDict.get()] = _dictCounter++;
         }
 
@@ -227,7 +227,7 @@ namespace {
         }
 
     private:
-        PTR(detail::MaskDict) getDefaultDict() {
+        std::shared_ptr<detail::MaskDict> getDefaultDict() {
             static bool first = true;
 
             if (first) {
@@ -239,7 +239,7 @@ namespace {
             return _defaultMaskDict;
         }
 
-        PTR(detail::MaskDict) setDefaultDict(PTR(detail::MaskDict) newDefaultMaskDict) {
+        std::shared_ptr<detail::MaskDict> setDefaultDict(std::shared_ptr<detail::MaskDict> newDefaultMaskDict) {
             _defaultMaskDict = newDefaultMaskDict;
 
             return _defaultMaskDict;
@@ -253,14 +253,14 @@ namespace {
             _dicts.erase(dict);
         }
 
-        PTR(detail::MaskDict) incrDefaultVersion() {
-            _defaultMaskDict = PTR(detail::MaskDict)(new detail::MaskDict(*_defaultMaskDict.get()));
+        std::shared_ptr<detail::MaskDict> incrDefaultVersion() {
+            _defaultMaskDict = std::shared_ptr<detail::MaskDict>(new detail::MaskDict(*_defaultMaskDict.get()));
             addDict(_defaultMaskDict.get());
 
             return _defaultMaskDict;
         }
 
-        PTR(detail::MaskDict) _defaultMaskDict; // default MaskDict to use
+        std::shared_ptr<detail::MaskDict> _defaultMaskDict; // default MaskDict to use
         HandleList _dicts;                            // all the live MaskDicts
         int _dictCounter;
     };
@@ -276,34 +276,34 @@ namespace detail {
  * Return the default dictionary, unless you provide mpd in which case you get one of
  * your very very own
  */
-PTR(MaskDict)
+std::shared_ptr<MaskDict>
 MaskDict::makeMaskDict()
 {
     return _state.getDefaultDict();
 }
 
-PTR(MaskDict)
+std::shared_ptr<MaskDict>
 MaskDict::makeMaskDict(detail::MaskPlaneDict const& mpd)
 {
-    PTR(MaskDict) dict = _state.getDefaultDict();
+    std::shared_ptr<MaskDict> dict = _state.getDefaultDict();
 
     if (!mpd.empty()) {
         MapWithHash mwh(mpd);
-        dict = PTR(MaskDict)(new MaskDict(&mwh));
+        dict = std::shared_ptr<MaskDict>(new MaskDict(&mwh));
         _state.addDict(dict.get());
     }
 
     return dict;
 }
 
-PTR(MaskDict)
-MaskDict::setDefaultDict(PTR(MaskDict) dict)
+std::shared_ptr<MaskDict>
+MaskDict::setDefaultDict(std::shared_ptr<MaskDict> dict)
 {
     return _state.setDefaultDict(dict);
 }
 
-PTR(MaskDict) MaskDict::clone() const {
-    PTR(MaskDict) dict(new MaskDict(*this));
+std::shared_ptr<MaskDict> MaskDict::clone() const {
+    std::shared_ptr<MaskDict> dict(new MaskDict(*this));
 
     _state.addDict(dict.get());
 
@@ -314,7 +314,7 @@ MaskDict::~MaskDict() {
     _state.eraseDict(this);
 }
 
-PTR(MaskDict) MaskDict::incrDefaultVersion() {
+std::shared_ptr<MaskDict> MaskDict::incrDefaultVersion() {
     return _state.incrDefaultVersion();
 }
 
@@ -366,7 +366,7 @@ namespace {
      * planes defined here should be documented with the Mask class in Mask.h
      */
     void
-    setInitMaskBits(PTR(detail::MaskDict) dict)
+    setInitMaskBits(std::shared_ptr<detail::MaskDict> dict)
     {
         int i = -1;
         dict->add("BAD", ++i);
@@ -513,7 +513,7 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
     std::string const & fileName,
     int hdu,
-    PTR(daf::base::PropertySet) metadata,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     afw::geom::Box2I const & bbox,
     ImageOrigin origin,
     bool conformMasks
@@ -527,7 +527,7 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
     fits::MemFileManager & manager,
     int hdu,
-    PTR(daf::base::PropertySet) metadata,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     afw::geom::Box2I const & bbox,
     ImageOrigin origin,
     bool conformMasks
@@ -541,7 +541,7 @@ Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(
     fits::Fits & fitsfile,
-    PTR(daf::base::PropertySet) metadata,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     afw::geom::Box2I const & bbox,
     ImageOrigin const origin,
     bool const conformMasks
@@ -556,14 +556,14 @@ Mask<MaskPixelT>::Mask(
     >fits_mask_types;
 
     if (!metadata) {
-        metadata = PTR(daf::base::PropertySet)(new daf::base::PropertyList);
+        metadata = std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList);
     }
 
     fits_read_image<fits_mask_types>(fitsfile, *this, *metadata, bbox, origin);
 
     // look for mask planes in the file
     MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata);
-    PTR(detail::MaskDict) fileMD = detail::MaskDict::makeMaskDict(fileMaskDict);
+    std::shared_ptr<detail::MaskDict> fileMD = detail::MaskDict::makeMaskDict(fileMaskDict);
 
     if (*fileMD == *detail::MaskDict::makeMaskDict()) { // file is already consistent with Mask
         return;
@@ -580,7 +580,7 @@ Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     std::string const & fileName,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -590,7 +590,7 @@ void Mask<MaskPixelT>::writeFits(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     fits::MemFileManager & manager,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -600,20 +600,20 @@ void Mask<MaskPixelT>::writeFits(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     fits::Fits & fitsfile,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i
 ) const {
 
-    PTR(dafBase::PropertySet) metadata;
+    std::shared_ptr<dafBase::PropertySet> metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
-        metadata = PTR(dafBase::PropertySet)(new dafBase::PropertyList());
+        metadata = std::shared_ptr<dafBase::PropertySet>(new dafBase::PropertyList());
     }
     addMaskPlanesToMetadata(metadata);
     //
     // Add WCS with (X0, Y0) information
     //
-    PTR(dafBase::PropertySet) wcsAMetadata = detail::createTrivialWcsAsPropertySet(
+    std::shared_ptr<dafBase::PropertySet> wcsAMetadata = detail::createTrivialWcsAsPropertySet(
         detail::wcsNameForXY0, this->getX0(), this->getY0()
     );
     metadata->combine(wcsAMetadata);
@@ -818,7 +818,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(
     MaskPlaneDict const &currentPlaneDict
                                                   )
 {
-    PTR(detail::MaskDict) currentMD = detail::MaskDict::makeMaskDict(currentPlaneDict);
+    std::shared_ptr<detail::MaskDict> currentMD = detail::MaskDict::makeMaskDict(currentPlaneDict);
 
     if (*_maskDict == *currentMD) {
         if (*detail::MaskDict::makeMaskDict() == *_maskDict) {
@@ -1009,9 +1009,9 @@ void Mask<MaskPixelT>::setMaskPlaneValues(int const planeId,
 }
 
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::addMaskPlanesToMetadata(PTR(dafBase::PropertySet) metadata) {
+void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::PropertySet> metadata) {
     if (!metadata) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Null PTR(PropertySet)");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Null std::shared_ptr<PropertySet>");
     }
 
     // First, clear existing MaskPlane metadata
@@ -1038,7 +1038,7 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(PTR(dafBase::PropertySet) metadat
 
 template<typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadata(
-    CONST_PTR(dafBase::PropertySet) metadata
+    std::shared_ptr<dafBase::PropertySet const> metadata
 ) {
     MaskPlaneDict newDict;
 
@@ -1092,7 +1092,7 @@ template<typename MaskPixelT>
 std::string const Mask<MaskPixelT>::maskPlanePrefix("MP_");
 
 template<typename MaskPixelT>
-PTR(detail::MaskDict) Mask<MaskPixelT>::_maskPlaneDict()
+std::shared_ptr<detail::MaskDict> Mask<MaskPixelT>::_maskPlaneDict()
 {
     return detail::MaskDict::makeMaskDict();
 }

@@ -51,7 +51,7 @@ public:
     Schema getSchema() const { return _table->getSchema(); }
 
     /// Return the table this record is associated with.
-    CONST_PTR(BaseTable) getTable() const { return _table; }
+    std::shared_ptr<BaseTable const> getTable() const { return _table; }
 
     /**
      *  Return a pointer to the underlying elements of a field (non-const).
@@ -182,7 +182,7 @@ protected:
     virtual void _assign(BaseRecord const & other) {}
 
     /// Construct a record with uninitialized data.
-    BaseRecord(PTR(BaseTable) const & table) : daf::base::Citizen(typeid(this)), _table(table) {
+    BaseRecord(std::shared_ptr<BaseTable> const & table) : daf::base::Citizen(typeid(this)), _table(table) {
         table->_initialize(*this);
     }
 
@@ -193,7 +193,7 @@ private:
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     void * _data;                   // pointer to field data
-    PTR(BaseTable) _table;          // the associated table
+    std::shared_ptr<BaseTable> _table;          // the associated table
     ndarray::Manager::Ptr _manager; // shared manager for lifetime of _data (like shared_ptr with no pointer)
 };
 

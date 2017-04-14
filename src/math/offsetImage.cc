@@ -40,20 +40,20 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(ImageT const& inImage,
+std::shared_ptr<ImageT> offsetImage(ImageT const& inImage,
                                  float dx,
                                  float dy,
                                  std::string const& algorithmName,
                                  unsigned int buffer
 
                                 ) {
-    SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
+    std::shared_ptr<SeparableKernel> offsetKernel = makeWarpingKernel(algorithmName);
 
-    typename ImageT::Ptr buffImage;
+    std::shared_ptr<ImageT> buffImage;
     if (buffer > 0) {
         // Paste input image into buffered image
         afwGeom::Extent2I const &dims = inImage.getDimensions();
-        typename ImageT::Ptr buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
+        std::shared_ptr<ImageT> buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
         buffImage = buffered;
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
         buffImage->assign(inImage, box);
@@ -70,8 +70,8 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,
                            offsetKernel->getWidth() % offsetKernel->getHeight()).str());
     }
 
-//    typename ImageT::Ptr convImage(new ImageT(buffImage, true)); // output image, a deep copy
-    typename ImageT::Ptr convImage(new ImageT(buffImage->getDimensions())); // Convolved image
+//    std::shared_ptr<ImageT> convImage(new ImageT(buffImage, true)); // output image, a deep copy
+    std::shared_ptr<ImageT> convImage(new ImageT(buffImage->getDimensions())); // Convolved image
 
     int dOrigX, dOrigY;
     double fracX, fracY;
@@ -108,10 +108,10 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,
 
     convolve(*convImage, *buffImage, *offsetKernel, true, true);
 
-    typename ImageT::Ptr outImage;
+    std::shared_ptr<ImageT> outImage;
     if (buffer > 0) {
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), inImage.getDimensions());
-        typename ImageT::Ptr out(new ImageT(*convImage, box, afwImage::LOCAL, true));
+        std::shared_ptr<ImageT> out(new ImageT(*convImage, box, afwImage::LOCAL, true));
         outImage = out;
     } else {
         outImage = convImage;
@@ -128,9 +128,9 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,
 //
 /// @cond
 #define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
+    template std::shared_ptr<afwImage::Image<TYPE>> offsetImage(afwImage::Image<TYPE> const&, float, float, \
                                                     std::string const&, unsigned int); \
-    template afwImage::MaskedImage<TYPE>::Ptr offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
                                                           std::string const&, unsigned int);
 
 INSTANTIATE(double)

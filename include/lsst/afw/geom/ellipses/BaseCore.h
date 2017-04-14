@@ -56,29 +56,26 @@ public:
     class Convolution;
     template <typename Output> struct Converter;
 
-    typedef std::shared_ptr<BaseCore> Ptr;
-    typedef std::shared_ptr<BaseCore const> ConstPtr;
-
     typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
     typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
 
-    static Ptr make(std::string const & name);
+    static std::shared_ptr<BaseCore> make(std::string const & name);
 
-    static Ptr make(std::string const & name, ParameterVector const & parameters);
+    static std::shared_ptr<BaseCore> make(std::string const & name, ParameterVector const & parameters);
 
-    static Ptr make(std::string const & name, double v1, double v2, double v3);
+    static std::shared_ptr<BaseCore> make(std::string const & name, double v1, double v2, double v3);
 
-    static Ptr make(std::string const & name, BaseCore const & other);
+    static std::shared_ptr<BaseCore> make(std::string const & name, BaseCore const & other);
 
-    static Ptr make(std::string const & name, Transformer const & other);
+    static std::shared_ptr<BaseCore> make(std::string const & name, Transformer const & other);
 
-    static Ptr make(std::string const & name, Convolution const & other);
+    static std::shared_ptr<BaseCore> make(std::string const & name, Convolution const & other);
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
 
     /// Deep-copy the Core.
-    Ptr clone() const { return _clone(); }
+    std::shared_ptr<BaseCore> clone() const { return _clone(); }
 
     /**
      *  @brief Put the parameters into a "standard form", and throw InvalidParameterError
@@ -185,14 +182,14 @@ public:
 protected:
     friend class Parametric;
 
-    static void registerSubclass(Ptr const & example);
+    static void registerSubclass(std::shared_ptr<BaseCore> const & example);
 
     template <typename T>
     struct Registrar {
         Registrar() { registerSubclass(std::make_shared<T>()); }
     };
 
-    virtual BaseCore::Ptr _clone() const = 0;
+    virtual std::shared_ptr<BaseCore> _clone() const = 0;
 
     static void _assignQuadrupoleToAxes(
         double ixx, double iyy, double ixy,

@@ -103,7 +103,7 @@ public:
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
     void addCatalog(
-        PTR(afw::table::SourceTable) sourceTable,
+        std::shared_ptr<afw::table::SourceTable> sourceTable,
         afw::table::SourceCatalog const &inputCat,
         std::string const & filter,
         float minNewPeakDist=-1.,
@@ -133,7 +133,7 @@ private:
         FlagKey peak;
     };
 
-    typedef std::vector<PTR(FootprintMerge)> FootprintMergeVec;
+    typedef std::vector<std::shared_ptr<FootprintMerge>> FootprintMergeVec;
     typedef std::map<std::string,KeyTuple> FilterMap;
 
     friend class FootprintMerge;
@@ -146,7 +146,7 @@ private:
     FootprintMergeVec _mergeList;
     FilterMap _filterMap;
     afw::table::SchemaMapper _peakSchemaMapper;
-    PTR(PeakTable) _peakTable;
+    std::shared_ptr<PeakTable> _peakTable;
 };
 
 }}} // namespace lsst::afw::detection

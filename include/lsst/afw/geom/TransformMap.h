@@ -43,7 +43,7 @@ namespace geom {
  *
  * TransformMap supports transforming between any two supported CoordSysT using the transform method.
  * It also allows iteration over the map of CoordSysT: XYTransform:
- * * In C++ the iterator is a CoordSysT, CONST_PTR(XYTransform) pair.
+ * * In C++ the iterator is a CoordSysT, std::shared_ptr<XYTransform const> pair.
  * * In Python, the iterator returns a CoordSysT; use TransformMap[CoordSysT] to access the XYTransform.
  *
  * If CoordSysT is not a plain old data type or std::string then:
@@ -64,7 +64,7 @@ namespace geom {
 template<typename CoordSysT>
 class TransformMap {
 public:
-    typedef std::map<CoordSysT, CONST_PTR(XYTransform)> Transforms;
+    typedef std::map<CoordSysT, std::shared_ptr<XYTransform const>> Transforms;
     typedef CoordSysT CoordSys; // needed by SWIG; see TransformMap.i
 
     /**
@@ -135,7 +135,7 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
      */
-    CONST_PTR(XYTransform) operator[](
+    std::shared_ptr<XYTransform const> operator[](
         CoordSysT const &coordSys ///< coordinate system whose XYTransform is wanted
     ) const;
 

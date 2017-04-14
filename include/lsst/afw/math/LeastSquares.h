@@ -350,7 +350,7 @@ private:
     // will not be computed until they are first requested.
     void _factor(bool haveNormalEquations);
 
-    PTR(Impl) _impl;
+    std::shared_ptr<Impl> _impl;
 };
 
 }}} // namespace lsst::afw::math

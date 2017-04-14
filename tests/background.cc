@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         // test methods for public stats objects in bgCtrl
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
-        PTR(math::Background) back = math::makeBackground(img, bgCtrl);
+        std::shared_ptr<math::Background> back = math::makeBackground(img, bgCtrl);
         double const TESTVAL = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
 
-        image::Image<float>::Ptr bImage = back->getImage<float>();
+        std::shared_ptr<image::Image<float>> bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
 
         BOOST_CHECK_EQUAL(TESTVAL, pixVal);
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages, * utf::description("requires afwdata 
 
             // get the image and header
             DecoratedImage dimg(img_path);
-            Image::Ptr img = dimg.getImage();
-            lsst::daf::base::PropertySet::Ptr fitsHdr = dimg.getMetadata(); // the FITS header
+            std::shared_ptr<Image> img = dimg.getImage();
+            std::shared_ptr<lsst::daf::base::PropertySet> fitsHdr = dimg.getMetadata(); // the FITS header
 
             // get the true values of the mean and stdev
             float reqMean = static_cast<float>(fitsHdr->getAsDouble("MEANREQ"));
@@ -124,14 +124,14 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages, * utf::description("requires afwdata 
             float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
-            PTR(math::Background) backobj = math::makeBackground(*img, bctrl);
+            std::shared_ptr<math::Background> backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
             float testval = std::dynamic_pointer_cast<math::BackgroundMI>(backobj)->getPixel(width/2, height/2);
             BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
-            image::Image<float>::Ptr bimg = backobj->getImage<float>();
+            std::shared_ptr<image::Image<float>> bimg = backobj->getImage<float>();
             float testImgval = static_cast<float>(*(bimg->xy_at(width/2, height/2)));
             BOOST_REQUIRE( fabs(testImgval - reqMean) < 2.0*stdevSubimg );
         }
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         bctrl.setNySample(6);
         bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
         bctrl.getStatisticsControl()->setNumIter(1);
-        PTR(math::BackgroundMI) backobj =
+        std::shared_ptr<math::BackgroundMI> backobj =
             std::dynamic_pointer_cast<math::BackgroundMI>(math::makeBackground(rampimg, bctrl));
 
         // test the values at the corners and in the middle
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         bctrl.setNySample(24);
         bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
         bctrl.getStatisticsControl()->setNumIter(1);
-        PTR(math::BackgroundMI) backobj =
+        std::shared_ptr<math::BackgroundMI> backobj =
             std::dynamic_pointer_cast<math::BackgroundMI>(math::makeBackground(parabimg, bctrl));
 
         // check the values at the corners and in the middle

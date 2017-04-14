@@ -94,8 +94,8 @@ void declarePeakTable(PyPeakTable & cls) {
     cls.def_static("getPeakValueKey", &PeakTable::getPeakValueKey);
     cls.def("clone", &PeakTable::clone);
     cls.def("makeRecord", &PeakTable::makeRecord);
-    cls.def("copyRecord", (PTR(PeakRecord) (PeakTable::*)(afw::table::BaseRecord const &)) &PeakTable::copyRecord);
-    cls.def("copyRecord", (PTR(PeakRecord) (PeakTable::*)(afw::table::BaseRecord const &, afw::table::SchemaMapper const &)) &PeakTable::copyRecord);
+    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &)) &PeakTable::copyRecord);
+    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &, afw::table::SchemaMapper const &)) &PeakTable::copyRecord);
 }
 
 }  // lsst::afw::detection::<anonymous>

@@ -108,7 +108,7 @@ void applyToImage(BoundedField const & field, image::Image<T> & img, F functor, 
 
 } // anonymous
 
-PTR(BoundedField) operator*(double const scale, CONST_PTR(BoundedField) bf) {
+std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf) {
     return *bf*scale;
 }
 

@@ -143,7 +143,7 @@ public:
      * @throws lsst::pex::exceptions::RuntimeError
      *      Thrown if the "rngSeed" policy value cannot be converted to an unsigned long int.
      */
-    explicit Random(lsst::pex::policy::Policy::Ptr const policy);
+    explicit Random(std::shared_ptr<lsst::pex::policy::Policy> const policy);
     // Use compiler generated destructor and shallow copy constructor/assignment operator
 
     /**

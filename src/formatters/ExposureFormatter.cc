@@ -109,7 +109,7 @@ lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePi
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
+    std::shared_ptr<lsst::pex::policy::Policy> policy) :
     lsst::daf::persistence::Formatter(typeid(this)), _policy(policy) {
 }
 
@@ -160,7 +160,7 @@ template <typename T>
 static void setColumn(
     dafPersist::DbStorage* db,
     std::string const& colName,
-    lsst::daf::base::PropertySet::Ptr source,
+    std::shared_ptr<lsst::daf::base::PropertySet> source,
     std::string const& propName
     ) {
     if (!source->exists(propName)) {
@@ -178,7 +178,7 @@ template <typename T1, typename T2>
 static void setColumn(
     dafPersist::DbStorage* db,                            ///< Destination database
     std::string const& colName,               ///< Output column name
-    lsst::daf::base::PropertySet::Ptr source, ///< Source PropertySet
+    std::shared_ptr<lsst::daf::base::PropertySet> source, ///< Source PropertySet
     std::string const& propName               ///< Property name
     ) {
     if (!source->exists(propName)) {
@@ -191,8 +191,8 @@ static void setColumn(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     dafBase::Persistable const* persistable,
-    dafPersist::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    std::shared_ptr<dafPersist::Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ExposureFormatter write start");
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
@@ -218,11 +218,11 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Get the Wcs headers.
-        lsst::daf::base::PropertySet::Ptr wcsProps =
+        std::shared_ptr<lsst::daf::base::PropertySet> wcsProps =
             ip->getWcs()->getFitsMetadata();
 
         // Get the image headers.
-        lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
+        std::shared_ptr<lsst::daf::base::PropertySet> dp = ip->getMetadata();
         if (!dp) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Unable to retrieve metadata from MaskedImage's Image");
@@ -232,7 +232,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         std::string itemName = additionalData->get<std::string>("itemName");
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::pex::policy::Policy::Ptr itemPolicy = _policy->getPolicy(itemName);
+            std::shared_ptr<lsst::pex::policy::Policy> itemPolicy = _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
             }
@@ -312,8 +312,8 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-    dafPersist::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    std::shared_ptr<dafPersist::Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ExposureFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         LOGL_DEBUG(_log, "ExposureFormatter read BoostStorage");
@@ -364,7 +364,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         std::string itemName = additionalData->get<std::string>("itemName");
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::pex::policy::Policy::Ptr itemPolicy =
+            std::shared_ptr<lsst::pex::policy::Policy> itemPolicy =
                 _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
@@ -424,7 +424,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         // Restore image from FITS...
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(db->getColumnByPos<std::string>(0));
-        lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
+        std::shared_ptr<lsst::daf::base::PropertySet> dp = ip->getMetadata();
 
         // Look up the filter name given the ID.
         int filterId = db->getColumnByPos<int>(1);
@@ -446,8 +446,8 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
         dafBase::Persistable*,
-        dafPersist::Storage::Ptr,
-        lsst::daf::base::PropertySet::Ptr
+        std::shared_ptr<dafPersist::Storage>,
+        std::shared_ptr<lsst::daf::base::PropertySet>
                                                                                 )
 {
     /// @todo Implement update from FitsStorage, keeping DB-provided headers.
@@ -466,17 +466,17 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Exposure");
     }
-    PTR(afwImg::Wcs) wcs = ip->getWcs();
+    std::shared_ptr<afwImg::Wcs> wcs = ip->getWcs();
     ar & *ip->getMetadata() & ip->_maskedImage & wcs;
     LOGL_DEBUG(_log, "ExposureFormatter delegateSerialize end");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT,
+std::shared_ptr<lsst::daf::persistence::Formatter> afwForm::ExposureFormatter<ImagePixelT,
                                                                   MaskPixelT,
                                                                   VariancePixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    typedef typename lsst::daf::persistence::Formatter::Ptr FormPtr;
+    std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    typedef std::shared_ptr<lsst::daf::persistence::Formatter> FormPtr;
     return FormPtr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 

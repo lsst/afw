@@ -158,7 +158,7 @@ ndarray::Array<double,2,2> makeMatrix(
 
 } // anonymous
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(
     afw::geom::Box2I const & bbox,
     ndarray::Array<double const,1> const & x,
     ndarray::Array<double const,1> const & y,
@@ -166,7 +166,7 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
     Control const & ctrl
 ) {
     // Initialize the result object, so we can make use of the AffineTransform it builds
-    PTR(ChebyshevBoundedField) result(new ChebyshevBoundedField(bbox));
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
     // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
     // using only those that the control says should have nonzero coefficients.
     Packer const packer(ctrl);
@@ -179,7 +179,7 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
     return result;
 }
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(
     afw::geom::Box2I const & bbox,
     ndarray::Array<double const,1> const & x,
     ndarray::Array<double const,1> const & y,
@@ -188,7 +188,7 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
     Control const & ctrl
 ) {
     // Initialize the result object, so we can make use of the AffineTransform it builds
-    PTR(ChebyshevBoundedField) result(new ChebyshevBoundedField(bbox));
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
     // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
     // using only those that the control says should have nonzero coefficients.
     Packer const packer(ctrl);
@@ -207,13 +207,13 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
 }
 
 template <typename T>
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(
     image::Image<T> const & img,
     Control const & ctrl
 ) {
     // Initialize the result object, so we can make use of the AffineTransform it builds
     geom::Box2I bbox = img.getBBox(image::PARENT);
-    PTR(ChebyshevBoundedField) result(new ChebyshevBoundedField(bbox));
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
     // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
     // using only those that the control says should have nonzero coefficients.
     Packer const packer(ctrl);
@@ -231,7 +231,7 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
 
 // ------------------ modifier factories ---------------------------------------------------------------
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::truncate(Control const & ctrl) const {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::truncate(Control const & ctrl) const {
     if (static_cast<std::size_t>(ctrl.orderX) >= _coefficients.getSize<1>()) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
@@ -258,7 +258,7 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::truncate(Control const & ctrl)
     return std::make_shared<ChebyshevBoundedField>(getBBox(), coefficients);
 }
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::relocate(geom::Box2I const & bbox) const {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::relocate(geom::Box2I const & bbox) const {
     return std::make_shared<ChebyshevBoundedField>(bbox, _coefficients);
 }
 
@@ -375,7 +375,7 @@ struct PersistenceHelper {
 class ChebyshevBoundedFieldFactory : public table::io::PersistableFactory {
 public:
 
-    virtual PTR(table::io::Persistable)
+    virtual std::shared_ptr<table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -411,7 +411,7 @@ std::string ChebyshevBoundedField::getPythonModule() const {
 void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
     PersistenceHelper const keys(_coefficients.getSize<1>(), _coefficients.getSize<0>());
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     record->set(keys.orderX, _coefficients.getSize<1>() - 1);
     record->set(keys.bboxMin, getBBox().getMin());
     record->set(keys.bboxMax, getBBox().getMax());
@@ -419,7 +419,7 @@ void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
-PTR(BoundedField) ChebyshevBoundedField::operator*(double const scale) const {
+std::shared_ptr<BoundedField> ChebyshevBoundedField::operator*(double const scale) const {
     return std::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients()*scale));
 }
 
@@ -428,7 +428,7 @@ PTR(BoundedField) ChebyshevBoundedField::operator*(double const scale) const {
 #ifndef DOXYGEN
 
 #define INSTANTIATE(T)                                                 \
-    template PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(    \
+    template std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(    \
         image::Image<T> const & image,                                 \
         Control const & ctrl                                           \
     )

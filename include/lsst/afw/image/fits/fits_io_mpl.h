@@ -112,7 +112,7 @@ void fits_read_image(
 template<typename supported_fits_types, typename ImageT>
 void fits_read_image(
     fits::Fits & fitsfile, ImageT& img,
-    PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+    std::shared_ptr<lsst::daf::base::PropertySet> metadata = std::shared_ptr<lsst::daf::base::PropertySet>(),
     geom::Box2I const& bbox=geom::Box2I(),
     ImageOrigin const origin=PARENT
 ) {

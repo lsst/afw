@@ -59,17 +59,17 @@ public:
      *  If the given pointer is null, the returned ID is always 0, which may be used
      *  to retrieve null pointers from an InputArchive.
      *
-     *  It is expected that the CONST_PTR form will usually be used, as Persistables
-     *  are typically held by PTR.  But we expose the lower-level raw-pointer form
+     *  It is expected that the `shared_ptr` form will usually be used, as Persistables
+     *  are typically held by `shared_ptr`.  But we expose the lower-level raw-pointer form
      *  so users aren't forced to clone objects before persisting them if they don't
-     *  already have a PTR.
+     *  already have a `shared_ptr`.
      *
      *  The implementation of 'put' does not provide any exception safety; if the object
      *  being saved (or any nested object) throws an exception, the entire archive may
      *  be in an inconsistent state and should not be saved.
      */
     int put(Persistable const * obj, bool permissive=false);
-    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get(), permissive); }
+    int put(std::shared_ptr<Persistable const> obj, bool permissive=false) { return put(obj.get(), permissive); }
     //@}
 
     /**
@@ -97,7 +97,7 @@ private:
 
     class Impl;
 
-    PTR(Impl) _impl;
+    std::shared_ptr<Impl> _impl;
 };
 
 /**
@@ -132,7 +132,7 @@ public:
      *  @copydoc OutputArchive::put.
      */
     int put(Persistable const * obj, bool permissive=false);
-    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get(), permissive); }
+    int put(std::shared_ptr<Persistable const> obj, bool permissive=false) { return put(obj.get(), permissive); }
     //@}
 
     ~OutputArchiveHandle();
@@ -151,14 +151,14 @@ private:
 
     OutputArchiveHandle(
         int id, std::string const & name, std::string const & module,
-        PTR(OutputArchive::Impl) impl
+        std::shared_ptr<OutputArchive::Impl> impl
     );
 
     int _id;
     int _catPersistable;
     std::string _name;
     std::string _module;
-    PTR(OutputArchive::Impl) _impl;
+    std::shared_ptr<OutputArchive::Impl> _impl;
 };
 
 }}}} // namespace lsst::afw::table::io

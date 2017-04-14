@@ -123,7 +123,7 @@ double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
 }
 
 /// @internal Set each pixel in a row to the amount of overlap with polygon
-void pixelRowOverlap(PTR(lsst::afw::image::Image<float>) const image,
+void pixelRowOverlap(std::shared_ptr<lsst::afw::image::Image<float>> const image,
                      BoostPolygon const& poly, int const xStart, int const xStop, int const y)
 {
     int x = xStart;
@@ -178,7 +178,7 @@ struct Polygon::Impl
     void check() { boost::geometry::correct(poly); }
 
     /// @internal Convert collection of Boost polygons to our own
-    static std::vector<PTR(Polygon)> convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons);
+    static std::vector<std::shared_ptr<Polygon>> convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons);
 
     template <class PolyT>
     bool overlaps(PolyT const& other) const {
@@ -186,36 +186,36 @@ struct Polygon::Impl
     }
 
     template <class PolyT>
-    PTR(Polygon) intersectionSingle(PolyT const& other) const;
+    std::shared_ptr<Polygon> intersectionSingle(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<PTR(Polygon)> intersection(PolyT const& other) const;
+    std::vector<std::shared_ptr<Polygon>> intersection(PolyT const& other) const;
 
     template <class PolyT>
-    PTR(Polygon) unionSingle(PolyT const& other) const;
+    std::shared_ptr<Polygon> unionSingle(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<PTR(Polygon)> union_(PolyT const& other) const;
+    std::vector<std::shared_ptr<Polygon>> union_(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<PTR(Polygon)> symDifference(PolyT const& other) const;
+    std::vector<std::shared_ptr<Polygon>> symDifference(PolyT const& other) const;
 
     BoostPolygon poly;
 };
 
-std::vector<PTR(Polygon)> Polygon::Impl::convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons)
+std::vector<std::shared_ptr<Polygon>> Polygon::Impl::convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons)
 {
-    std::vector<PTR(Polygon)> lsstPolygons;
+    std::vector<std::shared_ptr<Polygon>> lsstPolygons;
     lsstPolygons.reserve(boostPolygons.size());
     for (std::vector<BoostPolygon>::const_iterator i = boostPolygons.begin(); i != boostPolygons.end(); ++i) {
-        PTR(Polygon) tmp(new Polygon(PTR(Polygon::Impl)(new Polygon::Impl(*i))));
+        std::shared_ptr<Polygon> tmp(new Polygon(std::shared_ptr<Polygon::Impl>(new Polygon::Impl(*i))));
         lsstPolygons.push_back(tmp);
     }
     return lsstPolygons;
 }
 
 template <class PolyT>
-PTR(Polygon) Polygon::Impl::intersectionSingle(PolyT const& other) const
+std::shared_ptr<Polygon> Polygon::Impl::intersectionSingle(PolyT const& other) const
 {
     std::vector<BoostPolygon> result;
     boost::geometry::intersection(poly, other, result);
@@ -227,11 +227,11 @@ PTR(Polygon) Polygon::Impl::intersectionSingle(PolyT const& other) const
                           (boost::format("Multiple polygons (%d) created by intersection()") %
                            result.size()).str());
     }
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(result[0]))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(result[0]))));
 }
 
 template <class PolyT>
-std::vector<PTR(Polygon)> Polygon::Impl::intersection(PolyT const& other) const
+std::vector<std::shared_ptr<Polygon>> Polygon::Impl::intersection(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::intersection(poly, other, boostResult);
@@ -239,7 +239,7 @@ std::vector<PTR(Polygon)> Polygon::Impl::intersection(PolyT const& other) const
 }
 
 template <class PolyT>
-PTR(Polygon) Polygon::Impl::unionSingle(PolyT const& other) const
+std::shared_ptr<Polygon> Polygon::Impl::unionSingle(PolyT const& other) const
 {
     std::vector<BoostPolygon> result;
     boost::geometry::union_(poly, other, result);
@@ -248,11 +248,11 @@ PTR(Polygon) Polygon::Impl::unionSingle(PolyT const& other) const
                           (boost::format("Multiple polygons (%d) created by union_()") %
                            result.size()).str());
     }
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(result[0]))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(result[0]))));
 }
 
 template <class PolyT>
-std::vector<PTR(Polygon)> Polygon::Impl::union_(PolyT const& other) const
+std::vector<std::shared_ptr<Polygon>> Polygon::Impl::union_(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::union_(poly, other, boostResult);
@@ -260,7 +260,7 @@ std::vector<PTR(Polygon)> Polygon::Impl::union_(PolyT const& other) const
 }
 
 template <class PolyT>
-std::vector<PTR(Polygon)> Polygon::Impl::symDifference(PolyT const& other) const
+std::vector<std::shared_ptr<Polygon>> Polygon::Impl::symDifference(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::sym_difference(poly, other, boostResult);
@@ -277,7 +277,7 @@ Polygon::Polygon(std::vector<LsstPoint> const& vertices) :
 
 Polygon::Polygon(
     Polygon::Box const &box,
-    CONST_PTR(afw::geom::XYTransform) const& transform
+    std::shared_ptr<afw::geom::XYTransform const> const& transform
     ) : _impl(new Polygon::Impl())
 {
     std::vector<LsstPoint> corners = boxToCorners(box);
@@ -359,60 +359,60 @@ bool Polygon::overlaps(Box const& box) const {
     return _impl->overlaps(box);
 }
 
-PTR(Polygon) Polygon::intersectionSingle(Polygon const& other) const {
+std::shared_ptr<Polygon> Polygon::intersectionSingle(Polygon const& other) const {
     return _impl->intersectionSingle(other._impl->poly);
 }
 
-PTR(Polygon) Polygon::intersectionSingle(Box const& box) const {
+std::shared_ptr<Polygon> Polygon::intersectionSingle(Box const& box) const {
     return _impl->intersectionSingle(box);
 }
 
-std::vector<PTR(Polygon)> Polygon::intersection(Polygon const& other) const {
+std::vector<std::shared_ptr<Polygon>> Polygon::intersection(Polygon const& other) const {
     return _impl->intersection(other._impl->poly);
 }
 
-std::vector<PTR(Polygon)> Polygon::intersection(Box const& box) const {
+std::vector<std::shared_ptr<Polygon>> Polygon::intersection(Box const& box) const {
     return _impl->intersection(box);
 }
 
-PTR(Polygon) Polygon::unionSingle(Polygon const& other) const {
+std::shared_ptr<Polygon> Polygon::unionSingle(Polygon const& other) const {
     return _impl->unionSingle(other._impl->poly);
 }
 
-PTR(Polygon) Polygon::unionSingle(Box const& box) const {
+std::shared_ptr<Polygon> Polygon::unionSingle(Box const& box) const {
     return _impl->unionSingle(box);
 }
 
-std::vector<PTR(Polygon)> Polygon::union_(Polygon const& other) const {
+std::vector<std::shared_ptr<Polygon>> Polygon::union_(Polygon const& other) const {
     return _impl->union_(other._impl->poly);
 }
 
-std::vector<PTR(Polygon)> Polygon::union_(Box const& box) const {
+std::vector<std::shared_ptr<Polygon>> Polygon::union_(Box const& box) const {
     return _impl->union_(box);
 }
 
-std::vector<PTR(Polygon)> Polygon::symDifference(Polygon const& other) const {
+std::vector<std::shared_ptr<Polygon>> Polygon::symDifference(Polygon const& other) const {
     return _impl->symDifference(other._impl->poly);
 }
 
-std::vector<PTR(Polygon)> Polygon::symDifference(Box const& box) const {
+std::vector<std::shared_ptr<Polygon>> Polygon::symDifference(Box const& box) const {
     return _impl->symDifference(box);
 }
 
-PTR(Polygon) Polygon::simplify(double const distance) const {
+std::shared_ptr<Polygon> Polygon::simplify(double const distance) const {
     BoostPolygon result;
     boost::geometry::simplify(_impl->poly, result, distance);
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(result))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(result))));
 }
 
-PTR(Polygon) Polygon::convexHull() const
+std::shared_ptr<Polygon> Polygon::convexHull() const
 {
     BoostPolygon hull;
     boost::geometry::convex_hull(_impl->poly, hull);
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(hull))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(hull))));
 }
 
-PTR(Polygon) Polygon::transform(CONST_PTR(XYTransform) const& transform) const
+std::shared_ptr<Polygon> Polygon::transform(std::shared_ptr<XYTransform const> const& transform) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges());
@@ -420,10 +420,10 @@ PTR(Polygon) Polygon::transform(CONST_PTR(XYTransform) const& transform) const
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform->forwardTransform(*i));
     }
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
 }
 
-PTR(Polygon) Polygon::transform(AffineTransform const& transform) const
+std::shared_ptr<Polygon> Polygon::transform(AffineTransform const& transform) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges());
@@ -431,10 +431,10 @@ PTR(Polygon) Polygon::transform(AffineTransform const& transform) const
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform(*i));
     }
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
 }
 
-PTR(Polygon) Polygon::subSample(size_t num) const
+std::shared_ptr<Polygon> Polygon::subSample(size_t num) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges()*num);
@@ -443,10 +443,10 @@ PTR(Polygon) Polygon::subSample(size_t num) const
          i != edges.end(); ++i) {
         addSubSampledEdge(vertices, i->first, i->second, num);
     }
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
 }
 
-PTR(Polygon) Polygon::subSample(double maxLength) const
+std::shared_ptr<Polygon> Polygon::subSample(double maxLength) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges() + static_cast<size_t>(::ceil(calculatePerimeter()/maxLength)));
@@ -457,14 +457,14 @@ PTR(Polygon) Polygon::subSample(double maxLength) const
         double const dist = ::sqrt(p1.distanceSquared(p2));
         addSubSampledEdge(vertices, p1, p2, static_cast<size_t>(::ceil(dist/maxLength)));
     }
-    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
 }
 
 
-PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox) const
+std::shared_ptr<afw::image::Image<float>> Polygon::createImage(afw::geom::Box2I const& bbox) const
 {
     typedef afw::image::Image<float> Image;
-    PTR(Image) image = std::make_shared<Image>(bbox);
+    std::shared_ptr<Image> image = std::make_shared<Image>(bbox);
     image->setXY0(bbox.getMin());
     *image = 0.0;
     afw::geom::Box2D bounds = getBBox(); // Polygon bounds
@@ -581,7 +581,7 @@ public:
     explicit PolygonFactory(std::string const & name) :
         table::io::PersistableFactory(name) {}
 
-    virtual PTR(table::io::Persistable) read(InputArchive const & archive,
+    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const & archive,
                                              CatalogVector const & catalogs) const
         {
             static PolygonSchema const & keys = PolygonSchema::get();
@@ -593,7 +593,7 @@ public:
             for ( afw::table::BaseCatalog::const_iterator iter = cat.begin(); iter != cat.end(); ++iter) {
                 vertices.push_back(iter->get(keys.vertices));
             }
-            PTR(Polygon) result(new Polygon(vertices));
+            std::shared_ptr<Polygon> result(new Polygon(vertices));
             return result;
         }
 };
@@ -613,7 +613,7 @@ void Polygon::write(OutputArchiveHandle & handle) const {
 
     std::vector<LsstPoint> vertices = this->getVertices();
     for (std::vector<LsstPoint>::const_iterator i = vertices.begin(); i != vertices.end(); ++i) {
-        PTR(afw::table::BaseRecord) record = catalog.addNew();
+        std::shared_ptr<afw::table::BaseRecord> record = catalog.addNew();
         record->set(keys.vertices, *i);
     }
 

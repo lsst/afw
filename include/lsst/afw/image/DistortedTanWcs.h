@@ -67,7 +67,7 @@ public:
     virtual ~DistortedTanWcs() {};
 
     /// Polymorphic deep-copy.
-    virtual PTR(Wcs) clone() const;
+    virtual std::shared_ptr<Wcs> clone() const;
 
     /// @warning not implemented (because XYTransform operator== is not implemented)
     bool operator==(Wcs const & other) const;
@@ -86,10 +86,10 @@ public:
     bool hasDistortion() const { return true; }
 
     /// return the pure tan WCS component
-    PTR(Wcs) getTanWcs() const { return TanWcs::clone(); }
+    std::shared_ptr<Wcs> getTanWcs() const { return TanWcs::clone(); }
 
     /// return the PIXELS to TAN_PIXELS XYTransform
-    PTR(geom::XYTransform) getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
+    std::shared_ptr<geom::XYTransform> getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
 
 protected:
 
@@ -112,7 +112,7 @@ protected:
 
 private:
 
-    PTR(geom::XYTransform) _pixelsToTanPixelsPtr;   // XYTransform that converts from PIXELS to TAN_PIXELS
+    std::shared_ptr<geom::XYTransform> _pixelsToTanPixelsPtr;   // XYTransform that converts from PIXELS to TAN_PIXELS
                                                     // coordinates in the forward direction
 
 };

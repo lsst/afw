@@ -63,9 +63,9 @@ static string gQueryBounds = "37.8_39_1_1.3";	//This query is good for pairing 2
 //================================================================================
 //tools
 
-PTR(afwFits::MemFileManager) readFile(string filename)
+std::shared_ptr<afwFits::MemFileManager> readFile(string filename)
 {
-    PTR(afwFits::MemFileManager) result;
+    std::shared_ptr<afwFits::MemFileManager> result;
     std::size_t fileLen = 0;
 	ifstream ifs;
 	ifs.open(filename.c_str(), ios::in|ios::binary|ios::ate);
@@ -107,8 +107,8 @@ void test6()
 		throw runtime_error("Must specify SDSS image filename on command line");
 
 	//Read FITS file from disk into an Image
-	PTR(dafBase::PropertySet) miMetadata(new dafBase::PropertySet);
-	PTR(ImageF) image(new ImageF(gFilename, INT_MIN, miMetadata));
+	std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
+	std::shared_ptr<ImageF> image(new ImageF(gFilename, INT_MIN, miMetadata));
 
 	//Write the Image to a RAM FITS file
 	image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
@@ -132,10 +132,10 @@ void test7()
 		throw runtime_error("Must specify SDSS image filename on command line");
 
 	//Read FITS file from disk into an Exposure
-	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
-	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, INT_MIN, miMetadata));
+	std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
+	std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, INT_MIN, miMetadata));
 	MaskedImageF maskedImage(image);
-	afwImage::Wcs::Ptr wcsFromFITS = afwImage::makeWcs(miMetadata);
+	std::shared_ptr<afwImage::Wcs> wcsFromFITS = afwImage::makeWcs(miMetadata);
 	ExposureF exposure(maskedImage, wcsFromFITS);
 
 	//Write the Exposure to a RAM FITS file

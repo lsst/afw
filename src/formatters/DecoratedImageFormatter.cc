@@ -99,7 +99,7 @@ lsst::daf::persistence::FormatterRegistration DecoratedImageFormatter<ImagePixel
 
 template <typename ImagePixelT>
 DecoratedImageFormatter<ImagePixelT>::DecoratedImageFormatter(
-        lsst::pex::policy::Policy::Ptr
+        std::shared_ptr<lsst::pex::policy::Policy>
                                                              )
     : lsst::daf::persistence::Formatter(typeid(this))
 {
@@ -112,8 +112,8 @@ DecoratedImageFormatter<ImagePixelT>::~DecoratedImageFormatter(void) {
 template <typename ImagePixelT>
 void DecoratedImageFormatter<ImagePixelT>::write(
         Persistable const* persistable,
-        Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
+        std::shared_ptr<Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet>
                                                 )
 {
     LOGL_DEBUG(_log, "DecoratedImageFormatter write start");
@@ -151,8 +151,8 @@ void DecoratedImageFormatter<ImagePixelT>::write(
 
 template <typename ImagePixelT>
 Persistable* DecoratedImageFormatter<ImagePixelT>::read(
-        Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
+        std::shared_ptr<Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet>
                                                        )
 {
     LOGL_DEBUG(_log, "DecoratedImageFormatter read start");
@@ -189,8 +189,8 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
 template <typename ImagePixelT>
 void DecoratedImageFormatter<ImagePixelT>::update(
         lsst::daf::base::Persistable*,
-        lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::PropertySet::Ptr
+        std::shared_ptr<lsst::daf::persistence::Storage>,
+        std::shared_ptr<lsst::daf::base::PropertySet>
                                                  )
 {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -214,11 +214,11 @@ void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
 }
 
 template <typename ImagePixelT>
-lsst::daf::persistence::Formatter::Ptr DecoratedImageFormatter<ImagePixelT>::createInstance(
-        lsst::pex::policy::Policy::Ptr policy
+std::shared_ptr<lsst::daf::persistence::Formatter> DecoratedImageFormatter<ImagePixelT>::createInstance(
+        std::shared_ptr<lsst::pex::policy::Policy> policy
                                                                                            )
 {
-    return lsst::daf::persistence::Formatter::Ptr(new DecoratedImageFormatter<ImagePixelT>(policy));
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(new DecoratedImageFormatter<ImagePixelT>(policy));
 }
 
 #define InstantiateFormatter(ImagePixelT) \

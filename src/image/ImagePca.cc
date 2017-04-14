@@ -55,7 +55,7 @@ ImagePca<ImageT>::ImagePca(bool constantWeight
 }
 
 template <typename ImageT>
-void ImagePca<ImageT>::addImage(typename ImageT::Ptr img,
+void ImagePca<ImageT>::addImage(std::shared_ptr<ImageT> img,
                                 double flux
                                ) {
     if (_imageList.empty()) {
@@ -86,12 +86,12 @@ typename ImagePca<ImageT>::ImageList ImagePca<ImageT>::getImageList() const {
 }
 
 template <typename ImageT>
-typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
+std::shared_ptr<ImageT> ImagePca<ImageT>::getMean() const {
     if (_imageList.empty()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "You haven't provided any images");
     }
 
-    typename ImageT::Ptr mean(new ImageT(getDimensions()));
+    std::shared_ptr<ImageT> mean(new ImageT(getDimensions()));
     *mean = static_cast<typename ImageT::Pixel>(0);
 
     for (typename ImageList::const_iterator ptr = _imageList.begin(), end = _imageList.end();
@@ -131,7 +131,7 @@ void ImagePca<ImageT>::analyze()
      */
     if (nImage == 1) {
         _eigenImages.clear();
-        _eigenImages.push_back(typename ImageT::Ptr(new ImageT(*_imageList[0], true)));
+        _eigenImages.push_back(std::shared_ptr<ImageT>(new ImageT(*_imageList[0], true)));
 
         _eigenValues.clear();
         _eigenValues.push_back(1.0);
@@ -198,7 +198,7 @@ void ImagePca<ImageT>::analyze()
 
         int const ii = lambdaAndIndex[i].second; // the index after sorting (backwards) by eigenvalue
 
-        typename ImageT::Ptr eImage(new ImageT(_dimensions));
+        std::shared_ptr<ImageT> eImage(new ImageT(_dimensions));
         *eImage = static_cast<typename ImageT::Pixel>(0);
 
         for (int j = 0; j != nImage; ++j) {
@@ -218,7 +218,7 @@ namespace {
  * return std::pair(best-fit kernel, std::pair(amp, chi^2))
  */
 template<typename MaskedImageT>
-typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
+std::shared_ptr<typename MaskedImageT::Image> fitEigenImagesToImage(
         typename ImagePca<MaskedImageT>::ImageList const& eigenImages, // Eigen images
         int nEigen,                                                    // Number of eigen images to use
         MaskedImageT const& image                                      // The image to be fit
@@ -258,7 +258,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     //
     // Accumulate the best-fit-image in bestFitImage
     //
-    typename ImageT::Ptr bestFitImage = std::make_shared<ImageT>(eigenImages[0]->getDimensions());
+    std::shared_ptr<ImageT> bestFitImage = std::make_shared<ImageT>(eigenImages[0]->getDimensions());
 
     for (int i = 0; i != nEigen; ++i) {
         bestFitImage->scaledPlus(x[i], *eigenImages[i]->getImage());
@@ -365,7 +365,7 @@ double do_updateBadPixels(
         }
 
         for (int i = 0; i != nImage; ++i) {
-            typename ImageT::Image::Ptr fitted = fitEigenImagesToImage(eigenImages, ncomp, *imageList[i]);
+            std::shared_ptr<typename ImageT::Image> fitted = fitEigenImagesToImage(eigenImages, ncomp, *imageList[i]);
 
             for (int y = 0; y != height; ++y) {
                 typename ImageT::x_iterator iptr = imageList[i]->row_begin(y);

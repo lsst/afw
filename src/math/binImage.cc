@@ -36,7 +36,7 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-PTR(ImageT) binImage(ImageT const& in,
+std::shared_ptr<ImageT> binImage(ImageT const& in,
                      int const binsize,
                      lsst::afw::math::Property const flags
                     )
@@ -45,7 +45,7 @@ PTR(ImageT) binImage(ImageT const& in,
 }
 
 template<typename ImageT>
-PTR(ImageT) binImage(ImageT const& in,
+std::shared_ptr<ImageT> binImage(ImageT const& in,
                      int const binX,
                      int const binY,
                      lsst::afw::math::Property const flags
@@ -63,7 +63,7 @@ PTR(ImageT) binImage(ImageT const& in,
     int const outWidth = in.getWidth()/binX;
     int const outHeight = in.getHeight()/binY;
 
-    typename ImageT::Ptr out = typename ImageT::Ptr(
+    std::shared_ptr<ImageT> out = std::shared_ptr<ImageT>(
         new ImageT(geom::Extent2I(outWidth, outHeight))
     );
     out->setXY0(in.getXY0());
@@ -94,13 +94,13 @@ PTR(ImageT) binImage(ImageT const& in,
 //
 /// @cond
 #define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr \
+    template std::shared_ptr<afwImage::Image<TYPE>> \
              binImage(afwImage::Image<TYPE> const&, int, lsst::afw::math::Property const); \
-    template afwImage::Image<TYPE>::Ptr \
+    template std::shared_ptr<afwImage::Image<TYPE>> \
              binImage(afwImage::Image<TYPE> const&, int, int, lsst::afw::math::Property const); \
-    template afwImage::MaskedImage<TYPE>::Ptr \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> \
              binImage(afwImage::MaskedImage<TYPE> const&, int, lsst::afw::math::Property const); \
-    template afwImage::MaskedImage<TYPE>::Ptr \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> \
              binImage(afwImage::MaskedImage<TYPE> const&, int, int, lsst::afw::math::Property const); \
 
 INSTANTIATE(std::uint16_t)

@@ -54,9 +54,6 @@ namespace image {
  */
 class FilterProperty {
 public:
-    std::shared_ptr<FilterProperty> Ptr;
-    std::shared_ptr<FilterProperty const> ConstPtr;
-
     explicit FilterProperty(std::string const& name, double lambdaEff, bool force=false) :
         _name(name), _lambdaEff(lambdaEff) { _insert(force); }
     /**
@@ -153,7 +150,7 @@ public :
      * @param metadata Metadata to process (e.g. a IFITS header)
      * @param force Allow us to construct an unknown Filter
      */
-    explicit Filter(CONST_PTR(lsst::daf::base::PropertySet), bool const force=false);
+    explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const>, bool const force=false);
 
     /**
      * Are two filters identical?
@@ -248,7 +245,7 @@ namespace detail {
      * @param[in, out] metadata Metadata to be stripped
      * @return Number of keywords stripped
      */
-    int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata);
+    int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
 }
 
 }}}  // lsst::afw::image

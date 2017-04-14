@@ -176,7 +176,7 @@ const {
             --remXDiv;
             remWidth -= width;
 
-            KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
+            std::shared_ptr<KernelImagesForRegion> regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
                 afwGeom::Box2I(blCorner, afwGeom::Extent2I(width, height)),
                 _xy0,

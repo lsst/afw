@@ -55,7 +55,7 @@ public:
 
 protected:
 
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows);
 
     virtual void _writeRecord(BaseRecord const & record);
 
@@ -67,14 +67,14 @@ protected:
 
 private:
     SchemaMapper _mapper;
-    PTR(BaseRecord) _outRecord;
-    PTR(BaseTable) _outTable;
+    std::shared_ptr<BaseRecord> _outRecord;
+    std::shared_ptr<BaseTable> _outTable;
     Key<int> _footprintKey;
     io::OutputArchive _archive;
 };
 
-void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(SourceTable) table = std::dynamic_pointer_cast<SourceTable const>(t);
+void SourceFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & t, std::size_t nRows) {
+    std::shared_ptr<SourceTable const> table = std::dynamic_pointer_cast<SourceTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -86,7 +86,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         _mapper.addMinimalSchema(t->getSchema(), true);
         _footprintKey = _mapper.editOutputSchema().addField<int>("footprint", "archive ID for Footprint");
         _outTable = BaseTable::make(_mapper.getOutputSchema());
-        PTR(daf::base::PropertyList) metadata = table->getMetadata();
+        std::shared_ptr<daf::base::PropertyList> metadata = table->getMetadata();
         if (metadata) {
             metadata = std::static_pointer_cast<daf::base::PropertyList>(metadata->deepCopy());
         } else {
@@ -114,7 +114,7 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
     SourceRecord const & record = static_cast<SourceRecord const &>(r);
     if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
         _outRecord->assign(record, _mapper);
-        PTR(afw::detection::Footprint) footprint = record.getFootprint();
+        std::shared_ptr<afw::detection::Footprint> footprint = record.getFootprint();
         if (footprint) {
             if ((_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) && footprint->isHeavy()) {
                 footprint.reset(new afw::detection::Footprint(*footprint));
@@ -226,7 +226,7 @@ public:
         BaseRecord & baseRecord,
         std::size_t row,
         fits::Fits & fits,
-        PTR(io::InputArchive) const & archive
+        std::shared_ptr<io::InputArchive> const & archive
     ) const {
         SourceRecord & record = static_cast<SourceRecord&>(baseRecord);
         std::vector<geom::Span> spansVector;
@@ -302,7 +302,7 @@ public:
             }
             // float HeavyFootprints were the only kind we ever saved using the old format
             typedef detection::HeavyFootprint<float,image::MaskPixel,image::VariancePixel> HeavyFootprint;
-            PTR(HeavyFootprint) heavy = std::make_shared<HeavyFootprint>(*fp);
+            std::shared_ptr<HeavyFootprint> heavy = std::make_shared<HeavyFootprint>(*fp);
             fits.readTableArray(row, _heavyPixCol,  N, heavy->getImageArray().getData());
             fits.readTableArray(row, _heavyMaskCol, N, heavy->getMaskArray().getData());
             fits.readTableArray(row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
@@ -344,11 +344,11 @@ public:
         BaseRecord & record,
         std::size_t row,
         fits::Fits & fits,
-        PTR(io::InputArchive) const & archive
+        std::shared_ptr<io::InputArchive> const & archive
     ) const {
         int id = 0;
         fits.readTableScalar<int>(row, _column, id);
-        PTR(Footprint) footprint = archive->get<Footprint>(id);
+        std::shared_ptr<Footprint> footprint = archive->get<Footprint>(id);
         if (_noHeavy && footprint->isHeavy()) {
             // It sort of defeats the purpose of the flag if we have to do the I/O to read
             // a HeavyFootprint before we can downgrade it to a regular Footprint, but that's
@@ -374,9 +374,9 @@ public:
 
         SourceFitsReader() : afw::table::io::FitsReader("SOURCE") {}
 
-        virtual PTR(BaseTable) makeTable(
+        virtual std::shared_ptr<BaseTable> makeTable(
             io::FitsSchemaInputMapper & mapper,
-            PTR(daf::base::PropertyList) metadata,
+            std::shared_ptr<daf::base::PropertyList> metadata,
             int ioFlags,
             bool stripMetadata
         ) const {
@@ -387,7 +387,7 @@ public:
             // Look for new-style persistence of Footprints.  We'll only read them if we have an archive,
             // but we'll strip fields out regardless.
             SourceFootprintReader::setup(mapper, ioFlags);
-            PTR(SourceTable) table = SourceTable::make(mapper.finalize());
+            std::shared_ptr<SourceTable> table = SourceTable::make(mapper.finalize());
             table->setMetadata(metadata);
             return table;
         }
@@ -406,7 +406,7 @@ static SourceFitsReader const sourceFitsReader;
 //----- SourceTable/Record member function implementations --------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SourceRecord::SourceRecord(PTR(SourceTable) const & table) : SimpleRecord(table) {}
+SourceRecord::SourceRecord(std::shared_ptr<SourceTable> const & table) : SimpleRecord(table) {}
 
 void SourceRecord::updateCoord(image::Wcs const & wcs) {
     setCoord(*wcs.pixelToSky(getCentroid()));
@@ -423,7 +423,7 @@ void SourceRecord::_assign(BaseRecord const & other) {
     } catch (std::bad_cast&) {}
 }
 
-PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const & idFactory) {
+std::shared_ptr<SourceTable> SourceTable::make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterError,
@@ -435,7 +435,7 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
 
 SourceTable::SourceTable(
     Schema const & schema,
-    PTR(IdFactory) const & idFactory
+    std::shared_ptr<IdFactory> const & idFactory
 ) : SimpleTable(schema, idFactory), _slots(schema) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
@@ -460,7 +460,7 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+std::shared_ptr<io::FitsWriter> SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return std::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
 

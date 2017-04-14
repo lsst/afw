@@ -90,9 +90,8 @@ static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p
     }
 }
 
-
-PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
-    return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
+std::shared_ptr<afwMath::Kernel> afwMath::LanczosWarpingKernel::clone() const {
+    return std::shared_ptr<afwMath::Kernel>(new afwMath::LanczosWarpingKernel(this->getOrder()));
 }
 
 int afwMath::LanczosWarpingKernel::getOrder() const {
@@ -105,8 +104,8 @@ void afwMath::LanczosWarpingKernel::setKernelParameter(unsigned int ind, double 
     SeparableKernel::setKernelParameter(ind, value);
 }
 
-PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
-    return PTR(afwMath::Kernel)(new afwMath::BilinearWarpingKernel());
+std::shared_ptr<afwMath::Kernel> afwMath::BilinearWarpingKernel::clone() const {
+    return std::shared_ptr<afwMath::Kernel>(new afwMath::BilinearWarpingKernel());
 }
 
 afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const
@@ -139,8 +138,8 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::str
     return os.str();
 }
 
-PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
-    return PTR(afwMath::Kernel)(new afwMath::NearestWarpingKernel());
+std::shared_ptr<afwMath::Kernel> afwMath::NearestWarpingKernel::clone() const {
+    std::shared_ptr<afwMath::Kernel>(new afwMath::NearestWarpingKernel());
 }
 
 afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
@@ -180,7 +179,7 @@ std::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string
     }
 }
 
-PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getWarpingKernel() const {
+std::shared_ptr<afwMath::SeparableKernel> afwMath::WarpingControl::getWarpingKernel() const {
     if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
         _warpingKernelPtr->computeCache(_cacheSize);
     }
@@ -190,7 +189,7 @@ PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getWarpingKernel() const 
 void afwMath::WarpingControl::setWarpingKernelName(
     std::string const &warpingKernelName
 ) {
-    PTR(SeparableKernel) warpingKernelPtr(makeWarpingKernel(warpingKernelName));
+    std::shared_ptr<SeparableKernel> warpingKernelPtr(makeWarpingKernel(warpingKernelName));
     setWarpingKernel(*warpingKernelPtr);
 }
 
@@ -200,12 +199,12 @@ void afwMath::WarpingControl::setWarpingKernel(
     if (_maskWarpingKernelPtr) {
         _testWarpingKernels(warpingKernel, *_maskWarpingKernelPtr);
     }
-    PTR(SeparableKernel) warpingKernelPtr(std::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
+    std::shared_ptr<SeparableKernel> warpingKernelPtr(std::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
     _warpingKernelPtr = warpingKernelPtr;
 }
 
 
-PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getMaskWarpingKernel() const {
+std::shared_ptr<afwMath::SeparableKernel> afwMath::WarpingControl::getMaskWarpingKernel() const {
     if (_maskWarpingKernelPtr) { // lazily update kernel cache
         if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
             _maskWarpingKernelPtr->computeCache(_cacheSize);
@@ -218,7 +217,7 @@ void afwMath::WarpingControl::setMaskWarpingKernelName(
     std::string const &maskWarpingKernelName
 ) {
     if (!maskWarpingKernelName.empty()) {
-        PTR(SeparableKernel) maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
+        std::shared_ptr<SeparableKernel> maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
         setMaskWarpingKernel(*maskWarpingKernelPtr);
     } else {
         _maskWarpingKernelPtr.reset();
@@ -328,7 +327,7 @@ namespace {
         }
         // if src image is too small then don't try to warp
         try {
-            PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
+            std::shared_ptr<afwMath::SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
             warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
         } catch(...) {
             for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
@@ -339,7 +338,7 @@ namespace {
             }
             return 0;
         }
-        PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
+        std::shared_ptr<afwMath::SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
         int interpLength = control.getInterpLength();
 
         std::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =

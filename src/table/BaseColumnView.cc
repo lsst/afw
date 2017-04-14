@@ -63,10 +63,10 @@ BitsColumn::BitsColumn(int size) : _array(ndarray::allocate(size)) {
 struct BaseColumnView::Impl {
     int recordCount;                  // number of records
     void * buf;                       // pointer to the beginning of the first record's data
-    PTR(BaseTable) table;             // table that owns the records
+    std::shared_ptr<BaseTable> table;             // table that owns the records
     ndarray::Manager::Ptr manager;    // manages lifetime of 'buf'
 
-    Impl(PTR(BaseTable) const & table_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
+    Impl(std::shared_ptr<BaseTable> const & table_, int recordCount_, void * buf_, ndarray::Manager::Ptr const & manager_)
         : recordCount(recordCount_), buf(buf_), table(table_),
           manager(manager_)
     {}
@@ -74,7 +74,7 @@ struct BaseColumnView::Impl {
 
 // =============== BaseColumnView member function implementations ===========================================
 
-PTR(BaseTable) BaseColumnView::getTable() const { return _impl->table; }
+std::shared_ptr<BaseTable> BaseColumnView::getTable() const { return _impl->table; }
 
 template <typename T>
 typename ndarray::ArrayRef<T,1> const BaseColumnView::operator[](Key<T> const & key) const {
@@ -181,7 +181,7 @@ BitsColumn BaseColumnView::getAllBits() const {
 BaseColumnView::~BaseColumnView() {}
 
 BaseColumnView::BaseColumnView(
-    PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
+    std::shared_ptr<BaseTable> const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
 ) : _impl(std::make_shared<Impl>(table, recordCount, buf, manager)) {}
 
 // =============== Explicit instantiations ==================================================================

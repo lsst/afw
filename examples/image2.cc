@@ -53,7 +53,7 @@ int main() {
     //
     // Do the same thing a faster way, using cached_location_t
     //
-    ImageT::Ptr out2(new ImageT(in.getDimensions()));
+    std::shared_ptr<ImageT> out2(new ImageT(in.getDimensions()));
     out2->assign(in);
 
     typedef ImageT::const_xy_locator xy_loc;

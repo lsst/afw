@@ -127,7 +127,7 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
  * @param slc The ImageSlice
  */
 template<typename PixelT>
-typename Image<PixelT>::Ptr operator+(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
+std::shared_ptr<Image<PixelT>> operator+(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
  * Overload operator+()
@@ -138,7 +138,7 @@ typename Image<PixelT>::Ptr operator+(Image<PixelT> const &img, ImageSlice<Pixel
  * We require two of these, one for image+slice (previous one) and one for slice+image (this)
  */
 template<typename PixelT>
-typename Image<PixelT>::Ptr operator+(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
+std::shared_ptr<Image<PixelT>> operator+(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
 /**
  * Overload operator+=()
@@ -163,7 +163,7 @@ void operator+=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
  * @param slc The ImageSlice
  */
 template<typename PixelT>
-typename Image<PixelT>::Ptr operator-(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
+std::shared_ptr<Image<PixelT>> operator-(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
  * Overload operator-=()
@@ -188,7 +188,7 @@ void operator-=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
  * @param slc The ImageSlice
  */
 template<typename PixelT>
-typename Image<PixelT>::Ptr operator*(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
+std::shared_ptr<Image<PixelT>> operator*(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
  * Overload operator*()
@@ -199,7 +199,7 @@ typename Image<PixelT>::Ptr operator*(Image<PixelT> const &img, ImageSlice<Pixel
  * @param img The ImageSlice
  */
 template<typename PixelT>
-typename Image<PixelT>::Ptr operator*(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
+std::shared_ptr<Image<PixelT>> operator*(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
 /**
  * Overload operator*=()
@@ -224,7 +224,7 @@ void operator*=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
  * @param slc The ImageSlice
  */
 template<typename PixelT>
-typename Image<PixelT>::Ptr operator/(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
+std::shared_ptr<Image<PixelT>> operator/(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
  * Overload operator/=()

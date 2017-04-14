@@ -411,7 +411,7 @@ template<typename PixelT>
 image::Image<PixelT>::Image(
     std::string const & fileName,
     int hdu,
-    PTR(daf::base::PropertySet) metadata,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox,
     ImageOrigin origin
 ) : image::ImageBase<PixelT>() {
@@ -431,7 +431,7 @@ template<typename PixelT>
 image::Image<PixelT>::Image(
     fits::MemFileManager & manager,
     int const hdu,
-    PTR(daf::base::PropertySet) metadata,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const& bbox,
     ImageOrigin const origin
 ) : image::ImageBase<PixelT>() {
@@ -443,7 +443,7 @@ image::Image<PixelT>::Image(
 template<typename PixelT>
 image::Image<PixelT>::Image(
     fits::Fits & fitsfile,
-    PTR(daf::base::PropertySet) metadata,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const& bbox,
     ImageOrigin const origin
 ) : image::ImageBase<PixelT>() {
@@ -469,7 +469,7 @@ image::Image<PixelT>::Image(
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     std::string const & fileName,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -479,7 +479,7 @@ void image::Image<PixelT>::writeFits(
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     fits::MemFileManager & manager,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -489,10 +489,10 @@ void image::Image<PixelT>::writeFits(
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     fits::Fits & fitsfile,
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i
+    std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i
 ) const {
-    PTR(daf::base::PropertySet) metadata;
-    PTR(daf::base::PropertySet) wcsAMetadata =
+    std::shared_ptr<daf::base::PropertySet> metadata;
+    std::shared_ptr<daf::base::PropertySet> wcsAMetadata =
         image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                      this->getX0(), this->getY0());
     if (metadata_i) {

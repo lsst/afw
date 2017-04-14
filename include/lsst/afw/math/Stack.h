@@ -45,8 +45,8 @@ namespace math {
  * A function to compute some statistics of a stack of Images
  */
 template<typename PixelT>
-typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
-        std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &images,      ///< Images to process
+std::shared_ptr<lsst::afw::image::Image<PixelT>> statisticsStack(
+        std::vector<std::shared_ptr<lsst::afw::image::Image<PixelT>> > &images,      ///< Images to process
         Property flags, ///< statistics requested
         StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
@@ -58,7 +58,7 @@ typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
 template<typename PixelT>
 void statisticsStack(
     lsst::afw::image::Image<PixelT>& out, ///< Output image
-    std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &images,      ///< Images to process
+    std::vector<std::shared_ptr<lsst::afw::image::Image<PixelT>> > &images,      ///< Images to process
     Property flags, ///< statistics requested
     StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
     std::vector<lsst::afw::image::VariancePixel> const& wvector=
@@ -74,8 +74,8 @@ void statisticsStack(
  * All the work is done in the function computeMaskedImageStack.
  */
 template<typename PixelT>
-typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
-        std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &images,///< MaskedImages to process
+std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
+        std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> > &images,///< MaskedImages to process
         Property flags, ///< statistics requested
         StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights
@@ -87,7 +87,7 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
 template<typename PixelT>
 void statisticsStack(
     lsst::afw::image::MaskedImage<PixelT>& out, ///< Output image
-    std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &images,///< MaskedImages to process
+    std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> > &images,///< MaskedImages to process
     Property flags, ///< statistics requested
     StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
     std::vector<lsst::afw::image::VariancePixel> const& wvector=
@@ -118,7 +118,7 @@ std::shared_ptr<std::vector<PixelT> > statisticsStack(
  * A function to compute statistics on the rows or columns of an image
  */
 template<typename PixelT>
-typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
+std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
         lsst::afw::image::Image<PixelT> const &image,
         Property flags,
         char dimension,
@@ -128,7 +128,7 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
  * A function to compute statistics on the rows or columns of an image
  */
 template<typename PixelT>
-typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
+std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
         lsst::afw::image::MaskedImage<PixelT> const &image,
         Property flags,
         char dimension,

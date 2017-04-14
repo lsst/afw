@@ -65,8 +65,8 @@ afwMath::AnalyticKernel::AnalyticKernel(
     }
 }
 
-PTR(afwMath::Kernel) afwMath::AnalyticKernel::clone() const {
-    PTR(afwMath::Kernel) retPtr;
+std::shared_ptr<afwMath::Kernel> afwMath::AnalyticKernel::clone() const {
+    std::shared_ptr<afwMath::Kernel> retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelFunctionPtr), this->_spatialFunctionList));
@@ -173,15 +173,15 @@ struct AnalyticKernelPersistenceHelper : public Kernel::PersistenceHelper {
 class AnalyticKernel::Factory : public afw::table::io::PersistableFactory {
 public:
 
-    virtual PTR(afw::table::io::Persistable)
+    virtual std::shared_ptr<afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         AnalyticKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
-        PTR(AnalyticKernel::KernelFunction) kernelFunction =
+        std::shared_ptr<AnalyticKernel::KernelFunction> kernelFunction =
             archive.get<AnalyticKernel::KernelFunction>(record.get(keys.kernelFunction));
-        PTR(AnalyticKernel) result;
+        std::shared_ptr<AnalyticKernel> result;
         if (keys.spatialFunctions.isValid()) {
             result = std::make_shared<AnalyticKernel>(
                 record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction,
@@ -211,7 +211,7 @@ std::string AnalyticKernel::getPersistenceName() const { return getAnalyticKerne
 
 void AnalyticKernel::write(OutputArchiveHandle & handle) const {
     AnalyticKernelPersistenceHelper const keys(_spatialFunctionList.size());
-    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.kernelFunction, handle.put(_kernelFunctionPtr.get()));
 }
 

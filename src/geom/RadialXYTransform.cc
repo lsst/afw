@@ -55,12 +55,12 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
     _icoeffs = polyInvert(_coeffs);
 }
 
-PTR(XYTransform) RadialXYTransform::clone() const
+std::shared_ptr<XYTransform> RadialXYTransform::clone() const
 {
     return std::make_shared<RadialXYTransform> (_coeffs);
 }
 
-PTR(XYTransform) RadialXYTransform::invert() const
+std::shared_ptr<XYTransform> RadialXYTransform::invert() const
 {
     return std::make_shared<RadialXYTransform> (_coeffs);
 }

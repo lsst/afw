@@ -49,8 +49,8 @@ afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     }
 }
 
-PTR(afwMath::Kernel) afwMath::DeltaFunctionKernel::clone() const {
-    PTR(afwMath::Kernel) retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
+std::shared_ptr<afwMath::Kernel> afwMath::DeltaFunctionKernel::clone() const {
+    std::shared_ptr<afwMath::Kernel> retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
         this->_pixel));
     retPtr->setCtr(this->getCtr());
     return retPtr;
@@ -118,14 +118,14 @@ private:
 class DeltaFunctionKernel::Factory : public afw::table::io::PersistableFactory {
 public:
 
-    virtual PTR(afw::table::io::Persistable)
+    virtual std::shared_ptr<afw::table::io::Persistable>
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         afw::table::BaseRecord const & record = catalogs.front().front();
-        PTR(DeltaFunctionKernel) result(
+        std::shared_ptr<DeltaFunctionKernel> result(
             new DeltaFunctionKernel(record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()),
                                     record.get(keys.pixel))
         );
@@ -150,7 +150,7 @@ std::string DeltaFunctionKernel::getPersistenceName() const {
 
 void DeltaFunctionKernel::write(OutputArchiveHandle & handle) const {
     DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
-    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.pixel, _pixel);
 }
 

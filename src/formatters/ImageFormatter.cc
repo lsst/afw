@@ -104,7 +104,7 @@ lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::regis
 
 template <typename ImagePixelT>
 ImageFormatter<ImagePixelT>::ImageFormatter(
-        lsst::pex::policy::Policy::Ptr
+        std::shared_ptr<lsst::pex::policy::Policy>
                                            )
     :
     lsst::daf::persistence::Formatter(typeid(this))
@@ -124,8 +124,8 @@ namespace afwImage = lsst::afw::image;
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    std::shared_ptr<Storage> storage,
+    std::shared_ptr<lsst::daf::base::PropertySet>) {
 
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
@@ -162,8 +162,8 @@ void ImageFormatter<ImagePixelT>::write(
 }
 
 template <typename ImagePixelT>
-Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
-                                               lsst::daf::base::PropertySet::Ptr additionalData) {
+Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
+                                               std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         LOGL_DEBUG(_log, "ImageFormatter read BoostStorage");
@@ -213,11 +213,11 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
                 );
             }
         }
-        lsst::daf::base::PropertySet::Ptr metadata;
+        std::shared_ptr<lsst::daf::base::PropertySet> metadata;
 
         Image<ImagePixelT>* ip = new Image<ImagePixelT>(
             fits->getPath(), fits->getHdu(),
-            lsst::daf::base::PropertySet::Ptr(),
+            std::shared_ptr<lsst::daf::base::PropertySet>(),
             box, origin
         );
         // @note We're throwing away the metadata
@@ -233,8 +233,8 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::update(
     Persistable*,
-    Storage::Ptr,
-    lsst::daf::base::PropertySet::Ptr) {
+    std::shared_ptr<Storage>,
+    std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Image");
 }
 
@@ -269,9 +269,9 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
 }
 
 template <typename ImagePixelT>
-lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
+std::shared_ptr<lsst::daf::persistence::Formatter> ImageFormatter<ImagePixelT>::createInstance(
+    std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(new ImageFormatter<ImagePixelT>(policy));
 }
 
 #define InstantiateFormatter(ImagePixelT) \

@@ -58,7 +58,7 @@ AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 }
 
 
-PTR(XYTransform) XYTransform::invert() const
+std::shared_ptr<XYTransform> XYTransform::invert() const
 {
     return std::make_shared<InvertedXYTransform> (this->clone());
 }
