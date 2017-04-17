@@ -27,8 +27,7 @@
 # simpleStacker.py
 # An example executible which calls the example 'stack' code
 #
-from __future__ import print_function
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 from builtins import range
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage

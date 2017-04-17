@@ -22,7 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 import os
 import lsst.utils
 import lsst.afw.image as afwImage

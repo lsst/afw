@@ -19,7 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 from builtins import range
 from .cameraGeomLib import CameraPoint, CameraSysPrefix, PIXELS
 from .detectorCollection import DetectorCollection

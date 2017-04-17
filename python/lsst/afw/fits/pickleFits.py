@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 from lsst.afw.fits.fitsLib import MemFileManager#, cdata, memmove
 
 def reduceToFits(obj):

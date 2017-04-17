@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 import os.path
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog

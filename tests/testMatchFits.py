@@ -23,6 +23,7 @@
 """
 Test for match persistence via FITS
 """
+from __future__ import absolute_import, division, print_function
 import unittest
 
 from builtins import str

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 from past.builtins import basestring
 import sys
 import lsst.afw.table as afwTable

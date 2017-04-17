@@ -2,8 +2,7 @@
 Code that works with gdb 7.1's python pretty printing.  When gdb >= 7.2 is widely available this
 file should be deleted (it's only used after importing gdb.printing fails)
 """
-from __future__ import print_function
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 from builtins import str
 from builtins import range
 from builtins import object
