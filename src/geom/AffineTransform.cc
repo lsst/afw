@@ -27,22 +27,22 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/pex/exceptions/Runtime.h"
 
-namespace geom = lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom {
 
-geom::AffineTransform::ParameterVector const geom::AffineTransform::getParameterVector() const {
+AffineTransform::ParameterVector const AffineTransform::getParameterVector() const {
     ParameterVector r;
     r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY], (*this)[X], (*this)[Y];
     return r;
 }
 
-void geom::AffineTransform::setParameterVector(
+void AffineTransform::setParameterVector(
     AffineTransform::ParameterVector const & vector
 ) {
     (*this)[XX] = vector[XX];  (*this)[XY] = vector[XY];  (*this)[X] = vector[X];
     (*this)[YX] = vector[YX];  (*this)[YY] = vector[YY];  (*this)[Y] = vector[Y];
 }
 
-geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
+AffineTransform::Matrix const AffineTransform::getMatrix() const {
     Matrix r;
     r <<
         (*this)[XX], (*this)[XY], (*this)[X],
@@ -51,12 +51,12 @@ geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
     return r;
 }
 
-geom::AffineTransform const geom::AffineTransform::invert() const {
+AffineTransform const AffineTransform::invert() const {
     LinearTransform inv(getLinear().invert());
     return AffineTransform(inv, -inv(getTranslation()));
 }
 
-geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
+AffineTransform::TransformDerivativeMatrix AffineTransform::dTransform(
     Point2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
@@ -66,7 +66,7 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
     return r;
 }
 
-geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
+AffineTransform::TransformDerivativeMatrix AffineTransform::dTransform(
     Extent2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
@@ -74,9 +74,9 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
     return r;
 }
 
-std::ostream& geom::operator<<(std::ostream& os, lsst::afw::geom::AffineTransform const & transform) {
+std::ostream& operator<<(std::ostream& os, AffineTransform const & transform) {
     std::ios::fmtflags flags = os.flags();
-    geom::AffineTransform::Matrix const & matrix = transform.getMatrix();
+    AffineTransform::Matrix const & matrix = transform.getMatrix();
     int prec = os.precision(7);
     os.setf(std::ios::fixed);
     os << "AffineTransform([(" << std::setw(10) << matrix(0,0) << "," << std::setw(10) << matrix(0,1)
@@ -91,8 +91,8 @@ std::ostream& geom::operator<<(std::ostream& os, lsst::afw::geom::AffineTransfor
 }
 
 
-geom::AffineTransform geom::makeAffineTransformFromTriple(geom::Point2D const &p1, geom::Point2D const &p2, geom::Point2D const &p3,
-                                                          geom::Point2D const &q1, geom::Point2D const &q2, geom::Point2D const &q3)
+AffineTransform makeAffineTransformFromTriple(Point2D const &p1, Point2D const &p2, Point2D const &p3,
+                                                          Point2D const &q1, Point2D const &q2, Point2D const &q3)
 {
     Eigen::Matrix3d mp;
     mp << p1.getX(), p2.getX(), p3.getX(),
@@ -107,3 +107,5 @@ geom::AffineTransform geom::makeAffineTransformFromTriple(geom::Point2D const &p
     Eigen::Matrix3d m = mq * mp.inverse();
     return AffineTransform(m);
 }
+
+}}} // end lsst::afw::geom

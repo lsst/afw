@@ -401,7 +401,7 @@ protected:
      *
      * Don't call this directly. Use makeWcs() instead, which will figure out which (if any) sub-class of Wcs is appropriate.
      */
-    Wcs(std::shared_ptr<lsst::daf::base::PropertySet const> const& fitsMetadata);
+    Wcs(std::shared_ptr<daf::base::PropertySet const> const& fitsMetadata);
 
     // Construct from a record; used by WcsFactory for afw::table::io persistence.
     explicit Wcs(afw::table::BaseRecord const & record);

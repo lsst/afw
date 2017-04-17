@@ -40,17 +40,15 @@
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-namespace afwMath = lsst::afw::math;
-namespace mathDetail = lsst::afw::math::detail;
+
+namespace lsst { namespace afw { namespace math { namespace detail {
 
 template <typename OutImageT, typename InImageT>
-void mathDetail::convolveWithInterpolation(
+void convolveWithInterpolation(
         OutImageT &outImage,
         InImageT const &inImage,
-        lsst::afw::math::Kernel const &kernel,
-        lsst::afw::math::ConvolutionControl const &convolutionControl)
+        math::Kernel const &kernel,
+        math::ConvolutionControl const &convolutionControl)
 {
     if (outImage.getDimensions() != inImage.getDimensions()) {
         std::ostringstream os;
@@ -61,10 +59,10 @@ void mathDetail::convolveWithInterpolation(
     }
 
     // compute region covering good area of output image
-    afwGeom::Box2I fullBBox = afwGeom::Box2I(
-        afwGeom::Point2I(0, 0),
-        afwGeom::Extent2I(outImage.getWidth(), outImage.getHeight()));
-    afwGeom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
+    geom::Box2I fullBBox = geom::Box2I(
+        geom::Point2I(0, 0),
+        geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
+    geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(
         kernel.clone(),
         goodBBox,
@@ -100,7 +98,7 @@ void mathDetail::convolveWithInterpolation(
 }
 
 template <typename OutImageT, typename InImageT>
-void mathDetail::convolveRegionWithInterpolation(
+void convolveRegionWithInterpolation(
         OutImageT &outImage,
         InImageT const &inImage,
         KernelImagesForRegion const &region,
@@ -111,23 +109,23 @@ void mathDetail::convolveRegionWithInterpolation(
     typedef KernelImagesForRegion::Image KernelImage;
     typedef KernelImage::const_xy_locator KernelConstLocator;
 
-    std::shared_ptr<afwMath::Kernel const> kernelPtr = region.getKernel();
+    std::shared_ptr<Kernel const> kernelPtr = region.getKernel();
     geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_LEFT));
     workingImages.rightImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_RIGHT));
     workingImages.kernelImage.assign(workingImages.leftImage);
 
-    afwGeom::Box2I const goodBBox = region.getBBox();
-    afwGeom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
+    geom::Box2I const goodBBox = region.getBBox();
+    geom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
 
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels
     double xfrac = 1.0 / static_cast<double>(goodBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(goodBBox.getHeight());
-    afwMath::scaledPlus(workingImages.leftDeltaImage,
+    math::scaledPlus(workingImages.leftDeltaImage,
          yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
         -yfrac, workingImages.leftImage);
-    afwMath::scaledPlus(workingImages.rightDeltaImage,
+    math::scaledPlus(workingImages.rightDeltaImage,
          yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
         -yfrac, workingImages.rightImage);
 
@@ -142,10 +140,10 @@ void mathDetail::convolveRegionWithInterpolation(
     for (int j = 0; ; ) {
         auto inLocatorInitialPosition = inLocator;
         auto outLocatorInitialPosition = outLocator;
-        afwMath::scaledPlus(
+        math::scaledPlus(
             workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
         for (int i = 0; ; ) {
-            *outLocator = afwMath::convolveAtAPoint<OutImageT, InImageT>(
+            *outLocator = math::convolveAtAPoint<OutImageT, InImageT>(
                 inLocator, kernelLocator, kernelDimensions.getX(), kernelDimensions.getY());
             ++outLocator.x();
             ++inLocator.x();
@@ -179,15 +177,15 @@ void mathDetail::convolveRegionWithInterpolation(
  * Explicit instantiation
  */
 /// @cond
-#define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
-#define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
+#define IMAGE(PIXTYPE) image::Image<PIXTYPE>
+#define MASKEDIMAGE(PIXTYPE) image::MaskedImage<PIXTYPE, image::MaskPixel, image::VariancePixel>
 #define NL /* */
 // Instantiate Image or MaskedImage versions
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
-    template void mathDetail::convolveWithInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
-            afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::convolveRegionWithInterpolation( \
+    template void convolveWithInterpolation( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::Kernel const&, \
+            math::ConvolutionControl const&); NL \
+    template void convolveRegionWithInterpolation( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, \
         ConvolveWithInterpolationWorkingImages&);
 // Instantiate both Image and MaskedImage versions
@@ -205,3 +203,5 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
+
+}}}}    // end math::detail

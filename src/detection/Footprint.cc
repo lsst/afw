@@ -29,14 +29,14 @@
 namespace lsst { namespace afw { namespace detection {
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
-                     geom::Box2I const & region): lsst::daf::base::Citizen(typeid(this)),
+                     geom::Box2I const & region): daf::base::Citizen(typeid(this)),
                                                   _spans(inputSpans),
                                                   _peaks(PeakTable::makeMinimalSchema()),
                                                   _region(region) {}
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
                      afw::table::Schema const & peakSchema,
-                     geom::Box2I const & region): lsst::daf::base::Citizen(typeid(this)),
+                     geom::Box2I const & region): daf::base::Citizen(typeid(this)),
                                                  _spans(inputSpans),
                                                  _peaks(peakSchema),
                                                  _region(region) {}

@@ -31,16 +31,15 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageSlice.h"
 
-namespace afwImage      = lsst::afw::image;
-namespace afwMath       = lsst::afw::math;
 namespace ex            = lsst::pex::exceptions;
 
+namespace lsst { namespace afw { namespace image {
 
 template<typename PixelT>
-afwImage::ImageSlice<PixelT>::ImageSlice(
+ImageSlice<PixelT>::ImageSlice(
     image::Image<PixelT> const &img
                                         ) :
-    afwImage::Image<PixelT>(img),
+    Image<PixelT>(img),
     _sliceType(ROW)
 {
 
@@ -75,11 +74,11 @@ afwImage::ImageSlice<PixelT>::ImageSlice(
 // overload +
 
 template<typename PixelT>
-std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator+(
-    afwImage::Image<PixelT> const &img,
-    afwImage::ImageSlice<PixelT> const &slc
+std::shared_ptr<Image<PixelT>> operator+(
+    Image<PixelT> const &img,
+    ImageSlice<PixelT> const &slc
                                                          ) {
-    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg += slc;
     return retImg;
 }
@@ -87,21 +86,21 @@ std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator+(
 
 
 template<typename PixelT>
-std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator+(
-    afwImage::ImageSlice<PixelT> const &slc,
-    afwImage::Image<PixelT> const &img
+std::shared_ptr<Image<PixelT>> operator+(
+    ImageSlice<PixelT> const &slc,
+    Image<PixelT> const &img
                                                          ) {
-    return afwImage::operator+(img, slc);
+    return operator+(img, slc);
 }
 
 
 
 template<typename PixelT>
-void afwImage::operator+=(
-                          afwImage::Image<PixelT> &img,
-                          afwImage::ImageSlice<PixelT> const &slc
+void operator+=(
+                          Image<PixelT> &img,
+                          ImageSlice<PixelT> const &slc
                          ) {
-    afwImage::details::operate<afwImage::details::Plus<PixelT> >(img, slc, slc.getImageSliceType());
+    details::operate<details::Plus<PixelT> >(img, slc, slc.getImageSliceType());
 }
 
 
@@ -112,20 +111,20 @@ void afwImage::operator+=(
 
 
 template<typename PixelT>
-std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator-(
-    afwImage::Image<PixelT> const &img,
-    afwImage::ImageSlice<PixelT> const &slc
+std::shared_ptr<Image<PixelT>> operator-(
+    Image<PixelT> const &img,
+    ImageSlice<PixelT> const &slc
                                                          ) {
-    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg -= slc;
     return retImg;
 }
 
 
 template<typename PixelT>
-void afwImage::operator-=(
-                          afwImage::Image<PixelT> &img,
-                          afwImage::ImageSlice<PixelT> const &slc
+void operator-=(
+                          Image<PixelT> &img,
+                          ImageSlice<PixelT> const &slc
                          ) {
     details::operate<details::Minus<PixelT> >(img, slc, slc.getImageSliceType());
 }
@@ -136,28 +135,28 @@ void afwImage::operator-=(
 
 
 template<typename PixelT>
-std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator*(
-    afwImage::Image<PixelT> const &img,
-    afwImage::ImageSlice<PixelT> const &slc
+std::shared_ptr<Image<PixelT>> operator*(
+    Image<PixelT> const &img,
+    ImageSlice<PixelT> const &slc
                                                          ) {
-    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg *= slc;
     return retImg;
 }
 
 
 template<typename PixelT>
-std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator*(
-    afwImage::ImageSlice<PixelT> const &slc,
-    afwImage::Image<PixelT> const &img
+std::shared_ptr<Image<PixelT>> operator*(
+    ImageSlice<PixelT> const &slc,
+    Image<PixelT> const &img
                                                          ) {
-    return afwImage::operator*(img, slc);
+    return operator*(img, slc);
 }
 
 template<typename PixelT>
-void afwImage::operator*=(
-                          afwImage::Image<PixelT> &img,
-                          afwImage::ImageSlice<PixelT> const &slc
+void operator*=(
+                          Image<PixelT> &img,
+                          ImageSlice<PixelT> const &slc
                          ) {
     details::operate<details::Mult<PixelT> >(img, slc, slc.getImageSliceType());
 }
@@ -167,20 +166,20 @@ void afwImage::operator*=(
 
 
 template<typename PixelT>
-std::shared_ptr<afwImage::Image<PixelT>> afwImage::operator/(
-    afwImage::Image<PixelT> const &img,
-    afwImage::ImageSlice<PixelT> const &slc
+std::shared_ptr<Image<PixelT>> operator/(
+    Image<PixelT> const &img,
+    ImageSlice<PixelT> const &slc
                                                          ) {
-    std::shared_ptr<afwImage::Image<PixelT>> retImg(new afwImage::Image<PixelT>(img, true));
+    std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg /= slc;
     return retImg;
 }
 
 
 template<typename PixelT>
-void afwImage::operator/=(
-                          afwImage::Image<PixelT> &img,
-                          afwImage::ImageSlice<PixelT> const &slc
+void operator/=(
+                          Image<PixelT> &img,
+                          ImageSlice<PixelT> const &slc
                          ) {
     details::operate<details::Div<PixelT> >(img, slc, slc.getImageSliceType());
 }
@@ -194,25 +193,25 @@ void afwImage::operator/=(
  */
 /// @cond
 #define INSTANTIATE_SLICE_OP_SYM(TYPE, OP) \
-    template std::shared_ptr<afwImage::Image<TYPE>> afwImage::operator OP(afwImage::Image<TYPE> const &img, \
-                                                              afwImage::ImageSlice<TYPE> const &slc); \
-    template std::shared_ptr<afwImage::Image<TYPE>> afwImage::operator OP(afwImage::ImageSlice<TYPE> const &slc, \
-                                                              afwImage::Image<TYPE> const &img)
+    template std::shared_ptr<Image<TYPE>> operator OP(Image<TYPE> const &img, \
+                                                              ImageSlice<TYPE> const &slc); \
+    template std::shared_ptr<Image<TYPE>> operator OP(ImageSlice<TYPE> const &slc, \
+                                                              Image<TYPE> const &img)
 
 
 #define INSTANTIATE_SLICE_OP_ASYM(TYPE, OP) \
-    template std::shared_ptr<afwImage::Image<TYPE>> afwImage::operator OP(afwImage::Image<TYPE> const &img, \
-                                                              afwImage::ImageSlice<TYPE> const &slc)
+    template std::shared_ptr<Image<TYPE>> operator OP(Image<TYPE> const &img, \
+                                                              ImageSlice<TYPE> const &slc)
 
 
 #define INSTANTIATE_SLICE_OPEQ(TYPE, OP)                                \
-    template void afwImage::operator OP(afwImage::Image<TYPE> &img,     \
-                                        afwImage::ImageSlice<TYPE> const &slc)
+    template void operator OP(Image<TYPE> &img,     \
+                                        ImageSlice<TYPE> const &slc)
 
 
 
 #define INSTANTIATE_SLICES(TYPE) \
-    template afwImage::ImageSlice<TYPE>::ImageSlice(afwImage::Image<TYPE> const &image); \
+    template ImageSlice<TYPE>::ImageSlice(Image<TYPE> const &image); \
     INSTANTIATE_SLICE_OP_SYM(TYPE, +);                                  \
     INSTANTIATE_SLICE_OP_ASYM(TYPE, -);                                 \
     INSTANTIATE_SLICE_OP_SYM(TYPE, *);                                  \
@@ -226,3 +225,5 @@ void afwImage::operator/=(
 INSTANTIATE_SLICES(double);
 INSTANTIATE_SLICES(float);
 /// @endcond
+
+}}} // end lsst::afw::image

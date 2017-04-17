@@ -58,32 +58,32 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.WcsFormatter");
 }
 
-namespace afwForm = lsst::afw::formatters;
-namespace afwImg = lsst::afw::image;
+namespace lsst { namespace afw { namespace formatters {
+
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
 namespace pexPolicy = lsst::pex::policy;
 namespace pexExcept = lsst::pex::exceptions;
 
 
-dafPersist::FormatterRegistration afwForm::WcsFormatter::registration(
-    "Wcs", typeid(afwImg::Wcs), createInstance);
+dafPersist::FormatterRegistration WcsFormatter::registration(
+    "Wcs", typeid(image::Wcs), createInstance);
 
-afwForm::WcsFormatter::WcsFormatter(
+WcsFormatter::WcsFormatter(
     std::shared_ptr<pexPolicy::Policy>) :
     dafPersist::Formatter(typeid(this)) {
 }
 
-afwForm::WcsFormatter::~WcsFormatter(void) {
+WcsFormatter::~WcsFormatter(void) {
 }
 
-void afwForm::WcsFormatter::write(
+void WcsFormatter::write(
     dafBase::Persistable const* persistable,
     std::shared_ptr<dafPersist::Storage> storage,
     std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "WcsFormatter write start");
-    afwImg::Wcs const* ip =
-        dynamic_cast<afwImg::Wcs const*>(persistable);
+    image::Wcs const* ip =
+        dynamic_cast<image::Wcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-Wcs");
     }
@@ -97,12 +97,12 @@ void afwForm::WcsFormatter::write(
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
 }
 
-dafBase::Persistable* afwForm::WcsFormatter::read(
+dafBase::Persistable* WcsFormatter::read(
     std::shared_ptr<dafPersist::Storage> storage,
     std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "WcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        afwImg::Wcs* ip = new afwImg::Wcs;
+        image::Wcs* ip = new image::Wcs;
         LOGL_DEBUG(_log, "WcsFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
@@ -115,14 +115,14 @@ dafBase::Persistable* afwForm::WcsFormatter::read(
         int hdu = additionalData->get<int>("hdu", INT_MIN);
         std::shared_ptr<dafBase::PropertySet> md =
             afw::fits::readMetadata(fits->getPath(), hdu);
-        afwImg::Wcs* ip = new afwImg::Wcs(md);
+        image::Wcs* ip = new image::Wcs(md);
         LOGL_DEBUG(_log, "WcsFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
 }
 
-void afwForm::WcsFormatter::update(
+void WcsFormatter::update(
     dafBase::Persistable*,
     std::shared_ptr<dafPersist::Storage>,
     std::shared_ptr<dafBase::PropertySet>) {
@@ -130,7 +130,7 @@ void afwForm::WcsFormatter::update(
 }
 
 std::shared_ptr<dafBase::PropertyList>
-afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
+WcsFormatter::generatePropertySet(image::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     std::shared_ptr<dafBase::PropertyList> wcsProps(new dafBase::PropertyList());
 
@@ -173,10 +173,10 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
 }
 
 template <class Archive>
-void afwForm::WcsFormatter::delegateSerialize(
+void WcsFormatter::delegateSerialize(
     Archive& ar, int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "WcsFormatter delegateSerialize start");
-    afwImg::Wcs* ip = dynamic_cast<afwImg::Wcs*>(persistable);
+    image::Wcs* ip = dynamic_cast<image::Wcs*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-Wcs");
     }
@@ -232,18 +232,19 @@ void afwForm::WcsFormatter::delegateSerialize(
 
 // Explicit template specializations confuse Doxygen, tell it to ignore them
 /// @cond
-template void afwForm::WcsFormatter::delegateSerialize(
+template void WcsFormatter::delegateSerialize(
     boost::archive::text_oarchive & , int, dafBase::Persistable*);
-template void afwForm::WcsFormatter::delegateSerialize(
+template void WcsFormatter::delegateSerialize(
     boost::archive::text_iarchive & , int, dafBase::Persistable*);
-template void afwForm::WcsFormatter::delegateSerialize(
+template void WcsFormatter::delegateSerialize(
     boost::archive::binary_oarchive & , int, dafBase::Persistable*);
-template void afwForm::WcsFormatter::delegateSerialize(
+template void WcsFormatter::delegateSerialize(
     boost::archive::binary_iarchive & , int, dafBase::Persistable*);
 /// @endcond
 
-std::shared_ptr<dafPersist::Formatter> afwForm::WcsFormatter::createInstance(
+std::shared_ptr<dafPersist::Formatter> WcsFormatter::createInstance(
     std::shared_ptr<pexPolicy::Policy> policy) {
-    return std::shared_ptr<dafPersist::Formatter>(new afwForm::WcsFormatter(policy));
+    return std::shared_ptr<dafPersist::Formatter>(new WcsFormatter(policy));
 }
 
+}}} // end lsst::afw::formatters

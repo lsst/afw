@@ -52,7 +52,7 @@ char getFormatCode(float*) { return 'E'; }
 char getFormatCode(double*) { return 'D'; }
 char getFormatCode(std::complex<float>*) { return 'C'; }
 char getFormatCode(std::complex<double>*) { return 'M'; }
-char getFormatCode(lsst::afw::geom::Angle*) { return 'D'; }
+char getFormatCode(geom::Angle*) { return 'D'; }
 
 // ---- Create a TFORM value for the given type and size ----------------------------------------------------
 
@@ -86,7 +86,7 @@ template <> struct FitsType<long long> { static int const CONSTANT = TLONGLONG; 
 template <> struct FitsType<unsigned long long> { static int const CONSTANT = TLONGLONG; };
 template <> struct FitsType<float> { static int const CONSTANT = TFLOAT; };
 template <> struct FitsType<double> { static int const CONSTANT = TDOUBLE; };
-template <> struct FitsType<lsst::afw::geom::Angle> { static int const CONSTANT = TDOUBLE; };
+template <> struct FitsType<geom::Angle> { static int const CONSTANT = TDOUBLE; };
 template <> struct FitsType< std::complex<float> > { static int const CONSTANT = TCOMPLEX; };
 template <> struct FitsType< std::complex<double> > { static int const CONSTANT = TDBLCOMPLEX; };
 
@@ -1207,11 +1207,11 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits & fitsfile, boo
 
 #define COLUMN_TYPES                                                    \
     (bool)(std::string)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t) \
-    (std::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
+    (std::int64_t)(float)(double)(geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define COLUMN_ARRAY_TYPES                                              \
     (bool)(char)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t) \
-    (std::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
+    (std::int64_t)(float)(double)(geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define IMAGE_TYPES                                                     \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(std::int64_t)(std::uint64_t) \

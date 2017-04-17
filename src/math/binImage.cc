@@ -29,7 +29,6 @@
 #include "lsst/afw/math/offsetImage.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwImage = lsst::afw::image;
 
 namespace lsst {
 namespace afw {
@@ -94,14 +93,14 @@ std::shared_ptr<ImageT> binImage(ImageT const& in,
 //
 /// @cond
 #define INSTANTIATE(TYPE) \
-    template std::shared_ptr<afwImage::Image<TYPE>> \
-             binImage(afwImage::Image<TYPE> const&, int, lsst::afw::math::Property const); \
-    template std::shared_ptr<afwImage::Image<TYPE>> \
-             binImage(afwImage::Image<TYPE> const&, int, int, lsst::afw::math::Property const); \
-    template std::shared_ptr<afwImage::MaskedImage<TYPE>> \
-             binImage(afwImage::MaskedImage<TYPE> const&, int, lsst::afw::math::Property const); \
-    template std::shared_ptr<afwImage::MaskedImage<TYPE>> \
-             binImage(afwImage::MaskedImage<TYPE> const&, int, int, lsst::afw::math::Property const); \
+    template std::shared_ptr<image::Image<TYPE>> \
+             binImage(image::Image<TYPE> const&, int, lsst::afw::math::Property const); \
+    template std::shared_ptr<image::Image<TYPE>> \
+             binImage(image::Image<TYPE> const&, int, int, lsst::afw::math::Property const); \
+    template std::shared_ptr<image::MaskedImage<TYPE>> \
+             binImage(image::MaskedImage<TYPE> const&, int, lsst::afw::math::Property const); \
+    template std::shared_ptr<image::MaskedImage<TYPE>> \
+             binImage(image::MaskedImage<TYPE> const&, int, int, lsst::afw::math::Property const); \
 
 INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)

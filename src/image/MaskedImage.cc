@@ -41,15 +41,15 @@
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/fits.h"
 
-namespace image = lsst::afw::image;
+namespace lsst { namespace afw { namespace image {
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     unsigned int width,
     unsigned int height,
     MaskPlaneDict const& planeDict
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image(width, height)),
     _mask(new Mask(width, height, planeDict)),
     _variance(new Variance(width, height)) {
@@ -59,11 +59,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     geom::Extent2I const & dimensions,
     MaskPlaneDict const& planeDict
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image(dimensions)),
     _mask(new Mask(dimensions, planeDict)),
     _variance(new Variance(dimensions)) {
@@ -73,11 +73,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     geom::Box2I const & bbox,
     MaskPlaneDict const& planeDict
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image(bbox)),
     _mask(new Mask(bbox, planeDict)),
     _variance(new Variance(bbox)) {
@@ -87,13 +87,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     std::string const & fileName, std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
     std::shared_ptr<daf::base::PropertySet> imageMetadata,
     std::shared_ptr<daf::base::PropertySet> maskMetadata,
     std::shared_ptr<daf::base::PropertySet> varianceMetadata
-) : lsst::daf::base::Citizen(typeid(this)),
+) : daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance()
 {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -102,13 +102,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     fits::MemFileManager & manager, std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
     std::shared_ptr<daf::base::PropertySet> imageMetadata,
     std::shared_ptr<daf::base::PropertySet> maskMetadata,
     std::shared_ptr<daf::base::PropertySet> varianceMetadata
-) : lsst::daf::base::Citizen(typeid(this)),
+) : daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance()
 {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -121,26 +121,26 @@ namespace {
 // Helper functions for MaskedImage FITS ctor.
 
 void checkExtType(
-    lsst::afw::fits::Fits & fitsfile,
-    std::shared_ptr<lsst::daf::base::PropertySet> metadata,
+    fits::Fits & fitsfile,
+    std::shared_ptr<daf::base::PropertySet> metadata,
     std::string const & expected
 ) {
     try {
         std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
         if (exttype != "" && exttype != expected) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"%s\", saw \"%s\"") %
                                expected % fitsfile.getFileName() % fitsfile.getHdu() % exttype).str());
         }
         metadata->remove("EXTTYPE");
-    } catch(lsst::pex::exceptions::NotFoundError) {
+    } catch(pex::exceptions::NotFoundError) {
         LOGLS_WARN("afw.image.MaskedImage", "Expected extension type not found: " << expected);
     }
 }
 
-void ensureMetadata(std::shared_ptr<lsst::daf::base::PropertySet> & metadata) {
+void ensureMetadata(std::shared_ptr<daf::base::PropertySet> & metadata) {
     if (!metadata) {
-        metadata.reset(new lsst::daf::base::PropertyList());
+        metadata.reset(new daf::base::PropertyList());
     }
 }
 
@@ -148,13 +148,13 @@ void ensureMetadata(std::shared_ptr<lsst::daf::base::PropertySet> & metadata) {
 
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     fits::Fits & fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
     geom::Box2I const & bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
     std::shared_ptr<daf::base::PropertySet> imageMetadata,
     std::shared_ptr<daf::base::PropertySet> maskMetadata,
     std::shared_ptr<daf::base::PropertySet> varianceMetadata
-) : lsst::daf::base::Citizen(typeid(this)),
+) : daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance()
 {
     // When reading a standard Masked Image, we expect four HDUs:
@@ -243,12 +243,12 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         ImagePtr image,
         MaskPtr mask,
         VariancePtr variance
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(image),
     _mask(mask),
     _variance(variance) {
@@ -256,11 +256,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     MaskedImage const& rhs,
     bool deep
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
         _image =    std::shared_ptr<Image>(new Image(*rhs.getImage(), deep));
@@ -271,14 +271,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     MaskedImage const& rhs,
     const geom::Box2I& bbox,
     ImageOrigin const origin,
     bool deep
 
 ) :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _image(new Image(*rhs.getImage(), bbox, origin, deep)),
     _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask *>(NULL)),
     _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, origin, deep) : static_cast<Variance *>(NULL)) {
@@ -287,12 +287,12 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
 #if defined(DOXYGEN)
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(image::MaskedImage const& rhs
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage const& rhs
                       ) {}
 #endif
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage &rhs) {
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
 
     _image.swap(rhs._image);
@@ -304,8 +304,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedIma
 
 // Operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::Pixel const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::Pixel const& rhs) {
     *_image = rhs.image();
     *_mask = rhs.mask();
     *_variance = rhs.variance();
@@ -314,8 +314,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::SinglePixel const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::SinglePixel const& rhs) {
     *_image = rhs.image();
     *_mask = rhs.mask();
     *_variance = rhs.variance();
@@ -324,14 +324,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
     assign(rhs);
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedImage const &rhs,
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedImage const &rhs,
     geom::Box2I const &bbox, ImageOrigin origin) {
     _image->assign(*rhs.getImage(), bbox, origin);
     _mask->assign(*rhs.getMask(), bbox, origin);
@@ -339,8 +339,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedI
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
     *_image += *rhs.getImage();
     *_mask  |= *rhs.getMask();
     *_variance += *rhs.getVariance();
@@ -348,7 +348,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedIm
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c,
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c,
                                                                              MaskedImage const& rhs) {
     (*_image).scaledPlus(c, *rhs.getImage());
     *_mask  |= *rhs.getMask();
@@ -356,15 +356,15 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(dou
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT const rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT const rhs) {
     *_image += rhs;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
     *_image -= *rhs.getImage();
     *_mask  |= *rhs.getMask();
     *_variance += *rhs.getVariance();
@@ -372,7 +372,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedIm
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c,
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c,
                                                                               MaskedImage const& rhs) {
     (*_image).scaledMinus(c, *rhs.getImage());
     *_mask  |= *rhs.getMask();
@@ -380,8 +380,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(do
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT const rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT const rhs) {
     *_image -= rhs;
     return *this;
 }
@@ -407,8 +407,8 @@ namespace {
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(MaskedImage const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
     transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
@@ -423,7 +423,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(MaskedIm
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultiplies(double const c,
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultiplies(double const c,
                                                                                    MaskedImage const& rhs) {
     // Must do variance before we modify the image values
     transform_pixels(_image->_getRawView(), // lhs
@@ -438,8 +438,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultipli
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(ImagePixelT const rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(ImagePixelT const rhs) {
     *_image *= rhs;
     *_variance *= rhs*rhs;
     return *this;
@@ -468,8 +468,8 @@ namespace {
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(MaskedImage const& rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
     transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
@@ -484,7 +484,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(MaskedIm
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(double const c,
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(double const c,
                                                                                 MaskedImage const& rhs) {
     // Must do variance before we modify the image values
     transform_pixels(_image->_getRawView(), // lhs
@@ -499,15 +499,15 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(ImagePixelT const rhs) {
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(ImagePixelT const rhs) {
     *_image /= rhs;
     *_variance /= rhs*rhs;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     std::string const& fileName,
     std::shared_ptr<daf::base::PropertySet const> metadata,
     std::shared_ptr<daf::base::PropertySet const> imageMetadata,
@@ -519,7 +519,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::MemFileManager & manager,
     std::shared_ptr<daf::base::PropertySet const> metadata,
     std::shared_ptr<daf::base::PropertySet const> imageMetadata,
@@ -533,14 +533,14 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 namespace {
 
 void processPlaneMetadata(
-    std::shared_ptr<lsst::daf::base::PropertySet const> metadata,
-    std::shared_ptr<lsst::daf::base::PropertySet> & hdr,
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet> & hdr,
     char const * exttype
 ) {
     if (metadata) {
         hdr = metadata->deepCopy();
     } else {
-        hdr.reset(new lsst::daf::base::PropertyList());
+        hdr.reset(new daf::base::PropertyList());
     }
     hdr->set("INHERIT", true);
     hdr->set("EXTTYPE", exttype);
@@ -549,7 +549,7 @@ void processPlaneMetadata(
 } // anonymous
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::Fits & fitsfile,
     std::shared_ptr<daf::base::PropertySet const> metadata,
     std::shared_ptr<daf::base::PropertySet const> imageMetadata,
@@ -593,7 +593,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 // a lsst::pex::exceptions::LengthError is thrown.
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
 
     if (!_mask || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
         _mask = MaskPtr(new Mask(_image->getBBox()));
@@ -601,7 +601,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     } else {
         if (_mask->getDimensions() != _image->getDimensions()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthError,
+                pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
                     _image->getWidth() % _image->getHeight() %
                     _mask->getWidth() % _mask->getHeight()
@@ -616,7 +616,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     } else {
         if (_variance->getDimensions() != _image->getDimensions()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthError,
+                pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
                     _image->getWidth() % _image->getHeight() %
                     _variance->getWidth() % _variance->getHeight()
@@ -630,7 +630,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
 // Iterators and locators
 //
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin() const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin() const {
 #if 0                                   // this doesn't compile; why?
     return iterator(_image->begin(), _mask->begin(), _variance->begin());
 #else
@@ -643,7 +643,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end() const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end() const {
     typename Image::iterator imageEnd = getImage()->end();
     typename Mask::iterator maskEnd = getMask()->end();
     typename Variance::iterator varianceEnd = getVariance()->end();
@@ -652,7 +652,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::at(int const x, int const y) const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::at(int const x, int const y) const {
     typename Image::iterator imageEnd = getImage()->at(x, y);
     typename Mask::iterator maskEnd = getMask()->at(x, y);
     typename Variance::iterator varianceEnd = getVariance()->at(x, y);
@@ -661,7 +661,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rbegin() const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rbegin() const {
     typename Image::reverse_iterator imageBegin = _image->rbegin();
     typename Mask::reverse_iterator maskBegin = _mask->rbegin();
     typename Variance::reverse_iterator varianceBegin = _variance->rbegin();
@@ -670,7 +670,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rend() const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rend() const {
     typename Image::reverse_iterator imageEnd = getImage()->rend();
     typename Mask::reverse_iterator maskEnd = getMask()->rend();
     typename Variance::reverse_iterator varianceEnd = getVariance()->rend();
@@ -679,7 +679,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_begin(int y) const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_begin(int y) const {
     typename Image::x_iterator imageBegin = _image->row_begin(y);
     typename Mask::x_iterator maskBegin = _mask->row_begin(y);
     typename Variance::x_iterator varianceBegin = _variance->row_begin(y);
@@ -688,7 +688,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_end(int y) const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_end(int y) const {
     typename Image::x_iterator imageEnd = getImage()->row_end(y);
     typename Mask::x_iterator maskEnd = getMask()->row_end(y);
     typename Variance::x_iterator varianceEnd = getVariance()->row_end(y);
@@ -698,7 +698,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
 
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_begin(int x) const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_begin(int x) const {
     typename Image::y_iterator imageBegin = _image->col_begin(x);
     typename Mask::y_iterator maskBegin = _mask->col_begin(x);
     typename Variance::y_iterator varianceBegin = _variance->col_begin(x);
@@ -707,7 +707,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_end(int x) const {
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_end(int x) const {
     typename Image::y_iterator imageEnd = getImage()->col_end(x);
     typename Mask::y_iterator maskEnd = getMask()->col_end(x);
     typename Variance::y_iterator varianceEnd = getVariance()->col_end(x);
@@ -716,8 +716,8 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
-    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
         bool contiguous
                                                                       ) const {
     typename Image::fast_iterator imageBegin = _image->begin(contiguous);
@@ -728,8 +728,8 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
-    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end(
+typename MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end(
         bool contiguous
                                                                     ) const {
     typename Image::fast_iterator imageEnd = getImage()->end(contiguous);
@@ -742,9 +742,10 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
 //
 // Explicit instantiations
 //
-template class image::MaskedImage<std::uint16_t>;
-template class image::MaskedImage<int>;
-template class image::MaskedImage<float>;
-template class image::MaskedImage<double>;
-template class image::MaskedImage<std::uint64_t>;
+template class MaskedImage<std::uint16_t>;
+template class MaskedImage<int>;
+template class MaskedImage<float>;
+template class MaskedImage<double>;
+template class MaskedImage<std::uint64_t>;
 
+}}} // end lsst::afw::image

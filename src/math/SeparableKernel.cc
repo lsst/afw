@@ -29,10 +29,10 @@
 #include "lsst/afw/math/Kernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwImage = lsst::afw::image;
-namespace afwMath = lsst::afw::math;
 
-afwMath::SeparableKernel::SeparableKernel()
+namespace lsst { namespace afw { namespace math {
+
+SeparableKernel::SeparableKernel()
 :
     Kernel(),
     _kernelColFunctionPtr(),
@@ -44,7 +44,7 @@ afwMath::SeparableKernel::SeparableKernel()
     _setKernelXY();
 }
 
-afwMath::SeparableKernel::SeparableKernel(
+SeparableKernel::SeparableKernel(
     int width,
     int height,
     KernelFunction const& kernelColFunction,
@@ -62,7 +62,7 @@ afwMath::SeparableKernel::SeparableKernel(
     _setKernelXY();
 }
 
-afwMath::SeparableKernel::SeparableKernel(
+SeparableKernel::SeparableKernel(
     int width,
     int height,
     KernelFunction const& kernelColFunction,
@@ -88,13 +88,13 @@ afwMath::SeparableKernel::SeparableKernel(
     _setKernelXY();
 }
 
-std::shared_ptr<afwMath::Kernel> afwMath::SeparableKernel::clone() const {
-    std::shared_ptr<afwMath::Kernel> retPtr;
+std::shared_ptr<Kernel> SeparableKernel::clone() const {
+    std::shared_ptr<Kernel> retPtr;
     if (this->isSpatiallyVarying()) {
-        retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
+        retPtr.reset(new SeparableKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr), this->_spatialFunctionList));
     } else {
-        retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
+        retPtr.reset(new SeparableKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr)));
     }
     retPtr->setCtr(this->getCtr());
@@ -102,7 +102,7 @@ std::shared_ptr<afwMath::Kernel> afwMath::SeparableKernel::clone() const {
     return retPtr;
 }
 
-double afwMath::SeparableKernel::computeVectors(
+double SeparableKernel::computeVectors(
     std::vector<Pixel> &colList,
     std::vector<Pixel> &rowList,
     bool doNormalize,
@@ -125,17 +125,17 @@ double afwMath::SeparableKernel::computeVectors(
     return basicComputeVectors(colList, rowList, doNormalize);
 }
 
-afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelColFunction(
+SeparableKernel::KernelFunctionPtr SeparableKernel::getKernelColFunction(
 ) const {
     return _kernelColFunctionPtr->clone();
 }
 
-afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelRowFunction(
+SeparableKernel::KernelFunctionPtr SeparableKernel::getKernelRowFunction(
 ) const {
     return _kernelRowFunctionPtr->clone();
 }
 
-std::string afwMath::SeparableKernel::toString(std::string const& prefix) const {
+std::string SeparableKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "SeparableKernel:" << std::endl;
     os << prefix << "..x (width) function: "
@@ -146,7 +146,7 @@ std::string afwMath::SeparableKernel::toString(std::string const& prefix) const 
     return os.str();
 }
 
-std::vector<double> afwMath::SeparableKernel::getKernelParameters() const {
+std::vector<double> SeparableKernel::getKernelParameters() const {
     std::vector<double> allParams = _kernelColFunctionPtr->getParameters();
     std::vector<double> yParams = _kernelRowFunctionPtr->getParameters();
     std::copy(yParams.begin(), yParams.end(), std::back_inserter(allParams));
@@ -157,14 +157,14 @@ std::vector<double> afwMath::SeparableKernel::getKernelParameters() const {
 // Protected Member Functions
 //
 
-double afwMath::SeparableKernel::doComputeImage(
-    afwImage::Image<Pixel> &image,
+double SeparableKernel::doComputeImage(
+    image::Image<Pixel> &image,
     bool doNormalize
 ) const {
     double imSum = basicComputeVectors(_localColList, _localRowList, doNormalize);
 
     for (int y = 0; y != image.getHeight(); ++y) {
-        afwImage::Image<Pixel>::x_iterator imPtr = image.row_begin(y);
+        image::Image<Pixel>::x_iterator imPtr = image.row_begin(y);
         for (std::vector<Pixel>::iterator colIter = _localColList.begin();
              colIter != _localColList.end(); ++colIter, ++imPtr) {
             *imPtr = (*colIter)*_localRowList[y];
@@ -174,7 +174,7 @@ double afwMath::SeparableKernel::doComputeImage(
     return imSum;
 }
 
-void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value) const {
+void SeparableKernel::setKernelParameter(unsigned int ind, double value) const {
     unsigned int const nColParams = _kernelColFunctionPtr->getNParameters();
     if (ind < nColParams) {
         _kernelColFunctionPtr->setParameter(ind, value);
@@ -187,7 +187,7 @@ void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value
 // Private Member Functions
 //
 
-double afwMath::SeparableKernel::basicComputeVectors(
+double SeparableKernel::basicComputeVectors(
     std::vector<Pixel> &colList,
     std::vector<Pixel> &rowList,
     bool doNormalize
@@ -266,7 +266,7 @@ namespace {
      */
     void _computeCache(int const cacheSize,
                        std::vector<double> const& x,
-                       afwMath::SeparableKernel::KernelFunctionPtr & func,
+                       SeparableKernel::KernelFunctionPtr & func,
                        std::vector<std::vector<double> > *kernelCache)
     {
         if (cacheSize <= 0) {
@@ -304,10 +304,10 @@ namespace {
     }
 }
 
-void afwMath::SeparableKernel::computeCache(
+void SeparableKernel::computeCache(
         int const cacheSize
 ) {
-    afwMath::SeparableKernel::KernelFunctionPtr func;
+    SeparableKernel::KernelFunctionPtr func;
 
     func = getKernelColFunction();
     _computeCache(cacheSize, _kernelY, func, &_kernelColCache);
@@ -316,6 +316,8 @@ void afwMath::SeparableKernel::computeCache(
     _computeCache(cacheSize, _kernelX, func, &_kernelRowCache);
 }
 
-int afwMath::SeparableKernel::getCacheSize() const {
+int SeparableKernel::getCacheSize() const {
     return _kernelColCache.size();
 };
+
+}}} // lsst::afw::math

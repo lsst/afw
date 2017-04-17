@@ -29,10 +29,11 @@
 #include "lsst/afw/image/TanWcs.h"
 
 namespace except = lsst::pex::exceptions;
-namespace afwImg = lsst::afw::image;
 
-std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
-        std::shared_ptr<lsst::daf::base::PropertySet> const& _metadata,
+namespace lsst { namespace afw { namespace image {
+
+std::shared_ptr<Wcs> makeWcs(
+        std::shared_ptr<daf::base::PropertySet> const& _metadata,
         bool stripMetadata
                                 )
 {
@@ -72,9 +73,9 @@ std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
         metadata->set<std::string>("CTYPE2", ctype2);
     }
 
-    std::shared_ptr<afwImg::Wcs> wcs;               // we can't use make_shared as ctor is private
+    std::shared_ptr<Wcs> wcs;               // we can't use make_shared as ctor is private
     if (ctype1.substr(5, 3) == "TAN") {
-        wcs = std::shared_ptr<afwImg::Wcs>(new afwImg::TanWcs(metadata));
+        wcs = std::shared_ptr<Wcs>(new TanWcs(metadata));
     } else if (ctype1.substr(5, 3) == "TPV") { // unfortunately we don't support TPV
         if (!modifyable) {
             metadata = _metadata->deepCopy();
@@ -102,9 +103,9 @@ std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
             }
         }
 
-        wcs = std::shared_ptr<afwImg::Wcs>(new afwImg::TanWcs(metadata));
+        wcs = std::shared_ptr<Wcs>(new TanWcs(metadata));
     } else {
-        wcs = std::shared_ptr<afwImg::Wcs>(new afwImg::Wcs(metadata));
+        wcs = std::shared_ptr<Wcs>(new Wcs(metadata));
     }
 
     // If keywords LTV[1,2] are present, the image on disk is already a subimage, so
@@ -120,15 +121,15 @@ std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
     }
 
     if (stripMetadata) {
-        afwImg::detail::stripWcsKeywords(_metadata, wcs);
+        detail::stripWcsKeywords(_metadata, wcs);
     }
 
     return wcs;
 }
 
-std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
-    lsst::afw::coord::Coord const & crval,
-    lsst::afw::geom::Point2D const & crpix,
+std::shared_ptr<Wcs> makeWcs(
+    coord::Coord const & crval,
+    geom::Point2D const & crpix,
     double CD11,
     double CD12,
     double CD21,
@@ -136,8 +137,10 @@ std::shared_ptr<afwImg::Wcs> afwImg::makeWcs(
     ) {
     Eigen::Matrix2d CD;
     CD << CD11, CD12, CD21, CD22;
-    lsst::afw::geom::Point2D crvalTmp;
+    geom::Point2D crvalTmp;
     crvalTmp[0] = crval.toIcrs().getLongitude().asDegrees();
     crvalTmp[1] = crval.toIcrs().getLatitude().asDegrees();
-    return std::shared_ptr<afwImg::Wcs>(new lsst::afw::image::TanWcs(crvalTmp, crpix, CD));
+    return std::shared_ptr<Wcs>(new TanWcs(crvalTmp, crpix, CD));
 }
+
+}}} // end lsst::afw::image

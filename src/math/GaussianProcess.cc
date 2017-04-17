@@ -2238,15 +2238,13 @@ void NeuralNetCovariogram < T > ::setSigma1(double sigma1)
     _sigma1 = sigma1;
 }
 
-}}}
-
-#define gpn lsst::afw::math
-
 #define INSTANTIATEGP(T) \
-        template class gpn::KdTree < T > ; \
-        template class gpn::GaussianProcess < T > ; \
-        template class gpn::Covariogram < T > ; \
-        template class gpn::SquaredExpCovariogram < T > ;\
-        template class gpn::NeuralNetCovariogram < T > ;
+        template class KdTree < T > ; \
+        template class GaussianProcess < T > ; \
+        template class Covariogram < T > ; \
+        template class SquaredExpCovariogram < T > ;\
+        template class NeuralNetCovariogram < T > ;
 
 INSTANTIATEGP(double);
+
+}}}

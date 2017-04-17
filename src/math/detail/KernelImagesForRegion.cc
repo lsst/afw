@@ -40,17 +40,16 @@
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-namespace mathDetail = lsst::afw::math::detail;
 
-mathDetail::KernelImagesForRegion::KernelImagesForRegion(
+namespace lsst { namespace afw { namespace math { namespace detail {
+
+KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr kernelPtr,
-        lsst::afw::geom::Box2I const &bbox,
-        lsst::afw::geom::Point2I const &xy0,
+        geom::Box2I const &bbox,
+        geom::Point2I const &xy0,
         bool doNormalize)
 :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
@@ -65,17 +64,17 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
-mathDetail::KernelImagesForRegion::KernelImagesForRegion(
+KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr const kernelPtr,
-        lsst::afw::geom::Box2I const &bbox,
-        lsst::afw::geom::Point2I const &xy0,
+        geom::Box2I const &bbox,
+        geom::Point2I const &xy0,
         bool doNormalize,
         ImagePtr bottomLeftImagePtr,
         ImagePtr bottomRightImagePtr,
         ImagePtr topLeftImagePtr,
         ImagePtr topRightImagePtr)
 :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
     _xy0(xy0),
@@ -94,7 +93,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
-mathDetail::KernelImagesForRegion::ImagePtr mathDetail::KernelImagesForRegion::getImage(
+KernelImagesForRegion::ImagePtr KernelImagesForRegion::getImage(
         Location location)
 const {
     if (_imagePtrList[location]) {
@@ -107,7 +106,7 @@ const {
     return imagePtr;
 }
 
-lsst::afw::geom::Point2I mathDetail::KernelImagesForRegion::getPixelIndex(
+geom::Point2I KernelImagesForRegion::getPixelIndex(
         Location location)
 const {
     switch (location) {
@@ -115,13 +114,13 @@ const {
             return _bbox.getMin();
             break; // paranoia
         case BOTTOM_RIGHT:
-            return afwGeom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
+            return geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
             break; // paranoia
         case TOP_LEFT:
-            return afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
+            return geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
             break; // paranoia
         case TOP_RIGHT:
-            return afwGeom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
+            return geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
             break; // paranoia
         default: {
             std::ostringstream os;
@@ -131,7 +130,7 @@ const {
     }
 }
 
-bool mathDetail::KernelImagesForRegion::computeNextRow(
+bool KernelImagesForRegion::computeNextRow(
         RowOfKernelImagesForRegion &regionRow)
 const {
     if (regionRow.isLastRow()) {
@@ -166,7 +165,7 @@ const {
         ImagePtr tlImagePtr;
         ImagePtr const trImageNullPtr;
 
-        afwGeom::Point2I blCorner = afwGeom::Point2I(this->_bbox.getMinX(), startY);
+        geom::Point2I blCorner = geom::Point2I(this->_bbox.getMinX(), startY);
 
         int remWidth = this->_bbox.getWidth();
         int remXDiv = regionRow.getNX();
@@ -178,7 +177,7 @@ const {
 
             std::shared_ptr<KernelImagesForRegion> regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
-                afwGeom::Box2I(blCorner, afwGeom::Extent2I(width, height)),
+                geom::Box2I(blCorner, geom::Extent2I(width, height)),
                 _xy0,
                 _doNormalize,
                 blImagePtr,
@@ -191,7 +190,7 @@ const {
                 regionPtr->getImage(TOP_LEFT);
             }
 
-            blCorner += afwGeom::Extent2I(width, 0);
+            blCorner += geom::Extent2I(width, 0);
             blImagePtr = regionPtr->getImage(BOTTOM_RIGHT);
             tlImagePtr = regionPtr->getImage(TOP_RIGHT);
         }
@@ -199,7 +198,7 @@ const {
     return true;
 }
 
-void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
+void KernelImagesForRegion::_computeImage(Location location) const {
     ImagePtr imagePtr = _imagePtrList[location];
     if (!imagePtr) {
         std::ostringstream os;
@@ -207,15 +206,15 @@ void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
         throw LSST_EXCEPT(pexExcept::NotFoundError, os.str());
     }
 
-    afwGeom::Point2I pixelIndex = getPixelIndex(location);
+    geom::Point2I pixelIndex = getPixelIndex(location);
     _kernelPtr->computeImage(
         *imagePtr,
         _doNormalize,
-        afwImage::indexToPosition(pixelIndex.getX() + _xy0[0]),
-        afwImage::indexToPosition(pixelIndex.getY() + _xy0[1]));
+        image::indexToPosition(pixelIndex.getX() + _xy0[0]),
+        image::indexToPosition(pixelIndex.getY() + _xy0[1]));
 }
 
-std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
+std::vector<int> KernelImagesForRegion::_computeSubregionLengths(
     int length,
     int nDivisions)
 {
@@ -240,14 +239,14 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     return regionLengths;
 }
 
-void mathDetail::KernelImagesForRegion::_moveUp(
+void KernelImagesForRegion::_moveUp(
         bool isFirst,
         int newHeight)
 {
     // move bbox up (this must be done before recomputing the top kernel images)
-    _bbox = afwGeom::Box2I(
-        afwGeom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
-        afwGeom::Extent2I(_bbox.getWidth(), newHeight));
+    _bbox = geom::Box2I(
+        geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
+        geom::Extent2I(_bbox.getWidth(), newHeight));
 
     // swap top and bottom image pointers
     _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);
@@ -261,9 +260,9 @@ void mathDetail::KernelImagesForRegion::_moveUp(
 }
 
 
-int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 10;
+int const KernelImagesForRegion::_MinInterpolationSize = 10;
 
-mathDetail::RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
+RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
         int nx,
         int ny)
 :
@@ -278,3 +277,5 @@ mathDetail::RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     };
 }
+
+}}}}    // end lsst::afw::math::detail

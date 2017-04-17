@@ -24,10 +24,10 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
-namespace geom = lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom {
 
 template <typename Derived, typename T, int N>
-bool geom::allclose(
+bool allclose(
     CoordinateBase<Derived,T,N> const & a,
     CoordinateBase<Derived,T,N> const & b,
     T rtol, T atol
@@ -39,23 +39,25 @@ bool geom::allclose(
     return (diff <= rhs).all();
 }
 
-template bool geom::allclose<geom::Point2D,double,2>(
-    CoordinateBase<geom::Point2D,double,2> const &,
-    CoordinateBase<geom::Point2D,double,2> const &,
+template bool allclose<Point2D,double,2>(
+    CoordinateBase<Point2D,double,2> const &,
+    CoordinateBase<Point2D,double,2> const &,
     double, double
 );
-template bool geom::allclose<geom::Point3D,double,3>(
-    CoordinateBase<geom::Point3D,double,3> const &,
-    CoordinateBase<geom::Point3D,double,3> const &,
+template bool allclose<Point3D,double,3>(
+    CoordinateBase<Point3D,double,3> const &,
+    CoordinateBase<Point3D,double,3> const &,
     double, double
 );
-template bool geom::allclose<geom::Extent2D,double,2>(
-    CoordinateBase<geom::Extent2D,double,2> const &,
-    CoordinateBase<geom::Extent2D,double,2> const &,
+template bool allclose<Extent2D,double,2>(
+    CoordinateBase<Extent2D,double,2> const &,
+    CoordinateBase<Extent2D,double,2> const &,
     double, double
 );
-template bool geom::allclose<geom::Extent3D,double,3>(
-    CoordinateBase<geom::Extent3D,double,3> const &,
-    CoordinateBase<geom::Extent3D,double,3> const &,
+template bool allclose<Extent3D,double,3>(
+    CoordinateBase<Extent3D,double,3> const &,
+    CoordinateBase<Extent3D,double,3> const &,
     double, double
 );
+
+}}} // lsst::afw::geom

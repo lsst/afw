@@ -25,10 +25,10 @@
  */
 #include "lsst/afw/math/FunctionLibrary.h"
 
-namespace afwMath = lsst::afw::math;
+namespace lsst { namespace afw { namespace math {
 
 template<typename ReturnT>
-std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, double y) const {
+std::vector<double> PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, double y) const {
     std::vector<double> coeffs(this->getNParameters());
 
     //
@@ -62,8 +62,10 @@ std::vector<double> afwMath::PolynomialFunction2<ReturnT>::getDFuncDParameters(d
 /// @cond
 #define INSTANTIATE(TYPE) \
     template std::vector<double> \
-    afwMath::PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const
+    PolynomialFunction2<TYPE>::getDFuncDParameters(double x, double y) const
 
 INSTANTIATE(double);
 INSTANTIATE(float);
 /// @endcond
+
+}}} // end lsst::afw::math

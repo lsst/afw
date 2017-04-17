@@ -27,26 +27,26 @@
 #include <iostream>
 #include <iomanip>
 
-namespace afwGeom = lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom {
 
-afwGeom::LinearTransform::ParameterVector const afwGeom::LinearTransform::getParameterVector() const {
+LinearTransform::ParameterVector const LinearTransform::getParameterVector() const {
     ParameterVector r;
     r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY];
     return r;
 }
 
-void afwGeom::LinearTransform::setParameterVector(
+void LinearTransform::setParameterVector(
     LinearTransform::ParameterVector const & vector
 ) {
     (*this)[XX] = vector[XX];  (*this)[XY] = vector[XY];
     (*this)[YX] = vector[YX];  (*this)[YY] = vector[YY];
 }
 
-afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
+LinearTransform const LinearTransform::invert() const {
     Eigen::FullPivLU<Matrix> lu(getMatrix());
     if (!lu.isInvertible()) {
         throw LSST_EXCEPT(
-            lsst::afw::geom::SingularTransformException,
+            SingularTransformException,
             "Could not compute LinearTransform inverse"
         );
     }
@@ -54,12 +54,12 @@ afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
     return LinearTransform(inv);
 }
 
-double afwGeom::LinearTransform::computeDeterminant() const {
+double LinearTransform::computeDeterminant() const {
     Eigen::MatrixXd const & m = getMatrix();
     return m(0, 0)*m(1,1) - m(0,1)*m(1,0);
 }
 
-afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dTransform(
+LinearTransform::TransformDerivativeMatrix LinearTransform::dTransform(
     Point2D const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
@@ -70,20 +70,20 @@ afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dT
     return r;
 }
 
-std::ostream& afwGeom::operator<<(
+std::ostream& operator<<(
     std::ostream& os,
-    lsst::afw::geom::LinearTransform const & t
+    LinearTransform const & t
 ) {
     std::ios::fmtflags flags = os.flags();
     int prec = os.precision(7);
     os.setf(std::ios::fixed);
-    os << "LinearTransform([(" << std::setw(10) << t[afwGeom::LinearTransform::XX]
-       << "," << std::setw(10) << t[afwGeom::LinearTransform::XY] << "),\n";
-    os << "                 (" << std::setw(10) << t[afwGeom::LinearTransform::YX]
-       << "," << std::setw(10) << t[afwGeom::LinearTransform::YY] << ")])";
+    os << "LinearTransform([(" << std::setw(10) << t[LinearTransform::XX]
+       << "," << std::setw(10) << t[LinearTransform::XY] << "),\n";
+    os << "                 (" << std::setw(10) << t[LinearTransform::YX]
+       << "," << std::setw(10) << t[LinearTransform::YY] << ")])";
     os.precision(prec);
     os.flags(flags);
     return os;
 }
 
-
+}}} // end lsst::afw::geom

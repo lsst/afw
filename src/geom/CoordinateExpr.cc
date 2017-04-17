@@ -24,10 +24,10 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
-namespace geom = lsst::afw::geom;
+namespace lsst { namespace afw { namespace geom {
 
 template <int N>
-geom::CoordinateExpr<N> geom::CoordinateExpr<N>::and_(CoordinateExpr<N> const & other) const {
+CoordinateExpr<N> CoordinateExpr<N>::and_(CoordinateExpr<N> const & other) const {
     CoordinateExpr r(*this);
     for (int n=0; n<N; ++n) {
         if (!other[n]) r[n] = false;
@@ -36,7 +36,7 @@ geom::CoordinateExpr<N> geom::CoordinateExpr<N>::and_(CoordinateExpr<N> const & 
 }
 
 template <int N>
-geom::CoordinateExpr<N> geom::CoordinateExpr<N>::or_(CoordinateExpr<N> const & other) const {
+CoordinateExpr<N> CoordinateExpr<N>::or_(CoordinateExpr<N> const & other) const {
     CoordinateExpr r(*this);
     for (int n=0; n<N; ++n) {
         if (other[n]) r[n] = true;
@@ -45,7 +45,7 @@ geom::CoordinateExpr<N> geom::CoordinateExpr<N>::or_(CoordinateExpr<N> const & o
 }
 
 template <int N>
-geom::CoordinateExpr<N> geom::CoordinateExpr<N>::not_() const {
+CoordinateExpr<N> CoordinateExpr<N>::not_() const {
     CoordinateExpr r;
     for (int n=0; n<N; ++n) {
         if (!this->operator[](n)) r[n] = true;
@@ -53,5 +53,7 @@ geom::CoordinateExpr<N> geom::CoordinateExpr<N>::not_() const {
     return r;
 }
 
-template class geom::CoordinateExpr<2>;
-template class geom::CoordinateExpr<3>;
+template class CoordinateExpr<2>;
+template class CoordinateExpr<3>;
+
+}}} // end lsst::afw::geom

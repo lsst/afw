@@ -35,11 +35,10 @@
 #include "lsst/afw/geom.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwMath = lsst::afw::math;
-namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
-afwMath::LinearCombinationKernel::LinearCombinationKernel()
+namespace lsst { namespace afw { namespace math {
+
+LinearCombinationKernel::LinearCombinationKernel()
 :
     Kernel(),
     _kernelList(),
@@ -49,7 +48,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel()
     _isDeltaFunctionBasis(false)
 { }
 
-afwMath::LinearCombinationKernel::LinearCombinationKernel(
+LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,
     std::vector<double> const &kernelParameters
 ) :
@@ -70,7 +69,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-afwMath::LinearCombinationKernel::LinearCombinationKernel(
+LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,
     Kernel::SpatialFunction const &spatialFunction
 ) :
@@ -85,7 +84,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-afwMath::LinearCombinationKernel::LinearCombinationKernel(
+LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,
     std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
 ) :
@@ -106,24 +105,24 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::clone() const {
+std::shared_ptr<Kernel> LinearCombinationKernel::clone() const {
     std::shared_ptr<Kernel> retPtr;
     if (this->isSpatiallyVarying()) {
-        retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
+        retPtr.reset(new LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
     } else {
-        retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_kernelParams));
+        retPtr.reset(new LinearCombinationKernel(this->_kernelList, this->_kernelParams));
     }
     retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
-void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
+void LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelList has no elements");
     }
 
-    afwGeom::Extent2I const dim0 = kernelList[0]->getDimensions();
-    afwGeom::Point2I const ctr0 = kernelList[0]->getCtr();
+    geom::Extent2I const dim0 = kernelList[0]->getDimensions();
+    geom::Point2I const ctr0 = kernelList[0]->getCtr();
 
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
         if (kernelList[ii]->getDimensions() != dim0) {
@@ -141,19 +140,19 @@ void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelL
     }
 }
 
-afwMath::KernelList const & afwMath::LinearCombinationKernel::getKernelList() const {
+KernelList const & LinearCombinationKernel::getKernelList() const {
     return _kernelList;
 }
 
-std::vector<double> afwMath::LinearCombinationKernel::getKernelSumList() const {
+std::vector<double> LinearCombinationKernel::getKernelSumList() const {
     return _kernelSumList;
 }
 
-std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() const {
+std::vector<double> LinearCombinationKernel::getKernelParameters() const {
     return _kernelParams;
 }
 
-std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::refactor() const {
+std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
     if (!this->isSpatiallyVarying()) {
         return std::shared_ptr<Kernel>();
     }
@@ -162,7 +161,7 @@ std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::refactor() co
         return std::shared_ptr<Kernel>();
     }
 
-    typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
+    typedef image::Image<Kernel::Pixel> KernelImage;
     typedef std::shared_ptr<KernelImage> KernelImagePtr;
     typedef std::vector<KernelImagePtr> KernelImageList;
 
@@ -177,8 +176,8 @@ std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::refactor() co
     KernelImage kernelImage(this->getDimensions());
     std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter =
         this->_spatialFunctionList.begin();
-    afwMath::KernelList::const_iterator kIter = _kernelList.begin();
-    afwMath::KernelList::const_iterator const kEnd = _kernelList.end();
+    KernelList::const_iterator kIter = _kernelList.begin();
+    KernelList::const_iterator const kEnd = _kernelList.end();
     for ( ; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
         if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
             return std::shared_ptr<Kernel>();
@@ -194,12 +193,12 @@ std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::refactor() co
     // create new kernel; the basis kernels are fixed kernels computed above
     // and the corresponding spatial model is the same function as the original kernel,
     // but with all coefficients zero except coeff_i = 1.0
-    afwMath::KernelList newKernelList;
+    KernelList newKernelList;
     newKernelList.reserve(nSpatialParameters);
     KernelImageList::iterator newKImPtrIter = newKernelImagePtrList.begin();
     KernelImageList::iterator const newKImPtrEnd = newKernelImagePtrList.end();
     for ( ; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
-        newKernelList.push_back(std::shared_ptr<Kernel>(new afwMath::FixedKernel(**newKImPtrIter)));
+        newKernelList.push_back(std::shared_ptr<Kernel>(new FixedKernel(**newKImPtrIter)));
     }
     std::vector<SpatialFunctionPtr> newSpFunctionPtrList;
     for (int i = 0; i < nSpatialParameters; ++i) {
@@ -215,7 +214,7 @@ std::shared_ptr<afwMath::Kernel> afwMath::LinearCombinationKernel::refactor() co
     return refactoredKernel;
 }
 
-std::string afwMath::LinearCombinationKernel::toString(std::string const& prefix) const {
+std::string LinearCombinationKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "LinearCombinationKernel:" << std::endl;
     os << prefix << "..Kernels:" << std::endl;
@@ -235,13 +234,13 @@ std::string afwMath::LinearCombinationKernel::toString(std::string const& prefix
 //
 // Protected Member Functions
 //
-double afwMath::LinearCombinationKernel::doComputeImage(
-    afwImage::Image<Pixel> &image,
+double LinearCombinationKernel::doComputeImage(
+    image::Image<Pixel> &image,
     bool doNormalize
 ) const {
     image = 0.0;
     double imSum = 0.0;
-    std::vector<std::shared_ptr<afwImage::Image<Pixel>>>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<std::shared_ptr<image::Image<Pixel>>>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
@@ -260,14 +259,14 @@ double afwMath::LinearCombinationKernel::doComputeImage(
     return imSum;
 }
 
-void afwMath::LinearCombinationKernel::setKernelParameter(unsigned int ind, double value) const {
+void LinearCombinationKernel::setKernelParameter(unsigned int ind, double value) const {
     this->_kernelParams[ind] = value;
 }
 
 //
 // Private Member Functions
 //
-void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
+void LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
     _kernelSumList.clear();
     _kernelImagePtrList.clear();
     _kernelList.clear();
@@ -275,19 +274,17 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
         kIter != kEnd; ++kIter) {
         std::shared_ptr<Kernel> basisKernelPtr = (*kIter)->clone();
-        if (dynamic_cast<afwMath::DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
+        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);
-        std::shared_ptr<afwImage::Image<Pixel>> kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
+        std::shared_ptr<image::Image<Pixel>> kernelImagePtr(new image::Image<Pixel>(this->getDimensions()));
         _kernelSumList.push_back(basisKernelPtr->computeImage(*kernelImagePtr, false));
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
 
 // ------ Persistence ---------------------------------------------------------------------------------------
-
-namespace lsst { namespace afw { namespace math {
 
 namespace {
 
@@ -385,4 +382,4 @@ void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
     }
 }
 
-}}} // namespace lsst::afw::math
+}}} // namespace math

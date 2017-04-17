@@ -260,7 +260,6 @@ namespace math {
             MaskedImageT::Mask::getPlaneBitMask("NO_DATA"),
             std::numeric_limits<VariancePixelT>::infinity());
     }
-}}}   // lsst::afw::math
 
 /*
  * Define inline functions
@@ -283,25 +282,25 @@ namespace math {
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
+inline typename OutImageT::SinglePixel convolveAtAPoint(
         typename InImageT::const_xy_locator inImageLocator,
-        lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
+        image::Image<Kernel::Pixel>::const_xy_locator kernelLocator,
         int kWidth,
         int kHeight)
 {
     typename OutImageT::SinglePixel outValue = 0;
     for (int kRow = 0; kRow != kHeight; ++kRow) {
-        for (lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kEnd =
-            kernelLocator + lsst::afw::image::detail::difference_type(kWidth, 0);
+        for (image::Image<Kernel::Pixel>::const_xy_locator kEnd =
+            kernelLocator + image::detail::difference_type(kWidth, 0);
             kernelLocator != kEnd; ++inImageLocator.x(), ++kernelLocator.x()) {
-            typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
+            typename Kernel::Pixel const kVal = kernelLocator[0];
             if (kVal != 0) {
                 outValue += *inImageLocator*kVal;
             }
         }
 
-        inImageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
-        kernelLocator += lsst::afw::image::detail::difference_type(-kWidth, 1);
+        inImageLocator  += image::detail::difference_type(-kWidth, 1);
+        kernelLocator += image::detail::difference_type(-kWidth, 1);
     }
 
     return outValue;
@@ -322,12 +321,12 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
+inline typename OutImageT::SinglePixel convolveAtAPoint(
         typename InImageT::const_xy_locator inImageLocator,
-        std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,
-        std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList)
+        std::vector<Kernel::Pixel> const &kernelXList,
+        std::vector<Kernel::Pixel> const &kernelYList)
 {
-    typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
+    typedef typename std::vector<Kernel::Pixel>::const_iterator k_iter;
 
     typedef typename OutImageT::SinglePixel OutT;
     OutT outValue = 0;
@@ -337,7 +336,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
         OutT outValueY = 0;
         for (k_iter kernelXIter = kernelXList.begin(), xEnd = kernelXList.end();
              kernelXIter != xEnd; ++kernelXIter, ++inImageLocator.x()) {
-            typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
+            typename Kernel::Pixel const kValX = *kernelXIter;
             if (kValX != 0) {
                 outValueY += *inImageLocator*kValX;
             }
@@ -348,11 +347,12 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
             outValue += outValueY*kValY;
         }
 
-        inImageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
+        inImageLocator += image::detail::difference_type(-kernelXList.size(), 1);
     }
 
     return outValue;
 }
 
+}}}   // lsst::afw::math
 
 #endif // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)

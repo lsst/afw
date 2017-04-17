@@ -1,4 +1,4 @@
-// -*- LSST-C++ -*-
+﻿// -*- LSST-C++ -*-
 
 /*
  * LSST Data Management System
@@ -40,10 +40,6 @@
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-namespace afwMath = lsst::afw::math;
-namespace mathDetail = lsst::afw::math::detail;
 
 namespace {
 
@@ -124,35 +120,37 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
     }
 }   // anonymous namespace
 
+namespace lsst { namespace afw { namespace math { namespace detail {
+
 template <typename OutImageT, typename InImageT>
-void mathDetail::basicConvolve(
+void basicConvolve(
         OutImageT &convolvedImage,
         InImageT const& inImage,
-        afwMath::Kernel const& kernel,
-        afwMath::ConvolutionControl const& convolutionControl)
+        math::Kernel const& kernel,
+        math::ConvolutionControl const& convolutionControl)
 {
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
-    if (IS_INSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
+    if (IS_INSTANCE(kernel, math::DeltaFunctionKernel)) {
         LOGL_DEBUG("TRACE3.afw.math.convolve.basicConvolve",
             "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
-        mathDetail::basicConvolve(convolvedImage, inImage,
-            *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
+        basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<math::DeltaFunctionKernel const*>(&kernel),
             convolutionControl);
         return;
-    } else if (IS_INSTANCE(kernel, afwMath::SeparableKernel)) {
+    } else if (IS_INSTANCE(kernel, math::SeparableKernel)) {
         LOGL_DEBUG("TRACE3.afw.math.convolve.basicConvolve",
             "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
-        mathDetail::basicConvolve(convolvedImage, inImage,
-            *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
+        basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<math::SeparableKernel const*>(&kernel),
             convolutionControl);
         return;
-    } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
+    } else if (IS_INSTANCE(kernel, math::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
         LOGL_DEBUG("TRACE3.afw.math.convolve.basicConvolve",
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
-        mathDetail::basicConvolve(convolvedImage, inImage,
-            *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
+        basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<math::LinearCombinationKernel const*>(&kernel),
             convolutionControl);
         return;
     }
@@ -161,22 +159,22 @@ void mathDetail::basicConvolve(
         // use linear interpolation
         LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
                    "generic basicConvolve: using linear interpolation");
-        mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
+        convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
 
     } else {
         // use brute force
         LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
                    "generic basicConvolve: using brute force");
-        mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,convolutionControl);
+        convolveWithBruteForce(convolvedImage, inImage, kernel,convolutionControl);
     }
 }
 
 template <typename OutImageT, typename InImageT>
-void mathDetail::basicConvolve(
+void basicConvolve(
         OutImageT& convolvedImage,
         InImageT const& inImage,
-        afwMath::DeltaFunctionKernel const &kernel,
-        afwMath::ConvolutionControl const &convolutionControl)
+        math::DeltaFunctionKernel const &kernel,
+        math::ConvolutionControl const &convolutionControl)
 {
     assert (!kernel.isSpatiallyVarying());
     assertDimensionsOK(convolvedImage, inImage, kernel);
@@ -202,22 +200,22 @@ void mathDetail::basicConvolve(
 }
 
 template <typename OutImageT, typename InImageT>
-void mathDetail::basicConvolve(
+void basicConvolve(
     OutImageT& convolvedImage,
     InImageT const& inImage,
-    afwMath::LinearCombinationKernel const& kernel,
-    afwMath::ConvolutionControl const & convolutionControl)
+    math::LinearCombinationKernel const& kernel,
+    math::ConvolutionControl const & convolutionControl)
 {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
         LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
             "basicConvolve for LinearCombinationKernel: spatially invariant; using brute force");
-        return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
+        return convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
     } else {
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
-        std::shared_ptr<afwMath::Kernel> refKernelPtr; // possibly refactored version of kernel
+        std::shared_ptr<Kernel> refKernelPtr; // possibly refactored version of kernel
         if (static_cast<int>(kernel.getNKernelParameters()) > kernel.getNSpatialParameters()) {
             // refactoring will speed convolution, so try it
             refKernelPtr = kernel.refactor();
@@ -231,24 +229,24 @@ void mathDetail::basicConvolve(
         if (convolutionControl.getMaxInterpolationDistance() > 1) {
             LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
                 "basicConvolve for LinearCombinationKernel: using interpolation");
-            return mathDetail::convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
+            return convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
         } else {
             LOGL_DEBUG("TRACE2.afw.math.convolve.basicConvolve",
                 "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute force");
-            return mathDetail::convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
+            return convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
                 convolutionControl.getDoNormalize());
         }
     }
 }
 
 template <typename OutImageT, typename InImageT>
-void mathDetail::basicConvolve(
+void basicConvolve(
         OutImageT& convolvedImage,
         InImageT const& inImage,
-        afwMath::SeparableKernel const &kernel,
-        afwMath::ConvolutionControl const & convolutionControl)
+        math::SeparableKernel const &kernel,
+        math::ConvolutionControl const & convolutionControl)
 {
-    typedef typename afwMath::Kernel::Pixel KernelPixel;
+    typedef typename math::Kernel::Pixel KernelPixel;
     typedef typename std::vector<KernelPixel> KernelVector;
     typedef KernelVector::const_iterator KernelIterator;
     typedef typename InImageT::const_x_iterator InXIterator;
@@ -259,8 +257,8 @@ void mathDetail::basicConvolve(
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
 
-    afwGeom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
-    afwGeom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
+    geom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
+    geom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
 
     KernelVector kernelXVec(kernel.getWidth());
     KernelVector kernelYVec(kernel.getHeight());
@@ -270,19 +268,19 @@ void mathDetail::basicConvolve(
             "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = goodBBox.getMinY(); cnvY <= goodBBox.getMaxY(); ++cnvY) {
-            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
+            double const rowPos = inImage.indexToPosition(cnvY, image::Y);
 
             InXYLocator inImLoc = inImage.xy_at(0, cnvY - goodBBox.getMinY());
             OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + goodBBox.getMinX();
             for (int cnvX = goodBBox.getMinX(); cnvX <= goodBBox.getMaxX();
                 ++cnvX, ++inImLoc.x(), ++cnvXIter) {
-                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
+                double const colPos = inImage.indexToPosition(cnvX, image::X);
 
                 KernelPixel kSum = kernel.computeVectors(kernelXVec, kernelYVec,
                     convolutionControl.getDoNormalize(), colPos, rowPos);
 
                 // why does this trigger warnings? It did not in the past.
-                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelXVec, kernelYVec);
+                *cnvXIter = math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelXVec, kernelYVec);
                 if (convolutionControl.getDoNormalize()) {
                     *cnvXIter = *cnvXIter/kSum;
                 }
@@ -306,7 +304,7 @@ void mathDetail::basicConvolve(
         KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
         // buffer for x-convolved data
-        OutImageT buffer(afwGeom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
+        OutImageT buffer(geom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
 
         // pre-fill x-convolved data buffer with all but one row of data
         int yInd = 0; // during initial fill bufY = inImageY
@@ -355,16 +353,16 @@ void mathDetail::basicConvolve(
 }
 
 template <typename OutImageT, typename InImageT>
-void mathDetail::convolveWithBruteForce(
+void convolveWithBruteForce(
         OutImageT &convolvedImage,
         InImageT const& inImage,
-        afwMath::Kernel const& kernel,
-        afwMath::ConvolutionControl const & convolutionControl)
+        math::Kernel const& kernel,
+        math::ConvolutionControl const & convolutionControl)
 {
     bool doNormalize=convolutionControl.getDoNormalize();
 
-    typedef typename afwMath::Kernel::Pixel KernelPixel;
-    typedef afwImage::Image<KernelPixel> KernelImage;
+    typedef typename math::Kernel::Pixel KernelPixel;
+    typedef image::Image<KernelPixel> KernelImage;
 
     typedef typename KernelImage::const_x_iterator KernelXIterator;
     typedef typename KernelImage::const_xy_locator KernelXYLocator;
@@ -394,15 +392,15 @@ void mathDetail::convolveWithBruteForce(
             "convolveWithBruteForce: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
+            double const rowPos = inImage.indexToPosition(cnvY, image::Y);
 
             InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
-                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
+                double const colPos = inImage.indexToPosition(cnvX, image::X);
 
                 KernelPixel kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
-                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(
+                *cnvXIter = math::convolveAtAPoint<OutImageT, InImageT>(
                     inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
                     *cnvXIter = *cnvXIter/kSum;
@@ -440,26 +438,26 @@ void mathDetail::convolveWithBruteForce(
  * Explicit instantiation
  */
 /// @cond
-#define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
-#define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
+#define IMAGE(PIXTYPE) image::Image<PIXTYPE>
+#define MASKEDIMAGE(PIXTYPE) image::MaskedImage<PIXTYPE, image::MaskPixel, image::VariancePixel>
 #define NL /* */
 // Instantiate Image or MaskedImage versions
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
-    template void mathDetail::basicConvolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
-            afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::basicConvolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::DeltaFunctionKernel const&, \
-            afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::basicConvolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::LinearCombinationKernel const&, \
-            afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::basicConvolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::SeparableKernel const&, \
-            afwMath::ConvolutionControl const&); NL \
-    template void mathDetail::convolveWithBruteForce( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
-            afwMath::ConvolutionControl const&);
+    template void basicConvolve( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::Kernel const&, \
+            math::ConvolutionControl const&); NL \
+    template void basicConvolve( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::DeltaFunctionKernel const&, \
+            math::ConvolutionControl const&); NL \
+    template void basicConvolve( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::LinearCombinationKernel const&, \
+            math::ConvolutionControl const&); NL \
+    template void basicConvolve( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::SeparableKernel const&, \
+            math::ConvolutionControl const&); NL \
+    template void convolveWithBruteForce( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::Kernel const&, \
+            math::ConvolutionControl const&);
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
@@ -475,3 +473,5 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
+
+}}}}    // end lsst::afw::math::detail

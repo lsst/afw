@@ -28,8 +28,6 @@
 #include <boost/format.hpp>
 #include <map>
 
-namespace afwGeom = lsst::afw::geom;
-
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 namespace {
@@ -113,7 +111,7 @@ void BaseCore::scale(double factor) {
 double BaseCore::getArea() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
-    return a * b * afwGeom::PI;
+    return a * b * geom::PI;
 }
 
 double BaseCore::getDeterminantRadius() const {

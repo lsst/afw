@@ -28,17 +28,16 @@
 #include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwGeom = lsst::afw::geom;
-namespace afwMath = lsst::afw::math;
-namespace afwImage = lsst::afw::image;
 
-afwMath::AnalyticKernel::AnalyticKernel()
+namespace lsst { namespace afw { namespace math {
+
+AnalyticKernel::AnalyticKernel()
 :
     Kernel(),
     _kernelFunctionPtr()
 {}
 
-afwMath::AnalyticKernel::AnalyticKernel(
+AnalyticKernel::AnalyticKernel(
     int width,
     int height,
     KernelFunction const &kernelFunction,
@@ -48,7 +47,7 @@ afwMath::AnalyticKernel::AnalyticKernel(
     _kernelFunctionPtr(kernelFunction.clone())
 {}
 
-afwMath::AnalyticKernel::AnalyticKernel(
+AnalyticKernel::AnalyticKernel(
     int width,
     int height,
     KernelFunction const &kernelFunction,
@@ -65,39 +64,39 @@ afwMath::AnalyticKernel::AnalyticKernel(
     }
 }
 
-std::shared_ptr<afwMath::Kernel> afwMath::AnalyticKernel::clone() const {
-    std::shared_ptr<afwMath::Kernel> retPtr;
+std::shared_ptr<Kernel> AnalyticKernel::clone() const {
+    std::shared_ptr<Kernel> retPtr;
     if (this->isSpatiallyVarying()) {
-        retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
+        retPtr.reset(new AnalyticKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelFunctionPtr), this->_spatialFunctionList));
     } else {
-        retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
+        retPtr.reset(new AnalyticKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelFunctionPtr)));
     }
     retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
-double afwMath::AnalyticKernel::computeImage(
-    lsst::afw::image::Image<Pixel> &image,
+double AnalyticKernel::computeImage(
+    image::Image<Pixel> &image,
     bool doNormalize,
     double x,
     double y
 ) const {
-    afwGeom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
-    image.setXY0(afwGeom::Point2I(-afwGeom::Extent2I(getCtr()+ llBorder)));
+    geom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
+    image.setXY0(geom::Point2I(-geom::Extent2I(getCtr()+ llBorder)));
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
     }
     return doComputeImage(image, doNormalize);
 }
 
-afwMath::AnalyticKernel::KernelFunctionPtr afwMath::AnalyticKernel::getKernelFunction(
+AnalyticKernel::KernelFunctionPtr AnalyticKernel::getKernelFunction(
 ) const {
     return _kernelFunctionPtr->clone();
 }
 
-std::string afwMath::AnalyticKernel::toString(std::string const& prefix) const {
+std::string AnalyticKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "AnalyticKernel:" << std::endl;
     os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None")
@@ -106,23 +105,23 @@ std::string afwMath::AnalyticKernel::toString(std::string const& prefix) const {
     return os.str();
 }
 
-std::vector<double> afwMath::AnalyticKernel::getKernelParameters() const {
+std::vector<double> AnalyticKernel::getKernelParameters() const {
     return _kernelFunctionPtr->getParameters();
 }
 
 //
 // Protected Member Functions
 //
-double afwMath::AnalyticKernel::doComputeImage(
-    afwImage::Image<Pixel> &image,
+double AnalyticKernel::doComputeImage(
+    image::Image<Pixel> &image,
     bool doNormalize
 ) const {
     double imSum = 0;
     for (int y = 0; y != image.getHeight(); ++y) {
-        double const fy = image.indexToPosition(y, afwImage::Y);
-        afwImage::Image<Pixel>::x_iterator ptr = image.row_begin(y);
+        double const fy = image.indexToPosition(y, image::Y);
+        image::Image<Pixel>::x_iterator ptr = image.row_begin(y);
         for (int x = 0; x != image.getWidth(); ++x, ++ptr) {
-            double const fx = image.indexToPosition(x, afwImage::X);
+            double const fx = image.indexToPosition(x, image::X);
             Pixel const pixelVal = (*_kernelFunctionPtr)(fx, fy);
             *ptr = pixelVal;
             imSum += pixelVal;
@@ -140,13 +139,11 @@ double afwMath::AnalyticKernel::doComputeImage(
     return imSum;
 }
 
-void afwMath::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
+void AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
     _kernelFunctionPtr->setParameter(ind, value);
 }
 
 // ------ Persistence ---------------------------------------------------------------------------------------
-
-namespace lsst { namespace afw { namespace math {
 
 namespace {
 
@@ -215,4 +212,4 @@ void AnalyticKernel::write(OutputArchiveHandle & handle) const {
     record->set(keys.kernelFunction, handle.put(_kernelFunctionPtr.get()));
 }
 
-}}} // namespace lsst::afw::math
+}}} // namespace math

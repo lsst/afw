@@ -29,14 +29,13 @@
 #include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwMath = lsst::afw::math;
-namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
-afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
+namespace lsst { namespace afw { namespace math {
+
+DeltaFunctionKernel::DeltaFunctionKernel(
     int width,
     int height,
-    afwGeom::Point2I const &point
+    geom::Point2I const &point
 ) :
     Kernel(width, height, 0),
     _pixel(point)
@@ -49,14 +48,14 @@ afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     }
 }
 
-std::shared_ptr<afwMath::Kernel> afwMath::DeltaFunctionKernel::clone() const {
-    std::shared_ptr<afwMath::Kernel> retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
+std::shared_ptr<Kernel> DeltaFunctionKernel::clone() const {
+    std::shared_ptr<Kernel> retPtr(new DeltaFunctionKernel(this->getWidth(), this->getHeight(),
         this->_pixel));
     retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
-std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) const {
+std::string DeltaFunctionKernel::toString(std::string const& prefix) const {
     const int pixelX = getPixel().getX(); // active pixel in Kernel
     const int pixelY = getPixel().getY();
 
@@ -67,8 +66,8 @@ std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) co
     return os.str();
 }
 
-double afwMath::DeltaFunctionKernel::doComputeImage(
-    afwImage::Image<Pixel> &image,
+double DeltaFunctionKernel::doComputeImage(
+    image::Image<Pixel> &image,
     bool
 ) const {
     const int pixelX = getPixel().getX(); // active pixel in Kernel
@@ -81,8 +80,6 @@ double afwMath::DeltaFunctionKernel::doComputeImage(
 }
 
 // ------ Persistence ---------------------------------------------------------------------------------------
-
-namespace lsst { namespace afw { namespace math {
 
 namespace {
 

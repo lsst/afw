@@ -29,25 +29,24 @@
 #include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwGeom = lsst::afw::geom;
-namespace afwMath = lsst::afw::math;
-namespace afwImage = lsst::afw::image;
 
-afwMath::FixedKernel::FixedKernel()
+namespace lsst { namespace afw { namespace math {
+
+FixedKernel::FixedKernel()
 :
     Kernel(),
     _image(),
     _sum(0) {
 }
 
-afwMath::FixedKernel::FixedKernel(
-    afwImage::Image<Pixel> const &image
+FixedKernel::FixedKernel(
+    image::Image<Pixel> const &image
 ) :
     Kernel(image.getWidth(), image.getHeight(), 0),
     _image(image, true),
     _sum(0) {
 
-    typedef afwImage::Image<Pixel>::x_iterator XIter;
+    typedef image::Image<Pixel>::x_iterator XIter;
     double imSum = 0.0;
     for (int y = 0; y != image.getHeight(); ++y) {
         for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
@@ -57,9 +56,9 @@ afwMath::FixedKernel::FixedKernel(
     this->_sum = imSum;
 }
 
-afwMath::FixedKernel::FixedKernel(
-    afwMath::Kernel const& kernel,
-    afwGeom::Point2D const& pos
+FixedKernel::FixedKernel(
+    Kernel const& kernel,
+    geom::Point2D const& pos
 ) :
     Kernel(kernel.getWidth(), kernel.getHeight(), 0),
     _image(kernel.getDimensions()),
@@ -67,14 +66,14 @@ afwMath::FixedKernel::FixedKernel(
     _sum = kernel.computeImage(_image, false, pos[0], pos[1]);
 }
 
-std::shared_ptr<afwMath::Kernel> afwMath::FixedKernel::clone() const {
-    std::shared_ptr<afwMath::Kernel> retPtr(new afwMath::FixedKernel(_image));
+std::shared_ptr<Kernel> FixedKernel::clone() const {
+    std::shared_ptr<Kernel> retPtr(new FixedKernel(_image));
     retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
-double afwMath::FixedKernel::doComputeImage(
-    afwImage::Image<Pixel> &image,
+double FixedKernel::doComputeImage(
+    image::Image<Pixel> &image,
     bool doNormalize
 ) const {
     double multFactor = 1.0;
@@ -87,7 +86,7 @@ double afwMath::FixedKernel::doComputeImage(
         imSum = 1.0;
     }
 
-    typedef afwImage::Image<Pixel>::x_iterator XIter;
+    typedef image::Image<Pixel>::x_iterator XIter;
 
     for (int y = 0; y != this->getHeight(); ++y) {
         for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y), kPtr = this->_image.row_begin(y);
@@ -99,7 +98,7 @@ double afwMath::FixedKernel::doComputeImage(
     return imSum;
 }
 
-std::string afwMath::FixedKernel::toString(std::string const& prefix) const {
+std::string FixedKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "FixedKernel:" << std::endl;
     os << prefix << "..sum: " << _sum << std::endl;
@@ -108,8 +107,6 @@ std::string afwMath::FixedKernel::toString(std::string const& prefix) const {
 }
 
 // ------ Persistence ---------------------------------------------------------------------------------------
-
-namespace lsst { namespace afw { namespace math {
 
 namespace {
 

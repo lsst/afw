@@ -476,7 +476,6 @@ namespace detail {
             InImageT const &inImage,
             KernelImagesForRegion const &region,
             ConvolveWithInterpolationWorkingImages &workingImages);
-}}}}   // lsst::afw::math::detail
 
 /*
  * Define inline functions
@@ -489,7 +488,7 @@ namespace detail {
  *
  * @warning: no range checking
  */
-inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregionLength(
+inline int KernelImagesForRegion::_computeNextSubregionLength(
     int length,     ///< length of region
     int nDivisions) ///< number of divisions of region
 {
@@ -503,7 +502,7 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
  * @throws lsst::pex::exceptions::InvalidParameterError if image pointer is null
  * @throws lsst::pex::exceptions::InvalidParameterError if image has the wrong dimensions
  */
-inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
+inline void KernelImagesForRegion::_insertImage(
         Location location,      ///< location at which to insert image
         ImagePtr imagePtr)      ///< image to insert
 const {
@@ -519,5 +518,6 @@ const {
         _imagePtrList[location] = imagePtr;
     }
 }
+}}}}   // lsst::afw::math::detail
 
 #endif // !defined(LSST_AFW_MATH_DETAIL_CONVOLVE_H)

@@ -71,7 +71,7 @@ private:
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     Footprint const& foot,
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
+    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
     HeavyFootprintCtrl const *ctrl
         ) : Footprint(foot),
             _image(ndarray::allocate(ndarray::makeVector(foot.getArea()))),
@@ -123,7 +123,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage
+        image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage
                                                                     ) const
 {
     getSpans()->unflatten(mimage.getImage()->getArray(), _image, mimage.getXY0());
@@ -133,7 +133,7 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
-    lsst::afw::image::Image<ImagePixelT> & image) const
+    image::Image<ImagePixelT> & image) const
 {
     getSpans()->unflatten(image.getArray(), _image, image.getXY0());
 }

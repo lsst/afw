@@ -43,10 +43,8 @@
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-namespace afwMath = lsst::afw::math;
-namespace mathDetail = lsst::afw::math::detail;
+
+namespace lsst { namespace afw { namespace math {
 
 namespace {
 
@@ -65,10 +63,10 @@ namespace {
     template <typename OutImageT, typename InImageT>
     inline void setEdgePixels(
             OutImageT& outImage,
-            afwMath::Kernel const &kernel,
+            Kernel const &kernel,
             InImageT const &inImage,
             bool doCopyEdge,
-            lsst::afw::image::detail::Image_tag)
+            image::detail::Image_tag)
     {
         const unsigned int imWidth = outImage.getWidth();
         const unsigned int imHeight = outImage.getHeight();
@@ -77,10 +75,10 @@ namespace {
         const unsigned int kCtrX = kernel.getCtrX();
         const unsigned int kCtrY = kernel.getCtrY();
 
-        const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
-            typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+        const typename OutImageT::SinglePixel edgePixel = math::edgePixel<OutImageT>(
+            typename image::detail::image_traits<OutImageT>::image_category()
         );
-        std::vector<afwGeom::Box2I> bboxList;
+        std::vector<geom::Box2I> bboxList;
 
         // create a list of bounding boxes describing edge regions, in this order:
         // bottom edge, top edge (both edge to edge),
@@ -88,26 +86,26 @@ namespace {
         int const numHeight = kHeight - (1 + kCtrY);
         int const numWidth = kWidth - (1 + kCtrX);
         bboxList.push_back(
-            afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(imWidth, kCtrY))
+            geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY))
         );
         bboxList.push_back(
-            afwGeom::Box2I(afwGeom::Point2I(0, imHeight - numHeight), afwGeom::Extent2I(imWidth, numHeight))
+            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight))
         );
         bboxList.push_back(
-            afwGeom::Box2I(afwGeom::Point2I(0, kCtrY), afwGeom::Extent2I(kCtrX, imHeight + 1 - kHeight))
+            geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight))
         );
         bboxList.push_back(
-            afwGeom::Box2I(afwGeom::Point2I(imWidth - numWidth, kCtrY), afwGeom::Extent2I(numWidth, imHeight + 1 - kHeight))
+            geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY), geom::Extent2I(numWidth, imHeight + 1 - kHeight))
         );
 
-        for (std::vector<afwGeom::Box2I>::const_iterator bboxIter = bboxList.begin();
+        for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter
         ) {
-            OutImageT outView(outImage, *bboxIter, afwImage::LOCAL);
+            OutImageT outView(outImage, *bboxIter, image::LOCAL);
             if (doCopyEdge) {
                 // note: set only works with data of the same type
                 // so convert the input image to output format
-                outView.assign(OutImageT(InImageT(inImage, *bboxIter, afwImage::LOCAL), true));
+                outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
             } else {
                 outView = edgePixel;
             }
@@ -129,10 +127,10 @@ namespace {
     template <typename OutImageT, typename InImageT>
     inline void setEdgePixels(
             OutImageT& outImage,
-            afwMath::Kernel const &kernel,
+            Kernel const &kernel,
             InImageT const &inImage,
             bool doCopyEdge,
-            lsst::afw::image::detail::MaskedImage_tag)
+            image::detail::MaskedImage_tag)
     {
         const unsigned int imWidth = outImage.getWidth();
         const unsigned int imHeight = outImage.getHeight();
@@ -141,10 +139,10 @@ namespace {
         const unsigned int kCtrX = kernel.getCtrX();
         const unsigned int kCtrY = kernel.getCtrY();
 
-        const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
-            typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+        const typename OutImageT::SinglePixel edgePixel = math::edgePixel<OutImageT>(
+            typename image::detail::image_traits<OutImageT>::image_category()
         );
-        std::vector<afwGeom::Box2I> bboxList;
+        std::vector<geom::Box2I> bboxList;
 
         // create a list of bounding boxes describing edge regions, in this order:
         // bottom edge, top edge (both edge to edge),
@@ -152,38 +150,38 @@ namespace {
         int const numHeight = kHeight - (1 + kCtrY);
         int const numWidth = kWidth - (1 + kCtrX);
         bboxList.push_back(
-            afwGeom::Box2I(
-                afwGeom::Point2I(0, 0),
-                afwGeom::Extent2I(imWidth, kCtrY)
+            geom::Box2I(
+                geom::Point2I(0, 0),
+                geom::Extent2I(imWidth, kCtrY)
             )
         );
         bboxList.push_back(
-            afwGeom::Box2I(
-                afwGeom::Point2I(0, imHeight - numHeight),
-                afwGeom::Extent2I(imWidth, numHeight)
+            geom::Box2I(
+                geom::Point2I(0, imHeight - numHeight),
+                geom::Extent2I(imWidth, numHeight)
             )
         );
         bboxList.push_back(
-            afwGeom::Box2I(
-                afwGeom::Point2I(0, kCtrY),
-                afwGeom::Extent2I(kCtrX, imHeight + 1 - kHeight)
+            geom::Box2I(
+                geom::Point2I(0, kCtrY),
+                geom::Extent2I(kCtrX, imHeight + 1 - kHeight)
             )
         );
         bboxList.push_back(
-            afwGeom::Box2I(
-                afwGeom::Point2I(imWidth - numWidth, kCtrY),
-                afwGeom::Extent2I(numWidth, imHeight + 1 - kHeight)
+            geom::Box2I(
+                geom::Point2I(imWidth - numWidth, kCtrY),
+                geom::Extent2I(numWidth, imHeight + 1 - kHeight)
             )
         );
 
-        afwImage::MaskPixel const edgeMask = afwImage::Mask<afwImage::MaskPixel>::getPlaneBitMask("EDGE");
-        for (std::vector<afwGeom::Box2I>::const_iterator bboxIter = bboxList.begin();
+        image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
+        for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter) {
-            OutImageT outView(outImage, *bboxIter, afwImage::LOCAL);
+            OutImageT outView(outImage, *bboxIter, image::LOCAL);
             if (doCopyEdge) {
                 // note: set only works with data of the same type
                 // so convert the input image to output format
-                outView.assign(OutImageT(InImageT(inImage, *bboxIter, afwImage::LOCAL), true));
+                outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
                 *(outView.getMask()) |= edgeMask;
             } else {
                 outView = edgePixel;
@@ -194,7 +192,7 @@ namespace {
 }   // anonymous namespace
 
 template <typename OutImageT, typename InImageT>
-void afwMath::scaledPlus(
+void scaledPlus(
         OutImageT &outImage,
         double c1,
         InImageT const &inImage1,
@@ -229,21 +227,21 @@ void afwMath::scaledPlus(
 }
 
 template <typename OutImageT, typename InImageT, typename KernelT>
-void afwMath::convolve(
+void convolve(
         OutImageT& convolvedImage,
         InImageT const& inImage,
         KernelT const& kernel,
         ConvolutionControl const& convolutionControl)
 {
-    mathDetail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
+    detail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
     setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
-        typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+        typename image::detail::image_traits<OutImageT>::image_category()
     );
     convolvedImage.setXY0(inImage.getXY0());
 }
 
 template <typename OutImageT, typename InImageT, typename KernelT>
-void afwMath::convolve(
+void convolve(
         OutImageT& convolvedImage,
         InImageT const& inImage,
         KernelT const& kernel,
@@ -253,7 +251,7 @@ void afwMath::convolve(
     ConvolutionControl convolutionControl;
     convolutionControl.setDoNormalize(doNormalize);
     convolutionControl.setDoCopyEdge(doCopyEdge);
-    afwMath::convolve(convolvedImage, inImage, kernel, convolutionControl);
+    convolve(convolvedImage, inImage, kernel, convolutionControl);
 }
 
 
@@ -266,8 +264,8 @@ void afwMath::convolve(
  * This code needs to be compiled with full optimization, and there's no reason why
  * it should be instantiated in the swig wrappers.
  */
-#define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
-#define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
+#define IMAGE(PIXTYPE) image::Image<PIXTYPE>
+#define MASKEDIMAGE(PIXTYPE) image::MaskedImage<PIXTYPE, image::MaskPixel, image::VariancePixel>
 //
 // Next a macro to generate needed instantiations for IMGMACRO (either IMAGE or MASKEDIMAGE)
 // and the specified pixel types
@@ -282,9 +280,9 @@ void afwMath::convolve(
 // KERNELTYPE = a kernel class
 //
 #define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE) \
-    template void afwMath::convolve( \
+    template void convolve( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, bool); NL \
-    template void afwMath::convolve( \
+    template void convolve( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, ConvolutionControl const&); NL
 //
 // Instantiate Image or MaskedImage versions of all functions defined in this file.
@@ -292,14 +290,14 @@ void afwMath::convolve(
 // IMGMACRO = IMAGE or MASKEDIMAGE
 //
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
-    template void afwMath::scaledPlus( \
+    template void scaledPlus( \
         IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double, IMGMACRO(INPIXTYPE) const&); NL \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::AnalyticKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::DeltaFunctionKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::FixedKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::LinearCombinationKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::SeparableKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::Kernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, AnalyticKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, DeltaFunctionKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, FixedKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, LinearCombinationKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, SeparableKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, Kernel) \
 //
 // Instantiate all functions defined in this file for one specific output and input pixel type
 //
@@ -319,3 +317,5 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
+
+}}} // end math

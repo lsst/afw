@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+﻿// -*- lsst-c++ -*-
 
 /*
  * LSST Data Management System
@@ -49,25 +49,21 @@
 #include "lsst/afw/table/aggregates.h"
 
 namespace except = lsst::pex::exceptions;
-namespace afwImg = lsst::afw::image;
-namespace afwCoord = lsst::afw::coord;
-namespace afwGeom = lsst::afw::geom;
-
 
 using namespace std;
 
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::daf::base::PropertyList PropertyList;
-typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::Point2D GeomPoint;
 typedef std::shared_ptr<lsst::afw::coord::Coord> CoordPtr;
-typedef lsst::afw::image::XYTransformFromWcsPair XYTransformFromWcsPair;
 
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
 
+namespace lsst { namespace afw { namespace image {
+
 //Set internal params for wcslib
-void lsst::afw::image::Wcs::_setWcslibParams()
+void Wcs::_setWcslibParams()
 {
     _wcsfixCtrl =                       // ctrl for wcsfix
         2;                              // Translate "H" to "h"
@@ -85,17 +81,17 @@ const int fitsToLsstPixels = -1;
 //
 
 
-lsst::afw::image::Wcs::Wcs() :
+Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
+    _coordSystem(coord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
     _initWcs();
 }
 
 
-Wcs::Wcs(std::shared_ptr<lsst::daf::base::PropertySet const> const& fitsMetadata):
+Wcs::Wcs(std::shared_ptr<daf::base::PropertySet const> const& fitsMetadata):
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL),
     _nWcsInfo(0),
@@ -103,7 +99,7 @@ Wcs::Wcs(std::shared_ptr<lsst::daf::base::PropertySet const> const& fitsMetadata
     _wcsfixCtrl(0),
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
+    _coordSystem(coord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
 
@@ -118,13 +114,13 @@ void Wcs::_initWcs()
 
     if (_wcsInfo) {
         if (ctype1[0] == 'G') {
-            _coordSystem = afwCoord::GALACTIC;
+            _coordSystem = coord::GALACTIC;
             _skyAxesSwapped = (ctype1[2] == 'A'); // GLAT instead of GLON
         } else if (ctype1[0] == 'E') {
-            _coordSystem = afwCoord::ECLIPTIC;
+            _coordSystem = coord::ECLIPTIC;
             _skyAxesSwapped = (ctype1[2] == 'A'); // ELAT instead of ELON
         } else {
-            _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+            _coordSystem = coord::makeCoordEnum(_wcsInfo->radesys);
             _skyAxesSwapped = (ctype1[0] == 'D'); // DEC instead of RA
         }
 
@@ -152,7 +148,7 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
     _wcsfixCtrl(0),
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
+    _coordSystem(coord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
     initWcsLib(crval, crpix, CD,
@@ -163,7 +159,7 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
 }
 
 
-void Wcs::initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const> const& header){
+void Wcs::initWcsLibFromFits(std::shared_ptr<daf::base::PropertySet const> const& header){
     /*
      * Access control for the input header
      *
@@ -173,9 +169,9 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const>
     class HeaderAccess {
     public:
         // Return a readable version of the metadata
-        std::shared_ptr<lsst::daf::base::PropertySet const> const& toRead() { return _constHeader; }
+        std::shared_ptr<daf::base::PropertySet const> const& toRead() { return _constHeader; }
         // Return a writable version of the metadata
-        std::shared_ptr<lsst::daf::base::PropertySet> const& toWrite() {
+        std::shared_ptr<daf::base::PropertySet> const& toWrite() {
             if (!_hackHeader) {
                 _hackHeader = _constHeader->deepCopy();
                 _constHeader = _hackHeader;
@@ -184,12 +180,12 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const>
         }
 
         // Ctor
-        HeaderAccess(std::shared_ptr<lsst::daf::base::PropertySet const> const& header) :
+        HeaderAccess(std::shared_ptr<daf::base::PropertySet const> const& header) :
             _constHeader(header), _hackHeader() {}
 
     private:
-        std::shared_ptr<lsst::daf::base::PropertySet const> _constHeader;
-        std::shared_ptr<lsst::daf::base::PropertySet> _hackHeader;
+        std::shared_ptr<daf::base::PropertySet const> _constHeader;
+        std::shared_ptr<daf::base::PropertySet> _hackHeader;
     };
 
     HeaderAccess access(header);
@@ -208,7 +204,7 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const>
     }
 
     //Check header isn't empty
-    int nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead());
+    int nCards = formatters::countFitsHeaderCards(access.toRead());
     if (nCards <= 0) {
         string msg = "Could not parse FITS WCS: no header cards found";
         throw LSST_EXCEPT(except::InvalidParameterError, msg);
@@ -268,12 +264,12 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const>
 
     //Pass the header into wcslib's formatter to extract & setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
-    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(access.toRead());
+    std::string metadataStr = formatters::formatFitsProperties(access.toRead());
     // We own the data, and wcslib is slack about constness, so no qualms with casting away const
     char *hdrString = const_cast<char*>(metadataStr.c_str());
     //printf("wcspih string:\n%s\n", hdrString);
 
-    nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead()); // we may have dropped some
+    nCards = formatters::countFitsHeaderCards(access.toRead()); // we may have dropped some
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
     if (pihStatus != 0) {
@@ -435,7 +431,7 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
 }
 
 
-Wcs::Wcs(afwImg::Wcs const & rhs) :
+Wcs::Wcs(Wcs const & rhs) :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL),
     _nWcsInfo(rhs._nWcsInfo),
@@ -443,13 +439,13 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _wcsfixCtrl(rhs._wcsfixCtrl),
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject),
-    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
+    _coordSystem(coord::UNKNOWN)  // set by _initWcs
 {
 
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryError, "Cannot allocate WCS info");
+            throw LSST_EXCEPT(pex::exceptions::MemoryError, "Cannot allocate WCS info");
         }
 
         int alloc = 1;                  //Unconditionally allocate memory when calling
@@ -458,7 +454,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
             int status = wcscopy(alloc, &rhs._wcsInfo[i], &_wcsInfo[i]);
             if (status != 0) {
                 wcsvfree(&i, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryError,
+                throw LSST_EXCEPT(pex::exceptions::MemoryError,
                                   (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
                                    status % wcs_errmsg[status]).str());
             }
@@ -518,10 +514,10 @@ bool Wcs::_isSubset(Wcs const & rhs) const {
         compareArrays(_wcsInfo->cd, rhs._wcsInfo->cd, 4) &&
         compareStringArrays(_wcsInfo->cunit, rhs._wcsInfo->cunit, 2) &&
         compareStringArrays(_wcsInfo->ctype, rhs._wcsInfo->ctype, 2) &&
-        skyToPixel(_wcsInfo->crval[0] * afwGeom::degrees,
-                   _wcsInfo->crval[1] * afwGeom::degrees) ==
-        rhs.skyToPixel(_wcsInfo->crval[0] * afwGeom::degrees,
-                       _wcsInfo->crval[1] * afwGeom::degrees) &&
+        skyToPixel(_wcsInfo->crval[0] * geom::degrees,
+                   _wcsInfo->crval[1] * geom::degrees) ==
+        rhs.skyToPixel(_wcsInfo->crval[0] * geom::degrees,
+                       _wcsInfo->crval[1] * geom::degrees) &&
         *pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]) ==
         *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
 }
@@ -543,7 +539,7 @@ std::shared_ptr<Wcs> Wcs::clone(void) const {
 
 CoordPtr Wcs::getSkyOrigin() const {
     assert(_wcsInfo);
-    return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees, _wcsInfo->crval[1] * afwGeom::degrees);
+    return makeCorrectCoord(_wcsInfo->crval[0] * geom::degrees, _wcsInfo->crval[1] * geom::degrees);
 }
 
 GeomPoint Wcs::getPixelOrigin() const {
@@ -551,7 +547,7 @@ GeomPoint Wcs::getPixelOrigin() const {
     //Convert from fits units back to lsst units
     double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
     double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
-    return afwGeom::Point2D(p1, p2);
+    return geom::Point2D(p1, p2);
 }
 
 Eigen::Matrix2d Wcs::getCDMatrix() const {
@@ -572,7 +568,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
     return C;
 }
 
-void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const {
+void Wcs::flipImage(int flipLR, int flipTB, geom::Extent2I dimensions) const {
     assert(_wcsInfo);
 
     int const naxis = _wcsInfo->naxis;
@@ -595,7 +591,7 @@ void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const 
     _wcsInfo->flag = 0;
 }
 
-void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
+void Wcs::rotateImageBy90(int nQuarter, geom::Extent2I dimensions) const {
     assert(_wcsInfo);
 
     while (nQuarter < 0 ) {
@@ -650,7 +646,7 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
 }
 
 std::shared_ptr<PropertyList> Wcs::getFitsMetadata() const {
-    return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
+    return formatters::WcsFormatter::generatePropertySet(*this);
 }
 
 bool Wcs::isFlipped() const {
@@ -683,16 +679,16 @@ double Wcs::pixArea(GeomPoint pix00
     const double side = 1;             // length of the square's sides in pixels
 
     // Work in 3-space to avoid RA wrapping and pole issues.
-    afwGeom::Point3D v0 = pixelToSky(pix00)->getVector();
+    geom::Point3D v0 = pixelToSky(pix00)->getVector();
 
     // Step by "side" in x and y pixel directions...
     GeomPoint px(pix00);
     GeomPoint py(pix00);
-    px.shift(afwGeom::Extent2D(side, 0));
-    py.shift(afwGeom::Extent2D(0, side));
+    px.shift(geom::Extent2D(side, 0));
+    py.shift(geom::Extent2D(0, side));
     // Push the points through the WCS, and find difference in 3-space.
-    afwGeom::Extent3D dx = pixelToSky(px)->getVector() - v0;
-    afwGeom::Extent3D dy = pixelToSky(py)->getVector() - v0;
+    geom::Extent3D dx = pixelToSky(px)->getVector() - v0;
+    geom::Extent3D dy = pixelToSky(py)->getVector() - v0;
 
     // Compute |cross product| = area of parallelogram with sides dx,dy
     // FIXME -- this is slightly incorrect -- it's making the small-angle
@@ -703,15 +699,15 @@ double Wcs::pixArea(GeomPoint pix00
                        square(dx[2]*dy[0] - dx[0]*dy[2]) +
                        square(dx[0]*dy[1] - dx[1]*dy[0]));
 
-    return area / square(side) * square(180. / afwGeom::PI);
+    return area / square(side) * square(180. / geom::PI);
 }
 
-afwGeom::Angle Wcs::pixelScale() const {
-    return sqrt(pixArea(getPixelOrigin())) * afwGeom::degrees;
+geom::Angle Wcs::pixelScale() const {
+    return sqrt(pixArea(getPixelOrigin())) * geom::degrees;
 }
 
-GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1,
-                              afwGeom::Angle sky2
+GeomPoint Wcs::skyToPixelImpl(geom::Angle sky1,
+                              geom::Angle sky2
                              ) const {
     assert(_wcsInfo);
 
@@ -745,29 +741,29 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1,
     }
 
     // wcslib assumes 1-indexed coords
-    return afwGeom::Point2D(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
-                            pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels);
+    return geom::Point2D(pixTmp[0] + PixelZeroPos + fitsToLsstPixels,
+                            pixTmp[1] + PixelZeroPos + fitsToLsstPixels);
 }
 
-GeomPoint Wcs::skyToPixel(lsst::afw::coord::Coord const & coord) const {
-    std::shared_ptr<afwCoord::Coord> sky = convertCoordToSky(coord);
+GeomPoint Wcs::skyToPixel(coord::Coord const & coord) const {
+    std::shared_ptr<coord::Coord> sky = convertCoordToSky(coord);
     return skyToPixelImpl(sky->getLongitude(), sky->getLatitude());
 }
 
 
-std::shared_ptr<afwCoord::Coord>
-Wcs::convertCoordToSky(afwCoord::Coord const & coord) const {
+std::shared_ptr<coord::Coord>
+Wcs::convertCoordToSky(coord::Coord const & coord) const {
     return coord.convert(_coordSystem, _wcsInfo->equinox);
 }
 
-GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
+GeomPoint Wcs::skyToPixel(geom::Angle sky1, geom::Angle sky2) const {
     return skyToPixelImpl(sky1, sky2);
 }
 
-GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const {
+GeomPoint Wcs::skyToIntermediateWorldCoord(coord::Coord const & coord) const {
     assert(_wcsInfo);
 
-    std::shared_ptr<afwCoord::Coord> sky = convertCoordToSky(coord);
+    std::shared_ptr<coord::Coord> sky = convertCoordToSky(coord);
     double skyTmp[2];
     double imgcrd[2];
     double phi, theta;
@@ -799,7 +795,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
     /*
      printf("->iwc (%.3f, %.3f)\n", imgcrd[0], imgcrd[1]);
      printf("-> pix (%.2f, %.2f)\n", pixTmp[0], pixTmp[1]);
-     std::shared_ptr<afwCoord::Coord> crval = getSkyOrigin();
+     std::shared_ptr<coord::Coord> crval = getSkyOrigin();
      printf("(crval is (%.3f, %.3f))\n", crval->getLongitude().asDegrees(), crval->getLatitude().asDegrees());
      */
     return GeomPoint(imgcrd[0], imgcrd[1]);
@@ -820,13 +816,13 @@ bool Wcs::isSameSkySystem(Wcs const &wcs) const {
 }
 
 void
-Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) const
+Wcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const
 {
     assert(_wcsInfo);
 
     // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels};
+    double pixTmp[2] = { pixel1 - PixelZeroPos + lsstToFitsPixels,
+                         pixel2 - PixelZeroPos + lsstToFitsPixels};
     double imgcrd[2];
     double phi, theta;
 
@@ -839,8 +835,8 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) cons
             status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
     // FIXME -- _wcsInfo.lat, _wcsInfo.lng ?
-    skyTmp[0] = sky[0] * afwGeom::degrees;
-    skyTmp[1] = sky[1] * afwGeom::degrees;
+    skyTmp[0] = sky[0] * geom::degrees;
+    skyTmp[1] = sky[1] * geom::degrees;
 }
 
 CoordPtr Wcs::pixelToSky(GeomPoint const & pixel) const {
@@ -850,36 +846,36 @@ CoordPtr Wcs::pixelToSky(GeomPoint const & pixel) const {
 CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
     assert(_wcsInfo);
 
-    afwGeom::Angle skyTmp[2];
+    geom::Angle skyTmp[2];
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
     return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
-void Wcs::pixelToSky(double pixel1, double pixel2, afwGeom::Angle& sky1, afwGeom::Angle& sky2) const {
-    afwGeom::Angle skyTmp[2];
+void Wcs::pixelToSky(double pixel1, double pixel2, geom::Angle& sky1, geom::Angle& sky2) const {
+    geom::Angle skyTmp[2];
     // HACK -- we shouldn't need to initialize these -- pixelToSkyImpl() sets them unless an
     // exception is thrown -- but be safe.
-    skyTmp[0] = 0. * afwGeom::radians;
-    skyTmp[1] = 0. * afwGeom::radians;
+    skyTmp[0] = 0. * geom::radians;
+    skyTmp[1] = 0. * geom::radians;
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
     sky1 = skyTmp[0];
     sky2 = skyTmp[1];
 }
 
-CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const {
+CoordPtr Wcs::makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const {
     auto coordSystem = getCoordSystem();
-    if ((coordSystem == afwCoord::ICRS) || (coordSystem == afwCoord::GALACTIC)) {
+    if ((coordSystem == coord::ICRS) || (coordSystem == coord::GALACTIC)) {
         // equinox not relevant
         if (_skyAxesSwapped) {
-            return afwCoord::makeCoord(coordSystem, sky1, sky0);
+            return coord::makeCoord(coordSystem, sky1, sky0);
         } else {
-            return afwCoord::makeCoord(coordSystem, sky0, sky1);
+            return coord::makeCoord(coordSystem, sky0, sky1);
         }
-    } else if ((coordSystem == afwCoord::FK5) || (coordSystem == afwCoord::ECLIPTIC)) {
+    } else if ((coordSystem == coord::FK5) || (coordSystem == coord::ECLIPTIC)) {
         if (_skyAxesSwapped) {
-            return afwCoord::makeCoord(coordSystem, sky1, sky0, _wcsInfo->equinox);
+            return coord::makeCoord(coordSystem, sky1, sky0, _wcsInfo->equinox);
         } else {
-            return afwCoord::makeCoord(coordSystem, sky0, sky1, _wcsInfo->equinox);
+            return coord::makeCoord(coordSystem, sky0, sky1, _wcsInfo->equinox);
         }
     }
     throw LSST_EXCEPT(except::RuntimeError,
@@ -888,23 +884,23 @@ CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Ang
 }
 
 
-lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
-    lsst::afw::coord::Coord const & coord,
-    lsst::afw::geom::AngleUnit skyUnit
+geom::AffineTransform Wcs::linearizePixelToSky(
+    coord::Coord const & coord,
+    geom::AngleUnit skyUnit
 ) const {
     return linearizePixelToSkyInternal(skyToPixel(coord), coord, skyUnit);
 }
-lsst::afw::geom::AffineTransform Wcs::linearizePixelToSky(
+geom::AffineTransform Wcs::linearizePixelToSky(
     GeomPoint const & pix,
-    lsst::afw::geom::AngleUnit skyUnit
+    geom::AngleUnit skyUnit
 ) const {
     return linearizePixelToSkyInternal(pix, *pixelToSky(pix), skyUnit);
 }
 
-lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
+geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     GeomPoint const & pix00,
-    lsst::afw::coord::Coord const & coord,
-    lsst::afw::geom::AngleUnit skyUnit
+    coord::Coord const & coord,
+    geom::AngleUnit skyUnit
 ) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -913,9 +909,9 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     //
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = coord.getPosition(skyUnit);
-    typedef std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle> AngleAngle;
-    AngleAngle const dsky10 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + afwGeom::Extent2D(side, 0)));
-    AngleAngle const dsky01 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + afwGeom::Extent2D(0, side)));
+    typedef std::pair<geom::Angle, geom::Angle> AngleAngle;
+    AngleAngle const dsky10 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + geom::Extent2D(side, 0)));
+    AngleAngle const dsky01 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + geom::Extent2D(0, side)));
 
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.first.asAngularUnits(skyUnit)/side;
@@ -927,41 +923,40 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    //return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::Extent2D(sky00v - m * pix00v));
-    return lsst::afw::geom::AffineTransform(m, (sky00v - m * pix00v));
+    //return geom::AffineTransform(m, geom::Extent2D(sky00v - m * pix00v));
+    return geom::AffineTransform(m, (sky00v - m * pix00v));
 }
 
-lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
-    lsst::afw::coord::Coord const & coord,
-    lsst::afw::geom::AngleUnit skyUnit
+geom::AffineTransform Wcs::linearizeSkyToPixel(
+    coord::Coord const & coord,
+    geom::AngleUnit skyUnit
 ) const {
     return linearizeSkyToPixelInternal(skyToPixel(coord), coord, skyUnit);
 }
 
-lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixel(
+geom::AffineTransform Wcs::linearizeSkyToPixel(
     GeomPoint const & pix,
-    lsst::afw::geom::AngleUnit skyUnit
+    geom::AngleUnit skyUnit
 ) const {
     return linearizeSkyToPixelInternal(pix, *pixelToSky(pix), skyUnit);
 }
 
-lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
+geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
     GeomPoint const & pix00,
-    lsst::afw::coord::Coord const & coord,
-    lsst::afw::geom::AngleUnit skyUnit
+    coord::Coord const & coord,
+    geom::AngleUnit skyUnit
 ) const {
-    lsst::afw::geom::AffineTransform inverse = linearizePixelToSkyInternal(pix00, coord, skyUnit);
+    geom::AffineTransform inverse = linearizePixelToSkyInternal(pix00, coord, skyUnit);
     return inverse.invert();
 }
 
-lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
+geom::LinearTransform Wcs::getLinearTransform() const
 {
-    return lsst::afw::geom::LinearTransform(getCDMatrix());
+    return geom::LinearTransform(getCDMatrix());
 }
 
 // -------- table-based persistence -------------------------------------------------------------------------
 
-namespace lsst { namespace afw { namespace image {
 
 class WcsFactory : public table::io::PersistableFactory {
 public:
@@ -1105,7 +1100,6 @@ WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) co
     return result;
 }
 
-}}} // namespace lsst::afw::image
 
 // ----------------------------------------------------------------------------------------------------------
 
@@ -1126,21 +1120,17 @@ void Wcs::shiftReferencePixel(double dx, double dy) {
 /*
  * Now WCSA, pixel coordinates, but allowing for X0 and Y0
  */
-namespace lsst {
-namespace afw {
-namespace image {
-
 namespace detail {
 
 /**
  * @internal Define a trivial WCS that maps the lower left corner (LLC) pixel of an image to a given value
  */
-std::shared_ptr<lsst::daf::base::PropertyList>
+std::shared_ptr<daf::base::PropertyList>
 createTrivialWcsAsPropertySet(std::string const& wcsName, ///< @internal Name of desired WCS
                               int const x0,               ///< @internal Column coordinate of LLC pixel
                               int const y0                ///< @internal Row coordinate of LLC pixel
                              ) {
-    std::shared_ptr<lsst::daf::base::PropertyList> wcsMetaData(new lsst::daf::base::PropertyList);
+    std::shared_ptr<daf::base::PropertyList> wcsMetaData(new daf::base::PropertyList);
 
     wcsMetaData->set("CRVAL1" + wcsName, x0, "Column pixel of Reference Pixel");
     wcsMetaData->set("CRVAL2" + wcsName, y0, "Row pixel of Reference Pixel");
@@ -1162,8 +1152,8 @@ createTrivialWcsAsPropertySet(std::string const& wcsName, ///< @internal Name of
  * @param wcsName the WCS to search (E.g. "A")
  * @param metadata the metadata, maybe containing the WCS
  */
-afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,
-                                      lsst::daf::base::PropertySet *metadata
+geom::Point2I getImageXY0FromMetadata(std::string const& wcsName,
+                                      daf::base::PropertySet *metadata
                                      ) {
 
     int x0 = 0;                         // Our value of X0
@@ -1190,11 +1180,11 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,
             metadata->remove("CUNIT1" + wcsName);
             metadata->remove("CUNIT2" + wcsName);
         }
-    } catch(lsst::pex::exceptions::NotFoundError &) {
+    } catch(pex::exceptions::NotFoundError &) {
         ;                               // OK, not present
     }
 
-    return afwGeom::Point2I(x0, y0);
+    return geom::Point2I(x0, y0);
 }
 
 /**
@@ -1208,11 +1198,11 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,
  * @param metadata Metadata to be stripped
  * @param wcs A Wcs with (implied) keywords
  */
-int stripWcsKeywords(std::shared_ptr<lsst::daf::base::PropertySet> const& metadata,
+int stripWcsKeywords(std::shared_ptr<daf::base::PropertySet> const& metadata,
                      std::shared_ptr<Wcs const> const& wcs
                     )
 {
-    std::shared_ptr<lsst::daf::base::PropertySet> wcsMetadata = wcs->getFitsMetadata();
+    std::shared_ptr<daf::base::PropertySet> wcsMetadata = wcs->getFitsMetadata();
     std::vector<std::string> paramNames = wcsMetadata->paramNames();
     paramNames.push_back("CDELT1");
     paramNames.push_back("CDELT2");
@@ -1230,7 +1220,7 @@ int stripWcsKeywords(std::shared_ptr<lsst::daf::base::PropertySet> const& metada
 }
 
 
-}}}}
+}
 
 
 
@@ -1244,13 +1234,13 @@ XYTransformFromWcsPair::XYTransformFromWcsPair(std::shared_ptr<Wcs const> dst, s
 { }
 
 
-std::shared_ptr<afwGeom::XYTransform> XYTransformFromWcsPair::clone() const
+std::shared_ptr<geom::XYTransform> XYTransformFromWcsPair::clone() const
 {
     return std::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
 }
 
 
-afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
+geom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
 {
     if (_isSameSkySystem) {
         // high performance branch; no coordinate conversion required
@@ -1263,7 +1253,7 @@ afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) 
     }
 }
 
-afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
+geom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
 {
     if (_isSameSkySystem) {
         // high performance branch; no coordinate conversion required
@@ -1276,8 +1266,10 @@ afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) 
     }
 }
 
-std::shared_ptr<afwGeom::XYTransform> XYTransformFromWcsPair::invert() const
+std::shared_ptr<geom::XYTransform> XYTransformFromWcsPair::invert() const
 {
     // just swap src, dst
     return std::make_shared<XYTransformFromWcsPair> (_src, _dst);
 }
+
+}}} // end image

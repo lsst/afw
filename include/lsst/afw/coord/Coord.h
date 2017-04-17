@@ -763,9 +763,6 @@ std::string angleToHmsString(lsst::afw::geom::Angle const deg);
 
 std::ostream & operator<<(std::ostream & os, Coord const & coord);
 
-}}}
-
-
 /* ==============================================================
  *
  * Definitions of inline functions
@@ -777,7 +774,7 @@ std::ostream & operator<<(std::ostream & os, Coord const & coord);
  * Provide access to our contents via an index
  *
  */
-inline lsst::afw::geom::Angle lsst::afw::coord::Coord::operator[](int const index) const {
+inline geom::Angle Coord::operator[](int const index) const {
 
     switch (index) {
       case 0:
@@ -802,7 +799,7 @@ inline lsst::afw::geom::Angle lsst::afw::coord::Coord::operator[](int const inde
  *       explicitly provided.
  *
  */
-inline std::string lsst::afw::coord::Coord::getLongitudeStr(lsst::afw::geom::AngleUnit unit) const {
+inline std::string Coord::getLongitudeStr(geom::AngleUnit unit) const {
     if (unit == lsst::afw::geom::hours) {
         return angleToHmsString(getLongitude());
     } else if (unit == lsst::afw::geom::degrees) {
@@ -819,14 +816,14 @@ inline std::string lsst::afw::coord::Coord::getLongitudeStr(lsst::afw::geom::Ang
  *       the units can not be explicitly requested.
  *
  */
-inline std::string lsst::afw::coord::Coord::getLatitudeStr() const {
+inline std::string Coord::getLatitudeStr() const {
     return angleToDmsString(getLatitude());
 }
 
 /**
  * Equality operator, compares each element directly
  */
-inline bool lsst::afw::coord::Coord::operator==(lsst::afw::coord::Coord const &rhs) const {
+inline bool Coord::operator==(Coord const &rhs) const {
     return (_longitude == rhs._longitude) &&
         (_latitude == rhs._latitude) &&
         (_epoch == rhs._epoch);
@@ -835,8 +832,10 @@ inline bool lsst::afw::coord::Coord::operator==(lsst::afw::coord::Coord const &r
 /**
  * Inequality; the complement of equality
  */
-inline bool operator!=(lsst::afw::coord::Coord const &lhs, lsst::afw::coord::Coord const &rhs) {
+inline bool operator!=(Coord const &lhs, Coord const &rhs) {
     return !(lhs == rhs);
 }
+
+}}}
 
 #endif

@@ -39,10 +39,9 @@
 #include "lsst/afw/geom/Angle.h"
 
 using namespace std;
-namespace afwImage = lsst::afw::image;
-namespace afwMath = lsst::afw::math;
-namespace afwGeom = lsst::afw::geom;
 namespace pexExceptions = lsst::pex::exceptions;
+
+namespace lsst { namespace afw { namespace math {
 
 namespace {
     double const NaN = std::numeric_limits<double>::quiet_NaN();
@@ -139,11 +138,11 @@ namespace {
     /// @internal return type for processPixels
     typedef std::tuple<int,                        // n
                          double,                     // sum
-                         afwMath::Statistics::Value, // mean
-                         afwMath::Statistics::Value, // variance
+                         Statistics::Value, // mean
+                         Statistics::Value, // variance
                          double,                     // min
                          double,                     // max
-                         lsst::afw::image::MaskPixel // allPixelOrMask
+                         image::MaskPixel // allPixelOrMask
                          > StandardReturn;
 
     /*
@@ -191,7 +190,7 @@ namespace {
         double min = (nCrude) ? meanCrude : MAX_DOUBLE;
         double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
 
-        afwImage::MaskPixel allPixelOrMask = 0x0;
+        image::MaskPixel allPixelOrMask = 0x0;
 
         std::vector<double> rejectedWeightsByBit(maskPropagationThresholds.size(), 0.0);
 
@@ -246,7 +245,7 @@ namespace {
                     n++;
                 } else { // pixel has been clipped, rejected, etc.
                     for (int bit = 0, nBits=maskPropagationThresholds.size(); bit < nBits; ++bit) {
-                        lsst::afw::image::MaskPixel mask = 1 << bit;
+                        image::MaskPixel mask = 1 << bit;
                         if (*mptr & mask) {
                             double weight = 1.0;
                             if (useWeights) {
@@ -304,8 +303,8 @@ namespace {
         mean += meanCrude;
 
         return StandardReturn(n, sumx,
-                              afwMath::Statistics::Value(mean, meanVar),
-                              afwMath::Statistics::Value(variance, varVar), min, max, allPixelOrMask);
+                              Statistics::Value(mean, meanVar),
+                              Statistics::Value(variance, varVar), min, max, allPixelOrMask);
     }
 
     template<typename IsFinite,
@@ -446,7 +445,7 @@ namespace {
         // Estimate the full precision variance using that crude mean
         // - get the min and max as well
 
-        if (flags & (afwMath::MIN | afwMath::MAX)) {
+        if (flags & (MIN | MAX)) {
             return processPixels<ChkFin, ChkMin, ChkMax, AlwaysT, true>(
                                  img, msk, var, weights,
                                  flags, nCrude, 1, meanCrude,
@@ -502,8 +501,8 @@ namespace {
 
         if (std::isnan(center) || std::isnan(cliplimit)) {
             return StandardReturn(0, NaN,
-                                  afwMath::Statistics::Value(NaN, NaN),
-                                  afwMath::Statistics::Value(NaN, NaN), NaN, NaN, ~0x0);
+                                  Statistics::Value(NaN, NaN),
+                                  Statistics::Value(NaN, NaN), NaN, NaN, ~0x0);
         }
 
         // =======================================================
@@ -511,7 +510,7 @@ namespace {
         int const stride = 1;
         int nCrude = 0;
 
-        if (flags & (afwMath::MIN | afwMath::MAX)) {
+        if (flags & (MIN | MAX)) {
             return processPixels<ChkFin, ChkMin, ChkMax, ChkClip, true>(
                                  img, msk, var, weights,
                                  flags, nCrude, stride,
@@ -689,8 +688,7 @@ namespace {
 }
 
 
-
-double afwMath::StatisticsControl::getMaskPropagationThreshold(int bit) const {
+double StatisticsControl::getMaskPropagationThreshold(int bit) const {
     int oldSize = _maskPropagationThresholds.size();
     if (oldSize < bit) {
         return 1.0;
@@ -698,7 +696,7 @@ double afwMath::StatisticsControl::getMaskPropagationThreshold(int bit) const {
     return _maskPropagationThresholds[bit];
 }
 
-void afwMath::StatisticsControl::setMaskPropagationThreshold(int bit, double threshold) {
+void StatisticsControl::setMaskPropagationThreshold(int bit, double threshold) {
     int oldSize = _maskPropagationThresholds.size();
     if (oldSize <= bit) {
         int newSize = bit + 1;
@@ -711,7 +709,7 @@ void afwMath::StatisticsControl::setMaskPropagationThreshold(int bit, double thr
 }
 
 
-afwMath::Property afwMath::stringToStatisticsProperty(std::string const property) {
+Property stringToStatisticsProperty(std::string const property) {
     static std::map<std::string, Property> statisticsProperty;
     if (statisticsProperty.size() == 0) {
         statisticsProperty["NOTHING"]      = NOTHING;
@@ -735,12 +733,12 @@ afwMath::Property afwMath::stringToStatisticsProperty(std::string const property
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT>
-afwMath::Statistics::Statistics(
+Statistics::Statistics(
         ImageT const &img,
         MaskT const &msk,
         VarianceT const &var,
         int const flags,
-        afwMath::StatisticsControl const& sctrl
+        StatisticsControl const& sctrl
                                         ) :
     _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
     _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
@@ -754,7 +752,7 @@ namespace {
     bool isEmpty(T const& t) { return t.empty(); }
 
     template<typename T>
-    bool isEmpty(afwImage::Image<T> const& im) { return (im.getWidth() == 0 && im.getHeight() == 0); }
+    bool isEmpty(image::Image<T> const& im) { return (im.getWidth() == 0 && im.getHeight() == 0); }
 
     // Asserts that image dimensions are equal
     template<typename ImageT1, typename ImageT2>
@@ -769,20 +767,20 @@ namespace {
 
     // Overloads for MaskImposter (which doesn't have a size)
     template<typename ImageT, typename PixelT>
-    void checkDimensions(ImageT const& image1, afwMath::MaskImposter<PixelT> const& image2) {}
+    void checkDimensions(ImageT const& image1, MaskImposter<PixelT> const& image2) {}
     template<typename ImageT, typename PixelT>
-    void checkDimensions(afwMath::MaskImposter<PixelT> const& image1, ImageT const& image2) {}
+    void checkDimensions(MaskImposter<PixelT> const& image1, ImageT const& image2) {}
 
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-afwMath::Statistics::Statistics(
+Statistics::Statistics(
         ImageT const &img,
         MaskT const &msk,
         VarianceT const &var,
         WeightT const &weights,
         int const flags,
-        afwMath::StatisticsControl const& sctrl
+        StatisticsControl const& sctrl
                                         ) :
     _flags(flags), _mean(NaN, NaN), _variance(NaN, NaN), _min(NaN), _max(NaN), _sum(NaN),
     _meanclip(NaN, NaN), _varianceclip(NaN, NaN), _median(NaN, NaN), _iqrange(NaN),
@@ -790,7 +788,7 @@ afwMath::Statistics::Statistics(
 {
     if (!isEmpty(weights)) {
         if (_sctrl.getWeightedIsSet() && !_sctrl.getWeighted()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               "You must use the weights if you provide them");
         }
 
@@ -800,13 +798,13 @@ afwMath::Statistics::Statistics(
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-void afwMath::Statistics::doStatistics(
+void Statistics::doStatistics(
     ImageT const &img,
     MaskT const &msk,
     VarianceT const &var,
     WeightT const &weights,
     int const flags,
-    afwMath::StatisticsControl const& sctrl
+    StatisticsControl const& sctrl
                                )
 {
     _n = img.getWidth()*img.getHeight();
@@ -888,16 +886,13 @@ void afwMath::Statistics::doStatistics(
     }
 }
 
-std::pair<double, double> afwMath::Statistics::getResult(
-		afwMath::Property const iProp
-
-
-
+std::pair<double, double> Statistics::getResult(
+		Property const iProp
                                                         ) const {
 
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
-    afwMath::Property const prop =
-        static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
+    Property const prop =
+        static_cast<Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
 
     if (!(prop & _flags)) {             // we didn't calculate it
         throw LSST_EXCEPT(pexExceptions::InvalidParameterError,
@@ -985,7 +980,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
       case MEDIAN:
         ret.first = _median.first;
         if ( _flags & ERRORS ) {
-            ret.second = sqrt(afwGeom::HALFPI*_variance.first/_n); // assumes Gaussian
+            ret.second = sqrt(geom::HALFPI*_variance.first/_n); // assumes Gaussian
         }
         break;
       case IQRANGE:
@@ -1001,31 +996,27 @@ std::pair<double, double> afwMath::Statistics::getResult(
         // default: redundant as 'ret' is initialized to NaN, NaN
       default:                          // we must have set prop to _flags
         assert (iProp == 0);
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "getValue() may only be called without a parameter"
                           " if you asked for only one statistic");
     }
     return ret;
 }
 
-double afwMath::Statistics::getValue(
-		afwMath::Property const prop
+double Statistics::getValue(
+		Property const prop
                                      ) const {
     return getResult(prop).first;
 }
 
 
-double afwMath::Statistics::getError(
-		afwMath::Property const prop
+double Statistics::getError(
+		Property const prop
                                      ) const {
     return getResult(prop).second;
 }
 
 
-
-namespace lsst {
-namespace afw {
-namespace math {
 
 /**
  * @internal Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
@@ -1038,9 +1029,9 @@ namespace math {
  */
 template<>
 Statistics::Statistics(
-    afwImage::Mask<afwImage::MaskPixel> const& msk,
-    afwImage::Mask<afwImage::MaskPixel> const& msk2,
-    afwImage::Mask<afwImage::MaskPixel> const& var,
+    image::Mask<image::MaskPixel> const& msk,
+    image::Mask<image::MaskPixel> const& msk2,
+    image::Mask<image::MaskPixel> const& var,
     int const flags,
     StatisticsControl const& sctrl
                       ) :
@@ -1053,7 +1044,7 @@ Statistics::Statistics(
         throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Statistics<Mask> only supports NPOINT and SUM");
     }
 
-    typedef afwImage::Mask<afwImage::MaskPixel> Mask;
+    typedef image::Mask<image::MaskPixel> Mask;
 
     _n = msk.getWidth()*msk.getHeight();
     if (_n == 0) {
@@ -1063,7 +1054,7 @@ Statistics::Statistics(
     // Check that an int's large enough to hold the number of pixels
     assert(msk.getWidth()*static_cast<double>(msk.getHeight()) < std::numeric_limits<int>::max());
 
-    afwImage::MaskPixel sum = 0x0;
+    image::MaskPixel sum = 0x0;
     for (int y = 0; y != msk.getHeight(); ++y) {
         for (Mask::x_iterator ptr = msk.row_begin(y), end = msk.row_end(y); ptr != end; ++ptr) {
             sum |= (*ptr)[0];
@@ -1078,14 +1069,12 @@ Statistics::Statistics(
  *       (g++ complained when this was in the header.)
  */
 Statistics makeStatistics(
-    afwImage::Mask<afwImage::MaskPixel> const &msk,
+    image::Mask<image::MaskPixel> const &msk,
     int const flags,
     StatisticsControl const& sctrl
                          ) {
     return Statistics(msk, msk, msk, flags, sctrl);
 }
-
-}}}
 
 /*
  * Explicit instantiations
@@ -1095,68 +1084,68 @@ Statistics makeStatistics(
  */
 /// @cond
 //
-#define STAT afwMath::Statistics
+#define STAT Statistics
 
-typedef afwImage::VariancePixel VPixel;
+typedef image::VariancePixel VPixel;
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                              afwImage::Image<VPixel> const &var,               \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                              afwImage::Image<VPixel> const &var,               \
-                              afwImage::Image<VPixel> const &weights,   \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
+                              image::Image<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                              afwImage::Image<VPixel> const &var,               \
-                              afwMath::ImageImposter<VPixel> const &weights,   \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
+                              ImageImposter<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                              afwImage::Image<VPixel> const &var,               \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              MaskImposter<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                              afwImage::Image<VPixel> const &var,               \
-                              afwImage::Image<VPixel> const &weights,   \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              MaskImposter<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
+                              image::Image<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(TYPE)                       \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                              afwMath::MaskImposter<VPixel> const &var,          \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              MaskImposter<VPixel> const &var,          \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                              afwMath::MaskImposter<VPixel> const &var,          \
-                              afwImage::Image<VPixel> const &weights,   \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              MaskImposter<VPixel> const &var,          \
+                              image::Image<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
-                              afwMath::MaskImposter<VPixel> const &var,          \
-                              afwMath::ImageImposter<VPixel> const &weights,   \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              MaskImposter<VPixel> const &var,          \
+                              ImageImposter<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \
-    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
-                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                              afwMath::MaskImposter<VPixel> const &var, \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              MaskImposter<image::MaskPixel> const &msk, \
+                              MaskImposter<VPixel> const &var, \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_VECTOR_STATISTICS(TYPE)                         \
-    template STAT::Statistics(afwMath::ImageImposter<TYPE> const &img,     \
-                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                              afwMath::MaskImposter<VPixel> const &var,      \
+    template STAT::Statistics(ImageImposter<TYPE> const &img,     \
+                              MaskImposter<image::MaskPixel> const &msk, \
+                              MaskImposter<VPixel> const &var,      \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::Statistics(afwMath::ImageImposter<TYPE> const &img,     \
-                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
-                              afwMath::MaskImposter<VPixel> const &var,      \
-                              afwMath::ImageImposter<VPixel> const &weights,   \
+    template STAT::Statistics(ImageImposter<TYPE> const &img,     \
+                              MaskImposter<image::MaskPixel> const &msk, \
+                              MaskImposter<VPixel> const &var,      \
+                              ImageImposter<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_IMAGE_STATISTICS(T)            \
@@ -1173,3 +1162,5 @@ INSTANTIATE_IMAGE_STATISTICS(std::uint16_t);
 INSTANTIATE_IMAGE_STATISTICS(std::uint64_t);
 
 /// @endcond
+
+}}} // end math

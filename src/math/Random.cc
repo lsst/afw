@@ -41,12 +41,12 @@
 using lsst::pex::policy::Policy;
 
 namespace ex = lsst::pex::exceptions;
-namespace math = lsst::afw::math;
 
+namespace lsst { namespace afw { namespace math {
 
 // -- Static data --------
 
-::gsl_rng_type const * const math::Random::_gslRngTypes[math::Random::NUM_ALGORITHMS] = {
+::gsl_rng_type const * const Random::_gslRngTypes[Random::NUM_ALGORITHMS] = {
     ::gsl_rng_mt19937,
     ::gsl_rng_ranlxs0,
     ::gsl_rng_ranlxs1,
@@ -62,7 +62,7 @@ namespace math = lsst::afw::math;
     ::gsl_rng_gfsr4
 };
 
-char const * const math::Random::_algorithmNames[math::Random::NUM_ALGORITHMS] = {
+char const * const Random::_algorithmNames[Random::NUM_ALGORITHMS] = {
     "MT19937",
     "RANLXS0",
     "RANLXS1",
@@ -78,13 +78,13 @@ char const * const math::Random::_algorithmNames[math::Random::NUM_ALGORITHMS] =
     "GFSR4"
 };
 
-char const * const math::Random::_algorithmEnvVarName = "LSST_RNG_ALGORITHM";
-char const * const math::Random::_seedEnvVarName = "LSST_RNG_SEED";
+char const * const Random::_algorithmEnvVarName = "LSST_RNG_ALGORITHM";
+char const * const Random::_seedEnvVarName = "LSST_RNG_SEED";
 
 
 // -- Private helper functions --------
 
-void math::Random::initialize() {
+void Random::initialize() {
     if (_seed == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Invalid RNG seed: %lu") % _seed).str());
@@ -97,7 +97,7 @@ void math::Random::initialize() {
     _rng.reset(rng, ::gsl_rng_free);
 }
 
-void math::Random::initialize(std::string const & algorithm) {
+void Random::initialize(std::string const & algorithm) {
    // linear search (the number of algorithms is small)
    for (int i = 0; i < NUM_ALGORITHMS; ++i) {
         if (_algorithmNames[i] == algorithm) {
@@ -113,7 +113,7 @@ void math::Random::initialize(std::string const & algorithm) {
 
 // -- Constructor --------
 
-math::Random::Random(Algorithm const algorithm, unsigned long seed)
+Random::Random(Algorithm const algorithm, unsigned long seed)
     : _rng(), _seed(seed), _algorithm(algorithm)
 {
     if (_algorithm < 0 || _algorithm >= NUM_ALGORITHMS) {
@@ -123,14 +123,14 @@ math::Random::Random(Algorithm const algorithm, unsigned long seed)
 }
 
 
-math::Random::Random(std::string const & algorithm, unsigned long seed)
+Random::Random(std::string const & algorithm, unsigned long seed)
     : _rng(), _seed(seed)
 {
     initialize(algorithm);
 }
 
 
-math::Random::Random(std::shared_ptr<lsst::pex::policy::Policy> const policy)
+Random::Random(std::shared_ptr<pex::policy::Policy> const policy)
     : _rng(), _seed()
 {
     std::string const seed(policy->getString("rngSeed"));
@@ -147,7 +147,7 @@ math::Random::Random(std::shared_ptr<lsst::pex::policy::Policy> const policy)
 }
 
 
-math::Random math::Random::deepCopy() const {
+Random Random::deepCopy() const {
     Random rng = *this;
     rng._rng.reset(::gsl_rng_clone(_rng.get()), ::gsl_rng_free);
     if (!rng._rng) {
@@ -156,11 +156,11 @@ math::Random math::Random::deepCopy() const {
     return rng;
 }
 
-math::Random::State math::Random::getState() const {
+Random::State Random::getState() const {
     return State(static_cast<char*>(::gsl_rng_state(_rng.get())), getStateSize());
 }
 
-void math::Random::setState(State const & state) {
+void Random::setState(State const & state) {
     if (state.size() != getStateSize()) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
@@ -171,21 +171,21 @@ void math::Random::setState(State const & state) {
     std::copy(state.begin(), state.end(), static_cast<char*>(::gsl_rng_state(_rng.get())));
 }
 
-std::size_t math::Random::getStateSize() const {
+std::size_t Random::getStateSize() const {
     return ::gsl_rng_size(_rng.get());
 }
 
 // -- Accessors --------
 
-math::Random::Algorithm math::Random::getAlgorithm() const {
+Random::Algorithm Random::getAlgorithm() const {
     return _algorithm;
 }
 
-std::string math::Random::getAlgorithmName() const {
+std::string Random::getAlgorithmName() const {
     return std::string(_algorithmNames[_algorithm]);
 }
 
-std::vector<std::string> const & math::Random::getAlgorithmNames() {
+std::vector<std::string> const & Random::getAlgorithmNames() {
     static std::vector<std::string> names;
     if (names.size() == 0) {
         for (int i = 0; i < NUM_ALGORITHMS; ++i) {
@@ -195,22 +195,22 @@ std::vector<std::string> const & math::Random::getAlgorithmNames() {
     return names;
 }
 
-unsigned long math::Random::getSeed() const {
+unsigned long Random::getSeed() const {
     return _seed;
 }
 
 
 // -- Mutators: generating random numbers --------
 
-double math::Random::uniform() {
+double Random::uniform() {
     return ::gsl_rng_uniform(_rng.get());
 }
 
-double math::Random::uniformPos() {
+double Random::uniformPos() {
     return ::gsl_rng_uniform_pos(_rng.get());
 }
 
-unsigned long math::Random::uniformInt(unsigned long n) {
+unsigned long Random::uniformInt(unsigned long n) {
     if (n > ::gsl_rng_max(_rng.get()) - ::gsl_rng_min(_rng.get())) {
         throw LSST_EXCEPT(ex::RangeError,
                           "Desired random number range exceeds generator range");
@@ -220,21 +220,22 @@ unsigned long math::Random::uniformInt(unsigned long n) {
 
 // -- Mutators: computing random variates for various distributions --------
 
-double math::Random::flat(double const a, double const b) {
+double Random::flat(double const a, double const b) {
     return ::gsl_ran_flat(_rng.get(), a, b);
 }
 
-double math::Random::gaussian() {
+double Random::gaussian() {
     return ::gsl_ran_gaussian_ziggurat(_rng.get(), 1.0);
 }
 
-double math::Random::chisq(double nu) {
+double Random::chisq(double nu) {
     return ::gsl_ran_chisq(_rng.get(), nu);
 }
 
 
-double math::Random::poisson(double mu
+double Random::poisson(double mu
                             ) {
     return ::gsl_ran_poisson(_rng.get(), mu);
 }
 
+}}} // lsst::afw::math

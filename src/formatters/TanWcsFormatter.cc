@@ -57,31 +57,31 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.TanWcsFormatter");
 }
 
-namespace afwForm = lsst::afw::formatters;
-namespace afwImg = lsst::afw::image;
+namespace lsst { namespace afw { namespace formatters {
+
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
 namespace pexPolicy = lsst::pex::policy;
 namespace pexExcept = lsst::pex::exceptions;
 
 
-dafPersist::FormatterRegistration afwForm::TanWcsFormatter::registration(
-    "TanWcs", typeid(afwImg::TanWcs), createInstance);
+dafPersist::FormatterRegistration TanWcsFormatter::registration(
+    "TanWcs", typeid(image::TanWcs), createInstance);
 
-afwForm::TanWcsFormatter::TanWcsFormatter(
+TanWcsFormatter::TanWcsFormatter(
     std::shared_ptr<pexPolicy::Policy>) :
     dafPersist::Formatter(typeid(this)) {
 }
 
-afwForm::TanWcsFormatter::~TanWcsFormatter(void) {
+TanWcsFormatter::~TanWcsFormatter(void) {
 }
 
-void afwForm::TanWcsFormatter::write(
+void TanWcsFormatter::write(
     dafBase::Persistable const* persistable,
     std::shared_ptr<dafPersist::Storage> storage,
     std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "TamWcsFormatter write start");
-    afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
+    image::TanWcs const* ip = dynamic_cast<image::TanWcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-TanWcs");
     }
@@ -95,12 +95,12 @@ void afwForm::TanWcsFormatter::write(
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
 }
 
-dafBase::Persistable* afwForm::TanWcsFormatter::read(
+dafBase::Persistable* TanWcsFormatter::read(
     std::shared_ptr<dafPersist::Storage> storage,
     std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        afwImg::TanWcs* ip = new afwImg::TanWcs;
+        image::TanWcs* ip = new image::TanWcs;
         LOGL_DEBUG(_log, "TanWcsFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
@@ -113,14 +113,14 @@ dafBase::Persistable* afwForm::TanWcsFormatter::read(
         int hdu = additionalData->get<int>("hdu", INT_MIN);
         std::shared_ptr<dafBase::PropertySet> md =
             afw::fits::readMetadata(fits->getPath(), hdu);
-        afwImg::TanWcs* ip = new afwImg::TanWcs(md);
+        image::TanWcs* ip = new image::TanWcs(md);
         LOGL_DEBUG(_log, "TanWcsFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
 }
 
-void afwForm::TanWcsFormatter::update(
+void TanWcsFormatter::update(
     dafBase::Persistable*,
     std::shared_ptr<dafPersist::Storage>,
     std::shared_ptr<dafBase::PropertySet>) {
@@ -145,7 +145,7 @@ void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eige
 }
 
 
-static void encodeSipHeader(std::shared_ptr<lsst::daf::base::PropertySet> wcsProps,
+static void encodeSipHeader(std::shared_ptr<daf::base::PropertySet> wcsProps,
                             std::string const& which,   ///< @internal Either A,B, Ap or Bp
                             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
     int order = m.rows();
@@ -169,7 +169,7 @@ static void encodeSipHeader(std::shared_ptr<lsst::daf::base::PropertySet> wcsPro
 }
 
 std::shared_ptr<dafBase::PropertyList>
-afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
+TanWcsFormatter::generatePropertySet(image::TanWcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     std::shared_ptr<dafBase::PropertyList> wcsProps(new dafBase::PropertyList());
 
@@ -223,10 +223,10 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
 }
 
 template <class Archive>
-void afwForm::TanWcsFormatter::delegateSerialize(
+void TanWcsFormatter::delegateSerialize(
     Archive& ar, int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "TanWcsFormatter delegateSerialize start");
-    afwImg::TanWcs* ip = dynamic_cast<afwImg::TanWcs*>(persistable);
+    image::TanWcs* ip = dynamic_cast<image::TanWcs*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-TanWcs");
     }
@@ -287,18 +287,19 @@ void afwForm::TanWcsFormatter::delegateSerialize(
 
 // Explicit template specializations confuse Doxygen, tell it to ignore them
 /// @cond
-template void afwForm::TanWcsFormatter::delegateSerialize(
+template void TanWcsFormatter::delegateSerialize(
     boost::archive::text_oarchive & , int, dafBase::Persistable*);
-template void afwForm::TanWcsFormatter::delegateSerialize(
+template void TanWcsFormatter::delegateSerialize(
     boost::archive::text_iarchive & , int, dafBase::Persistable*);
-template void afwForm::TanWcsFormatter::delegateSerialize(
+template void TanWcsFormatter::delegateSerialize(
     boost::archive::binary_oarchive & , int, dafBase::Persistable*);
-template void afwForm::TanWcsFormatter::delegateSerialize(
+template void TanWcsFormatter::delegateSerialize(
     boost::archive::binary_iarchive & , int, dafBase::Persistable*);
 /// @endcond
 
-std::shared_ptr<dafPersist::Formatter> afwForm::TanWcsFormatter::createInstance(
+std::shared_ptr<dafPersist::Formatter> TanWcsFormatter::createInstance(
     std::shared_ptr<pexPolicy::Policy> policy) {
-    return std::shared_ptr<dafPersist::Formatter>(new afwForm::TanWcsFormatter(policy));
+    return std::shared_ptr<dafPersist::Formatter>(new TanWcsFormatter(policy));
 }
 
+}}} // end lsst::afw::formatters

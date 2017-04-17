@@ -38,17 +38,17 @@
 #include "lsst/log/Log.h"
 #include "lsst/afw/math/minimize.h"
 
-namespace afwMath = lsst::afw::math;
+namespace lsst { namespace afw { namespace math {
 
 namespace {
     /*
      * Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::base::Citizen {
+    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
     public:
         explicit MinimizerFunctionBase1(
-            afwMath::Function1<ReturnT> const &function,
+            Function1<ReturnT> const &function,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -66,7 +66,7 @@ namespace {
         inline void setErrorDef(double def) {_errorDef=def;}
 #endif
     private:
-        std::shared_ptr<afwMath::Function1<ReturnT> > _functionPtr;
+        std::shared_ptr<Function1<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -77,10 +77,10 @@ namespace {
      * Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::base::Citizen {
+    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
     public:
         explicit MinimizerFunctionBase2(
-            afwMath::Function2<ReturnT> const &function,
+            Function2<ReturnT> const &function,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -100,7 +100,7 @@ namespace {
         inline void setErrorDef(double def) {_errorDef=def;}
 #endif
     private:
-        std::shared_ptr<afwMath::Function2<ReturnT> > _functionPtr;
+        std::shared_ptr<Function2<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -108,16 +108,17 @@ namespace {
         double _errorDef;
     };
 }
+
 /// @cond
 template<typename ReturnT>
 MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    lsst::afw::math::Function1<ReturnT> const &function,
+    Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList,
     double errorDef)
 :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -127,14 +128,14 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
 
 template<typename ReturnT>
 MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    lsst::afw::math::Function2<ReturnT> const &function,
+    Function2<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList,
     std::vector<double> const &yPositionList,
     double errorDef)
 :
-    lsst::daf::base::Citizen(typeid(this)),
+    daf::base::Citizen(typeid(this)),
     _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -178,8 +179,8 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
 /// @endcond
 
 template<typename ReturnT>
-afwMath::FitResults afwMath::minimize(
-    lsst::afw::math::Function1<ReturnT> const &function,
+FitResults minimize(
+    Function1<ReturnT> const &function,
     std::vector<double> const &initialParameterList,
     std::vector<double> const &stepSizeList,
     std::vector<double> const &measurementList,
@@ -189,20 +190,20 @@ afwMath::FitResults afwMath::minimize(
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "xPositionList is the wrong length");
     }
 
@@ -247,8 +248,8 @@ afwMath::FitResults afwMath::minimize(
 
 
 template<typename ReturnT>
-afwMath::FitResults afwMath::minimize(
-    lsst::afw::math::Function2<ReturnT> const &function,
+FitResults minimize(
+    Function2<ReturnT> const &function,
     std::vector<double> const &initialParameterList,
     std::vector<double> const &stepSizeList,
     std::vector<double> const &measurementList,
@@ -259,24 +260,24 @@ afwMath::FitResults afwMath::minimize(
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "xPositionList is the wrong length");
     }
     if (yPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "yPositionList is the wrong length");
     }
 
@@ -324,8 +325,8 @@ afwMath::FitResults afwMath::minimize(
 /// @cond
 #define NL /* */
 #define minimizeFuncs(ReturnT) \
-    template afwMath::FitResults afwMath::minimize( \
-        afwMath::Function1<ReturnT> const &, \
+    template FitResults minimize( \
+        Function1<ReturnT> const &, \
         std::vector<double> const &,         \
         std::vector<double> const &, \
         std::vector<double> const &, \
@@ -333,8 +334,8 @@ afwMath::FitResults afwMath::minimize(
         std::vector<double> const &, \
         double \
     ); NL \
-    template afwMath::FitResults afwMath::minimize( \
-        afwMath::Function2<ReturnT> const &, \
+    template FitResults minimize( \
+        Function2<ReturnT> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
@@ -347,3 +348,5 @@ afwMath::FitResults afwMath::minimize(
 minimizeFuncs(float)
 minimizeFuncs(double)
 /// @endcond
+
+}}} // end lsst::afw::math

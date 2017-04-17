@@ -88,26 +88,26 @@ boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_l
 
 }}} // namespace lsst::afw::image
 
+namespace boost { namespace gil {
 /** advance a GIL locator by `off`
  *
  * Allow users to use std::pair<int,int> to manipulate GIL locator%s.
  */
 template <typename T>
-boost::gil::memory_based_2d_locator<T>& operator+=(boost::gil::memory_based_2d_locator<T> &loc,
+memory_based_2d_locator<T>& operator+=(memory_based_2d_locator<T> &loc,
                                                    std::pair<int, int> off) {
-    return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+    return (loc += point2<std::ptrdiff_t>(off.first, off.second));
 }
 /** retreat a GIL locator by `off`
  *
  * Allow users to use std::pair<int,int> to manipulate GIL locator%s.
  */
 template <typename T>
-boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_locator<T> &loc,
+memory_based_2d_locator<T>& operator-=(memory_based_2d_locator<T> &loc,
                                                    std::pair<int, int> off) {
-    return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+    return (loc -= point2<std::ptrdiff_t>(off.first, off.second));
 }
 
-namespace boost { namespace gil {
 /*
  * Define types that are pure (un)signed long, without scaling into [0, 1]
  */

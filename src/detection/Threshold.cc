@@ -30,9 +30,6 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Threshold.h"
 
-namespace image = lsst::afw::image;
-namespace math = lsst::afw::math;
-
 namespace lsst {
 namespace afw {
 namespace detection {

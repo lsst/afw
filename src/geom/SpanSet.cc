@@ -29,6 +29,7 @@
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
+namespace lsst { namespace afw { namespace geom {
 namespace {
 
 /* These classes are used in the erode operator to quickly calculate the
@@ -75,7 +76,7 @@ class ComparePrimaryRunM{
  * b Second Span in comparison
  * compareY a boolean to control if the comparison takes into account the y position of the spans
  */
-bool spansOverlap(lsst::afw::geom::Span const & a, lsst::afw::geom::Span const & b, bool compareY = true) {
+bool spansOverlap(Span const & a, Span const & b, bool compareY = true) {
     bool yTruth = true;
     if (compareY) {
         yTruth = a.getY() == b.getY();
@@ -93,7 +94,7 @@ bool spansOverlap(lsst::afw::geom::Span const & a, lsst::afw::geom::Span const &
  * b Second Span in comparison
  * compareY a boolean to control if the comparison takes into account the y position of the spans
  */
-bool spansContiguous(lsst::afw::geom::Span const & a, lsst::afw::geom::Span const & b, bool compareY = true) {
+bool spansContiguous(Span const & a, Span const & b, bool compareY = true) {
     bool yTruth(true);
     if (compareY) {
         yTruth = a.getY() == b.getY();
@@ -105,7 +106,6 @@ bool spansContiguous(lsst::afw::geom::Span const & a, lsst::afw::geom::Span cons
 
 }  // namespace
 
-namespace lsst { namespace afw { namespace geom {
 // Default constructor, creates a null SpanSet which may be useful for
 // comparisons
 SpanSet::SpanSet() : _spanVector(), _bbox(), _area(0) {}
@@ -769,14 +769,14 @@ void SpanSet::setImage(image::Image<ImageT> & image, ImageT val,
         } else {
             applyFunctor(setterFunc, image, val);
         }
-    } catch (lsst::pex::exceptions::OutOfRangeError e) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
+    } catch (pex::exceptions::OutOfRangeError e) {
+        throw LSST_EXCEPT(pex::exceptions::OutOfRangeError,
             "Footprint Bounds Outside image, set doClip to true");
       }
 }
 
 template <typename T>
-void SpanSet::setMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
+void SpanSet::setMask(image::Mask<T> & target, T bitmask) const {
     // Use a lambda to set bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
@@ -791,7 +791,7 @@ void SpanSet::setMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
 }
 
 template <typename T>
-void SpanSet::clearMask(lsst::afw::image::Mask<T> & target, T bitmask) const {
+void SpanSet::clearMask(image::Mask<T> & target, T bitmask) const {
     // Use a lambda to clear bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
@@ -921,8 +921,8 @@ void SpanSet::write(OutputArchiveHandle & handle) const {
                   geom::Box2I const & region=geom::Box2I(), bool doClip=false) const;
 
 #define INSTANTIATE_MASK_TYPE(T) \
-    template void SpanSet::setMask<T>(lsst::afw::image::Mask<T> & target, T bitmask) const; \
-    template void SpanSet::clearMask<T>(lsst::afw::image::Mask<T> & target, T bitmask) const; \
+    template void SpanSet::setMask<T>(image::Mask<T> & target, T bitmask) const; \
+    template void SpanSet::clearMask<T>(image::Mask<T> & target, T bitmask) const; \
     template std::shared_ptr<SpanSet> SpanSet::intersect<T>(image::Mask<T> const & other, T bitmask) const; \
     template std::shared_ptr<SpanSet> SpanSet::intersectNot<T>(image::Mask<T> const & other, \
                                                                T bitmask) const; \
@@ -935,6 +935,6 @@ INSTANTIATE_IMAGE_TYPE(int);
 INSTANTIATE_IMAGE_TYPE(float);
 INSTANTIATE_IMAGE_TYPE(double);
 
-INSTANTIATE_MASK_TYPE(lsst::afw::image::MaskPixel)
+INSTANTIATE_MASK_TYPE(image::MaskPixel)
 
 }}} // Close lsst::afw::geom
