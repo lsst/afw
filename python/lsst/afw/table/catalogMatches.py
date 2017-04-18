@@ -21,7 +21,8 @@
 #
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["makeMergedSchema", "copyIntoCatalog", "matchesToCatalog", "matchesFromCatalog"]
+__all__ = ["makeMergedSchema", "copyIntoCatalog",
+           "matchesToCatalog", "matchesFromCatalog"]
 
 import os.path
 
@@ -91,7 +92,8 @@ def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targe
         target.addNew()
 
     if len(catalog) != len(target):
-        raise RuntimeError("Length mismatch: %d vs %d" % (len(catalog), len(target)))
+        raise RuntimeError("Length mismatch: %d vs %d" %
+                           (len(catalog), len(target)))
 
     m = makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix)
     for rFrom, rTo in zip(catalog, target):
@@ -117,12 +119,16 @@ def matchesToCatalog(matches, matchMeta):
     srcSchema = matches[0].second.getSchema()
 
     mergedSchema = makeMergedSchema(refSchema, Schema(), targetPrefix="ref_")
-    mergedSchema = makeMergedSchema(srcSchema, mergedSchema, targetPrefix="src_")
-    distKey = mergedSchema.addField("distance", type=np.float64, doc="Distance between ref and src")
+    mergedSchema = makeMergedSchema(
+        srcSchema, mergedSchema, targetPrefix="src_")
+    distKey = mergedSchema.addField(
+        "distance", type=np.float64, doc="Distance between ref and src")
 
     mergedCatalog = BaseCatalog(mergedSchema)
-    copyIntoCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref_")
-    copyIntoCatalog([m.second for m in matches], mergedCatalog, sourceSchema=srcSchema, targetPrefix="src_")
+    copyIntoCatalog([m.first for m in matches], mergedCatalog,
+                    sourceSchema=refSchema, targetPrefix="ref_")
+    copyIntoCatalog([m.second for m in matches], mergedCatalog,
+                    sourceSchema=srcSchema, targetPrefix="src_")
     for m, r in zip(matches, mergedCatalog):
         r.set(distKey, m.distance)
 
@@ -147,11 +153,13 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None):
 
     \returns   lsst.afw.table.ReferenceMatch of matches
     """
-    refSchema = makeMergedSchema(catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
+    refSchema = makeMergedSchema(
+        catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
     refCatalog = SimpleCatalog(refSchema)
     copyIntoCatalog(catalog, refCatalog, sourcePrefix="ref_")
 
-    srcSchema = makeMergedSchema(catalog.schema, SourceTable.makeMinimalSchema(), sourcePrefix="src_")
+    srcSchema = makeMergedSchema(
+        catalog.schema, SourceTable.makeMinimalSchema(), sourcePrefix="src_")
     srcCatalog = SourceCatalog(srcSchema)
     copyIntoCatalog(catalog, srcCatalog, sourcePrefix="src_")
 

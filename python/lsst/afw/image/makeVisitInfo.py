@@ -60,5 +60,6 @@ def makeVisitInfo(**kwargs):
     @param[in] weather  basic weather information for computing air mass,
                     (lsst.afw.coord.Weather, defaults to Weather(NaN, NaN, NaN))
     """
-    warnings.warn("makeVisitInfo is deprecated; use VisitInfo directly, instead", DeprecationWarning)
+    warnings.warn(
+        "makeVisitInfo is deprecated; use VisitInfo directly, instead", DeprecationWarning)
     return VisitInfo(**kwargs)

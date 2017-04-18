@@ -29,6 +29,7 @@ import numpy as np
 class Pupil(object):
     """!Pupil obscuration function.
     """
+
     def __init__(self, illuminated, size, scale):
         """!Construct a Pupil
 
@@ -49,6 +50,7 @@ class Pupil(object):
 class PupilFactory(object):
     """!Pupil obscuration function factory for use with Fourier optics.
     """
+
     def __init__(self, visitInfo, pupilSize, npix):
         """!Construct a PupilFactory.
 
@@ -73,7 +75,7 @@ class PupilFactory(object):
         @returns      Pupil
         """
         raise NotImplementedError(
-                "PupilFactory not implemented for this camera")
+            "PupilFactory not implemented for this camera")
 
     @staticmethod
     def _pointLineDistance(p0, p1, p2):
@@ -133,6 +135,6 @@ class PupilFactory(object):
         # the line
         p1 = (p0[0] + 1, p0[1] + np.tan(angleRad))
         d = PupilFactory._pointLineDistance((self.u, self.v), p0, p1)
-        pupil.illuminated[(d < 0.5*thickness)
-                          & ((self.u - p0[0])*np.cos(angleRad)
-                             + (self.v - p0[1])*np.sin(angleRad) >= 0)] = False
+        pupil.illuminated[(d < 0.5*thickness) &
+                          ((self.u - p0[0])*np.cos(angleRad) +
+                           (self.v - p0[1])*np.sin(angleRad) >= 0)] = False

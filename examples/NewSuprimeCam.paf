@@ -100,8 +100,6 @@ Raft: {
     }
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 Ccd: {
     #pixelSize: 10.0e-3                 # pixel size (mm)
     pixelSize: 1.0                      # pixel size (we're using pixels, not mm)
@@ -130,8 +128,6 @@ Ccd: {
     }
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 Amp: {
     height: 4177                        # number of physical rows
     preRows: 48                         # extra rows before first real serial transfer
@@ -141,7 +137,6 @@ Amp: {
     overclockV: 48                      # number of parallel overclock pixels
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Electronic properties of our CCDs
 #

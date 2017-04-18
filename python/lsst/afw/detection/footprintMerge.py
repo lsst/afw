@@ -2,7 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 from ._footprintMerge import FootprintMergeList
 
-__all__ = [] # only imported for side effects
+__all__ = []  # only imported for side effects
+
 
 def getMergedSourceCatalog(self, catalogs, filters,
                            peakDist, schema, idFactory, samePeakDist):
@@ -42,5 +43,5 @@ def getMergedSourceCatalog(self, catalogs, filters,
     self.getFinalSources(mergedList)
     return mergedList
 
-FootprintMergeList.getMergedSourceCatalog = getMergedSourceCatalog
 
+FootprintMergeList.getMergedSourceCatalog = getMergedSourceCatalog

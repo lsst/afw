@@ -59,7 +59,8 @@ def makeDeltaFunctionKernelList(kWidth, kHeight):
     kVec = []
     for activeCol in range(kWidth):
         for activeRow in range(kHeight):
-            kVec.append(afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(activeCol, activeRow)))
+            kVec.append(afwMath.DeltaFunctionKernel(
+                kWidth, kHeight, afwGeom.Point2I(activeCol, activeRow)))
     return kVec
 
 
@@ -75,7 +76,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         self.basicTests(kernel, 3, dimMustMatch=False)
-        fArr = np.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
+        fArr = np.zeros(
+            shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
                 gaussFunc.setParameters((xsigma, ysigma, 0.0))
@@ -105,7 +107,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel.setKernelParameters((1.5, 0.2, 0.7))
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
-            self.fail("Clone was modified by changing original's kernel parameters")
+            self.fail(
+                "Clone was modified by changing original's kernel parameters")
 
         self.verifyCache(kernel, hasCache=False)
 
@@ -117,7 +120,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         """
         for cacheSize in (0, 100, 2000):
             kernel.computeCache(cacheSize)
-            self.assertEqual(kernel.getCacheSize(), cacheSize if hasCache else 0)
+            self.assertEqual(kernel.getCacheSize(),
+                             cacheSize if hasCache else 0)
             kernelCopy = kernel.clone()
             self.assertEqual(kernelCopy.getCacheSize(), kernel.getCacheSize())
 
@@ -131,19 +135,27 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     fullWidth = kWidth + deltaWidth
                     for deltaHeight in (-1, 0, 1, 20):
                         fullHeight = kHeight + deltaHeight
-                        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(0, 0))
-                        fullBBox = afwGeom.Box2I(boxStart, afwGeom.Extent2I(fullWidth, fullHeight))
+                        kernel = afwMath.DeltaFunctionKernel(
+                            kWidth, kHeight, afwGeom.Point2I(0, 0))
+                        fullBBox = afwGeom.Box2I(
+                            boxStart, afwGeom.Extent2I(fullWidth, fullHeight))
                         if (fullWidth < kWidth) or (fullHeight < kHeight):
-                            self.assertRaises(Exception, kernel.shrinkBBox, fullBBox)
+                            self.assertRaises(
+                                Exception, kernel.shrinkBBox, fullBBox)
                             continue
 
                         shrunkBBox = kernel.shrinkBBox(fullBBox)
-                        self.assertEqual(shrunkBBox.getWidth(), fullWidth + 1 - kWidth)
-                        self.assertEqual(shrunkBBox.getHeight(), fullHeight + 1 - kHeight)
-                        self.assertEqual(shrunkBBox.getMinX(), boxStart[0] + kernel.getCtrX())
-                        self.assertEqual(shrunkBBox.getMinY(), boxStart[1] + kernel.getCtrY())
+                        self.assertEqual(shrunkBBox.getWidth(),
+                                         fullWidth + 1 - kWidth)
+                        self.assertEqual(shrunkBBox.getHeight(),
+                                         fullHeight + 1 - kHeight)
+                        self.assertEqual(shrunkBBox.getMinX(),
+                                         boxStart[0] + kernel.getCtrX())
+                        self.assertEqual(shrunkBBox.getMinY(),
+                                         boxStart[1] + kernel.getCtrY())
                         newFullBBox = kernel.growBBox(shrunkBBox)
-                        self.assertEqual(newFullBBox, fullBBox, "growBBox(shrinkBBox(x)) != x")
+                        self.assertEqual(newFullBBox, fullBBox,
+                                         "growBBox(shrinkBBox(x)) != x")
 
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -266,7 +278,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             analKernel.computeImage(kImage, False)
             fixedKernel = afwMath.FixedKernel(kImage)
 
-            sepKernel = afwMath.SeparableKernel(kWidth, kHeight, polyFunc1, polyFunc1)
+            sepKernel = afwMath.SeparableKernel(
+                kWidth, kHeight, polyFunc1, polyFunc1)
             sepKernel.setKernelParameters([coeff, coeff])
 
             kernelList = []
@@ -275,13 +288,18 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             self.assertFalse(lcKernel.isDeltaFunctionBasis())
 
             doRaise = (coeff == 0)
-            self.basicTestComputeImageRaise(analKernel, doRaise, "AnalyticKernel")
-            self.basicTestComputeImageRaise(fixedKernel, doRaise, "FixedKernel")
-            self.basicTestComputeImageRaise(sepKernel, doRaise, "SeparableKernel")
-            self.basicTestComputeImageRaise(lcKernel, doRaise, "LinearCombinationKernel")
+            self.basicTestComputeImageRaise(
+                analKernel, doRaise, "AnalyticKernel")
+            self.basicTestComputeImageRaise(
+                fixedKernel, doRaise, "FixedKernel")
+            self.basicTestComputeImageRaise(
+                sepKernel, doRaise, "SeparableKernel")
+            self.basicTestComputeImageRaise(
+                lcKernel, doRaise, "LinearCombinationKernel")
 
         lcKernel.setKernelParameters([0])
-        self.basicTestComputeImageRaise(lcKernel, True, "LinearCombinationKernel")
+        self.basicTestComputeImageRaise(
+            lcKernel, True, "LinearCombinationKernel")
 
     def testLinearCombinationKernelAnalytic(self):
         """Test LinearCombinationKernel using analytic basis kernels.
@@ -296,8 +314,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         basisImArrList = []
         basisKernelList = []
         for basisKernelParams in [(1.2, 0.3, 1.570796), (1.0, 0.2, 0.0)]:
-            basisKernelFunction = afwMath.GaussianFunction2D(*basisKernelParams)
-            basisKernel = afwMath.AnalyticKernel(kWidth, kHeight, basisKernelFunction)
+            basisKernelFunction = afwMath.GaussianFunction2D(
+                *basisKernelParams)
+            basisKernel = afwMath.AnalyticKernel(
+                kWidth, kHeight, basisKernelFunction)
             basisImage = afwImage.ImageD(basisKernel.getDimensions())
             basisKernel.computeImage(basisImage, True)
             basisImArrList.append(basisImage.getArray())
@@ -309,7 +329,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         self.basicTests(kernel, len(kParams))
 
         # make sure the linear combination kernel has private copies of its basis kernels
-        # by altering the local basis kernels and making sure the new images do NOT match
+        # by altering the local basis kernels and making sure the new images do
+        # NOT match
         modBasisImArrList = []
         for basisKernel in basisKernelList:
             basisKernel.setKernelParameters((0.4, 0.5, 0.6))
@@ -345,9 +366,11 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kHeight = 8
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
-        kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
+        kernel = afwMath.SeparableKernel(
+            kWidth, kHeight, gaussFunc1, gaussFunc1)
         self.basicTests(kernel, 2)
-        fArr = np.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
+        fArr = np.zeros(
+            shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
@@ -376,7 +399,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel.setKernelParameters((1.2, 0.6))
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
-            self.fail("Clone was modified by changing original's kernel parameters")
+            self.fail(
+                "Clone was modified by changing original's kernel parameters")
 
         self.verifyCache(kernel, hasCache=True)
 
@@ -390,8 +414,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         spFunc = afwMath.PolynomialFunction2D(1)
         kernelList = []
-        kernelList.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.1)))
-        kernelList.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.2)))
+        kernelList.append(afwMath.FixedKernel(
+            afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.1)))
+        kernelList.append(afwMath.FixedKernel(
+            afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.2)))
 
         for numKernelParams in (2, 4):
             spFuncList = []
@@ -419,7 +445,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             except pexExcept.Exception:
                 pass
             try:
-                afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1, spFuncList)
+                afwMath.SeparableKernel(
+                    kWidth, kHeight, gaussFunc1, gaussFunc1, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
             except pexExcept.Exception:
                 pass
@@ -429,7 +456,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 if (0 <= pointX < kWidth) and (0 <= pointY < kHeight):
                     continue
                 try:
-                    afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(pointX, pointY))
+                    afwMath.DeltaFunctionKernel(
+                        kWidth, kHeight, afwGeom.Point2I(pointX, pointY))
                     self.fail("Should have failed with point not on kernel")
                 except pexExcept.Exception:
                     pass
@@ -470,7 +498,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel.setSpatialParameters(newSParams)
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
-            self.fail("Clone was modified by changing original's spatial parameters")
+            self.fail(
+                "Clone was modified by changing original's spatial parameters")
 
         #
         # check that we can construct a FixedKernel from a LinearCombinationKernel
@@ -511,7 +540,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         # create a list of basis kernels from the images
         basisKernelList = []
         for basisImArr in basisImArrList:
-            basisImage = afwImage.makeImageFromArray(basisImArr.transpose().copy())
+            basisImage = afwImage.makeImageFromArray(
+                basisImArr.transpose().copy())
             kernel = afwMath.FixedKernel(basisImage)
             basisKernelList.append(kernel)
 
@@ -539,7 +569,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         ]:
             kernel.computeImage(kImage, False, colPos, rowPos)
             kImArr = kImage.getArray().transpose()
-            refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
+            refKImArr = (basisImArrList[0] * coeff0) + \
+                (basisImArrList[1] * coeff1)
             if not np.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
                           (kernel.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
@@ -561,7 +592,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel.setSpatialParameters(newSParams)
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
-            self.fail("Clone was modified by changing original's spatial parameters")
+            self.fail(
+                "Clone was modified by changing original's spatial parameters")
 
     def testSVSeparableKernel(self):
         """Test spatially varying SeparableKernel using a Gaussian function
@@ -582,7 +614,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         )
 
         gaussFunc = afwMath.GaussianFunction1D(1.0)
-        kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc, gaussFunc, spFunc)
+        kernel = afwMath.SeparableKernel(
+            kWidth, kHeight, gaussFunc, gaussFunc, spFunc)
         kernel.setSpatialParameters(sParams)
 
         kernelClone = kernel.clone()
@@ -597,7 +630,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel.setSpatialParameters(newSParams)
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
-            self.fail("Clone was modified by changing original's spatial parameters")
+            self.fail(
+                "Clone was modified by changing original's spatial parameters")
 
     def testSetCtr(self):
         """Test setCtrCol/Row"""
@@ -628,12 +662,16 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     continue
                 if (kHeight >= 0) and (kWidth >= 0):
                     # don't try to create an image with negative dimensions
-                    blankImage = afwImage.ImageF(afwGeom.Extent2I(kWidth, kHeight))
-                    self.assertRaises(Exception, afwMath.FixedKernel, blankImage)
-                self.assertRaises(Exception, afwMath.AnalyticKernel, kWidth, kHeight, gaussFunc2D)
+                    blankImage = afwImage.ImageF(
+                        afwGeom.Extent2I(kWidth, kHeight))
+                    self.assertRaises(
+                        Exception, afwMath.FixedKernel, blankImage)
+                self.assertRaises(
+                    Exception, afwMath.AnalyticKernel, kWidth, kHeight, gaussFunc2D)
                 self.assertRaises(Exception, afwMath.SeparableKernel,
                                   kWidth, kHeight, gaussFunc1D, gaussFunc1D)
-                self.assertRaises(Exception, afwMath.DeltaFunctionKernel, kWidth, kHeight, zeroPoint)
+                self.assertRaises(
+                    Exception, afwMath.DeltaFunctionKernel, kWidth, kHeight, zeroPoint)
 
     def testRefactorDeltaLinearCombinationKernel(self):
         """Test LinearCombinationKernel.refactor with delta function basis kernels
@@ -650,14 +688,17 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
             numBasisKernels = kernel.getNKernelParameters()
             maxVal = 1.01 + ((numSpParams - 1) * 0.1)
-            sParamList = [np.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
+            sParamList = [np.arange(kInd + 1.0, kInd + maxVal, 0.1)
+                          for kInd in range(numBasisKernels)]
             kernel.setSpatialParameters(sParamList)
 
             refKernel = kernel.refactor()
             self.assertTrue(refKernel)
-            errStr = self.compareKernels(kernel, refKernel, compareParams=False)
+            errStr = self.compareKernels(
+                kernel, refKernel, compareParams=False)
             if errStr:
-                self.fail("failed with %s for spOrder=%s (numSpCoeff=%s)" % (errStr, spOrder, numSpParams))
+                self.fail("failed with %s for spOrder=%s (numSpCoeff=%s)" %
+                          (errStr, spOrder, numSpParams))
 
     def testRefactorGaussianLinearCombinationKernel(self):
         """Test LinearCombinationKernel.refactor with Gaussian basis kernels
@@ -674,19 +715,24 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 (2.5, 1.5, 0.0),
                 (2.5, 1.5, math.pi / 2.0),
             ]
-            gaussBasisKernelList = makeGaussianKernelList(kWidth, kHeight, gaussParamsList)
-            kernel = afwMath.LinearCombinationKernel(gaussBasisKernelList, spFunc)
+            gaussBasisKernelList = makeGaussianKernelList(
+                kWidth, kHeight, gaussParamsList)
+            kernel = afwMath.LinearCombinationKernel(
+                gaussBasisKernelList, spFunc)
 
             numBasisKernels = kernel.getNKernelParameters()
             maxVal = 1.01 + ((numSpParams - 1) * 0.1)
-            sParamList = [np.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
+            sParamList = [np.arange(kInd + 1.0, kInd + maxVal, 0.1)
+                          for kInd in range(numBasisKernels)]
             kernel.setSpatialParameters(sParamList)
 
             refKernel = kernel.refactor()
             self.assertTrue(refKernel)
-            errStr = self.compareKernels(kernel, refKernel, compareParams=False)
+            errStr = self.compareKernels(
+                kernel, refKernel, compareParams=False)
             if errStr:
-                self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" % (errStr, spOrder, numSpParams))
+                self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" %
+                          (errStr, spOrder, numSpParams))
 
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0, dimMustMatch=True):
         """Basic tests of a kernel"""
@@ -705,7 +751,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 self.assertRaises(pexExcept.InvalidParameterError,
                                   kernel.getSpatialFunction, ii)
 
-        # test a range of numbers of parameters, including both valid and invalid sized tuples.
+        # test a range of numbers of parameters, including both valid and
+        # invalid sized tuples.
         for nsp in range(nSpatialParams + 2):
             spatialParamsForOneKernel = [1.0]*nsp
             for nkp in range(nKernelParams + 2):
@@ -714,11 +761,14 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     kernel.setSpatialParameters(spatialParams)
                     if nsp == 0:
                         # A non-spatially varying kernel returns an empty tuple, even though
-                        # it can only be set with a tuple of empty tuples, one per kernel parameter.
+                        # it can only be set with a tuple of empty tuples, one
+                        # per kernel parameter.
                         self.assertEqual(kernel.getSpatialParameters(), [])
                     else:
-                        # a spatially varying kernel should return exactly what we set it to be.
-                        self.assertEqual(kernel.getSpatialParameters(), spatialParams)
+                        # a spatially varying kernel should return exactly what
+                        # we set it to be.
+                        self.assertEqual(
+                            kernel.getSpatialParameters(), spatialParams)
                 else:
                     with self.assertRaises(pexExcept.InvalidParameterError):
                         kernel.setSpatialParameters(spatialParams)
@@ -735,11 +785,13 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 if (dx == dy == 0) or not dimMustMatch:
                     ksum = kernel.computeImage(image, True)
                     self.assertAlmostEqual(ksum, 1.0)
-                    llBorder = ((image.getDimensions() - kernelDim) / 2).truncate()
+                    llBorder = ((image.getDimensions() -
+                                 kernelDim) / 2).truncate()
                     predCtr = afwGeom.Point2I(llBorder + kernelCtr)
                     self.assertEqual(kernel.getCtr(), predCtr)
                 else:
-                    self.assertRaises(Exception, kernel.computeImage, image, True)
+                    self.assertRaises(
+                        Exception, kernel.computeImage, image, True)
 
     def basicTestComputeImageRaise(self, kernel, doRaise, kernelDescr=""):
         """Test that computeImage either does or does not raise an exception, as appropriate
@@ -748,10 +800,12 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         try:
             kernel.computeImage(kImage, True)
             if doRaise:
-                self.fail(kernelDescr + ".computeImage should have raised an exception")
+                self.fail(kernelDescr +
+                          ".computeImage should have raised an exception")
         except pexExcept.Exception:
             if not doRaise:
-                self.fail(kernelDescr + ".computeImage should not have raised an exception")
+                self.fail(kernelDescr +
+                          ".computeImage should not have raised an exception")
 
     def compareKernels(self, kernel1, kernel2, compareParams=True, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
@@ -763,7 +817,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         """
         retStrs = []
         if kernel1.getDimensions() != kernel2.getDimensions():
-            retStrs.append("dimensions differ: %s != %s" % (kernel1.getDimensions(), kernel2.getDimensions()))
+            retStrs.append("dimensions differ: %s != %s" %
+                           (kernel1.getDimensions(), kernel2.getDimensions()))
         ctr1 = kernel1.getCtrX(), kernel1.getCtrY()
         ctr2 = kernel2.getCtrX(), kernel2.getCtrY()
         if ctr1 != ctr2:

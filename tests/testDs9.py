@@ -107,7 +107,8 @@ class DisplayTestCase(unittest.TestCase):
 
         with ds9.Buffering():
             ds9.dot('o', 200, 220)
-            vertices = [(200, 220), (210, 230), (224, 230), (214, 220), (200, 220)]
+            vertices = [(200, 220), (210, 230), (224, 230),
+                        (214, 220), (200, 220)]
             ds9.line(vertices, ctype=ds9.CYAN)
             ds9.line(vertices[:-1], symbs="+x+x", size=3)
 
@@ -139,6 +140,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

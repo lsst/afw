@@ -37,7 +37,8 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm):
     @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.afw.geom.Extent2D)
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-    pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
+    pixelToPupil = afwGeom.MultiXYTransform(
+        (pixelToFocalPlane, focalPlaneToPupil))
     # pupilToTanPix is affine and matches pupilToPix at pupil center
     # Note: focal plane to pupil is typically a radial transform,
     # and linearizing the inverse transform of that may fail,

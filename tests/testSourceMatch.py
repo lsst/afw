@@ -33,7 +33,6 @@ or
 from __future__ import absolute_import, division, print_function
 import os
 import re
-import pickle
 import unittest
 
 from builtins import zip
@@ -43,7 +42,6 @@ import numpy as np
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.daf.base as dafBase
-import lsst.utils
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 
@@ -79,20 +77,25 @@ class SourceMatchTestCase(unittest.TestCase):
         for i in range(nobj):
             s = self.ss1.addNew()
             s.setId(i)
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                  (10 + 0.001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                  (10 + 0.001*i) * afwGeom.degrees)
 
             s = self.ss2.addNew()
             s.setId(2*nobj + i)
             # Give slight offsets for Coord testing of matches to/from catalog in checkMatchToFromCatalog()
             # Chosen such that the maximum offset (nobj*1E-7 deg = 0.36 arcsec) is within the maximum
             # distance (1 arcsec) in afwTable.matchRaDec.
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0010001*i) * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0010001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                  (10 + 0.0010001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                  (10 + 0.0010001*i) * afwGeom.degrees)
 
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
-        mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0*afwGeom.arcseconds, mc)
+        mat = afwTable.matchRaDec(
+            self.ss1, self.ss2, 1.0*afwGeom.arcseconds, mc)
         self.assertEqual(len(mat), nobj)
 
         cat = afwTable.packMatches(mat)
@@ -118,17 +121,23 @@ class SourceMatchTestCase(unittest.TestCase):
         ss1 = afwTable.SourceCatalog(self.table)
         ss2 = afwTable.SourceCatalog(self.table)
         for ss in (ss1, ss2):
-            ss.addNew().set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
+            ss.addNew().set(afwTable.SourceTable.getCoordKey().getRa(),
+                            float('nan') * afwGeom.radians)
 
-            ss.addNew().set(afwTable.SourceTable.getCoordKey().getDec(), float('nan') * afwGeom.radians)
-
-            s = ss.addNew()
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), 0.0 * afwGeom.radians)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), 0.0 * afwGeom.radians)
+            ss.addNew().set(afwTable.SourceTable.getCoordKey().getDec(),
+                            float('nan') * afwGeom.radians)
 
             s = ss.addNew()
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), float('nan') * afwGeom.radians)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                  0.0 * afwGeom.radians)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                  0.0 * afwGeom.radians)
+
+            s = ss.addNew()
+            s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                  float('nan') * afwGeom.radians)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                  float('nan') * afwGeom.radians)
 
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
@@ -196,8 +205,10 @@ class SourceMatchTestCase(unittest.TestCase):
             s = template.addNew()
             s.setId(id)
             id += 1
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), ra * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), dec * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                  ra * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                  dec * afwGeom.degrees)
             s.set(self.table.getPsfFluxKey(), flux[0])
 
         del ifd
@@ -206,7 +217,8 @@ class SourceMatchTestCase(unittest.TestCase):
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
 
-        matches = afwTable.matchRaDec(sdss, template, 1.0*afwGeom.arcseconds, mc)
+        matches = afwTable.matchRaDec(
+            sdss, template, 1.0*afwGeom.arcseconds, mc)
 
         self.assertEqual(len(matches), 901)
 
@@ -215,7 +227,8 @@ class SourceMatchTestCase(unittest.TestCase):
                 s0 = mat[0]
                 s1 = mat[1]
                 d = mat[2]
-                print(s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
+                print(s0.getRa(), s0.getDec(), s1.getRa(),
+                      s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
 
         # Actually do the match
         for s in sdssSecondary:
@@ -261,18 +274,24 @@ class SourceMatchTestCase(unittest.TestCase):
             s2 = cat2.addNew()
             s1.setId(i)
             s2.setId(i)
-            s1.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0001*i) * afwGeom.degrees)
-            s2.set(afwTable.SourceTable.getCoordKey().getRa(), (10.005 + 0.0001*i) * afwGeom.degrees)
-            s1.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0001*i) * afwGeom.degrees)
-            s2.set(afwTable.SourceTable.getCoordKey().getDec(), (10.005 + 0.0001*i) * afwGeom.degrees)
+            s1.set(afwTable.SourceTable.getCoordKey().getRa(),
+                   (10 + 0.0001*i) * afwGeom.degrees)
+            s2.set(afwTable.SourceTable.getCoordKey().getRa(),
+                   (10.005 + 0.0001*i) * afwGeom.degrees)
+            s1.set(afwTable.SourceTable.getCoordKey().getDec(),
+                   (10 + 0.0001*i) * afwGeom.degrees)
+            s2.set(afwTable.SourceTable.getCoordKey().getDec(),
+                   (10.005 + 0.0001*i) * afwGeom.degrees)
 
         for closest in (True, False):
             mc = afwTable.MatchControl()
             mc.findOnlyClosest = closest
             mc.includeMismatches = False
-            matches = afwTable.matchRaDec(cat1, cat2, 1.0*afwGeom.arcseconds, mc)
+            matches = afwTable.matchRaDec(
+                cat1, cat2, 1.0*afwGeom.arcseconds, mc)
             mc.includeMismatches = True
-            matchesMismatches = afwTable.matchRaDec(cat1, cat2, 1.0*afwGeom.arcseconds, mc)
+            matchesMismatches = afwTable.matchRaDec(
+                cat1, cat2, 1.0*afwGeom.arcseconds, mc)
 
             catMatches = afwTable.SourceCatalog(self.table)
             catMismatches = afwTable.SourceCatalog(self.table)
@@ -284,10 +303,12 @@ class SourceMatchTestCase(unittest.TestCase):
                     catMismatches.append(m[0])
             if closest:
                 self.assertEqual(len(catMatches), len(matches))
-            matches2 = afwTable.matchRaDec(catMatches, cat2, 1.0*afwGeom.arcseconds, mc)
+            matches2 = afwTable.matchRaDec(
+                catMatches, cat2, 1.0*afwGeom.arcseconds, mc)
             self.assertEqual(len(matches), len(matches2))
             mc.includeMismatches = False
-            noMatches = afwTable.matchRaDec(catMismatches, cat2, 1.0*afwGeom.arcseconds, mc)
+            noMatches = afwTable.matchRaDec(
+                catMismatches, cat2, 1.0*afwGeom.arcseconds, mc)
             self.assertEqual(len(noMatches), 0)
 
     def checkMatchToFromCatalog(self, matches, catalog):
@@ -300,7 +321,8 @@ class SourceMatchTestCase(unittest.TestCase):
         """
         catalog.setMetadata(self.metadata)
         matchMeta = catalog.getTable().getMetadata()
-        matchToCat = afwTable.catalogMatches.matchesToCatalog(matches, matchMeta)
+        matchToCat = afwTable.catalogMatches.matchesToCatalog(
+            matches, matchMeta)
         matchFromCat = afwTable.catalogMatches.matchesFromCatalog(matchToCat)
         self.assertEqual(len(matches), len(matchToCat))
         self.assertEqual(len(matches), len(matchFromCat))
@@ -325,7 +347,8 @@ class SourceMatchTestCase(unittest.TestCase):
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN
         """
-        self.assertTrue(value1 == value2 or (np.isnan(value1) and np.isnan(value2)))
+        self.assertTrue(value1 == value2 or
+                        (np.isnan(value1) and np.isnan(value2)))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
@@ -334,6 +357,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

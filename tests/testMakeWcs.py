@@ -109,8 +109,10 @@ class MakeWcsTestCase(unittest.TestCase):
             crpixTest = wcs.getPixelOrigin()
             CD = wcs.getCDMatrix()
 
-            self.assertAlmostEqual(crvalTest[0], crval.getLongitude().asDegrees())
-            self.assertAlmostEqual(crvalTest[1], crval.getLatitude().asDegrees())
+            self.assertAlmostEqual(
+                crvalTest[0], crval.getLongitude().asDegrees())
+            self.assertAlmostEqual(
+                crvalTest[1], crval.getLatitude().asDegrees())
             self.assertAlmostEqual(crpixTest[0], crpix[0])
             self.assertAlmostEqual(crpixTest[1], crpix[1])
             self.assertAlmostEqual(CD[0, 0], cd11)

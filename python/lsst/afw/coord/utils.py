@@ -56,5 +56,6 @@ def assertCoordsAlmostEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcs
 
 @lsst.utils.tests.inTestCase
 def assertCoordsNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertCoordsAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertCoordsAlmostEqual",
+                  DeprecationWarning)
     assertCoordsAlmostEqual(*args, **kwargs)

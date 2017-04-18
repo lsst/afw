@@ -28,6 +28,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 from lsst.afw.display.displayLib import replaceSaturatedPixels, getZScale
 
+
 def computeIntensity(imageR, imageG=None, imageB=None):
     """!Return a naive total intensity from the red, blue, and green intensities
     \param imageR intensity of image that'll be mapped to red; or intensity if imageG and imageB are None
@@ -55,12 +56,13 @@ def computeIntensity(imageR, imageG=None, imageB=None):
     #
     Image = afwImage.ImageU if intensity.dtype == 'uint16' else afwImage.ImageF
 
-    if hasattr(imageR, "getImage"): # a maskedImage
+    if hasattr(imageR, "getImage"):  # a maskedImage
         intensity = afwImage.makeMaskedImage(Image(intensity))
     elif hasattr(imageR, "getArray"):
         intensity = Image(intensity)
 
     return intensity
+
 
 class Mapping(object):
     """!Baseclass to map red, blue, green intensities into uint8 values"""
@@ -97,7 +99,8 @@ class Mapping(object):
         """
         if imageR is None:
             if self._image is None:
-                raise RuntimeError("You must provide an image (or pass one to the constructor)")
+                raise RuntimeError(
+                    "You must provide an image (or pass one to the constructor)")
             imageR = self._image
 
         if imageG is None:
@@ -120,9 +123,9 @@ class Mapping(object):
             elif xSize is None:
                 xSize = int(ySize*w/float(h) + 0.5)
 
-            size = (ySize, xSize) # n.b. y, x order for scipy
+            size = (ySize, xSize)  # n.b. y, x order for scipy
         elif rescaleFactor is not None:
-            size = float(rescaleFactor) # an int is intepreted as a percentage
+            size = float(rescaleFactor)  # an int is intepreted as a percentage
         else:
             size = None
 
@@ -130,10 +133,12 @@ class Mapping(object):
             try:
                 import scipy.misc
             except ImportError as e:
-                raise RuntimeError("Unable to rescale as scipy.misc is unavailable: %s" % e)
+                raise RuntimeError(
+                    "Unable to rescale as scipy.misc is unavailable: %s" % e)
 
             for i, im in enumerate(imageRGB):
-                imageRGB[i] = scipy.misc.imresize(im, size, interp='bilinear', mode='F')
+                imageRGB[i] = scipy.misc.imresize(
+                    im, size, interp='bilinear', mode='F')
 
         return np.dstack(self._convertImagesToUint8(*imageRGB)).astype(np.uint8)
 
@@ -146,7 +151,7 @@ class Mapping(object):
 
     def mapIntensityToUint8(self, I):
         """Map an intensity into the range of a uint8, [0, 255] (but not converted to uint8)"""
-        with np.errstate(invalid='ignore', divide='ignore'): # n.b. np.where can't and doesn't short-circuit
+        with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
             return np.where(I <= 0, 0, np.where(I < self._uint8Max, I, self._uint8Max))
 
     def _convertImagesToUint8(self, imageR, imageG, imageB):
@@ -160,12 +165,15 @@ class Mapping(object):
         imageRGB = [imageR, imageG, imageB]
         for c in imageRGB:
             c *= fac
-            c[c < 0] = 0                # individual bands can still be < 0, even if fac isn't
+            # individual bands can still be < 0, even if fac isn't
+            c[c < 0] = 0
 
         pixmax = self._uint8Max
-        r0, g0, b0 = imageRGB           # copies -- could work row by row to minimise memory usage
+        # copies -- could work row by row to minimise memory usage
+        r0, g0, b0 = imageRGB
 
-        with np.errstate(invalid='ignore', divide='ignore'): # n.b. np.where can't and doesn't short-circuit
+        # n.b. np.where can't and doesn't short-circuit
+        with np.errstate(invalid='ignore', divide='ignore'):
             for i, c in enumerate(imageRGB):
                 c = np.where(r0 > g0,
                              np.where(r0 > b0,
@@ -179,6 +187,7 @@ class Mapping(object):
                 imageRGB[i] = c
 
         return imageRGB
+
 
 class LinearMapping(Mapping):
     """!A linear map map of red, blue, green intensities into uint8 values"""
@@ -215,9 +224,10 @@ class LinearMapping(Mapping):
 
         The intensity is assumed to have had minimum subtracted (as that can be done per-band)
         """
-        with np.errstate(invalid='ignore', divide='ignore'): # n.b. np.where can't and doesn't short-circuit
+        with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
             return np.where(I <= 0, 0,
                             np.where(I >= self._range, self._uint8Max/I, self._uint8Max/self._range))
+
 
 class ZScaleMapping(LinearMapping):
     """!A mapping for a linear stretch chosen by the zscale algorithm
@@ -239,6 +249,7 @@ class ZScaleMapping(LinearMapping):
 
         LinearMapping.__init__(self, z1, z2, image)
 
+
 class AsinhMapping(Mapping):
     """!A mapping for an asinh stretch (preserving colours independent of brightness)
 
@@ -252,7 +263,8 @@ class AsinhMapping(Mapping):
     def __init__(self, minimum, dataRange, Q=8):
         Mapping.__init__(self, minimum)
 
-        epsilon = 1.0/2**23            # 32bit floating point machine epsilon; sys.float_info.epsilon is 64bit
+        # 32bit floating point machine epsilon; sys.float_info.epsilon is 64bit
+        epsilon = 1.0/2**23
         if abs(Q) < epsilon:
             Q = 0.1
         else:
@@ -274,8 +286,9 @@ class AsinhMapping(Mapping):
 
         The intensity is assumed to have had minimum subtracted (as that can be done per-band)
         """
-        with np.errstate(invalid='ignore', divide='ignore'): # n.b. np.where can't and doesn't short-circuit
+        with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
             return np.where(I <= 0, 0, np.arcsinh(I*self._soften)*self._slope/I)
+
 
 class AsinhZScaleMapping(AsinhMapping):
     """!A mapping for an asinh stretch, estimating the linear stretch by zscale
@@ -303,7 +316,8 @@ class AsinhZScaleMapping(AsinhMapping):
 
         if pedestal is not None:
             try:
-                assert len(pedestal) in (1, 3,), "Please provide 1 or 3 pedestals"
+                assert len(pedestal) in (
+                    1, 3,), "Please provide 1 or 3 pedestals"
             except TypeError:
                 pedestal = 3*[pedestal]
 
@@ -315,14 +329,15 @@ class AsinhZScaleMapping(AsinhMapping):
                     if hasattr(im, "getArray"):
                         im = im.getArray()
 
-                    image[i] = im - pedestal[i] # n.b. a copy
+                    image[i] = im - pedestal[i]  # n.b. a copy
         else:
             pedestal = len(image)*[0.0]
 
         image = computeIntensity(*image)
 
         zscale = ZScaleMapping(image)
-        dataRange = zscale.maximum - zscale.minimum[0] # zscale.minimum is always a triple
+        # zscale.minimum is always a triple
+        dataRange = zscale.maximum - zscale.minimum[0]
         minimum = zscale.minimum
 
         for i, level in enumerate(pedestal):
@@ -330,6 +345,7 @@ class AsinhZScaleMapping(AsinhMapping):
 
         AsinhMapping.__init__(self, minimum, dataRange, Q)
         self._image = image             # support self.makeRgbImage()
+
 
 def makeRGB(imageR, imageG=None, imageB=None, minimum=0, dataRange=5, Q=8, fileName=None,
             saturatedBorderWidth=0, saturatedPixelValue=None,
@@ -346,8 +362,10 @@ def makeRGB(imageR, imageG=None, imageB=None, minimum=0, dataRange=5, Q=8, fileN
 
     if saturatedBorderWidth:
         if saturatedPixelValue is None:
-            raise ValueError("saturatedPixelValue must be set if saturatedBorderWidth is set")
-        replaceSaturatedPixels(imageR, imageG, imageB, saturatedBorderWidth, saturatedPixelValue)
+            raise ValueError(
+                "saturatedPixelValue must be set if saturatedBorderWidth is set")
+        replaceSaturatedPixels(imageR, imageG, imageB,
+                               saturatedBorderWidth, saturatedPixelValue)
 
     asinhMap = AsinhMapping(minimum, dataRange, Q)
     rgb = asinhMap.makeRgbImage(imageR, imageG, imageB,
@@ -357,6 +375,7 @@ def makeRGB(imageR, imageG=None, imageB=None, minimum=0, dataRange=5, Q=8, fileN
         writeRGB(fileName, rgb)
 
     return rgb
+
 
 def displayRGB(rgb, show=True):
     """!Display an rgb image using matplotlib
@@ -368,6 +387,7 @@ def displayRGB(rgb, show=True):
     if show:
         plt.show()
     return plt
+
 
 def writeRGB(fileName, rgbImage):
     """!Write an RGB image to disk
@@ -382,19 +402,23 @@ def writeRGB(fileName, rgbImage):
     import matplotlib.image
     matplotlib.image.imsave(fileName, rgbImage)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Support the legacy API
 #
+
+
 class asinhMappingF(object):
     """!\deprecated Object used to support legacy API"""
+
     def __init__(self, minimum, dataRange, Q):
         self.minimum = minimum
         self.dataRange = dataRange
         self.Q = Q
 
+
 class _RgbImageF(object):
     """!\deprecated Object used to support legacy API"""
+
     def __init__(self, imageR, imageG, imageB, mapping):
         """!\deprecated Legacy API"""
         asinh = AsinhMapping(mapping.minimum, mapping.dataRange, mapping.Q)
@@ -403,6 +427,7 @@ class _RgbImageF(object):
     def write(self, fileName):
         """!\deprecated Legacy API"""
         writeRGB(fileName, self.rgb)
+
 
 def RgbImageF(imageR, imageG, imageB, mapping):
     """!\deprecated Legacy API"""

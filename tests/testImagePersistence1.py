@@ -45,7 +45,8 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
     """A test case for Image Persistence"""
 
     def checkImages(self, image, image2):
-        # Check that two images are identical (well, actually check only every 4th pixel)
+        # Check that two images are identical (well, actually check only every
+        # 4th pixel)
         assert image.getHeight() == image2.getHeight()
         assert image.getWidth() == image2.getWidth()
         assert image.getY0() == image2.getY0()
@@ -57,7 +58,8 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
                 # Persisting through Boost text archives causes conversion error!
                 # assert abs(pixel1 - pixel2) / pixel1 < 1e-7, \
                 assert pixel1 == pixel2, \
-                    "Differing pixel2 at %d, %d: %f, %f" % (x, y, pixel1, pixel2)
+                    "Differing pixel2 at %d, %d: %f, %f" % (
+                        x, y, pixel1, pixel2)
 
     def setUp(self):
         # Create the additionalData PropertySet
@@ -74,7 +76,8 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
         self.persistence = dafPers.Persistence.getPersistence(policy)
 
         # Choose a file to manipulate
-        self.infile = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+        self.infile = os.path.join(
+            dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
 
         self.image = afwImage.ImageF(self.infile)
 
@@ -91,11 +94,13 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
         logicalLocation = dafPers.LogicalLocation(self.infile)
 
         # Create a FitsStorage and put it in a StorageList.
-        storage = self.persistence.getRetrieveStorage("FitsStorage", logicalLocation)
+        storage = self.persistence.getRetrieveStorage(
+            "FitsStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
 
         # Let's do the retrieval!
-        image2 = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
+        image2 = self.persistence.unsafeRetrieve(
+            "ImageF", storageList, self.additionalData)
 
         # Check the resulting Image
         self.checkImages(self.image, image2)
@@ -104,14 +109,18 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
         """Persist the image using boost"""
         with lsst.utils.tests.getTempFilePath(".boost") as boostFilePath:
             logicalLocation = dafPers.LogicalLocation(boostFilePath)
-            storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
+            storage = self.persistence.getPersistStorage(
+                "BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
-            self.persistence.persist(self.image, storageList, self.additionalData)
+            self.persistence.persist(
+                self.image, storageList, self.additionalData)
 
             # Retrieve it again
-            storage = self.persistence.getRetrieveStorage("BoostStorage", logicalLocation)
+            storage = self.persistence.getRetrieveStorage(
+                "BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
-            image2 = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
+            image2 = self.persistence.unsafeRetrieve(
+                "ImageF", storageList, self.additionalData)
 
             # Check the resulting Image
             self.checkImages(self.image, image2)
@@ -120,18 +129,23 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
         """Persist a U16 image using boost"""
         with lsst.utils.tests.getTempFilePath(".boost") as boostFilePath:
             logicalLocation = dafPers.LogicalLocation(boostFilePath)
-            storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
+            storage = self.persistence.getPersistStorage(
+                "BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
             #
             # Read a U16 image
             #
-            self.image = self.image.Factory(os.path.join(dataDir, "data", "small_MI.fits"))
-            self.persistence.persist(self.image, storageList, self.additionalData)
+            self.image = self.image.Factory(
+                os.path.join(dataDir, "data", "small_MI.fits"))
+            self.persistence.persist(
+                self.image, storageList, self.additionalData)
 
             # Retrieve it again
-            storage = self.persistence.getRetrieveStorage("BoostStorage", logicalLocation)
+            storage = self.persistence.getRetrieveStorage(
+                "BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
-            image2 = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
+            image2 = self.persistence.unsafeRetrieve(
+                "ImageF", storageList, self.additionalData)
 
             # Check the resulting Image
             self.checkImages(self.image, image2)
@@ -143,6 +157,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-from lsst.afw.fits.fitsLib import MemFileManager#, cdata, memmove
+from lsst.afw.fits.fitsLib import MemFileManager  # , cdata, memmove
+
 
 def reduceToFits(obj):
     """Pickle to FITS
@@ -14,6 +15,7 @@ def reduceToFits(obj):
     size = manager.getLength()
     data = manager.getData()
     return (unreduceFromFits, (obj.__class__, data, size))
+
 
 def unreduceFromFits(cls, data, size):
     """Unpickle from FITS

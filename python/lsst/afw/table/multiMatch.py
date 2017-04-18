@@ -39,9 +39,11 @@ class MultiMatch(object):
         self.idKey = schema.find(idField).key
         self.dataIdKeys = {}
         outSchema = self.mapper.editOutputSchema()
-        self.objectKey = outSchema.addField("object", type=numpy.int64, doc="Unique ID for joined sources")
+        self.objectKey = outSchema.addField(
+            "object", type=numpy.int64, doc="Unique ID for joined sources")
         for name, dataType in dataIdFormat.items():
-            self.dataIdKeys[name] = outSchema.addField(name, type=dataType, doc="'%s' data ID component")
+            self.dataIdKeys[name] = outSchema.addField(
+                name, type=dataType, doc="'%s' data ID component")
         # self.result will be a catalog containing the union of all matched records, with an 'object' ID
         # column that can be used to group matches.  Sources that have ambiguous matches may appear
         # multiple times.
@@ -50,7 +52,8 @@ class MultiMatch(object):
         # (we'll use the one from the first catalog matched into this group)
         # We'll use this to match against each subsequent catalog.
         self.reference = None
-        # A set of ambiguous objects that we may want to ultimately remove from the final merged catalog.
+        # A set of ambiguous objects that we may want to ultimately remove from
+        # the final merged catalog.
         self.ambiguous = set()
         # Table used to allocate new records for the ouput catalog.
         self.table = RecordClass.Table.make(self.mapper.getOutputSchema())
@@ -72,19 +75,22 @@ class MultiMatch(object):
         if self.result is None:
             self.result = self.table.Catalog(self.table)
             for record in catalog:
-                self.result.append(self.makeRecord(record, dataId, objId=self.nextObjId))
+                self.result.append(self.makeRecord(
+                    record, dataId, objId=self.nextObjId))
                 self.nextObjId += 1
             self.reference = self.result.copy(deep=False)
             return
         # Temporary dict mapping object ID to reference record
         # Will remove from this dict as objects are matched.
-        objById = {record.get(self.objectKey): record for record in self.reference}
+        objById = {record.get(self.objectKey):
+                   record for record in self.reference}
         # Temporary dict mapping source ID to new catalog record.
         # Will remove from this dict as objects are matched.
         newById = {record.get(self.idKey): record for record in catalog}
         # Temporary dict mapping new source ID to a set of associated objects.
         newToObj = {}
-        matches = lsst.afw.table.matchRaDec(self.reference, catalog, self.radius)
+        matches = lsst.afw.table.matchRaDec(
+            self.reference, catalog, self.radius)
         for refRecord, newRecord, distance in matches:
             objId = refRecord.get(self.objectKey)
             if objById.pop(objId, None) is None:
@@ -95,8 +101,10 @@ class MultiMatch(object):
                 # We've already matched this new source to one or more other objects
                 # Mark all involved objects as ambiguous
                 self.ambiguous.add(objId)
-                self.ambiguous |= newToObj.get(newRecord.get(self.idKey), set())
-            # Populate the newToObj dict (setdefault trick is an idiom for appending to a dict-of-sets)
+                self.ambiguous |= newToObj.get(
+                    newRecord.get(self.idKey), set())
+            # Populate the newToObj dict (setdefault trick is an idiom for
+            # appending to a dict-of-sets)
             newToObj.setdefault(newRecord.get(self.idKey), set()).add(objId)
             # Add a new result record for this match.
             self.result.append(self.makeRecord(newRecord, dataId, objId))
@@ -152,7 +160,8 @@ class GroupView(collections.Mapping):
         groups = numpy.zeros(len(ids), dtype=object)
         ends = list(indices[1:]) + [len(catalog)]
         for n, (i1, i2) in enumerate(zip(indices, ends)):
-            groups[n] = catalog[int(i1):int(i2)]  # casts are a work-around for DM-8557
+            # casts are a work-around for DM-8557
+            groups[n] = catalog[int(i1):int(i2)]
             assert (groups[n].get(groupKey) == ids[n]).all()
         return cls(catalog.schema, ids, groups)
 
@@ -207,7 +216,9 @@ class GroupView(collections.Mapping):
         result = numpy.zeros(len(self), dtype=dtype)
         if field is not None:
             key = self.schema.find(field).key
-            f = lambda cat: function(cat.get(key))
+
+            def f(cat):
+                return function(cat.get(key))
         else:
             f = function
         for i in range(len(self)):
@@ -227,7 +238,9 @@ class GroupView(collections.Mapping):
         result = numpy.zeros(self.count, dtype=dtype)
         if field is not None:
             key = self.schema.find(field).key
-            f = lambda cat: function(cat.get(key))
+
+            def f(cat):
+                return function(cat.get(key))
         else:
             f = function
         last = 0

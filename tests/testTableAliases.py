@@ -88,7 +88,8 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(aliases[k], v)
         self.assertEqual(n + 1, len(aliases))
         self.assertEqual(list(aliases.keys()), [k for k, v in aliases.items()])
-        self.assertEqual(list(aliases.values()), [v for k, v in aliases.items()])
+        self.assertEqual(list(aliases.values()), [
+                         v for k, v in aliases.items()])
 
         # Try removing something using the C++-named methods
         self.assertTrue(aliases.erase("q"))
@@ -126,7 +127,8 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         """Test that multi-level alias replacement works.
         """
         self.schema.setAliasMap(None)  # remove all current aliases
-        # applying the following aliases recursively should let us use 'u1' to get to the 'a11' field
+        # applying the following aliases recursively should let us use 'u1' to
+        # get to the 'a11' field
         self.schema.getAliasMap().set("t2", "a1")
         self.schema.getAliasMap().set("u", "t2")
         self.assertEqual(self.schema.find("u1").key, self.a11)
@@ -147,18 +149,29 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(aliases.get("q"), "a1")
 
     def testSchemaComparison(self):
-        self.assertEqual(self.schema.compare(self.schema, self.schema.EQUAL_ALIASES),
-                         self.schema.EQUAL_ALIASES)
-        self.assertEqual(self.schema.compare(self.schema, self.schema.IDENTICAL), self.schema.IDENTICAL)
+        self.assertEqual(
+            self.schema.compare(self.schema, self.schema.EQUAL_ALIASES),
+            self.schema.EQUAL_ALIASES)
+        self.assertEqual(
+            self.schema.compare(self.schema, self.schema.IDENTICAL),
+            self.schema.IDENTICAL)
         copy = lsst.afw.table.Schema(self.schema)
         copy.disconnectAliases()
         self.assertEqual(self.schema.getAliasMap(), copy.getAliasMap())
         copy.getAliasMap().erase("q")
         self.assertNotEqual(self.schema.getAliasMap(), copy.getAliasMap())
-        self.assertEqual(self.schema.compare(copy, self.schema.EQUAL_ALIASES), 0)
-        self.assertEqual(self.schema.compare(copy, self.schema.IDENTICAL), self.schema.EQUAL_FIELDS)
-        self.assertEqual(self.schema.contains(copy, self.schema.EQUAL_ALIASES), self.schema.EQUAL_ALIASES)
-        self.assertEqual(self.schema.contains(copy, self.schema.IDENTICAL), self.schema.IDENTICAL)
+        self.assertEqual(
+            self.schema.compare(copy, self.schema.EQUAL_ALIASES),
+            0)
+        self.assertEqual(
+            self.schema.compare(copy, self.schema.IDENTICAL),
+            self.schema.EQUAL_FIELDS)
+        self.assertEqual(
+            self.schema.contains(copy, self.schema.EQUAL_ALIASES),
+            self.schema.EQUAL_ALIASES)
+        self.assertEqual(
+            self.schema.contains(copy, self.schema.IDENTICAL),
+            self.schema.IDENTICAL)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

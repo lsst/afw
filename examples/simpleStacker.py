@@ -36,6 +36,8 @@ import lsst.afw.geom as afwGeom
 ######################################
 # main body of code
 ######################################
+
+
 def main():
 
     nImg = 10

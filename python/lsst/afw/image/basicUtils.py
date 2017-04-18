@@ -85,7 +85,8 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     much less than the maximum error across the whole pixel grid.
     """
     if nx < 1 or ny < 1:
-        raise RuntimeError("nx = %s and ny = %s must both be positive" % (nx, ny))
+        raise RuntimeError(
+            "nx = %s and ny = %s must both be positive" % (nx, ny))
     if maxDiffSky <= 0*afwGeom.arcseconds:
         raise RuntimeError("maxDiffSky = %s must be positive" % (maxDiffSky,))
     if maxDiffPix <= 0:
@@ -94,7 +95,8 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     bboxd = afwGeom.Box2D(bbox)
     xList = numpy.linspace(bboxd.getMinX(), bboxd.getMaxX(), nx)
     yList = numpy.linspace(bboxd.getMinY(), bboxd.getMaxY(), ny)
-    # we don't care about measured error unless it is too large, so initialize to max allowed
+    # we don't care about measured error unless it is too large, so initialize
+    # to max allowed
     measDiffSky = (maxDiffSky, "?")  # (sky diff, pix pos)
     measDiffPix = (maxDiffPix, "?")  # (pix diff, sky pos)
     for x, y in itertools.product(xList, yList):
@@ -194,5 +196,6 @@ def wcsNearlyEqualOverBBox(*args, **kwargs):
 
 @lsst.utils.tests.inTestCase
 def assertWcsNearlyEqualOverBBox(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertWcsAlmostEqualOverBBox", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertWcsAlmostEqualOverBBox",
+                  DeprecationWarning)
     assertWcsAlmostEqualOverBBox(*args, **kwargs)

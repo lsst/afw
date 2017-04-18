@@ -40,7 +40,8 @@ class PickleBase:
     """A test case for pickles"""
 
     def setUp(self):
-        raise NotImplementedError("Need to inherit and create the 'data' element.")
+        raise NotImplementedError(
+            "Need to inherit and create the 'data' element.")
 
     def tearDown(self):
         del self.data
@@ -175,7 +176,8 @@ class AffineTransformTestCase(PickleBase, unittest.TestCase):
         self.data = afwGeom.AffineTransform(linear, trans)
 
     def assertPickled(self, new):
-        self.assertListEqual(new.getMatrix().flatten().tolist(), self.data.getMatrix().flatten().tolist())
+        self.assertListEqual(new.getMatrix().flatten().tolist(),
+                             self.data.getMatrix().flatten().tolist())
 
 
 class LinearTransformTestCase(PickleBase, unittest.TestCase):
@@ -185,7 +187,8 @@ class LinearTransformTestCase(PickleBase, unittest.TestCase):
         self.data = afwGeom.LinearTransform().makeScaling(scale)
 
     def assertPickled(self, new):
-        self.assertListEqual(new.getMatrix().flatten().tolist(), self.data.getMatrix().flatten().tolist())
+        self.assertListEqual(new.getMatrix().flatten().tolist(),
+                             self.data.getMatrix().flatten().tolist())
 
 
 class WcsPickleBase(PickleBase, unittest.TestCase):
@@ -301,6 +304,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

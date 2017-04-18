@@ -29,6 +29,7 @@ def addTransformMapMethods(cls):
 
     @param[in] cls  The class to which to add the methods, e.g. lsst::afw::cameraGeom::CameraTransformMap
     """
+
     def __iter__(self):
         """Get an iterator over coordinate systems"""
         return iter(self.getCoordSysList())

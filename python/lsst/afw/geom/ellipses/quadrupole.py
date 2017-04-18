@@ -16,6 +16,7 @@ def __reduce__(self):
 def __str__(self):
     return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
 
+
 Quadrupole.__repr__ = __repr__
 Quadrupole.__reduce__ = __reduce__
 Quadrupole.__str__ = __str__

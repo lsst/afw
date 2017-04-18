@@ -35,4 +35,5 @@ ReadoutCornerValNameDict = {
     UR: "UR",
     UL: "UL",
 }
-ReadoutCornerNameValDict = {val: key for key, val in ReadoutCornerValNameDict.items()}
+ReadoutCornerNameValDict = {val: key for key, val in
+                            ReadoutCornerValNameDict.items()}

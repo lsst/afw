@@ -44,7 +44,8 @@ class CoordPtrTestCase(unittest.TestCase):
     def testMakeCoord(self):
         c = coord.Coord(1 * afwGeom.degrees, 2 * afwGeom.degrees)
         print(type(c))
-        c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
+        c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees,
+                            2 * afwGeom.degrees)
         print(type(c))
 
     def testMakeWcs(self):

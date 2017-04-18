@@ -44,6 +44,7 @@ def of(self, first):
             "Cannot concatenate %r and %r: endpoints do not match."
             % (first, self))
 
+
 endpoints = ("Generic", "Point2", "Point3", "SpherePoint")
 
 for fromPoint in endpoints:

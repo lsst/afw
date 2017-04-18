@@ -77,11 +77,13 @@ class MaskedImagePersistenceTestCase(lsst.utils.tests.TestCase):
         logicalLocation = dafPers.LogicalLocation(self.infile)
 
         # Create a FitsStorage and put it in a StorageList.
-        storage = self.persistence.getRetrieveStorage("FitsStorage", logicalLocation)
+        storage = self.persistence.getRetrieveStorage(
+            "FitsStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
 
         # Let's do the retrieval!
-        maskedImage2 = self.persistence.unsafeRetrieve("MaskedImageF", storageList, self.additionalData)
+        maskedImage2 = self.persistence.unsafeRetrieve(
+            "MaskedImageF", storageList, self.additionalData)
 
         # Check the resulting MaskedImage
         self.assertMaskedImagesEqual(self.maskedImage, maskedImage2)
@@ -92,9 +94,11 @@ class MaskedImagePersistenceTestCase(lsst.utils.tests.TestCase):
 
         miPath = os.path.join("tests", "data", "Dest")
         logicalLocation = dafPers.LogicalLocation(miPath)
-        storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
+        storage = self.persistence.getPersistStorage(
+            "BoostStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
-        self.persistence.persist(self.maskedImage, storageList, self.additionalData)
+        self.persistence.persist(
+            self.maskedImage, storageList, self.additionalData)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
@@ -103,6 +107,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

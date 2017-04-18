@@ -36,7 +36,8 @@ def insertPsf(pos, im, psf, kernelSize, flux):
     for x, y in pos:
         x0 = x-kernelSize//2
         y0 = y-kernelSize//2
-        tmpbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(kernelSize, kernelSize))
+        tmpbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0),
+                               afwGeom.Extent2I(kernelSize, kernelSize))
         tmp = psf.computeImage(afwGeom.Point2D(x0, y0))
         tmp *= flux
         im.getImage()[tmpbox] += tmp
@@ -86,7 +87,8 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         kernelSize = 41
         flux = 1000
 
-        # Create a different sized psf for each image and insert them at the desired positions
+        # Create a different sized psf for each image and insert them at the
+        # desired positions
         im1 = afwImage.MaskedImageD(box)
         psf1 = afwDetect.GaussianPsf(kernelSize, kernelSize, psfsig)
 
@@ -105,15 +107,18 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         self.table = afwTable.SourceTable.make(schema, self.idFactory)
 
         # Create SourceCatalogs from these objects
-        fp1 = afwDetect.FootprintSet(im1, afwDetect.Threshold(0.001), "DETECTED")
+        fp1 = afwDetect.FootprintSet(
+            im1, afwDetect.Threshold(0.001), "DETECTED")
         self.catalog1 = afwTable.SourceCatalog(self.table)
         fp1.makeSources(self.catalog1)
 
-        fp2 = afwDetect.FootprintSet(im2, afwDetect.Threshold(0.001), "DETECTED")
+        fp2 = afwDetect.FootprintSet(
+            im2, afwDetect.Threshold(0.001), "DETECTED")
         self.catalog2 = afwTable.SourceCatalog(self.table)
         fp2.makeSources(self.catalog2)
 
-        fp3 = afwDetect.FootprintSet(im3, afwDetect.Threshold(0.001), "DETECTED")
+        fp3 = afwDetect.FootprintSet(
+            im3, afwDetect.Threshold(0.001), "DETECTED")
         self.catalog3 = afwTable.SourceCatalog(self.table)
         fp3.makeSources(self.catalog3)
 
@@ -145,19 +150,23 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         # Add the first catalog and second catalog with the wrong name, which should result
         # an exception being raised
         with self.assertRaises(lsst.pex.exceptions.LogicError):
-            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0, 0], self.idFactory, ["1", "3"])
+            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [
+                          0, 0], self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of peakDist elements,
         # which should raise an exception
         with self.assertRaises(ValueError):
-            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0], self.idFactory, ["1", "3"])
+            mergeCatalogs([self.catalog1, self.catalog2], [
+                          "1", "2"], [0], self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of filters,
         # which should raise an exception
         with self.assertRaises(ValueError):
-            mergeCatalogs([self.catalog1, self.catalog2], ["1"], [0], self.idFactory, ["1", "3"])
+            mergeCatalogs([self.catalog1, self.catalog2], [
+                          "1"], [0], self.idFactory, ["1", "3"])
 
-        # Add the first catalog and second catalog with minPeak < 1 so it will not add new peaks
+        # Add the first catalog and second catalog with minPeak < 1 so it will
+        # not add new peaks
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2],
                                           ["1", "2"], [0, -1],
                                           self.idFactory)
@@ -178,7 +187,8 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
 
         for record in merge:
             for peak in record.getFootprint().getPeaks():
-                # Should only get peaks from catalog2 if catalog1 didn't contribute to the footprint
+                # Should only get peaks from catalog2 if catalog1 didn't
+                # contribute to the footprint
                 if record.get("merge_footprint_1"):
                     self.assertTrue(peak.get("merge_peak_1"))
                     self.assertFalse(peak.get("merge_peak_2"))
@@ -208,7 +218,8 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
 
         for record in merge:
             for peak in record.getFootprint().getPeaks():
-                # Should only get peaks from catalog2 if catalog1 didn't contribute to the footprint
+                # Should only get peaks from catalog2 if catalog1 didn't
+                # contribute to the footprint
                 if record.get("merge_footprint_1"):
                     self.assertTrue(peak.get("merge_peak_1"))
                     self.assertFalse(peak.get("merge_peak_2"))
@@ -225,7 +236,8 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
         measArea = [i.getFootprint().getArea() for i in merge]
         np.testing.assert_array_equal(pixArea, measArea)
 
-        # Add all the catalogs with minPeak = 10 so some peaks will be added to the footprint
+        # Add all the catalogs with minPeak = 10 so some peaks will be added to
+        # the footprint
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
                                           ["1", "2", "3"], 10, self.idFactory)
         self.assertEqual(nob, 19)

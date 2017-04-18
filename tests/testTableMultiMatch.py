@@ -108,11 +108,15 @@ class TestGroupView(lsst.utils.tests.TestCase):
 
                 s = template.addNew()
                 s.setId(id_)
-                s.set(afwTable.SourceTable.getCoordKey().getRa(), ra * afwGeom.degrees)
-                s.set(afwTable.SourceTable.getCoordKey().getDec(), dec * afwGeom.degrees)
+                s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                      ra * afwGeom.degrees)
+                s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                      dec * afwGeom.degrees)
                 s.set(self.table.getPsfFluxKey(), flux[0])
 
-        m = afwTable.MultiMatch(self.schema, dict(visit=np.int64), RecordClass=afwTable.SimpleRecord)
+        m = afwTable.MultiMatch(self.schema,
+                                dict(visit=np.int64),
+                                RecordClass=afwTable.SimpleRecord)
         m.add(sdss, {'visit': 1})
         m.add(template, {'visit': 2})
 

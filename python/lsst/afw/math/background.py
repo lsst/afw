@@ -9,4 +9,5 @@ def __reduce__(self):
     """Pickling"""
     return self.__class__, (self.getImageBBox(), self.getStatsImage())
 
+
 Background.__reduce__ = __reduce__

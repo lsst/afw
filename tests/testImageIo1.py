@@ -106,7 +106,8 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 3
         im = afwImage.ImageF(fileName, hdu)
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120),
+                             afwGeom.Extent2I(20, 15))
         sim = im.Factory(im, bbox, afwImage.LOCAL)
 
         im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
@@ -176,6 +177,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

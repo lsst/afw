@@ -36,13 +36,15 @@ except NameError:
 
 ################################################
 
+
 def getImage():
     imagePath = os.path.join(lsst.utils.getPackageDir("afwdata"),
                              "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
     return afwImage.MaskedImageF(imagePath)
 
+
 def simpleBackground(image):
-    binsize   = 128
+    binsize = 128
     nx = int(image.getWidth()/binsize) + 1
     ny = int(image.getHeight()/binsize) + 1
     bctrl = afwMath.BackgroundControl(nx, ny)
@@ -51,12 +53,13 @@ def simpleBackground(image):
 
     statsImage = bkgd.getStatsImage()
 
-    image  -= bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE)
+    image -= bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE)
 
     return bkgd
 
+
 def complexBackground(image):
-    binsize   = 128
+    binsize = 128
     nx = int(image.getWidth()/binsize) + 1
     ny = int(image.getHeight()/binsize) + 1
 
@@ -82,6 +85,7 @@ def complexBackground(image):
 
     return bkgd
 
+
 def main():
     image = getImage()
 
@@ -97,12 +101,14 @@ def main():
         ds9.mtv(bkgd.getStatsImage(), frame=2)
 
     order = 2
-    actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order, order)
+    actrl = afwMath.ApproximateControl(
+        afwMath.ApproximateControl.CHEBYSHEV, order, order)
     approx = bkgd.getApproximate(actrl)
 
     approx.getImage()
     approx.getMaskedImage()
     approx.getImage(order - 1)
+
 
 #################################################
 if __name__ == '__main__':

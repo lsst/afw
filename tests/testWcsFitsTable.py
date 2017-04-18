@@ -218,7 +218,6 @@ class WcsFitsTableTestCase(unittest.TestCase):
             self.assertEqual(wcs1, wcs2)
 
 
-
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
 

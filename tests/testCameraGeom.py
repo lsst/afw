@@ -57,7 +57,8 @@ class CameraGeomTestCase(unittest.TestCase):
         self.cameraList = (self.lsstCamWrapper, self.scCamWrapper)
         self.assemblyList = {}
         self.assemblyList[self.lsstCamWrapper.camera.getName()] =\
-            [afwImage.ImageU(os.path.join(testPath, 'test_amp.fits.gz')) for i in range(8)]
+            [afwImage.ImageU(os.path.join(testPath, 'test_amp.fits.gz'))
+             for i in range(8)]
         self.assemblyList[self.scCamWrapper.camera.getName()] =\
             [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'))]
 
@@ -72,11 +73,14 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertIsInstance(cw.camera, Camera)
             self.assertEqual(cw.nDetectors, len(cw.camera))
             self.assertEqual(cw.nDetectors, len(cw.ampInfoDict))
-            self.assertEqual(sorted(cw.detectorNameList), sorted(cw.camera.getNameIter()))
-            self.assertEqual(sorted(cw.detectorIdList), sorted(cw.camera.getIdIter()))
+            self.assertEqual(sorted(cw.detectorNameList),
+                             sorted(cw.camera.getNameIter()))
+            self.assertEqual(sorted(cw.detectorIdList),
+                             sorted(cw.camera.getIdIter()))
             for det in cw.camera:
                 self.assertIsInstance(det, Detector)
-                self.assertEqual(cw.ampInfoDict[det.getName()]['namps'], len(det))
+                self.assertEqual(
+                    cw.ampInfoDict[det.getName()]['namps'], len(det))
 
     def testMakeCameraPoint(self):
         point = afwGeom.Point2D(0, 0)
@@ -91,7 +95,8 @@ class CameraGeomTestCase(unittest.TestCase):
                 for pt in (pt1, pt2, pt3, pt4, pt5):
                     cp = camera.makeCameraPoint(pt, coordSys)
                     self.assertEquals(cp.getPoint(), pt)
-                    self.assertEquals(cp.getCameraSys().getSysName(), coordSys.getSysName())
+                    self.assertEquals(
+                        cp.getCameraSys().getSysName(), coordSys.getSysName())
 
                     # test == and !=
                     cp2 = camera.makeCameraPoint(pt, coordSys)
@@ -104,7 +109,8 @@ class CameraGeomTestCase(unittest.TestCase):
             cp = camera.makeCameraPoint(point, det.makeCameraSys(PIXELS))
             self.checkCamPoint(cp, point, det.makeCameraSys(PIXELS))
             # non-existant camera sys in makeCameraPoint
-            self.assertRaises(RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
+            self.assertRaises(
+                RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
             # CameraSysPrefix camera sys in makeCameraPoint
             self.assertRaises(TypeError, camera.makeCameraPoint, point, PIXELS)
 
@@ -173,7 +179,8 @@ class CameraGeomTestCase(unittest.TestCase):
             for point in testData:
                 fpGivenPos = afwGeom.Point2D(point[2], point[3])
                 fpGivenCP = camera.makeCameraPoint(fpGivenPos, FOCAL_PLANE)
-                pupilGivenPos = afwGeom.Point2D(afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
+                pupilGivenPos = afwGeom.Point2D(
+                    afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
                 pupilGivenCP = camera.makeCameraPoint(pupilGivenPos, PUPIL)
 
                 fpComputedCP = camera.transform(pupilGivenCP, FOCAL_PLANE)
@@ -201,16 +208,20 @@ class CameraGeomTestCase(unittest.TestCase):
                 self.assertCamPointAlmostEquals(pupilCP, pupilCP2)
 
                 for intermedCP in (pixCP, fpCP, pupilCP):
-                    pixRoundTripCP = camera.transform(intermedCP, det.makeCameraSys(PIXELS))
+                    pixRoundTripCP = camera.transform(
+                        intermedCP, det.makeCameraSys(PIXELS))
                     self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP)
 
                     pixFindRoundTripCP = camera.transform(intermedCP, PIXELS)
                     self.assertCamPointAlmostEquals(pixCP, pixFindRoundTripCP)
 
                 # test transforms using a point off the detector
-                pixOffDetCP = det.makeCameraPoint(afwGeom.Point2D(0, -10), PIXELS)
-                pixOffDetRoundTripCP = camera.transform(pixOffDetCP, det.makeCameraSys(PIXELS))
-                self.assertCamPointAlmostEquals(pixOffDetCP, pixOffDetRoundTripCP)
+                pixOffDetCP = det.makeCameraPoint(
+                    afwGeom.Point2D(0, -10), PIXELS)
+                pixOffDetRoundTripCP = camera.transform(
+                    pixOffDetCP, det.makeCameraSys(PIXELS))
+                self.assertCamPointAlmostEquals(
+                    pixOffDetCP, pixOffDetRoundTripCP)
 
                 # the point off the detector MAY be on another detector
                 # (depending if the detector has neighbor on the correct edge)
@@ -218,12 +229,15 @@ class CameraGeomTestCase(unittest.TestCase):
                 if len(detList) == 1:
                     numOffUsable += 1
                     pixFindOffCP = camera.transform(pixOffDetCP, PIXELS)
-                    self.assertNotEqual(pixCP.getCameraSys(), pixFindOffCP.getCameraSys())
+                    self.assertNotEqual(
+                        pixCP.getCameraSys(), pixFindOffCP.getCameraSys())
 
                     # convert point on other detector to pixels on the main detector
                     # the result should not be on the main detector
-                    pixToPixCP = camera.transform(pixFindOffCP, det.makeCameraSys(PIXELS))
-                    self.assertFalse(afwGeom.Box2D(det.getBBox()).contains(pixToPixCP.getPoint()))
+                    pixToPixCP = camera.transform(
+                        pixFindOffCP, det.makeCameraSys(PIXELS))
+                    self.assertFalse(afwGeom.Box2D(
+                        det.getBBox()).contains(pixToPixCP.getPoint()))
             self.assertGreater(numOffUsable, 0)
             print("numOffUsable=", numOffUsable)
 
@@ -302,16 +316,21 @@ class CameraGeomTestCase(unittest.TestCase):
     def testCameraGeomUtils(self):
         for cw in self.cameraList:
             camera = cw.camera
-            cameraGeomUtils.showCamera(camera, referenceDetectorName=camera[0].getName())
+            cameraGeomUtils.showCamera(
+                camera, referenceDetectorName=camera[0].getName())
             ds9.incrDefaultFrame()
             for det in (camera[0], camera[1]):
-                cameraGeomUtils.showCcd(det, isTrimmed=True, inCameraCoords=False)
+                cameraGeomUtils.showCcd(
+                    det, isTrimmed=True, inCameraCoords=False)
                 ds9.incrDefaultFrame()
-                cameraGeomUtils.showCcd(det, isTrimmed=True, inCameraCoords=True)
+                cameraGeomUtils.showCcd(
+                    det, isTrimmed=True, inCameraCoords=True)
                 ds9.incrDefaultFrame()
-                cameraGeomUtils.showCcd(det, isTrimmed=False, inCameraCoords=False)
+                cameraGeomUtils.showCcd(
+                    det, isTrimmed=False, inCameraCoords=False)
                 ds9.incrDefaultFrame()
-                cameraGeomUtils.showCcd(det, isTrimmed=False, inCameraCoords=True)
+                cameraGeomUtils.showCcd(
+                    det, isTrimmed=False, inCameraCoords=True)
                 ds9.incrDefaultFrame()
                 for amp in det:
                     cameraGeomUtils.showAmp(amp)
@@ -325,7 +344,8 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertRaises(RuntimeError, camera.transform, cp, PIXELS)
             # non-existant destination camera system
             cp = camera.makeCameraPoint(afwGeom.Point2D(0, 0), FOCAL_PLANE)
-            self.assertRaises(RuntimeError, camera.transform, cp, CameraSys('abcd'))
+            self.assertRaises(RuntimeError, camera.transform,
+                              cp, CameraSys('abcd'))
 
     def checkCamPoint(self, cp, testPt, testSys):
         """Assert that a CameraPoint contains the specified Point2D and CameraSys"""
@@ -346,6 +366,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

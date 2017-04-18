@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 
 from . import detectionLib as afwDetect
 
+
 def writeFootprintAsDefects(fd, foot):
     """Write foot as a set of Defects to fd"""
 

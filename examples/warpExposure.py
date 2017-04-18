@@ -76,11 +76,13 @@ where exposure arguments are paths to Exposure fits files"""
         print("Verbosity =", opt.verbosity)
         logUtils.traceSetAt("afw.math.warp", opt.verbosity)
 
-    numGoodPixels = afwMath.warpExposure(destExposure, srcExposure, warpingControl)
+    numGoodPixels = afwMath.warpExposure(
+        destExposure, srcExposure, warpingControl)
     print("Warped exposure has %s good pixels" % (numGoodPixels))
 
     print("Writing warped exposure to %s" % (destExposurePath,))
     destExposure.writeFits(destExposurePath)
+
 
 if __name__ == "__main__":
     memId0 = dafBase.Citizen_getNextMemId()

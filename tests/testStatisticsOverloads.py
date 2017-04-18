@@ -57,22 +57,31 @@ class StatisticsTestCase(unittest.TestCase):
         self.sctrl = afwMath.StatisticsControl()
 
         # Integers
-        self.mimgI = afwImage.MaskedImageI(afwGeom.Extent2I(self.nRow, self.nCol))
+        self.mimgI = afwImage.MaskedImageI(
+            afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgI.set(self.val, 0x0, self.val)
-        self.imgI = afwImage.ImageI(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
-        self.vecI = [self.val for i in range(self.nRow*self.nCol)] # TODO: pybind11, this should probably be ndarray
+        self.imgI = afwImage.ImageI(
+            afwGeom.Extent2I(self.nRow, self.nCol), self.val)
+        # TODO: pybind11, this should probably be ndarray
+        self.vecI = [self.val for i in range(self.nRow*self.nCol)]
 
         # floats
-        self.mimgF = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
+        self.mimgF = afwImage.MaskedImageF(
+            afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgF.set(self.val, 0x0, self.val)
-        self.imgF = afwImage.ImageF(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
-        self.vecF = [float(self.val) for i in range(self.nRow*self.nCol)] # TODO: pybind11, this should probably be ndarray
+        self.imgF = afwImage.ImageF(
+            afwGeom.Extent2I(self.nRow, self.nCol), self.val)
+        # TODO: pybind11, this should probably be ndarray
+        self.vecF = [float(self.val) for i in range(self.nRow*self.nCol)]
 
         # doubles
-        self.mimgD = afwImage.MaskedImageD(afwGeom.Extent2I(self.nRow, self.nCol))
+        self.mimgD = afwImage.MaskedImageD(
+            afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgD.set(self.val, 0x0, self.val)
-        self.imgD = afwImage.ImageD(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
-        self.vecD = [float(self.val) for i in range(self.nRow*self.nCol)] # TODO: pybind11, this should probably be ndarray
+        self.imgD = afwImage.ImageD(
+            afwGeom.Extent2I(self.nRow, self.nCol), self.val)
+        # TODO: pybind11, this should probably be ndarray
+        self.vecD = [float(self.val) for i in range(self.nRow*self.nCol)]
 
         self.imgList = [self.imgI, self.imgF, self.imgD]
         self.mimgList = [self.mimgI, self.mimgF, self.mimgD]
@@ -93,7 +102,8 @@ class StatisticsTestCase(unittest.TestCase):
         del self.imgList
         del self.vecList
 
-    # The guts of the testing: grab a mean, stddev, and sum for whatever you're called with
+    # The guts of the testing: grab a mean, stddev, and sum for whatever
+    # you're called with
     def compareMakeStatistics(self, image, n):
         stats = afwMath.makeStatistics(image, afwMath.NPOINT | afwMath.STDEV |
                                        afwMath.MEAN | afwMath.SUM, self.sctrl)
@@ -104,7 +114,8 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
-    # same as compareMakeStatistics but calls constructor directly (only for masked image)
+    # same as compareMakeStatistics but calls constructor directly (only for
+    # masked image)
     def compareStatistics(self, stats, n):
         self.assertEqual(stats.getValue(afwMath.NPOINT), n)
         self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
@@ -139,8 +150,10 @@ class StatisticsTestCase(unittest.TestCase):
             stats = afwMath.makeStatistics(vec, weights,
                                            afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, sctrl)
 
-            self.assertAlmostEqual(0.5*weight*sum(vec)/stats.getValue(afwMath.SUM), 1.0)
-            self.assertAlmostEqual(sum(vec)/len(vec), stats.getValue(afwMath.MEAN))
+            self.assertAlmostEqual(
+                0.5*weight*sum(vec)/stats.getValue(afwMath.SUM), 1.0)
+            self.assertAlmostEqual(
+                sum(vec)/len(vec), stats.getValue(afwMath.MEAN))
 
     # Try calling the Statistics constructor directly
     def testStatisticsConstructor(self):
@@ -155,9 +168,12 @@ class StatisticsTestCase(unittest.TestCase):
                                          afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
                                          self.sctrl)
 
-            self.compareStatistics(statsI, self.mimgI.getWidth()*self.mimgI.getHeight())
-            self.compareStatistics(statsF, self.mimgF.getWidth()*self.mimgF.getHeight())
-            self.compareStatistics(statsD, self.mimgD.getWidth()*self.mimgD.getHeight())
+            self.compareStatistics(
+                statsI, self.mimgI.getWidth()*self.mimgI.getHeight())
+            self.compareStatistics(
+                statsF, self.mimgF.getWidth()*self.mimgF.getHeight())
+            self.compareStatistics(
+                statsD, self.mimgD.getWidth()*self.mimgD.getHeight())
 
     # Test the Mask specialization
     def testMask(self):
@@ -170,7 +186,8 @@ class StatisticsTestCase(unittest.TestCase):
         mask.set(4, 5, 0x02)
 
         stats = afwMath.makeStatistics(mask, afwMath.SUM | afwMath.NPOINT)
-        self.assertEqual(mask.getWidth()*mask.getHeight(), stats.getValue(afwMath.NPOINT))
+        self.assertEqual(mask.getWidth()*mask.getHeight(),
+                         stats.getValue(afwMath.NPOINT))
         self.assertEqual(0x1a, stats.getValue(afwMath.SUM))
 
         def tst():
@@ -184,6 +201,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

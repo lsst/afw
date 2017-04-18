@@ -72,7 +72,8 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.nativeSys = cameraGeom.FOCAL_PLANE
         self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
         transforms = {cameraGeom.PUPIL: self.pupilTransform}
-        self.transformMap = cameraGeom.CameraTransformMap(self.nativeSys, transforms)
+        self.transformMap = cameraGeom.CameraTransformMap(
+            self.nativeSys, transforms)
 
     def tearDown(self):
         self.nativeSys = None
@@ -132,8 +133,10 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.compare2DFunctions(nativeTr.reverseTransform, unityTransform)
 
         pupilTr = self.transformMap[cameraGeom.PUPIL]
-        self.compare2DFunctions(pupilTr.forwardTransform, self.pupilTransform.forwardTransform)
-        self.compare2DFunctions(pupilTr.reverseTransform, self.pupilTransform.reverseTransform)
+        self.compare2DFunctions(pupilTr.forwardTransform,
+                                self.pupilTransform.forwardTransform)
+        self.compare2DFunctions(pupilTr.reverseTransform,
+                                self.pupilTransform.reverseTransform)
 
         missingCamSys = cameraGeom.CameraSys("missing")
         with self.assertRaises(lsst.pex.exceptions.Exception):
@@ -161,7 +164,8 @@ class CameraTransformMapTestCase(unittest.TestCase):
         """
         for fromSys in self.transformMap.getCoordSysList():
             for toSys in self.transformMap.getCoordSysList():
-                trConvFunc = TransformWrapper(self.transformMap, fromSys, toSys)
+                trConvFunc = TransformWrapper(
+                    self.transformMap, fromSys, toSys)
                 if fromSys == toSys:
                     self.compare2DFunctions(trConvFunc, unityTransform)
                 funcPair = FuncPair(
@@ -184,7 +188,8 @@ class CameraTransformMapTestCase(unittest.TestCase):
 
                 self.assertEqual(len(fromList), len(toList))
                 for fromPoint, toPoint in zip(fromList, toList):
-                    predToPoint = self.transformMap.transform(fromPoint, fromSys, toSys)
+                    predToPoint = self.transformMap.transform(
+                        fromPoint, fromSys, toSys)
                     for i in range(2):
                         self.assertAlmostEqual(predToPoint[i], toPoint[i])
 

@@ -143,7 +143,8 @@ class WcsTestCase(unittest.TestCase):
         pl = headerToPropertyList(self.header)
         afwImage.makeWcs(pl)
         for key, value in self.header.items():
-            self.assertEqual(value, pl.get(key), "%s not invariant: %s vs %s" % (key, value, pl.get(key)))
+            self.assertEqual(value, pl.get(
+                key), "%s not invariant: %s vs %s" % (key, value, pl.get(key)))
 
     def testRepeat(self):
         pl = headerToPropertyList(self.header)

@@ -24,13 +24,15 @@ from builtins import zip
 import lsst.afw.geom as afwGeom
 from . import copyDetector
 
-__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage', 'updateAmpGeometryForAssembledCcd']
+__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
+           'updateAmpGeometryForAssembledCcd']
 
 # dict of doFlip: slice
 _SliceDict = {
-    False: slice(None,None,1),
-    True:  slice(None,None,-1),
+    False: slice(None, None, 1),
+    True: slice(None, None, -1),
 }
+
 
 def _insertPixelChunk(outView, inView, amplifier, hasArrays):
     # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
@@ -48,7 +50,9 @@ def _insertPixelChunk(outView, inView, amplifier, hasArrays):
         outArrList = [outView.getArray()]
 
     for inArr, outArr in zip(inArrList, outArrList):
-        outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
+        # y,x because numpy arrays are transposed w.r.t. afw Images
+        outArr[:] = inArr[ySlice, xSlice]
+
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
     """!Assemble the amplifier region of an image from a raw image
@@ -65,12 +69,14 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):
-        raise RuntimeError("destImage type = %s != %s = rawImage type" % \
-            type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
+        raise RuntimeError("destImage type = %s != %s = rawImage type" %
+                           type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
     inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox())
     outView = destImage.Factory(destImage, amplifier.getBBox())
 
-    _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
+    _insertPixelChunk(outView, inView, amplifier,
+                      hasattr(rawImage, "getArrays"))
+
 
 def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     """!Assemble the amplifier region of a raw CCD image
@@ -90,15 +96,17 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):
-        raise RuntimeError("destImage type = %s != %s = rawImage type" % \
-            type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
+        raise RuntimeError("destImage type = %s != %s = rawImage type" %
+                           type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
     inBBox = amplifier.getRawBBox()
     inView = rawImage.Factory(rawImage, inBBox)
     outBBox = amplifier.getRawBBox()
     outBBox.shift(amplifier.getRawXYOffset())
     outView = destImage.Factory(destImage, outBBox)
 
-    _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
+    _insertPixelChunk(outView, inView, amplifier,
+                      hasattr(rawImage, "getArrays"))
+
 
 def makeUpdatedDetector(ccd):
     """Return a Detector that has had the definitions of amplifier geometry updated post assembly
@@ -115,10 +123,8 @@ def makeUpdatedDetector(ccd):
                          "Prescan"):
             bbox = getattr(amp, "getRaw%sBBox" % bboxName)()
             if amp.getRawFlipX():
-                x0 = bbox.getBeginX()
                 bbox.flipLR(awidth)
             if amp.getRawFlipY():
-                y0 = bbox.getBeginY()
                 bbox.flipTB(aheight)
             bbox.shift(amp.getRawXYOffset())
 

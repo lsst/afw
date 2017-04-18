@@ -25,7 +25,6 @@ from builtins import input
 import sys
 import matplotlib.pyplot as plt
 
-import lsst.daf.persistence as dafPersist
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 from lsst.log import Log
 
@@ -34,32 +33,40 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Show the layout of CCDs in a camera.',
                                      epilog=
-                        'The corresponding obs-package must be setup (e.g. obs_decam if you want to see DECam)'
+                                     'The corresponding obs-package must be setup (e.g. obs_decam ' +
+                                     'if you want to see DECam)'
                                      )
-    parser.add_argument('mapper', help="Name of camera (e.g. decam)", default=None)
-    parser.add_argument('--outputFile', type=str, help="File to write plot to", default=None)
-    parser.add_argument('--ids', action="store_true", help="Use CCD's IDs, not names")
+    parser.add_argument(
+        'mapper', help="Name of camera (e.g. decam)", default=None)
+    parser.add_argument('--outputFile', type=str,
+                        help="File to write plot to", default=None)
+    parser.add_argument('--ids', action="store_true",
+                        help="Use CCD's IDs, not names")
 
     args = parser.parse_args()
 
     #
     # Import the obs package and lookup the mapper
     #
-    obsPackageName = "lsst.obs.%s" % args.mapper # guess the package
+    obsPackageName = "lsst.obs.%s" % args.mapper  # guess the package
 
     try:
         __import__(obsPackageName)
     except:
-        print("Unable to import %s -- is it setup?" % (obsPackageName,), file=sys.stderr)
+        print("Unable to import %s -- is it setup?" %
+              (obsPackageName,), file=sys.stderr)
         sys.exit(1)
 
-    obsPackage = sys.modules[obsPackageName] # __import__ returns the top-level module, so look ours up
+    # __import__ returns the top-level module, so look ours up
+    obsPackage = sys.modules[obsPackageName]
 
-    mapperName = "%s%sMapper" % (args.mapper[0].title(), args.mapper[1:]) # guess the name too
+    mapperName = "%s%sMapper" % (
+        args.mapper[0].title(), args.mapper[1:])  # guess the name too
     try:
         mapper = getattr(obsPackage, mapperName)
     except AttributeError:
-        print("Unable to find mapper %s in %s" % (mapperName, obsPackageName), file=sys.stderr)
+        print("Unable to find mapper %s in %s" %
+              (mapperName, obsPackageName), file=sys.stderr)
         sys.exit(1)
     #
     # Control verbosity from butler
@@ -78,6 +85,7 @@ if __name__ == '__main__':
                                    showFig=not args.outputFile, savePath=args.outputFile)
 
     if not args.outputFile:
-        print("Hit any key to exit", end=' '); input()
+        print("Hit any key to exit", end=' ')
+        input()
 
     sys.exit(0)

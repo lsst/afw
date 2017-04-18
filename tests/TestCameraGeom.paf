@@ -86,7 +86,6 @@ Raft: {
     }
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 Ccd: {
     pixelSize: 10.0e-3                  # pixel size (mm)
     ptype: "vendor1"
@@ -195,7 +194,6 @@ Ccd: {
     }
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Amp: {
     ptype: "default"                    # Type of amp allowing for different amp configurations in one camera
@@ -219,7 +217,6 @@ Amp: {
     eheight: 213                        # Total height of the amp section in pixels
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Electronic properties of our CCDs
 #
@@ -297,7 +294,6 @@ Electronic: {
     }
 }
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # N.b. we need to specify serial for each CCD due to pex_policy #1117
 #

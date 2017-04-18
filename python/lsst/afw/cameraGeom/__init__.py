@@ -28,7 +28,6 @@ from .cameraGeomLib import *
 from .cameraConfig import *
 from .detectorCollection import *
 from .camera import *
-from .cameraConfig import *
 from .cameraFactory import *
 from .cameraGeomEnumDicts import *
 from .makePixelToTanPixel import *

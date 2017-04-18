@@ -2,13 +2,12 @@
 
 from __future__ import absolute_import, division, print_function
 from builtins import range
-import sys, math
+import math
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
-import lsst.afw.cameraGeom as cameraGeom
+
 
 def main():
 
@@ -33,8 +32,10 @@ def main():
 
     # now warp it about the centroid using a linear transform
 
-    linTran = afwGeom.LinearTransform().makeScaling(1.2)  # a simple scale-by-20%
-    linTran[0] *= 1.2                                     # extent a bit along x-dir
+    linTran = afwGeom.LinearTransform().makeScaling(
+        1.2)  # a simple scale-by-20%
+    # extent a bit along x-dir
+    linTran[0] *= 1.2
 
     wimg = afwImage.ImageF(nx, ny, 0)            # output 'warped' image
     wimg.setXY0(xy0)
@@ -47,4 +48,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

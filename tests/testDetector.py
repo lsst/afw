@@ -59,7 +59,8 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         orientation = detector.getOrientation()
 
         transformMap = detector.getTransformMap()
-        self.assertEquals(len(transformMap), len(dw.transMap) + 1)  # add 1 for null transform
+        # add 1 for null transform
+        self.assertEquals(len(transformMap), len(dw.transMap) + 1)
         for cameraSys in dw.transMap:
             self.assertTrue(cameraSys in transformMap)
 
@@ -85,7 +86,8 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
 
         def addBadCameraSys(dw):
             """Add an invalid camera system"""
-            dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
+            dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = \
+                afwGeom.IdentityXYTransform()
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=addBadCameraSys)
 
@@ -96,23 +98,29 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         pixOffset = dw.orientation.getReferencePoint()
         for xyMM in ((25.6, -31.07), (0, 0), (-1.234e5, 3.123e4)):
             fpPoint = afwGeom.Point2D(*xyMM)
-            fpCamPoint = cameraGeom.CameraPoint(fpPoint, cameraGeom.FOCAL_PLANE)
+            fpCamPoint = cameraGeom.CameraPoint(
+                fpPoint, cameraGeom.FOCAL_PLANE)
             pixCamPoint = dw.detector.transform(fpCamPoint, cameraGeom.PIXELS)
             pixPoint = pixCamPoint.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(fpPoint[i]/dw.pixelSize[i] + pixOffset[i], pixPoint[i])
-            fpCamPoint2 = dw.detector.transform(pixCamPoint, cameraGeom.FOCAL_PLANE)
+                self.assertAlmostEquals(
+                    fpPoint[i]/dw.pixelSize[i] + pixOffset[i], pixPoint[i])
+            fpCamPoint2 = dw.detector.transform(
+                pixCamPoint, cameraGeom.FOCAL_PLANE)
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):
                 self.assertAlmostEquals(fpPoint[i], fpPoint2[i])
 
             # test pix to pix
-            pixCamPoint2 = dw.detector.transform(pixCamPoint, cameraGeom.PIXELS)
+            pixCamPoint2 = dw.detector.transform(
+                pixCamPoint, cameraGeom.PIXELS)
             for i in range(2):
-                self.assertAlmostEquals(pixCamPoint.getPoint()[i], pixCamPoint2.getPoint()[i])
+                self.assertAlmostEquals(pixCamPoint.getPoint()[
+                                        i], pixCamPoint2.getPoint()[i])
 
         # make sure you cannot transform to a different detector
-        pixCamPoint = dw.detector.makeCameraPoint(afwGeom.Point2D(1, 1), cameraGeom.PIXELS)
+        pixCamPoint = dw.detector.makeCameraPoint(
+            afwGeom.Point2D(1, 1), cameraGeom.PIXELS)
         otherCamSys = cameraGeom.CameraSys(cameraGeom.PIXELS, "other detector")
         with self.assertRaises(lsst.pex.exceptions.Exception):
             dw.detector.transform(pixCamPoint, otherCamSys)
@@ -126,7 +134,8 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for i, amp in enumerate(ampList):
             self.assertEquals(amp.getName(), dw.detector[i].getName())
             self.assertEquals(amp.getName(), dw.ampInfo[i].getName())
-            self.assertEquals(amp.getName(), dw.detector[amp.getName()].getName())
+            self.assertEquals(
+                amp.getName(), dw.detector[amp.getName()].getName())
 
     def testTransformAccess(self):
         """Test hasTransform and getTransform
@@ -157,13 +166,15 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             for sysName in ("csys1", "csys2"):
                 for detectorName in ("", dw.name, "a different detector"):
                     cameraSys1 = cameraGeom.CameraSys(sysName, detectorName)
-                    cameraPoint1 = dw.detector.makeCameraPoint(point, cameraSys1)
+                    cameraPoint1 = dw.detector.makeCameraPoint(
+                        point, cameraSys1)
 
                     self.assertEquals(cameraPoint1.getPoint(), point)
                     self.assertEquals(cameraPoint1.getCameraSys(), cameraSys1)
 
                 cameraSysPrefix = cameraGeom.CameraSysPrefix(sysName)
-                cameraPoint2 = dw.detector.makeCameraPoint(point, cameraSysPrefix)
+                cameraPoint2 = dw.detector.makeCameraPoint(
+                    point, cameraSysPrefix)
                 predCameraSys2 = cameraGeom.CameraSys(sysName, dw.name)
                 self.assertEquals(cameraPoint2.getPoint(), point)
                 self.assertEquals(cameraPoint2.getCameraSys(), predCameraSys2)
@@ -180,7 +191,8 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
 
             inCamSysPrefix = cameraGeom.CameraSysPrefix(sysName)
             outCamSys2 = dw.detector.makeCameraSys(inCamSysPrefix)
-            self.assertEquals(outCamSys2, cameraGeom.CameraSys(sysName, dw.name))
+            self.assertEquals(
+                outCamSys2, cameraGeom.CameraSys(sysName, dw.name))
 
     def testGetCorners(self):
         """Test the getCorners method
@@ -194,7 +206,9 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                     cameraSys,
                 )
                 predToPoint = predToCameraPoint.getPoint()
-                self.assertEquals(predToCameraPoint.getCameraSys().getSysName(), cameraSys.getSysName())
+                self.assertEquals(
+                    predToCameraPoint.getCameraSys().getSysName(),
+                    cameraSys.getSysName())
                 for i in range(2):
                     self.assertAlmostEquals(predToPoint[i], toPoint[i])
                     if cameraSys == cameraGeom.PIXELS:
@@ -205,12 +219,16 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """
         dw = DetectorWrapper()
         ctrPixPoint = afwGeom.Box2D(dw.detector.getBBox()).getCenter()
-        ctrPixCameraPoint = dw.detector.makeCameraPoint(ctrPixPoint, cameraGeom.PIXELS)
+        ctrPixCameraPoint = dw.detector.makeCameraPoint(
+            ctrPixPoint, cameraGeom.PIXELS)
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
             ctrCameraPoint = dw.detector.getCenter(cameraSys)
-            self.assertEquals(ctrCameraPoint.getCameraSys().getSysName(), cameraSys.getSysName())
+            self.assertEquals(
+                ctrCameraPoint.getCameraSys().getSysName(),
+                cameraSys.getSysName())
             ctrPoint = ctrCameraPoint.getPoint()
-            predCtrCameraPoint = dw.detector.transform(ctrPixCameraPoint, cameraSys)
+            predCtrCameraPoint = dw.detector.transform(
+                ctrPixCameraPoint, cameraSys)
             predCtrPoint = predCtrCameraPoint.getPoint()
             for i in range(2):
                 self.assertAlmostEquals(ctrPoint[i], predCtrPoint[i])
@@ -223,7 +241,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         #
         # Make a copy without any modifications
         #
-        detector  = DetectorWrapper().detector
+        detector = DetectorWrapper().detector
         ndetector = cameraGeom.copyDetector(detector)
 
         self.assertEqual(detector.getName(), ndetector.getName())
@@ -238,7 +256,8 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for i, amp in enumerate(ampInfoCatalog, 1):
             amp.setRawXYOffset(i*afwGeom.ExtentI(1, 1))
 
-        ndetector = cameraGeom.copyDetector(detector, ampInfoCatalog=ampInfoCatalog)
+        ndetector = cameraGeom.copyDetector(
+            detector, ampInfoCatalog=ampInfoCatalog)
 
         self.assertEqual(detector.getName(), ndetector.getName())
         self.assertEqual(detector.getBBox(), ndetector.getBBox())
@@ -246,6 +265,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(amp.getBBox(), namp.getBBox())
             self.assertNotEqual(amp.getRawXYOffset(), namp.getRawXYOffset())
             self.assertEqual(namp.getRawXYOffset()[0], i)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

@@ -32,10 +32,12 @@ from lsst.afw.coord import Weather
 
 class WeatherTestCase(unittest.TestCase):
     """Test lsst.afw.coord.Weather, a simple struct-like class"""
+
     def testBasics(self):
         prevWeather = None
         for temp, pressure in ((1.1, 2.2), (100.1, 200.2)):  # arbitrary values
-            for humidity in (0.0, 10.1, 100.0, 120.5):  # 0 and greater, including supersaturation
+            # 0 and greater, including supersaturation
+            for humidity in (0.0, 10.1, 100.0, 120.5):
                 weather = Weather(temp, pressure, humidity)
                 self.assertEqual(weather.getAirTemperature(), temp)
                 self.assertEqual(weather.getAirPressure(), pressure)
@@ -47,7 +49,8 @@ class WeatherTestCase(unittest.TestCase):
                 self.assertEqual(weatherCopy.getAirPressure(), pressure)
                 self.assertEqual(weatherCopy.getHumidity(), humidity)
 
-                # test == (using a copy, to make sure the test is not based on identity) and !=
+                # test == (using a copy, to make sure the test is not based on
+                # identity) and !=
                 self.assertEqual(weather, weatherCopy)
                 if prevWeather is not None:
                     self.assertNotEqual(weather, prevWeather)

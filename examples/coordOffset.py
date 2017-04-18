@@ -27,6 +27,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import range
 import lsst.afw.coord as afwCoord
 
+
 def main():
 
     # trace out a great circle
@@ -47,14 +48,17 @@ def main():
         arc = i*dArc*afwCoord.degToRad
         c = afwCoord.Fk5Coord(long0, lat0)
         c.offset(phi*afwCoord.degToRad, arc)
-        print(c.getLongitude(afwCoord.DEGREES), c.getLatitude(afwCoord.DEGREES), end=' ')
+        print(c.getLongitude(afwCoord.DEGREES),
+              c.getLatitude(afwCoord.DEGREES), end=' ')
 
         # try the rotate() method
         c = afwCoord.Fk5Coord(long0, lat0)
         ax = afwCoord.Fk5Coord(axLon, axLat)
 
         c.rotate(ax, arc)
-        print(c.getLongitude(afwCoord.DEGREES), c.getLatitude(afwCoord.DEGREES))
+        print(c.getLongitude(afwCoord.DEGREES),
+              c.getLatitude(afwCoord.DEGREES))
+
 
 if __name__ == '__main__':
     main()

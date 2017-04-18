@@ -69,7 +69,8 @@ class RandomTestCase(unittest.TestCase):
         for name in afwMath.Random.getAlgorithmNames():
             rngs.append(afwMath.Random(name))
         for r in rngs:
-            assert afwMath.Random(r.getAlgorithmName()).uniform() == r.uniform()
+            assert afwMath.Random(r.getAlgorithmName()
+                                  ).uniform() == r.uniform()
             r2 = afwMath.Random(r.getAlgorithm())
             r2.uniform()
             assert r2.uniform() == r.uniform()
@@ -91,7 +92,8 @@ class RandomTestCase(unittest.TestCase):
         pol = pexPolicy.Policy()
         seed = getSeed()
         pol.set("rngSeed", str(seed))
-        pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()[int(afwMath.Random.Algorithm.RANLXD2)])
+        pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()
+                [int(afwMath.Random.Algorithm.RANLXD2)])
         r1 = afwMath.Random(afwMath.Random.RANLXD2, seed)
         r2 = afwMath.Random(pol)
         checkRngEquivalence(r1, r2)
@@ -139,7 +141,8 @@ class RandomImageTestCase(unittest.TestCase):
     def testRandomChisqImage(self):
         nu = 10
         afwMath.randomChisqImage(self.image, self.rand, nu)
-        stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
+        stats = afwMath.makeStatistics(
+            self.image, afwMath.MEAN | afwMath.VARIANCE)
         if False:
             print("nu = %g.  mean = %g, variance = %g" %
                   (nu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE)))
@@ -149,7 +152,8 @@ class RandomImageTestCase(unittest.TestCase):
     def testRandomPoissonImage(self):
         mu = 10
         afwMath.randomPoissonImage(self.image, self.rand, mu)
-        stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
+        stats = afwMath.makeStatistics(
+            self.image, afwMath.MEAN | afwMath.VARIANCE)
         if False:
             print("mu = %g.  mean = %g, variance = %g" %
                   (mu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE)))
@@ -163,6 +167,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

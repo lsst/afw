@@ -46,7 +46,8 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
 
     def testSpherePointEndpoint(self):
         endpoint = afwGeom.SpherePointEndpoint()
-        self.checkEndpointBasics(endpoint=endpoint, pointType=afwGeom.SpherePoint, nAxes=2)
+        self.checkEndpointBasics(
+            endpoint=endpoint, pointType=afwGeom.SpherePoint, nAxes=2)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.SpherePointEndpoint()")
         self.assertEqual("{}".format(endpoint), "SpherePointEndpoint()")
 
@@ -75,7 +76,8 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
 
     def testPoint2Endpoint(self):
         endpoint = afwGeom.Point2Endpoint()
-        self.checkEndpointBasics(endpoint=endpoint, pointType=afwGeom.Point2D, nAxes=2)
+        self.checkEndpointBasics(
+            endpoint=endpoint, pointType=afwGeom.Point2D, nAxes=2)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.Point2Endpoint()")
         self.assertEqual("{}".format(endpoint), "Point2Endpoint()")
 
@@ -85,14 +87,16 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
             try:
                 endpoint.normalizeFrame(frame1)
             except Exception as e:
-                self.fail("endpoint.normalizeFrame(Frame({})) failed with error = {}".format(n, e))
+                self.fail(
+                    "endpoint.normalizeFrame(Frame({})) failed with error = {}".format(n, e))
         badFrame = astshim.SkyFrame()
         with self.assertRaises(InvalidParameterError):
             endpoint.normalizeFrame(badFrame)
 
     def testPoint3Endpoint(self):
         endpoint = afwGeom.Point3Endpoint()
-        self.checkEndpointBasics(endpoint = endpoint, pointType = afwGeom.Point3D, nAxes = 3)
+        self.checkEndpointBasics(
+            endpoint = endpoint, pointType = afwGeom.Point3D, nAxes = 3)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.Point3Endpoint()")
         self.assertEqual("{}".format(endpoint), "Point3Endpoint()")
 
@@ -102,7 +106,8 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
             try:
                 endpoint.normalizeFrame(frame1)
             except Exception as e:
-                self.fail("endpoint.normalizeFrame(Frame({})) failed with error = {}".format(n, e))
+                self.fail(
+                    "endpoint.normalizeFrame(Frame({})) failed with error = {}".format(n, e))
         badFrame = astshim.SkyFrame()
         with self.assertRaises(InvalidParameterError):
             endpoint.normalizeFrame(badFrame)
@@ -110,9 +115,12 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
     def testGenericEndpoint(self):
         for nAxes in (1, 2, 3, 4, 5):
             endpoint = afwGeom.GenericEndpoint(nAxes)
-            self.checkEndpointBasics(endpoint=endpoint, pointType=list, nAxes=nAxes)
-            self.assertEqual(repr(endpoint), "lsst.afw.geom.GenericEndpoint({})".format(nAxes))
-            self.assertEqual("{}".format(endpoint), "GenericEndpoint({})".format(nAxes))
+            self.checkEndpointBasics(
+                endpoint=endpoint, pointType=list, nAxes=nAxes)
+            self.assertEqual(
+                repr(endpoint), "lsst.afw.geom.GenericEndpoint({})".format(nAxes))
+            self.assertEqual("{}".format(endpoint),
+                             "GenericEndpoint({})".format(nAxes))
 
             newFrame = endpoint.makeFrame()
             self.assertEqual(type(newFrame), astshim.Frame)
@@ -121,7 +129,8 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
     def checkEndpointBasics(self, endpoint, pointType, nAxes):
         isAngle = pointType == afwGeom.SpherePoint  # point components are Angles
 
-        baseMsg = "endpoint={}, pointType={}, nAxes={}".format(endpoint, pointType, nAxes)
+        baseMsg = "endpoint={}, pointType={}, nAxes={}".format(
+            endpoint, pointType, nAxes)
 
         self.assertEqual(endpoint.getNAxes(), nAxes, msg=baseMsg)
 
@@ -133,12 +142,15 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(endpoint.getNPoints(pointList), nPoints, msg=baseMsg)
         for i, point in enumerate(pointList):
             for axis in range(nAxes):
-                msg = "{}, endpoint={}, i={}, point={}".format(baseMsg, endpoint, i, point)
+                msg = "{}, endpoint={}, i={}, point={}".format(
+                    baseMsg, endpoint, i, point)
                 if isAngle:
                     desAngle = rawData[i, axis] * afwGeom.radians
-                    self.assertAnglesAlmostEqual(point[axis], desAngle, msg=msg)
+                    self.assertAnglesAlmostEqual(
+                        point[axis], desAngle, msg=msg)
                 else:
-                    self.assertAlmostEqual(point[axis], rawData[i, axis], msg=msg)
+                    self.assertAlmostEqual(
+                        point[axis], rawData[i, axis], msg=msg)
 
         rawDataRoundTrip = endpoint.dataFromArray(pointList)
         self.assertEqual(rawData.shape, rawDataRoundTrip.shape, msg=baseMsg)

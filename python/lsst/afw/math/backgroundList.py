@@ -23,11 +23,11 @@ from builtins import object
 #
 import os
 import lsst.daf.base as dafBase
-from lsst.log import Log
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
 from . import mathLib as afwMath
+
 
 class BackgroundList(object):
     """A list-like class to contain a list of (afwMath.Background, interpStyle, undersampleStyle) tuples
@@ -47,7 +47,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         # Set any previously-unknown Styles (they are set by bkgd.getImage())
         #
         for i, val in enumerate(self._backgrounds):
-            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY, approxWeighting = val
+            bkgd, interpStyle, undersampleStyle, approxStyle, \
+                approxOrderX, approxOrderY, approxWeighting = val
             if interpStyle is None or undersampleStyle is None:
                 interpStyle = bkgd.getAsUsedInterpStyle()
                 undersampleStyle = bkgd.getAsUsedUndersampleStyle()
@@ -68,7 +69,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
     def append(self, val):
         try:
-            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY, approxWeighting = val
+            bkgd, interpStyle, undersampleStyle, approxStyle, \
+                approxOrderX, approxOrderY, approxWeighting = val
         except TypeError:
             bkgd = val
             interpStyle = None
@@ -77,21 +79,6 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             approxOrderX = None
             approxOrderY = None
             approxWeighting = None
-
-# TODO: No longer needed with pybind11, remove?
-#        # Check to see if the Background is actually a BackgroundMI.
-#        # Such special treatment is not generally a good idea as it is against the whole idea of subclassing.
-#        # However, lsst.afw.math.makeBackground() returns a Background, even though it's really a BackgroundMI
-#        # under the covers.  Persistence requires that the type python sees is the actual type under the covers
-#        # (or it will call the wrong python class's python persistence methods).
-#        # The real solution is to not use makeBackground() in python but call the constructor directly;
-#        # however there is already code using makeBackground(), so this is an attempt to assist the user.
-#        subclassed = afwMath.cast_BackgroundMI(bkgd)
-#        if subclassed is not None:
-#            bkgd = subclassed
-#        else:
-#            logger = Log.getLogger("afw.BackgroundList.append")
-#            logger.warn("Unrecognised Background object %s may be unpersistable.", bkgd)
 
         bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                   approxOrderX, approxOrderY, approxWeighting)
@@ -132,8 +119,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             md.set("BKGD_WIDTH", bbox.getWidth())
             md.set("BKGD_HEIGHT", bbox.getHeight())
 
-            statsImage.getImage().writeFits(   fileName, md, "w" if i == 0 else "a")
-            statsImage.getMask().writeFits(    fileName, md, "a")
+            statsImage.getImage().writeFits(fileName, md, "w" if i == 0 else "a")
+            statsImage.getMask().writeFits(fileName, md, "a")
             statsImage.getVariance().writeFits(fileName, md, "a")
 
     @staticmethod
@@ -156,47 +143,56 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         if hdu == INT_MIN:
             hdu = -1
         else:
-            hdu -= 1  # we want to start at 0 (post RFC-304), but are about to increment
+            # we want to start at 0 (post RFC-304), but are about to increment
+            hdu -= 1
 
         while True:
             hdu += 1
 
             md = dafBase.PropertyList()
             try:
-                img = afwImage.ImageF(fileName, hdu, md); hdu += 1
+                img = afwImage.ImageF(fileName, hdu, md)
+                hdu += 1
             except FitsError:
                 break
 
-            msk = afwImage.MaskU( fileName, hdu);     hdu += 1
+            msk = afwImage.MaskU(fileName, hdu)
+            hdu += 1
             var = afwImage.ImageF(fileName, hdu)
 
             statsImage = afwImage.makeMaskedImage(img, msk, var)
 
             x0 = md.get("BKGD_X0")
             y0 = md.get("BKGD_Y0")
-            width  = md.get("BKGD_WIDTH")
+            width = md.get("BKGD_WIDTH")
             height = md.get("BKGD_HEIGHT")
-            imageBBox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height))
+            imageBBox = afwGeom.BoxI(afwGeom.PointI(
+                x0, y0), afwGeom.ExtentI(width, height))
 
-            interpStyle =      afwMath.Interpolate.Style(md.get("INTERPSTYLE"))
-            undersampleStyle = afwMath.UndersampleStyle(md.get("UNDERSAMPLESTYLE"))
+            interpStyle = afwMath.Interpolate.Style(md.get("INTERPSTYLE"))
+            undersampleStyle = afwMath.UndersampleStyle(
+                md.get("UNDERSAMPLESTYLE"))
 
             # Older outputs won't have APPROX* settings.  Provide alternative defaults.
             # Note: Currently X- and Y-orders must be equal due to a limitation in
             #       math::Chebyshev1Function2.  Setting approxOrderY = -1 is equivalent
             #       to saying approxOrderY = approxOrderX.
             approxStyle = md.get("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
-                          else afwMath.ApproximateControl.UNKNOWN
+                else afwMath.ApproximateControl.UNKNOWN
             approxStyle = afwMath.ApproximateControl.Style(approxStyle)
-            approxOrderX = md.get("APPROXORDERX") if "APPROXORDERX" in md.names() else 1
-            approxOrderY = md.get("APPROXORDERY") if "APPROXORDERY" in md.names() else -1
-            approxWeighting = md.get("APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True
+            approxOrderX = md.get(
+                "APPROXORDERX") if "APPROXORDERX" in md.names() else 1
+            approxOrderY = md.get(
+                "APPROXORDERY") if "APPROXORDERY" in md.names() else -1
+            approxWeighting = md.get(
+                "APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
             bctrl.setInterpStyle(interpStyle)
             bctrl.setUndersampleStyle(undersampleStyle)
-            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
+            actrl = afwMath.ApproximateControl(
+                approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
             bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                       approxOrderX, approxOrderY, approxWeighting)
@@ -206,7 +202,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
     def getImage(self):
         """
-        Compute and return a full-resolution image from our list of (Background, interpStyle, undersampleStyle)
+        Compute and return a full-resolution image from our list of
+        (Background, interpStyle, undersampleStyle)
         """
 
         bkgdImage = None

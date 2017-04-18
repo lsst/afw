@@ -73,12 +73,24 @@ class CoordinateTestCase(object):
             self.assertIsNotNone(p1)  # should not throw
             self.assertNotEqual(p1, tuple(p1))  # should not throw
 
-            self.assertEqual(tuple(p1.eq(p2)), tuple([v1 == v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(tuple(p1.ne(p2)), tuple([v1 != v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(tuple(p1.lt(p2)), tuple([v1 < v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(tuple(p1.le(p2)), tuple([v1 <= v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(tuple(p1.gt(p2)), tuple([v1 > v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(tuple(p1.ge(p2)), tuple([v1 >= v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(
+                tuple(p1.eq(p2)),
+                tuple([v1 == v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(
+                tuple(p1.ne(p2)),
+                tuple([v1 != v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(
+                tuple(p1.lt(p2)),
+                tuple([v1 < v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(
+                tuple(p1.le(p2)),
+                tuple([v1 <= v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(
+                tuple(p1.gt(p2)),
+                tuple([v1 > v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(
+                tuple(p1.ge(p2)),
+                tuple([v1 >= v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1.eq(p2)), CoordinateExpr)
             self.assertEqual(type(p1.ne(p2)), CoordinateExpr)
             self.assertEqual(type(p1.lt(p2)), CoordinateExpr)
@@ -86,12 +98,18 @@ class CoordinateTestCase(object):
             self.assertEqual(type(p1.gt(p2)), CoordinateExpr)
             self.assertEqual(type(p1.ge(p2)), CoordinateExpr)
             scalar = dtype(rnd()[0])
-            self.assertEqual(tuple(p1.eq(scalar)), tuple([v1 == scalar for v1 in vector1]))
-            self.assertEqual(tuple(p1.ne(scalar)), tuple([v1 != scalar for v1 in vector1]))
-            self.assertEqual(tuple(p1.lt(scalar)), tuple([v1 < scalar for v1 in vector1]))
-            self.assertEqual(tuple(p1.le(scalar)), tuple([v1 <= scalar for v1 in vector1]))
-            self.assertEqual(tuple(p1.gt(scalar)), tuple([v1 > scalar for v1 in vector1]))
-            self.assertEqual(tuple(p1.ge(scalar)), tuple([v1 >= scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.eq(scalar)),
+                             tuple([v1 == scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.ne(scalar)),
+                             tuple([v1 != scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.lt(scalar)),
+                             tuple([v1 < scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.le(scalar)),
+                             tuple([v1 <= scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.gt(scalar)),
+                             tuple([v1 > scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.ge(scalar)),
+                             tuple([v1 >= scalar for v1 in vector1]))
             self.assertEqual(type(p1.eq(scalar)), CoordinateExpr)
             self.assertEqual(type(p1.ne(scalar)), CoordinateExpr)
             self.assertEqual(type(p1.lt(scalar)), CoordinateExpr)
@@ -106,10 +124,14 @@ class PointTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.classes = [
-            (float, geom.Point2D, lambda: [float(x) for x in np.random.randn(2)]),
-            (int, geom.Point2I, lambda: [int(x) for x in np.random.randint(-5, 5, 2)]),
-            (float, geom.Point3D, lambda: [float(x) for x in np.random.randn(3)]),
-            (int, geom.Point3I, lambda: [int(x) for x in np.random.randint(-5, 5, 3)]),
+            (float, geom.Point2D, lambda: [float(x)
+                                           for x in np.random.randn(2)]),
+            (int, geom.Point2I, lambda: [int(x)
+                                         for x in np.random.randint(-5, 5, 2)]),
+            (float, geom.Point3D, lambda: [float(x)
+                                           for x in np.random.randn(3)]),
+            (int, geom.Point3I, lambda: [int(x)
+                                         for x in np.random.randint(-5, 5, 3)]),
         ]
 
     def testSpanIteration(self):
@@ -148,11 +170,13 @@ class PointTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
         # test rounding to integral coordinates
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Point2I(e1)
-        self.assertAlmostEqual(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+        self.assertAlmostEqual(
+            tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Point3I(e1)
-        self.assertAlmostEqual(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+        self.assertAlmostEqual(
+            tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
 
 
 class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
@@ -161,10 +185,14 @@ class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.classes = [
-            (float, geom.Extent2D, lambda: [float(x) for x in np.random.randn(2)]),
-            (int, geom.Extent2I, lambda: [int(x) for x in np.random.randint(-5, 5, 2)]),
-            (float, geom.Extent3D, lambda: [float(x) for x in np.random.randn(3)]),
-            (int, geom.Extent3I, lambda: [int(x) for x in np.random.randint(-5, 5, 3)]),
+            (float, geom.Extent2D, lambda: [float(x)
+                                            for x in np.random.randn(2)]),
+            (int, geom.Extent2I, lambda: [int(x)
+                                          for x in np.random.randint(-5, 5, 2)]),
+            (float, geom.Extent3D, lambda: [float(x)
+                                            for x in np.random.randn(3)]),
+            (int, geom.Extent3I, lambda: [int(x)
+                                          for x in np.random.randint(-5, 5, 3)]),
         ]
 
     def testRounding(self):
@@ -299,7 +327,8 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 self.fail("%s(%s, %s): expected %s, got %s" %
                           (op.__name__, lhs.__name__, rhs.__name__, tuple(check), tuple(result)))
             if inPlace and result is not v1:
-                self.fail("%s(%s, %s): result is not self" % (op.__name__, lhs.__name__, rhs.__name__))
+                self.fail("%s(%s, %s): result is not self" %
+                          (op.__name__, lhs.__name__, rhs.__name__))
 
     def testPointAsExtent(self):
         for n in (2, 3):
@@ -307,7 +336,8 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 p = self.makeRandom(geom.Point[t, n])
                 e = p.asExtent()
                 self.assertEqual(type(e), geom.Extent[t, n])
-                self.assertFloatsAlmostEqual(np.array(p), np.array(e), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(
+                    np.array(p), np.array(e), rtol=0.0, atol=0.0)
 
     def testExtentAsPoint(self):
         for n in (2, 3):
@@ -315,7 +345,8 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 e = self.makeRandom(geom.Extent[t, n])
                 p = e.asPoint()
                 self.assertEqual(type(p), geom.Point[t, n])
-                self.assertFloatsAlmostEqual(np.array(p), np.array(e), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(
+                    np.array(p), np.array(e), rtol=0.0, atol=0.0)
 
     def testUnaryOperators(self):
         for n in (2, 3):
@@ -323,10 +354,12 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 e1 = self.makeRandom(geom.Extent[t, n])
                 e2 = +e1
                 self.assertEqual(type(e1), type(e2))
-                self.assertFloatsAlmostEqual(np.array(e1), np.array(e2), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(
+                    np.array(e1), np.array(e2), rtol=0.0, atol=0.0)
                 e3 = -e1
                 self.assertEqual(type(e1), type(e3))
-                self.assertFloatsAlmostEqual(np.array(e3), -np.array(e1), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(
+                    np.array(e3), -np.array(e1), rtol=0.0, atol=0.0)
 
     def testBinaryOperators(self):
         for n in (2, 3):

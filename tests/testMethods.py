@@ -122,23 +122,30 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                 self.assertBoxesAlmostEqual(box0, box0, maxDiff=1e-7)
                 for deltaExtent in ((0.001, -0.001), (2, -3)):
                     deltaExtent = afwGeom.Extent2D(*deltaExtent)
-                    box1 = afwGeom.Box2D(box0.getMin() + deltaExtent, box0.getMax())
+                    box1 = afwGeom.Box2D(
+                        box0.getMin() + deltaExtent, box0.getMax())
                     radDiff = math.hypot(*deltaExtent)
-                    self.assertBoxesAlmostEqual(box0, box1, maxDiff=radDiff*1.00001)
+                    self.assertBoxesAlmostEqual(
+                        box0, box1, maxDiff=radDiff*1.00001)
                     # sanity-check deprecated version
-                    self.assertBoxesNearlyEqual(box0, box1, maxDiff=radDiff*1.00001)
+                    self.assertBoxesNearlyEqual(
+                        box0, box1, maxDiff=radDiff*1.00001)
                     with self.assertRaises(AssertionError):
                         self.assertBoxesAlmostEqual(
                             box0, box1, maxDiff=radDiff*0.99999)
 
-                    box2 = afwGeom.Box2D(box0.getMin() - deltaExtent, box0.getMax())
-                    self.assertBoxesAlmostEqual(box0, box2, maxDiff=radDiff*1.00001)
+                    box2 = afwGeom.Box2D(
+                        box0.getMin() - deltaExtent, box0.getMax())
+                    self.assertBoxesAlmostEqual(
+                        box0, box2, maxDiff=radDiff*1.00001)
                     with self.assertRaises(AssertionError):
                         self.assertBoxesAlmostEqual(
                             box0, box2, maxDiff=radDiff*0.999999)
 
-                    box3 = afwGeom.Box2D(box0.getMin(), box0.getMax() + deltaExtent)
-                    self.assertBoxesAlmostEqual(box0, box3, maxDiff=radDiff*1.00001)
+                    box3 = afwGeom.Box2D(
+                        box0.getMin(), box0.getMax() + deltaExtent)
+                    self.assertBoxesAlmostEqual(
+                        box0, box3, maxDiff=radDiff*1.00001)
                     with self.assertRaises(AssertionError):
                         self.assertBoxesAlmostEqual(
                             box0, box3, maxDiff=radDiff*0.999999)
@@ -148,9 +155,11 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         for raDecDeg in ((45, 45), (-70, 89), (130, -89.5)):
             raDecDeg = [val*afwGeom.degrees for val in raDecDeg]
             coord0 = afwCoord.IcrsCoord(*raDecDeg)
-            self.assertCoordsAlmostEqual(coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
+            self.assertCoordsAlmostEqual(
+                coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
             # sanity-check deprecated version
-            self.assertCoordsNearlyEqual(coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
+            self.assertCoordsNearlyEqual(
+                coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
 
             for offAng in (0, 45, 90):
                 offAng = offAng*afwGeom.degrees
@@ -158,43 +167,54 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     offDist = offDist*afwGeom.arcseconds
                     coord1 = coord0.toGalactic()
                     coord1.offset(offAng, offDist)
-                    self.assertCoordsAlmostEqual(coord0, coord1, maxDiff=offDist*1.00001)
+                    self.assertCoordsAlmostEqual(
+                        coord0, coord1, maxDiff=offDist*1.00001)
                     with self.assertRaises(AssertionError):
-                        self.assertCoordsAlmostEqual(coord0, coord1, maxDiff=offDist*0.99999)
+                        self.assertCoordsAlmostEqual(
+                            coord0, coord1, maxDiff=offDist*0.99999)
 
             # test wraparound in RA
-            coord2 = afwCoord.IcrsCoord(raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
-            self.assertCoordsAlmostEqual(coord0, coord2, maxDiff=1e-7*afwGeom.arcseconds)
+            coord2 = afwCoord.IcrsCoord(
+                raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
+            self.assertCoordsAlmostEqual(
+                coord0, coord2, maxDiff=1e-7*afwGeom.arcseconds)
 
     def testAssertSpherePointsAlmostEqual(self):
         """Test assertSpherePointsAlmostEqual"""
         for raDecDeg in ((45, 45), (-70, 89), (130, -89.5)):
             raDecDeg = [val*afwGeom.degrees for val in raDecDeg]
             sp0 = afwGeom.SpherePoint(*raDecDeg)
-            self.assertSpherePointsAlmostEqual(sp0, sp0, maxSep=1e-7*afwGeom.arcseconds)
+            self.assertSpherePointsAlmostEqual(
+                sp0, sp0, maxSep=1e-7*afwGeom.arcseconds)
             # make sure specifying msg is acceptable
-            self.assertSpherePointsAlmostEqual(sp0, sp0, maxSep=1e-7*afwGeom.arcseconds, msg="any")
+            self.assertSpherePointsAlmostEqual(
+                sp0, sp0, maxSep=1e-7*afwGeom.arcseconds, msg="any")
 
             for offAng in (0, 45, 90):
                 offAng = offAng*afwGeom.degrees
                 for offDist in (0.001, 0.1):
                     offDist = offDist*afwGeom.arcseconds
                     sp1 = sp0.offset(bearing=offAng, amount=offDist)
-                    self.assertSpherePointsAlmostEqual(sp0, sp1, maxSep=offDist*1.00001)
+                    self.assertSpherePointsAlmostEqual(
+                        sp0, sp1, maxSep=offDist*1.00001)
                     with self.assertRaises(AssertionError):
-                        self.assertSpherePointsAlmostEqual(sp0, sp1, maxSep=offDist*0.99999)
+                        self.assertSpherePointsAlmostEqual(
+                            sp0, sp1, maxSep=offDist*0.99999)
 
                     # make sure msg is appended
                     try:
-                        self.assertSpherePointsAlmostEqual(sp0, sp1, maxSep=offDist*0.99999, msg="boo")
+                        self.assertSpherePointsAlmostEqual(
+                            sp0, sp1, maxSep=offDist*0.99999, msg="boo")
                         self.fail("Sphere point lists should be unequal")
                     except AssertionError as e:
                         errMsg = e.args[0]
                     self.assertTrue(errMsg.endswith("boo"))
 
             # test wraparound in RA
-            sp2 = afwGeom.SpherePoint(raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
-            self.assertSpherePointsAlmostEqual(sp0, sp2, maxSep=1e-7*afwGeom.arcseconds)
+            sp2 = afwGeom.SpherePoint(
+                raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
+            self.assertSpherePointsAlmostEqual(
+                sp0, sp2, maxSep=1e-7*afwGeom.arcseconds)
 
     def testAssertSpherePointListsAlmostEqual(self):
         """Test assertSpherePointListsAlmostEqual
@@ -206,13 +226,16 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         offDist = 1.1 * afwGeom.arcseconds
         splist1 = [sp0.offset(bearing=bearDeg*afwGeom.degrees, amount=offDist)
                    for sp0, bearDeg in zip(splist0, (-10, 78, 123))]
-        self.assertSpherePointListsAlmostEqual(splist0, splist1, maxSep=offDist*1.00001)
+        self.assertSpherePointListsAlmostEqual(
+            splist0, splist1, maxSep=offDist*1.00001)
         with self.assertRaises(AssertionError):
-            self.assertSpherePointListsAlmostEqual(splist0, splist1, maxSep=offDist*0.99999)
+            self.assertSpherePointListsAlmostEqual(
+                splist0, splist1, maxSep=offDist*0.99999)
 
         # make sure msg is appended
         try:
-            self.assertSpherePointListsAlmostEqual(splist0, splist1, maxSep=offDist*0.99999, msg="boo")
+            self.assertSpherePointListsAlmostEqual(
+                splist0, splist1, maxSep=offDist*0.99999, msg="boo")
             self.fail("Sphere point lists should be unequal")
         except AssertionError as e:
             errMsg = e.args[0]
@@ -224,17 +247,21 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             self.assertPairsAlmostEqual(pair0, pair0, maxDiff=1e-7)
             # sanity-check deprecated version
             self.assertPairsNearlyEqual(pair0, pair0, maxDiff=1e-7)
-            self.assertPairsAlmostEqual(afwGeom.Point2D(*pair0), afwGeom.Extent2D(*pair0), maxDiff=1e-7)
+            self.assertPairsAlmostEqual(afwGeom.Point2D(*pair0),
+                                        afwGeom.Extent2D(*pair0), maxDiff=1e-7)
             for diff in ((0.001, 0), (-0.01, 0.03)):
                 pair1 = [pair0[i] + diff[i] for i in range(2)]
                 radialDiff = math.hypot(*diff)
-                self.assertPairsAlmostEqual(pair0, pair1, maxDiff=radialDiff+1e-7)
+                self.assertPairsAlmostEqual(
+                    pair0, pair1, maxDiff=radialDiff+1e-7)
                 with self.assertRaises(AssertionError):
-                    self.assertPairsAlmostEqual(pair0, pair1, maxDiff=radialDiff-1e-7)
+                    self.assertPairsAlmostEqual(
+                        pair0, pair1, maxDiff=radialDiff-1e-7)
 
     def testAssertWcssAlmostEqualOverBBox(self):
         """Test assertWcsAlmostEqualOverBBox and wcsAlmostEqualOverBBox"""
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(3001, 3001))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                             afwGeom.Extent2I(3001, 3001))
         ctrPix = afwGeom.Point2I(1500, 1500)
         metadata = dafBase.PropertySet()
         metadata.set("RADECSYS", "FK5")
@@ -309,9 +336,12 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
         # sanity-check deprecated version
         self.assertMaskedImagesNearlyEqual(mi1, mi0, atol=0, rtol=0)
-        self.assertMaskedImagesAlmostEqual(mi0.getArrays(), mi1, atol=0, rtol=0)
-        self.assertMaskedImagesAlmostEqual(mi0, mi1.getArrays(), atol=0, rtol=0)
-        self.assertMaskedImagesAlmostEqual(mi0.getArrays(), mi1.getArrays(), atol=0, rtol=0)
+        self.assertMaskedImagesAlmostEqual(
+            mi0.getArrays(), mi1, atol=0, rtol=0)
+        self.assertMaskedImagesAlmostEqual(
+            mi0, mi1.getArrays(), atol=0, rtol=0)
+        self.assertMaskedImagesAlmostEqual(
+            mi0.getArrays(), mi1.getArrays(), atol=0, rtol=0)
         for getName in ("getImage", "getVariance"):
             plane0 = getattr(mi0, getName)()
             plane1 = getattr(mi1, getName)()
@@ -321,9 +351,12 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             # sanity-check deprecated version
             self.assertImagesNearlyEqual(plane0, plane1, atol=0, rtol=0)
             self.assertImagesAlmostEqual(plane1, plane0, atol=0, rtol=0)
-            self.assertImagesAlmostEqual(plane0.getArray(), plane1, atol=0, rtol=0)
-            self.assertImagesAlmostEqual(plane0, plane1.getArray(), atol=0, rtol=0)
-            self.assertImagesAlmostEqual(plane0.getArray(), plane1.getArray(), atol=0, rtol=0)
+            self.assertImagesAlmostEqual(
+                plane0.getArray(), plane1, atol=0, rtol=0)
+            self.assertImagesAlmostEqual(
+                plane0, plane1.getArray(), atol=0, rtol=0)
+            self.assertImagesAlmostEqual(
+                plane0.getArray(), plane1.getArray(), atol=0, rtol=0)
             self.assertMasksEqual(plane0, plane1)
             self.assertMasksEqual(plane1, plane0)
             self.assertMasksEqual(plane0.getArray(), plane1)
@@ -351,7 +384,8 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     with self.assertRaises(Exception):
                         self.assertMaskedImagesAlmostEqual(mi0, mi1)
                     with self.assertRaises(Exception):
-                        self.assertMaskedImagesAlmostEqual(mi0, mi1.getArrays())
+                        self.assertMaskedImagesAlmostEqual(
+                            mi0, mi1.getArrays())
                     with self.assertRaises(Exception):
                         self.assertMaskedImagesAlmostEqual(mi1, mi0)
 
@@ -359,10 +393,14 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     skipMaskArr = skipMask.getArray()
                     skipMaskArr[:] = 0
                     skipMaskArr[2, 2] = 1
-                    self.assertImagesAlmostEqual(plane0, plane1, skipMask=skipMaskArr, atol=0, rtol=0)
-                    self.assertImagesAlmostEqual(plane0, plane1, skipMask=skipMask, atol=0, rtol=0)
-                    self.assertMaskedImagesAlmostEqual(mi0, mi1, skipMask=skipMaskArr, atol=0, rtol=0)
-                    self.assertMaskedImagesAlmostEqual(mi0, mi1, skipMask=skipMask, atol=0, rtol=0)
+                    self.assertImagesAlmostEqual(
+                        plane0, plane1, skipMask=skipMaskArr, atol=0, rtol=0)
+                    self.assertImagesAlmostEqual(
+                        plane0, plane1, skipMask=skipMask, atol=0, rtol=0)
+                    self.assertMaskedImagesAlmostEqual(
+                        mi0, mi1, skipMask=skipMaskArr, atol=0, rtol=0)
+                    self.assertMaskedImagesAlmostEqual(
+                        mi0, mi1, skipMask=skipMask, atol=0, rtol=0)
 
                 for dval in (0.001, 0.03):
                     mi0 = mi.Factory(mi, True)
@@ -371,18 +409,26 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     plane1 = getattr(mi1, getName)()
                     plane1[2, 2] += dval
                     val1 = plane1.get(2, 2)
-                    self.assertImagesAlmostEqual(plane0, plane1, rtol=0, atol=dval + epsilon)
-                    self.assertImagesAlmostEqual(plane0, plane1, rtol=dval/val1 + epsilon, atol=0)
-                    self.assertMaskedImagesAlmostEqual(mi0, mi1, rtol=0, atol=dval + epsilon)
-                    self.assertMaskedImagesAlmostEqual(mi1, mi0, rtol=0, atol=dval + epsilon)
+                    self.assertImagesAlmostEqual(
+                        plane0, plane1, rtol=0, atol=dval + epsilon)
+                    self.assertImagesAlmostEqual(
+                        plane0, plane1, rtol=dval/val1 + epsilon, atol=0)
+                    self.assertMaskedImagesAlmostEqual(
+                        mi0, mi1, rtol=0, atol=dval + epsilon)
+                    self.assertMaskedImagesAlmostEqual(
+                        mi1, mi0, rtol=0, atol=dval + epsilon)
                     with self.assertRaises(Exception):
-                        self.assertImagesAlmostEqual(plane0, plane1, rtol=0, atol=dval - epsilon)
+                        self.assertImagesAlmostEqual(
+                            plane0, plane1, rtol=0, atol=dval - epsilon)
                     with self.assertRaises(Exception):
-                        self.assertImagesAlmostEqual(plane0, plane1, rtol=dval/val1 - epsilon, atol=0)
+                        self.assertImagesAlmostEqual(
+                            plane0, plane1, rtol=dval/val1 - epsilon, atol=0)
                     with self.assertRaises(Exception):
-                        self.assertMaskedImagesAlmostEqual(mi0, mi1, rtol=0, atol=dval - epsilon)
+                        self.assertMaskedImagesAlmostEqual(
+                            mi0, mi1, rtol=0, atol=dval - epsilon)
                     with self.assertRaises(Exception):
-                        self.assertMaskedImagesAlmostEqual(mi0, mi1, rtol=dval/val1 - epsilon, atol=0)
+                        self.assertMaskedImagesAlmostEqual(
+                            mi0, mi1, rtol=dval/val1 - epsilon, atol=0)
             else:
                 # plane is an integer of some type
                 for dval in (1, 3):
@@ -393,13 +439,18 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     plane1[2, 2] += dval
                     val1 = plane1.get(2, 2)
                     # int value and test is <= so epsilon not required for atol
-                    # but rtol is a fraction, so epsilon is still safest for the rtol test
-                    self.assertImagesAlmostEqual(plane0, plane1, rtol=0, atol=dval)
-                    self.assertImagesAlmostEqual(plane0, plane1, rtol=dval/val1 + epsilon, atol=0)
+                    # but rtol is a fraction, so epsilon is still safest for
+                    # the rtol test
+                    self.assertImagesAlmostEqual(
+                        plane0, plane1, rtol=0, atol=dval)
+                    self.assertImagesAlmostEqual(
+                        plane0, plane1, rtol=dval/val1 + epsilon, atol=0)
                     with self.assertRaises(Exception):
-                        self.assertImagesAlmostEqual(plane0, plane1, rtol=0, atol=dval - epsilon)
+                        self.assertImagesAlmostEqual(
+                            plane0, plane1, rtol=0, atol=dval - epsilon)
                     with self.assertRaises(Exception):
-                        self.assertImagesAlmostEqual(plane0, plane1, rtol=dval/val1 - epsilon, atol=0)
+                        self.assertImagesAlmostEqual(
+                            plane0, plane1, rtol=dval/val1 - epsilon, atol=0)
 
         # alter mask and check the results
         mi0 = mi.Factory(mi, True)
@@ -407,7 +458,8 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         mask0 = mi0.getMask()
         mask1 = mi1.getMask()
         for dval in (1, 3):
-            mask1.getArray()[2, 2] += 1  # getArray avoids "unsupported operand type" failure
+            # getArray avoids "unsupported operand type" failure
+            mask1.getArray()[2, 2] += 1
             with self.assertRaises(Exception):
                 self.assertMasksEqual(mask0, mask1)
             with self.assertRaises(Exception):
@@ -423,8 +475,10 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         skipMaskArr[2, 2] = 1
         self.assertMasksEqual(mask0, mask1, skipMask=skipMaskArr)
         self.assertMasksEqual(mask0, mask1, skipMask=skipMask)
-        self.assertMaskedImagesAlmostEqual(mi0, mi1, skipMask=skipMaskArr, atol=0, rtol=0)
-        self.assertMaskedImagesAlmostEqual(mi0, mi1, skipMask=skipMask, atol=0, rtol=0)
+        self.assertMaskedImagesAlmostEqual(
+            mi0, mi1, skipMask=skipMaskArr, atol=0, rtol=0)
+        self.assertMaskedImagesAlmostEqual(
+            mi0, mi1, skipMask=skipMask, atol=0, rtol=0)
 
     def testAssertImagesAlmostEqual(self):
         """Test assertImagesAlmostEqual, assertMasksEqual and assertMaskedImagesAlmostEqual
@@ -444,24 +498,28 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             with self.assertRaises(TypeError):
                 self.assertMasksEqual(invalidType, mi.getMask())
             with self.assertRaises(TypeError):
-                self.assertMasksEqual(mi.getMask(), mi.getMask(), skipMask=invalidType)
+                self.assertMasksEqual(
+                    mi.getMask(), mi.getMask(), skipMask=invalidType)
 
             with self.assertRaises(TypeError):
                 self.assertImagesAlmostEqual(mi.getImage(), invalidType)
             with self.assertRaises(TypeError):
                 self.assertImagesAlmostEqual(invalidType, mi.getImage())
             with self.assertRaises(TypeError):
-                self.assertImagesAlmostEqual(mi.getImage(), mi.getImage(), skipMask=invalidType)
+                self.assertImagesAlmostEqual(
+                    mi.getImage(), mi.getImage(), skipMask=invalidType)
 
             with self.assertRaises(TypeError):
                 self.assertMaskedImagesAlmostEqual(mi, invalidType)
             with self.assertRaises(TypeError):
                 self.assertMaskedImagesAlmostEqual(invalidType, mi)
             with self.assertRaises(TypeError):
-                self.assertMaskedImagesAlmostEqual(mi, mi, skipMask=invalidType)
+                self.assertMaskedImagesAlmostEqual(
+                    mi, mi, skipMask=invalidType)
 
             with self.assertRaises(TypeError):
-                self.assertMaskedImagesAlmostEqual(mi.getImage(), mi.getImage())
+                self.assertMaskedImagesAlmostEqual(
+                    mi.getImage(), mi.getImage())
 
     def testUnsignedImages(self):
         """Unsigned images can give incorrect differences unless the test code is careful
@@ -501,7 +559,8 @@ def makeRampMaskedImageWithNans(width, height, imgClass=afwImage.MaskedImageF):
     try:
         np.array([np.nan], dtype=im.getArray().dtype)
     except Exception:
-        # image plane does not support nan, etc. (presumably an int of some variety)
+        # image plane does not support nan, etc. (presumably an int of some
+        # variety)
         pass
     else:
         # image plane does support nan, etc.

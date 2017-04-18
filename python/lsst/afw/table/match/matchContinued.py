@@ -87,11 +87,11 @@ def clone(self):
 
 
 # Pickling support disabled for this type (see testSourceMatch comment for reasoning)
-#def __getstate__(self):
+# def __getstate__(self):
 #    return self.first, self.second, self.distance
 #
 #
-#def __setstate__(self, state):
+# def __setstate__(self, state):
 #    self.__init__(*state)
 
 
@@ -123,9 +123,12 @@ def packMatches(matches):
     to wrap the overloaded C++ functions with pybind11, but there didn't seem much point.
     """
     schema = Schema()
-    outKey1 = schema.addField("first", type=np.int64, doc="ID for first source record in match.")
-    outKey2 = schema.addField("second", type=np.int64, doc="ID for second source record in match.")
-    keyD = schema.addField("distance", type=np.float64, doc="Distance between matches sources.")
+    outKey1 = schema.addField("first", type=np.int64,
+                              doc="ID for first source record in match.")
+    outKey2 = schema.addField("second", type=np.int64,
+                              doc="ID for second source record in match.")
+    keyD = schema.addField("distance", type=np.float64,
+                           doc="Distance between matches sources.")
     result = BaseCatalog(schema)
     result.table.preallocate(len(matches))
     for match in matches:

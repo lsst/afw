@@ -47,8 +47,10 @@ class CovarianceMatrixKey(with_metaclass(TemplateMeta, object)):
 CovarianceMatrixKey.register((np.float32, 2), aggregates.CovarianceMatrix2fKey)
 CovarianceMatrixKey.register((np.float32, 3), aggregates.CovarianceMatrix3fKey)
 CovarianceMatrixKey.register((np.float32, 4), aggregates.CovarianceMatrix4fKey)
-CovarianceMatrixKey.register((np.float32, None), aggregates.CovarianceMatrixXfKey)
+CovarianceMatrixKey.register(
+    (np.float32, None), aggregates.CovarianceMatrixXfKey)
 CovarianceMatrixKey.register((np.float64, 2), aggregates.CovarianceMatrix2dKey)
 CovarianceMatrixKey.register((np.float64, 3), aggregates.CovarianceMatrix3dKey)
 CovarianceMatrixKey.register((np.float64, 4), aggregates.CovarianceMatrix4dKey)
-CovarianceMatrixKey.register((np.float64, None), aggregates.CovarianceMatrixXdKey)
+CovarianceMatrixKey.register(
+    (np.float64, None), aggregates.CovarianceMatrixXdKey)

@@ -20,8 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-## \file
-## \brief Utilities to use with displaying images
+# \file
+# \brief Utilities to use with displaying images
 
 from __future__ import absolute_import, division, print_function
 from builtins import str
@@ -34,7 +34,8 @@ import lsst.afw.geom as afwGeom
 __all__ = (
     "Mosaic",
     "drawBBox", "drawFootprint", "drawCoaddInputs",
-    )
+)
+
 
 def _getDisplayFromDisplayOrFrame(display, frame=None):
     """!Return an afwDisplay.Display given either a display or a frame ID.
@@ -45,7 +46,8 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
     If the desired display is None, return None;
     if (display, frame) == ("deferToFrame", None), return the default display"""
 
-    import lsst.afw.display as afwDisplay # import locally to allow this file to be imported by __init__
+    # import locally to allow this file to be imported by __init__
+    import lsst.afw.display as afwDisplay
 
     if display in ("deferToFrame", None):
         if display is None and frame is None:
@@ -67,7 +69,6 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
 
     return display
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class Mosaic(object):
     """A class to handle mosaics of one or more identically-sized images (or Masks or MaskedImages)
@@ -104,6 +105,7 @@ class Mosaic(object):
 
     You can return the (ix, iy)th (or nth) bounding box (in pixels) with getBBox()
     """
+
     def __init__(self, gutter=3, background=0, mode="square"):
         self.gutter = gutter            # number of pixels between panels in a mosaic
         self.background = background    # value in gutters
@@ -133,7 +135,8 @@ class Mosaic(object):
 
         return len(self.images)
 
-    def makeMosaic(self, images=None, display="deferToFrame", mode=None, background=None, title="", frame=None):
+    def makeMosaic(self, images=None, display="deferToFrame", mode=None,
+                   background=None, title="", frame=None):
         """Return a mosaic of all the images provided; if none are specified,
         use the list accumulated with Mosaic.append().
 
@@ -145,7 +148,8 @@ class Mosaic(object):
 
         if images:
             if self.images:
-                raise RuntimeError("You have already appended %d images to this Mosaic" % len(self.images))
+                raise RuntimeError(
+                    "You have already appended %d images to this Mosaic" % len(self.images))
 
             try:
                 len(images)             # check that it quacks like a list
@@ -202,8 +206,9 @@ class Mosaic(object):
         self.nx, self.ny = nx, ny
 
         mosaic = images[0].Factory(
-            afwGeom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
-            )
+            afwGeom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter,
+                             ny*self.ysize + (ny - 1)*self.gutter)
+        )
         try:
             mosaic.set(self.background)
         except AttributeError:
@@ -211,13 +216,15 @@ class Mosaic(object):
                                type(mosaic))
 
         for i in range(len(images)):
-            smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx), afwImage.LOCAL)
+            smosaic = mosaic.Factory(
+                mosaic, self.getBBox(i%nx, i//nx), afwImage.LOCAL)
             im = images[i]
 
-            if smosaic.getDimensions() != im.getDimensions(): # im is smaller than smosaic
+            if smosaic.getDimensions() != im.getDimensions():  # im is smaller than smosaic
                 llc = afwGeom.PointI((smosaic.getWidth() - im.getWidth())//2,
                                      (smosaic.getHeight() - im.getHeight())//2)
-                smosaic = smosaic.Factory(smosaic, afwGeom.Box2I(llc, im.getDimensions()), afwImage.LOCAL)
+                smosaic = smosaic.Factory(smosaic, afwGeom.Box2I(
+                    llc, im.getDimensions()), afwImage.LOCAL)
 
             smosaic[:] = im
 
@@ -270,7 +277,8 @@ class Mosaic(object):
             return
 
         if len(labels) != self.nImage:
-            raise RuntimeError("You provided %d labels for %d panels" % (len(labels), self.nImage))
+            raise RuntimeError("You provided %d labels for %d panels" % (
+                len(labels), self.nImage))
 
         display = _getDisplayFromDisplayOrFrame(display, frame)
         if not display:
@@ -288,12 +296,14 @@ class Mosaic(object):
                     if not label:
                         continue
 
-                    display.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(), ctype=ctype)
+                    display.dot(str(label), self.getBBox(i).getMinX(),
+                                self.getBBox(i).getMinY(), ctype=ctype)
 
     @property
     def nImage(self):
         """Number of images"""
         return len(self.images)
+
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, display="deferToFrame", ctype=None, bin=1, frame=None):
     """Draw an afwImage::BBox on a display frame with the specified ctype.  Include an extra borderWidth pixels
@@ -305,20 +315,25 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
     x1, y1 = bbox.getMaxX(), bbox.getMaxY()
 
     if origin:
-        x0 += origin[0]; x1 += origin[0]
-        y0 += origin[1]; y1 += origin[1]
+        x0 += origin[0]
+        x1 += origin[0]
+        y0 += origin[1]
+        y1 += origin[1]
 
-    x0 /= bin; y0 /= bin
-    x1 /= bin; y1 /= bin
+    x0 /= bin
+    y0 /= bin
+    x1 /= bin
+    y1 /= bin
     borderWidth /= bin
 
     display = _getDisplayFromDisplayOrFrame(display, frame)
     display.line([(x0 - borderWidth, y0 - borderWidth),
-              (x0 - borderWidth, y1 + borderWidth),
-              (x1 + borderWidth, y1 + borderWidth),
-              (x1 + borderWidth, y0 - borderWidth),
-              (x0 - borderWidth, y0 - borderWidth),
-              ], ctype=ctype)
+                  (x0 - borderWidth, y1 + borderWidth),
+                  (x1 + borderWidth, y1 + borderWidth),
+                  (x1 + borderWidth, y0 - borderWidth),
+                  (x0 - borderWidth, y0 - borderWidth),
+                  ], ctype=ctype)
+
 
 def drawFootprint(foot, borderWidth=0.5, origin=None, XY0=None, frame=None, ctype=None, bin=1,
                   peaks=False, symb="+", size=0.4, ctypePeak=None, display="deferToFrame"):
@@ -342,28 +357,34 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
             y, x0, x1 = s.getY(), s.getX0(), s.getX1()
 
             if origin:
-                x0 += origin[0]; x1 += origin[0]
+                x0 += origin[0]
+                x1 += origin[0]
                 y += origin[1]
 
-            x0 /= bin; x1 /= bin; y /= bin
+            x0 /= bin
+            x1 /= bin
+            y /= bin
 
             display.line([(x0 - borderWidth, y - borderWidth),
-                      (x0 - borderWidth, y + borderWidth),
-                      (x1 + borderWidth, y + borderWidth),
-                      (x1 + borderWidth, y - borderWidth),
-                      (x0 - borderWidth, y - borderWidth),
-                      ], ctype=ctype)
+                          (x0 - borderWidth, y + borderWidth),
+                          (x1 + borderWidth, y + borderWidth),
+                          (x1 + borderWidth, y - borderWidth),
+                          (x0 - borderWidth, y - borderWidth),
+                          ], ctype=ctype)
 
         if peaks:
             for p in foot.getPeaks():
                 x, y = p.getIx(), p.getIy()
 
                 if origin:
-                    x += origin[0]; y += origin[1]
+                    x += origin[0]
+                    y += origin[1]
 
-                x /= bin; y /= bin
+                x /= bin
+                y /= bin
 
                 display.dot(symb, x, y, size=size, ctype=ctypePeak)
+
 
 def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display="deferToFrame"):
     """Draw the bounding boxes of input exposures to a coadd on a display frame with the specified ctype,
@@ -386,4 +407,4 @@ def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display="deferToFra
             coaddCorners = [coaddWcs.skyToPixel(record.getWcs().pixelToSky(point)) + offset
                             for point in ccdCorners]
             display.line([(coaddCorners[i].getX()/bin, coaddCorners[i].getY()/bin)
-                      for i in range(-1, 4)], ctype=ctype)
+                          for i in range(-1, 4)], ctype=ctype)

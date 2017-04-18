@@ -10,6 +10,7 @@ from lsst.afw.math import LeastSquares
 nDataList = 2**numpy.arange(4, 14, 2, dtype=int)
 dimensionList = 2**numpy.arange(1, 8, dtype=int)
 
+
 def run(number=10):
     setup = """
 import numpy
@@ -30,21 +31,24 @@ design = numpy.random.randn(dimension, nData).transpose()
     progress = 0
     sys.stderr.write("Timing: ")
     for method in ("DIRECT_SVD", "NORMAL_EIGENSYSTEM", "NORMAL_CHOLESKY"):
-        results[method] = numpy.zeros(nDataList.shape + dimensionList.shape, dtype=float)
+        results[method] = numpy.zeros(
+            nDataList.shape + dimensionList.shape, dtype=float)
         for i, nData in enumerate(nDataList):
             for j, dimension in enumerate(dimensionList):
                 if dimension <= nData:
-                    results[method][i,j] = timeit.timeit(statement % method, setup % (nData, dimension),
-                                                         number = number) / number
+                    results[method][i, j] = timeit.timeit(statement % method, setup % (nData, dimension),
+                                                          number = number) / number
                     progress += 1
                 else:
-                    results[method][i,j] = float("NaN")
+                    results[method][i, j] = float("NaN")
             sys.stderr.write("%0.2f " % (float(progress) / totalCount))
     sys.stderr.write("\n")
     return results
 
+
 def plot(results):
-    colors = {"DIRECT_SVD": "r", "NORMAL_EIGENSYSTEM": "g", "NORMAL_CHOLESKY": "b"}
+    colors = {"DIRECT_SVD": "r",
+              "NORMAL_EIGENSYSTEM": "g", "NORMAL_CHOLESKY": "b"}
     pyplot.figure()
     alpha = 0.75
     for method in results:
@@ -53,11 +57,12 @@ def plot(results):
                 label = method
             else:
                 label = "_nolegend_"
-            pyplot.loglog(dimensionList, results[method][i,:], colors[method], alpha=alpha, label=label,
+            pyplot.loglog(dimensionList, results[method][i, :], colors[method], alpha=alpha, label=label,
                           marker="o", markeredgewidth=0, markersize=3)
             j = -1
-            while numpy.isnan(results[method][i,j]): j -= 1
-            pyplot.text(dimensionList[j], results[method][i,j], " %d" % nData,
+            while numpy.isnan(results[method][i, j]):
+                j -= 1
+            pyplot.text(dimensionList[j], results[method][i, j], " %d" % nData,
                         color=colors[method], size="x-small")
     pyplot.xlabel("# of parameters (# of data points in labels)")
     pyplot.ylabel("time (s)")
@@ -70,15 +75,16 @@ def plot(results):
                 label = method
             else:
                 label = "_nolegend_"
-            pyplot.loglog(nDataList, results[method][:,j], colors[method], alpha=alpha, label=label,
+            pyplot.loglog(nDataList, results[method][:, j], colors[method], alpha=alpha, label=label,
                           marker="o", markeredgewidth=0, markersize=3)
-            pyplot.text(nDataList[i], results[method][-1,j], " %d" % dimension,
+            pyplot.text(nDataList[i], results[method][-1, j], " %d" % dimension,
                         color=colors[method], size="x-small")
     pyplot.xlabel("# of data points (# of parameters in labels)")
     pyplot.ylabel("time (s)")
     pyplot.legend(loc="upper left")
 
     pyplot.show()
+
 
 def main():
     results = run()

@@ -74,7 +74,8 @@ class MaskedImageTestCase(unittest.TestCase):
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(maskPlaneDict, key=maskPlaneDict.__getitem__)
+        self.defaultMaskPlanes = sorted(
+            maskPlaneDict, key=maskPlaneDict.__getitem__)
 
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
@@ -85,7 +86,8 @@ class MaskedImageTestCase(unittest.TestCase):
             if False:
                 self.fileName = os.path.join(dataDir, "Small_MI.fits")
             else:
-                self.fileName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+                self.fileName = os.path.join(
+                    dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
             self.mi = afwImage.MaskedImageF(self.fileName)
 
     def tearDown(self):
@@ -118,26 +120,32 @@ class MaskedImageTestCase(unittest.TestCase):
         maskedImage = afwImage.MaskedImageF(filename)
         exposure = afwImage.ExposureF(filename)
         self.assertEqual(image.get(0, 0), maskedImage.getImage().get(0, 0))
-        self.assertEqual(image.get(0, 0), exposure.getMaskedImage().getImage().get(0, 0))
+        self.assertEqual(
+            image.get(0, 0), exposure.getMaskedImage().getImage().get(0, 0))
         self.assertTrue(np.all(maskedImage.getMask().getArray() == 0))
-        self.assertTrue(np.all(exposure.getMaskedImage().getMask().getArray() == 0))
+        self.assertTrue(
+            np.all(exposure.getMaskedImage().getMask().getArray() == 0))
         self.assertTrue(np.all(maskedImage.getVariance().getArray() == 0.0))
-        self.assertTrue(np.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
+        self.assertTrue(
+            np.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
         metadata, bbox, conformMasks = None, afwGeom.Box2I(), True
-        self.mi = afwImage.MaskedImageF(self.fileName, metadata, bbox, afwImage.LOCAL, conformMasks)
+        self.mi = afwImage.MaskedImageF(
+            self.fileName, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         image = self.mi.getImage()
         mask = self.mi.getMask()
 
         self.assertEqual(image.get(32, 1), 3728)
-        self.assertEqual(mask.get(0, 0), 1)  # i.e. not shifted 1 place to the right
+        # i.e. not shifted 1 place to the right
+        self.assertEqual(mask.get(0, 0), 1)
 
-        self.assertEqual(mask.getMaskPlane("CR"), 3, "Plane CR has value specified in FITS file")
+        self.assertEqual(mask.getMaskPlane("CR"), 3,
+                         "Plane CR has value specified in FITS file")
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadNoConform2(self):
@@ -196,7 +204,8 @@ class MaskedImageTestCase(unittest.TestCase):
 def tmpFits(*hdus):
     # Given a list of numpy arrays, create a temporary FITS file that
     # contains them as consecutive HDUs. Yield it, then remove it.
-    hdus = [pyfits.PrimaryHDU(hdus[0])] + [pyfits.ImageHDU(hdu) for hdu in hdus[1:]]
+    hdus = [pyfits.PrimaryHDU(hdus[0])] + [pyfits.ImageHDU(hdu)
+                                           for hdu in hdus[1:]]
     hdulist = pyfits.HDUList(hdus)
     tempdir = tempfile.mkdtemp()
     try:
@@ -247,10 +256,15 @@ class MultiExtensionTestCase(object):
         # variance have mean val1, val2 & val3 respectively.
         self.assertEqual(mim.getWidth(), width)
         self.assertEqual(mim.getHeight(), width)
-        self.assertEqual(afwMath.makeStatistics(mim.getImage(), afwMath.MEAN).getValue(), val1)
+        self.assertEqual(
+            afwMath.makeStatistics(mim.getImage(), afwMath.MEAN).getValue(),
+            val1)
         s = afwMath.makeStatistics(mim.getMask(), afwMath.SUM | afwMath.NPOINT)
-        self.assertEqual(float(s.getValue(afwMath.SUM)) / s.getValue(afwMath.NPOINT), val2)
-        self.assertEqual(afwMath.makeStatistics(mim.getVariance(), afwMath.MEAN).getValue(), val3)
+        self.assertEqual(float(s.getValue(afwMath.SUM)) /
+                         s.getValue(afwMath.NPOINT), val2)
+        self.assertEqual(
+            afwMath.makeStatistics(mim.getVariance(), afwMath.MEAN).getValue(),
+            val3)
 
     def testUnreadableExtensionAsImage(self):
         # Test for case 2.1.1 above.
@@ -275,7 +289,8 @@ class MultiExtensionTestCase(object):
             self._checkImage(self._constructImage(fitsfile), 1, 1, 1, 0, 3)
         # Unreadable variance.
         with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16), None) as fitsfile:
-            self._checkImage(self._constructImage(fitsfile, needAllHdus=False), 1, 1, 1, 2, 0)
+            self._checkImage(self._constructImage(fitsfile, needAllHdus=False),
+                             1, 1, 1, 2, 0)
 
 
 class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.TestCase):
@@ -304,28 +319,37 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Test
         with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16),
                      np.array([[3]])) as fitsfile:
             # No HDU specified -> ok.
-            self._checkImage(self._constructImage(fitsfile, needAllHdus=True), 1, 1, 1, 2, 3)
+            self._checkImage(self._constructImage(fitsfile, needAllHdus=True),
+                             1, 1, 1, 2, 3)
             # First HDU -> ok.
-            self._checkImage(self._constructImage(fitsfile, 0, needAllHdus=True), 1, 1, 1, 2, 3)
+            self._checkImage(
+                self._constructImage(fitsfile, 0, needAllHdus=True),
+                1, 1, 1, 2, 3)
             # First HDU -> ok.
-            self._checkImage(self._constructImage(fitsfile, 1, needAllHdus=True), 1, 1, 1, 2, 3)
+            self._checkImage(
+                self._constructImage(fitsfile, 1, needAllHdus=True),
+                1, 1, 1, 2, 3)
             # Second HDU -> raises.
-            self.assertRaises(Exception, self._constructImage, fitsfile, 2, needAllHdus=True)
+            self.assertRaises(Exception, self._constructImage,
+                              fitsfile, 2, needAllHdus=True)
 
     def testUnreadableImage(self):
         # Test for case 1.2.1 above.
         with tmpFits(None, None, np.array([[2]], dtype=np.int16), np.array([[3]])) as fitsfile:
-            self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
+            self.assertRaises(Exception, self._constructImage,
+                              fitsfile, None, needAllHdus=True)
 
     def testUnreadableMask(self):
         # Test for case 1.2.1 above.
         with tmpFits(None, np.array([[1]]), None, np.array([[3]])) as fitsfile:
-            self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
+            self.assertRaises(Exception, self._constructImage,
+                              fitsfile, None, needAllHdus=True)
 
     def testUnreadableVariance(self):
         # Test for case 1.2.1 above.
         with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16), None) as fitsfile:
-            self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
+            self.assertRaises(Exception, self._constructImage,
+                              fitsfile, None, needAllHdus=True)
 
 
 class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.TestCase):
@@ -344,7 +368,8 @@ class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Te
         return afwImage.ExposureF(filename)
 
     def _checkImage(self, im, width, height, val1, val2, val3):
-        self._checkMaskedImage(im.getMaskedImage(), width, height, val1, val2, val3)
+        self._checkMaskedImage(im.getMaskedImage(), width,
+                               height, val1, val2, val3)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
@@ -353,6 +378,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

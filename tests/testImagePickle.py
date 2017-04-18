@@ -57,7 +57,8 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
         return image
 
     def createPattern(self):
-        yy, xx = np.ogrid[0:self.ySize, 0:self.xSize]  # NB: numpy operates 'backwards'
+        # NB: numpy operates 'backwards'
+        yy, xx = np.ogrid[0:self.ySize, 0:self.xSize]
         return self.xSize*yy + xx
 
     def assertImagesEqual(self, image, original):
@@ -76,7 +77,8 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
 
     def checkExposures(self, original):
         image = pickle.loads(pickle.dumps(original))
-        self.assertImagesEqual(image.getMaskedImage(), original.getMaskedImage())
+        self.assertImagesEqual(image.getMaskedImage(),
+                               original.getMaskedImage())
         self.assertEqual(image.getWcs(), original.getWcs())
 
     def testImage(self):
@@ -108,6 +110,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

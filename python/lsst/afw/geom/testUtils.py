@@ -34,6 +34,7 @@ from .box import Box2I, Box2D
 class BoxGrid(object):
     """!Divide a box into nx by ny sub-boxes that tile the region
     """
+
     def __init__(self, box, numColRow):
         """!Construct a BoxGrid
 
@@ -46,7 +47,8 @@ class BoxGrid(object):
         @param[in] numColRow  number of columns and rows (a pair of ints)
         """
         if len(numColRow) != 2:
-            raise RuntimeError("numColRow=%r; must be a sequence of two integers" % (numColRow,))
+            raise RuntimeError(
+                "numColRow=%r; must be a sequence of two integers" % (numColRow,))
         self._numColRow = tuple(int(val) for val in numColRow)
 
         if isinstance(box, Box2I):
@@ -76,7 +78,8 @@ class BoxGrid(object):
         """!Return the box at the specified x,y index (a pair of ints)
         """
         beg = self.pointClass(*[self._divList[i][indXY[i]] for i in range(2)])
-        end = self.pointClass(*[self._divList[i][indXY[i] + 1] - self.stopDelta for i in range(2)])
+        end = self.pointClass(
+            *[self._divList[i][indXY[i] + 1] - self.stopDelta for i in range(2)])
         return self.boxClass(beg, end)
 
     def __len__(self):
@@ -88,5 +91,3 @@ class BoxGrid(object):
         for row in range(self.numColRow[1]):
             for col in range(self.numColRow[0]):
                 yield self[col, row]
-
-

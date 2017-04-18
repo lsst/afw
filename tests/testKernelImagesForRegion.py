@@ -115,13 +115,15 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
         """
         kernel = self.makeKernel()
         for doNormalize in (False, True):
-            region = mathDetail.KernelImagesForRegion(kernel, self.bbox, self.xy0, doNormalize)
+            region = mathDetail.KernelImagesForRegion(
+                kernel, self.bbox, self.xy0, doNormalize)
             self.assertEqual(region.getDoNormalize(), doNormalize)
 
     def testGetPixelIndex(self):
         """Test getPixelIndex method
         """
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
+        region = mathDetail.KernelImagesForRegion(
+            self.kernel, self.bbox, self.xy0, False)
         leftInd = self.bbox.getMinX()
         rightInd = self.bbox.getMaxX() + 1
         bottomInd = self.bbox.getMinY()
@@ -149,11 +151,13 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
         self.assertFalse(regionRow.isLastRow())
         self.assertEqual(regionRow.getYInd(), -1)
 
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
+        region = mathDetail.KernelImagesForRegion(
+            self.kernel, self.bbox, self.xy0, False)
         floatWidth = self.bbox.getWidth() / float(nx)
         validWidths = (int(math.floor(floatWidth)), int(math.ceil(floatWidth)))
         floatHeight = self.bbox.getHeight() / float(ny)
-        validHeights = (int(math.floor(floatHeight)), int(math.ceil(floatHeight)))
+        validHeights = (int(math.floor(floatHeight)),
+                        int(math.ceil(floatHeight)))
 
         totalHeight = 0
         prevBBox = None
@@ -173,7 +177,8 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             self.assertTrue(firstBBoxHeight in validHeights)
             totalHeight += firstBBoxHeight
             if yInd > 0:
-                self.assertEqual(firstBBox.getMinY(), prevFirstBBox.getMaxY() + 1)
+                self.assertEqual(firstBBox.getMinY(),
+                                 prevFirstBBox.getMaxY() + 1)
                 if yInd == ny - 1:
                     self.assertEqual(firstBBox.getMaxY(), self.bbox.getMaxY())
             prevFirstBBox = firstBBox
@@ -202,10 +207,12 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
         """
-        desImage = afwImage.ImageD(afwGeom.Extent2I(self.kernel.getWidth(), self.kernel.getHeight()))
+        desImage = afwImage.ImageD(afwGeom.Extent2I(
+            self.kernel.getWidth(), self.kernel.getHeight()))
 
         for doNormalize in (False, True):
-            region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
+            region = mathDetail.KernelImagesForRegion(
+                self.kernel, self.bbox, self.xy0, doNormalize)
             for location in (
                 region.BOTTOM_LEFT,
                 region.BOTTOM_RIGHT,
@@ -228,6 +235,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

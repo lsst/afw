@@ -53,8 +53,10 @@ class BoxGridTestCase(lsst.utils.tests.TestCase):
                 desColStart = desColStarts[col]
                 desWidth = desWidths[col]
                 box = boxGrid[col, row]
-                self.assertEqual(tuple(box.getMin()), (desColStart, desRowStart))
-                self.assertEqual(tuple(box.getDimensions()), (desWidth, desHeight))
+                self.assertEqual(tuple(box.getMin()),
+                                 (desColStart, desRowStart))
+                self.assertEqual(tuple(box.getDimensions()),
+                                 (desWidth, desHeight))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

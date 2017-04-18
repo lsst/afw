@@ -46,10 +46,12 @@ from lsst.afw.geom.polygon import Polygon
 class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(20, 20))
+        self.bbox = afwGeom.Box2I(
+            afwGeom.Point2I(0, 0), afwGeom.Point2I(20, 20))
         x = [0, 0, 10, 10]
         y = [0, 10, 10, 0]
-        self.polygon = Polygon([afwGeom.Point2D(xc, yc) for xc, yc in zip(x, y)])
+        self.polygon = Polygon([afwGeom.Point2D(xc, yc)
+                                for xc, yc in zip(x, y)])
 
     def testPersistence(self):
         """Test that we can round-trip an ValidPolygon through FITS persistence."""
@@ -73,7 +75,8 @@ class ValidPolygonTestCase(lsst.utils.tests.TestCase):
     def testExposureRecordPersistence(self):
         """Test that the ValidPolygon is saved with an ExposureRecord"""
         filename = "testValidPolygon.fits"
-        cat1 = afwTable.ExposureCatalog(afwTable.ExposureTable.makeMinimalSchema())
+        cat1 = afwTable.ExposureCatalog(
+            afwTable.ExposureTable.makeMinimalSchema())
         record1 = cat1.addNew()
         record1.setValidPolygon(self.polygon)
         cat1.writeFits(filename)
@@ -85,12 +88,14 @@ class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
-        filename = os.path.join(os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
+        filename = os.path.join(
+            os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
         cat = afwTable.ExposureCatalog.readFits(filename)
         record = cat[0]
         self.assertIsNone(record.getValidPolygon())
 
-        filename2 = os.path.join(os.environ["AFW_DIR"], "tests", "data", "version-1-ExposureCatalog.fits")
+        filename2 = os.path.join(
+            os.environ["AFW_DIR"], "tests", "data", "version-1-ExposureCatalog.fits")
         cat2 = afwTable.ExposureCatalog.readFits(filename2)
         record2 = cat2[0]
         self.assertIsNone(record2.getValidPolygon())
@@ -102,6 +107,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

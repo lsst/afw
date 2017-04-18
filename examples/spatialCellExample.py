@@ -51,7 +51,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def readImage(filename=None):
     """Read an image and background subtract it"""
@@ -59,11 +58,14 @@ def readImage(filename=None):
         try:
             afwDataDir = lsst.utils.getPackageDir("afwdata")
         except Exception:
-            raise RuntimeError("You must provide a filename or setup afwdata to run these examples")
+            raise RuntimeError(
+                "You must provide a filename or setup afwdata to run these examples")
 
-        filename = os.path.join(afwDataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+        filename = os.path.join(afwDataDir, "CFHT", "D4",
+                                "cal-53535-i-797722_1.fits")
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(270, 2530), afwGeom.Extent2I(512, 512))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(270, 2530),
+                             afwGeom.Extent2I(512, 512))
     else:
         bbox = None
 
@@ -102,7 +104,6 @@ def readImage(filename=None):
 
     return mi, fs
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def SpatialCellSetDemo(filename=None):
     """A demonstration of the use of a SpatialCellSet"""
@@ -157,11 +158,13 @@ def SpatialCellSetDemo(filename=None):
 
             w, h = cand.getBBox().getDimensions()
             if w*h < 75:
-                #print "%d %5.2f %5.2f %d" % (i, cand.getXCenter(), cand.getYCenter(), w*h)
+                # print "%d %5.2f %5.2f %d" % (i, cand.getXCenter(),
+                # cand.getYCenter(), w*h)
                 cand.setStatus(afwMath.SpatialCellCandidate.BAD)
 
                 if display:
-                    ds9.dot("o", cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
+                    ds9.dot("o", cand.getXCenter(), cand.getYCenter(),
+                            size=4, ctype=ctypes[i%len(ctypes)])
             else:
                 if display:
                     ds9.dot("%s:%d" % (cand.getId(), j),
@@ -179,20 +182,19 @@ def SpatialCellSetDemo(filename=None):
         cell.visitCandidates(visitor)
 
         cell.setIgnoreBad(False)        # include BAD in cell.size()
-        print("%s nobj=%d N_good=%d NPix_good=%d" % \
+        print("%s nobj=%d N_good=%d NPix_good=%d" %
               (cell.getLabel(), cell.size(), visitor.getN(), visitor.getNPix()))
-
 
     cellSet.setIgnoreBad(True)           # don't visit BAD candidates
     cellSet.visitCandidates(visitor)
     print("There are %d good candidates" % (visitor.getN()))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def run():
     """Run the tests"""
 
     SpatialCellSetDemo()
+
 
 if __name__ == "__main__":
     run()

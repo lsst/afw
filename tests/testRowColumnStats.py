@@ -63,7 +63,8 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         self.rowMult = nVector(self.n, 0.0)
         self.rowDiv = nVector(self.n, 0.0)
 
-        # set the values in the image, and keep track of the stats to verify things
+        # set the values in the image, and keep track of the stats to verify
+        # things
         for y in range(self.n):
             for x in range(self.n):
                 val = 1.0*x + 2.0*y
@@ -77,8 +78,10 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
             self.colPlus[i] = self.img.get(0, i) + self.column[i]
 
         # get stats on the columns and rows
-        self.imgProjectCol = afwMath.statisticsStack(self.img, afwMath.MEAN, 'x')
-        self.imgProjectRow = afwMath.statisticsStack(self.img, afwMath.MEAN, 'y')
+        self.imgProjectCol = afwMath.statisticsStack(
+            self.img, afwMath.MEAN, 'x')
+        self.imgProjectRow = afwMath.statisticsStack(
+            self.img, afwMath.MEAN, 'y')
 
     def tearDown(self):
         del self.img
@@ -108,12 +111,17 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         imgDiv = self.img / columnSlice
 
         for i in range(self.n):
-            self.assertAlmostEqual(imgAdd.get(0, i), self.img.get(0, i) + columnSlice.get(0, i))
-            self.assertAlmostEqual(imgAdd2.get(0, i), imgAdd.get(0, i))
-            self.assertAlmostEqual(imgSub.get(0, i), self.img.get(0, i) - columnSlice.get(0, i))
-            self.assertAlmostEqual(imgMul.get(0, i), self.img.get(0, i) * columnSlice.get(0, i))
+            self.assertAlmostEqual(imgAdd.get(0, i),
+                                   self.img.get(0, i) + columnSlice.get(0, i))
+            self.assertAlmostEqual(imgAdd2.get(0, i),
+                                   imgAdd.get(0, i))
+            self.assertAlmostEqual(imgSub.get(0, i),
+                                   self.img.get(0, i) - columnSlice.get(0, i))
+            self.assertAlmostEqual(imgMul.get(0, i),
+                                   self.img.get(0, i) * columnSlice.get(0, i))
             self.assertAlmostEqual(imgMul2.get(0, i), imgMul.get(0, i))
-            self.assertAlmostEqual(imgDiv.get(0, i), self.img.get(0, i) / columnSlice.get(0, i))
+            self.assertAlmostEqual(imgDiv.get(0, i),
+                                   self.img.get(0, i) / columnSlice.get(0, i))
 
 
 #################################################################
@@ -125,6 +133,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

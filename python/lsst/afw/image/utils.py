@@ -46,52 +46,58 @@ def clipImage(im, minClip, maxClip):
         mi = makeMaskedImage(im, MaskU(im.getDimensions()))
 
     if minClip is not None:
-        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
-        afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), minClip)
+        ds = afwDetect.FootprintSet(
+            mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
+        afwDetect.setImageFromFootprintList(
+            mi.getImage(), ds.getFootprints(), minClip)
 
     if maxClip is not None:
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxClip))
-        afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxClip)
+        afwDetect.setImageFromFootprintList(
+            mi.getImage(), ds.getFootprints(), maxClip)
+
 
 def getDistortedWcs(exposureInfo, log=None):
-        """!Get a WCS from an exposureInfo, with distortion terms if possible
+    """!Get a WCS from an exposureInfo, with distortion terms if possible
 
-        If the WCS in the exposure is a pure TAN WCS and distortion information is available
-        in the exposure's Detector, then return a DistortedTanWcs that combines the
-        distortion information with the pure TAN WCS.
-        Otherwise return the WCS in the exposureInfo without modification.
+    If the WCS in the exposure is a pure TAN WCS and distortion information is available
+    in the exposure's Detector, then return a DistortedTanWcs that combines the
+    distortion information with the pure TAN WCS.
+    Otherwise return the WCS in the exposureInfo without modification.
 
-        This function is intended as a temporary workaround until ISR puts a WCS with distortion information
-        into its exposures.
+    This function is intended as a temporary workaround until ISR puts a WCS with distortion information
+    into its exposures.
 
-        @param[in] exposureInfo  exposure information (an lsst.afw.image.ExposureInfo),
-            e.g. from exposure.getInfo()
-        @param[in] log  an lsst.log.Log or None; if specified then a warning is logged if:
-            - the exposureInfo's WCS has no distortion and cannot be cast to a TanWcs
-            - the expousureInfo's detector has no TAN_PIXELS transform (distortion information)
-        @throw RuntimeError if exposureInfo has no WCS.
-        """
-        if not exposureInfo.hasWcs():
-            raise RuntimeError("exposure must have a WCS")
-        wcs = exposureInfo.getWcs()
-        if not wcs.hasDistortion() and exposureInfo.hasDetector():
-            # warn and return original Wcs the initial WCS is not a TanWcs or TAN_PIXELS not present;
-            # other errors indicate a bug that should raise an exception
-            if not isinstance(wcs, TanWcs):
-                if log:
-                    log.warn("Could not create a DistortedTanWcs:"
-                             "exposure's Wcs is a %r isntead of a TanWcs" % (wcs,))
-                return wcs
+    @param[in] exposureInfo  exposure information (an lsst.afw.image.ExposureInfo),
+        e.g. from exposure.getInfo()
+    @param[in] log  an lsst.log.Log or None; if specified then a warning is logged if:
+        - the exposureInfo's WCS has no distortion and cannot be cast to a TanWcs
+        - the expousureInfo's detector has no TAN_PIXELS transform (distortion information)
+    @throw RuntimeError if exposureInfo has no WCS.
+    """
+    if not exposureInfo.hasWcs():
+        raise RuntimeError("exposure must have a WCS")
+    wcs = exposureInfo.getWcs()
+    if not wcs.hasDistortion() and exposureInfo.hasDetector():
+        # warn and return original Wcs the initial WCS is not a TanWcs or TAN_PIXELS not present;
+        # other errors indicate a bug that should raise an exception
+        if not isinstance(wcs, TanWcs):
+            if log:
+                log.warn("Could not create a DistortedTanWcs:"
+                         "exposure's Wcs is a %r isntead of a TanWcs" % (wcs,))
+            return wcs
 
-            detector = exposureInfo.getDetector()
-            if not detector.hasTransform(TAN_PIXELS):
-                if log:
-                    log.warn("Could not create a DistortedTanWcs: exposure has no Detector")
-                return wcs
+        detector = exposureInfo.getDetector()
+        if not detector.hasTransform(TAN_PIXELS):
+            if log:
+                log.warn(
+                    "Could not create a DistortedTanWcs: exposure has no Detector")
+            return wcs
 
-            pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
-            return DistortedTanWcs(wcs, pixelsToTanPixels)
-        return wcs
+        pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
+        return DistortedTanWcs(wcs, pixelsToTanPixels)
+    return wcs
+
 
 def resetFilters():
     """Reset registry of filters and filter properties"""
@@ -119,8 +125,10 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
     #
     # Process the Policy and define the filters
     #
-    policyFile = pexPolicy.DefaultPolicyFile("afw", "FilterDictionary.paf", "policy")
-    defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+    policyFile = pexPolicy.DefaultPolicyFile(
+        "afw", "FilterDictionary.paf", "policy")
+    defPolicy = pexPolicy.Policy.createPolicy(
+        policyFile, policyFile.getRepositoryPath(), True)
 
     filterPolicy.mergeDefaults(defPolicy.getDictionary())
 
@@ -139,6 +147,7 @@ E.g.
      with CalibNoThrow():
          ax.plot([exposure.getCalib().getMagnitude(a) for a in candAmps], zGood[:,k], 'b+')
     """
+
     def __enter__(self):
         self._throwOnNegative = Calib.getThrowOnNegativeFlux()
         Calib.setThrowOnNegativeFlux(False)

@@ -58,23 +58,28 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(0.0, self.calib.getFluxMag0()[1])
         self.assertEqual(22.5, self.calib.getMagnitude(flux))
         # Error just in flux
-        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1],
+                               2.5/math.log(10)*fluxErr/flux)
         # Error just in flux0
         self.calib.setFluxMag0(flux0, flux0Err)
         self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
-        self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1], 2.5/math.log(10)*flux0Err/flux0)
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1],
+                               2.5/math.log(10)*flux0Err/flux0)
 
         self.assertAlmostEqual(flux0, self.calib.getFlux(0))
         self.assertAlmostEqual(flux, self.calib.getFlux(22.5))
 
-        # I don't know how to test round-trip if fluxMag0 is significant compared to fluxErr
+        # I don't know how to test round-trip if fluxMag0 is significant
+        # compared to fluxErr
         self.calib.setFluxMag0(flux0, flux0 / 1e6)
         for fluxErr in (flux / 1e2, flux / 1e4):
             mag, magErr = self.calib.getMagnitude(flux, fluxErr)
             self.assertAlmostEqual(flux, self.calib.getFlux(mag, magErr)[0])
-            self.assertLess(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]), 1.0e-4)
+            self.assertLess(
+                abs(fluxErr - self.calib.getFlux(mag, magErr)[1]), 1.0e-4)
 
-        # Test context manager; shouldn't raise an exception within the block, should outside
+        # Test context manager; shouldn't raise an exception within the block,
+        # should outside
         with imageUtils.CalibNoThrow():
             self.assertTrue(np.isnan(self.calib.getMagnitude(-50.0)))
         with self.assertRaises(pexExcept.DomainError):
@@ -85,7 +90,8 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         flux, fluxErr = 1000.0, 10.0
         num = 5
 
-        mag, magErr = self.calib.getMagnitude(flux, fluxErr)  # Result assumed to be true: tested elsewhere
+        # Result assumed to be true: tested elsewhere
+        mag, magErr = self.calib.getMagnitude(flux, fluxErr)
 
         fluxList = np.array([flux for i in range(num)], dtype=float)
         fluxErrList = np.array([fluxErr for i in range(num)], dtype=float)
@@ -100,7 +106,8 @@ class CalibTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(m, mag)
             self.assertEqual(dm, magErr)
 
-        flux, fluxErr = self.calib.getFlux(mag, magErr)  # Result assumed to be true: tested elsewhere
+        # Result assumed to be true: tested elsewhere
+        flux, fluxErr = self.calib.getFlux(mag, magErr)
 
         fluxList = self.calib.getFlux(magList)
         for f in fluxList:
@@ -129,7 +136,8 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         # Error just in flux
         self.calib.setFluxMag0(flux0, 0)
 
-        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1],
+                               2.5/math.log(10)*fluxErr/flux)
 
         # Check that we can clean up metadata
         afwImage.stripCalibKeywords(metadata)
@@ -137,7 +145,8 @@ class CalibTestCase(lsst.utils.tests.TestCase):
 
     def testCalibEquality(self):
         self.assertEqual(self.calib, self.calib)
-        self.assertFalse(self.calib != self.calib)  # using assertFalse to directly test != operator
+        # using assertFalse to directly test != operator
+        self.assertFalse(self.calib != self.calib)
 
         calib2 = afwImage.Calib()
         calib2.setFluxMag0(1200)
@@ -195,7 +204,11 @@ def defineSdssFilters(testCase):
     imageUtils.resetFilters()
     wavelengths = dict()
     testCase.aliases = dict(u=[], g=[], r=[], i=[], z=['zprime', "z'"])
-    for name, lambdaEff in (('u', 355.1), ('g', 468.6), ('r', 616.5), ('i', 748.1), ('z', 893.1)):
+    for name, lambdaEff in (('u', 355.1),
+                            ('g', 468.6),
+                            ('r', 616.5),
+                            ('i', 748.1),
+                            ('z', 893.1)):
         wavelengths[name] = lambdaEff
         imageUtils.defineFilter(name, lambdaEff, alias=testCase.aliases[name])
     return wavelengths
@@ -214,7 +227,8 @@ class ColorTestCase(lsst.utils.tests.TestCase):
         g_r = 1.2
         c = afwImage.Color(g_r)
 
-        self.assertEqual(c.getLambdaEff(f), 1000*g_r)  # XXX Not a real implementation!
+        # XXX Not a real implementation!
+        self.assertEqual(c.getLambdaEff(f), 1000*g_r)
 
     def testIsIndeterminate(self):
         """Test that a default-constructed Color tests True, but ones with a g-r value test False"""
@@ -277,8 +291,10 @@ class FilterTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(f.getName(), "g")
         self.assertEqual(f.getId(), 1)
-        self.assertEqual(f.getFilterProperty().getLambdaEff(), self.g_lambdaEff)
-        self.assertEqual(f.getFilterProperty(), self.defineFilterProperty("gX", self.g_lambdaEff, True))
+        self.assertEqual(f.getFilterProperty().getLambdaEff(),
+                         self.g_lambdaEff)
+        self.assertEqual(f.getFilterProperty(),
+                         self.defineFilterProperty("gX", self.g_lambdaEff, True))
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
 
     def testFilterAliases(self):
@@ -286,17 +302,20 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         for name0 in self.aliases:
             f0 = afwImage.Filter(name0)
             self.assertEqual(f0.getCanonicalName(), name0)
-            self.assertEqual(sorted(f0.getAliases()), sorted(self.aliases[name0]))
+            self.assertEqual(sorted(f0.getAliases()),
+                             sorted(self.aliases[name0]))
 
             for name in self.aliases[name0]:
                 f = afwImage.Filter(name)
-                self.assertEqual(sorted(f.getAliases()), sorted(self.aliases[name0]))
+                self.assertEqual(sorted(f.getAliases()),
+                                 sorted(self.aliases[name0]))
                 self.assertEqual(f.getId(), f0.getId())
                 self.assertEqual(f.getName(), name)
                 self.assertEqual(afwImage.Filter(f.getId()).getName(), name0)
                 self.assertEqual(f.getCanonicalName(), name0)
                 self.assertNotEqual(f.getCanonicalName(), name)
-                self.assertEqual(f.getFilterProperty().getLambdaEff(), f0.getFilterProperty().getLambdaEff())
+                self.assertEqual(f.getFilterProperty().getLambdaEff(),
+                                 f0.getFilterProperty().getLambdaEff())
 
     def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
@@ -305,20 +324,26 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         # Can we add a filter property?
         with self.assertRaises(pexExcept.RuntimeError):
             self.defineFilterProperty("g", self.g_lambdaEff + 10)
-        self.defineFilterProperty("g", self.g_lambdaEff + 10, True)  # should not raise
+        # should not raise
+        self.defineFilterProperty("g", self.g_lambdaEff + 10, True)
         self.defineFilterProperty("g", self.g_lambdaEff, True)
 
         # Can we redefine properties?
         with self.assertRaises(pexExcept.RuntimeError):
-            self.defineFilterProperty("g", self.g_lambdaEff + 10)  # changing definition is not allowed
+            # changing definition is not allowed
+            self.defineFilterProperty("g", self.g_lambdaEff + 10)
 
-        self.defineFilterProperty("g", self.g_lambdaEff)  # identical redefinition is allowed
+        # identical redefinition is allowed
+        self.defineFilterProperty("g", self.g_lambdaEff)
 
-        afwImage.Filter.define(g, afwImage.Filter("g").getId())  # OK if Id's the same
-        afwImage.Filter.define(g, afwImage.Filter.AUTO)         # AUTO will assign the same ID
+        # OK if Id's the same
+        afwImage.Filter.define(g, afwImage.Filter("g").getId())
+        # AUTO will assign the same ID
+        afwImage.Filter.define(g, afwImage.Filter.AUTO)
 
+        # different ID
         with self.assertRaises(pexExcept.RuntimeError):
-            afwImage.Filter.define(g, afwImage.Filter("g").getId() + 10)  # different ID
+            afwImage.Filter.define(g, afwImage.Filter("g").getId() + 10)
 
     def testUnknownFilter(self):
         """Test that we can define, but not use, an unknown filter"""
@@ -337,7 +362,8 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         lambdaEff = 666.0
         self.defineFilterProperty(badFilter, lambdaEff)
 
-        self.assertEqual(f.getFilterProperty().getLambdaEff(), lambdaEff)  # but now we can
+        # but now we can
+        self.assertEqual(f.getFilterProperty().getLambdaEff(), lambdaEff)
 
         # Check that we didn't accidently define the unknown filter
         with self.assertRaises(pexExcept.NotFoundError):

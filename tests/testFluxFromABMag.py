@@ -50,8 +50,10 @@ class FluxFromABMagTableTestCase(unittest.TestCase):
             for fluxErrFrac in (0.001, 0.01, 0.1):
                 fluxErr = flux * fluxErrFrac
                 abMagErr = afwImage.abMagErrFromFluxErr(fluxErr, flux)
-                self.assertAlmostEqual(abMagErr, refABMagErrFromFluxErr(fluxErr, flux))
-                fluxErrRoundTrip = afwImage.fluxErrFromABMagErr(abMagErr, abMag)
+                self.assertAlmostEqual(
+                    abMagErr, refABMagErrFromFluxErr(fluxErr, flux))
+                fluxErrRoundTrip = afwImage.fluxErrFromABMagErr(
+                    abMagErr, abMag)
                 self.assertAlmostEqual(fluxErr, fluxErrRoundTrip)
 
 

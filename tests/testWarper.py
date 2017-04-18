@@ -51,7 +51,8 @@ else:
     originalExposurePath = os.path.join(dataDir, originalExposureName)
     subExposureName = "medsub.fits"
     subExposurePath = os.path.join(dataDir, originalExposureName)
-    originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
+    originalFullExposureName = os.path.join(
+        "CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
 
@@ -68,7 +69,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel with a subexposure
         """
         for useDeepCopy in (False, True):
-            self.compareToSwarp("lanczos2", useSubregion=True, useDeepCopy=useDeepCopy)
+            self.compareToSwarp("lanczos2", useSubregion=True,
+                                useDeepCopy=useDeepCopy)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBBox(self):
@@ -79,7 +81,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
-        filterPolicyFile = pexPolicy.DefaultPolicyFile("afw", "SdssFilters.paf", "tests")
+        filterPolicyFile = pexPolicy.DefaultPolicyFile(
+            "afw", "SdssFilters.paf", "tests")
         filterPolicy = pexPolicy.Policy.createPolicy(
             filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
         imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
@@ -90,11 +93,16 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure.setFilter(originalFilter)
         originalExposure.setCalib(originalCalib)
 
-        warpedExposure1 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure)
-        # the default size must include all good pixels, so growing the bbox should not add any
-        warpedExposure2 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
-        # a bit of excess border is allowed, but surely not as much as 10 (in fact it is approx. 5)
-        warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
+        warpedExposure1 = warper.warpExposure(
+            destWcs=swarpedWcs, srcExposure=originalExposure)
+        # the default size must include all good pixels, so growing the bbox
+        # should not add any
+        warpedExposure2 = warper.warpExposure(
+            destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
+        # a bit of excess border is allowed, but surely not as much as 10 (in
+        # fact it is approx. 5)
+        warpedExposure3 = warper.warpExposure(
+            destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
         # assert that warpedExposure and warpedExposure2 have the same number of non-no_data pixels
         # and that warpedExposure3 has fewer
         noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
@@ -107,8 +115,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(nGood1, nGood2)
         self.assertLess(nGood3, nGood1)
 
-        self.assertEqual(warpedExposure1.getFilter().getName(), originalFilter.getName())
-        self.assertEqual(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
+        self.assertEqual(warpedExposure1.getFilter().getName(),
+                         originalFilter.getName())
+        self.assertEqual(warpedExposure1.getCalib().getFluxMag0(),
+                         originalCalib.getFluxMag0())
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDestBBox(self):
@@ -124,8 +134,11 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             destWcs=swarpedWcs,
             srcExposure=originalExposure,
             destBBox=bbox,
-            border=-2,  # should be ignored
-            maxBBox=afwGeom.Box2I(afwGeom.Point2I(1, 2), afwGeom.Extent2I(8, 9)),  # should be ignored
+            # should be ignored
+            border=-2,
+            # should be ignored
+            maxBBox=afwGeom.Box2I(afwGeom.Point2I(1, 2),
+                                  afwGeom.Extent2I(8, 9)),
         )
         self.assertEqual(bbox, warpedExposure.getBBox(afwImage.PARENT))
 
@@ -147,8 +160,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
-            bbox = afwGeom.Box2I(afwGeom.Point2I(40, 150), afwGeom.Extent2I(145, 200))
-            originalExposure = afwImage.ExposureF(originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
+            bbox = afwGeom.Box2I(afwGeom.Point2I(40, 150),
+                                 afwGeom.Extent2I(145, 200))
+            originalExposure = afwImage.ExposureF(
+                originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
         else:
             originalExposure = afwImage.ExposureF(originalExposurePath)

@@ -35,4 +35,3 @@ class Wcs:
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
-

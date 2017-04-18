@@ -51,11 +51,13 @@ class Ticket1045TestCase(unittest.TestCase):
         pass
 
     def testTicket1045(self):
-        values = [1.08192, 1.08792, 1.08774, 1.09953, 1.1122, 1.09408, 0.879792, 1.12235, 1.10115, 1.08999]
+        values = [1.08192, 1.08792, 1.08774, 1.09953, 1.1122,
+                  1.09408, 0.879792, 1.12235, 1.10115, 1.08999]
         knownMean, knownStdev = np.mean(values), 0.069903889977279199
 
         # this was reported to work
-        dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
+        dmean1 = afwMath.makeStatistics(
+            values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean1 = dmean1.getValue(afwMath.MEAN)
         stdev1 = dmean1.getValue(afwMath.STDEV)
         self.assertAlmostEqual(mean1, knownMean, 8)
@@ -66,7 +68,8 @@ class Ticket1045TestCase(unittest.TestCase):
         knownMeanClip = 1.097431111111111
         knownStdevClip = 0.012984991763998597
 
-        dmean2 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
+        dmean2 = afwMath.makeStatistics(
+            values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
         mean2 = dmean2.getValue(afwMath.MEANCLIP)
         stdev2 = dmean2.getValue(afwMath.STDEVCLIP)
         self.assertEqual(mean2, knownMeanClip)
@@ -110,11 +113,13 @@ class Ticket1045TestCase(unittest.TestCase):
 
     def testUnexpectedNan1051(self):
 
-        values = [7824.0, 7803.0, 7871.0, 7567.0, 7813.0, 7809.0, 8011.0, 7807.0]
+        values = [7824.0, 7803.0, 7871.0, 7567.0,
+                  7813.0, 7809.0, 8011.0, 7807.0]
         npValues = np.array(values)
 
         meanClip = afwMath.makeStatistics(values, afwMath.MEANCLIP).getValue()
-        iKept = np.array([0, 1, 2, 4, 5, 7])  # note ... it will clip indices 3 and 6
+        # note ... it will clip indices 3 and 6
+        iKept = np.array([0, 1, 2, 4, 5, 7])
         knownMeanClip = np.mean(npValues[iKept])
         self.assertEqual(meanClip, knownMeanClip)
 
@@ -125,6 +130,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

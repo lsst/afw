@@ -89,11 +89,13 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertEqual(poly, poly)
             self.assertNotEqual(poly, self.square(1.0, 2.0, 3.0))
             self.assertEqual(poly.getNumEdges(), num)
-            self.assertEqual(len(poly.getVertices()), num + 1)  # One extra for the closing point
+            # One extra for the closing point
+            self.assertEqual(len(poly.getVertices()), num + 1)
             self.assertEqual(len(poly.getEdges()), num)
             perimeter = 0.0
             for p1, p2 in poly.getEdges():
-                perimeter += np.hypot(p1.getX() - p2.getX(), p1.getY() - p2.getY())
+                perimeter += np.hypot(p1.getX() - p2.getX(),
+                                      p1.getY() - p2.getY())
             self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
 
         size = 3.0
@@ -118,7 +120,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
     def testFromBox(self):
         size = 1.0
         poly1 = self.square(size=size)
-        box = afwGeom.Box2D(afwGeom.Point2D(-1.0, -1.0), afwGeom.Point2D(1.0, 1.0))
+        box = afwGeom.Box2D(afwGeom.Point2D(-1.0, -1.0),
+                            afwGeom.Point2D(1.0, 1.0))
         poly2 = Polygon(box)
         self.assertEqual(poly1, poly2)
 
@@ -146,7 +149,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
         for num in range(3, 30):
             poly = self.polygon(num, radius=radius)
             self.assertTrue(poly.contains(afwGeom.Point2D(self.x0, self.y0)))
-            self.assertFalse(poly.contains(afwGeom.Point2D(self.x0 + radius, self.y0 + radius)))
+            self.assertFalse(poly.contains(
+                afwGeom.Point2D(self.x0 + radius, self.y0 + radius)))
 
     def testOverlaps(self):
         """Test Polygon.overlaps"""
@@ -170,11 +174,14 @@ class PolygonTest(lsst.utils.tests.TestCase):
         poly3 = self.square(1.0, 0.0, 0.0)
         poly4 = self.square(1.0, +5.0, +5.0)
 
-        # intersectionSingle: assumes there's a single intersection (convex polygons)
+        # intersectionSingle: assumes there's a single intersection (convex
+        # polygons)
         self.assertEqual(poly1.intersectionSingle(poly2), poly3)
         self.assertEqual(poly2.intersectionSingle(poly1), poly3)
-        self.assertRaises(SinglePolygonException, poly1.intersectionSingle, poly4)
-        self.assertRaises(SinglePolygonException, poly4.intersectionSingle, poly1)
+        self.assertRaises(SinglePolygonException,
+                          poly1.intersectionSingle, poly4)
+        self.assertRaises(SinglePolygonException,
+                          poly4.intersectionSingle, poly1)
 
         # intersection: no assumptions
         polyList1 = poly1.intersection(poly2)
@@ -251,18 +258,21 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.createImage"""
         for i, num in enumerate(range(3, 30)):
             poly = self.polygon(num, 25, 75, 75)
-            box = afwGeom.Box2I(afwGeom.Point2I(15, 15), afwGeom.Extent2I(115, 115))
+            box = afwGeom.Box2I(afwGeom.Point2I(15, 15),
+                                afwGeom.Extent2I(115, 115))
             image = poly.createImage(box)
             if DEBUG:
                 import lsst.afw.display.ds9 as ds9
                 ds9.mtv(image, frame=i+1, title="Polygon nside=%d" % num)
                 for p1, p2 in poly.getEdges():
                     ds9.line((p1, p2), frame=i+1)
-            self.assertAlmostEqual(image.getArray().sum()/poly.calculateArea(), 1.0, 6)
+            self.assertAlmostEqual(
+                image.getArray().sum()/poly.calculateArea(), 1.0, 6)
 
     def testTransform(self):
         """Test constructor for Polygon involving transforms"""
-        box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0), afwGeom.Point2D(123.4, 567.8))
+        box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0),
+                            afwGeom.Point2D(123.4, 567.8))
         poly1 = Polygon(box)
         scale = (0.2*afwGeom.arcseconds).asDegrees()
         wcs = afwImage.makeWcs(afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
@@ -310,7 +320,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
             self.assertEqual(len(sub), 2*num)
             self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
-            self.assertAlmostEqual(sub.calculatePerimeter(), poly.calculatePerimeter())
+            self.assertAlmostEqual(
+                sub.calculatePerimeter(), poly.calculatePerimeter())
             polyCenter = poly.calculateCenter()
             subCenter = sub.calculateCenter()
             self.assertAlmostEqual(polyCenter[0], subCenter[0])
@@ -320,7 +331,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
             sub = poly.subSample(0.1)
             self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
-            self.assertAlmostEqual(sub.calculatePerimeter(), poly.calculatePerimeter())
+            self.assertAlmostEqual(
+                sub.calculatePerimeter(), poly.calculatePerimeter())
             polyCenter = poly.calculateCenter()
             subCenter = sub.calculateCenter()
             self.assertAlmostEqual(polyCenter[0], subCenter[0])
@@ -329,7 +341,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
     def testTransform2(self):
         scale = 2.0
         shift = afwGeom.Extent2D(3.0, 4.0)
-        transform = afwGeom.AffineTransform.makeTranslation(shift)*afwGeom.AffineTransform.makeScaling(scale)
+        transform = afwGeom.AffineTransform.makeTranslation(shift) * \
+            afwGeom.AffineTransform.makeScaling(scale)
         for num in range(3, 30):
             small = self.polygon(num, 1.0, 0.0, 0.0)
             large = small.transform(transform)
@@ -359,6 +372,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

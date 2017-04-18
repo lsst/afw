@@ -13,11 +13,15 @@ def spatialCellCandidateIter(self):
         except NotFoundError:
             return
         self.__incr__()
+
+
 SpatialCellCandidateIterator.__iter__ = spatialCellCandidateIter
 
 
 def spatialCellIter(self):
     return self.begin().__iter__()
+
+
 SpatialCell.__iter__ = spatialCellIter
 
 
@@ -25,10 +29,13 @@ def spatialCellGetitem(self, idx):
     idx = int(idx)
     num_cells = len(self)
     if idx < -num_cells or idx >= num_cells:
-        raise IndexError("idx={} < -{} or >= {})".format(idx, num_cells, num_cells))
+        raise IndexError("idx={} < -{} or >= {})".format(idx,
+                                                         num_cells, num_cells))
     if idx < 0:
         idx += num_cells
     for i, cell in enumerate(self):
         if i >= idx:
             return cell
+
+
 SpatialCell.__getitem__ = spatialCellGetitem

@@ -82,6 +82,7 @@ def saturate(image, satValue):
     arr[np.where(arr >= satValue)] = np.nan
     return image
 
+
 R, G, B = 2, 1, 0
 
 
@@ -112,7 +113,8 @@ class RgbTestCase(unittest.TestCase):
 
                 self.images[i].set(x, y, amp)
 
-        psf = afwMath.AnalyticKernel(15, 15, afwMath.GaussianFunction2D(2.5, 1.5, 0.5))
+        psf = afwMath.AnalyticKernel(
+            15, 15, afwMath.GaussianFunction2D(2.5, 1.5, 0.5))
 
         convolvedImage = type(self.images[0])(self.images[0].getDimensions())
         randomImage = type(self.images[0])(self.images[0].getDimensions())
@@ -134,7 +136,8 @@ class RgbTestCase(unittest.TestCase):
     def testStarsAsinh(self):
         """Test creating an RGB image using an asinh stretch"""
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
-        rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
+        rgbImage = asinhMap.makeRgbImage(
+            self.images[R], self.images[G], self.images[B])
 
         if display:
             rgb.displayRGB(rgbImage)
@@ -231,7 +234,8 @@ class RgbTestCase(unittest.TestCase):
     def testWriteStars(self):
         """Test writing RGB files to disk"""
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
-        rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
+        rgbImage = asinhMap.makeRgbImage(
+            self.images[R], self.images[G], self.images[B])
         with lsst.utils.tests.getTempFilePath(".png") as fileName:
             rgb.writeRGB(fileName, rgbImage)
             self.assertTrue(os.path.exists(fileName))
@@ -243,12 +247,14 @@ class RgbTestCase(unittest.TestCase):
         for f in [R, G, B]:
             self.images[f] = saturate(self.images[f], satValue)
 
-        rgb.replaceSaturatedPixels(self.images[R], self.images[G], self.images[B], 1, 2000)
+        rgb.replaceSaturatedPixels(
+            self.images[R], self.images[G], self.images[B], 1, 2000)
         #
         # Check that we replaced those NaNs with some reasonable value
         #
         for f in [R, G, B]:
-            self.assertTrue(np.isfinite(self.images[f].getImage().getArray()).all())
+            self.assertTrue(np.isfinite(
+                self.images[f].getImage().getArray()).all())
 
         if False:
             ds9.mtv(self.images[B], frame=0, title="B")
@@ -261,7 +267,8 @@ class RgbTestCase(unittest.TestCase):
             self.images[f] = self.images[f].getImage()
 
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
-        rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
+        rgbImage = asinhMap.makeRgbImage(
+            self.images[R], self.images[G], self.images[B])
 
         if display:
             rgb.displayRGB(rgbImage)
@@ -295,7 +302,8 @@ class RgbTestCase(unittest.TestCase):
                                    (None, None, 0.5),
                                    (None, None, 2),
                                    ]:
-            rgbImage = map.makeRgbImage(*rgbImages, xSize=xSize, ySize=ySize, rescaleFactor=frac)
+            rgbImage = map.makeRgbImage(
+                *rgbImages, xSize=xSize, ySize=ySize, rescaleFactor=frac)
 
             h, w = rgbImage.shape[0:2]
             self.assertTrue(xSize is None or xSize == w)
@@ -310,16 +318,19 @@ class RgbTestCase(unittest.TestCase):
     @unittest.skipUnless(HAVE_MATPLOTLIB, NO_MATPLOTLIB_STRING)
     def testMakeRGBResize(self):
         """Test the function that does it all, including rescaling"""
-        rgb.makeRGB(self.images[R], self.images[G], self.images[B], xSize=40, ySize=60)
+        rgb.makeRGB(self.images[R], self.images[G],
+                    self.images[B], xSize=40, ySize=60)
 
         with lsst.utils.tests.getTempFilePath(".png") as fileName:
-            rgb.makeRGB(self.images[R], self.images[G], self.images[B], fileName=fileName, rescaleFactor=0.5)
+            rgb.makeRGB(self.images[R], self.images[G],
+                        self.images[B], fileName=fileName, rescaleFactor=0.5)
             self.assertTrue(os.path.exists(fileName))
 
     def writeFileLegacyAPI(self, fileName):
         """Test that the legacy API still works, although it's deprecated"""
         asinh = rgb.asinhMappingF(self.min, self.range, self.Q)
-        rgbImage = rgb.RgbImageF(self.images[R], self.images[G], self.images[B], asinh)
+        rgbImage = rgb.RgbImageF(
+            self.images[R], self.images[G], self.images[B], asinh)
         if False:
             ds9.mtv(self.images[B], frame=0, title="B")
             ds9.mtv(self.images[G], frame=1, title="G")
@@ -340,6 +351,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

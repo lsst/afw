@@ -25,6 +25,7 @@ import lsst.afw.geom as afwGeom
 
 __all__ = ["rotateBBoxBy90"]
 
+
 def rotateBBoxBy90(bbox, n90, dimensions):
     """!Rotate a bounding box by an integer multiple of 90 degrees
 
@@ -59,8 +60,10 @@ def rotateBBoxBy90(bbox, n90, dimensions):
 
     centerPixel = afwGeom.Point2I(int(dimensions[0]/2), int(dimensions[1]/2))
 
-    xCorner = numpy.array([(corner.getX() - centerPixel[0]) for corner in bbox.getCorners()])
-    yCorner = numpy.array([(corner.getY() - centerPixel[1]) for corner in bbox.getCorners()])
+    xCorner = numpy.array([(corner.getX() - centerPixel[0])
+                           for corner in bbox.getCorners()])
+    yCorner = numpy.array([(corner.getY() - centerPixel[1])
+                           for corner in bbox.getCorners()])
     x0 = int((c*xCorner - s*yCorner).min())
     y0 = int((s*xCorner + c*yCorner).min())
     x1 = int((c*xCorner - s*yCorner).max())
@@ -69,8 +72,8 @@ def rotateBBoxBy90(bbox, n90, dimensions):
     # Fiddle things a little if the detector has an even number of pixels so that square BBoxes
     # will map into themselves
 
-    if n90 == 1 :
-        if  dimensions[0]%2 == 0:
+    if n90 == 1:
+        if dimensions[0]%2 == 0:
             x0 -= 1
             x1 -= 1
     elif n90 == 2:

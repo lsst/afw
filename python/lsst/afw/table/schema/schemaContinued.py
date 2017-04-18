@@ -103,6 +103,7 @@ class Schema:
         """Return a list of field names in the order the fields were added to the Schema.
         """
         names = []
+
         def func(item):
             names.append(item.field.getName())
         self.forEach(func)
@@ -119,7 +120,8 @@ class Schema:
         """Check that all units in the Schema are valid Astropy unit strings.
         """
         def func(item):
-            astropy.units.Unit(item.field.getUnits(), parse_strict=parse_strict)
+            astropy.units.Unit(item.field.getUnits(),
+                               parse_strict=parse_strict)
         self.forEach(func)
 
     def addField(self, field, type=None, doc="", units="", size=None,
@@ -148,7 +150,8 @@ class Schema:
             handle unrecognized unit strings.  See also astropy.units.Unit.
         """
         if isinstance(field, basestring):
-            field = Field[type](field, doc=doc, units=units, size=size, parse_strict=parse_strict)
+            field = Field[type](field, doc=doc, units=units,
+                                size=size, parse_strict=parse_strict)
         return field._addTo(self, doReplace)
 
     def extract(self, *patterns, **kwds):
@@ -182,9 +185,11 @@ class Schema:
         regex = kwds.pop("regex", None)
         sub = kwds.pop("sub", None)
         if sub is not None and regex is None:
-            raise ValueError("'sub' keyword argument to extract is invalid without 'regex' argument")
+            raise ValueError(
+                "'sub' keyword argument to extract is invalid without 'regex' argument")
         if kwds:
-            raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
+            raise ValueError(
+                "Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
         for item in self:
             trueName = item.field.getName()
             names = [trueName]
@@ -198,9 +203,9 @@ class Schema:
                         if sub is not None:
                             name = m.expand(sub)
                         d[name] = item
-                        continue # continue middle loop so we don't match the same name twice
+                        continue  # continue middle loop so we don't match the same name twice
                 for pattern in patterns:
                     if fnmatch.fnmatchcase(name, pattern):
                         d[name] = item
-                        break # break inner loop so we don't match the same name twice
+                        break  # break inner loop so we don't match the same name twice
         return d

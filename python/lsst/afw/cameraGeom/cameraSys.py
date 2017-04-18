@@ -30,6 +30,7 @@ __all__ = []  # import this module only for its side effects
 def __hash__(self):
     return hash(repr(self))
 
+
 CameraSys.__hash__ = __hash__
 
 addTransformMapMethods(CameraTransformMap)

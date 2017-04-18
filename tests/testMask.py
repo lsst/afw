@@ -80,7 +80,8 @@ class MaskTestCase(utilsTests.TestCase):
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(maskPlaneDict, key=maskPlaneDict.__getitem__)
+        self.defaultMaskPlanes = sorted(
+            maskPlaneDict, key=maskPlaneDict.__getitem__)
 
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
@@ -202,7 +203,8 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testSubmasks(self):
         smask = afwImage.MaskU(self.mask1,
-                               afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)),
+                               afwGeom.Box2I(afwGeom.Point2I(1, 1),
+                                             afwGeom.ExtentI(3, 2)),
                                afwImage.LOCAL)
         mask2 = afwImage.MaskU(smask.getDimensions())
 
@@ -222,14 +224,16 @@ class MaskTestCase(utilsTests.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
-        mask = self.Mask(self.maskFile, hdu=2)  # will shift any unrecognised mask planes into unused slots
+        # will shift any unrecognised mask planes into unused slots
+        mask = self.Mask(self.maskFile, hdu=2)
 
         self.assertMasksEqual(mask, self.expect << nMaskPlanes0)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFitsConform(self):
         hdu = 2
-        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None,
+                              afwGeom.Box2I(), afwImage.LOCAL, True)
 
         self.assertMasksEqual(mask, self.expect)
 
@@ -349,7 +353,8 @@ class MaskTestCase(utilsTests.TestCase):
             self.assertEqual(im.interpret(bitmask), p)
             im.getArray()[0, i] = bitmask
             self.assertEqual(im.getAsString(i, 0), p)
-        self.assertEqual(self.Mask.interpret(allBits), ",".join(sorted(planes.keys())))
+        self.assertEqual(self.Mask.interpret(allBits),
+                         ",".join(sorted(planes.keys())))
 
 
 class OldMaskTestCase(unittest.TestCase):
@@ -363,15 +368,18 @@ class OldMaskTestCase(unittest.TestCase):
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
-        self.defaultMaskPlanes = sorted(maskPlaneDict, key=maskPlaneDict.__getitem__)
+        self.defaultMaskPlanes = sorted(
+            maskPlaneDict, key=maskPlaneDict.__getitem__)
 
         # reset so tests will be deterministic
         self.Mask.clearMaskPlaneDict()
         for p in ("CR", "BP"):
             self.Mask.addMaskPlane(p)
 
-        self.region = afwGeom.Box2I(afwGeom.Point2I(100, 300), afwGeom.Extent2I(10, 40))
-        self.subTestMask = self.Mask(self.testMask, self.region, afwImage.LOCAL)
+        self.region = afwGeom.Box2I(afwGeom.Point2I(100, 300),
+                                    afwGeom.Extent2I(10, 40))
+        self.subTestMask = self.Mask(
+            self.testMask, self.region, afwImage.LOCAL)
 
         if False:
             self.pixelList = afwImage.listPixelCoord()
@@ -393,7 +401,8 @@ class OldMaskTestCase(unittest.TestCase):
 
         nplane = self.testMask.getNumPlanesUsed()
         for p in ("XCR", "XBP"):
-            self.assertEqual(self.Mask.addMaskPlane(p), nplane, "Assigning plane %s" % (p))
+            self.assertEqual(self.Mask.addMaskPlane(p),
+                             nplane, "Assigning plane %s" % (p))
             nplane += 1
 
         def pname(p):
@@ -406,12 +415,14 @@ class OldMaskTestCase(unittest.TestCase):
         for p in range(0, nextra):
             self.testMask.removeAndClearMaskPlane(pname(p))
 
-        self.assertEqual(nplane + nextra, self.Mask.getNumPlanesUsed(), "Adding and removing planes")
+        self.assertEqual(
+            nplane + nextra, self.Mask.getNumPlanesUsed(), "Adding and removing planes")
 
         for p in range(0, nextra):
             self.Mask.removeMaskPlane(pname(p))
 
-        self.assertEqual(nplane, self.testMask.getNumPlanesUsed(), "Adding and removing planes")
+        self.assertEqual(nplane, self.testMask.getNumPlanesUsed(),
+                         "Adding and removing planes")
 
     def testMetadata(self):
         """Test mask plane metadata interchange with MaskPlaneDict"""
@@ -429,7 +440,8 @@ class OldMaskTestCase(unittest.TestCase):
         #
         metadata.addInt("MP_" + "Whatever", self.Mask.getNumPlanesUsed())
 
-        self.testMask.conformMaskPlanes(self.Mask.parseMaskPlaneMetadata(metadata))
+        self.testMask.conformMaskPlanes(
+            self.Mask.parseMaskPlaneMetadata(metadata))
         for (k, v) in self.Mask().getMaskPlaneDict().items():
             self.assertEqual(metadata.getInt("MP_%s" % k), v)
 
@@ -458,8 +470,10 @@ class OldMaskTestCase(unittest.TestCase):
 
         testMask2.getMaskPlaneDict()
 
-        checkPlaneBP()                                        # still present in default mask
-        self.assertIn("BP", testMask2.getMaskPlaneDict())  # should still be in testMask2
+        # still present in default mask
+        checkPlaneBP()
+        # should still be in testMask2
+        self.assertIn("BP", testMask2.getMaskPlaneDict())
 
         self.Mask.removeMaskPlane("BP")  # remove from default mask too
 
@@ -473,7 +487,8 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.clearMaskPlaneDict()
         self.Mask.addMaskPlane("P0")
         self.Mask.addMaskPlane("P1")
-        self.Mask.addMaskPlane("P1")  # a no-op -- readding a plane has no effect
+        # a no-op -- readding a plane has no effect
+        self.Mask.addMaskPlane("P1")
         #
         # Check that removing default mask planes doesn't affect pre-existing planes
         #
@@ -508,7 +523,8 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.assertRaises(pexExcept.RuntimeError, tst)
 
-        self.Mask.addMaskPlane(name)    # The dictionary should be back to the same state, so ...
+        # The dictionary should be back to the same state, so ...
+        self.Mask.addMaskPlane(name)
         tst                             # ... assertion should not fail
 
         self.testMask.removeAndClearMaskPlane(name, True)
@@ -526,15 +542,18 @@ class OldMaskTestCase(unittest.TestCase):
         name2 = "Our Boss"
         self.Mask.addMaskPlane(name)
         self.Mask.addMaskPlane(name2)
-        oldDict = testMask3.getMaskPlaneDict()  # a description of the Mask's current dictionary
+        # a description of the Mask's current dictionary
+        oldDict = testMask3.getMaskPlaneDict()
 
         for n in (name, name2):
             self.testMask.removeAndClearMaskPlane(n, True)
 
-        self.Mask.addMaskPlane(name2)        # added in opposite order to the planes in testMask3
+        # added in opposite order to the planes in testMask3
+        self.Mask.addMaskPlane(name2)
         self.Mask.addMaskPlane(name)
 
-        self.assertNotEqual(self.testMask.getMaskPlaneDict()[name], oldDict[name])
+        self.assertNotEqual(self.testMask.getMaskPlaneDict()[
+                            name], oldDict[name])
 
         def tst():
             self.testMask |= testMask3
@@ -546,7 +565,8 @@ class OldMaskTestCase(unittest.TestCase):
         # OK, that failed as it should.  Fixup the dictionaries and try again
         #
         self.Mask.addMaskPlane("BP")
-        testMask3.conformMaskPlanes(oldDict)  # convert testMask3 from oldDict to current default
+        # convert testMask3 from oldDict to current default
+        testMask3.conformMaskPlanes(oldDict)
 
         self.testMask |= testMask3      # shouldn't throw
 
@@ -558,7 +578,8 @@ class OldMaskTestCase(unittest.TestCase):
         name = "XXX"
         self.Mask.addMaskPlane(name)
         oldDict = testMask3.getMaskPlaneDict()
-        testMask3.removeAndClearMaskPlane(name)  # invalidates dictionary version
+        # invalidates dictionary version
+        testMask3.removeAndClearMaskPlane(name)
 
         testMask3.conformMaskPlanes(oldDict)
 
@@ -580,7 +601,8 @@ class OldMaskTestCase(unittest.TestCase):
 
         if display:
             im = afwImage.ImageF(testMask3.getDimensions())
-            ds9.mtv(im)                 # bug in ds9's Mask display; needs an Image first
+            # bug in ds9's Mask display; needs an Image first
+            ds9.mtv(im)
             ds9.mtv(testMask3)
 
         self.assertEqual(testMask3.get(0, 0), testMask3.getPlaneBitMask(name1))
@@ -597,8 +619,10 @@ class OldMaskTestCase(unittest.TestCase):
             ds9.mtv(im, frame=1)
             ds9.mtv(testMask3, frame=1)
 
-        self.assertNotEqual(testMask3.get(0, 0), testMask3.getPlaneBitMask(name1))
-        self.assertNotEqual(testMask3.get(0, 1), testMask3.getPlaneBitMask(name2))
+        self.assertNotEqual(testMask3.get(0, 0),
+                            testMask3.getPlaneBitMask(name1))
+        self.assertNotEqual(testMask3.get(0, 1),
+                            testMask3.getPlaneBitMask(name2))
 
         testMask3.conformMaskPlanes(oldDict)
 
@@ -633,6 +657,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

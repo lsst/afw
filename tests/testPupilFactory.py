@@ -31,6 +31,7 @@ from lsst.afw.geom import degrees
 
 class PupilFactoryTestCase(lsst.utils.tests.TestCase):
     """Test lsst.afw.cameraGeom.PupilFactory"""
+
     def setUp(self):
         self.visitInfo = afwImage.VisitInfo()
         self.size = 16.8
@@ -38,7 +39,8 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
         self.scale = self.size / self.npix
 
     def testBasePupilFactory(self):
-        pupilFactory = afwCameraGeom.PupilFactory(self.visitInfo, self.size, self.npix)
+        pupilFactory = afwCameraGeom.PupilFactory(
+            self.visitInfo, self.size, self.npix)
         self.assertEqual(pupilFactory.pupilSize, self.size)
         self.assertEqual(pupilFactory.pupilScale, self.scale)
         self.assertEqual(pupilFactory.npix, self.npix)
@@ -46,7 +48,8 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
             pupilFactory.getPupil(point=None)
 
     def testBasePupilFactoryMethods(self):
-        pupilFactory = afwCameraGeom.PupilFactory(self.visitInfo, self.size, self.npix)
+        pupilFactory = afwCameraGeom.PupilFactory(
+            self.visitInfo, self.size, self.npix)
         pupil = pupilFactory._fullPupil()
         self.assertFloatsEqual(pupil.illuminated, True)
         nFull = np.sum(pupil.illuminated)
@@ -54,13 +57,15 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
         # Cut out a primary aperture
         pupilFactory._cutCircleExterior(pupil, (0.0, 0.0), 8.4/2)
         nCircle = np.sum(pupil.illuminated)
-        self.assertFloatsAlmostEqual(nCircle/nFull, np.pi*(8.4/2)**2 / 16.8**2, rtol=3e-4)
+        self.assertFloatsAlmostEqual(
+            nCircle/nFull, np.pi*(8.4/2)**2 / 16.8**2, rtol=3e-4)
         self.assertFloatsEqual(pupil.illuminated, pupil.illuminated.T)
 
         # Cut out a central obstruction making an annulus
         pupilFactory._cutCircleInterior(pupil, (0.0, 0.0), 8.4/2 * 0.6)
         nAnnulus = np.sum(pupil.illuminated)
-        self.assertFloatsAlmostEqual(nAnnulus/nFull, nCircle/nFull * (1-0.6**2), rtol=3e-4)
+        self.assertFloatsAlmostEqual(
+            nAnnulus/nFull, nCircle/nFull * (1-0.6**2), rtol=3e-4)
         self.assertFloatsEqual(pupil.illuminated, pupil.illuminated.T)
 
         # Cut a horizontal ray, which preserves vertical reflection symmetry
@@ -68,14 +73,17 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
         # symmetry.
         pupilFactory._cutRay(pupil, (0.0, 0.0), 0*degrees, 0.1)
         self.assertFloatsEqual(pupil.illuminated, pupil.illuminated[::-1, :])
-        self.assertFloatsNotEqual(pupil.illuminated, pupil.illuminated[:, ::-1])
+        self.assertFloatsNotEqual(
+            pupil.illuminated, pupil.illuminated[:, ::-1])
         self.assertFloatsNotEqual(pupil.illuminated, pupil.illuminated.T)
 
         # Cut a vertical ray, which then gives transpositional symmetry but
         # removes vertical and horizontal reflection symmetry
         pupilFactory._cutRay(pupil, (0.0, 0.0), 90*degrees, 0.1)
-        self.assertFloatsNotEqual(pupil.illuminated, pupil.illuminated[::-1, :])
-        self.assertFloatsNotEqual(pupil.illuminated, pupil.illuminated[:, ::-1])
+        self.assertFloatsNotEqual(
+            pupil.illuminated, pupil.illuminated[::-1, :])
+        self.assertFloatsNotEqual(
+            pupil.illuminated, pupil.illuminated[:, ::-1])
         self.assertFloatsEqual(pupil.illuminated, pupil.illuminated.T)
 
 
