@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 #ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
 #define LSST_AFW_MATH_GAUSSIAN_PROCESS_H
 
@@ -61,10 +60,8 @@ namespace math {
   *
   * _interpolationCount keeps track of how many points have been interpolated
 */
-class GaussianProcessTimer{
-
+class GaussianProcessTimer {
 public:
-
     GaussianProcessTimer();
 
     /**
@@ -111,11 +108,10 @@ public:
     void display();
 
 private:
-    double _before,_beginning;
-    double _eigenTime,_iterationTime,_searchTime,_varianceTime,_totalTime;
+    double _before, _beginning;
+    double _eigenTime, _iterationTime, _searchTime, _varianceTime, _totalTime;
     int _interpolationCount;
 };
-
 
 /**
   * The parent class of covariogram functions for use in Gaussian Process interpolation
@@ -129,18 +125,17 @@ public:
     virtual ~Covariogram();
 
     // No copying
-    Covariogram (const Covariogram&) = delete;
-    Covariogram& operator=(const Covariogram&) = delete;
+    Covariogram(const Covariogram &) = delete;
+    Covariogram &operator=(const Covariogram &) = delete;
 
     // No moving
-    Covariogram (Covariogram&&) = delete;
-    Covariogram& operator=(Covariogram&&) = delete;
+    Covariogram(Covariogram &&) = delete;
+    Covariogram &operator=(Covariogram &&) = delete;
 
     /**
      * construct a Covariogram assigning default values to the hyper parameters
     */
-    explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
-
+    explicit Covariogram() : lsst::daf::base::Citizen(typeid(this)){};
 
     /**
      * Actually evaluate the covariogram function relating two points you want to interpolate from
@@ -149,10 +144,8 @@ public:
      *
      * @param [in] p2 the second point
     */
-    virtual T operator() (ndarray::Array<const T,1,1> const &p1,
-                          ndarray::Array<const T,1,1> const &p2
-                          ) const;
-
+    virtual T operator()(ndarray::Array<const T, 1, 1> const &p1,
+                         ndarray::Array<const T, 1, 1> const &p2) const;
 };
 
 /**
@@ -165,8 +158,7 @@ public:
  * characteristic length scale of the covariogram
 */
 template <typename T>
-class SquaredExpCovariogram : public Covariogram<T>{
-
+class SquaredExpCovariogram : public Covariogram<T> {
 public:
     virtual ~SquaredExpCovariogram();
 
@@ -178,13 +170,10 @@ public:
     */
     void setEllSquared(double ellSquared);
 
-    virtual T operator() (ndarray::Array<const T,1,1> const &,
-                          ndarray::Array<const T,1,1> const &
-                          ) const;
+    virtual T operator()(ndarray::Array<const T, 1, 1> const &, ndarray::Array<const T, 1, 1> const &) const;
 
 private:
     double _ellSquared;
-
 };
 
 /**
@@ -198,8 +187,7 @@ private:
   * equation 4.29
 */
 template <typename T>
-class NeuralNetCovariogram : public Covariogram<T>{
-
+class NeuralNetCovariogram : public Covariogram<T> {
 public:
     virtual ~NeuralNetCovariogram();
 
@@ -215,14 +203,10 @@ public:
     */
     void setSigma1(double sigma1);
 
-    virtual T operator() (ndarray::Array<const T,1,1> const &,
-                          ndarray::Array<const T,1,1> const &
-                          ) const;
+    virtual T operator()(ndarray::Array<const T, 1, 1> const &, ndarray::Array<const T, 1, 1> const &) const;
 
 private:
-    double _sigma0,_sigma1;
-
-
+    double _sigma0, _sigma1;
 };
 
 /**
@@ -236,14 +220,13 @@ private:
 template <typename T>
 class KdTree {
 public:
-
     // No copying
-    KdTree (const KdTree&) = delete;
-    KdTree& operator=(const KdTree&) = delete;
+    KdTree(const KdTree &) = delete;
+    KdTree &operator=(const KdTree &) = delete;
 
     // No moving
-    KdTree (KdTree&&) = delete;
-    KdTree& operator=(KdTree&&) = delete;
+    KdTree(KdTree &&) = delete;
+    KdTree &operator=(KdTree &&) = delete;
 
     // Add default constructor (which is no longer generated)
     KdTree() = default;
@@ -256,7 +239,7 @@ public:
      *
      * @throws pex::exceptions::RuntimeError if the tree is not properly constructed
     */
-    void Initialize(ndarray::Array<T,2,2> const &dt);
+    void Initialize(ndarray::Array<T, 2, 2> const &dt);
 
     /**
      * Find the nearest neighbors of a point
@@ -273,11 +256,8 @@ public:
      *
      * note that distance is forced to be the Euclidean distance
     */
-    void findNeighbors(ndarray::Array<int,1,1> neighdex,
-                       ndarray::Array<double,1,1> dd,
-                       ndarray::Array<const T,1,1> const &v,
-                       int n_nn) const;
-
+    void findNeighbors(ndarray::Array<int, 1, 1> neighdex, ndarray::Array<double, 1, 1> dd,
+                       ndarray::Array<const T, 1, 1> const &v, int n_nn) const;
 
     /**
      * Return one element of one node on the tree
@@ -287,7 +267,6 @@ public:
      * @param [in] idim the index of the dimension to return
     */
     T getData(int ipt, int idim) const;
-
 
     /**
      * Return an entire node from the tree
@@ -310,7 +289,7 @@ public:
      * any time), so I reverted to return-by-value.
      *
     */
-    ndarray::Array<T,1,1> getData(int ipt) const;
+    ndarray::Array<T, 1, 1> getData(int ipt) const;
 
     /**
      * Add a point to the tree.  Allot more space in _tree and data if needed.
@@ -319,7 +298,7 @@ public:
      *
      * @throws pex::exceptions::RuntimeError if the branch ending in the new point is not properly constructed
     */
-    void addPoint(ndarray::Array<const T,1,1> const &v);
+    void addPoint(ndarray::Array<const T, 1, 1> const &v);
 
     /**
      * Remove a point from the tree.  Reorganize what remains so that the tree remains self-consistent
@@ -336,46 +315,44 @@ public:
     */
     int getNPoints() const;
 
-   /**
-     * Return the _tree information for a given data point
-     *
-     * @param [out] v the array in which to store the entry from _tree
-     *
-     * @param [in] dex the index of the node whose information you are requesting
-   */
-    void getTreeNode(ndarray::Array<int,1,1> const &v,int dex) const;
-
+    /**
+      * Return the _tree information for a given data point
+      *
+      * @param [out] v the array in which to store the entry from _tree
+      *
+      * @param [in] dex the index of the node whose information you are requesting
+    */
+    void getTreeNode(ndarray::Array<int, 1, 1> const &v, int dex) const;
 
 private:
-    ndarray::Array<int,2,2> _tree;
-    ndarray::Array<int,1,1> _inn;
-    ndarray::Array<T,2,2> _data;
+    ndarray::Array<int, 2, 2> _tree;
+    ndarray::Array<int, 1, 1> _inn;
+    ndarray::Array<T, 2, 2> _data;
 
-    enum{DIMENSION,LT,GEQ,PARENT};
+    enum { DIMENSION, LT, GEQ, PARENT };
 
     //_tree stores the relationships between data points
     //_tree[i][DIMENSION] is the dimension on which the ith node segregates its daughters
     //
     //_tree[i][LT] is the branch of the tree down which the daughters' DIMENSIONth component
-    //is less than the parent's
+    // is less than the parent's
     //
     //_tree[i][GEQ] is the branch of the tree down which the daughters' DIMENSIONth component is
-    //greather than or equal to the parent's
+    // greather than or equal to the parent's
     //
     //_tree[i][PARENT] is the parent node of the ith node
 
     //_data actually stores the data points
 
-
-    int _npts,_dimensions,_room,_roomStep,_masterParent;
-    mutable int _neighborsFound,_neighborsWanted;
+    int _npts, _dimensions, _room, _roomStep, _masterParent;
+    mutable int _neighborsFound, _neighborsWanted;
 
     //_room denotes the capacity of _data and _tree.  It will usually be larger
-    //than _npts so that we do not have to reallocate
+    // than _npts so that we do not have to reallocate
     //_tree and _data every time we add a new point to the tree
 
-    mutable ndarray::Array<double,1,1> _neighborDistances;
-    mutable ndarray::Array<int,1,1> _neighborCandidates;
+    mutable ndarray::Array<double, 1, 1> _neighborDistances;
+    mutable ndarray::Array<int, 1, 1> _neighborCandidates;
 
     /**
      * Find the daughter point of a node in the tree and segregate the points around it
@@ -389,37 +366,32 @@ private:
      * @param [in] dir which side of the parent are we on?  dir==1 means that we are on the left
      * side; dir==2 means the right side.
     */
-    void _organize(ndarray::Array<int,1,1> const &use,
-                   int ct,
-                   int parent,
-                   int dir);
+    void _organize(ndarray::Array<int, 1, 1> const &use, int ct, int parent, int dir);
 
     /**
       * Find the point already in the tree that would be the parent of a point not in the tree
       *
       * @param [in] v the points whose prospective parent you want to find
     */
-    int _findNode(ndarray::Array<const T,1,1> const &v) const;
+    int _findNode(ndarray::Array<const T, 1, 1> const &v) const;
 
-   /**
-    * @brief This method actually looks for the neighbors, determining whether or
-    * not to descend branches of the tree
-    *
-    * @param [in] v the point whose neighbors you are looking for
-    *
-    * @param [in] consider the index of the data point you are considering as a possible nearest neighbor
-    *
-    * @param [in] from the index of the point you last considered as a nearest neighbor
-    *  (so the search does not backtrack along the tree)
-    *
-    * The class KdTree keeps track of how many neighbors you want and how many
-    * neighbors you have found and what their distances from v are in the class member
-    * variables _neighborsWanted, _neighborsFound, _neighborCandidates,
-    * and _neighborDistances
-   */
-    void _lookForNeighbors(ndarray::Array<const T,1,1> const &v,
-                           int consider,
-                           int from) const;
+    /**
+     * @brief This method actually looks for the neighbors, determining whether or
+     * not to descend branches of the tree
+     *
+     * @param [in] v the point whose neighbors you are looking for
+     *
+     * @param [in] consider the index of the data point you are considering as a possible nearest neighbor
+     *
+     * @param [in] from the index of the point you last considered as a nearest neighbor
+     *  (so the search does not backtrack along the tree)
+     *
+     * The class KdTree keeps track of how many neighbors you want and how many
+     * neighbors you have found and what their distances from v are in the class member
+     * variables _neighborsWanted, _neighborsFound, _neighborCandidates,
+     * and _neighborDistances
+    */
+    void _lookForNeighbors(ndarray::Array<const T, 1, 1> const &v, int consider, int from) const;
 
     /**
      * Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
@@ -439,9 +411,7 @@ private:
      * This method returns the value of _masterParent if the branch is correctly contructed.
      * It returns zero otherwise
     */
-    int _walkUpTree(int target,
-                   int dir,
-                   int root) const;
+    int _walkUpTree(int target, int dir, int root) const;
 
     /**
       * @brief A method which counts the number of nodes descended from a given node
@@ -451,7 +421,7 @@ private:
       *
       * @param [in,out] *ct keeps track of how many nodes you have encountered as you descend the tree
     */
-    void _count(int where,int *ct) const;
+    void _count(int where, int *ct) const;
 
     /**
      * Descend the tree from a node which has been removed, reassigning severed nodes as you go
@@ -470,10 +440,8 @@ private:
     /**
      * calculate the Euclidean distance between the points p1 and p2
     */
-    double _distance(ndarray::Array<const T,1,1> const &p1,
-                     ndarray::Array<const T,1,1> const &p2) const;
+    double _distance(ndarray::Array<const T, 1, 1> const &p1, ndarray::Array<const T, 1, 1> const &p2) const;
 };
-
 
 /**
  * Stores values of a function sampled on an image and allows
@@ -498,16 +466,14 @@ private:
 
 template <typename T>
 class GaussianProcess {
-
 public:
-
     // No copying
-    GaussianProcess (const GaussianProcess&) = delete;
-    GaussianProcess& operator=(const GaussianProcess&) = delete;
+    GaussianProcess(const GaussianProcess &) = delete;
+    GaussianProcess &operator=(const GaussianProcess &) = delete;
 
     // No moving
-    GaussianProcess (GaussianProcess&&) = delete;
-    GaussianProcess& operator=(GaussianProcess&&) = delete;
+    GaussianProcess(GaussianProcess &&) = delete;
+    GaussianProcess &operator=(GaussianProcess &&) = delete;
 
     /**
       * @brief This is the constructor you call if you do not wish to normalize the positions
@@ -521,9 +487,8 @@ public:
       *
       * @param [in] covarIn is the input covariogram
     */
-    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
-                    ndarray::Array<T,1,1> const &ff,
-                    std::shared_ptr< Covariogram<T> > const &covarIn);
+    GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarray::Array<T, 1, 1> const &ff,
+                    std::shared_ptr<Covariogram<T> > const &covarIn);
 
     /**
      * @brief This is the constructor you call if you want the positions of your data
@@ -544,11 +509,9 @@ public:
      *
      * Note: the member variable _useMaxMin will allow the code to remember which constructor you invoked
     */
-    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
-                    ndarray::Array<T,1,1> const &mn,
-                    ndarray::Array<T,1,1> const &mx,
-                    ndarray::Array<T,1,1> const &ff,
-                    std::shared_ptr< Covariogram<T> > const &covarIn);
+    GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarray::Array<T, 1, 1> const &mn,
+                    ndarray::Array<T, 1, 1> const &mx, ndarray::Array<T, 1, 1> const &ff,
+                    std::shared_ptr<Covariogram<T> > const &covarIn);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions
      * and an unbounded/unnormalized parameter space
@@ -561,9 +524,8 @@ public:
      *
      * @param [in] covarIn is the input covariogram
     */
-    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
-                    ndarray::Array<T,2,2> const &ff,
-                    std::shared_ptr< Covariogram<T> > const &covarIn);
+    GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarray::Array<T, 2, 2> const &ff,
+                    std::shared_ptr<Covariogram<T> > const &covarIn);
     /**
      * @brief this is the constructor to use in the case of a vector of input
      * functions using minima and maxima in parameter space
@@ -580,11 +542,9 @@ public:
      *
      * @param [in] covarIn is the input covariogram
     */
-    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
-                    ndarray::Array<T,1,1> const &mn,
-                    ndarray::Array<T,1,1> const &mx,
-                    ndarray::Array<T,2,2> const &ff,
-                    std::shared_ptr< Covariogram<T> > const &covarIn);
+    GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarray::Array<T, 1, 1> const &mn,
+                    ndarray::Array<T, 1, 1> const &mx, ndarray::Array<T, 2, 2> const &ff,
+                    std::shared_ptr<Covariogram<T> > const &covarIn);
 
     /**
      * return the number of data points stored in the GaussianProcess
@@ -606,7 +566,7 @@ public:
      *
      * @param [in] indices is an array of indices indicating the points to return
     */
-    void getData(ndarray::Array<T,2,2> pts, ndarray::Array<T,1,1> fn,
+    void getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 1, 1> fn,
                  ndarray::Array<int, 1, 1> indices) const;
 
     /**
@@ -618,9 +578,8 @@ public:
      *
      * @param [in] indices is an array of indices indicating the points to return
     */
-    void getData(ndarray::Array<T,2,2> pts, ndarray::Array<T,2,2> fn,
+    void getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 2, 2> fn,
                  ndarray::Array<int, 1, 1> indices) const;
-
 
     /**
      * Interpolate the function value at one point using a specified number of nearest neighbors
@@ -639,8 +598,7 @@ public:
      * vin before inputting.  The code will remember that you want a normalized
      * parameter space, and will apply the normalization when you call interpolate
     */
-    T interpolate(ndarray::Array<T,1,1> variance,
-                  ndarray::Array<T,1,1> const &vin,
+    T interpolate(ndarray::Array<T, 1, 1> variance, ndarray::Array<T, 1, 1> const &vin,
                   int numberOfNeighbors) const;
     /**
      * This is the version of GaussianProcess::interpolate for a vector of functions.
@@ -657,10 +615,8 @@ public:
      * function currently does not include any terms relating different elements of mu to each other,
      * all of the elements of variance will be identical
     */
-    void interpolate(ndarray::Array<T,1,1> mu,
-                     ndarray::Array<T,1,1> variance,
-                     ndarray::Array<T,1,1> const &vin,
-                     int numberOfNeighbors) const;
+    void interpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<T, 1, 1> variance,
+                     ndarray::Array<T, 1, 1> const &vin, int numberOfNeighbors) const;
 
     /**
      * @brief This method will interpolate the function on a data point
@@ -681,9 +637,7 @@ public:
      * This method ignores the point on which you are interpolating when requesting nearest neighbors
      *
     */
-    T selfInterpolate(ndarray::Array<T,1,1> variance,
-                      int dex,
-                      int numberOfNeighbors) const;
+    T selfInterpolate(ndarray::Array<T, 1, 1> variance, int dex, int numberOfNeighbors) const;
 
     /**
      * The version of selfInterpolate called for a vector of functions
@@ -699,9 +653,7 @@ public:
      * @throws pex::exceptions::RuntimeError if the nearest neighbor search does not find
      * the data point itself as the nearest neighbor
     */
-    void selfInterpolate(ndarray::Array<T,1,1> mu,
-                         ndarray::Array<T,1,1> variance,
-                         int dex,
+    void selfInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<T, 1, 1> variance, int dex,
                          int numberOfNeighbors) const;
 
     /**
@@ -725,9 +677,8 @@ public:
      * data points and 1,000,000 interpolations.
      *
     */
-    void batchInterpolate(ndarray::Array<T,1,1> mu,
-                          ndarray::Array<T,1,1> variance,
-                          ndarray::Array<T,2,2> const &queries) const;
+    void batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<T, 1, 1> variance,
+                          ndarray::Array<T, 2, 2> const &queries) const;
 
     /**
      * @brief Interpolate a list of points using all of the data. Do not return variances for the
@@ -746,24 +697,20 @@ public:
      * that does return variances (timing done on a case with 189 data points and 1 million query points).
      *
     */
-    void batchInterpolate(ndarray::Array<T,1,1> mu,
-                          ndarray::Array<T,2,2> const &queries) const;
+    void batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<T, 2, 2> const &queries) const;
 
     /**
      * @brief This is the version of batchInterpolate (with variances)
      * that is called for a vector of functions
     */
-    void batchInterpolate(ndarray::Array<T,2,2> mu,
-                          ndarray::Array<T,2,2> variance,
-                          ndarray::Array<T,2,2> const &queries) const;
+    void batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::Array<T, 2, 2> variance,
+                          ndarray::Array<T, 2, 2> const &queries) const;
 
     /**
      * @brief This is the version of batchInterpolate (without variances) that
      * is called for a vector of functions
     */
-    void batchInterpolate(ndarray::Array<T,2,2> mu,
-                          ndarray::Array<T,2,2> const &queries) const;
-
+    void batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::Array<T, 2, 2> const &queries) const;
 
     /**
      * Add a point to the pool of data used by GaussianProcess for interpolation
@@ -781,7 +728,7 @@ public:
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree,
      * which will slow down nearest neighbor searches
     */
-    void addPoint(ndarray::Array<T,1,1> const &vin,T f);
+    void addPoint(ndarray::Array<T, 1, 1> const &vin, T f);
 
     /**
      * This is the version of addPoint that is called for a vector of functions
@@ -792,7 +739,7 @@ public:
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree,
      * which will slow down nearest neighbor searches
     */
-    void addPoint(ndarray::Array<T,1,1> const &vin,ndarray::Array<T,1,1> const &f);
+    void addPoint(ndarray::Array<T, 1, 1> const &vin, ndarray::Array<T, 1, 1> const &f);
 
     /**
      * This will remove a point from the data set
@@ -821,7 +768,7 @@ public:
      * @param [in] covar the Covariogram object that you wish to assign
      *
     */
-    void setCovariogram(std::shared_ptr< Covariogram<T> > const &covar);
+    void setCovariogram(std::shared_ptr<Covariogram<T> > const &covar);
 
     /**
      * set the value of the hyperparameter _lambda
@@ -835,7 +782,6 @@ public:
      * can have different variances.
     */
     void setLambda(T lambda);
-
 
     /**
      * @brief Give the user acces to _timer, an object keeping track of the time spent on
@@ -851,25 +797,23 @@ public:
      *
      * ticktock.display()
     */
-    GaussianProcessTimer& getTimes() const;
+    GaussianProcessTimer &getTimes() const;
 
- private:
-    int _npts,_useMaxMin,_dimensions,_room,_roomStep,_nFunctions;
+private:
+    int _npts, _useMaxMin, _dimensions, _room, _roomStep, _nFunctions;
 
-    T _krigingParameter,_lambda;
+    T _krigingParameter, _lambda;
 
-    ndarray::Array<T,1,1> _max,_min;
-    ndarray::Array<T,2,2> _function;
+    ndarray::Array<T, 1, 1> _max, _min;
+    ndarray::Array<T, 2, 2> _function;
 
     KdTree<T> _kdTree;
 
-    std::shared_ptr< Covariogram<T> > _covariogram;
+    std::shared_ptr<Covariogram<T> > _covariogram;
     mutable GaussianProcessTimer _timer;
-
 };
+}
+}
+}
 
-}}}
-
-
-
-#endif //#ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
+#endif  //#ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H

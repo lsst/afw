@@ -34,7 +34,8 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeError, lsst::afw::geom::SingularTransformException)
+LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeError,
+                    lsst::afw::geom::SingularTransformException)
 
 /**
  *  A 2D linear coordinate transformation.
@@ -69,24 +70,23 @@ LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeEr
  */
 class LinearTransform {
 public:
-    enum Parameters {XX=0,YX=1,XY=2,YY=3};
+    enum Parameters { XX = 0, YX = 1, XY = 2, YY = 3 };
 
-    typedef Eigen::Matrix<double,4,1> ParameterVector;
-    typedef Eigen::Matrix<double,2,4> TransformDerivativeMatrix;
-    typedef Eigen::Matrix<double,4,4> ProductDerivativeMatrix;
+    typedef Eigen::Matrix<double, 4, 1> ParameterVector;
+    typedef Eigen::Matrix<double, 2, 4> TransformDerivativeMatrix;
+    typedef Eigen::Matrix<double, 4, 4> ProductDerivativeMatrix;
 
-    typedef Eigen::Matrix<double,2,2,Eigen::DontAlign> Matrix;
+    typedef Eigen::Matrix<double, 2, 2, Eigen::DontAlign> Matrix;
 
     /** Construct an empty (identity) LinearTransform. */
     LinearTransform() : _matrix(Matrix::Identity()) {}
 
     /** Construct an LinearTransform from an Eigen::Matrix. */
-    explicit LinearTransform(Matrix const & matrix) : _matrix(matrix) {}
+    explicit LinearTransform(Matrix const& matrix) : _matrix(matrix) {}
 
-    LinearTransform operator*(LinearTransform const & other) const {
+    LinearTransform operator*(LinearTransform const& other) const {
         return LinearTransform(getMatrix() * other.getMatrix());
     }
-
 
     static LinearTransform makeScaling(double s) {
         return LinearTransform((Matrix() << s, 0.0, 0.0, s).finished());
@@ -100,28 +100,28 @@ public:
         return LinearTransform(Matrix(Eigen::Rotation2D<double>(t.asRadians())));
     }
 
-    LinearTransform & operator=(LinearTransform const & other) {
+    LinearTransform& operator=(LinearTransform const& other) {
         _matrix = other._matrix;
         return *this;
     }
 
-    LinearTransform & operator+=(LinearTransform const & other) {
+    LinearTransform& operator+=(LinearTransform const& other) {
         _matrix += other._matrix;
         return *this;
     }
 
-    LinearTransform operator+(LinearTransform const & other) {
+    LinearTransform operator+(LinearTransform const& other) {
         LinearTransform tmp(*this);
         tmp += other;
         return tmp;
     }
 
-    LinearTransform & operator-=(LinearTransform const & other) {
+    LinearTransform& operator-=(LinearTransform const& other) {
         _matrix -= other._matrix;
         return *this;
     }
 
-    LinearTransform operator-(LinearTransform const & other) {
+    LinearTransform operator-(LinearTransform const& other) {
         LinearTransform tmp(*this);
         tmp -= other;
         return tmp;
@@ -138,15 +138,13 @@ public:
      *
      * The parameter vector is ordered XX, YX, XY, YY
      */
-    void setParameterVector(ParameterVector const & vector);
+    void setParameterVector(ParameterVector const& vector);
 
-    Matrix const & getMatrix() const { return _matrix; }
-    Matrix & getMatrix() { return _matrix; }
+    Matrix const& getMatrix() const { return _matrix; }
+    Matrix& getMatrix() { return _matrix; }
 
-    double & operator[](int i) { return _matrix(i % 2, i / 2); }
-    double const & operator[](int i) const {
-        return const_cast<Matrix&>(_matrix)(i % 2, i / 2);
-    }
+    double& operator[](int i) { return _matrix(i % 2, i / 2); }
+    double const& operator[](int i) const { return const_cast<Matrix&>(_matrix)(i % 2, i / 2); }
 
     /**
      * Return the inverse transform.
@@ -169,7 +167,7 @@ public:
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Extent
      */
-    Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asEigen()); }
+    Point2D operator()(Point2D const& p) const { return Point2D(getMatrix() * p.asEigen()); }
 
     /**
      *  Transform a Extent2D object.
@@ -177,24 +175,23 @@ public:
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Point
      */
-    Extent2D operator()(Extent2D const & p) const { return Extent2D(getMatrix() * p.asEigen()); }
+    Extent2D operator()(Extent2D const& p) const { return Extent2D(getMatrix() * p.asEigen()); }
 
     /**
      * Derivative of (*this)(input) with respect to the transform elements (for Point).
      */
-    TransformDerivativeMatrix dTransform(Point2D const & input) const;
+    TransformDerivativeMatrix dTransform(Point2D const& input) const;
 
     /// Derivative of (*this)(input) with respect to the transform elements (for Extent);
-    TransformDerivativeMatrix dTransform(Extent2D const & input) const {
-        return dTransform(Point2D(input));
-    }
+    TransformDerivativeMatrix dTransform(Extent2D const& input) const { return dTransform(Point2D(input)); }
 
 private:
     Matrix _matrix;
 };
 
-std::ostream & operator<<(std::ostream & os, lsst::afw::geom::LinearTransform const & t);
+std::ostream& operator<<(std::ostream& os, lsst::afw::geom::LinearTransform const& t);
+}
+}
+}  // namespace lsst::afw::geom
 
-}}} // namespace lsst::afw::geom
-
-#endif // !LSST_AFW_GEOM_LINEAR_TRANSFORM_H
+#endif  // !LSST_AFW_GEOM_LINEAR_TRANSFORM_H

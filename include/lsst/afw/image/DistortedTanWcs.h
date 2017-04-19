@@ -59,18 +59,15 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
      */
-    DistortedTanWcs(
-        TanWcs const &tanWcs,
-        geom::XYTransform const &pixelsToTanPixels
-    );
+    DistortedTanWcs(TanWcs const &tanWcs, geom::XYTransform const &pixelsToTanPixels);
 
-    virtual ~DistortedTanWcs() {};
+    virtual ~DistortedTanWcs(){};
 
     /// Polymorphic deep-copy.
     virtual std::shared_ptr<Wcs> clone() const;
 
     /// @warning not implemented (because XYTransform operator== is not implemented)
-    bool operator==(Wcs const & other) const;
+    bool operator==(Wcs const &other) const;
 
     /// @warning not implemented
     virtual void flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const;
@@ -92,7 +89,6 @@ public:
     std::shared_ptr<geom::XYTransform> getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
 
 protected:
-
     /**
     Worker routine for skyToPixel
 
@@ -111,12 +107,12 @@ protected:
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
 private:
-
-    std::shared_ptr<geom::XYTransform> _pixelsToTanPixelsPtr;   // XYTransform that converts from PIXELS to TAN_PIXELS
-                                                    // coordinates in the forward direction
-
+    std::shared_ptr<geom::XYTransform>
+            _pixelsToTanPixelsPtr;  // XYTransform that converts from PIXELS to TAN_PIXELS
+                                    // coordinates in the forward direction
 };
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image
 
 #endif

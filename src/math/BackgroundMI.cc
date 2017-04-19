@@ -43,47 +43,43 @@ namespace math {
 
 namespace {
 
-    // Given two vectors x and y, with some nans in y we want vectors x' and y' that correspond to the data
-    // without the nans basic idea is that 'x' is the values, and 'y' is the ref (where nan checking happens)
-    //    cullNan(x, y, x', y')
-    void cullNan(std::vector<double> const &values, std::vector<double> const &refs,
-                 std::vector<double> &culledValues, std::vector<double> &culledRefs,
-                 double const defaultValue=std::numeric_limits<double>::quiet_NaN()
-                ) {
-        if (culledValues.capacity() == 0) {
-            culledValues.reserve(refs.size());
-        } else {
-            culledValues.clear();
-        }
-        if (culledRefs.capacity() == 0) {
-            culledRefs.reserve(refs.size());
-        } else {
-            culledRefs.clear();
-        }
+// Given two vectors x and y, with some nans in y we want vectors x' and y' that correspond to the data
+// without the nans basic idea is that 'x' is the values, and 'y' is the ref (where nan checking happens)
+//    cullNan(x, y, x', y')
+void cullNan(std::vector<double> const& values, std::vector<double> const& refs,
+             std::vector<double>& culledValues, std::vector<double>& culledRefs,
+             double const defaultValue = std::numeric_limits<double>::quiet_NaN()) {
+    if (culledValues.capacity() == 0) {
+        culledValues.reserve(refs.size());
+    } else {
+        culledValues.clear();
+    }
+    if (culledRefs.capacity() == 0) {
+        culledRefs.reserve(refs.size());
+    } else {
+        culledRefs.clear();
+    }
 
-        bool const haveDefault = !std::isnan(defaultValue);
+    bool const haveDefault = !std::isnan(defaultValue);
 
-        for (std::vector<double>::const_iterator pVal = values.begin(), pRef = refs.begin();
-             pRef != refs.end(); ++pRef, ++pVal) {
-            if (!std::isnan(*pRef)) {
-                culledValues.push_back(*pVal);
-                culledRefs.push_back(*pRef);
-            } else if(haveDefault) {
-                culledValues.push_back(*pVal);
-                culledRefs.push_back(defaultValue);
-            } else {
-                ;                       // drop a NaN
-            }
+    for (std::vector<double>::const_iterator pVal = values.begin(), pRef = refs.begin(); pRef != refs.end();
+         ++pRef, ++pVal) {
+        if (!std::isnan(*pRef)) {
+            culledValues.push_back(*pVal);
+            culledRefs.push_back(*pRef);
+        } else if (haveDefault) {
+            culledValues.push_back(*pVal);
+            culledRefs.push_back(defaultValue);
+        } else {
+            ;  // drop a NaN
         }
     }
 }
+}
 
-template<typename ImageT>
-BackgroundMI::BackgroundMI(ImageT const& img,
-                             BackgroundControl const& bgCtrl
-                            ) :
-    Background(img, bgCtrl), _statsImage(image::MaskedImage<InternalPixelT>())
-{
+template <typename ImageT>
+BackgroundMI::BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl)
+        : Background(img, bgCtrl), _statsImage(image::MaskedImage<InternalPixelT>()) {
     // =============================================================
     // Loop over the cells in the image, computing statistical properties
     // of each cell in turn and using them to set _statsImage
@@ -91,34 +87,30 @@ BackgroundMI::BackgroundMI(ImageT const& img,
     int const nySample = bgCtrl.getNySample();
     _statsImage = image::MaskedImage<InternalPixelT>(nxSample, nySample);
 
-    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage.getImage();
-    image::MaskedImage<InternalPixelT>::Variance &var = *_statsImage.getVariance();
+    image::MaskedImage<InternalPixelT>::Image& im = *_statsImage.getImage();
+    image::MaskedImage<InternalPixelT>::Variance& var = *_statsImage.getVariance();
 
     for (int iX = 0; iX < nxSample; ++iX) {
         for (int iY = 0; iY < nySample; ++iY) {
             ImageT subimg = ImageT(img, geom::Box2I(geom::Point2I(_xorig[iX], _yorig[iY]),
-                                                    geom::Extent2I(_xsize[iX], _ysize[iY])), image::LOCAL);
+                                                    geom::Extent2I(_xsize[iX], _ysize[iY])),
+                                   image::LOCAL);
 
             std::pair<double, double> res = makeStatistics(subimg, bgCtrl.getStatisticsProperty() | ERRORS,
-                                                           *bgCtrl.getStatisticsControl()).getResult();
+                                                           *bgCtrl.getStatisticsControl())
+                                                    .getResult();
             im(iX, iY) = res.first;
             var(iX, iY) = res.second;
         }
     }
 }
-BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,
-                           image::MaskedImage<InternalPixelT> const& statsImage
-                          ) :
-    Background(imageBBox, statsImage.getWidth(), statsImage.getHeight()),
-    _statsImage(statsImage)
-{
-}
+BackgroundMI::BackgroundMI(geom::Box2I const imageBBox, image::MaskedImage<InternalPixelT> const& statsImage)
+        : Background(imageBBox, statsImage.getWidth(), statsImage.getHeight()), _statsImage(statsImage) {}
 
 void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
-                                   UndersampleStyle const undersampleStyle,
-                                   int const iX, std::vector<int> const& ypix) const
-{
-    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage.getImage();
+                                   UndersampleStyle const undersampleStyle, int const iX,
+                                   std::vector<int> const& ypix) const {
+    image::MaskedImage<InternalPixelT>::Image& im = *_statsImage.getImage();
 
     int const height = _imgBBox.getHeight();
     _gridColumns[iX].resize(height);
@@ -136,13 +128,12 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
     std::shared_ptr<Interpolate> intobj;
     try {
         intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
-    } catch(pex::exceptions::OutOfRangeError &e) {
+    } catch (pex::exceptions::OutOfRangeError& e) {
         switch (undersampleStyle) {
-          case THROW_EXCEPTION:
-            LSST_EXCEPT_ADD(e, "setting _gridcolumns");
-            throw;
-          case REDUCE_INTERP_ORDER:
-            {
+            case THROW_EXCEPTION:
+                LSST_EXCEPT_ADD(e, "setting _gridcolumns");
+                throw;
+            case REDUCE_INTERP_ORDER: {
                 if (gridTmp.empty()) {
                     // Set the column to NaN.  We'll deal with this properly when interpolating in x
                     ycenTmp.push_back(0);
@@ -154,15 +145,17 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
                     return _setGridColumns(lookupMaxInterpStyle(gridTmp.size()), undersampleStyle, iX, ypix);
                 }
             }
-          case INCREASE_NXNYSAMPLE:
-            LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
-            throw;
-          default:
-            LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
-                                                 "UndersampleStyle %d is not defined.") % undersampleStyle));
-            throw;
+            case INCREASE_NXNYSAMPLE:
+                LSST_EXCEPT_ADD(
+                        e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
+                throw;
+            default:
+                LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
+                                                     "UndersampleStyle %d is not defined.") %
+                                       undersampleStyle));
+                throw;
         }
-    } catch(ex::Exception &e) {
+    } catch (ex::Exception& e) {
         LSST_EXCEPT_ADD(e, "setting _gridcolumns");
         throw;
     }
@@ -172,26 +165,18 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
     }
 }
 
-BackgroundMI& BackgroundMI::operator+=(float const delta
-                                  )
-{
+BackgroundMI& BackgroundMI::operator+=(float const delta) {
     _statsImage += delta;
     return *this;
 }
 
-BackgroundMI& BackgroundMI::operator-=(float const delta
-                                  )
-{
+BackgroundMI& BackgroundMI::operator-=(float const delta) {
     _statsImage -= delta;
     return *this;
 }
 
-double BackgroundMI::getPixel(Interpolate::Style const interpStyle,
-                            int const x,
-                            int const y
-                           ) const
-{
-    (void)getImage<InternalPixelT>(interpStyle);        // setup the interpolation
+double BackgroundMI::getPixel(Interpolate::Style const interpStyle, int const x, int const y) const {
+    (void)getImage<InternalPixelT>(interpStyle);  // setup the interpolation
 
     // build an interpobj along the row y and get the x'th value
     int const nxSample = _statsImage.getWidth();
@@ -205,28 +190,27 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle,
     try {
         std::shared_ptr<Interpolate> intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
         return static_cast<double>(intobj->interpolate(x));
-    } catch(ex::Exception &e) {
+    } catch (ex::Exception& e) {
         LSST_EXCEPT_ADD(e, "in getPixel()");
         throw;
     }
 }
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
-    geom::Box2I const& bbox,
+        geom::Box2I const& bbox,
         Interpolate::Style const interpStyle_,   // Style of the interpolation
-        UndersampleStyle const undersampleStyle // Behaviour if there are too few points
-                                                ) const
-{
+        UndersampleStyle const undersampleStyle  // Behaviour if there are too few points
+        ) const {
     if (!_imgBBox.contains(bbox)) {
-        throw LSST_EXCEPT(ex::LengthError,
-                          str(boost::format("BBox (%d:%d,%d:%d) out of range (%d:%d,%d:%d)") %
-                              bbox.getMinX() % bbox.getMaxX() % bbox.getMinY() % bbox.getMaxY() %
-                              _imgBBox.getMinX() % _imgBBox.getMaxX() %
-                              _imgBBox.getMinY() % _imgBBox.getMaxY()));
+        throw LSST_EXCEPT(
+                ex::LengthError,
+                str(boost::format("BBox (%d:%d,%d:%d) out of range (%d:%d,%d:%d)") % bbox.getMinX() %
+                    bbox.getMaxX() % bbox.getMinY() % bbox.getMaxY() % _imgBBox.getMinX() %
+                    _imgBBox.getMaxX() % _imgBBox.getMinY() % _imgBBox.getMaxY()));
     }
     int const nxSample = _statsImage.getWidth();
     int const nySample = _statsImage.getHeight();
-    Interpolate::Style interpStyle = interpStyle_; // not const -- may be modified if REDUCE_INTERP_ORDER
+    Interpolate::Style interpStyle = interpStyle_;  // not const -- may be modified if REDUCE_INTERP_ORDER
 
     /*
      * Save the as-used interpStyle and undersampleStyle.
@@ -245,41 +229,45 @@ std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
     bool const isYundersampled = (nySample < lookupMinInterpPoints(interpStyle));
 
     switch (undersampleStyle) {
-      case THROW_EXCEPTION:
-        if (isXundersampled && isYundersampled) {
+        case THROW_EXCEPTION:
+            if (isXundersampled && isYundersampled) {
+                throw LSST_EXCEPT(
+                        ex::InvalidParameterError,
+                        "nxSample and nySample have too few points for requested interpolation style.");
+            } else if (isXundersampled) {
+                throw LSST_EXCEPT(ex::InvalidParameterError,
+                                  "nxSample has too few points for requested interpolation style.");
+            } else if (isYundersampled) {
+                throw LSST_EXCEPT(ex::InvalidParameterError,
+                                  "nySample has too few points for requested interpolation style.");
+            }
+            break;
+        case REDUCE_INTERP_ORDER:
+            if (isXundersampled || isYundersampled) {
+                Interpolate::Style const xStyle = lookupMaxInterpStyle(nxSample);
+                Interpolate::Style const yStyle = lookupMaxInterpStyle(nySample);
+                interpStyle = (nxSample < nySample) ? xStyle : yStyle;
+                _asUsedInterpStyle = interpStyle;
+            }
+            break;
+        case INCREASE_NXNYSAMPLE:
+            if (isXundersampled || isYundersampled) {
+                throw LSST_EXCEPT(
+                        ex::InvalidParameterError,
+                        "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
+            }
+            break;
+        default:
             throw LSST_EXCEPT(ex::InvalidParameterError,
-                              "nxSample and nySample have too few points for requested interpolation style.");
-        } else if (isXundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterError,
-                              "nxSample has too few points for requested interpolation style.");
-        } else if (isYundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterError,
-                              "nySample has too few points for requested interpolation style.");
-        }
-        break;
-      case REDUCE_INTERP_ORDER:
-        if (isXundersampled || isYundersampled) {
-            Interpolate::Style const xStyle = lookupMaxInterpStyle(nxSample);
-            Interpolate::Style const yStyle = lookupMaxInterpStyle(nySample);
-            interpStyle = (nxSample < nySample) ? xStyle : yStyle;
-            _asUsedInterpStyle = interpStyle;
-        }
-        break;
-      case INCREASE_NXNYSAMPLE:
-        if (isXundersampled || isYundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterError,
-                              "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
-        }
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          str(boost::format("The selected BackgroundControl "
-                                            "UndersampleStyle %d is not defined.") % undersampleStyle));
+                              str(boost::format("The selected BackgroundControl "
+                                                "UndersampleStyle %d is not defined.") %
+                                  undersampleStyle));
     }
 
     // if we're approximating, don't bother with the rest of the interp-related work.  Return from here.
     if (_bctrl->getApproximateControl()->getStyle() != ApproximateControl::UNKNOWN) {
-        return doGetApproximate<PixelT>(*_bctrl->getApproximateControl(), _asUsedUndersampleStyle)->getImage();
+        return doGetApproximate<PixelT>(*_bctrl->getApproximateControl(), _asUsedUndersampleStyle)
+                ->getImage();
     }
 
     // =============================================================
@@ -302,7 +290,7 @@ std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
     // create a shared_ptr to put the background image in and return to caller
     // start with xy0 = 0 and set final xy0 later
     std::shared_ptr<image::Image<PixelT>> bg =
-        std::shared_ptr<image::Image<PixelT>>(new image::Image<PixelT>(bbox.getDimensions()));
+            std::shared_ptr<image::Image<PixelT>>(new image::Image<PixelT>(bbox.getDimensions()));
 
     // go through row by row
     // - interpolate on the gridcolumns that were pre-computed by the constructor
@@ -326,13 +314,12 @@ std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
         std::shared_ptr<Interpolate> intobj;
         try {
             intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
-        } catch(pex::exceptions::OutOfRangeError &e) {
+        } catch (pex::exceptions::OutOfRangeError& e) {
             switch (undersampleStyle) {
-              case THROW_EXCEPTION:
-                LSST_EXCEPT_ADD(e, str(boost::format("Interpolating in y (iY = %d)") % iY));
-                throw;
-              case REDUCE_INTERP_ORDER:
-                {
+                case THROW_EXCEPTION:
+                    LSST_EXCEPT_ADD(e, str(boost::format("Interpolating in y (iY = %d)") % iY));
+                    throw;
+                case REDUCE_INTERP_ORDER: {
                     if (bgTmp.empty()) {
                         xcenTmp.push_back(0);
                         bgTmp.push_back(defaultValue);
@@ -342,17 +329,19 @@ std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
                     } else {
                         intobj = makeInterpolate(xcenTmp, bgTmp, lookupMaxInterpStyle(bgTmp.size()));
                     }
-                }
-                break;
-              case INCREASE_NXNYSAMPLE:
-                LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
-                throw;
-              default:
-                LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
-                                                     "UndersampleStyle %d is not defined.") % undersampleStyle));
-                throw;
+                } break;
+                case INCREASE_NXNYSAMPLE:
+                    LSST_EXCEPT_ADD(
+                            e,
+                            "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
+                    throw;
+                default:
+                    LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
+                                                         "UndersampleStyle %d is not defined.") %
+                                           undersampleStyle));
+                    throw;
             }
-        } catch(ex::Exception &e) {
+        } catch (ex::Exception& e) {
             LSST_EXCEPT_ADD(e, str(boost::format("Interpolating in y (iY = %d)") % iY));
             throw;
         }
@@ -367,13 +356,11 @@ std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
     return bg;
 }
 
-
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Approximate<PixelT>> BackgroundMI::doGetApproximate(
-        ApproximateControl const& actrl,                          /* Approximation style */
-        UndersampleStyle const undersampleStyle                   /* Behaviour if there are too few points */
-                                    ) const
-{
+        ApproximateControl const& actrl,        /* Approximation style */
+        UndersampleStyle const undersampleStyle /* Behaviour if there are too few points */
+        ) const {
     auto const localBBox = afw::geom::Box2I(afw::geom::Point2I(0, 0), _imgBBox.getDimensions());
     return makeApproximate(_xcen, _ycen, _statsImage, localBBox, actrl);
 }
@@ -383,34 +370,31 @@ std::shared_ptr<Approximate<PixelT>> BackgroundMI::doGetApproximate(
  * Create the versions we need of _get{Approximate,Image} and Explicit instantiations
  *
  */
-#define CREATE_BACKGROUND(m, v, TYPE)                              \
-    template BackgroundMI::BackgroundMI(image::Image<TYPE> const& img, \
-                                          BackgroundControl const& bgCtrl); \
-    template BackgroundMI::BackgroundMI(image::MaskedImage<TYPE> const& img, \
-                                          BackgroundControl const& bgCtrl); \
-    std::shared_ptr<image::Image<TYPE>>                                     \
-    BackgroundMI::_getImage(                                            \
-        geom::Box2I const& bbox, \
-        Interpolate::Style const interpStyle,                    /* Style of the interpolation */ \
-        UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
-        TYPE                                                     /* disambiguate */    \
-                         ) const                                        \
-    {                                                                   \
-        return BackgroundMI::doGetImage<TYPE>(bbox, interpStyle, undersampleStyle); \
+#define CREATE_BACKGROUND(m, v, TYPE)                                                                       \
+    template BackgroundMI::BackgroundMI(image::Image<TYPE> const& img, BackgroundControl const& bgCtrl);    \
+    template BackgroundMI::BackgroundMI(image::MaskedImage<TYPE> const& img,                                \
+                                        BackgroundControl const& bgCtrl);                                   \
+    std::shared_ptr<image::Image<TYPE>> BackgroundMI::_getImage(                                            \
+            geom::Box2I const& bbox, Interpolate::Style const interpStyle, /* Style of the interpolation */ \
+            UndersampleStyle const undersampleStyle, /* Behaviour if there are too few points */            \
+            TYPE                                     /* disambiguate */                                     \
+            ) const {                                                                                       \
+        return BackgroundMI::doGetImage<TYPE>(bbox, interpStyle, undersampleStyle);                         \
     }
 
-#define CREATE_getApproximate(m, v, TYPE)                               \
-std::shared_ptr<Approximate<TYPE>> BackgroundMI::_getApproximate(                   \
-        ApproximateControl const& actrl,                         /* Approximation style */ \
-        UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
-        TYPE                                                     /* disambiguate */ \
-                                               ) const                  \
-    {                                                                   \
-        return BackgroundMI::doGetApproximate<TYPE>(actrl, undersampleStyle); \
+#define CREATE_getApproximate(m, v, TYPE)                                                        \
+    std::shared_ptr<Approximate<TYPE>> BackgroundMI::_getApproximate(                            \
+            ApproximateControl const& actrl,         /* Approximation style */                   \
+            UndersampleStyle const undersampleStyle, /* Behaviour if there are too few points */ \
+            TYPE                                     /* disambiguate */                          \
+            ) const {                                                                            \
+        return BackgroundMI::doGetApproximate<TYPE>(actrl, undersampleStyle);                    \
     }
 
 BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
 BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
 /// @endcond
-}}} // lsst::afw::math
+}
+}
+}  // lsst::afw::math

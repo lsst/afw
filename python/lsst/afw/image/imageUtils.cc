@@ -32,8 +32,8 @@ PYBIND11_PLUGIN(imageUtils) {
     py::module mod("imageUtils");
 
     mod.def("indexToPosition", indexToPosition);
-    mod.def("positionToIndex", (int (*)(double)) positionToIndex);
-    mod.def("positionToIndex", (std::pair<int, double> (*)(double const, bool)) positionToIndex);
+    mod.def("positionToIndex", (int (*)(double))positionToIndex);
+    mod.def("positionToIndex", (std::pair<int, double>(*)(double const, bool))positionToIndex);
 
     return mod.ptr();
 }

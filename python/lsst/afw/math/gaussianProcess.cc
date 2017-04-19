@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -35,13 +35,13 @@ namespace py = pybind11;
 using namespace lsst::afw::math;
 
 template <typename T>
-void declareKdTree(py::module &mod, const std::string & suffix) {
-    py::class_<KdTree<T>> clsKdTree(mod, ("KdTree"+suffix).c_str());
+void declareKdTree(py::module &mod, const std::string &suffix) {
+    py::class_<KdTree<T>> clsKdTree(mod, ("KdTree" + suffix).c_str());
     clsKdTree.def(py::init<>());
     clsKdTree.def("Initialize", &KdTree<T>::Initialize);
     clsKdTree.def("removePoint", &KdTree<T>::removePoint);
-    clsKdTree.def("getData", (T (KdTree<T>::*)(int, int) const) &KdTree<T>::getData);
-    clsKdTree.def("getData", (ndarray::Array<T,1,1> (KdTree<T>::*)(int) const) &KdTree<T>::getData);
+    clsKdTree.def("getData", (T (KdTree<T>::*)(int, int) const) & KdTree<T>::getData);
+    clsKdTree.def("getData", (ndarray::Array<T, 1, 1> (KdTree<T>::*)(int) const) & KdTree<T>::getData);
     clsKdTree.def("addPoint", &KdTree<T>::addPoint);
     clsKdTree.def("getNPoints", &KdTree<T>::getNPoints);
     clsKdTree.def("getTreeNode", &KdTree<T>::getTreeNode);
@@ -49,124 +49,100 @@ void declareKdTree(py::module &mod, const std::string & suffix) {
 };
 
 template <typename T>
-void declareCovariograms(py::module &mod, const std::string & suffix) {
+void declareCovariograms(py::module &mod, const std::string &suffix) {
     /* Covariogram */
-    py::class_<Covariogram<T>, std::shared_ptr<Covariogram<T>> > clsCovariogram(mod, ("Covariogram"+suffix).c_str());
+    py::class_<Covariogram<T>, std::shared_ptr<Covariogram<T>>> clsCovariogram(
+            mod, ("Covariogram" + suffix).c_str());
     clsCovariogram.def(py::init<>());
     clsCovariogram.def("__call__", &Covariogram<T>::operator());
 
     /* SquaredExpCovariogram */
     py::class_<SquaredExpCovariogram<T>, std::shared_ptr<SquaredExpCovariogram<T>>, Covariogram<T>>
-        clsSquaredExpCovariogram(mod, ("SquaredExpCovariogram"+suffix).c_str());
+            clsSquaredExpCovariogram(mod, ("SquaredExpCovariogram" + suffix).c_str());
     clsSquaredExpCovariogram.def(py::init<>());
     clsSquaredExpCovariogram.def("__call__", &SquaredExpCovariogram<T>::operator());
     clsSquaredExpCovariogram.def("setEllSquared", &SquaredExpCovariogram<T>::setEllSquared);
-    
+
     /* SquaredExpCovariogram */
     py::class_<NeuralNetCovariogram<T>, std::shared_ptr<NeuralNetCovariogram<T>>, Covariogram<T>>
-        clsNeuralNetCovariogram(mod, ("NeuralNetCovariogram"+suffix).c_str());
+            clsNeuralNetCovariogram(mod, ("NeuralNetCovariogram" + suffix).c_str());
     clsNeuralNetCovariogram.def(py::init<>());
     clsNeuralNetCovariogram.def("setSigma0", &NeuralNetCovariogram<T>::setSigma0);
     clsNeuralNetCovariogram.def("setSigma1", &NeuralNetCovariogram<T>::setSigma1);
 };
 
 template <typename T>
-void declareGaussianProcess(py::module &mod, const std::string & suffix) {
-    py::class_<GaussianProcess<T>> clsGaussianProcess(mod, ("GaussianProcess"+suffix).c_str());
+void declareGaussianProcess(py::module &mod, const std::string &suffix) {
+    py::class_<GaussianProcess<T>> clsGaussianProcess(mod, ("GaussianProcess" + suffix).c_str());
     /* Constructors */
-    clsGaussianProcess.def(py::init<ndarray::Array<T,2,2> const &,
-                                    ndarray::Array<T,1,1> const &,
-                                    std::shared_ptr< Covariogram<T> > const &>()
-    );
-    clsGaussianProcess.def(py::init<ndarray::Array<T,2,2> const &,
-                                    ndarray::Array<T,1,1> const &,
-                                    ndarray::Array<T,1,1> const &,
-                                    ndarray::Array<T,1,1> const &,
-                                    std::shared_ptr< Covariogram<T> > const &>()
-    );
-    clsGaussianProcess.def(py::init<ndarray::Array<T,2,2> const &,
-                                    ndarray::Array<T,2,2> const &,
-                                    std::shared_ptr< Covariogram<T> > const &>()
-    );
-    clsGaussianProcess.def(py::init<ndarray::Array<T,2,2> const &,
-                                    ndarray::Array<T,1,1> const &,
-                                    ndarray::Array<T,1,1> const &,
-                                    ndarray::Array<T,2,2> const &,
-                                    std::shared_ptr< Covariogram<T> > const &>()
-    );
+    clsGaussianProcess.def(py::init<ndarray::Array<T, 2, 2> const &, ndarray::Array<T, 1, 1> const &,
+                                    std::shared_ptr<Covariogram<T>> const &>());
+    clsGaussianProcess.def(py::init<ndarray::Array<T, 2, 2> const &, ndarray::Array<T, 1, 1> const &,
+                                    ndarray::Array<T, 1, 1> const &, ndarray::Array<T, 1, 1> const &,
+                                    std::shared_ptr<Covariogram<T>> const &>());
+    clsGaussianProcess.def(py::init<ndarray::Array<T, 2, 2> const &, ndarray::Array<T, 2, 2> const &,
+                                    std::shared_ptr<Covariogram<T>> const &>());
+    clsGaussianProcess.def(py::init<ndarray::Array<T, 2, 2> const &, ndarray::Array<T, 1, 1> const &,
+                                    ndarray::Array<T, 1, 1> const &, ndarray::Array<T, 2, 2> const &,
+                                    std::shared_ptr<Covariogram<T>> const &>());
     /* Members */
-    clsGaussianProcess.def("interpolate", 
-                           (T (GaussianProcess<T>::*)(ndarray::Array<T,1,1>,
-                                                      ndarray::Array<T,1,1> const &,
-                                                      int) const) &GaussianProcess<T>::interpolate
-    );
+    clsGaussianProcess.def(
+            "interpolate",
+            (T (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1>, ndarray::Array<T, 1, 1> const &, int) const) &
+                    GaussianProcess<T>::interpolate);
     clsGaussianProcess.def("interpolate",
-                           (void (GaussianProcess<T>::*)(ndarray::Array<T,1,1>,
-                                                      ndarray::Array<T,1,1>,
-                                                      ndarray::Array<T,1,1> const &,
-                                                      int) const) &GaussianProcess<T>::interpolate
-    );
+                           (void (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1>, ndarray::Array<T, 1, 1>,
+                                                         ndarray::Array<T, 1, 1> const &, int) const) &
+                                   GaussianProcess<T>::interpolate);
     clsGaussianProcess.def("selfInterpolate",
-                           (T (GaussianProcess<T>::*)(ndarray::Array<T,1,1>,
-                                                      int,
-                                                      int) const) &GaussianProcess<T>::selfInterpolate
-    );
-    clsGaussianProcess.def("selfInterpolate",
-                           (void (GaussianProcess<T>::*)(ndarray::Array<T,1,1>,
-                                                      ndarray::Array<T,1,1>,
-                                                      int,
-                                                      int) const) &GaussianProcess<T>::selfInterpolate
-    );
+                           (T (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1>, int, int) const) &
+                                   GaussianProcess<T>::selfInterpolate);
+    clsGaussianProcess.def(
+            "selfInterpolate",
+            (void (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1>, ndarray::Array<T, 1, 1>, int, int) const) &
+                    GaussianProcess<T>::selfInterpolate);
     clsGaussianProcess.def("setLambda", &GaussianProcess<T>::setLambda);
     clsGaussianProcess.def("setCovariogram", &GaussianProcess<T>::setCovariogram);
-    clsGaussianProcess.def("addPoint",
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,1,1> const &, T)) &GaussianProcess<T>::addPoint
-    );
-    clsGaussianProcess.def("addPoint",
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,1,1> const &,
-                                      ndarray::Array<T,1,1> const &)) &GaussianProcess<T>::addPoint
-    );
+    clsGaussianProcess.def("addPoint", (void (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1> const &, T)) &
+                                               GaussianProcess<T>::addPoint);
+    clsGaussianProcess.def("addPoint", (void (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1> const &,
+                                                                     ndarray::Array<T, 1, 1> const &)) &
+                                               GaussianProcess<T>::addPoint);
     clsGaussianProcess.def("batchInterpolate",
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,1,1>,
-                                      ndarray::Array<T,1,1>,
-                                      ndarray::Array<T,2,2> const &) const)
-                                          &GaussianProcess<T>::batchInterpolate
-    );
+                           (void (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1>, ndarray::Array<T, 1, 1>,
+                                                         ndarray::Array<T, 2, 2> const &) const) &
+                                   GaussianProcess<T>::batchInterpolate);
+    clsGaussianProcess.def(
+            "batchInterpolate",
+            (void (GaussianProcess<T>::*)(ndarray::Array<T, 1, 1>, ndarray::Array<T, 2, 2> const &) const) &
+                    GaussianProcess<T>::batchInterpolate);
     clsGaussianProcess.def("batchInterpolate",
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,1,1>,
-                                      ndarray::Array<T,2,2> const &) const)
-                                          &GaussianProcess<T>::batchInterpolate
-    );
-    clsGaussianProcess.def("batchInterpolate", 
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,2,2>,
-                                      ndarray::Array<T,2,2>,
-                                      ndarray::Array<T,2,2> const &) const)
-                                          &GaussianProcess<T>::batchInterpolate
-    );
-    clsGaussianProcess.def("batchInterpolate", 
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,2,2>,
-                                      ndarray::Array<T,2,2> const &) const)
-                                          &GaussianProcess<T>::batchInterpolate
-    );
+                           (void (GaussianProcess<T>::*)(ndarray::Array<T, 2, 2>, ndarray::Array<T, 2, 2>,
+                                                         ndarray::Array<T, 2, 2> const &) const) &
+                                   GaussianProcess<T>::batchInterpolate);
+    clsGaussianProcess.def(
+            "batchInterpolate",
+            (void (GaussianProcess<T>::*)(ndarray::Array<T, 2, 2>, ndarray::Array<T, 2, 2> const &) const) &
+                    GaussianProcess<T>::batchInterpolate);
     clsGaussianProcess.def("setKrigingParameter", &GaussianProcess<T>::setKrigingParameter);
     clsGaussianProcess.def("removePoint", &GaussianProcess<T>::removePoint);
     clsGaussianProcess.def("getNPoints", &GaussianProcess<T>::getNPoints);
     clsGaussianProcess.def("getData",
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,2,2>,
-                                      ndarray::Array<T,1,1>,
-                                      ndarray::Array<int, 1, 1>) const) &GaussianProcess<T>::getData);
+                           (void (GaussianProcess<T>::*)(ndarray::Array<T, 2, 2>, ndarray::Array<T, 1, 1>,
+                                                         ndarray::Array<int, 1, 1>) const) &
+                                   GaussianProcess<T>::getData);
     clsGaussianProcess.def("getData",
-        (void (GaussianProcess<T>::*)(ndarray::Array<T,2,2>,
-                                      ndarray::Array<T,2,2>,
-                                      ndarray::Array<int, 1, 1>) const) &GaussianProcess<T>::getData);
+                           (void (GaussianProcess<T>::*)(ndarray::Array<T, 2, 2>, ndarray::Array<T, 2, 2>,
+                                                         ndarray::Array<int, 1, 1>) const) &
+                                   GaussianProcess<T>::getData);
 };
 
 PYBIND11_PLUGIN(_gaussianProcess) {
     py::module mod("_gaussianProcess", "Python wrapper for afw _gaussianProcess library");
-    
+
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
     };
 
     declareCovariograms<double>(mod, "D");

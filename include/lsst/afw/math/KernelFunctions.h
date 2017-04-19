@@ -36,25 +36,21 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    /**
-     * Print the pixel values of a Kernel to std::cout
-     *
-     * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
-     *
-     * @param kernel the kernel
-     * @param doNormalize if true, normalize kernel
-     * @param x x at which to evaluate kernel
-     * @param y y at which to evaluate kernel
-     * @param pixelFmt format for pixel values
-     */
-    void printKernel(
-        lsst::afw::math::Kernel const &kernel,
-        bool doNormalize,
-        double x = 0,
-        double y = 0,
-        std::string pixelFmt = "%7.3f"
-    );
+/**
+ * Print the pixel values of a Kernel to std::cout
+ *
+ * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
+ *
+ * @param kernel the kernel
+ * @param doNormalize if true, normalize kernel
+ * @param x x at which to evaluate kernel
+ * @param y y at which to evaluate kernel
+ * @param pixelFmt format for pixel values
+ */
+void printKernel(lsst::afw::math::Kernel const &kernel, bool doNormalize, double x = 0, double y = 0,
+                 std::string pixelFmt = "%7.3f");
+}
+}
+}  // lsst::afw::math
 
-}}}   // lsst::afw::math
-
-#endif // !defined(LSST_AFW_MATH_KERNELFUNCTIONS_H)
+#endif  // !defined(LSST_AFW_MATH_KERNELFUNCTIONS_H)

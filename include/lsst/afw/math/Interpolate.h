@@ -30,9 +30,9 @@ namespace lsst {
 namespace afw {
 namespace math {
 
- /*
- * Interpolate values for a set of x,y vector<>s
- */
+/*
+* Interpolate values for a set of x,y vector<>s
+*/
 class Interpolate {
 public:
     enum Style {
@@ -47,21 +47,24 @@ public:
         NUM_STYLES
     };
 
-    friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
-                                            Interpolate::Style const style);
+    friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x,
+                                                        std::vector<double> const &y,
+                                                        Interpolate::Style const style);
 
     virtual ~Interpolate() {}
     virtual double interpolate(double const x) const = 0;
-    std::vector<double> interpolate(std::vector<double> const& x) const;
-    ndarray::Array<double, 1> interpolate(ndarray::Array<double const, 1> const& x) const;
+    std::vector<double> interpolate(std::vector<double> const &x) const;
+    ndarray::Array<double, 1> interpolate(ndarray::Array<double const, 1> const &x) const;
+
 protected:
     /**
      * Base class ctor
      */
-    Interpolate(std::vector<double> const &x, ///< the ordinates of points
-                std::vector<double> const &y, ///< the values at x[]
-                Interpolate::Style const style=UNKNOWN ///< desired interpolator
-               ) : _x(x), _y(y), _style(style) {}
+    Interpolate(std::vector<double> const &x,             ///< the ordinates of points
+                std::vector<double> const &y,             ///< the values at x[]
+                Interpolate::Style const style = UNKNOWN  ///< desired interpolator
+                )
+            : _x(x), _y(y), _style(style) {}
     /**
      * Base class ctor.  Note that we should use rvalue references when
      * available as the vectors in xy will typically be movable (although the
@@ -71,14 +74,15 @@ protected:
      * @param style desired interpolator
      */
     Interpolate(std::pair<std::vector<double>, std::vector<double> > const xy,
-                Interpolate::Style const style=UNKNOWN);
+                Interpolate::Style const style = UNKNOWN);
 
     std::vector<double> const _x;
     std::vector<double> const _y;
     Interpolate::Style const _style;
+
 private:
-    Interpolate(Interpolate const&);
-    Interpolate& operator=(Interpolate const&);
+    Interpolate(Interpolate const &);
+    Interpolate &operator=(Interpolate const &);
 };
 
 /**
@@ -89,10 +93,10 @@ private:
  * @param style desired interpolator
  */
 std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
-                                 Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+                                             Interpolate::Style const style = Interpolate::AKIMA_SPLINE);
 std::shared_ptr<Interpolate> makeInterpolate(ndarray::Array<double const, 1> const &x,
-                                 ndarray::Array<double const, 1> const &y,
-                                 Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+                                             ndarray::Array<double const, 1> const &y,
+                                             Interpolate::Style const style = Interpolate::AKIMA_SPLINE);
 /**
  * Conversion function to switch a string to an Interpolate::Style.
  *
@@ -111,7 +115,8 @@ Interpolate::Style lookupMaxInterpStyle(int const n);
  * @param style The style in question
  */
 int lookupMinInterpPoints(Interpolate::Style const style);
+}
+}
+}
 
-}}}
-
-#endif // LSST_AFW_MATH_INTERPOLATE_H
+#endif  // LSST_AFW_MATH_INTERPOLATE_H

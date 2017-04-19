@@ -151,31 +151,21 @@ std::string const getItemName(std::shared_ptr<PropertySet const> const& properti
     return properties->getAsString("itemName");
 }
 
-
-bool extractOptionalFlag(
-    std::shared_ptr<PropertySet const> const& properties,
-    std::string      const & name
-) {
+bool extractOptionalFlag(std::shared_ptr<PropertySet const> const& properties, std::string const& name) {
     if (properties && properties->exists(name)) {
         return properties->getAsBool(name);
     }
     return false;
 }
 
-
-std::string const getTableName(
-    std::shared_ptr<Policy const> const& policy,
-    std::shared_ptr<PropertySet const> const& properties
-) {
+std::string const getTableName(std::shared_ptr<Policy const> const& policy,
+                               std::shared_ptr<PropertySet const> const& properties) {
     std::string itemName(getItemName(properties));
     return LogicalLocation(policy->getString(itemName + ".tableNamePattern"), properties).locString();
 }
 
-
-std::vector<std::string> getAllSliceTableNames(
-    std::shared_ptr<Policy const> const& policy,
-    std::shared_ptr<PropertySet const> const& properties
-) {
+std::vector<std::string> getAllSliceTableNames(std::shared_ptr<Policy const> const& policy,
+                                               std::shared_ptr<PropertySet const> const& properties) {
     std::string itemName(getItemName(properties));
     std::string pattern(policy->getString(itemName + ".tableNamePattern"));
     int numSlices = 1;
@@ -183,8 +173,7 @@ std::vector<std::string> getAllSliceTableNames(
         numSlices = properties->getAsInt(itemName + ".numSlices");
     }
     if (numSlices <= 0) {
-        throw LSST_EXCEPT(ex::RuntimeError,
-                          itemName + " \".numSlices\" property value must be positive");
+        throw LSST_EXCEPT(ex::RuntimeError, itemName + " \".numSlices\" property value must be positive");
     }
     std::vector<std::string> names;
     names.reserve(numSlices);
@@ -196,12 +185,9 @@ std::vector<std::string> getAllSliceTableNames(
     return names;
 }
 
-
-void createTable(
-    lsst::daf::persistence::LogicalLocation const & location,
-    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-    std::shared_ptr<PropertySet const> const& properties
-) {
+void createTable(lsst::daf::persistence::LogicalLocation const& location,
+                 std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+                 std::shared_ptr<PropertySet const> const& properties) {
     std::string itemName(getItemName(properties));
     std::string name(getTableName(policy, properties));
     std::string model(policy->getString(itemName + ".templateTableName"));
@@ -211,12 +197,9 @@ void createTable(
     db.createTableFromTemplate(name, model);
 }
 
-
-void dropAllSliceTables(
-    lsst::daf::persistence::LogicalLocation const & location,
-    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-    std::shared_ptr<PropertySet const> const& properties
-) {
+void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
+                        std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+                        std::shared_ptr<PropertySet const> const& properties) {
     std::vector<std::string> names = getAllSliceTableNames(policy, properties);
 
     lsst::daf::persistence::DbTsvStorage db;
@@ -226,7 +209,6 @@ void dropAllSliceTables(
     }
 }
 
-
 std::string formatFitsProperties(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop) {
     typedef std::vector<std::string> NameList;
     std::string sout;
@@ -234,42 +216,41 @@ std::string formatFitsProperties(std::shared_ptr<lsst::daf::base::PropertySet co
     NameList paramNames = prop->paramNames(false);
 
     for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
-       std::size_t lastPeriod = i->rfind(char('.'));
-       std::string name = (lastPeriod == std::string::npos) ? *i : i->substr(lastPeriod + 1);
-       std::type_info const & type = prop->typeOf(*i);
+        std::size_t lastPeriod = i->rfind(char('.'));
+        std::string name = (lastPeriod == std::string::npos) ? *i : i->substr(lastPeriod + 1);
+        std::type_info const& type = prop->typeOf(*i);
 
-       std::string out = "";
-       if (name.size() > 8) {           // Oh dear; too long for a FITS keyword
-           out += "HIERARCH = " + name;
-       } else {
-           out = (boost::format("%-8s= ") % name).str();
-       }
+        std::string out = "";
+        if (name.size() > 8) {  // Oh dear; too long for a FITS keyword
+            out += "HIERARCH = " + name;
+        } else {
+            out = (boost::format("%-8s= ") % name).str();
+        }
 
-       if (type == typeid(int)) {
-           out += (boost::format("%20d") % prop->get<int>(*i)).str();
-       } else if (type == typeid(double)) {
-           out += (boost::format("%20.15g") % prop->get<double>(*i)).str();
-       } else if (type == typeid(std::string)) {
-           out += (boost::format("'%-67s' ") % prop->get<std::string>(*i)).str();
-       }
+        if (type == typeid(int)) {
+            out += (boost::format("%20d") % prop->get<int>(*i)).str();
+        } else if (type == typeid(double)) {
+            out += (boost::format("%20.15g") % prop->get<double>(*i)).str();
+        } else if (type == typeid(std::string)) {
+            out += (boost::format("'%-67s' ") % prop->get<std::string>(*i)).str();
+        }
 
-       int const len = out.size();
-       if (len < 80) {
-           out += std::string(80 - len, ' ');
-       } else {
-           out = out.substr(0, 80);
-       }
+        int const len = out.size();
+        if (len < 80) {
+            out += std::string(80 - len, ' ');
+        } else {
+            out = out.substr(0, 80);
+        }
 
-       sout += out;
+        sout += out;
     }
 
     return sout.c_str();
 }
 
-
 int countFitsHeaderCards(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop) {
     return prop->paramNames(false).size();
 }
-
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters

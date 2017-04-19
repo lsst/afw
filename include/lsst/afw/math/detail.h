@@ -29,4 +29,4 @@
  */
 #include "lsst/afw/math/detail/Convolve.h"
 
-#endif // !defined(LSST_AFW_MATH_DETAIL_H)
+#endif  // !defined(LSST_AFW_MATH_DETAIL_H)

@@ -27,99 +27,98 @@
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Registrar< Separable<Ellipticity_,Radius_> > Separable<Ellipticity_,Radius_>::registrar;
+BaseCore::Registrar<Separable<Ellipticity_, Radius_> > Separable<Ellipticity_, Radius_>::registrar;
 
 template <typename Ellipticity_, typename Radius_>
-std::string Separable<Ellipticity_,Radius_>::getName() const {
+std::string Separable<Ellipticity_, Radius_>::getName() const {
     return "Separable" + Ellipticity_::getName() + Radius_::getName();
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::normalize() {
+void Separable<Ellipticity_, Radius_>::normalize() {
     _ellipticity.normalize();
     _radius.normalize();
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::readParameters(double const * iter) {
+void Separable<Ellipticity_, Radius_>::readParameters(double const* iter) {
     setE1(*iter++);
     setE2(*iter++);
     setRadius(*iter++);
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::writeParameters(double * iter) const {
+void Separable<Ellipticity_, Radius_>::writeParameters(double* iter) const {
     *iter++ = getE1();
     *iter++ = getE2();
     *iter++ = getRadius();
 }
 
 template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_> &
-Separable<Ellipticity_,Radius_>::operator=(Separable<Ellipticity_,Radius_> const & other) {
+Separable<Ellipticity_, Radius_>& Separable<Ellipticity_, Radius_>::operator=(
+        Separable<Ellipticity_, Radius_> const& other) {
     _ellipticity = other._ellipticity;
     _radius = other._radius;
     return *this;
 }
 
 template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(double e1, double e2, double radius, bool normalize) :
-    _ellipticity(e1, e2), _radius(radius)
-{
+Separable<Ellipticity_, Radius_>::Separable(double e1, double e2, double radius, bool normalize)
+        : _ellipticity(e1, e2), _radius(radius) {
     if (normalize) this->normalize();
 }
 
 template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(
-    std::complex<double> const & complex,
-    double radius, bool normalize
-) : _ellipticity(complex), _radius(radius) {
+Separable<Ellipticity_, Radius_>::Separable(std::complex<double> const& complex, double radius,
+                                            bool normalize)
+        : _ellipticity(complex), _radius(radius) {
     if (normalize) this->normalize();
 }
 
 template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(Ellipticity const & ellipticity, double radius, bool normalize) :
-    _ellipticity(ellipticity), _radius(radius)
-{
+Separable<Ellipticity_, Radius_>::Separable(Ellipticity const& ellipticity, double radius, bool normalize)
+        : _ellipticity(ellipticity), _radius(radius) {
     if (normalize) this->normalize();
 }
 
 template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(BaseCore::ParameterVector const & vector, bool normalize) :
-    _ellipticity(vector[0], vector[1]), _radius(vector[2])
-{
+Separable<Ellipticity_, Radius_>::Separable(BaseCore::ParameterVector const& vector, bool normalize)
+        : _ellipticity(vector[0], vector[1]), _radius(vector[2]) {
     if (normalize) this->normalize();
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+void Separable<Ellipticity_, Radius_>::_assignToQuadrupole(double& ixx, double& iyy, double& ixy) const {
     Distortion distortion(_ellipticity);
     _radius.assignToQuadrupole(distortion, ixx, iyy, ixy);
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian
-Separable<Ellipticity_,Radius_>::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+BaseCore::Jacobian Separable<Ellipticity_, Radius_>::_dAssignToQuadrupole(double& ixx, double& iyy,
+                                                                          double& ixy) const {
     Distortion distortion;
     BaseCore::Jacobian rhs = Jacobian::Identity();
-    rhs.block<2,2>(0,0) = distortion.dAssign(_ellipticity);
+    rhs.block<2, 2>(0, 0) = distortion.dAssign(_ellipticity);
     BaseCore::Jacobian lhs = _radius.dAssignToQuadrupole(distortion, ixx, iyy, ixy);
     return lhs * rhs;
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignToAxes(double & a, double & b, double & theta) const {
+void Separable<Ellipticity_, Radius_>::_assignToAxes(double& a, double& b, double& theta) const {
     double ixx, iyy, ixy;
     this->_assignToQuadrupole(ixx, iyy, ixy);
     BaseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian
-Separable<Ellipticity_,Radius_>::_dAssignToAxes(double & a, double & b, double & theta) const {
+BaseCore::Jacobian Separable<Ellipticity_, Radius_>::_dAssignToAxes(double& a, double& b,
+                                                                    double& theta) const {
     double ixx, iyy, ixy;
     BaseCore::Jacobian rhs = this->_dAssignToQuadrupole(ixx, iyy, ixy);
     BaseCore::Jacobian lhs = BaseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
@@ -127,50 +126,52 @@ Separable<Ellipticity_,Radius_>::_dAssignToAxes(double & a, double & b, double &
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
+void Separable<Ellipticity_, Radius_>::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
     Distortion distortion;
     _radius.assignFromQuadrupole(ixx, iyy, ixy, distortion);
     _ellipticity = distortion;
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian
-Separable<Ellipticity_,Radius_>::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
+BaseCore::Jacobian Separable<Ellipticity_, Radius_>::_dAssignFromQuadrupole(double ixx, double iyy,
+                                                                            double ixy) {
     Distortion distortion;
     BaseCore::Jacobian rhs = _radius.dAssignFromQuadrupole(ixx, iyy, ixy, distortion);
     BaseCore::Jacobian lhs = BaseCore::Jacobian::Identity();
-    lhs.block<2,2>(0,0) = _ellipticity.dAssign(distortion);
+    lhs.block<2, 2>(0, 0) = _ellipticity.dAssign(distortion);
     return lhs * rhs;
 }
 
 template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignFromAxes(double a, double b, double theta) {
+void Separable<Ellipticity_, Radius_>::_assignFromAxes(double a, double b, double theta) {
     double ixx, iyy, ixy;
     BaseCore::_assignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
     this->_assignFromQuadrupole(ixx, iyy, ixy);
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian Separable<Ellipticity_,Radius_>::_dAssignFromAxes(double a, double b, double theta) {
+BaseCore::Jacobian Separable<Ellipticity_, Radius_>::_dAssignFromAxes(double a, double b, double theta) {
     double ixx, iyy, ixy;
     BaseCore::Jacobian rhs = BaseCore::_dAssignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
     BaseCore::Jacobian lhs = this->_dAssignFromQuadrupole(ixx, iyy, ixy);
     return lhs * rhs;
 }
 
-template class Separable<Distortion,DeterminantRadius>;
-template class Separable<Distortion,TraceRadius>;
-template class Separable<Distortion,LogDeterminantRadius>;
-template class Separable<Distortion,LogTraceRadius>;
+template class Separable<Distortion, DeterminantRadius>;
+template class Separable<Distortion, TraceRadius>;
+template class Separable<Distortion, LogDeterminantRadius>;
+template class Separable<Distortion, LogTraceRadius>;
 
-template class Separable<ConformalShear,DeterminantRadius>;
-template class Separable<ConformalShear,TraceRadius>;
-template class Separable<ConformalShear,LogDeterminantRadius>;
-template class Separable<ConformalShear,LogTraceRadius>;
+template class Separable<ConformalShear, DeterminantRadius>;
+template class Separable<ConformalShear, TraceRadius>;
+template class Separable<ConformalShear, LogDeterminantRadius>;
+template class Separable<ConformalShear, LogTraceRadius>;
 
-template class Separable<ReducedShear,DeterminantRadius>;
-template class Separable<ReducedShear,TraceRadius>;
-template class Separable<ReducedShear,LogDeterminantRadius>;
-template class Separable<ReducedShear,LogTraceRadius>;
-
-}}}} // namespace lsst::afw::geom::ellipses
+template class Separable<ReducedShear, DeterminantRadius>;
+template class Separable<ReducedShear, TraceRadius>;
+template class Separable<ReducedShear, LogDeterminantRadius>;
+template class Separable<ReducedShear, LogTraceRadius>;
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

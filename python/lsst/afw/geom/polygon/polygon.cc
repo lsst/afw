@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -52,13 +52,12 @@ PYBIND11_PLUGIN(_polygon) {
     /* Module level */
     table::io::python::declarePersistableFacade<Polygon>(mod, "Polygon");
 
-    py::class_<Polygon,
-               std::shared_ptr<Polygon>,
-               table::io::PersistableFacade<Polygon>,
-               table::io::Persistable> clsPolygon(mod, "Polygon");
+    py::class_<Polygon, std::shared_ptr<Polygon>, table::io::PersistableFacade<Polygon>,
+               table::io::Persistable>
+            clsPolygon(mod, "Polygon");
 
     pex::exceptions::python::declareException<SinglePolygonException, pex::exceptions::RuntimeError>(
-        mod, "SinglePolygonException", "RuntimeError");
+            mod, "SinglePolygonException", "RuntimeError");
 
     /* Member types and enums */
 
@@ -69,11 +68,9 @@ PYBIND11_PLUGIN(_polygon) {
     clsPolygon.def(py::init<std::vector<Polygon::Point> const &>());
 
     /* Operators */
-    clsPolygon.def("__eq__",
-                   [](Polygon const & self, Polygon const & other) { return self == other; },
+    clsPolygon.def("__eq__", [](Polygon const &self, Polygon const &other) { return self == other; },
                    py::is_operator());
-    clsPolygon.def("__ne__",
-                   [](Polygon const & self, Polygon const & other) { return self != other; },
+    clsPolygon.def("__ne__", [](Polygon const &self, Polygon const &other) { return self != other; },
                    py::is_operator());
 
     /* Members */
@@ -85,57 +82,54 @@ PYBIND11_PLUGIN(_polygon) {
     clsPolygon.def("getVertices", &Polygon::getVertices);
     clsPolygon.def("getEdges", &Polygon::getEdges);
     clsPolygon.def("contains", &Polygon::contains);
-    clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon const &) const) &Polygon::overlaps);
-    clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon::Box const &) const) &Polygon::overlaps);
-    clsPolygon.def("intersectionSingle",
-                   (std::shared_ptr<Polygon> (Polygon::*)(Polygon const &) const)
-                        &Polygon::intersectionSingle);
-    clsPolygon.def("intersectionSingle",
-                   (std::shared_ptr<Polygon> (Polygon::*)(Polygon::Box const &) const)
-                        &Polygon::intersectionSingle);
+    clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon const &) const) & Polygon::overlaps);
+    clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon::Box const &) const) & Polygon::overlaps);
+    clsPolygon.def("intersectionSingle", (std::shared_ptr<Polygon> (Polygon::*)(Polygon const &) const) &
+                                                 Polygon::intersectionSingle);
+    clsPolygon.def("intersectionSingle", (std::shared_ptr<Polygon> (Polygon::*)(Polygon::Box const &) const) &
+                                                 Polygon::intersectionSingle);
     clsPolygon.def("intersection",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const)
-                        &Polygon::intersection);
+                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const) &
+                           Polygon::intersection);
     clsPolygon.def("intersection",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const)
-                        &Polygon::intersection);
+                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const) &
+                           Polygon::intersection);
     clsPolygon.def("unionSingle",
-                   (std::shared_ptr<Polygon> (Polygon::*)(Polygon const &) const) &Polygon::unionSingle);
-    clsPolygon.def("unionSingle",
-                   (std::shared_ptr<Polygon> (Polygon::*)(Polygon::Box const &) const) &Polygon::unionSingle);
+                   (std::shared_ptr<Polygon> (Polygon::*)(Polygon const &) const) & Polygon::unionSingle);
+    clsPolygon.def("unionSingle", (std::shared_ptr<Polygon> (Polygon::*)(Polygon::Box const &) const) &
+                                          Polygon::unionSingle);
 
     // Wrap Polygon::union_ (C++) as Polygon.union (Python)
-    clsPolygon.def("union",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const)
-                        &Polygon::union_);
-    clsPolygon.def("union",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const)
-                        &Polygon::union_);
+    clsPolygon.def("union", (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const) &
+                                    Polygon::union_);
+    clsPolygon.def("union", (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const) &
+                                    Polygon::union_);
     clsPolygon.def("symDifference",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const)
-                        &Polygon::symDifference);
+                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const) &
+                           Polygon::symDifference);
     clsPolygon.def("symDifference",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const)
-                        &Polygon::symDifference);
-    //clsPolygon.def("simplify", &Polygon::simplify);
+                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const) &
+                           Polygon::symDifference);
+    // clsPolygon.def("simplify", &Polygon::simplify);
     clsPolygon.def("convexHull", &Polygon::convexHull);
     clsPolygon.def("transform",
-                   (std::shared_ptr<Polygon> (Polygon::*)(std::shared_ptr<XYTransform const> const &) const)
-                        &Polygon::transform);
-    clsPolygon.def("transform",
-                   (std::shared_ptr<Polygon> (Polygon::*)(AffineTransform const &) const)
-                        &Polygon::transform);
-    clsPolygon.def("subSample", (std::shared_ptr<Polygon> (Polygon::*)(size_t) const) &Polygon::subSample);
-    clsPolygon.def("subSample", (std::shared_ptr<Polygon> (Polygon::*)(double) const) &Polygon::subSample);
+                   (std::shared_ptr<Polygon> (Polygon::*)(std::shared_ptr<XYTransform const> const &) const) &
+                           Polygon::transform);
+    clsPolygon.def("transform", (std::shared_ptr<Polygon> (Polygon::*)(AffineTransform const &) const) &
+                                        Polygon::transform);
+    clsPolygon.def("subSample", (std::shared_ptr<Polygon> (Polygon::*)(size_t) const) & Polygon::subSample);
+    clsPolygon.def("subSample", (std::shared_ptr<Polygon> (Polygon::*)(double) const) & Polygon::subSample);
     clsPolygon.def("createImage",
-                   (std::shared_ptr<afw::image::Image<float>> (Polygon::*)(Box2I const &) const)
-                        &Polygon::createImage);
+                   (std::shared_ptr<afw::image::Image<float>> (Polygon::*)(Box2I const &) const) &
+                           Polygon::createImage);
     clsPolygon.def("createImage",
-                   (std::shared_ptr<afw::image::Image<float>> (Polygon::*)(Extent2I const &) const)
-                        &Polygon::createImage);
-    //clsPolygon.def("isPersistable", &Polygon::isPersistable);
+                   (std::shared_ptr<afw::image::Image<float>> (Polygon::*)(Extent2I const &) const) &
+                           Polygon::createImage);
+    // clsPolygon.def("isPersistable", &Polygon::isPersistable);
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::geom::polygon
+}
+}
+}
+}  // namespace lsst::afw::geom::polygon

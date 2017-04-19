@@ -57,9 +57,7 @@ namespace geom {
  *
  * @see @ref coord::Coord
  */
-class SpherePoint
-        final
-{
+class SpherePoint final {
 public:
     /**
      * Construct a SpherePoint from a longitude and latitude.

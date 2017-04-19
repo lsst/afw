@@ -30,38 +30,30 @@ namespace afw {
 namespace geom {
 
 InvertedXYTransform::InvertedXYTransform(std::shared_ptr<XYTransform const> base)
-    : XYTransform(), _base(base)
-{ }
+        : XYTransform(), _base(base) {}
 
-std::shared_ptr<XYTransform> InvertedXYTransform::clone() const
-{
+std::shared_ptr<XYTransform> InvertedXYTransform::clone() const {
     // deep copy
-    return std::make_shared<InvertedXYTransform> (_base->clone());
+    return std::make_shared<InvertedXYTransform>(_base->clone());
 }
 
-std::shared_ptr<XYTransform> InvertedXYTransform::invert() const
-{
-    return _base->clone();
-}
+std::shared_ptr<XYTransform> InvertedXYTransform::invert() const { return _base->clone(); }
 
-Point2D InvertedXYTransform::forwardTransform(Point2D const &point) const
-{
+Point2D InvertedXYTransform::forwardTransform(Point2D const &point) const {
     return _base->reverseTransform(point);
 }
 
-Point2D InvertedXYTransform::reverseTransform(Point2D const &point) const
-{
+Point2D InvertedXYTransform::reverseTransform(Point2D const &point) const {
     return _base->forwardTransform(point);
 }
 
-AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &point) const
-{
+AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &point) const {
     return _base->linearizeReverseTransform(point);
 }
 
-AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &point) const
-{
+AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &point) const {
     return _base->linearizeForwardTransform(point);
 }
-
-}}}
+}
+}
+}

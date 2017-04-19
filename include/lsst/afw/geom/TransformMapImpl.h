@@ -32,15 +32,11 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-template<typename CoordSysT>
-TransformMap<CoordSysT>::TransformMap(
-    CoordSysT const &nativeCoordSys,
-    Transforms const &transforms
-) :
-    _nativeCoordSys(nativeCoordSys), _transforms()
-{
-    for (typename Transforms::const_iterator trIter = transforms.begin();
-        trIter != transforms.end(); ++trIter) {
+template <typename CoordSysT>
+TransformMap<CoordSysT>::TransformMap(CoordSysT const &nativeCoordSys, Transforms const &transforms)
+        : _nativeCoordSys(nativeCoordSys), _transforms() {
+    for (typename Transforms::const_iterator trIter = transforms.begin(); trIter != transforms.end();
+         ++trIter) {
         if (_transforms.count(trIter->first) > 0) {
             std::ostringstream os;
             os << "Duplicate coordSys \"" << trIter->first << "\"";
@@ -55,21 +51,16 @@ TransformMap<CoordSysT>::TransformMap(
 
     // insert identity transform for nativeCoordSys, if not already provided
     if (!contains(nativeCoordSys)) {
-        _transforms.insert(std::make_pair(nativeCoordSys,
-            std::make_shared<IdentityXYTransform>()));
+        _transforms.insert(std::make_pair(nativeCoordSys, std::make_shared<IdentityXYTransform>()));
     }
 }
 
-template<typename CoordSysT>
+template <typename CoordSysT>
 TransformMap<CoordSysT>::TransformMap() : _nativeCoordSys(), _transforms() {}
 
-
-template<typename CoordSysT>
-Point2D TransformMap<CoordSysT>::transform(
-    Point2D const &fromPoint,
-    CoordSysT const &fromCoordSys,
-    CoordSysT const &toCoordSys
-) const {
+template <typename CoordSysT>
+Point2D TransformMap<CoordSysT>::transform(Point2D const &fromPoint, CoordSysT const &fromCoordSys,
+                                           CoordSysT const &toCoordSys) const {
     if (fromCoordSys == toCoordSys) {
         return fromPoint;
     }
@@ -80,12 +71,10 @@ Point2D TransformMap<CoordSysT>::transform(
     return toTransform->forwardTransform(fromTransform->reverseTransform(fromPoint));
 }
 
-template<typename CoordSysT>
-std::vector<Point2D> TransformMap<CoordSysT>::transform(
-    std::vector<Point2D> const &pointList,
-    CoordSysT const &fromCoordSys,
-    CoordSysT const &toCoordSys
-) const {
+template <typename CoordSysT>
+std::vector<Point2D> TransformMap<CoordSysT>::transform(std::vector<Point2D> const &pointList,
+                                                        CoordSysT const &fromCoordSys,
+                                                        CoordSysT const &toCoordSys) const {
     if (fromCoordSys == toCoordSys) {
         return pointList;
     }
@@ -96,12 +85,12 @@ std::vector<Point2D> TransformMap<CoordSysT>::transform(
     if (fromCoordSys != _nativeCoordSys) {
         std::shared_ptr<XYTransform const> fromTransform = (*this)[fromCoordSys];
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
-            fromPtIter != pointList.end(); ++fromPtIter) {
+             fromPtIter != pointList.end(); ++fromPtIter) {
             outList.push_back(fromTransform->reverseTransform(*fromPtIter));
         }
     } else {
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
-            fromPtIter != pointList.end(); ++fromPtIter) {
+             fromPtIter != pointList.end(); ++fromPtIter) {
             outList.push_back(*fromPtIter);
         }
     }
@@ -109,28 +98,26 @@ std::vector<Point2D> TransformMap<CoordSysT>::transform(
     // transform outList from native coords to toCoordSys, in place
     if (toCoordSys != _nativeCoordSys) {
         std::shared_ptr<XYTransform const> toTransform = (*this)[toCoordSys];
-        for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
-            nativePtIter != outList.end(); ++nativePtIter) {
+        for (std::vector<Point2D>::iterator nativePtIter = outList.begin(); nativePtIter != outList.end();
+             ++nativePtIter) {
             *nativePtIter = toTransform->forwardTransform(*nativePtIter);
         }
     }
     return outList;
 }
 
-template<typename CoordSysT>
+template <typename CoordSysT>
 std::vector<CoordSysT> TransformMap<CoordSysT>::getCoordSysList() const {
     std::vector<CoordSysT> coordSysList;
-    for (typename Transforms::const_iterator trIter = _transforms.begin();
-        trIter != _transforms.end(); ++trIter) {
+    for (typename Transforms::const_iterator trIter = _transforms.begin(); trIter != _transforms.end();
+         ++trIter) {
         coordSysList.push_back(trIter->first);
     }
     return coordSysList;
 }
 
-template<typename CoordSysT>
-std::shared_ptr<XYTransform const> TransformMap<CoordSysT>::operator[](
-    CoordSysT const &coordSys
-) const {
+template <typename CoordSysT>
+std::shared_ptr<XYTransform const> TransformMap<CoordSysT>::operator[](CoordSysT const &coordSys) const {
     typename Transforms::const_iterator const foundIter = _transforms.find(coordSys);
     if (foundIter == _transforms.end()) {
         std::ostringstream os;
@@ -140,11 +127,10 @@ std::shared_ptr<XYTransform const> TransformMap<CoordSysT>::operator[](
     return foundIter->second;
 }
 
-template<typename CoordSysT>
-bool TransformMap<CoordSysT>::contains(
-    CoordSysT const &coordSys
-) const {
+template <typename CoordSysT>
+bool TransformMap<CoordSysT>::contains(CoordSysT const &coordSys) const {
     return _transforms.find(coordSys) != _transforms.end();
 }
-
-}}}
+}
+}
+}

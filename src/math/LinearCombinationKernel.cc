@@ -36,69 +36,60 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 LinearCombinationKernel::LinearCombinationKernel()
-:
-    Kernel(),
-    _kernelList(),
-    _kernelImagePtrList(),
-    _kernelSumList(),
-    _kernelParams(),
-    _isDeltaFunctionBasis(false)
-{ }
+        : Kernel(),
+          _kernelList(),
+          _kernelImagePtrList(),
+          _kernelSumList(),
+          _kernelParams(),
+          _isDeltaFunctionBasis(false) {}
 
-LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,
-    std::vector<double> const &kernelParameters
-) :
-    Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
-    _kernelList(),
-    _kernelImagePtrList(),
-    _kernelSumList(),
-    _kernelParams(kernelParameters),
-    _isDeltaFunctionBasis(false)
-{
+LinearCombinationKernel::LinearCombinationKernel(KernelList const &kernelList,
+                                                 std::vector<double> const &kernelParameters)
+        : Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
+          _kernelList(),
+          _kernelImagePtrList(),
+          _kernelSumList(),
+          _kernelParams(kernelParameters),
+          _isDeltaFunctionBasis(false) {
     if (kernelList.size() != kernelParameters.size()) {
         std::ostringstream os;
-        os << "kernelList.size() = " << kernelList.size()
-            << " != " << kernelParameters.size() << " = " << "kernelParameters.size()";
+        os << "kernelList.size() = " << kernelList.size() << " != " << kernelParameters.size() << " = "
+           << "kernelParameters.size()";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     checkKernelList(kernelList);
     _setKernelList(kernelList);
 }
 
-LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,
-    Kernel::SpatialFunction const &spatialFunction
-) :
-    Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
-    _kernelList(),
-    _kernelImagePtrList(),
-    _kernelSumList(),
-    _kernelParams(std::vector<double>(kernelList.size())),
-    _isDeltaFunctionBasis(false)
-{
+LinearCombinationKernel::LinearCombinationKernel(KernelList const &kernelList,
+                                                 Kernel::SpatialFunction const &spatialFunction)
+        : Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
+          _kernelList(),
+          _kernelImagePtrList(),
+          _kernelSumList(),
+          _kernelParams(std::vector<double>(kernelList.size())),
+          _isDeltaFunctionBasis(false) {
     checkKernelList(kernelList);
     _setKernelList(kernelList);
 }
 
 LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,
-    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
-) :
-    Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
-    _kernelList(),
-    _kernelImagePtrList(),
-    _kernelSumList(),
-    _kernelParams(std::vector<double>(kernelList.size())),
-    _isDeltaFunctionBasis(false)
-{
+        KernelList const &kernelList, std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
+        : Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
+          _kernelList(),
+          _kernelImagePtrList(),
+          _kernelSumList(),
+          _kernelParams(std::vector<double>(kernelList.size())),
+          _isDeltaFunctionBasis(false) {
     if (kernelList.size() != spatialFunctionList.size()) {
         std::ostringstream os;
-        os << "kernelList.size() = " << kernelList.size()
-            << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
+        os << "kernelList.size() = " << kernelList.size() << " != " << spatialFunctionList.size() << " = "
+           << "spatialFunctionList.size()";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     checkKernelList(kernelList);
@@ -127,30 +118,24 @@ void LinearCombinationKernel::checkKernelList(const KernelList &kernelList) cons
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
         if (kernelList[ii]->getDimensions() != dim0) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-                (boost::format("kernel %d has different size than kernel 0") % ii).str());
+                              (boost::format("kernel %d has different size than kernel 0") % ii).str());
         }
         if (kernelList[ii]->getCtr() != ctr0) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-                (boost::format("kernel %d has different center than kernel 0") % ii).str());
+                              (boost::format("kernel %d has different center than kernel 0") % ii).str());
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-                (boost::format("kernel %d is spatially varying") % ii).str());
+                              (boost::format("kernel %d is spatially varying") % ii).str());
         }
     }
 }
 
-KernelList const & LinearCombinationKernel::getKernelList() const {
-    return _kernelList;
-}
+KernelList const &LinearCombinationKernel::getKernelList() const { return _kernelList; }
 
-std::vector<double> LinearCombinationKernel::getKernelSumList() const {
-    return _kernelSumList;
-}
+std::vector<double> LinearCombinationKernel::getKernelSumList() const { return _kernelSumList; }
 
-std::vector<double> LinearCombinationKernel::getKernelParameters() const {
-    return _kernelParams;
-}
+std::vector<double> LinearCombinationKernel::getKernelParameters() const { return _kernelParams; }
 
 std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
     if (!this->isSpatiallyVarying()) {
@@ -175,10 +160,10 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
     }
     KernelImage kernelImage(this->getDimensions());
     std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter =
-        this->_spatialFunctionList.begin();
+            this->_spatialFunctionList.begin();
     KernelList::const_iterator kIter = _kernelList.begin();
     KernelList::const_iterator const kEnd = _kernelList.end();
-    for ( ; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
+    for (; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
         if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
             return std::shared_ptr<Kernel>();
         }
@@ -197,7 +182,7 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
     newKernelList.reserve(nSpatialParameters);
     KernelImageList::iterator newKImPtrIter = newKernelImagePtrList.begin();
     KernelImageList::iterator const newKImPtrEnd = newKernelImagePtrList.end();
-    for ( ; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
+    for (; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
         newKernelList.push_back(std::shared_ptr<Kernel>(new FixedKernel(**newKImPtrIter)));
     }
     std::vector<SpatialFunctionPtr> newSpFunctionPtrList;
@@ -209,12 +194,12 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
         newSpFunctionPtrList.push_back(newSpFunctionPtr);
     }
     std::shared_ptr<LinearCombinationKernel> refactoredKernel(
-        new LinearCombinationKernel(newKernelList, newSpFunctionPtrList));
+            new LinearCombinationKernel(newKernelList, newSpFunctionPtrList));
     refactoredKernel->setCtr(this->getCtr());
     return refactoredKernel;
 }
 
-std::string LinearCombinationKernel::toString(std::string const& prefix) const {
+std::string LinearCombinationKernel::toString(std::string const &prefix) const {
     std::ostringstream os;
     os << prefix << "LinearCombinationKernel:" << std::endl;
     os << prefix << "..Kernels:" << std::endl;
@@ -234,16 +219,14 @@ std::string LinearCombinationKernel::toString(std::string const& prefix) const {
 //
 // Protected Member Functions
 //
-double LinearCombinationKernel::doComputeImage(
-    image::Image<Pixel> &image,
-    bool doNormalize
-) const {
+double LinearCombinationKernel::doComputeImage(image::Image<Pixel> &image, bool doNormalize) const {
     image = 0.0;
     double imSum = 0.0;
-    std::vector<std::shared_ptr<image::Image<Pixel>>>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<std::shared_ptr<image::Image<Pixel>>>::const_iterator kImPtrIter =
+            _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
+    for (; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
         image.scaledPlus(*kParIter, **kImPtrIter);
         imSum += (*kSumIter) * (*kParIter);
     }
@@ -271,8 +254,8 @@ void LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
     _kernelImagePtrList.clear();
     _kernelList.clear();
     _isDeltaFunctionBasis = true;
-    for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
-        kIter != kEnd; ++kIter) {
+    for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end(); kIter != kEnd;
+         ++kIter) {
         std::shared_ptr<Kernel> basisKernelPtr = (*kIter)->clone();
         if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
             _isDeltaFunctionBasis = false;
@@ -289,25 +272,21 @@ void LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
 namespace {
 
 struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelper {
-    table::Key< table::Array<double> > amplitudes;
-    table::Key< table::Array<int> > components;
+    table::Key<table::Array<double>> amplitudes;
+    table::Key<table::Array<int>> components;
 
-    LinearCombinationKernelPersistenceHelper(int nComponents, bool isSpatiallyVarying) :
-        Kernel::PersistenceHelper(isSpatiallyVarying ? nComponents : 0),
-        components(
-            schema.addField< table::Array<int> >("components", "archive IDs of component kernel",
-                                                 nComponents)
-        )
-    {
+    LinearCombinationKernelPersistenceHelper(int nComponents, bool isSpatiallyVarying)
+            : Kernel::PersistenceHelper(isSpatiallyVarying ? nComponents : 0),
+              components(schema.addField<table::Array<int>>("components", "archive IDs of component kernel",
+                                                            nComponents)) {
         if (!isSpatiallyVarying) {
-            amplitudes = schema.addField< table::Array<double> >("amplitudes", "amplitudes component kernel",
-                                                                 nComponents);
+            amplitudes = schema.addField<table::Array<double>>("amplitudes", "amplitudes component kernel",
+                                                               nComponents);
         }
     }
 
-    LinearCombinationKernelPersistenceHelper(table::Schema const & schema_) :
-        Kernel::PersistenceHelper(schema_), components(schema["components"])
-    {
+    LinearCombinationKernelPersistenceHelper(table::Schema const &schema_)
+            : Kernel::PersistenceHelper(schema_), components(schema["components"]) {
         if (!spatialFunctions.isValid()) {
             amplitudes = schema["amplitudes"];
             LSST_ARCHIVE_ASSERT(amplitudes.getSize() == components.getSize());
@@ -315,20 +294,18 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
             LSST_ARCHIVE_ASSERT(spatialFunctions.getSize() == components.getSize());
         }
     }
-
 };
 
-} // anonymous
+}  // anonymous
 
 class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
 public:
-
-    virtual std::shared_ptr<afw::table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const &archive,
+                                                              CatalogVector const &catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
-        afw::table::BaseRecord const & record = catalogs.front().front();
+        afw::table::BaseRecord const &record = catalogs.front().front();
         geom::Extent2I dimensions(record.get(keys.dimensions));
         std::vector<std::shared_ptr<Kernel>> componentList(keys.components.getSize());
         for (std::size_t i = 0; i < componentList.size(); ++i) {
@@ -350,7 +327,7 @@ public:
         return result;
     }
 
-    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+    explicit Factory(std::string const &name) : afw::table::io::PersistableFactory(name) {}
 };
 
 namespace {
@@ -359,13 +336,13 @@ std::string getLinearCombinationKernelPersistenceName() { return "LinearCombinat
 
 LinearCombinationKernel::Factory registration(getLinearCombinationKernelPersistenceName());
 
-} // anonymous
+}  // anonymous
 
 std::string LinearCombinationKernel::getPersistenceName() const {
     return getLinearCombinationKernelPersistenceName();
 }
 
-void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
+void LinearCombinationKernel::write(OutputArchiveHandle &handle) const {
     bool isVarying = isSpatiallyVarying();
     LinearCombinationKernelPersistenceHelper const keys(getNBasisKernels(), isVarying);
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
@@ -381,5 +358,6 @@ void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
         }
     }
 }
-
-}}} // namespace math
+}
+}
+}  // namespace math

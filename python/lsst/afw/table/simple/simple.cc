@@ -41,15 +41,15 @@ namespace {
 using PySimpleTable = py::class_<SimpleTable, std::shared_ptr<SimpleTable>, BaseTable>;
 using PySimpleRecord = py::class_<SimpleRecord, std::shared_ptr<SimpleRecord>, BaseRecord>;
 
-PySimpleRecord declareSimpleRecord(py::module & mod) {
+PySimpleRecord declareSimpleRecord(py::module &mod) {
     PySimpleRecord cls(mod, "SimpleRecord");
     cls.def("getId", &SimpleRecord::getId);
     cls.def("setId", &SimpleRecord::setId);
     cls.def("getTable", &SimpleRecord::getTable);
     cls.def_property_readonly("table", &SimpleRecord::getTable);
     cls.def("getCoord", &SimpleRecord::getCoord);
-    cls.def("setCoord", (void (SimpleRecord::*)(IcrsCoord const &)) &SimpleRecord::setCoord);
-    cls.def("setCoord", (void (SimpleRecord::*)(Coord const &)) &SimpleRecord::setCoord);
+    cls.def("setCoord", (void (SimpleRecord::*)(IcrsCoord const &)) & SimpleRecord::setCoord);
+    cls.def("setCoord", (void (SimpleRecord::*)(Coord const &)) & SimpleRecord::setCoord);
     cls.def("getRa", &SimpleRecord::getRa);
     cls.def("setRa", &SimpleRecord::setRa);
     cls.def("getDec", &SimpleRecord::getDec);
@@ -57,27 +57,27 @@ PySimpleRecord declareSimpleRecord(py::module & mod) {
     return cls;
 }
 
-PySimpleTable declareSimpleTable(py::module & mod) {
+PySimpleTable declareSimpleTable(py::module &mod) {
     PySimpleTable cls(mod, "SimpleTable");
     cls.def_static("make",
-                   (std::shared_ptr<SimpleTable> (*)(Schema const &, std::shared_ptr<IdFactory> const &))
-                        &SimpleTable::make);
-    cls.def_static("make", (std::shared_ptr<SimpleTable> (*)(Schema const &)) &SimpleTable::make);
+                   (std::shared_ptr<SimpleTable>(*)(Schema const &, std::shared_ptr<IdFactory> const &)) &
+                           SimpleTable::make);
+    cls.def_static("make", (std::shared_ptr<SimpleTable>(*)(Schema const &)) & SimpleTable::make);
     cls.def_static("makeMinimalSchema", &SimpleTable::makeMinimalSchema);
     cls.def_static("checkSchema", &SimpleTable::checkSchema, "schema"_a);
     cls.def_static("getIdKey", &SimpleTable::getIdKey);
     cls.def_static("getCoordKey", &SimpleTable::getCoordKey);
 
-    cls.def("getIdFactory", (std::shared_ptr<IdFactory> (SimpleTable::*)()) &SimpleTable::getIdFactory);
+    cls.def("getIdFactory", (std::shared_ptr<IdFactory> (SimpleTable::*)()) & SimpleTable::getIdFactory);
     cls.def("setIdFactory", &SimpleTable::setIdFactory, "idFactory"_a);
     cls.def("clone", &SimpleTable::clone);
     cls.def("makeRecord", &SimpleTable::makeRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<SimpleRecord> (SimpleTable::*)(BaseRecord const &)) &SimpleTable::copyRecord,
+            (std::shared_ptr<SimpleRecord> (SimpleTable::*)(BaseRecord const &)) & SimpleTable::copyRecord,
             "other"_a);
     cls.def("copyRecord",
-            (std::shared_ptr<SimpleRecord> (SimpleTable::*)(BaseRecord const &, SchemaMapper const &))
-                &SimpleTable::copyRecord,
+            (std::shared_ptr<SimpleRecord> (SimpleTable::*)(BaseRecord const &, SchemaMapper const &)) &
+                    SimpleTable::copyRecord,
             "other"_a, "mapper"_a);
     return cls;
 }
@@ -108,5 +108,6 @@ PYBIND11_PLUGIN(simple) {
 
     return mod.ptr();
 }
-
-}}}  // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

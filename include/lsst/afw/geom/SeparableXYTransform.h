@@ -45,52 +45,48 @@ class Functor;
  *  instances of concrete subclasses of the Functor base class.
  */
 class SeparableXYTransform : public XYTransform {
-
 public:
+    /** @param xfunctor Functor describing the transformation from
+     *         nominal pixels to actual pixels in the x-direction.
+     *  @param yfunctor Functor describing the transformation from
+     *         nominal pixels to actual pixels in the y-direction.
+     */
+    SeparableXYTransform(Functor const& xfunctor, Functor const& yfunctor);
 
-   /** @param xfunctor Functor describing the transformation from
-    *         nominal pixels to actual pixels in the x-direction.
-    *  @param yfunctor Functor describing the transformation from
-    *         nominal pixels to actual pixels in the y-direction.
-    */
-   SeparableXYTransform(Functor const & xfunctor, Functor const & yfunctor);
+    virtual ~SeparableXYTransform() {}
 
-   virtual ~SeparableXYTransform() {}
+    virtual std::shared_ptr<XYTransform> clone() const;
 
-   virtual std::shared_ptr<XYTransform> clone() const;
+    /**
+     * @param point The Point2D location in sensor coordinates in
+     *              units of pixels.  This corresponds to the location on
+     *              the sensor in the absence of the pixel distortions.
+     * @returns The transformed Point2D in sensor coordinates in units
+     *         of pixels.
+     */
+    virtual Point2D forwardTransform(Point2D const& point) const;
 
-   /**
-    * @param point The Point2D location in sensor coordinates in
-    *              units of pixels.  This corresponds to the location on
-    *              the sensor in the absence of the pixel distortions.
-    * @returns The transformed Point2D in sensor coordinates in units
-    *         of pixels.
-    */
-   virtual Point2D forwardTransform(Point2D const & point) const;
+    /**
+     * @param point The Point2D location in sensor coordinates.  This
+     *              corresponds to the actual location of charge deposition,
+     *              i.e., with the pixel distortions applied.
+     * @returns The un-transformed Point2D in sensor coordinates.
+     */
+    virtual Point2D reverseTransform(Point2D const& point) const;
 
-   /**
-    * @param point The Point2D location in sensor coordinates.  This
-    *              corresponds to the actual location of charge deposition,
-    *              i.e., with the pixel distortions applied.
-    * @returns The un-transformed Point2D in sensor coordinates.
-    */
-   virtual Point2D reverseTransform(Point2D const & point) const;
+    /// @returns Const reference to the xfunctor.
+    Functor const& getXfunctor() const;
 
-   /// @returns Const reference to the xfunctor.
-   Functor const & getXfunctor() const;
-
-   /// @returns Const reference to the yfunctor.
-   Functor const & getYfunctor() const;
+    /// @returns Const reference to the yfunctor.
+    Functor const& getYfunctor() const;
 
 private:
-
-   std::shared_ptr<Functor> _xfunctor;
-   std::shared_ptr<Functor> _yfunctor;
-
+    std::shared_ptr<Functor> _xfunctor;
+    std::shared_ptr<Functor> _yfunctor;
 };
 
-} // namespace geom
-} // namespace af
-} // namespace lsst
+}  // namespace geom
+}  // namespace af
+}  // namespace lsst
 
-#endif // LSST_AFW_GEOM_SEPARABLEXYTRANSFORM_H
+#endif  // LSST_AFW_GEOM_SEPARABLEXYTRANSFORM_H

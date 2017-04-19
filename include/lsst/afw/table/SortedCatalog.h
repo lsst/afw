@@ -26,7 +26,9 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Catalog.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
  *  @brief Custom catalog class for record/table subclasses that are guaranteed to have an ID,
@@ -38,8 +40,8 @@ namespace lsst { namespace afw { namespace table {
 template <typename RecordT>
 class SortedCatalogT : public CatalogT<RecordT> {
     typedef CatalogT<RecordT> Base;
-public:
 
+public:
     typedef RecordT Record;
     typedef typename Record::Table Table;
 
@@ -75,10 +77,10 @@ public:
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit SortedCatalogT(std::shared_ptr<Table> const & table = std::shared_ptr<Table>()) : Base(table) {}
+    explicit SortedCatalogT(std::shared_ptr<Table> const& table = std::shared_ptr<Table>()) : Base(table) {}
 
     /// Construct a vector from a schema, creating a table with Table::make(schema).
-    explicit SortedCatalogT(Schema const & schema) : Base(schema) {}
+    explicit SortedCatalogT(Schema const& schema) : Base(schema) {}
 
     /**
      *  Construct a vector from a table and an iterator range.
@@ -91,9 +93,9 @@ public:
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      */
     template <typename InputIterator>
-    SortedCatalogT(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last, bool deep=false) :
-        Base(table, first, last, deep)
-    {}
+    SortedCatalogT(std::shared_ptr<Table> const& table, InputIterator first, InputIterator last,
+                   bool deep = false)
+            : Base(table, first, last, deep) {}
 
     /**
      *  Shallow copy constructor from a container containing a related record type.
@@ -102,7 +104,7 @@ public:
      *  convertible to Table.
      */
     template <typename OtherRecordT>
-    SortedCatalogT(SortedCatalogT<OtherRecordT> const & other) : Base(other) {}
+    SortedCatalogT(SortedCatalogT<OtherRecordT> const& other) : Base(other) {}
 
     /**
      *  Read a FITS binary table from a regular file.
@@ -113,7 +115,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(std::string const & filename, int hdu=INT_MIN, int flags=0) {
+    static SortedCatalogT readFits(std::string const& filename, int hdu = INT_MIN, int flags = 0) {
         return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags);
     }
 
@@ -126,7 +128,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=INT_MIN, int flags=0) {
+    static SortedCatalogT readFits(fits::MemFileManager& manager, int hdu = INT_MIN, int flags = 0) {
         return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags);
     }
 
@@ -137,7 +139,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+    static SortedCatalogT readFits(fits::Fits& fitsfile, int flags = 0) {
         return io::FitsReader::apply<SortedCatalogT>(fitsfile, flags);
     }
 
@@ -146,7 +148,7 @@ public:
      *
      *  The returned array's records are shallow copies, and hence will not in general be contiguous.
      */
-    SortedCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+    SortedCatalogT<RecordT> subset(ndarray::Array<bool const, 1> const& mask) const {
         return SortedCatalogT(Base::subset(mask));
     }
 
@@ -159,9 +161,10 @@ public:
     }
 
 protected:
-    explicit SortedCatalogT(Base const & other) : Base(other) {}
+    explicit SortedCatalogT(Base const& other) : Base(other) {}
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_SortedCatalog_h_INCLUDED
+#endif  // !AFW_TABLE_SortedCatalog_h_INCLUDED

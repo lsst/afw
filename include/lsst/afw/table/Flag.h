@@ -8,13 +8,15 @@
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/KeyBase.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 namespace detail {
 
 class Access;
 
-} // namespace detail
+}  // namespace detail
 
 /**
  *  Specialization for Flag fields.
@@ -27,9 +29,8 @@ class Access;
  */
 template <>
 struct FieldBase<Flag> {
-
-    typedef bool Value;        ///< the type returned by BaseRecord::get
-    typedef std::int64_t Element;   ///< the actual storage type (shared by multiple flag fields)
+    typedef bool Value;            ///< the type returned by BaseRecord::get
+    typedef std::int64_t Element;  ///< the actual storage type (shared by multiple flag fields)
 
     /// Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }
@@ -42,24 +43,20 @@ struct FieldBase<Flag> {
     // by other specializations.
     FieldBase() {}
     FieldBase(int) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Constructor disabled (this Field type is not sized)."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Constructor disabled (this Field type is not sized).");
     }
 
 protected:
-
     /// Defines how fields are printed.
-    void stream(std::ostream & os) const {}
-
+    void stream(std::ostream &os) const {}
 };
 
 /**
  *  A base class for Key that allows the underlying storage field to be extracted.
  */
 template <>
-class KeyBase< Flag > {
+class KeyBase<Flag> {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
 
@@ -81,7 +78,6 @@ public:
 template <>
 class Key<Flag> : public KeyBase<Flag>, public FieldBase<Flag> {
 public:
-
     //@{
     /**
      *  Equality comparison.
@@ -92,11 +88,17 @@ public:
      *  different name in one Schema than another, but is otherwise the same,
      *  the two keys will be equal).
      */
-    template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }
-    template <typename OtherT> bool operator!=(Key<OtherT> const & other) const { return true; }
+    template <typename OtherT>
+    bool operator==(Key<OtherT> const &other) const {
+        return false;
+    }
+    template <typename OtherT>
+    bool operator!=(Key<OtherT> const &other) const {
+        return true;
+    }
 
-    bool operator==(Key const & other) const { return _offset == other._offset && _bit == other._bit; }
-    bool operator!=(Key const & other) const { return !this->operator==(other); }
+    bool operator==(Key const &other) const { return _offset == other._offset && _bit == other._bit; }
+    bool operator!=(Key const &other) const { return !this->operator==(other); }
     //@}
 
     /// Return the offset in bytes of the integer element that holds this field's bit.
@@ -123,23 +125,22 @@ public:
     Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
 
     /// Stringification.
-    inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {
+    inline friend std::ostream &operator<<(std::ostream &os, Key<Flag> const &key) {
         return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset()
                   << ", bit=" << key.getBit() << ")";
     }
 
 private:
-
     friend class detail::Access;
     friend class BaseRecord;
 
     /// Used to implement RecordBase::get.
-    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
+    Value getValue(Element const *p, ndarray::Manager::Ptr const &) const {
         return (*p) & (Element(1) << _bit);
     }
 
     /// Used to implement RecordBase::set.
-    void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const {
+    void setValue(Element *p, ndarray::Manager::Ptr const &, Value v) const {
         if (v) {
             *p |= (Element(1) << _bit);
         } else {
@@ -152,7 +153,8 @@ private:
     int _offset;
     int _bit;
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !LSST_AFW_TABLE_Flag_h_INCLUDED
+#endif  // !LSST_AFW_TABLE_Flag_h_INCLUDED

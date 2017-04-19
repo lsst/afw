@@ -3,7 +3,10 @@
 #include <cmath>
 #include <vector>
 
-namespace lsst { namespace afw { namespace math { namespace detail {
+namespace lsst {
+namespace afw {
+namespace math {
+namespace detail {
 
 /*
  * Splines
@@ -18,18 +21,14 @@ public:
      * @param[in] x points to interpolate at
      * @param[out] y values of spline interpolation at x
      */
-    void interpolate(std::vector<double> const& x,
-                     std::vector<double> &y
-                    ) const;
+    void interpolate(std::vector<double> const& x, std::vector<double>& y) const;
     /**
      * Find the derivative of a Spline.
      *
      * @param[in] x points to evaluate derivative at
      * @param[out] dydx derivatives at x
      */
-    void derivative(std::vector<double> const& x,
-                    std::vector<double> &dydx
-                   ) const;
+    void derivative(std::vector<double> const& x, std::vector<double>& dydx) const;
 
     /**
      * Find the roots of
@@ -39,10 +38,7 @@ public:
      * @param value desired value
      * @param x0, x1 specify desired range is [x0,x1)
      */
-    std::vector<double> roots(double const value,
-                              double const x0,
-                              double const x1
-                             ) const;
+    std::vector<double> roots(double const value, double const x0, double const x1) const;
 
 protected:
     Spline() {}
@@ -51,8 +47,8 @@ protected:
      */
     void _allocateSpline(int const nknot);
 
-    std::vector<double> _knots;                // positions of knots
-    std::vector<std::vector<double> > _coeffs; // and associated coefficients
+    std::vector<double> _knots;                 // positions of knots
+    std::vector<std::vector<double> > _coeffs;  // and associated coefficients
 };
 
 class TautSpline : public Spline {
@@ -63,7 +59,8 @@ public:
      * Construct cubic spline interpolant to given data.
      *
      * Adapted from <i>A Practical Guide to Splines</i> by C. de Boor (N.Y. : Springer-Verlag, 1978).
-     * (His routine tautsp converted to C by Robert Lupton and then to C++ by an older and grayer Robert Lupton)
+     * (His routine tautsp converted to C by Robert Lupton and then to C++ by an older and grayer Robert
+     * Lupton)
      *
      * If `gamma` > 0, additional knots are introduced where needed to
      * make the interpolant more flexible locally. This avoids extraneous
@@ -128,11 +125,9 @@ public:
      * cubic spline, but if you provide fewer we'll fit a quadratic or linear
      * polynomial (but you must provide at least 2)
      */
-    TautSpline(std::vector<double> const& x,
-               std::vector<double> const& y,
-               double const gamma=0,
-               Symmetry type=Unknown
-          );
+    TautSpline(std::vector<double> const& x, std::vector<double> const& y, double const gamma = 0,
+               Symmetry type = Unknown);
+
 private:
     /**
      * Here's the worker routine for the TautSpline ctor
@@ -141,10 +136,7 @@ private:
      * @param y values of function at tau[]
      * @param gamma0 control extra knots
      */
-    void calculateTautSpline(std::vector<double> const& x,
-                             std::vector<double> const& y,
-                             double const gamma0
-                            );
+    void calculateTautSpline(std::vector<double> const& x, std::vector<double> const& y, double const gamma0);
     /**
      * Fit a taut spline to a set of data, forcing the resulting spline to
      * obey S(x) = +-S(-x). The input points must have tau[] >= 0.
@@ -155,11 +147,8 @@ private:
      * This is done by duplicating the input data for -ve x, so consider
      * carefully before using this function on many-thousand-point datasets
      */
-    void calculateTautSplineEvenOdd(std::vector<double> const& x,
-                                    std::vector<double> const& y,
-                                    double const gamma0,
-                                    bool even
-                                );
+    void calculateTautSplineEvenOdd(std::vector<double> const& x, std::vector<double> const& y,
+                                    double const gamma0, bool even);
 };
 
 class SmoothedSpline : public Spline {
@@ -231,13 +220,11 @@ public:
      * M.F. Hutchinson and F.R. de Hoog, 'Smoothing Noisy Data with Spline
      * Functions', Numer. Math. 47 p.99 (1985)
      */
-    SmoothedSpline(std::vector<double> const& x,
-                   std::vector<double> const& y,
-                   std::vector<double> const& dy,
-                   double s,
-                   double *chisq=NULL,
-                   std::vector<double> *errs=NULL
-          );
+    SmoothedSpline(std::vector<double> const& x, std::vector<double> const& y, std::vector<double> const& dy,
+                   double s, double* chisq = NULL, std::vector<double>* errs = NULL);
 };
-}}}}
+}
+}
+}
+}
 #endif

@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
     auto miMetadata(new PropertySet);
     afwImage::Exposure<Pixel> exposure(inImagePath);
     if (!exposure.hasWcs()) {
-            std::cerr << "Exposure does not have a WCS." << std::endl;
-            exit(EXIT_FAILURE);
+        std::cerr << "Exposure does not have a WCS." << std::endl;
+        exit(EXIT_FAILURE);
     }
     std::shared_ptr<afwImage::Wcs> wcs = exposure.getWcs();
 
@@ -89,11 +89,13 @@ int main(int argc, char **argv) {
     afwGeom::Angle miRa2 = sky2->getLongitude();
     afwGeom::Angle miDecl2 = sky2->getLatitude();
 
-    std::cout << "ra, decl of " << inImagePath << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
-              << "ra: " << miRa1.asDegrees() << " decl: " << miDecl1.asDegrees() << std::endl << std::endl;
+    std::cout << "ra, decl of " << inImagePath << " at (" << minCoord[0] << " " << minCoord[1] << ") = "
+              << "ra: " << miRa1.asDegrees() << " decl: " << miDecl1.asDegrees() << std::endl
+              << std::endl;
 
-    std::cout << "ra, decl of " << inImagePath << " at ("<< xy[0] << " " << xy[1]<<") = "
-        << "ra: " << miRa2.asDegrees() << " decl: " << miDecl2.asDegrees() << std::endl << std::endl;
+    std::cout << "ra, decl of " << inImagePath << " at (" << xy[0] << " " << xy[1] << ") = "
+              << "ra: " << miRa2.asDegrees() << " decl: " << miDecl2.asDegrees() << std::endl
+              << std::endl;
 
     double pixArea0 = wcs->pixArea(minCoord);
     double pixArea1 = wcs->pixArea(xy);
@@ -105,11 +107,15 @@ int main(int argc, char **argv) {
     afwGeom::Point2D pix1 = wcs->skyToPixel(miRa1, miDecl1);
     afwGeom::Point2D pix2 = wcs->skyToPixel(miRa2, miDecl2);
 
-    std::cout << "col, row of " << inImagePath << " at ("<< miRa1.asDegrees() << " " << miDecl1.asDegrees() <<") = "
-        << "col: " << pix1[0] << " row: " << pix1[1] << std::endl << std::endl;
+    std::cout << "col, row of " << inImagePath << " at (" << miRa1.asDegrees() << " " << miDecl1.asDegrees()
+              << ") = "
+              << "col: " << pix1[0] << " row: " << pix1[1] << std::endl
+              << std::endl;
 
-    std::cout << "col, row of " << inImagePath << " at ("<< miRa2.asDegrees() << " " << miDecl2.asDegrees() <<") = "
-        << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
+    std::cout << "col, row of " << inImagePath << " at (" << miRa2.asDegrees() << " " << miDecl2.asDegrees()
+              << ") = "
+              << "col: " << pix2[0] << " row: " << pix2[1] << std::endl
+              << std::endl;
 
     std::shared_ptr<afwCoord::Coord const> raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
     std::shared_ptr<afwCoord::Coord const> raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
@@ -117,10 +123,11 @@ int main(int argc, char **argv) {
     afwGeom::Point2D pix3 = wcs->skyToPixel(*raDecl1);
     afwGeom::Point2D pix4 = wcs->skyToPixel(*raDecl2);
 
-    std::cout << "col, row of " << inImagePath << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
-        << "col: " << pix3[0] << " row: " << pix3[1] << std::endl << std::endl;
+    std::cout << "col, row of " << inImagePath << " at (" << (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
+              << "col: " << pix3[0] << " row: " << pix3[1] << std::endl
+              << std::endl;
 
-    std::cout << "col, row of " << inImagePath << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
-              << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;
-
+    std::cout << "col, row of " << inImagePath << " at (" << (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
+              << "col: " << pix4[0] << " row: " << pix4[1] << std::endl
+              << std::endl;
 }

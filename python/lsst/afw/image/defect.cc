@@ -51,10 +51,12 @@ PYBIND11_PLUGIN(defect) {
     cls.def("getY0", &DefectBase::getY0);
     cls.def("getY1", &DefectBase::getY1);
     cls.def("clip", &DefectBase::clip);
-    cls.def("shift", (void (DefectBase::*)(int, int)) &DefectBase::shift, "dx"_a, "dy"_a);
-    cls.def("shift", (void (DefectBase::*)(geom::Extent2I const &)) &DefectBase::shift, "d"_a);
+    cls.def("shift", (void (DefectBase::*)(int, int)) & DefectBase::shift, "dx"_a, "dy"_a);
+    cls.def("shift", (void (DefectBase::*)(geom::Extent2I const &)) & DefectBase::shift, "d"_a);
 
     return mod.ptr();
 }
-
-}}}} // lsst::afw::image::<anonymous>
+}
+}
+}
+}  // lsst::afw::image::<anonymous>

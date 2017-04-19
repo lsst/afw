@@ -40,37 +40,33 @@
 
 namespace lsst {
 namespace daf {
-    namespace base {
-        class PropertySet;
-    }
+namespace base {
+class PropertySet;
+}
 }
 
 namespace afw {
 namespace cameraGeom {
-    class Detector;
+class Detector;
 }
 namespace image {
 
 static double const JanskysPerABFlux = 3631.0;
 
 /// Compute AB magnitude from flux in Janskys
-inline double abMagFromFlux(double flux) {
-    return -2.5*std::log10(flux/JanskysPerABFlux);
-}
+inline double abMagFromFlux(double flux) { return -2.5 * std::log10(flux / JanskysPerABFlux); }
 
 /// Compute AB magnitude error from flux and flux error in Janskys
 inline double abMagErrFromFluxErr(double fluxErr, double flux) {
-    return std::abs(fluxErr/(-0.4*flux*std::log(10)));
+    return std::abs(fluxErr / (-0.4 * flux * std::log(10)));
 }
 
 /// Compute flux in Janskys from AB magnitude
-inline double fluxFromABMag(double mag) {
-    return std::pow(10.0, -0.4*mag)*JanskysPerABFlux;
-}
+inline double fluxFromABMag(double mag) { return std::pow(10.0, -0.4 * mag) * JanskysPerABFlux; }
 
 /// Compute flux error in Janskys from AB magnitude error and AB magnitude
 inline double fluxErrFromABMagErr(double magErr, double mag) {
-    return std::abs(-0.4*magErr*fluxFromABMag(mag)*std::log(10.0));
+    return std::abs(-0.4 * magErr * fluxFromABMag(mag) * std::log(10.0));
 }
 
 /**
@@ -78,7 +74,7 @@ inline double fluxErrFromABMagErr(double magErr, double mag) {
  */
 
 class Calib : public table::io::PersistableFacade<Calib>, public table::io::Persistable {
-public :
+public:
     /**
      * ctor
      */
@@ -106,7 +102,7 @@ public :
      * @param fluxMag0 The flux in question (ADUs)
      * @param fluxMag0Sigma The error in the flux (ADUs)
      */
-    void setFluxMag0(double fluxMag0, double fluxMag0Sigma=0.0);
+    void setFluxMag0(double fluxMag0, double fluxMag0Sigma = 0.0);
     /**
      * @param fluxMag0AndSigma The flux and error (ADUs)
      */
@@ -133,12 +129,10 @@ public :
      */
     std::pair<double, double> getFlux(double const mag, double const magErr) const;
 
-    ndarray::Array<double,1> getFlux(ndarray::Array<double const,1> const & mag) const;
+    ndarray::Array<double, 1> getFlux(ndarray::Array<double const, 1> const& mag) const;
 
-    std::pair< ndarray::Array<double,1>, ndarray::Array<double,1> > getFlux(
-        ndarray::Array<double const,1> const & mag,
-        ndarray::Array<double const,1> const & magErr
-    ) const;
+    std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> getFlux(
+            ndarray::Array<double const, 1> const& mag, ndarray::Array<double const, 1> const& magErr) const;
 
     /**
      * Return a magnitude given a flux
@@ -155,12 +149,11 @@ public :
      */
     std::pair<double, double> getMagnitude(double const flux, double const fluxErr) const;
 
-    ndarray::Array<double,1> getMagnitude(ndarray::Array<double const,1> const & flux) const;
+    ndarray::Array<double, 1> getMagnitude(ndarray::Array<double const, 1> const& flux) const;
 
-    std::pair< ndarray::Array<double,1>,ndarray::Array<double,1> > getMagnitude(
-        ndarray::Array<double const,1> const & flux,
-        ndarray::Array<double const,1> const & fluxErr
-    ) const;
+    std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> getMagnitude(
+            ndarray::Array<double const, 1> const& flux,
+            ndarray::Array<double const, 1> const& fluxErr) const;
 
     /**
      * Set whether Calib should throw an exception when asked to convert a flux to a magnitude
@@ -180,16 +173,18 @@ public :
     bool operator==(Calib const& rhs) const;
     bool operator!=(Calib const& rhs) const { return !(*this == rhs); }
 
-    Calib & operator*=(double const scale);
-    Calib & operator/=(double const scale) { (*this) *= 1.0/scale; return *this; }
+    Calib& operator*=(double const scale);
+    Calib& operator/=(double const scale) {
+        (*this) *= 1.0 / scale;
+        return *this;
+    }
 
     bool isPersistable() const { return true; }
 
 protected:
-
     virtual std::string getPersistenceName() const;
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
 private:
     double _fluxMag0;
@@ -201,15 +196,16 @@ private:
 };
 
 namespace detail {
-    /**
-     * Remove Calib-related keywords from the metadata
-     *
-     * @param[in, out] metadata Metadata to be stripped
-     * @returns Number of keywords stripped
-     */
-    int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
+/**
+ * Remove Calib-related keywords from the metadata
+ *
+ * @param[in, out] metadata Metadata to be stripped
+ * @returns Number of keywords stripped
+ */
+int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
 }
+}
+}
+}  // lsst::afw::image
 
-}}}  // lsst::afw::image
-
-#endif // LSST_AFW_IMAGE_CALIB_H
+#endif  // LSST_AFW_IMAGE_CALIB_H

@@ -41,9 +41,9 @@
 
 namespace lsst {
 namespace daf {
-    namespace base {
-        class PropertySet;
-    }
+namespace base {
+class PropertySet;
+}
 }
 
 namespace afw {
@@ -54,18 +54,18 @@ namespace image {
  */
 class FilterProperty {
 public:
-    explicit FilterProperty(std::string const& name, double lambdaEff, bool force=false) :
-        _name(name), _lambdaEff(lambdaEff) { _insert(force); }
+    explicit FilterProperty(std::string const& name, double lambdaEff, bool force = false)
+            : _name(name), _lambdaEff(lambdaEff) {
+        _insert(force);
+    }
     /**
      * @param name name of filter
      * @param prop values describing the Filter
      * @param force Allow this name to replace a previous one
      */
-    explicit FilterProperty(
-        std::string const& name,
-        lsst::daf::base::PropertySet const& prop=lsst::daf::base::PropertySet(),
-        bool force=false
-        );
+    explicit FilterProperty(std::string const& name,
+                            lsst::daf::base::PropertySet const& prop = lsst::daf::base::PropertySet(),
+                            bool force = false);
     /**
      * Create a new FilterProperty, setting values from a Policy
      *
@@ -73,7 +73,8 @@ public:
      * @param pol values describing the Filter
      * @param force Allow this name to replace a previous one
      */
-    explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force=false);
+    explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol,
+                            bool force = false);
     /**
      * Return a filter's name
      */
@@ -91,8 +92,10 @@ public:
     /**
      * Return true iff rhs != this
      */
-    bool operator!=(FilterProperty const& rhs ///< Object to compare with this
-                   ) const { return !(*this == rhs); }
+    bool operator!=(FilterProperty const& rhs  ///< Object to compare with this
+                    ) const {
+        return !(*this == rhs);
+    }
     /**
      * Clear all definitions
      */
@@ -104,6 +107,7 @@ public:
      * @param name name of desired filter
      */
     static FilterProperty const& lookup(std::string const& name);
+
 private:
     typedef std::unordered_map<std::string, FilterProperty> PropertyMap;
 
@@ -116,41 +120,42 @@ private:
      *
      * @param force Allow this name to replace a previous one?
      */
-    void _insert(bool force=false);
+    void _insert(bool force = false);
 
-    std::string _name;                  // name of filter
-    double _lambdaEff;                  // effective wavelength (nm)
+    std::string _name;  // name of filter
+    double _lambdaEff;  // effective wavelength (nm)
 
-    static PropertyMap *_propertyMap;   // mapping from name -> FilterProperty
+    static PropertyMap* _propertyMap;  // mapping from name -> FilterProperty
 };
 
 /**
  * Holds an integer identifier for an LSST filter.
  */
-class Filter
-{
-public :
+class Filter {
+public:
     static int const AUTO;
     static int const UNKNOWN;
 
     /**
      * Creates a Filter with the given name
      */
-    explicit Filter(std::string const& name, ///< Name of filter
-                    bool const force=false   ///< Allow us to construct an unknown Filter
-                   ) : _id(_lookup(name, force)), _name(name) {}
+    explicit Filter(std::string const& name,  ///< Name of filter
+                    bool const force = false  ///< Allow us to construct an unknown Filter
+                    )
+            : _id(_lookup(name, force)), _name(name) {}
     /**
      * Creates a Filter with the given identifier
      */
-    explicit Filter(int id=UNKNOWN      ///< Id number of desired filter
-                   ) : _id(id), _name(_lookup(id)) {}
+    explicit Filter(int id = UNKNOWN  ///< Id number of desired filter
+                    )
+            : _id(id), _name(_lookup(id)) {}
     /**
      * Create a Filter from a PropertySet (e.g. a FITS header)
      *
      * @param metadata Metadata to process (e.g. a IFITS header)
      * @param force Allow us to construct an unknown Filter
      */
-    explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const>, bool const force=false);
+    explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const>, bool const force = false);
 
     /**
      * Are two filters identical?
@@ -194,7 +199,7 @@ public :
      *
      * It is an error to attempt to change a name's id (unless you specify force)
      */
-    static int define(FilterProperty const& filterProperty, int id=AUTO, bool force=false);
+    static int define(FilterProperty const& filterProperty, int id = AUTO, bool force = false);
     /**
      * Define an alias for a filter
      *
@@ -202,13 +207,14 @@ public :
      * @param newName new name for Filter
      * @param force force an alias even if newName is already in use
      */
-    static int defineAlias(std::string const& oldName, std::string const& newName, bool force=false);
+    static int defineAlias(std::string const& oldName, std::string const& newName, bool force = false);
 
     /**
      * Return a list of known filters
      */
     static std::vector<std::string> getNames();
-private :
+
+private:
     typedef std::unordered_map<std::string, std::string const> AliasMap;
     typedef std::unordered_map<std::string, unsigned int const> NameMap;
     typedef std::unordered_map<unsigned int, std::string const> IdMap;
@@ -223,7 +229,7 @@ private :
      * @param name Name of filter
      * @param force return an invalid ID, but don't throw, if name is unknown
      */
-    static int _lookup(std::string const& name, bool const force=false);
+    static int _lookup(std::string const& name, bool const force = false);
     /**
      * Lookup the name associated with an ID
      */
@@ -232,22 +238,23 @@ private :
     int _id;
     std::string _name;
 
-    static int _id0;                    // next Id to use
-    static AliasMap *_aliasMap;         // mapping from alias -> name
-    static IdMap *_idMap;               // mapping from id -> name
-    static NameMap *_nameMap;           // mapping from name -> id
+    static int _id0;             // next Id to use
+    static AliasMap* _aliasMap;  // mapping from alias -> name
+    static IdMap* _idMap;        // mapping from id -> name
+    static NameMap* _nameMap;    // mapping from name -> id
 };
 
 namespace detail {
-    /**
-     * Remove Filter-related keywords from the metadata
-     *
-     * @param[in, out] metadata Metadata to be stripped
-     * @return Number of keywords stripped
-     */
-    int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
+/**
+ * Remove Filter-related keywords from the metadata
+ *
+ * @param[in, out] metadata Metadata to be stripped
+ * @return Number of keywords stripped
+ */
+int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
 }
+}
+}
+}  // lsst::afw::image
 
-}}}  // lsst::afw::image
-
-#endif // LSST_AFW_IMAGE_FILTER_H
+#endif  // LSST_AFW_IMAGE_FILTER_H

@@ -12,26 +12,21 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 
-namespace lsst { namespace afw { namespace display {
+namespace lsst {
+namespace afw {
+namespace display {
 
 template <class T>
-static void getSample(
-    image::Image<T> const& image,
-    std::size_t const nSamples,
-    std::vector<T>&  vSample
-                       )
-{
-    int const width  = image.getWidth();
+static void getSample(image::Image<T> const& image, std::size_t const nSamples, std::vector<T>& vSample) {
+    int const width = image.getWidth();
     int const height = image.getHeight();
 
     // extract, from image, about nSample samples
     // such that they form a grid.
     vSample.reserve(nSamples);
 
-    int const initialStride = std::max(
-        1,
-        static_cast<int>(std::sqrt(width*height/static_cast<double>(nSamples)))
-    );
+    int const initialStride =
+            std::max(1, static_cast<int>(std::sqrt(width * height / static_cast<double>(nSamples))));
 
     for (int stride = initialStride; stride >= 1; --stride) {
         vSample.clear();
@@ -46,19 +41,14 @@ static void getSample(
         }
 
         // if more than 80% of nSamples were sampled, OK.
-        if (5*vSample.size() > 4*nSamples) {
+        if (5 * vSample.size() > 4 * nSamples) {
             break;
         }
     }
 }
 
-static inline double
-computeSigma(
-    std::vector<double> const& vFlat,
-    std::vector<int> const& vBadPix,
-    std::size_t const nGoodPix
-                 )
-{
+static inline double computeSigma(std::vector<double> const& vFlat, std::vector<int> const& vBadPix,
+                                  std::size_t const nGoodPix) {
     if (nGoodPix <= 1) {
         return 0;
     }
@@ -68,49 +58,42 @@ computeSigma(
         if (!vBadPix[i]) {
             double const z = vFlat[i];
 
-            sumz  += z;
-            sumsq += z*z;
+            sumz += z;
+            sumsq += z * z;
         }
     }
 
     double const goodPix = nGoodPix;
-    double const tmp = sumsq/(goodPix - 1) - sumz*sumz/(goodPix*(goodPix - 1));
+    double const tmp = sumsq / (goodPix - 1) - sumz * sumz / (goodPix * (goodPix - 1));
 
     return (tmp > 0) ? std::sqrt(tmp) : 0;
-
 }
 
 template <class T>
-static std::pair<double, double>
-fitLine(
-    int *nGoodPixOut,                    // returned; it'd be nice to use std::tuple from C++11
-    std::vector<T> const& vSample,
-    double const nSigmaClip,
-    int const nGrow,
-    int const minpix,
-    int const nIter
-                        )
-{
+static std::pair<double, double> fitLine(
+        int* nGoodPixOut,  // returned; it'd be nice to use std::tuple from C++11
+        std::vector<T> const& vSample, double const nSigmaClip, int const nGrow, int const minpix,
+        int const nIter) {
     // map the indices of vSample to [-1.0, 1.0]
-    double const xscale = 2.0/(vSample.size() - 1);
+    double const xscale = 2.0 / (vSample.size() - 1);
     std::vector<double> xnorm;
     xnorm.reserve(vSample.size());
     for (std::size_t i = 0; i < vSample.size(); ++i) {
-        xnorm.push_back(i*xscale - 1.0);
+        xnorm.push_back(i * xscale - 1.0);
     }
 
     // Mask that is used in k-sigma clipping
     std::vector<int> vBadPix(vSample.size(), 0);
 
-    std::size_t nGoodPix =  vSample.size();
+    std::size_t nGoodPix = vSample.size();
     std::size_t nGoodPixOld = nGoodPix + 1;
 
     // values to be obtained
     double intercept = 0;
-    double slope     = 0;
+    double slope = 0;
 
     for (int iteration = 0; iteration < nIter; ++iteration) {
-        if (nGoodPix <  minpix || nGoodPix >= nGoodPixOld) {
+        if (nGoodPix < minpix || nGoodPix >= nGoodPixOld) {
             break;
         }
 
@@ -121,10 +104,10 @@ fitLine(
                 double const x = xnorm[i];
                 double const y = vSample[i];
 
-                sumx  += x;
-                sumy  += y;
-                sumxx += x*x;
-                sumxy += x*y;
+                sumx += x;
+                sumy += y;
+                sumxx += x * x;
+                sumxy += x * y;
             }
         }
 
@@ -132,18 +115,18 @@ fitLine(
 
         // slope and intercept
         intercept = (sumxx * sumy - sumx * sumxy) / delta;
-        slope     = (sum * sumxy - sumx * sumy) / delta;
+        slope = (sum * sumxy - sumx * sumy) / delta;
 
         // residue
         std::vector<double> vFlat;
         vFlat.reserve(vSample.size());
         for (unsigned i = 0; i < vSample.size(); ++i) {
-            vFlat.push_back(vSample[i] - (xnorm[i]*slope + intercept));
+            vFlat.push_back(vSample[i] - (xnorm[i] * slope + intercept));
         }
 
         // Threshold of k-sigma clipping
         double const sigma = computeSigma(vFlat, vBadPix, nGoodPix);
-        double const hcut = sigma*nSigmaClip;
+        double const hcut = sigma * nSigmaClip;
         double const lcut = -hcut;
 
         // revise vBadPix
@@ -158,12 +141,12 @@ fitLine(
         }
 
         // blurr vBadPix
-        std::vector<int>vBadPix_new;
+        std::vector<int> vBadPix_new;
         vBadPix_new.reserve(vSample.size());
         for (unsigned x = 0; x < vSample.size(); ++x) {
             int imin = (static_cast<int>(x) > nGrow) ? x - nGrow : -1;
             int val = 0;
-            for (int i = x; i > imin ; --i) {
+            for (int i = x; i > imin; --i) {
                 val += vBadPix[i];
             }
             vBadPix_new.push_back(val ? 1 : 0);
@@ -177,16 +160,11 @@ fitLine(
     // return the scale of x-axis
     *nGoodPixOut = nGoodPix;
 
-    return std::make_pair(intercept - slope, slope*xscale);
+    return std::make_pair(intercept - slope, slope * xscale);
 }
 
 template <class T>
-std::pair<double, double>
-getZScale(image::Image<T> const& image,
-          int const nSamples,
-          double const contrast
-         )
-{
+std::pair<double, double> getZScale(image::Image<T> const& image, int const nSamples, double const contrast) {
     // extract samples
     std::vector<T> vSample;
     getSample(image, nSamples, vSample);
@@ -204,22 +182,22 @@ getZScale(image::Image<T> const& image,
     // the pixel values and build a histogram
     double const zmin = vSample.front();
     double const zmax = vSample.back();
-    int const iCenter = nPix/2;
-    T median = (nPix & 1) ? vSample[iCenter] : (vSample[iCenter] + vSample[iCenter + 1])/2;
+    int const iCenter = nPix / 2;
+    T median = (nPix & 1) ? vSample[iCenter] : (vSample[iCenter] + vSample[iCenter + 1]) / 2;
 
     // fit a line to the sorted sample
     const int maxRejectionRatio = 2;
     const int npixelsMin = 5;
 
-    int minpix = std::max(npixelsMin, nPix/maxRejectionRatio);
-    int nGrow  = std::max(1, nPix/100);
+    int minpix = std::max(npixelsMin, nPix / maxRejectionRatio);
+    int nGrow = std::max(1, nPix / 100);
 
     const double nSigmaClip = 2.5;
     const int nIterations = 5;
 
     int nGoodPix = 0;
     std::pair<double, double> ret = fitLine(&nGoodPix, vSample, nSigmaClip, nGrow, minpix, nIterations);
-#if 0                                   // unused, but calculated and potentially useful
+#if 0  // unused, but calculated and potentially useful
     double const zstart = ret.first;
 #endif
     double const zslope = ret.second;
@@ -229,20 +207,22 @@ getZScale(image::Image<T> const& image,
         z1 = zmin;
         z2 = zmax;
     } else {
-        double const slope = zslope/contrast;
+        double const slope = zslope / contrast;
 
-        z1 = std::max(zmin, median - iCenter*slope);
-        z2 = std::min(zmax, median + (nPix - iCenter - 1)*slope);
+        z1 = std::max(zmin, median - iCenter * slope);
+        z2 = std::min(zmax, median + (nPix - iCenter - 1) * slope);
     }
 
     return std::make_pair(z1, z2);
 }
 //
 // Explicit instantiations
-#define INSTANTIATE_GETZSCALE(T) \
-    template std::pair<double, double> \
-        getZScale(image::Image<T> const& image, int const nSamples, double const contrast)
+#define INSTANTIATE_GETZSCALE(T)                                                                   \
+    template std::pair<double, double> getZScale(image::Image<T> const& image, int const nSamples, \
+                                                 double const contrast)
 
 INSTANTIATE_GETZSCALE(std::uint16_t);
 INSTANTIATE_GETZSCALE(float);
-}}}
+}
+}
+}

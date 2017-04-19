@@ -27,7 +27,10 @@
 
 #include "lsst/afw/geom/ellipses/EllipticityBase.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 class ConformalShear;
 class ReducedShear;
@@ -40,43 +43,43 @@ class ReducedShear;
  */
 class Distortion : public detail::EllipticityBase {
 public:
+    explicit Distortion(std::complex<double> const& complex) : detail::EllipticityBase(complex) {}
 
-    explicit Distortion(std::complex<double> const & complex) : detail::EllipticityBase(complex) {}
+    explicit Distortion(double e1 = 0.0, double e2 = 0.0) : detail::EllipticityBase(e1, e2) {}
 
-    explicit Distortion(double e1=0.0, double e2=0.0) : detail::EllipticityBase(e1, e2) {}
+    Distortion(Distortion const& other) : detail::EllipticityBase(other.getComplex()) {}
 
-    Distortion(Distortion const & other) : detail::EllipticityBase(other.getComplex()) {}
+    explicit Distortion(ConformalShear const& other) { this->operator=(other); }
 
-    explicit Distortion(ConformalShear const & other) { this->operator=(other); }
+    explicit Distortion(ReducedShear const& other) { this->operator=(other); }
 
-    explicit Distortion(ReducedShear const & other) { this->operator=(other); }
-
-    Distortion & operator=(Distortion const & other) {
+    Distortion& operator=(Distortion const& other) {
         _complex = other._complex;
         return *this;
     }
 
-    Distortion & operator=(ConformalShear const & other);
+    Distortion& operator=(ConformalShear const& other);
 
-    Distortion & operator=(ReducedShear const & other);
+    Distortion& operator=(ReducedShear const& other);
 
-    Jacobian dAssign(Distortion const & other) {
+    Jacobian dAssign(Distortion const& other) {
         _complex = other._complex;
         return Jacobian::Identity();
     }
 
-    Jacobian dAssign(ConformalShear const & other);
+    Jacobian dAssign(ConformalShear const& other);
 
-    Jacobian dAssign(ReducedShear const & other);
+    Jacobian dAssign(ReducedShear const& other);
 
     double getAxisRatio() const;
 
     void normalize();
 
     static std::string getName() { return "Distortion"; }
-
 };
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_Distortion_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_Distortion_h_INCLUDED

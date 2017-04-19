@@ -28,7 +28,9 @@
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 /**
  *  A simple Persistable struct containing ExposureCatalogs that record the inputs to a coadd.
@@ -57,10 +59,10 @@ public:
     CoaddInputs();
 
     /// Construct new catalogs from the given schemas.
-    CoaddInputs(table::Schema const & visitSchema, table::Schema const & ccdSchema);
+    CoaddInputs(table::Schema const& visitSchema, table::Schema const& ccdSchema);
 
     /// Construct from shallow copies of the given catalogs.
-    CoaddInputs(table::ExposureCatalog const & visits_, table::ExposureCatalog const & ccds_);
+    CoaddInputs(table::ExposureCatalog const& visits_, table::ExposureCatalog const& ccds_);
 
     /**
      *  Whether the object is in fact persistable - in this case, always true.
@@ -73,9 +75,10 @@ public:
 protected:
     virtual std::string getPersistenceName() const;
     virtual std::string getPythonModule() const;
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 };
+}
+}
+}  // lsst::afw::image
 
-}}} // lsst::afw::image
-
-#endif // !LSST_AFW_IMAGE_CoaddInputs_h_INCLUDED
+#endif  // !LSST_AFW_IMAGE_CoaddInputs_h_INCLUDED

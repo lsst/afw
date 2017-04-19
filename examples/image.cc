@@ -53,7 +53,7 @@ void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
 
 template <typename PixelT>
 void printT(afwImage::Image<PixelT>& src, const std::string& _title = "") {
-    std::string title =_title;
+    std::string title = _title;
     if (title.size() > 0) {
         title += " ";
     }
@@ -69,14 +69,14 @@ void printT(afwImage::Image<PixelT>& src, const std::string& _title = "") {
     for (int c = 0; c != src.getWidth(); ++c) {
         printf("%3d ", c);
 
-#if 1   // print the column from the top (there's no reverse iterator)
+#if 1  // print the column from the top (there's no reverse iterator)
         typename afwImage::Image<PixelT>::y_iterator src_it = src.col_begin(c);
         for (int r = src.getHeight() - 1; r >= 0; --r) {
             printf("%4g ", static_cast<float>(src_it[r][0]));
         }
 #else  // print the column from the bottom (i.e. upside down)
         for (typename afwImage::Image<PixelT>::y_iterator src_it = src.col_begin(c); src_it != src.col_end(c);
-            ++src_it) {
+             ++src_it) {
             printf("%4g ", static_cast<float>((*src_it)[0]));
         }
 #endif
@@ -84,7 +84,6 @@ void printT(afwImage::Image<PixelT>& src, const std::string& _title = "") {
         printf("\n");
     }
 }
-
 
 template <typename PixelT>
 void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT>& dst) {
@@ -95,24 +94,23 @@ void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT
 
 #define USE_CACHE_LOCATION 1
 #if USE_CACHE_LOCATION
-    typename xy_loc::cached_location_t above = src_loc.cache_location(0,  1);
+    typename xy_loc::cached_location_t above = src_loc.cache_location(0, 1);
     typename xy_loc::cached_location_t below = src_loc.cache_location(0, -1);
 #endif
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {
-        for (typename afwImage::Image<PixelT>::x_iterator dst_it = dst.row_begin(r);
-            dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {
-#if USE_CACHE_LOCATION                  // this version is faster
-            *dst_it = (src_loc[above] - src_loc[below])/2;
+        for (typename afwImage::Image<PixelT>::x_iterator dst_it = dst.row_begin(r); dst_it != dst.row_end(r);
+             ++dst_it, ++src_loc.x()) {
+#if USE_CACHE_LOCATION  // this version is faster
+            *dst_it = (src_loc[above] - src_loc[below]) / 2;
 #else  // but this is possible too, and more general (but slower)
-            *dst_it = (src_loc(0, 1) - src_loc(0, -1))/2;
+            *dst_it = (src_loc(0, 1) - src_loc(0, -1)) / 2;
 #endif
         }
 
         src_loc += afwImage::detail::difference_type(-src.getWidth(), 1);
     }
 }
-
 
 int main() {
     afwImage::Image<float> img(afwGeom::Extent2I(10, 6));
@@ -142,7 +140,7 @@ int main() {
     print(jmg, "jmg");
 
     afwImage::Image<float> kmg = jmg;
-    kmg(0,0) = 111;
+    kmg(0, 0) = 111;
     kmg += 222;
     kmg -= 222;
     kmg += jmg;
@@ -159,26 +157,15 @@ int main() {
     print(lmg, "lmg");
 
     afwImage::Image<float> mmg(img, true);
-    mmg = -1;                           // shouldn't modify img
+    mmg = -1;  // shouldn't modify img
 
     printf("sub images\n");
 
     // img will be modified
-    afwImage::Image<float> simg1(
-        img, afwGeom::Box2I(
-            afwGeom::Point2I(1, 1),
-            afwGeom::Extent2I(7, 3)
-        ),
-        afwImage::LOCAL
-    );
-    afwImage::Image<float> simg(
-        simg1, afwGeom::Box2I(
-            afwGeom::Point2I(0, 0),
-            afwGeom::Extent2I(5, 2)
-        ),
-        afwImage::LOCAL
-    );
-
+    afwImage::Image<float> simg1(img, afwGeom::Box2I(afwGeom::Point2I(1, 1), afwGeom::Extent2I(7, 3)),
+                                 afwImage::LOCAL);
+    afwImage::Image<float> simg(simg1, afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(5, 2)),
+                                afwImage::LOCAL);
 
     {
         afwImage::Image<float> nimg(afwGeom::Extent2I(5, 2));
@@ -191,7 +178,7 @@ int main() {
 
     printf("\n");
     for (int r = 0; r != img.getHeight(); ++r) {
-        std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
+        std::fill(img.row_begin(r), img.row_end(r), 100 * (1 + r));
     }
     print(img, "ramp img");
 
@@ -203,12 +190,12 @@ int main() {
 
     afwImage::Image<unsigned short> u16(img.getDimensions());
     u16 = 100;
-    afwImage::Image<float> fl32(u16, true); // must be true as all type conversions are deep
+    afwImage::Image<float> fl32(u16, true);  // must be true as all type conversions are deep
     print(fl32, "Float from U16");
 
     try {
         afwImage::Image<float> fl32(u16, false);  // will throw
-    } catch(lsst::pex::exceptions::InvalidParameterError &e) {
+    } catch (lsst::pex::exceptions::InvalidParameterError& e) {
         printf("Correctly threw exception: %s\n", e.what());
     }
 

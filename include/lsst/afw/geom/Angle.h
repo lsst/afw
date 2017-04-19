@@ -38,7 +38,6 @@ inline constexpr double radToMas(double x) noexcept { return x * 1000. * 3600. *
 inline constexpr double arcsecToRad(double x) noexcept { return (x / 3600.) * PI / 180.; }
 inline constexpr double masToRad(double x) noexcept { return (x / (1000. * 3600.)) * PI / 180.; }
 
-
 class Angle;
 /**
  * A class used to convert scalar POD types such as `double` to Angle.
@@ -344,7 +343,6 @@ constexpr double operator/(T const lhs, Angle rhs) noexcept = delete;
  * @relatesalso Angle
  */
 std::ostream& operator<<(std::ostream& s, Angle a);
-
 
 /// Allow a user to check if they have an angle.
 template <typename T>

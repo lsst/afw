@@ -36,14 +36,14 @@ namespace pexEx = lsst::pex::exceptions;
 namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
 
-int test(int argc, char**argv) {
-
+int test(int argc, char **argv) {
     string dataDir, inImagePath1, inImagePath2, outImagePath1, outImagePath2;
     if (argc < 2) {
         try {
             dataDir = lsst::utils::getPackageDir("afwdata");
             inImagePath1 = dataDir + "/data/871034p_1_MI.fits";
-            inImagePath2 = dataDir + "/data/871034p_1_MI.fits"; // afw/tests/SConscript passes the same file twice in the previous avatar.
+            inImagePath2 = dataDir + "/data/871034p_1_MI.fits";  // afw/tests/SConscript passes the same file
+                                                                 // twice in the previous avatar.
             outImagePath1 = "tests/file:maskedImage1_output_1.fits";
             outImagePath2 = "tests/file:maskedImage1_output_2.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
@@ -51,8 +51,7 @@ int test(int argc, char**argv) {
             cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
             return EXIT_SUCCESS;
         }
-    }
-    else {
+    } else {
         inImagePath1 = string(argv[1]);
         inImagePath2 = string(argv[2]);
         outImagePath1 = string(argv[3]);
@@ -82,7 +81,7 @@ int test(int argc, char**argv) {
     MaskedImage::Image imageCopy(testImage);
     imageCopy = testImage;
 
-    MaskedImage testMaskedImage2(testMaskedImage1->getDimensions()); // n.b. could just do a deep copy
+    MaskedImage testMaskedImage2(testMaskedImage1->getDimensions());  // n.b. could just do a deep copy
     testMaskedImage2 = *testMaskedImage1;
 
     std::shared_ptr<MaskedImage> testFlat;
@@ -105,11 +104,7 @@ int test(int argc, char**argv) {
     // test of subImage
 
     geom::Box2I region(geom::Point2I(100, 600), geom::Extent2I(200, 300));
-    MaskedImage subMaskedImage1 = MaskedImage(
-        *testMaskedImage1,
-        region,
-        image::LOCAL
-    );
+    MaskedImage subMaskedImage1 = MaskedImage(*testMaskedImage1, region, image::LOCAL);
     subMaskedImage1 *= 0.5;
     subMaskedImage1.writeFits(outImagePath2);
 
@@ -130,10 +125,10 @@ int test(int argc, char**argv) {
 int main(int argc, char **argv) {
     int status = EXIT_SUCCESS;
     try {
-       status = test(argc, argv);
+        status = test(argc, argv);
     } catch (pexEx::Exception &e) {
-       clog << e.what() << endl;
-       status = EXIT_FAILURE;
+        clog << e.what() << endl;
+        status = EXIT_FAILURE;
     }
 
     // Check for memory leaks

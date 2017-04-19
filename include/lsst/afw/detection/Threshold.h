@@ -44,29 +44,28 @@ class Threshold {
 public:
     /// Types of threshold:
     enum ThresholdType {
-        VALUE,               ///< Use pixel value
-        BITMASK,             ///< Use (pixels & (given mask))
-        STDEV,               ///< Use number of sigma given s.d.
-        VARIANCE,            ///< Use number of sigma given variance
-        PIXEL_STDEV          ///< Use number of sigma given per-pixel s.d.
+        VALUE,       ///< Use pixel value
+        BITMASK,     ///< Use (pixels & (given mask))
+        STDEV,       ///< Use number of sigma given s.d.
+        VARIANCE,    ///< Use number of sigma given variance
+        PIXEL_STDEV  ///< Use number of sigma given per-pixel s.d.
     };
 
     /**
      * Threshold constructor
      */
-    Threshold(
-        double const value,               ///< desired threshold value
-        ThresholdType const type = VALUE, ///< interpretation of type
-        bool const polarity = true,       ///< search pixel above threshold? (useful for -ve thresholds)
-        double const includeMultiplier = 1.0 ///< threshold multiplier for inclusion in FootprintSet
-             ) : _value(value), _type(type), _polarity(polarity),
-                 _includeMultiplier(includeMultiplier) {}
+    Threshold(double const value,                ///< desired threshold value
+              ThresholdType const type = VALUE,  ///< interpretation of type
+              bool const polarity = true,  ///< search pixel above threshold? (useful for -ve thresholds)
+              double const includeMultiplier = 1.0  ///< threshold multiplier for inclusion in FootprintSet
+              )
+            : _value(value), _type(type), _polarity(polarity), _includeMultiplier(includeMultiplier) {}
 
     /// return type of threshold
     ThresholdType getType() const { return _type; }
 
-    static ThresholdType parseTypeString(std::string const & typeStr);
-    static std::string getTypeString(ThresholdType const & type);
+    static ThresholdType parseTypeString(std::string const& typeStr);
+    static std::string getTypeString(ThresholdType const& type);
 
     /**
      * return value of threshold, to be interpreted via type
@@ -80,26 +79,30 @@ public:
      * @param image Image to interrogate, if threshold type demands
      * @returns value of threshold
      */
-    template<typename ImageT>
+    template <typename ImageT>
     double getValue(ImageT const& image) const;
 
     /// return Threshold's polarity
     bool getPolarity() const { return _polarity; }
     /// set Threshold's polarity
-    void setPolarity(bool const polarity ///< desired polarity
-                    ) { _polarity = polarity; }
+    void setPolarity(bool const polarity  ///< desired polarity
+                     ) {
+        _polarity = polarity;
+    }
 
     /// return includeMultiplier
     double getIncludeMultiplier() const { return _includeMultiplier; }
     /// set includeMultiplier
-    void setIncludeMultiplier(double const includeMultiplier ///< desired multiplier
-                             ) { _includeMultiplier = includeMultiplier; }
+    void setIncludeMultiplier(double const includeMultiplier  ///< desired multiplier
+                              ) {
+        _includeMultiplier = includeMultiplier;
+    }
 
 private:
-    double _value;                      ///< value of threshold, to be interpreted via _type
-    ThresholdType _type;                ///< type of threshold
-    bool _polarity;                     ///< true for positive polarity, false for negative
-    double _includeMultiplier;          ///< multiplier for threshold needed for inclusion in FootprintSet
+    double _value;              ///< value of threshold, to be interpreted via _type
+    ThresholdType _type;        ///< type of threshold
+    bool _polarity;             ///< true for positive polarity, false for negative
+    double _includeMultiplier;  ///< multiplier for threshold needed for inclusion in FootprintSet
 };
 
 /**
@@ -112,9 +115,9 @@ private:
  *
  * @returns desired Threshold
  */
-Threshold createThreshold(const double value,
-                          const std::string type = "value",
-                          const bool polarity = true);
-}}}
+Threshold createThreshold(const double value, const std::string type = "value", const bool polarity = true);
+}
+}
+}
 
 #endif

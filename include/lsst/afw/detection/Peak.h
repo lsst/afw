@@ -29,7 +29,9 @@
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 class PeakRecord;
 class PeakTable;
@@ -39,7 +41,6 @@ class PeakTable;
  */
 class PeakRecord : public afw::table::BaseRecord {
 public:
-
     typedef PeakTable Table;
     typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
     typedef afw::table::CatalogT<PeakRecord> Catalog;
@@ -73,13 +74,10 @@ public:
     //@}
 
 protected:
-
-    explicit PeakRecord(std::shared_ptr<PeakTable> const & table);
+    explicit PeakRecord(std::shared_ptr<PeakTable> const& table);
 
 private:
-
     friend class PeakTable;
-
 };
 
 /**
@@ -87,7 +85,6 @@ private:
  */
 class PeakTable : public afw::table::BaseTable {
 public:
-
     typedef PeakRecord Record;
     typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
     typedef afw::table::CatalogT<Record> Catalog;
@@ -108,7 +105,7 @@ public:
      *  This behavior can be disabled by setting forceNewTable=true or by cloning an existing table
      *  (in both of these cases, the new table will not be reused in the future, either)
      */
-    static std::shared_ptr<PeakTable> make(afw::table::Schema const & schema, bool forceNew=false);
+    static std::shared_ptr<PeakTable> make(afw::table::Schema const& schema, bool forceNew = false);
 
     /**
      *  Return a minimal schema for Peak tables and records.
@@ -125,7 +122,7 @@ public:
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(afw::table::Schema const & other) {
+    static bool checkSchema(afw::table::Schema const& other) {
         return other.contains(getMinimalSchema().schema);
     }
 
@@ -159,30 +156,26 @@ public:
     std::shared_ptr<PeakRecord> makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const & other) {
+    std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const& other) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    std::shared_ptr<PeakRecord> copyRecord(
-        afw::table::BaseRecord const & other,
-        afw::table::SchemaMapper const & mapper
-    ) {
+    std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const& other,
+                                           afw::table::SchemaMapper const& mapper) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other, mapper));
     }
 
 protected:
+    PeakTable(afw::table::Schema const& schema, std::shared_ptr<afw::table::IdFactory> const& idFactory);
 
-    PeakTable(afw::table::Schema const & schema, std::shared_ptr<afw::table::IdFactory> const & idFactory);
-
-    PeakTable(PeakTable const & other);
+    PeakTable(PeakTable const& other);
 
     std::shared_ptr<afw::table::BaseTable> _clone() const override;
 
     std::shared_ptr<afw::table::BaseRecord> _makeRecord() override;
 
 private:
-
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         afw::table::Schema schema;
@@ -197,17 +190,18 @@ private:
     };
 
     // Return the singleton minimal schema.
-    static MinimalSchema & getMinimalSchema();
+    static MinimalSchema& getMinimalSchema();
 
     friend class afw::table::io::FitsWriter;
 
-     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    std::shared_ptr<afw::table::io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
+    std::shared_ptr<afw::table::io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile,
+                                                               int flags) const override;
 
-    std::shared_ptr<afw::table::IdFactory> _idFactory;        // generates IDs for new records
+    std::shared_ptr<afw::table::IdFactory> _idFactory;  // generates IDs for new records
 };
 
-std::ostream & operator<<(std::ostream & os, PeakRecord const & record);
+std::ostream& operator<<(std::ostream& os, PeakRecord const& record);
 
 inline afw::table::RecordId PeakRecord::getId() const { return get(PeakTable::getIdKey()); }
 inline void PeakRecord::setId(afw::table::RecordId id) { set(PeakTable::getIdKey(), id); }
@@ -228,7 +222,8 @@ inline void PeakRecord::setPeakValue(float peakValue) { set(PeakTable::getPeakVa
 typedef afw::table::ColumnViewT<PeakRecord> PeakColumnView;
 typedef afw::table::CatalogT<PeakRecord> PeakCatalog;
 typedef afw::table::CatalogT<PeakRecord const> ConstPeakCatalog;
+}
+}
+}  // namespace lsst::afw::detection
 
-}}} // namespace lsst::afw::detection
-
-#endif // !AFW_DETECTION_Peak_h_INCLUDED
+#endif  // !AFW_DETECTION_Peak_h_INCLUDED

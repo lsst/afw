@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 /*
  * Random number generator class.
  */
@@ -37,8 +36,9 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 
-
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 /**
  * A class that can be used to generate sequences of random numbers according to a number
@@ -54,21 +54,25 @@ namespace lsst { namespace afw { namespace math {
  * to used based on the the `LSST_RNG_ALGORITHM` and `LSST_RNG_SEED` environment variables (or the
  * "rngAlgorithm" and "rngSeed" keys in a policy) are provided.
  *
- * @see <a href="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Generation.html">Random number generation in GSL</a>
- * @see <a href="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">Random number distributions in GSL</a>
+ * @see <a href="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Generation.html">Random number
+ * generation in GSL</a>
+ * @see <a href="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">Random
+ * number distributions in GSL</a>
  */
 class Random {
 public:
-
     /** Identifiers for the list of supported algorithms. */
     enum Algorithm {
         /** The `MT19937` "Mersenne Twister" generator of Makoto Matsumoto and Takuji Nishimura. */
         MT19937 = 0,
-        /** Second-generation version of the RANLUX algorithm of Lüscher, 24-bit output, luxury level 0 (weakest) */
+        /** Second-generation version of the RANLUX algorithm of Lüscher, 24-bit output, luxury level 0
+           (weakest) */
         RANLXS0,
-        /** Second-generation version of the RANLUX algorithm of Lüscher, 24-bit output, luxury level 1 (stronger) */
+        /** Second-generation version of the RANLUX algorithm of Lüscher, 24-bit output, luxury level 1
+           (stronger) */
         RANLXS1,
-        /** Second-generation version of the RANLUX algorithm of Lüscher, 24-bit output, luxury level 2 (strongest) */
+        /** Second-generation version of the RANLUX algorithm of Lüscher, 24-bit output, luxury level 2
+           (strongest) */
         RANLXS2,
         /** Double precision (48-bit) output using the `RANLXS` algorithm, luxury level 1 (weakest). */
         RANLXD1,
@@ -84,7 +88,8 @@ public:
         MRG,
         /** A maximally equidistributed combined Tausworthe generator by L'Ecuyer. */
         TAUS,
-        /** A maximally equidistributed combined Tausworthe generator by L'Ecuyer with improved seeding relative to TAUS. */
+        /** A maximally equidistributed combined Tausworthe generator by L'Ecuyer with improved seeding
+           relative to TAUS. */
         TAUS2,
         /** A fifth-order multiple recursive generator by L'Ecuyer, Blouin, and Coutre. */
         GFSR4,
@@ -124,7 +129,7 @@ public:
      * @throws lsst::pex::exceptions::MemoryError
      *      Thrown if memory allocation for internal generator state fails.
      */
-    explicit Random(std::string const & algorithm, unsigned long seed = 1);
+    explicit Random(std::string const &algorithm, unsigned long seed = 1);
     /**
      * Creates a random number generator using the algorithm and seed specified
      * in the given policy. The algorithm name and seed are expected to be specified
@@ -170,7 +175,7 @@ public:
      */
     typedef std::string State;
     State getState() const;
-    void setState(State const & state);
+    void setState(State const &state);
     std::size_t getStateSize() const;
     //@}
 
@@ -186,7 +191,7 @@ public:
     /**
      * @returns  The list of names of supported random number generation algorithms.
      */
-    static std::vector<std::string> const & getAlgorithmNames();
+    static std::vector<std::string> const &getAlgorithmNames();
     /**
      * @returns  The integer this random number generator was seeded with.
      * @note    A seed value of 0 indicates that the random number generator
@@ -278,10 +283,10 @@ private:
     unsigned long _seed;
     Algorithm _algorithm;
 
-    static ::gsl_rng_type const * const _gslRngTypes[NUM_ALGORITHMS];
-    static char const * const _algorithmNames[NUM_ALGORITHMS];
-    static char const * const _algorithmEnvVarName;
-    static char const * const _seedEnvVarName;
+    static ::gsl_rng_type const *const _gslRngTypes[NUM_ALGORITHMS];
+    static char const *const _algorithmNames[NUM_ALGORITHMS];
+    static char const *const _algorithmEnvVarName;
+    static char const *const _seedEnvVarName;
 
     /**
      * Initializes the underlying GSL random number generator.
@@ -311,7 +316,7 @@ private:
  * @param[out] image The image to set
  * @param[in, out] rand definition of random number algorithm, seed, etc.
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomUniformImage(ImageT *image, Random &rand);
 
 /**
@@ -320,7 +325,7 @@ void randomUniformImage(ImageT *image, Random &rand);
  * @param[out] image The image to set
  * @param[in, out] rand definition of random number algorithm, seed, etc.
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomUniformPosImage(ImageT *image, Random &rand);
 
 /**
@@ -330,7 +335,7 @@ void randomUniformPosImage(ImageT *image, Random &rand);
  * @param[in, out] rand definition of random number algorithm, seed, etc.
  * @param[in] n (exclusive) upper limit for random variates
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomUniformIntImage(ImageT *image, Random &rand, unsigned long n);
 
 /**
@@ -341,7 +346,7 @@ void randomUniformIntImage(ImageT *image, Random &rand, unsigned long n);
  * @param[in] a (inclusive) lower limit for random variates
  * @param[in] b (exclusive) upper limit for random variates
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomFlatImage(ImageT *image, Random &rand, double const a, double const b);
 
 /**
@@ -350,7 +355,7 @@ void randomFlatImage(ImageT *image, Random &rand, double const a, double const b
  * @param[out] image The image to set
  * @param[in, out] rand definition of random number algorithm, seed, etc.
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomGaussianImage(ImageT *image, Random &rand);
 
 /**
@@ -360,7 +365,7 @@ void randomGaussianImage(ImageT *image, Random &rand);
  * @param[in, out] rand definition of random number algorithm, seed, etc.
  * @param[in] nu number of degrees of freedom
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomChisqImage(ImageT *image, Random &rand, double const nu);
 
 /**
@@ -370,11 +375,10 @@ void randomChisqImage(ImageT *image, Random &rand, double const nu);
  * @param[in, out] rand definition of random number algorithm, seed, etc.
  * @param[in] mu mean of distribution
  */
-template<typename ImageT>
+template <typename ImageT>
 void randomPoissonImage(ImageT *image, Random &rand, double const mu);
+}
+}
+}  // end of namespace lsst::afw::math
 
-
-}}} // end of namespace lsst::afw::math
-
-#endif // LSST_AFW_MATH_RANDOM_H
-
+#endif  // LSST_AFW_MATH_RANDOM_H

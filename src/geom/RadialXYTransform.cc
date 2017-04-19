@@ -34,20 +34,18 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
-    : XYTransform()
-{
+RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs) : XYTransform() {
     if (coeffs.size() == 0) {
         // constructor called with no arguments = identity transformation
         _coeffs.resize(2);
         _coeffs[0] = 0.0;
         _coeffs[1] = 1.0;
-    }
-    else {
+    } else {
         if ((coeffs.size() == 1) || (coeffs[0] != 0.0) || (coeffs[1] == 0.0)) {
             // Discontinuous or singular transformation; presumably unintentional so throw exception
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
-                "invalid parameters for radial distortion: need coeffs.size() != 1, coeffs[0]==0, coeffs[1]!=0");
+                              "invalid parameters for radial distortion: need coeffs.size() != 1, "
+                              "coeffs[0]==0, coeffs[1]!=0");
         }
         _coeffs = coeffs;
     }
@@ -55,36 +53,27 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
     _icoeffs = polyInvert(_coeffs);
 }
 
-std::shared_ptr<XYTransform> RadialXYTransform::clone() const
-{
-    return std::make_shared<RadialXYTransform> (_coeffs);
+std::shared_ptr<XYTransform> RadialXYTransform::clone() const {
+    return std::make_shared<RadialXYTransform>(_coeffs);
 }
 
-std::shared_ptr<XYTransform> RadialXYTransform::invert() const
-{
-    return std::make_shared<RadialXYTransform> (_coeffs);
+std::shared_ptr<XYTransform> RadialXYTransform::invert() const {
+    return std::make_shared<RadialXYTransform>(_coeffs);
 }
 
-Point2D RadialXYTransform::forwardTransform(Point2D const &p) const
-{
-    return polyEval(_coeffs,p);
+Point2D RadialXYTransform::forwardTransform(Point2D const &p) const { return polyEval(_coeffs, p); }
+
+Point2D RadialXYTransform::reverseTransform(Point2D const &p) const {
+    return polyEvalInverse(_coeffs, _icoeffs, p);
 }
 
-Point2D RadialXYTransform::reverseTransform(Point2D const &p) const
-{
-    return polyEvalInverse(_coeffs,_icoeffs,p);
+AffineTransform RadialXYTransform::linearizeForwardTransform(Point2D const &p) const {
+    return polyEvalJacobian(_coeffs, p);
 }
 
-AffineTransform RadialXYTransform::linearizeForwardTransform(Point2D const &p) const
-{
-    return polyEvalJacobian(_coeffs,p);
+AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) const {
+    return polyEvalInverseJacobian(_coeffs, _icoeffs, p);
 }
-
-AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) const
-{
-    return polyEvalInverseJacobian(_coeffs,_icoeffs,p);
-}
-
 
 // --- Note: all subsequent RadialXYTransform member functions are static
 
@@ -97,9 +86,8 @@ AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) c
  * This is a taylor approx, so not perfect.  We'll use it to get close to the inverse
  * and then use Newton-Raphson to get to machine precision. (only needs 1 or 2 iterations)
  */
-std::vector<double> RadialXYTransform::polyInvert(std::vector<double> const &coeffs)
-{
-    static const unsigned int maxN = 7;   // degree of output polynomial + 1
+std::vector<double> RadialXYTransform::polyInvert(std::vector<double> const &coeffs) {
+    static const unsigned int maxN = 7;  // degree of output polynomial + 1
 
     //
     // Some sanity checks.  The formulas for the inversion below assume c0 == 0 and c1 != 0
@@ -113,136 +101,122 @@ std::vector<double> RadialXYTransform::polyInvert(std::vector<double> const &coe
 
     std::vector<double> ic(maxN);
 
-    ic[0]  = 0.0;
+    ic[0] = 0.0;
 
-    ic[1]  = 1.0;
+    ic[1] = 1.0;
     ic[1] /= c[1];
 
-    ic[2]  = -c[2];
-    ic[2] /= std::pow(c[1],3);
+    ic[2] = -c[2];
+    ic[2] /= std::pow(c[1], 3);
 
-    ic[3]  = 2.0*c[2]*c[2] - c[1]*c[3];
-    ic[3] /= std::pow(c[1],5);
+    ic[3] = 2.0 * c[2] * c[2] - c[1] * c[3];
+    ic[3] /= std::pow(c[1], 5);
 
-    ic[4]  = 5.0*c[1]*c[2]*c[3] - 5.0*c[2]*c[2]*c[2] - c[1]*c[1]*c[4];
-    ic[4] /= std::pow(c[1],7);
+    ic[4] = 5.0 * c[1] * c[2] * c[3] - 5.0 * c[2] * c[2] * c[2] - c[1] * c[1] * c[4];
+    ic[4] /= std::pow(c[1], 7);
 
-    ic[5]  = 6.0*c[1]*c[1]*c[2]*c[4] + 3.0*c[1]*c[1]*c[3]*c[3] - c[1]*c[1]*c[1]*c[5] +
-        14.0*std::pow(c[2], 4) - 21.0*c[1]*c[2]*c[2]*c[3];
+    ic[5] = 6.0 * c[1] * c[1] * c[2] * c[4] + 3.0 * c[1] * c[1] * c[3] * c[3] - c[1] * c[1] * c[1] * c[5] +
+            14.0 * std::pow(c[2], 4) - 21.0 * c[1] * c[2] * c[2] * c[3];
     ic[5] /= std::pow(c[1], 9);
 
-    ic[6]  = 7.0*c[1]*c[1]*c[1]*c[2]*c[5] + 84.0*c[1]*c[2]*c[2]*c[2]*c[3] +
-        7.0*c[1]*c[1]*c[1]*c[3]*c[4] - 28.0*c[1]*c[1]*c[2]*c[3]*c[3] -
-        std::pow(c[1], 4)*c[6] - 28.0*c[1]*c[1]*c[2]*c[2]*c[4] - 42.0*std::pow(c[2], 5);
-    ic[6] /= std::pow(c[1],11);
+    ic[6] = 7.0 * c[1] * c[1] * c[1] * c[2] * c[5] + 84.0 * c[1] * c[2] * c[2] * c[2] * c[3] +
+            7.0 * c[1] * c[1] * c[1] * c[3] * c[4] - 28.0 * c[1] * c[1] * c[2] * c[3] * c[3] -
+            std::pow(c[1], 4) * c[6] - 28.0 * c[1] * c[1] * c[2] * c[2] * c[4] - 42.0 * std::pow(c[2], 5);
+    ic[6] /= std::pow(c[1], 11);
 
     return ic;
 }
 
-double RadialXYTransform::polyEval(std::vector<double> const &coeffs, double x)
-{
+double RadialXYTransform::polyEval(std::vector<double> const &coeffs, double x) {
     int n = coeffs.size();
 
     double ret = 0.0;
-    for (int i = n-1; i >= 0; i--)
-        ret = ret*x + coeffs[i];
+    for (int i = n - 1; i >= 0; i--) ret = ret * x + coeffs[i];
 
     return ret;
 }
 
-Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D const &p)
-{
+Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D const &p) {
     double r = p.asEigen().norm();
 
     if (r > 0.0) {
-        double rnew = polyEval(coeffs,r);
-        return Point2D(rnew*p.getX()/r, rnew*p.getY()/r);
+        double rnew = polyEval(coeffs, r);
+        return Point2D(rnew * p.getX() / r, rnew * p.getY() / r);
     }
 
     if (coeffs.size() == 0 || coeffs[0] != 0.0) {
-        throw LSST_EXCEPT(pexEx::InvalidParameterError,
-                          "invalid parameters for radial distortion");
+        throw LSST_EXCEPT(pexEx::InvalidParameterError, "invalid parameters for radial distortion");
     }
 
-    return Point2D(0,0);
+    return Point2D(0, 0);
 }
 
-double RadialXYTransform::polyEvalDeriv(std::vector<double> const &coeffs, double x)
-{
+double RadialXYTransform::polyEvalDeriv(std::vector<double> const &coeffs, double x) {
     int n = coeffs.size();
 
     double ret = 0.0;
-    for (int i = n-1; i >= 1; i--)
-        ret = ret*x + i*coeffs[i];
+    for (int i = n - 1; i >= 1; i--) ret = ret * x + i * coeffs[i];
 
     return ret;
 }
 
-AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p)
-{
+AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p) {
     double r = p.asEigen().norm();
-    double rnew = polyEval(coeffs,r);
-    double rderiv = polyEvalDeriv(coeffs,r);
+    double rnew = polyEval(coeffs, r);
+    double rderiv = polyEvalDeriv(coeffs, r);
     return makeAffineTransform(p.getX(), p.getY(), rnew, rderiv);
 }
 
 double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
-                                          std::vector<double> const &icoeffs, double x)
-{
+                                          std::vector<double> const &icoeffs, double x) {
     static const int maxIter = 1000;
     double tolerance = 1.0e-14 * x;
 
-    double r = polyEval(icoeffs, x);      // initial guess
+    double r = polyEval(icoeffs, x);  // initial guess
     int iter = 0;
 
     for (;;) {
-        double dx = x - polyEval(coeffs,r);   // residual
-        if (fabs(dx) <= tolerance)
-            return r;
+        double dx = x - polyEval(coeffs, r);  // residual
+        if (fabs(dx) <= tolerance) return r;
         if (iter++ > maxIter) {
             throw LSST_EXCEPT(pexEx::RuntimeError,
                               "max iteration count exceeded in RadialXYTransform::polyEvalInverse");
         }
-        r += dx / polyEvalDeriv(coeffs,r);   // Newton-Raphson iteration
+        r += dx / polyEvalDeriv(coeffs, r);  // Newton-Raphson iteration
     }
 }
 
 Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
-                                                    std::vector<double> const &icoeffs,
-                                                    Point2D const &p)
-{
+                                           std::vector<double> const &icoeffs, Point2D const &p) {
     double r = p.asEigen().norm();
 
     if (r > 0.0) {
         double rnew = polyEvalInverse(coeffs, icoeffs, r);
-        return Point2D(rnew*p.getX()/r, rnew*p.getY()/r);
+        return Point2D(rnew * p.getX() / r, rnew * p.getY() / r);
     }
 
     if (coeffs.size() == 0 || coeffs[0] != 0.0) {
-        throw LSST_EXCEPT(pexEx::InvalidParameterError,
-                          "invalid parameters for radial distortion");
+        throw LSST_EXCEPT(pexEx::InvalidParameterError, "invalid parameters for radial distortion");
     }
 
-    return Point2D(0,0);
+    return Point2D(0, 0);
 }
 
 AffineTransform RadialXYTransform::polyEvalInverseJacobian(std::vector<double> const &coeffs,
                                                            std::vector<double> const &icoeffs,
-                                                           Point2D const &p)
-{
+                                                           Point2D const &p) {
     double r = p.asEigen().norm();
-    double rnew = polyEvalInverse(coeffs,icoeffs,r);
-    double rderiv = 1.0 / polyEvalDeriv(coeffs,rnew);
+    double rnew = polyEvalInverse(coeffs, icoeffs, r);
+    double rderiv = 1.0 / polyEvalDeriv(coeffs, rnew);
     return makeAffineTransform(p.getX(), p.getY(), rnew, rderiv);
 }
 
-AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv)
-{
+AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv) {
     double r = ::hypot(x, y);
 
     if (r <= 0.0) {
         AffineTransform ret;
-        ret[0] = ret[3] = rderiv;   // ret = rderiv * (identity)
+        ret[0] = ret[3] = rderiv;  // ret = rderiv * (identity)
         return ret;
     }
 
@@ -254,15 +228,16 @@ AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, doubl
     // Propagating through the formulas below, the AffineTransform is
     // [rderiv*I + O(r) + O(10^{-17})] which is fine (assuming rderiv is nonzero as r->0).
     //
-    double t = rderiv - rnew/r;
+    double t = rderiv - rnew / r;
 
     AffineTransform ret;
-    ret[0] = (rderiv*x*x + rnew/r*y*y) / (r*r);    // a00
-    ret[1] = ret[2] = t*x*y / (r*r);               // a01 == a10 for this transform
-    ret[3] = (rderiv*y*y + rnew/r*x*x) / (r*r);    // a11
-    ret[4] = -t*x;                                 // v0
-    ret[5] = -t*y;                                 // v1
+    ret[0] = (rderiv * x * x + rnew / r * y * y) / (r * r);  // a00
+    ret[1] = ret[2] = t * x * y / (r * r);                   // a01 == a10 for this transform
+    ret[3] = (rderiv * y * y + rnew / r * x * x) / (r * r);  // a11
+    ret[4] = -t * x;                                         // v0
+    ret[5] = -t * y;                                         // v1
     return ret;
 }
-
-}}}
+}
+}
+}

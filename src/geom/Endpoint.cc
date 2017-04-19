@@ -80,7 +80,7 @@ ndarray::Array<double, 2, 2> BaseVectorEndpoint<Point>::dataFromArray(Array cons
     const int nPoints = this->getNPoints(arr);
     ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nPoints, nAxes));
     auto dataRowIter = data.begin();
-    for (auto const & point: arr) {
+    for (auto const& point : arr) {
         for (int axInd = 0; axInd < nAxes; ++axInd) {
             (*dataRowIter)[axInd] = point[axInd];
         }
@@ -101,7 +101,7 @@ std::vector<Point> BaseVectorEndpoint<Point>::arrayFromData(ndarray::Array<doubl
     int const nPoints = this->_getNPoints(data);
     Array array;
     array.reserve(nPoints);
-    for (auto const & dataRow: data) {
+    for (auto const& dataRow : data) {
         array.emplace_back(dataRow.getData());
     }
     return array;
@@ -177,22 +177,22 @@ void SpherePointEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) c
     }
 }
 
-std::ostream & operator<<(std::ostream & os, GenericEndpoint const & endpoint) {
+std::ostream& operator<<(std::ostream& os, GenericEndpoint const& endpoint) {
     os << "GenericEndpoint(" << endpoint.getNAxes() << ")";
     return os;
 }
 
-std::ostream & operator<<(std::ostream & os, Point2Endpoint const & endpoint) {
+std::ostream& operator<<(std::ostream& os, Point2Endpoint const& endpoint) {
     os << "Point2Endpoint()";
     return os;
 }
 
-std::ostream & operator<<(std::ostream & os, Point3Endpoint const & endpoint) {
+std::ostream& operator<<(std::ostream& os, Point3Endpoint const& endpoint) {
     os << "Point3Endpoint()";
     return os;
 }
 
-std::ostream & operator<<(std::ostream & os, SpherePointEndpoint const & endpoint) {
+std::ostream& operator<<(std::ostream& os, SpherePointEndpoint const& endpoint) {
     os << "SpherePointEndpoint()";
     return os;
 }

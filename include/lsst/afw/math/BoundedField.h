@@ -32,7 +32,9 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 /**
  *  An abstract base class for 2-d functions defined on an integer bounding boxes
@@ -52,7 +54,6 @@ namespace lsst { namespace afw { namespace math {
  */
 class BoundedField : public table::io::PersistableFacade<BoundedField>, public table::io::Persistable {
 public:
-
     /**
      *  Evaluate the field at the given point.
      *
@@ -61,7 +62,7 @@ public:
      *  Subclasses should not provide bounds checking on the given position; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    virtual double evaluate(geom::Point2D const & position) const = 0;
+    virtual double evaluate(geom::Point2D const& position) const = 0;
 
     /**
      *  Evaluate the field at the given point.
@@ -83,10 +84,8 @@ public:
      *  There is no bounds-checking on the given positions; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    ndarray::Array<double,1,1> evaluate(
-        ndarray::Array<double const,1> const & x,
-        ndarray::Array<double const,1> const & y
-    ) const;
+    ndarray::Array<double, 1, 1> evaluate(ndarray::Array<double const, 1> const& x,
+                                          ndarray::Array<double const, 1> const& y) const;
 
     /**
      * Compute the integral of this function over its bounding-box.
@@ -123,7 +122,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void fillImage(image::Image<T> & image, bool overlapOnly=false) const;
+    void fillImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Add the field or a constant multiple of it to an image in-place
@@ -137,7 +136,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void addToImage(image::Image<T> & image, double scaleBy=1.0, bool overlapOnly=false) const;
+    void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false) const;
 
     /**
      *  Multiply an image by the field in-place.
@@ -150,7 +149,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void multiplyImage(image::Image<T> & image, bool overlapOnly=false) const;
+    void multiplyImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Divide an image by the field in-place.
@@ -163,7 +162,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void divideImage(image::Image<T> & image, bool overlapOnly=false) const;
+    void divideImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Return a scaled BoundedField
@@ -171,22 +170,20 @@ public:
      *  @param[in]  scale    Scaling factor
      */
     virtual std::shared_ptr<BoundedField> operator*(double const scale) const = 0;
-    std::shared_ptr<BoundedField> operator/(double scale) const {
-        return (*this)*(1.0/scale);
-    }
+    std::shared_ptr<BoundedField> operator/(double scale) const { return (*this) * (1.0 / scale); }
 
     virtual ~BoundedField() {}
 
 protected:
-
-    explicit BoundedField(geom::Box2I const & bbox) : _bbox(bbox) {}
+    explicit BoundedField(geom::Box2I const& bbox) : _bbox(bbox) {}
 
 private:
     geom::Box2I const _bbox;
 };
 
 std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf);
+}
+}
+}  // namespace lsst::afw::math
 
-}}} // namespace lsst::afw::math
-
-#endif // !LSST_AFW_MATH_BoundedField_h_INCLUDED
+#endif  // !LSST_AFW_MATH_BoundedField_h_INCLUDED

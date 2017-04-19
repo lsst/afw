@@ -25,7 +25,7 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/minimize.h"
 
-template<class T>
+template <class T>
 void printVector(std::vector<T> v) {
     for (unsigned int ii = 0; ii < v.size(); ++ii) {
         std::cout << "  " << v[ii];
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     std::vector<double> initialParams = modelParams;
     std::vector<double> stepSizes(nParams);
     for (unsigned int ii = 0; ii < nParams; ++ii) {
-        initialParams[ii] += 0.5 * double(rand())/RAND_MAX;
+        initialParams[ii] += 0.5 * double(rand()) / RAND_MAX;
         stepSizes[ii] = 0.1;
     }
     std::cout << "Initial guess:" << std::endl;
@@ -77,14 +77,7 @@ int main(int argc, char** argv) {
     double errorDef = 1.0;
 
     lsst::afw::math::FitResults fitResults = lsst::afw::math::minimize(
-        chebyFunc,
-        initialParams,
-        stepSizes,
-        measurements,
-        variances,
-        positions,
-        errorDef
-    );
+            chebyFunc, initialParams, stepSizes, measurements, variances, positions, errorDef);
 
     std::vector<double> fitParams = chebyFunc.getParameters();
     std::cout << "fitResults.isValid =" << fitResults.isValid << std::endl;
@@ -101,57 +94,56 @@ int main(int argc, char** argv) {
     std::cout << "Positive parameter errors:" << std::endl;
     printVector(posErrors);
 
-
-//    MnMigrad migrad(myFcn, upar);
-//    FunctionMinimum min = migrad();
-//
-//    MnMinos minos(myFcn, min);
-//
-//    std::pair<double,double> e0 = minos(0);
-//    std::pair<double,double> e1 = minos(1);
-//    std::pair<double,double> e2 = minos(2);
-//    std::pair<double,double> e3 = minos(3);
-//
-//    cout << "Best fit:" << endl;
-//    std::cout<<"par0: "<<min.userState().value("p0")<<" "<<e0.first<<" "<<e0.second<<std::endl;
-//    std::cout<<"par1: "<<min.userState().value("p1")<<" "<<e1.first<<" "<<e1.second<<std::endl;
-//    std::cout<<"par2: "<<min.userState().value("p2")<<" "<<e2.first<<" "<<e2.second<<std::endl;
-//    std::cout<<"par3: "<<min.userState().value("p3")<<" "<<e3.first<<" "<<e3.second<<std::endl;
-//
-//    // Try fitting for a number with no variation
-//    // Try fitting for a number with no variation
-//    // Try fitting for a number with no variation
-//    // Try fitting for a number with no variation
-//    MnUserParameters upar2;
-//    upar2.add("p0", 1, 0.1);
-//    std::vector<double> measurements2(npts);
-//    std::vector<double> variances2(npts);
-//    std::vector<double> positions2(npts);
-//    x = -1.;
-//    for (unsigned int i = 0; i < npts; i++, x += 0.2) {
-//        measurements[i] = 1.;
-//        variances[i] = 0.1;
-//        positions[i] = x;
-//    }
-//    def = 1.0;
-//
-//
-//    const unsigned int polyorder = 0;
-//    std::shared_ptr<lsst::afw::math::PolynomialFunction1<FuncReturn> > polyFuncPtr(
-//        new lsst::afw::math::PolynomialFunction1<FuncReturn>(polyorder)
-//        );
-//
-//    lsst::afw::math::MinimizerFunctionBase1<FuncReturn> myFcn2(
-//        measurements, variances, positions, def, polyFuncPtr);
-//
-//    MnMigrad migrad2(myFcn2, upar2);
-//    FunctionMinimum min2 = migrad2();
-//    MnMinos minos2(myFcn2, min2);
-//
-//    std::pair<double,double> e02 = minos2(0);
-//
-//    cout << "Best fit:" << endl;
-//    std::cout<<"par0: "<<min2.userState().value("p0")<<" "<<e02.first<<" "<<e02.second<<std::endl;
+    //    MnMigrad migrad(myFcn, upar);
+    //    FunctionMinimum min = migrad();
+    //
+    //    MnMinos minos(myFcn, min);
+    //
+    //    std::pair<double,double> e0 = minos(0);
+    //    std::pair<double,double> e1 = minos(1);
+    //    std::pair<double,double> e2 = minos(2);
+    //    std::pair<double,double> e3 = minos(3);
+    //
+    //    cout << "Best fit:" << endl;
+    //    std::cout<<"par0: "<<min.userState().value("p0")<<" "<<e0.first<<" "<<e0.second<<std::endl;
+    //    std::cout<<"par1: "<<min.userState().value("p1")<<" "<<e1.first<<" "<<e1.second<<std::endl;
+    //    std::cout<<"par2: "<<min.userState().value("p2")<<" "<<e2.first<<" "<<e2.second<<std::endl;
+    //    std::cout<<"par3: "<<min.userState().value("p3")<<" "<<e3.first<<" "<<e3.second<<std::endl;
+    //
+    //    // Try fitting for a number with no variation
+    //    // Try fitting for a number with no variation
+    //    // Try fitting for a number with no variation
+    //    // Try fitting for a number with no variation
+    //    MnUserParameters upar2;
+    //    upar2.add("p0", 1, 0.1);
+    //    std::vector<double> measurements2(npts);
+    //    std::vector<double> variances2(npts);
+    //    std::vector<double> positions2(npts);
+    //    x = -1.;
+    //    for (unsigned int i = 0; i < npts; i++, x += 0.2) {
+    //        measurements[i] = 1.;
+    //        variances[i] = 0.1;
+    //        positions[i] = x;
+    //    }
+    //    def = 1.0;
+    //
+    //
+    //    const unsigned int polyorder = 0;
+    //    std::shared_ptr<lsst::afw::math::PolynomialFunction1<FuncReturn> > polyFuncPtr(
+    //        new lsst::afw::math::PolynomialFunction1<FuncReturn>(polyorder)
+    //        );
+    //
+    //    lsst::afw::math::MinimizerFunctionBase1<FuncReturn> myFcn2(
+    //        measurements, variances, positions, def, polyFuncPtr);
+    //
+    //    MnMigrad migrad2(myFcn2, upar2);
+    //    FunctionMinimum min2 = migrad2();
+    //    MnMinos minos2(myFcn2, min2);
+    //
+    //    std::pair<double,double> e02 = minos2(0);
+    //
+    //    cout << "Best fit:" << endl;
+    //    std::cout<<"par0: "<<min2.userState().value("p0")<<" "<<e02.first<<" "<<e02.second<<std::endl;
 
     return 0;
 }

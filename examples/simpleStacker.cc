@@ -40,7 +40,6 @@ typedef std::vector<float> VecF;
 typedef std::shared_ptr<VecF> VecFPtr;
 
 int main(int argc, char **argv) {
-
     int const nImg = 10;
     int const nX = 64;
     int const nY = 64;
@@ -48,13 +47,13 @@ int main(int argc, char **argv) {
     // load a vector with weights to demonstrate weighting each image/vector by a constant weight.
     std::vector<float> wvec(nImg, 1.0);
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        if (iImg < nImg/2) {
+        if (iImg < nImg / 2) {
             wvec[iImg] = 0.0;
         }
     }
     // we'll need a StatisticsControl object with weighted stats specified.
     math::StatisticsControl sctrl;
-    if ( argc > 1 && std::atoi(argv[1]) > 0 ) {
+    if (argc > 1 && std::atoi(argv[1]) > 0) {
         sctrl.setWeighted(true);
     } else {
         sctrl.setWeighted(false);
@@ -63,40 +62,36 @@ int main(int argc, char **argv) {
     // regular image
     std::vector<std::shared_ptr<ImageF>> imgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        std::shared_ptr<ImageF> img = std::shared_ptr<ImageF> (new ImageF(geom::Extent2I(nX, nY), iImg));
+        std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(geom::Extent2I(nX, nY), iImg));
         imgList.push_back(img);
     }
     std::shared_ptr<ImageF> imgStack = math::statisticsStack<float>(imgList, math::MEAN);
-    std::cout << "Image:                      " << (*imgStack)(nX/2, nY/2) << std::endl;
+    std::cout << "Image:                      " << (*imgStack)(nX / 2, nY / 2) << std::endl;
     std::shared_ptr<ImageF> wimgStack = math::statisticsStack<float>(imgList, math::MEAN, sctrl, wvec);
-    std::cout << "Image (const weight):       " << (*wimgStack)(nX/2, nY/2) << std::endl;
-
+    std::cout << "Image (const weight):       " << (*wimgStack)(nX / 2, nY / 2) << std::endl;
 
     // masked image
     std::vector<std::shared_ptr<MImageF>> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
         std::shared_ptr<MImageF> mimg = std::shared_ptr<MImageF>(new MImageF(geom::Extent2I(nX, nY)));
-        *mimg->getImage()    = iImg;
-        *mimg->getMask()     = 0x0;
+        *mimg->getImage() = iImg;
+        *mimg->getMask() = 0x0;
         *mimg->getVariance() = iImg;
         mimgList.push_back(mimg);
     }
     std::shared_ptr<MImageF> mimgStack = math::statisticsStack<float>(mimgList, math::MEAN);
-    std::cout << "MaskedImage:                " << (*mimgStack->getImage())(nX/2, nY/2) << std::endl;
+    std::cout << "MaskedImage:                " << (*mimgStack->getImage())(nX / 2, nY / 2) << std::endl;
     std::shared_ptr<MImageF> wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
-    std::cout << "MaskedImage (const weight): " << (*wmimgStack->getImage())(nX/2, nY/2) << std::endl;
-
-
+    std::cout << "MaskedImage (const weight): " << (*wmimgStack->getImage())(nX / 2, nY / 2) << std::endl;
 
     // std::vector, and also with a constant weight vector
     std::vector<VecFPtr> vecList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        VecFPtr v = VecFPtr(new VecF(nX*nY, iImg));
+        VecFPtr v = VecFPtr(new VecF(nX * nY, iImg));
         vecList.push_back(v);
     }
     VecFPtr vecStack = math::statisticsStack<float>(vecList, math::MEAN);
-    std::cout << "Vector:                     " << (*vecStack)[nX*nY/2] << std::endl;
+    std::cout << "Vector:                     " << (*vecStack)[nX * nY / 2] << std::endl;
     VecFPtr wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
-    std::cout << "Vector (const weight):      " << (*wvecStack)[nX*nY/2] << std::endl;
-
+    std::cout << "Vector (const weight):      " << (*wvecStack)[nX * nY / 2] << std::endl;
 }

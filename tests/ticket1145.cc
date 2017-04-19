@@ -41,7 +41,8 @@ void setImage(afwImage::MaskedImage<float> &image, float im, float var) {
     *image.getVariance() = var;
 }
 
-BOOST_AUTO_TEST_CASE(Ticket1145) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(
+        Ticket1145) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     typedef afwImage::MaskedImage<float>::x_iterator XIterator;
     afwImage::MaskedImage<float> image(geom::Extent2I(1, 1));
 

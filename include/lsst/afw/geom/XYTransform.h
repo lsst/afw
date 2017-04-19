@@ -40,18 +40,16 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-
 /**
  * Virtual base class for 2D transforms
  */
-class XYTransform : public daf::base::Citizen
-{
+class XYTransform : public daf::base::Citizen {
 public:
     typedef afw::geom::Point2D Point2D;
     typedef afw::geom::AffineTransform AffineTransform;
 
     explicit XYTransform();
-    virtual ~XYTransform() { }
+    virtual ~XYTransform() {}
 
     /// returns a deep copy
     virtual std::shared_ptr<XYTransform> clone() const = 0;
@@ -87,12 +85,10 @@ public:
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
 };
 
-
 /**
  * A trivial XYTransform satisfying f(x)=x.
  */
-class IdentityXYTransform : public XYTransform
-{
+class IdentityXYTransform : public XYTransform {
 public:
     IdentityXYTransform();
 
@@ -103,12 +99,10 @@ public:
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
 };
 
-
 /**
  * Wrap an XYTransform, swapping forward and reverse transforms.
  */
-class InvertedXYTransform : public XYTransform
-{
+class InvertedXYTransform : public XYTransform {
 public:
     InvertedXYTransform(std::shared_ptr<XYTransform const> base);
 
@@ -124,7 +118,6 @@ protected:
     std::shared_ptr<XYTransform const> _base;
 };
 
-
 /**
  * Wrap a sequence of multiple XYTransforms
  *
@@ -133,8 +126,7 @@ protected:
  *     MultiXYTransform.forwardTransform(p) =
  *         transformList[n].forwardTransform(...(transformList[1].forwardTransform(transformList[0].forwardTransform(p))...)
  */
-class MultiXYTransform : public XYTransform
-{
+class MultiXYTransform : public XYTransform {
 public:
     typedef std::vector<std::shared_ptr<XYTransform const>> TransformList;
     MultiXYTransform(TransformList const &transformList);
@@ -144,6 +136,7 @@ public:
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
     TransformList getTransformList() const { return _transformList; }
+
 private:
     TransformList _transformList;
 };
@@ -152,8 +145,7 @@ private:
  * Wrap an AffineTransform
  *
  */
-class AffineXYTransform : public XYTransform
-{
+class AffineXYTransform : public XYTransform {
 public:
     AffineXYTransform(AffineTransform const &affineTransform);
 
@@ -172,7 +164,6 @@ protected:
     AffineTransform _reverseAffineTransform;
 };
 
-
 /**
  * A purely radial polynomial distortion, up to 6th order.
  *
@@ -186,18 +177,15 @@ protected:
  * @throws lsst::pex::exceptions::InvalidParameterError if coeffs.size() > 0 and any of
  * the following are true: coeffs.size() == 1, coeffs[0] != 0 or coeffs[1] == 0
  */
-class RadialXYTransform : public XYTransform
-{
+class RadialXYTransform : public XYTransform {
 public:
     /**
      * @param coeffs radial polynomial coefficients; if size == 0 then gives the identity transformation;
      *               otherwise must satisfy: size > 1, coeffs[0] == 0, and coeffs[1] != 0
      */
-    RadialXYTransform(
-        std::vector<double> const &coeffs
+    RadialXYTransform(std::vector<double> const &coeffs
 
-
-    );
+                      );
 
     virtual std::shared_ptr<XYTransform> clone() const;
     virtual std::shared_ptr<XYTransform> invert() const;
@@ -213,33 +201,30 @@ public:
      * They are intended mainly as helpers for the virtual member functions above, but are declared
      * public since there are also some unit tests which call them.
      */
-    static std::vector<double>  polyInvert(std::vector<double> const &coeffs);
-    static double               polyEval(std::vector<double> const &coeffs, double x);
-    static Point2D              polyEval(std::vector<double> const &coeffs, Point2D const &p);
-    static double               polyEvalDeriv(std::vector<double> const &coeffs, double x);
+    static std::vector<double> polyInvert(std::vector<double> const &coeffs);
+    static double polyEval(std::vector<double> const &coeffs, double x);
+    static Point2D polyEval(std::vector<double> const &coeffs, Point2D const &p);
+    static double polyEvalDeriv(std::vector<double> const &coeffs, double x);
 
-    static AffineTransform      polyEvalJacobian(std::vector<double> const &coeffs,
-                                                 Point2D const &p);
+    static AffineTransform polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p);
 
-    static double               polyEvalInverse(std::vector<double> const &coeffs,
-                                                std::vector<double> const &icoeffs, double x);
+    static double polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs,
+                                  double x);
 
-    static Point2D              polyEvalInverse(std::vector<double> const &coeffs,
-                                                std::vector<double> const &icoeffs,
-                                                Point2D const &p);
+    static Point2D polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs,
+                                   Point2D const &p);
 
-    static AffineTransform      polyEvalInverseJacobian(std::vector<double> const &coeffs,
-                                                        std::vector<double> const &icoeffs,
-                                                        Point2D const &p);
+    static AffineTransform polyEvalInverseJacobian(std::vector<double> const &coeffs,
+                                                   std::vector<double> const &icoeffs, Point2D const &p);
 
-    static AffineTransform      makeAffineTransform(double x, double y, double f, double g);
+    static AffineTransform makeAffineTransform(double x, double y, double f, double g);
 
 protected:
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
 };
-
-
-}}}
+}
+}
+}
 
 #endif

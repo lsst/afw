@@ -45,12 +45,12 @@ int main() {
     lsst::afw::math::AnalyticKernel analyticKernel(kernelCols, kernelRows, gaussFunc);
     lsst::afw::image::Image<Pixel> analyticImage(analyticKernel.getDimensions());
     (void)analyticKernel.computeImage(analyticImage, true);
-    analyticImage *= 47.3; // denormalize by some arbitrary factor
+    analyticImage *= 47.3;  // denormalize by some arbitrary factor
 
     lsst::afw::math::FixedKernel fixedKernel(analyticImage);
 
-    cout << boost::format("Gaussian kernel with majorSigma=%.1f, minorSigma=%.1f\n") %
-        majorSigma % minorSigma;
+    cout << boost::format("Gaussian kernel with majorSigma=%.1f, minorSigma=%.1f\n") % majorSigma %
+                    minorSigma;
 
     lsst::afw::math::printKernel(fixedKernel, true);
 }

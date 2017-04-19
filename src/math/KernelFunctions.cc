@@ -31,24 +31,19 @@
 
 #include "lsst/afw/math/KernelFunctions.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
-void
-printKernel(
-    Kernel const &kernel,
-    bool doNormalize,
-    double xPos,
-    double yPos,
-    std::string pixelFmt
-) {
+void printKernel(Kernel const &kernel, bool doNormalize, double xPos, double yPos, std::string pixelFmt) {
     typedef Kernel::Pixel Pixel;
 
     image::Image<Pixel> kImage(kernel.getDimensions());
     double kSum = kernel.computeImage(kImage, doNormalize, xPos, yPos);
 
     for (int y = kImage.getHeight() - 1; y >= 0; --y) {
-        for (image::Image<Pixel>::const_x_iterator ptr = kImage.row_begin(y);
-             ptr != kImage.row_end(y); ++ptr) {
+        for (image::Image<Pixel>::const_x_iterator ptr = kImage.row_begin(y); ptr != kImage.row_end(y);
+             ++ptr) {
             std::cout << boost::format(pixelFmt) % *ptr << " ";
         }
         std::cout << std::endl;
@@ -59,5 +54,6 @@ printKernel(
     }
     std::cout << std::endl;
 }
-
-}}} // end lsst::afw::math
+}
+}
+}  // end lsst::afw::math

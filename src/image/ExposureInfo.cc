@@ -36,12 +36,14 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
 }
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 namespace {
 
 // Return an int value from a PropertySet if it exists and remove it, or return 0.
-int popInt(daf::base::PropertySet & metadata, std::string const & name) {
+int popInt(daf::base::PropertySet& metadata, std::string const& name) {
     int r = 0;
     if (metadata.exists(name)) {
         r = metadata.get<int>(name);
@@ -50,20 +52,17 @@ int popInt(daf::base::PropertySet & metadata, std::string const & name) {
     return r;
 }
 
-} // anonymous
-
+}  // anonymous
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
 std::shared_ptr<Calib> ExposureInfo::_cloneCalib(std::shared_ptr<Calib const> calib) {
-    if (calib)
-        return std::shared_ptr<Calib>(new Calib(*calib));
+    if (calib) return std::shared_ptr<Calib>(new Calib(*calib));
     return std::shared_ptr<Calib>();
 }
 
 std::shared_ptr<Wcs> ExposureInfo::_cloneWcs(std::shared_ptr<Wcs const> wcs) {
-    if (wcs)
-        return wcs->clone();
+    if (wcs) return wcs->clone();
     return std::shared_ptr<Wcs>();
 }
 
@@ -74,58 +73,54 @@ std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrM
     return std::shared_ptr<ApCorrMap>();
 }
 
-ExposureInfo::ExposureInfo(
-    std::shared_ptr<Wcs const> const & wcs,
-    std::shared_ptr<detection::Psf const> const & psf,
-    std::shared_ptr<Calib const> const & calib,
-    std::shared_ptr<cameraGeom::Detector const> const & detector,
-    std::shared_ptr<geom::polygon::Polygon const> const & polygon,
-    Filter const & filter,
-    std::shared_ptr<daf::base::PropertySet> const & metadata,
-    std::shared_ptr<CoaddInputs> const & coaddInputs,
-    std::shared_ptr<ApCorrMap> const & apCorrMap,
-    std::shared_ptr<image::VisitInfo const> const & visitInfo
-) : _wcs(_cloneWcs(wcs)),
-    _psf(std::const_pointer_cast<detection::Psf>(psf)),
-    _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
-    _detector(detector),
-    _validPolygon(polygon),
-    _filter(filter),
-    _metadata(metadata ? metadata : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
-    _coaddInputs(coaddInputs),
-    _apCorrMap(_cloneApCorrMap(apCorrMap)),
-    _visitInfo(visitInfo)
-{}
+ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
+                           std::shared_ptr<detection::Psf const> const& psf,
+                           std::shared_ptr<Calib const> const& calib,
+                           std::shared_ptr<cameraGeom::Detector const> const& detector,
+                           std::shared_ptr<geom::polygon::Polygon const> const& polygon, Filter const& filter,
+                           std::shared_ptr<daf::base::PropertySet> const& metadata,
+                           std::shared_ptr<CoaddInputs> const& coaddInputs,
+                           std::shared_ptr<ApCorrMap> const& apCorrMap,
+                           std::shared_ptr<image::VisitInfo const> const& visitInfo)
+        : _wcs(_cloneWcs(wcs)),
+          _psf(std::const_pointer_cast<detection::Psf>(psf)),
+          _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
+          _detector(detector),
+          _validPolygon(polygon),
+          _filter(filter),
+          _metadata(metadata ? metadata
+                             : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
+          _coaddInputs(coaddInputs),
+          _apCorrMap(_cloneApCorrMap(apCorrMap)),
+          _visitInfo(visitInfo) {}
 
-ExposureInfo::ExposureInfo(ExposureInfo const & other) :
-    _wcs(_cloneWcs(other._wcs)),
-    _psf(other._psf),
-    _calib(_cloneCalib(other._calib)),
-    _detector(other._detector),
-    _validPolygon(other._validPolygon),
-    _filter(other._filter),
-    _metadata(other._metadata),
-    _coaddInputs(other._coaddInputs),
-    _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
-    _visitInfo(other._visitInfo)
-{}
+ExposureInfo::ExposureInfo(ExposureInfo const& other)
+        : _wcs(_cloneWcs(other._wcs)),
+          _psf(other._psf),
+          _calib(_cloneCalib(other._calib)),
+          _detector(other._detector),
+          _validPolygon(other._validPolygon),
+          _filter(other._filter),
+          _metadata(other._metadata),
+          _coaddInputs(other._coaddInputs),
+          _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
+          _visitInfo(other._visitInfo) {}
 
-ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
-    _wcs(_cloneWcs(other._wcs)),
-    _psf(other._psf),
-    _calib(_cloneCalib(other._calib)),
-    _detector(other._detector),
-    _validPolygon(other._validPolygon),
-    _filter(other._filter),
-    _metadata(other._metadata),
-    _coaddInputs(other._coaddInputs),
-    _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
-    _visitInfo(other._visitInfo)
-{
+ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
+        : _wcs(_cloneWcs(other._wcs)),
+          _psf(other._psf),
+          _calib(_cloneCalib(other._calib)),
+          _detector(other._detector),
+          _validPolygon(other._validPolygon),
+          _filter(other._filter),
+          _metadata(other._metadata),
+          _coaddInputs(other._coaddInputs),
+          _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
+          _visitInfo(other._visitInfo) {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
 
-ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
+ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
         _wcs = _cloneWcs(other._wcs);
         _psf = other._psf;
@@ -141,15 +136,11 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
     return *this;
 }
 
-void ExposureInfo::initApCorrMap() {
-    _apCorrMap = std::make_shared<ApCorrMap>();
-}
+void ExposureInfo::initApCorrMap() { _apCorrMap = std::make_shared<ApCorrMap>(); }
 
 ExposureInfo::~ExposureInfo() {}
 
-ExposureInfo::FitsWriteData
-ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
-
+ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I const& xy0) const {
     FitsWriteData data;
 
     data.metadata.reset(new daf::base::PropertyList());
@@ -187,28 +178,28 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
         data.metadata->set("VALID_POLYGON_ID", polygonId, "archive ID for the Exposure's valid polygon");
     }
 
-    //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
-    //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
-    //image coordinates. When saving an image we convert from pixel to index coordinates.
-    //In the case where this image is a parent image, the reference pixels are unchanged
-    //by this transformation
+    // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
+    // corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
+    // image coordinates. When saving an image we convert from pixel to index coordinates.
+    // In the case where this image is a parent image, the reference pixels are unchanged
+    // by this transformation
     if (hasWcs()) {
-        std::shared_ptr<Wcs> newWcs = getWcs()->clone(); //Create a copy
-        newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY() );
+        std::shared_ptr<Wcs> newWcs = getWcs()->clone();  // Create a copy
+        newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY());
 
         // We want the WCS to appear in all HDUs
         data.imageMetadata->combine(newWcs->getFitsMetadata());
     }
 
-    //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
-    //indicate the origin (the position of the bottom left corner) of the sub-image with
-    //respect to the origin of the parent image.
-    //This is stored in the fits header using the LTV convention used by STScI
+    // Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
+    // indicate the origin (the position of the bottom left corner) of the sub-image with
+    // respect to the origin of the parent image.
+    // This is stored in the fits header using the LTV convention used by STScI
     //(see \S2.6.2 of HST Data Handbook for STIS, version 5.0
     // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287).
-    //This is not a fits standard keyword, but is recognised by ds9
-    //LTV keywords use the opposite convention to the LSST, in that they represent
-    //the position of the origin of the parent image relative to the origin of the sub-image.
+    // This is not a fits standard keyword, but is recognised by ds9
+    // LTV keywords use the opposite convention to the LSST, in that they represent
+    // the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
 
     data.imageMetadata->set("LTV1", static_cast<double>(-xy0.getX()));
@@ -234,15 +225,12 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     return data;
 }
 
-void ExposureInfo::_finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const {
+void ExposureInfo::_finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const {
     data.archive.writeFits(fitsfile);
 }
 
-void ExposureInfo::_readFits(
-    fits::Fits & fitsfile,
-    std::shared_ptr<daf::base::PropertySet> metadata,
-    std::shared_ptr<daf::base::PropertySet> imageMetadata
-) {
+void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
+                             std::shared_ptr<daf::base::PropertySet> imageMetadata) {
     // true: strip keywords that are related to the created WCS from the input metadata
     _wcs = makeWcs(imageMetadata, true);
 
@@ -268,7 +256,7 @@ void ExposureInfo::_readFits(
     int archiveHdu = popInt(*metadata, "AR_HDU");
 
     if (archiveHdu) {
-        --archiveHdu;                   // see note above in _startWriteFits;  AR_HDU is *one* indexed
+        --archiveHdu;  // see note above in _startWriteFits;  AR_HDU is *one* indexed
 
         fitsfile.setHdu(archiveHdu);
         table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
@@ -279,7 +267,7 @@ void ExposureInfo::_readFits(
         int psfId = popInt(*metadata, "PSF_ID");
         try {
             _psf = archive.get<detection::Psf>(psfId);
-        } catch (pex::exceptions::NotFoundError & err) {
+        } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read PSF; setting to null: " << err.what());
         }
         int wcsId = popInt(*metadata, "WCS_ID");
@@ -290,7 +278,7 @@ void ExposureInfo::_readFits(
             } else {
                 LOGLS_INFO(_log, "Empty WCS extension, using FITS header");
             }
-        } catch (pex::exceptions::NotFoundError & err) {
+        } catch (pex::exceptions::NotFoundError& err) {
             auto msg = str(boost::format("Could not read WCS extension; setting to null: %s") % err.what());
             if (_wcs) {
                 msg += " ; using WCS from FITS header";
@@ -300,24 +288,25 @@ void ExposureInfo::_readFits(
         int coaddInputsId = popInt(*metadata, "COADD_INPUTS_ID");
         try {
             _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
-        } catch (pex::exceptions::NotFoundError & err) {
+        } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read CoaddInputs; setting to null: " << err.what());
         }
         int apCorrMapId = popInt(*metadata, "AP_CORR_MAP_ID");
         try {
             _apCorrMap = archive.get<ApCorrMap>(apCorrMapId);
-        } catch (pex::exceptions::NotFoundError & err) {
+        } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read ApCorrMap; setting to null: " << err.what());
         }
         int validPolygonId = popInt(*metadata, "VALID_POLYGON_ID");
         try {
             _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
-        } catch (pex::exceptions::NotFoundError & err) {
+        } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read ValidPolygon; setting to null: " << err.what());
         }
     }
 
     _metadata = metadata;
 }
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image

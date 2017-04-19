@@ -36,12 +36,12 @@ CameraSysPrefix const TAN_PIXELS = CameraSysPrefix("TanPixels");
 
 CameraSysPrefix const ACTUAL_PIXELS = CameraSysPrefix("ActualPixels");
 
-std::ostream &operator<< (std::ostream &os, CameraSysPrefix const &camSysPrefix) {
+std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &camSysPrefix) {
     os << "CameraSysPrefix(" << camSysPrefix.getSysName() << ")";
     return os;
 }
 
-std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys) {
+std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys) {
     os << "CameraSys(" << cameraSys.getSysName();
     if (cameraSys.hasDetectorName()) {
         os << ", " << cameraSys.getDetectorName();
@@ -52,4 +52,5 @@ std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys) {
 }
 // instantiate CameraTransformMap = TransformMap<CameraSys>
 template class geom::TransformMap<cameraGeom::CameraSys>;
-}}
+}
+}

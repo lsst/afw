@@ -48,15 +48,15 @@ namespace {
 @param[in] name  Name of Python class, e.g. "SinglePixelI" if PixelT is `int`.
 */
 template <typename PixelT>
-void declareSinglePixel(py::module & mod, std::string const & name) {
+void declareSinglePixel(py::module& mod, std::string const& name) {
     mod.def("makeSinglePixel", &makeSinglePixel<PixelT, MaskPixel, VariancePixel>, "x"_a, "m"_a, "v"_a);
 
     py::class_<SinglePixel<PixelT, MaskPixel, VariancePixel>> cls(mod, name.c_str());
 
-    cls.def(py::init<PixelT, MaskPixel, VariancePixel>(), "image"_a, "mask"_a=0, "variance"_a=0);
+    cls.def(py::init<PixelT, MaskPixel, VariancePixel>(), "image"_a, "mask"_a = 0, "variance"_a = 0);
 }
 
-} // anonymous
+}  // anonymous
 
 PYBIND11_PLUGIN(pixel) {
     py::module mod("pixel");
@@ -69,5 +69,7 @@ PYBIND11_PLUGIN(pixel) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::image::pixel
+}
+}
+}
+}  // namespace lsst::afw::image::pixel

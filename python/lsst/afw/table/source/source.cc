@@ -48,14 +48,14 @@ namespace {
 
 using PySourceRecord = py::class_<SourceRecord, std::shared_ptr<SourceRecord>, SimpleRecord>;
 using PySourceTable = py::class_<SourceTable, std::shared_ptr<SourceTable>, SimpleTable>;
-using PySourceColumnView = py::class_<SourceColumnViewT<SourceRecord>,
-                                      std::shared_ptr<SourceColumnViewT<SourceRecord>>,
-                                      ColumnViewT<SourceRecord>>;
+using PySourceColumnView =
+        py::class_<SourceColumnViewT<SourceRecord>, std::shared_ptr<SourceColumnViewT<SourceRecord>>,
+                   ColumnViewT<SourceRecord>>;
 
 /*
 Declare member and static functions for a pybind11 wrapper of SourceRecord
 */
-PySourceRecord declareSourceRecord(py::module & mod) {
+PySourceRecord declareSourceRecord(py::module &mod) {
     PySourceRecord cls(mod, "SourceRecord");
     cls.def("getFootprint", &SourceRecord::getFootprint);
     cls.def("setFootprint", &SourceRecord::setFootprint);
@@ -98,11 +98,9 @@ PySourceRecord declareSourceRecord(py::module & mod) {
     cls.def("getIxx", &SourceRecord::getIxx);
     cls.def("getIyy", &SourceRecord::getIyy);
     cls.def("getIxy", &SourceRecord::getIxy);
-    cls.def("updateCoord",
-            (void (SourceRecord::*)(image::Wcs const &)) &SourceRecord::updateCoord,
-            "wcs"_a);
-    cls.def("updateCoord",
-            (void (SourceRecord::*)(image::Wcs const &, PointKey<double> const &)) &SourceRecord::updateCoord,
+    cls.def("updateCoord", (void (SourceRecord::*)(image::Wcs const &)) & SourceRecord::updateCoord, "wcs"_a);
+    cls.def("updateCoord", (void (SourceRecord::*)(image::Wcs const &, PointKey<double> const &)) &
+                                   SourceRecord::updateCoord,
             "wcs"_a, "key"_a);
     return cls;
 }
@@ -110,20 +108,20 @@ PySourceRecord declareSourceRecord(py::module & mod) {
 /*
 Declare member and static functions for a pybind11 wrapper of SourceTable
 */
-PySourceTable declareSourceTable(py::module & mod) {
+PySourceTable declareSourceTable(py::module &mod) {
     PySourceTable cls(mod, "SourceTable");
     cls.def("clone", &SourceTable::clone);
     cls.def_static("make",
-                   (std::shared_ptr<SourceTable> (*)(Schema const &, std::shared_ptr<IdFactory> const &))
-                        &SourceTable::make);
-    cls.def_static("make", (std::shared_ptr<SourceTable> (*)(Schema const &)) &SourceTable::make);
+                   (std::shared_ptr<SourceTable>(*)(Schema const &, std::shared_ptr<IdFactory> const &)) &
+                           SourceTable::make);
+    cls.def_static("make", (std::shared_ptr<SourceTable>(*)(Schema const &)) & SourceTable::make);
     cls.def_static("makeMinimalSchema", &SourceTable::makeMinimalSchema);
     cls.def_static("getParentKey", &SourceTable::getParentKey);
     cls.def("copyRecord",
-            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &)) &SourceTable::copyRecord);
+            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &)) & SourceTable::copyRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &, SchemaMapper const &))
-                            &SourceTable::copyRecord);
+            (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &, SchemaMapper const &)) &
+                    SourceTable::copyRecord);
     cls.def("makeRecord", &SourceTable::makeRecord);
 
     cls.def("getPsfFluxSlot", &SourceTable::getPsfFluxSlot);
@@ -185,7 +183,7 @@ PySourceTable declareSourceTable(py::module & mod) {
     return cls;
 }
 
-PySourceColumnView declareSourceColumnView(py::module & mod) {
+PySourceColumnView declareSourceColumnView(py::module &mod) {
     table::python::declareColumnView<SourceRecord>(mod, "Source", true);
     PySourceColumnView cls(mod, "SourceColumnView");
     using SourceColumnView = SourceColumnViewT<SourceRecord>;
@@ -207,9 +205,7 @@ PySourceColumnView declareSourceColumnView(py::module & mod) {
     return cls;
 };
 
-
 PYBIND11_PLUGIN(source) {
-
     py::module::import("lsst.afw.geom.ellipses");
     py::module::import("lsst.afw.table.simple");
     py::module::import("lsst.afw.table.aggregates");
@@ -218,8 +214,8 @@ PYBIND11_PLUGIN(source) {
     py::module mod("source");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
     };
 
     // SourceFitsFlags enum values are used as integer masks, so wrap as attributes instead of an enum
@@ -246,5 +242,7 @@ PYBIND11_PLUGIN(source) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

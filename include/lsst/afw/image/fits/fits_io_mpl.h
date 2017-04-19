@@ -32,94 +32,86 @@
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/Image.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 namespace {
-struct found_type : public std::exception { }; // type to throw when we've read our data
+struct found_type : public std::exception {};  // type to throw when we've read our data
 
-template<typename ImageT, typename ExceptionT>
+template <typename ImageT, typename ExceptionT>
 class try_fits_read_array {
 public:
-    try_fits_read_array(fits::Fits & fitsfile,
-                        ndarray::Array<typename ImageT::Pixel,2,2> & array,
-                        geom::Point2I & xy0,
-                        daf::base::PropertySet & metadata,
-                        geom::Box2I const& bbox,
-                        ImageOrigin const origin
-    ) : _fitsfile(&fitsfile), _array(array), _xy0(xy0),
-        _metadata(metadata), _bbox(bbox), _origin(origin) { }
+    try_fits_read_array(fits::Fits& fitsfile, ndarray::Array<typename ImageT::Pixel, 2, 2>& array,
+                        geom::Point2I& xy0, daf::base::PropertySet& metadata, geom::Box2I const& bbox,
+                        ImageOrigin const origin)
+            : _fitsfile(&fitsfile),
+              _array(array),
+              _xy0(xy0),
+              _metadata(metadata),
+              _bbox(bbox),
+              _origin(origin) {}
 
     // read directly into the desired type if the file's the same type
     void operator()(typename ImageT::Pixel) {
         try {
             fits_read_array(*_fitsfile, _array, _xy0, _metadata, _bbox, _origin);
-            throw ExceptionT();         // signal that we've succeeded
-        } catch(fits::FitsTypeError const&) {
+            throw ExceptionT();  // signal that we've succeeded
+        } catch (fits::FitsTypeError const&) {
             // ah well.  We'll try another image type
         }
     }
 
     template <typename OtherPixel>
-        void operator()(OtherPixel) { // read and convert into the desired type
+    void operator()(OtherPixel) {  // read and convert into the desired type
         try {
-            ndarray::Array<OtherPixel,2,2> array;
+            ndarray::Array<OtherPixel, 2, 2> array;
             fits_read_array(*_fitsfile, array, _xy0, _metadata, _bbox, _origin);
-            //copy and convert
+            // copy and convert
             _array = ndarray::allocate(array.getShape());
             _array.deep() = array;
-            throw ExceptionT();         // signal that we've succeeded
-        } catch(fits::FitsTypeError const&) {
+            throw ExceptionT();  // signal that we've succeeded
+        } catch (fits::FitsTypeError const&) {
             // pass
         }
     }
+
 private:
-    fits::Fits * _fitsfile;
-    ndarray::Array<typename ImageT::Pixel,2,2> & _array;
-    geom::Point2I & _xy0;
-    daf::base::PropertySet & _metadata;
+    fits::Fits* _fitsfile;
+    ndarray::Array<typename ImageT::Pixel, 2, 2>& _array;
+    geom::Point2I& _xy0;
+    daf::base::PropertySet& _metadata;
     geom::Box2I const& _bbox;
     ImageOrigin _origin;
 };
 
-} // anonymous
+}  // anonymous
 
-template<typename supported_fits_types, typename ImageT>
-void fits_read_image(
-    fits::Fits & fitsfile, ImageT& img,
-    lsst::daf::base::PropertySet &metadata,
-    geom::Box2I const& bbox=geom::Box2I(),
-    ImageOrigin const origin=PARENT
-) {
-    ndarray::Array<typename ImageT::Pixel,2,2> array;
+template <typename supported_fits_types, typename ImageT>
+void fits_read_image(fits::Fits& fitsfile, ImageT& img, lsst::daf::base::PropertySet& metadata,
+                     geom::Box2I const& bbox = geom::Box2I(), ImageOrigin const origin = PARENT) {
+    ndarray::Array<typename ImageT::Pixel, 2, 2> array;
     geom::Point2I xy0;
     try {
         boost::mpl::for_each<supported_fits_types>(
-            try_fits_read_array<ImageT, found_type>(
-                fitsfile, array, xy0, metadata, bbox, origin
-            )
-        );
-    } catch (found_type &) {
+                try_fits_read_array<ImageT, found_type>(fitsfile, array, xy0, metadata, bbox, origin));
+    } catch (found_type&) {
         img = ImageT(array, false, xy0);
         return;
     }
-    throw LSST_FITS_EXCEPT(
-        fits::FitsError,
-        fitsfile,
-        "FITS file does not have one of the expected types"
-    );
+    throw LSST_FITS_EXCEPT(fits::FitsError, fitsfile, "FITS file does not have one of the expected types");
 }
 
-template<typename supported_fits_types, typename ImageT>
-void fits_read_image(
-    fits::Fits & fitsfile, ImageT& img,
-    std::shared_ptr<lsst::daf::base::PropertySet> metadata = std::shared_ptr<lsst::daf::base::PropertySet>(),
-    geom::Box2I const& bbox=geom::Box2I(),
-    ImageOrigin const origin=PARENT
-) {
+template <typename supported_fits_types, typename ImageT>
+void fits_read_image(fits::Fits& fitsfile, ImageT& img,
+                     std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                             std::shared_ptr<lsst::daf::base::PropertySet>(),
+                     geom::Box2I const& bbox = geom::Box2I(), ImageOrigin const origin = PARENT) {
     lsst::daf::base::PropertySet metadata_s;
-    fits_read_image<supported_fits_types, ImageT>(fitsfile, img, (metadata ? *metadata : metadata_s),
-                                                  bbox, origin);
+    fits_read_image<supported_fits_types, ImageT>(fitsfile, img, (metadata ? *metadata : metadata_s), bbox,
+                                                  origin);
 }
-
-}}} // lsst::afw::image
-#endif // !LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED
+}
+}
+}  // lsst::afw::image
+#endif  // !LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED

@@ -47,7 +47,7 @@ void declareStatistics(py::module &mod) {
             "mimg"_a, "weights"_a, "flags"_a, "sctrl"_a = StatisticsControl());
     mod.def("makeStatistics",
             (Statistics(*)(image::Mask<image::MaskPixel> const &, int const, StatisticsControl const &))
-                makeStatistics,  // this is not a template, just a regular overload
+                    makeStatistics,  // this is not a template, just a regular overload
             "msk"_a,
             "flags"_a, "sctrl"_a = StatisticsControl());
     mod.def("makeStatistics", (Statistics(*)(image::Image<Pixel> const &, int const,
@@ -70,34 +70,34 @@ PYBIND11_PLUGIN(_statistics) {
 
     /* Module level */
     py::enum_<Property>(mod, "Property", py::arithmetic())
-        .value("NOTHING", Property::NOTHING)
-        .value("ERRORS", Property::ERRORS)
-        .value("NPOINT", Property::NPOINT)
-        .value("MEAN", Property::MEAN)
-        .value("STDEV", Property::STDEV)
-        .value("VARIANCE", Property::VARIANCE)
-        .value("MEDIAN", Property::MEDIAN)
-        .value("IQRANGE", Property::IQRANGE)
-        .value("MEANCLIP", Property::MEANCLIP)
-        .value("STDEVCLIP", Property::STDEVCLIP)
-        .value("VARIANCECLIP", Property::VARIANCECLIP)
-        .value("MIN", Property::MIN)
-        .value("MAX", Property::MAX)
-        .value("SUM", Property::SUM)
-        .value("MEANSQUARE", Property::MEANSQUARE)
-        .value("ORMASK", Property::ORMASK)
-        .export_values();
+            .value("NOTHING", Property::NOTHING)
+            .value("ERRORS", Property::ERRORS)
+            .value("NPOINT", Property::NPOINT)
+            .value("MEAN", Property::MEAN)
+            .value("STDEV", Property::STDEV)
+            .value("VARIANCE", Property::VARIANCE)
+            .value("MEDIAN", Property::MEDIAN)
+            .value("IQRANGE", Property::IQRANGE)
+            .value("MEANCLIP", Property::MEANCLIP)
+            .value("STDEVCLIP", Property::STDEVCLIP)
+            .value("VARIANCECLIP", Property::VARIANCECLIP)
+            .value("MIN", Property::MIN)
+            .value("MAX", Property::MAX)
+            .value("SUM", Property::SUM)
+            .value("MEANSQUARE", Property::MEANSQUARE)
+            .value("ORMASK", Property::ORMASK)
+            .export_values();
 
     mod.def("stringToStatisticsProperty", stringToStatisticsProperty);
 
     py::class_<StatisticsControl, std::shared_ptr<StatisticsControl>> clsStatisticsControl(
-        mod, "StatisticsControl");
+            mod, "StatisticsControl");
 
     py::enum_<StatisticsControl::WeightsBoolean>(clsStatisticsControl, "WeightsBoolean")
-        .value("WEIGHTS_FALSE", StatisticsControl::WeightsBoolean::WEIGHTS_FALSE)
-        .value("WEIGHTS_TRUE", StatisticsControl::WeightsBoolean::WEIGHTS_TRUE)
-        .value("WEIGHTS_NONE", StatisticsControl::WeightsBoolean::WEIGHTS_NONE)
-        .export_values();
+            .value("WEIGHTS_FALSE", StatisticsControl::WeightsBoolean::WEIGHTS_FALSE)
+            .value("WEIGHTS_TRUE", StatisticsControl::WeightsBoolean::WEIGHTS_TRUE)
+            .value("WEIGHTS_NONE", StatisticsControl::WeightsBoolean::WEIGHTS_NONE)
+            .export_values();
 
     clsStatisticsControl.def(py::init<double, int, lsst::afw::image::MaskPixel, bool,
                                       typename StatisticsControl::WeightsBoolean>(),

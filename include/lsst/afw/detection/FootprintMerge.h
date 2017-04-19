@@ -29,7 +29,9 @@
 
 #include "lsst/afw/table/Source.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 /**
  *  FootprintMerge is a private helper class for FootprintMergeList; it's only declared here (it's defined
@@ -53,7 +55,6 @@ class FootprintMerge;
  */
 class FootprintMergeList {
 public:
-
     /**
      *  Initialize the merge with a custom initial peak schema
      *
@@ -66,11 +67,8 @@ public:
      *  The output schema for PeakRecords will include additional 'merge_peak_<filter>' Flag fields that
      *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
      */
-    FootprintMergeList(
-        afw::table::Schema & sourceSchema,
-        std::vector<std::string> const & filterList,
-        afw::table::Schema const & initialPeakSchema
-    );
+    FootprintMergeList(afw::table::Schema &sourceSchema, std::vector<std::string> const &filterList,
+                       afw::table::Schema const &initialPeakSchema);
 
     /**
      *  Initialize the merge with the default peak schema
@@ -83,10 +81,7 @@ public:
      *  The output schema for PeakRecords will include additional 'merge_peak_<filter>' Flag fields that
      *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
      */
-    FootprintMergeList(
-        afw::table::Schema & sourceSchema,
-        std::vector<std::string> const & filterList
-    );
+    FootprintMergeList(afw::table::Schema &sourceSchema, std::vector<std::string> const &filterList);
 
     /// Return the schema for PeakRecords in the merged footprints.
     afw::table::Schema getPeakSchema() const { return _peakTable->getSchema(); }
@@ -102,14 +97,9 @@ public:
      *
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
-    void addCatalog(
-        std::shared_ptr<afw::table::SourceTable> sourceTable,
-        afw::table::SourceCatalog const &inputCat,
-        std::string const & filter,
-        float minNewPeakDist=-1.,
-        bool doMerge=true,
-        float maxSamePeakDist=-1.
-    );
+    void addCatalog(std::shared_ptr<afw::table::SourceTable> sourceTable,
+                    afw::table::SourceCatalog const &inputCat, std::string const &filter,
+                    float minNewPeakDist = -1., bool doMerge = true, float maxSamePeakDist = -1.);
 
     /**
      *  Clear entries in the current vector
@@ -125,7 +115,6 @@ public:
     void getFinalSources(afw::table::SourceCatalog &outputCat);
 
 private:
-
     typedef afw::table::Key<afw::table::Flag> FlagKey;
 
     struct KeyTuple {
@@ -134,21 +123,19 @@ private:
     };
 
     typedef std::vector<std::shared_ptr<FootprintMerge>> FootprintMergeVec;
-    typedef std::map<std::string,KeyTuple> FilterMap;
+    typedef std::map<std::string, KeyTuple> FilterMap;
 
     friend class FootprintMerge;
 
-    void _initialize(
-        afw::table::Schema & sourceSchema,
-        std::vector<std::string> const & filterList
-    );
+    void _initialize(afw::table::Schema &sourceSchema, std::vector<std::string> const &filterList);
 
     FootprintMergeVec _mergeList;
     FilterMap _filterMap;
     afw::table::SchemaMapper _peakSchemaMapper;
     std::shared_ptr<PeakTable> _peakTable;
 };
+}
+}
+}  // namespace lsst::afw::detection
 
-}}} // namespace lsst::afw::detection
-
-#endif // !LSST_AFW_DETECTION_FOOTPRINTMERGE_H
+#endif  // !LSST_AFW_DETECTION_FOOTPRINTMERGE_H

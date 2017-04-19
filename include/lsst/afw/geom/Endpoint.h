@@ -37,7 +37,6 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-
 /**
 Virtual base class for endpoints, which are helper classes for Transform
 
@@ -74,10 +73,10 @@ public:
 
     BaseEndpoint(BaseEndpoint const &) = default;
     BaseEndpoint(BaseEndpoint &&) = default;
-    BaseEndpoint & operator=(BaseEndpoint const &) = default;
-    BaseEndpoint & operator=(BaseEndpoint &&) = default;
+    BaseEndpoint &operator=(BaseEndpoint const &) = default;
+    BaseEndpoint &operator=(BaseEndpoint &&) = default;
 
-    virtual ~BaseEndpoint() {};
+    virtual ~BaseEndpoint(){};
 
     int getNAxes() const { return _nAxes; }
 
@@ -94,18 +93,18 @@ public:
 
     @throws lsst::pex::exceptions::InvalidParameterError if the point has the wrong number of axes
     */
-    virtual std::vector<double> dataFromPoint(Point const & point) const = 0;
+    virtual std::vector<double> dataFromPoint(Point const &point) const = 0;
 
     /**
     Get raw data from an array of points
-    
+
     @param[in] arr  Array of points
     @returns the data as a 2-D ndarray array [nPoints, nAxes] in C order,
         so the in-memory view is, for example, x0, y0, x1, y1, x2, y2, ...
 
     @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
     */
-    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const & arr) const = 0;
+    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const = 0;
 
     /**
     Get a single point from raw data
@@ -113,18 +112,18 @@ public:
     @param[in] data  Data as a vector of length NAxes
     @returns the corresponding point
     */
-    virtual Point pointFromData(std::vector<double> const & data) const = 0;
+    virtual Point pointFromData(std::vector<double> const &data) const = 0;
 
     /**
     Get an array of points from raw data
-    
+
     @param[in] data  Raw data for an array of points, as a 2-D ndarray array [nPoints, nAxes] in C order,
         so the in-memory view is, for example, x0, y0, x1, y1, x2, y2, ...
     @returns an array of points
 
     @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
     */
-    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const & data) const = 0;
+    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const = 0;
 
     /**
     Create a Frame that can be used with this end point in a Transform
@@ -150,21 +149,13 @@ protected:
 
     void _assertNAxes(int nAxes) const;
 
-    int _getNAxes(ndarray::Array<double, 2, 2> const & data) const {
-        return data.getSize<1>();
-    }
+    int _getNAxes(ndarray::Array<double, 2, 2> const &data) const { return data.getSize<1>(); }
 
-    int _getNAxes(ndarray::Array<double, 1, 1> const & data) const {
-        return data.getSize<0>();
-    }
+    int _getNAxes(ndarray::Array<double, 1, 1> const &data) const { return data.getSize<0>(); }
 
-    int _getNAxes(std::vector<double> const & data) const {
-        return data.size();
-    }
+    int _getNAxes(std::vector<double> const &data) const { return data.size(); }
 
-    int _getNPoints(ndarray::Array<double, 2, 2> const & data) const {
-        return data.getSize<0>();
-    }
+    int _getNPoints(ndarray::Array<double, 2, 2> const &data) const { return data.getSize<0>(); }
 
 private:
     int _nAxes;  /// number of axes
@@ -181,22 +172,20 @@ public:
 
     BaseVectorEndpoint(BaseVectorEndpoint const &) = default;
     BaseVectorEndpoint(BaseVectorEndpoint &&) = default;
-    BaseVectorEndpoint & operator=(BaseVectorEndpoint const &) = default;
-    BaseVectorEndpoint & operator=(BaseVectorEndpoint &&) = default;
+    BaseVectorEndpoint &operator=(BaseVectorEndpoint const &) = default;
+    BaseVectorEndpoint &operator=(BaseVectorEndpoint &&) = default;
 
-    virtual ~BaseVectorEndpoint() {};
+    virtual ~BaseVectorEndpoint(){};
 
-    virtual int getNPoints(Array const & arr) const override {
-        return arr.size();
-    }
+    virtual int getNPoints(Array const &arr) const override { return arr.size(); }
 
-    virtual std::vector<double> dataFromPoint(Point const & point) const override;
+    virtual std::vector<double> dataFromPoint(Point const &point) const override;
 
-    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const & arr) const override;
+    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
 
-    virtual Point pointFromData(std::vector<double> const & data) const override;
+    virtual Point pointFromData(std::vector<double> const &data) const override;
 
-    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const & data) const override;
+    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 
 protected:
     /**
@@ -204,7 +193,7 @@ protected:
 
     @param[in] nAxes  the number of axes in a point
     */
-    explicit BaseVectorEndpoint(int nAxes) : BaseEndpoint<Point, Array>(nAxes) {};
+    explicit BaseVectorEndpoint(int nAxes) : BaseEndpoint<Point, Array>(nAxes){};
 };
 
 /**
@@ -213,32 +202,28 @@ A generic endpoint for data in the format used by ast::Mapping
 Thus supports all ast frame classes and any number of axes, and thus can be used as an endpoint
 for any ast::Mapping.
 */
-class GenericEndpoint: public BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>> {
+class GenericEndpoint : public BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>> {
 public:
-
     GenericEndpoint(GenericEndpoint const &) = default;
     GenericEndpoint(GenericEndpoint &&) = default;
-    GenericEndpoint & operator=(GenericEndpoint const &) = default;
-    GenericEndpoint & operator=(GenericEndpoint &&) = default;
+    GenericEndpoint &operator=(GenericEndpoint const &) = default;
+    GenericEndpoint &operator=(GenericEndpoint &&) = default;
 
     /// Construct a GenericEndpoint with the specified number of axes
-    explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes) {};
+    explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes){};
 
-    virtual ~GenericEndpoint() {};
+    virtual ~GenericEndpoint(){};
 
-    virtual int getNPoints(Array const & arr) const override {
-        return arr.getSize<0>();
-    }
+    virtual int getNPoints(Array const &arr) const override { return arr.getSize<0>(); }
 
-    virtual std::vector<double> dataFromPoint(Point const & point) const override;
+    virtual std::vector<double> dataFromPoint(Point const &point) const override;
 
-    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const & arr) const override;
+    virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const override;
 
-    virtual Point pointFromData(std::vector<double> const & data) const override;
+    virtual Point pointFromData(std::vector<double> const &data) const override;
 
-    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const & data) const override;
+    virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 };
-
 
 /**
 An endpoint for Point<double, N>
@@ -250,8 +235,8 @@ class PointEndpoint : public BaseVectorEndpoint<Point<double, N>> {
 public:
     PointEndpoint(PointEndpoint const &) = default;
     PointEndpoint(PointEndpoint &&) = default;
-    PointEndpoint & operator=(PointEndpoint const &) = default;
-    PointEndpoint & operator=(PointEndpoint &&) = default;
+    PointEndpoint &operator=(PointEndpoint const &) = default;
+    PointEndpoint &operator=(PointEndpoint &&) = default;
 
     /// Construct a PointEndpoint; template parameter N specifies the number of axes
     explicit PointEndpoint() : BaseVectorEndpoint<Point<double, N>>(N) {}
@@ -259,7 +244,7 @@ public:
     /// This constructor is used by Transform; nAxes must equal template parameter N
     explicit PointEndpoint(int nAxes);
 
-    virtual ~PointEndpoint() {};
+    virtual ~PointEndpoint(){};
 
     /**
     Check that framePtr points to a Frame, not a subclass
@@ -288,8 +273,8 @@ class SpherePointEndpoint : public BaseVectorEndpoint<SpherePoint> {
 public:
     SpherePointEndpoint(SpherePointEndpoint const &) = default;
     SpherePointEndpoint(SpherePointEndpoint &&) = default;
-    SpherePointEndpoint & operator=(SpherePointEndpoint const &) = default;
-    SpherePointEndpoint & operator=(SpherePointEndpoint &&) = default;
+    SpherePointEndpoint &operator=(SpherePointEndpoint const &) = default;
+    SpherePointEndpoint &operator=(SpherePointEndpoint &&) = default;
 
     /// Construct a SpherePointEndpoint
     explicit SpherePointEndpoint() : BaseVectorEndpoint(2) {}
@@ -297,7 +282,7 @@ public:
     /// This constructor is used by Transform; nAxes must be 2
     explicit SpherePointEndpoint(int nAxes);
 
-    virtual ~SpherePointEndpoint() {};
+    virtual ~SpherePointEndpoint(){};
 
     /**
     Create a Frame that can be used with this end point in a Transform
@@ -313,16 +298,16 @@ public:
 /**
 Print "GenericEndpoint(_n_)" to the ostream where `_n_` is the number of axes, e.g. "GenericAxes(4)"
 */
-std::ostream & operator<<(std::ostream & os, GenericEndpoint const & endpoint);
+std::ostream &operator<<(std::ostream &os, GenericEndpoint const &endpoint);
 
 /// Print "Point2Endpoint()" to the ostream
-std::ostream & operator<<(std::ostream & os, Point2Endpoint const & endpoint);
+std::ostream &operator<<(std::ostream &os, Point2Endpoint const &endpoint);
 
 /// Print "Point3Endpoint()" to the ostream
-std::ostream & operator<<(std::ostream & os, Point3Endpoint const & endpoint);
+std::ostream &operator<<(std::ostream &os, Point3Endpoint const &endpoint);
 
 /// Print "SpherePointEndpoint()" to the ostream
-std::ostream & operator<<(std::ostream & os, SpherePointEndpoint const & endpoint);
+std::ostream &operator<<(std::ostream &os, SpherePointEndpoint const &endpoint);
 
 }  // geom
 }  // afw

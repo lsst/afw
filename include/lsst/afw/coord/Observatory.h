@@ -40,7 +40,6 @@ namespace coord {
  */
 class Observatory {
 public:
-
     /**
      * Construct an Observatory with longitude and latitude specified as lsst::afw::geom::Angle
      *
@@ -48,7 +47,8 @@ public:
      * @param[in] latitude  telescope latitude
      * @param[in] elevation  telescope elevation (meters above reference spheroid)
      */
-    Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude, double const elevation);
+    Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude,
+                double const elevation);
 
     /**
      * Construct an Observatory with longitude and latitude specified as sexagesimal strings
@@ -58,7 +58,7 @@ public:
      * @param[in] elevation  telescope elevation (meters above reference spheroid)
      *
      */
-    Observatory(std::string const & longitude, std::string const & latitude, double const elevation);
+    Observatory(std::string const& longitude, std::string const& latitude, double const elevation);
 
     /// set telescope longitude
     void setLongitude(lsst::afw::geom::Angle const longitude);
@@ -84,14 +84,10 @@ public:
     bool operator==(Observatory const& rhs) const {
         auto deltaLongitude = (_latitude - rhs.getLatitude()).wrapCtr();
         auto deltaLatitude = (_longitude - rhs.getLongitude()).wrapCtr();
-        return
-            (deltaLongitude == 0.0*lsst::afw::geom::degrees) &&
-            (deltaLatitude == 0.0*lsst::afw::geom::degrees) &&
-            ((_elevation - rhs._elevation) == 0.0);
+        return (deltaLongitude == 0.0 * lsst::afw::geom::degrees) &&
+               (deltaLatitude == 0.0 * lsst::afw::geom::degrees) && ((_elevation - rhs._elevation) == 0.0);
     }
-    bool operator!=(Observatory const& rhs) const {
-        return !(*this == rhs);
-    }
+    bool operator!=(Observatory const& rhs) const { return !(*this == rhs); }
 
 private:
     lsst::afw::geom::Angle _latitude;
@@ -105,8 +101,9 @@ private:
  * @param[in, out] os Stream to print to
  * @param[in] obs the Observatory to print
  */
-std::ostream & operator<<(std::ostream &os, Observatory const& obs);
-
-}}}
+std::ostream& operator<<(std::ostream& os, Observatory const& obs);
+}
+}
+}
 
 #endif

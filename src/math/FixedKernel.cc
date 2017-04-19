@@ -30,22 +30,14 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
-FixedKernel::FixedKernel()
-:
-    Kernel(),
-    _image(),
-    _sum(0) {
-}
+FixedKernel::FixedKernel() : Kernel(), _image(), _sum(0) {}
 
-FixedKernel::FixedKernel(
-    image::Image<Pixel> const &image
-) :
-    Kernel(image.getWidth(), image.getHeight(), 0),
-    _image(image, true),
-    _sum(0) {
-
+FixedKernel::FixedKernel(image::Image<Pixel> const& image)
+        : Kernel(image.getWidth(), image.getHeight(), 0), _image(image, true), _sum(0) {
     typedef image::Image<Pixel>::x_iterator XIter;
     double imSum = 0.0;
     for (int y = 0; y != image.getHeight(); ++y) {
@@ -56,13 +48,8 @@ FixedKernel::FixedKernel(
     this->_sum = imSum;
 }
 
-FixedKernel::FixedKernel(
-    Kernel const& kernel,
-    geom::Point2D const& pos
-) :
-    Kernel(kernel.getWidth(), kernel.getHeight(), 0),
-    _image(kernel.getDimensions()),
-    _sum(0) {
+FixedKernel::FixedKernel(Kernel const& kernel, geom::Point2D const& pos)
+        : Kernel(kernel.getWidth(), kernel.getHeight(), 0), _image(kernel.getDimensions()), _sum(0) {
     _sum = kernel.computeImage(_image, false, pos[0], pos[1]);
 }
 
@@ -72,17 +59,14 @@ std::shared_ptr<Kernel> FixedKernel::clone() const {
     return retPtr;
 }
 
-double FixedKernel::doComputeImage(
-    image::Image<Pixel> &image,
-    bool doNormalize
-) const {
+double FixedKernel::doComputeImage(image::Image<Pixel>& image, bool doNormalize) const {
     double multFactor = 1.0;
     double imSum = this->_sum;
     if (doNormalize) {
         if (imSum == 0) {
             throw LSST_EXCEPT(pexExcept::OverflowError, "Cannot normalize; kernel sum is 0");
         }
-        multFactor = 1.0/static_cast<double>(this->_sum);
+        multFactor = 1.0 / static_cast<double>(this->_sum);
         imSum = 1.0;
     }
 
@@ -90,8 +74,8 @@ double FixedKernel::doComputeImage(
 
     for (int y = 0; y != this->getHeight(); ++y) {
         for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y), kPtr = this->_image.row_begin(y);
-            imPtr != imEnd; ++imPtr, ++kPtr) {
-            imPtr[0] = multFactor*kPtr[0];
+             imPtr != imEnd; ++imPtr, ++kPtr) {
+            imPtr[0] = multFactor * kPtr[0];
         }
     }
 
@@ -111,44 +95,35 @@ std::string FixedKernel::toString(std::string const& prefix) const {
 namespace {
 
 struct FixedKernelPersistenceHelper : public Kernel::PersistenceHelper {
-    table::Key< table::Array<Kernel::Pixel> > image;
+    table::Key<table::Array<Kernel::Pixel> > image;
 
-    explicit FixedKernelPersistenceHelper(geom::Extent2I const & dimensions) :
-        Kernel::PersistenceHelper(0),
-        image(
-            schema.addField< table::Array<Kernel::Pixel> >(
-                "image", "pixel values (row-major)", dimensions.getX() * dimensions.getY()
-            )
-        )
-    {}
+    explicit FixedKernelPersistenceHelper(geom::Extent2I const& dimensions)
+            : Kernel::PersistenceHelper(0),
+              image(schema.addField<table::Array<Kernel::Pixel> >("image", "pixel values (row-major)",
+                                                                  dimensions.getX() * dimensions.getY())) {}
 
-    explicit FixedKernelPersistenceHelper(table::Schema const & schema_) :
-        Kernel::PersistenceHelper(schema_),
-        image(schema["image"])
-    {}
+    explicit FixedKernelPersistenceHelper(table::Schema const& schema_)
+            : Kernel::PersistenceHelper(schema_), image(schema["image"]) {}
 };
 
-} // anonymous
+}  // anonymous
 
 class FixedKernel::Factory : public afw::table::io::PersistableFactory {
 public:
-
-    virtual std::shared_ptr<afw::table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                              CatalogVector const& catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         FixedKernelPersistenceHelper const keys(catalogs.front().getSchema());
-        afw::table::BaseRecord const & record = catalogs.front().front();
+        afw::table::BaseRecord const& record = catalogs.front().front();
         image::Image<Pixel> image(geom::Extent2I(record.get(keys.dimensions)));
-        ndarray::flatten<1>(
-            ndarray::static_dimension_cast<2>(image.getArray())
-        ) = record[keys.image];
+        ndarray::flatten<1>(ndarray::static_dimension_cast<2>(image.getArray())) = record[keys.image];
         std::shared_ptr<FixedKernel> result = std::make_shared<FixedKernel>(image);
         result->setCtr(record.get(keys.center));
         return result;
     }
 
-    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+    explicit Factory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 namespace {
@@ -157,14 +132,15 @@ std::string getFixedKernelPersistenceName() { return "FixedKernel"; }
 
 FixedKernel::Factory registration(getFixedKernelPersistenceName());
 
-} // anonymous
+}  // anonymous
 
 std::string FixedKernel::getPersistenceName() const { return getFixedKernelPersistenceName(); }
 
-void FixedKernel::write(OutputArchiveHandle & handle) const {
+void FixedKernel::write(OutputArchiveHandle& handle) const {
     FixedKernelPersistenceHelper const keys(getDimensions());
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     (*record)[keys.image] = ndarray::flatten<1>(ndarray::copy(_image.getArray()));
 }
-
-}}} // namespace lsst::afw::math
+}
+}
+}  // namespace lsst::afw::math

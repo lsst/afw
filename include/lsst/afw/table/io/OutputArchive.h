@@ -5,11 +5,14 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 class Schema;
 class BaseRecord;
-template <typename RecordT> class CatalogT;
+template <typename RecordT>
+class CatalogT;
 typedef CatalogT<BaseRecord> BaseCatalog;
 
 namespace io {
@@ -30,17 +33,16 @@ class OutputArchiveHandle;
  */
 class OutputArchive {
 public:
-
     friend class OutputArchiveHandle;
 
     /// Construct an empty OutputArchive containing no objects.
     OutputArchive();
 
     /// Copy-construct an OutputArchive.  Saved objects are not deep-copied.
-    OutputArchive(OutputArchive const & other);
+    OutputArchive(OutputArchive const& other);
 
     /// Assign from another OutputArchive.  Saved objects are not deep-copied.
-    OutputArchive & operator=(OutputArchive const & other);
+    OutputArchive& operator=(OutputArchive const& other);
 
     // (trivial) destructor must be defined in the source for pimpl idiom.
     ~OutputArchive();
@@ -68,18 +70,20 @@ public:
      *  being saved (or any nested object) throws an exception, the entire archive may
      *  be in an inconsistent state and should not be saved.
      */
-    int put(Persistable const * obj, bool permissive=false);
-    int put(std::shared_ptr<Persistable const> obj, bool permissive=false) { return put(obj.get(), permissive); }
+    int put(Persistable const* obj, bool permissive = false);
+    int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
+        return put(obj.get(), permissive);
+    }
     //@}
 
     /**
      *  @brief Return the index catalog that specifies where objects are stored in the
      *         data catalogs.
      */
-    BaseCatalog const & getIndexCatalog() const;
+    BaseCatalog const& getIndexCatalog() const;
 
     /// Return the nth catalog.  Catalog 0 is always the index catalog.
-    BaseCatalog const & getCatalog(int n) const;
+    BaseCatalog const& getCatalog(int n) const;
 
     /// Return the total number of catalogs, including the index.
     int countCatalogs() const;
@@ -91,10 +95,9 @@ public:
      *
      *  @param[in] fitsfile     Open FITS object to write to.
      */
-    void writeFits(fits::Fits & fitsfile) const;
+    void writeFits(fits::Fits& fitsfile) const;
 
 private:
-
     class Impl;
 
     std::shared_ptr<Impl> _impl;
@@ -108,14 +111,13 @@ private:
  */
 class OutputArchiveHandle {
 public:
-
     /**
      *  Return a new, empty catalog with the given schema.
      *
      *  All catalogs passed to saveCatalog should be originally
      *  created by makeCatalog, or at least share the same table.
      */
-    BaseCatalog makeCatalog(Schema const & schema);
+    BaseCatalog makeCatalog(Schema const& schema);
 
     /**
      *  Save a catalog in the archive.
@@ -123,7 +125,7 @@ public:
      *  The catalog must have been created using makeCatalog,
      *  or be a shallow copy or subset of such a catalog.
      */
-    void saveCatalog(BaseCatalog const & catalog);
+    void saveCatalog(BaseCatalog const& catalog);
 
     //@{
     /**
@@ -131,28 +133,27 @@ public:
      *
      *  @copydoc OutputArchive::put.
      */
-    int put(Persistable const * obj, bool permissive=false);
-    int put(std::shared_ptr<Persistable const> obj, bool permissive=false) { return put(obj.get(), permissive); }
+    int put(Persistable const* obj, bool permissive = false);
+    int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
+        return put(obj.get(), permissive);
+    }
     //@}
 
     ~OutputArchiveHandle();
 
     // No copying
-    OutputArchiveHandle (const OutputArchiveHandle&) = delete;
+    OutputArchiveHandle(const OutputArchiveHandle&) = delete;
     OutputArchiveHandle& operator=(const OutputArchiveHandle&) = delete;
 
     // No moving
-    OutputArchiveHandle (OutputArchiveHandle&&) = delete;
+    OutputArchiveHandle(OutputArchiveHandle&&) = delete;
     OutputArchiveHandle& operator=(OutputArchiveHandle&&) = delete;
 
 private:
-
     friend class OutputArchive::Impl;
 
-    OutputArchiveHandle(
-        int id, std::string const & name, std::string const & module,
-        std::shared_ptr<OutputArchive::Impl> impl
-    );
+    OutputArchiveHandle(int id, std::string const& name, std::string const& module,
+                        std::shared_ptr<OutputArchive::Impl> impl);
 
     int _id;
     int _catPersistable;
@@ -160,7 +161,9 @@ private:
     std::string _module;
     std::shared_ptr<OutputArchive::Impl> _impl;
 };
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_OutputArchive_h_INCLUDED
+#endif  // !AFW_TABLE_IO_OutputArchive_h_INCLUDED

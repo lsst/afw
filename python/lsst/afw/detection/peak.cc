@@ -48,7 +48,7 @@ using PyPeakTable = py::class_<PeakTable, std::shared_ptr<PeakTable>, table::Bas
 /**
 @internal Declare constructors and member and static functions for a pybind11 PeakRecord
 */
-void declarePeakRecord(PyPeakRecord & cls) {
+void declarePeakRecord(PyPeakRecord &cls) {
     cls.def("getTable", &PeakRecord::getTable);
     cls.def_property_readonly("table", &PeakRecord::getTable);
     cls.def("getId", &PeakRecord::getId);
@@ -58,8 +58,8 @@ void declarePeakRecord(PyPeakRecord & cls) {
     cls.def("setIx", &PeakRecord::setIx);
     cls.def("setIy", &PeakRecord::setIy);
     cls.def("getI", &PeakRecord::getI);
-    cls.def("getCentroid", (afw::geom::Point2I (PeakRecord::*)(bool) const) &PeakRecord::getCentroid);
-    cls.def("getCentroid", (afw::geom::Point2D (PeakRecord::*)() const) &PeakRecord::getCentroid);
+    cls.def("getCentroid", (afw::geom::Point2I (PeakRecord::*)(bool) const) & PeakRecord::getCentroid);
+    cls.def("getCentroid", (afw::geom::Point2D (PeakRecord::*)() const) & PeakRecord::getCentroid);
     cls.def("getFx", &PeakRecord::getFx);
     cls.def("getFy", &PeakRecord::getFy);
     cls.def("setFx", &PeakRecord::setFx);
@@ -79,12 +79,11 @@ void declarePeakRecord(PyPeakRecord & cls) {
 /**
 @internal Declare constructors and member and static functions for a pybind11 PeakTable
 */
-void declarePeakTable(PyPeakTable & cls) {
-    cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a=false);
+void declarePeakTable(PyPeakTable &cls) {
+    cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a = false);
     cls.def_static("makeMinimalSchema", &PeakTable::makeMinimalSchema);
     cls.def_static("checkSchema", &PeakTable::checkSchema, "schema"_a);
-    cls.def("getIdFactory",
-            (std::shared_ptr<table::IdFactory> (PeakTable::*)()) &PeakTable::getIdFactory);
+    cls.def("getIdFactory", (std::shared_ptr<table::IdFactory> (PeakTable::*)()) & PeakTable::getIdFactory);
     cls.def("setIdFactory", &PeakTable::setIdFactory, "factory"_a);
     cls.def_static("getIdKey", &PeakTable::getIdKey);
     cls.def_static("getIxKey", &PeakTable::getIxKey);
@@ -94,8 +93,11 @@ void declarePeakTable(PyPeakTable & cls) {
     cls.def_static("getPeakValueKey", &PeakTable::getPeakValueKey);
     cls.def("clone", &PeakTable::clone);
     cls.def("makeRecord", &PeakTable::makeRecord);
-    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &)) &PeakTable::copyRecord);
-    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &, afw::table::SchemaMapper const &)) &PeakTable::copyRecord);
+    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &)) &
+                                  PeakTable::copyRecord);
+    cls.def("copyRecord", (std::shared_ptr<PeakRecord> (PeakTable::*)(afw::table::BaseRecord const &,
+                                                                      afw::table::SchemaMapper const &)) &
+                                  PeakTable::copyRecord);
 }
 
 }  // lsst::afw::detection::<anonymous>
@@ -125,4 +127,6 @@ PYBIND11_PLUGIN(_peak) {
 
     return mod.ptr();
 }
-}}} // lsst::afw::detection
+}
+}
+}  // lsst::afw::detection

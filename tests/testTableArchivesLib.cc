@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -39,7 +39,6 @@ namespace py = pybind11;
 // not really a Psf, just a Persistable we can stuff in an Exposure
 class DummyPsf : public lsst::afw::detection::Psf {
 public:
-
     virtual std::shared_ptr<lsst::afw::detection::Psf> clone() const {
         return std::shared_ptr<lsst::afw::detection::Psf>(new DummyPsf(_x));
     }
@@ -48,37 +47,26 @@ public:
 
     double getValue() const { return _x; }
 
-    virtual lsst::afw::geom::Box2I doComputeBBox(
-        lsst::afw::geom::Point2D const & position,
-        lsst::afw::image::Color const & color
-        ) const {
-            return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-1, -1),
-            lsst::afw::geom::Point2I(1, 1));
+    virtual lsst::afw::geom::Box2I doComputeBBox(lsst::afw::geom::Point2D const& position,
+                                                 lsst::afw::image::Color const& color) const {
+        return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-1, -1), lsst::afw::geom::Point2I(1, 1));
     }
 
     explicit DummyPsf(double x) : _x(x) {}
 
 protected:
-
-    virtual std::shared_ptr<Image> doComputeKernelImage(
-        lsst::afw::geom::Point2D const & ccdXY,
-        lsst::afw::image::Color const & color
-    ) const {
+    virtual std::shared_ptr<Image> doComputeKernelImage(lsst::afw::geom::Point2D const& ccdXY,
+                                                        lsst::afw::image::Color const& color) const {
         return std::shared_ptr<Image>();
     }
 
-    virtual double doComputeApertureFlux(
-        double radius,
-        lsst::afw::geom::Point2D const & ccdXY,
-        lsst::afw::image::Color const & color
-    ) const {
+    virtual double doComputeApertureFlux(double radius, lsst::afw::geom::Point2D const& ccdXY,
+                                         lsst::afw::image::Color const& color) const {
         return 0.0;
     }
 
-    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(
-        lsst::afw::geom::Point2D const & ccdXY,
-        lsst::afw::image::Color const & color
-    ) const {
+    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(lsst::afw::geom::Point2D const& ccdXY,
+                                                                 lsst::afw::image::Color const& color) const {
         return lsst::afw::geom::ellipses::Quadrupole();
     }
 
@@ -86,7 +74,7 @@ protected:
 
     virtual std::string getPythonModule() const { return "testTableArchivesLib"; }
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
     double _x;
 };
@@ -97,53 +85,46 @@ struct DummyPsfPersistenceHelper {
     lsst::afw::table::Schema schema;
     lsst::afw::table::Key<double> x;
 
-    static DummyPsfPersistenceHelper const & get() {
+    static DummyPsfPersistenceHelper const& get() {
         static DummyPsfPersistenceHelper instance;
         return instance;
     }
 
     // No copying
-    DummyPsfPersistenceHelper (const DummyPsfPersistenceHelper&) = delete;
+    DummyPsfPersistenceHelper(const DummyPsfPersistenceHelper&) = delete;
     DummyPsfPersistenceHelper& operator=(const DummyPsfPersistenceHelper&) = delete;
 
     // No moving
-    DummyPsfPersistenceHelper (DummyPsfPersistenceHelper&&) = delete;
+    DummyPsfPersistenceHelper(DummyPsfPersistenceHelper&&) = delete;
     DummyPsfPersistenceHelper& operator=(DummyPsfPersistenceHelper&&) = delete;
 
 private:
-    DummyPsfPersistenceHelper() :
-        schema(),
-        x(schema.addField<double>("x", "dummy parameter"))
-    {
+    DummyPsfPersistenceHelper() : schema(), x(schema.addField<double>("x", "dummy parameter")) {
         schema.getCitizen().markPersistent();
     }
 };
 
 class DummyPsfFactory : public lsst::afw::table::io::PersistableFactory {
 public:
-
-    virtual std::shared_ptr<lsst::afw::table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        static DummyPsfPersistenceHelper const & keys = DummyPsfPersistenceHelper::get();
+    virtual std::shared_ptr<lsst::afw::table::io::Persistable> read(InputArchive const& archive,
+                                                                    CatalogVector const& catalogs) const {
+        static DummyPsfPersistenceHelper const& keys = DummyPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        lsst::afw::table::BaseRecord const & record = catalogs.front().front();
+        lsst::afw::table::BaseRecord const& record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
-        return std::make_shared<DummyPsf>(
-            record.get(keys.x)
-        );
+        return std::make_shared<DummyPsf>(record.get(keys.x));
     }
 
-    DummyPsfFactory(std::string const & name) : lsst::afw::table::io::PersistableFactory(name) {}
-
+    DummyPsfFactory(std::string const& name) : lsst::afw::table::io::PersistableFactory(name) {}
 };
 
 DummyPsfFactory registration("DummyPsf");
 
-} // anonymous
+}  // anonymous
 
-void DummyPsf::write(OutputArchiveHandle & handle) const {
-    static DummyPsfPersistenceHelper const & keys = DummyPsfPersistenceHelper::get();
+void DummyPsf::write(OutputArchiveHandle& handle) const {
+    static DummyPsfPersistenceHelper const& keys = DummyPsfPersistenceHelper::get();
     lsst::afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     std::shared_ptr<lsst::afw::table::BaseRecord> record = catalog.addNew();
     (*record).set(keys.x, _x);
@@ -155,7 +136,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
 PYBIND11_PLUGIN(_testTableArchivesLib) {
     py::module mod("_testTableArchivesLib", "Python wrapper for DummyPsf");
 
-    py::class_<DummyPsf, std::shared_ptr<DummyPsf>, lsst::afw::detection::Psf> cls(mod, "DummyPsf"); 
+    py::class_<DummyPsf, std::shared_ptr<DummyPsf>, lsst::afw::detection::Psf> cls(mod, "DummyPsf");
 
     cls.def(py::init<double>());
 

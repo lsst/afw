@@ -33,80 +33,78 @@
 namespace lsst {
 namespace afw {
 namespace image {
-    enum xOrY {X, Y};
+enum xOrY { X, Y };
 
-    /**
-     * position of center of pixel 0
-     *
-     * FITS uses 1.0, SDSS uses 0.5, LSST uses 0.0 (http://dev.lsstcorp.org/trac/wiki/BottomLeftPixelProposalII%3A)
-     */
-    const double PixelZeroPos = 0.0;
+/**
+ * position of center of pixel 0
+ *
+ * FITS uses 1.0, SDSS uses 0.5, LSST uses 0.0
+ * (http://dev.lsstcorp.org/trac/wiki/BottomLeftPixelProposalII%3A)
+ */
+const double PixelZeroPos = 0.0;
 
-    /**
-     * Convert image index to image position
-     *
-     * The LSST indexing convention is:
-     * * the index of the bottom left pixel is 0,0
-     * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
-     *
-     * @returns image position
-     */
-    inline double indexToPosition(
-        double ind ///< image index
-    ) {
-        return ind + PixelZeroPos;
-    }
+/**
+ * Convert image index to image position
+ *
+ * The LSST indexing convention is:
+ * * the index of the bottom left pixel is 0,0
+ * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+ *
+ * @returns image position
+ */
+inline double indexToPosition(double ind  ///< image index
+                              ) {
+    return ind + PixelZeroPos;
+}
 
-    /**
-     * Convert image position to nearest integer index
-     *
-     * The LSST indexing convention is:
-     * * the index of the bottom left pixel is 0,0
-     * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
-     *
-     * @returns nearest integer index
-     */
-    inline int positionToIndex(
-        double pos ///< image position
-    ) {
-        return static_cast<int>(std::floor(pos + 0.5 - PixelZeroPos));
-    }
+/**
+ * Convert image position to nearest integer index
+ *
+ * The LSST indexing convention is:
+ * * the index of the bottom left pixel is 0,0
+ * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+ *
+ * @returns nearest integer index
+ */
+inline int positionToIndex(double pos  ///< image position
+                           ) {
+    return static_cast<int>(std::floor(pos + 0.5 - PixelZeroPos));
+}
 
-    /**
-     * Convert image position to index (nearest integer and fractional parts)
-     *
-     * The LSST indexing convention is:
-     * * the index of the bottom left pixel is 0,0
-     * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
-     *
-     * Note: in python this is called positionToIndexAndResidual
-     *
-     * @returns nearest integer index
-     */
-    inline int positionToIndex(
-        double &residual, ///< fractional part of index
-        double pos ///< image position
-    ) {
-        double fullIndex = pos - PixelZeroPos;
-        double roundedIndex = std::floor(fullIndex + 0.5);
-        residual = fullIndex - roundedIndex;
-        return static_cast<int>(roundedIndex);
-    }
-    /**
-     * Convert image position to index (nearest integer and fractional parts)
-     *
-     * @returns std::pair(nearest integer index, fractional part)
-     */
-    inline std::pair<int, double> positionToIndex(double const pos,                ///< image position
-                                                  bool                             ///< ignored; just to disambiguate
-    ) {
-        double residual;                // fractional part of index
-        int const ind = positionToIndex(residual, pos); // integral part
+/**
+ * Convert image position to index (nearest integer and fractional parts)
+ *
+ * The LSST indexing convention is:
+ * * the index of the bottom left pixel is 0,0
+ * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+ *
+ * Note: in python this is called positionToIndexAndResidual
+ *
+ * @returns nearest integer index
+ */
+inline int positionToIndex(double &residual,  ///< fractional part of index
+                           double pos         ///< image position
+                           ) {
+    double fullIndex = pos - PixelZeroPos;
+    double roundedIndex = std::floor(fullIndex + 0.5);
+    residual = fullIndex - roundedIndex;
+    return static_cast<int>(roundedIndex);
+}
+/**
+ * Convert image position to index (nearest integer and fractional parts)
+ *
+ * @returns std::pair(nearest integer index, fractional part)
+ */
+inline std::pair<int, double> positionToIndex(double const pos,  ///< image position
+                                              bool               ///< ignored; just to disambiguate
+                                              ) {
+    double residual;                                 // fractional part of index
+    int const ind = positionToIndex(residual, pos);  // integral part
 
-        return std::pair<int, double>(ind, residual);
-    }
+    return std::pair<int, double>(ind, residual);
+}
+}
+}
+}  // lsst::afw::image
 
-}}} // lsst::afw::image
-
-#endif // LSST_AFW_IMAGE_IMAGEUTILS_H
-
+#endif  // LSST_AFW_IMAGE_IMAGEUTILS_H

@@ -29,35 +29,25 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-IdentityXYTransform::IdentityXYTransform()
-    : XYTransform()
-{ }
+IdentityXYTransform::IdentityXYTransform() : XYTransform() {}
 
-std::shared_ptr<XYTransform> IdentityXYTransform::clone() const
-{
-    return std::make_shared<IdentityXYTransform> ();
+std::shared_ptr<XYTransform> IdentityXYTransform::clone() const {
+    return std::make_shared<IdentityXYTransform>();
 }
 
-Point2D IdentityXYTransform::forwardTransform(Point2D const &point) const
-{
-    return point;
-}
+Point2D IdentityXYTransform::forwardTransform(Point2D const &point) const { return point; }
 
-Point2D IdentityXYTransform::reverseTransform(Point2D const &point) const
-{
-    return point;
-}
+Point2D IdentityXYTransform::reverseTransform(Point2D const &point) const { return point; }
 
-AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &point) const
-{
+AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &point) const {
     // note: AffineTransform constructor called with no arguments gives the identity transform
     return AffineTransform();
 }
 
-AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &point) const
-{
+AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &point) const {
     // note: AffineTransform constructor called with no arguments gives the identity transform
     return AffineTransform();
 }
-
-}}}
+}
+}
+}

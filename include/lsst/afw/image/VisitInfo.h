@@ -36,19 +36,21 @@
 #include "lsst/afw/table/misc.h"  // for RecordId
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 /// Type of rotation
 enum class RotType {
-    UNKNOWN,    ///< Rotation angle is unknown. Note: if there is no instrument rotator then it is better
-                ///< to compute SKY or HORIZON and use that rotation type rather than specify UNKNOWN.
-    SKY,        ///< Position angle of focal plane +Y, measured from N through E.
-                ///< At 0 degrees, +Y is along N and +X is along E/W depending on handedness.
-                ///< At 90 degrees, +Y is along E and +X is along S/N depending on handedness.
-    HORIZON,    ///< Position angle of focal plane +Y, measured from +Alt through +Az.
-                ///< At 0 degrees, +Y is along +Alt and +X is along +/-Az, depending on handedness.
-                ///< At 90 degrees, +Y is along +Az and +X is along -/+Alt, depending on handedness.
-    MOUNT       ///< The position sent to the instrument rotator; the details depend on the rotator.
+    UNKNOWN,  ///< Rotation angle is unknown. Note: if there is no instrument rotator then it is better
+              ///< to compute SKY or HORIZON and use that rotation type rather than specify UNKNOWN.
+    SKY,      ///< Position angle of focal plane +Y, measured from N through E.
+              ///< At 0 degrees, +Y is along N and +X is along E/W depending on handedness.
+              ///< At 90 degrees, +Y is along E and +X is along S/N depending on handedness.
+    HORIZON,  ///< Position angle of focal plane +Y, measured from +Alt through +Az.
+              ///< At 0 degrees, +Y is along +Alt and +X is along +/-Az, depending on handedness.
+              ///< At 90 degrees, +Y is along +Az and +X is along -/+Alt, depending on handedness.
+    MOUNT     ///< The position sent to the instrument rotator; the details depend on the rotator.
 };
 
 /**
@@ -64,7 +66,6 @@ enum class RotType {
  */
 class VisitInfo : public table::io::PersistableFacade<VisitInfo>, public table::io::Persistable {
 public:
-
     /**
      * Construct a VisitInfo
      *
@@ -87,47 +88,36 @@ public:
      * @param[in] observatory  observatory longitude, latitude and altitude
      * @param[in] weather  basic weather information for computing air mass
      */
-    explicit VisitInfo(
-        table::RecordId exposureId,
-        double exposureTime,
-        double darkTime,
-        daf::base::DateTime const & date,
-        double ut1,
-        geom::Angle const & era,
-        coord::IcrsCoord const & boresightRaDec,
-        coord::Coord const & boresightAzAlt,
-        double boresightAirmass,
-        geom::Angle const & boresightRotAngle,
-        RotType const & rotType,
-        coord::Observatory const & observatory,
-        coord::Weather const & weather
-    ) :
-        _exposureId(exposureId),
-        _exposureTime(exposureTime),
-        _darkTime(darkTime),
-        _date(date),
-        _ut1(ut1),
-        _era(era),
-        _boresightRaDec(boresightRaDec),
-        _boresightAzAlt(boresightAzAlt),
-        _boresightAirmass(boresightAirmass),
-        _boresightRotAngle(boresightRotAngle),
-        _rotType(rotType),
-        _observatory(observatory),
-        _weather(weather)
-    {};
+    explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
+                       daf::base::DateTime const &date, double ut1, geom::Angle const &era,
+                       coord::IcrsCoord const &boresightRaDec, coord::Coord const &boresightAzAlt,
+                       double boresightAirmass, geom::Angle const &boresightRotAngle, RotType const &rotType,
+                       coord::Observatory const &observatory, coord::Weather const &weather)
+            : _exposureId(exposureId),
+              _exposureTime(exposureTime),
+              _darkTime(darkTime),
+              _date(date),
+              _ut1(ut1),
+              _era(era),
+              _boresightRaDec(boresightRaDec),
+              _boresightAzAlt(boresightAzAlt),
+              _boresightAirmass(boresightAirmass),
+              _boresightRotAngle(boresightRotAngle),
+              _rotType(rotType),
+              _observatory(observatory),
+              _weather(weather){};
 
-    explicit VisitInfo(daf::base::PropertySet const & metadata);
+    explicit VisitInfo(daf::base::PropertySet const &metadata);
 
-    ~VisitInfo() {};
+    ~VisitInfo(){};
 
     VisitInfo(VisitInfo const &) = default;
     VisitInfo(VisitInfo &&) = default;
-    VisitInfo & operator=(VisitInfo const &) = default;
-    VisitInfo & operator=(VisitInfo &&) = default;
+    VisitInfo &operator=(VisitInfo const &) = default;
+    VisitInfo &operator=(VisitInfo &&) = default;
 
-    bool operator==(VisitInfo const & other) const;
-    bool operator!=(VisitInfo const & other) const { return !(*this == other); };
+    bool operator==(VisitInfo const &other) const;
+    bool operator!=(VisitInfo const &other) const { return !(*this == other); };
 
     /// get exposure ID
     table::RecordId getExposureId() const { return _exposureId; }
@@ -185,10 +175,9 @@ public:
     geom::Angle getBoresightHourAngle() const;
 
 protected:
-
     virtual std::string getPersistenceName() const;
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle &handle) const;
 
 private:
     table::RecordId _exposureId;
@@ -223,10 +212,11 @@ void setVisitInfoMetadata(daf::base::PropertyList &metadata, VisitInfo const &vi
  *
  * @returns Number of keywords stripped
  */
-int stripVisitInfoKeywords(daf::base::PropertySet & metadata);
+int stripVisitInfoKeywords(daf::base::PropertySet &metadata);
 
-} // lsst::afw::image::detail
+}  // lsst::afw::image::detail
+}
+}
+}  // lsst::afw::image
 
-}}} // lsst::afw::image
-
-#endif // !LSST_AFW_IMAGE_VISITINFO_H_INCLUDED
+#endif  // !LSST_AFW_IMAGE_VISITINFO_H_INCLUDED

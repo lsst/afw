@@ -28,7 +28,9 @@
 #include "lsst/base.h"
 #include "ndarray/eigen.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 /**
  *  Solver for linear least-squares problems.
@@ -64,43 +66,40 @@ namespace lsst { namespace afw { namespace math {
  */
 class LeastSquares {
 public:
-
-    class Impl; ///< Private implementation; forward-declared publicly so we can inherit from it in .cc
+    class Impl;  ///< Private implementation; forward-declared publicly so we can inherit from it in .cc
 
     enum Factorization {
-        NORMAL_EIGENSYSTEM,  /**<
-                              *   Use the normal equations with a symmetric Eigensystem decomposition.
-                              *
-                              *   This method is fully robust and computes the minimum-norm solution when
-                              *   the problem does not have full rank.  It is affected slightly more by
-                              *   round-off error than the SVD method, but because it can handle singular
-                              *   matrices this usually isn't a problem.
-                              */
-        NORMAL_CHOLESKY,     /**<
-                              *   Use the normal equations with a Cholesky decomposition.
-                              *
-                              *   While this method uses a robust LDL^T decomposition that does not
-                              *   require square roots, it is not appropriate for problems that do
-                              *   not have full rank, and cannot be used to determine whether a
-                              *   problem has full rank.  It is the fastest decomposition.
-                              */
-        DIRECT_SVD           /**<
-                              *   Use a thin singular value decomposition of the design matrix.
-                              *
-                              *   This method is the most robust and computes the minimum-norm solution
-                              *   the problem does not have full rank.  However, it is also the slowest
-                              *   and is not available when the solver is initialized with the
-                              *   normal equations.
-                              */
+        NORMAL_EIGENSYSTEM, /**<
+                             *   Use the normal equations with a symmetric Eigensystem decomposition.
+                             *
+                             *   This method is fully robust and computes the minimum-norm solution when
+                             *   the problem does not have full rank.  It is affected slightly more by
+                             *   round-off error than the SVD method, but because it can handle singular
+                             *   matrices this usually isn't a problem.
+                             */
+        NORMAL_CHOLESKY,    /**<
+                             *   Use the normal equations with a Cholesky decomposition.
+                             *
+                             *   While this method uses a robust LDL^T decomposition that does not
+                             *   require square roots, it is not appropriate for problems that do
+                             *   not have full rank, and cannot be used to determine whether a
+                             *   problem has full rank.  It is the fastest decomposition.
+                             */
+        DIRECT_SVD          /**<
+                             *   Use a thin singular value decomposition of the design matrix.
+                             *
+                             *   This method is the most robust and computes the minimum-norm solution
+                             *   the problem does not have full rank.  However, it is also the slowest
+                             *   and is not available when the solver is initialized with the
+                             *   normal equations.
+                             */
     };
 
     /// Initialize from the design matrix and data vector given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
-    static LeastSquares fromDesignMatrix(
-        ndarray::Array<T1,2,C1> const & design,
-        ndarray::Array<T2,1,C2> const & data,
-        Factorization factorization = NORMAL_EIGENSYSTEM
-    ) {
+    static LeastSquares fromDesignMatrix(ndarray::Array<T1, 2, C1> const& design,
+                                         ndarray::Array<T2, 1, C2> const& data,
+                                         Factorization factorization = NORMAL_EIGENSYSTEM) {
         LeastSquares r(factorization, design.template getSize<1>());
         r.setDesignMatrix(design, data);
         return r;
@@ -108,11 +107,9 @@ public:
 
     /// Initialize from the design matrix and data vector given as an Eigen objects.
     template <typename D1, typename D2>
-    static LeastSquares fromDesignMatrix(
-        Eigen::MatrixBase<D1> const & design,
-        Eigen::MatrixBase<D2> const & data,
-        Factorization factorization = NORMAL_EIGENSYSTEM
-    ) {
+    static LeastSquares fromDesignMatrix(Eigen::MatrixBase<D1> const& design,
+                                         Eigen::MatrixBase<D2> const& data,
+                                         Factorization factorization = NORMAL_EIGENSYSTEM) {
         LeastSquares r(factorization, design.cols());
         r.setDesignMatrix(design, data);
         return r;
@@ -120,10 +117,7 @@ public:
 
     /// Reset the design matrix and data vector given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
-    void setDesignMatrix(
-        ndarray::Array<T1,2,C1> const & design,
-        ndarray::Array<T2,1,C2> const & data
-    ) {
+    void setDesignMatrix(ndarray::Array<T1, 2, C1> const& design, ndarray::Array<T2, 1, C2> const& data) {
         // n.b. "template cast<T>" below is not a special kind of cast; it's just
         // the weird C++ syntax required for calling a templated member function
         // called "cast" in this context; see
@@ -135,10 +129,7 @@ public:
 
     /// Reset the design matrix and data vector given as Eigen objects; dimension must not change.
     template <typename D1, typename D2>
-    void setDesignMatrix(
-        Eigen::MatrixBase<D1> const & design,
-        Eigen::MatrixBase<D2> const & data
-    ) {
+    void setDesignMatrix(Eigen::MatrixBase<D1> const& design, Eigen::MatrixBase<D2> const& data) {
         _getDesignMatrix() = design.template cast<double>();
         _getDataVector() = data.template cast<double>();
         _factor(false);
@@ -146,25 +137,23 @@ public:
 
     /// Reset the design matrix given as an ndarray; dimension and data are not changed.
     template <typename T1, int C1>
-    void setDesignMatrix(ndarray::Array<T1,2,C1> const & design) {
+    void setDesignMatrix(ndarray::Array<T1, 2, C1> const& design) {
         _getDesignMatrix() = design.asEigen().template cast<double>();
         _factor(false);
     }
 
     /// Reset the design matrix given as an Eigen object; dimension and data are not changed.
     template <typename D1, typename D2>
-    void setDesignMatrix(Eigen::MatrixBase<D1> const & design) {
+    void setDesignMatrix(Eigen::MatrixBase<D1> const& design) {
         _getDesignMatrix() = design.template cast<double>();
         _factor(false);
     }
 
     /// Initialize from the terms in the normal equations, given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
-    static LeastSquares fromNormalEquations(
-        ndarray::Array<T1,2,C1> const & fisher,
-        ndarray::Array<T2,1,C2> const & rhs,
-        Factorization factorization = NORMAL_EIGENSYSTEM
-    ) {
+    static LeastSquares fromNormalEquations(ndarray::Array<T1, 2, C1> const& fisher,
+                                            ndarray::Array<T2, 1, C2> const& rhs,
+                                            Factorization factorization = NORMAL_EIGENSYSTEM) {
         LeastSquares r(factorization, fisher.template getSize<0>());
         r.setNormalEquations(fisher, rhs);
         return r;
@@ -172,11 +161,9 @@ public:
 
     /// Initialize from the terms in the normal equations, given as Eigen objects.
     template <typename D1, typename D2>
-    static LeastSquares fromNormalEquations(
-        Eigen::MatrixBase<D1> const & fisher,
-        Eigen::MatrixBase<D2> const & rhs,
-        Factorization factorization = NORMAL_EIGENSYSTEM
-    ) {
+    static LeastSquares fromNormalEquations(Eigen::MatrixBase<D1> const& fisher,
+                                            Eigen::MatrixBase<D2> const& rhs,
+                                            Factorization factorization = NORMAL_EIGENSYSTEM) {
         LeastSquares r(factorization, fisher.rows());
         r.setNormalEquations(fisher, rhs);
         return r;
@@ -184,10 +171,7 @@ public:
 
     /// Reset the terms in the normal equations given as ndarrays; dimension must not change.
     template <typename T1, typename T2, int C1, int C2>
-    void setNormalEquations(
-        ndarray::Array<T1,2,C1> const & fisher,
-        ndarray::Array<T2,1,C2> const & rhs
-    ) {
+    void setNormalEquations(ndarray::Array<T1, 2, C1> const& fisher, ndarray::Array<T2, 1, C2> const& rhs) {
         if ((C1 > 0) == bool(Eigen::MatrixXd::IsRowMajor)) {
             _getFisherMatrix() = fisher.asEigen().template cast<double>();
         } else {
@@ -199,10 +183,7 @@ public:
 
     /// Reset the terms in the normal equations given as Eigen objects; dimension must not change.
     template <typename D1, typename D2>
-    void setNormalEquations(
-        Eigen::MatrixBase<D1> const & fisher,
-        Eigen::MatrixBase<D2> const & rhs
-    ) {
+    void setNormalEquations(Eigen::MatrixBase<D1> const& fisher, Eigen::MatrixBase<D2> const& rhs) {
         if (bool(Eigen::MatrixBase<D1>::IsRowMajor) == bool(Eigen::MatrixXd::IsRowMajor)) {
             _getFisherMatrix() = fisher.template cast<double>();
         } else {
@@ -247,7 +228,7 @@ public:
      *  The solution is cached the first time this member function is called, and will be
      *  reused unless the matrices are reset or the threshold is changed.
      */
-    ndarray::Array<double const,1,1> getSolution();
+    ndarray::Array<double const, 1, 1> getSolution();
 
     /**
      *  Return the covariance matrix of the least squares problem.
@@ -261,7 +242,7 @@ public:
      *  The covariance is cached the first time this member function is called, and will be
      *  reused unless the matrices are reset or the threshold is changed.
      */
-    ndarray::Array<double const,2,2> getCovariance();
+    ndarray::Array<double const, 2, 2> getCovariance();
 
     /**
      *  Return the Fisher matrix (inverse of the covariance) of the parameters.
@@ -275,7 +256,7 @@ public:
      *
      *  If you want an Eigen object instead, just use getFisherMatrix().asEigen().
      */
-    ndarray::Array<double const,2,2> getFisherMatrix();
+    ndarray::Array<double const, 2, 2> getFisherMatrix();
 
     /**
      *  @brief Return a factorization-dependent vector that can be used to characterize
@@ -302,7 +283,7 @@ public:
      *  test the stability of the problem, but it does provide a way to compute the determinant
      *  of the Fisher matrix.  It is only available when the factorization is NORMAL_CHOLESKY.
      */
-    ndarray::Array<double const,1,1> getDiagnostic(Factorization factorization);
+    ndarray::Array<double const, 1, 1> getDiagnostic(Factorization factorization);
 
     /// Return the number of parameters.
     int getDimension() const;
@@ -330,20 +311,19 @@ public:
     ~LeastSquares();
 
 private:
-
     // We want a column-major design matrix so the self-adjoint product is cache-friendly, so we always
     // copy a (possibly row-major) design matrix into a col-major one.  This is an unnecessarily and
     // cache-unfriendly operation when solver is DIRECT_SVD, but right now it doesn't seem to be worth
     // special-casing the design for that case.  In other cases it's a cache-unfriendly op that avoids
     // an even worse one, and it can always be avoided by using a column-major design matrix.
-    Eigen::MatrixXd & _getDesignMatrix();
-    Eigen::VectorXd & _getDataVector();
+    Eigen::MatrixXd& _getDesignMatrix();
+    Eigen::VectorXd& _getDataVector();
 
     // Storage order matters less here, so we just go with what Eigen is most accustomed to.
     // Because the Fisher matrix is symmetric, we can just transpose it before copying to avoid doing
     // any expensive copies between different storage orders.
-    Eigen::MatrixXd & _getFisherMatrix();
-    Eigen::VectorXd & _getRhsVector();
+    Eigen::MatrixXd& _getFisherMatrix();
+    Eigen::VectorXd& _getRhsVector();
 
     // Do the actual high-level linear algrebra factorization; the appropriate input matrices and
     // vectors must already be set before this is called.  The solution and other quantities
@@ -352,7 +332,8 @@ private:
 
     std::shared_ptr<Impl> _impl;
 };
+}
+}
+}  // namespace lsst::afw::math
 
-}}} // namespace lsst::afw::math
-
-#endif // !LSST_AFW_MATH_LeastSquares_h_INCLUDED
+#endif  // !LSST_AFW_MATH_LeastSquares_h_INCLUDED

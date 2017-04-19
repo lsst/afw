@@ -26,9 +26,10 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-std::ostream &operator<< (std::ostream &os, CameraPoint const &cameraPoint) {
+std::ostream &operator<<(std::ostream &os, CameraPoint const &cameraPoint) {
     os << "CameraPoint(" << cameraPoint.getPoint() << ", " << cameraPoint.getCameraSys() << ")";
     return os;
 }
-
-}}}
+}
+}
+}

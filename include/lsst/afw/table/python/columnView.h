@@ -32,8 +32,8 @@ namespace table {
 namespace python {
 
 template <typename Record>
-using PyColumnView = pybind11::class_<ColumnViewT<Record>, std::shared_ptr<ColumnViewT<Record>>,
-                                      BaseColumnView>;
+using PyColumnView =
+        pybind11::class_<ColumnViewT<Record>, std::shared_ptr<ColumnViewT<Record>>, BaseColumnView>;
 
 /**
 Declare member and static functions for a given instantiation of lsst::afw::table::ColumnViewT<RecordT>.
@@ -45,7 +45,7 @@ Declare member and static functions for a given instantiation of lsst::afw::tabl
 @param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
 */
 template <typename Record>
-PyColumnView<Record> declareColumnView(pybind11::module & mod, std::string const & name, bool isBase=false) {
+PyColumnView<Record> declareColumnView(pybind11::module& mod, std::string const& name, bool isBase = false) {
     std::string fullName;
     if (isBase) {
         fullName = "_" + name + "ColumnViewBase";
@@ -57,6 +57,8 @@ PyColumnView<Record> declareColumnView(pybind11::module & mod, std::string const
     cls.def_property_readonly("table", &ColumnViewT<Record>::getTable);
     return cls;
 };
-
-}}}}  // namespace lsst::afw::table::python
+}
+}
+}
+}  // namespace lsst::afw::table::python
 #endif

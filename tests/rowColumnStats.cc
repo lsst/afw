@@ -46,18 +46,19 @@ namespace geom = lsst::afw::geom;
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MImageF;
 
-BOOST_AUTO_TEST_CASE(RowColumnStats) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(RowColumnStats) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
+                                          "Boost non-Std" */
 
     int const n = 8;
 
     // fill an image with a gradient
     std::vector<float> column(n, 0.0);
     std::vector<float> row(n, 0.0);
-    std::shared_ptr<ImageF> img = std::shared_ptr<ImageF> (new ImageF(geom::Extent2I(n, n), 0));
+    std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(geom::Extent2I(n, n), 0));
     for (int y = 0; y < img->getHeight(); ++y) {
         int x = 0;
         for (ImageF::x_iterator ptr = img->row_begin(y), end = img->row_end(y); ptr != end; ++ptr, ++x) {
-            *ptr = 1.0*x + 2.0*y;
+            *ptr = 1.0 * x + 2.0 * y;
             column[y] += *ptr;
             row[x] += *ptr;
             if (y == n - 1) {

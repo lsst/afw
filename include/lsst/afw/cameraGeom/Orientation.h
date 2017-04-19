@@ -51,16 +51,18 @@ namespace cameraGeom {
 class Orientation {
 public:
     explicit Orientation(
-        geom::Point2D const fpPosition=geom::Point2D(0, 0),
+            geom::Point2D const fpPosition = geom::Point2D(0, 0),
             ///< Focal plane position of detector reference point (mm)
-        geom::Point2D const refPoint=geom::Point2D(-0.5, -0.5),
+            geom::Point2D const refPoint = geom::Point2D(-0.5, -0.5),
             ///< Reference point on detector (pixels).
             ///< Offset is measured to this point and all all rotations are about this point.
             ///< The default value (-0.5, -0.5) is the lower left corner of the detector.
-        geom::Angle const yaw=geom::Angle(0),   ///< yaw: rotation about Z (X to Y), 1st rotation
-        geom::Angle const pitch=geom::Angle(0),  ///< pitch: rotation about Y' (Z'=Z to X'), 2nd rotation
-        geom::Angle const roll=geom::Angle(0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
-    );
+            geom::Angle const yaw = geom::Angle(0),  ///< yaw: rotation about Z (X to Y), 1st rotation
+            geom::Angle const pitch =
+                    geom::Angle(0),  ///< pitch: rotation about Y' (Z'=Z to X'), 2nd rotation
+            geom::Angle const roll =
+                    geom::Angle(0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
+            );
 
     /// Return focal plane position of detector reference point (mm)
     geom::Point2D getFpPosition() const { return _fpPosition; }
@@ -86,8 +88,8 @@ public:
      * @returns lsst::afw::geom::AffineXYTransform from pixel to focal plane coordinates
      */
     geom::AffineXYTransform makePixelFpTransform(
-            geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
-    ) const;
+            geom::Extent2D const pixelSizeMm  ///< Size of the pixel in mm in X and Y
+            ) const;
 
     /**
      * Generate an XYTransform from focal plane to pixel coordinates
@@ -95,22 +97,23 @@ public:
      * @returns lsst::afw::geom::AffineXYTransform from focal plane to pixel coordinates
      */
     geom::AffineXYTransform makeFpPixelTransform(
-            geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
-    ) const;
+            geom::Extent2D const pixelSizeMm  ///< Size of the pixel in mm in X and Y
+            ) const;
 
 private:
-    geom::Point2D _fpPosition;          ///< focal plane position of reference point on detector
-    geom::Point2D _refPoint;            ///< reference point on detector
+    geom::Point2D _fpPosition;  ///< focal plane position of reference point on detector
+    geom::Point2D _refPoint;    ///< reference point on detector
 
-    lsst::afw::geom::Angle _yaw;        ///< yaw
-    lsst::afw::geom::Angle _pitch;      ///< pitch
-    lsst::afw::geom::Angle _roll;       ///< roll
+    lsst::afw::geom::Angle _yaw;    ///< yaw
+    lsst::afw::geom::Angle _pitch;  ///< pitch
+    lsst::afw::geom::Angle _roll;   ///< roll
 
     // Elements of the Jacobian for three space rotation projected into XY plane.
     // Turn off alignment since this is dynamically allocated (via Detector)
-    Eigen::Matrix<double,2,2,Eigen::DontAlign> _rotMat;
+    Eigen::Matrix<double, 2, 2, Eigen::DontAlign> _rotMat;
 };
-
-}}}
+}
+}
+}
 
 #endif

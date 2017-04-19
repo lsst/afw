@@ -31,7 +31,9 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 namespace {
 
@@ -42,78 +44,62 @@ struct GaussianPsfPersistenceHelper {
     afw::table::PointKey<int> dimensions;
     afw::table::Key<double> sigma;
 
-    static GaussianPsfPersistenceHelper const & get() {
+    static GaussianPsfPersistenceHelper const& get() {
         static GaussianPsfPersistenceHelper instance;
         return instance;
     }
 
     // No copying
-    GaussianPsfPersistenceHelper (const GaussianPsfPersistenceHelper&) = delete;
+    GaussianPsfPersistenceHelper(const GaussianPsfPersistenceHelper&) = delete;
     GaussianPsfPersistenceHelper& operator=(const GaussianPsfPersistenceHelper&) = delete;
 
     // No moving
-    GaussianPsfPersistenceHelper (GaussianPsfPersistenceHelper&&) = delete;
+    GaussianPsfPersistenceHelper(GaussianPsfPersistenceHelper&&) = delete;
     GaussianPsfPersistenceHelper& operator=(GaussianPsfPersistenceHelper&&) = delete;
 
 private:
-    GaussianPsfPersistenceHelper() :
-        schema(),
-        dimensions(
-            afw::table::PointKey<int>::addFields(
-                schema,
-                "dimensions",
-                "width/height of realization of Psf", "pixel"
-            )
-        ),
-        sigma(schema.addField<double>("sigma", "radius of Gaussian", "pixel"))
-    {
+    GaussianPsfPersistenceHelper()
+            : schema(),
+              dimensions(afw::table::PointKey<int>::addFields(schema, "dimensions",
+                                                              "width/height of realization of Psf", "pixel")),
+              sigma(schema.addField<double>("sigma", "radius of Gaussian", "pixel")) {
         schema.getCitizen().markPersistent();
     }
 };
 
 class GaussianPsfFactory : public afw::table::io::PersistableFactory {
 public:
-
-    virtual std::shared_ptr<afw::table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        static GaussianPsfPersistenceHelper const & keys = GaussianPsfPersistenceHelper::get();
+    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                              CatalogVector const& catalogs) const {
+        static GaussianPsfPersistenceHelper const& keys = GaussianPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        afw::table::BaseRecord const & record = catalogs.front().front();
+        afw::table::BaseRecord const& record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
-        return std::make_shared<GaussianPsf>(
-            record.get(keys.dimensions.getX()),
-            record.get(keys.dimensions.getY()),
-            record.get(keys.sigma)
-        );
+        return std::make_shared<GaussianPsf>(record.get(keys.dimensions.getX()),
+                                             record.get(keys.dimensions.getY()), record.get(keys.sigma));
     }
 
-    GaussianPsfFactory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
-
+    GaussianPsfFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 GaussianPsfFactory registration("GaussianPsf");
 
-void checkDimensions(geom::Extent2I const & dimensions) {
+void checkDimensions(geom::Extent2I const& dimensions) {
     if (dimensions.getX() % 2 == 0 || dimensions.getY() % 2 == 2) {
-        throw LSST_EXCEPT(
-            pex::exceptions::InvalidParameterError,
-            "GaussianPsf dimensions must be odd"
-        );
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "GaussianPsf dimensions must be odd");
     }
 }
 
-} // anonymous
+}  // anonymous
 
-GaussianPsf::GaussianPsf(int width, int height, double sigma) :
-    Psf(true), _dimensions(width, height), _sigma(sigma)
-{
+GaussianPsf::GaussianPsf(int width, int height, double sigma)
+        : Psf(true), _dimensions(width, height), _sigma(sigma) {
     checkDimensions(_dimensions);
 }
 
-GaussianPsf::GaussianPsf(geom::Extent2I const & dimensions, double sigma) :
-    Psf(true), _dimensions(dimensions), _sigma(sigma)
-{
+GaussianPsf::GaussianPsf(geom::Extent2I const& dimensions, double sigma)
+        : Psf(true), _dimensions(dimensions), _sigma(sigma) {
     checkDimensions(_dimensions);
 }
 
@@ -125,8 +111,8 @@ std::string GaussianPsf::getPersistenceName() const { return "GaussianPsf"; }
 
 std::string GaussianPsf::getPythonModule() const { return "lsst.afw.detection"; }
 
-void GaussianPsf::write(OutputArchiveHandle & handle) const {
-    static GaussianPsfPersistenceHelper const & keys = GaussianPsfPersistenceHelper::get();
+void GaussianPsf::write(OutputArchiveHandle& handle) const {
+    static GaussianPsfPersistenceHelper const& keys = GaussianPsfPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     std::shared_ptr<afw::table::BaseRecord> record = catalog.addNew();
     (*record)[keys.dimensions.getX()] = _dimensions.getX();
@@ -135,39 +121,34 @@ void GaussianPsf::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
-std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(
-    geom::Point2D const &, image::Color const &
-) const {
+std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(geom::Point2D const&,
+                                                                      image::Color const&) const {
     std::shared_ptr<Image> r(new Image(computeBBox()));
     Image::Array array = r->getArray();
     double sum = 0.0;
     for (int yIndex = 0, y = r->getY0(); yIndex < _dimensions.getY(); ++yIndex, ++y) {
         Image::Array::Reference row = array[yIndex];
         for (int xIndex = 0, x = r->getX0(); xIndex < _dimensions.getX(); ++xIndex, ++x) {
-            sum += row[xIndex] = std::exp(-0.5*(x*x + y*y)/(_sigma*_sigma));
+            sum += row[xIndex] = std::exp(-0.5 * (x * x + y * y) / (_sigma * _sigma));
         }
     }
     array.asEigen() /= sum;
     return r;
 }
 
-double GaussianPsf::doComputeApertureFlux(
-    double radius, geom::Point2D const & position, image::Color const & color
-) const {
-    return 1.0 - std::exp(-0.5*radius*radius/(_sigma*_sigma));
+double GaussianPsf::doComputeApertureFlux(double radius, geom::Point2D const& position,
+                                          image::Color const& color) const {
+    return 1.0 - std::exp(-0.5 * radius * radius / (_sigma * _sigma));
 }
 
-geom::ellipses::Quadrupole GaussianPsf::doComputeShape(
-    geom::Point2D const & position, image::Color const & color
-) const {
-    return geom::ellipses::Quadrupole(_sigma*_sigma, _sigma*_sigma, 0.0);
+geom::ellipses::Quadrupole GaussianPsf::doComputeShape(geom::Point2D const& position,
+                                                       image::Color const& color) const {
+    return geom::ellipses::Quadrupole(_sigma * _sigma, _sigma * _sigma, 0.0);
 }
 
-geom::Box2I GaussianPsf::doComputeBBox(
-        geom::Point2D const & position,
-        image::Color const & color
-) const {
-    return geom::Box2I(geom::Point2I(-_dimensions/2), _dimensions);  // integer truncation intentional
+geom::Box2I GaussianPsf::doComputeBBox(geom::Point2D const& position, image::Color const& color) const {
+    return geom::Box2I(geom::Point2I(-_dimensions / 2), _dimensions);  // integer truncation intentional
 }
-
-}}} // namespace lsst::afw::detection
+}
+}
+}  // namespace lsst::afw::detection

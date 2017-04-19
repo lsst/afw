@@ -37,27 +37,33 @@ namespace afw {
 namespace cameraGeom {
 
 namespace {
-    /**
-    @internal Declare methods common to CameraSysPrefix and CameraSys
+/**
+@internal Declare methods common to CameraSysPrefix and CameraSys
 
-    @tparam CppClass  C++ class; one of CameraSysPrefix or CameraSys
-    @tparam PyClass  pybind11 class corresponding to `CppClass`
-    */
-    template <typename CppClass, typename PyClass>
-    void declareCommonSysMethods(PyClass & cls) {
-        /* Operators */
-        cls.def("__eq__",
-                [](CppClass const & self, CppClass const & other) { return self == other; },
-                py::is_operator());
-        cls.def("__ne__",
-                [](CppClass const & self, CppClass const & other) { return self != other; },
-                py::is_operator());
-        cls.def("__str__", [](CppClass const & self) { std::ostringstream os; os << self; return os.str(); });
-        cls.def("__repr__", [](CppClass const & self) { std::ostringstream os; os << self; return os.str(); });
+@tparam CppClass  C++ class; one of CameraSysPrefix or CameraSys
+@tparam PyClass  pybind11 class corresponding to `CppClass`
+*/
+template <typename CppClass, typename PyClass>
+void declareCommonSysMethods(PyClass &cls) {
+    /* Operators */
+    cls.def("__eq__", [](CppClass const &self, CppClass const &other) { return self == other; },
+            py::is_operator());
+    cls.def("__ne__", [](CppClass const &self, CppClass const &other) { return self != other; },
+            py::is_operator());
+    cls.def("__str__", [](CppClass const &self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
+    cls.def("__repr__", [](CppClass const &self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
 
-        /* Methods */
-        cls.def("getSysName", &CppClass::getSysName);
-    }
+    /* Methods */
+    cls.def("getSysName", &CppClass::getSysName);
+}
 }
 
 PYBIND11_PLUGIN(_cameraSys) {
@@ -83,9 +89,10 @@ PYBIND11_PLUGIN(_cameraSys) {
 
     /* Constructors */
     clsCameraSysPrefix.def(py::init<std::string const &>(), "sysName"_a);
-    clsCameraSys.def(py::init<std::string const &, std::string const &>(), "sysName"_a, "detectorName"_a="");
-    clsCameraSys.def(py::init<CameraSysPrefix const &, std::string const &>(),
-                     "sysPrefix"_a, "detectorName"_a="");
+    clsCameraSys.def(py::init<std::string const &, std::string const &>(), "sysName"_a,
+                     "detectorName"_a = "");
+    clsCameraSys.def(py::init<CameraSysPrefix const &, std::string const &>(), "sysPrefix"_a,
+                     "detectorName"_a = "");
 
     /* Operators */
 
@@ -95,5 +102,6 @@ PYBIND11_PLUGIN(_cameraSys) {
 
     return mod.ptr();
 }
-
-}}}
+}
+}
+}

@@ -39,20 +39,17 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-template<typename ImageT>
-std::shared_ptr<ImageT> offsetImage(ImageT const& inImage,
-                                 float dx,
-                                 float dy,
-                                 std::string const& algorithmName,
-                                 unsigned int buffer
+template <typename ImageT>
+std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
+                                    std::string const& algorithmName, unsigned int buffer
 
-                                ) {
+                                    ) {
     std::shared_ptr<SeparableKernel> offsetKernel = makeWarpingKernel(algorithmName);
 
     std::shared_ptr<ImageT> buffImage;
     if (buffer > 0) {
         // Paste input image into buffered image
-        afwGeom::Extent2I const &dims = inImage.getDimensions();
+        afwGeom::Extent2I const& dims = inImage.getDimensions();
         std::shared_ptr<ImageT> buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
         buffImage = buffered;
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
@@ -67,11 +64,12 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage,
                           (boost::format("Image of size %dx%d is too small to offset using a %s kernel"
                                          "(minimum %dx%d)") %
                            buffImage->getWidth() % buffImage->getHeight() % algorithmName %
-                           offsetKernel->getWidth() % offsetKernel->getHeight()).str());
+                           offsetKernel->getWidth() % offsetKernel->getHeight())
+                                  .str());
     }
 
-//    std::shared_ptr<ImageT> convImage(new ImageT(buffImage, true)); // output image, a deep copy
-    std::shared_ptr<ImageT> convImage(new ImageT(buffImage->getDimensions())); // Convolved image
+    //    std::shared_ptr<ImageT> convImage(new ImageT(buffImage, true)); // output image, a deep copy
+    std::shared_ptr<ImageT> convImage(new ImageT(buffImage->getDimensions()));  // Convolved image
 
     int dOrigX, dOrigY;
     double fracX, fracY;
@@ -127,15 +125,16 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage,
 // Explicit instantiations
 //
 /// @cond
-#define INSTANTIATE(TYPE) \
+#define INSTANTIATE(TYPE)                                                                                   \
     template std::shared_ptr<afwImage::Image<TYPE>> offsetImage(afwImage::Image<TYPE> const&, float, float, \
-                                                    std::string const&, unsigned int); \
-    template std::shared_ptr<afwImage::MaskedImage<TYPE>> offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
-                                                          std::string const&, unsigned int);
+                                                                std::string const&, unsigned int);          \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> offsetImage(                                      \
+            afwImage::MaskedImage<TYPE> const&, float, float, std::string const&, unsigned int);
 
 INSTANTIATE(double)
 INSTANTIATE(float)
 INSTANTIATE(int)
 /// @endcond
-
-}}}
+}
+}
+}

@@ -30,18 +30,16 @@
 
 namespace except = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
-std::shared_ptr<Wcs> makeWcs(
-        std::shared_ptr<daf::base::PropertySet> const& _metadata,
-        bool stripMetadata
-                                )
-{
+std::shared_ptr<Wcs> makeWcs(std::shared_ptr<daf::base::PropertySet> const& _metadata, bool stripMetadata) {
     //
     // _metadata is not const (it is probably meant to be), but we don't want to modify it.
     //
-    auto metadata = _metadata;          // we'll make a copy and modify metadata if needs be
-    auto modifyable = false;            // ... and set this variable to say that we did
+    auto metadata = _metadata;  // we'll make a copy and modify metadata if needs be
+    auto modifyable = false;    // ... and set this variable to say that we did
 
     std::string ctype1, ctype2;
     if (metadata->exists("CTYPE1") && metadata->exists("CTYPE2")) {
@@ -57,8 +55,7 @@ std::shared_ptr<Wcs> makeWcs(
     //
     // Follow Dave's AST and switch TAN to TPV
     //
-    if (ctype1.substr(5, 3) == "TAN" &&
-        (metadata->exists("PV1_5") || metadata->exists("PV2_1"))) {
+    if (ctype1.substr(5, 3) == "TAN" && (metadata->exists("PV1_5") || metadata->exists("PV2_1"))) {
         LOGL_INFO("makeWcs", "Interpreting %s/%s + PVi_j as TPV", ctype1.c_str(), ctype2.c_str());
 
         if (!modifyable) {
@@ -73,10 +70,10 @@ std::shared_ptr<Wcs> makeWcs(
         metadata->set<std::string>("CTYPE2", ctype2);
     }
 
-    std::shared_ptr<Wcs> wcs;               // we can't use make_shared as ctor is private
+    std::shared_ptr<Wcs> wcs;  // we can't use make_shared as ctor is private
     if (ctype1.substr(5, 3) == "TAN") {
         wcs = std::shared_ptr<Wcs>(new TanWcs(metadata));
-    } else if (ctype1.substr(5, 3) == "TPV") { // unfortunately we don't support TPV
+    } else if (ctype1.substr(5, 3) == "TPV") {  // unfortunately we don't support TPV
         if (!modifyable) {
             metadata = _metadata->deepCopy();
             modifyable = true;
@@ -94,7 +91,7 @@ std::shared_ptr<Wcs> makeWcs(
         // John Swinbank points out the maximum value of j in TVi_j is 39;
         // http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html
         for (int i = 0; i != 2; ++i) {
-            for (int j = 1; j <= 39; ++j) { // 39's the max in the TPV standard
+            for (int j = 1; j <= 39; ++j) {  // 39's the max in the TPV standard
                 char pvName[8];
                 sprintf(pvName, "PV%d_%d", i, j);
                 if (metadata->exists(pvName)) {
@@ -116,7 +113,7 @@ std::shared_ptr<Wcs> makeWcs(
     }
 
     key = "LTV2";
-    if (metadata->exists(key) ) {
+    if (metadata->exists(key)) {
         wcs->shiftReferencePixel(0, -metadata->getAsDouble(key));
     }
 
@@ -127,14 +124,8 @@ std::shared_ptr<Wcs> makeWcs(
     return wcs;
 }
 
-std::shared_ptr<Wcs> makeWcs(
-    coord::Coord const & crval,
-    geom::Point2D const & crpix,
-    double CD11,
-    double CD12,
-    double CD21,
-    double CD22
-    ) {
+std::shared_ptr<Wcs> makeWcs(coord::Coord const& crval, geom::Point2D const& crpix, double CD11, double CD12,
+                             double CD21, double CD22) {
     Eigen::Matrix2d CD;
     CD << CD11, CD12, CD21, CD22;
     geom::Point2D crvalTmp;
@@ -142,5 +133,6 @@ std::shared_ptr<Wcs> makeWcs(
     crvalTmp[1] = crval.toIcrs().getLatitude().asDegrees();
     return std::shared_ptr<Wcs>(new TanWcs(crvalTmp, crpix, CD));
 }
-
-}}} // end lsst::afw::image
+}
+}
+}  // end lsst::afw::image

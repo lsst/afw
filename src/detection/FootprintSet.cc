@@ -55,51 +55,56 @@
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 namespace {
-    /// Don't let doxygen see this block  @cond
+/// Don't let doxygen see this block  @cond
 
-    typedef std::uint64_t IdPixelT;    // Type of temporary Images used in merging Footprints
+typedef std::uint64_t IdPixelT;  // Type of temporary Images used in merging Footprints
 
-    struct Threshold_traits {
-    };
-    struct ThresholdLevel_traits : public Threshold_traits { // Threshold is a single number
-    };
-    struct ThresholdPixelLevel_traits : public Threshold_traits { // Threshold varies from pixel to pixel
-    };
-    struct ThresholdBitmask_traits : public Threshold_traits { // Threshold ORs with a bitmask
-    };
+struct Threshold_traits {};
+struct ThresholdLevel_traits : public Threshold_traits {  // Threshold is a single number
+};
+struct ThresholdPixelLevel_traits : public Threshold_traits {  // Threshold varies from pixel to pixel
+};
+struct ThresholdBitmask_traits : public Threshold_traits {  // Threshold ORs with a bitmask
+};
 
-template<typename PixelT>
+template <typename PixelT>
 class setIdImage {
 public:
-    explicit setIdImage(std::uint64_t const id,
-                        bool overwriteId=false,
-                        long const idMask=0x0): _id(id), _idMask(idMask), _withSetReplace(false),
-                                                _overwriteId(overwriteId), _oldIds(NULL), _pos() {
+    explicit setIdImage(std::uint64_t const id, bool overwriteId = false, long const idMask = 0x0)
+            : _id(id),
+              _idMask(idMask),
+              _withSetReplace(false),
+              _overwriteId(overwriteId),
+              _oldIds(NULL),
+              _pos() {
         if (_id & _idMask) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                  str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % _id % _idMask));
+            throw LSST_EXCEPT(
+                    pex::exceptions::InvalidParameterError,
+                    str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % _id % _idMask));
         }
     }
 
-    setIdImage(std::uint64_t const id,
-               typename std::set<std::uint64_t> * oldIds,
-               bool overwriteId=false,
-               long const idMask=0x0): _id(id),
-                                       _idMask(idMask),
-                                       _withSetReplace(true),
-                                       _overwriteId(overwriteId),
-                                       _oldIds(oldIds),
-                                       _pos(oldIds->begin()) {
+    setIdImage(std::uint64_t const id, typename std::set<std::uint64_t> *oldIds, bool overwriteId = false,
+               long const idMask = 0x0)
+            : _id(id),
+              _idMask(idMask),
+              _withSetReplace(true),
+              _overwriteId(overwriteId),
+              _oldIds(oldIds),
+              _pos(oldIds->begin()) {
         if (_id & _idMask) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                  str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % _id % _idMask));
+            throw LSST_EXCEPT(
+                    pex::exceptions::InvalidParameterError,
+                    str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % _id % _idMask));
         }
     }
 
-    void operator()(geom::Point2I const & point, PixelT & input) {
+    void operator()(geom::Point2I const &point, PixelT &input) {
         if (_overwriteId) {
             auto val = input & ~_idMask;
 
@@ -118,398 +123,388 @@ private:
     long const _idMask;
     bool _withSetReplace;
     bool _overwriteId;
-    typename std::set<std::uint64_t> * _oldIds;
+    typename std::set<std::uint64_t> *_oldIds;
     typename std::set<std::uint64_t>::const_iterator _pos;
 };
 
-    //
-    // Define our own functions to handle NaN tests;  this gives us the
-    // option to define a value for e.g. image::MaskPixel or int
-    //
-    template<typename T>
-    inline bool isBadPixel(T) {
-        return false;
+//
+// Define our own functions to handle NaN tests;  this gives us the
+// option to define a value for e.g. image::MaskPixel or int
+//
+template <typename T>
+inline bool isBadPixel(T) {
+    return false;
+}
+
+template <>
+inline bool isBadPixel(float val) {
+    return std::isnan(val);
+}
+
+template <>
+inline bool isBadPixel(double val) {
+    return std::isnan(val);
+}
+
+/*
+ * Return the number of bits required to represent a unsigned long
+ */
+int nbit(unsigned long i) {
+    int n = 0;
+    while (i > 0) {
+        ++n;
+        i >>= 1;
     }
 
-    template<>
-    inline bool isBadPixel(float val) {
-        return std::isnan(val);
+    return n;
+}
+/*
+ * Find the list of pixel values that lie in a Footprint
+ *
+ * Used when the Footprints are constructed from an Image containing Footprint indices
+ */
+template <typename T>
+class FindIdsInFootprint {
+public:
+    explicit FindIdsInFootprint() : _ids(), _old(0) {}
+
+    // Reset everything for a new Footprint
+    void reset() {
+        _ids.clear();
+        _old = 0;
     }
 
-    template<>
-    inline bool isBadPixel(double val) {
-        return std::isnan(val);
+    // Take by copy and not be reference on purpose
+    void operator()(geom::Point2I const &point, T val) {
+        if (val != _old) {
+            _ids.insert(val);
+            _old = val;
+        }
     }
 
-    /*
-     * Return the number of bits required to represent a unsigned long
-     */
-    int nbit(unsigned long i) {
-        int n = 0;
-        while (i > 0) {
-            ++n;
-            i >>= 1;
+    std::set<T> const &getIds() const { return _ids; }
+
+private:
+    std::set<T> _ids;
+    T _old;
+};
+
+/*
+ * Sort peaks by decreasing pixel value.  N.b. -ve peaks are sorted the same way as +ve ones
+ */
+struct SortPeaks {
+    bool operator()(std::shared_ptr<PeakRecord const> a, std::shared_ptr<PeakRecord const> b) {
+        if (a->getPeakValue() != b->getPeakValue()) {
+            return (a->getPeakValue() > b->getPeakValue());
         }
 
-        return n;
-    }
-    /*
-     * Find the list of pixel values that lie in a Footprint
-     *
-     * Used when the Footprints are constructed from an Image containing Footprint indices
-     */
-    template<typename T>
-    class FindIdsInFootprint {
-    public:
-        explicit FindIdsInFootprint(): _ids(), _old(0) {}
-
-        // Reset everything for a new Footprint
-        void reset() {
-            _ids.clear();
-            _old = 0;
+        if (a->getIx() != b->getIx()) {
+            return (a->getIx() < b->getIx());
         }
 
-        // Take by copy and not be reference on purpose
-        void operator()(geom::Point2I const & point, T val) {
-            if (val != _old) {
-                _ids.insert(val);
-                _old = val;
+        return (a->getIy() < b->getIy());
+    }
+};
+/*
+ * Worker routine for merging two FootprintSets, possibly growing them as we proceed
+ */
+FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSet to be merged to
+                                int rLhs,                     // Grow lhs Footprints by this many pixels
+                                FootprintSet const &rhs,      // the FootprintSet to be merged into lhs
+                                int rRhs,                     // Grow rhs Footprints by this many pixels
+                                FootprintControl const &ctrl  // Control how the grow is done
+                                ) {
+    typedef FootprintSet::FootprintList FootprintList;
+    // The isXXX routines return <isset, value>
+    bool const circular = ctrl.isCircular().first && ctrl.isCircular().second;
+    bool const isotropic = ctrl.isIsotropic().second;  // isotropic grow as opposed to a Manhattan metric
+                                                       // n.b. Isotropic grows are significantly slower
+    bool const left = ctrl.isLeft().first && ctrl.isLeft().second;
+    bool const right = ctrl.isRight().first && ctrl.isRight().second;
+    bool const up = ctrl.isUp().first && ctrl.isUp().second;
+    bool const down = ctrl.isDown().first && ctrl.isDown().second;
+
+    geom::Box2I const region = lhs.getRegion();
+    if (region != rhs.getRegion()) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                          boost::format("The two FootprintSets must have the same region").str());
+    }
+
+    auto idImage = std::make_shared<image::Image<IdPixelT>>(region);
+    idImage->setXY0(region.getMinX(), region.getMinY());
+    *idImage = 0;
+
+    FootprintList const &lhsFootprints = *lhs.getFootprints();
+    FootprintList const &rhsFootprints = *rhs.getFootprints();
+    int const nLhs = lhsFootprints.size();
+    int const nRhs = rhsFootprints.size();
+    /*
+     * In general the lists of Footprints overlap, so we need to make sure that the IDs can be
+     * uniquely recovered from the idImage.  We do this by allocating a range of bits to the lhs IDs
+     */
+    int const lhsIdNbit = nbit(nLhs);
+    int const lhsIdMask = (lhsIdNbit == 0) ? 0x0 : (1 << lhsIdNbit) - 1;
+
+    if (std::size_t(nRhs << lhsIdNbit) > std::numeric_limits<IdPixelT>::max() - 1) {
+        throw LSST_EXCEPT(
+                pex::exceptions::OverflowError,
+                (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef") % nLhs %
+                 nRhs).str());
+    }
+    /*
+     * When we insert grown Footprints into the idImage we can potentially overwrite an entire Footprint,
+     * losing any peaks that it might contain.  We'll preserve the overwritten Ids in case we need to
+     * get them back (n.b. Footprints that overlap, but both if which survive, will appear in this list)
+     */
+    typedef std::map<int, std::set<std::uint64_t>> OldIdMap;
+    OldIdMap overwrittenIds;  // here's a map from id -> overwritten IDs
+
+    auto grower = [&circular, &up, &down, &left, &right, &isotropic](
+            std::shared_ptr<Footprint> const &foot, int amount) -> std::shared_ptr<Footprint> {
+        if (circular) {
+            auto element = isotropic ? geom::Stencil::CIRCLE : geom::Stencil::MANHATTAN;
+            auto tmpFoot = std::make_shared<Footprint>(foot->getSpans()->dilated(amount, element),
+                                                       foot->getRegion());
+            return tmpFoot;
+        } else {
+            int top = up ? amount : 0;
+            int bottom = down ? amount : 0;
+            int lLimit = left ? amount : 0;
+            int rLimit = right ? amount : 0;
+
+            auto yRange = top + bottom + 1;
+            std::vector<geom::Span> spanList;
+            spanList.reserve(yRange);
+
+            for (auto dy = 1; dy <= top; ++dy) {
+                spanList.push_back(geom::Span(dy, 0, 0));
             }
+            for (auto dy = -1; dy >= -bottom; --dy) {
+                spanList.push_back(geom::Span(dy, 0, 0));
+            }
+            spanList.push_back(geom::Span(0, -lLimit, rLimit));
+            geom::SpanSet structure(std::move(spanList));
+            auto tmpFoot =
+                    std::make_shared<Footprint>(foot->getSpans()->dilated(structure), foot->getRegion());
+            return tmpFoot;
         }
-
-        std::set<T> const & getIds() const {
-            return _ids;
-        }
-
-    private:
-        std::set<T> _ids;
-        T _old;
     };
 
-    /*
-     * Sort peaks by decreasing pixel value.  N.b. -ve peaks are sorted the same way as +ve ones
-     */
-    struct SortPeaks {
-	bool operator()(std::shared_ptr<PeakRecord const> a, std::shared_ptr<PeakRecord const> b) {
-            if (a->getPeakValue() != b->getPeakValue()) {
-                return (a->getPeakValue() > b->getPeakValue());
-            }
+    IdPixelT id = 1;  // the ID inserted into the image
+    for (FootprintList::const_iterator ptr = lhsFootprints.begin(), end = lhsFootprints.end(); ptr != end;
+         ++ptr, ++id) {
+        std::shared_ptr<Footprint> foot = *ptr;
 
-            if (a->getIx() != b->getIx()) {
-                return (a->getIx() < b->getIx());
-            }
-
-            return (a->getIy() < b->getIy());
-        }
-    };
-    /*
-     * Worker routine for merging two FootprintSets, possibly growing them as we proceed
-     */
-    FootprintSet
-    mergeFootprintSets(
-        FootprintSet const &lhs, // the FootprintSet to be merged to
-        int rLhs,                                         // Grow lhs Footprints by this many pixels
-        FootprintSet const &rhs, // the FootprintSet to be merged into lhs
-        int rRhs,                                         // Grow rhs Footprints by this many pixels
-        FootprintControl const& ctrl           // Control how the grow is done
-                      )
-    {
-        typedef FootprintSet::FootprintList FootprintList;
-        // The isXXX routines return <isset, value>
-        bool const circular = ctrl.isCircular().first && ctrl.isCircular().second;
-        bool const isotropic = ctrl.isIsotropic().second; // isotropic grow as opposed to a Manhattan metric
-                                        // n.b. Isotropic grows are significantly slower
-        bool const left =  ctrl.isLeft().first  && ctrl.isLeft().second;
-        bool const right = ctrl.isRight().first && ctrl.isRight().second;
-        bool const up =    ctrl.isUp().first    && ctrl.isUp().second;
-        bool const down =  ctrl.isDown().first  && ctrl.isDown().second;
-
-        geom::Box2I const region = lhs.getRegion();
-        if (region != rhs.getRegion()) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                              boost::format("The two FootprintSets must have the same region").str());
+        if (rLhs > 0 && foot->getArea() > 0) {
+            foot = grower(foot, rLhs);
         }
 
-        auto idImage = std::make_shared<image::Image<IdPixelT>>(region);
-        idImage->setXY0(region.getMinX(), region.getMinY());
-        *idImage = 0;
+        std::set<std::uint64_t> overwritten;
+        foot->getSpans()
+                ->clippedTo(idImage->getBBox())
+                ->applyFunctor(setIdImage<IdPixelT>(id, &overwritten, true), *idImage);
 
-        FootprintList const& lhsFootprints = *lhs.getFootprints();
-        FootprintList const& rhsFootprints = *rhs.getFootprints();
-        int const nLhs = lhsFootprints.size();
-        int const nRhs = rhsFootprints.size();
-        /*
-         * In general the lists of Footprints overlap, so we need to make sure that the IDs can be
-         * uniquely recovered from the idImage.  We do this by allocating a range of bits to the lhs IDs
-         */
-        int const lhsIdNbit = nbit(nLhs);
-        int const lhsIdMask = (lhsIdNbit == 0) ? 0x0 : (1 << lhsIdNbit) - 1;
-
-        if (std::size_t(nRhs << lhsIdNbit) > std::numeric_limits<IdPixelT>::max() - 1) {
-            throw LSST_EXCEPT(pex::exceptions::OverflowError,
-                              (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef")
-                               % nLhs % nRhs).str());
+        if (!overwritten.empty()) {
+            overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
         }
-        /*
-         * When we insert grown Footprints into the idImage we can potentially overwrite an entire Footprint,
-         * losing any peaks that it might contain.  We'll preserve the overwritten Ids in case we need to
-         * get them back (n.b. Footprints that overlap, but both if which survive, will appear in this list)
-         */
-        typedef std::map<int, std::set<std::uint64_t> > OldIdMap;
-        OldIdMap overwrittenIds;        // here's a map from id -> overwritten IDs
+    }
 
-        auto grower = [& circular, & up, & down , & left , & right, &isotropic]
-                      (std::shared_ptr<Footprint> const & foot, int amount) -> std::shared_ptr<Footprint>
-                      {
-                          if (circular) {
-                              auto element = isotropic ? geom::Stencil::CIRCLE : geom::Stencil::MANHATTAN;
-                              auto tmpFoot = std::make_shared<Footprint>(foot->getSpans()->dilated(amount, element),
-                                                                         foot->getRegion());
-                              return tmpFoot;
-                          } else {
-                              int top = up ? amount : 0;
-                              int bottom = down ? amount : 0;
-                              int lLimit = left ? amount : 0;
-                              int rLimit = right ? amount : 0;
+    assert(id <= std::size_t(1 << lhsIdNbit));
+    id = (1 << lhsIdNbit);
+    for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end(); ptr != end;
+         ++ptr, id += (1 << lhsIdNbit)) {
+        std::shared_ptr<Footprint> foot = *ptr;
 
-                              auto yRange = top + bottom + 1;
-                              std::vector<geom::Span> spanList;
-                              spanList.reserve(yRange);
-
-                              for (auto dy = 1; dy <= top; ++dy) {
-                                  spanList.push_back(geom::Span(dy, 0, 0));
-                              }
-                              for (auto dy = -1; dy >= -bottom; --dy){
-                                  spanList.push_back(geom::Span(dy, 0, 0));
-                              }
-                              spanList.push_back(geom::Span(0, -lLimit, rLimit));
-                              geom::SpanSet structure(std::move(spanList));
-                              auto tmpFoot = std::make_shared<Footprint>(foot->getSpans()->dilated(structure),
-                                                                         foot->getRegion());
-                              return tmpFoot;
-                          }
-                      };
-
-        IdPixelT id = 1;                     // the ID inserted into the image
-        for (FootprintList::const_iterator ptr = lhsFootprints.begin(), end = lhsFootprints.end();
-             ptr != end; ++ptr, ++id) {
-            std::shared_ptr<Footprint> foot = *ptr;
-
-            if (rLhs > 0 && foot->getArea() > 0) {
-                foot = grower(foot, rLhs);
-            }
-
-            std::set<std::uint64_t> overwritten;
-            foot->getSpans()->clippedTo(idImage->getBBox())->applyFunctor(setIdImage<IdPixelT>(id,
-                                                                                               &overwritten,
-                                                                                               true),
-                                                                                               *idImage);
-
-            if (!overwritten.empty()) {
-                overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
-            }
+        if (rRhs > 0 && foot->getArea() > 0) {
+            foot = grower(foot, rRhs);
         }
 
-        assert (id <= std::size_t(1 << lhsIdNbit));
-        id = (1 << lhsIdNbit);
-        for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end();
-             ptr != end; ++ptr, id += (1 << lhsIdNbit)) {
-            std::shared_ptr<Footprint> foot = *ptr;
+        std::set<std::uint64_t> overwritten;
+        foot->getSpans()
+                ->clippedTo(idImage->getBBox())
+                ->applyFunctor(setIdImage<IdPixelT>(id, &overwritten, true, lhsIdMask), *idImage);
 
-            if (rRhs > 0 && foot->getArea() > 0) {
-                foot = grower(foot, rRhs);
-            }
-
-            std::set<std::uint64_t> overwritten;
-            foot->getSpans()->clippedTo(idImage->getBBox())->applyFunctor(setIdImage<IdPixelT>(id,
-                                                                                               &overwritten,
-                                                                                               true,
-                                                                                               lhsIdMask),
-                                                                                               *idImage);
-
-            if (!overwritten.empty()) {
-                overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
-            }
+        if (!overwritten.empty()) {
+            overwrittenIds.insert(overwrittenIds.end(), std::make_pair(id, overwritten));
         }
+    }
 
-        FootprintSet fs(*idImage, Threshold(1),
-                                   1, false); // detect all pixels in rhs + lhs
-        /*
-         * Now go through the new Footprints looking up and remembering their progenitor's IDs; we'll use
-         * these IDs to merge the peaks in a moment
-         *
-         * We can't do this as we go through the idFinder as the IDs it returns are
-         *   (lhsId + 1) | ((rhsId + 1) << nbit)
-         * and, depending on the geometry, values of lhsId and/or rhsId can appear multiple times
-         * (e.g. if nbit is 2, idFinder IDs 0x5 and 0x6 both contain lhsId = 0) so we get duplicates
-         * of peaks.  This is not too bad, but it's a bit of a pain to make the lists unique again,
-         * and we avoid this by this two-step process.
-         */
-        FindIdsInFootprint<IdPixelT> idFinder;
-        for (FootprintList::iterator ptr = fs.getFootprints()->begin(),
-                 end = fs.getFootprints()->end(); ptr != end; ++ptr) {
-            std::shared_ptr<Footprint> foot = *ptr;
+    FootprintSet fs(*idImage, Threshold(1), 1, false);  // detect all pixels in rhs + lhs
+                                                        /*
+                                                         * Now go through the new Footprints looking up and remembering their progenitor's IDs; we'll use
+                                                         * these IDs to merge the peaks in a moment
+                                                         *
+                                                         * We can't do this as we go through the idFinder as the IDs it returns are
+                                                         *   (lhsId + 1) | ((rhsId + 1) << nbit)
+                                                         * and, depending on the geometry, values of lhsId and/or rhsId can appear multiple times
+                                                         * (e.g. if nbit is 2, idFinder IDs 0x5 and 0x6 both contain lhsId = 0) so we get duplicates
+                                                         * of peaks.  This is not too bad, but it's a bit of a pain to make the lists unique again,
+                                                         * and we avoid this by this two-step process.
+                                                         */
+    FindIdsInFootprint<IdPixelT> idFinder;
+    for (FootprintList::iterator ptr = fs.getFootprints()->begin(), end = fs.getFootprints()->end();
+         ptr != end; ++ptr) {
+        std::shared_ptr<Footprint> foot = *ptr;
 
-            // find the (mangled) [lr]hsFootprint IDs that contribute to foot
-            foot->getSpans()->applyFunctor(idFinder, *idImage);
+        // find the (mangled) [lr]hsFootprint IDs that contribute to foot
+        foot->getSpans()->applyFunctor(idFinder, *idImage);
 
-            std::set<std::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs; // indexes into [lr]hsFootprints
+        std::set<std::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs;  // indexes into [lr]hsFootprints
 
-            for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
-                     idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
-                unsigned int indx = *idptr;
-                if ((indx & lhsIdMask) > 0) {
-                    std::uint64_t i = (indx & lhsIdMask) - 1;
-                    lhsFootprintIndxs.insert(i);
-                    /*
-                     * Now allow for Footprints that vanished beneath this one
-                     */
-                    OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
-                    if (mapPtr != overwrittenIds.end()) {
-                        std::set<std::uint64_t> &overwritten = mapPtr->second;
+        for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(), idend = idFinder.getIds().end();
+             idptr != idend; ++idptr) {
+            unsigned int indx = *idptr;
+            if ((indx & lhsIdMask) > 0) {
+                std::uint64_t i = (indx & lhsIdMask) - 1;
+                lhsFootprintIndxs.insert(i);
+                /*
+                 * Now allow for Footprints that vanished beneath this one
+                 */
+                OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
+                if (mapPtr != overwrittenIds.end()) {
+                    std::set<std::uint64_t> &overwritten = mapPtr->second;
 
-                        for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(),
-                                 end = overwritten.end(); ptr != end; ++ptr){
-                            lhsFootprintIndxs.insert((*ptr & lhsIdMask) - 1);
-                        }
-                    }
-                }
-                indx >>= lhsIdNbit;
-
-                if (indx > 0) {
-                    std::uint64_t i = indx - 1;
-                    rhsFootprintIndxs.insert(i);
-                    /*
-                     * Now allow for Footprints that vanished beneath this one
-                     */
-                    OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
-                    if (mapPtr != overwrittenIds.end()) {
-                        std::set<std::uint64_t> &overwritten = mapPtr->second;
-
-                        for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(),
-                                 end = overwritten.end(); ptr != end; ++ptr) {
-                            rhsFootprintIndxs.insert(*ptr - 1);
-                        }
+                    for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(), end = overwritten.end();
+                         ptr != end; ++ptr) {
+                        lhsFootprintIndxs.insert((*ptr & lhsIdMask) - 1);
                     }
                 }
             }
-            /*
-             * We now have a complete set of Footprints that contributed to this one, so merge
-             * all their Peaks into the new one
-             */
-            PeakCatalog &peaks = foot->getPeaks();
+            indx >>= lhsIdNbit;
 
-            for (std::set<std::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(),
-                     end = lhsFootprintIndxs.end(); ptr != end; ++ptr) {
-                std::uint64_t i = *ptr;
-                assert (i < lhsFootprints.size());
-                PeakCatalog const& oldPeaks = lhsFootprints[i]->getPeaks();
+            if (indx > 0) {
+                std::uint64_t i = indx - 1;
+                rhsFootprintIndxs.insert(i);
+                /*
+                 * Now allow for Footprints that vanished beneath this one
+                 */
+                OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
+                if (mapPtr != overwrittenIds.end()) {
+                    std::set<std::uint64_t> &overwritten = mapPtr->second;
 
-                int const nold = peaks.size();
-                peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
-                // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
-                // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
-                // it'd try to do if we passed Catalog's own iterators).
-                std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
-                                   peaks.getInternal().end(), SortPeaks());
+                    for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(), end = overwritten.end();
+                         ptr != end; ++ptr) {
+                        rhsFootprintIndxs.insert(*ptr - 1);
+                    }
+                }
             }
+        }
+        /*
+         * We now have a complete set of Footprints that contributed to this one, so merge
+         * all their Peaks into the new one
+         */
+        PeakCatalog &peaks = foot->getPeaks();
 
-            for (std::set<std::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(),
-                     end = rhsFootprintIndxs.end(); ptr != end; ++ptr) {
-                std::uint64_t i = *ptr;
-                assert (i < rhsFootprints.size());
-                PeakCatalog const& oldPeaks = rhsFootprints[i]->getPeaks();
+        for (std::set<std::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(), end = lhsFootprintIndxs.end();
+             ptr != end; ++ptr) {
+            std::uint64_t i = *ptr;
+            assert(i < lhsFootprints.size());
+            PeakCatalog const &oldPeaks = lhsFootprints[i]->getPeaks();
 
-                int const nold = peaks.size();
-                peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
-                // See note above on why we're using getInternal() here.
-                std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
-                                   peaks.getInternal().end(), SortPeaks());
-            }
-            idFinder.reset();
+            int const nold = peaks.size();
+            peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+            // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
+            // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
+            // it'd try to do if we passed Catalog's own iterators).
+            std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
+                               peaks.getInternal().end(), SortPeaks());
         }
 
-        return fs;
+        for (std::set<std::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(), end = rhsFootprintIndxs.end();
+             ptr != end; ++ptr) {
+            std::uint64_t i = *ptr;
+            assert(i < rhsFootprints.size());
+            PeakCatalog const &oldPeaks = rhsFootprints[i]->getPeaks();
+
+            int const nold = peaks.size();
+            peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
+            // See note above on why we're using getInternal() here.
+            std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
+                               peaks.getInternal().end(), SortPeaks());
+        }
+        idFinder.reset();
     }
+
+    return fs;
+}
 /*
  * run-length code for part of object
  */
-    class IdSpan {
-    public:
-        explicit IdSpan(int id, int y, int x0, int x1, double good) :
-            id(id), y(y), x0(x0), x1(x1), good(good) {}
-        int id;                         /* ID for object */
-        int y;                          /* Row wherein IdSpan dwells */
-        int x0, x1;                     /* inclusive range of columns */
-        bool good;                      /* includes a value over the desired threshold? */
-    };
+class IdSpan {
+public:
+    explicit IdSpan(int id, int y, int x0, int x1, double good) : id(id), y(y), x0(x0), x1(x1), good(good) {}
+    int id;     /* ID for object */
+    int y;      /* Row wherein IdSpan dwells */
+    int x0, x1; /* inclusive range of columns */
+    bool good;  /* includes a value over the desired threshold? */
+};
 /*
  * comparison functor; sort by ID then row
  */
-    struct IdSpanCompar : public std::binary_function<const std::shared_ptr<IdSpan>, const std::shared_ptr<IdSpan>, bool> {
-        bool operator()(std::shared_ptr<IdSpan> const a, std::shared_ptr<IdSpan> const b) {
-            if (a->id < b->id) {
-                return true;
-            } else if (a->id > b->id) {
-                return false;
-            } else {
-                return (a->y < b->y) ? true : false;
-            }
+struct IdSpanCompar
+        : public std::binary_function<const std::shared_ptr<IdSpan>, const std::shared_ptr<IdSpan>, bool> {
+    bool operator()(std::shared_ptr<IdSpan> const a, std::shared_ptr<IdSpan> const b) {
+        if (a->id < b->id) {
+            return true;
+        } else if (a->id > b->id) {
+            return false;
+        } else {
+            return (a->y < b->y) ? true : false;
         }
-    };
+    }
+};
 /*
  * Follow a chain of aliases, returning the final resolved value.
  */
-    int resolve_alias(std::vector<int> const &aliases, /* list of aliases */
-                      int id) {         /* alias to look up */
-        int resolved = id;              /* resolved alias */
+int resolve_alias(std::vector<int> const &aliases, /* list of aliases */
+                  int id) {                        /* alias to look up */
+    int resolved = id;                             /* resolved alias */
 
-        while (id != aliases[id]) {
-            resolved = id = aliases[id];
-        }
-
-        return(resolved);
+    while (id != aliases[id]) {
+        resolved = id = aliases[id];
     }
-    /// @endcond
-}
 
+    return (resolved);
+}
+/// @endcond
+}
 
 namespace {
 template <typename ImageT>
-void findPeaksInFootprint(ImageT const & image, bool polarity, PeakCatalog & peaks,
-                          Footprint & foot, std::size_t const margin=0) {
+void findPeaksInFootprint(ImageT const &image, bool polarity, PeakCatalog &peaks, Footprint &foot,
+                          std::size_t const margin = 0) {
     auto spanSet = foot.getSpans();
-    if (spanSet->size() == 0){
+    if (spanSet->size() == 0) {
         return;
     }
     auto bbox = image.getBBox();
-    for (auto const & spanIter: *spanSet) {
+    for (auto const &spanIter : *spanSet) {
         auto y = spanIter.getY() - image.getY0();
-        if (static_cast<std::size_t>(y+image.getY0()) < bbox.getMinY() + margin ||
-            static_cast<std::size_t>(y+image.getY0()) > bbox.getMaxY() - margin) {
+        if (static_cast<std::size_t>(y + image.getY0()) < bbox.getMinY() + margin ||
+            static_cast<std::size_t>(y + image.getY0()) > bbox.getMaxY() - margin) {
             continue;
         }
-        for (auto x = spanIter.getMinX()-image.getX0(); x <= spanIter.getMaxX()-image.getX0(); ++x) {
-            if (static_cast<std::size_t>(x+image.getX0()) < (bbox.getMinX() + margin) ||
-                static_cast<std::size_t>(x+image.getX0()) > (bbox.getMaxX() - margin)) {
+        for (auto x = spanIter.getMinX() - image.getX0(); x <= spanIter.getMaxX() - image.getX0(); ++x) {
+            if (static_cast<std::size_t>(x + image.getX0()) < (bbox.getMinX() + margin) ||
+                static_cast<std::size_t>(x + image.getX0()) > (bbox.getMaxX() - margin)) {
                 continue;
             }
             auto val = image(x, y);
-            if (polarity) {            // look for +ve peaks
-                if (image(x-1,  y+1) > val || image(x, y+1) > val || image(x+1, y+1) > val ||
-                    image(x-1,  y) > val   ||                        image(x+1,  y) > val  ||
-                    image(x-1, y-1) > val  || image(x, y-1) > val || image(x+1, y-1) > val) {
+            if (polarity) {  // look for +ve peaks
+                if (image(x - 1, y + 1) > val || image(x, y + 1) > val || image(x + 1, y + 1) > val ||
+                    image(x - 1, y) > val || image(x + 1, y) > val || image(x - 1, y - 1) > val ||
+                    image(x, y - 1) > val || image(x + 1, y - 1) > val) {
                     continue;
                 }
-            } else {                    // look for -ve "peaks" (pits)
-                if (image(x-1, y+1) < val || image(x, y+1) < val || image(x+1, y+1) < val ||
-                    image(x-1,  y) < val  ||                        image(x+1,  y) < val  ||
-                    image(x-1, y-1) < val || image(x, y-1) < val || image(x+1, y-1) < val) {
+            } else {  // look for -ve "peaks" (pits)
+                if (image(x - 1, y + 1) < val || image(x, y + 1) < val || image(x + 1, y + 1) < val ||
+                    image(x - 1, y) < val || image(x + 1, y) < val || image(x - 1, y - 1) < val ||
+                    image(x, y - 1) < val || image(x + 1, y - 1) < val) {
                     continue;
                 }
             }
 
-            foot.addPeak(x+image.getX0(), y+image.getY0(), val);
+            foot.addPeak(x + image.getX0(), y + image.getY0(), val);
         }
     }
 }
@@ -517,14 +512,15 @@ void findPeaksInFootprint(ImageT const & image, bool polarity, PeakCatalog & pea
 template <typename ImageT>
 class FindMaxInFootprint {
 public:
-    explicit FindMaxInFootprint(bool polarity): _polarity(polarity),
-                                                _x(0),
-                                                _y(0),
-                                                _min(std::numeric_limits<double>::max()),
-                                                _max(-std::numeric_limits<double>::max()) {}
+    explicit FindMaxInFootprint(bool polarity)
+            : _polarity(polarity),
+              _x(0),
+              _y(0),
+              _min(std::numeric_limits<double>::max()),
+              _max(-std::numeric_limits<double>::max()) {}
 
-    void operator()(geom::Point2I const & point, ImageT const & val) {
-        if(_polarity) {
+    void operator()(geom::Point2I const &point, ImageT const &val) {
+        if (_polarity) {
             if (val > _max) {
                 _max = val;
                 _x = point.getX();
@@ -539,9 +535,7 @@ public:
         }
     }
 
-    void addRecord(Footprint & foot) const {
-        foot.addPeak(_x, _y, _polarity ? _max : _min);
-    }
+    void addRecord(Footprint &foot) const { foot.addPeak(_x, _y, _polarity ? _max : _min); }
 
 private:
     bool _polarity;
@@ -549,65 +543,61 @@ private:
     double _min, _max;
 };
 
-    template<typename ImageT, typename ThresholdT>
-    void findPeaks(std::shared_ptr<Footprint> foot, ImageT const& img, bool polarity, ThresholdT)
-    {
-        findPeaksInFootprint(img, polarity, foot->getPeaks(), *foot, 1);
+template <typename ImageT, typename ThresholdT>
+void findPeaks(std::shared_ptr<Footprint> foot, ImageT const &img, bool polarity, ThresholdT) {
+    findPeaksInFootprint(img, polarity, foot->getPeaks(), *foot, 1);
 
-        // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
-        // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
-        // it'd try to do if we passed Catalog's own iterators).
-        std::stable_sort(foot->getPeaks().getInternal().begin(), foot->getPeaks().getInternal().end(),
-                         SortPeaks());
+    // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
+    // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
+    // it'd try to do if we passed Catalog's own iterators).
+    std::stable_sort(foot->getPeaks().getInternal().begin(), foot->getPeaks().getInternal().end(),
+                     SortPeaks());
 
-        if (foot->getPeaks().empty()) {
-            FindMaxInFootprint<typename ImageT::Pixel> maxFinder(polarity);
-            foot->getSpans()->applyFunctor(maxFinder, ndarray::ndImage(img.getArray(), img.getXY0()));
-            maxFinder.addRecord(*foot);
-        }
+    if (foot->getPeaks().empty()) {
+        FindMaxInFootprint<typename ImageT::Pixel> maxFinder(polarity);
+        foot->getSpans()->applyFunctor(maxFinder, ndarray::ndImage(img.getArray(), img.getXY0()));
+        maxFinder.addRecord(*foot);
     }
+}
 
-    // No need to search for peaks when processing a Mask
-    template<typename ImageT>
-    void findPeaks(std::shared_ptr<Footprint>, ImageT const&, bool, ThresholdBitmask_traits)
-    {
-        ;
-    }
+// No need to search for peaks when processing a Mask
+template <typename ImageT>
+void findPeaks(std::shared_ptr<Footprint>, ImageT const &, bool, ThresholdBitmask_traits) {
+    ;
+}
 }
 
 /*
  * Functions to determine if a pixel's in a Footprint
  */
-template<typename ImagePixelT, typename IterT>
-static inline bool inFootprint(ImagePixelT pixVal, IterT,
-                               bool polarity, double thresholdVal, ThresholdLevel_traits) {
+template <typename ImagePixelT, typename IterT>
+static inline bool inFootprint(ImagePixelT pixVal, IterT, bool polarity, double thresholdVal,
+                               ThresholdLevel_traits) {
     return (polarity ? pixVal : -pixVal) >= thresholdVal;
 }
 
-template<typename ImagePixelT, typename IterT>
-static inline bool inFootprint(ImagePixelT pixVal, IterT var,
-                               bool polarity, double thresholdVal, ThresholdPixelLevel_traits) {
-    return (polarity ? pixVal : -pixVal) >= thresholdVal*::sqrt(*var);
+template <typename ImagePixelT, typename IterT>
+static inline bool inFootprint(ImagePixelT pixVal, IterT var, bool polarity, double thresholdVal,
+                               ThresholdPixelLevel_traits) {
+    return (polarity ? pixVal : -pixVal) >= thresholdVal * ::sqrt(*var);
 }
 
-template<typename ImagePixelT, typename IterT>
-static inline bool inFootprint(ImagePixelT pixVal, IterT,
-                               bool, double thresholdVal, ThresholdBitmask_traits) {
+template <typename ImagePixelT, typename IterT>
+static inline bool inFootprint(ImagePixelT pixVal, IterT, bool, double thresholdVal,
+                               ThresholdBitmask_traits) {
     return (pixVal & static_cast<long>(thresholdVal));
 }
 
 /*
  * Advance the x_iterator to the variance image, when relevant (it may be NULL otherwise)
  */
-template<typename IterT>
-static inline IterT
-advancePtr(IterT varPtr, Threshold_traits) {
+template <typename IterT>
+static inline IterT advancePtr(IterT varPtr, Threshold_traits) {
     return varPtr;
 }
 
-template<typename IterT>
-static inline IterT
-advancePtr(IterT varPtr, ThresholdPixelLevel_traits) {
+template <typename IterT>
+static inline IterT advancePtr(IterT varPtr, ThresholdPixelLevel_traits) {
     return varPtr + 1;
 }
 
@@ -615,56 +605,55 @@ advancePtr(IterT varPtr, ThresholdPixelLevel_traits) {
  * Here's the working routine for the FootprintSet constructors; see documentation
  * of the constructors themselves
  */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT, typename ThresholdTraitT>
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT, typename ThresholdTraitT>
 static void findFootprints(
-        typename FootprintSet::FootprintList *_footprints, // Footprints
-        geom::Box2I const& _region,               // BBox of pixels that are being searched
-        image::ImageBase<ImagePixelT> const &img, // Image to search for objects
-        image::Image<VariancePixelT> const *var,  // img's variance
-        double const footprintThreshold,  // threshold value for footprint
+        typename FootprintSet::FootprintList *_footprints,  // Footprints
+        geom::Box2I const &_region,                         // BBox of pixels that are being searched
+        image::ImageBase<ImagePixelT> const &img,           // Image to search for objects
+        image::Image<VariancePixelT> const *var,            // img's variance
+        double const footprintThreshold,                    // threshold value for footprint
         double const includeThresholdMultiplier,  // threshold (relative to footprintThreshold) for inclusion
         bool const polarity,                      // if false, search _below_ thresholdVal
         int const npixMin,                        // minimum number of pixels in an object
         bool const setPeaks                       // should I set the Peaks list?
-)
-{
-    int id;                             /* object ID */
-    int in_span;                        /* object ID of current IdSpan */
-    int nobj = 0;                       /* number of objects found */
-    int x0 = 0;                         /* unpacked from a IdSpan */
+        ) {
+    int id;       /* object ID */
+    int in_span;  /* object ID of current IdSpan */
+    int nobj = 0; /* number of objects found */
+    int x0 = 0;   /* unpacked from a IdSpan */
 
     typedef typename image::Image<ImagePixelT> ImageT;
-    double includeThreshold = footprintThreshold * includeThresholdMultiplier; // Threshold for inclusion
+    double includeThreshold = footprintThreshold * includeThresholdMultiplier;  // Threshold for inclusion
 
     int const row0 = img.getY0();
     int const col0 = img.getX0();
     int const height = img.getHeight();
     int const width = img.getWidth();
-/*
- * Storage for arrays that identify objects by ID. We want to be able to
- * refer to idp[-1] and idp[width], hence the (width + 2)
- */
+    /*
+     * Storage for arrays that identify objects by ID. We want to be able to
+     * refer to idp[-1] and idp[width], hence the (width + 2)
+     */
     std::vector<int> id1(width + 2);
     std::fill(id1.begin(), id1.end(), 0);
     std::vector<int> id2(width + 2);
     std::fill(id2.begin(), id2.end(), 0);
-    std::vector<int>::iterator idc = id1.begin() + 1; // object IDs in current/
-    std::vector<int>::iterator idp = id2.begin() + 1; //                       previous row
+    std::vector<int>::iterator idc = id1.begin() + 1;  // object IDs in current/
+    std::vector<int>::iterator idp = id2.begin() + 1;  //                       previous row
 
-    std::vector<int> aliases;           // aliases for initially disjoint parts of Footprints
-    aliases.reserve(1 + height/20);     // initial size of aliases
+    std::vector<int> aliases;          // aliases for initially disjoint parts of Footprints
+    aliases.reserve(1 + height / 20);  // initial size of aliases
 
-    std::vector<std::shared_ptr<IdSpan>> spans;     // y:x0,x1 for objects
-    spans.reserve(aliases.capacity());  // initial size of spans
+    std::vector<std::shared_ptr<IdSpan>> spans;  // y:x0,x1 for objects
+    spans.reserve(aliases.capacity());           // initial size of spans
 
-    aliases.push_back(0);               // 0 --> 0
-/*
- * Go through image identifying objects
- */
+    aliases.push_back(0);  // 0 --> 0
+                           /*
+                            * Go through image identifying objects
+                            */
     typedef typename image::Image<ImagePixelT>::x_iterator x_iterator;
     typedef typename image::Image<VariancePixelT>::x_iterator x_var_iterator;
 
-    in_span = 0;                        // not in a span
+    in_span = 0;  // not in a span
     for (int y = 0; y != height; ++y) {
         if (idc == id1.begin() + 1) {
             idc = id2.begin() + 1;
@@ -675,7 +664,7 @@ static void findFootprints(
         }
         std::fill_n(idc - 1, width + 2, 0);
 
-        in_span = 0;                    /* not in a span */
+        in_span = 0;                                     /* not in a span */
         bool good = (includeThresholdMultiplier == 1.0); /* Span exceeds the threshold? */
 
         x_iterator pixPtr = img.row_begin(y);
@@ -692,7 +681,7 @@ static void findFootprints(
                     in_span = 0;
                     good = false;
                 }
-            } else {                    /* a pixel to fix */
+            } else { /* a pixel to fix */
                 if (idc[x - 1] != 0) {
                     id = idc[x - 1];
                 } else if (idp[x - 1] != 0) {
@@ -711,9 +700,9 @@ static void findFootprints(
                     x0 = x;
                     in_span = id;
                 }
-/*
- * Do we need to merge ID numbers? If so, make suitable entries in aliases[]
- */
+                /*
+                 * Do we need to merge ID numbers? If so, make suitable entries in aliases[]
+                 */
                 if (idp[x + 1] != 0 && idp[x + 1] != id) {
                     aliases[resolve_alias(aliases, idp[x + 1])] = resolve_alias(aliases, id);
 
@@ -731,33 +720,33 @@ static void findFootprints(
             spans.push_back(sp);
         }
     }
-/*
- * Resolve aliases; first alias chains, then the IDs in the spans
- */
+    /*
+     * Resolve aliases; first alias chains, then the IDs in the spans
+     */
     for (unsigned int i = 0; i < spans.size(); i++) {
         spans[i]->id = resolve_alias(aliases, spans[i]->id);
     }
-/*
- * Sort spans by ID, so we can sweep through them once
- */
+    /*
+     * Sort spans by ID, so we can sweep through them once
+     */
     if (spans.size() > 0) {
         std::sort(spans.begin(), spans.end(), IdSpanCompar());
     }
-/*
- * Build Footprints from spans
- */
-    unsigned int i0;                    // initial value of i
+    /*
+     * Build Footprints from spans
+     */
+    unsigned int i0;  // initial value of i
     if (spans.size() > 0) {
         id = spans[0]->id;
         i0 = 0;
-        for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
+        for (unsigned int i = 0; i <= spans.size(); i++) {  // <= size to catch the last object
             if (i == spans.size() || spans[i]->id != id) {
-
-                bool good = false;      // Span includes pixel sufficient to include footprint in set?
+                bool good = false;  // Span includes pixel sufficient to include footprint in set?
                 std::vector<geom::Span> tempSpanList;
                 for (; i0 < i; i0++) {
                     good |= spans[i0]->good;
-                    tempSpanList.push_back(geom::Span(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0));
+                    tempSpanList.push_back(
+                            geom::Span(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0));
                 }
                 auto tempSpanSet = std::make_shared<geom::SpanSet>(std::move(tempSpanList));
                 auto fp = std::make_shared<Footprint>(tempSpanSet, _region);
@@ -772,9 +761,9 @@ static void findFootprints(
             }
         }
     }
-/*
- * Find all peaks within those Footprints
- */
+    /*
+     * Find all peaks within those Footprints
+     */
     if (setPeaks) {
         typedef FootprintSet::FootprintList::iterator fiterator;
         for (fiterator ptr = _footprints->begin(), end = _footprints->end(); ptr != end; ++ptr) {
@@ -783,103 +772,64 @@ static void findFootprints(
     }
 }
 
-template<typename ImagePixelT>
-FootprintSet::FootprintSet(
-    image::Image<ImagePixelT> const &img,
-    Threshold const &threshold,
-    int const npixMin,
-    bool const setPeaks
-) : daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList()),
-    _region(img.getBBox())
-{
+template <typename ImagePixelT>
+FootprintSet::FootprintSet(image::Image<ImagePixelT> const &img, Threshold const &threshold,
+                           int const npixMin, bool const setPeaks)
+        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList()), _region(img.getBBox()) {
     typedef float VariancePixelT;
 
     findFootprints<ImagePixelT, image::MaskPixel, VariancePixelT, ThresholdLevel_traits>(
-        _footprints.get(),
-        _region,
-        img,
-        NULL,
-        threshold.getValue(img), threshold.getIncludeMultiplier(), threshold.getPolarity(),
-        npixMin,
-        setPeaks
-    );
+            _footprints.get(), _region, img, NULL, threshold.getValue(img), threshold.getIncludeMultiplier(),
+            threshold.getPolarity(), npixMin, setPeaks);
 }
 
 // NOTE: not a template to appease swig (see note by instantiations at bottom)
 
 template <typename MaskPixelT>
-FootprintSet::FootprintSet(
-    image::Mask<MaskPixelT> const &msk,
-    Threshold const &threshold,
-    int const npixMin
-) : daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList()),
-    _region(msk.getBBox())
-{
+FootprintSet::FootprintSet(image::Mask<MaskPixelT> const &msk, Threshold const &threshold, int const npixMin)
+        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList()), _region(msk.getBBox()) {
     switch (threshold.getType()) {
-      case Threshold::BITMASK:
-          findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
-            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getIncludeMultiplier(),
-            threshold.getPolarity(), npixMin, false);
-        break;
+        case Threshold::BITMASK:
+            findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
+                    _footprints.get(), _region, msk, NULL, threshold.getValue(),
+                    threshold.getIncludeMultiplier(), threshold.getPolarity(), npixMin, false);
+            break;
 
-      case Threshold::VALUE:
-        findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
-            _footprints.get(), _region, msk, NULL, threshold.getValue(), threshold.getIncludeMultiplier(),
-            threshold.getPolarity(), npixMin, false);
-        break;
+        case Threshold::VALUE:
+            findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
+                    _footprints.get(), _region, msk, NULL, threshold.getValue(),
+                    threshold.getIncludeMultiplier(), threshold.getPolarity(), npixMin, false);
+            break;
 
-      default:
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "You must specify a numerical threshold value with a Mask");
+        default:
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              "You must specify a numerical threshold value with a Mask");
     }
 }
 
-
-template<typename ImagePixelT, typename MaskPixelT>
-FootprintSet::FootprintSet(
-    const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg,
-    Threshold const &threshold,
-    std::string const &planeName,
-    int const npixMin,
-    bool const setPeaks
-) : daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList()),
-    _region(
-        geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
-        geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())
-    )
-{
+template <typename ImagePixelT, typename MaskPixelT>
+FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg,
+                           Threshold const &threshold, std::string const &planeName, int const npixMin,
+                           bool const setPeaks)
+        : daf::base::Citizen(typeid(this)),
+          _footprints(new FootprintList()),
+          _region(geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
+                  geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())) {
     typedef typename image::MaskedImage<ImagePixelT, MaskPixelT>::Variance::Pixel VariancePixelT;
     // Find the Footprints
     switch (threshold.getType()) {
-      case Threshold::PIXEL_STDEV:
-        findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdPixelLevel_traits>(
-            _footprints.get(),
-            _region,
-            *maskedImg.getImage(),
-            maskedImg.getVariance().get(),
-            threshold.getValue(maskedImg),
-            threshold.getIncludeMultiplier(),
-            threshold.getPolarity(),
-            npixMin,
-            setPeaks
-                                                                                  );
-        break;
-      default:
-        findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdLevel_traits>(
-            _footprints.get(),
-            _region,
-            *maskedImg.getImage(),
-            maskedImg.getVariance().get(),
-            threshold.getValue(maskedImg),
-            threshold.getIncludeMultiplier(),
-            threshold.getPolarity(),
-            npixMin,
-            setPeaks
-                                                                                  );
-        break;
+        case Threshold::PIXEL_STDEV:
+            findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdPixelLevel_traits>(
+                    _footprints.get(), _region, *maskedImg.getImage(), maskedImg.getVariance().get(),
+                    threshold.getValue(maskedImg), threshold.getIncludeMultiplier(), threshold.getPolarity(),
+                    npixMin, setPeaks);
+            break;
+        default:
+            findFootprints<ImagePixelT, MaskPixelT, VariancePixelT, ThresholdLevel_traits>(
+                    _footprints.get(), _region, *maskedImg.getImage(), maskedImg.getVariance().get(),
+                    threshold.getValue(maskedImg), threshold.getIncludeMultiplier(), threshold.getPolarity(),
+                    npixMin, setPeaks);
+            break;
     }
     // Set Mask if requested
     if (planeName == "") {
@@ -895,185 +845,180 @@ FootprintSet::FootprintSet(
     //
     // Set the bits where objects are detected
     //
-    for (auto const & fIter : *_footprints) {
+    for (auto const &fIter : *_footprints) {
         fIter->getSpans()->setMask(*(maskedImg.getMask()), bitPlane);
     }
 }
 
-
 namespace {
-    /// Don't let doxygen see this block  @cond
-    /*
-     * A data structure to hold the starting point for a search for pixels above threshold,
-     * used by pmFindFootprintAtPoint
-     *
-     * We don't want to find this span again --- it's already part of the footprint ---
-     * so we set appropriate mask bits
-     */
-    //
-    // An enum for what we should do with a Startspan
-    //
-    enum DIRECTION {DOWN = 0,   // scan down from this span
-                    UP,         // scan up from this span
-                    RESTART,     // restart scanning from this span
-                    DONE                // this span is processed
-    };
-    //
-    // A Class that remembers how to [re-]start scanning the image for pixels
-    //
-    template<typename MaskPixelT>
-    class Startspan {
-    public:
-        Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
-        ~Startspan() { delete _span; }
+/// Don't let doxygen see this block  @cond
+/*
+ * A data structure to hold the starting point for a search for pixels above threshold,
+ * used by pmFindFootprintAtPoint
+ *
+ * We don't want to find this span again --- it's already part of the footprint ---
+ * so we set appropriate mask bits
+ */
+//
+// An enum for what we should do with a Startspan
+//
+enum DIRECTION {
+    DOWN = 0,  // scan down from this span
+    UP,        // scan up from this span
+    RESTART,   // restart scanning from this span
+    DONE       // this span is processed
+};
+//
+// A Class that remembers how to [re-]start scanning the image for pixels
+//
+template <typename MaskPixelT>
+class Startspan {
+public:
+    Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
+    ~Startspan() { delete _span; }
 
-        bool getSpan() { return _span; }
-        bool Stop() { return _stop; }
-        DIRECTION getDirection() { return _direction; }
+    bool getSpan() { return _span; }
+    bool Stop() { return _stop; }
+    DIRECTION getDirection() { return _direction; }
 
-        static int detectedPlane;       // The MaskPlane to use for detected pixels
-        static int stopPlane;           // The MaskPlane to use for pixels that signal us to stop searching
-    private:
-        std::shared_ptr<geom::Span const> _span; // The initial Span
-        DIRECTION _direction;           // How to continue searching for further pixels
-        bool _stop;                     // should we stop searching?
-    };
+    static int detectedPlane;  // The MaskPlane to use for detected pixels
+    static int stopPlane;      // The MaskPlane to use for pixels that signal us to stop searching
+private:
+    std::shared_ptr<geom::Span const> _span;  // The initial Span
+    DIRECTION _direction;                     // How to continue searching for further pixels
+    bool _stop;                               // should we stop searching?
+};
 
-    template<typename MaskPixelT>
-    Startspan<MaskPixelT>::Startspan(geom::Span const *span, // The span in question
-                         image::Mask<MaskPixelT> *mask, // Pixels that we've already detected
-                         DIRECTION const dir // Should we continue searching towards the top of the image?
-                        ) :
-        _span(span),
-        _direction(dir),
-        _stop(false) {
+template <typename MaskPixelT>
+Startspan<MaskPixelT>::Startspan(
+        geom::Span const *span,         // The span in question
+        image::Mask<MaskPixelT> *mask,  // Pixels that we've already detected
+        DIRECTION const dir             // Should we continue searching towards the top of the image?
+        )
+        : _span(span), _direction(dir), _stop(false) {
+    if (mask != NULL) {  // remember that we've detected these pixels
+        mask->setMaskPlaneValues(detectedPlane, span->getX0(), span->getX1(), span->getY());
 
-        if (mask != NULL) {                     // remember that we've detected these pixels
-            mask->setMaskPlaneValues(detectedPlane, span->getX0(), span->getX1(), span->getY());
-
-            int const y = span->getY() - mask->getY0();
-            for (int x = span->getX0() - mask->getX0(); x <= span->getX1() - mask->getX0(); x++) {
-                if (mask(x, y, stopPlane)) {
-                    _stop = true;
-                    break;
-                }
+        int const y = span->getY() - mask->getY0();
+        for (int x = span->getX0() - mask->getX0(); x <= span->getX1() - mask->getX0(); x++) {
+            if (mask(x, y, stopPlane)) {
+                _stop = true;
+                break;
             }
         }
     }
+}
 
-    template<typename ImagePixelT, typename MaskPixelT>
-    class StartspanSet {
-    public:
-        StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT>& image) :
-            _image(image->getImage()),
-            _mask(image->getMask()) {}
-        ~StartspanSet() {}
+template <typename ImagePixelT, typename MaskPixelT>
+class StartspanSet {
+public:
+    StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT> &image)
+            : _image(image->getImage()), _mask(image->getMask()) {}
+    ~StartspanSet() {}
 
-        bool add(geom::Span *span, DIRECTION const dir, bool addToMask = true);
-        bool process(Footprint *fp,          // the footprint that we're building
-                     Threshold const &threshold, // Threshold
-                     double const param = -1);           // parameter that Threshold may need
-    private:
-        image::Image<ImagePixelT> const *_image; // the Image we're searching
-        image::Mask<MaskPixelT> *_mask;          // the mask that tells us where we've got to
-        std::vector<std::shared_ptr<Startspan<MaskPixelT>>> _spans; // list of Startspans
-    };
+    bool add(geom::Span *span, DIRECTION const dir, bool addToMask = true);
+    bool process(Footprint *fp,               // the footprint that we're building
+                 Threshold const &threshold,  // Threshold
+                 double const param = -1);    // parameter that Threshold may need
+private:
+    image::Image<ImagePixelT> const *_image;                     // the Image we're searching
+    image::Mask<MaskPixelT> *_mask;                              // the mask that tells us where we've got to
+    std::vector<std::shared_ptr<Startspan<MaskPixelT>>> _spans;  // list of Startspans
+};
 
-    //
-    // Add a new Startspan to a StartspansSet.  Iff we see a stop bit, return true
-    //
-    template<typename ImagePixelT, typename MaskPixelT>
-    bool StartspanSet<ImagePixelT, MaskPixelT>::add(geom::Span *span, // the span in question
-                                                    DIRECTION const dir, // the desired direction to search
-                                                    bool addToMask) { // should I add the Span to the mask?
-        if (dir == RESTART) {
-            if (add(span,  UP) || add(span, DOWN, false)) {
-                return true;
-            }
-        } else {
-            auto sspan = std::make_shared<MaskPixelT>(span, dir);
-            if (sspan->stop()) {        // we detected a stop bit
-                return true;
-            } else {
-                _spans.push_back(sspan);
-            }
+//
+// Add a new Startspan to a StartspansSet.  Iff we see a stop bit, return true
+//
+template <typename ImagePixelT, typename MaskPixelT>
+bool StartspanSet<ImagePixelT, MaskPixelT>::add(geom::Span *span,     // the span in question
+                                                DIRECTION const dir,  // the desired direction to search
+                                                bool addToMask) {     // should I add the Span to the mask?
+    if (dir == RESTART) {
+        if (add(span, UP) || add(span, DOWN, false)) {
+            return true;
         }
+    } else {
+        auto sspan = std::make_shared<MaskPixelT>(span, dir);
+        if (sspan->stop()) {  // we detected a stop bit
+            return true;
+        } else {
+            _spans.push_back(sspan);
+        }
+    }
 
+    return false;
+}
+
+/*
+ * Search the image for pixels above threshold, starting at a single Startspan.
+ * We search the array looking for one to process; it'd be better to move the
+ * ones that we're done with to the end, but it probably isn't worth it for
+ * the anticipated uses of this routine.
+ *
+ * This is the guts of pmFindFootprintAtPoint
+ */
+template <typename ImagePixelT, typename MaskPixelT>
+bool StartspanSet<ImagePixelT, MaskPixelT>::process(Footprint *fp,  // the footprint that we're building
+                                                    Threshold const &threshold,  // Threshold
+                                                    double const param  // parameter that Threshold may need
+                                                    ) {
+    int const row0 = _image->getY0();
+    int const col0 = _image->getOffsetCols();
+    int const height = _image->getHeight();
+
+    Startspan<MaskPixelT> *sspan = NULL;
+    for (auto iter = _spans.begin(); iter != _spans.end(); iter++) {
+        *sspan = *iter;
+        if (sspan->getDirection() != DONE) {
+            break;
+        }
+        if (sspan->Stop()) {
+            break;
+        }
+    }
+    if (sspan == NULL || sspan->getDirection() == DONE) {  // no more Startspans to process
         return false;
     }
-
+    if (sspan->Stop()) {  // they don't want any more spans processed
+        return false;
+    }
     /*
-     * Search the image for pixels above threshold, starting at a single Startspan.
-     * We search the array looking for one to process; it'd be better to move the
-     * ones that we're done with to the end, but it probably isn't worth it for
-     * the anticipated uses of this routine.
-     *
-     * This is the guts of pmFindFootprintAtPoint
+     * Work
      */
-    template<typename ImagePixelT, typename MaskPixelT>
-    bool StartspanSet<ImagePixelT, MaskPixelT>::process(
-                Footprint *fp,              // the footprint that we're building
-                Threshold const &threshold, // Threshold
-                double const param                     // parameter that Threshold may need
-                                                             ) {
-        int const row0 = _image->getY0();
-        int const col0 = _image->getOffsetCols();
-        int const height = _image->getHeight();
+    DIRECTION const dir = sspan->getDirection();
+    /*
+     * Set initial span to the startspan
+     */
+    int x0 = sspan->getSpan()->getX0() - col0;
+    /*
+     * Go through image identifying objects
+     */
+    int nx0 = -1;                         // new value of x0
+    int const di = (dir == UP) ? 1 : -1;  // how much i changes to get to the next row
+    bool stop = false;                    // should I stop searching for spans?
 
+    typedef typename image::Image<ImagePixelT>::pixel_accessor pixAccessT;
+    double const thresholdVal = threshold.getValue(param);
+    bool const polarity = threshold.getPolarity();
 
-        Startspan<MaskPixelT> *sspan = NULL;
-        for (auto iter = _spans.begin(); iter != _spans.end(); iter++) {
-            *sspan = *iter;
-            if (sspan->getDirection() != DONE) {
-                break;
-            }
-            if (sspan->Stop()) {
-                break;
-            }
-        }
-        if (sspan == NULL || sspan->getDirection() == DONE) { // no more Startspans to process
-            return false;
-        }
-        if (sspan->Stop()) {                    // they don't want any more spans processed
-            return false;
-        }
-        /*
-         * Work
-         */
-        DIRECTION const dir = sspan->getDirection();
-        /*
-         * Set initial span to the startspan
-         */
-        int x0 = sspan->getSpan()->getX0() - col0;
-        /*
-         * Go through image identifying objects
-         */
-        int nx0 = -1;                        // new value of x0
-        int const di = (dir == UP) ? 1 : -1; // how much i changes to get to the next row
-        bool stop = false;                   // should I stop searching for spans?
-
-        typedef typename image::Image<ImagePixelT>::pixel_accessor pixAccessT;
-        double const thresholdVal = threshold.getValue(param);
-        bool const polarity = threshold.getPolarity();
-
-        for (int i = sspan->span->y -row0 + di; i < height && i >= 0; i += di) {
-            pixAccessT imgRow = _image->origin().advance(0, i); // row pointer
-            //maskPixAccessT maskRow = _mask->origin.advance(0, i);  //  masks's row pointer
-            //
-            // Search left from the pixel diagonally to the left of (i - di, x0). If there's
-            // a connected span there it may need to grow up and/or down, so push it onto
-            // the stack for later consideration
-            //
-            nx0 = -1;
-            for (int j = x0 - 1; j >= -1; j--) {
-                ImagePixelT pixVal = (j < 0) ? thresholdVal - 100 : (polarity ? imgRow[j] : -imgRow[j]);
-                if (_mask(j, i, Startspan<MaskPixelT>::detectedPlane) || pixVal < threshold) {
-                    if (j < x0 - 1) {   // we found some pixels above threshold
-                        nx0 = j + 1;
-                    }
-                    break;
+    for (int i = sspan->span->y - row0 + di; i < height && i >= 0; i += di) {
+        pixAccessT imgRow = _image->origin().advance(0, i);  // row pointer
+        // maskPixAccessT maskRow = _mask->origin.advance(0, i);  //  masks's row pointer
+        //
+        // Search left from the pixel diagonally to the left of (i - di, x0). If there's
+        // a connected span there it may need to grow up and/or down, so push it onto
+        // the stack for later consideration
+        //
+        nx0 = -1;
+        for (int j = x0 - 1; j >= -1; j--) {
+            ImagePixelT pixVal = (j < 0) ? thresholdVal - 100 : (polarity ? imgRow[j] : -imgRow[j]);
+            if (_mask(j, i, Startspan<MaskPixelT>::detectedPlane) || pixVal < threshold) {
+                if (j < x0 - 1) {  // we found some pixels above threshold
+                    nx0 = j + 1;
                 }
+                break;
             }
+        }
 #if 0
             if (nx0 < 0) {                      // no span to the left
                 nx1 = x0 - 1;           // we're going to resume searching at nx1 + 1
@@ -1165,15 +1110,15 @@ namespace {
             x0 = nx0;
             x1 = nx1;
 #endif
-        }
-        /*
-         * Cleanup
-         */
-
-        sspan->_direction = DONE;
-        return stop ? false : true;
     }
-    /// @endcond
+    /*
+     * Cleanup
+     */
+
+    sspan->_direction = DONE;
+    return stop ? false : true;
+}
+/// @endcond
 }
 #if 0
 
@@ -1294,66 +1239,45 @@ pmFindFootprintAtPoint(psImage const *img,      // image to search
 }
 #endif
 
-FootprintSet::FootprintSet(geom::Box2I region
-) :
-    daf::base::Citizen(typeid(this)),
-    _footprints(std::make_shared<FootprintList>()), _region(region) {
-}
+FootprintSet::FootprintSet(geom::Box2I region)
+        : daf::base::Citizen(typeid(this)), _footprints(std::make_shared<FootprintList>()), _region(region) {}
 
-FootprintSet::FootprintSet(
-    FootprintSet const &rhs
-) :
-    daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList), _region(rhs._region)
-{
+FootprintSet::FootprintSet(FootprintSet const &rhs)
+        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
     _footprints->reserve(rhs._footprints->size());
     for (FootprintSet::FootprintList::const_iterator ptr = rhs._footprints->begin(),
-             end = rhs._footprints->end(); ptr != end; ++ptr) {
+                                                     end = rhs._footprints->end();
+         ptr != end; ++ptr) {
         _footprints->push_back(std::make_shared<Footprint>(**ptr));
     }
 }
 
-FootprintSet &
-FootprintSet::operator=(FootprintSet const& rhs) {
+FootprintSet &FootprintSet::operator=(FootprintSet const &rhs) {
     FootprintSet tmp(rhs);
-    swap(tmp);                          // See Meyers, Effective C++, Item 11
+    swap(tmp);  // See Meyers, Effective C++, Item 11
     return *this;
 }
 
-void FootprintSet::merge(
-        FootprintSet const& rhs,
-        int tGrow,
-        int rGrow,
-        bool isotropic
-)
-{
+void FootprintSet::merge(FootprintSet const &rhs, int tGrow, int rGrow, bool isotropic) {
     FootprintControl const ctrl(true, isotropic);
     FootprintSet fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, ctrl);
-    swap(fs);                           // Swap the new FootprintSet into place
+    swap(fs);  // Swap the new FootprintSet into place
 }
 
-void FootprintSet::setRegion(
-    geom::Box2I const& region
-) {
+void FootprintSet::setRegion(geom::Box2I const &region) {
     _region = region;
 
-    for (FootprintSet::FootprintList::iterator ptr = _footprints->begin(),
-             end = _footprints->end(); ptr != end; ++ptr
-    ) {
+    for (FootprintSet::FootprintList::iterator ptr = _footprints->begin(), end = _footprints->end();
+         ptr != end; ++ptr) {
         (*ptr)->setRegion(region);
     }
 }
 
-FootprintSet::FootprintSet(
-    FootprintSet const &rhs,
-    int r,
-    bool isotropic
-)
-    : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
-{
+FootprintSet::FootprintSet(FootprintSet const &rhs, int r, bool isotropic)
+        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
     if (r == 0) {
         FootprintSet fs = rhs;
-        swap(fs);                       // Swap the new FootprintSet into place
+        swap(fs);  // Swap the new FootprintSet into place
         return;
     } else if (r < 0) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
@@ -1362,18 +1286,14 @@ FootprintSet::FootprintSet(
 
     FootprintControl const ctrl(true, isotropic);
     FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, r, ctrl);
-    swap(fs);                           // Swap the new FootprintSet into place
+    swap(fs);  // Swap the new FootprintSet into place
 }
 
-
-FootprintSet::FootprintSet(FootprintSet const& rhs,
-                                      int ngrow,
-                                      FootprintControl const& ctrl)
-    : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
-{
+FootprintSet::FootprintSet(FootprintSet const &rhs, int ngrow, FootprintControl const &ctrl)
+        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
     if (ngrow == 0) {
         FootprintSet fs = rhs;
-        swap(fs);                       // Swap the new FootprintSet into place
+        swap(fs);  // Swap the new FootprintSet into place
         return;
     } else if (ngrow < 0) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
@@ -1381,32 +1301,21 @@ FootprintSet::FootprintSet(FootprintSet const& rhs,
     }
 
     FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow, ctrl);
-    swap(fs);                           // Swap the new FootprintSet into place
+    swap(fs);  // Swap the new FootprintSet into place
 }
 
-FootprintSet::FootprintSet(
-        FootprintSet const& fs1,
-        FootprintSet const& fs2,
-        bool const
-                                                              )
-    : daf::base::Citizen(typeid(this)),
-      _footprints(new FootprintList()),
-      _region(fs1._region)
-{
+FootprintSet::FootprintSet(FootprintSet const &fs1, FootprintSet const &fs2, bool const)
+        : daf::base::Citizen(typeid(this)), _footprints(new FootprintList()), _region(fs1._region) {
     _region.include(fs2._region);
     throw LSST_EXCEPT(pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
-std::shared_ptr<image::Image<FootprintIdPixel>>
-FootprintSet::insertIntoImage(
-    bool const relativeIDs
-) const {
+std::shared_ptr<image::Image<FootprintIdPixel>> FootprintSet::insertIntoImage(bool const relativeIDs) const {
     auto im = std::make_shared<image::Image<FootprintIdPixel>>(_region);
     *im = 0;
 
     FootprintIdPixel id = 0;
-    for (auto const & fIter : *_footprints) {
-
+    for (auto const &fIter : *_footprints) {
         if (relativeIDs) {
             id++;
         } else {
@@ -1419,34 +1328,26 @@ FootprintSet::insertIntoImage(
     return im;
 }
 
-template<typename ImagePixelT, typename MaskPixelT>
-void
-FootprintSet::makeHeavy(
-    image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
-    HeavyFootprintCtrl const *ctrl
-)
-{
+template <typename ImagePixelT, typename MaskPixelT>
+void FootprintSet::makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const &mimg,
+                             HeavyFootprintCtrl const *ctrl) {
     HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
 
     if (!ctrl) {
         ctrl = &ctrl_s;
     }
 
-    for (FootprintList::iterator ptr = _footprints->begin(),
-                                          end = _footprints->end(); ptr != end; ++ptr) {
+    for (FootprintList::iterator ptr = _footprints->begin(), end = _footprints->end(); ptr != end; ++ptr) {
         ptr->reset(new HeavyFootprint<ImagePixelT, MaskPixelT>(**ptr, mimg, ctrl));
     }
 }
 
-void FootprintSet::makeSources(
-    afw::table::SourceCatalog & cat
-) const {
+void FootprintSet::makeSources(afw::table::SourceCatalog &cat) const {
     for (FootprintList::const_iterator i = _footprints->begin(); i != _footprints->end(); ++i) {
         std::shared_ptr<afw::table::SourceRecord> r = cat.addNew();
         r->setFootprint(*i);
     }
 }
-
 
 //
 // Explicit instantiations
@@ -1454,17 +1355,15 @@ void FootprintSet::makeSources(
 
 #ifndef DOXYGEN
 
-#define INSTANTIATE(PIXEL)                      \
-    template FootprintSet::FootprintSet(                     \
-        image::Image<PIXEL> const &, Threshold const &, int const, bool const); \
-    template FootprintSet::FootprintSet(                     \
-        image::MaskedImage<PIXEL,image::MaskPixel> const &, Threshold const &, \
-        std::string const &, int const, bool const);\
-    template void FootprintSet::makeHeavy(image::MaskedImage<PIXEL,image::MaskPixel> const &, \
-                                                     HeavyFootprintCtrl const *)
+#define INSTANTIATE(PIXEL)                                                                              \
+    template FootprintSet::FootprintSet(image::Image<PIXEL> const &, Threshold const &, int const,      \
+                                        bool const);                                                    \
+    template FootprintSet::FootprintSet(image::MaskedImage<PIXEL, image::MaskPixel> const &,            \
+                                        Threshold const &, std::string const &, int const, bool const); \
+    template void FootprintSet::makeHeavy(image::MaskedImage<PIXEL, image::MaskPixel> const &,          \
+                                          HeavyFootprintCtrl const *)
 
-template FootprintSet::FootprintSet(image::Mask<image::MaskPixel> const &,
-                                               Threshold const &, int const);
+template FootprintSet::FootprintSet(image::Mask<image::MaskPixel> const &, Threshold const &, int const);
 
 template void FootprintSet::setMask(image::Mask<image::MaskPixel> *, std::string const &);
 template void FootprintSet::setMask(std::shared_ptr<image::Mask<image::MaskPixel>>, std::string const &);
@@ -1473,7 +1372,8 @@ INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
+}
+}
+}  // end lsst::afw::detection
 
-}}} // end lsst::afw::detection
-
-#endif // !DOXYGEN
+#endif  // !DOXYGEN

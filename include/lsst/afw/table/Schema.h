@@ -13,7 +13,9 @@
 #include "lsst/afw/table/Flag.h"
 #include "lsst/afw/table/AliasMap.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 class SubSchema;
 class BaseRecord;
@@ -43,8 +45,8 @@ class BaseRecord;
  */
 class Schema {
     typedef detail::SchemaImpl Impl;
-public:
 
+public:
     // This variable is defined in SchemaImpl, but is replicated here as
     // so that it is available to Python.
     static int const VERSION = detail::SchemaImpl::VERSION;
@@ -56,24 +58,23 @@ public:
      *  fields added in opposite order, they will not be considered equal.
      */
     enum ComparisonFlags {
-        EQUAL_KEYS         =0x01, ///< Keys have the same types offsets, and sizes.
-        EQUAL_NAMES        =0x02, ///< Fields have the same names (ordered).
-        EQUAL_DOCS         =0x04, ///< Fields have the same documentation (ordered).
-        EQUAL_UNITS        =0x08, ///< Fields have the same units (ordered).
-        EQUAL_FIELDS       =0x0F, ///< Fields are identical (but aliases may not be).
-        EQUAL_ALIASES      =0x10, ///< Schemas have identical AliasMaps
-        IDENTICAL          =0x1F  ///< Everything is the same.
+        EQUAL_KEYS = 0x01,     ///< Keys have the same types offsets, and sizes.
+        EQUAL_NAMES = 0x02,    ///< Fields have the same names (ordered).
+        EQUAL_DOCS = 0x04,     ///< Fields have the same documentation (ordered).
+        EQUAL_UNITS = 0x08,    ///< Fields have the same units (ordered).
+        EQUAL_FIELDS = 0x0F,   ///< Fields are identical (but aliases may not be).
+        EQUAL_ALIASES = 0x10,  ///< Schemas have identical AliasMaps
+        IDENTICAL = 0x1F       ///< Everything is the same.
     };
 
     //@{
     /// Join strings using the field delimiter appropriate for this Schema
-    std::string join(std::string const & a, std::string const & b) const;
-    std::string join(std::string const & a, std::string const & b, std::string const & c) const {
+    std::string join(std::string const& a, std::string const& b) const;
+    std::string join(std::string const& a, std::string const& b, std::string const& c) const {
         return join(join(a, b), c);
     }
-    std::string join(
-        std::string const & a, std::string const & b, std::string const & c, std::string const & d
-    ) const {
+    std::string join(std::string const& a, std::string const& b, std::string const& c,
+                     std::string const& d) const {
         return join(join(a, b), join(c, d));
     }
     //@}
@@ -86,7 +87,7 @@ public:
      *  with only the name changed.
      */
     template <typename T>
-    SchemaItem<T> find(std::string const & name) const;
+    SchemaItem<T> find(std::string const& name) const;
 
     /**
      *  Find a SchemaItem in the Schema by key.
@@ -97,7 +98,7 @@ public:
      *  subfields (such as array elements) are not accepted.
      */
     template <typename T>
-    SchemaItem<T> find(Key<T> const & key) const;
+    SchemaItem<T> find(Key<T> const& key) const;
 
     /**
      *  Find a SchemaItem by name and run a functor on it.
@@ -108,7 +109,7 @@ public:
      *  a functor provided to forEach).
      */
     template <typename F>
-    void findAndApply(std::string const & name, F && func) const {
+    void findAndApply(std::string const& name, F&& func) const {
         _impl->findAndApply(_aliases->apply(name), std::forward<F>(func));
     }
 
@@ -123,7 +124,7 @@ public:
      *  the additions, and will invoke the copy-on-write
      *  mechanism of the Schema itself.
      */
-    SubSchema operator[](std::string const & name) const;
+    SubSchema operator[](std::string const& name) const;
 
     /**
      *  Return a set of field names in the schema.
@@ -137,7 +138,7 @@ public:
      *
      *  Aliases are not returned.
      */
-    std::set<std::string> getNames(bool topOnly=false) const;
+    std::set<std::string> getNames(bool topOnly = false) const;
 
     /// Return the raw size of a record in bytes.
     int getRecordSize() const { return _impl->getRecordSize(); }
@@ -162,7 +163,7 @@ public:
      *  throwing an exception.
      */
     template <typename T>
-    Key<T> addField(Field<T> const & field, bool doReplace=false);
+    Key<T> addField(Field<T> const& field, bool doReplace = false);
 
     /**
      *  Add a new field to the Schema, and return the associated Key.
@@ -172,10 +173,8 @@ public:
      *      addField(Field<T>(name, doc, units, base), doReplace)
      */
     template <typename T>
-    Key<T> addField(
-        std::string const & name, std::string const & doc, std::string const & units = "",
-        FieldBase<T> const & base = FieldBase<T>(), bool doReplace=false
-    ) {
+    Key<T> addField(std::string const& name, std::string const& doc, std::string const& units = "",
+                    FieldBase<T> const& base = FieldBase<T>(), bool doReplace = false) {
         return addField(Field<T>(name, doc, units, base), doReplace);
     }
 
@@ -187,16 +186,14 @@ public:
      *      addField(Field<T>(name, doc, base), doReplace)
      */
     template <typename T>
-    Key<T> addField(
-        std::string const & name, std::string const & doc, FieldBase<T> const & base,
-        bool doReplace=false
-    ) {
+    Key<T> addField(std::string const& name, std::string const& doc, FieldBase<T> const& base,
+                    bool doReplace = false) {
         return addField(Field<T>(name, doc, base), doReplace);
     }
 
     /// Replace the Field (name/description) for an existing Key.
     template <typename T>
-    void replaceField(Key<T> const & key, Field<T> const & field);
+    void replaceField(Key<T> const& key, Field<T> const& field);
 
     /**
      *  Apply a functor to each SchemaItem in the Schema.
@@ -221,8 +218,8 @@ public:
      *  of keys are identical (same types with the same offsets); names and descriptions of
      *  fields are not considered.  For a more precise comparison, use compare() or contains().
      */
-    bool operator==(Schema const & other) const { return compare(other, EQUAL_KEYS); }
-    bool operator!=(Schema const & other) const { return !this->operator==(other); }
+    bool operator==(Schema const& other) const { return compare(other, EQUAL_KEYS); }
+    bool operator!=(Schema const& other) const { return !this->operator==(other); }
     //@}
 
     /**
@@ -234,7 +231,7 @@ public:
      *  @param[in] flags   Which types of comparisions to perform.  Flag bits not present here
      *                     will never be returned.
      */
-    int compare(Schema const & other, int flags=EQUAL_KEYS) const;
+    int compare(Schema const& other, int flags = EQUAL_KEYS) const;
 
     /**
      *  Test whether the given schema is a subset of this.
@@ -242,7 +239,7 @@ public:
      *  This function behaves very similarly to compare(), but ignores fields that are present
      *  in this but absent in other.
      */
-    int contains(Schema const & other, int flags=EQUAL_KEYS) const;
+    int contains(Schema const& other, int flags = EQUAL_KEYS) const;
 
     /**
      *  Return true if the given item is in this schema.
@@ -251,7 +248,7 @@ public:
      *  will be set on return.
      */
     template <typename T>
-    int contains(SchemaItem<T> const & item, int flags=EQUAL_KEYS) const;
+    int contains(SchemaItem<T> const& item, int flags = EQUAL_KEYS) const;
 
     /**
      *  Return the map of aliases
@@ -281,32 +278,31 @@ public:
     Schema();
 
     /// Copy constructor.
-    Schema(Schema const & other);
+    Schema(Schema const& other);
 
     /** Construct from reading a FITS file.
      *
      * Reads from the nominated 'hdu' (0=PHU which cannot be a catalog,
      * INT_MIN is a special value meaning read from the first HDU with NAXIS != 0).
      */
-    static Schema readFits(std::string const& filename, int hdu=INT_MIN);
-    static Schema readFits(fits::MemFileManager & manager, int hdu=INT_MIN);
-    static Schema readFits(fits::Fits & fitsfile);
+    static Schema readFits(std::string const& filename, int hdu = INT_MIN);
+    static Schema readFits(fits::MemFileManager& manager, int hdu = INT_MIN);
+    static Schema readFits(fits::Fits& fitsfile);
 
     /** Construct from reading a FITS header
      *
      * If 'stripMetadata', then the header will be modified,
      * removing the relevant keywords.
      */
-    static Schema fromFitsMetadata(daf::base::PropertyList & header, bool stripMetadata=true);
+    static Schema fromFitsMetadata(daf::base::PropertyList& header, bool stripMetadata = true);
 
     /// Stringification.
-    friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
+    friend std::ostream& operator<<(std::ostream& os, Schema const& schema);
 
     /// Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
-    daf::base::Citizen & getCitizen() { return *_impl; }
+    daf::base::Citizen& getCitizen() { return *_impl; }
 
 private:
-
     friend class detail::Access;
     friend class SubSchema;
 
@@ -351,24 +347,23 @@ private:
  */
 class SubSchema {
     typedef detail::SchemaImpl Impl;
-public:
 
+public:
     //@{
     /// Join strings using the field delimiter appropriate for this Schema
-    std::string join(std::string const & a, std::string const & b) const;
-    std::string join(std::string const & a, std::string const & b, std::string const & c) const {
+    std::string join(std::string const& a, std::string const& b) const;
+    std::string join(std::string const& a, std::string const& b, std::string const& c) const {
         return join(join(a, b), c);
     }
-    std::string join(
-        std::string const & a, std::string const & b, std::string const & c, std::string const & d
-    ) const {
+    std::string join(std::string const& a, std::string const& b, std::string const& c,
+                     std::string const& d) const {
         return join(join(a, b), join(c, d));
     }
     //@}
 
     /// Find a nested SchemaItem by name.
     template <typename T>
-    SchemaItem<T> find(std::string const & name) const;
+    SchemaItem<T> find(std::string const& name) const;
 
     /**
      *  Find a nested SchemaItem by name and run a functor on it.
@@ -379,7 +374,7 @@ public:
      *  a functor provided to apply or Schema::forEach).
      */
     template <typename F>
-    void findAndApply(std::string const & name, F && func) const {
+    void findAndApply(std::string const& name, F&& func) const {
         _impl->findAndApply(_aliases->apply(join(_name, name)), std::forward<F>(func));
     }
 
@@ -395,15 +390,15 @@ public:
      *          named subfield).
      */
     template <typename F>
-    void apply(F && func) const {
+    void apply(F&& func) const {
         _impl->findAndApply(_aliases->apply(_name), std::forward<F>(func));
     }
 
     /// Return a nested proxy.
-    SubSchema operator[](std::string const & name) const;
+    SubSchema operator[](std::string const& name) const;
 
     /// Return the prefix that defines this SubSchema relative to its parent Schema.
-    std::string const & getPrefix() const { return _name; }
+    std::string const& getPrefix() const { return _name; }
 
     /**
      *  Return a set of nested names that start with the SubSchema's prefix.
@@ -411,7 +406,7 @@ public:
      *  Returns an instance of Python's builtin set in Python.
      *  @see Schema::getNames
      */
-    std::set<std::string> getNames(bool topOnly=false) const;
+    std::set<std::string> getNames(bool topOnly = false) const;
 
     /**
      *  Implicit conversion to the appropriate Key type.
@@ -421,7 +416,9 @@ public:
      *  equivalent asKey() method.
      */
     template <typename T>
-    operator Key<T>() const { return _impl->find<T>(_aliases->apply(_name)).key; }
+    operator Key<T>() const {
+        return _impl->find<T>(_aliases->apply(_name)).key;
+    }
 
     /**
      *  Implicit conversion to the appropriate Key type.
@@ -431,23 +428,25 @@ public:
      *  equivalent asField() method.
      */
     template <typename T>
-    operator Field<T>() const { return _impl->find<T>(_aliases->apply(_name)).field; }
+    operator Field<T>() const {
+        return _impl->find<T>(_aliases->apply(_name)).field;
+    }
 
 private:
-
     friend class Schema;
 
-    SubSchema(std::shared_ptr<Impl> impl, std::shared_ptr<AliasMap> aliases, std::string const & name);
+    SubSchema(std::shared_ptr<Impl> impl, std::shared_ptr<AliasMap> aliases, std::string const& name);
 
     std::shared_ptr<Impl> _impl;
     std::shared_ptr<AliasMap> _aliases;
     std::string _name;
 };
 
-inline SubSchema Schema::operator[](std::string const & name) const {
+inline SubSchema Schema::operator[](std::string const& name) const {
     return SubSchema(_impl, _aliases, name);
 }
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_Schema_h_INCLUDED
+#endif  // !AFW_TABLE_Schema_h_INCLUDED

@@ -24,8 +24,8 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
- #ifndef LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H
- #define LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H
+#ifndef LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H
+#define LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H
 
 #include <type_traits>
 #include "lsst/afw/geom/Span.h"
@@ -35,7 +35,10 @@
 #include "lsst/afw/image/Mask.h"
 #include "lsst/pex/exceptions.h"
 
-namespace lsst { namespace afw { namespace geom { namespace details {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace details {
 
 /* These variadic functions exist because of a current limitation in c++ where
  * calls of the form foo(x)... are not possibe unless it is used as a parameter
@@ -44,35 +47,35 @@ namespace lsst { namespace afw { namespace geom { namespace details {
  * called on all the variadic parameters
  */
 
-template<typename T>
-void variadicSpanSetter(Span const spn, T & x) {
+template <typename T>
+void variadicSpanSetter(Span const spn, T& x) {
     x.setSpan(spn);
 }
 
 template <typename T, typename... Args>
-void variadicSpanSetter(Span const spn, T & first, Args&... x) {
+void variadicSpanSetter(Span const spn, T& first, Args&... x) {
     variadicSpanSetter(spn, first);
     variadicSpanSetter(spn, x...);
 }
 
-template<typename T>
-void variadicBoundChecker(Box2I const box, int area, T const & x) {
+template <typename T>
+void variadicBoundChecker(Box2I const box, int area, T const& x) {
     x.checkExtents(box, area);
 }
 
-template<typename T, typename... Args>
-void variadicBoundChecker(Box2I const box, int area, T const & first, Args&... x) {
+template <typename T, typename... Args>
+void variadicBoundChecker(Box2I const box, int area, T const& first, Args&... x) {
     variadicBoundChecker(box, area, first);
     variadicBoundChecker(box, area, x...);
 }
 
-template<typename T>
-void variadicIncrementPosition(T & x) {
+template <typename T>
+void variadicIncrementPosition(T& x) {
     x.increment();
 }
 
-template<typename T, typename... Args>
-void variadicIncrementPosition(T & first, Args&... x) {
+template <typename T, typename... Args>
+void variadicIncrementPosition(T& first, Args&... x) {
     variadicIncrementPosition(first);
     variadicIncrementPosition(x...);
 }
@@ -97,21 +100,21 @@ class IterGetter {
        as 1d arrays, of length at least the number of elements in the
        SpanSet which originates the applyFunctor call
      */
- public:
+public:
     using type = typename std::iterator_traits<T>::value_type;
-    explicit IterGetter(T iter): _iter(iter) {}
+    explicit IterGetter(T iter) : _iter(iter) {}
 
     // There is no good way to check the extents of a generic iterator, so make
     // a no-op function to satisfy api
-    void checkExtents(Box2I const & bbox, int area) const {}
+    void checkExtents(Box2I const& bbox, int area) const {}
 
-    void setSpan(Span const & span) {}
+    void setSpan(Span const& span) {}
 
-    void increment() { ++_iter;}
+    void increment() { ++_iter; }
 
-    typename std::iterator_traits<T>::reference get() const {return *_iter;}
+    typename std::iterator_traits<T>::reference get() const { return *_iter; }
 
- private:
+private:
     T _iter;
 };
 
@@ -119,53 +122,54 @@ template <typename T>
 class ConstantGetter {
     // Getter class which takes in a constant value, and simply returns that value
     // for each iteration
- public:
-    explicit ConstantGetter(T constant): _const(constant) {}
+public:
+    explicit ConstantGetter(T constant) : _const(constant) {}
 
     // Constants are simply repeated, so no need to check extents, make no-op
     // function
-    void checkExtents(Box2I const & bbox, int area) const {}
+    void checkExtents(Box2I const& bbox, int area) const {}
 
-    void setSpan(Span const & span) {}
+    void setSpan(Span const& span) {}
 
     // No need to increment, make a no-op function
     void increment() {}
 
-    T get() const {return _const;}
- private:
+    T get() const { return _const; }
+
+private:
     T _const;
 };
 
 template <typename T, int N, int C>
 class ImageNdGetter {
     // Getter class to manage iterating though an ndarray which is interpreted as a 2D image
- public:
+public:
     using Reference = typename ndarray::Array<T, N, C>::Reference::Reference;
 
-    ImageNdGetter(ndarray::Array<T, N, C> const & array, geom::Point2I const & xy0): _array(array), _xy0(xy0) {}
+    ImageNdGetter(ndarray::Array<T, N, C> const& array, geom::Point2I const& xy0)
+            : _array(array), _xy0(xy0) {}
 
-    void checkExtents(Box2I const & bbox, int area) const {
+    void checkExtents(Box2I const& bbox, int area) const {
         // If the bounding box lays outside the are of the image, throw an error
-        geom::Box2I arrayBBox(_xy0, geom::Extent2I(_array.template getSize<1>(),
-                                                   _array.template getSize<0>()));
+        geom::Box2I arrayBBox(_xy0,
+                              geom::Extent2I(_array.template getSize<1>(), _array.template getSize<0>()));
         if (!arrayBBox.contains(bbox)) {
             throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                               "SpanSet bounding box lands outside array");
         }
     }
 
-    void setSpan(Span const & span) {
+    void setSpan(Span const& span) {
         auto _iterY = _array.begin() + (span.getY() - _xy0.getY());
         _iterX = (*_iterY).begin() + (span.getMinX() - _xy0.getX());
     }
 
     void increment() { ++_iterX; }
 
-    Reference get() {
-        return *_iterX;}
+    Reference get() { return *_iterX; }
 
- private:
-    ndarray::Array<T, N, C>  _array;
+private:
+    ndarray::Array<T, N, C> _array;
     geom::Point2I _xy0;
     typename ndarray::Array<T, N, C>::Reference::Iterator _iterX;
 };
@@ -173,12 +177,12 @@ class ImageNdGetter {
 template <typename T, int inA, int inC>
 class FlatNdGetter {
     // Getter class to manage iterating though an ndarray which is interpreted as a 1D image
- public:
+public:
     using Reference = typename ndarray::Array<T, inA, inC>::Reference;
 
-    explicit FlatNdGetter(ndarray::Array<T, inA, inC> const & array): _array(array), _iter(_array.begin()) {}
+    explicit FlatNdGetter(ndarray::Array<T, inA, inC> const& array) : _array(array), _iter(_array.begin()) {}
 
-    void checkExtents(Box2I const & bbox, int area) const {
+    void checkExtents(Box2I const& bbox, int area) const {
         // If the area of the array is greater than the size of the array, throw an error
         // as the iteration dimensions will not match
         auto shape = _array.getShape();
@@ -188,15 +192,14 @@ class FlatNdGetter {
         }
     }
 
-    void setSpan(Span const & span) {}
+    void setSpan(Span const& span) {}
 
     void increment() { ++_iter; }
 
-    Reference get() const {
-        return *_iter;}
+    Reference get() const { return *_iter; }
 
- private:
-    ndarray::Array<T, inA, inC>  _array;
+private:
+    ndarray::Array<T, inA, inC> _array;
     typename ndarray::Array<T, inA, inC>::Iterator _iter;
 };
 
@@ -210,37 +213,37 @@ class FlatNdGetter {
  */
 
 template <typename T, int inA, int inC>
-FlatNdGetter<T, inA, inC> makeGetter(FlatNdGetter<T, inA, inC> & getter) {
+FlatNdGetter<T, inA, inC> makeGetter(FlatNdGetter<T, inA, inC>& getter) {
     // This function simply passes through any FlatNdGetter passed to it
     return getter;
 }
 
 template <typename T, int inA, int inB>
-ImageNdGetter<T, inA, inB> makeGetter(ImageNdGetter<T, inA, inB> & getter) {
+ImageNdGetter<T, inA, inB> makeGetter(ImageNdGetter<T, inA, inB>& getter) {
     // This function simply passes though any imageNdGetter passed to it
     return getter;
 }
 
 template <typename T>
-ImageNdGetter<T, 2, 1> makeGetter(lsst::afw::image::Image<T> & image) {
+ImageNdGetter<T, 2, 1> makeGetter(lsst::afw::image::Image<T>& image) {
     // Function to create a ndarray getter from an afw image
     return ImageNdGetter<T, 2, 1>(image.getArray(), image.getXY0());
 }
 
 template <typename T>
-ImageNdGetter<T const, 2, 1> makeGetter(lsst::afw::image::Image<T> const & image) {
+ImageNdGetter<T const, 2, 1> makeGetter(lsst::afw::image::Image<T> const& image) {
     // Function to create a ndarray getter from an afw image
     return ImageNdGetter<T const, 2, 1>(image.getArray(), image.getXY0());
 }
 
 template <typename T>
-ImageNdGetter<T, 2, 1> makeGetter(lsst::afw::image::Mask<T> & image) {
+ImageNdGetter<T, 2, 1> makeGetter(lsst::afw::image::Mask<T>& image) {
     // Function to create a ndarray getter from an afw image
     return ImageNdGetter<T, 2, 1>(image.getArray(), image.getXY0());
 }
 
 template <typename T>
-ImageNdGetter<T const, 2, 1> makeGetter(lsst::afw::image::Mask<T> const & image) {
+ImageNdGetter<T const, 2, 1> makeGetter(lsst::afw::image::Mask<T> const& image) {
     // Function to create a ndarray getter from an afw image
     return ImageNdGetter<T const, 2, 1>(image.getArray(), image.getXY0());
 }
@@ -260,52 +263,56 @@ template <typename T, typename = void>
 struct is_iterator : std::false_type {};
 
 template <typename T>
-struct is_iterator<T, typename std::enable_if<!std::is_same<typename std::iterator_traits<T>::value_type,
-                                                            void>::value>::type> :std::true_type {};
+struct is_iterator<T, typename std::enable_if<
+                              !std::is_same<typename std::iterator_traits<T>::value_type, void>::value>::type>
+        : std::true_type {};
 
 template <typename T>
 IterGetter<T> makeGetter(T iter, typename std::enable_if<is_iterator<T>::value, int>::type = 0) {
     // Use defined type trait checker to create an iterator getter if the template is an iterator type
     return IterGetter<T>(iter);
 }
-}}}} // Close namespace lsst::afw::geom::details
+}
+}
+}
+}  // Close namespace lsst::afw::geom::details
 
 namespace ndarray {
-    // These function are placed in the ndarray namespace to enable function argument namespace lookup
-    // This means the function can be used on an ndarray without the need to specify the namespace of
-    // the function itself
-    namespace details = lsst::afw::geom::details;
-    namespace afwGeom = lsst::afw::geom;
-    template <typename T, int inA, int inB>
+// These function are placed in the ndarray namespace to enable function argument namespace lookup
+// This means the function can be used on an ndarray without the need to specify the namespace of
+// the function itself
+namespace details = lsst::afw::geom::details;
+namespace afwGeom = lsst::afw::geom;
+template <typename T, int inA, int inB>
 
-    /** Marks a ndarray to be interpreted as a 1D vector when applying a functor from a SpanSet
-     *
-     * @tparam T The datatype of a pixel in the ndarray
-     * @tparam inA The number of dimensions of the array
-     * @tparam inB Number of guaranteed row-major contiguous dimensions, starting from the end
-     *
-     * @param array ndarray which will be used in functor calls
-     */
-    details::FlatNdGetter<T, inA, inB> ndFlat(ndarray::Array<T, inA, inB> const & array) {
-        // Function to mark a ndarray to be treated as a flat vector by the applyFunctor method
-        return details::FlatNdGetter<T, inA, inB>(array);
-    }
+/** Marks a ndarray to be interpreted as a 1D vector when applying a functor from a SpanSet
+ *
+ * @tparam T The datatype of a pixel in the ndarray
+ * @tparam inA The number of dimensions of the array
+ * @tparam inB Number of guaranteed row-major contiguous dimensions, starting from the end
+ *
+ * @param array ndarray which will be used in functor calls
+ */
+details::FlatNdGetter<T, inA, inB> ndFlat(ndarray::Array<T, inA, inB> const& array) {
+    // Function to mark a ndarray to be treated as a flat vector by the applyFunctor method
+    return details::FlatNdGetter<T, inA, inB>(array);
+}
 
-    /** @brief Marks a ndarray to be interpreted as an image when applying a functor from a SpanSet
-     *
-     * @tparam T - The datatype of a pixel in the ndarray
-     * @tparam inA - The number of dimensions of the array
-     * @tparam inB - Number of guaranteed row-major contiguous dimensions, starting from the end
-     *
-     * @param array - ndarray which will be used in functor calls
-     * @param xy0 - Origin to be used to translate between pixel coordinates and array indices
-     */
-    template <typename T, int inA, int inB>
-    details::ImageNdGetter<T, inA, inB> ndImage(ndarray::Array<T, inA, inB> const & array,
-                                                afwGeom::Point2I xy0 = afwGeom::Point2I()) {
-        // Function to mark a ndarray to be treated as a 2D image by the applyFunctor method
-        return details::ImageNdGetter<T, inA, inB>(array, xy0);
-    }
-} // Close namespace ndarray
+/** @brief Marks a ndarray to be interpreted as an image when applying a functor from a SpanSet
+ *
+ * @tparam T - The datatype of a pixel in the ndarray
+ * @tparam inA - The number of dimensions of the array
+ * @tparam inB - Number of guaranteed row-major contiguous dimensions, starting from the end
+ *
+ * @param array - ndarray which will be used in functor calls
+ * @param xy0 - Origin to be used to translate between pixel coordinates and array indices
+ */
+template <typename T, int inA, int inB>
+details::ImageNdGetter<T, inA, inB> ndImage(ndarray::Array<T, inA, inB> const& array,
+                                            afwGeom::Point2I xy0 = afwGeom::Point2I()) {
+    // Function to mark a ndarray to be treated as a 2D image by the applyFunctor method
+    return details::ImageNdGetter<T, inA, inB>(array, xy0);
+}
+}  // Close namespace ndarray
 
- #endif // LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H
+#endif  // LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H

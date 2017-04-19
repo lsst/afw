@@ -28,7 +28,10 @@
 #include "Eigen/Core"
 #include <complex>
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 namespace detail {
 
@@ -41,16 +44,15 @@ namespace detail {
  */
 class EllipticityBase {
 public:
-
     typedef Eigen::Matrix2d Jacobian;
 
-    enum ParameterEnum { E1=0, E2=1 };
+    enum ParameterEnum { E1 = 0, E2 = 1 };
 
-    std::complex<double> & getComplex() { return _complex; }
+    std::complex<double>& getComplex() { return _complex; }
 
-    std::complex<double> const & getComplex() const { return _complex; }
+    std::complex<double> const& getComplex() const { return _complex; }
 
-    void setComplex(std::complex<double> const & v) { _complex = v; }
+    void setComplex(std::complex<double> const& v) { _complex = v; }
 
     double getE1() const { return _complex.real(); }
     void setE1(double e1) {
@@ -76,16 +78,17 @@ public:
     double getTheta() const { return 0.5 * std::arg(_complex); }
 
 protected:
+    explicit EllipticityBase(std::complex<double> const& complex) : _complex(complex) {}
 
-    explicit EllipticityBase(std::complex<double> const & complex) : _complex(complex) {}
-
-    explicit EllipticityBase(double e1=0.0, double e2=0.0) : _complex(e1, e2) {}
+    explicit EllipticityBase(double e1 = 0.0, double e2 = 0.0) : _complex(e1, e2) {}
 
     std::complex<double> _complex;
 };
 
-} // namespace detail
+}  // namespace detail
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_EllipticityBase_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_EllipticityBase_h_INCLUDED

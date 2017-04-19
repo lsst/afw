@@ -22,13 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 /*
  * Implementation of WcsFormatter class
  */
 
 #ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
+#define __attribute__(x) /*NOTHING*/
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
@@ -58,32 +57,26 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.WcsFormatter");
 }
 
-namespace lsst { namespace afw { namespace formatters {
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
 namespace pexPolicy = lsst::pex::policy;
 namespace pexExcept = lsst::pex::exceptions;
 
+dafPersist::FormatterRegistration WcsFormatter::registration("Wcs", typeid(image::Wcs), createInstance);
 
-dafPersist::FormatterRegistration WcsFormatter::registration(
-    "Wcs", typeid(image::Wcs), createInstance);
+WcsFormatter::WcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::Formatter(typeid(this)) {}
 
-WcsFormatter::WcsFormatter(
-    std::shared_ptr<pexPolicy::Policy>) :
-    dafPersist::Formatter(typeid(this)) {
-}
+WcsFormatter::~WcsFormatter(void) {}
 
-WcsFormatter::~WcsFormatter(void) {
-}
-
-void WcsFormatter::write(
-    dafBase::Persistable const* persistable,
-    std::shared_ptr<dafPersist::Storage> storage,
-    std::shared_ptr<dafBase::PropertySet>) {
+void WcsFormatter::write(dafBase::Persistable const* persistable,
+                         std::shared_ptr<dafPersist::Storage> storage,
+                         std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "WcsFormatter write start");
-    image::Wcs const* ip =
-        dynamic_cast<image::Wcs const*>(persistable);
+    image::Wcs const* ip = dynamic_cast<image::Wcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-Wcs");
     }
@@ -97,9 +90,8 @@ void WcsFormatter::write(
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
 }
 
-dafBase::Persistable* WcsFormatter::read(
-    std::shared_ptr<dafPersist::Storage> storage,
-    std::shared_ptr<dafBase::PropertySet> additionalData) {
+dafBase::Persistable* WcsFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+                                         std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "WcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         image::Wcs* ip = new image::Wcs;
@@ -108,13 +100,11 @@ dafBase::Persistable* WcsFormatter::read(
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "WcsFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
         LOGL_DEBUG(_log, "WcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", INT_MIN);
-        std::shared_ptr<dafBase::PropertySet> md =
-            afw::fits::readMetadata(fits->getPath(), hdu);
+        std::shared_ptr<dafBase::PropertySet> md = afw::fits::readMetadata(fits->getPath(), hdu);
         image::Wcs* ip = new image::Wcs(md);
         LOGL_DEBUG(_log, "WcsFormatter read end");
         return ip;
@@ -122,19 +112,16 @@ dafBase::Persistable* WcsFormatter::read(
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
 }
 
-void WcsFormatter::update(
-    dafBase::Persistable*,
-    std::shared_ptr<dafPersist::Storage>,
-    std::shared_ptr<dafBase::PropertySet>) {
+void WcsFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+                          std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for Wcs");
 }
 
-std::shared_ptr<dafBase::PropertyList>
-WcsFormatter::generatePropertySet(image::Wcs const& wcs) {
+std::shared_ptr<dafBase::PropertyList> WcsFormatter::generatePropertySet(image::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     std::shared_ptr<dafBase::PropertyList> wcsProps(new dafBase::PropertyList());
 
-    assert(wcs._wcsInfo); // default ctor is private, so an uninitialized Wcs should not exist in the wild
+    assert(wcs._wcsInfo);  // default ctor is private, so an uninitialized Wcs should not exist in the wild
 
     wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis, "number of data axes");
     // EQUINOX is "not relevant" (FITS definition, version 3.0, page 30) when
@@ -158,7 +145,7 @@ WcsFormatter::generatePropertySet(image::Wcs const& wcs) {
     //
     for (int i = 0; i != wcs._wcsInfo[0].npv; ++i) {
         auto const pv = wcs._wcsInfo[0].pv[i];
-        int const ii = pv.i > 0 ? pv.i : (wcs._wcsInfo[0].lat + 1); // 0 => latitude axis (see wcslib/wsc.h)
+        int const ii = pv.i > 0 ? pv.i : (wcs._wcsInfo[0].lat + 1);  // 0 => latitude axis (see wcslib/wsc.h)
         char key[20];
         sprintf(key, "PV%d_%d", ii, pv.m);
         wcsProps->add(key, pv.value);
@@ -173,8 +160,7 @@ WcsFormatter::generatePropertySet(image::Wcs const& wcs) {
 }
 
 template <class Archive>
-void WcsFormatter::delegateSerialize(
-    Archive& ar, int const, dafBase::Persistable* persistable) {
+void WcsFormatter::delegateSerialize(Archive& ar, int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "WcsFormatter delegateSerialize start");
     image::Wcs* ip = dynamic_cast<image::Wcs*>(persistable);
     if (ip == 0) {
@@ -186,13 +172,10 @@ void WcsFormatter::delegateSerialize(
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
     ar & ip->_coordSystem;
 
-
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
-        ip->_wcsInfo =
-            reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
+        ip->_wcsInfo = reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
     }
-
 
     for (int i = 0; i < ip->_nWcsInfo; ++i) {
         // If we are loading, initialize the struct first
@@ -202,8 +185,8 @@ void WcsFormatter::delegateSerialize(
         }
 
         // Serialize only critical Wcs parameters
-        //wcslib provides support for arrays of wcs', but we only
-        //implement support for one.
+        // wcslib provides support for arrays of wcs', but we only
+        // implement support for one.
         ar & ip->_wcsInfo[i].naxis;
         ar & ip->_wcsInfo[i].equinox;
         ar & ip->_wcsInfo[i].radesys;
@@ -232,19 +215,16 @@ void WcsFormatter::delegateSerialize(
 
 // Explicit template specializations confuse Doxygen, tell it to ignore them
 /// @cond
-template void WcsFormatter::delegateSerialize(
-    boost::archive::text_oarchive & , int, dafBase::Persistable*);
-template void WcsFormatter::delegateSerialize(
-    boost::archive::text_iarchive & , int, dafBase::Persistable*);
-template void WcsFormatter::delegateSerialize(
-    boost::archive::binary_oarchive & , int, dafBase::Persistable*);
-template void WcsFormatter::delegateSerialize(
-    boost::archive::binary_iarchive & , int, dafBase::Persistable*);
+template void WcsFormatter::delegateSerialize(boost::archive::text_oarchive&, int, dafBase::Persistable*);
+template void WcsFormatter::delegateSerialize(boost::archive::text_iarchive&, int, dafBase::Persistable*);
+template void WcsFormatter::delegateSerialize(boost::archive::binary_oarchive&, int, dafBase::Persistable*);
+template void WcsFormatter::delegateSerialize(boost::archive::binary_iarchive&, int, dafBase::Persistable*);
 /// @endcond
 
 std::shared_ptr<dafPersist::Formatter> WcsFormatter::createInstance(
-    std::shared_ptr<pexPolicy::Policy> policy) {
+        std::shared_ptr<pexPolicy::Policy> policy) {
     return std::shared_ptr<dafPersist::Formatter>(new WcsFormatter(policy));
 }
-
-}}} // end lsst::afw::formatters
+}
+}
+}  // end lsst::afw::formatters

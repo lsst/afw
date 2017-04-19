@@ -36,19 +36,20 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.math.LeastSquares");
 }
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 class LeastSquares::Impl {
 public:
-
     enum StateFlags {
-        LOWER_FISHER_MATRIX     = 0x001,
-        FULL_FISHER_MATRIX      = 0x002,
-        RHS_VECTOR              = 0x004,
-        SOLUTION_ARRAY          = 0x008,
-        COVARIANCE_ARRAY        = 0x010,
-        DIAGNOSTIC_ARRAY        = 0x020,
-        DESIGN_AND_DATA         = 0x040
+        LOWER_FISHER_MATRIX = 0x001,
+        FULL_FISHER_MATRIX = 0x002,
+        RHS_VECTOR = 0x004,
+        SOLUTION_ARRAY = 0x008,
+        COVARIANCE_ARRAY = 0x010,
+        DIAGNOSTIC_ARRAY = 0x020,
+        DESIGN_AND_DATA = 0x040
     };
 
     int state;
@@ -63,17 +64,18 @@ public:
     Eigen::MatrixXd fisher;
     Eigen::VectorXd rhs;
 
-    ndarray::Array<double,1,1> solution;
-    ndarray::Array<double,2,2> covariance;
-    ndarray::Array<double,1,1> diagnostic;
+    ndarray::Array<double, 1, 1> solution;
+    ndarray::Array<double, 2, 2> covariance;
+    ndarray::Array<double, 1, 1> diagnostic;
 
     template <typename D>
-    void setRank(Eigen::MatrixBase<D> const & values) {
+    void setRank(Eigen::MatrixBase<D> const& values) {
         double cond = threshold * values[0];
         if (cond <= 0.0) {
             rank = 0;
         } else {
-            for (rank = dimension; (rank > 1) && (values[rank-1] < cond); --rank);
+            for (rank = dimension; (rank > 1) && (values[rank - 1] < cond); --rank)
+                ;
         }
     }
 
@@ -117,9 +119,8 @@ public:
 
     virtual void updateDiagnostic() = 0;
 
-    Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) :
-        state(0), dimension(dimension_), rank(dimension_), threshold(threshold_)
-        {}
+    Impl(int dimension_, double threshold_ = std::numeric_limits<double>::epsilon())
+            : state(0), dimension(dimension_), rank(dimension_), threshold(threshold_) {}
 
     virtual ~Impl() {}
 };
@@ -128,10 +129,7 @@ namespace {
 
 class EigensystemSolver : public LeastSquares::Impl {
 public:
-
-    explicit EigensystemSolver(int dimension) :
-        Impl(dimension), _eig(dimension), _svd(), _tmp(dimension)
-    {}
+    explicit EigensystemSolver(int dimension) : Impl(dimension), _eig(dimension), _svd(), _tmp(dimension) {}
 
     virtual void factor() {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
@@ -144,12 +142,11 @@ public:
             // are the same for a symmetric matrix; this is very different from doing a direct SVD of
             // the design matrix.
             ensure(FULL_FISHER_MATRIX);
-            _svd.compute(fisher, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
+            _svd.compute(fisher, Eigen::ComputeFullU);  // Matrix is symmetric, so V == U == eigenvectors
             setRank(_svd.singularValues());
             LOGL_DEBUG(_log,
-                "SelfAdjointEigenSolver failed; falling back to equivalent SVD: dimension=%d, rank=%d",
-                dimension, rank
-            );
+                       "SelfAdjointEigenSolver failed; falling back to equivalent SVD: dimension=%d, rank=%d",
+                       dimension, rank);
         }
     }
 
@@ -164,9 +161,8 @@ public:
     virtual void updateDiagnostic() {
         if (whichDiagnostic == LeastSquares::NORMAL_CHOLESKY) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicError,
-                "Cannot compute NORMAL_CHOLESKY diagnostic from NORMAL_EIGENSYSTEM factorization."
-            );
+                    pex::exceptions::LogicError,
+                    "Cannot compute NORMAL_CHOLESKY diagnostic from NORMAL_EIGENSYSTEM factorization.");
         }
         if (_eig.info() == Eigen::Success) {
             diagnostic.asEigen() = _eig.eigenvalues().reverse();
@@ -200,27 +196,24 @@ public:
             return;
         }
         if (_eig.info() == Eigen::Success) {
-            covariance.asEigen() =
-                _eig.eigenvectors().rightCols(rank)
-                * _eig.eigenvalues().tail(rank).array().inverse().matrix().asDiagonal()
-                * _eig.eigenvectors().rightCols(rank).adjoint();
+            covariance.asEigen() = _eig.eigenvectors().rightCols(rank) *
+                                   _eig.eigenvalues().tail(rank).array().inverse().matrix().asDiagonal() *
+                                   _eig.eigenvectors().rightCols(rank).adjoint();
         } else {
-            covariance.asEigen() =
-                _svd.matrixU().leftCols(rank)
-                * _svd.singularValues().head(rank).array().inverse().matrix().asDiagonal()
-                * _svd.matrixU().leftCols(rank).adjoint();
+            covariance.asEigen() = _svd.matrixU().leftCols(rank) *
+                                   _svd.singularValues().head(rank).array().inverse().matrix().asDiagonal() *
+                                   _svd.matrixU().leftCols(rank).adjoint();
         }
     }
 
 private:
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> _eig;
-    Eigen::JacobiSVD<Eigen::MatrixXd> _svd; // only used if Eigendecomposition fails, should be very rare
+    Eigen::JacobiSVD<Eigen::MatrixXd> _svd;  // only used if Eigendecomposition fails, should be very rare
     Eigen::VectorXd _tmp;
 };
 
 class CholeskySolver : public LeastSquares::Impl {
 public:
-
     explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
 
     virtual void factor() {
@@ -233,9 +226,8 @@ public:
     virtual void updateDiagnostic() {
         if (whichDiagnostic != LeastSquares::NORMAL_CHOLESKY) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicError,
-                "Can only compute NORMAL_CHOLESKY diagnostic from NORMAL_CHOLESKY factorization."
-            );
+                    pex::exceptions::LogicError,
+                    "Can only compute NORMAL_CHOLESKY diagnostic from NORMAL_CHOLESKY factorization.");
         }
         diagnostic.asEigen() = _ldlt.vectorD();
     }
@@ -243,7 +235,7 @@ public:
     virtual void updateSolution() { solution.asEigen() = _ldlt.solve(rhs); }
 
     virtual void updateCovariance() {
-        ndarray::EigenView<double,2,2> cov(covariance);
+        ndarray::EigenView<double, 2, 2> cov(covariance);
         cov.setIdentity();
         cov = _ldlt.solve(cov);
     }
@@ -254,15 +246,12 @@ private:
 
 class SvdSolver : public LeastSquares::Impl {
 public:
-
     explicit SvdSolver(int dimension) : Impl(dimension), _svd(), _tmp(dimension) {}
 
     virtual void factor() {
         if (!(state & DESIGN_AND_DATA)) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                "Cannot initialize DIRECT_SVD solver with normal equations."
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              "Cannot initialize DIRECT_SVD solver with normal equations.");
         }
         _svd.compute(design, Eigen::ComputeThinU | Eigen::ComputeThinV);
         setRank(_svd.singularValues());
@@ -273,17 +262,16 @@ public:
 
     virtual void updateDiagnostic() {
         switch (whichDiagnostic) {
-        case LeastSquares::NORMAL_EIGENSYSTEM:
-            diagnostic.asEigen<Eigen::ArrayXpr>() = _svd.singularValues().array().square();
-            break;
-        case LeastSquares::NORMAL_CHOLESKY:
-            throw LSST_EXCEPT(
-                pex::exceptions::LogicError,
-                "Can only compute NORMAL_CHOLESKY diagnostic from DIRECT_SVD factorization."
-            );
-        case LeastSquares::DIRECT_SVD:
-            diagnostic.asEigen() = _svd.singularValues();
-            break;
+            case LeastSquares::NORMAL_EIGENSYSTEM:
+                diagnostic.asEigen<Eigen::ArrayXpr>() = _svd.singularValues().array().square();
+                break;
+            case LeastSquares::NORMAL_CHOLESKY:
+                throw LSST_EXCEPT(
+                        pex::exceptions::LogicError,
+                        "Can only compute NORMAL_CHOLESKY diagnostic from DIRECT_SVD factorization.");
+            case LeastSquares::DIRECT_SVD:
+                diagnostic.asEigen() = _svd.singularValues();
+                break;
         }
     }
 
@@ -303,9 +291,9 @@ public:
             return;
         }
         covariance.asEigen() =
-            _svd.matrixV().leftCols(rank)
-            * _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal()
-            * _svd.matrixV().leftCols(rank).adjoint();
+                _svd.matrixV().leftCols(rank) *
+                _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal() *
+                _svd.matrixV().leftCols(rank).adjoint();
     }
 
 private:
@@ -313,7 +301,7 @@ private:
     Eigen::VectorXd _tmp;
 };
 
-} // anonymous
+}  // anonymous
 
 void LeastSquares::setThreshold(double threshold) {
     _impl->threshold = threshold;
@@ -324,29 +312,25 @@ void LeastSquares::setThreshold(double threshold) {
 
 double LeastSquares::getThreshold() const { return _impl->threshold; }
 
-ndarray::Array<double const,1,1> LeastSquares::getSolution() {
+ndarray::Array<double const, 1, 1> LeastSquares::getSolution() {
     _impl->ensure(Impl::SOLUTION_ARRAY);
     return _impl->solution;
 }
 
-ndarray::Array<double const,2,2> LeastSquares::getCovariance() {
+ndarray::Array<double const, 2, 2> LeastSquares::getCovariance() {
     _impl->ensure(Impl::COVARIANCE_ARRAY);
     return _impl->covariance;
 }
 
-ndarray::Array<double const,2,2> LeastSquares::getFisherMatrix() {
+ndarray::Array<double const, 2, 2> LeastSquares::getFisherMatrix() {
     _impl->ensure(Impl::FULL_FISHER_MATRIX);
     // Wrap the Eigen::MatrixXd in an ndarray::Array, using _impl as the reference-counted owner.
     // Doesn't matter if we swap strides, because it's symmetric.
-    return ndarray::external(
-        _impl->fisher.data(),
-        ndarray::makeVector(_impl->dimension, _impl->dimension),
-        ndarray::makeVector(_impl->dimension, 1),
-        _impl
-    );
+    return ndarray::external(_impl->fisher.data(), ndarray::makeVector(_impl->dimension, _impl->dimension),
+                             ndarray::makeVector(_impl->dimension, 1), _impl);
 }
 
-ndarray::Array<double const,1,1> LeastSquares::getDiagnostic(Factorization factorization) {
+ndarray::Array<double const, 1, 1> LeastSquares::getDiagnostic(Factorization factorization) {
     if (_impl->whichDiagnostic != factorization) {
         _impl->state &= ~Impl::DIAGNOSTIC_ARRAY;
         _impl->whichDiagnostic = factorization;
@@ -363,80 +347,76 @@ LeastSquares::Factorization LeastSquares::getFactorization() const { return _imp
 
 LeastSquares::LeastSquares(Factorization factorization, int dimension) {
     switch (factorization) {
-    case NORMAL_EIGENSYSTEM:
-        _impl = std::make_shared<EigensystemSolver>(dimension);
-        break;
-    case NORMAL_CHOLESKY:
-        _impl = std::make_shared<CholeskySolver>(dimension);
-        break;
-    case DIRECT_SVD:
-        _impl = std::make_shared<SvdSolver>(dimension);
-        break;
+        case NORMAL_EIGENSYSTEM:
+            _impl = std::make_shared<EigensystemSolver>(dimension);
+            break;
+        case NORMAL_CHOLESKY:
+            _impl = std::make_shared<CholeskySolver>(dimension);
+            break;
+        case DIRECT_SVD:
+            _impl = std::make_shared<SvdSolver>(dimension);
+            break;
     }
     _impl->factorization = factorization;
 }
 
 LeastSquares::~LeastSquares() {}
 
-Eigen::MatrixXd & LeastSquares::_getDesignMatrix() { return _impl->design; }
-Eigen::VectorXd & LeastSquares::_getDataVector() { return _impl->data; }
+Eigen::MatrixXd& LeastSquares::_getDesignMatrix() { return _impl->design; }
+Eigen::VectorXd& LeastSquares::_getDataVector() { return _impl->data; }
 
-Eigen::MatrixXd & LeastSquares::_getFisherMatrix() { return _impl->fisher; }
-Eigen::VectorXd & LeastSquares::_getRhsVector() { return _impl->rhs; }
+Eigen::MatrixXd& LeastSquares::_getFisherMatrix() { return _impl->fisher; }
+Eigen::VectorXd& LeastSquares::_getRhsVector() { return _impl->rhs; }
 
 void LeastSquares::_factor(bool haveNormalEquations) {
     if (haveNormalEquations) {
         if (_getFisherMatrix().rows() != _impl->dimension) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                (boost::format("Number of rows of Fisher matrix (%d) does not match"
-                               " dimension of LeastSquares solver.")
-                 % _getFisherMatrix().rows() % _impl->dimension).str()
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              (boost::format("Number of rows of Fisher matrix (%d) does not match"
+                                             " dimension of LeastSquares solver.") %
+                               _getFisherMatrix().rows() % _impl->dimension)
+                                      .str());
         }
         if (_getFisherMatrix().cols() != _impl->dimension) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                (boost::format("Number of columns of Fisher matrix (%d) does not match"
-                               " dimension of LeastSquares solver.")
-                 % _getFisherMatrix().cols() % _impl->dimension).str()
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              (boost::format("Number of columns of Fisher matrix (%d) does not match"
+                                             " dimension of LeastSquares solver.") %
+                               _getFisherMatrix().cols() % _impl->dimension)
+                                      .str());
         }
         if (_getRhsVector().size() != _impl->dimension) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                (boost::format("Number of elements in RHS vector (%d) does not match"
-                               " dimension of LeastSquares solver.")
-                 % _getRhsVector().size() % _impl->dimension).str()
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              (boost::format("Number of elements in RHS vector (%d) does not match"
+                                             " dimension of LeastSquares solver.") %
+                               _getRhsVector().size() % _impl->dimension)
+                                      .str());
         }
         _impl->state = Impl::RHS_VECTOR | Impl::FULL_FISHER_MATRIX | Impl::LOWER_FISHER_MATRIX;
     } else {
         if (_getDesignMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                "Number of columns of design matrix does not match dimension of LeastSquares solver."
-            );
+                    pex::exceptions::InvalidParameterError,
+                    "Number of columns of design matrix does not match dimension of LeastSquares solver.");
         }
         if (_getDesignMatrix().rows() != _getDataVector().size()) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                (boost::format("Number of rows of design matrix (%d) does not match number of "
-                               "data points (%d)") % _getDesignMatrix().rows() % _getDataVector().size()
-                ).str()
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              (boost::format("Number of rows of design matrix (%d) does not match number of "
+                                             "data points (%d)") %
+                               _getDesignMatrix().rows() % _getDataVector().size())
+                                      .str());
         }
         if (_getDesignMatrix().cols() > _getDataVector().size()) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                (boost::format("Number of columns of design matrix (%d) must be smaller than number of "
-                               "data points (%d)") % _getDesignMatrix().cols() % _getDataVector().size()
-                ).str()
-            );
+                    pex::exceptions::InvalidParameterError,
+                    (boost::format("Number of columns of design matrix (%d) must be smaller than number of "
+                                   "data points (%d)") %
+                     _getDesignMatrix().cols() % _getDataVector().size())
+                            .str());
         }
         _impl->state = Impl::DESIGN_AND_DATA;
     }
     _impl->factor();
 }
-
-}}} // namespace lsst::afw::math
+}
+}
+}  // namespace lsst::afw::math

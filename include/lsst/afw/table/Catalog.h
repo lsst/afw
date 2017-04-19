@@ -15,7 +15,9 @@
 #include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/SchemaMapper.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
  *  Iterator class for CatalogT.
@@ -32,32 +34,31 @@ namespace lsst { namespace afw { namespace table {
  *  the underlying record.
  */
 template <typename BaseT>
-class CatalogIterator
-    : public boost::iterator_adaptor<CatalogIterator<BaseT>,BaseT,typename BaseT::value_type::element_type>
-{
+class CatalogIterator : public boost::iterator_adaptor<CatalogIterator<BaseT>, BaseT,
+                                                       typename BaseT::value_type::element_type> {
 public:
-
     CatalogIterator() {}
 
     template <typename OtherBaseT>
-    CatalogIterator(CatalogIterator<OtherBaseT> const & other) :
-        CatalogIterator::iterator_adaptor_(other.base())
-    {}
+    CatalogIterator(CatalogIterator<OtherBaseT> const& other)
+            : CatalogIterator::iterator_adaptor_(other.base()) {}
 
-    explicit CatalogIterator(BaseT const & base) : CatalogIterator::iterator_adaptor_(base) {}
-
-    template <typename RecordT>
-    operator std::shared_ptr<RecordT> () const { return *this->base(); }
+    explicit CatalogIterator(BaseT const& base) : CatalogIterator::iterator_adaptor_(base) {}
 
     template <typename RecordT>
-    CatalogIterator & operator=(std::shared_ptr<RecordT> const & other) const {
+    operator std::shared_ptr<RecordT>() const {
+        return *this->base();
+    }
+
+    template <typename RecordT>
+    CatalogIterator& operator=(std::shared_ptr<RecordT> const& other) const {
         *this->base() = other;
         return *this;
     }
 
 private:
     friend class boost::iterator_core_access;
-    typename BaseT::value_type::element_type & dereference() const { return **this->base(); }
+    typename BaseT::value_type::element_type& dereference() const { return **this->base(); }
 };
 
 /**
@@ -94,14 +95,14 @@ private:
 template <typename RecordT>
 class CatalogT {
     typedef std::vector<std::shared_ptr<RecordT>> Internal;
-public:
 
+public:
     typedef RecordT Record;
     typedef typename Record::Table Table;
     typedef typename Record::ColumnView ColumnView;
 
     typedef RecordT value_type;
-    typedef RecordT & reference;
+    typedef RecordT& reference;
     typedef std::shared_ptr<RecordT> pointer;
     typedef typename Internal::size_type size_type;
     typedef typename Internal::difference_type difference_type;
@@ -120,10 +121,11 @@ public:
      *  A catalog with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit CatalogT(std::shared_ptr<Table> const & table = std::shared_ptr<Table>()) : _table(table), _internal() {}
+    explicit CatalogT(std::shared_ptr<Table> const& table = std::shared_ptr<Table>())
+            : _table(table), _internal() {}
 
     /// Construct a catalog from a schema, creating a table with Table::make(schema).
-    explicit CatalogT(Schema const & schema) : _table(Table::make(schema)), _internal() {}
+    explicit CatalogT(Schema const& schema) : _table(Table::make(schema)), _internal() {}
 
     /**
      *  Construct a catalog from a table and an iterator range.
@@ -136,14 +138,13 @@ public:
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      */
     template <typename InputIterator>
-    CatalogT(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last, bool deep=false) :
-        _table(table), _internal()
-    {
+    CatalogT(std::shared_ptr<Table> const& table, InputIterator first, InputIterator last, bool deep = false)
+            : _table(table), _internal() {
         insert(end(), first, last, deep);
     }
 
     /// Shallow copy constructor.
-    CatalogT(CatalogT const & other) : _table(other._table), _internal(other._internal) {}
+    CatalogT(CatalogT const& other) : _table(other._table), _internal(other._internal) {}
 
     /**
      *  Shallow copy constructor from a container containing a related record type.
@@ -152,12 +153,11 @@ public:
      *  convertible to Table.
      */
     template <typename OtherRecordT>
-    CatalogT(CatalogT<OtherRecordT> const & other) :
-        _table(other.getTable()), _internal(other.begin().base(), other.end().base())
-    {}
+    CatalogT(CatalogT<OtherRecordT> const& other)
+            : _table(other.getTable()), _internal(other.begin().base(), other.end().base()) {}
 
     /// Shallow assigment.
-    CatalogT & operator=(CatalogT const & other) {
+    CatalogT& operator=(CatalogT const& other) {
         if (&other != this) {
             _table = other._table;
             _internal = other._internal;
@@ -170,16 +170,16 @@ public:
      *
      *  The returned array's records are shallow copies, and hence will not in general be contiguous.
      */
-    CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+    CatalogT<RecordT> subset(ndarray::Array<bool const, 1> const& mask) const {
         if (size_type(mask.size()) != size()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LengthError,
-                (boost::format("Mask array with %d elements applied to catalog with %d elements")
-                 % mask.size() % size()).str()
-            );
+                    pex::exceptions::LengthError,
+                    (boost::format("Mask array with %d elements applied to catalog with %d elements") %
+                     mask.size() %
+                     size()).str());
         }
         CatalogT<RecordT> result(getTable());
-        ndarray::Array<bool const,1>::Iterator maskIter = mask.begin();
+        ndarray::Array<bool const, 1>::Iterator maskIter = mask.begin();
         const_iterator catIter = begin();
         for (; maskIter != mask.end(); ++maskIter, ++catIter) {
             if (*maskIter) result.push_back(catIter);
@@ -216,17 +216,14 @@ public:
         size_type start, stop = 0;
         // Python doesn't allow step == 0
         if (step == 0) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                "Step cannot be zero"
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Step cannot be zero");
         }
         // Basic negative indexing rule: first add size
         if (startd < 0) {
             startd += S;
         }
-        if (stopd  < 0) {
-            stopd  += S;
+        if (stopd < 0) {
+            stopd += S;
         }
         // Start gets clipped to zero; stop does not (yet).
         if (startd < 0) {
@@ -255,8 +252,7 @@ public:
             }
         }
 
-        if (((step > 0) && (start >= stop)) ||
-            ((step < 0) && ((std::ptrdiff_t)start <= stopd))) {
+        if (((step > 0) && (start >= stop)) || ((step < 0) && ((std::ptrdiff_t)start <= stopd))) {
             // Empty range
             return CatalogT<RecordT>(getTable(), begin(), begin());
         }
@@ -264,10 +260,10 @@ public:
         if (step == 1) {
             // Use the iterator-based constructor for this simple case
             assert(start >= 0);
-            assert(stop  >  0);
-            assert(start <  S);
-            assert(stop  <= S);
-            return CatalogT<RecordT>(getTable(), begin()+start, begin()+stop);
+            assert(stop > 0);
+            assert(start < S);
+            assert(stop <= S);
+            return CatalogT<RecordT>(getTable(), begin() + start, begin() + stop);
         }
 
         // Build a new CatalogT and copy records into it.
@@ -281,11 +277,11 @@ public:
         }
         cat.reserve(N);
         if (step >= 0) {
-            for (size_type i=start; i<stop; i+=step) {
+            for (size_type i = start; i < stop; i += step) {
                 cat.push_back(get(i));
             }
         } else {
-            for (std::ptrdiff_t i=(std::ptrdiff_t)start; i>stopd; i+=step) {
+            for (std::ptrdiff_t i = (std::ptrdiff_t)start; i > stopd; i += step) {
                 cat.push_back(get(i));
             }
         }
@@ -300,7 +296,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to
      *                         read the catalogs.  See e.g. SourceFitsFlags.
      */
-    void writeFits(std::string const & filename, std::string const & mode="w", int flags=0) const {
+    void writeFits(std::string const& filename, std::string const& mode = "w", int flags = 0) const {
         io::FitsWriter::apply(filename, mode, *this, flags);
     }
 
@@ -312,7 +308,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to
      *                         read the catalogs.  See e.g. SourceFitsFlags.
      */
-    void writeFits(fits::MemFileManager & manager, std::string const & mode="w", int flags=0) const {
+    void writeFits(fits::MemFileManager& manager, std::string const& mode = "w", int flags = 0) const {
         io::FitsWriter::apply(manager, mode, *this, flags);
     }
 
@@ -323,7 +319,7 @@ public:
      *  @param[in] flags        Table-subclass-dependent bitflags that control the details of how to
      *                          read the catalogs.  See e.g. SourceFitsFlags.
      */
-    void writeFits(fits::Fits & fitsfile, int flags=0) const {
+    void writeFits(fits::Fits& fitsfile, int flags = 0) const {
         io::FitsWriter::apply(fitsfile, *this, flags);
     }
 
@@ -336,7 +332,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static CatalogT readFits(std::string const & filename, int hdu=INT_MIN, int flags=0) {
+    static CatalogT readFits(std::string const& filename, int hdu = INT_MIN, int flags = 0) {
         return io::FitsReader::apply<CatalogT>(filename, hdu, flags);
     }
 
@@ -349,7 +345,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static CatalogT readFits(fits::MemFileManager & manager, int hdu=INT_MIN, int flags=0) {
+    static CatalogT readFits(fits::MemFileManager& manager, int hdu = INT_MIN, int flags = 0) {
         return io::FitsReader::apply<CatalogT>(manager, hdu, flags);
     }
 
@@ -360,7 +356,7 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static CatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+    static CatalogT readFits(fits::Fits& fitsfile, int flags = 0) {
         return io::FitsReader::apply<CatalogT>(fitsfile, flags);
     }
 
@@ -372,10 +368,9 @@ public:
     ColumnView getColumnView() const {
         if (std::is_const<RecordT>::value) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicError,
-                "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
-                "non-const views)."
-            );
+                    pex::exceptions::LogicError,
+                    "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
+                    "non-const views).");
         }
         return ColumnView::make(_table, begin(), end());
     }
@@ -440,9 +435,7 @@ public:
     std::shared_ptr<RecordT> const get(size_type i) const { return _internal[i]; }
 
     /// Set the record at index i to a pointer.
-    void set(size_type i, std::shared_ptr<RecordT> const & p) {
-        _internal[i] = p;
-    }
+    void set(size_type i, std::shared_ptr<RecordT> const& p) { _internal[i] = p; }
 
     /**
      *  Replace the contents of the table with an iterator range.
@@ -450,21 +443,19 @@ public:
      *  Delegates to insert(); look there for more information.
      */
     template <typename InputIterator>
-    void assign(InputIterator first, InputIterator last, bool deep=false) {
+    void assign(InputIterator first, InputIterator last, bool deep = false) {
         clear();
         insert(end(), first, last, deep);
     }
 
     /// Add a copy of the given record to the end of the catalog.
-    void push_back(Record const & r) {
+    void push_back(Record const& r) {
         std::shared_ptr<RecordT> p = _table->copyRecord(r);
         _internal.push_back(p);
     }
 
     /// Add the given record to the end of the catalog without copying.
-    void push_back(std::shared_ptr<RecordT> const & p) {
-        _internal.push_back(p);
-    }
+    void push_back(std::shared_ptr<RecordT> const& p) { _internal.push_back(p); }
 
     /// Create a new record, add it to the end of the catalog, and return a pointer to it.
     std::shared_ptr<RecordT> addNew() {
@@ -495,10 +486,9 @@ public:
      *  other iterator types, the user must preallocate the table manually.
      */
     template <typename InputIterator>
-    void insert(iterator pos, InputIterator first, InputIterator last, bool deep=false) {
-        _maybeReserve(
-            pos, first, last, deep, (typename std::iterator_traits<InputIterator>::iterator_category*)0
-        );
+    void insert(iterator pos, InputIterator first, InputIterator last, bool deep = false) {
+        _maybeReserve(pos, first, last, deep,
+                      (typename std::iterator_traits<InputIterator>::iterator_category*)0);
         if (deep) {
             while (first != last) {
                 pos = insert(pos, *first);
@@ -517,16 +507,13 @@ public:
 
     /// Insert a range of records into the catalog by copying them with a SchemaMapper.
     template <typename InputIterator>
-    void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
+    void insert(SchemaMapper const& mapper, iterator pos, InputIterator first, InputIterator last) {
         if (!_table->getSchema().contains(mapper.getOutputSchema())) {
-            throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                "SchemaMapper's output schema does not match catalog's schema"
-            );
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                              "SchemaMapper's output schema does not match catalog's schema");
         }
-        _maybeReserve(
-            pos, first, last, true, (typename std::iterator_traits<InputIterator>::iterator_category*)0
-        );
+        _maybeReserve(pos, first, last, true,
+                      (typename std::iterator_traits<InputIterator>::iterator_category*)0);
         while (first != last) {
             pos = insert(pos, _table->copyRecord(*first, mapper));
             ++pos;
@@ -535,13 +522,13 @@ public:
     }
 
     /// Insert a copy of the given record at the given position.
-    iterator insert(iterator pos, Record const & r) {
+    iterator insert(iterator pos, Record const& r) {
         std::shared_ptr<RecordT> p = _table->copyRecord(r);
         return iterator(_internal.insert(pos.base(), p));
     }
 
     /// Insert the given record at the given position without copying.
-    iterator insert(iterator pos, std::shared_ptr<RecordT> const & p) {
+    iterator insert(iterator pos, std::shared_ptr<RecordT> const& p) {
         return iterator(_internal.insert(pos.base(), p));
     }
 
@@ -554,7 +541,7 @@ public:
     }
 
     /// Shallow swap of two catalogs.
-    void swap(CatalogT & other) {
+    void swap(CatalogT& other) {
         _table.swap(other._table);
         _internal.swap(other._internal);
     }
@@ -564,7 +551,7 @@ public:
 
     /// Return true if the catalog is in ascending order according to the given key.
     template <typename T>
-    bool isSorted(Key<T> const & key) const;
+    bool isSorted(Key<T> const& key) const;
 
     /**
      *  Return true if the catalog is in ascending order according to the given predicate.
@@ -576,7 +563,7 @@ public:
 
     /// Sort the catalog in-place by the field with the given key.
     template <typename T>
-    void sort(Key<T> const & key);
+    void sort(Key<T> const& key);
 
     /**
      *  Sort the catalog in-place by the field with the given predicate.
@@ -602,10 +589,10 @@ public:
      *  Returns end() if the Record cannot be found.
      */
     template <typename T>
-    iterator find(typename Field<T>::Value const & value, Key<T> const & key);
+    iterator find(typename Field<T>::Value const& value, Key<T> const& key);
 
     template <typename T>
-    const_iterator find(typename Field<T>::Value const & value, Key<T> const & key) const;
+    const_iterator find(typename Field<T>::Value const& value, Key<T> const& key) const;
     //@}
 
     //@{
@@ -623,24 +610,23 @@ public:
      *        before calling any of the search methods (i.e. isSorted(key) must be true).
      */
     template <typename T>
-    iterator lower_bound(typename Field<T>::Value const & value, Key<T> const & key);
+    iterator lower_bound(typename Field<T>::Value const& value, Key<T> const& key);
 
     template <typename T>
-    const_iterator lower_bound(typename Field<T>::Value const & value, Key<T> const & key) const;
+    const_iterator lower_bound(typename Field<T>::Value const& value, Key<T> const& key) const;
 
     template <typename T>
-    iterator upper_bound(typename Field<T>::Value const & value, Key<T> const & key);
+    iterator upper_bound(typename Field<T>::Value const& value, Key<T> const& key);
 
     template <typename T>
-    const_iterator upper_bound(typename Field<T>::Value const & value, Key<T> const & key) const;
+    const_iterator upper_bound(typename Field<T>::Value const& value, Key<T> const& key) const;
 
     template <typename T>
-    std::pair<iterator,iterator>
-    equal_range(typename Field<T>::Value const & value, Key<T> const & key);
+    std::pair<iterator, iterator> equal_range(typename Field<T>::Value const& value, Key<T> const& key);
 
     template <typename T>
-    std::pair<const_iterator,const_iterator>
-    equal_range(typename Field<T>::Value const & value, Key<T> const & key) const;
+    std::pair<const_iterator, const_iterator> equal_range(typename Field<T>::Value const& value,
+                                                          Key<T> const& key) const;
     //@}
 
     //@{
@@ -656,25 +642,20 @@ public:
      *  containers.  When an algorithm should be called in such a way that records are deep-copied,
      *  the regular Catalog iterators should be used.
      */
-    Internal & getInternal() { return _internal; }
-    Internal const & getInternal() const { return _internal; }
+    Internal& getInternal() { return _internal; }
+    Internal const& getInternal() const { return _internal; }
     //@}
 
 private:
-
     template <typename InputIterator>
-    void _maybeReserve(
-        iterator & pos, InputIterator first, InputIterator last, bool deep,
-        std::random_access_iterator_tag *
-    ) {
+    void _maybeReserve(iterator& pos, InputIterator first, InputIterator last, bool deep,
+                       std::random_access_iterator_tag*) {
         if (deep) _table->preallocate(last - first);
     }
 
     template <typename InputIterator>
-    void _maybeReserve(
-        iterator pos, InputIterator first, InputIterator last, bool deep,
-        std::input_iterator_tag *
-    ) {}
+    void _maybeReserve(iterator pos, InputIterator first, InputIterator last, bool deep,
+                       std::input_iterator_tag*) {}
 
     std::shared_ptr<Table> _table;
     Internal _internal;
@@ -684,16 +665,14 @@ namespace detail {
 
 template <typename RecordT, typename T>
 struct KeyComparisonFunctor {
-
-    bool operator()(RecordT const & a, RecordT const & b) const { return a.get(key) < b.get(key); }
+    bool operator()(RecordT const& a, RecordT const& b) const { return a.get(key) < b.get(key); }
 
     Key<T> key;
 };
 
 template <typename RecordT, typename Adaptee>
 struct ComparisonAdaptor {
-
-    bool operator()(std::shared_ptr<RecordT> const & a, std::shared_ptr<RecordT> const & b) const {
+    bool operator()(std::shared_ptr<RecordT> const& a, std::shared_ptr<RecordT> const& b) const {
         return adaptee(*a, *b);
     }
 
@@ -702,24 +681,24 @@ struct ComparisonAdaptor {
 
 template <typename RecordT, typename T>
 struct KeyExtractionFunctor {
-
     typedef typename Field<T>::Value result_type;
 
-    result_type operator()(RecordT const & r) const { return r.get(key); }
+    result_type operator()(RecordT const& r) const { return r.get(key); }
 
     Key<T> key;
 };
 
-} // namespace detail
+}  // namespace detail
 
 template <typename RecordT>
 template <typename Compare>
 bool CatalogT<RecordT>::isSorted(Compare cmp) const {
     /// TODO: C++11 has an is_sorted function we should use when available.
-    detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
+    detail::ComparisonAdaptor<RecordT, Compare> f = {cmp};
     if (empty()) return true;
     const_iterator last = this->begin();
-    const_iterator i = last; ++i;
+    const_iterator i = last;
+    ++i;
     for (; i != this->end(); ++i) {
         if (f(i, last)) return false;
         last = i;
@@ -730,31 +709,31 @@ bool CatalogT<RecordT>::isSorted(Compare cmp) const {
 template <typename RecordT>
 template <typename Compare>
 void CatalogT<RecordT>::sort(Compare cmp) {
-    detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
+    detail::ComparisonAdaptor<RecordT, Compare> f = {cmp};
     std::stable_sort(_internal.begin(), _internal.end(), f);
 }
 
 template <typename RecordT>
 template <typename T>
-bool CatalogT<RecordT>::isSorted(Key<T> const & key) const {
-    detail::KeyComparisonFunctor<RecordT,T> f = { key };
+bool CatalogT<RecordT>::isSorted(Key<T> const& key) const {
+    detail::KeyComparisonFunctor<RecordT, T> f = {key};
     return isSorted(f);
 }
 
 template <typename RecordT>
 template <typename T>
-void CatalogT<RecordT>::sort(Key<T> const & key) {
-    detail::KeyComparisonFunctor<RecordT,T> f = { key };
+void CatalogT<RecordT>::sort(Key<T> const& key) {
+    detail::KeyComparisonFunctor<RecordT, T> f = {key};
     return sort(f);
 }
 
 template <typename RecordT>
 template <typename T>
-typename CatalogT<RecordT>::iterator
-CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+typename CatalogT<RecordT>::iterator CatalogT<RecordT>::find(typename Field<T>::Value const& value,
+                                                             Key<T> const& key) {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     if (i.base() == end() || *i != value) return end();
@@ -763,11 +742,11 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
 
 template <typename RecordT>
 template <typename T>
-typename CatalogT<RecordT>::const_iterator
-CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & key) const {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::find(typename Field<T>::Value const& value,
+                                                                   Key<T> const& key) const {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
     // Use binary search for log n search; requires sorted table.
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     if (i.base() == end() || *i != value) return end();
@@ -776,70 +755,69 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
 
 template <typename RecordT>
 template <typename T>
-typename CatalogT<RecordT>::iterator
-CatalogT<RecordT>::lower_bound(typename Field<T>::Value const & value, Key<T> const & key) {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+typename CatalogT<RecordT>::iterator CatalogT<RecordT>::lower_bound(typename Field<T>::Value const& value,
+                                                                    Key<T> const& key) {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
 
 template <typename RecordT>
 template <typename T>
-typename CatalogT<RecordT>::const_iterator
-CatalogT<RecordT>::lower_bound(typename Field<T>::Value const & value, Key<T> const & key) const {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::lower_bound(
+        typename Field<T>::Value const& value, Key<T> const& key) const {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
     SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
 
 template <typename RecordT>
 template <typename T>
-typename CatalogT<RecordT>::iterator
-CatalogT<RecordT>::upper_bound(typename Field<T>::Value const & value, Key<T> const & key) {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+typename CatalogT<RecordT>::iterator CatalogT<RecordT>::upper_bound(typename Field<T>::Value const& value,
+                                                                    Key<T> const& key) {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
     SearchIter i = std::upper_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
 
 template <typename RecordT>
 template <typename T>
-typename CatalogT<RecordT>::const_iterator
-CatalogT<RecordT>::upper_bound(typename Field<T>::Value const & value, Key<T> const & key) const {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+typename CatalogT<RecordT>::const_iterator CatalogT<RecordT>::upper_bound(
+        typename Field<T>::Value const& value, Key<T> const& key) const {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
     SearchIter i = std::upper_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
     return i.base();
 }
 
 template <typename RecordT>
 template <typename T>
-std::pair<typename CatalogT<RecordT>::iterator,typename CatalogT<RecordT>::iterator>
-CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> const & key) {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+std::pair<typename CatalogT<RecordT>::iterator, typename CatalogT<RecordT>::iterator>
+CatalogT<RecordT>::equal_range(typename Field<T>::Value const& value, Key<T> const& key) {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
-    std::pair<SearchIter,SearchIter> i
-        = std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, iterator> SearchIter;
+    std::pair<SearchIter, SearchIter> i =
+            std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
     return std::make_pair(i.first.base(), i.second.base());
-
 }
 
 template <typename RecordT>
 template <typename T>
-std::pair<typename CatalogT<RecordT>::const_iterator,typename CatalogT<RecordT>::const_iterator>
-CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> const & key) const {
-    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+std::pair<typename CatalogT<RecordT>::const_iterator, typename CatalogT<RecordT>::const_iterator>
+CatalogT<RecordT>::equal_range(typename Field<T>::Value const& value, Key<T> const& key) const {
+    detail::KeyExtractionFunctor<RecordT, T> f = {key};
     // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
-    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
-    std::pair<SearchIter,SearchIter> i
-        = std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT, T>, const_iterator> SearchIter;
+    std::pair<SearchIter, SearchIter> i =
+            std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
     return std::make_pair(i.first.base(), i.second.base());
 }
 
@@ -866,7 +844,7 @@ CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> co
  */
 
 template <typename RecordT, typename Catalog, typename T>
-std::shared_ptr<RecordT> _Catalog_find(Catalog const & catalog, T const & value, Key<T> const & key) {
+std::shared_ptr<RecordT> _Catalog_find(Catalog const& catalog, T const& value, Key<T> const& key) {
     typename Catalog::const_iterator iter = catalog.find(value, key);
     if (iter == catalog.end()) {
         return std::shared_ptr<RecordT>();
@@ -875,25 +853,25 @@ std::shared_ptr<RecordT> _Catalog_find(Catalog const & catalog, T const & value,
 }
 
 template <typename Catalog, typename T>
-int _Catalog_lower_bound(Catalog const & catalog, T const & value, Key<T> const & key) {
+int _Catalog_lower_bound(Catalog const& catalog, T const& value, Key<T> const& key) {
     return catalog.lower_bound(value, key) - catalog.begin();
 }
 
 template <typename Catalog, typename T>
-int _Catalog_upper_bound(Catalog const & catalog, T const & value, Key<T> const & key) {
+int _Catalog_upper_bound(Catalog const& catalog, T const& value, Key<T> const& key) {
     return catalog.upper_bound(value, key) - catalog.begin();
 }
 
 template <typename Catalog, typename T>
-std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T const & value, Key<T> const & key) {
-    std::pair<typename Catalog::const_iterator,typename Catalog::const_iterator> p
-        = catalog.equal_range(value, key);
-    return std::pair<int,int>(p.first - catalog.begin(), p.second - catalog.begin());
+std::pair<int, int> _Catalog_equal_range(Catalog const& catalog, T const& value, Key<T> const& key) {
+    std::pair<typename Catalog::const_iterator, typename Catalog::const_iterator> p =
+            catalog.equal_range(value, key);
+    return std::pair<int, int>(p.first - catalog.begin(), p.second - catalog.begin());
 }
 
 //@}
+}
+}
+}  // namespace lsst::afw::table
 
-
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_Catalog_h_INCLUDED
+#endif  // !AFW_TABLE_Catalog_h_INCLUDED

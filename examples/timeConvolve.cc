@@ -67,13 +67,13 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
             afwMath::convolve(resImage, image, analyticKernel, true);
         }
         // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
-        double secPerIter = (clock() - startTime)/
-            (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-        double mOps = static_cast<double>(
-            (imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double secPerIter =
+                (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+        double mOps =
+                static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
-        std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
-            << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
+        std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps << "\t"
+                  << secPerIter << "\t" << mOpsPerSec << std::endl;
     }
 
     std::cout << std::endl << "Separable Kernel" << std::endl;
@@ -89,14 +89,14 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
             // convolve
             afwMath::convolve(resImage, image, separableKernel, true);
         }
-        double secPerIter = (clock() - startTime)/
-            (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
+        double secPerIter =
+                (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
 
-        double mOps = static_cast<double>((
-            imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOps =
+                static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
-        std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
-            << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
+        std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps << "\t"
+                  << secPerIter << "\t" << mOpsPerSec << std::endl;
     }
 }
 
@@ -109,8 +109,8 @@ int main(int argc, char **argv) {
         } catch (lsst::pex::exceptions::NotFoundError) {
             std::cerr << "Usage: timeConvolve [fitsFile [nIter]]" << std::endl;
             std::cerr << "fitsFile is the path to a masked image" << std::endl;
-            std::cerr << "nIter (default " << DefNIter
-                      << ") is the number of iterations per kernel size" << std::endl;
+            std::cerr << "nIter (default " << DefNIter << ") is the number of iterations per kernel size"
+                      << std::endl;
             std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
         }

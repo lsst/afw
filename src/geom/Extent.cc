@@ -24,82 +24,78 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
-namespace lsst { namespace afw { namespace geom {
+namespace lsst {
+namespace afw {
+namespace geom {
 
 template <typename T, int N>
-Extent<T,N>::Extent(Point<T,N> const & other) :
-    Super(other.asEigen())
-{}
+Extent<T, N>::Extent(Point<T, N> const &other) : Super(other.asEigen()) {}
 
 // The following two template specializations raise Doxygen warnings and produce no documenation.
 // This is a known Doxygen bug: <https://bugzilla.gnome.org/show_bug.cgi?id=406027>
 /// @cond DOXYGEN_BUG
 template <typename T>
-Extent<T,2>::Extent(Point<T,2> const & other) :
-    Super(other.asEigen())
-{}
+Extent<T, 2>::Extent(Point<T, 2> const &other) : Super(other.asEigen()) {}
 
 template <typename T>
-Extent<T,3>::Extent(Point<T,3> const & other) :
-    Super(other.asEigen())
-{}
+Extent<T, 3>::Extent(Point<T, 3> const &other) : Super(other.asEigen()) {}
 /// @endcond
 
 template <typename T, int N>
-CoordinateExpr<N> ExtentBase<T,N>::eq(Extent<T,N> const & other) const {
+CoordinateExpr<N> ExtentBase<T, N>::eq(Extent<T, N> const &other) const {
     CoordinateExpr<N> r;
-    for (int n=0; n<N; ++n) r[n] = this->_vector[n] == other[n];
+    for (int n = 0; n < N; ++n) r[n] = this->_vector[n] == other[n];
     return r;
 }
 
 template <typename T, int N>
-CoordinateExpr<N> ExtentBase<T,N>::ne(Extent<T,N> const & other) const {
+CoordinateExpr<N> ExtentBase<T, N>::ne(Extent<T, N> const &other) const {
     CoordinateExpr<N> r;
-    for (int n=0; n<N; ++n) r[n] = this->_vector[n] != other[n];
+    for (int n = 0; n < N; ++n) r[n] = this->_vector[n] != other[n];
     return r;
 }
 
 template <typename T, int N>
-CoordinateExpr<N> ExtentBase<T,N>::lt(Extent<T,N> const & other) const {
+CoordinateExpr<N> ExtentBase<T, N>::lt(Extent<T, N> const &other) const {
     CoordinateExpr<N> r;
-    for (int n=0; n<N; ++n) r[n] = this->_vector[n] < other[n];
+    for (int n = 0; n < N; ++n) r[n] = this->_vector[n] < other[n];
     return r;
 }
 
 template <typename T, int N>
-CoordinateExpr<N> ExtentBase<T,N>::le(Extent<T,N> const & other) const {
+CoordinateExpr<N> ExtentBase<T, N>::le(Extent<T, N> const &other) const {
     CoordinateExpr<N> r;
-    for (int n=0; n<N; ++n) r[n] = this->_vector[n] <= other[n];
+    for (int n = 0; n < N; ++n) r[n] = this->_vector[n] <= other[n];
     return r;
 }
 
 template <typename T, int N>
-CoordinateExpr<N> ExtentBase<T,N>::gt(Extent<T,N> const & other) const {
+CoordinateExpr<N> ExtentBase<T, N>::gt(Extent<T, N> const &other) const {
     CoordinateExpr<N> r;
-    for (int n=0; n<N; ++n) r[n] = this->_vector[n] > other[n];
+    for (int n = 0; n < N; ++n) r[n] = this->_vector[n] > other[n];
     return r;
 }
 
 template <typename T, int N>
-CoordinateExpr<N> ExtentBase<T,N>::ge(Extent<T,N> const & other) const {
+CoordinateExpr<N> ExtentBase<T, N>::ge(Extent<T, N> const &other) const {
     CoordinateExpr<N> r;
-    for (int n=0; n<N; ++n) r[n] = this->_vector[n] >= other[n];
+    for (int n = 0; n < N; ++n) r[n] = this->_vector[n] >= other[n];
     return r;
 }
 
 template <typename T, int N>
-Point<T,N> ExtentBase<T,N>::asPoint() const {
-    return Point<T,N>(static_cast<Extent<T,N> const &>(*this));
+Point<T, N> ExtentBase<T, N>::asPoint() const {
+    return Point<T, N>(static_cast<Extent<T, N> const &>(*this));
 }
 
 template <typename T, int N>
-Point<T,N> ExtentBase<T,N>::operator+(Point<T,N> const & other) const {
-    return Point<T,N>(this->_vector + other.asEigen());
+Point<T, N> ExtentBase<T, N>::operator+(Point<T, N> const &other) const {
+    return Point<T, N>(this->_vector + other.asEigen());
 }
 
 template <int N>
-Extent<int,N> truncate(Extent<double,N> const & input) {
-    Extent<int,N> result;
+Extent<int, N> truncate(Extent<double, N> const &input) {
+    Extent<int, N> result;
     for (int i = 0; i < N; ++i) {
         result[i] = static_cast<int>(input[i]);
     }
@@ -107,8 +103,8 @@ Extent<int,N> truncate(Extent<double,N> const & input) {
 }
 
 template <int N>
-Extent<int,N> floor(Extent<double,N> const & input) {
-    Extent<int,N> result;
+Extent<int, N> floor(Extent<double, N> const &input) {
+    Extent<int, N> result;
     for (int i = 0; i < N; ++i) {
         result[i] = std::floor(input[i]);
     }
@@ -116,8 +112,8 @@ Extent<int,N> floor(Extent<double,N> const & input) {
 }
 
 template <int N>
-Extent<int,N> ceil(Extent<double,N> const & input) {
-    Extent<int,N> result;
+Extent<int, N> ceil(Extent<double, N> const &input) {
+    Extent<int, N> result;
     for (int i = 0; i < N; ++i) {
         result[i] = std::ceil(input[i]);
     }
@@ -126,26 +122,27 @@ Extent<int,N> ceil(Extent<double,N> const & input) {
 
 #ifndef DOXYGEN
 
-template class ExtentBase<int,2>;
-template class ExtentBase<int,3>;
-template class ExtentBase<double,2>;
-template class ExtentBase<double,3>;
-template class Extent<int,2>;
-template class Extent<int,3>;
-template class Extent<double,2>;
-template class Extent<double,3>;
-template Extent<double,2>::Extent(Extent<int,2> const &);
-template Extent<double,3>::Extent(Extent<int,3> const &);
-template Extent<double,2>::Extent(Point<int,2> const &);
-template Extent<double,3>::Extent(Point<int,3> const &);
+template class ExtentBase<int, 2>;
+template class ExtentBase<int, 3>;
+template class ExtentBase<double, 2>;
+template class ExtentBase<double, 3>;
+template class Extent<int, 2>;
+template class Extent<int, 3>;
+template class Extent<double, 2>;
+template class Extent<double, 3>;
+template Extent<double, 2>::Extent(Extent<int, 2> const &);
+template Extent<double, 3>::Extent(Extent<int, 3> const &);
+template Extent<double, 2>::Extent(Point<int, 2> const &);
+template Extent<double, 3>::Extent(Point<int, 3> const &);
 
-template Extent<int,2> truncate(Extent<double,2> const &);
-template Extent<int,3> truncate(Extent<double,3> const &);
-template Extent<int,2> floor(Extent<double,2> const &);
-template Extent<int,3> floor(Extent<double,3> const &);
-template Extent<int,2> ceil(Extent<double,2> const &);
-template Extent<int,3> ceil(Extent<double,3> const &);
+template Extent<int, 2> truncate(Extent<double, 2> const &);
+template Extent<int, 3> truncate(Extent<double, 3> const &);
+template Extent<int, 2> floor(Extent<double, 2> const &);
+template Extent<int, 3> floor(Extent<double, 3> const &);
+template Extent<int, 2> ceil(Extent<double, 2> const &);
+template Extent<int, 3> ceil(Extent<double, 3> const &);
 
-#endif // !DOXYGEN
-
-}}} // end lsst::afw::geom
+#endif  // !DOXYGEN
+}
+}
+}  // end lsst::afw::geom

@@ -9,13 +9,14 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
 
-namespace lsst { namespace afw {
+namespace lsst {
+namespace afw {
 
 namespace fits {
 
 class Fits;
 
-} // namespace fits
+}  // namespace fits
 
 namespace table {
 
@@ -42,7 +43,6 @@ namespace table {
  */
 class BaseTable : public std::enable_shared_from_this<BaseTable>, public daf::base::Citizen {
 public:
-
     /// The associated record class.
     typedef BaseRecord Record;
 
@@ -62,7 +62,7 @@ public:
     std::shared_ptr<daf::base::PropertyList> getMetadata() const { return _metadata; }
 
     /// Set the flexible metadata associated with the table.  May be null.
-    void setMetadata(std::shared_ptr<daf::base::PropertyList> const & metadata) { _metadata = metadata; }
+    void setMetadata(std::shared_ptr<daf::base::PropertyList> const& metadata) { _metadata = metadata; }
 
     /// Return the metadata and set the internal metadata to a null pointer.
     std::shared_ptr<daf::base::PropertyList> popMetadata() {
@@ -107,14 +107,14 @@ public:
      *  This is implemented using makeRecord and calling record.assign on the results; override those
      *  to change the behavior.
      */
-    std::shared_ptr<BaseRecord> copyRecord(BaseRecord const & input);
+    std::shared_ptr<BaseRecord> copyRecord(BaseRecord const& input);
 
     /**
      *  Deep-copy a record, using a mapper to relate two schemas.
      *
      *  @copydetails BaseTable::copyRecord(BaseRecord const &)
      */
-    std::shared_ptr<BaseRecord> copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
+    std::shared_ptr<BaseRecord> copyRecord(BaseRecord const& input, SchemaMapper const& mapper);
 
     /// Return the table's schema.
     Schema getSchema() const { return _schema; }
@@ -152,12 +152,11 @@ public:
      *  In some cases it may also serve as a form of pimpl, keeping class implementation details
      *  out of header files.
      */
-    static std::shared_ptr<BaseTable> make(Schema const & schema);
+    static std::shared_ptr<BaseTable> make(Schema const& schema);
 
     virtual ~BaseTable();
 
 protected:
-
     /// Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     std::shared_ptr<Derived> getSelf() {
@@ -170,7 +169,7 @@ protected:
         return std::static_pointer_cast<Derived const>(shared_from_this());
     }
 
-    virtual void handleAliasChange(std::string const & alias) {}
+    virtual void handleAliasChange(std::string const& alias) {}
 
     /// Clone implementation with noncovariant return types.
     virtual std::shared_ptr<BaseTable> _clone() const;
@@ -179,25 +178,21 @@ protected:
     virtual std::shared_ptr<BaseRecord> _makeRecord();
 
     /// Construct from a schema.
-    explicit BaseTable(Schema const & schema);
+    explicit BaseTable(Schema const& schema);
 
     /// Copy construct.
-    BaseTable(BaseTable const & other) :
-        daf::base::Citizen(other), _schema(other._schema),
-        _metadata(other._metadata)
-    {
-        if (_metadata)
-            _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
+    BaseTable(BaseTable const& other)
+            : daf::base::Citizen(other), _schema(other._schema), _metadata(other._metadata) {
+        if (_metadata) _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
     }
 
 private:
-
     friend class BaseRecord;
     friend class io::FitsWriter;
     friend class AliasMap;
 
     // Called by BaseRecord ctor to fill in its _data, _table, and _manager members.
-    void _initialize(BaseRecord & record);
+    void _initialize(BaseRecord& record);
 
     /*
      *  Called by BaseRecord dtor to notify the table when it is about to be destroyed.
@@ -209,21 +204,22 @@ private:
      *  about using every last bit of allocated memory efficiently - it's so we can keep
      *  records contiguous as much as possible to allow ColumnView to be used.
      */
-    void _destroy(BaseRecord & record);
+    void _destroy(BaseRecord& record);
 
     // Tables are not assignable to prevent type slicing; this is intentionally not implemented,
     // so we get linker errors if we do try to use the assignment operator.
-    void operator=(BaseTable const & other);
+    void operator=(BaseTable const& other);
 
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    virtual std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile, int flags) const;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
-    Schema _schema;                 // schema that defines the table's fields
-    ndarray::Manager::Ptr _manager; // current memory block to use for new records
-    std::shared_ptr<daf::base::PropertyList> _metadata; // flexible metadata; may be null
+    Schema _schema;                                      // schema that defines the table's fields
+    ndarray::Manager::Ptr _manager;                      // current memory block to use for new records
+    std::shared_ptr<daf::base::PropertyList> _metadata;  // flexible metadata; may be null
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_BaseTable_h_INCLUDED
+#endif  // !AFW_TABLE_BaseTable_h_INCLUDED

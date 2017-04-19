@@ -41,46 +41,39 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math { namespace detail {
+namespace lsst {
+namespace afw {
+namespace math {
+namespace detail {
 
-KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr kernelPtr,
-        geom::Box2I const &bbox,
-        geom::Point2I const &xy0,
-        bool doNormalize)
-:
-    daf::base::Citizen(typeid(this)),
-    _kernelPtr(kernelPtr),
-    _bbox(bbox),
-    _xy0(xy0),
-    _doNormalize(doNormalize),
-    _imagePtrList(4)
-{
+KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr kernelPtr, geom::Box2I const &bbox,
+                                             geom::Point2I const &xy0, bool doNormalize)
+        : daf::base::Citizen(typeid(this)),
+          _kernelPtr(kernelPtr),
+          _bbox(bbox),
+          _xy0(xy0),
+          _doNormalize(doNormalize),
+          _imagePtrList(4) {
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
     LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
-    "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
-       _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
+               "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, "
+               "images...)",
+               _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1],
+               _doNormalize);
 }
 
-KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr const kernelPtr,
-        geom::Box2I const &bbox,
-        geom::Point2I const &xy0,
-        bool doNormalize,
-        ImagePtr bottomLeftImagePtr,
-        ImagePtr bottomRightImagePtr,
-        ImagePtr topLeftImagePtr,
-        ImagePtr topRightImagePtr)
-:
-    daf::base::Citizen(typeid(this)),
-    _kernelPtr(kernelPtr),
-    _bbox(bbox),
-    _xy0(xy0),
-    _doNormalize(doNormalize),
-    _imagePtrList(4)
-{
+KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr const kernelPtr, geom::Box2I const &bbox,
+                                             geom::Point2I const &xy0, bool doNormalize,
+                                             ImagePtr bottomLeftImagePtr, ImagePtr bottomRightImagePtr,
+                                             ImagePtr topLeftImagePtr, ImagePtr topRightImagePtr)
+        : daf::base::Citizen(typeid(this)),
+          _kernelPtr(kernelPtr),
+          _bbox(bbox),
+          _xy0(xy0),
+          _doNormalize(doNormalize),
+          _imagePtrList(4) {
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
@@ -89,13 +82,13 @@ KernelImagesForRegion::KernelImagesForRegion(
     _insertImage(TOP_LEFT, topLeftImagePtr);
     _insertImage(TOP_RIGHT, topRightImagePtr);
     LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
-    "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
-       _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
+               "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, "
+               "images...)",
+               _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1],
+               _doNormalize);
 }
 
-KernelImagesForRegion::ImagePtr KernelImagesForRegion::getImage(
-        Location location)
-const {
+KernelImagesForRegion::ImagePtr KernelImagesForRegion::getImage(Location location) const {
     if (_imagePtrList[location]) {
         return _imagePtrList[location];
     }
@@ -106,22 +99,20 @@ const {
     return imagePtr;
 }
 
-geom::Point2I KernelImagesForRegion::getPixelIndex(
-        Location location)
-const {
+geom::Point2I KernelImagesForRegion::getPixelIndex(Location location) const {
     switch (location) {
         case BOTTOM_LEFT:
             return _bbox.getMin();
-            break; // paranoia
+            break;  // paranoia
         case BOTTOM_RIGHT:
             return geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
-            break; // paranoia
+            break;  // paranoia
         case TOP_LEFT:
             return geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
-            break; // paranoia
+            break;  // paranoia
         case TOP_RIGHT:
             return geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
-            break; // paranoia
+            break;  // paranoia
         default: {
             std::ostringstream os;
             os << "Bug: unhandled location = " << location;
@@ -130,9 +121,7 @@ const {
     }
 }
 
-bool KernelImagesForRegion::computeNextRow(
-        RowOfKernelImagesForRegion &regionRow)
-const {
+bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow) const {
     if (regionRow.isLastRow()) {
         return false;
     }
@@ -154,7 +143,7 @@ const {
         // Move each region up one segment
         bool isFirst = true;
         for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
-            rgnIter != rgnEnd; ++rgnIter) {
+             rgnIter != rgnEnd; ++rgnIter) {
             (*rgnIter)->_moveUp(isFirst, height);
             isFirst = false;
         }
@@ -170,20 +159,14 @@ const {
         int remWidth = this->_bbox.getWidth();
         int remXDiv = regionRow.getNX();
         for (RowOfKernelImagesForRegion::Iterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
-            rgnIter != rgnEnd; ++rgnIter) {
+             rgnIter != rgnEnd; ++rgnIter) {
             int width = _computeNextSubregionLength(remWidth, remXDiv);
             --remXDiv;
             remWidth -= width;
 
             std::shared_ptr<KernelImagesForRegion> regionPtr(new KernelImagesForRegion(
-                _kernelPtr,
-                geom::Box2I(blCorner, geom::Extent2I(width, height)),
-                _xy0,
-                _doNormalize,
-                blImagePtr,
-                brImagePtr,
-                tlImagePtr,
-                trImageNullPtr));
+                    _kernelPtr, geom::Box2I(blCorner, geom::Extent2I(width, height)), _xy0, _doNormalize,
+                    blImagePtr, brImagePtr, tlImagePtr, trImageNullPtr));
             *rgnIter = regionPtr;
 
             if (!tlImagePtr) {
@@ -207,17 +190,11 @@ void KernelImagesForRegion::_computeImage(Location location) const {
     }
 
     geom::Point2I pixelIndex = getPixelIndex(location);
-    _kernelPtr->computeImage(
-        *imagePtr,
-        _doNormalize,
-        image::indexToPosition(pixelIndex.getX() + _xy0[0]),
-        image::indexToPosition(pixelIndex.getY() + _xy0[1]));
+    _kernelPtr->computeImage(*imagePtr, _doNormalize, image::indexToPosition(pixelIndex.getX() + _xy0[0]),
+                             image::indexToPosition(pixelIndex.getY() + _xy0[1]));
 }
 
-std::vector<int> KernelImagesForRegion::_computeSubregionLengths(
-    int length,
-    int nDivisions)
-{
+std::vector<int> KernelImagesForRegion::_computeSubregionLengths(int length, int nDivisions) {
     if ((nDivisions > length) || (nDivisions < 1)) {
         std::ostringstream os;
         os << "nDivisions = " << nDivisions << " not in range [1, " << length << " = length]";
@@ -229,8 +206,8 @@ std::vector<int> KernelImagesForRegion::_computeSubregionLengths(
         int subLength = _computeNextSubregionLength(remLength, remNDiv);
         if (subLength < 1) {
             std::ostringstream os;
-            os << "Bug! _computeSubregionLengths(length=" << length << ", nDivisions=" << nDivisions <<
-                ") computed sublength = " << subLength << " < 0; remLength = " << remLength;
+            os << "Bug! _computeSubregionLengths(length=" << length << ", nDivisions=" << nDivisions
+               << ") computed sublength = " << subLength << " < 0; remLength = " << remLength;
             throw LSST_EXCEPT(pexExcept::RuntimeError, os.str());
         }
         regionLengths.push_back(subLength);
@@ -239,14 +216,10 @@ std::vector<int> KernelImagesForRegion::_computeSubregionLengths(
     return regionLengths;
 }
 
-void KernelImagesForRegion::_moveUp(
-        bool isFirst,
-        int newHeight)
-{
+void KernelImagesForRegion::_moveUp(bool isFirst, int newHeight) {
     // move bbox up (this must be done before recomputing the top kernel images)
-    _bbox = geom::Box2I(
-        geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
-        geom::Extent2I(_bbox.getWidth(), newHeight));
+    _bbox = geom::Box2I(geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
+                        geom::Extent2I(_bbox.getWidth(), newHeight));
 
     // swap top and bottom image pointers
     _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);
@@ -259,23 +232,17 @@ void KernelImagesForRegion::_moveUp(
     }
 }
 
-
 int const KernelImagesForRegion::_MinInterpolationSize = 10;
 
-RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
-        int nx,
-        int ny)
-:
-    _nx(nx),
-    _ny(ny),
-    _yInd(-1),
-    _regionList(nx)
-{
+RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(int nx, int ny)
+        : _nx(nx), _ny(ny), _yInd(-1), _regionList(nx) {
     if ((nx < 1) || (ny < 1)) {
         std::ostringstream os;
         os << "nx = " << nx << " and/or ny = " << ny << " < 1";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     };
 }
-
-}}}}    // end lsst::afw::math::detail
+}
+}
+}
+}  // end lsst::afw::math::detail

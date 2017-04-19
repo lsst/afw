@@ -31,7 +31,6 @@
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
-
 int main() {
     afwImage::Mask<afwImage::MaskPixel> img(afwGeom::Extent2I(10, 6));
     // This is equivalent to mask = 100:
@@ -59,15 +58,9 @@ int main() {
 
     // img will be modified
     afwImage::Mask<afwImage::MaskPixel> simg1(
-        img,
-        afwGeom::Box2I(afwGeom::Point2I(1, 1), afwGeom::Extent2I(7, 3)),
-        afwImage::LOCAL
-    );
+            img, afwGeom::Box2I(afwGeom::Point2I(1, 1), afwGeom::Extent2I(7, 3)), afwImage::LOCAL);
     afwImage::Mask<afwImage::MaskPixel> simg(
-        simg1,
-        afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(5, 2)),
-        afwImage::LOCAL
-    );
+            simg1, afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(5, 2)), afwImage::LOCAL);
 
     {
         afwImage::Mask<afwImage::MaskPixel> nimg(simg.getDimensions());
@@ -76,7 +69,7 @@ int main() {
     }
 
     for (int r = 0; r != img.getHeight(); ++r) {
-        std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
+        std::fill(img.row_begin(r), img.row_end(r), 100 * (1 + r));
     }
 
     std::string inImagePath;
@@ -91,8 +84,8 @@ int main() {
     }
 
     afwImage::MaskedImage<float> mi = afwImage::MaskedImage<float>(inImagePath);
-    printf("mask(0,0) = %d\n", (*(mi.getMask()))(0,0));
-    printf("image(0,0) = %f\n", (*(mi.getImage()))(0,0));
+    printf("mask(0,0) = %d\n", (*(mi.getMask()))(0, 0));
+    printf("image(0,0) = %f\n", (*(mi.getImage()))(0, 0));
 
     return 0;
 }

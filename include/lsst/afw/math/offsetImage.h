@@ -48,16 +48,16 @@ namespace math {
  *
  * @throws lsst::pex::exceptions::InvalidParameterError if the algorithm is invalid
  */
-template<typename ImageT>
+template <typename ImageT>
 std::shared_ptr<ImageT> offsetImage(ImageT const& image, float dx, float dy,
-                                 std::string const& algorithmName="lanczos5", unsigned int buffer=0);
+                                    std::string const& algorithmName = "lanczos5", unsigned int buffer = 0);
 /**
  * Rotate an image by an integral number of quarter turns
  *
  * @param image The %image to rotate
  * @param nQuarter the desired number of quarter turns
  */
-template<typename ImageT>
+template <typename ImageT>
 std::shared_ptr<ImageT> rotateImageBy90(ImageT const& image, int nQuarter);
 
 /**
@@ -67,29 +67,26 @@ std::shared_ptr<ImageT> rotateImageBy90(ImageT const& image, int nQuarter);
  * @param flipLR Flip left <--> right?
  * @param flipTB Flip top <--> bottom?
  */
-template<typename ImageT>
-std::shared_ptr<ImageT> flipImage(ImageT const& inImage,
-                      bool flipLR,
-                      bool flipTB
-                     );
+template <typename ImageT>
+std::shared_ptr<ImageT> flipImage(ImageT const& inImage, bool flipLR, bool flipTB);
 /**
  * @param inImage The %image to bin
  * @param binX Output pixels are binX*binY input pixels
  * @param binY Output pixels are binX*binY input pixels
  * @param flags how to generate super-pixels
  */
-template<typename ImageT>
+template <typename ImageT>
 std::shared_ptr<ImageT> binImage(ImageT const& inImage, int const binX, int const binY,
-                     lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
+                                 lsst::afw::math::Property const flags = lsst::afw::math::MEAN);
 /**
  * @param inImage The %image to bin
  * @param binsize Output pixels are binsize*binsize input pixels
  * @param flags how to generate super-pixels
  */
-template<typename ImageT>
+template <typename ImageT>
 std::shared_ptr<ImageT> binImage(ImageT const& inImage, int const binsize,
-                     lsst::afw::math::Property const flags=lsst::afw::math::MEAN);
-
-
-}}}
+                                 lsst::afw::math::Property const flags = lsst::afw::math::MEAN);
+}
+}
+}
 #endif

@@ -10,8 +10,9 @@
 
 #include "lsst/afw/table/Schema.h"
 
-
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 class SchemaMapper;
 
@@ -26,26 +27,24 @@ namespace detail {
  */
 class SchemaMapperImpl {
 private:
-
     /// Boost.MPL metafunction that returns a std::pair< Key<T>, Key<T> > given a T.
     struct MakeKeyPair {
         template <typename T>
         struct apply {
-            typedef std::pair< Key<T>, Key<T> > type;
+            typedef std::pair<Key<T>, Key<T> > type;
         };
     };
 
 public:
-
     /// An MPL sequence of all the allowed pair templates.
-    typedef boost::mpl::transform<FieldTypes,MakeKeyPair>::type KeyPairTypes;
+    typedef boost::mpl::transform<FieldTypes, MakeKeyPair>::type KeyPairTypes;
     /// A Boost.Variant type that can hold any one of the allowed pair types.
     typedef boost::make_variant_over<KeyPairTypes>::type KeyPairVariant;
-        /// A std::vector whose elements can be any of the allowed pair types.
+    /// A std::vector whose elements can be any of the allowed pair types.
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
     /// Constructor from the given input and output schemas
-    explicit SchemaMapperImpl(Schema const & input, Schema const & output) : _input(input), _output(output) {}
+    explicit SchemaMapperImpl(Schema const& input, Schema const& output) : _input(input), _output(output) {}
 
     /**
      *  A functor-wrapper used in the implementation of SchemaMapper::forEach.
@@ -54,10 +53,9 @@ public:
      */
     template <typename F>
     struct VisitorWrapper : public boost::static_visitor<> {
-
         /// Call the wrapped function.
         template <typename T>
-        void operator()(std::pair< Key<T>, Key<T> > const & pair) const {
+        void operator()(std::pair<Key<T>, Key<T> > const& pair) const {
             _func(pair.first, pair.second);
         }
 
@@ -70,9 +68,7 @@ public:
          *  with function-call syntax, allowing us to use it on our vector of variants with
          *  std::for_each and other STL algorithms.
          */
-        void operator()(KeyPairVariant const & v) const {
-            boost::apply_visitor(*this, v);
-        }
+        void operator()(KeyPairVariant const& v) const { boost::apply_visitor(*this, v); }
 
         /// Construct the wrappper.
         template <typename T>
@@ -83,7 +79,6 @@ public:
     };
 
 private:
-
     friend class table::SchemaMapper;
     friend class detail::Access;
 
@@ -91,7 +86,9 @@ private:
     Schema _output;
     KeyPairMap _map;
 };
+}
+}
+}
+}  // namespace lsst::afw::table::detail
 
-}}}} // namespace lsst::afw::table::detail
-
-#endif // !AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED
+#endif  // !AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED

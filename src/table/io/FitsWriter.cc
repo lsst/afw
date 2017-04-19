@@ -6,7 +6,10 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 namespace {
 
@@ -19,36 +22,30 @@ typedef FitsWriter::Fits Fits;
 
 // A Schema::forEach functor that writes FITS header keys for a field when it is called.
 struct ProcessSchema {
-
     template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
+    void operator()(SchemaItem<T> const& item) const {
         std::string name = item.field.getName();
-        int n = fits->addColumn<typename Field<T>::Element>(
-            name, item.field.getElementCount(),
-            item.field.getDoc()
-        );
+        int n = fits->addColumn<typename Field<T>::Element>(name, item.field.getElementCount(),
+                                                            item.field.getDoc());
         if (!item.field.getDoc().empty()) {
             // We use a separate key TDOCn for documentation (in addition to the TTYPEn comments)
             // so we can have long strings via the CONTINUE convention.
             // When reading, if there is no TDOCn, we'll just use the TTYPEn comment.
             fits->writeColumnKey("TDOC", n, item.field.getDoc());
         }
-        specialize(item, n); // delegate to other member functions that are specialized on field tag types
+        specialize(item, n);  // delegate to other member functions that are specialized on field tag types
     }
 
-    void operator()(SchemaItem<std::string> const & item) const {
+    void operator()(SchemaItem<std::string> const& item) const {
         std::string name = item.field.getName();
-        int n = fits->addColumn<std::string>(
-            name, item.field.getElementCount(),
-            item.field.getDoc()
-        );
+        int n = fits->addColumn<std::string>(name, item.field.getElementCount(), item.field.getDoc());
         if (!item.field.getDoc().empty()) {
             fits->writeColumnKey("TDOC", n, item.field.getDoc());
         }
         specialize(item, n);
     }
 
-    void operator()(SchemaItem<Flag> const & item) const {
+    void operator()(SchemaItem<Flag> const& item) const {
         std::string name = item.field.getName();
         fits->writeColumnKey("TFLAG", nFlags, name);
         if (!item.field.getDoc().empty()) {
@@ -61,19 +58,18 @@ struct ProcessSchema {
     }
 
     // Create and apply the functor to a schema.
-    static void apply(Fits & fits, Schema const & schema) {
-        ProcessSchema f = { &fits, 0 };
+    static void apply(Fits& fits, Schema const& schema) {
+        ProcessSchema f = {&fits, 0};
         schema.forEach(f);
     }
 
     template <typename T>
-    void specialize(SchemaItem<T> const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
+    void specialize(SchemaItem<T> const& item, int n) const {
+        if (!item.field.getUnits().empty()) fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "Scalar", "Field template used by lsst.afw.table");
     }
 
-    void specialize(SchemaItem<Angle> const & item, int n) const {
+    void specialize(SchemaItem<Angle> const& item, int n) const {
         // Always write units for Angles as radians (in-memory Angles field don't use the unit attribute,
         // single Angle abstracts that away).
         fits->writeColumnKey("TUNIT", n, "rad");
@@ -81,32 +77,30 @@ struct ProcessSchema {
     }
 
     template <typename T>
-    void specialize(SchemaItem< Array<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
+    void specialize(SchemaItem<Array<T> > const& item, int n) const {
+        if (!item.field.getUnits().empty()) fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "Array", "Field template used by lsst.afw.table");
     }
 
-    void specialize(SchemaItem< std::string > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
+    void specialize(SchemaItem<std::string> const& item, int n) const {
+        if (!item.field.getUnits().empty()) fits->writeColumnKey("TUNIT", n, item.field.getUnits());
         fits->writeColumnKey("TCCLS", n, "String", "Field template used by lsst.afw.table");
     }
 
-    Fits * fits;
+    Fits* fits;
     mutable int nFlags;
 };
 
-void writeAliasMap(Fits & fits, AliasMap const & aliases) {
+void writeAliasMap(Fits& fits, AliasMap const& aliases) {
     for (AliasMap::Iterator i = aliases.begin(); i != aliases.end(); ++i) {
         fits.writeKey("ALIAS", i->first + ":" + i->second);
     }
 }
 
-} // anonymous
+}  // anonymous
 
 // the driver for all the above machinery
-void FitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows) {
+void FitsWriter::_writeTable(std::shared_ptr<BaseTable const> const& table, std::size_t nRows) {
     Schema schema = table->getSchema();
     _fits->createTable();
     LSST_FITS_CHECK_STATUS(*_fits, "creating table");
@@ -140,17 +134,16 @@ void FitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & table, std
 // We instantiate one of these, then reuse it on all the records after updating the data
 // members that tell it which record and row number it's on.
 struct FitsWriter::ProcessRecords {
-
     template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
+    void operator()(SchemaItem<T> const& item) const {
         fits->writeTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
         ++col;
     }
 
     template <typename T>
-    void operator()(SchemaItem< Array<T> > const & item) const {
+    void operator()(SchemaItem<Array<T> > const& item) const {
         if (item.key.isVariableLength()) {
-            ndarray::Array<T const,1,1> array = record->get(item.key);
+            ndarray::Array<T const, 1, 1> array = record->get(item.key);
             fits->writeTableArray(row, col, array.template getSize<0>(), array.getData());
         } else {
             fits->writeTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
@@ -158,23 +151,22 @@ struct FitsWriter::ProcessRecords {
         ++col;
     }
 
-    void operator()(SchemaItem<std::string> const & item) const {
+    void operator()(SchemaItem<std::string> const& item) const {
         fits->writeTableScalar(row, col, record->get(item.key));
         ++col;
     }
 
-    void operator()(SchemaItem<Flag> const & item) const {
+    void operator()(SchemaItem<Flag> const& item) const {
         flags[bit] = record->get(item.key);
         ++bit;
     }
 
-    ProcessRecords(Fits * fits_, Schema const & schema_, int nFlags_, std::size_t const & row_) :
-        row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_)
-    {
+    ProcessRecords(Fits* fits_, Schema const& schema_, int nFlags_, std::size_t const& row_)
+            : row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_) {
         if (nFlags) flags.reset(new bool[nFlags]);
     }
 
-    void apply(BaseRecord const * r) {
+    void apply(BaseRecord const* r) {
         record = r;
         col = 0;
         bit = 0;
@@ -183,19 +175,21 @@ struct FitsWriter::ProcessRecords {
         if (nFlags) fits->writeTableArray(row, 0, nFlags, flags.get());
     }
 
-    std::size_t const & row;
+    std::size_t const& row;
     mutable int col;
     mutable int bit;
     int nFlags;
-    Fits * fits;
+    Fits* fits;
     std::unique_ptr<bool[]> flags;
-    BaseRecord const * record;
+    BaseRecord const* record;
     Schema schema;
 };
 
-void FitsWriter::_writeRecord(BaseRecord const & record) {
+void FitsWriter::_writeRecord(BaseRecord const& record) {
     ++_row;
     _processor->apply(&record);
 }
-
-}}}} // namespace lsst::afw::table::io
+}
+}
+}
+}  // namespace lsst::afw::table::io

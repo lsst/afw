@@ -23,15 +23,20 @@
  */
 #include "lsst/afw/geom/ellipses/Parametric.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
-Parametric::Parametric(Ellipse const & ellipse) : _center(ellipse.getCenter()) {
+Parametric::Parametric(Ellipse const& ellipse) : _center(ellipse.getCenter()) {
     double a, b, theta;
     ellipse.getCore()._assignToAxes(a, b, theta);
     double c = std::cos(theta);
     double s = std::sin(theta);
-    _u = Extent2D(a*c, a*s);
-    _v = Extent2D(-b*s, b*c);
+    _u = Extent2D(a * c, a * s);
+    _v = Extent2D(-b * s, b * c);
 }
-
-}}}} // namespace lsst::afw::geom::ellipses
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

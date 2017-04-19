@@ -6,33 +6,33 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 namespace {
 
 // Comparison function that determines when we used the cached image instead of recomputing it.
 // We'll probably want a tolerance for colors someday too, but they're just a placeholder right now
 // so it's not worth the effort.
-bool comparePsfEvalPoints(geom::Point2D const & a, geom::Point2D const & b) {
+bool comparePsfEvalPoints(geom::Point2D const &a, geom::Point2D const &b) {
     // n.b. desired tolerance is actually sqrt(eps), so tolerance squared is eps.
     return (a - b).computeSquaredNorm() < std::numeric_limits<double>::epsilon();
 }
 
-bool isPointNull(geom::Point2D const & p) {
-    return std::isnan(p.getX()) && std::isnan(p.getY());
-}
+bool isPointNull(geom::Point2D const &p) { return std::isnan(p.getX()) && std::isnan(p.getY()); }
 
-} // anonymous
+}  // anonymous
 
 Psf::Psf(bool isFixed) : daf::base::Citizen(typeid(this)), _isFixed(isFixed) {}
 
-std::shared_ptr<image::Image<double>>
-Psf::recenterKernelImage(
-    std::shared_ptr<Image> im, geom::Point2D const & position, std::string const &warpAlgorithm, unsigned int warpBuffer
-) {
+std::shared_ptr<image::Image<double>> Psf::recenterKernelImage(std::shared_ptr<Image> im,
+                                                               geom::Point2D const &position,
+                                                               std::string const &warpAlgorithm,
+                                                               unsigned int warpBuffer) {
     // "ir" : (integer, residual)
-    std::pair<int,double> const irX = image::positionToIndex(position.getX(), true);
-    std::pair<int,double> const irY = image::positionToIndex(position.getY(), true);
+    std::pair<int, double> const irX = image::positionToIndex(position.getX(), true);
+    std::pair<int, double> const irY = image::positionToIndex(position.getY(), true);
 
     if (irX.second != 0.0 || irY.second != 0.0) {
         im = math::offsetImage(*im, irX.second, irY.second, warpAlgorithm, warpBuffer);
@@ -42,15 +42,12 @@ Psf::recenterKernelImage(
     return im;
 }
 
-std::shared_ptr<Psf::Image> Psf::computeImage(
-    geom::Point2D position, image::Color color, ImageOwnerEnum owner
-) const {
+std::shared_ptr<Psf::Image> Psf::computeImage(geom::Point2D position, image::Color color,
+                                              ImageOwnerEnum owner) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     std::shared_ptr<Psf::Image> result;
-    if (_cachedImage && color == _cachedImageColor
-        && comparePsfEvalPoints(position, _cachedImagePosition)
-    ) {
+    if (_cachedImage && color == _cachedImageColor && comparePsfEvalPoints(position, _cachedImagePosition)) {
         result = _cachedImage;
     } else {
         result = doComputeImage(position, color);
@@ -64,16 +61,13 @@ std::shared_ptr<Psf::Image> Psf::computeImage(
     return result;
 }
 
-std::shared_ptr<Psf::Image> Psf::computeKernelImage(
-    geom::Point2D position, image::Color color, ImageOwnerEnum owner
-) const {
+std::shared_ptr<Psf::Image> Psf::computeKernelImage(geom::Point2D position, image::Color color,
+                                                    ImageOwnerEnum owner) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     std::shared_ptr<Psf::Image> result;
-    if (_cachedKernelImage
-        && (_isFixed ||
-            (color == _cachedKernelImageColor && comparePsfEvalPoints(position, _cachedKernelImagePosition)))
-    ) {
+    if (_cachedKernelImage && (_isFixed || (color == _cachedKernelImageColor &&
+                                            comparePsfEvalPoints(position, _cachedKernelImagePosition)))) {
         result = _cachedKernelImage;
     } else {
         result = doComputeKernelImage(position, color);
@@ -120,11 +114,13 @@ geom::ellipses::Quadrupole Psf::computeShape(geom::Point2D position, image::Colo
     return doComputeShape(position, color);
 }
 
-std::shared_ptr<Psf::Image> Psf::doComputeImage(geom::Point2D const & position, image::Color const & color) const {
+std::shared_ptr<Psf::Image> Psf::doComputeImage(geom::Point2D const &position,
+                                                image::Color const &color) const {
     std::shared_ptr<Psf::Image> im = computeKernelImage(position, color, COPY);
     return recenterKernelImage(im, position);
 }
 
 geom::Point2D Psf::getAveragePosition() const { return geom::Point2D(); }
-
-}}} // namespace lsst::afw::detection
+}
+}
+}  // namespace lsst::afw::detection

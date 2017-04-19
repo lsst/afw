@@ -36,7 +36,10 @@
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 /**
  *  @brief A temporary-only expression object representing a LinearTransform that
@@ -44,15 +47,14 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  */
 class BaseCore::GridTransform {
 public:
-
     /// Matrix type for derivative with respect to ellipse parameters.
-    typedef Eigen::Matrix<double,4,3> DerivativeMatrix;
+    typedef Eigen::Matrix<double, 4, 3> DerivativeMatrix;
 
     /// Standard constructor.
-    explicit GridTransform(BaseCore const & input);
+    explicit GridTransform(BaseCore const& input);
 
     /// Convert the proxy to a LinearTransform.
-    operator LinearTransform () const;
+    operator LinearTransform() const;
 
     /// Return the transform matrix as an Eigen object.
     LinearTransform::Matrix getMatrix() const;
@@ -67,8 +69,7 @@ public:
     LinearTransform invert() const;
 
 private:
-
-    BaseCore const & _input; ///< @internal input core to be transformed
+    BaseCore const& _input;  ///< @internal input core to be transformed
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> _eig;
 };
 
@@ -78,12 +79,11 @@ private:
  */
 class Ellipse::GridTransform {
 public:
-
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix<double,6,5> DerivativeMatrix;
+    typedef Eigen::Matrix<double, 6, 5> DerivativeMatrix;
 
     /// Standard constructor.
-    explicit GridTransform(Ellipse const & input);
+    explicit GridTransform(Ellipse const& input);
 
     /// Return the transform matrix as an Eigen object.
     AffineTransform::Matrix getMatrix() const;
@@ -95,25 +95,26 @@ public:
     double getDeterminant() const;
 
     /// Convert the proxy to a AffineTransform.
-    operator AffineTransform () const;
+    operator AffineTransform() const;
 
     /// Return the inverse of the AffineTransform.
     AffineTransform invert() const;
 
 private:
-
-    Ellipse const & _input; ///< @internal input ellipse to be transformed
+    Ellipse const& _input;  ///< @internal input ellipse to be transformed
     BaseCore::GridTransform _coreGt;
 };
 
-inline BaseCore::GridTransform const BaseCore::getGridTransform() const{
+inline BaseCore::GridTransform const BaseCore::getGridTransform() const {
     return BaseCore::GridTransform(*this);
 }
 
 inline Ellipse::GridTransform const Ellipse::getGridTransform() const {
     return Ellipse::GridTransform(*this);
 }
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED

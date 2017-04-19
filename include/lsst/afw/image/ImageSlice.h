@@ -39,15 +39,13 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-
-
 /**
  * A class to specify a slice of an image
  */
-template<typename PixelT>
+template <typename PixelT>
 class ImageSlice : public Image<PixelT> {
 public:
-    enum ImageSliceType {ROW, COLUMN};
+    enum ImageSliceType { ROW, COLUMN };
 
     /**
      * Constructor for ImageSlice
@@ -62,8 +60,6 @@ private:
     ImageSliceType _sliceType;
 };
 
-
-
 namespace details {
 
 /*
@@ -73,24 +69,30 @@ namespace details {
  *
  */
 
-template<typename PixelT>
-struct Plus     { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix + slcPix; } };
-template<typename PixelT>
-struct Minus    { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix - slcPix; } };
-template<typename PixelT>
-struct Mult     { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix * slcPix; } };
-template<typename PixelT>
-struct Div      { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix / slcPix; } };
-
+template <typename PixelT>
+struct Plus {
+    PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix + slcPix; }
+};
+template <typename PixelT>
+struct Minus {
+    PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix - slcPix; }
+};
+template <typename PixelT>
+struct Mult {
+    PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix * slcPix; }
+};
+template <typename PixelT>
+struct Div {
+    PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix / slcPix; }
+};
 
 /**
  * A function to loop over pixels and perform the requested operation
  *
  */
-template<typename OperatorT, typename PixelT>
+template <typename OperatorT, typename PixelT>
 void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
              typename ImageSlice<PixelT>::ImageSliceType sliceType) {
-
     OperatorT op;
 
     if (sliceType == ImageSlice<PixelT>::ROW) {
@@ -102,7 +104,6 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
             }
         }
     } else if (sliceType == ImageSlice<PixelT>::COLUMN) {
-
         typename ImageSlice<PixelT>::y_iterator pSlc = slc.col_begin(0);
         for (int y = 0; y < img.getHeight(); ++y, ++pSlc) {
             for (typename Image<PixelT>::x_iterator pImg = img.row_begin(y), end = img.row_end(y);
@@ -111,10 +112,8 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
             }
         }
     }
-
 }
 }
-
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
@@ -126,7 +125,7 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
  * @param img The Image
  * @param slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Image<PixelT>> operator+(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
@@ -137,7 +136,7 @@ std::shared_ptr<Image<PixelT>> operator+(Image<PixelT> const &img, ImageSlice<Pi
  *
  * We require two of these, one for image+slice (previous one) and one for slice+image (this)
  */
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Image<PixelT>> operator+(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
 /**
@@ -148,9 +147,8 @@ std::shared_ptr<Image<PixelT>> operator+(ImageSlice<PixelT> const &slc, Image<Pi
  * @param[in, out] img The Image
  * @param[in] slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 void operator+=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
-
 
 // -----------------------------------------------------------------
 // overload -
@@ -162,7 +160,7 @@ void operator+=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
  * @param img The Image
  * @param slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Image<PixelT>> operator-(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
@@ -173,9 +171,8 @@ std::shared_ptr<Image<PixelT>> operator-(Image<PixelT> const &img, ImageSlice<Pi
  * @param[in, out] img The Image
  * @param[in] slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 void operator-=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
-
 
 // ******************************************************************
 // overload *
@@ -187,7 +184,7 @@ void operator-=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
  * @param img The Image
  * @param slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Image<PixelT>> operator*(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
@@ -198,7 +195,7 @@ std::shared_ptr<Image<PixelT>> operator*(Image<PixelT> const &img, ImageSlice<Pi
  * @param slc The Image
  * @param img The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Image<PixelT>> operator*(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
 /**
@@ -209,9 +206,8 @@ std::shared_ptr<Image<PixelT>> operator*(ImageSlice<PixelT> const &slc, Image<Pi
  * @param[in, out] img The Image
  * @param[in] slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 void operator*=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
-
 
 // ///////////////////////////////////////////////////////////////////
 // overload /
@@ -223,7 +219,7 @@ void operator*=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
  * @param img The Image
  * @param slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 std::shared_ptr<Image<PixelT>> operator/(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 /**
@@ -234,10 +230,10 @@ std::shared_ptr<Image<PixelT>> operator/(Image<PixelT> const &img, ImageSlice<Pi
  * @param[in, out] img The Image
  * @param[in] slc The ImageSlice
  */
-template<typename PixelT>
+template <typename PixelT>
 void operator/=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
-
-
-}}}
+}
+}
+}
 
 #endif

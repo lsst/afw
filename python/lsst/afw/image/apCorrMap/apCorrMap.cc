@@ -34,15 +34,13 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace image { namespace {
+namespace lsst {
+namespace afw {
+namespace image {
+namespace {
 
-using PyApCorrMap =
-    py::class_<
-        ApCorrMap,
-        std::shared_ptr<ApCorrMap>,
-        table::io::PersistableFacade<ApCorrMap>,
-        table::io::Persistable
-    >;
+using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>, table::io::PersistableFacade<ApCorrMap>,
+                               table::io::Persistable>;
 
 PYBIND11_PLUGIN(apCorrMap) {
     py::module mod("apCorrMap");
@@ -64,23 +62,19 @@ PYBIND11_PLUGIN(apCorrMap) {
     /* Members */
     cls.def("get", &ApCorrMap::get);
     cls.def("set", &ApCorrMap::set);
-    cls.def(
-        "items",
-        [](ApCorrMap const & self) {
-            return py::make_iterator(self.begin(), self.end());
-        },
-        py::keep_alive<0, 1>()
-    );
+    cls.def("items", [](ApCorrMap const& self) { return py::make_iterator(self.begin(), self.end()); },
+            py::keep_alive<0, 1>());
     // values, keys, and __iter__ defined in apCorrMap.py
 
     cls.def("__len__", &ApCorrMap::size);
     cls.def("__getitem__", &ApCorrMap::operator[]);
     cls.def("__setitem__", &ApCorrMap::set);
-    cls.def("__contains__", [](ApCorrMap const & self, std::string name) {
-        return static_cast<bool>(self.get(name));
-    });
+    cls.def("__contains__",
+            [](ApCorrMap const& self, std::string name) { return static_cast<bool>(self.get(name)); });
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::geom::<anonymous>

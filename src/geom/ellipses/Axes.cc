@@ -24,7 +24,10 @@
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 BaseCore::Registrar<Axes> Axes::registrar;
 
@@ -43,33 +46,33 @@ void Axes::normalize() {
     }
 }
 
-void Axes::readParameters(double const * iter) {
+void Axes::readParameters(double const* iter) {
     setA(*iter++);
     setB(*iter++);
     setTheta(*iter++);
 }
 
-void Axes::writeParameters(double * iter) const {
+void Axes::writeParameters(double* iter) const {
     *iter++ = getA();
     *iter++ = getB();
     *iter++ = getTheta();
 }
 
-void Axes::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+void Axes::_assignToQuadrupole(double& ixx, double& iyy, double& ixy) const {
     BaseCore::_assignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
 }
 
-BaseCore::Jacobian Axes::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+BaseCore::Jacobian Axes::_dAssignToQuadrupole(double& ixx, double& iyy, double& ixy) const {
     return BaseCore::_dAssignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
 }
 
-void Axes::_assignToAxes(double & a, double & b, double & theta) const {
+void Axes::_assignToAxes(double& a, double& b, double& theta) const {
     a = _vector[A];
     b = _vector[B];
     theta = _vector[THETA];
 }
 
-BaseCore::Jacobian Axes::_dAssignToAxes(double & a, double & b, double & theta) const {
+BaseCore::Jacobian Axes::_dAssignToAxes(double& a, double& b, double& theta) const {
     a = _vector[A];
     b = _vector[B];
     theta = _vector[THETA];
@@ -98,5 +101,7 @@ BaseCore::Jacobian Axes::_dAssignFromAxes(double a, double b, double theta) {
     _vector[THETA] = theta;
     return Jacobian::Identity();
 }
-
-}}}} // namespace lsst::afw::geom::ellipses
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

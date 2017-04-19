@@ -10,7 +10,10 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/Schema.h"
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 /**
  *  @brief Schema for the index catalog that specifies where objects are stored in the
@@ -32,8 +35,8 @@ namespace lsst { namespace afw { namespace table { namespace io {
 struct ArchiveIndexSchema {
     Schema schema;
     Key<int> id;
-    Key<int> catArchive;  // 'cat.archive' in schema
-    Key<int> catPersistable; // 'cat.persistable' in schema
+    Key<int> catArchive;      // 'cat.archive' in schema
+    Key<int> catPersistable;  // 'cat.persistable' in schema
     Key<int> row0;
     Key<int> nRows;  // 'nrows' in schema
     Key<std::string> name;
@@ -43,20 +46,22 @@ struct ArchiveIndexSchema {
     static int const MAX_MODULE_LENGTH = 64;
 
     /// Return the singleton instance.
-    static ArchiveIndexSchema const & get();
+    static ArchiveIndexSchema const& get();
 
     // No copying
-    ArchiveIndexSchema (const ArchiveIndexSchema&) = delete;
+    ArchiveIndexSchema(const ArchiveIndexSchema&) = delete;
     ArchiveIndexSchema& operator=(const ArchiveIndexSchema&) = delete;
 
     // No moving
-    ArchiveIndexSchema (ArchiveIndexSchema&&) = delete;
+    ArchiveIndexSchema(ArchiveIndexSchema&&) = delete;
     ArchiveIndexSchema& operator=(ArchiveIndexSchema&&) = delete;
 
 private:
     ArchiveIndexSchema();
 };
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_ArchiveInputSchema_h_INCLUDED
+#endif  // !AFW_TABLE_IO_ArchiveInputSchema_h_INCLUDED

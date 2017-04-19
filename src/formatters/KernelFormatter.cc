@@ -22,17 +22,14 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
-
 /*
  * Implementation of KernelFormatter class
  */
 
 #ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
+#define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) =
-    "$Id$";
+static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "lsst/afw/formatters/KernelFormatter.h"
 
@@ -61,7 +58,6 @@ static char const* SVNid __attribute__((unused)) =
 #include "lsst/log/Log.h"
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/policy/Policy.h>
-
 
 BOOST_CLASS_EXPORT(lsst::afw::math::Kernel)
 BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel)
@@ -104,7 +100,9 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.math.KernelFormatter");
 }
 
-namespace lsst { namespace afw { namespace formatters {
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
@@ -112,57 +110,44 @@ namespace pexPolicy = lsst::pex::policy;
 
 using boost::serialization::make_nvp;
 
-dafPersist::FormatterRegistration
-KernelFormatter::kernelRegistration(
-    "Kernel", typeid(math::Kernel), createInstance);
-dafPersist::FormatterRegistration
-KernelFormatter::fixedKernelRegistration(
-    "FixedKernel", typeid(math::FixedKernel), createInstance);
-dafPersist::FormatterRegistration
-KernelFormatter::analyticKernelRegistration(
-    "AnalyticKernel", typeid(math::AnalyticKernel), createInstance);
-dafPersist::FormatterRegistration
-KernelFormatter::deltaFunctionKernelRegistration(
-    "DeltaFunctionKernel", typeid(math::DeltaFunctionKernel),
-    createInstance);
-dafPersist::FormatterRegistration
-KernelFormatter::linearCombinationKernelRegistration(
-    "LinearCombinationKernel", typeid(math::LinearCombinationKernel),
-    createInstance);
-dafPersist::FormatterRegistration
-KernelFormatter::separableKernelRegistration(
-    "SeparableKernel", typeid(math::SeparableKernel), createInstance);
+dafPersist::FormatterRegistration KernelFormatter::kernelRegistration("Kernel", typeid(math::Kernel),
+                                                                      createInstance);
+dafPersist::FormatterRegistration KernelFormatter::fixedKernelRegistration("FixedKernel",
+                                                                           typeid(math::FixedKernel),
+                                                                           createInstance);
+dafPersist::FormatterRegistration KernelFormatter::analyticKernelRegistration("AnalyticKernel",
+                                                                              typeid(math::AnalyticKernel),
+                                                                              createInstance);
+dafPersist::FormatterRegistration KernelFormatter::deltaFunctionKernelRegistration(
+        "DeltaFunctionKernel", typeid(math::DeltaFunctionKernel), createInstance);
+dafPersist::FormatterRegistration KernelFormatter::linearCombinationKernelRegistration(
+        "LinearCombinationKernel", typeid(math::LinearCombinationKernel), createInstance);
+dafPersist::FormatterRegistration KernelFormatter::separableKernelRegistration("SeparableKernel",
+                                                                               typeid(math::SeparableKernel),
+                                                                               createInstance);
 
-KernelFormatter::KernelFormatter(
-    std::shared_ptr<pexPolicy::Policy> policy) :
-    dafPersist::Formatter(typeid(this)), _policy(policy) {
-}
+KernelFormatter::KernelFormatter(std::shared_ptr<pexPolicy::Policy> policy)
+        : dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-KernelFormatter::~KernelFormatter(void) {
-}
+KernelFormatter::~KernelFormatter(void) {}
 
-void KernelFormatter::write(
-    dafBase::Persistable const* persistable,
-    std::shared_ptr<dafPersist::Storage> storage,
-    std::shared_ptr<dafBase::PropertySet>) {
+void KernelFormatter::write(dafBase::Persistable const* persistable,
+                            std::shared_ptr<dafPersist::Storage> storage,
+                            std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter write start");
-    math::Kernel const* kp =
-        dynamic_cast<math::Kernel const*>(persistable);
+    math::Kernel const* kp = dynamic_cast<math::Kernel const*>(persistable);
     if (kp == 0) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Persisting non-Kernel");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         LOGL_DEBUG(_log, "KernelFormatter write BoostStorage");
-        dafPersist::BoostStorage* boost =
-            dynamic_cast<dafPersist::BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & kp;
         LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
         LOGL_DEBUG(_log, "KernelFormatter write XmlStorage");
-        dafPersist::XmlStorage* xml =
-            dynamic_cast<dafPersist::XmlStorage*>(storage.get());
+        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("ptr", kp);
         LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
@@ -170,22 +155,19 @@ void KernelFormatter::write(
     throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
 }
 
-dafBase::Persistable* KernelFormatter::read(
-    std::shared_ptr<dafPersist::Storage> storage, std::shared_ptr<dafBase::PropertySet>) {
+dafBase::Persistable* KernelFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+                                            std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter read start");
     math::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         LOGL_DEBUG(_log, "KernelFormatter read BoostStorage");
-        dafPersist::BoostStorage* boost =
-            dynamic_cast<dafPersist::BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & kp;
         LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;
-    }
-    else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
         LOGL_DEBUG(_log, "KernelFormatter read XmlStorage");
-        dafPersist::XmlStorage* xml =
-            dynamic_cast<dafPersist::XmlStorage*>(storage.get());
+        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("ptr", kp);
         LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;
@@ -193,52 +175,49 @@ dafBase::Persistable* KernelFormatter::read(
     throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
 }
 
-void KernelFormatter::update(dafBase::Persistable*,
-                                   std::shared_ptr<dafPersist::Storage>,
-                                   std::shared_ptr<dafBase::PropertySet>) {
+void KernelFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+                             std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unexpected call to update for Kernel");
 }
 
 template <class Archive>
-void KernelFormatter::delegateSerialize(
-    Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
+void KernelFormatter::delegateSerialize(Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "KernelFormatter delegateSerialize start");
-    math::Kernel* kp =
-        dynamic_cast<math::Kernel*>(persistable);
+    math::Kernel* kp = dynamic_cast<math::Kernel*>(persistable);
     if (kp == 0) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Serializing non-Kernel");
     }
-    ar & make_nvp("base",
-                  boost::serialization::base_object<dafBase::Persistable>(*kp));
-    ar & make_nvp("width", kp->_width);
-    ar & make_nvp("height", kp->_height);
-    ar & make_nvp("ctrX", kp->_ctrX);
-    ar & make_nvp("ctrY", kp->_ctrY);
-    ar & make_nvp("nParams", kp->_nKernelParams);
-    ar & make_nvp("spatialFunctionList", kp->_spatialFunctionList);
+    ar& make_nvp("base", boost::serialization::base_object<dafBase::Persistable>(*kp));
+    ar& make_nvp("width", kp->_width);
+    ar& make_nvp("height", kp->_height);
+    ar& make_nvp("ctrX", kp->_ctrX);
+    ar& make_nvp("ctrY", kp->_ctrY);
+    ar& make_nvp("nParams", kp->_nKernelParams);
+    ar& make_nvp("spatialFunctionList", kp->_spatialFunctionList);
 
     LOGL_DEBUG(_log, "KernelFormatter delegateSerialize end");
 }
 
 // Explicit template specializations confuse Doxygen, tell it to ignore them
 /// @cond
-template void KernelFormatter::delegateSerialize(
-    boost::archive::text_oarchive& ar, unsigned int const, dafBase::Persistable*);
-template void KernelFormatter::delegateSerialize(
-    boost::archive::text_iarchive& ar, unsigned int const, dafBase::Persistable*);
-template void KernelFormatter::delegateSerialize(
-    boost::archive::xml_oarchive& ar, unsigned int const, dafBase::Persistable*);
-template void KernelFormatter::delegateSerialize(
-    boost::archive::xml_iarchive& ar, unsigned int const, dafBase::Persistable*);
-template void KernelFormatter::delegateSerialize(
-    boost::archive::binary_oarchive& ar, unsigned int const, dafBase::Persistable*);
-template void KernelFormatter::delegateSerialize(
-    boost::archive::binary_iarchive& ar, unsigned int const, dafBase::Persistable*);
+template void KernelFormatter::delegateSerialize(boost::archive::text_oarchive& ar, unsigned int const,
+                                                 dafBase::Persistable*);
+template void KernelFormatter::delegateSerialize(boost::archive::text_iarchive& ar, unsigned int const,
+                                                 dafBase::Persistable*);
+template void KernelFormatter::delegateSerialize(boost::archive::xml_oarchive& ar, unsigned int const,
+                                                 dafBase::Persistable*);
+template void KernelFormatter::delegateSerialize(boost::archive::xml_iarchive& ar, unsigned int const,
+                                                 dafBase::Persistable*);
+template void KernelFormatter::delegateSerialize(boost::archive::binary_oarchive& ar, unsigned int const,
+                                                 dafBase::Persistable*);
+template void KernelFormatter::delegateSerialize(boost::archive::binary_iarchive& ar, unsigned int const,
+                                                 dafBase::Persistable*);
 /// @endcond
 
 std::shared_ptr<dafPersist::Formatter> KernelFormatter::createInstance(
-    std::shared_ptr<pexPolicy::Policy> policy) {
+        std::shared_ptr<pexPolicy::Policy> policy) {
     return std::shared_ptr<dafPersist::Formatter>(new KernelFormatter(policy));
 }
-
-}}}
+}
+}
+}

@@ -41,13 +41,12 @@
 
 using namespace std;
 namespace afwCoord = lsst::afw::coord;
-namespace afwGeom  = lsst::afw::geom;
+namespace afwGeom = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(dmsToDecimal) {
-
     std::string rastr = "10:00:00.00";
     std::string decstr = "-02:30:00.00";
-    afwGeom::Angle ra  = afwCoord::hmsStringToAngle(rastr);
+    afwGeom::Angle ra = afwCoord::hmsStringToAngle(rastr);
     afwGeom::Angle dec = afwCoord::dmsStringToAngle(decstr);
 
     CHECK_DIFF(ra.asDegrees(), 150.0, 1e-8);
@@ -57,12 +56,9 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     ra -= (0.000001 * afwGeom::degrees);
     std::string raStr2 = afwCoord::angleToHmsString(ra);
     BOOST_CHECK_EQUAL(raStr2, rastr);
-
 }
 
-
 BOOST_AUTO_TEST_CASE(eclipticConversion) {
-
     // Pollux
     std::string alpha = "07:45:18.946";
     std::string delta = "28:01:34.26";
@@ -77,8 +73,8 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     BOOST_CHECK_CLOSE(lamb, lamb0, 1.0e-6);
     BOOST_CHECK_CLOSE(beta, beta0, 1.0e-6);
 
-    auto test = afwCoord::makeCoord(afwCoord::makeCoordEnum("FK5"),
-                                    lamb0 * afwGeom::degrees, beta0 * afwGeom::degrees);
+    auto test = afwCoord::makeCoord(afwCoord::makeCoordEnum("FK5"), lamb0 * afwGeom::degrees,
+                                    beta0 * afwGeom::degrees);
 
     BOOST_CHECK_EQUAL(test->getLongitude().asDegrees(), lamb0);
 }

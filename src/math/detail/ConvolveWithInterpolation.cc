@@ -41,69 +41,59 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math { namespace detail {
+namespace lsst {
+namespace afw {
+namespace math {
+namespace detail {
 
 template <typename OutImageT, typename InImageT>
-void convolveWithInterpolation(
-        OutImageT &outImage,
-        InImageT const &inImage,
-        math::Kernel const &kernel,
-        math::ConvolutionControl const &convolutionControl)
-{
+void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, math::Kernel const &kernel,
+                               math::ConvolutionControl const &convolutionControl) {
     if (outImage.getDimensions() != inImage.getDimensions()) {
         std::ostringstream os;
-        os << "outImage dimensions = ( "
-            << outImage.getWidth() << ", " << outImage.getHeight()
-            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        os << "outImage dimensions = ( " << outImage.getWidth() << ", " << outImage.getHeight() << ") != ("
+           << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
     // compute region covering good area of output image
-    geom::Box2I fullBBox = geom::Box2I(
-        geom::Point2I(0, 0),
-        geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
+    geom::Box2I fullBBox =
+            geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
     geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
-    KernelImagesForRegion goodRegion(KernelImagesForRegion(
-        kernel.clone(),
-        goodBBox,
-        inImage.getXY0(),
-        convolutionControl.getDoNormalize()));
+    KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox, inImage.getXY0(),
+                                                           convolutionControl.getDoNormalize()));
     LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
-        "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
-            fullBBox.getMinX(), fullBBox.getMinY(),
-            fullBBox.getWidth(), fullBBox.getHeight());
+               "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)", fullBBox.getMinX(),
+               fullBBox.getMinY(), fullBBox.getWidth(), fullBBox.getHeight());
     LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
-        "convolveWithInterpolation: goodRegion bbox minimum=(%d, %d), extent=(%d, %d)",
-            goodRegion.getBBox().getMinX(), goodRegion.getBBox().getMinY(),
-            goodRegion.getBBox().getWidth(), goodRegion.getBBox().getHeight());
+               "convolveWithInterpolation: goodRegion bbox minimum=(%d, %d), extent=(%d, %d)",
+               goodRegion.getBBox().getMinX(), goodRegion.getBBox().getMinY(),
+               goodRegion.getBBox().getWidth(), goodRegion.getBBox().getHeight());
 
     // divide good region into subregions small enough to interpolate over
     int nx = 1 + (goodBBox.getWidth() / convolutionControl.getMaxInterpolationDistance());
     int ny = 1 + (goodBBox.getHeight() / convolutionControl.getMaxInterpolationDistance());
     LOGL_DEBUG("TRACE3.afw.math.convolve.convolveWithInterpolation",
-        "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
+               "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
     ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
     RowOfKernelImagesForRegion regionRow(nx, ny);
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
-            rgnIter != rgnEnd; ++rgnIter) {
+             rgnIter != rgnEnd; ++rgnIter) {
             LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
-                "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
-                    (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
-                    (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
+                       "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
+                       (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
+                       (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
             convolveRegionWithInterpolation(outImage, inImage, **rgnIter, workingImages);
         }
     }
 }
 
 template <typename OutImageT, typename InImageT>
-void convolveRegionWithInterpolation(
-        OutImageT &outImage,
-        InImageT const &inImage,
-        KernelImagesForRegion const &region,
-        ConvolveWithInterpolationWorkingImages &workingImages)
-{
+void convolveRegionWithInterpolation(OutImageT &outImage, InImageT const &inImage,
+                                     KernelImagesForRegion const &region,
+                                     ConvolveWithInterpolationWorkingImages &workingImages) {
     typedef typename OutImageT::xy_locator OutLocator;
     typedef typename InImageT::const_xy_locator InConstLocator;
     typedef KernelImagesForRegion::Image KernelImage;
@@ -122,12 +112,10 @@ void convolveRegionWithInterpolation(
     // so the distance between edge images is bbox width/height pixels
     double xfrac = 1.0 / static_cast<double>(goodBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(goodBBox.getHeight());
-    math::scaledPlus(workingImages.leftDeltaImage,
-         yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
-        -yfrac, workingImages.leftImage);
-    math::scaledPlus(workingImages.rightDeltaImage,
-         yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
-        -yfrac, workingImages.rightImage);
+    math::scaledPlus(workingImages.leftDeltaImage, yfrac, *region.getImage(KernelImagesForRegion::TOP_LEFT),
+                     -yfrac, workingImages.leftImage);
+    math::scaledPlus(workingImages.rightDeltaImage, yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
+                     -yfrac, workingImages.rightImage);
 
     KernelConstLocator const kernelLocator = workingImages.kernelImage.xy_at(0, 0);
 
@@ -137,14 +125,14 @@ void convolveRegionWithInterpolation(
     // they are not computed at all for the last iteration.
     InConstLocator inLocator = inImage.xy_at(fullBBox.getMinX(), fullBBox.getMinY());
     OutLocator outLocator = outImage.xy_at(goodBBox.getMinX(), goodBBox.getMinY());
-    for (int j = 0; ; ) {
+    for (int j = 0;;) {
         auto inLocatorInitialPosition = inLocator;
         auto outLocatorInitialPosition = outLocator;
-        math::scaledPlus(
-            workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
-        for (int i = 0; ; ) {
+        math::scaledPlus(workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac,
+                         workingImages.leftImage);
+        for (int i = 0;;) {
             *outLocator = math::convolveAtAPoint<OutImageT, InImageT>(
-                inLocator, kernelLocator, kernelDimensions.getX(), kernelDimensions.getY());
+                    inLocator, kernelLocator, kernelDimensions.getX(), kernelDimensions.getY());
             ++outLocator.x();
             ++inLocator.x();
             ++i;
@@ -181,16 +169,15 @@ void convolveRegionWithInterpolation(
 #define MASKEDIMAGE(PIXTYPE) image::MaskedImage<PIXTYPE, image::MaskPixel, image::VariancePixel>
 #define NL /* */
 // Instantiate Image or MaskedImage versions
-#define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
-    template void convolveWithInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::Kernel const&, \
-            math::ConvolutionControl const&); NL \
-    template void convolveRegionWithInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, \
-        ConvolveWithInterpolationWorkingImages&);
+#define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE)                                             \
+    template void convolveWithInterpolation(IMGMACRO(OUTPIXTYPE) &, IMGMACRO(INPIXTYPE) const &,          \
+                                            math::Kernel const &, math::ConvolutionControl const &);      \
+    NL template void convolveRegionWithInterpolation(IMGMACRO(OUTPIXTYPE) &, IMGMACRO(INPIXTYPE) const &, \
+                                                     KernelImagesForRegion const &,                       \
+                                                     ConvolveWithInterpolationWorkingImages &);
 // Instantiate both Image and MaskedImage versions
-#define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
-    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+#define INSTANTIATE(OUTPIXTYPE, INPIXTYPE)             \
+    INSTANTIATE_IM_OR_MI(IMAGE, OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 
 INSTANTIATE(double, double)
@@ -203,5 +190,7 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-
-}}}}    // end math::detail
+}
+}
+}
+}  // end math::detail

@@ -6,7 +6,9 @@
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SimpleFitsWriter ---------------------------------------------------------------------------------
@@ -19,28 +21,23 @@ namespace {
 
 class SimpleFitsWriter : public io::FitsWriter {
 public:
-
-    explicit SimpleFitsWriter(Fits * fits, int flags) : io::FitsWriter(fits, flags) {}
+    explicit SimpleFitsWriter(Fits* fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
-
-    virtual void _writeTable(std::shared_ptr<BaseTable const> const & table, std::size_t nRows);
-
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const& table, std::size_t nRows);
 };
 
-void SimpleFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const & t, std::size_t nRows) {
+void SimpleFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const& t, std::size_t nRows) {
     std::shared_ptr<SimpleTable const> table = std::dynamic_pointer_cast<SimpleTable const>(t);
     if (!table) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Cannot use a SimpleFitsWriter on a non-Simple table."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Cannot use a SimpleFitsWriter on a non-Simple table.");
     }
     io::FitsWriter::_writeTable(table, nRows);
     _fits->writeKey("AFW_TYPE", "SIMPLE", "Tells lsst::afw to load this as a Simple table.");
 }
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SimpleFitsReader ---------------------------------------------------------------------------------
@@ -53,48 +50,42 @@ namespace {
 
 class SimpleFitsReader : public io::FitsReader {
 public:
-
     SimpleFitsReader() : io::FitsReader("SIMPLE") {}
 
-    virtual std::shared_ptr<BaseTable> makeTable(
-        io::FitsSchemaInputMapper & mapper,
-        std::shared_ptr<daf::base::PropertyList> metadata,
-        int ioFlags,
-        bool stripMetadata
-    ) const {
+    virtual std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper& mapper,
+                                                 std::shared_ptr<daf::base::PropertyList> metadata,
+                                                 int ioFlags, bool stripMetadata) const {
         std::shared_ptr<SimpleTable> table = SimpleTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
     }
-
 };
 
 // registers the reader so FitsReader::make can use it.
 static SimpleFitsReader const simpleFitsReader;
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SimpleTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SimpleRecord::SimpleRecord(std::shared_ptr<SimpleTable> const & table) : BaseRecord(table) {}
+SimpleRecord::SimpleRecord(std::shared_ptr<SimpleTable> const& table) : BaseRecord(table) {}
 
-std::shared_ptr<SimpleTable> SimpleTable::make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory) {
+std::shared_ptr<SimpleTable> SimpleTable::make(Schema const& schema,
+                                               std::shared_ptr<IdFactory> const& idFactory) {
     if (!checkSchema(schema)) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterError,
-            "Schema for Simple must contain at least the keys defined by makeMinimalSchema()."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          "Schema for Simple must contain at least the keys defined by makeMinimalSchema().");
     }
     return std::shared_ptr<SimpleTable>(new SimpleTable(schema, idFactory));
 }
 
-SimpleTable::SimpleTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory) :
-    BaseTable(schema), _idFactory(idFactory) {}
+SimpleTable::SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory)
+        : BaseTable(schema), _idFactory(idFactory) {}
 
-SimpleTable::SimpleTable(SimpleTable const & other) :
-    BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
+SimpleTable::SimpleTable(SimpleTable const& other)
+        : BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
 
 SimpleTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");
@@ -102,13 +93,12 @@ SimpleTable::MinimalSchema::MinimalSchema() {
     schema.getCitizen().markPersistent();
 }
 
-SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
+SimpleTable::MinimalSchema& SimpleTable::getMinimalSchema() {
     static MinimalSchema it;
     return it;
 }
 
-std::shared_ptr<io::FitsWriter>
-SimpleTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+std::shared_ptr<io::FitsWriter> SimpleTable::makeFitsWriter(fits::Fits* fitsfile, int flags) const {
     return std::make_shared<SimpleFitsWriter>(fitsfile, flags);
 }
 
@@ -127,5 +117,6 @@ template class CatalogT<SimpleRecord const>;
 
 template class SortedCatalogT<SimpleRecord>;
 template class SortedCatalogT<SimpleRecord const>;
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

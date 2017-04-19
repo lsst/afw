@@ -9,7 +9,9 @@
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
  *  Type used for unique IDs for records.
@@ -26,13 +28,15 @@ typedef std::int64_t RecordId;
  *  See the documentation for specializations of FieldBase and KeyBase
  *  for more information.
  */
-template <typename T> class Array;
+template <typename T>
+class Array;
 class Flag;
 typedef lsst::afw::coord::Coord Coord;
 typedef lsst::afw::coord::IcrsCoord IcrsCoord;
 typedef lsst::afw::geom::Angle Angle;
 //@}
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_misc_h_INCLUDED
+#endif  // !AFW_TABLE_misc_h_INCLUDED

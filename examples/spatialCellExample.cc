@@ -33,7 +33,6 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
 
-
 #include "testSpatialCell.h"
 
 namespace afwDetect = lsst::afw::detection;
@@ -42,7 +41,8 @@ namespace afwMath = lsst::afw::math;
 namespace afwGeom = lsst::afw::geom;
 typedef float PixelT;
 
-std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>> readImage();
+std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>>
+readImage();
 
 /*
  * A demonstration of the use of a SpatialCellSet
@@ -54,18 +54,16 @@ void SpatialCellSetDemo() {
     /*
      * Create an (empty) SpatialCellSet
      */
-    afwMath::SpatialCellSet cellSet(
-        im->getBBox(),
-        260, 200
-    );
+    afwMath::SpatialCellSet cellSet(im->getBBox(), 260, 200);
     /*
      * Populate the cellSet using the detected object in the FootprintSet
      */
     for (afwDetect::FootprintSet::FootprintList::iterator ptr = fs->getFootprints()->begin(),
-             end = fs->getFootprints()->end(); ptr != end; ++ptr) {
+                                                          end = fs->getFootprints()->end();
+         ptr != end; ++ptr) {
         afwGeom::Box2I const bbox = (*ptr)->getBBox();
-        float const xc = (bbox.getMinX() + bbox.getMaxX())/2.0;
-        float const yc = (bbox.getMinY() + bbox.getMaxY())/2.0;
+        float const xc = (bbox.getMinX() + bbox.getMaxX()) / 2.0;
+        float const yc = (bbox.getMinY() + bbox.getMaxY()) / 2.0;
         std::shared_ptr<ExampleCandidate> tc(new ExampleCandidate(xc, yc, im, bbox));
         cellSet.insertCandidate(tc);
     }
@@ -84,8 +82,7 @@ void SpatialCellSetDemo() {
 
         for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
              candidate != candidateEnd; ++candidate) {
-            afwGeom::Box2I box =
-                dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
+            afwGeom::Box2I box = dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
 
 #if 0
             std::cout << boost::format("%d %5.2f %5.2f %d\n")
@@ -103,12 +100,12 @@ void SpatialCellSetDemo() {
         std::shared_ptr<afwMath::SpatialCell> cell = cellSet.getCellList()[i];
         cell->visitCandidates(&visitor);
 
-        cell->setIgnoreBad(false);       // include BAD in cell.size()
-        std::cout << boost::format("%s nobj=%d N_good=%d NPix_good=%d\n") %
-            cell->getLabel() % cell->size() % visitor.getN() % visitor.getNPix();
+        cell->setIgnoreBad(false);  // include BAD in cell.size()
+        std::cout << boost::format("%s nobj=%d N_good=%d NPix_good=%d\n") % cell->getLabel() % cell->size() %
+                             visitor.getN() % visitor.getNPix();
     }
 
-    cellSet.setIgnoreBad(true);           // don't visit BAD candidates
+    cellSet.setIgnoreBad(true);  // don't visit BAD candidates
     cellSet.visitCandidates(&visitor);
     std::cout << boost::format("There are %d good candidates\n") % visitor.getN();
 }
@@ -125,10 +122,7 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
 
-        afwGeom::Box2I bbox = afwGeom::Box2I(
-            afwGeom::Point2I(270, 2530),
-            afwGeom::Extent2I(512, 512)
-        );
+        afwGeom::Box2I bbox = afwGeom::Box2I(afwGeom::Point2I(270, 2530), afwGeom::Extent2I(512, 512));
 
         std::shared_ptr<lsst::daf::base::PropertySet> md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, md, bbox));
@@ -142,15 +136,15 @@ readImage() {
      * (meas/algorithms)
      */
     afwMath::BackgroundControl bctrl(afwMath::Interpolate::NATURAL_SPLINE);
-    bctrl.setNxSample(mi->getWidth()/256 + 1);
-    bctrl.setNySample(mi->getHeight()/256 + 1);
+    bctrl.setNxSample(mi->getWidth() / 256 + 1);
+    bctrl.setNySample(mi->getHeight() / 256 + 1);
     bctrl.getStatisticsControl()->setNumSigmaClip(3.0);
     bctrl.getStatisticsControl()->setNumIter(2);
 
     std::shared_ptr<afwImage::Image<PixelT>> im = mi->getImage();
     try {
         *mi->getImage() -= *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>();
-    } catch(std::exception &) {
+    } catch (std::exception &) {
         bctrl.setInterpStyle(afwMath::Interpolate::CONSTANT);
         *mi->getImage() -= *afwMath::makeBackground(*im, bctrl)->getImage<PixelT>();
     }
@@ -158,8 +152,9 @@ readImage() {
      * Find sources
      */
     afwDetect::Threshold threshold(5, afwDetect::Threshold::STDEV);
-    int npixMin = 5;                    // we didn't smooth
-    std::shared_ptr<afwDetect::FootprintSet> fs(new afwDetect::FootprintSet(*mi, threshold, "DETECTED", npixMin));
+    int npixMin = 5;  // we didn't smooth
+    std::shared_ptr<afwDetect::FootprintSet> fs(
+            new afwDetect::FootprintSet(*mi, threshold, "DETECTED", npixMin));
     int const grow = 1;
     bool const isotropic = false;
     std::shared_ptr<afwDetect::FootprintSet> grownFs(new afwDetect::FootprintSet(*fs, grow, isotropic));
@@ -172,8 +167,9 @@ readImage() {
  * Run the example
  */
 int main() {
-    std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>> data = readImage();
-    assert (data.first != NULL);        // stop compiler complaining about data being unused
+    std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>> data =
+            readImage();
+    assert(data.first != NULL);  // stop compiler complaining about data being unused
 
     SpatialCellSetDemo();
 }

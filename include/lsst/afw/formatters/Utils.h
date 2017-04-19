@@ -38,17 +38,17 @@
 
 namespace lsst {
 namespace daf {
-    namespace base {
-        class PropertySet;
-    }
-    namespace persistence {
-        class LogicalLocation;
-    }
+namespace base {
+class PropertySet;
+}
+namespace persistence {
+class LogicalLocation;
+}
 }
 namespace pex {
-    namespace policy {
-        class Policy;
-    }
+namespace policy {
+class Policy;
+}
 }
 namespace afw {
 namespace formatters {
@@ -57,10 +57,8 @@ namespace formatters {
  * Returns `true` if and only if `properties` is non-null and contains a
  * unique property with the given name that has type `bool` and a value of `true`.
  */
-bool extractOptionalFlag(
-    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties,
-    std::string const & name
-);
+bool extractOptionalFlag(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties,
+                         std::string const& name);
 
 /**
  * Extracts and returns the string-valued `"itemName"` property from the given data property object.
@@ -69,9 +67,7 @@ bool extractOptionalFlag(
  *        If the given pointer is null, or the `PropertySet` pointed
  *        to does not contain a unique property named `"itemName"`.
  */
-std::string const getItemName(
-    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
-);
+std::string const getItemName(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
 /**
  * Returns the name of the table that a single slice of a pipeline involved in the processing
@@ -88,10 +84,8 @@ std::string const getItemName(
  *                         output table name.
  * @returns table name
  */
-std::string const getTableName(
-    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
-);
+std::string const getTableName(std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+                               std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
 /**
  * Stores the name of the table that each slice of a pipeline involved in processing a visit
@@ -116,9 +110,8 @@ std::string const getTableName(
  * @see getTableName()
  */
 std::vector<std::string> getAllSliceTableNames(
-    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
-);
+        std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+        std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
 /**
  * Creates the table identified by calling getTableName() with the given `policy` and `properties`.
@@ -129,18 +122,14 @@ std::vector<std::string> getAllSliceTableNames(
  * Note that the template table must exist in the database identified by `location`, and that if
  * the desired table already exists, an exception is thrown.
  */
-void createTable(
-    lsst::daf::persistence::LogicalLocation const & location,
-    std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-    std::shared_ptr<lsst::daf::base::PropertySet const> const& properties
-);
+void createTable(lsst::daf::persistence::LogicalLocation const& location,
+                 std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+                 std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
 /** Drops the database table(s) identified by getAllSliceTables(). */
-void dropAllSliceTables(
-    lsst::daf::persistence::LogicalLocation const & location,
-    std::shared_ptr<lsst::pex::policy::Policy const> const & policy,
-    std::shared_ptr<lsst::daf::base::PropertySet const> const & properties
-);
+void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
+                        std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
+                        std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
 int extractSliceId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 int64_t extractFpaExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
@@ -152,8 +141,8 @@ int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop
 
 std::string formatFitsProperties(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop);
 int countFitsHeaderCards(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop);
+}
+}
+}  // namespace lsst::afw::formatters
 
-}}} // namespace lsst::afw::formatters
-
-#endif // LSST_AFW_FORMATTERS_UTILS_H
-
+#endif  // LSST_AFW_FORMATTERS_UTILS_H

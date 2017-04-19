@@ -28,8 +28,12 @@
 
 #include <cstdint>
 
-namespace lsst { namespace afw { namespace image {
-    typedef std::uint16_t MaskPixel;  ///< default type for Masks and MaskedImage Masks
-    typedef float VariancePixel;        ///< default type for MaskedImage variance images
-}}}
+namespace lsst {
+namespace afw {
+namespace image {
+typedef std::uint16_t MaskPixel;  ///< default type for Masks and MaskedImage Masks
+typedef float VariancePixel;      ///< default type for MaskedImage variance images
+}
+}
+}
 #endif

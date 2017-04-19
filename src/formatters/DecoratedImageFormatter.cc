@@ -22,16 +22,14 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 /*
  * Implementation of DecoratedImageFormatter class
  */
 
 #ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
+#define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) =
-    "$Id$";
+static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <cstdint>
 #include <memory>
@@ -70,52 +68,48 @@ public:
     static std::string name();
 };
 
-template<> std::string DecoratedImageFormatterTraits<std::uint16_t>::name() {
+template <>
+std::string DecoratedImageFormatterTraits<std::uint16_t>::name() {
     static std::string name = "DecoratedImageU";
     return name;
 }
-template<> std::string DecoratedImageFormatterTraits<int>::name() {
+template <>
+std::string DecoratedImageFormatterTraits<int>::name() {
     static std::string name = "DecoratedImageI";
     return name;
 }
-template<> std::string DecoratedImageFormatterTraits<float>::name() {
+template <>
+std::string DecoratedImageFormatterTraits<float>::name() {
     static std::string name = "DecoratedImageF";
     return name;
 }
-template<> std::string DecoratedImageFormatterTraits<double>::name() {
+template <>
+std::string DecoratedImageFormatterTraits<double>::name() {
     static std::string name = "DecoratedImageD";
     return name;
 }
-template<> std::string DecoratedImageFormatterTraits<std::uint64_t>::name() {
+template <>
+std::string DecoratedImageFormatterTraits<std::uint64_t>::name() {
     static std::string name = "DecoratedImageL";
     return name;
 }
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration DecoratedImageFormatter<ImagePixelT>::registration(
-    DecoratedImageFormatterTraits<ImagePixelT>::name(),
-    typeid(DecoratedImage<ImagePixelT>),
-    createInstance);
+        DecoratedImageFormatterTraits<ImagePixelT>::name(), typeid(DecoratedImage<ImagePixelT>),
+        createInstance);
 
 template <typename ImagePixelT>
-DecoratedImageFormatter<ImagePixelT>::DecoratedImageFormatter(
-        std::shared_ptr<lsst::pex::policy::Policy>
-                                                             )
-    : lsst::daf::persistence::Formatter(typeid(this))
-{
-}
+DecoratedImageFormatter<ImagePixelT>::DecoratedImageFormatter(std::shared_ptr<lsst::pex::policy::Policy>)
+        : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename ImagePixelT>
-DecoratedImageFormatter<ImagePixelT>::~DecoratedImageFormatter(void) {
-}
+DecoratedImageFormatter<ImagePixelT>::~DecoratedImageFormatter(void) {}
 
 template <typename ImagePixelT>
-void DecoratedImageFormatter<ImagePixelT>::write(
-        Persistable const* persistable,
-        std::shared_ptr<Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet>
-                                                )
-{
+void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,
+                                                 std::shared_ptr<Storage> storage,
+                                                 std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter write start");
     DecoratedImage<ImagePixelT> const* ip = dynamic_cast<DecoratedImage<ImagePixelT> const*>(persistable);
     if (ip == 0) {
@@ -145,16 +139,12 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Unrecognized Storage for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for DecoratedImage");
 }
 
 template <typename ImagePixelT>
-Persistable* DecoratedImageFormatter<ImagePixelT>::read(
-        std::shared_ptr<Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet>
-                                                       )
-{
+Persistable* DecoratedImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
+                                                        std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter read BoostStorage");
@@ -170,8 +160,7 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         boost->getIArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
-    } else if(typeid(*storage) == typeid(FitsStorage)) {
-
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
@@ -182,28 +171,19 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Unrecognized Storage for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for DecoratedImage");
 }
 
 template <typename ImagePixelT>
-void DecoratedImageFormatter<ImagePixelT>::update(
-        lsst::daf::base::Persistable*,
-        std::shared_ptr<lsst::daf::persistence::Storage>,
-        std::shared_ptr<lsst::daf::base::PropertySet>
-                                                 )
-{
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Unexpected call to update for DecoratedImage");
+void DecoratedImageFormatter<ImagePixelT>::update(lsst::daf::base::Persistable*,
+                                                  std::shared_ptr<lsst::daf::persistence::Storage>,
+                                                  std::shared_ptr<lsst::daf::base::PropertySet>) {
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for DecoratedImage");
 }
 
-template <typename ImagePixelT> template <class Archive>
-void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
-        Archive&,
-        int const,
-        Persistable* persistable
-                                                            )
-{
+template <typename ImagePixelT>
+template <class Archive>
+void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(Archive&, int const, Persistable* persistable) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter delegateSerialize start");
     DecoratedImage<ImagePixelT>* ip = dynamic_cast<DecoratedImage<ImagePixelT>*>(persistable);
     if (ip == 0) {
@@ -215,18 +195,21 @@ void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
 
 template <typename ImagePixelT>
 std::shared_ptr<lsst::daf::persistence::Formatter> DecoratedImageFormatter<ImagePixelT>::createInstance(
-        std::shared_ptr<lsst::pex::policy::Policy> policy
-                                                                                           )
-{
-    return std::shared_ptr<lsst::daf::persistence::Formatter>(new DecoratedImageFormatter<ImagePixelT>(policy));
+        std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(
+            new DecoratedImageFormatter<ImagePixelT>(policy));
 }
 
-#define InstantiateFormatter(ImagePixelT) \
-    template class DecoratedImageFormatter<ImagePixelT >; \
-    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_oarchive&, int const, Persistable*); \
-    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_iarchive&, int const, Persistable*); \
-    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_oarchive&, int const, Persistable*); \
-    template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_iarchive&, int const, Persistable*);
+#define InstantiateFormatter(ImagePixelT)                                                                   \
+    template class DecoratedImageFormatter<ImagePixelT>;                                                    \
+    template void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::text_oarchive&,   \
+                                                                          int const, Persistable*);         \
+    template void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::text_iarchive&,   \
+                                                                          int const, Persistable*);         \
+    template void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::binary_oarchive&, \
+                                                                          int const, Persistable*);         \
+    template void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::binary_iarchive&, \
+                                                                          int const, Persistable*);
 
 InstantiateFormatter(std::uint16_t);
 InstantiateFormatter(int);
@@ -235,6 +218,6 @@ InstantiateFormatter(double);
 InstantiateFormatter(std::uint64_t);
 
 #undef InstantiateFormatter
-
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters

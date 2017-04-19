@@ -27,20 +27,18 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/coord/Weather.h"
 
-namespace lsst { namespace afw { namespace coord {
+namespace lsst {
+namespace afw {
+namespace coord {
 
-Weather::Weather(double airTemperature, double airPressure, double humidity) :
-    _airTemperature(airTemperature),
-    _airPressure(airPressure),
-    _humidity(humidity)
-{
+Weather::Weather(double airTemperature, double airPressure, double humidity)
+        : _airTemperature(airTemperature), _airPressure(airPressure), _humidity(humidity) {
     validate();
 }
 
-bool Weather::operator==(Weather const & other) const {
-    return (_airTemperature == other.getAirTemperature()
-            && _airPressure == other.getAirPressure()
-            && _humidity == other.getHumidity());
+bool Weather::operator==(Weather const& other) const {
+    return (_airTemperature == other.getAirTemperature() && _airPressure == other.getAirPressure() &&
+            _humidity == other.getHumidity());
 }
 
 void Weather::validate() const {
@@ -51,11 +49,10 @@ void Weather::validate() const {
     }
 }
 
-std::ostream & operator<<(std::ostream &os, Weather const& weath) {
-    return os << "Weather("
-        << weath.getAirTemperature() << ", "
-        << weath.getAirPressure() << ", "
-        << weath.getHumidity() << ")";
+std::ostream& operator<<(std::ostream& os, Weather const& weath) {
+    return os << "Weather(" << weath.getAirTemperature() << ", " << weath.getAirPressure() << ", "
+              << weath.getHumidity() << ")";
 }
-
-}}} // lsst::afw::coord
+}
+}
+}  // lsst::afw::coord

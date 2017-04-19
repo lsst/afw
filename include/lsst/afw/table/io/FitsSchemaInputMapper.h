@@ -7,45 +7,41 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/BaseRecord.h"
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 class FitsColumnReader {
 public:
-
     FitsColumnReader() {}
 
     // Neither copyable nor moveable.
     FitsColumnReader(FitsColumnReader const &) = delete;
     FitsColumnReader(FitsColumnReader &&) = delete;
-    FitsColumnReader & operator=(FitsColumnReader const &) = delete;
-    FitsColumnReader & operator=(FitsColumnReader &&) = delete;
+    FitsColumnReader &operator=(FitsColumnReader const &) = delete;
+    FitsColumnReader &operator=(FitsColumnReader &&) = delete;
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        fits::Fits & fits,
-        std::shared_ptr<InputArchive> const & archive
-    ) const = 0;
+    virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const = 0;
 
     virtual ~FitsColumnReader() {}
-
 };
 
 /**
  *  A structure that describes a field as a collection of related strings read from the FITS header.
  */
 struct FitsSchemaItem {
-    int column;          // column number (0-indexed); -1 for Flag fields
-    int bit;             // flag bit number (0-indexed); -1 for non-Flag fields
-    std::string ttype;   // name of the field (from TTYPE keys)
-    std::string tform;   // FITS column format code (from TFORM keys)
-    std::string tccls;   // which field class to use (from our own TCCLS keys)
-    std::string tunit;   // field units (from TUNIT keys)
-    std::string doc;     // field docs (from comments on TTYPE keys)
+    int column;         // column number (0-indexed); -1 for Flag fields
+    int bit;            // flag bit number (0-indexed); -1 for non-Flag fields
+    std::string ttype;  // name of the field (from TTYPE keys)
+    std::string tform;  // FITS column format code (from TFORM keys)
+    std::string tccls;  // which field class to use (from our own TCCLS keys)
+    std::string tunit;  // field units (from TUNIT keys)
+    std::string doc;    // field docs (from comments on TTYPE keys)
 
     explicit FitsSchemaItem(int column_, int bit_) : column(column_), bit(bit_) {}
 };
-
 
 /**
  *  A class that describes a mapping from a FITS binary table to an afw::table Schema.
@@ -66,11 +62,10 @@ struct FitsSchemaItem {
  */
 class FitsSchemaInputMapper {
 public:
-
     typedef FitsSchemaItem Item;
 
     /// Construct a mapper from a PropertyList of FITS header values, stripping recognized keys if desired.
-    FitsSchemaInputMapper(daf::base::PropertyList & metadata, bool stripMetadata);
+    FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata);
 
     /**
      *  Set the Archive to an externally-provided one, overriding any that may have been read.
@@ -82,7 +77,7 @@ public:
      *
      *  Returns true on success, false if there is no AR_HDU entry.
      */
-    bool readArchive(afw::fits::Fits & fits);
+    bool readArchive(afw::fits::Fits &fits);
 
     /// Return true if the mapper has an InputArchive.
     bool hasArchive() const;
@@ -93,7 +88,7 @@ public:
      *  The returned pointer is owned by the mapper object, and should not be deleted.  It is
      *  invalidated by calls to either erase() or finalize().
      */
-    Item const * find(std::string const & ttype) const;
+    Item const *find(std::string const &ttype) const;
 
     /**
      *  Find an item with the given column number, returning nullptr if no such column exists.
@@ -101,19 +96,19 @@ public:
      *  The returned pointer is owned by the mapper object, and should not be deleted.  It is
      *  invalidated by calls to either erase() or finalize().
      */
-    Item const * find(int column) const;
+    Item const *find(int column) const;
 
     /**
      *  Remove the given item (which should have been retrieved via find()) from the mapping, preventing it
      *  from being included in the regular fields added by finalize().
      */
-    void erase(Item const * item);
+    void erase(Item const *item);
 
     /**
      *  Remove the item with the given column name (ttype) from the mapping, preventing it
      *  from being included in the regular fields added by finalize().
      */
-    void erase(std::string const & ttype);
+    void erase(std::string const &ttype);
 
     /**
      *  Remove the item at the given column position from the mapping, preventing it
@@ -136,17 +131,15 @@ public:
     /**
      *  Fill a record from a FITS binary table row.
      */
-    void readRecord(
-        BaseRecord & record,
-        afw::fits::Fits & fits,
-        std::size_t row
-    );
+    void readRecord(BaseRecord &record, afw::fits::Fits &fits, std::size_t row);
 
 private:
     class Impl;
     std::shared_ptr<Impl> _impl;
 };
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_FitsSchemaInputMapper_h_INCLUDED
+#endif  // !AFW_TABLE_IO_FitsSchemaInputMapper_h_INCLUDED

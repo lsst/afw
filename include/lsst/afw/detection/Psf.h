@@ -34,7 +34,9 @@
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 class PsfFormatter;
 
@@ -65,23 +67,23 @@ class PsfFormatter;
  *  or meas::algorithms::KernelPsf, as these will provide default implementions for
  *  several member functions.
  */
-class Psf : public daf::base::Citizen, public daf::base::Persistable,
-            public afw::table::io::PersistableFacade<Psf>, public afw::table::io::Persistable
-{
-    static geom::Point2D makeNullPoint() {
-        return geom::Point2D(std::numeric_limits<double>::quiet_NaN());
-    }
+class Psf : public daf::base::Citizen,
+            public daf::base::Persistable,
+            public afw::table::io::PersistableFacade<Psf>,
+            public afw::table::io::Persistable {
+    static geom::Point2D makeNullPoint() { return geom::Point2D(std::numeric_limits<double>::quiet_NaN()); }
+
 public:
-    typedef math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
-    typedef image::Image<Pixel> Image; ///< Image type returned by computeImage
+    typedef math::Kernel::Pixel Pixel;  ///< Pixel type of Image returned by computeImage
+    typedef image::Image<Pixel> Image;  ///< Image type returned by computeImage
 
     /// Enum passed to computeImage and computeKernelImage to determine image ownership.
     enum ImageOwnerEnum {
-        COPY=0,     ///< The image will be copied before returning; caller will own it.
-        INTERNAL=1  /**< An internal image will be returned without copying.  The caller must not modify
-                     *   it, and it may be invalidated the next time a Psf member function is called with
-                     *   different color and/or position.
-                     */
+        COPY = 0,    ///< The image will be copied before returning; caller will own it.
+        INTERNAL = 1 /**< An internal image will be returned without copying.  The caller must not modify
+                      *   it, and it may be invalidated the next time a Psf member function is called with
+                      *   different color and/or position.
+                      */
     };
 
     virtual ~Psf() {}
@@ -115,11 +117,9 @@ public:
      *  @note The real work is done in the virtual private member function Psf::doComputeImage;
      *        computeImage only handles caching and default arguments.
      */
-    std::shared_ptr<Image> computeImage(
-        geom::Point2D position=makeNullPoint(),
-        image::Color color=image::Color(),
-        ImageOwnerEnum owner=COPY
-    ) const;
+    std::shared_ptr<Image> computeImage(geom::Point2D position = makeNullPoint(),
+                                        image::Color color = image::Color(),
+                                        ImageOwnerEnum owner = COPY) const;
 
     /**
      *  Return an Image of the PSF, in a form suitable for convolution.
@@ -143,11 +143,9 @@ public:
      *  @note The real work is done in the virtual private member function Psf::doComputeKernelImage;
      *        computeKernelImage only handles caching and default arguments.
      */
-    std::shared_ptr<Image> computeKernelImage(
-        geom::Point2D position=makeNullPoint(),
-        image::Color color=image::Color(),
-        ImageOwnerEnum owner=COPY
-    ) const;
+    std::shared_ptr<Image> computeKernelImage(geom::Point2D position = makeNullPoint(),
+                                              image::Color color = image::Color(),
+                                              ImageOwnerEnum owner = COPY) const;
 
     /**
      *   Return the peak value of the PSF image.
@@ -160,10 +158,7 @@ public:
      *  be expensive (but be careful not to accidentally call it with no arguments when you actually
      *  want to call it with the same arguments just used to call computeImage or computeKernelImage).
      */
-    double computePeak(
-        geom::Point2D position=makeNullPoint(),
-        image::Color color=image::Color()
-    ) const;
+    double computePeak(geom::Point2D position = makeNullPoint(), image::Color color = image::Color()) const;
 
     /**
      *  Compute the "flux" of the Psf model within a circular aperture of the given radius.
@@ -176,11 +171,8 @@ public:
      *  The flux is relative to a Psf image that has been normalized to unit integral, and the radius
      *  is in pixels.
      */
-    double computeApertureFlux(
-        double radius,
-        geom::Point2D position=makeNullPoint(),
-        image::Color color=image::Color()
-    ) const;
+    double computeApertureFlux(double radius, geom::Point2D position = makeNullPoint(),
+                               image::Color color = image::Color()) const;
 
     /**
      *  Compute the ellipse corresponding to the second moments of the Psf.
@@ -192,10 +184,8 @@ public:
      *  The algorithm used to compute the moments is up to the derived class, and hence this
      *  method should not be used when a particular algorithm or weight function is required.
      */
-    geom::ellipses::Quadrupole computeShape(
-        geom::Point2D position=makeNullPoint(),
-        image::Color color=image::Color()
-    ) const;
+    geom::ellipses::Quadrupole computeShape(geom::Point2D position = makeNullPoint(),
+                                            image::Color color = image::Color()) const;
 
     /**
      *  Return a FixedKernel corresponding to the Psf image at the given point.
@@ -203,10 +193,8 @@ public:
      *  This is implemented by calling computeKernelImage, and is simply provided for
      *  convenience.
      */
-    std::shared_ptr<math::Kernel const> getLocalKernel(
-        geom::Point2D position=makeNullPoint(),
-        image::Color color=image::Color()
-    ) const;
+    std::shared_ptr<math::Kernel const> getLocalKernel(geom::Point2D position = makeNullPoint(),
+                                                       image::Color color = image::Color()) const;
 
     /**
      *  Return the average Color of the stars used to construct the Psf
@@ -225,10 +213,8 @@ public:
     /**
      *  Return the bounding box of the image returned by computeKernelImage()
      */
-    geom::Box2I computeBBox(
-        geom::Point2D position = makeNullPoint(),
-        image::Color color = image::Color()
-    ) const;
+    geom::Box2I computeBBox(geom::Point2D position = makeNullPoint(),
+                            image::Color color = image::Color()) const;
 
     /**
      * Helper function for Psf::doComputeImage(): converts a kernel image (centered at (0,0) when xy0
@@ -248,25 +234,21 @@ public:
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
      * If not, then the original image will be returned (after setting XY0).
      */
-    static std::shared_ptr<Image> recenterKernelImage(
-        std::shared_ptr<Image> im,
-        geom::Point2D const & position,
-        std::string const & warpAlgorithm = "lanczos5",
-        unsigned int warpBuffer = 5
-    );
+    static std::shared_ptr<Image> recenterKernelImage(std::shared_ptr<Image> im,
+                                                      geom::Point2D const& position,
+                                                      std::string const& warpAlgorithm = "lanczos5",
+                                                      unsigned int warpBuffer = 5);
 
 protected:
-
     /**
      *  Main constructor for subclasses.
      *
      *  @param[in] isFixed  Should be true for Psf for which doComputeKernelImage always returns
      *                      the same image, regardless of color or position arguments.
      */
-    explicit Psf(bool isFixed=false);
+    explicit Psf(bool isFixed = false);
 
 private:
-
     //@{
     /**
      *  These virtual member functions are private, not protected, because we only want derived classes
@@ -275,21 +257,15 @@ private:
      *
      *  Derived classes are responsible for ensuring that returned images sum to one.
      */
-    virtual std::shared_ptr<Image> doComputeImage(
-        geom::Point2D const & position, image::Color const& color
-    ) const;
-    virtual std::shared_ptr<Image> doComputeKernelImage(
-        geom::Point2D const & position, image::Color const & color
-    ) const = 0;
-    virtual double doComputeApertureFlux(
-        double radius, geom::Point2D const & position, image::Color const & color
-    ) const = 0;
-    virtual geom::ellipses::Quadrupole doComputeShape(
-        geom::Point2D const & position, image::Color const & color
-    ) const = 0;
-    virtual geom::Box2I doComputeBBox(
-        geom::Point2D const & position, image::Color const & color
-    ) const = 0;
+    virtual std::shared_ptr<Image> doComputeImage(geom::Point2D const& position,
+                                                  image::Color const& color) const;
+    virtual std::shared_ptr<Image> doComputeKernelImage(geom::Point2D const& position,
+                                                        image::Color const& color) const = 0;
+    virtual double doComputeApertureFlux(double radius, geom::Point2D const& position,
+                                         image::Color const& color) const = 0;
+    virtual geom::ellipses::Quadrupole doComputeShape(geom::Point2D const& position,
+                                                      image::Color const& color) const = 0;
+    virtual geom::Box2I doComputeBBox(geom::Point2D const& position, image::Color const& color) const = 0;
     //@}
 
     bool const _isFixed;
@@ -302,7 +278,8 @@ private:
 
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
+}
+}
+}  // namespace lsst::afw::detection
 
-}}} // namespace lsst::afw::detection
-
-#endif // !LSST_AFW_DETECTION_Psf_h_INCLUDED
+#endif  // !LSST_AFW_DETECTION_Psf_h_INCLUDED

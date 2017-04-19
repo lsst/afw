@@ -27,7 +27,10 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace geom { namespace {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace {
 
 using PyFunctor = py::class_<Functor, std::shared_ptr<Functor>>;
 using PyLinearFunctor = py::class_<LinearFunctor, std::shared_ptr<LinearFunctor>, Functor>;
@@ -39,7 +42,7 @@ PYBIND11_PLUGIN(functor) {
 
     PyFunctor clsFunctor(mod, "Functor");
     clsFunctor.def("__call__", &Functor::operator());
-    clsFunctor.def("inverse", &Functor::inverse, "y"_a, "tol"_a=1e-10, "maxiter"_a=1000);
+    clsFunctor.def("inverse", &Functor::inverse, "y"_a, "tol"_a = 1e-10, "maxiter"_a = 1000);
     clsFunctor.def("derivative", &Functor::derivative);
 
     /* LinearFunctor */
@@ -51,5 +54,7 @@ PYBIND11_PLUGIN(functor) {
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::geom::<anonymous>

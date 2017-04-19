@@ -61,11 +61,11 @@ namespace geom {
  * @warning: code that instantiates a templated version of TransformMap must include
  * lsst/afw/geom/TransformMapImpl.h (else you will get linker errors).
  */
-template<typename CoordSysT>
+template <typename CoordSysT>
 class TransformMap {
 public:
     typedef std::map<CoordSysT, std::shared_ptr<XYTransform const>> Transforms;
-    typedef CoordSysT CoordSys; // needed by SWIG; see TransformMap.i
+    typedef CoordSysT CoordSys;  // needed by SWIG; see TransformMap.i
 
     /**
      * Construct a TransformMap
@@ -76,11 +76,10 @@ public:
      * @throws pex::exceptions::InvalidParameterError if you specify the same coordSys
      * more than once, or a transform is specified where coordSys == nativeCoordSys
      */
-    explicit TransformMap(
-        CoordSysT const &nativeCoordSys, ///< Native coordinate system for this registry
-        Transforms const &transforms    ///< a map of coordSys:xyTransform,
-            ///< where xyTransform.forward transforms coordSys to nativeCoordSys
-    );
+    explicit TransformMap(CoordSysT const &nativeCoordSys,  ///< Native coordinate system for this registry
+                          Transforms const &transforms      ///< a map of coordSys:xyTransform,
+                          ///< where xyTransform.forward transforms coordSys to nativeCoordSys
+                          );
 
     /// null implementation to make SWIG willing to wrap a map that contains these
     explicit TransformMap();
@@ -92,22 +91,20 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if toCoordSys is unknown
      */
-    Point2D transform(
-        Point2D const &fromPoint,       ///< point from which to transform
-        CoordSysT const &fromSys,        ///< coordinate system from which to transform
-        CoordSysT const &toCoordSys      ///< coordinate system to which to transform
-    ) const;
+    Point2D transform(Point2D const &fromPoint,    ///< point from which to transform
+                      CoordSysT const &fromSys,    ///< coordinate system from which to transform
+                      CoordSysT const &toCoordSys  ///< coordinate system to which to transform
+                      ) const;
 
     /**
      * Convert a list of Point2D from one coordinate system to another
      *
      * @throws pex::exceptions::InvalidParameterError if fromCoordSys or toCoordSys is unknown
      */
-     std::vector<Point2D> transform(
-        std::vector<Point2D> const &pointList,    ///< list of points to transform
-        CoordSysT const &fromCoordSys,    ///< from coordinate system
-        CoordSysT const &toCoordSys       ///< to coordinate system
-    ) const;
+    std::vector<Point2D> transform(std::vector<Point2D> const &pointList,  ///< list of points to transform
+                                   CoordSysT const &fromCoordSys,          ///< from coordinate system
+                                   CoordSysT const &toCoordSys             ///< to coordinate system
+                                   ) const;
 
     CoordSysT getNativeCoordSys() const { return _nativeCoordSys; }
 
@@ -124,9 +121,8 @@ public:
      * In Python this is renamed to __contains__; use as follows:
      *     coordSys in transformMap
      */
-    bool contains(
-        CoordSysT const &coordSys ///< coordinate system
-    ) const;
+    bool contains(CoordSysT const &coordSys  ///< coordinate system
+                  ) const;
 
     /**
      * Get an XYTransform that transforms from coordSys to nativeCoordSys in the forward direction
@@ -136,8 +132,8 @@ public:
      * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
      */
     std::shared_ptr<XYTransform const> operator[](
-        CoordSysT const &coordSys ///< coordinate system whose XYTransform is wanted
-    ) const;
+            CoordSysT const &coordSys  ///< coordinate system whose XYTransform is wanted
+            ) const;
 
     typename Transforms::const_iterator begin() const { return _transforms.begin(); }
 
@@ -146,10 +142,11 @@ public:
     size_t size() const { return _transforms.size(); }
 
 private:
-    CoordSysT _nativeCoordSys;   ///< native coordinate system
-    Transforms _transforms;   ///< map of coordSys: XYTransform
+    CoordSysT _nativeCoordSys;  ///< native coordinate system
+    Transforms _transforms;     ///< map of coordSys: XYTransform
 };
-
-}}}
+}
+}
+}
 
 #endif

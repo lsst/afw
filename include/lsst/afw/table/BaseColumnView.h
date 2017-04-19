@@ -6,7 +6,9 @@
 
 #include "lsst/afw/table/BaseTable.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 namespace detail {
 
@@ -17,13 +19,13 @@ struct FlagExtractor {
 
     result_type operator()(argument_type element) const { return element & _mask; }
 
-    explicit FlagExtractor(Key<Flag> const & key) : _mask(argument_type(1) << key.getBit()) {}
+    explicit FlagExtractor(Key<Flag> const& key) : _mask(argument_type(1) << key.getBit()) {}
 
 private:
     argument_type _mask;
 };
 
-} // namespace detail
+}  // namespace detail
 
 class BaseTable;
 
@@ -39,27 +41,25 @@ class BaseColumnView;
  */
 class BitsColumn {
 public:
-
     typedef std::int64_t IntT;
 
-    ndarray::Array<IntT,1,1> getArray() const { return _array; }
+    ndarray::Array<IntT, 1, 1> getArray() const { return _array; }
 
-    IntT getBit(Key<Flag> const & key) const;
-    IntT getBit(std::string const & name) const;
+    IntT getBit(Key<Flag> const& key) const;
+    IntT getBit(std::string const& name) const;
 
-    IntT getMask(Key<Flag> const & key) const { return IntT(1) << getBit(key); }
-    IntT getMask(std::string const & name) const { return IntT(1) << getBit(name); }
+    IntT getMask(Key<Flag> const& key) const { return IntT(1) << getBit(key); }
+    IntT getMask(std::string const& name) const { return IntT(1) << getBit(name); }
 
-    std::vector< SchemaItem<Flag> > const & getSchemaItems() const { return _items; }
+    std::vector<SchemaItem<Flag> > const& getSchemaItems() const { return _items; }
 
 private:
-
     friend class BaseColumnView;
 
     explicit BitsColumn(int size);
 
-    ndarray::Array<IntT,1,1> _array;
-    std::vector< SchemaItem<Flag> > _items;
+    ndarray::Array<IntT, 1, 1> _array;
+    std::vector<SchemaItem<Flag> > _items;
 };
 
 /**
@@ -82,7 +82,6 @@ private:
  */
 class BaseColumnView {
 public:
-
     /// Return the table that owns the records.
     std::shared_ptr<BaseTable> getTable() const;
 
@@ -91,11 +90,11 @@ public:
 
     /// Return a 1-d array corresponding to a scalar field (or subfield).
     template <typename T>
-    ndarray::ArrayRef<T,1> const operator[](Key<T> const & key) const;
+    ndarray::ArrayRef<T, 1> const operator[](Key<T> const& key) const;
 
     /// Return a 2-d array corresponding to an array field.
     template <typename T>
-    ndarray::ArrayRef<T,2,1> const operator[](Key< Array<T> > const & key) const;
+    ndarray::ArrayRef<T, 2, 1> const operator[](Key<Array<T> > const& key) const;
 
     /**
      *  Return a 1-d array expression corresponding to a flag bit.
@@ -104,9 +103,8 @@ public:
      *  & operation on every element when that element is requested.  In Python, the result will
      *  be copied into a bool NumPy array.
      */
-    ndarray::result_of::vectorize< detail::FlagExtractor,
-                                   ndarray::Array< Field<Flag>::Element const,1> >::type
-    operator[](Key<Flag> const & key) const;
+    ndarray::result_of::vectorize<detail::FlagExtractor, ndarray::Array<Field<Flag>::Element const, 1> >::type
+    operator[](Key<Flag> const& key) const;
 
     /**
      *  Return an integer array with the given Flag fields repacked into individual bits.
@@ -116,7 +114,7 @@ public:
      *
      *  @throws pex::exceptions::LengthError if keys.size() > 64
      */
-    BitsColumn getBits(std::vector< Key<Flag> > const & keys) const;
+    BitsColumn getBits(std::vector<Key<Flag> > const& keys) const;
 
     /**
      *  Return an integer array with all Flag fields repacked into individual bits.
@@ -135,7 +133,8 @@ public:
      *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeError.
      */
     template <typename InputIterator>
-    static BaseColumnView make(std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last);
+    static BaseColumnView make(std::shared_ptr<BaseTable> const& table, InputIterator first,
+                               InputIterator last);
 
     /**
      *  @brief Return true if the given record iterator range is continuous and the records all belong
@@ -145,18 +144,16 @@ public:
      *  succeeds, BaseColumnView::make should as well.
      */
     template <typename InputIterator>
-    static bool isRangeContiguous(std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last);
+    static bool isRangeContiguous(std::shared_ptr<BaseTable> const& table, InputIterator first,
+                                  InputIterator last);
 
     ~BaseColumnView();
 
 protected:
-
-    BaseColumnView(
-        std::shared_ptr<BaseTable> const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
-    );
+    BaseColumnView(std::shared_ptr<BaseTable> const& table, int recordCount, void* buf,
+                   ndarray::Manager::Ptr const& manager);
 
 private:
-
     friend class BaseTable;
 
     struct Impl;
@@ -167,58 +164,55 @@ private:
 template <typename RecordT>
 class ColumnViewT : public BaseColumnView {
 public:
-
     typedef RecordT Record;
     typedef typename RecordT::Table Table;
 
     /// @copydoc BaseColumnView::getTable
-    std::shared_ptr<Table> getTable() const { return std::static_pointer_cast<Table>(BaseColumnView::getTable()); }
+    std::shared_ptr<Table> getTable() const {
+        return std::static_pointer_cast<Table>(BaseColumnView::getTable());
+    }
 
     /// @copydoc BaseColumnView::make
     template <typename InputIterator>
-    static ColumnViewT make(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last) {
+    static ColumnViewT make(std::shared_ptr<Table> const& table, InputIterator first, InputIterator last) {
         return ColumnViewT(BaseColumnView::make(table, first, last));
     }
 
 protected:
-
-    explicit ColumnViewT(BaseColumnView const & base) : BaseColumnView(base) {}
-
+    explicit ColumnViewT(BaseColumnView const& base) : BaseColumnView(base) {}
 };
 
 template <typename InputIterator>
-BaseColumnView BaseColumnView::make(std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last) {
+BaseColumnView BaseColumnView::make(std::shared_ptr<BaseTable> const& table, InputIterator first,
+                                    InputIterator last) {
     if (first == last) {
         return BaseColumnView(table, 0, 0, ndarray::Manager::Ptr());
     }
     Schema schema = table->getSchema();
     std::size_t recordSize = schema.getRecordSize();
     std::size_t recordCount = 1;
-    void * buf = first->_data;
+    void* buf = first->_data;
     ndarray::Manager::Ptr manager = first->_manager;
-    char * expected = reinterpret_cast<char*>(buf) + recordSize;
+    char* expected = reinterpret_cast<char*>(buf) + recordSize;
     for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
         if (first->_data != expected || first->_manager != manager) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeError,
-                "Record data is not contiguous in memory."
-            );
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                              "Record data is not contiguous in memory.");
         }
     }
     return BaseColumnView(table, recordCount, buf, manager);
 }
 
 template <typename InputIterator>
-bool BaseColumnView::isRangeContiguous(
-    std::shared_ptr<BaseTable> const & table, InputIterator first, InputIterator last
-) {
+bool BaseColumnView::isRangeContiguous(std::shared_ptr<BaseTable> const& table, InputIterator first,
+                                       InputIterator last) {
     if (first == last) return true;
     Schema schema = table->getSchema();
     std::size_t recordSize = schema.getRecordSize();
     std::size_t recordCount = 1;
-    void * buf = first->_data;
+    void* buf = first->_data;
     ndarray::Manager::Ptr manager = first->_manager;
-    char * expected = reinterpret_cast<char*>(buf) + recordSize;
+    char* expected = reinterpret_cast<char*>(buf) + recordSize;
     for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
         if (first->_data != expected || first->_manager != manager) {
             return false;
@@ -226,7 +220,8 @@ bool BaseColumnView::isRangeContiguous(
     }
     return true;
 }
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_BaseColumnView_h_INCLUDED
+#endif  // !AFW_TABLE_BaseColumnView_h_INCLUDED

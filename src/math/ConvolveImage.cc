@@ -44,172 +44,130 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 namespace {
 
-    /**
-    * Set the edge pixels of a convolved Image based on size of the convolution kernel used
-    *
-    * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
-    * (if there is one) when doCopyEdge is true.
-    *
-    * @param[out] outImage %image whose edge pixels are to be set
-    * @param[in] kernel convolution kernel; kernel size is used to determine the edge
-    * @param[in] inImage %image whose edge pixels are to be copied; ignored if doCopyEdge is false
-    * @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true,
-    *                   copy edge pixels from input and set EDGE bit of mask
-    */
-    template <typename OutImageT, typename InImageT>
-    inline void setEdgePixels(
-            OutImageT& outImage,
-            Kernel const &kernel,
-            InImageT const &inImage,
-            bool doCopyEdge,
-            image::detail::Image_tag)
-    {
-        const unsigned int imWidth = outImage.getWidth();
-        const unsigned int imHeight = outImage.getHeight();
-        const unsigned int kWidth = kernel.getWidth();
-        const unsigned int kHeight = kernel.getHeight();
-        const unsigned int kCtrX = kernel.getCtrX();
-        const unsigned int kCtrY = kernel.getCtrY();
+/**
+* Set the edge pixels of a convolved Image based on size of the convolution kernel used
+*
+* Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
+* (if there is one) when doCopyEdge is true.
+*
+* @param[out] outImage %image whose edge pixels are to be set
+* @param[in] kernel convolution kernel; kernel size is used to determine the edge
+* @param[in] inImage %image whose edge pixels are to be copied; ignored if doCopyEdge is false
+* @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true,
+*                   copy edge pixels from input and set EDGE bit of mask
+*/
+template <typename OutImageT, typename InImageT>
+inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT const& inImage, bool doCopyEdge,
+                          image::detail::Image_tag) {
+    const unsigned int imWidth = outImage.getWidth();
+    const unsigned int imHeight = outImage.getHeight();
+    const unsigned int kWidth = kernel.getWidth();
+    const unsigned int kHeight = kernel.getHeight();
+    const unsigned int kCtrX = kernel.getCtrX();
+    const unsigned int kCtrY = kernel.getCtrY();
 
-        const typename OutImageT::SinglePixel edgePixel = math::edgePixel<OutImageT>(
-            typename image::detail::image_traits<OutImageT>::image_category()
-        );
-        std::vector<geom::Box2I> bboxList;
+    const typename OutImageT::SinglePixel edgePixel =
+            math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
+    std::vector<geom::Box2I> bboxList;
 
-        // create a list of bounding boxes describing edge regions, in this order:
-        // bottom edge, top edge (both edge to edge),
-        // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
-        int const numHeight = kHeight - (1 + kCtrY);
-        int const numWidth = kWidth - (1 + kCtrX);
-        bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY))
-        );
-        bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight))
-        );
-        bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight))
-        );
-        bboxList.push_back(
-            geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY), geom::Extent2I(numWidth, imHeight + 1 - kHeight))
-        );
+    // create a list of bounding boxes describing edge regions, in this order:
+    // bottom edge, top edge (both edge to edge),
+    // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
+    int const numHeight = kHeight - (1 + kCtrY);
+    int const numWidth = kWidth - (1 + kCtrX);
+    bboxList.push_back(geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(
+            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight)));
+    bboxList.push_back(geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+    bboxList.push_back(geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY),
+                                   geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
 
-        for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin();
-            bboxIter != bboxList.end(); ++bboxIter
-        ) {
-            OutImageT outView(outImage, *bboxIter, image::LOCAL);
-            if (doCopyEdge) {
-                // note: set only works with data of the same type
-                // so convert the input image to output format
-                outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
-            } else {
-                outView = edgePixel;
-            }
+    for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
+         ++bboxIter) {
+        OutImageT outView(outImage, *bboxIter, image::LOCAL);
+        if (doCopyEdge) {
+            // note: set only works with data of the same type
+            // so convert the input image to output format
+            outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
+        } else {
+            outView = edgePixel;
         }
     }
+}
 
-    /**
-    * Set the edge pixels of a convolved MaskedImage based on size of the convolution kernel used
-    *
-    * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
-    * (if there is one) when doCopyEdge is true.
-    *
-    * @param[out] outImage %image whose edge pixels are to be set
-    * @param[in] kernel convolution kernel; kernel size is used to determine the edge
-    * @param[in] inImage  %image whose edge pixels are to be copied; ignored if doCopyEdge false
-    * @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true, copy \
-    *                       edge pixels from input and set EDGE bit of mask
-    */
-    template <typename OutImageT, typename InImageT>
-    inline void setEdgePixels(
-            OutImageT& outImage,
-            Kernel const &kernel,
-            InImageT const &inImage,
-            bool doCopyEdge,
-            image::detail::MaskedImage_tag)
-    {
-        const unsigned int imWidth = outImage.getWidth();
-        const unsigned int imHeight = outImage.getHeight();
-        const unsigned int kWidth = kernel.getWidth();
-        const unsigned int kHeight = kernel.getHeight();
-        const unsigned int kCtrX = kernel.getCtrX();
-        const unsigned int kCtrY = kernel.getCtrY();
+/**
+* Set the edge pixels of a convolved MaskedImage based on size of the convolution kernel used
+*
+* Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
+* (if there is one) when doCopyEdge is true.
+*
+* @param[out] outImage %image whose edge pixels are to be set
+* @param[in] kernel convolution kernel; kernel size is used to determine the edge
+* @param[in] inImage  %image whose edge pixels are to be copied; ignored if doCopyEdge false
+* @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true, copy \
+*                       edge pixels from input and set EDGE bit of mask
+*/
+template <typename OutImageT, typename InImageT>
+inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT const& inImage, bool doCopyEdge,
+                          image::detail::MaskedImage_tag) {
+    const unsigned int imWidth = outImage.getWidth();
+    const unsigned int imHeight = outImage.getHeight();
+    const unsigned int kWidth = kernel.getWidth();
+    const unsigned int kHeight = kernel.getHeight();
+    const unsigned int kCtrX = kernel.getCtrX();
+    const unsigned int kCtrY = kernel.getCtrY();
 
-        const typename OutImageT::SinglePixel edgePixel = math::edgePixel<OutImageT>(
-            typename image::detail::image_traits<OutImageT>::image_category()
-        );
-        std::vector<geom::Box2I> bboxList;
+    const typename OutImageT::SinglePixel edgePixel =
+            math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
+    std::vector<geom::Box2I> bboxList;
 
-        // create a list of bounding boxes describing edge regions, in this order:
-        // bottom edge, top edge (both edge to edge),
-        // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
-        int const numHeight = kHeight - (1 + kCtrY);
-        int const numWidth = kWidth - (1 + kCtrX);
-        bboxList.push_back(
-            geom::Box2I(
-                geom::Point2I(0, 0),
-                geom::Extent2I(imWidth, kCtrY)
-            )
-        );
-        bboxList.push_back(
-            geom::Box2I(
-                geom::Point2I(0, imHeight - numHeight),
-                geom::Extent2I(imWidth, numHeight)
-            )
-        );
-        bboxList.push_back(
-            geom::Box2I(
-                geom::Point2I(0, kCtrY),
-                geom::Extent2I(kCtrX, imHeight + 1 - kHeight)
-            )
-        );
-        bboxList.push_back(
-            geom::Box2I(
-                geom::Point2I(imWidth - numWidth, kCtrY),
-                geom::Extent2I(numWidth, imHeight + 1 - kHeight)
-            )
-        );
+    // create a list of bounding boxes describing edge regions, in this order:
+    // bottom edge, top edge (both edge to edge),
+    // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
+    int const numHeight = kHeight - (1 + kCtrY);
+    int const numWidth = kWidth - (1 + kCtrX);
+    bboxList.push_back(geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(
+            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight)));
+    bboxList.push_back(geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+    bboxList.push_back(geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY),
+                                   geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
 
-        image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
-        for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin();
-            bboxIter != bboxList.end(); ++bboxIter) {
-            OutImageT outView(outImage, *bboxIter, image::LOCAL);
-            if (doCopyEdge) {
-                // note: set only works with data of the same type
-                // so convert the input image to output format
-                outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
-                *(outView.getMask()) |= edgeMask;
-            } else {
-                outView = edgePixel;
-            }
+    image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
+    for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
+         ++bboxIter) {
+        OutImageT outView(outImage, *bboxIter, image::LOCAL);
+        if (doCopyEdge) {
+            // note: set only works with data of the same type
+            // so convert the input image to output format
+            outView.assign(OutImageT(InImageT(inImage, *bboxIter, image::LOCAL), true));
+            *(outView.getMask()) |= edgeMask;
+        } else {
+            outView = edgePixel;
         }
     }
+}
 
-}   // anonymous namespace
+}  // anonymous namespace
 
 template <typename OutImageT, typename InImageT>
-void scaledPlus(
-        OutImageT &outImage,
-        double c1,
-        InImageT const &inImage1,
-        double c2,
-        InImageT const &inImage2)
-{
+void scaledPlus(OutImageT& outImage, double c1, InImageT const& inImage1, double c2,
+                InImageT const& inImage2) {
     if (outImage.getDimensions() != inImage1.getDimensions()) {
         std::ostringstream os;
-        os << "outImage dimensions = ( " << outImage.getWidth() << ", " << outImage.getHeight()
-            << ") != (" << inImage1.getWidth() << ", " << inImage1.getHeight()
-            << ") = inImage1 dimensions";
+        os << "outImage dimensions = ( " << outImage.getWidth() << ", " << outImage.getHeight() << ") != ("
+           << inImage1.getWidth() << ", " << inImage1.getHeight() << ") = inImage1 dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     } else if (inImage1.getDimensions() != inImage2.getDimensions()) {
         std::ostringstream os;
-        os << "inImage1 dimensions = ( " << inImage1.getWidth() << ", " << inImage1.getHeight()
-            << ") != (" << inImage2.getWidth() << ", " << inImage2.getHeight()
-            << ") = inImage2 dimensions";
+        os << "inImage1 dimensions = ( " << inImage1.getWidth() << ", " << inImage1.getHeight() << ") != ("
+           << inImage2.getWidth() << ", " << inImage2.getHeight() << ") = inImage2 dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
@@ -227,35 +185,22 @@ void scaledPlus(
 }
 
 template <typename OutImageT, typename InImageT, typename KernelT>
-void convolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        KernelT const& kernel,
-        ConvolutionControl const& convolutionControl)
-{
+void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const& kernel,
+              ConvolutionControl const& convolutionControl) {
     detail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
     setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
-        typename image::detail::image_traits<OutImageT>::image_category()
-    );
+                  typename image::detail::image_traits<OutImageT>::image_category());
     convolvedImage.setXY0(inImage.getXY0());
 }
 
 template <typename OutImageT, typename InImageT, typename KernelT>
-void convolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        KernelT const& kernel,
-        bool doNormalize,
-        bool doCopyEdge)
-{
+void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const& kernel, bool doNormalize,
+              bool doCopyEdge) {
     ConvolutionControl convolutionControl;
     convolutionControl.setDoNormalize(doNormalize);
     convolutionControl.setDoCopyEdge(doCopyEdge);
     convolve(convolvedImage, inImage, kernel, convolutionControl);
 }
-
-
-
 
 /// @cond
 /*
@@ -279,30 +224,32 @@ void convolve(
 // IMGMACRO = IMAGE or MASKEDIMAGE
 // KERNELTYPE = a kernel class
 //
-#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE) \
-    template void convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, bool); NL \
-    template void convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, ConvolutionControl const&); NL
+#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE)                       \
+    template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, \
+                           bool);                                                                      \
+    NL template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&,    \
+                              ConvolutionControl const&);                                              \
+    NL
 //
 // Instantiate Image or MaskedImage versions of all functions defined in this file.
 // Call INSTANTIATE_IM_OR_MI_KERNEL once for each kernel class.
 // IMGMACRO = IMAGE or MASKEDIMAGE
 //
-#define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
-    template void scaledPlus( \
-        IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double, IMGMACRO(INPIXTYPE) const&); NL \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, AnalyticKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, DeltaFunctionKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, FixedKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, LinearCombinationKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, SeparableKernel) \
-    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, Kernel) \
-//
+#define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE)                                             \
+    template void scaledPlus(IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double,           \
+                             IMGMACRO(INPIXTYPE) const&);                                                 \
+    NL INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE,                                       \
+                                   AnalyticKernel) INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE,      \
+                                                                               INPIXTYPE,                 \
+                                                                               DeltaFunctionKernel)       \
+            INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, FixedKernel)                     \
+                    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, LinearCombinationKernel) \
+                            INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, SeparableKernel) \
+                                    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, Kernel)  //
 // Instantiate all functions defined in this file for one specific output and input pixel type
 //
-#define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
-    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+#define INSTANTIATE(OUTPIXTYPE, INPIXTYPE)             \
+    INSTANTIATE_IM_OR_MI(IMAGE, OUTPIXTYPE, INPIXTYPE) \
     INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 //
 // Instantiate all functions defined in this file
@@ -317,5 +264,6 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-
-}}} // end math
+}
+}
+}  // end math

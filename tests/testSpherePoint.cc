@@ -130,8 +130,7 @@ BOOST_AUTO_TEST_CASE(getItemError) {
 /*
  * Test the SpherePoint(double const lonLatRad[2]) constructor
  */
-BOOST_AUTO_TEST_CASE(SpherePointArrayConstructor, *boost::unit_test::tolerance(1e-14))
-{
+BOOST_AUTO_TEST_CASE(SpherePointArrayConstructor, *boost::unit_test::tolerance(1e-14)) {
     double lonLatRad[2] = {1.23, -0.34};
     SpherePoint point(lonLatRad);
 

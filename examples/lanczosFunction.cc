@@ -41,8 +41,8 @@ int main() {
 
     vector<FuncReturn> offVec(2);
     for (offVec[0] = 0.0; offVec[0] < deltaX * 1.01; offVec[0] += deltaOff) {
-        cout << "LanczosFunction2(" << order << ") with offset " << offVec[0] << ", " << offVec[1]
-            << endl << endl;
+        cout << "LanczosFunction2(" << order << ") with offset " << offVec[0] << ", " << offVec[1] << endl
+             << endl;
 
         lancFunc.setParameters(offVec);
 

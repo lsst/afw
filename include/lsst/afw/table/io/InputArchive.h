@@ -7,10 +7,13 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 class BaseRecord;
-template <typename RecordT> class CatalogT;
+template <typename RecordT>
+class CatalogT;
 typedef CatalogT<BaseRecord> BaseCatalog;
 
 namespace io {
@@ -27,20 +30,19 @@ class CatalogVector;
  */
 class InputArchive {
 public:
-
-    typedef std::map<int,std::shared_ptr<Persistable>> Map;
+    typedef std::map<int, std::shared_ptr<Persistable>> Map;
 
     /// Construct an empty InputArchive that contains no objects.
     InputArchive();
 
     /// Construct an archive from catalogs.
-    InputArchive(BaseCatalog const & index, CatalogVector const & dataCatalogs);
+    InputArchive(BaseCatalog const& index, CatalogVector const& dataCatalogs);
 
     /// Copy-constructor.  Does not deep-copy loaded Persistables.
-    InputArchive(InputArchive const & other);
+    InputArchive(InputArchive const& other);
 
     /// Assignment.  Does not deep-copy loaded Persistables.
-    InputArchive & operator=(InputArchive const & other);
+    InputArchive& operator=(InputArchive const& other);
 
     ~InputArchive();
 
@@ -60,24 +62,25 @@ public:
     }
 
     /// Load and return all objects in the archive.
-    Map const & getAll() const;
+    Map const& getAll() const;
 
     /**
      *  Read an object from an already open FITS object.
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
-    static InputArchive readFits(fits::Fits & fitsfile);
+    static InputArchive readFits(fits::Fits& fitsfile);
 
 private:
-
     class Impl;
 
     InputArchive(std::shared_ptr<Impl> impl);
 
     std::shared_ptr<Impl> _impl;
 };
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_InputArchive_h_INCLUDED
+#endif  // !AFW_TABLE_IO_InputArchive_h_INCLUDED

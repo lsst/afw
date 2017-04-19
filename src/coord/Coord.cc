@@ -44,10 +44,12 @@
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/daf/base/DateTime.h"
 
-namespace ex       = lsst::pex::exceptions;
-namespace dafBase  = lsst::daf::base;
+namespace ex = lsst::pex::exceptions;
+namespace dafBase = lsst::daf::base;
 
-namespace lsst { namespace afw { namespace coord {
+namespace lsst {
+namespace afw {
+namespace coord {
 
 namespace {
 
@@ -55,12 +57,12 @@ typedef std::map<std::string, CoordSystem> CoordSystemMap;
 
 CoordSystemMap const getCoordSystemMap() {
     CoordSystemMap idMap;
-    idMap["FK5"]         = FK5;
-    idMap["ICRS"]        = ICRS;
-    idMap["ECLIPTIC"]    = ECLIPTIC;
-    idMap["GALACTIC"]    = GALACTIC;
-    idMap["ELON"]        = ECLIPTIC;
-    idMap["GLON"]        = GALACTIC;
+    idMap["FK5"] = FK5;
+    idMap["ICRS"] = ICRS;
+    idMap["ECLIPTIC"] = ECLIPTIC;
+    idMap["GALACTIC"] = GALACTIC;
+    idMap["ELON"] = ECLIPTIC;
+    idMap["GLON"] = GALACTIC;
     idMap["TOPOCENTRIC"] = TOPOCENTRIC;
     return idMap;
 }
@@ -75,14 +77,10 @@ CoordSystemMap const getCoordSystemMap() {
  * @param cosDelta1 Cosine of the first Dec, cos(delta1)
  * @param cosDelta2 Cosine of the second Dec, cos(delta2)
  */
-geom::Angle haversine(geom::Angle const dAlpha,
-                         geom::Angle const dDelta,
-                         double const cosDelta1,
-                         double const cosDelta2
-    )
-{
-    double const havDDelta = std::sin(dDelta/2.0) * std::sin(dDelta/2.0);
-    double const havDAlpha = std::sin(dAlpha/2.0) * std::sin(dAlpha/2.0);
+geom::Angle haversine(geom::Angle const dAlpha, geom::Angle const dDelta, double const cosDelta1,
+                      double const cosDelta2) {
+    double const havDDelta = std::sin(dDelta / 2.0) * std::sin(dDelta / 2.0);
+    double const havDAlpha = std::sin(dAlpha / 2.0) * std::sin(dAlpha / 2.0);
     double const havD = havDDelta + cosDelta1 * cosDelta2 * havDAlpha;
     double const sinDHalf = std::sqrt(havD);
     geom::Angle dist = (2.0 * std::asin(sinDHalf)) * geom::radians;
@@ -93,10 +91,7 @@ geom::Angle haversine(geom::Angle const dAlpha,
 double const epochTolerance = 1.0e-12;
 
 /// @internal Put a pair of coordinates in a common FK5 system
-std::pair<Fk5Coord, Fk5Coord> commonFk5(Coord const& c1,
-                                                            Coord const& c2
-    )
-{
+std::pair<Fk5Coord, Fk5Coord> commonFk5(Coord const &c1, Coord const &c2) {
     // make sure they're fk5
     Fk5Coord fk51 = c1.toFk5();
     Fk5Coord fk5tmp = c2.toFk5();
@@ -112,8 +107,7 @@ std::pair<Fk5Coord, Fk5Coord> commonFk5(Coord const& c1,
     return std::make_pair(fk51, fk52);
 }
 
-} // end anonymous namespace
-
+}  // end anonymous namespace
 
 CoordSystem makeCoordEnum(std::string const system) {
     static CoordSystemMap idmap = getCoordSystemMap();
@@ -124,12 +118,10 @@ CoordSystem makeCoordEnum(std::string const system) {
     }
 }
 
-
 namespace {
 
-double const NaN          = std::numeric_limits<double>::quiet_NaN();
-double const JD2000       = 2451544.50;
-
+double const NaN = std::numeric_limits<double>::quiet_NaN();
+double const JD2000 = 2451544.50;
 
 /*
  * A local class to handle dd:mm:ss coordinates
@@ -144,24 +136,24 @@ double const JD2000       = 2451544.50;
  */
 class Dms {
 public:
-    Dms() {};
+    Dms(){};
 
     // note that isSouth is needed to specify coords between dec = 0, and dec = -1
     // otherwise, d = -0 gets carried as d = 0 ... need a way to specify it explicitly
-    Dms(int const d, int const m, double const s, bool const isSouth=false) {
+    Dms(int const d, int const m, double const s, bool const isSouth = false) {
         sign = (d < 0 || isSouth) ? -1 : 1;
-        deg  = std::abs(d);
-        min  = m;
-        sec  = s;
+        deg = std::abs(d);
+        min = m;
+        sec = s;
     };
     // unit could be "degrees" or "hours"
     Dms(geom::Angle const deg00, geom::AngleUnit const unit = geom::degrees) {
         double deg0 = deg00.asAngularUnits(unit);
         double const absVal = std::fabs(deg0);
         sign = (deg0 >= 0) ? 1 : -1;
-        deg  = static_cast<int>(std::floor(absVal));
-        min  = static_cast<int>(std::floor((absVal - deg)*60.0));
-        sec  = ((absVal - deg)*60.0 - min)*60.0;
+        deg = static_cast<int>(std::floor(absVal));
+        min = static_cast<int>(std::floor((absVal - deg) * 60.0));
+        sec = ((absVal - deg) * 60.0 - min) * 60.0;
     }
 
     int deg;
@@ -170,21 +162,17 @@ public:
     int sign;
 };
 
-
-
 /**
  * @internal Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
  *
  */
-Coord const& GalacticPoleInFk5()
-{
-    static Coord pole(192.85950*geom::degrees, 27.12825*geom::degrees, 2000.0); // C&O
+Coord const &GalacticPoleInFk5() {
+    static Coord pole(192.85950 * geom::degrees, 27.12825 * geom::degrees, 2000.0);  // C&O
     return pole;
 }
 
-Coord const& Fk5PoleInGalactic()
-{
-    static Coord pole(122.93200 * geom::degrees, 27.12825 * geom::degrees, 2000.0); // C&O
+Coord const &Fk5PoleInGalactic() {
+    static Coord pole(122.93200 * geom::degrees, 27.12825 * geom::degrees, 2000.0);  // C&O
     return pole;
 }
 
@@ -192,19 +180,19 @@ Coord const& Fk5PoleInGalactic()
  * @internal Compute the mean Sidereal Time at Greenwich
  *
  */
-geom::Angle meanSiderealTimeGreenwich(
-                                 double const jd ///< Julian Day
-                                ) {
-    double const T = (jd - 2451545.0)/36525.0;
-    return (280.46061837 + 360.98564736629*(jd - 2451545.0) + 0.000387933*T*T - (T*T*T/38710000.0)) * geom::degrees;
+geom::Angle meanSiderealTimeGreenwich(double const jd  ///< Julian Day
+                                      ) {
+    double const T = (jd - 2451545.0) / 36525.0;
+    return (280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T -
+            (T * T * T / 38710000.0)) *
+           geom::degrees;
 }
-
 
 /*
  * A pair of utility functions to go from cartesian to spherical
  */
-double const atPoleEpsilon = 0.0; //std::numeric_limits<double>::epsilon();
-geom::Angle pointToLongitude(geom::Point3D const &p3d, double const defaultLongitude=0.0) {
+double const atPoleEpsilon = 0.0;  // std::numeric_limits<double>::epsilon();
+geom::Angle pointToLongitude(geom::Point3D const &p3d, double const defaultLongitude = 0.0) {
     geom::Angle lon;
     if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
         lon = geom::Angle(0.0);
@@ -215,21 +203,23 @@ geom::Angle pointToLongitude(geom::Point3D const &p3d, double const defaultLongi
 }
 geom::Angle pointToLatitude(geom::Point3D const &p3d) {
     geom::Angle lat;
-    if ( fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
+    if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
         lat = (p3d.getZ() >= 0) ? geom::Angle(geom::HALFPI) : geom::Angle(-geom::HALFPI);
     } else {
         lat = std::asin(p3d.getZ()) * geom::radians;
     }
     return lat;
 }
-std::pair<geom::Angle, geom::Angle> pointToLonLat(geom::Point3D const &p3d, double const defaultLongitude=0.0, bool normalize=true) {
+std::pair<geom::Angle, geom::Angle> pointToLonLat(geom::Point3D const &p3d,
+                                                  double const defaultLongitude = 0.0,
+                                                  bool normalize = true) {
     std::pair<geom::Angle, geom::Angle> lonLat;
 
     if (normalize) {
-        double const inorm = 1.0/p3d.asEigen().norm();
-        double const x = inorm*p3d.getX();
-        double const y = inorm*p3d.getY();
-        double const z = inorm*p3d.getZ();
+        double const inorm = 1.0 / p3d.asEigen().norm();
+        double const x = inorm * p3d.getX();
+        double const y = inorm * p3d.getY();
+        double const z = inorm * p3d.getZ();
         if (fabs(x) <= atPoleEpsilon && fabs(y) <= atPoleEpsilon) {
             lonLat.first = 0.0 * geom::radians;
             lonLat.second = ((z >= 0) ? 1.0 : -1.0) * geom::HALFPI * geom::radians;
@@ -249,19 +239,15 @@ std::pair<geom::Angle, geom::Angle> pointToLonLat(geom::Point3D const &p3d, doub
     return lonLat;
 }
 
-
-} // end anonymous namespace
-
-
+}  // end anonymous namespace
 
 /* ******************* Public functions ******************* */
 
 static std::string angleToXmsString(geom::Angle const a, geom::AngleUnit const unit) {
-
     Dms dms(a, unit);
 
     // make sure rounding won't give 60.00 for sec or min
-    if ( (60.00 - dms.sec) < 0.005 ) {
+    if ((60.00 - dms.sec) < 0.005) {
         dms.sec = 0.0;
         dms.min += 1;
         if (dms.min == 60) {
@@ -279,17 +265,11 @@ static std::string angleToXmsString(geom::Angle const a, geom::AngleUnit const u
         s = "-" + s;
     }
     return s;
-
 }
 
+std::string angleToDmsString(geom::Angle const a) { return angleToXmsString(a, geom::degrees); }
 
-std::string angleToDmsString(geom::Angle const a) {
-    return angleToXmsString(a, geom::degrees);
-}
-
-std::string angleToHmsString(geom::Angle const a) {
-    return angleToXmsString(a, geom::hours);
-}
+std::string angleToHmsString(geom::Angle const a) { return angleToXmsString(a, geom::hours); }
 
 /**
  * @internal Convert a XX:mm:ss string to Angle
@@ -298,10 +278,7 @@ std::string angleToHmsString(geom::Angle const a) {
  * @param unit the units assumed for the first part of `dms`. The second and third
  *             parts shall be defined to be 1/60 and 1/3600 of `unit`, respectively.
  */
-static geom::Angle xmsStringToAngle(
-    std::string const dms,
-    geom::AngleUnit unit
-    ) {
+static geom::Angle xmsStringToAngle(std::string const dms, geom::AngleUnit unit) {
     if (dms.find(":") == std::string::npos) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("String is not in xx:mm:ss format: %s") % dms).str());
@@ -312,36 +289,26 @@ static geom::Angle xmsStringToAngle(
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Could not parse string as xx:mm:ss format: %s") % dms).str());
     }
-    int const deg   = abs(atoi(elements[0].c_str()));
-    int const min   = atoi(elements[1].c_str());
+    int const deg = abs(atoi(elements[0].c_str()));
+    int const min = atoi(elements[1].c_str());
     double const sec = atof(elements[2].c_str());
 
-    geom::Angle ang = (deg + min/60.0 + sec/3600.0) * unit;
-    if ( (elements[0].c_str())[0] == '-' ) {
+    geom::Angle ang = (deg + min / 60.0 + sec / 3600.0) * unit;
+    if ((elements[0].c_str())[0] == '-') {
         ang *= -1.0;
     }
     return ang;
 }
 
-geom::Angle hmsStringToAngle(
-    std::string const hms
-    ){
-    return xmsStringToAngle(hms, geom::hours);
-}
+geom::Angle hmsStringToAngle(std::string const hms) { return xmsStringToAngle(hms, geom::hours); }
 
-geom::Angle dmsStringToAngle(
-    std::string const dms
-    ) {
-    return xmsStringToAngle(dms, geom::degrees);
-}
+geom::Angle dmsStringToAngle(std::string const dms) { return xmsStringToAngle(dms, geom::degrees); }
 
-geom::Angle eclipticPoleInclination(
-                                         double const epoch
-                                        ) {
-    double const T = (epoch - 2000.0)/100.0;
-    return (23.0 + 26.0/60.0 + (21.448 - 46.82*T - 0.0006*T*T - 0.0018*T*T*T)/3600.0) * geom::degrees;
+geom::Angle eclipticPoleInclination(double const epoch) {
+    double const T = (epoch - 2000.0) / 100.0;
+    return (23.0 + 26.0 / 60.0 + (21.448 - 46.82 * T - 0.0006 * T * T - 0.0018 * T * T * T) / 3600.0) *
+           geom::degrees;
 }
-
 
 /* ============================================================
  *
@@ -349,76 +316,47 @@ geom::Angle eclipticPoleInclination(
  *
  * ============================================================*/
 
-
-Coord::Coord(
-                       geom::Point2D const &p2d,
-                       geom::AngleUnit unit,
-                       double const epoch
-                      ) :
-    _longitude(NaN), _latitude(NaN), _epoch(epoch) {
+Coord::Coord(geom::Point2D const &p2d, geom::AngleUnit unit, double const epoch)
+        : _longitude(NaN), _latitude(NaN), _epoch(epoch) {
     _longitude = geom::Angle(p2d.getX(), unit).wrap();
-    _latitude  = geom::Angle(p2d.getY(), unit);
+    _latitude = geom::Angle(p2d.getY(), unit);
     _verifyValues();
 }
 
-Coord::Coord(
-                       geom::Point3D const &p3d,
-                       double const epoch,
-                       bool normalize,
-                       geom::Angle const defaultLongitude
-                      ) :
-    _longitude(0. * geom::radians),
-    _latitude(0. * geom::radians),
-    _epoch(epoch) {
-
+Coord::Coord(geom::Point3D const &p3d, double const epoch, bool normalize, geom::Angle const defaultLongitude)
+        : _longitude(0. * geom::radians), _latitude(0. * geom::radians), _epoch(epoch) {
     std::pair<geom::Angle, geom::Angle> lonLat = pointToLonLat(p3d, defaultLongitude, normalize);
     _longitude = lonLat.first;
-    _latitude  = lonLat.second;
+    _latitude = lonLat.second;
     _epoch = epoch;
 }
 
-Coord::Coord(
-                       geom::Angle const ra,
-                       geom::Angle const dec,
-                       double const epoch
-                      ) :
-    _longitude(ra.wrap()), _latitude(dec), _epoch(epoch) {
+Coord::Coord(geom::Angle const ra, geom::Angle const dec, double const epoch)
+        : _longitude(ra.wrap()), _latitude(dec), _epoch(epoch) {
     _verifyValues();
 }
 
-Coord::Coord(
-                       std::string const ra,
-                       std::string const dec,
-                       double const epoch
-                      ) :
-    _longitude(hmsStringToAngle(ra).wrap()),
-    _latitude(dmsStringToAngle(dec)),
-    _epoch(epoch) {
+Coord::Coord(std::string const ra, std::string const dec, double const epoch)
+        : _longitude(hmsStringToAngle(ra).wrap()), _latitude(dmsStringToAngle(dec)), _epoch(epoch) {
     _verifyValues();
 }
 
 Coord::Coord() : _longitude(geom::Angle(NaN)), _latitude(geom::Angle(NaN)), _epoch(NaN) {}
 
-
 void Coord::_verifyValues() const {
     if (_latitude.asRadians() < -geom::HALFPI || _latitude.asRadians() > geom::HALFPI) {
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") %
-                           _latitude).str());
+        throw LSST_EXCEPT(
+                ex::InvalidParameterError,
+                (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") % _latitude).str());
     }
 }
 
-void Coord::reset(
-    geom::Angle const longitude,
-    geom::Angle const latitude,
-    double const epoch
-    ) {
+void Coord::reset(geom::Angle const longitude, geom::Angle const latitude, double const epoch) {
     _longitude = longitude.wrap();
-    _latitude  = latitude;
+    _latitude = latitude;
     _epoch = epoch;
     _verifyValues();
 }
-
 
 geom::Point2D Coord::getPosition(geom::AngleUnit unit) const {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
@@ -429,7 +367,6 @@ geom::Point2D Coord::getPosition(geom::AngleUnit unit) const {
     }
 }
 
-
 geom::Point3D Coord::getVector() const {
     double lng = getLongitude();
     double lat = getLatitude();
@@ -439,30 +376,25 @@ geom::Point3D Coord::getVector() const {
     return geom::Point3D(x, y, z);
 }
 
-
-Coord Coord::transform(
-    Coord const &poleTo,
-    Coord const &poleFrom
-                                          ) const {
-    double const alphaGP  = poleFrom[0];
-    double const deltaGP  = poleFrom[1];
-    double const lCP      = poleTo[0];
+Coord Coord::transform(Coord const &poleTo, Coord const &poleFrom) const {
+    double const alphaGP = poleFrom[0];
+    double const deltaGP = poleFrom[1];
+    double const lCP = poleTo[0];
 
     double const alpha = getLongitude();
     double const delta = getLatitude();
 
     geom::Angle const l = (lCP - std::atan2(std::sin(alpha - alphaGP),
-                                               std::tan(delta)*std::cos(deltaGP) - std::cos(alpha - alphaGP)*std::sin(deltaGP))) * geom::radians;
-    geom::Angle const b = std::asin( (std::sin(deltaGP)*std::sin(delta) + std::cos(deltaGP)*std::cos(delta)*std::cos(alpha - alphaGP))) * geom::radians;
+                                            std::tan(delta) * std::cos(deltaGP) -
+                                                    std::cos(alpha - alphaGP) * std::sin(deltaGP))) *
+                          geom::radians;
+    geom::Angle const b = std::asin((std::sin(deltaGP) * std::sin(delta) +
+                                     std::cos(deltaGP) * std::cos(delta) * std::cos(alpha - alphaGP))) *
+                          geom::radians;
     return Coord(l, b);
 }
 
-
-void Coord::rotate(
-                             Coord const &axis,
-                             geom::Angle const theta
-                            ) {
-
+void Coord::rotate(Coord const &axis, geom::Angle const theta) {
     double const c = std::cos(theta);
     double const mc = 1.0 - c;
     double const s = std::sin(theta);
@@ -476,22 +408,20 @@ void Coord::rotate(
 
     // rotate
     geom::Point3D xprime;
-    xprime[0] = (ux*ux + (1.0 - ux*ux)*c)*x[0] +  (ux*uy*mc - uz*s)*x[1] +  (ux*uz*mc + uy*s)*x[2];
-    xprime[1] = (uy*uy + (1.0 - uy*uy)*c)*x[1] +  (uy*uz*mc - ux*s)*x[2] +  (ux*uy*mc + uz*s)*x[0];
-    xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
+    xprime[0] = (ux * ux + (1.0 - ux * ux) * c) * x[0] + (ux * uy * mc - uz * s) * x[1] +
+                (ux * uz * mc + uy * s) * x[2];
+    xprime[1] = (uy * uy + (1.0 - uy * uy) * c) * x[1] + (uy * uz * mc - ux * s) * x[2] +
+                (ux * uy * mc + uz * s) * x[0];
+    xprime[2] = (uz * uz + (1.0 - uz * uz) * c) * x[2] + (uz * ux * mc - uy * s) * x[0] +
+                (uy * uz * mc + ux * s) * x[1];
 
     // in-situ
     std::pair<geom::Angle, geom::Angle> lonLat = pointToLonLat(xprime);
     _longitude = lonLat.first;
-    _latitude  = lonLat.second;
+    _latitude = lonLat.second;
 }
 
-
-geom::Angle Coord::offset(
-                               geom::Angle const phi,
-                               geom::Angle const arcLen
-                              ) {
-
+geom::Angle Coord::offset(geom::Angle const phi, geom::Angle const arcLen) {
     // let v = vector in the direction arcLen points (tangent to surface of sphere)
     // thus: |v| = arcLen
     //       angle phi = orientation of v in a tangent plane, measured wrt to a parallel of declination
@@ -521,7 +451,7 @@ geom::Angle Coord::offset(
     Eigen::Vector3d u;
     u << -std::sin(getLongitude()), std::cos(getLongitude()), 0.0;
     Eigen::Vector3d w = r.cross(u);
-    Eigen::Vector3d v = arcLen * std::cos(phi)*u + arcLen * std::sin(phi)*w;
+    Eigen::Vector3d v = arcLen * std::cos(phi) * u + arcLen * std::sin(phi) * w;
 
     // take r x v to get the axis
     Eigen::Vector3d axisVector = r.cross(v);
@@ -553,66 +483,45 @@ geom::Angle Coord::offset(
     return phi2;
 }
 
-
 std::shared_ptr<Coord> Coord::convert(CoordSystem system, double epoch) const {
-
     switch (system) {
-      case FK5:
-        {
+        case FK5: {
             Fk5Coord c1 = this->toFk5(epoch);
-            return std::shared_ptr<Fk5Coord>(new Fk5Coord(c1.getLongitude(),
-                                                            c1.getLatitude(),
-                                                            c1.getEpoch()));
-        }
-        break;
-      case ICRS:
-        {
+            return std::shared_ptr<Fk5Coord>(
+                    new Fk5Coord(c1.getLongitude(), c1.getLatitude(), c1.getEpoch()));
+        } break;
+        case ICRS: {
             IcrsCoord c2 = this->toIcrs();
-            return std::shared_ptr<IcrsCoord>(new IcrsCoord(c2.getLongitude(),
-                                                              c2.getLatitude()));
-        }
-        break;
-      case GALACTIC:
-        {
+            return std::shared_ptr<IcrsCoord>(new IcrsCoord(c2.getLongitude(), c2.getLatitude()));
+        } break;
+        case GALACTIC: {
             GalacticCoord c4 = this->toGalactic();
-            return std::shared_ptr<GalacticCoord>(new GalacticCoord(c4.getLongitude(),
-                                                                      c4.getLatitude()));
-        }
-        break;
-      case ECLIPTIC:
-        {
+            return std::shared_ptr<GalacticCoord>(new GalacticCoord(c4.getLongitude(), c4.getLatitude()));
+        } break;
+        case ECLIPTIC: {
             EclipticCoord c5 = this->toEcliptic(epoch);
-            return std::shared_ptr<EclipticCoord>(new EclipticCoord(c5.getLongitude(),
-                                                                      c5.getLatitude(),
-                                                                      c5.getEpoch()));
-        }
-        break;
-      case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Cannot make Topocentric with convert() (must also specify Observatory).\n"
-                          "Instantiate TopocentricCoord() directly.");
-        break;
-      case UNKNOWN:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Cannot convert to UNKNOWN coordinate system");
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC allowed.");
-        break;
-
+            return std::shared_ptr<EclipticCoord>(
+                    new EclipticCoord(c5.getLongitude(), c5.getLatitude(), c5.getEpoch()));
+        } break;
+        case TOPOCENTRIC:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Cannot make Topocentric with convert() (must also specify Observatory).\n"
+                              "Instantiate TopocentricCoord() directly.");
+            break;
+        case UNKNOWN:
+            throw LSST_EXCEPT(ex::InvalidParameterError, "Cannot convert to UNKNOWN coordinate system");
+            break;
+        default:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC allowed.");
+            break;
     }
-
 }
 
-
-geom::Angle Coord::angularSeparation(
-    Coord const &c
-    ) const {
-
+geom::Angle Coord::angularSeparation(Coord const &c) const {
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
     // we'll put them in the same system.
-    std::pair<Fk5Coord, Fk5Coord> const& fk5 = commonFk5(*this, c);
+    std::pair<Fk5Coord, Fk5Coord> const &fk5 = commonFk5(*this, c);
     geom::Angle const alpha1 = fk5.first.getRa();
     geom::Angle const delta1 = fk5.first.getDec();
     geom::Angle const alpha2 = fk5.second.getRa();
@@ -621,21 +530,17 @@ geom::Angle Coord::angularSeparation(
     return haversine(alpha1 - alpha2, delta1 - delta2, std::cos(delta1), std::cos(delta2));
 }
 
-
-std::pair<geom::Angle, geom::Angle>
-Coord::getOffsetFrom(Coord const &c
-    ) const
-{
+std::pair<geom::Angle, geom::Angle> Coord::getOffsetFrom(Coord const &c) const {
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
     // we'll put them in the same system.
-    std::pair<Fk5Coord, Fk5Coord> const& fk5 = commonFk5(*this, c);
+    std::pair<Fk5Coord, Fk5Coord> const &fk5 = commonFk5(*this, c);
     geom::Angle const alpha1 = fk5.first.getRa();
     geom::Angle const delta1 = fk5.first.getDec();
     geom::Angle const alpha2 = fk5.second.getRa();
     geom::Angle const delta2 = fk5.second.getDec();
 
-    geom::Angle const dAlpha = alpha1-alpha2;
-    geom::Angle const dDelta = delta1-delta2;
+    geom::Angle const dAlpha = alpha1 - alpha2;
+    geom::Angle const dDelta = delta1 - delta2;
 
     double const cosDelta1 = std::cos(delta1);
     double const cosDelta2 = std::cos(delta2);
@@ -643,20 +548,17 @@ Coord::getOffsetFrom(Coord const &c
     geom::Angle separation = haversine(dAlpha, dDelta, cosDelta1, cosDelta2);
 
     // Formula from http://www.movable-type.co.uk/scripts/latlong.html
-    double const y = std::sin(dAlpha)*cosDelta2;
-    double const x = cosDelta1*std::sin(delta2) - std::sin(delta1)*cosDelta2*std::cos(dAlpha);
-    geom::Angle bearing = std::atan2(y, x)*geom::radians - 90.0*geom::degrees;
+    double const y = std::sin(dAlpha) * cosDelta2;
+    double const x = cosDelta1 * std::sin(delta2) - std::sin(delta1) * cosDelta2 * std::cos(dAlpha);
+    geom::Angle bearing = std::atan2(y, x) * geom::radians - 90.0 * geom::degrees;
 
     return std::make_pair(bearing, separation);
 }
 
-std::pair<geom::Angle, geom::Angle>
-Coord::getTangentPlaneOffset(Coord const &c
-    ) const
-{
+std::pair<geom::Angle, geom::Angle> Coord::getTangentPlaneOffset(Coord const &c) const {
     // work in Fk5, no matter what two derived classes we're given (eg Fk5 and Galactic)
     // we'll put them in the same system.
-    std::pair<Fk5Coord, Fk5Coord> const& fk5 = commonFk5(*this, c);
+    std::pair<Fk5Coord, Fk5Coord> const &fk5 = commonFk5(*this, c);
     geom::Angle const alpha1 = fk5.first.getRa();
     geom::Angle const delta1 = fk5.first.getDec();
     geom::Angle const alpha2 = fk5.second.getRa();
@@ -674,41 +576,25 @@ Coord::getTangentPlaneOffset(Coord const &c
     double const xi = cosDelta1 * sinAlphaDiff / div;
     double const eta = (cosDelta1 * cosAlphaDiff * sinDelta2 - sinDelta1 * cosDelta2) / div;
 
-    return std::make_pair(xi*geom::radians, eta*geom::radians);
+    return std::make_pair(xi * geom::radians, eta * geom::radians);
 }
-
 
 Fk5Coord Coord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(), getLatitude(), getEpoch()).precess(epoch);
 }
-Fk5Coord Coord::toFk5() const {
-    return Fk5Coord(getLongitude(), getLatitude(), getEpoch());
-}
+Fk5Coord Coord::toFk5() const { return Fk5Coord(getLongitude(), getLatitude(), getEpoch()); }
 
-IcrsCoord Coord::toIcrs() const {
-    return this->toFk5().toIcrs();
-}
+IcrsCoord Coord::toIcrs() const { return this->toFk5().toIcrs(); }
 
-GalacticCoord Coord::toGalactic() const {
-    return this->toFk5().toGalactic();
-}
+GalacticCoord Coord::toGalactic() const { return this->toFk5().toGalactic(); }
 
-EclipticCoord Coord::toEcliptic(double const epoch) const {
-        return this->toFk5(epoch).toEcliptic();
-}
-EclipticCoord Coord::toEcliptic() const {
-        return this->toFk5().toEcliptic();
-}
+EclipticCoord Coord::toEcliptic(double const epoch) const { return this->toFk5(epoch).toEcliptic(); }
+EclipticCoord Coord::toEcliptic() const { return this->toFk5().toEcliptic(); }
 
-TopocentricCoord Coord::toTopocentric(
-                                        Observatory const &obs,
-                                        lsst::daf::base::DateTime const &obsDate
-                                                         ) const {
+TopocentricCoord Coord::toTopocentric(Observatory const &obs,
+                                      lsst::daf::base::DateTime const &obsDate) const {
     return this->toFk5().toTopocentric(obs, obsDate);
 }
-
-
-
 
 /* ============================================================
  *
@@ -716,18 +602,14 @@ TopocentricCoord Coord::toTopocentric(
  *
  * ============================================================*/
 
-
 Fk5Coord Fk5Coord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(), getLatitude(), getEpoch()).precess(epoch);
 }
-Fk5Coord Fk5Coord::toFk5() const {
-    return Fk5Coord(getLongitude(), getLatitude(), getEpoch());
-}
+Fk5Coord Fk5Coord::toFk5() const { return Fk5Coord(getLongitude(), getLatitude(), getEpoch()); }
 
 IcrsCoord Fk5Coord::toIcrs() const {
-
     // only do the precession to 2000 if we're not already there.
-    if ( fabs(getEpoch() - 2000.0) > epochTolerance ) {
+    if (fabs(getEpoch() - 2000.0) > epochTolerance) {
         Fk5Coord c = precess(2000.0);
         return IcrsCoord(c.getLongitude(), c.getLatitude());
     } else {
@@ -735,12 +617,10 @@ IcrsCoord Fk5Coord::toIcrs() const {
     }
 }
 
-
 GalacticCoord Fk5Coord::toGalactic() const {
-
     // if we're epoch==2000, we can transform, otherwise we need to precess first
     Fk5Coord c;
-    if ( fabs(getEpoch() - 2000.0) > epochTolerance ) {
+    if (fabs(getEpoch() - 2000.0) > epochTolerance) {
         c = precess(2000.0);
     } else {
         c = *this;
@@ -748,7 +628,6 @@ GalacticCoord Fk5Coord::toGalactic() const {
 
     Coord ct = c.transform(Fk5PoleInGalactic(), GalacticPoleInFk5());
     return GalacticCoord(ct.getLongitude(), ct.getLatitude());
-
 }
 
 EclipticCoord Fk5Coord::toEcliptic(double const epoch) const {
@@ -758,15 +637,10 @@ EclipticCoord Fk5Coord::toEcliptic(double const epoch) const {
     Coord c = transform(equPoleInEcliptic, eclPoleInEquatorial);
     return EclipticCoord(c.getLongitude(), c.getLatitude(), epoch);
 }
-EclipticCoord Fk5Coord::toEcliptic() const {
-    return this->toEcliptic(getEpoch());
-}
+EclipticCoord Fk5Coord::toEcliptic() const { return this->toEcliptic(getEpoch()); }
 
-TopocentricCoord Fk5Coord::toTopocentric(
-    Observatory const &obs,
-    lsst::daf::base::DateTime const &obsDate
-                                                            ) const {
-
+TopocentricCoord Fk5Coord::toTopocentric(Observatory const &obs,
+                                         lsst::daf::base::DateTime const &obsDate) const {
     // make sure we precess to the epoch
     Fk5Coord fk5 = precess(obsDate.get(dafBase::DateTime::EPOCH));
 
@@ -774,72 +648,71 @@ TopocentricCoord Fk5Coord::toTopocentric(
     geom::Angle theta0 = meanSiderealTimeGreenwich(obsDate.get(dafBase::DateTime::JD)).wrap();
 
     // lat/long of the observatory
-    geom::Angle const phi             = obs.getLatitude();
-    geom::Angle const L               = obs.getLongitude();
+    geom::Angle const phi = obs.getLatitude();
+    geom::Angle const L = obs.getLongitude();
 
     // ra/dec of the target
-    geom::Angle const alpha           = fk5.getRa();
-    geom::Angle const delta           = fk5.getDec();
+    geom::Angle const alpha = fk5.getRa();
+    geom::Angle const delta = fk5.getDec();
 
-    geom::Angle const H               = theta0 + L - alpha;
+    geom::Angle const H = theta0 + L - alpha;
 
     // compute the altitude, h
-    double const sinh            = std::sin(phi)* std::sin(delta) + std::cos(phi) * std::cos(delta) * std::cos(H);
-    geom::Angle const h               = std::asin(sinh) * geom::radians;
+    double const sinh = std::sin(phi) * std::sin(delta) + std::cos(phi) * std::cos(delta) * std::cos(H);
+    geom::Angle const h = std::asin(sinh) * geom::radians;
 
     // compute the azimuth, A
-    double const tanAnumerator   = std::sin(H);
+    double const tanAnumerator = std::sin(H);
     double const tanAdenominator = (std::cos(H) * std::sin(phi) - std::tan(delta) * std::cos(phi));
 
     // Equations used here assume azimuth is with respect to South
     // but we use the North as our origin ... must add 180 deg
-    geom::Angle A = ((180.0*geom::degrees) + atan2(tanAnumerator, tanAdenominator)* geom::radians).wrap();
+    geom::Angle A = ((180.0 * geom::degrees) + atan2(tanAnumerator, tanAdenominator) * geom::radians).wrap();
 
     return TopocentricCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
 }
 
-
-
-Fk5Coord Fk5Coord::precess(
-                                               double const epochTo
-                                              ) const {
-
+Fk5Coord Fk5Coord::precess(double const epochTo) const {
     // return a copy if the epochs are the same
-    if ( fabs(getEpoch() - epochTo) < epochTolerance) {
+    if (fabs(getEpoch() - epochTo) < epochTolerance) {
         return Fk5Coord(getLongitude(), getLatitude(), getEpoch());
     }
 
     dafBase::DateTime const dateFrom(getEpoch(), dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
     dafBase::DateTime const dateTo(epochTo, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
     double const jd0 = dateFrom.get(dafBase::DateTime::JD);
-    double const jd  = dateTo.get(dafBase::DateTime::JD);
+    double const jd = dateTo.get(dafBase::DateTime::JD);
 
-    double const T   = (jd0 - JD2000)/36525.0;
-    double const t   = (jd - jd0)/36525.0;
-    double const tt  = t*t;
-    double const ttt = tt*t;
+    double const T = (jd0 - JD2000) / 36525.0;
+    double const t = (jd - jd0) / 36525.0;
+    double const tt = t * t;
+    double const ttt = tt * t;
 
-    geom::Angle const xi    = ((2306.2181 + 1.39656*T - 0.000139*T*T)*t +
-                                  (0.30188 - 0.000344*T)*tt + 0.017998*ttt) * geom::arcseconds;
-    geom::Angle const z     = ((2306.2181 + 1.39656*T - 0.000139*T*T)*t +
-                                  (1.09468 + 0.000066*T)*tt + 0.018203*ttt) * geom::arcseconds;
-    geom::Angle const theta = ((2004.3109 - 0.85330*T - 0.000217*T*T)*t -
-                                  (0.42665 + 0.000217*T)*tt - 0.041833*ttt) * geom::arcseconds;
+    geom::Angle const xi = ((2306.2181 + 1.39656 * T - 0.000139 * T * T) * t + (0.30188 - 0.000344 * T) * tt +
+                            0.017998 * ttt) *
+                           geom::arcseconds;
+    geom::Angle const z = ((2306.2181 + 1.39656 * T - 0.000139 * T * T) * t + (1.09468 + 0.000066 * T) * tt +
+                           0.018203 * ttt) *
+                          geom::arcseconds;
+    geom::Angle const theta = ((2004.3109 - 0.85330 * T - 0.000217 * T * T) * t -
+                               (0.42665 + 0.000217 * T) * tt - 0.041833 * ttt) *
+                              geom::arcseconds;
 
     Fk5Coord fk5 = this->toFk5();
     geom::Angle const alpha0 = fk5.getRa();
     geom::Angle const delta0 = fk5.getDec();
 
     double const a = std::cos(delta0) * std::sin((alpha0 + xi));
-    double const b = std::cos(theta)  * std::cos(delta0) * std::cos((alpha0 + xi)) - std::sin(theta) * std::sin(delta0);
-    double const c = std::sin(theta)  * std::cos(delta0) * std::cos((alpha0 + xi)) + std::cos(theta) * std::sin(delta0);
+    double const b =
+            std::cos(theta) * std::cos(delta0) * std::cos((alpha0 + xi)) - std::sin(theta) * std::sin(delta0);
+    double const c =
+            std::sin(theta) * std::cos(delta0) * std::cos((alpha0 + xi)) + std::cos(theta) * std::sin(delta0);
 
-    geom::Angle const alpha = (std::atan2(a,b) + z) * geom::radians;
+    geom::Angle const alpha = (std::atan2(a, b) + z) * geom::radians;
     geom::Angle const delta = std::asin(c) * geom::radians;
 
     return Fk5Coord(alpha, delta, epochTo);
 }
-
 
 /* ============================================================
  *
@@ -854,22 +727,15 @@ void IcrsCoord::reset(geom::Angle const longitude, geom::Angle const latitude) {
 Fk5Coord IcrsCoord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(), getLatitude(), 2000.0).precess(epoch);
 }
-Fk5Coord IcrsCoord::toFk5() const {
-    return Fk5Coord(getLongitude(), getLatitude(), 2000.0);
-}
+Fk5Coord IcrsCoord::toFk5() const { return Fk5Coord(getLongitude(), getLatitude(), 2000.0); }
 
-IcrsCoord IcrsCoord::toIcrs() const {
-    return IcrsCoord(getLongitude(), getLatitude());
-}
+IcrsCoord IcrsCoord::toIcrs() const { return IcrsCoord(getLongitude(), getLatitude()); }
 
 std::string IcrsCoord::toString() const {
-    return (boost::format("%s(%.7f, %.7f)")
-            % getClassName()
-            % (*this)[0].asDegrees()
-            % (*this)[1].asDegrees()).str();
+    return (boost::format("%s(%.7f, %.7f)") % getClassName() % (*this)[0].asDegrees() %
+            (*this)[1].asDegrees())
+            .str();
 }
-
-
 
 /* ============================================================
  *
@@ -887,23 +753,15 @@ Fk5Coord GalacticCoord::toFk5(double const epoch) const {
     Coord c = transform(GalacticPoleInFk5(), Fk5PoleInGalactic());
     return Fk5Coord(c.getLongitude(), c.getLatitude(), 2000.0).precess(epoch);
 }
-Fk5Coord GalacticCoord::toFk5() const {
-    return this->toFk5(2000.0);
-}
+Fk5Coord GalacticCoord::toFk5() const { return this->toFk5(2000.0); }
 
-GalacticCoord GalacticCoord::toGalactic() const {
-    return GalacticCoord(getLongitude(), getLatitude());
-}
+GalacticCoord GalacticCoord::toGalactic() const { return GalacticCoord(getLongitude(), getLatitude()); }
 
 std::string GalacticCoord::toString() const {
-    return (boost::format("%s(%.7f, %.7f)")
-            % getClassName()
-            % (*this)[0].asDegrees()
-            % (*this)[1].asDegrees()).str();
+    return (boost::format("%s(%.7f, %.7f)") % getClassName() % (*this)[0].asDegrees() %
+            (*this)[1].asDegrees())
+            .str();
 }
-
-
-
 
 /* ============================================================
  *
@@ -918,7 +776,6 @@ EclipticCoord EclipticCoord::toEcliptic() const {
     return EclipticCoord(getLongitude(), getLatitude(), getEpoch());
 }
 
-
 Fk5Coord EclipticCoord::toFk5(double const epoch) const {
     geom::Angle const eclPoleIncl = eclipticPoleInclination(epoch);
     geom::Angle ninety = 90. * geom::degrees;
@@ -927,18 +784,11 @@ Fk5Coord EclipticCoord::toFk5(double const epoch) const {
     Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
     return Fk5Coord(c.getLongitude(), c.getLatitude(), epoch);
 }
-Fk5Coord EclipticCoord::toFk5() const {
-    return this->toFk5(getEpoch());
-}
+Fk5Coord EclipticCoord::toFk5() const { return this->toFk5(getEpoch()); }
 
-
-EclipticCoord EclipticCoord::precess(
-                                                         double const epochTo
-                                                        ) const {
+EclipticCoord EclipticCoord::precess(double const epochTo) const {
     return this->toFk5().precess(epochTo).toEcliptic();
 }
-
-
 
 /* ============================================================
  *
@@ -947,41 +797,32 @@ EclipticCoord EclipticCoord::precess(
  * ============================================================*/
 
 Fk5Coord TopocentricCoord::toFk5(double const epoch) const {
-
-    geom::Angle const phi      = _obs.getLatitude();
-    geom::Angle const L        = _obs.getLongitude();
+    geom::Angle const phi = _obs.getLatitude();
+    geom::Angle const L = _obs.getLongitude();
 
     // Equations used here assume azimuth is with respect to South
     // but we use the North as our origin.
-    geom::Angle A              = (getAzimuth() + 180.0*geom::degrees).wrap();
-    geom::Angle const h        = getAltitude();
+    geom::Angle A = (getAzimuth() + 180.0 * geom::degrees).wrap();
+    geom::Angle const h = getAltitude();
 
+    double const jd = dafBase::DateTime(epoch, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI)
+                              .get(dafBase::DateTime::JD);
+    geom::Angle theta0 = meanSiderealTimeGreenwich(jd).wrap();
 
-    double const jd       = dafBase::DateTime(epoch,
-                                              dafBase::DateTime::EPOCH,
-                                              dafBase::DateTime::TAI).get(dafBase::DateTime::JD);
-    geom::Angle theta0   = meanSiderealTimeGreenwich(jd).wrap();
+    double const tanHnum = std::sin(A);
+    double const tanHdenom = std::cos(A) * std::sin(phi) + std::tan(h) * std::cos(phi);
+    geom::Angle H = std::atan2(tanHnum, tanHdenom) * geom::radians;
 
-    double const tanHnum     = std::sin(A);
-    double const tanHdenom   = std::cos(A)*std::sin(phi) + std::tan(h)*std::cos(phi);
-    geom::Angle H         = std::atan2(tanHnum, tanHdenom) * geom::radians;
-
-    geom::Angle const alpha    = theta0 + L - H;
-    double const sinDelta = std::sin(phi)*std::sin(h) - std::cos(phi)*std::cos(h)*std::cos(A);
-    geom::Angle const delta    = (std::asin(sinDelta)) * geom::radians;
+    geom::Angle const alpha = theta0 + L - H;
+    double const sinDelta = std::sin(phi) * std::sin(h) - std::cos(phi) * std::cos(h) * std::cos(A);
+    geom::Angle const delta = (std::asin(sinDelta)) * geom::radians;
 
     return Fk5Coord(alpha, delta, epoch);
 }
-Fk5Coord TopocentricCoord::toFk5() const {
-    return this->toFk5(getEpoch());
-}
+Fk5Coord TopocentricCoord::toFk5() const { return this->toFk5(getEpoch()); }
 
-
-TopocentricCoord TopocentricCoord::toTopocentric(
-    Observatory const &obs,
-    lsst::daf::base::DateTime const &date
-                                                                    ) const
-{
+TopocentricCoord TopocentricCoord::toTopocentric(Observatory const &obs,
+                                                 lsst::daf::base::DateTime const &date) const {
     if (obs != _obs) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Expected observatory %s, saw %s") % _obs % obs).str());
@@ -999,15 +840,10 @@ TopocentricCoord TopocentricCoord::toTopocentric() const {
 }
 
 std::string TopocentricCoord::toString() const {
-    return (boost::format("%s(%.7f, %.7f, %.12f, (%s))")
-            % getClassName()
-            % (*this)[0].asDegrees()
-            % (*this)[1].asDegrees()
-            % getEpoch()
-            % getObservatory()).str();
+    return (boost::format("%s(%.7f, %.7f, %.12f, (%s))") % getClassName() % (*this)[0].asDegrees() %
+            (*this)[1].asDegrees() % getEpoch() % getObservatory())
+            .str();
 }
-
-
 
 /* ===============================================================================
  *
@@ -1022,180 +858,134 @@ std::string TopocentricCoord::toString() const {
  * ===============================================================================
  */
 
-std::shared_ptr<Coord> makeCoord(
-        CoordSystem const system,
-        geom::Angle const ra,
-        geom::Angle const dec,
-        double const epoch
-) {
-
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Angle const ra, geom::Angle const dec,
+                                 double const epoch) {
     switch (system) {
-      case FK5:
-        return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
-        break;
-      case ICRS:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "ICRS has no epoch, use overloaded makeCoord with args (system, ra, dec).");
-        break;
-      case GALACTIC:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Galactic has no epoch, use overloaded makeCoord with (system, ra, dec).");
-        break;
-      case ECLIPTIC:
-        return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
-        break;
-      case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
-                          "Instantiate TopocentricCoord() directly.");
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-            "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
-        break;
-
+        case FK5:
+            return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
+            break;
+        case ICRS:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "ICRS has no epoch, use overloaded makeCoord with args (system, ra, dec).");
+            break;
+        case GALACTIC:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Galactic has no epoch, use overloaded makeCoord with (system, ra, dec).");
+            break;
+        case ECLIPTIC:
+            return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
+            break;
+        case TOPOCENTRIC:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
+                              "Instantiate TopocentricCoord() directly.");
+            break;
+        default:
+            throw LSST_EXCEPT(
+                    ex::InvalidParameterError,
+                    "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
+            break;
     }
-
 }
 
-
-
-std::shared_ptr<Coord> makeCoord(
-        CoordSystem const system,
-        geom::Angle const ra,
-        geom::Angle const dec
-) {
-
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Angle const ra, geom::Angle const dec) {
     switch (system) {
-      case FK5:
-        return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, 2000.0));
-        break;
-      case ICRS:
-        return std::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
-        break;
-      case GALACTIC:
-        return std::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
-        break;
-      case ECLIPTIC:
-        return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, 2000.0));
-        break;
-      case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
-                          "Instantiate TopocentricCoord() directly.");
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-            "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
-        break;
-
+        case FK5:
+            return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, 2000.0));
+            break;
+        case ICRS:
+            return std::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
+            break;
+        case GALACTIC:
+            return std::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
+            break;
+        case ECLIPTIC:
+            return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, 2000.0));
+            break;
+        case TOPOCENTRIC:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
+                              "Instantiate TopocentricCoord() directly.");
+            break;
+        default:
+            throw LSST_EXCEPT(
+                    ex::InvalidParameterError,
+                    "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
+            break;
     }
-
 }
 
-
-
-std::shared_ptr<Coord> makeCoord(
-        CoordSystem const system,
-        geom::Point3D const &p3d,
-        double const epoch,
-        bool normalize,
-        geom::Angle const defaultLongitude
-) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Point3D const &p3d, double const epoch,
+                                 bool normalize, geom::Angle const defaultLongitude) {
     Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude(), epoch);
 }
-std::shared_ptr<Coord> makeCoord(
-        CoordSystem const system,
-        geom::Point3D const &p3d,
-        bool normalize,
-        geom::Angle const defaultLongitude
-) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Point3D const &p3d, bool normalize,
+                                 geom::Angle const defaultLongitude) {
     Coord c(p3d, 2000.0, normalize, defaultLongitude);
     return makeCoord(system, c.getLongitude(), c.getLatitude());
 }
 
-std::shared_ptr<Coord> makeCoord(
-        CoordSystem const system,
-        geom::Point2D const &p2d,
-        geom::AngleUnit unit,
-        double const epoch
-) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Point2D const &p2d, geom::AngleUnit unit,
+                                 double const epoch) {
     if (unit == geom::hours) {
-        return makeCoord(system, geom::Angle(p2d.getX(), geom::hours), geom::Angle(p2d.getY(), geom::degrees), epoch);
+        return makeCoord(system, geom::Angle(p2d.getX(), geom::hours), geom::Angle(p2d.getY(), geom::degrees),
+                         epoch);
     } else {
         return makeCoord(system, geom::Angle(p2d.getX(), unit), geom::Angle(p2d.getY(), unit), epoch);
     }
 }
 
-std::shared_ptr<Coord> makeCoord(
-        CoordSystem const system,
-        geom::Point2D const &p2d,
-        geom::AngleUnit unit
-) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Point2D const &p2d, geom::AngleUnit unit) {
     if (unit == geom::hours) {
-        return makeCoord(system, geom::Angle(p2d.getX(), geom::hours), geom::Angle(p2d.getY(), geom::degrees));
+        return makeCoord(system, geom::Angle(p2d.getX(), geom::hours),
+                         geom::Angle(p2d.getY(), geom::degrees));
     } else {
         return makeCoord(system, geom::Angle(p2d.getX(), unit), geom::Angle(p2d.getY(), unit));
     }
 }
 
-std::shared_ptr<Coord> makeCoord(
-                                   CoordSystem const system,
-                                   std::string const ra,
-                                   std::string const dec,
-                                   double const epoch
-                                  ) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, std::string const ra, std::string const dec,
+                                 double const epoch) {
     return makeCoord(system, dmsStringToAngle(ra), dmsStringToAngle(dec), epoch);
 }
-std::shared_ptr<Coord> makeCoord(
-                                   CoordSystem const system,
-                                   std::string const ra,
-                                   std::string const dec
-                                  ) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system, std::string const ra, std::string const dec) {
     return makeCoord(system, dmsStringToAngle(ra), dmsStringToAngle(dec));
 }
 
-
-
-std::shared_ptr<Coord> makeCoord(
-                                   CoordSystem const system
-                                  ) {
+std::shared_ptr<Coord> makeCoord(CoordSystem const system) {
     switch (system) {
-      case FK5:
-        return std::shared_ptr<Fk5Coord>(new Fk5Coord());
-        break;
-      case ICRS:
-        return std::shared_ptr<IcrsCoord>(new IcrsCoord());
-        break;
-      case GALACTIC:
-        return std::shared_ptr<GalacticCoord>(new GalacticCoord());
-        break;
-      case ECLIPTIC:
-        return std::shared_ptr<EclipticCoord>(new EclipticCoord());
-        break;
-      case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
-                          "Instantiate TopocentricCoord() directly.");
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, allowed.");
-        break;
-
+        case FK5:
+            return std::shared_ptr<Fk5Coord>(new Fk5Coord());
+            break;
+        case ICRS:
+            return std::shared_ptr<IcrsCoord>(new IcrsCoord());
+            break;
+        case GALACTIC:
+            return std::shared_ptr<GalacticCoord>(new GalacticCoord());
+            break;
+        case ECLIPTIC:
+            return std::shared_ptr<EclipticCoord>(new EclipticCoord());
+            break;
+        case TOPOCENTRIC:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
+                              "Instantiate TopocentricCoord() directly.");
+            break;
+        default:
+            throw LSST_EXCEPT(ex::InvalidParameterError,
+                              "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, allowed.");
+            break;
     }
 }
 
 std::string Coord::toString() const {
-    return (boost::format("%s(%.7f, %.7f, %.2f)")
-            % getClassName()
-            % (*this)[0].asDegrees()
-            % (*this)[1].asDegrees()
-            % getEpoch()).str();
+    return (boost::format("%s(%.7f, %.7f, %.2f)") % getClassName() % (*this)[0].asDegrees() %
+            (*this)[1].asDegrees() % getEpoch())
+            .str();
 }
 
-std::ostream & operator<<(std::ostream & os, Coord const & coord) {
+std::ostream &operator<<(std::ostream &os, Coord const &coord) {
     os << coord.toString();
     return os;
 }
@@ -1203,16 +993,13 @@ std::ostream & operator<<(std::ostream & os, Coord const & coord) {
 namespace {
 
 // Heavy lifting for averageCoord
-std::shared_ptr<Coord> doAverageCoord(
-    std::vector<std::shared_ptr<Coord const>> const coords,
-    CoordSystem system
-    )
-{
-    assert(system != UNKNOWN); // Handled by caller
-    assert(coords.size() > 0); // Handled by caller
+std::shared_ptr<Coord> doAverageCoord(std::vector<std::shared_ptr<Coord const>> const coords,
+                                      CoordSystem system) {
+    assert(system != UNKNOWN);  // Handled by caller
+    assert(coords.size() > 0);  // Handled by caller
     geom::Point3D sum(0, 0, 0);
-    geom::Point3D corr(0, 0, 0); // Kahan summation correction
-    for (auto&& cc : coords) {
+    geom::Point3D corr(0, 0, 0);  // Kahan summation correction
+    for (auto &&cc : coords) {
         geom::Point3D const point = cc->getVector();
         // Kahan summation
         geom::Extent3D const add = point - corr;
@@ -1220,17 +1007,14 @@ std::shared_ptr<Coord> doAverageCoord(
         corr = (temp - geom::Extent3D(sum)) - add;
         sum = temp;
     }
-    sum.scale(1.0/coords.size());
+    sum.scale(1.0 / coords.size());
     return makeCoord(system, sum);
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-std::shared_ptr<Coord> averageCoord(
-    std::vector<std::shared_ptr<Coord const>> const coords,
-    CoordSystem system
-    )
-{
+std::shared_ptr<Coord> averageCoord(std::vector<std::shared_ptr<Coord const>> const coords,
+                                    CoordSystem system) {
     if (coords.size() == 0) {
         throw LSST_EXCEPT(ex::LengthError, "No coordinates provided to average");
     }
@@ -1238,11 +1022,12 @@ std::shared_ptr<Coord> averageCoord(
     if (system == UNKNOWN) {
         // Determine which system we're using, and check that every coordinate is in that system
         system = coords[0]->getCoordSystem();
-        for (auto&& cc : coords) {
+        for (auto &&cc : coords) {
             if (cc->getCoordSystem() != system) {
                 throw LSST_EXCEPT(ex::InvalidParameterError,
                                   (boost::format("Coordinates are not all in the same system: %d vs %d") %
-                                   cc->getCoordSystem() % system).str());
+                                   cc->getCoordSystem() %
+                                   system).str());
             }
         }
         return doAverageCoord(coords, system);
@@ -1251,9 +1036,11 @@ std::shared_ptr<Coord> averageCoord(
     // Convert everything to the nominated coordinate system if necessary
     std::vector<std::shared_ptr<Coord const>> converted;
     converted.reserve(coords.size());
-    for (auto&& cc : coords) {
+    for (auto &&cc : coords) {
         converted.push_back(cc->getCoordSystem() == system ? cc : cc->convert(system));
     }
     return doAverageCoord(converted, system);
 }
-}}} // end lsst::afw::coord
+}
+}
+}  // end lsst::afw::coord

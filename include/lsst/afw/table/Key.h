@@ -6,13 +6,15 @@
 #include "lsst/afw/table/Flag.h"
 #include "lsst/afw/table/KeyBase.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 namespace detail {
 
 class Access;
 
-} // namespace detail
+}  // namespace detail
 
 /**
  *  A class used as a handle to a particular field in a table.
@@ -48,7 +50,6 @@ class Access;
 template <typename T>
 class Key : public KeyBase<T>, public FieldBase<T> {
 public:
-
     //@{
     /**
      *  Equality comparison.
@@ -59,13 +60,19 @@ public:
      *  different name in one Schema than another, but is otherwise the same,
      *  the two keys will be equal).
      */
-    template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }
-    template <typename OtherT> bool operator!=(Key<OtherT> const & other) const { return true; }
+    template <typename OtherT>
+    bool operator==(Key<OtherT> const& other) const {
+        return false;
+    }
+    template <typename OtherT>
+    bool operator!=(Key<OtherT> const& other) const {
+        return true;
+    }
 
-    bool operator==(Key const & other) const {
+    bool operator==(Key const& other) const {
         return _offset == other._offset && this->getElementCount() == other.getElementCount();
     }
-    bool operator!=(Key const & other) const { return !this->operator==(other); }
+    bool operator!=(Key const& other) const { return !this->operator==(other); }
     //@}
 
     /// Return the offset (in bytes) of this field within a record.
@@ -89,22 +96,21 @@ public:
     Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
 
     /// Stringification.
-    inline friend std::ostream & operator<<(std::ostream & os, Key<T> const & key) {
+    inline friend std::ostream& operator<<(std::ostream& os, Key<T> const& key) {
         return os << "Key<" << Key<T>::getTypeString() << ">(offset=" << key.getOffset()
                   << ", nElements=" << key.getElementCount() << ")";
     }
 
 private:
-
     friend class detail::Access;
     friend class BaseRecord;
 
-    explicit Key(int offset, FieldBase<T> const & fb = FieldBase<T>())
-        : FieldBase<T>(fb), _offset(offset) {}
+    explicit Key(int offset, FieldBase<T> const& fb = FieldBase<T>()) : FieldBase<T>(fb), _offset(offset) {}
 
     int _offset;
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_Key_h_INCLUDED
+#endif  // !AFW_TABLE_Key_h_INCLUDED

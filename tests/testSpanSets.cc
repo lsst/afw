@@ -20,7 +20,6 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 #include <iostream>
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE SpanSet
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testBBoxSpanSet) {
     BOOST_CHECK(boxSS.getBBox().getMaxY() == 6);
 
     int beginY = 2;
-    for (auto const & spn : boxSS) {
+    for (auto const& spn : boxSS) {
         BOOST_CHECK(spn.getY() == beginY);
         BOOST_CHECK(spn.getMinX() == 2);
         BOOST_CHECK(spn.getMaxX() == 6);
@@ -73,21 +72,16 @@ BOOST_AUTO_TEST_CASE(SpanSet_testBBoxSpanSet) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(SpanSet_testVectorSpanSetConstructors)
-{
+BOOST_AUTO_TEST_CASE(SpanSet_testVectorSpanSetConstructors) {
     // Test SpanSet can be created from a vector of Spans, with an iterator, copying the vector
     // and moving the vector
     std::shared_ptr<afwGeom::SpanSet> SSFromVec;
-    std::vector<afwGeom::Span> SpanSetInput = {afwGeom::Span(0, 2, 4),
-                                               afwGeom::Span(1, 2, 4),
+    std::vector<afwGeom::Span> SpanSetInput = {afwGeom::Span(0, 2, 4), afwGeom::Span(1, 2, 4),
                                                afwGeom::Span(2, 2, 4)};
     for (int i = 0; i < 3; ++i) {
-        if (i == 0)
-            SSFromVec = std::make_shared<afwGeom::SpanSet>(SpanSetInput.begin(), SpanSetInput.end());
-        if (i == 1)
-            SSFromVec = std::make_shared<afwGeom::SpanSet>(SpanSetInput);
-        if (i == 2 )
-            SSFromVec = std::make_shared<afwGeom::SpanSet>(std::move(SpanSetInput));
+        if (i == 0) SSFromVec = std::make_shared<afwGeom::SpanSet>(SpanSetInput.begin(), SpanSetInput.end());
+        if (i == 1) SSFromVec = std::make_shared<afwGeom::SpanSet>(SpanSetInput);
+        if (i == 2) SSFromVec = std::make_shared<afwGeom::SpanSet>(std::move(SpanSetInput));
 
         BOOST_CHECK(SSFromVec->getArea() == 9);
         BOOST_CHECK(SSFromVec->getBBox().getMinX() == 2);
@@ -96,7 +90,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testVectorSpanSetConstructors)
         BOOST_CHECK(SSFromVec->getBBox().getMaxY() == 2);
 
         int beginY = 0;
-        for (auto const & spn : *SSFromVec) {
+        for (auto const& spn : *SSFromVec) {
             BOOST_CHECK(spn.getY() == beginY);
             BOOST_CHECK(spn.getMinX() == 2);
             BOOST_CHECK(spn.getMaxX() == 4);
@@ -123,8 +117,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testContiguous) {
     BOOST_CHECK(SSNotCont.isContiguous() == false);
 
     // Test has hole in one row
-    std::vector<afwGeom::Span> SpanSetWithHoleVec = {afwGeom::Span(0, 1, 3),
-                                                     afwGeom::Span(0, 5, 7),
+    std::vector<afwGeom::Span> SpanSetWithHoleVec = {afwGeom::Span(0, 1, 3), afwGeom::Span(0, 5, 7),
                                                      afwGeom::Span(1, 0, 6)};
     afwGeom::SpanSet SSWithHole(SpanSetWithHoleVec);
     BOOST_CHECK(SSWithHole.isContiguous() == true);
@@ -138,17 +131,16 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSplit) {
     std::vector<afwGeom::Span> SpanSetConVec = {afwGeom::Span(0, 2, 5), afwGeom::Span(1, 5, 8)};
     afwGeom::SpanSet SSCont(SpanSetConVec);
 
-    //This should return only 1 entry
+    // This should return only 1 entry
     auto result1 = SSCont.split();
     BOOST_CHECK(result1.size() == 1);
     int i = 0;
-    for (auto const & value : *(result1[0])) {
+    for (auto const& value : *(result1[0])) {
         BOOST_CHECK(value == SpanSetConVec[i]);
         ++i;
     }
-    std::vector<afwGeom::Span> SpanSetNotConVec = {afwGeom::Span(0, 2, 5),
-                                                   afwGeom::Span(1, 20, 25),
-                                                   afwGeom::Span(2, 19,23)};
+    std::vector<afwGeom::Span> SpanSetNotConVec = {afwGeom::Span(0, 2, 5), afwGeom::Span(1, 20, 25),
+                                                   afwGeom::Span(2, 19, 23)};
     afwGeom::SpanSet SSNotCont(SpanSetNotConVec.begin(), SpanSetNotConVec.end());
 
     // This should return two entries
@@ -156,16 +148,16 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSplit) {
     BOOST_CHECK(result2.size() == 2);
 
     // Check that the first one has the same entries as the first entry in the list
-    afwGeom::SpanSet const & tempSpanSet1 = *(result2[0]);
+    afwGeom::SpanSet const& tempSpanSet1 = *(result2[0]);
     auto vectorIterator = SpanSetNotConVec.begin();
-    for (auto const & value : tempSpanSet1) {
+    for (auto const& value : tempSpanSet1) {
         BOOST_CHECK(value == *vectorIterator);
         ++vectorIterator;
     }
 
     // Check that the second group contains the last two entries from the list
-    auto const & tempSpanSet2 = *(result2[1]);
-    for (auto const & value : tempSpanSet2) {
+    auto const& tempSpanSet2 = *(result2[1]);
+    for (auto const& value : tempSpanSet2) {
         BOOST_CHECK(value == *vectorIterator);
         ++vectorIterator;
     }
@@ -269,7 +261,6 @@ BOOST_AUTO_TEST_CASE(SpanSet_testComputeCentroid) {
     auto nullCenter = nullSpanSet.computeCentroid();
     BOOST_CHECK(std::isnan(nullCenter.getX()));
     BOOST_CHECK(std::isnan(nullCenter.getY()));
-
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testComputeShape) {
@@ -307,7 +298,6 @@ BOOST_AUTO_TEST_CASE(SpanSet_testdilated) {
     auto SpanSetNulldilated = SpanSetPredilated->dilated(nullSpanSet);
     BOOST_CHECK(SpanSetNulldilated->getBBox().getMinX() == -1);
     BOOST_CHECK(SpanSetNulldilated->getBBox().getMinY() == -1);
-
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testeroded) {
@@ -351,7 +341,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFlatten) {
     BOOST_CHECK(flatArr.size() == spnSt.getArea());
     // Verify that the output values are the same, and in the same order, as the input array
     auto inputValue = 1;
-    for (auto const &  val : flatArr) {
+    for (auto const& val : flatArr) {
         BOOST_CHECK(val == inputValue);
         ++inputValue;
     }
@@ -360,14 +350,13 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFlatten) {
     ndarray::Array<int, 1, 1> flatOutput = ndarray::allocate(ndarray::makeVector(4));
     flatOutput.deep() = 0;
 
-    std::vector<afwGeom::Span> spanVectorOriginAlign = {afwGeom::Span(1,1,2), afwGeom::Span(2,1,2)};
+    std::vector<afwGeom::Span> spanVectorOriginAlign = {afwGeom::Span(1, 1, 2), afwGeom::Span(2, 1, 2)};
     afwGeom::SpanSet spnStOriginAlign(spanVectorOriginAlign);
-
 
     spnStOriginAlign.flatten(flatOutput, input);
 
     auto nextInputValue = 1;
-    for (auto const & val : flatOutput) {
+    for (auto const& val : flatOutput) {
         BOOST_CHECK(val == nextInputValue);
         ++nextInputValue;
     }
@@ -385,7 +374,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnflatten) {
     input.deep() = dummyArrayValue;
 
     // Create a SpanSet which has six points int it
-    std::vector<afwGeom::Span> spanVector = {afwGeom::Span(9, 2, 3), afwGeom::Span(10, 3, 4), afwGeom::Span(11, 2, 3)};
+    std::vector<afwGeom::Span> spanVector = {afwGeom::Span(9, 2, 3), afwGeom::Span(10, 3, 4),
+                                             afwGeom::Span(11, 2, 3)};
     afwGeom::SpanSet spnSt(spanVector);
     auto output = spnSt.unflatten(input);
 
@@ -396,9 +386,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnflatten) {
 
     // Loop over each point in the array corresponding to the spanset, minus xy0 (the min of the SpanSet)
     // verify the array contains the value dummpArrayValue
-    for (auto const & spn : spnSt) {
-        for (auto const & pt : spn) {
-            BOOST_CHECK(output[pt.getY()-9][pt.getX()-2] == dummyArrayValue);
+    for (auto const& spn : spnSt) {
+        for (auto const& pt : spn) {
+            BOOST_CHECK(output[pt.getY() - 9][pt.getX() - 2] == dummyArrayValue);
         }
     }
     // Verify that points outside the vector have the value zero
@@ -429,7 +419,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnflatten) {
     BOOST_CHECK(nullUnflatArray.size() == 0);
 }
 
-std::pair<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, std::shared_ptr<afwGeom::SpanSet>> populateMask() {
+std::pair<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, std::shared_ptr<afwGeom::SpanSet>>
+populateMask() {
     // Create a mask and populate it with the value 2
     lsst::afw::image::Mask<lsst::afw::image::MaskPixel> msk(10, 10);
     msk.getArray().deep() = 1;
@@ -445,9 +436,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSetMask) {
     // Verify the mask was populated with the value 2
     auto mskArray = mask.getArray();
     auto mskShape = mskArray.getShape();
-    for (std::size_t i=0; i < mskShape[0]; ++i) {
-        for (std::size_t j=0; j<mskShape[1]; ++j){
-            if (spnSt->contains(afwGeom::Point2I(i,j))) {
+    for (std::size_t i = 0; i < mskShape[0]; ++i) {
+        for (std::size_t j = 0; j < mskShape[1]; ++j) {
+            if (spnSt->contains(afwGeom::Point2I(i, j))) {
                 BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(3));
             } else {
                 BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(1));
@@ -459,7 +450,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSetMask) {
     afwGeom::SpanSet nullSpanSet;
     lsst::afw::image::Mask<lsst::afw::image::MaskPixel> nullMask(10, 10);
     nullSpanSet.setMask(nullMask, static_cast<lsst::afw::image::MaskPixel>(2));
-    for (auto iter = nullMask.begin(); iter != nullMask.end(); ++iter){
+    for (auto iter = nullMask.begin(); iter != nullMask.end(); ++iter) {
         BOOST_CHECK(*iter == 0);
     }
 }
@@ -472,8 +463,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testClearMask) {
     // Verify the mask is now zero
     auto mskArray = mask.getArray();
     auto mskShape = mskArray.getShape();
-    for (size_t i=0; i < mskShape[0]; ++i) {
-        for (size_t j=0; j < mskShape[1]; ++j) {
+    for (size_t i = 0; i < mskShape[0]; ++i) {
+        for (size_t j = 0; j < mskShape[1]; ++j) {
             BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(1));
         }
     }
@@ -482,12 +473,12 @@ BOOST_AUTO_TEST_CASE(SpanSet_testClearMask) {
     afwGeom::SpanSet nullSpanSet;
     lsst::afw::image::Mask<lsst::afw::image::MaskPixel> nullMask(10, 10);
     int maskValue = 9;
-    for (auto iter = nullMask.begin(); iter != nullMask.end(); ++iter){
+    for (auto iter = nullMask.begin(); iter != nullMask.end(); ++iter) {
         *iter = static_cast<lsst::afw::image::MaskPixel>(maskValue);
     }
     nullSpanSet.clearMask(nullMask, static_cast<lsst::afw::image::MaskPixel>(maskValue));
 
-    for (auto iter = nullMask.begin(); iter != nullMask.end(); ++iter){
+    for (auto iter = nullMask.begin(); iter != nullMask.end(); ++iter) {
         BOOST_CHECK(*iter == static_cast<lsst::afw::image::MaskPixel>(maskValue));
     }
 }
@@ -496,21 +487,21 @@ std::pair<std::shared_ptr<afwGeom::SpanSet>, std::shared_ptr<afwGeom::SpanSet>> 
     using SS = afwGeom::SpanSet;
     auto firstSpanSet = SS::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 4);
     auto secondSpanSet = SS::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
-    return std::pair<std::shared_ptr<afwGeom::SpanSet>,
-                     std::shared_ptr<afwGeom::SpanSet>>(firstSpanSet, secondSpanSet);
+    return std::pair<std::shared_ptr<afwGeom::SpanSet>, std::shared_ptr<afwGeom::SpanSet>>(firstSpanSet,
+                                                                                           secondSpanSet);
 }
 
 std::pair<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, std::shared_ptr<afwGeom::SpanSet>>
- makeMaskAndSpanSetForOperationTests() {
+makeMaskAndSpanSetForOperationTests() {
     // Create three overlapping regions in a mask, and a SpanSet to use in set operation tests
     // This box will range from 0 to 4 in y and 0 to 4 in x
     auto firstMaskPart = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
     // This box will range from 6 to 10 in y and 0 to 4 in x
     auto secondMaskPart = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 8);
     // This box will range from 3 to 7 in y and 0 to 4 in x
-    auto spanSetMaskOperation = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2,5);
+    auto spanSetMaskOperation = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 5);
 
-    lsst::afw::image::Mask<lsst::afw::image::MaskPixel> mask(20,20);
+    lsst::afw::image::Mask<lsst::afw::image::MaskPixel> mask(20, 20);
     firstMaskPart->setMask(mask, static_cast<lsst::afw::image::MaskPixel>(3));
     secondMaskPart->setMask(mask, static_cast<lsst::afw::image::MaskPixel>(3));
     // This statement just sets the 4th bit to ensure that it is not included in the following tests
@@ -528,7 +519,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testIntersect) {
 
     // Verify the two boxes overlap in y range 2->4
     int yStart = 2;
-    for (auto const & spn : *overlap) {
+    for (auto const& spn : *overlap) {
         BOOST_CHECK(spn.getY() == yStart);
         BOOST_CHECK(spn.getMinX() == 0);
         BOOST_CHECK(spn.getMaxX() == 4);
@@ -540,11 +531,11 @@ BOOST_AUTO_TEST_CASE(SpanSet_testIntersect) {
     auto spanSetMaskOperation = maskAndSet.second;
 
     // intersect where the mask has the second bit set;
-    auto spanSetIntersectMask = spanSetMaskOperation->intersect(mask,
-                                                                static_cast<lsst::afw::image::MaskPixel>(2));
-    std::vector<int> expectedYRange{3,4,6,7};
+    auto spanSetIntersectMask =
+            spanSetMaskOperation->intersect(mask, static_cast<lsst::afw::image::MaskPixel>(2));
+    std::vector<int> expectedYRange{3, 4, 6, 7};
     auto yRangeIter = expectedYRange.begin();
-    for (auto const & val : *spanSetIntersectMask ){
+    for (auto const& val : *spanSetIntersectMask) {
         BOOST_CHECK(val.getY() == *yRangeIter);
         ++yRangeIter;
     }
@@ -567,7 +558,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testIntersectNot) {
 
     // Verify the result is in the y range 4->6
     int yStart = 5;
-    for (auto const & spn : *overlap) {
+    for (auto const& spn : *overlap) {
         BOOST_CHECK(spn.getY() == yStart);
         BOOST_CHECK(spn.getMinX() == 0);
         BOOST_CHECK(spn.getMaxX() == 4);
@@ -606,7 +597,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnion) {
 
     // Verify both SpanSets are combined together
     int yStart = 0;
-    for (auto const & spn : *overlap) {
+    for (auto const& spn : *overlap) {
         BOOST_CHECK(spn.getY() == yStart);
         BOOST_CHECK(spn.getMinX() == 0);
         BOOST_CHECK(spn.getMaxX() == 4);
@@ -623,7 +614,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnion) {
     auto spanSetUnion = spanSetMaskOperation->union_(mask, bitmask);
 
     int yCoord = 0;
-    for (auto const & val : *spanSetUnion) {
+    for (auto const& val : *spanSetUnion) {
         BOOST_CHECK(val.getY() == yCoord);
         ++yCoord;
     }
@@ -639,7 +630,6 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnion) {
 
     auto spanSetAsOther = nullSpanSet.union_(*firstSS);
     BOOST_CHECK(*spanSetAsOther == *firstSS);
-
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_MaskToSpanSet) {
@@ -649,7 +639,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_MaskToSpanSet) {
     auto spanSetFromMask = afwGeom::SpanSet::fromMask(mask);
 
     int yCoord = 0;
-    for (auto const & val : *spanSetFromMask) {
+    for (auto const& val : *spanSetFromMask) {
         BOOST_CHECK(val == afwGeom::Span(yCoord, 0, 4));
         ++yCoord;
     }
@@ -678,36 +668,34 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     int initialValue = 0;
     int dataValue = 6;
     afwImage::Image<int> imageObject(imageDim, imageDim, initialValue);
-    std::vector<int> vecObject(imageDim*imageDim, initialValue);
+    std::vector<int> vecObject(imageDim * imageDim, initialValue);
     afwImage::Image<int> const constImageObject(imageDim, imageDim, dataValue);
     afwImage::Mask<lsst::afw::image::MaskPixel> const constMaskObject(imageDim, imageDim, dataValue);
-    ndarray::Array<int, 2, 2> targetForConstImage = ndarray::allocate(ndarray::makeVector(imageDim,
-                                                                                          imageDim));
+    ndarray::Array<int, 2, 2> targetForConstImage =
+            ndarray::allocate(ndarray::makeVector(imageDim, imageDim));
     targetForConstImage.deep() = initialValue;
-    ndarray::Array<int, 2, 2> targetForConstMask = ndarray::allocate(ndarray::makeVector(imageDim,
-                                                                                         imageDim));
+    ndarray::Array<int, 2, 2> targetForConstMask = ndarray::allocate(ndarray::makeVector(imageDim, imageDim));
     targetForConstMask.deep() = initialValue;
 
     int spanRadius = 2;
-    auto SSShape = afwGeom::SpanSet::fromShape(spanRadius,
-                                                      afwGeom::Stencil::BOX)->shiftedBy(spanRadius,
-                                                                                       spanRadius);
+    auto SSShape =
+            afwGeom::SpanSet::fromShape(spanRadius, afwGeom::Stencil::BOX)->shiftedBy(spanRadius, spanRadius);
     // use a constant as a test of constantGetter
-    SSShape->applyFunctor([](afwGeom::Point2I pt, afwImage::Image<int>::Pixel & out, int in){ out = in; },
-                            imageObject, dataValue);
-    SSShape->applyFunctor([](afwGeom::Point2I pt, int & out, const afwImage::Image<int>::Pixel & in){ out = in; },
-                            ndarray::ndImage(targetForConstImage), constImageObject);
-    SSShape->applyFunctor([](afwGeom::Point2I pt, int & out, const lsst::afw::image::MaskPixel & in)
-                            { out = static_cast<int>(in); },
-                            ndarray::ndImage(targetForConstMask), constMaskObject);
-    SSShape->applyFunctor([](afwGeom::Point2I, int & out, int in){out = in;},
-                             vecObject.begin(), dataValue);
+    SSShape->applyFunctor([](afwGeom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
+                          imageObject, dataValue);
+    SSShape->applyFunctor(
+            [](afwGeom::Point2I pt, int& out, const afwImage::Image<int>::Pixel& in) { out = in; },
+            ndarray::ndImage(targetForConstImage), constImageObject);
+    SSShape->applyFunctor([](afwGeom::Point2I pt, int& out,
+                             const lsst::afw::image::MaskPixel& in) { out = static_cast<int>(in); },
+                          ndarray::ndImage(targetForConstMask), constMaskObject);
+    SSShape->applyFunctor([](afwGeom::Point2I, int& out, int in) { out = in; }, vecObject.begin(), dataValue);
 
     // Check the Image values
     auto bounds = SSShape->getBBox();
     for (int i = bounds.getMinY(); i <= bounds.getMaxY(); ++i) {
         for (int j = bounds.getMinX(); j <= bounds.getMaxX(); ++j) {
-            if (!SSShape->contains(afwGeom::Point2I(j,i))) {
+            if (!SSShape->contains(afwGeom::Point2I(j, i))) {
                 BOOST_CHECK(imageObject.getArray()[i][j] == initialValue);
                 BOOST_CHECK(targetForConstImage[i][j] == initialValue);
                 BOOST_CHECK(targetForConstMask[i][j] == initialValue);
@@ -720,8 +708,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     }
 
     // Check the vector values
-    for (int i = (2*spanRadius + 1)*(2*spanRadius + 1); i < imageDim*imageDim; ++i) {
-        if (i < (2*spanRadius + 1)*(2*spanRadius + 1)) {
+    for (int i = (2 * spanRadius + 1) * (2 * spanRadius + 1); i < imageDim * imageDim; ++i) {
+        if (i < (2 * spanRadius + 1) * (2 * spanRadius + 1)) {
             BOOST_CHECK(vecObject[i] == dataValue);
         } else {
             BOOST_CHECK(vecObject[i] == initialValue);
@@ -731,12 +719,12 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     // Check on the point input of a functor
     std::vector<afwGeom::Point2I> capturedPoints;
     capturedPoints.reserve(SSShape->getArea());
-    SSShape->applyFunctor([](afwGeom::Point2I point, afwGeom::Point2I & out){out = point;},
+    SSShape->applyFunctor([](afwGeom::Point2I point, afwGeom::Point2I& out) { out = point; },
                           capturedPoints.begin());
 
     auto capturedPointsIter = capturedPoints.begin();
-    for (auto const & spn : *SSShape) {
-        for (auto const & pnt : spn) {
+    for (auto const& spn : *SSShape) {
+        for (auto const& pnt : spn) {
             BOOST_CHECK(pnt == *capturedPointsIter);
             ++capturedPointsIter;
         }
@@ -744,24 +732,20 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
 
     // Test null SpanSets
     lsst::afw::image::Image<int> nullImageObject(imageDim, imageDim, initialValue);
-    std::vector<int> nullVecObject(imageDim*imageDim, initialValue);
+    std::vector<int> nullVecObject(imageDim * imageDim, initialValue);
     afwGeom::SpanSet nullSpanSet;
 
-    nullSpanSet.applyFunctor([]
-                             (afwGeom::Point2I pt, afwImage::Image<int>::Pixel & out, int in)
-                             {out = in;},
-                            imageObject, dataValue);
-    nullSpanSet.applyFunctor([]
-                             (afwGeom::Point2I, int & out, int in)
-                             {out = in;},
-                             vecObject.begin(), dataValue);
+    nullSpanSet.applyFunctor([](afwGeom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
+                             imageObject, dataValue);
+    nullSpanSet.applyFunctor([](afwGeom::Point2I, int& out, int in) { out = in; }, vecObject.begin(),
+                             dataValue);
 
     // nullSpanSet should not have changed any values
-    for (auto const & nullImageValue: nullImageObject) {
+    for (auto const& nullImageValue : nullImageObject) {
         BOOST_CHECK(nullImageValue == initialValue);
     }
 
-    for (auto const & nullVecValue : nullVecObject) {
+    for (auto const& nullVecValue : nullVecObject) {
         BOOST_CHECK(nullVecValue == initialValue);
     }
 }
@@ -783,14 +767,15 @@ BOOST_AUTO_TEST_CASE(SpanSet_testPersistence) {
     inFits.setHdu(INT_MIN);
     lsst::afw::table::io::InputArchive inArchive = tableIo::InputArchive::readFits(inFits);
     inFits.closeFile();
-    std::shared_ptr<afwGeom::SpanSet> spanSetPostArchive = std::dynamic_pointer_cast<afwGeom::SpanSet>(inArchive.get(id));
+    std::shared_ptr<afwGeom::SpanSet> spanSetPostArchive =
+            std::dynamic_pointer_cast<afwGeom::SpanSet>(inArchive.get(id));
 
     // Check that the two SpanSets are the same size
     BOOST_CHECK(spanSetPreArchive->size() == spanSetPostArchive->size());
 
     // Verify the values are the same for the two SpanSets
     auto preArchiveIterator = spanSetPreArchive->begin();
-    for (auto const & val : *spanSetPostArchive) {
+    for (auto const& val : *spanSetPostArchive) {
         BOOST_CHECK(val == *preArchiveIterator);
         ++preArchiveIterator;
     }

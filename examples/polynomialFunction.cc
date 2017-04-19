@@ -32,7 +32,7 @@ using namespace std;
 int main() {
     typedef double FuncReturn;
     const unsigned int order = 2;
-    vector<double> params(order+1);
+    vector<double> params(order + 1);
     lsst::afw::math::PolynomialFunction1<FuncReturn> polyFunc(order);
 
     for (unsigned int ii = 0; ii < params.size(); ++ii) {

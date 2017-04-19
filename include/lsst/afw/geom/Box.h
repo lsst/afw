@@ -30,7 +30,9 @@
 #include "lsst/afw/geom/Extent.h"
 #include "ndarray.h"
 
-namespace lsst { namespace afw { namespace geom {
+namespace lsst {
+namespace afw {
+namespace geom {
 
 class Box2D;
 
@@ -52,7 +54,6 @@ class Box2D;
  */
 class Box2I {
 public:
-
     typedef Point2I Point;
     typedef Extent2I Extent;
 
@@ -69,7 +70,7 @@ public:
      *  @param[in] invert    If true (default), swap the minimum and maximum coordinates if
      *                       minimum > maximum instead of creating an empty box.
      */
-    Box2I(Point2I const & minimum, Point2I const & maximum, bool invert=true);
+    Box2I(Point2I const& minimum, Point2I const& maximum, bool invert = true);
 
     /**
      *  Construct a box from its minimum point and dimensions.
@@ -79,8 +80,7 @@ public:
      *  @param[in] invert     If true (default), invert any negative dimensions instead of creating
      *                        an empty box.
      */
-    Box2I(Point2I const & minimum, Extent2I const & dimensions, bool invert=true);
-
+    Box2I(Point2I const& minimum, Extent2I const& dimensions, bool invert = true);
 
     /**
      *  Construct an integer box from a floating-point box.
@@ -97,18 +97,18 @@ public:
      *                            box will contain only pixels completely contained by
      *                            the floating-point box.
      */
-    explicit Box2I(Box2D const & other, EdgeHandlingEnum edgeHandling=EXPAND);
+    explicit Box2I(Box2D const& other, EdgeHandlingEnum edgeHandling = EXPAND);
 
     /// Standard copy constructor.
-    Box2I(Box2I const & other) : _minimum(other._minimum), _dimensions(other._dimensions) {}
+    Box2I(Box2I const& other) : _minimum(other._minimum), _dimensions(other._dimensions) {}
 
-    void swap(Box2I & other) {
+    void swap(Box2I& other) {
         _minimum.swap(other._minimum);
         _dimensions.swap(other._dimensions);
     }
 
     /// Standard assignment operator.
-    Box2I & operator=(Box2I const & other) {
+    Box2I& operator=(Box2I const& other) {
         _minimum = other._minimum;
         _dimensions = other._dimensions;
         return *this;
@@ -157,32 +157,27 @@ public:
     //@}
 
     /// Return slices to extract the box's region from an ndarray::Array.
-    ndarray::View<
-        boost::fusion::vector2< ndarray::index::Range, ndarray::index::Range >
-        >
-    getSlices() const;
+    ndarray::View<boost::fusion::vector2<ndarray::index::Range, ndarray::index::Range> > getSlices() const;
 
     /// Return true if the box contains no points.
-    bool isEmpty() const {
-        return _dimensions.getX() == 0 && _dimensions.getY() == 0;
-    }
+    bool isEmpty() const { return _dimensions.getX() == 0 && _dimensions.getY() == 0; }
 
     /// Return true if the box contains the point.
-    bool contains(Point2I const & point) const;
+    bool contains(Point2I const& point) const;
 
     /**
      *  Return true if all points contained by other are also contained by this.
      *
      *  An empty box is contained by every other box, including other empty boxes.
      */
-    bool contains(Box2I const & other) const;
+    bool contains(Box2I const& other) const;
 
     /**
      *  Return true if any points in other are also in this.
      *
      *  Any overlap operation involving an empty box returns false.
      */
-    bool overlaps(Box2I const & other) const;
+    bool overlaps(Box2I const& other) const;
 
     /**
      *  Increase the size of the box by the given buffer amount in all directions.
@@ -198,10 +193,10 @@ public:
      *  If a negative buffer is passed and the final size of the box is less than or
      *  equal to zero, the box will be made empty.
      */
-    void grow(Extent2I const & buffer);
+    void grow(Extent2I const& buffer);
 
     /// Shift the position of the box by the given offset.
-    void shift(Extent2I const & offset);
+    void shift(Extent2I const& offset);
 
     /// Flip a bounding box about the y-axis given a parent box of extent (xExtent).
     void flipLR(int xExtent);
@@ -210,27 +205,27 @@ public:
     void flipTB(int yExtent);
 
     /// Expand this to ensure that this->contains(point).
-    void include(Point2I const & point);
+    void include(Point2I const& point);
 
     /// Expand this to ensure that this->contains(other).
-    void include(Box2I const & other);
+    void include(Box2I const& other);
 
     /// Shrink this to ensure that other.contains(*this).
-    void clip(Box2I const & other);
+    void clip(Box2I const& other);
 
     /**
      *  Compare two boxes for equality.
      *
      *  All empty boxes are equal.
      */
-    bool operator==(Box2I const & other) const;
+    bool operator==(Box2I const& other) const;
 
     /**
      *  Compare two boxes for equality.
      *
      *  All empty boxes are equal.
      */
-    bool operator!=(Box2I const & other) const;
+    bool operator!=(Box2I const& other) const;
 
     /**
      * Get the corner points
@@ -270,7 +265,6 @@ private:
  */
 class Box2D {
 public:
-
     typedef Point2D Point;
     typedef Extent2D Extent;
 
@@ -296,7 +290,7 @@ public:
      *  @param[in] invert    If true (default), swap the minimum and maximum coordinates if
      *                       minimum > maximum instead of creating an empty box.
      */
-    Box2D(Point2D const & minimum, Point2D const & maximum, bool invert=true);
+    Box2D(Point2D const& minimum, Point2D const& maximum, bool invert = true);
 
     /**
      *  Construct a box from its minimum point and dimensions.
@@ -306,7 +300,7 @@ public:
      *  @param[in] invert     If true (default), invert any negative dimensions instead of creating
      *                        an empty box.
      */
-    Box2D(Point2D const & minimum, Extent2D const & dimensions, bool invert=true);
+    Box2D(Point2D const& minimum, Extent2D const& dimensions, bool invert = true);
 
     /**
      *  Construct a floating-point box from an integer box.
@@ -317,18 +311,18 @@ public:
      *  the same dimensions as the input integer box, its minimum/maximum coordinates
      *  are 0.5 smaller/greater.
      */
-    explicit Box2D(Box2I const & other);
+    explicit Box2D(Box2I const& other);
 
     /// Standard copy constructor.
-    Box2D(Box2D const & other) : _minimum(other._minimum), _maximum(other._maximum) {}
+    Box2D(Box2D const& other) : _minimum(other._minimum), _maximum(other._maximum) {}
 
-    void swap(Box2D & other) {
+    void swap(Box2D& other) {
         _minimum.swap(other._minimum);
         _maximum.swap(other._maximum);
     }
 
     /// Standard assignment operator.
-    Box2D & operator=(Box2D const & other) {
+    Box2D& operator=(Box2D const& other) {
         _minimum = other._minimum;
         _maximum = other._maximum;
         return *this;
@@ -370,30 +364,30 @@ public:
      *  Return the center coordinate of the box.
      */
     //@{
-    Point2D const getCenter() const { return Point2D((_minimum.asEigen() + _maximum.asEigen())*0.5); }
-    double getCenterX() const { return (_minimum.getX() + _maximum.getX())*0.5; }
-    double getCenterY() const { return (_minimum.getY() + _maximum.getY())*0.5; }
+    Point2D const getCenter() const { return Point2D((_minimum.asEigen() + _maximum.asEigen()) * 0.5); }
+    double getCenterX() const { return (_minimum.getX() + _maximum.getX()) * 0.5; }
+    double getCenterY() const { return (_minimum.getY() + _maximum.getY()) * 0.5; }
     //@}
 
     /// Return true if the box contains no points.
     bool isEmpty() const { return _minimum.getX() != _minimum.getX(); }
 
     /// Return true if the box contains the point.
-    bool contains(Point2D const & point) const;
+    bool contains(Point2D const& point) const;
 
     /**
      *  Return true if all points contained by other are also contained by this.
      *
      *  An empty box is contained by every other box, including other empty boxes.
      */
-    bool contains(Box2D const & other) const;
+    bool contains(Box2D const& other) const;
 
     /**
      *  Return true if any points in other are also in this.
      *
      *  Any overlap operation involving an empty box returns false.
      */
-    bool overlaps(Box2D const & other) const;
+    bool overlaps(Box2D const& other) const;
 
     /**
      *  Increase the size of the box by the given buffer amount in all directions.
@@ -409,10 +403,10 @@ public:
      *  If a negative buffer is passed and the final size of the box is less than or
      *  equal to zero, the box will be made empty.
      */
-    void grow(Extent2D const & buffer);
+    void grow(Extent2D const& buffer);
 
     /// Shift the position of the box by the given offset.
-    void shift(Extent2D const & offset);
+    void shift(Extent2D const& offset);
 
     /// Flip a bounding box about the y-axis given a parent box of extent (xExtent).
     void flipLR(float xExtent);
@@ -427,27 +421,27 @@ public:
      *  be adjusted to ensure the point is actually contained
      *  by the box instead of sitting on its exclusive upper edge.
      */
-    void include(Point2D const & point);
+    void include(Point2D const& point);
 
     /// Expand this to ensure that this->contains(other).
-    void include(Box2D const & other);
+    void include(Box2D const& other);
 
     /// Shrink this to ensure that other.contains(*this).
-    void clip(Box2D const & other);
+    void clip(Box2D const& other);
 
     /**
      *  Compare two boxes for equality.
      *
      *  All empty boxes are equal.
      */
-    bool operator==(Box2D const & other) const;
+    bool operator==(Box2D const& other) const;
 
     /**
      *  Compare two boxes for equality.
      *
      *  All empty boxes are equal.
      */
-    bool operator!=(Box2D const & other) const;
+    bool operator!=(Box2D const& other) const;
 
     /**
      * Get the corner points
@@ -478,10 +472,11 @@ private:
 typedef Box2D BoxD;
 typedef Box2I BoxI;
 
-std::ostream & operator<<(std::ostream & os, Box2I const & box);
+std::ostream& operator<<(std::ostream& os, Box2I const& box);
 
-std::ostream & operator<<(std::ostream & os, Box2D const & box);
-
-}}}
+std::ostream& operator<<(std::ostream& os, Box2D const& box);
+}
+}
+}
 
 #endif

@@ -52,7 +52,6 @@ typedef std::uint64_t FootprintIdPixel;
  */
 class FootprintSet : public lsst::daf::base::Citizen {
 public:
-
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<std::shared_ptr<Footprint>> FootprintList;
 
@@ -65,9 +64,8 @@ public:
      * @param setPeaks should I set the Peaks list?
      */
     template <typename ImagePixelT>
-    FootprintSet(image::Image<ImagePixelT> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::Image<ImagePixelT> const& img, Threshold const& threshold, int const npixMin = 1,
+                 bool const setPeaks = true);
 
     /**
      * Find a FootprintSet given a Mask and a threshold
@@ -77,9 +75,7 @@ public:
      * @param npixMin minimum number of pixels in an object
      */
     template <typename MaskPixelT>
-    FootprintSet(image::Mask<MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1);
+    FootprintSet(image::Mask<MaskPixelT> const& img, Threshold const& threshold, int const npixMin = 1);
 
     /**
      * Find a FootprintSet given a MaskedImage and a threshold
@@ -100,10 +96,8 @@ public:
      * @param setPeaks should I set the Peaks list?
      */
     template <typename ImagePixelT, typename MaskPixelT>
-    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img, Threshold const& threshold,
+                 std::string const& planeName = "", int const npixMin = 1, bool const setPeaks = true);
 
     /**
      * Construct an empty FootprintSet given a region that its footprints would have lived in
@@ -129,21 +123,19 @@ public:
      *
      * @note Isotropic grows are significantly slower
      */
-    FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
+    FootprintSet(FootprintSet const& set, int rGrow, bool isotropic = true);
     /**
      * Return the FootprintSet corresponding to the merge of two input FootprintSets
      *
      * @todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
      */
-    FootprintSet(FootprintSet const& footprints1,
-                 FootprintSet const& footprints2,
-                 bool const includePeaks);
+    FootprintSet(FootprintSet const& footprints1, FootprintSet const& footprints2, bool const includePeaks);
 
     /// Assignment operator.
     FootprintSet& operator=(FootprintSet const& rhs);
 
     void swap(FootprintSet& rhs) {
-        using std::swap;                    // See Meyers, Effective C++, Item 25
+        using std::swap;  // See Meyers, Effective C++, Item 25
         swap(*_footprints, *rhs.getFootprints());
         geom::Box2I rhsRegion = rhs.getRegion();
         rhs.setRegion(getRegion());
@@ -178,7 +170,7 @@ public:
      *  The new sources will have their footprints set to point to the footprints in the
      *  footprint set; they will not be deep-copied.
      */
-    void makeSources(afw::table::SourceCatalog & catalog) const;
+    void makeSources(afw::table::SourceCatalog& catalog) const;
 
     /**
      * Set the corners of the FootprintSet's MaskedImage to region
@@ -200,25 +192,21 @@ public:
      * @param relativeIDs Use IDs starting at 0 (rather than the ones in the Footprint%s)
      * @returns an std::shared_ptr<image::Image>
      */
-    std::shared_ptr<image::Image<FootprintIdPixel>> insertIntoImage(
-        const bool relativeIDs
-        ) const;
+    std::shared_ptr<image::Image<FootprintIdPixel>> insertIntoImage(const bool relativeIDs) const;
 
     template <typename MaskPixelT>
-    void setMask(
-        image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
-        std::string const& planeName   ///< Here's the name of the mask plane to fit
-    ) {
-        for (auto const & foot : *_footprints) {
+    void setMask(image::Mask<MaskPixelT>* mask,  ///< Set bits in the mask
+                 std::string const& planeName    ///< Here's the name of the mask plane to fit
+                 ) {
+        for (auto const& foot : *_footprints) {
             foot->getSpans()->setMask(*mask, image::Mask<MaskPixelT>::getPlaneBitMask(planeName));
         }
     }
 
     template <typename MaskPixelT>
-    void setMask(
-        std::shared_ptr<image::Mask<MaskPixelT>> mask, ///< Set bits in the mask
-        std::string const& planeName   ///< Here's the name of the mask plane to fit
-    ) {
+    void setMask(std::shared_ptr<image::Mask<MaskPixelT>> mask,  ///< Set bits in the mask
+                 std::string const& planeName                    ///< Here's the name of the mask plane to fit
+                 ) {
         setMask(mask.get(), planeName);
     }
 
@@ -230,7 +218,7 @@ public:
      * @param rGrow No. of pixels to grow rhs Footprints
      * @param isotropic Use (expensive) isotropic grow
      */
-    void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
+    void merge(FootprintSet const& rhs, int tGrow = 0, int rGrow = 0, bool isotropic = true);
 
     /**
      * Convert all the Footprints in the FootprintSet to be HeavyFootprint%s
@@ -240,13 +228,14 @@ public:
      */
     template <typename ImagePixelT, typename MaskPixelT>
     void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
-                   HeavyFootprintCtrl const* ctrl=NULL
-                  );
-private:
-    std::shared_ptr<FootprintList> _footprints;        ///< the Footprints of detected objects
-    geom::Box2I _region;                ///< The corners of the MaskedImage that the detections live in
-};
+                   HeavyFootprintCtrl const* ctrl = NULL);
 
-}}}
+private:
+    std::shared_ptr<FootprintList> _footprints;  ///< the Footprints of detected objects
+    geom::Box2I _region;  ///< The corners of the MaskedImage that the detections live in
+};
+}
+}
+}
 
 #endif

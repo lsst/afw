@@ -25,10 +25,10 @@
  *
  * This version knows about LSST data structures
  */
-#ifndef DOXYGEN // Doxygen doesn't like includes inside namespaces
-namespace posix {                       // here so no-one includes them first outside namespace posix {}
-#   include <unistd.h>
-#   include <fcntl.h>
+#ifndef DOXYGEN    // Doxygen doesn't like includes inside namespaces
+namespace posix {  // here so no-one includes them first outside namespace posix {}
+#include <unistd.h>
+#include <fcntl.h>
 }
 #endif  // !DOXYGEN
 using namespace posix;
@@ -53,18 +53,18 @@ using lsst::daf::base::PropertySet;
 /// @cond
 class Card {
 public:
-    Card(const std::string &name, bool val, const char *commnt = ""
-        ) : keyword(name), value(val), comment(commnt) { }
-    Card(const std::string &name, int val, const char *commnt = ""
-        ) : keyword(name), value(val), comment(commnt) { }
-    Card(const std::string &name, double val, const char *commnt = ""
-        ) : keyword(name), value(val), comment(commnt) { }
-    Card(const std::string &name, float val, const char *commnt = ""
-        ) : keyword(name), value(val), comment(commnt) { }
-    Card(const std::string &name, const std::string &val, const char *commnt = ""
-        ) : keyword(name), value(val), comment(commnt) { }
-    Card(const std::string &name, const char *val, const char *commnt = ""
-        ) : keyword(name), value(std::string(val)), comment(commnt) { }
+    Card(const std::string &name, bool val, const char *commnt = "")
+            : keyword(name), value(val), comment(commnt) {}
+    Card(const std::string &name, int val, const char *commnt = "")
+            : keyword(name), value(val), comment(commnt) {}
+    Card(const std::string &name, double val, const char *commnt = "")
+            : keyword(name), value(val), comment(commnt) {}
+    Card(const std::string &name, float val, const char *commnt = "")
+            : keyword(name), value(val), comment(commnt) {}
+    Card(const std::string &name, const std::string &val, const char *commnt = "")
+            : keyword(name), value(val), comment(commnt) {}
+    Card(const std::string &name, const char *val, const char *commnt = "")
+            : keyword(name), value(std::string(val)), comment(commnt) {}
 
     ~Card() {}
 
@@ -78,21 +78,15 @@ public:
 /*
  * Write a Card
  */
-int Card::write(int fd,
-                int ncard,
-                char *record
-               ) const {
-    char *card = &record[80*ncard];
+int Card::write(int fd, int ncard, char *record) const {
+    char *card = &record[80 * ncard];
 
     if (value.type() == typeid(std::string)) {
         const char *str = boost::any_cast<std::string>(value).c_str();
-        if (keyword == "" ||
-           keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
+        if (keyword == "" || keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
             sprintf(card, "%-8.8s%-72s", keyword.c_str(), str);
         } else {
-            sprintf(card,"%-8.8s= '%s' %c%-*s",
-                    keyword.c_str(), str,
-                    (comment == "" ? ' ' : '/'),
+            sprintf(card, "%-8.8s= '%s' %c%-*s", keyword.c_str(), str, (comment == "" ? ' ' : '/'),
                     (int)(80 - 14 - strlen(str)), comment.c_str());
         }
     } else {
@@ -110,14 +104,14 @@ int Card::write(int fd,
         card += 20;
         sprintf(card, " %c%-48s", (comment == "" ? ' ' : '/'), comment.c_str());
     }
-/*
- * Write record if full
- */
+    /*
+     * Write record if full
+     */
     if (++ncard == 36) {
         if (posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Cannot write header record");
-            }
-            ncard = 0;
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Cannot write header record");
+        }
+        ncard = 0;
     }
 
     return ncard;
@@ -130,236 +124,229 @@ int Card::write(int fd,
  * Flip high-order bit so as to write unsigned short to FITS.  Grrr.
  */
 namespace {
-    void flip_high_bit(char *arr,              // array that needs bits swapped
-                       const int n) {          // number of bytes in arr
-        if (n%2 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                              (boost::format("Attempt to bit flip odd number of bytes: %d") % n).str());
-        }
-
-        unsigned short* uarr = reinterpret_cast<unsigned short *>(arr);
-        for(unsigned short *end = uarr + n/2; uarr < end; ++uarr) {
-            *uarr ^= 0x8000;
-        }
+void flip_high_bit(char *arr,      // array that needs bits swapped
+                   const int n) {  // number of bytes in arr
+    if (n % 2 != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          (boost::format("Attempt to bit flip odd number of bytes: %d") % n).str());
     }
+
+    unsigned short *uarr = reinterpret_cast<unsigned short *>(arr);
+    for (unsigned short *end = uarr + n / 2; uarr < end; ++uarr) {
+        *uarr ^= 0x8000;
+    }
+}
 }
 
 /*
  * Byte swap ABABAB -> BABABAB in place
  */
 namespace {
-    void swap_2(char *arr,              // array to swap
-                const int n) {          // number of bytes
-        if (n%2 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                              (boost::format("Attempt to byte swap odd number of bytes: %d") % n).str());
-        }
-
-        for(char *end = arr + n;arr < end;arr += 2) {
-            char t = arr[0];
-            arr[0] = arr[1];
-            arr[1] = t;
-        }
-    }
-    /*
-     * Byte swap ABCDABCD -> DCBADCBA in place (e.g. sun <--> vax)
-     */
-    void swap_4(char *arr,              // array to swap
-                const int n) {          // number of bytes
-        if (n%4 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                              (boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n).str());
-        }
-
-        for(char *end = arr + n;arr < end;arr += 4) {
-            char t = arr[0];
-            arr[0] = arr[3];
-            arr[3] = t;
-            t = arr[1];
-            arr[1] = arr[2];
-            arr[2] = t;
-        }
+void swap_2(char *arr,      // array to swap
+            const int n) {  // number of bytes
+    if (n % 2 != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          (boost::format("Attempt to byte swap odd number of bytes: %d") % n).str());
     }
 
-    /*
-     * Byte swap ABCDEFGH -> HGFEDCBA in place (e.g. sun <--> vax)
-     */
-    void swap_8(char *arr,              // array to swap
-                const int n) {          // number of bytes
-        if (n%8 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                              (boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n).str());
-        }
-
-        for(char *end = arr + n;arr < end;arr += 8) {
-            char t = arr[0];
-            arr[0] = arr[7];
-            arr[7] = t;
-            t = arr[1];
-            arr[1] = arr[6];
-            arr[6] = t;
-            t = arr[2];
-            arr[2] = arr[5];
-            arr[5] = t;
-            t = arr[3];
-            arr[3] = arr[4];
-            arr[4] = t;
-        }
+    for (char *end = arr + n; arr < end; arr += 2) {
+        char t = arr[0];
+        arr[0] = arr[1];
+        arr[1] = t;
     }
-
-
-    int write_fits_hdr(int fd,
-                       int bitpix,
-                       int naxis,
-                       int *naxes,
-                       std::list<Card>& cards,  /* extra header cards */
-                       int primary)             /* is this the primary HDU? */
-    {
-        int i;
-        char record[FITS_SIZE + 1];             /* write buffer */
-
-        int ncard = 0;
-        if (primary) {
-            Card card("SIMPLE", true);
-            ncard = card.write(fd, ncard, record);
-        } else {
-            Card card("XTENSION", "IMAGE");
-            ncard = card.write(fd, ncard, record);
-        }
-
-        {
-            Card card("BITPIX", bitpix);
-            ncard = card.write(fd, ncard, record);
-        }
-        {
-            Card card("NAXIS", naxis);
-            ncard = card.write(fd, ncard, record);
-        }
-        for(i = 0; i < naxis; i++) {
-            char key[] = "NAXIS.";
-            sprintf(key, "NAXIS%d", i + 1);
-            Card card(key, naxes[i]);
-            ncard = card.write(fd, ncard, record);
-        }
-        if (primary) {
-            Card card("EXTEND", true, "There may be extensions");
-            ncard = card.write(fd,ncard,record);
-        }
+}
 /*
- * Write extra header cards
+ * Byte swap ABCDABCD -> DCBADCBA in place (e.g. sun <--> vax)
  */
-        for (std::list<Card>::const_iterator card = cards.begin(); card != cards.end(); card++) {
-            ncard = card->write(fd,ncard,record);
-        }
-
-        {
-            Card card("END", "");
-            ncard = card.write(fd,ncard,record);
-        }
-        while(ncard != 0) {
-            Card card("", "");
-            ncard = card.write(fd,ncard,record);
-        }
-
-        return 0;
+void swap_4(char *arr,      // array to swap
+            const int n) {  // number of bytes
+    if (n % 4 != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          (boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n).str());
     }
+
+    for (char *end = arr + n; arr < end; arr += 4) {
+        char t = arr[0];
+        arr[0] = arr[3];
+        arr[3] = t;
+        t = arr[1];
+        arr[1] = arr[2];
+        arr[2] = t;
+    }
+}
+
+/*
+ * Byte swap ABCDEFGH -> HGFEDCBA in place (e.g. sun <--> vax)
+ */
+void swap_8(char *arr,      // array to swap
+            const int n) {  // number of bytes
+    if (n % 8 != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          (boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n).str());
+    }
+
+    for (char *end = arr + n; arr < end; arr += 8) {
+        char t = arr[0];
+        arr[0] = arr[7];
+        arr[7] = t;
+        t = arr[1];
+        arr[1] = arr[6];
+        arr[6] = t;
+        t = arr[2];
+        arr[2] = arr[5];
+        arr[5] = t;
+        t = arr[3];
+        arr[3] = arr[4];
+        arr[4] = t;
+    }
+}
+
+int write_fits_hdr(int fd, int bitpix, int naxis, int *naxes, std::list<Card> &cards, /* extra header cards */
+                   int primary) /* is this the primary HDU? */
+{
+    int i;
+    char record[FITS_SIZE + 1]; /* write buffer */
+
+    int ncard = 0;
+    if (primary) {
+        Card card("SIMPLE", true);
+        ncard = card.write(fd, ncard, record);
+    } else {
+        Card card("XTENSION", "IMAGE");
+        ncard = card.write(fd, ncard, record);
+    }
+
+    {
+        Card card("BITPIX", bitpix);
+        ncard = card.write(fd, ncard, record);
+    }
+    {
+        Card card("NAXIS", naxis);
+        ncard = card.write(fd, ncard, record);
+    }
+    for (i = 0; i < naxis; i++) {
+        char key[] = "NAXIS.";
+        sprintf(key, "NAXIS%d", i + 1);
+        Card card(key, naxes[i]);
+        ncard = card.write(fd, ncard, record);
+    }
+    if (primary) {
+        Card card("EXTEND", true, "There may be extensions");
+        ncard = card.write(fd, ncard, record);
+    }
+    /*
+     * Write extra header cards
+     */
+    for (std::list<Card>::const_iterator card = cards.begin(); card != cards.end(); card++) {
+        ncard = card->write(fd, ncard, record);
+    }
+
+    {
+        Card card("END", "");
+        ncard = card.write(fd, ncard, record);
+    }
+    while (ncard != 0) {
+        Card card("", "");
+        ncard = card.write(fd, ncard, record);
+    }
+
+    return 0;
+}
 
 /*
  * Pad out to a FITS record boundary
  */
-    void pad_to_fits_record(int fd,             // output file descriptor
-                            int npixel, // number of pixels already written to HDU
-                            int bitpix  // bitpix for this datatype
-                           ) {
-        const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
-        int nbyte = npixel*bytes_per_pixel;
+void pad_to_fits_record(int fd,      // output file descriptor
+                        int npixel,  // number of pixels already written to HDU
+                        int bitpix   // bitpix for this datatype
+                        ) {
+    const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix) / 8;
+    int nbyte = npixel * bytes_per_pixel;
 
-        if (nbyte%FITS_SIZE != 0) {
-            char record[FITS_SIZE + 1]; /* write buffer */
+    if (nbyte % FITS_SIZE != 0) {
+        char record[FITS_SIZE + 1]; /* write buffer */
 
-            nbyte = FITS_SIZE - nbyte%FITS_SIZE;
-            memset(record, ' ', nbyte);
-            if (write(fd, record, nbyte) != nbyte) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                                  "error padding file to multiple of fits block size");
-            }
+        nbyte = FITS_SIZE - nbyte % FITS_SIZE;
+        memset(record, ' ', nbyte);
+        if (write(fd, record, nbyte) != nbyte) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                              "error padding file to multiple of fits block size");
         }
-    }
-
-    int write_fits_data(int fd,
-                        int bitpix,
-                        char *begin,
-                        char *end
-                       ) {
-        const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
-        int swap_bytes = 0;             // the default
-#if defined(LSST_LITTLE_ENDIAN)         // we'll need to byte swap FITS
-        if (bytes_per_pixel > 1) {
-            swap_bytes = 1;
-        }
-#endif
-
-        char *buff = NULL;              // I/O buffer
-        bool allocated = false;         // do I need to free it?
-        if (swap_bytes || bitpix == 16) {
-            buff = new char[FITS_SIZE*bytes_per_pixel];
-            allocated = true;
-        }
-
-        int nbyte = end - begin;
-        int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
-        for (char *ptr = begin; ptr != end; nbyte -= nwrite, ptr += nwrite) {
-            if (end - ptr < nwrite) {
-                nwrite = end - ptr;
-            }
-
-            if (swap_bytes) {
-                memcpy(buff, ptr, nwrite);
-                if (bitpix == 16) {     // flip high-order bit
-                    flip_high_bit(buff, nwrite);
-                }
-
-                if (bytes_per_pixel == 2) {
-                    swap_2(buff, nwrite);
-                } else if (bytes_per_pixel == 4) {
-                    swap_4(buff, nwrite);
-                } else if (bytes_per_pixel == 8) {
-                    swap_8(buff, nwrite);
-                } else {
-                    fprintf(stderr,"You cannot get here\n");
-                    abort();
-                }
-            } else {
-                if (bitpix == 16) {     // flip high-order bit
-                    memcpy(buff, ptr, nwrite);
-                    flip_high_bit(buff, nwrite);
-                } else {
-                    buff = ptr;
-                }
-            }
-
-            if (write(fd, buff, nwrite) != nwrite) {
-                perror("Error writing image: ");
-                break;
-            }
-        }
-
-        if (allocated) {
-            delete buff;
-        }
-
-        return (nbyte == 0 ? 0 : -1);
     }
 }
 
-namespace lsst { namespace afw { namespace display {
+int write_fits_data(int fd, int bitpix, char *begin, char *end) {
+    const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix) / 8;
+    int swap_bytes = 0;          // the default
+#if defined(LSST_LITTLE_ENDIAN)  // we'll need to byte swap FITS
+    if (bytes_per_pixel > 1) {
+        swap_bytes = 1;
+    }
+#endif
 
-template<typename ImageT>
-void writeBasicFits(int fd,                                      // file descriptor to write to
-                    ImageT const& data,                          // The data to write
-                    image::Wcs const* Wcs,                       // which Wcs to use for pixel
-                    char const *title                            // title to write to DS9
-                   ) {
+    char *buff = NULL;       // I/O buffer
+    bool allocated = false;  // do I need to free it?
+    if (swap_bytes || bitpix == 16) {
+        buff = new char[FITS_SIZE * bytes_per_pixel];
+        allocated = true;
+    }
+
+    int nbyte = end - begin;
+    int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
+    for (char *ptr = begin; ptr != end; nbyte -= nwrite, ptr += nwrite) {
+        if (end - ptr < nwrite) {
+            nwrite = end - ptr;
+        }
+
+        if (swap_bytes) {
+            memcpy(buff, ptr, nwrite);
+            if (bitpix == 16) {  // flip high-order bit
+                flip_high_bit(buff, nwrite);
+            }
+
+            if (bytes_per_pixel == 2) {
+                swap_2(buff, nwrite);
+            } else if (bytes_per_pixel == 4) {
+                swap_4(buff, nwrite);
+            } else if (bytes_per_pixel == 8) {
+                swap_8(buff, nwrite);
+            } else {
+                fprintf(stderr, "You cannot get here\n");
+                abort();
+            }
+        } else {
+            if (bitpix == 16) {  // flip high-order bit
+                memcpy(buff, ptr, nwrite);
+                flip_high_bit(buff, nwrite);
+            } else {
+                buff = ptr;
+            }
+        }
+
+        if (write(fd, buff, nwrite) != nwrite) {
+            perror("Error writing image: ");
+            break;
+        }
+    }
+
+    if (allocated) {
+        delete buff;
+    }
+
+    return (nbyte == 0 ? 0 : -1);
+}
+}
+
+namespace lsst {
+namespace afw {
+namespace display {
+
+template <typename ImageT>
+void writeBasicFits(int fd,                 // file descriptor to write to
+                    ImageT const &data,     // The data to write
+                    image::Wcs const *Wcs,  // which Wcs to use for pixel
+                    char const *title       // title to write to DS9
+                    ) {
     /*
      * Allocate cards for FITS headers
      */
@@ -368,9 +355,9 @@ void writeBasicFits(int fd,                                      // file descrip
      * What sort if image is it?
      */
     int bitpix = lsst::afw::fits::getBitPix<typename ImageT::Pixel>();
-    if (bitpix == 20) {                 // cfitsio for "Unsigned short"
-        cards.push_back(Card("BZERO",  32768.0, ""));
-        cards.push_back(Card("BSCALE", 1.0,     ""));
+    if (bitpix == 20) {  // cfitsio for "Unsigned short"
+        cards.push_back(Card("BZERO", 32768.0, ""));
+        cards.push_back(Card("BSCALE", 1.0, ""));
         bitpix = 16;
     } else if (bitpix == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unsupported image type");
@@ -379,12 +366,12 @@ void writeBasicFits(int fd,                                      // file descrip
      * Generate WcsA, pixel coordinates, allowing for X0 and Y0
      */
     std::string wcsName = "A";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
-                         data.getX0(), "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
-                         data.getY0(), "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0,
-                         "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), data.getX0(),
+                         "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), data.getY0(),
+                         "(output) Row pixel of Reference Pixel"));
+    cards.push_back(
+            Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
@@ -394,12 +381,12 @@ void writeBasicFits(int fd,                                      // file descrip
      * Now WcsB, so that pixel (0,0) is correctly labelled (but ignoring XY0)
      */
     wcsName = "B";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0,
-                         "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), 0,
-                         "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0,
-                         "Column Pixel Coordinate of Reference"));
+    cards.push_back(
+            Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
+    cards.push_back(
+            Card(str(boost::format("CRVAL2%s") % wcsName), 0, "(output) Row pixel of Reference Pixel"));
+    cards.push_back(
+            Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
@@ -415,7 +402,7 @@ void writeBasicFits(int fd,                                      // file descrip
     if (Wcs != NULL) {
         typedef std::vector<std::string> NameList;
 
-        std::shared_ptr<image::Wcs> newWcs = Wcs->clone(); //Create a copy
+        std::shared_ptr<image::Wcs> newWcs = Wcs->clone();  // Create a copy
         newWcs->shiftReferencePixel(-data.getX0(), -data.getY0());
 
         std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata();
@@ -423,15 +410,8 @@ void writeBasicFits(int fd,                                      // file descrip
         NameList paramNames = metadata->paramNames();
 
         for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
-            if (*i == "SIMPLE" ||
-                *i == "BITPIX" ||
-                *i == "NAXIS" ||
-                *i == "NAXIS1" ||
-                *i == "NAXIS2" ||
-                *i == "XTENSION" ||
-                *i == "PCOUNT" ||
-                *i == "GCOUNT"
-               ) {
+            if (*i == "SIMPLE" || *i == "BITPIX" || *i == "NAXIS" || *i == "NAXIS1" || *i == "NAXIS2" ||
+                *i == "XTENSION" || *i == "PCOUNT" || *i == "GCOUNT") {
                 continue;
             }
             std::type_info const &type = metadata->typeOf(*i);
@@ -451,31 +431,30 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * Basic FITS stuff
      */
-    const int naxis = 2;                // == NAXIS
-    int naxes[naxis];                   /* values of NAXIS1 etc */
+    const int naxis = 2;  // == NAXIS
+    int naxes[naxis];     /* values of NAXIS1 etc */
     naxes[0] = data.getWidth();
     naxes[1] = data.getHeight();
 
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (int y = 0; y != data.getHeight(); ++y) {
-        if (write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
+        if (write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               (boost::format("Error writing data for row %d") % y).str());
         }
     }
 
-    pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
+    pad_to_fits_record(fd, data.getWidth() * data.getHeight(), bitpix);
 }
 
-
-template<typename ImageT>
-void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
-                    ImageT const& data,                          // The data to write
-                    image::Wcs const* Wcs,                       // which Wcs to use for pixel
-                    char const* title                            // title to write to DS9
-                   ) {
+template <typename ImageT>
+void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
+                    ImageT const &data,           // The data to write
+                    image::Wcs const *Wcs,        // which Wcs to use for pixel
+                    char const *title             // title to write to DS9
+                    ) {
     int fd;
-    if ((filename.c_str())[0] == '|') {         // a command
+    if ((filename.c_str())[0] == '|') {  // a command
         const char *cmd = filename.c_str() + 1;
         while (isspace(*cmd)) {
             cmd++;
@@ -493,7 +472,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
 
     try {
         writeBasicFits(fd, data, Wcs, title);
-    } catch(lsst::pex::exceptions::Exception &) {
+    } catch (lsst::pex::exceptions::Exception &) {
         (void)close(fd);
         throw;
     }
@@ -502,12 +481,12 @@ void writeBasicFits(std::string const& filename,                 // file to writ
 }
 
 /// @cond
-#define INSTANTIATE(IMAGET)                                            \
-    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *, char const *); \
-    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *, char const *)
+#define INSTANTIATE(IMAGET)                                                              \
+    template void writeBasicFits(int, IMAGET const &, image::Wcs const *, char const *); \
+    template void writeBasicFits(std::string const &, IMAGET const &, image::Wcs const *, char const *)
 
 #define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
-#define INSTANTIATE_MASK(T)  INSTANTIATE(lsst::afw::image::Mask<T>)
+#define INSTANTIATE_MASK(T) INSTANTIATE(lsst::afw::image::Mask<T>)
 
 INSTANTIATE_IMAGE(std::uint16_t);
 INSTANTIATE_IMAGE(int);
@@ -517,5 +496,6 @@ INSTANTIATE_IMAGE(std::uint64_t);
 
 INSTANTIATE_MASK(std::uint16_t);
 /// @endcond
-
-}}}
+}
+}
+}

@@ -40,40 +40,30 @@ class PropertyListFormatter : public daf::persistence::Formatter {
 public:
     virtual ~PropertyListFormatter() {}
 
-    virtual void write(
-        daf::base::Persistable const* persistable,
-        std::shared_ptr<daf::persistence::Storage> storage,
-        std::shared_ptr<daf::base::PropertySet> additionalData
-    );
+    virtual void write(daf::base::Persistable const* persistable,
+                       std::shared_ptr<daf::persistence::Storage> storage,
+                       std::shared_ptr<daf::base::PropertySet> additionalData);
 
-    virtual daf::base::Persistable* read(
-        std::shared_ptr<daf::persistence::Storage> storage,
-        std::shared_ptr<daf::base::PropertySet> additionalData
-    );
+    virtual daf::base::Persistable* read(std::shared_ptr<daf::persistence::Storage> storage,
+                                         std::shared_ptr<daf::base::PropertySet> additionalData);
 
-    virtual void update(
-        daf::base::Persistable* persistable,
-        std::shared_ptr<daf::persistence::Storage> storage,
-        std::shared_ptr<daf::base::PropertySet> additionalData
-    );
+    virtual void update(daf::base::Persistable* persistable,
+                        std::shared_ptr<daf::persistence::Storage> storage,
+                        std::shared_ptr<daf::base::PropertySet> additionalData);
 
     static std::shared_ptr<daf::persistence::Formatter> createInstance(
-        std::shared_ptr<pex::policy::Policy> policy
-    );
+            std::shared_ptr<pex::policy::Policy> policy);
 
     template <class Archive>
-    static void delegateSerialize(
-        Archive& ar,
-        int const version,
-        daf::base::Persistable* persistable
-    );
+    static void delegateSerialize(Archive& ar, int const version, daf::base::Persistable* persistable);
 
 private:
     explicit PropertyListFormatter(std::shared_ptr<pex::policy::Policy> policy);
 
     static daf::persistence::FormatterRegistration registration;
 };
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters
 
 #endif

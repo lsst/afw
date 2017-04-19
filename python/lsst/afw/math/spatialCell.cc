@@ -45,10 +45,10 @@ void wrapSpatialCellCandidate(py::module &mod) {
     py::class_<SpatialCellCandidate, std::shared_ptr<SpatialCellCandidate>> cls(mod, "SpatialCellCandidate");
 
     py::enum_<SpatialCellCandidate::Status>(cls, "Status")
-        .value("BAD", SpatialCellCandidate::Status::BAD)
-        .value("GOOD", SpatialCellCandidate::Status::GOOD)
-        .value("UNKNOWN", SpatialCellCandidate::Status::UNKNOWN)
-        .export_values();
+            .value("BAD", SpatialCellCandidate::Status::BAD)
+            .value("GOOD", SpatialCellCandidate::Status::GOOD)
+            .value("UNKNOWN", SpatialCellCandidate::Status::UNKNOWN)
+            .export_values();
 
     cls.def("getXCenter", &SpatialCellCandidate::getXCenter);
     cls.def("getYCenter", &SpatialCellCandidate::getYCenter);
@@ -84,10 +84,10 @@ void wrapSpatialCell(py::module &mod) {
     cls.def("size", &SpatialCell::size);
     cls.def("__len__", &SpatialCell::size);
     cls.def("getLabel", &SpatialCell::getLabel);
-    cls.def("begin", (SpatialCellCandidateIterator(SpatialCell::*)()) & SpatialCell::begin);
-    cls.def("begin", (SpatialCellCandidateIterator(SpatialCell::*)(bool)) & SpatialCell::begin);
-    cls.def("end", (SpatialCellCandidateIterator(SpatialCell::*)()) & SpatialCell::end);
-    cls.def("end", (SpatialCellCandidateIterator(SpatialCell::*)(bool)) & SpatialCell::end);
+    cls.def("begin", (SpatialCellCandidateIterator (SpatialCell::*)()) & SpatialCell::begin);
+    cls.def("begin", (SpatialCellCandidateIterator (SpatialCell::*)(bool)) & SpatialCell::begin);
+    cls.def("end", (SpatialCellCandidateIterator (SpatialCell::*)()) & SpatialCell::end);
+    cls.def("end", (SpatialCellCandidateIterator (SpatialCell::*)(bool)) & SpatialCell::end);
     cls.def("insertCandidate", &SpatialCell::insertCandidate);
     cls.def("removeCandidate", &SpatialCell::removeCandidate);
     cls.def("setIgnoreBad", &SpatialCell::setIgnoreBad, "ignoreBad"_a);
@@ -98,10 +98,10 @@ void wrapSpatialCell(py::module &mod) {
     cls.def("sortCandidates", &SpatialCell::sortCandidates);
     cls.def("visitCandidates",
             (void (SpatialCell::*)(CandidateVisitor *, int const, bool const, bool const)) &
-                SpatialCell::visitCandidates,
+                    SpatialCell::visitCandidates,
             "visitor"_a, "nMaxPerCell"_a = -1, "ignoreExceptions"_a = false, "reset"_a = true);
     cls.def("visitAllCandidates", (void (SpatialCell::*)(CandidateVisitor *, bool const, bool const)) &
-                                      SpatialCell::visitAllCandidates,
+                                          SpatialCell::visitAllCandidates,
             "visitor"_a, "ignoreExceptions"_a = false, "reset"_a = true);
 }
 
@@ -116,7 +116,7 @@ void wrapSpatialCellSet(py::module &mod) {
     cls.def("insertCandidate", &SpatialCellSet::insertCandidate);
     cls.def("sortCandidates", &SpatialCellSet::sortCandidates);
     cls.def("visitCandidates", (void (SpatialCellSet::*)(CandidateVisitor *, int const, bool const)) &
-                                   SpatialCellSet::visitCandidates,
+                                       SpatialCellSet::visitCandidates,
             "visitor"_a, "nMaxPerCell"_a = -1, "ignoreExceptions"_a = false);
     cls.def("visitAllCandidates",
             (void (SpatialCellSet::*)(CandidateVisitor *, bool const)) & SpatialCellSet::visitAllCandidates,
@@ -138,7 +138,7 @@ void wrapCandidateVisitor(py::module &mod) {
 // Wrap class SpatialCellImageCandidate (an abstract class, so no constructor is wrapped)
 void wrapSpatialCellImageCandidate(py::module &mod) {
     py::class_<SpatialCellImageCandidate, std::shared_ptr<SpatialCellImageCandidate>, SpatialCellCandidate>
-        cls(mod, "SpatialCellImageCandidate");
+            cls(mod, "SpatialCellImageCandidate");
 
     cls.def_static("setWidth", &SpatialCellImageCandidate::setWidth, "width"_a);
     cls.def_static("getWidth", &SpatialCellImageCandidate::getWidth);
@@ -157,24 +157,24 @@ void wrapTestClasses(py::module &mod) {
      * Test class for SpatialCellCandidate
      */
     class TestCandidate : public SpatialCellCandidate {
-       public:
+    public:
         TestCandidate(float const xCenter,  ///< @internal The object's column-centre
                       float const yCenter,  ///< @internal The object's row-centre
                       float const flux      ///< @internal The object's flux
                       )
-            : SpatialCellCandidate(xCenter, yCenter), _flux(flux) {}
+                : SpatialCellCandidate(xCenter, yCenter), _flux(flux) {}
 
         /// @internal Return candidates rating
         virtual double getCandidateRating() const { return _flux; }
         virtual void setCandidateRating(double flux) { _flux = flux; }
 
-       private:
+    private:
         double _flux;
     };
 
     /// @internal A class to pass around to all our TestCandidates
     class TestCandidateVisitor : public CandidateVisitor {
-       public:
+    public:
         TestCandidateVisitor() : CandidateVisitor(), _n(0) {}
 
         // Called by SpatialCellSet::visitCandidates before visiting any Candidates
@@ -185,19 +185,19 @@ void wrapTestClasses(py::module &mod) {
 
         int getN() const { return _n; }
 
-       private:
+    private:
         int _n;  // number of TestCandidates
     };
 
     class TestImageCandidate : public SpatialCellImageCandidate {
-       public:
+    public:
         typedef image::MaskedImage<float> MaskedImageT;
 
         TestImageCandidate(float const xCenter,  ///< @internal The object's column-centre
                            float const yCenter,  ///< @internal The object's row-centre
                            float const flux      ///< @internal The object's flux
                            )
-            : SpatialCellImageCandidate(xCenter, yCenter), _flux(flux) {}
+                : SpatialCellImageCandidate(xCenter, yCenter), _flux(flux) {}
 
         /// @internal Return candidates rating
         double getCandidateRating() const { return _flux; }
@@ -211,24 +211,24 @@ void wrapTestClasses(py::module &mod) {
             return _image;
         }
 
-       private:
+    private:
         mutable std::shared_ptr<MaskedImageT> _image;
         double _flux;
     };
 
     py::class_<TestCandidate, std::shared_ptr<TestCandidate>, SpatialCellCandidate> clsTestCandidate(
-        mod, ("TestCandidate"));
+            mod, ("TestCandidate"));
     clsTestCandidate.def(py::init<float const, float const, float const>());
     clsTestCandidate.def("getCandidateRating", &TestCandidate::getCandidateRating);
     clsTestCandidate.def("setCandidateRating", &TestCandidate::setCandidateRating);
 
     py::class_<TestCandidateVisitor, std::shared_ptr<TestCandidateVisitor>, CandidateVisitor>
-        clsTestCandidateVisitor(mod, ("TestCandidateVisitor"));
+            clsTestCandidateVisitor(mod, ("TestCandidateVisitor"));
     clsTestCandidateVisitor.def(py::init<>());
     clsTestCandidateVisitor.def("getN", &TestCandidateVisitor::getN);
 
     py::class_<TestImageCandidate, std::shared_ptr<TestImageCandidate>, SpatialCellImageCandidate>
-        clsTestImageCandidate(mod, "TestImageCandidate");
+            clsTestImageCandidate(mod, "TestImageCandidate");
     clsTestImageCandidate.def(py::init<float const, float const, float const>(), "xCenter"_a, "yCenter"_a,
                               "flux"_a);
     clsTestImageCandidate.def("getCandidateRating", &TestImageCandidate::getCandidateRating);

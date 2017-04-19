@@ -43,8 +43,8 @@ public:
      * @param parent the parent image
      * @param bbox The object's bounding box
      */
-    ExampleCandidate(float const xCenter, float const yCenter,
-                     std::shared_ptr<MaskedImageT const> parent, lsst::afw::geom::Box2I bbox);
+    ExampleCandidate(float const xCenter, float const yCenter, std::shared_ptr<MaskedImageT const> parent,
+                     lsst::afw::geom::Box2I bbox);
 
     lsst::afw::geom::Box2I getBBox() const { return _bbox; }
 
@@ -80,9 +80,10 @@ public:
 
     int getN() const { return _n; }
     int getNPix() const { return _npix; }
+
 private:
-    int _n;                         // number of ExampleCandidates
-    int _npix;                      // number of pixels in ExampleCandidates's bounding boxes
+    int _n;     // number of ExampleCandidates
+    int _npix;  // number of pixels in ExampleCandidates's bounding boxes
 };
 
 #endif

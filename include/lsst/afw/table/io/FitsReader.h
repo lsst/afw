@@ -11,7 +11,10 @@
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 /**
  *  A utility class for reading FITS binary tables.
@@ -30,7 +33,6 @@ namespace lsst { namespace afw { namespace table { namespace io {
  */
 class FitsReader {
 public:
-
     /**
      *  Construct a FitsReader, registering it to be used for all persisted tables with the given tag.
      *
@@ -38,7 +40,7 @@ public:
      *  should be constructed only once, in a static-scope variable.  The FitsReader constructor
      *  will add a pointer to that variable to the registry.
      */
-    explicit FitsReader(std::string const & persistedClassName);
+    explicit FitsReader(std::string const& persistedClassName);
 
     /**
      *  Create a new Catalog by reading a FITS binary table.
@@ -61,31 +63,28 @@ public:
      *                       persistence).
      */
     template <typename ContainerT>
-    static ContainerT apply(afw::fits::Fits & fits, int ioFlags, std::shared_ptr<InputArchive> archive=std::shared_ptr<InputArchive>()) {
+    static ContainerT apply(afw::fits::Fits& fits, int ioFlags,
+                            std::shared_ptr<InputArchive> archive = std::shared_ptr<InputArchive>()) {
         std::shared_ptr<daf::base::PropertyList> metadata = std::make_shared<daf::base::PropertyList>();
         fits.readMetadata(*metadata, true);
-        FitsReader const * reader = _lookupFitsReader(*metadata);
+        FitsReader const* reader = _lookupFitsReader(*metadata);
         FitsSchemaInputMapper mapper(*metadata, true);
         reader->_setupArchive(fits, mapper, archive, ioFlags);
         std::shared_ptr<BaseTable> table = reader->makeTable(mapper, metadata, ioFlags, true);
         ContainerT container(std::dynamic_pointer_cast<typename ContainerT::Table>(table));
         if (!container.getTable()) {
-            throw LSST_EXCEPT(
-                pex::exceptions::RuntimeError,
-                "Invalid table class for catalog."
-            );
+            throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Invalid table class for catalog.");
         }
         std::size_t nRows = fits.countRows();
         container.reserve(nRows);
         for (std::size_t row = 0; row < nRows; ++row) {
             mapper.readRecord(
-                // We need to be able to support reading Catalog<T const>, since it shares the same template
-                // as Catalog<T> (which invokes this method in readFits).
-                const_cast<typename std::remove_const<typename ContainerT::Record>::type&>(
-                    *container.addNew()
-                ),
-                fits, row
-            );
+                    // We need to be able to support reading Catalog<T const>, since it shares the same
+                    // template
+                    // as Catalog<T> (which invokes this method in readFits).
+                    const_cast<typename std::remove_const<typename ContainerT::Record>::type&>(
+                            *container.addNew()),
+                    fits, row);
         }
         return container;
     }
@@ -97,7 +96,8 @@ public:
      *  a string filename or a afw::fits::MemFileManager, then calls the other apply() overload.
      */
     template <typename ContainerT, typename SourceT>
-    static ContainerT apply(SourceT & source, int hdu, int ioFlags, std::shared_ptr<InputArchive> archive=std::shared_ptr<InputArchive>()) {
+    static ContainerT apply(SourceT& source, int hdu, int ioFlags,
+                            std::shared_ptr<InputArchive> archive = std::shared_ptr<InputArchive>()) {
         afw::fits::Fits fits(source, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
         fits.setHdu(hdu);
         return apply<ContainerT>(fits, ioFlags, archive);
@@ -122,12 +122,9 @@ public:
      *  @param[in]  stripMetadata   If True, remove entries from the metadata that were added by the
      *                              persistence code.
      */
-    virtual std::shared_ptr<BaseTable> makeTable(
-        FitsSchemaInputMapper & mapper,
-        std::shared_ptr<daf::base::PropertyList> metadata,
-        int ioFlags,
-        bool stripMetadata
-    ) const;
+    virtual std::shared_ptr<BaseTable> makeTable(FitsSchemaInputMapper& mapper,
+                                                 std::shared_ptr<daf::base::PropertyList> metadata,
+                                                 int ioFlags, bool stripMetadata) const;
 
     /**
      *  Callback that should return true if the FitsReader subclass makes use of an InputArchive to read
@@ -138,18 +135,14 @@ public:
     virtual ~FitsReader() {}
 
 private:
+    static FitsReader const* _lookupFitsReader(daf::base::PropertyList const& metadata);
 
-    static FitsReader const * _lookupFitsReader(daf::base::PropertyList const & metadata);
-
-    void _setupArchive(
-        afw::fits::Fits & fits,
-        FitsSchemaInputMapper & mapper,
-        std::shared_ptr<InputArchive> archive,
-        int ioFlags
-    ) const;
-
+    void _setupArchive(afw::fits::Fits& fits, FitsSchemaInputMapper& mapper,
+                       std::shared_ptr<InputArchive> archive, int ioFlags) const;
 };
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_FitsReader_h_INCLUDED
+#endif  // !AFW_TABLE_IO_FitsReader_h_INCLUDED

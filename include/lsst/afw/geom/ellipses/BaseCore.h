@@ -38,7 +38,10 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/LinearTransform.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 class Parametric;
 
@@ -54,22 +57,23 @@ public:
     class Transformer;
     class GridTransform;
     class Convolution;
-    template <typename Output> struct Converter;
+    template <typename Output>
+    struct Converter;
 
     typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
-    typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
+    typedef Eigen::Matrix3d Jacobian;         ///< Parameter Jacobian matrix type.
 
-    static std::shared_ptr<BaseCore> make(std::string const & name);
+    static std::shared_ptr<BaseCore> make(std::string const& name);
 
-    static std::shared_ptr<BaseCore> make(std::string const & name, ParameterVector const & parameters);
+    static std::shared_ptr<BaseCore> make(std::string const& name, ParameterVector const& parameters);
 
-    static std::shared_ptr<BaseCore> make(std::string const & name, double v1, double v2, double v3);
+    static std::shared_ptr<BaseCore> make(std::string const& name, double v1, double v2, double v3);
 
-    static std::shared_ptr<BaseCore> make(std::string const & name, BaseCore const & other);
+    static std::shared_ptr<BaseCore> make(std::string const& name, BaseCore const& other);
 
-    static std::shared_ptr<BaseCore> make(std::string const & name, Transformer const & other);
+    static std::shared_ptr<BaseCore> make(std::string const& name, Transformer const& other);
 
-    static std::shared_ptr<BaseCore> make(std::string const & name, Convolution const & other);
+    static std::shared_ptr<BaseCore> make(std::string const& name, Convolution const& other);
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
@@ -115,8 +119,8 @@ public:
      *  expression object, or returned as a new shared_ptr by calling copy().
      */
     //@{
-    Transformer transform(LinearTransform const & transform);
-    Transformer const transform(LinearTransform const & transform) const;
+    Transformer transform(LinearTransform const& transform);
+    Transformer const transform(LinearTransform const& transform) const;
     //@}
 
     /**
@@ -131,58 +135,59 @@ public:
      *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
      */
     //@{
-    Convolution convolve(BaseCore const & other);
-    Convolution const convolve(BaseCore const & other) const;
+    Convolution convolve(BaseCore const& other);
+    Convolution const convolve(BaseCore const& other) const;
     //@}
 
     /// Return the size of the bounding box for the ellipse core.
     Extent2D computeDimensions() const;
 
-    virtual void readParameters(double const * iter) = 0;
+    virtual void readParameters(double const* iter) = 0;
 
-    virtual void writeParameters(double * iter) const = 0;
+    virtual void writeParameters(double* iter) const = 0;
 
     /// Return the core parameters as a vector.
     ParameterVector const getParameterVector() const;
 
     /// Set the core parameters from a vector.
-    void setParameterVector(ParameterVector const & vector);
+    void setParameterVector(ParameterVector const& vector);
 
     /**
      *  Compare two ellipse cores for equality.
      *
      *  Ellipse cores are only equal if they have the same type.
      */
-    bool operator==(BaseCore const & other) const;
+    bool operator==(BaseCore const& other) const;
 
     /**
      *  Compare two ellipse cores for inequality.
      *
      *  Ellipses are only equal if they have the same type.
      */
-    bool operator!=(BaseCore const & other) const { return !operator==(other); }
+    bool operator!=(BaseCore const& other) const { return !operator==(other); }
 
     /**
      *  Set the parameters of this ellipse core from another.
      *
      *  This does not change the parametrization of the ellipse core.
      */
-    BaseCore & operator=(BaseCore const & other);
+    BaseCore& operator=(BaseCore const& other);
 
     /// Assign other to this and return the derivative of the conversion, d(this)/d(other).
-    Jacobian dAssign(BaseCore const & other);
+    Jacobian dAssign(BaseCore const& other);
 
     /**
      *  Convert this to the core type specified as a template parameter.
      */
-    template <typename Output> Converter<Output> as() const;
+    template <typename Output>
+    Converter<Output> as() const;
 
     virtual ~BaseCore() {}
 
 protected:
     friend class Parametric;
 
-    static void registerSubclass(std::shared_ptr<BaseCore> const & example);
+    static void registerSubclass(std::shared_ptr<BaseCore> const& example);
 
     template <typename T>
     struct Registrar {
@@ -191,45 +196,36 @@ protected:
 
     virtual std::shared_ptr<BaseCore> _clone() const = 0;
 
-    static void _assignQuadrupoleToAxes(
-        double ixx, double iyy, double ixy,
-        double & a, double & b, double & theta
-    );
+    static void _assignQuadrupoleToAxes(double ixx, double iyy, double ixy, double& a, double& b,
+                                        double& theta);
 
-    static Jacobian _dAssignQuadrupoleToAxes(
-        double ixx, double iyy, double ixy,
-        double & a, double & b, double & theta
-    );
+    static Jacobian _dAssignQuadrupoleToAxes(double ixx, double iyy, double ixy, double& a, double& b,
+                                             double& theta);
 
-    static void _assignAxesToQuadrupole(
-        double a, double b, double theta,
-        double & ixx, double & iyy, double & ixy
-    );
+    static void _assignAxesToQuadrupole(double a, double b, double theta, double& ixx, double& iyy,
+                                        double& ixy);
 
-    static Jacobian _dAssignAxesToQuadrupole(
-        double a, double b, double theta,
-        double & ixx, double & iyy, double & ixy
-    );
+    static Jacobian _dAssignAxesToQuadrupole(double a, double b, double theta, double& ixx, double& iyy,
+                                             double& ixy);
 
-    virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const = 0;
+    virtual void _assignToQuadrupole(double& ixx, double& iyy, double& ixy) const = 0;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy) = 0;
 
-    virtual void _assignToAxes(double & a, double & b, double & theta) const = 0;
+    virtual void _assignToAxes(double& a, double& b, double& theta) const = 0;
     virtual void _assignFromAxes(double a, double b, double theta) = 0;
 
-    virtual Jacobian _dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const = 0;
+    virtual Jacobian _dAssignToQuadrupole(double& ixx, double& iyy, double& ixy) const = 0;
     virtual Jacobian _dAssignFromQuadrupole(double ixx, double iyy, double ixy) = 0;
 
-    virtual Jacobian _dAssignToAxes(double & a, double & b, double & theta) const = 0;
+    virtual Jacobian _dAssignToAxes(double& a, double& b, double& theta) const = 0;
     virtual Jacobian _dAssignFromAxes(double a, double b, double theta) = 0;
-
 };
 
 template <typename Output>
 struct BaseCore::Converter {
-    BaseCore const & input;
+    BaseCore const& input;
 
-    explicit Converter(BaseCore const & input_) : input(input_) {}
+    explicit Converter(BaseCore const& input_) : input(input_) {}
 
     operator Output() const { return Output(input); }
     std::shared_ptr<Output> copy() const { return std::shared_ptr<Output>(new Output(input)); }
@@ -239,7 +235,9 @@ template <typename Output>
 inline BaseCore::Converter<Output> BaseCore::as() const {
     return Converter<Output>(*this);
 }
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED

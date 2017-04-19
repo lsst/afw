@@ -28,24 +28,24 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace geom { namespace {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace {
 
 using PyXYTransform = py::class_<XYTransform, std::shared_ptr<XYTransform>>;
 
 using PyIdentityXYTransform =
-    py::class_<IdentityXYTransform, std::shared_ptr<IdentityXYTransform>, XYTransform>;
+        py::class_<IdentityXYTransform, std::shared_ptr<IdentityXYTransform>, XYTransform>;
 
 using PyInvertedXYTransform =
-    py::class_<InvertedXYTransform, std::shared_ptr<InvertedXYTransform>, XYTransform>;
+        py::class_<InvertedXYTransform, std::shared_ptr<InvertedXYTransform>, XYTransform>;
 
-using PyMultiXYTransform =
-    py::class_<MultiXYTransform, std::shared_ptr<MultiXYTransform>, XYTransform>;
+using PyMultiXYTransform = py::class_<MultiXYTransform, std::shared_ptr<MultiXYTransform>, XYTransform>;
 
-using PyAffineXYTransfrom =
-    py::class_<AffineXYTransform, std::shared_ptr<AffineXYTransform>, XYTransform>;
+using PyAffineXYTransfrom = py::class_<AffineXYTransform, std::shared_ptr<AffineXYTransform>, XYTransform>;
 
-using PyRadialXYTransform =
-    py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>, XYTransform>;
+using PyRadialXYTransform = py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>, XYTransform>;
 
 PYBIND11_PLUGIN(xyTransform) {
     py::module mod("xyTransform");
@@ -107,22 +107,24 @@ PYBIND11_PLUGIN(xyTransform) {
     clsRadialXYTransform.def("getCoeffs", &RadialXYTransform::getCoeffs);
     clsRadialXYTransform.def_static("polyInvert", &RadialXYTransform::polyInvert);
     clsRadialXYTransform.def_static(
-        "polyEval", (double (*)(std::vector<double> const &, double)) & RadialXYTransform::polyEval);
-    clsRadialXYTransform.def_static(
-        "polyEval", (Point2D(*)(std::vector<double> const &, Point2D const &)) & RadialXYTransform::polyEval);
+            "polyEval", (double (*)(std::vector<double> const &, double)) & RadialXYTransform::polyEval);
+    clsRadialXYTransform.def_static("polyEval", (Point2D(*)(std::vector<double> const &, Point2D const &)) &
+                                                        RadialXYTransform::polyEval);
     clsRadialXYTransform.def_static("polyEvalDeriv", &RadialXYTransform::polyEvalDeriv);
     clsRadialXYTransform.def_static("polyEvalJacobian", &RadialXYTransform::polyEvalJacobian);
+    clsRadialXYTransform.def_static("polyEvalInverse", (double (*)(std::vector<double> const &,
+                                                                   std::vector<double> const &, double)) &
+                                                               RadialXYTransform::polyEvalInverse);
     clsRadialXYTransform.def_static(
-        "polyEvalInverse", (double (*)(std::vector<double> const &, std::vector<double> const &, double)) &
-                               RadialXYTransform::polyEvalInverse);
-    clsRadialXYTransform.def_static(
-        "polyEvalInverse",
-        (Point2D(*)(std::vector<double> const &, std::vector<double> const &, Point2D const &)) &
-            RadialXYTransform::polyEvalInverse);
+            "polyEvalInverse",
+            (Point2D(*)(std::vector<double> const &, std::vector<double> const &, Point2D const &)) &
+                    RadialXYTransform::polyEvalInverse);
     clsRadialXYTransform.def_static("polyEvalInverseJacobian", &RadialXYTransform::polyEvalInverseJacobian);
     clsRadialXYTransform.def_static("makeAffineTransform", &RadialXYTransform::makeAffineTransform);
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::geom::<anonymous>

@@ -25,15 +25,16 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 namespace {
 
 class CoaddInputsFactory : public table::io::PersistableFactory {
 public:
-
-    virtual std::shared_ptr<table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2);
         std::shared_ptr<CoaddInputs> result = std::make_shared<CoaddInputs>();
         result->visits = table::ExposureCatalog::readFromArchive(archive, catalogs.front());
@@ -41,23 +42,20 @@ public:
         return result;
     }
 
-    CoaddInputsFactory(std::string const & name) : table::io::PersistableFactory(name) {}
-
+    CoaddInputsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 CoaddInputsFactory registration("CoaddInputs");
 
-} // anonymous
+}  // anonymous
 
 CoaddInputs::CoaddInputs() : visits(), ccds() {}
 
-CoaddInputs::CoaddInputs(table::Schema const & visitSchema, table::Schema const & ccdSchema) :
-    visits(visitSchema), ccds(ccdSchema)
-{}
+CoaddInputs::CoaddInputs(table::Schema const& visitSchema, table::Schema const& ccdSchema)
+        : visits(visitSchema), ccds(ccdSchema) {}
 
-CoaddInputs::CoaddInputs(table::ExposureCatalog const & visits_, table::ExposureCatalog const & ccds_) :
-    visits(visits_), ccds(ccds_)
-{}
+CoaddInputs::CoaddInputs(table::ExposureCatalog const& visits_, table::ExposureCatalog const& ccds_)
+        : visits(visits_), ccds(ccds_) {}
 
 bool CoaddInputs::isPersistable() const { return true; }
 
@@ -65,9 +63,10 @@ std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }
 
 std::string CoaddInputs::getPythonModule() const { return "lsst.afw.image"; }
 
-void CoaddInputs::write(OutputArchiveHandle & handle) const {
-    visits.writeToArchive(handle, true); // true == permissive - just ignore Psfs, Wcss that can't be saved
+void CoaddInputs::write(OutputArchiveHandle& handle) const {
+    visits.writeToArchive(handle, true);  // true == permissive - just ignore Psfs, Wcss that can't be saved
     ccds.writeToArchive(handle, true);
 }
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image

@@ -29,15 +29,17 @@
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/BaseColumnView.h"
 
-namespace ndarray { namespace detail {
+namespace ndarray {
+namespace detail {
 
 // Tell ndarray to wrap ndarray::Array<Angle,T,N> the same way it would wrap
 // ndarray::Array<double,T,N>.  That throws away unit information (just returns
 // radians, since that's how Angle is implemented), but in some places (e.g.
 // Catalog.asAstropy) we add it back in via astropy Quantities.
-template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
-
-}} // namespace ndarray::detail
+template <>
+struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
+}
+}  // namespace ndarray::detail
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -52,30 +54,26 @@ using PyBaseColumnView = py::class_<BaseColumnView, std::shared_ptr<BaseColumnVi
 using PyBitsColumn = py::class_<BitsColumn, std::shared_ptr<BitsColumn>>;
 
 template <typename T, typename PyClass>
-static void declareBaseColumnViewOverloads(PyClass & cls) {
-    cls.def("_basicget", [](BaseColumnView & self, Key<T> const & key)
-                          ->typename ndarray::Array<T,1> const {
-        return self[key];
-    });
+static void declareBaseColumnViewOverloads(PyClass &cls) {
+    cls.def("_basicget", [](BaseColumnView & self, Key<T> const &key) ->
+            typename ndarray::Array<T, 1> const { return self[key]; });
 };
 
 template <typename U, typename PyClass>
-static void declareBaseColumnViewArrayOverloads(PyClass & cls) {
-    cls.def("_basicget", [](BaseColumnView & self, Key<lsst::afw::table::Array<U>> const & key)
-                          ->typename ndarray::Array<U,2,1> const {
-        return self[key];
-    });
+static void declareBaseColumnViewArrayOverloads(PyClass &cls) {
+    cls.def("_basicget", [](BaseColumnView & self, Key<lsst::afw::table::Array<U>> const &key) ->
+            typename ndarray::Array<U, 2, 1> const { return self[key]; });
 };
 
 template <typename PyClass>
-static void declareBaseColumnViewFlagOverloads(PyClass & cls) {
-    cls.def("_basicget", [](BaseColumnView & self, Key<Flag> const & key)
-                          ->ndarray::Array<bool const,1,1> const {
-        return ndarray::copy(self[key]);
-    });
+static void declareBaseColumnViewFlagOverloads(PyClass &cls) {
+    cls.def("_basicget",
+            [](BaseColumnView &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 1> const {
+                return ndarray::copy(self[key]);
+            });
 };
 
-static void declareBaseColumnView(py::module & mod) {
+static void declareBaseColumnView(py::module &mod) {
     // We can't call this "BaseColumnView" because that's the typedef for "ColumnViewT<BaseRecord>".
     // This is just a mostly-invisible implementation base class, so we use the same naming convention
     // we use for those.
@@ -102,21 +100,17 @@ static void declareBaseColumnView(py::module & mod) {
     declareBaseColumnViewArrayOverloads<double>(cls);
 }
 
-static void declareBitsColumn(py::module & mod) {
+static void declareBitsColumn(py::module &mod) {
     PyBitsColumn cls(mod, "BitsColumn");
     cls.def("getArray", &BitsColumn::getArray);
     cls.def_property_readonly("array", &BitsColumn::getArray);
-    cls.def("getBit",
-            (BitsColumn::IntT (BitsColumn::*)(Key<Flag> const &) const) &BitsColumn::getBit,
+    cls.def("getBit", (BitsColumn::IntT (BitsColumn::*)(Key<Flag> const &) const) & BitsColumn::getBit,
             "key"_a);
-    cls.def("getBit",
-            (BitsColumn::IntT (BitsColumn::*)(std::string const &) const) &BitsColumn::getBit,
+    cls.def("getBit", (BitsColumn::IntT (BitsColumn::*)(std::string const &) const) & BitsColumn::getBit,
             "name"_a);
-    cls.def("getMask",
-            (BitsColumn::IntT (BitsColumn::*)(Key<Flag> const &) const) &BitsColumn::getMask,
+    cls.def("getMask", (BitsColumn::IntT (BitsColumn::*)(Key<Flag> const &) const) & BitsColumn::getMask,
             "key"_a);
-    cls.def("getMask",
-            (BitsColumn::IntT (BitsColumn::*)(std::string const &) const) &BitsColumn::getMask,
+    cls.def("getMask", (BitsColumn::IntT (BitsColumn::*)(std::string const &) const) & BitsColumn::getMask,
             "name"_a);
 }
 
@@ -135,5 +129,7 @@ PYBIND11_PLUGIN(baseColumnView) {
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

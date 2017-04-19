@@ -36,9 +36,9 @@
 
 namespace lsst {
 namespace afw {
-    namespace image {
-        class TanWcs;
-    }
+namespace image {
+class TanWcs;
+}
 namespace formatters {
 
 /**
@@ -49,41 +49,30 @@ class TanWcsFormatter : public lsst::daf::persistence::Formatter {
 public:
     virtual ~TanWcsFormatter(void);
 
-    virtual void write(
-        lsst::daf::base::Persistable const* persistable,
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
-    );
-    virtual lsst::daf::base::Persistable* read(
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
-    );
-    virtual void update(
-        lsst::daf::base::Persistable* persistable,
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
-    );
+    virtual void write(lsst::daf::base::Persistable const* persistable,
+                       std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                                               std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual void update(lsst::daf::base::Persistable* persistable,
+                        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     static std::shared_ptr<lsst::daf::base::PropertyList> generatePropertySet(
-        lsst::afw::image::TanWcs const& wcs
-    );
+            lsst::afw::image::TanWcs const& wcs);
     static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
-        std::shared_ptr<lsst::pex::policy::Policy> policy
-    );
+            std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     template <class Archive>
-    static void delegateSerialize(
-        Archive& ar,
-        int const version,
-        lsst::daf::base::Persistable* persistable
-    );
+    static void delegateSerialize(Archive& ar, int const version, lsst::daf::base::Persistable* persistable);
 
 private:
     explicit TanWcsFormatter(std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters
 
 #endif

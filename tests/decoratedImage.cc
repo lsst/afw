@@ -47,21 +47,20 @@ typedef float PixelT;
 typedef image::Image<PixelT> ImageT;
 typedef image::DecoratedImage<PixelT> DecoratedImageT;
 
-
-DecoratedImageT make_image(int const width=5, int const height=6) {
+DecoratedImageT make_image(int const width = 5, int const height = 6) {
     DecoratedImageT dimg(geom::Extent2I(width, height));
     std::shared_ptr<ImageT> img = dimg.getImage();
 
     int i = 0;
     for (ImageT::iterator ptr = img->begin(), end = img->end(); ptr != end; ++ptr, ++i) {
-        *ptr = i/dimg.getWidth() + 100*(i%dimg.getWidth());
+        *ptr = i / dimg.getWidth() + 100 * (i % dimg.getWidth());
     }
 
     return dimg;
 }
 
-
-BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(
+        setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     DecoratedImageT dimg = make_image();
     std::shared_ptr<daf_base::PropertySet> metadata = dimg.getMetadata();
 

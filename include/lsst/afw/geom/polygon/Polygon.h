@@ -26,7 +26,7 @@
 #define LSST_AFW_GEOM_POLYGON_POLYGON_H
 
 #include <vector>
-#include <utility> // for std::pair
+#include <utility>  // for std::pair
 
 #include <memory>
 
@@ -39,7 +39,10 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 
-namespace lsst { namespace afw { namespace geom { namespace polygon {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace polygon {
 
 /// An exception that indicates the single-polygon assumption has been violated
 ///
@@ -52,7 +55,7 @@ LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeError,
 ///
 /// Polygons are defined by a set of vertices
 
-class Polygon: public afw::table::io::PersistableFacade<Polygon>, public afw::table::io::Persistable {
+class Polygon : public afw::table::io::PersistableFacade<Polygon>, public afw::table::io::Persistable {
 public:
     typedef Box2D Box;
     typedef Point2D Point;
@@ -60,20 +63,17 @@ public:
     //@{
     /// Constructors
     explicit Polygon(Box const& box);
-    Polygon(Box const& box,             ///< Box to convert to polygon
-            std::shared_ptr<XYTransform const> const& transform ///< Transform from original to target frame
-        );
-    Polygon(Box const& box,                  ///< Box to convert to polygon
-            AffineTransform const& transform ///< Transform from original to target frame
-        );
+    Polygon(Box const& box,                                      ///< Box to convert to polygon
+            std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
+            );
+    Polygon(Box const& box,                   ///< Box to convert to polygon
+            AffineTransform const& transform  ///< Transform from original to target frame
+            );
     explicit Polygon(std::vector<Point> const& vertices);
     //@}
 
-
     /// Swap two polygons
-    void swap(Polygon& other) {
-        std::swap(this->_impl, other._impl);
-    }
+    void swap(Polygon& other) { std::swap(this->_impl, other._impl); }
 
     /// Return number of edges
     ///
@@ -106,7 +106,7 @@ public:
     /// Get vector of edges
     ///
     /// Returns edges, as pairs of vertices.
-    std::vector<std::pair<Point, Point> > getEdges() const;
+    std::vector<std::pair<Point, Point>> getEdges() const;
 
     bool operator==(Polygon const& other) const;
     bool operator!=(Polygon const& other) const { return !(*this == other); }
@@ -191,11 +191,11 @@ public:
     /// is non-linear, the edges will not reflect that, but simply join the vertices.
     /// Greater fidelity might be achieved by using "subSample" before transforming.
     std::shared_ptr<Polygon> transform(
-        std::shared_ptr<XYTransform const> const& transform ///< Transform from original to target frame
-        ) const;
+            std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
+            ) const;
     std::shared_ptr<Polygon> transform(
-        AffineTransform const& transform ///< Transform from original to target frame
-        ) const;
+            AffineTransform const& transform  ///< Transform from original to target frame
+            ) const;
     //@}
 
     //@{
@@ -226,10 +226,9 @@ public:
     virtual bool isPersistable() const { return true; }
 
 protected:
-
     virtual std::string getPersistenceName() const;
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
 private:
     //@{
@@ -242,7 +241,9 @@ private:
 
 /// Stream polygon
 std::ostream& operator<<(std::ostream& os, Polygon const& poly);
-
-}}}} // namespace lsst::afw::geom::polygon
+}
+}
+}
+}  // namespace lsst::afw::geom::polygon
 
 #endif

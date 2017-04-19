@@ -29,7 +29,6 @@
  * Interface for ExposureFormatter class
  */
 
-
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/policy/Policy.h"
@@ -41,35 +40,27 @@ namespace formatters {
 /**
  * Class implementing persistence and retrieval for Exposures.
  */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class ExposureFormatter : public lsst::daf::persistence::Formatter {
 public:
     virtual ~ExposureFormatter(void);
 
-    virtual void write(
-        lsst::daf::base::Persistable const* persistable,
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
-    );
-    virtual lsst::daf::base::Persistable* read(
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
-    );
-    virtual void update(
-        lsst::daf::base::Persistable* persistable,
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData
-    );
+    virtual void write(lsst::daf::base::Persistable const* persistable,
+                       std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                                               std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual void update(lsst::daf::base::Persistable* persistable,
+                        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
-        std::shared_ptr<lsst::pex::policy::Policy> policy
-    );
+            std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     template <class Archive>
-    static void delegateSerialize(
-        Archive& ar, unsigned int const version,
-        lsst::daf::base::Persistable* persistable
-    );
+    static void delegateSerialize(Archive& ar, unsigned int const version,
+                                  lsst::daf::base::Persistable* persistable);
+
 private:
     explicit ExposureFormatter(std::shared_ptr<lsst::pex::policy::Policy> policy);
 
@@ -77,7 +68,8 @@ private:
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters
 
 #endif

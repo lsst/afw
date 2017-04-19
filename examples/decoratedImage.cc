@@ -46,7 +46,7 @@ void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
     for (int y = src.getHeight() - 1; y >= 0; --y) {
         printf("%3d ", y);
         for (typename afwImage::Image<PixelT>::c_iterator src_it = src.row_begin(y); src_it != src.row_end(y);
-            ++src_it) {
+             ++src_it) {
             printf("%4g ", static_cast<float>((*src_it)[0]));
         }
         printf("\n");
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-    std::cout << "Running with: " <<  file_u16 << std::endl;
+    std::cout << "Running with: " << file_u16 << std::endl;
     afwImage::DecoratedImage<float> dimg2(file_u16);
 
     return 0;

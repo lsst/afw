@@ -35,93 +35,84 @@ namespace image {
 
 namespace {
 
-template <typename ImagePixelT>   // only the image type varies; mask and variance are fixed
-using PyMaskedImage =
-    py::class_<MaskedImage<ImagePixelT>,
-               std::shared_ptr<MaskedImage<ImagePixelT>>,
-               daf::base::Persistable, daf::base::Citizen>;
+template <typename ImagePixelT>  // only the image type varies; mask and variance are fixed
+using PyMaskedImage = py::class_<MaskedImage<ImagePixelT>, std::shared_ptr<MaskedImage<ImagePixelT>>,
+                                 daf::base::Persistable, daf::base::Citizen>;
 
 /**
-@internal Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
+@internal Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to
+ToPixelT
 
 The mask and variance must be of the standard types.
 
 @param[in] cls  The pybind11 class to which add the constructor
 */
 template <typename FromPixelT, typename ToPixelT>
-void declareCastConstructor(PyMaskedImage<ToPixelT> & cls) {
-    cls.def(py::init<MaskedImage<FromPixelT> const &, bool const>(),
-            "src"_a, "deep"_a);
+void declareCastConstructor(PyMaskedImage<ToPixelT> &cls) {
+    cls.def(py::init<MaskedImage<FromPixelT> const &, bool const>(), "src"_a, "deep"_a);
 }
 
 template <typename ImagePixelT>
-PyMaskedImage<ImagePixelT> declareMaskedImage(py::module & mod, const std::string & suffix) {
+PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string &suffix) {
     using MI = MaskedImage<ImagePixelT>;
 
     PyMaskedImage<ImagePixelT> cls(mod, ("MaskedImage" + suffix).c_str());
 
-    mod.def("makeMaskedImage", &makeMaskedImage<ImagePixelT, MaskPixel, VariancePixel>,
-            "image"_a, "mask"_a=nullptr, "variance"_a=nullptr);
+    mod.def("makeMaskedImage", &makeMaskedImage<ImagePixelT, MaskPixel, VariancePixel>, "image"_a,
+            "mask"_a = nullptr, "variance"_a = nullptr);
 
     /* Member types and enums */
 
     /* Constructors */
-    cls.def(py::init<unsigned int, unsigned int, typename MI::MaskPlaneDict const&>(),
-            "width"_a, "height"_a, "planeDict"_a=typename MI::MaskPlaneDict());
-    cls.def(py::init<geom::Extent2I, typename MI::MaskPlaneDict const&>(),
-            "dimensions"_a, "planeDict"_a=typename MI::MaskPlaneDict());
-    cls.def(py::init<typename MI::ImagePtr, typename MI::MaskPtr, typename MI::VariancePtr>(),
-            "image"_a, "mask"_a=nullptr, "variance"_a=nullptr);
-    cls.def(py::init<geom::Box2I const &, typename MI::MaskPlaneDict const&>(),
-            "bbox"_a, "planeDict"_a=typename MI::MaskPlaneDict());
+    cls.def(py::init<unsigned int, unsigned int, typename MI::MaskPlaneDict const &>(), "width"_a, "height"_a,
+            "planeDict"_a = typename MI::MaskPlaneDict());
+    cls.def(py::init<geom::Extent2I, typename MI::MaskPlaneDict const &>(), "dimensions"_a,
+            "planeDict"_a = typename MI::MaskPlaneDict());
+    cls.def(py::init<typename MI::ImagePtr, typename MI::MaskPtr, typename MI::VariancePtr>(), "image"_a,
+            "mask"_a = nullptr, "variance"_a = nullptr);
+    cls.def(py::init<geom::Box2I const &, typename MI::MaskPlaneDict const &>(), "bbox"_a,
+            "planeDict"_a = typename MI::MaskPlaneDict());
     cls.def(py::init<std::string const &, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
                      ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
                      std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
             "fileName"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
             "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
-    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>,
-                     geom::Box2I const &, ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
+    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
+                     ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
                      std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
             "manager"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
             "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
-    cls.def(py::init<MI const &, bool>(),
-            "rhs"_a, "deep"_a=false);
-    cls.def(py::init<MI const &, geom::Box2I const &, ImageOrigin, bool>(),
-            "rhs"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
+    cls.def(py::init<MI const &, bool>(), "rhs"_a, "deep"_a = false);
+    cls.def(py::init<MI const &, geom::Box2I const &, ImageOrigin, bool>(), "rhs"_a, "bbox"_a,
+            "origin"_a = PARENT, "deep"_a = false);
 
     /* Operators */
     cls.def("swap", &MI::swap);
-    cls.def("assign", &MI::assign,
-            "rhs"_a, "bbox"_a=geom::Box2I(), "origin"_a=PARENT,
-            py::is_operator()    // py::is_operator is a workaround for code in slicing.py
-                                 // that expects NotImplemented to be returned on failure.
-    );
+    cls.def("assign", &MI::assign, "rhs"_a, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+            py::is_operator()  // py::is_operator is a workaround for code in slicing.py
+                               // that expects NotImplemented to be returned on failure.
+            );
 
     cls.def("__ilshift__", &MI::operator<<=);
-    cls.def("__iadd__", (MI& (MI::*)(ImagePixelT const)) &MI::operator+=);
-    cls.def("__iadd__", (MI& (MI::*)(MI const &)) &MI::operator+=);
-    cls.def("__iadd__",
-            (MI& (MI::*)(Image<ImagePixelT> const &))&MI::operator+=);
-    cls.def("__iadd__",
-            (MI& (MI::*)(math::Function2<double> const &)) &MI::operator+=);
+    cls.def("__iadd__", (MI & (MI::*)(ImagePixelT const)) & MI::operator+=);
+    cls.def("__iadd__", (MI & (MI::*)(MI const &)) & MI::operator+=);
+    cls.def("__iadd__", (MI & (MI::*)(Image<ImagePixelT> const &)) & MI::operator+=);
+    cls.def("__iadd__", (MI & (MI::*)(math::Function2<double> const &)) & MI::operator+=);
     cls.def("scaledPlus", &MI::scaledPlus);
-    cls.def("__isub__", (MI& (MI::*)(ImagePixelT const)) &MI::operator-=);
-    cls.def("__isub__", (MI& (MI::*)(MI const &)) &MI::operator-=);
-    cls.def("__isub__",
-            (MI& (MI::*)(Image<ImagePixelT> const &)) &MI::operator-=);
-    cls.def("__isub__",
-            (MI& (MI::*)(math::Function2<double> const &)) &MI::operator-=);
+    cls.def("__isub__", (MI & (MI::*)(ImagePixelT const)) & MI::operator-=);
+    cls.def("__isub__", (MI & (MI::*)(MI const &)) & MI::operator-=);
+    cls.def("__isub__", (MI & (MI::*)(Image<ImagePixelT> const &)) & MI::operator-=);
+    cls.def("__isub__", (MI & (MI::*)(math::Function2<double> const &)) & MI::operator-=);
     cls.def("scaledMinus", &MI::scaledMinus);
-    cls.def("__imul__", (MI& (MI::*)(ImagePixelT const)) &MI::operator*=);
-    cls.def("__imul__", (MI& (MI::*)(MI const &)) &MI::operator*=);
-    cls.def("__imul__",
-            (MI& (MI::*)(Image<ImagePixelT> const &)) &MI::operator*=);
+    cls.def("__imul__", (MI & (MI::*)(ImagePixelT const)) & MI::operator*=);
+    cls.def("__imul__", (MI & (MI::*)(MI const &)) & MI::operator*=);
+    cls.def("__imul__", (MI & (MI::*)(Image<ImagePixelT> const &)) & MI::operator*=);
     cls.def("scaledMultiplies", &MI::scaledMultiplies);
-    cls.def("__itruediv__", (MI& (MI::*)(ImagePixelT const)) &MI::operator/=);
-    cls.def("__itruediv__", (MI& (MI::*)(MI const &)) &MI::operator/=);
-    cls.def("__itruediv__", (MI& (MI::*)(Image<ImagePixelT> const &)) &MI::operator/=);
+    cls.def("__itruediv__", (MI & (MI::*)(ImagePixelT const)) & MI::operator/=);
+    cls.def("__itruediv__", (MI & (MI::*)(MI const &)) & MI::operator/=);
+    cls.def("__itruediv__", (MI & (MI::*)(Image<ImagePixelT> const &)) & MI::operator/=);
     cls.def("scaledDivides", &MI::scaledDivides);
 
     /* Members */
@@ -129,7 +120,7 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module & mod, const std::strin
                                        std::shared_ptr<daf::base::PropertySet const>,
                                        std::shared_ptr<daf::base::PropertySet const>,
                                        std::shared_ptr<daf::base::PropertySet const>) const) &
-                             MI::writeFits,
+                                 MI::writeFits,
             "fileName"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
@@ -138,7 +129,7 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module & mod, const std::strin
                                        std::shared_ptr<daf::base::PropertySet const>,
                                        std::shared_ptr<daf::base::PropertySet const>,
                                        std::shared_ptr<daf::base::PropertySet const>) const) &
-                             MI::writeFits,
+                                 MI::writeFits,
             "manager"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
@@ -147,47 +138,39 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module & mod, const std::strin
                                        std::shared_ptr<daf::base::PropertySet const>,
                                        std::shared_ptr<daf::base::PropertySet const>,
                                        std::shared_ptr<daf::base::PropertySet const>) const) &
-                             MI::writeFits,
+                                 MI::writeFits,
             "fitsfile"_a, "metadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "imageMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
 
-    cls.def_static("readFits", (MI (*)(std::string const &)) MI::readFits,
-                   "filename"_a);
-    cls.def_static("readFits", (MI (*)(fits::MemFileManager &)) MI::readFits,
-                   "manager"_a);
-    cls.def("getImage", &MI::getImage,
-            "noThrow"_a=false);
-    cls.def("getMask", &MI::getMask,
-            "noThrow"_a=false);
-    cls.def("getVariance", &MI::getVariance,
-            "noThrow"_a=false);
+    cls.def_static("readFits", (MI(*)(std::string const &))MI::readFits, "filename"_a);
+    cls.def_static("readFits", (MI(*)(fits::MemFileManager &))MI::readFits, "manager"_a);
+    cls.def("getImage", &MI::getImage, "noThrow"_a = false);
+    cls.def("getMask", &MI::getMask, "noThrow"_a = false);
+    cls.def("getVariance", &MI::getVariance, "noThrow"_a = false);
     cls.def("getWidth", &MI::getWidth);
     cls.def("getHeight", &MI::getHeight);
     cls.def("getDimensions", &MI::getDimensions);
-    cls.def("getBBox", &MI::getBBox,
-            "origin"_a=PARENT);
+    cls.def("getBBox", &MI::getBBox, "origin"_a = PARENT);
     cls.def("getX0", &MI::getX0);
     cls.def("getY0", &MI::getY0);
     cls.def("getXY0", &MI::getXY0);
-    cls.def("setXY0", (void (MI::*)(int const, int const)) &MI::setXY0,
-            "x0"_a, "y0"_a);
-    cls.def("setXY0", (void (MI::*)(geom::Point2I const)) &MI::setXY0,
-            "origin"_a);
+    cls.def("setXY0", (void (MI::*)(int const, int const)) & MI::setXY0, "x0"_a, "y0"_a);
+    cls.def("setXY0", (void (MI::*)(geom::Point2I const)) & MI::setXY0, "origin"_a);
     cls.def("indexToPosition", &MI::indexToPosition);
     cls.def("positionToIndex", &MI::positionToIndex);
 
     return cls;
 }
 
-template <typename ImagePixelT> // addtional template types do not seem to be needed
-void declareMakeMaskedImage(py::module & mod) {
-    mod.def("makeMaskedImage", makeMaskedImage<ImagePixelT, MaskPixel, VariancePixel>,
-            "image"_a, "mask"_a=nullptr, "variance"_a=nullptr);
+template <typename ImagePixelT>  // addtional template types do not seem to be needed
+void declareMakeMaskedImage(py::module &mod) {
+    mod.def("makeMaskedImage", makeMaskedImage<ImagePixelT, MaskPixel, VariancePixel>, "image"_a,
+            "mask"_a = nullptr, "variance"_a = nullptr);
 }
 
-} // anonymous
+}  // anonymous
 
 PYBIND11_PLUGIN(maskedImage) {
     py::module mod("maskedImage");
@@ -221,4 +204,6 @@ PYBIND11_PLUGIN(maskedImage) {
 
     return mod.ptr();
 }
-}}}  // namspace lsst::afw::image
+}
+}
+}  // namspace lsst::afw::image

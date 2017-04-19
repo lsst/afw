@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -45,27 +45,27 @@ PYBIND11_PLUGIN(_ellipse) {
     py::module mod("_ellipse", "Python wrapper for afw _ellipse library");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
-        }
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
 
     /* Module level */
     py::class_<Ellipse, std::shared_ptr<Ellipse>> clsEllipse(mod, "Ellipse");
 
-//    /* Member types and enums */
-//    py::class_<Ellipse::GridTransform> clsEllipseGridTransform(clsEllipse, "GridTransform");
-//
-//    /* Constructors */
-//    clsEllipseGridTransform.def(py::init<Ellipse const &>());
-//
-//    /* Members */
-//    clsEllipseGridTransform.def("getMatrix", &Ellipse::GridTransform::getMatrix);
-//    clsEllipseGridTransform.def("d", &Ellipse::GridTransform::d);
-//    clsEllipseGridTransform.def("getDeterminant", &Ellipse::GridTransform::getDeterminant);
-//    clsEllipseGridTransform.def("invert", &Ellipse::GridTransform::invert);
+    //    /* Member types and enums */
+    //    py::class_<Ellipse::GridTransform> clsEllipseGridTransform(clsEllipse, "GridTransform");
+    //
+    //    /* Constructors */
+    //    clsEllipseGridTransform.def(py::init<Ellipse const &>());
+    //
+    //    /* Members */
+    //    clsEllipseGridTransform.def("getMatrix", &Ellipse::GridTransform::getMatrix);
+    //    clsEllipseGridTransform.def("d", &Ellipse::GridTransform::d);
+    //    clsEllipseGridTransform.def("getDeterminant", &Ellipse::GridTransform::getDeterminant);
+    //    clsEllipseGridTransform.def("invert", &Ellipse::GridTransform::invert);
 
     /* Constructors */
-    clsEllipse.def(py::init<BaseCore const &, Point2D const &>(), "core"_a, "center"_a=Point2D());
+    clsEllipse.def(py::init<BaseCore const &, Point2D const &>(), "core"_a, "center"_a = Point2D());
     clsEllipse.def(py::init<Ellipse const &>());
     clsEllipse.def(py::init<Ellipse::Convolution const &>());
 
@@ -74,10 +74,8 @@ PYBIND11_PLUGIN(_ellipse) {
     /* Operators */
 
     /* Members */
-    clsEllipse.def("getCore", [](Ellipse & ellipse){
-        return ellipse.getCorePtr();
-    });
-    clsEllipse.def("getCenter", (Point2D & (Ellipse::*)())&Ellipse::getCenter);
+    clsEllipse.def("getCore", [](Ellipse &ellipse) { return ellipse.getCorePtr(); });
+    clsEllipse.def("getCenter", (Point2D & (Ellipse::*)()) & Ellipse::getCenter);
     clsEllipse.def("setCenter", &Ellipse::setCenter);
     clsEllipse.def("setCore", &Ellipse::setCore);
     clsEllipse.def("normalize", &Ellipse::normalize);
@@ -86,16 +84,13 @@ PYBIND11_PLUGIN(_ellipse) {
     clsEllipse.def("shift", &Ellipse::shift);
     clsEllipse.def("getParameterVector", &Ellipse::getParameterVector);
     clsEllipse.def("setParameterVector", &Ellipse::setParameterVector);
-    clsEllipse.def(
-        "transform",
-        [](Ellipse const & self, AffineTransform const & t) -> Ellipse {
-            return self.transform(t);
-        },
-        "transform"_a
-    );
-//    clsEllipse.def("convolve", (Convolution const (Ellipse::*)(Ellipse const &) const) &Ellipse::convolve);
-    clsEllipse.def("getGridTransform", [](Ellipse & self) -> AffineTransform {
-        return self.getGridTransform(); // delibarate conversion to AffineTransform
+    clsEllipse.def("transform",
+                   [](Ellipse const &self, AffineTransform const &t) -> Ellipse { return self.transform(t); },
+                   "transform"_a);
+    //    clsEllipse.def("convolve", (Convolution const (Ellipse::*)(Ellipse const &) const)
+    //    &Ellipse::convolve);
+    clsEllipse.def("getGridTransform", [](Ellipse &self) -> AffineTransform {
+        return self.getGridTransform();  // delibarate conversion to AffineTransform
     });
     clsEllipse.def("computeBBox", &Ellipse::computeBBox);
 

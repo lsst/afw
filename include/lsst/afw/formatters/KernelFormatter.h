@@ -49,15 +49,15 @@ public:
     virtual ~KernelFormatter(void);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+                       std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+                                               std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     virtual void update(lsst::daf::base::Persistable* persistable,
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+                        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     /** Serialize a Kernel to a Boost archive.  Handles text or XML
      * archives, input or output.
@@ -67,7 +67,7 @@ public:
      */
     template <class Archive>
     static void delegateSerialize(Archive& ar, unsigned int const version,
-        lsst::daf::base::Persistable* persistable);
+                                  lsst::daf::base::Persistable* persistable);
 
 private:
     /** Constructor.
@@ -81,8 +81,8 @@ private:
      * @param[in] policy Policy for configuring the KernelFormatter
      * @returns Shared pointer to a new instance
      */
-    static std::shared_ptr<lsst::daf::persistence::Formatter>
-        createInstance(std::shared_ptr<lsst::pex::policy::Policy> policy);
+    static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
+            std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     /** Register this Formatter subclass through a static instance of
      * FormatterRegistration.
@@ -91,11 +91,11 @@ private:
     static lsst::daf::persistence::FormatterRegistration fixedKernelRegistration;
     static lsst::daf::persistence::FormatterRegistration analyticKernelRegistration;
     static lsst::daf::persistence::FormatterRegistration deltaFunctionKernelRegistration;
-    static lsst::daf::persistence::FormatterRegistration
-        linearCombinationKernelRegistration;
+    static lsst::daf::persistence::FormatterRegistration linearCombinationKernelRegistration;
     static lsst::daf::persistence::FormatterRegistration separableKernelRegistration;
 };
-
-}}} // namespace lsst::daf::persistence
+}
+}
+}  // namespace lsst::daf::persistence
 
 #endif

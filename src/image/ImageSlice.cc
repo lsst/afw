@@ -31,22 +31,18 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageSlice.h"
 
-namespace ex            = lsst::pex::exceptions;
+namespace ex = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
-template<typename PixelT>
-ImageSlice<PixelT>::ImageSlice(
-    image::Image<PixelT> const &img
-                                        ) :
-    Image<PixelT>(img),
-    _sliceType(ROW)
-{
-
+template <typename PixelT>
+ImageSlice<PixelT>::ImageSlice(image::Image<PixelT> const &img) : Image<PixelT>(img), _sliceType(ROW) {
     // verify the img is a slice (row or column)
     if (img.getWidth() != 1 && img.getHeight() != 1) {
         throw LSST_EXCEPT(ex::OutOfRangeError, "Input image must be a slice (width or height == 1)");
-    }  else if (img.getWidth() == 1 && img.getHeight() == 1) {
+    } else if (img.getWidth() == 1 && img.getHeight() == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           "1x1 image ambiguous (could be row or column).  "
                           "Perhaps a constant would be better than a slice? ");
@@ -60,170 +56,110 @@ ImageSlice<PixelT>::ImageSlice(
     // what about nx1 images wehre a 1x1 column slice is desired? ... use a constant instead of a slice
 }
 
-
-
-
 /* ************************************************************************ *
  *
  * column operators
  *
  * ************************************************************************ */
 
-
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
 
-template<typename PixelT>
-std::shared_ptr<Image<PixelT>> operator+(
-    Image<PixelT> const &img,
-    ImageSlice<PixelT> const &slc
-                                                         ) {
+template <typename PixelT>
+std::shared_ptr<Image<PixelT>> operator+(Image<PixelT> const &img, ImageSlice<PixelT> const &slc) {
     std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg += slc;
     return retImg;
 }
 
-
-
-template<typename PixelT>
-std::shared_ptr<Image<PixelT>> operator+(
-    ImageSlice<PixelT> const &slc,
-    Image<PixelT> const &img
-                                                         ) {
+template <typename PixelT>
+std::shared_ptr<Image<PixelT>> operator+(ImageSlice<PixelT> const &slc, Image<PixelT> const &img) {
     return operator+(img, slc);
 }
 
-
-
-template<typename PixelT>
-void operator+=(
-                          Image<PixelT> &img,
-                          ImageSlice<PixelT> const &slc
-                         ) {
-    details::operate<details::Plus<PixelT> >(img, slc, slc.getImageSliceType());
+template <typename PixelT>
+void operator+=(Image<PixelT> &img, ImageSlice<PixelT> const &slc) {
+    details::operate<details::Plus<PixelT>>(img, slc, slc.getImageSliceType());
 }
-
-
 
 // -----------------------------------------------------------------
 // overload -
 
-
-
-template<typename PixelT>
-std::shared_ptr<Image<PixelT>> operator-(
-    Image<PixelT> const &img,
-    ImageSlice<PixelT> const &slc
-                                                         ) {
+template <typename PixelT>
+std::shared_ptr<Image<PixelT>> operator-(Image<PixelT> const &img, ImageSlice<PixelT> const &slc) {
     std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg -= slc;
     return retImg;
 }
 
-
-template<typename PixelT>
-void operator-=(
-                          Image<PixelT> &img,
-                          ImageSlice<PixelT> const &slc
-                         ) {
-    details::operate<details::Minus<PixelT> >(img, slc, slc.getImageSliceType());
+template <typename PixelT>
+void operator-=(Image<PixelT> &img, ImageSlice<PixelT> const &slc) {
+    details::operate<details::Minus<PixelT>>(img, slc, slc.getImageSliceType());
 }
-
 
 // ******************************************************************
 // overload *
 
-
-template<typename PixelT>
-std::shared_ptr<Image<PixelT>> operator*(
-    Image<PixelT> const &img,
-    ImageSlice<PixelT> const &slc
-                                                         ) {
+template <typename PixelT>
+std::shared_ptr<Image<PixelT>> operator*(Image<PixelT> const &img, ImageSlice<PixelT> const &slc) {
     std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg *= slc;
     return retImg;
 }
 
-
-template<typename PixelT>
-std::shared_ptr<Image<PixelT>> operator*(
-    ImageSlice<PixelT> const &slc,
-    Image<PixelT> const &img
-                                                         ) {
+template <typename PixelT>
+std::shared_ptr<Image<PixelT>> operator*(ImageSlice<PixelT> const &slc, Image<PixelT> const &img) {
     return operator*(img, slc);
 }
 
-template<typename PixelT>
-void operator*=(
-                          Image<PixelT> &img,
-                          ImageSlice<PixelT> const &slc
-                         ) {
-    details::operate<details::Mult<PixelT> >(img, slc, slc.getImageSliceType());
+template <typename PixelT>
+void operator*=(Image<PixelT> &img, ImageSlice<PixelT> const &slc) {
+    details::operate<details::Mult<PixelT>>(img, slc, slc.getImageSliceType());
 }
-
 
 // overload
 
-
-template<typename PixelT>
-std::shared_ptr<Image<PixelT>> operator/(
-    Image<PixelT> const &img,
-    ImageSlice<PixelT> const &slc
-                                                         ) {
+template <typename PixelT>
+std::shared_ptr<Image<PixelT>> operator/(Image<PixelT> const &img, ImageSlice<PixelT> const &slc) {
     std::shared_ptr<Image<PixelT>> retImg(new Image<PixelT>(img, true));
     *retImg /= slc;
     return retImg;
 }
 
-
-template<typename PixelT>
-void operator/=(
-                          Image<PixelT> &img,
-                          ImageSlice<PixelT> const &slc
-                         ) {
-    details::operate<details::Div<PixelT> >(img, slc, slc.getImageSliceType());
+template <typename PixelT>
+void operator/=(Image<PixelT> &img, ImageSlice<PixelT> const &slc) {
+    details::operate<details::Div<PixelT>>(img, slc, slc.getImageSliceType());
 }
-
-
-
 
 /*
  * Explicit Instantiations
  *
  */
 /// @cond
-#define INSTANTIATE_SLICE_OP_SYM(TYPE, OP) \
-    template std::shared_ptr<Image<TYPE>> operator OP(Image<TYPE> const &img, \
-                                                              ImageSlice<TYPE> const &slc); \
-    template std::shared_ptr<Image<TYPE>> operator OP(ImageSlice<TYPE> const &slc, \
-                                                              Image<TYPE> const &img)
-
+#define INSTANTIATE_SLICE_OP_SYM(TYPE, OP)                                                                  \
+    template std::shared_ptr<Image<TYPE>> operator OP(Image<TYPE> const &img, ImageSlice<TYPE> const &slc); \
+    template std::shared_ptr<Image<TYPE>> operator OP(ImageSlice<TYPE> const &slc, Image<TYPE> const &img)
 
 #define INSTANTIATE_SLICE_OP_ASYM(TYPE, OP) \
-    template std::shared_ptr<Image<TYPE>> operator OP(Image<TYPE> const &img, \
-                                                              ImageSlice<TYPE> const &slc)
+    template std::shared_ptr<Image<TYPE>> operator OP(Image<TYPE> const &img, ImageSlice<TYPE> const &slc)
 
+#define INSTANTIATE_SLICE_OPEQ(TYPE, OP) \
+    template void operator OP(Image<TYPE> &img, ImageSlice<TYPE> const &slc)
 
-#define INSTANTIATE_SLICE_OPEQ(TYPE, OP)                                \
-    template void operator OP(Image<TYPE> &img,     \
-                                        ImageSlice<TYPE> const &slc)
-
-
-
-#define INSTANTIATE_SLICES(TYPE) \
+#define INSTANTIATE_SLICES(TYPE)                                     \
     template ImageSlice<TYPE>::ImageSlice(Image<TYPE> const &image); \
-    INSTANTIATE_SLICE_OP_SYM(TYPE, +);                                  \
-    INSTANTIATE_SLICE_OP_ASYM(TYPE, -);                                 \
-    INSTANTIATE_SLICE_OP_SYM(TYPE, *);                                  \
-    INSTANTIATE_SLICE_OP_ASYM(TYPE, /);                                 \
-    INSTANTIATE_SLICE_OPEQ(TYPE, +=);                                   \
-    INSTANTIATE_SLICE_OPEQ(TYPE, -=);                                   \
-    INSTANTIATE_SLICE_OPEQ(TYPE, *=);                                   \
+    INSTANTIATE_SLICE_OP_SYM(TYPE, +);                               \
+    INSTANTIATE_SLICE_OP_ASYM(TYPE, -);                              \
+    INSTANTIATE_SLICE_OP_SYM(TYPE, *);                               \
+    INSTANTIATE_SLICE_OP_ASYM(TYPE, /);                              \
+    INSTANTIATE_SLICE_OPEQ(TYPE, +=);                                \
+    INSTANTIATE_SLICE_OPEQ(TYPE, -=);                                \
+    INSTANTIATE_SLICE_OPEQ(TYPE, *=);                                \
     INSTANTIATE_SLICE_OPEQ(TYPE, /=)
-
 
 INSTANTIATE_SLICES(double);
 INSTANTIATE_SLICES(float);
 /// @endcond
-
-}}} // end lsst::afw::image
+}
+}
+}  // end lsst::afw::image

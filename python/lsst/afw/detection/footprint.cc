@@ -21,7 +21,6 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
@@ -32,25 +31,24 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h" // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 #include "lsst/afw/detection/Footprint.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 namespace {
 
 template <typename MaskT>
-void declareMaskFromFootprintList(py::module & mod){
-    auto maskSetter = [](
-        lsst::afw::image::Mask<MaskT> *mask,
-        std::vector<std::shared_ptr<lsst::afw::detection::Footprint>> const & footprints,
-        MaskT const bitmask,
-        bool doClip
-    ){
-        for (auto const & foot : footprints) {
+void declareMaskFromFootprintList(py::module &mod) {
+    auto maskSetter = [](lsst::afw::image::Mask<MaskT> *mask,
+                         std::vector<std::shared_ptr<lsst::afw::detection::Footprint>> const &footprints,
+                         MaskT const bitmask, bool doClip) {
+        for (auto const &foot : footprints) {
             try {
                 if (doClip) {
                     auto tmpSpan = foot->getSpans()->clippedTo(mask->getBBox());
@@ -60,7 +58,7 @@ void declareMaskFromFootprintList(py::module & mod){
                 }
             } catch (lsst::pex::exceptions::OutOfRangeError e) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
-                    "Bounds of a Footprint fall outside mask set doClip to force");
+                                  "Bounds of a Footprint fall outside mask set doClip to force");
             }
         }
     };
@@ -68,7 +66,7 @@ void declareMaskFromFootprintList(py::module & mod){
             "doClip"_a = true);
 }
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 PYBIND11_PLUGIN(_footprint) {
     py::module mod("_footprint", "Python wrapper for afw Footprint library");
@@ -80,25 +78,22 @@ PYBIND11_PLUGIN(_footprint) {
     }
 
     /* Footprint Constructors */
-    py::class_<Footprint,
-               std::shared_ptr<Footprint>,
-               daf::base::Citizen,
-               table::io::Persistable,
-               table::io::PersistableFacade<Footprint>> clsFootprint(mod, "Footprint");
-    clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, geom::Box2I const &>(),
-                     "inputSpans"_a, "region"_a = geom::Box2I());
+    py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen, table::io::Persistable,
+               table::io::PersistableFacade<Footprint>>
+            clsFootprint(mod, "Footprint");
+    clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, geom::Box2I const &>(), "inputSpans"_a,
+                     "region"_a = geom::Box2I());
 
-    clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>,
-                              afw::table::Schema const &,
-                              geom::Box2I const &>(),
-                     "inputSpans"_a, "peakSchema"_a, "region"_a = geom::Box2I());
+    clsFootprint.def(
+            py::init<std::shared_ptr<geom::SpanSet>, afw::table::Schema const &, geom::Box2I const &>(),
+            "inputSpans"_a, "peakSchema"_a, "region"_a = geom::Box2I());
     clsFootprint.def(py::init<Footprint const &>());
     clsFootprint.def(py::init<>());
 
     /* Footprint Methods */
     clsFootprint.def("getSpans", &Footprint::getSpans);
     clsFootprint.def("setSpans", &Footprint::setSpans);
-    clsFootprint.def("getPeaks", (PeakCatalog & (Footprint::*)()) &Footprint::getPeaks,
+    clsFootprint.def("getPeaks", (PeakCatalog & (Footprint::*)()) & Footprint::getPeaks,
                      py::return_value_policy::reference_internal);
     clsFootprint.def("addPeak", &Footprint::addPeak);
     clsFootprint.def("sortPeaks", &Footprint::sortPeaks, "key"_a = afw::table::Key<float>());
@@ -106,71 +101,60 @@ PYBIND11_PLUGIN(_footprint) {
     clsFootprint.def("getArea", &Footprint::getArea);
     clsFootprint.def("getCentroid", &Footprint::getCentroid);
     clsFootprint.def("getShape", &Footprint::getShape);
-    clsFootprint.def("shift", (void (Footprint::*)(int, int)) &Footprint::shift);
-    clsFootprint.def("shift", (void (Footprint::*)(geom::ExtentI const &)) &Footprint::shift);
+    clsFootprint.def("shift", (void (Footprint::*)(int, int)) & Footprint::shift);
+    clsFootprint.def("shift", (void (Footprint::*)(geom::ExtentI const &)) & Footprint::shift);
     clsFootprint.def("getBBox", &Footprint::getBBox);
     clsFootprint.def("getRegion", &Footprint::getRegion);
     clsFootprint.def("setRegion", &Footprint::setRegion);
     clsFootprint.def("clipTo", &Footprint::clipTo);
     clsFootprint.def("contains", &Footprint::contains);
-    clsFootprint.def("transform",
-                     (std::shared_ptr<Footprint> (Footprint::*)(std::shared_ptr<image::Wcs>,
-                                                                std::shared_ptr<image::Wcs>,
-                                                                geom::Box2I const &,
-                                                                bool) const) &Footprint::transform,
+    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
+                                          std::shared_ptr<image::Wcs>, std::shared_ptr<image::Wcs>,
+                                          geom::Box2I const &, bool) const) &
+                                          Footprint::transform,
                      "source"_a, "target"_a, "region"_a, "doClip"_a = true);
-    clsFootprint.def("transform",
-                     (std::shared_ptr<Footprint> (Footprint::*) (geom::LinearTransform const &,
-                                                                 geom::Box2I const &,
-                                                                 bool) const) &Footprint::transform);
-    clsFootprint.def("transform",
-                     (std::shared_ptr<Footprint> (Footprint::*) (geom::AffineTransform const &,
-                                                                 geom::Box2I const &,
-                                                                 bool) const) &Footprint::transform);
-    clsFootprint.def("transform",
-                     (std::shared_ptr<Footprint> (Footprint::*) (geom::XYTransform const &,
-                                                                 geom::Box2I const &,
-                                                                 bool) const) &Footprint::transform);
-    clsFootprint.def("dilate", (void (Footprint::*)(int, geom::Stencil)) &Footprint::dilate,
-                     "r"_a, "stencil"_a = geom::Stencil::CIRCLE);
-    clsFootprint.def("dilate", (void (Footprint::*)(geom::SpanSet const &)) &Footprint::dilate);
-    clsFootprint.def("erode", (void (Footprint::*)(int, geom::Stencil)) &Footprint::erode,
-                     "r"_a, "stencil"_a = geom::Stencil::CIRCLE);
-    clsFootprint.def("erode", (void (Footprint::*)(geom::SpanSet const &)) &Footprint::erode);
+    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
+                                          geom::LinearTransform const &, geom::Box2I const &, bool) const) &
+                                          Footprint::transform);
+    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
+                                          geom::AffineTransform const &, geom::Box2I const &, bool) const) &
+                                          Footprint::transform);
+    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
+                                          geom::XYTransform const &, geom::Box2I const &, bool) const) &
+                                          Footprint::transform);
+    clsFootprint.def("dilate", (void (Footprint::*)(int, geom::Stencil)) & Footprint::dilate, "r"_a,
+                     "stencil"_a = geom::Stencil::CIRCLE);
+    clsFootprint.def("dilate", (void (Footprint::*)(geom::SpanSet const &)) & Footprint::dilate);
+    clsFootprint.def("erode", (void (Footprint::*)(int, geom::Stencil)) & Footprint::erode, "r"_a,
+                     "stencil"_a = geom::Stencil::CIRCLE);
+    clsFootprint.def("erode", (void (Footprint::*)(geom::SpanSet const &)) & Footprint::erode);
     clsFootprint.def("removeOrphanPeaks", &Footprint::removeOrphanPeaks);
     clsFootprint.def("isContiguous", &Footprint::isContiguous);
     clsFootprint.def("isHeavy", &Footprint::isHeavy);
-    clsFootprint.def("assign", (Footprint & (Footprint::*)(Footprint const &)) &Footprint::operator=);
-    clsFootprint.def("split", []
-                              (Footprint const & self) -> py::list
-                              {
-                                  // This is a work around for pybind not properly
-                                  // handling converting a vector of unique pointers
-                                  // to python lists of shared pointers
-                                  py::list l;
-                                  for (auto & ptr: self.split()) {
-                                      l.append(py::cast(std::shared_ptr<Footprint>(std::move(ptr))));
-                                  }
-                                  return l;
-                              });
+    clsFootprint.def("assign", (Footprint & (Footprint::*)(Footprint const &)) & Footprint::operator=);
+    clsFootprint.def("split", [](Footprint const &self) -> py::list {
+        // This is a work around for pybind not properly
+        // handling converting a vector of unique pointers
+        // to python lists of shared pointers
+        py::list l;
+        for (auto &ptr : self.split()) {
+            l.append(py::cast(std::shared_ptr<Footprint>(std::move(ptr))));
+        }
+        return l;
+    });
 
     /* Define python level properties */
     clsFootprint.def_property("spans", &Footprint::getSpans, &Footprint::setSpans);
-    clsFootprint.def_property_readonly("peaks", (PeakCatalog & (Footprint::*)()) &Footprint::getPeaks,
+    clsFootprint.def_property_readonly("peaks", (PeakCatalog & (Footprint::*)()) & Footprint::getPeaks,
                                        py::return_value_policy::reference);
 
-
     /* Python Operators functions */
-    clsFootprint.def("__contains__", []
-                                     (Footprint const & self,
-                                      geom::Point2I const & point)->bool {
-                                          return self.contains(point);
-                                      });
-    clsFootprint.def("__eq__", []
-                               (Footprint const & self,
-                                Footprint const & other)->bool {
-                                    return self == other;
-                                }, py::is_operator());
+    clsFootprint.def("__contains__", [](Footprint const &self, geom::Point2I const &point) -> bool {
+        return self.contains(point);
+    });
+    clsFootprint.def("__eq__",
+                     [](Footprint const &self, Footprint const &other) -> bool { return self == other; },
+                     py::is_operator());
 
     declareMaskFromFootprintList<lsst::afw::image::MaskPixel>(mod);
 
@@ -179,4 +163,6 @@ PYBIND11_PLUGIN(_footprint) {
 
     return mod.ptr();
 }
-}}} // close lsst::afw::detection
+}
+}
+}  // close lsst::afw::detection

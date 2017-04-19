@@ -58,5 +58,7 @@ PYBIND11_PLUGIN(distortedTanWcs) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::image::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::image::<anonymous>

@@ -48,4 +48,4 @@
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/math/ChebyshevBoundedField.h"
 
-#endif // LSST_AFW_MATH_H
+#endif  // LSST_AFW_MATH_H

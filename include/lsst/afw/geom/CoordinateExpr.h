@@ -30,7 +30,9 @@
 
 #include "lsst/afw/geom/CoordinateBase.h"
 
-namespace lsst { namespace afw { namespace geom {
+namespace lsst {
+namespace afw {
+namespace geom {
 
 /**
  *  A boolean coordinate.
@@ -48,17 +50,17 @@ namespace lsst { namespace afw { namespace geom {
  *  think that will even remotely matter for most use cases.  The any() and all() functions do support
  *  short-circuiting.
  */
-template<int N>
-class CoordinateExpr : public CoordinateBase<CoordinateExpr<N>,bool,N> {
-    typedef CoordinateBase<CoordinateExpr<N>,bool,N> Super;
-public:
+template <int N>
+class CoordinateExpr : public CoordinateBase<CoordinateExpr<N>, bool, N> {
+    typedef CoordinateBase<CoordinateExpr<N>, bool, N> Super;
 
+public:
     /// Construct a CoordinateExpr with all elements set to the same scalar value.
-    explicit CoordinateExpr(bool val=false) : Super(val) {}
+    explicit CoordinateExpr(bool val = false) : Super(val) {}
 
     /// Construct a CoordinateExpr from an Eigen vector.
     template <typename Vector>
-    explicit CoordinateExpr(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
+    explicit CoordinateExpr(Eigen::MatrixBase<Vector> const& vector) : Super(vector) {}
 
     /**
      *  @name Logical operators
@@ -66,30 +68,32 @@ public:
      *  These operators do not provide interoperability with scalars.
      */
     //@{
-    CoordinateExpr and_(CoordinateExpr const & rhs) const;
-    CoordinateExpr or_(CoordinateExpr const & rhs) const;
+    CoordinateExpr and_(CoordinateExpr const& rhs) const;
+    CoordinateExpr or_(CoordinateExpr const& rhs) const;
     CoordinateExpr not_() const;
     //@}
-
 };
 
 /// Return true if all elements are true.
 template <int N>
-inline bool all(CoordinateExpr<N> const & expr) {
-    for (int n=0; n<N; ++n) if (!expr[n]) return false;
+inline bool all(CoordinateExpr<N> const& expr) {
+    for (int n = 0; n < N; ++n)
+        if (!expr[n]) return false;
     return true;
 }
 
 /// Return true if any elements are true.
 template <int N>
-inline bool any(CoordinateExpr<N> const & expr) {
-    for (int n=0; n<N; ++n) if (expr[n]) return true;
+inline bool any(CoordinateExpr<N> const& expr) {
+    for (int n = 0; n < N; ++n)
+        if (expr[n]) return true;
     return false;
 }
 
 typedef CoordinateExpr<2> CoordinateExpr2;
 typedef CoordinateExpr<3> CoordinateExpr3;
-
-}}}
+}
+}
+}
 
 #endif

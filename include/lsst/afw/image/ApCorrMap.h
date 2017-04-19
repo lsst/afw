@@ -30,7 +30,9 @@
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/math/BoundedField.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 /**
  *  A thin wrapper around std::map to allow aperture corrections to be attached to Exposures.
@@ -40,13 +42,14 @@ namespace lsst { namespace afw { namespace image {
  *  underyling container in the future).
  */
 class ApCorrMap : public table::io::PersistableFacade<ApCorrMap>, public table::io::Persistable {
-    typedef std::map<std::string,std::shared_ptr<math::BoundedField>> Internal;
-public:
+    typedef std::map<std::string, std::shared_ptr<math::BoundedField>> Internal;
 
+public:
     /// Maximum number of characters for an aperture correction name (required for persistence).
     static std::size_t const MAX_NAME_LENGTH = 64;
 
-    /// Iterator type returned by begin() and end().  Dereferences to a pair<string,std::shared_ptr<BoundedField>>.
+    /// Iterator type returned by begin() and end().  Dereferences to a
+    /// pair<string,std::shared_ptr<BoundedField>>.
     typedef Internal::const_iterator Iterator;
 
     Iterator begin() const { return _internal.begin(); }
@@ -55,32 +58,32 @@ public:
     std::size_t size() const { return _internal.size(); }
 
     /// Return the field with the given name, throwing NotFoundError when the name is not present.
-    std::shared_ptr<math::BoundedField> const operator[](std::string const & name) const;
+    std::shared_ptr<math::BoundedField> const operator[](std::string const& name) const;
 
     /// Return the field with the given name, returning an empty pointer when the name is not present.
-    std::shared_ptr<math::BoundedField> const get(std::string const & name) const;
+    std::shared_ptr<math::BoundedField> const get(std::string const& name) const;
 
     /// Add or replace an aperture correction.
-    void set(std::string const & name, std::shared_ptr<math::BoundedField> field);
+    void set(std::string const& name, std::shared_ptr<math::BoundedField> field);
 
     /// Whether the map is persistable (true IFF all contained BoundedFields are persistable).
     virtual bool isPersistable() const;
 
     /// Scale all fields by a constant
-    ApCorrMap & operator*=(double const scale);
-    ApCorrMap & operator/=(double const scale) { return *this *= 1.0/scale; }
+    ApCorrMap& operator*=(double const scale);
+    ApCorrMap& operator/=(double const scale) { return *this *= 1.0 / scale; }
 
 private:
-
     virtual std::string getPersistenceName() const;
 
     virtual std::string getPythonModule() const;
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
     Internal _internal;
 };
+}
+}
+}  // lsst::afw::image
 
-}}} // lsst::afw::image
-
-#endif // !LSST_AFW_IMAGE_ApCorrMap_h_INCLUDED
+#endif  // !LSST_AFW_IMAGE_ApCorrMap_h_INCLUDED

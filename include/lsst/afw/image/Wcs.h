@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
@@ -39,21 +38,21 @@
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-struct wcsprm;                          // defined in wcs.h
+struct wcsprm;  // defined in wcs.h
 
 namespace lsst {
 namespace daf {
-    namespace base {
-        class PropertySet;
-    }
+namespace base {
+class PropertySet;
+}
 }
 namespace afw {
-    namespace formatters {
-        class WcsFormatter;
-    }
-    namespace table {
-        class BaseRecord;
-    }
+namespace formatters {
+class WcsFormatter;
+}
+namespace table {
+class BaseRecord;
+}
 namespace image {
 
 ///
@@ -105,8 +104,7 @@ namespace image {
 class Wcs : public lsst::daf::base::Persistable,
             public lsst::daf::base::Citizen,
             public afw::table::io::PersistableFacade<Wcs>,
-            public afw::table::io::Persistable
-{
+            public afw::table::io::Persistable {
 public:
     /**
      *  Create a Wcs of the correct class using a FITS header.
@@ -114,7 +112,7 @@ public:
      *  Set stripMetadata=true to remove processed keywords from the PropertySet.
      */
     friend std::shared_ptr<Wcs> makeWcs(std::shared_ptr<lsst::daf::base::PropertySet> const& fitsMetadata,
-                            bool stripMetadata);
+                                        bool stripMetadata);
 
     /** Create a Wcs object with some known information.
      *
@@ -131,18 +129,16 @@ public:
      *@note LSST units are zero indexed while FITs units are 1 indexed. So a value of crpix stored in a fits
      * header of 127,127 corresponds to a pixel position in LSST units of 128, 128
      */
-    Wcs(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
-        Eigen::Matrix2d const & CD,
-        std::string const & ctype1="RA---TAN", std::string const & ctype2="DEC--TAN",
-        double equinox=2000, std::string const & raDecSys="ICRS",
-        std::string const & cunits1="deg", std::string const & cunits2="deg"
-       );
+    Wcs(lsst::afw::geom::Point2D const& crval, lsst::afw::geom::Point2D const& crpix,
+        Eigen::Matrix2d const& CD, std::string const& ctype1 = "RA---TAN",
+        std::string const& ctype2 = "DEC--TAN", double equinox = 2000, std::string const& raDecSys = "ICRS",
+        std::string const& cunits1 = "deg", std::string const& cunits2 = "deg");
 
     virtual ~Wcs();
     virtual std::shared_ptr<Wcs> clone(void) const;
 
-    bool operator==(Wcs const & other) const;
-    bool operator!=(Wcs const & other) const { return !(*this == other); }
+    bool operator==(Wcs const& other) const;
+    bool operator!=(Wcs const& other) const { return !(*this == other); }
 
     /// Returns CRVAL. This need not be the centre of the image.
     std::shared_ptr<lsst::afw::coord::Coord> getSkyOrigin() const;
@@ -197,7 +193,7 @@ public:
      *  system depends on the values of CTYPE used to construct the object. For RA/dec, the CTYPES should
      *  be RA---TAN and DEC--TAN.
      */
-    std::shared_ptr<coord::Coord> pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
+    std::shared_ptr<coord::Coord> pixelToSky(lsst::afw::geom::Point2D const& pixel) const;
 
     /**
      *  Convert from pixel position to sky coordinates (e.g. RA/dec)
@@ -205,9 +201,7 @@ public:
      *  @note This routine is designed for the knowledgeable user in need of performance;
      *  it's safer to call the version that returns a std::shared_ptr<Coord>.
      */
-    void pixelToSky(
-        double pixel1, double pixel2, geom::Angle& sky1, geom::Angle& sky2
-    ) const;
+    void pixelToSky(double pixel1, double pixel2, geom::Angle& sky1, geom::Angle& sky2) const;
 
     /**
      *  Convert from sky coordinates (e.g. RA/dec) to pixel positions
@@ -221,16 +215,16 @@ public:
     geom::Point2D skyToPixel(geom::Angle sky1, geom::Angle sky2) const;
 
     /// Convert from sky coordinates (e.g. RA/dec) to pixel positions.
-    geom::Point2D skyToPixel(coord::Coord const & coord) const;
+    geom::Point2D skyToPixel(coord::Coord const& coord) const;
 
     /**
      *  Convert from sky coordinates (e.g. RA/dec) to intermediate world coordinates
      *
      *  Intermediate world coordinates are in DEGREES.
      */
-    geom::Point2D skyToIntermediateWorldCoord(coord::Coord const & coord) const;
+    geom::Point2D skyToIntermediateWorldCoord(coord::Coord const& coord) const;
 
-    virtual bool hasDistortion() const {    return false;};
+    virtual bool hasDistortion() const { return false; };
 
     afw::coord::CoordSystem getCoordSystem() const { return _coordSystem; };
 
@@ -243,7 +237,7 @@ public:
      * - Equinox is ignored if the coordinate system is ICRS
      * - FK5 J2000 is considered the same as ICRS
      */
-    bool isSameSkySystem(Wcs const &wcs) const;
+    bool isSameSkySystem(Wcs const& wcs) const;
 
     /**
      * Return the linear part of the Wcs, the CD matrix in FITS-speak, as an AffineTransform.
@@ -265,10 +259,8 @@ public:
      * @param[in] coord   Position in sky coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
      */
-    geom::AffineTransform linearizePixelToSky(
-        coord::Coord const & coord,
-        geom::AngleUnit skyUnit = geom::degrees
-    ) const;
+    geom::AffineTransform linearizePixelToSky(coord::Coord const& coord,
+                                              geom::AngleUnit skyUnit = geom::degrees) const;
 
     /**
      * Return the local linear approximation to Wcs::pixelToSky at a point given in pixel coordinates.
@@ -285,10 +277,8 @@ public:
      * @param[in] pix     Position in pixel coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
      */
-    geom::AffineTransform linearizePixelToSky(
-        geom::Point2D const & pix,
-        geom::AngleUnit skyUnit = geom::degrees
-    ) const;
+    geom::AffineTransform linearizePixelToSky(geom::Point2D const& pix,
+                                              geom::AngleUnit skyUnit = geom::degrees) const;
 
     /**
      * Return the local linear approximation to Wcs::skyToPixel at a point given in sky coordinates.
@@ -305,10 +295,8 @@ public:
      * @param[in] coord   Position in sky coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
      */
-    geom::AffineTransform linearizeSkyToPixel(
-        coord::Coord const & coord,
-        geom::AngleUnit skyUnit = geom::degrees
-    ) const;
+    geom::AffineTransform linearizeSkyToPixel(coord::Coord const& coord,
+                                              geom::AngleUnit skyUnit = geom::degrees) const;
 
     /**
      * Return the local linear approximation to Wcs::skyToPixel at a point given in pixel coordinates.
@@ -325,10 +313,8 @@ public:
      * @param[in] pix     Position in pixel coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
      */
-    geom::AffineTransform linearizeSkyToPixel(
-        geom::Point2D const & pix,
-        geom::AngleUnit skyUnit = geom::degrees
-    ) const;
+    geom::AffineTransform linearizeSkyToPixel(geom::Point2D const& pix,
+                                              geom::AngleUnit skyUnit = geom::degrees) const;
 
     // Mutators; the first one is virtual, even though it will never be overridden,
     // to make sure subclasses use the correct version of both
@@ -344,13 +330,13 @@ public:
     virtual void shiftReferencePixel(double dx, double dy);
 
     // Virtual to make sure subclasses use the correct version of both shiftReferencePixel mutators.
-    virtual void shiftReferencePixel(geom::Extent2D const & d) { shiftReferencePixel(d.getX(), d.getY()); }
+    virtual void shiftReferencePixel(geom::Extent2D const& d) { shiftReferencePixel(d.getX(), d.getY()); }
 
     /// Whether the Wcs is persistable using afw::table::io archives.
     virtual bool isPersistable() const;
 
 private:
-    //Allow the formatter to access private goo
+    // Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
 
     /** Manually initialise a wcs struct using values passed by the constructor
@@ -365,50 +351,47 @@ private:
      * @param cunits1 Units of sky position. One of deg, arcmin or arcsec
      * @param cunits2 Units of sky position. One of deg, arcmin or arcsec
      */
-    void initWcsLib(geom::Point2D const & crval, geom::Point2D const & crpix,
-                    Eigen::Matrix2d const & CD,
-                    std::string const & ctype1, std::string const & ctype2,
-                    double equinox, std::string const & raDecSys,
-                    std::string const & cunits1, std::string const & cunits2
-                   );
+    void initWcsLib(geom::Point2D const& crval, geom::Point2D const& crpix, Eigen::Matrix2d const& CD,
+                    std::string const& ctype1, std::string const& ctype2, double equinox,
+                    std::string const& raDecSys, std::string const& cunits1, std::string const& cunits2);
 
 protected:
-
     friend class WcsFactory;
     /// Perform basic checks on whether *this might be persistable
     bool _mayBePersistable() const;
     // See afw::table::io::Persistable
     virtual std::string getPersistenceName() const;
     virtual std::string getPythonModule() const;
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
-    virtual bool _isSubset(Wcs const & other) const;
+    virtual bool _isSubset(Wcs const& other) const;
 
     // Return true if coordinate system is ICRS or FK5 J2000
     bool _isIcrs() const {
         return (getCoordSystem() == afw::coord::ICRS) ||
-            ((getCoordSystem() == afw::coord::FK5) && (getEquinox() == 2000));
+               ((getCoordSystem() == afw::coord::FK5) && (getEquinox() == 2000));
     }
 
     // Default constructor, only used by WcsFormatter
     /// Construct an invalid Wcs given no arguments
     Wcs();
 
-    //If you want to create a Wcs from a FITS header, use makeWcs().
-    //This is protected because the derived classes need to be able to see it.
+    // If you want to create a Wcs from a FITS header, use makeWcs().
+    // This is protected because the derived classes need to be able to see it.
     /** Create a Wcs from a fits header.
      *
-     * Don't call this directly. Use makeWcs() instead, which will figure out which (if any) sub-class of Wcs is appropriate.
+     * Don't call this directly. Use makeWcs() instead, which will figure out which (if any) sub-class of Wcs
+     * is appropriate.
      */
     Wcs(std::shared_ptr<daf::base::PropertySet const> const& fitsMetadata);
 
     // Construct from a record; used by WcsFactory for afw::table::io persistence.
-    explicit Wcs(afw::table::BaseRecord const & record);
+    explicit Wcs(afw::table::BaseRecord const& record);
 
-    ///Copy constructor
-    Wcs(Wcs const & rhs);
-    Wcs& operator= (const Wcs &);
+    /// Copy constructor
+    Wcs(Wcs const& rhs);
+    Wcs& operator=(const Wcs&);
 
     /**
      * Worker routine for pixelToSky
@@ -423,7 +406,8 @@ protected:
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
     /**
-     * Given a sky position, use the values stored in ctype and radesys to return the correct sub-class of Coord.
+     * Given a sky position, use the values stored in ctype and radesys to return the correct sub-class of
+     * Coord.
      */
     std::shared_ptr<afw::coord::Coord> makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
 
@@ -431,28 +415,25 @@ protected:
      *  Given a Coord (as a shared pointer), return the sky position in the correct
      *  coordinate system for this Wcs.
      */
-    std::shared_ptr<afw::coord::Coord> convertCoordToSky(coord::Coord const & coord) const;
+    std::shared_ptr<afw::coord::Coord> convertCoordToSky(coord::Coord const& coord) const;
 
     /**
-     * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate and the corresponding sky coordinate.
+     * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
+     * and the corresponding sky coordinate.
      */
-    virtual geom::AffineTransform linearizePixelToSkyInternal(
-        geom::Point2D const & pix,
-        coord::Coord const & coord,
-        geom::AngleUnit skyUnit
-    ) const;
+    virtual geom::AffineTransform linearizePixelToSkyInternal(geom::Point2D const& pix,
+                                                              coord::Coord const& coord,
+                                                              geom::AngleUnit skyUnit) const;
 
     /**
-     * Implementation for the overloaded public linearizeSkyToPixel methods, requiring both a pixel coordinate and the corresponding sky coordinate.
+     * Implementation for the overloaded public linearizeSkyToPixel methods, requiring both a pixel coordinate
+     * and the corresponding sky coordinate.
      */
-    virtual geom::AffineTransform linearizeSkyToPixelInternal(
-        geom::Point2D const & pix,
-        coord::Coord const & coord,
-        geom::AngleUnit skyUnit
-    ) const;
+    virtual geom::AffineTransform linearizeSkyToPixelInternal(geom::Point2D const& pix,
+                                                              coord::Coord const& coord,
+                                                              geom::AngleUnit skyUnit) const;
 
-
-    ///Parse a fits header, extract the relevant metadata and create a Wcs object
+    /// Parse a fits header, extract the relevant metadata and create a Wcs object
     void initWcsLibFromFits(std::shared_ptr<lsst::daf::base::PropertySet const> const& fitsMetadata);
     /**
      * Set some internal variables that we need to refer to
@@ -462,19 +443,20 @@ protected:
 
     struct wcsprm* _wcsInfo;
     int _nWcsInfo;
-    int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.
-    int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
-    int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
+    int _relax;       ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.
+    int _wcsfixCtrl;  ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
+    int _wcshdrCtrl;  ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
     int _nReject;
     coord::CoordSystem _coordSystem;
-    bool _skyAxesSwapped; ///< if true then the sky axes are swapped
+    bool _skyAxesSwapped;  ///< if true then the sky axes are swapped
 };
 
 namespace detail {
-    std::shared_ptr<lsst::daf::base::PropertyList>
-    createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
+std::shared_ptr<lsst::daf::base::PropertyList> createTrivialWcsAsPropertySet(std::string const& wcsName,
+                                                                             int const x0 = 0,
+                                                                             int const y0 = 0);
 
-    geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet* metadata);
 }
 
 /**
@@ -486,7 +468,8 @@ namespace detail {
  * @param fitsMetadata input metadata
  * @param stripMetadata Remove FITS keywords from metadata?
  */
-std::shared_ptr<Wcs> makeWcs(std::shared_ptr<lsst::daf::base::PropertySet> const& fitsMetadata, bool stripMetadata=false);
+std::shared_ptr<Wcs> makeWcs(std::shared_ptr<lsst::daf::base::PropertySet> const& fitsMetadata,
+                             bool stripMetadata = false);
 
 /**
  * Create a Wcs object from crval, crpix, CD, using CD elements (useful from python)
@@ -500,15 +483,15 @@ std::shared_ptr<Wcs> makeWcs(std::shared_ptr<lsst::daf::base::PropertySet> const
  *
  * @note CD matrix elements must be in degrees/pixel.
  */
-std::shared_ptr<Wcs> makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
-                 double CD11, double CD12, double CD21, double CD22);
+std::shared_ptr<Wcs> makeWcs(coord::Coord const& crval, geom::Point2D const& crpix, double CD11, double CD12,
+                             double CD21, double CD22);
 
 namespace detail {
-    int stripWcsKeywords(std::shared_ptr<lsst::daf::base::PropertySet> const& metadata, ///< Metadata to be stripped
-                         std::shared_ptr<Wcs const> const& wcs ///< A Wcs with (implied) keywords
-                        );
+int stripWcsKeywords(
+        std::shared_ptr<lsst::daf::base::PropertySet> const& metadata,  ///< Metadata to be stripped
+        std::shared_ptr<Wcs const> const& wcs                           ///< A Wcs with (implied) keywords
+        );
 }
-
 
 /**
  * XYTransformFromWcsPair: An XYTransform obtained by putting two Wcs objects "back to back".
@@ -517,28 +500,27 @@ namespace detail {
  * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
  * with a SIP-distorted TanWcs and an undistorted Wcs.
  */
-class XYTransformFromWcsPair : public afw::geom::XYTransform
-{
+class XYTransformFromWcsPair : public afw::geom::XYTransform {
 public:
     XYTransformFromWcsPair(std::shared_ptr<Wcs const> dst, std::shared_ptr<Wcs const> src);
-    virtual ~XYTransformFromWcsPair() { }
+    virtual ~XYTransformFromWcsPair() {}
 
     virtual std::shared_ptr<afw::geom::XYTransform> invert() const;
 
     /// The following methods are needed to devirtualize the XYTransform parent class
     virtual std::shared_ptr<afw::geom::XYTransform> clone() const;
-    virtual Point2D forwardTransform(Point2D const &pixel) const;
-    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual Point2D forwardTransform(Point2D const& pixel) const;
+    virtual Point2D reverseTransform(Point2D const& pixel) const;
 
 protected:
     std::shared_ptr<Wcs const> _dst;
     std::shared_ptr<Wcs const> _src;
     bool const _isSameSkySystem;
 };
+}
+}
+}  // lsst::afw::image
 
-
-}}} // lsst::afw::image
-
-#endif // LSST_AFW_IMAGE_WCS_H
+#endif  // LSST_AFW_IMAGE_WCS_H
 
 //  LocalWords:  LSST

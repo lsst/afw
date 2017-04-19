@@ -45,14 +45,17 @@
 
 namespace lsst {
 namespace afw {
-    namespace image {
-        template<typename> class Image;
-        template<typename, typename, typename> class MaskedImage;
-    }
+namespace image {
+template <typename>
+class Image;
+template <typename, typename, typename>
+class MaskedImage;
+}
 namespace math {
-    template<typename> class MaskedVector; // forward declaration
+template <typename>
+class MaskedVector;  // forward declaration
 
-    typedef lsst::afw::image::VariancePixel WeightPixel; // Type used for weights
+typedef lsst::afw::image::VariancePixel WeightPixel;  // Type used for weights
 
 /**
  * control what is calculated
@@ -79,7 +82,6 @@ enum Property {
 /// Conversion function to switch a string to a Property (see Statistics.h)
 Property stringToStatisticsProperty(std::string const property);
 
-
 /**
  * Pass parameters to a Statistics object
  *
@@ -88,28 +90,28 @@ Property stringToStatisticsProperty(std::string const property);
  */
 class StatisticsControl {
 public:
-    enum WeightsBoolean { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE }; // initial state is NONE
+    enum WeightsBoolean { WEIGHTS_FALSE = 0, WEIGHTS_TRUE = 1, WEIGHTS_NONE };  // initial state is NONE
 
-    StatisticsControl(
-        double numSigmaClip = 3.0, ///< number of standard deviations to clip at
-        int numIter = 3,           ///< Number of iterations
-        lsst::afw::image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
-        bool isNanSafe = true,     ///< flag NaNs & Infs
-        WeightsBoolean useWeights = WEIGHTS_NONE      ///< use weighted statistics (via a vector or an inverse variance)
-                     ) :
-        _numSigmaClip(numSigmaClip),
-        _numIter(numIter),
-        _andMask(andMask),
-        _noGoodPixelsMask(0x0),
-        _isNanSafe(isNanSafe),
-        _useWeights(useWeights),
-        _calcErrorFromInputVariance(false),
-        _maskPropagationThresholds()
-    {
+    StatisticsControl(double numSigmaClip = 3.0,  ///< number of standard deviations to clip at
+                      int numIter = 3,            ///< Number of iterations
+                      lsst::afw::image::MaskPixel andMask =
+                              0x0,  ///< and-Mask: defines which mask bits cause a value to be ignored
+                      bool isNanSafe = true,  ///< flag NaNs & Infs
+                      WeightsBoolean useWeights =
+                              WEIGHTS_NONE  ///< use weighted statistics (via a vector or an inverse variance)
+                      )
+            : _numSigmaClip(numSigmaClip),
+              _numIter(numIter),
+              _andMask(andMask),
+              _noGoodPixelsMask(0x0),
+              _isNanSafe(isNanSafe),
+              _useWeights(useWeights),
+              _calcErrorFromInputVariance(false),
+              _maskPropagationThresholds() {
         try {
             _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("NO_DATA");
-        } catch(lsst::pex::exceptions::InvalidParameterError) {
-            ;                           // Mask has no NO_DATA plane defined
+        } catch (lsst::pex::exceptions::InvalidParameterError) {
+            ;  // Mask has no NO_DATA plane defined
         }
 
         assert(_numSigmaClip > 0);
@@ -135,8 +137,14 @@ public:
     bool getWeightedIsSet() const { return _useWeights != WEIGHTS_NONE ? true : false; }
     bool getCalcErrorFromInputVariance() const { return _calcErrorFromInputVariance; }
 
-    void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
-    void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
+    void setNumSigmaClip(double numSigmaClip) {
+        assert(numSigmaClip > 0);
+        _numSigmaClip = numSigmaClip;
+    }
+    void setNumIter(int numIter) {
+        assert(numIter > 0);
+        _numIter = numIter;
+    }
     void setAndMask(int andMask) { _andMask = andMask; }
     void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
@@ -146,18 +154,17 @@ public:
     }
 
 private:
-
     friend class Statistics;
 
-    double _numSigmaClip;                 // Number of standard deviations to clip at
-    int _numIter;                         // Number of iterations
-    int _andMask;                         // and-Mask to specify which mask planes to ignore
-    int _noGoodPixelsMask;                // mask to set if no values are acceptable
-    bool _isNanSafe;                      // Check for NaNs & Infs before running (slower)
-    WeightsBoolean _useWeights;           // Calculate weighted statistics (enum because of 3-valued logic)
-    bool _calcErrorFromInputVariance;     // Calculate errors from the input variances, if available
-    std::vector<double> _maskPropagationThresholds; // Thresholds for when to propagate mask bits,
-                                                    // treated like a dict (unset bits are set to 1.0)
+    double _numSigmaClip;              // Number of standard deviations to clip at
+    int _numIter;                      // Number of iterations
+    int _andMask;                      // and-Mask to specify which mask planes to ignore
+    int _noGoodPixelsMask;             // mask to set if no values are acceptable
+    bool _isNanSafe;                   // Check for NaNs & Infs before running (slower)
+    WeightsBoolean _useWeights;        // Calculate weighted statistics (enum because of 3-valued logic)
+    bool _calcErrorFromInputVariance;  // Calculate errors from the input variances, if available
+    std::vector<double> _maskPropagationThresholds;  // Thresholds for when to propagate mask bits,
+                                                     // treated like a dict (unset bits are set to 1.0)
 };
 
 /**
@@ -220,12 +227,9 @@ public:
      * @note Most of the actual work is done in this constructor; the results
      * are retrieved using `getValue` etc.
      */
-    template<typename ImageT, typename MaskT, typename VarianceT>
-    explicit Statistics(ImageT const &img,
-                        MaskT const &msk,
-                        VarianceT const &var,
-                        int const flags,
-                        StatisticsControl const& sctrl = StatisticsControl());
+    template <typename ImageT, typename MaskT, typename VarianceT>
+    explicit Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags,
+                        StatisticsControl const &sctrl = StatisticsControl());
 
     /**
      * @param img Image whose properties we want
@@ -235,13 +239,9 @@ public:
      * @param flags Describe what we want to calculate
      * @param sctrl Control how things are calculated
      */
-    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    explicit Statistics(ImageT const &img,
-                        MaskT const &msk,
-                        VarianceT const &var,
-                        WeightT const &weights,
-                        int const flags,
-                        StatisticsControl const& sctrl = StatisticsControl());
+    template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    explicit Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var, WeightT const &weights,
+                        int const flags, StatisticsControl const &sctrl = StatisticsControl());
 
     /** Return the value and error in the specified statistic (e.g. MEAN)
      *
@@ -272,27 +272,25 @@ public:
      *             asked for one property in the constructor, that property is returned
      */
     double getValue(Property const prop = NOTHING) const;
-    lsst::afw::image::MaskPixel getOrMask() const {
-        return _allPixelOrMask;
-    }
+    lsst::afw::image::MaskPixel getOrMask() const { return _allPixelOrMask; }
 
 private:
-    long _flags;                        // The desired calculation
+    long _flags;  // The desired calculation
 
-    int _n;                             // number of pixels in the image
-    Value _mean;                        // the image's mean
-    Value _variance;                    // the image's variance
-    double _min;                        // the image's minimum
-    double _max;                        // the image's maximum
-    double _sum;                        // the sum of all the image's pixels
-    Value _meanclip;                    // the image's N-sigma clipped mean
-    Value _varianceclip;                // the image's N-sigma clipped variance
-    Value _median;                      // the image's median
-    double _iqrange;                    // the image's interquartile range
-    lsst::afw::image::MaskPixel _allPixelOrMask;   //  the 'or' of all masked pixels
+    int _n;                                       // number of pixels in the image
+    Value _mean;                                  // the image's mean
+    Value _variance;                              // the image's variance
+    double _min;                                  // the image's minimum
+    double _max;                                  // the image's maximum
+    double _sum;                                  // the sum of all the image's pixels
+    Value _meanclip;                              // the image's N-sigma clipped mean
+    Value _varianceclip;                          // the image's N-sigma clipped variance
+    Value _median;                                // the image's median
+    double _iqrange;                              // the image's interquartile range
+    lsst::afw::image::MaskPixel _allPixelOrMask;  //  the 'or' of all masked pixels
 
-    StatisticsControl _sctrl;           // the control structure
-    bool _weightsAreMultiplicative;     // Multiply by weights rather than dividing by them
+    StatisticsControl _sctrl;        // the control structure
+    bool _weightsAreMultiplicative;  // Multiply by weights rather than dividing by them
 
     /**
      * @param img Image whose properties we want
@@ -302,13 +300,9 @@ private:
      * @param flags Describe what we want to calculate
      * @param sctrl Control how things are calculated
      */
-    template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
-    void doStatistics(ImageT const &img,
-                      MaskT const &msk,
-                      VarianceT const &var,
-                      WeightT const &weights,
-                      int const flags,
-                      StatisticsControl const& sctrl);
+    template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
+    void doStatistics(ImageT const &img, MaskT const &msk, VarianceT const &var, WeightT const &weights,
+                      int const flags, StatisticsControl const &sctrl);
 };
 
 /* ************************************  The factory functions ********************************* */
@@ -317,58 +311,50 @@ private:
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
  */
 template <typename ValueT>
-class infinite_iterator
-    : public boost::iterator_adaptor<infinite_iterator<ValueT>,
-                                     const ValueT*, const ValueT,
-                                     boost::forward_traversal_tag> {
+class infinite_iterator : public boost::iterator_adaptor<infinite_iterator<ValueT>, const ValueT *,
+                                                         const ValueT, boost::forward_traversal_tag> {
 public:
     infinite_iterator() : infinite_iterator::iterator_adaptor_(0) {}
-    explicit infinite_iterator(const ValueT* p) : infinite_iterator::iterator_adaptor_(p) {}
+    explicit infinite_iterator(const ValueT *p) : infinite_iterator::iterator_adaptor_(p) {}
+
 private:
     friend class boost::iterator_core_access;
-    void increment() { ; }              // never actually advance the iterator
+    void increment() { ; }  // never actually advance the iterator
 };
 /**
  * @brief A Mask wrapper to provide an infinite_iterator for Mask::row_begin().  This allows a fake
  *        Mask to be passed in to Statistics with a regular (non-masked) Image.
  */
-template<typename ValueT>
+template <typename ValueT>
 class MaskImposter {
 public:
     typedef infinite_iterator<ValueT> x_iterator;
     explicit MaskImposter(ValueT val = 0) { _val[0] = val; }
     x_iterator row_begin(int) const { return x_iterator(_val); }
+
 private:
     ValueT _val[1];
 };
-
 
 /**
  * Handle a watered-down front-end to the constructor (no variance)
  * @relatesalso Statistics
  */
-template<typename Pixel>
+template <typename Pixel>
 Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
-                          lsst::afw::image::Mask<image::MaskPixel> const &msk,
-                          int const flags,
-                          StatisticsControl const& sctrl = StatisticsControl()
-                         ) {
+                          lsst::afw::image::Mask<image::MaskPixel> const &msk, int const flags,
+                          StatisticsControl const &sctrl = StatisticsControl()) {
     MaskImposter<WeightPixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
-
 
 /**
  * Handle a straight front-end to the constructor
  * @relatesalso Statistics
  */
-template<typename ImageT, typename MaskT, typename VarianceT>
-Statistics makeStatistics(ImageT const &img,
-                          MaskT const &msk,
-                          VarianceT const &var,
-                          int const flags,
-                          StatisticsControl const& sctrl = StatisticsControl()
-                         ) {
+template <typename ImageT, typename MaskT, typename VarianceT>
+Statistics makeStatistics(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags,
+                          StatisticsControl const &sctrl = StatisticsControl()) {
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -376,13 +362,9 @@ Statistics makeStatistics(ImageT const &img,
  * Handle MaskedImages, just pass the getImage() and getMask() values right on through.
  * @relatesalso Statistics
  */
-template<typename Pixel>
-Statistics makeStatistics(
-        lsst::afw::image::MaskedImage<Pixel> const &mimg,
-        int const flags,
-        StatisticsControl const& sctrl = StatisticsControl()
-                         )
-{
+template <typename Pixel>
+Statistics makeStatistics(lsst::afw::image::MaskedImage<Pixel> const &mimg, int const flags,
+                          StatisticsControl const &sctrl = StatisticsControl()) {
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
@@ -395,14 +377,10 @@ Statistics makeStatistics(
  * Handle MaskedImages, just pass the getImage() and getMask() values right on through.
  * @relatesalso Statistics
  */
-template<typename Pixel>
-Statistics makeStatistics(
-        lsst::afw::image::MaskedImage<Pixel> const &mimg,
-        lsst::afw::image::Image<WeightPixel> const &weights,
-        int const flags,
-        StatisticsControl const& sctrl = StatisticsControl()
-                         )
-{
+template <typename Pixel>
+Statistics makeStatistics(lsst::afw::image::MaskedImage<Pixel> const &mimg,
+                          lsst::afw::image::Image<WeightPixel> const &weights, int const flags,
+                          StatisticsControl const &sctrl = StatisticsControl()) {
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() ||
         (!sctrl.getWeightedIsSet() && (weights.getWidth() != 0 && weights.getHeight() != 0))) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
@@ -421,37 +399,32 @@ Statistics makeStatistics(
  *
  * @relatesalso Statistics
  */
-Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &msk,
-                          int const flags,
-                          StatisticsControl const& sctrl = StatisticsControl());
-
-
+Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &msk, int const flags,
+                          StatisticsControl const &sctrl = StatisticsControl());
 
 /**
  * The makeStatistics() overload to handle regular (non-masked) Images
  * @relatesalso Statistics
  */
-template<typename Pixel>
+template <typename Pixel>
 Statistics makeStatistics(
-        lsst::afw::image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
-        int const flags,   ///< Describe what we want to calculate
-        StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-) {
+        lsst::afw::image::Image<Pixel> const &img,            ///< Image (or Image) whose properties we want
+        int const flags,                                      ///< Describe what we want to calculate
+        StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
+        ) {
     // make a phony mask that will be compiled out
     MaskImposter<lsst::afw::image::MaskPixel> const msk;
     MaskImposter<WeightPixel> const var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
-
 /**
  * @brief A vector wrapper to provide a vector with the necessary methods and typedefs to
  *        be processed by Statistics as though it were an Image.
  */
-template<typename ValueT>
+template <typename ValueT>
 class ImageImposter {
 public:
-
     // types we'll use in Statistics
     typedef typename std::vector<ValueT>::const_iterator x_iterator;
     typedef typename std::vector<ValueT>::const_iterator fast_iterator;
@@ -459,7 +432,7 @@ public:
 
     // constructors for std::vector<>, and copy constructor
     // These are both shallow! ... no actual copying of values
-    explicit ImageImposter(std::vector<ValueT> const &v) : _v(v) { }
+    explicit ImageImposter(std::vector<ValueT> const &v) : _v(v) {}
     explicit ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
 
     // The methods we'll use in Statistics
@@ -470,22 +443,23 @@ public:
     afw::geom::Extent2I getDimensions() const { return afw::geom::Extent2I(getWidth(), getHeight()); }
 
     bool empty() const { return _v.empty(); }
+
 private:
-    std::vector<ValueT> const &_v;                  // a private reference to the data
-    std::vector<ValueT> const &_getVector() const { return _v; } // get the ref for the copyCon
+    std::vector<ValueT> const &_v;                                // a private reference to the data
+    std::vector<ValueT> const &_getVector() const { return _v; }  // get the ref for the copyCon
 };
 
 /**
  * The makeStatistics() overload to handle std::vector<>
  * @relatesalso Statistics
  */
-template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
-    ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
-    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+template <typename EntryT>
+Statistics makeStatistics(std::vector<EntryT> const &v,  ///< Image (or MaskedImage) whose properties we want
+                          int const flags,               ///< Describe what we want to calculate
+                          StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
+                          ) {
+    ImageImposter<EntryT> img(v);                   // wrap the vector in a fake image
+    MaskImposter<lsst::afw::image::MaskPixel> msk;  // instantiate a fake mask that will be compiled out.
     MaskImposter<WeightPixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
@@ -494,14 +468,14 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
  * The makeStatistics() overload to handle std::vector<>
  * @relatesalso Statistics
  */
-template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
-                          std::vector<WeightPixel> const &vweights, ///< Weights
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
-    ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
-    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+template <typename EntryT>
+Statistics makeStatistics(std::vector<EntryT> const &v,  ///< Image (or MaskedImage) whose properties we want
+                          std::vector<WeightPixel> const &vweights,  ///< Weights
+                          int const flags,                           ///< Describe what we want to calculate
+                          StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
+                          ) {
+    ImageImposter<EntryT> img(v);                   // wrap the vector in a fake image
+    MaskImposter<lsst::afw::image::MaskPixel> msk;  // instantiate a fake mask that will be compiled out.
     MaskImposter<WeightPixel> var;
 
     ImageImposter<WeightPixel> weights(vweights);
@@ -513,11 +487,11 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
  * The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
  * @relatesalso Statistics
  */
-template<typename EntryT>
-Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< MaskedVector
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
+template <typename EntryT>
+Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///< MaskedVector
+                          int const flags,  ///< Describe what we want to calculate
+                          StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
+                          ) {
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
     } else {
@@ -530,12 +504,12 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
  * The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
  * @relatesalso Statistics
  */
-template<typename EntryT>
-Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< MaskedVector
-                          std::vector<WeightPixel> const &vweights, ///< weights
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
+template <typename EntryT>
+Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///< MaskedVector
+                          std::vector<WeightPixel> const &vweights,         ///< weights
+                          int const flags,  ///< Describe what we want to calculate
+                          StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
+                          ) {
     ImageImposter<WeightPixel> weights(vweights);
 
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
@@ -545,7 +519,8 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
         return Statistics(*mv.getImage(), *mv.getMask(), var, weights, flags, sctrl);
     }
 }
-
-}}}
+}
+}
+}
 
 #endif

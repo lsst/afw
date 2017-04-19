@@ -1,14 +1,14 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/slots.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 namespace {
 
 // Return true if 'a' starts with 'b'
-bool startsWith(std::string const & a, std::string const b) {
-    return a.compare(0, b.size(), b) == 0;
-}
+bool startsWith(std::string const &a, std::string const b) { return a.compare(0, b.size(), b) == 0; }
 
 // helper class that resolves aliases for a slot's main measurement field, while
 // distiguishing between two cases where the field can't be found:
@@ -17,20 +17,19 @@ bool startsWith(std::string const & a, std::string const b) {
 //  - if the alias simply isn't defined, we should just reset the slot with invalid keys
 class MeasFieldNameGetter {
 public:
-
-    MeasFieldNameGetter(SubSchema const & s, Schema const & schema) :
-        replaced(schema[schema.getAliasMap()->apply(s.getPrefix())]),
-        defined(replaced.getPrefix() != s.getPrefix()) // slot is defined if applying alias wasn't a no-op
+    MeasFieldNameGetter(SubSchema const &s, Schema const &schema)
+            : replaced(schema[schema.getAliasMap()->apply(s.getPrefix())]),
+              defined(replaced.getPrefix() !=
+                      s.getPrefix())  // slot is defined if applying alias wasn't a no-op
     {}
 
     SubSchema replaced;  // a SubSchema that includes alias replacement
-    bool defined;  // whether the slot is defined at all
-
+    bool defined;        // whether the slot is defined at all
 };
 
-} // anonymous
+}  // anonymous
 
-void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+void FluxSlotDefinition::setKeys(std::string const &alias, Schema const &schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     _measKey = MeasKey();
@@ -43,10 +42,12 @@ void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schem
     _measKey = helper.replaced;
     try {
         _errKey = s["fluxSigma"];
-    } catch (pex::exceptions::NotFoundError &) {}
+    } catch (pex::exceptions::NotFoundError &) {
+    }
     try {
         _flagKey = s["flag"];
-    } catch (pex::exceptions::NotFoundError &) {}
+    } catch (pex::exceptions::NotFoundError &) {
+    }
 }
 
 namespace {
@@ -58,9 +59,9 @@ CentroidSlotDefinition::ErrKey::NameArray makeCentroidNameArray() {
     return v;
 }
 
-} // anonymous
+}  // anonymous
 
-void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+void CentroidSlotDefinition::setKeys(std::string const &alias, Schema const &schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeCentroidNameArray();
@@ -72,10 +73,12 @@ void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & s
     _measKey = helper.replaced;
     try {
         _errKey = ErrKey(s, names);
-    } catch (pex::exceptions::NotFoundError &) {}
+    } catch (pex::exceptions::NotFoundError &) {
+    }
     try {
         _flagKey = s["flag"];
-    } catch (pex::exceptions::NotFoundError &) {}
+    } catch (pex::exceptions::NotFoundError &) {
+    }
 }
 
 namespace {
@@ -88,9 +91,9 @@ ShapeSlotDefinition::ErrKey::NameArray makeShapeNameArray() {
     return v;
 }
 
-} // anonymous
+}  // anonymous
 
-void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+void ShapeSlotDefinition::setKeys(std::string const &alias, Schema const &schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeShapeNameArray();
@@ -102,13 +105,15 @@ void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & sche
     _measKey = helper.replaced;
     try {
         _errKey = ErrKey(s, names);
-    } catch (pex::exceptions::NotFoundError &) {}
+    } catch (pex::exceptions::NotFoundError &) {
+    }
     try {
         _flagKey = s["flag"];
-    } catch (pex::exceptions::NotFoundError &) {}
+    } catch (pex::exceptions::NotFoundError &) {
+    }
 }
 
-void SlotSuite::handleAliasChange(std::string const & alias, Schema const & schema) {
+void SlotSuite::handleAliasChange(std::string const &alias, Schema const &schema) {
     defPsfFlux.setKeys(alias, schema);
     defApFlux.setKeys(alias, schema);
     defInstFlux.setKeys(alias, schema);
@@ -118,15 +123,14 @@ void SlotSuite::handleAliasChange(std::string const & alias, Schema const & sche
     defShape.setKeys(alias, schema);
 }
 
-SlotSuite::SlotSuite(Schema const & schema) :
-    defPsfFlux("PsfFlux"),
-    defApFlux("ApFlux"),
-    defInstFlux("InstFlux"),
-    defModelFlux("ModelFlux"),
-    defCalibFlux("CalibFlux"),
-    defCentroid("Centroid"),
-    defShape("Shape")
-{
+SlotSuite::SlotSuite(Schema const &schema)
+        : defPsfFlux("PsfFlux"),
+          defApFlux("ApFlux"),
+          defInstFlux("InstFlux"),
+          defModelFlux("ModelFlux"),
+          defCalibFlux("CalibFlux"),
+          defCentroid("Centroid"),
+          defShape("Shape") {
     defPsfFlux.setKeys("", schema);
     defApFlux.setKeys("", schema);
     defInstFlux.setKeys("", schema);
@@ -135,5 +139,6 @@ SlotSuite::SlotSuite(Schema const & schema) :
     defCentroid.setKeys("", schema);
     defShape.setKeys("", schema);
 }
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

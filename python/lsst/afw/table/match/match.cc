@@ -38,7 +38,7 @@ namespace {
 
 /// @internal Declare match code templated on two types of catalog
 template <typename Catalog1, typename Catalog2>
-void declareMatch2(py::module & mod, std::string const & prefix) {
+void declareMatch2(py::module &mod, std::string const &prefix) {
     typedef typename Catalog1::Record Record1;
     typedef typename Catalog2::Record Record2;
     typedef std::vector<Match<typename Catalog1::Record, typename Catalog2::Record>> MatchList;
@@ -57,9 +57,9 @@ void declareMatch2(py::module & mod, std::string const & prefix) {
     // Free Functions
     mod.def("unpackMatches", &unpackMatches<Catalog1, Catalog2>, "matches"_a, "cat1"_a, "cat2"_a);
 
-    mod.def("matchRaDec",
-            (MatchList (*)(Catalog1 const &, Catalog2 const &, geom::Angle, MatchControl const &))
-             matchRaDec<Catalog1, Catalog2>, "cat1"_a, "cat2"_a, "radius"_a, "mc"_a=MatchControl());
+    mod.def("matchRaDec", (MatchList(*)(Catalog1 const &, Catalog2 const &, geom::Angle,
+                                        MatchControl const &))matchRaDec<Catalog1, Catalog2>,
+            "cat1"_a, "cat2"_a, "radius"_a, "mc"_a = MatchControl());
     // The following is deprecated; consider changing the code instead of wrapping it:
     // mod.def("matchRaDec",
     //         (MatchList (*)(Catalog1 const &, Catalog2 const &, geom::Angle, bool))
@@ -71,8 +71,8 @@ template <typename Catalog>
 void declareMatch1(py::module &mod) {
     typedef std::vector<Match<typename Catalog::Record, typename Catalog::Record>> MatchList;
     mod.def("matchRaDec",
-            (MatchList (*)(Catalog const &, geom::Angle, MatchControl const &))
-             matchRaDec<Catalog>, "cat"_a, "radius"_a, "mc"_a=MatchControl());
+            (MatchList(*)(Catalog const &, geom::Angle, MatchControl const &))matchRaDec<Catalog>, "cat"_a,
+            "radius"_a, "mc"_a = MatchControl());
     // The following is deprecated; consider changing the code instead of wrapping it:
     // mod.def("matchRaDec",
     //         (MatchList (*)(Catalog const &, geom::Angle, bool))
@@ -96,13 +96,11 @@ PYBIND11_PLUGIN(match) {
     declareMatch1<SimpleCatalog>(mod);
     declareMatch1<SourceCatalog>(mod);
 
-    mod.def("matchXy",
-            (SourceMatchVector (*)(SourceCatalog const &, SourceCatalog const &, double,
-                                   MatchControl const &))
-             matchXy, "cat1"_a, "cat2"_a, "radius"_a, "mc"_a=MatchControl());
-    mod.def("matchXy",
-            (SourceMatchVector (*)(SourceCatalog const &, double, MatchControl const &))
-             matchXy, "cat"_a, "radius"_a, "mc"_a=MatchControl());
+    mod.def("matchXy", (SourceMatchVector(*)(SourceCatalog const &, SourceCatalog const &, double,
+                                             MatchControl const &))matchXy,
+            "cat1"_a, "cat2"_a, "radius"_a, "mc"_a = MatchControl());
+    mod.def("matchXy", (SourceMatchVector(*)(SourceCatalog const &, double, MatchControl const &))matchXy,
+            "cat"_a, "radius"_a, "mc"_a = MatchControl());
     // The following are deprecated; consider changing the code instead of wrapping them:
     // mod.def("matchXy",
     //         (SourceMatchVector (*)(SourceCatalog const &, SourceCatalog const &, double, bool))
@@ -111,8 +109,8 @@ PYBIND11_PLUGIN(match) {
     //         (SourceMatchVector (*)(SourceCatalog const &, double, bool))
     //          &matchXy, "cat"_a, "radius"_a, "symmetric"_a);
 
-
     return mod.ptr();
 }
-
-}}}  // namespace lsst::afw::table::<anonymous>
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

@@ -29,7 +29,9 @@
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
-namespace lsst { namespace afw { namespace geom {
+namespace lsst {
+namespace afw {
+namespace geom {
 namespace {
 
 /* These classes are used in the erode operator to quickly calculate the
@@ -37,10 +39,10 @@ namespace {
 */
 
 struct PrimaryRun {
-        int m, y, xmin, xmax;
+    int m, y, xmin, xmax;
 };
 
-bool comparePrimaryRun(PrimaryRun const & first, PrimaryRun const & second) {
+bool comparePrimaryRun(PrimaryRun const& first, PrimaryRun const& second) {
     if (first.y != second.y) {
         return first.y < second.y;
     } else if (first.m != second.m) {
@@ -51,23 +53,15 @@ bool comparePrimaryRun(PrimaryRun const & first, PrimaryRun const & second) {
 }
 
 class ComparePrimaryRunY {
- public:
-    bool operator()(PrimaryRun const& pr, int yval) {
-        return pr.y < yval;
-    }
-    bool operator()(int yval, PrimaryRun const& pr) {
-        return yval < pr.y;
-    }
+public:
+    bool operator()(PrimaryRun const& pr, int yval) { return pr.y < yval; }
+    bool operator()(int yval, PrimaryRun const& pr) { return yval < pr.y; }
 };
 
-class ComparePrimaryRunM{
- public:
-    bool operator()(PrimaryRun const& pr, int mval) {
-        return pr.m < mval;
-    }
-    bool operator()(int mval, PrimaryRun const& pr) {
-        return mval < pr.m;
-    }
+class ComparePrimaryRunM {
+public:
+    bool operator()(PrimaryRun const& pr, int mval) { return pr.m < mval; }
+    bool operator()(int mval, PrimaryRun const& pr) { return mval < pr.m; }
 };
 
 /* Determine if two spans overlap
@@ -76,16 +70,16 @@ class ComparePrimaryRunM{
  * b Second Span in comparison
  * compareY a boolean to control if the comparison takes into account the y position of the spans
  */
-bool spansOverlap(Span const & a, Span const & b, bool compareY = true) {
+bool spansOverlap(Span const& a, Span const& b, bool compareY = true) {
     bool yTruth = true;
     if (compareY) {
         yTruth = a.getY() == b.getY();
     }
     return (yTruth && ((a.getMaxX() >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
-            (b.getMaxX() >= a.getMinX() && b.getMinX() <= a.getMinX())))
-            ? true : false;
+                       (b.getMaxX() >= a.getMinX() && b.getMinX() <= a.getMinX())))
+                   ? true
+                   : false;
 }
-
 
 /* Determine if two spans are contiguous, that is they can overlap or the end of one span is
  * one pixel before the beginning of the next
@@ -94,14 +88,15 @@ bool spansOverlap(Span const & a, Span const & b, bool compareY = true) {
  * b Second Span in comparison
  * compareY a boolean to control if the comparison takes into account the y position of the spans
  */
-bool spansContiguous(Span const & a, Span const & b, bool compareY = true) {
+bool spansContiguous(Span const& a, Span const& b, bool compareY = true) {
     bool yTruth(true);
     if (compareY) {
         yTruth = a.getY() == b.getY();
     }
-    return (yTruth && ((a.getMaxX()+1 >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
-            (b.getMaxX()+1 >= a.getMinX() && b.getMinX() <= a. getMinX())))
-            ? true: false;
+    return (yTruth && ((a.getMaxX() + 1 >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
+                       (b.getMaxX() + 1 >= a.getMinX() && b.getMinX() <= a.getMinX())))
+                   ? true
+                   : false;
 }
 
 }  // namespace
@@ -111,7 +106,7 @@ bool spansContiguous(Span const & a, Span const & b, bool compareY = true) {
 SpanSet::SpanSet() : _spanVector(), _bbox(), _area(0) {}
 
 // Construct a SpanSet from a Box2I object
-SpanSet::SpanSet(Box2I const & box) : _bbox(box), _area(box.getArea()) {
+SpanSet::SpanSet(Box2I const& box) : _bbox(box), _area(box.getArea()) {
     int beginY = box.getMinY();
 
     int beginX = box.getMinX();
@@ -123,7 +118,7 @@ SpanSet::SpanSet(Box2I const & box) : _bbox(box), _area(box.getArea()) {
 }
 
 // Construct a SpanSet from a std vector by copying
-SpanSet::SpanSet(std::vector<Span> const & vec, bool normalize) : _spanVector(vec) {
+SpanSet::SpanSet(std::vector<Span> const& vec, bool normalize) : _spanVector(vec) {
     // If the incoming vector is zero, should create an empty spanSet
     if (_spanVector.empty()) {
         _bbox = Box2I();
@@ -137,7 +132,7 @@ SpanSet::SpanSet(std::vector<Span> const & vec, bool normalize) : _spanVector(ve
 }
 
 // Construct a SpanSet from a std vector by moving
-SpanSet::SpanSet(std::vector<Span> && vec, bool normalize) : _spanVector(std::move(vec)) {
+SpanSet::SpanSet(std::vector<Span>&& vec, bool normalize) : _spanVector(std::move(vec)) {
     // If the incoming vector is zero, should create an empty SpanSet
     if (_spanVector.size() == 0) {
         _bbox = Box2I();
@@ -162,9 +157,8 @@ void SpanSet::_runNormalize() {
     for (auto iter = ++(_spanVector.begin()); iter != _spanVector.end(); iter++) {
         if (spansContiguous(*std::prev(iter, 1), *iter)) {
             // These spans overlap, create one new one, covering the whole expanse
-            *(iter-1) = Span((*(iter-1)).getY(),
-                             std::min((*(iter-1)).getMinX(), (*iter).getMinX()),
-                             std::max((*(iter-1)).getMaxX(), (*iter).getMaxX()));
+            *(iter - 1) = Span((*(iter - 1)).getY(), std::min((*(iter - 1)).getMinX(), (*iter).getMinX()),
+                               std::max((*(iter - 1)).getMaxX(), (*iter).getMaxX()));
             // Erase the current Span, as it is now contained in the previous element
             iter = _spanVector.erase(iter);
             // Move the iterator back one to make sure the element gets run in the loop
@@ -172,7 +166,6 @@ void SpanSet::_runNormalize() {
         }
     }
 }
-
 
 void SpanSet::_initialize() {
     /* This function exists to handle common functionality for most of the constructors. It  calculates the
@@ -190,7 +183,7 @@ void SpanSet::_initialize() {
     int maxX = _spanVector[0].getMaxX();
     _area = 0;
 
-    for (const auto & span : _spanVector) {
+    for (const auto& span : _spanVector) {
         if (span.getMinX() < minX) {
             minX = span.getMinX();
         }
@@ -204,14 +197,10 @@ void SpanSet::_initialize() {
 }
 
 // Getter for the area property
-std::size_t SpanSet::getArea() const {
-    return _area;
-}
+std::size_t SpanSet::getArea() const { return _area; }
 
 // Getter for the bounding box of the SpanSet
-Box2I SpanSet::getBBox() const {
-    return _bbox;
-}
+Box2I SpanSet::getBBox() const { return _bbox; }
 
 /* Here is a description of how the _makeLabels and _label function works. In the
    _makeLabels function, a vector is created with the same number of elements as
@@ -243,13 +232,12 @@ Box2I SpanSet::getBBox() const {
    been labeled.
  */
 
-void SpanSet::_label(Span const & spn,
-                           std::vector<std::size_t> & labelVector,
-                           std::size_t currentLabel) const{
+void SpanSet::_label(Span const& spn, std::vector<std::size_t>& labelVector, std::size_t currentLabel) const {
     std::size_t index = 0;
     // Loop over all Spans and if it is before or after the current span then consider it
-    for (auto const & currentSpan : _spanVector) {
-        if (!labelVector[index] && (currentSpan.getY() == spn.getY() - 1 || currentSpan.getY() == spn.getY() + 1)) {
+    for (auto const& currentSpan : _spanVector) {
+        if (!labelVector[index] &&
+            (currentSpan.getY() == spn.getY() - 1 || currentSpan.getY() == spn.getY() + 1)) {
             if (spansOverlap(spn, currentSpan, /* compareY= */ false)) {
                 labelVector[index] = currentLabel;
                 _label(currentSpan, labelVector, currentLabel);
@@ -263,7 +251,7 @@ std::pair<std::vector<std::size_t>, std::size_t> SpanSet::_makeLabels() const {
     std::vector<std::size_t> labelVector(_spanVector.size(), 0);
     std::size_t currentLabel = 1;
     std::size_t index = 0;
-    for (auto const & currentSpan : _spanVector) {
+    for (auto const& currentSpan : _spanVector) {
         if (!labelVector[index]) {
             labelVector[index] = currentLabel;
             _label(currentSpan, labelVector, currentLabel);
@@ -297,14 +285,14 @@ std::vector<std::shared_ptr<SpanSet>> SpanSet::split() const {
 
     // if numberOfLabels is 1, that means a null SpanSet is being operated on,
     // and we should return like
-    if (numberOfLabels == 1){
+    if (numberOfLabels == 1) {
         subRegions.push_back(std::make_shared<SpanSet>());
         return subRegions;
     }
     subRegions.reserve(numberOfLabels - 1);
-    for (std::size_t i = 1; i < numberOfLabels ; ++i){
+    for (std::size_t i = 1; i < numberOfLabels; ++i) {
         std::vector<Span> tempVec;
-        for (std::size_t j = 0; j < _spanVector.size(); ++j){
+        for (std::size_t j = 0; j < _spanVector.size(); ++j) {
             if (labels[j] == i) {
                 tempVec.push_back(_spanVector[j]);
             }
@@ -327,7 +315,7 @@ std::shared_ptr<SpanSet> SpanSet::shiftedBy(int x, int y) const {
     return makeShift(x, y);
 }
 
-std::shared_ptr<SpanSet> SpanSet::shiftedBy(Extent2I const & offset) const {
+std::shared_ptr<SpanSet> SpanSet::shiftedBy(Extent2I const& offset) const {
     // Function to create a new SpanSet which is a copy of this, shifted by an extent object
     return makeShift(offset.getX(), offset.getY());
 }
@@ -336,18 +324,18 @@ std::shared_ptr<SpanSet> SpanSet::makeShift(int x, int y) const {
     // Implementation method common to all overloads of the shiftedBy method
     std::vector<Span> tempVec;
     tempVec.reserve(_spanVector.size());
-    for (auto const & spn : _spanVector) {
+    for (auto const& spn : _spanVector) {
         tempVec.push_back(Span(spn.getY() + y, spn.getMinX() + x, spn.getMaxX() + x));
     }
     return std::make_shared<SpanSet>(std::move(tempVec), false);
 }
 
-std::shared_ptr<SpanSet> SpanSet::clippedTo(Box2I const & box) const {
+std::shared_ptr<SpanSet> SpanSet::clippedTo(Box2I const& box) const {
     /* Return a copy of the current SpanSet but only with values which are contained within
      * the supplied box
      */
     std::vector<Span> tempVec;
-    for (auto const & spn : _spanVector) {
+    for (auto const& spn : _spanVector) {
         if (spn.getY() >= box.getMinY() && spn.getY() <= box.getMaxY() &&
             spansOverlap(spn, Span(spn.getY(), box.getMinX(), box.getMaxX()))) {
             tempVec.push_back(Span(spn.getY(), std::max(box.getMinX(), spn.getMinX()),
@@ -357,10 +345,10 @@ std::shared_ptr<SpanSet> SpanSet::clippedTo(Box2I const & box) const {
     return std::make_shared<SpanSet>(std::move(tempVec), false);
 }
 
-bool SpanSet::overlaps(SpanSet const & other) const {
+bool SpanSet::overlaps(SpanSet const& other) const {
     // Function to check if two SpanSets overlap
-    for (auto const & otherSpan : other) {
-        for (auto const & spn : _spanVector) {
+    for (auto const& otherSpan : other) {
+        for (auto const& spn : _spanVector) {
             if (spansOverlap(otherSpan, spn)) {
                 return true;
             }
@@ -369,19 +357,19 @@ bool SpanSet::overlaps(SpanSet const & other) const {
     return false;
 }
 
-bool SpanSet::contains(SpanSet const & other) const {
+bool SpanSet::contains(SpanSet const& other) const {
     // Handle null SpanSet passed as other
     if (other.empty()) {
         return false;
     }
     // Function to check if a SpanSet is entirely contained within this
-    for (auto const & otherSpn : other) {
+    for (auto const& otherSpn : other) {
         std::size_t counter = 0;
-        for (auto const & spn : _spanVector) {
+        for (auto const& spn : _spanVector) {
             // Check that the end points of the span from other are contained in the
             // span from this
             if (spn.contains(Point2I(otherSpn.getMinX(), otherSpn.getY())) &&
-                spn.contains(Point2I(otherSpn.getMaxX(), otherSpn.getY()))){
+                spn.contains(Point2I(otherSpn.getMaxX(), otherSpn.getY()))) {
                 ++counter;
             }
         }
@@ -395,9 +383,9 @@ bool SpanSet::contains(SpanSet const & other) const {
     return true;
 }
 
-bool SpanSet::contains(Point2I const & point) const {
+bool SpanSet::contains(Point2I const& point) const {
     // Check to see if a given point is found within any spans in this
-    for (auto & spn : _spanVector) {
+    for (auto& spn : _spanVector) {
         if (spn.contains(point)) {
             return true;
         }
@@ -409,19 +397,19 @@ Point2D SpanSet::computeCentroid() const {
     // Find the centroid of the SpanSet
     std::size_t n = 0;
     double xc = 0, yc = 0;
-    for (auto const & spn : _spanVector) {
+    for (auto const& spn : _spanVector) {
         int const y = spn.getY();
         int const x0 = spn.getMinX();
         int const x1 = spn.getMaxX();
         int const npix = x1 - x0 + 1;
 
         n += npix;
-        xc += npix*0.5*(x1 + x0);
-        yc += npix*y;
+        xc += npix * 0.5 * (x1 + x0);
+        yc += npix * y;
     }
     assert(n == _area);
 
-    return Point2D(xc/_area, yc/_area);
+    return Point2D(xc / _area, yc / _area);
 }
 
 ellipses::Quadrupole SpanSet::computeShape() const {
@@ -431,20 +419,20 @@ ellipses::Quadrupole SpanSet::computeShape() const {
     double const yc = cen.getY();
 
     double sumxx = 0, sumxy = 0, sumyy = 0;
-    for (auto const & spn : _spanVector) {
+    for (auto const& spn : _spanVector) {
         int const y = spn.getY();
         int const x0 = spn.getX0();
         int const x1 = spn.getX1();
         int const npix = x1 - x0 + 1;
 
         for (int x = x0; x <= x1; ++x) {
-            sumxx += (x - xc)*(x - xc);
+            sumxx += (x - xc) * (x - xc);
         }
-        sumxy += npix*(0.5*(x1 + x0) - xc)*(y - yc);
-        sumyy += npix*(y - yc)*(y - yc);
+        sumxy += npix * (0.5 * (x1 + x0) - xc) * (y - yc);
+        sumyy += npix * (y - yc) * (y - yc);
     }
 
-    return ellipses::Quadrupole(sumxx/_area, sumyy/_area, sumxy/_area);
+    return ellipses::Quadrupole(sumxx / _area, sumyy / _area, sumxy / _area);
 }
 
 std::shared_ptr<SpanSet> SpanSet::dilated(int r, Stencil s) const {
@@ -454,7 +442,7 @@ std::shared_ptr<SpanSet> SpanSet::dilated(int r, Stencil s) const {
     return dilated(*stencilToSpanSet);
 }
 
-std::shared_ptr<SpanSet> SpanSet::dilated(SpanSet const & other) const {
+std::shared_ptr<SpanSet> SpanSet::dilated(SpanSet const& other) const {
     // Handle a null SpanSet nothing should be dilated
     if (other.size() == 0) {
         return std::make_shared<SpanSet>(_spanVector.begin(), _spanVector.end(), false);
@@ -463,8 +451,8 @@ std::shared_ptr<SpanSet> SpanSet::dilated(SpanSet const & other) const {
     // Return a dilated Spanset by the given SpanSet
     std::vector<Span> tempVec;
 
-    for (auto const & spn : _spanVector) {
-        for (auto const & otherSpn : other) {
+    for (auto const& spn : _spanVector) {
+        for (auto const& otherSpn : other) {
             int const xmin = spn.getMinX() + otherSpn.getMinX();
             int const xmax = spn.getMaxX() + otherSpn.getMaxX();
             int const yval = spn.getY() + otherSpn.getY();
@@ -482,7 +470,7 @@ std::shared_ptr<SpanSet> SpanSet::eroded(int r, Stencil s) const {
     return eroded(*stencilToSpanSet);
 }
 
-std::shared_ptr<SpanSet> SpanSet::eroded(SpanSet const & other) const {
+std::shared_ptr<SpanSet> SpanSet::eroded(SpanSet const& other) const {
     // Handle a null SpanSet nothing should be eroded
     if (other.size() == 0 || this->size() == 0) {
         return std::make_shared<SpanSet>(_spanVector.begin(), _spanVector.end(), false);
@@ -493,9 +481,9 @@ std::shared_ptr<SpanSet> SpanSet::eroded(SpanSet const & other) const {
 
     // Calculate all possible primary runs.
     std::vector<PrimaryRun> primaryRuns;
-    for (auto const & spn : _spanVector) {
+    for (auto const& spn : _spanVector) {
         int m = 0;
-        for (auto const & otherSpn : other) {
+        for (auto const& otherSpn : other) {
             if ((otherSpn.getMaxX() - otherSpn.getMinX()) <= (spn.getMaxX() - spn.getMinX())) {
                 int xmin = spn.getMinX() - otherSpn.getMinX();
                 int xmax = spn.getMaxX() - otherSpn.getMaxX();
@@ -517,7 +505,7 @@ std::shared_ptr<SpanSet> SpanSet::eroded(SpanSet const & other) const {
          * the total Y range of the structuring element. This is step 3.1 of the
          * Kim et al. algorithm.
          */
-         // Plus one because end points are inclusive
+        // Plus one because end points are inclusive
         auto otherYRange = other.back().getY() - other.front().getY() + 1;
         if (std::distance(yRange.first, yRange.second) < otherYRange) {
             continue;
@@ -528,65 +516,65 @@ std::shared_ptr<SpanSet> SpanSet::eroded(SpanSet const & other) const {
          * of m in turn, gradually whittling down the list of good runs, then
          * finally convert the remainder into Spans.
          */
-         std::list<PrimaryRun> goodRuns;
+        std::list<PrimaryRun> goodRuns;
 
-         for (int m = 0; m < otherYRange; ++m) {
-             auto mRange = std::equal_range(yRange.first, yRange.second, m, ComparePrimaryRunM());
-             if ((mRange.first == mRange.second)) {
-                 // If a particular m is missing, we known that this y contains
-                 // no good runs; this is equivalent to Kim et al. step 3.2.
-                 goodRuns.clear();
-             } else {
-                 // Consolidate all primary runs at this m so that they don't overlap.
-                 std::list<PrimaryRun> candidateRuns;
-                 int startX = mRange.first->xmin;
-                 int endX = mRange.first->xmax;
-                 for (auto run = mRange.first + 1; run != mRange.second; ++run) {
-                     if (run->xmin > endX) {
-                         // Start of a new run
-                         candidateRuns.push_back(PrimaryRun{m, y, startX, endX});
-                         startX = run->xmin;
-                         endX = run->xmax;
-                     } else {
-                         // Continuation of an existing run
-                         endX = run->xmax;
-                     }
-                 }
-                 candidateRuns.push_back(PrimaryRun{m, y, startX, endX});
+        for (int m = 0; m < otherYRange; ++m) {
+            auto mRange = std::equal_range(yRange.first, yRange.second, m, ComparePrimaryRunM());
+            if ((mRange.first == mRange.second)) {
+                // If a particular m is missing, we known that this y contains
+                // no good runs; this is equivalent to Kim et al. step 3.2.
+                goodRuns.clear();
+            } else {
+                // Consolidate all primary runs at this m so that they don't overlap.
+                std::list<PrimaryRun> candidateRuns;
+                int startX = mRange.first->xmin;
+                int endX = mRange.first->xmax;
+                for (auto run = mRange.first + 1; run != mRange.second; ++run) {
+                    if (run->xmin > endX) {
+                        // Start of a new run
+                        candidateRuns.push_back(PrimaryRun{m, y, startX, endX});
+                        startX = run->xmin;
+                        endX = run->xmax;
+                    } else {
+                        // Continuation of an existing run
+                        endX = run->xmax;
+                    }
+                }
+                candidateRuns.push_back(PrimaryRun{m, y, startX, endX});
 
-                 // Otherwise, calculate the intersection of candidate runs at
-                 // this m with good runs from all previous m.
-                 if (m == 0) {
-                     // For m = 0 we have nothing to compare to; all runs are accepted
-                     std::swap(goodRuns, candidateRuns);
-                 } else {
-                     std::list<PrimaryRun> newlist;
-                     for (auto & good : goodRuns) {
-                         for (auto & cand : candidateRuns) {
-                             int start = std::max(good.xmin, cand.xmin);
-                             int end = std::min(good.xmax, cand.xmax);
-                             if (end >= start) {
-                                 newlist.push_back(PrimaryRun({m, y, start, end}));
-                             }
-                         }
-                     }
-                     std::swap(newlist, goodRuns);
-                 }
-             }
-         }
-         for (auto & run : goodRuns) {
-             tempVec.push_back(Span(run.y, run.xmin, run.xmax));
-         }
+                // Otherwise, calculate the intersection of candidate runs at
+                // this m with good runs from all previous m.
+                if (m == 0) {
+                    // For m = 0 we have nothing to compare to; all runs are accepted
+                    std::swap(goodRuns, candidateRuns);
+                } else {
+                    std::list<PrimaryRun> newlist;
+                    for (auto& good : goodRuns) {
+                        for (auto& cand : candidateRuns) {
+                            int start = std::max(good.xmin, cand.xmin);
+                            int end = std::min(good.xmax, cand.xmax);
+                            if (end >= start) {
+                                newlist.push_back(PrimaryRun({m, y, start, end}));
+                            }
+                        }
+                    }
+                    std::swap(newlist, goodRuns);
+                }
+            }
+        }
+        for (auto& run : goodRuns) {
+            tempVec.push_back(Span(run.y, run.xmin, run.xmax));
+        }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
 }
 
-bool SpanSet::operator==(SpanSet const & other) const {
+bool SpanSet::operator==(SpanSet const& other) const {
     // Check the equivalence of this SpanSet with another
     return _spanVector == other._spanVector;
 }
 
-bool SpanSet::operator!=(SpanSet const & other) const {
+bool SpanSet::operator!=(SpanSet const& other) const {
     // Check the equivalence of this SpanSet with another
     return _spanVector != other._spanVector;
 }
@@ -594,11 +582,11 @@ bool SpanSet::operator!=(SpanSet const & other) const {
 std::shared_ptr<SpanSet> SpanSet::fromShape(int r, Stencil s, Point2I offset) {
     // Create a SpanSet from a given Stencil
     std::vector<Span> tempVec;
-    tempVec.reserve(2*r + 1);
+    tempVec.reserve(2 * r + 1);
     switch (s) {
         case Stencil::CIRCLE:
             for (auto dy = -r; dy <= r; ++dy) {
-                int dx = static_cast<int>(sqrt(r*r - dy*dy));
+                int dx = static_cast<int>(sqrt(r * r - dy * dy));
                 tempVec.push_back(Span(dy + offset.getY(), -dx + offset.getX(), dx + offset.getX()));
             }
             break;
@@ -618,19 +606,19 @@ std::shared_ptr<SpanSet> SpanSet::fromShape(int r, Stencil s, Point2I offset) {
     return std::make_shared<SpanSet>(std::move(tempVec), false);
 }
 
-std::shared_ptr<SpanSet> SpanSet::fromShape(ellipses::Ellipse const & ellipse) {
+std::shared_ptr<SpanSet> SpanSet::fromShape(ellipses::Ellipse const& ellipse) {
     ellipses::PixelRegion pr(ellipse);
     return std::make_shared<SpanSet>(pr.begin(), pr.end());
 }
 
-std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const & other) const {
+std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const& other) const {
     // Check if the bounding boxes overlap, if not return null SpanSet
     if (!_bbox.overlaps(other.getBBox())) {
         return std::make_shared<SpanSet>();
     }
     std::vector<Span> tempVec;
-    for (auto const & spn : _spanVector) {
-        for (auto const & otherSpn : other) {
+    for (auto const& spn : _spanVector) {
+        for (auto const& otherSpn : other) {
             if (spansOverlap(spn, otherSpn)) {
                 auto newMin = std::max(spn.getMinX(), otherSpn.getMinX());
                 auto newMax = std::min(spn.getMaxX(), otherSpn.getMaxX());
@@ -642,7 +630,7 @@ std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const & other) const {
     return std::make_shared<SpanSet>(std::move(tempVec));
 }
 
-std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const & other) const {
+std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
     // Check if the bounding boxes overlap, if not simply return a copy of this
     if (!getBBox().overlaps(other.getBBox())) {
         return std::make_shared<SpanSet>(this->begin(), this->end());
@@ -655,9 +643,9 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const & other) const {
      */
     std::vector<Span> tempVec;
     bool added;
-    for (auto const & spn : _spanVector) {
+    for (auto const& spn : _spanVector) {
         added = false;
-        for (auto const & otherSpn : other) {
+        for (auto const& otherSpn : other) {
             if (spansOverlap(spn, otherSpn)) {
                 added = true;
                 /* To handle one span containing the other, the spans will be added
@@ -667,10 +655,10 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const & other) const {
                  * which is the expected behavior.
                  */
                 if (spn.getMinX() < otherSpn.getMinX()) {
-                    tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherSpn.getMinX()-1));
+                    tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherSpn.getMinX() - 1));
                 }
                 if (spn.getMaxX() > otherSpn.getMaxX()) {
-                    tempVec.push_back(Span(spn.getY(), otherSpn.getMaxX()+1, spn.getMaxX()));
+                    tempVec.push_back(Span(spn.getY(), otherSpn.getMaxX() + 1, spn.getMaxX()));
                 }
             }
         }
@@ -684,7 +672,7 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const & other) const {
     return std::make_shared<SpanSet>(std::move(tempVec));
 }
 
-std::shared_ptr<SpanSet> SpanSet::union_(SpanSet const & other) const {
+std::shared_ptr<SpanSet> SpanSet::union_(SpanSet const& other) const {
     /* Simply include Spans from both SpanSets in a new vector and let the SpanSet
      * constructor normalize any of the SpanSets which may be contiguous
      */
@@ -698,17 +686,17 @@ std::shared_ptr<SpanSet> SpanSet::union_(SpanSet const & other) const {
     return std::make_shared<SpanSet>(std::move(tempVec));
 }
 
-std::shared_ptr<SpanSet> SpanSet::transformedBy(LinearTransform const & t) const {
+std::shared_ptr<SpanSet> SpanSet::transformedBy(LinearTransform const& t) const {
     // Transform points in SpanSet by LinearTransform
     return transformedBy(AffineTransform(t));
 }
 
-std::shared_ptr<SpanSet> SpanSet::transformedBy(AffineTransform const & t) const {
+std::shared_ptr<SpanSet> SpanSet::transformedBy(AffineTransform const& t) const {
     // Transform points in SpanSet by AffineTransform
     return transformedBy(AffineXYTransform(t));
 }
 
-std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const & t) const {
+std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const& t) const {
     // Transform points in SpanSet by XYTransform
     // Transform the original bounding box
     Box2D newBBoxD;
@@ -721,8 +709,8 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const & t) const {
 
     std::vector<Span> tempVec;
     for (int y = newBBoxI.getBeginY(); y < newBBoxI.getEndY(); ++y) {
-        bool inSpan = false;    // Are we in a span?
-        int start = -1;         // Start of span
+        bool inSpan = false;  // Are we in a span?
+        int start = -1;       // Start of span
 
         for (int x = newBBoxI.getBeginX(); x < newBBoxI.getEndX(); ++x) {
             Point2D p = t.reverseTransform(Point2D(x, y));
@@ -736,7 +724,7 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const & t) const {
                 }
             } else if (inSpan) {
                 inSpan = false;
-                tempVec.push_back(Span(y, start, x-1));
+                tempVec.push_back(Span(y, start, x - 1));
             }
         }
         if (inSpan) {
@@ -747,21 +735,14 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const & t) const {
 }
 
 template <typename ImageT>
-void SpanSet::setImage(image::Image<ImageT> & image, ImageT val,
-              Box2I const & region, bool doClip) const {
+void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, Box2I const& region, bool doClip) const {
     Box2I bbox;
     if (region.isEmpty()) {
         bbox = image.getBBox();
     } else {
         bbox = region;
     }
-    auto setterFunc = [](
-        Point2I const & point,
-        ImageT & out,
-        ImageT in
-    ){
-        out = in;
-    };
+    auto setterFunc = [](Point2I const& point, ImageT& out, ImageT in) { out = in; };
     try {
         if (doClip) {
             auto tmpSpan = this->clippedTo(bbox);
@@ -771,67 +752,48 @@ void SpanSet::setImage(image::Image<ImageT> & image, ImageT val,
         }
     } catch (pex::exceptions::OutOfRangeError e) {
         throw LSST_EXCEPT(pex::exceptions::OutOfRangeError,
-            "Footprint Bounds Outside image, set doClip to true");
-      }
+                          "Footprint Bounds Outside image, set doClip to true");
+    }
 }
 
 template <typename T>
-void SpanSet::setMask(image::Mask<T> & target, T bitmask) const {
+void SpanSet::setMask(image::Mask<T>& target, T bitmask) const {
     // Use a lambda to set bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
-    auto maskFunctor = [](
-        Point2I const & point,
-        typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
-        T bitmask
-    ){
-        maskVal |= bitmask;
-    };
+    auto maskFunctor = [](Point2I const& point, typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
+                          T bitmask) { maskVal |= bitmask; };
     applyFunctor(maskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
 }
 
 template <typename T>
-void SpanSet::clearMask(image::Mask<T> & target, T bitmask) const {
+void SpanSet::clearMask(image::Mask<T>& target, T bitmask) const {
     // Use a lambda to clear bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
-    auto clearMaskFunctor = []
-                            (Point2I const & point,
-                             typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
-                             T bitmask)
-                            {maskVal &= ~bitmask;};
+    auto clearMaskFunctor = [](Point2I const& point,
+                               typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
+                               T bitmask) { maskVal &= ~bitmask; };
     applyFunctor(clearMaskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
 }
 
 template <typename T>
-std::shared_ptr<SpanSet> SpanSet::intersect(image::Mask<T> const & other, T bitmask) const {
-    auto comparator = [bitmask](
-        T pixelValue
-    ){
-        return (pixelValue & bitmask);
-    };
+std::shared_ptr<SpanSet> SpanSet::intersect(image::Mask<T> const& other, T bitmask) const {
+    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
     auto spanSetFromMask = SpanSet::fromMask(other, comparator);
     return intersect(*spanSetFromMask);
 }
 
 template <typename T>
-std::shared_ptr<SpanSet> SpanSet::intersectNot(image::Mask<T> const & other, T bitmask) const {
-    auto comparator = [bitmask](
-        T pixelValue
-    ){
-        return (pixelValue & bitmask);
-    };
+std::shared_ptr<SpanSet> SpanSet::intersectNot(image::Mask<T> const& other, T bitmask) const {
+    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
     auto spanSetFromMask = SpanSet::fromMask(other, comparator);
     return intersectNot(*spanSetFromMask);
 }
 
 template <typename T>
-std::shared_ptr<SpanSet> SpanSet::union_(image::Mask<T> const & other, T bitmask) const {
-    auto comparator = [bitmask](
-        T pixelValue
-    ){
-        return (pixelValue & bitmask);
-    };
+std::shared_ptr<SpanSet> SpanSet::union_(image::Mask<T> const& other, T bitmask) const {
+    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
     auto spanSetFromMask = fromMask(other, comparator);
     return union_(*spanSetFromMask);
 }
@@ -839,73 +801,71 @@ std::shared_ptr<SpanSet> SpanSet::union_(image::Mask<T> const & other, T bitmask
 namespace {
 // Singleton helper class that manages the schema and keys for the persistence of SpanSets
 class SpanSetPersistenceHelper {
- public:
+public:
     table::Schema spanSetSchema;
     table::Key<int> spanY;
     table::Key<int> spanX0;
     table::Key<int> spanX1;
 
-    static SpanSetPersistenceHelper const & get() {
+    static SpanSetPersistenceHelper const& get() {
         static SpanSetPersistenceHelper instance;
         return instance;
     }
 
     // No copying
-    SpanSetPersistenceHelper (const SpanSetPersistenceHelper &) = delete;
-    SpanSetPersistenceHelper & operator=(const SpanSetPersistenceHelper &) = delete;
+    SpanSetPersistenceHelper(const SpanSetPersistenceHelper&) = delete;
+    SpanSetPersistenceHelper& operator=(const SpanSetPersistenceHelper&) = delete;
 
     // No Moving
-    SpanSetPersistenceHelper (SpanSetPersistenceHelper &&) = delete;
-    SpanSetPersistenceHelper & operator=(SpanSetPersistenceHelper &&) = delete;
+    SpanSetPersistenceHelper(SpanSetPersistenceHelper&&) = delete;
+    SpanSetPersistenceHelper& operator=(SpanSetPersistenceHelper&&) = delete;
 
- private:
-    SpanSetPersistenceHelper() :
-        spanSetSchema(),
-        spanY(spanSetSchema.addField<int>("y", "The row of the span", "pixel")),
-        spanX0(spanSetSchema.addField<int>("x0", "First column of span (inclusive)", "pixel")),
-        spanX1(spanSetSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel")) {
-            spanSetSchema.getCitizen().markPersistent();
-        }
+private:
+    SpanSetPersistenceHelper()
+            : spanSetSchema(),
+              spanY(spanSetSchema.addField<int>("y", "The row of the span", "pixel")),
+              spanX0(spanSetSchema.addField<int>("x0", "First column of span (inclusive)", "pixel")),
+              spanX1(spanSetSchema.addField<int>("x1", "Second column of span (inclusive)", "pixel")) {
+        spanSetSchema.getCitizen().markPersistent();
+    }
 };
 
 std::string getSpanSetPersistenceName() { return "SpanSet"; }
 
 class SpanSetFactory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const {
         // There should only be one catalog saved
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         // Get the catalog with the spans
         auto spansCatalog = catalogs.front();
         // Retrieve the keys that will be used to reference the catalog
-        auto const & keys = SpanSetPersistenceHelper::get();
+        auto const& keys = SpanSetPersistenceHelper::get();
         // Construct a temporary container which will later be turned into the SpanSet
         std::vector<Span> tempVec;
         tempVec.reserve(spansCatalog.size());
-        for (auto const & val : spansCatalog) {
+        for (auto const& val : spansCatalog) {
             tempVec.push_back(Span(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1)));
         }
         return std::make_shared<SpanSet>(std::move(tempVec));
     }
-    explicit SpanSetFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+    explicit SpanSetFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 // insert the factory into the registry (instantiating an instance is sufficient, because the code
 // that does the work is in the base class ctor)
 SpanSetFactory registration(getSpanSetPersistenceName());
 
-} // end anonymous
-
-
+}  // end anonymous
 
 std::string SpanSet::getPersistenceName() const { return getSpanSetPersistenceName(); }
 
-void SpanSet::write(OutputArchiveHandle & handle) const {
-    auto const & keys = SpanSetPersistenceHelper::get();
+void SpanSet::write(OutputArchiveHandle& handle) const {
+    auto const& keys = SpanSetPersistenceHelper::get();
     auto spanCat = handle.makeCatalog(keys.spanSetSchema);
     spanCat.reserve(size());
-    for (auto const & val : *this) {
+    for (auto const& val : *this) {
         auto record = spanCat.addNew();
         record->set(keys.spanY, val.getY());
         record->set(keys.spanX0, val.getX0());
@@ -916,18 +876,18 @@ void SpanSet::write(OutputArchiveHandle & handle) const {
 
 //
 // Explicit instantiations
-#define INSTANTIATE_IMAGE_TYPE(T) \
-    template void SpanSet::setImage<T>(image::Image<T> & image, T val,\
-                  geom::Box2I const & region=geom::Box2I(), bool doClip=false) const;
+#define INSTANTIATE_IMAGE_TYPE(T)                                                                      \
+    template void SpanSet::setImage<T>(image::Image<T> & image, T val,                                 \
+                                       geom::Box2I const& region = geom::Box2I(), bool doClip = false) \
+            const;
 
-#define INSTANTIATE_MASK_TYPE(T) \
-    template void SpanSet::setMask<T>(image::Mask<T> & target, T bitmask) const; \
-    template void SpanSet::clearMask<T>(image::Mask<T> & target, T bitmask) const; \
-    template std::shared_ptr<SpanSet> SpanSet::intersect<T>(image::Mask<T> const & other, T bitmask) const; \
-    template std::shared_ptr<SpanSet> SpanSet::intersectNot<T>(image::Mask<T> const & other, \
-                                                               T bitmask) const; \
-    template std::shared_ptr<SpanSet> SpanSet::union_<T>(image::Mask<T> const & other, T bitmask) const;
-
+#define INSTANTIATE_MASK_TYPE(T)                                                                           \
+    template void SpanSet::setMask<T>(image::Mask<T> & target, T bitmask) const;                           \
+    template void SpanSet::clearMask<T>(image::Mask<T> & target, T bitmask) const;                         \
+    template std::shared_ptr<SpanSet> SpanSet::intersect<T>(image::Mask<T> const& other, T bitmask) const; \
+    template std::shared_ptr<SpanSet> SpanSet::intersectNot<T>(image::Mask<T> const& other, T bitmask)     \
+            const;                                                                                         \
+    template std::shared_ptr<SpanSet> SpanSet::union_<T>(image::Mask<T> const& other, T bitmask) const;
 
 INSTANTIATE_IMAGE_TYPE(std::uint16_t);
 INSTANTIATE_IMAGE_TYPE(std::uint64_t);
@@ -936,5 +896,6 @@ INSTANTIATE_IMAGE_TYPE(float);
 INSTANTIATE_IMAGE_TYPE(double);
 
 INSTANTIATE_MASK_TYPE(image::MaskPixel)
-
-}}} // Close lsst::afw::geom
+}
+}
+}  // Close lsst::afw::geom

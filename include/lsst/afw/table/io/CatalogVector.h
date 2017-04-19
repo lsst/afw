@@ -8,7 +8,10 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 /**
  *  A vector of catalogs used by Persistable.
@@ -24,7 +27,9 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  and copy constructors for CatalogVector.
  */
 class CatalogVector : public std::vector<BaseCatalog> {};
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_CatalogVector_h_INCLUDED
+#endif  // !AFW_TABLE_IO_CatalogVector_h_INCLUDED

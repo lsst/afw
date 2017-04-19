@@ -36,38 +36,29 @@
 
 namespace pexEx = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
-FilterProperty::PropertyMap *FilterProperty::_propertyMap = NULL;
+FilterProperty::PropertyMap* FilterProperty::_propertyMap = NULL;
 
-FilterProperty::FilterProperty(
-    std::string const& name,
-    lsst::daf::base::PropertySet const& prop,
-    bool force
-    ) : _name(name), _lambdaEff(-1)
-{
+FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertySet const& prop, bool force)
+        : _name(name), _lambdaEff(-1) {
     if (prop.exists("lambdaEff")) {
         _lambdaEff = prop.getAsDouble("lambdaEff");
     }
     _insert(force);
 }
 
-
-FilterProperty::FilterProperty(std::string const& name,
-                               lsst::pex::policy::Policy const& pol,
-                               bool force
-                              ) : _name(name), _lambdaEff(-1)
-{
+FilterProperty::FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol, bool force)
+        : _name(name), _lambdaEff(-1) {
     if (pol.exists("lambdaEff")) {
         _lambdaEff = pol.getDouble("lambdaEff");
     }
     _insert(force);
 }
 
-void FilterProperty::_insert(
-    bool force
-    )
-{
+void FilterProperty::_insert(bool force) {
     if (!_propertyMap) {
         _initRegistry();
     }
@@ -76,7 +67,7 @@ void FilterProperty::_insert(
 
     if (keyVal != _propertyMap->end()) {
         if (keyVal->second == *this) {
-            return;                     // OK, a redefinition with identical values
+            return;  // OK, a redefinition with identical values
         }
 
         if (!force) {
@@ -88,15 +79,9 @@ void FilterProperty::_insert(
     _propertyMap->insert(std::make_pair(getName(), *this));
 }
 
-bool FilterProperty::operator==(FilterProperty const& rhs
-                               ) const
-{
-    return (_lambdaEff == rhs._lambdaEff);
-}
+bool FilterProperty::operator==(FilterProperty const& rhs) const { return (_lambdaEff == rhs._lambdaEff); }
 
-
-void FilterProperty::_initRegistry()
-{
+void FilterProperty::_initRegistry() {
     if (_propertyMap) {
         delete _propertyMap;
     }
@@ -104,9 +89,7 @@ void FilterProperty::_initRegistry()
     _propertyMap = new PropertyMap;
 }
 
-FilterProperty const& FilterProperty::lookup(std::string const& name
-                                            )
-{
+FilterProperty const& FilterProperty::lookup(std::string const& name) {
     if (!_propertyMap) {
         _initRegistry();
     }
@@ -120,20 +103,16 @@ FilterProperty const& FilterProperty::lookup(std::string const& name
     return keyVal->second;
 }
 
-
 namespace {
-    std::string const unknownFilter = "_unknown_";
+std::string const unknownFilter = "_unknown_";
 }
 
 int const Filter::AUTO = -1;
 int const Filter::UNKNOWN = -1;
 
-Filter::Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata,
-               bool const force
-              )
-{
+Filter::Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, bool const force) {
     std::string const key = "FILTER";
-    if( metadata->exists(key) ) {
+    if (metadata->exists(key)) {
         std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
         _id = _lookup(filterName, force);
         _name = filterName;
@@ -141,9 +120,7 @@ Filter::Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata,
 }
 
 namespace detail {
-int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata
-                      )
-{
+int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
     int nstripped = 0;
 
     std::string key = "FILTER";
@@ -157,8 +134,7 @@ int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata
 }
 
 // N.b. we cannot declare a std::vector<std::string const&> as there's no way to push the references
-std::vector<std::string> Filter::getAliases() const
-{
+std::vector<std::string> Filter::getAliases() const {
     std::vector<std::string> aliases;
 
     std::string const& canonicalName = getCanonicalName();
@@ -171,8 +147,7 @@ std::vector<std::string> Filter::getAliases() const
     return aliases;
 }
 
-std::vector<std::string> Filter::getNames()
-{
+std::vector<std::string> Filter::getNames() {
     if (!_nameMap) {
         _initRegistry();
     }
@@ -189,12 +164,9 @@ std::vector<std::string> Filter::getNames()
     return names;
 }
 
-bool Filter::operator==(Filter const& rhs) const {
-    return _id != UNKNOWN && _id == rhs._id;
-}
+bool Filter::operator==(Filter const& rhs) const { return _id != UNKNOWN && _id == rhs._id; }
 
-void Filter::_initRegistry()
-{
+void Filter::_initRegistry() {
     _id0 = UNKNOWN;
     delete _aliasMap;
     delete _nameMap;
@@ -207,16 +179,14 @@ void Filter::_initRegistry()
     define(FilterProperty(unknownFilter, lsst::pex::policy::Policy(), true));
 }
 
-
 int Filter::_id0 = Filter::UNKNOWN;
 
 // dynamically allocated as that avoids an intel bug with static variables in dynamic libraries
-Filter::AliasMap *Filter::_aliasMap = NULL;
-Filter::NameMap *Filter::_nameMap = NULL;
-Filter::IdMap *Filter::_idMap = NULL;
+Filter::AliasMap* Filter::_aliasMap = NULL;
+Filter::NameMap* Filter::_nameMap = NULL;
+Filter::IdMap* Filter::_idMap = NULL;
 
-int Filter::define(FilterProperty const& fp, int id, bool force)
-{
+int Filter::define(FilterProperty const& fp, int id, bool force) {
     if (!_nameMap) {
         _initRegistry();
     }
@@ -228,7 +198,7 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
         int oid = keyVal->second;
 
         if (id == oid || id == AUTO) {
-            return oid;                 // OK, same value as before
+            return oid;  // OK, same value as before
         }
 
         if (!force) {
@@ -249,11 +219,7 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
     return id;
 }
 
-int Filter::defineAlias(std::string const& oldName,
-                        std::string const& newName,
-                        bool force
-                       )
-{
+int Filter::defineAlias(std::string const& oldName, std::string const& newName, bool force) {
     if (!_nameMap) {
         _initRegistry();
     }
@@ -269,7 +235,7 @@ int Filter::defineAlias(std::string const& oldName,
     AliasMap::iterator aliasKeyVal = _aliasMap->find(newName);
     if (aliasKeyVal != _aliasMap->end()) {
         if (aliasKeyVal->second == oldName) {
-            return id;                  // OK, same value as before
+            return id;  // OK, same value as before
         }
 
         if (!force) {
@@ -283,10 +249,7 @@ int Filter::defineAlias(std::string const& oldName,
     return id;
 }
 
-int Filter::_lookup(std::string const& name,
-                    bool const force
-                               )
-{
+int Filter::_lookup(std::string const& name, bool const force) {
     if (!_nameMap) {
         _initRegistry();
     }
@@ -309,8 +272,7 @@ int Filter::_lookup(std::string const& name,
     return keyVal->second;
 }
 
-std::string const& Filter::_lookup(int id)
-{
+std::string const& Filter::_lookup(int id) {
     if (!_idMap) {
         _initRegistry();
     }
@@ -332,5 +294,6 @@ FilterProperty const& Filter::getFilterProperty() const {
 
     return FilterProperty::lookup(name);
 }
-
-}}}
+}
+}
+}

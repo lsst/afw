@@ -30,27 +30,25 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/math/BoundedField.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 /// A control object used when fitting ChebyshevBoundedField to data (see ChebyshevBoundedField::fit)
 class ChebyshevBoundedFieldControl {
 public:
-
     ChebyshevBoundedFieldControl() : orderX(2), orderY(2), triangular(true) {}
 
     LSST_CONTROL_FIELD(orderX, int, "maximum Chebyshev function order in x");
 
     LSST_CONTROL_FIELD(orderY, int, "maximum Chebyshev function order in y");
 
-    LSST_CONTROL_FIELD(
-        triangular, bool,
-        "if true, only include terms where the sum of the x and y order "
-        "is less than or equal to max(orderX, orderY)"
-    );
+    LSST_CONTROL_FIELD(triangular, bool,
+                       "if true, only include terms where the sum of the x and y order "
+                       "is less than or equal to max(orderX, orderY)");
 
     /// Return the number of nonzero coefficients in the Chebyshev function defined by this object
     int computeSize() const;
-
 };
 
 /**
@@ -75,12 +73,9 @@ public:
  *  when the parametrization interface that is part of the Function2 class
  *  is not needed.
  */
-class ChebyshevBoundedField :
-        public table::io::PersistableFacade<ChebyshevBoundedField>,
-        public BoundedField
-{
+class ChebyshevBoundedField : public table::io::PersistableFacade<ChebyshevBoundedField>,
+                              public BoundedField {
 public:
-
     typedef ChebyshevBoundedFieldControl Control;
 
     /**
@@ -117,10 +112,8 @@ public:
      *  f(x,y) = 1 T_0(x) T_0(y) + 2 T_0(x) T_1(y) + 3 T_1(x) T_0(y) + 4 T_1(x) T_1(y)
      *  @f]
      */
-    ChebyshevBoundedField(
-        afw::geom::Box2I const & bbox,
-        ndarray::Array<double const,2,2> const & coefficients
-    );
+    ChebyshevBoundedField(afw::geom::Box2I const& bbox,
+                          ndarray::Array<double const, 2, 2> const& coefficients);
 
     /**
      *  Fit a Chebyshev approximation to non-gridded data with equal weights.
@@ -132,13 +125,11 @@ public:
      *  @param[in]  z        Array of field values to be fit at each (x,y) point.
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
-    static std::shared_ptr<ChebyshevBoundedField> fit(
-        afw::geom::Box2I const & bbox,
-        ndarray::Array<double const,1> const & x,
-        ndarray::Array<double const,1> const & y,
-        ndarray::Array<double const,1> const & z,
-        Control const & ctrl
-    );
+    static std::shared_ptr<ChebyshevBoundedField> fit(afw::geom::Box2I const& bbox,
+                                                      ndarray::Array<double const, 1> const& x,
+                                                      ndarray::Array<double const, 1> const& y,
+                                                      ndarray::Array<double const, 1> const& z,
+                                                      Control const& ctrl);
 
     /**
      *  Fit a Chebyshev approximation to non-gridded data with unequal weights.
@@ -152,14 +143,12 @@ public:
      *                       noise, w = 1/sigma.
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
-    static std::shared_ptr<ChebyshevBoundedField> fit(
-        afw::geom::Box2I const & bbox,
-        ndarray::Array<double const,1> const & x,
-        ndarray::Array<double const,1> const & y,
-        ndarray::Array<double const,1> const & z,
-        ndarray::Array<double const,1> const & w,
-        Control const & ctrl
-    );
+    static std::shared_ptr<ChebyshevBoundedField> fit(afw::geom::Box2I const& bbox,
+                                                      ndarray::Array<double const, 1> const& x,
+                                                      ndarray::Array<double const, 1> const& y,
+                                                      ndarray::Array<double const, 1> const& z,
+                                                      ndarray::Array<double const, 1> const& w,
+                                                      Control const& ctrl);
 
     /**
      *  Fit a Chebyshev approximation to gridded data with equal weights.
@@ -175,20 +164,17 @@ public:
      *        fitting.
      */
     template <typename T>
-    static std::shared_ptr<ChebyshevBoundedField> fit(
-        image::Image<T> const & image,
-        Control const & ctrl
-    );
+    static std::shared_ptr<ChebyshevBoundedField> fit(image::Image<T> const& image, Control const& ctrl);
 
     /**
      *  Return the coefficient matrix.
      *
      *  The coefficients are ordered [y,x], so the shape is (orderY+1, orderX+1).
      */
-    ndarray::Array<double const,2,2> getCoefficients() const { return _coefficients; }
+    ndarray::Array<double const, 2, 2> getCoefficients() const { return _coefficients; }
 
     /// Return a new ChebyshevBoudedField with maximum orders set by the given control object.
-    std::shared_ptr<ChebyshevBoundedField> truncate(Control const & ctrl) const;
+    std::shared_ptr<ChebyshevBoundedField> truncate(Control const& ctrl) const;
 
     /**
      *  Return a new ChebyshevBoundedField with domain set to the given bounding box.
@@ -196,10 +182,10 @@ public:
      *  Because this leaves the coefficients unchanged, it is equivalent to transforming the function
      *  by the affine transform that maps the old box to the new one.
      */
-    std::shared_ptr<ChebyshevBoundedField> relocate(geom::Box2I const & bbox) const;
+    std::shared_ptr<ChebyshevBoundedField> relocate(geom::Box2I const& bbox) const;
 
     /// @copydoc BoundedField::evaluate
-    virtual double evaluate(geom::Point2D const & position) const;
+    virtual double evaluate(geom::Point2D const& position) const;
 
     using BoundedField::evaluate;
 
@@ -216,24 +202,22 @@ public:
     virtual std::shared_ptr<BoundedField> operator*(double const scale) const;
 
 protected:
-
     virtual std::string getPersistenceName() const;
 
     virtual std::string getPythonModule() const;
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
 private:
-
     // Internal constructor for fit() routines: just initializes the transform,
     // leaves coefficients empty.
-    explicit ChebyshevBoundedField(afw::geom::Box2I const & bbox);
+    explicit ChebyshevBoundedField(afw::geom::Box2I const& bbox);
 
-    geom::AffineTransform _toChebyshevRange; // maps points from the bbox to [-1,1]x[-1,1]
-    ndarray::Array<double const,2,2> _coefficients;  // shape=(orderY+1, orderX+1)
+    geom::AffineTransform _toChebyshevRange;           // maps points from the bbox to [-1,1]x[-1,1]
+    ndarray::Array<double const, 2, 2> _coefficients;  // shape=(orderY+1, orderX+1)
 };
+}
+}
+}  // namespace lsst::afw::math
 
-
-}}} // namespace lsst::afw::math
-
-#endif // !LSST_AFW_MATH_ChebyshevBoundedField_h_INCLUDED
+#endif  // !LSST_AFW_MATH_ChebyshevBoundedField_h_INCLUDED

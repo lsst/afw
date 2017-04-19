@@ -7,7 +7,9 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/misc.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
  *  A polymorphic functor base class for generating record IDs for a table.
@@ -18,7 +20,6 @@ namespace lsst { namespace afw { namespace table {
  */
 class IdFactory {
 public:
-
     /// Return a new unique RecordId.
     virtual RecordId operator()() = 0;
 
@@ -50,12 +51,11 @@ public:
     virtual ~IdFactory() {}
 
 private:
-
     // Protected to prevent slicing.
-    void operator=(IdFactory const & other) {}
-
+    void operator=(IdFactory const& other) {}
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_IdFactory_h_INCLUDED
+#endif  // !AFW_TABLE_IdFactory_h_INCLUDED

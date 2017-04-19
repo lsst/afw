@@ -31,7 +31,9 @@
 #include "lsst/afw/table/SortedCatalog.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 class SimpleRecord;
 class SimpleTable;
@@ -45,7 +47,6 @@ class SimpleTable;
  */
 class SimpleRecord : public BaseRecord {
 public:
-
     typedef SimpleTable Table;
     typedef ColumnViewT<SimpleRecord> ColumnView;
     typedef SortedCatalogT<SimpleRecord> Catalog;
@@ -61,8 +62,8 @@ public:
     void setId(RecordId id);
 
     IcrsCoord getCoord() const;
-    void setCoord(IcrsCoord const & coord);
-    void setCoord(Coord const & coord);
+    void setCoord(IcrsCoord const& coord);
+    void setCoord(Coord const& coord);
 
     Angle getRa() const;
     void setRa(Angle ra);
@@ -72,11 +73,9 @@ public:
     //@}
 
 protected:
-
     friend class SimpleTable;
 
-    explicit SimpleRecord(std::shared_ptr<SimpleTable> const & table);
-
+    explicit SimpleRecord(std::shared_ptr<SimpleTable> const& table);
 };
 
 /**
@@ -86,7 +85,6 @@ protected:
  */
 class SimpleTable : public BaseTable {
 public:
-
     typedef SimpleRecord Record;
     typedef ColumnViewT<SimpleRecord> ColumnView;
     typedef SortedCatalogT<Record> Catalog;
@@ -102,7 +100,8 @@ public:
      *  Note that not passing an IdFactory at all will call the other override of make(), which will
      *  set the ID factory to IdFactory::makeSimple().
      */
-    static std::shared_ptr<SimpleTable> make(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
+    static std::shared_ptr<SimpleTable> make(Schema const& schema,
+                                             std::shared_ptr<IdFactory> const& idFactory);
 
     /**
      *  Construct a new table.
@@ -111,7 +110,9 @@ public:
      *
      *  This overload sets the ID factory to IdFactory::makeSimple().
      */
-    static std::shared_ptr<SimpleTable> make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
+    static std::shared_ptr<SimpleTable> make(Schema const& schema) {
+        return make(schema, IdFactory::makeSimple());
+    }
 
     /**
      *  Return a minimal schema for Simple tables and records.
@@ -132,9 +133,7 @@ public:
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(Schema const & other) {
-        return other.contains(getMinimalSchema().schema);
-    }
+    static bool checkSchema(Schema const& other) { return other.contains(getMinimalSchema().schema); }
 
     /// Return the object that generates IDs for the table (may be null).
     std::shared_ptr<IdFactory> getIdFactory() { return _idFactory; }
@@ -161,30 +160,30 @@ public:
     std::shared_ptr<SimpleTable> clone() const { return std::static_pointer_cast<SimpleTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    std::shared_ptr<SimpleRecord> makeRecord() { return std::static_pointer_cast<SimpleRecord>(_makeRecord()); }
+    std::shared_ptr<SimpleRecord> makeRecord() {
+        return std::static_pointer_cast<SimpleRecord>(_makeRecord());
+    }
 
     /// @copydoc BaseTable::copyRecord
-    std::shared_ptr<SimpleRecord> copyRecord(BaseRecord const & other) {
+    std::shared_ptr<SimpleRecord> copyRecord(BaseRecord const& other) {
         return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    std::shared_ptr<SimpleRecord> copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<SimpleRecord> copyRecord(BaseRecord const& other, SchemaMapper const& mapper) {
         return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:
+    SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory);
 
-    SimpleTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
-
-    explicit SimpleTable(SimpleTable const & other);
+    explicit SimpleTable(SimpleTable const& other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 
     std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
-
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
@@ -195,29 +194,30 @@ private:
     };
 
     // Return the singleton minimal schema.
-    static MinimalSchema & getMinimalSchema();
+    static MinimalSchema& getMinimalSchema();
 
     friend class io::FitsWriter;
 
-     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile, int flags) const override;
 
-    std::shared_ptr<IdFactory> _idFactory;        // generates IDs for new records
+    std::shared_ptr<IdFactory> _idFactory;  // generates IDs for new records
 };
 
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }
 inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id); }
 
 inline IcrsCoord SimpleRecord::getCoord() const { return get(SimpleTable::getCoordKey()); }
-inline void SimpleRecord::setCoord(IcrsCoord const & coord) { set(SimpleTable::getCoordKey(), coord); }
-inline void SimpleRecord::setCoord(Coord const & coord) { SimpleTable::getCoordKey().set(*this, coord); }
+inline void SimpleRecord::setCoord(IcrsCoord const& coord) { set(SimpleTable::getCoordKey(), coord); }
+inline void SimpleRecord::setCoord(Coord const& coord) { SimpleTable::getCoordKey().set(*this, coord); }
 
 inline Angle SimpleRecord::getRa() const { return get(SimpleTable::getCoordKey().getRa()); }
 inline void SimpleRecord::setRa(Angle ra) { set(SimpleTable::getCoordKey().getRa(), ra); }
 
 inline Angle SimpleRecord::getDec() const { return get(SimpleTable::getCoordKey().getDec()); }
 inline void SimpleRecord::setDec(Angle dec) { set(SimpleTable::getCoordKey().getDec(), dec); }
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_Simple_h_INCLUDED
+#endif  // !AFW_TABLE_Simple_h_INCLUDED

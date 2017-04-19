@@ -6,16 +6,18 @@
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 
-namespace lsst { namespace afw {
+namespace lsst {
+namespace afw {
 
 namespace fits {
 
 class Fits;
 class MemFileManager;
 
-} // namespace fits
+}  // namespace fits
 
-namespace table { namespace io {
+namespace table {
+namespace io {
 
 class InputArchive;
 class OutputArchive;
@@ -25,8 +27,7 @@ class CatalogVector;
 /**
  *  An exception thrown when problems occur during persistence.
  */
-LSST_EXCEPTION_TYPE(PersistenceError, lsst::pex::exceptions::IoError,
-                    lsst::afw::table::io::PersistenceError)
+LSST_EXCEPTION_TYPE(PersistenceError, lsst::pex::exceptions::IoError, lsst::afw::table::io::PersistenceError)
 
 /**
  *  An exception thrown when an InputArchive's contents do not make sense.
@@ -43,10 +44,9 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
  *  and should be reserved for errors that should only occur when an InputArchive is found to be
  *  in a state that could not have been produced by an OutputArchive.
  */
-#define LSST_ARCHIVE_ASSERT(EXPR)                                       \
-    if (!(EXPR)) throw LSST_EXCEPT(                                     \
-        lsst::afw::table::io::MalformedArchiveError,                    \
-        "Archive assertion failed: " # EXPR)
+#define LSST_ARCHIVE_ASSERT(EXPR) \
+    if (!(EXPR))                  \
+    throw LSST_EXCEPT(lsst::afw::table::io::MalformedArchiveError, "Archive assertion failed: " #EXPR)
 
 /**
  *  A base class for objects that can be persisted via afw::table::io Archive classes.
@@ -72,7 +72,6 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
  */
 class Persistable {
 public:
-
     /**
      *  Write the object to a regular FITS file.
      *
@@ -80,7 +79,7 @@ public:
      *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
      *                          "a", new HDUs will be appended to an existing file.
      */
-    void writeFits(std::string const & fileName, std::string const & mode="w") const;
+    void writeFits(std::string const& fileName, std::string const& mode = "w") const;
 
     /**
      *  Write the object to a FITS image in memory.
@@ -89,14 +88,14 @@ public:
      *  @param[in] mode         If "w", any existing file with the given name will be overwritten.  If
      *                          "a", new HDUs will be appended to an existing file.
      */
-    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const;
+    void writeFits(fits::MemFileManager& manager, std::string const& mode = "w") const;
 
     /**
      *  Write the object to an already-open FITS object.
      *
      *  @param[in] fitsfile     Open FITS object to write to.
      */
-    void writeFits(fits::Fits & fitsfile) const;
+    void writeFits(fits::Fits& fitsfile) const;
 
     /// Return true if this particular object can be persisted using afw::table::io.
     virtual bool isPersistable() const { return false; }
@@ -104,7 +103,6 @@ public:
     virtual ~Persistable() {}
 
 protected:
-
     // convenient for derived classes not in afw::table::io
     typedef io::OutputArchiveHandle OutputArchiveHandle;
 
@@ -132,27 +130,26 @@ protected:
      *  and adding nested objects to the same archive (while checking for duplicates).  See
      *  OutputArchiveHandle for more information.
      */
-    virtual void write(OutputArchiveHandle & handle) const;
+    virtual void write(OutputArchiveHandle& handle) const;
 
     Persistable() {}
 
-    Persistable(Persistable const & other) {}
+    Persistable(Persistable const& other) {}
 
-    void operator=(Persistable const & other) {}
+    void operator=(Persistable const& other) {}
 
 private:
-
     friend class io::OutputArchive;
     friend class io::InputArchive;
 
-    template <typename T> friend class PersistableFacade;
+    template <typename T>
+    friend class PersistableFacade;
 
-    static std::shared_ptr<Persistable> _readFits(std::string const & fileName, int hdu=INT_MIN);
+    static std::shared_ptr<Persistable> _readFits(std::string const& fileName, int hdu = INT_MIN);
 
-    static std::shared_ptr<Persistable> _readFits(fits::MemFileManager & manager, int hdu=INT_MIN);
+    static std::shared_ptr<Persistable> _readFits(fits::MemFileManager& manager, int hdu = INT_MIN);
 
-    static std::shared_ptr<Persistable> _readFits(fits::Fits & fitsfile);
-
+    static std::shared_ptr<Persistable> _readFits(fits::Fits& fitsfile);
 };
 
 /**
@@ -175,13 +172,12 @@ private:
 template <typename T>
 class PersistableFacade {
 public:
-
     /**
      *  Read an object from an already open FITS object.
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
-    static std::shared_ptr<T> readFits(fits::Fits & fitsfile) {
+    static std::shared_ptr<T> readFits(fits::Fits& fitsfile) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
     }
 
@@ -192,7 +188,7 @@ public:
      *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
      *                           skips the primary HDU if it is empty.
      */
-    static std::shared_ptr<T> readFits(std::string const & fileName, int hdu=INT_MIN) {
+    static std::shared_ptr<T> readFits(std::string const& fileName, int hdu = INT_MIN) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
     }
 
@@ -203,10 +199,9 @@ public:
      *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
      *                           skips the primary HDU if it is empty.
      */
-    static std::shared_ptr<T> readFits(fits::MemFileManager & manager, int hdu=INT_MIN) {
+    static std::shared_ptr<T> readFits(fits::MemFileManager& manager, int hdu = INT_MIN) {
         return std::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
     }
-
 };
 
 /**
@@ -218,10 +213,10 @@ public:
  */
 class PersistableFactory {
 protected:
-    typedef io::InputArchive InputArchive; // convenient for derived classes not in afw::table::io
+    typedef io::InputArchive InputArchive;  // convenient for derived classes not in afw::table::io
     typedef io::CatalogVector CatalogVector;
-public:
 
+public:
     /**
      *  Constructor for the factory.
      *
@@ -233,10 +228,11 @@ public:
      *  may also declare is not used to resolve names, but rather just to import the
      *  module that may install the necessary factory in the registry.
      */
-    explicit PersistableFactory(std::string const & name);
+    explicit PersistableFactory(std::string const& name);
 
     /// Construct a new object from the given InputArchive and vector of catalogs.
-    virtual std::shared_ptr<Persistable> read(InputArchive const & archive, CatalogVector const & catalogs) const = 0;
+    virtual std::shared_ptr<Persistable> read(InputArchive const& archive,
+                                              CatalogVector const& catalogs) const = 0;
 
     /**
      *  Return the factory that has been registered with the given name.
@@ -245,19 +241,21 @@ public:
      *  module with that name (this will only work when the C++ is being called from Python) and
      *  try again.
      */
-    static PersistableFactory const & lookup(std::string const & name, std::string const & module="");
+    static PersistableFactory const& lookup(std::string const& name, std::string const& module = "");
 
     virtual ~PersistableFactory() {}
 
     // No copying
-    PersistableFactory (const PersistableFactory&) = delete;
+    PersistableFactory(const PersistableFactory&) = delete;
     PersistableFactory& operator=(const PersistableFactory&) = delete;
 
     // No moving
-    PersistableFactory (PersistableFactory&&) = delete;
+    PersistableFactory(PersistableFactory&&) = delete;
     PersistableFactory& operator=(PersistableFactory&&) = delete;
 };
+}
+}
+}
+}  // namespace lsst::afw::table::io
 
-}}}} // namespace lsst::afw::table::io
-
-#endif // !AFW_TABLE_IO_Persistable_h_INCLUDED
+#endif  // !AFW_TABLE_IO_Persistable_h_INCLUDED

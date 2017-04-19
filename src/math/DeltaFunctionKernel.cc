@@ -30,33 +30,29 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
-DeltaFunctionKernel::DeltaFunctionKernel(
-    int width,
-    int height,
-    geom::Point2I const &point
-) :
-    Kernel(width, height, 0),
-    _pixel(point)
-{
+DeltaFunctionKernel::DeltaFunctionKernel(int width, int height, geom::Point2I const& point)
+        : Kernel(width, height, 0), _pixel(point) {
     if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
         std::ostringstream os;
-        os << "point (" << point.getX() << ", " << point.getY() << ") lies outside "
-            << width << "x" << height << " sized kernel";
+        os << "point (" << point.getX() << ", " << point.getY() << ") lies outside " << width << "x" << height
+           << " sized kernel";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 }
 
 std::shared_ptr<Kernel> DeltaFunctionKernel::clone() const {
-    std::shared_ptr<Kernel> retPtr(new DeltaFunctionKernel(this->getWidth(), this->getHeight(),
-        this->_pixel));
+    std::shared_ptr<Kernel> retPtr(
+            new DeltaFunctionKernel(this->getWidth(), this->getHeight(), this->_pixel));
     retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
 std::string DeltaFunctionKernel::toString(std::string const& prefix) const {
-    const int pixelX = getPixel().getX(); // active pixel in Kernel
+    const int pixelX = getPixel().getX();  // active pixel in Kernel
     const int pixelY = getPixel().getY();
 
     std::ostringstream os;
@@ -66,11 +62,8 @@ std::string DeltaFunctionKernel::toString(std::string const& prefix) const {
     return os.str();
 }
 
-double DeltaFunctionKernel::doComputeImage(
-    image::Image<Pixel> &image,
-    bool
-) const {
-    const int pixelX = getPixel().getX(); // active pixel in Kernel
+double DeltaFunctionKernel::doComputeImage(image::Image<Pixel>& image, bool) const {
+    const int pixelX = getPixel().getX();  // active pixel in Kernel
     const int pixelY = getPixel().getY();
 
     image = 0;
@@ -86,51 +79,46 @@ namespace {
 struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper {
     table::PointKey<int> pixel;
 
-    static DeltaFunctionKernelPersistenceHelper const & get() {
+    static DeltaFunctionKernelPersistenceHelper const& get() {
         static DeltaFunctionKernelPersistenceHelper const instance;
         return instance;
     }
 
     // No copying
-    DeltaFunctionKernelPersistenceHelper (const DeltaFunctionKernelPersistenceHelper&) = delete;
+    DeltaFunctionKernelPersistenceHelper(const DeltaFunctionKernelPersistenceHelper&) = delete;
     DeltaFunctionKernelPersistenceHelper& operator=(const DeltaFunctionKernelPersistenceHelper&) = delete;
 
     // No moving
-    DeltaFunctionKernelPersistenceHelper (DeltaFunctionKernelPersistenceHelper&&) = delete;
+    DeltaFunctionKernelPersistenceHelper(DeltaFunctionKernelPersistenceHelper&&) = delete;
     DeltaFunctionKernelPersistenceHelper& operator=(DeltaFunctionKernelPersistenceHelper&&) = delete;
 
 private:
-
-    explicit DeltaFunctionKernelPersistenceHelper() :
-        Kernel::PersistenceHelper(0),
-        pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixel"))
-    {
-       schema.getCitizen().markPersistent();
+    explicit DeltaFunctionKernelPersistenceHelper()
+            : Kernel::PersistenceHelper(0),
+              pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixel")) {
+        schema.getCitizen().markPersistent();
     }
-
 };
 
-} // anonymous
+}  // anonymous
 
 class DeltaFunctionKernel::Factory : public afw::table::io::PersistableFactory {
 public:
-
-    virtual std::shared_ptr<afw::table::io::Persistable>
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                              CatalogVector const& catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
+        DeltaFunctionKernelPersistenceHelper const& keys = DeltaFunctionKernelPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
-        afw::table::BaseRecord const & record = catalogs.front().front();
+        afw::table::BaseRecord const& record = catalogs.front().front();
         std::shared_ptr<DeltaFunctionKernel> result(
-            new DeltaFunctionKernel(record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()),
-                                    record.get(keys.pixel))
-        );
+                new DeltaFunctionKernel(record.get(keys.dimensions.getX()),
+                                        record.get(keys.dimensions.getY()), record.get(keys.pixel)));
         result->setCtr(record.get(keys.center));
         return result;
     }
 
-    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+    explicit Factory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 namespace {
@@ -139,16 +127,17 @@ std::string getDeltaFunctionKernelPersistenceName() { return "DeltaFunctionKerne
 
 DeltaFunctionKernel::Factory registration(getDeltaFunctionKernelPersistenceName());
 
-} // anonymous
+}  // anonymous
 
 std::string DeltaFunctionKernel::getPersistenceName() const {
     return getDeltaFunctionKernelPersistenceName();
 }
 
-void DeltaFunctionKernel::write(OutputArchiveHandle & handle) const {
-    DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
+void DeltaFunctionKernel::write(OutputArchiveHandle& handle) const {
+    DeltaFunctionKernelPersistenceHelper const& keys = DeltaFunctionKernelPersistenceHelper::get();
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.pixel, _pixel);
 }
-
-}}} // namespace lsst::afw::math
+}
+}
+}  // namespace lsst::afw::math

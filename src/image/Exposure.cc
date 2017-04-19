@@ -40,172 +40,117 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 // CLASS CONSTRUCTORS and DESTRUCTOR
 
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(unsigned int width, unsigned int height,
+                                             std::shared_ptr<Wcs const> wcs)
+        : daf::base::Citizen(typeid(this)), _maskedImage(width, height), _info(new ExposureInfo(wcs)) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    unsigned int width,
-    unsigned int height,
-    std::shared_ptr<Wcs const> wcs
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(width, height),
-    _info(new ExposureInfo(wcs))
-{}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Extent2I const &dimensions, std::shared_ptr<Wcs const> wcs)
+        : daf::base::Citizen(typeid(this)), _maskedImage(dimensions), _info(new ExposureInfo(wcs)) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    geom::Extent2I const & dimensions,
-    std::shared_ptr<Wcs const> wcs
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(dimensions),
-    _info(new ExposureInfo(wcs))
-{}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Box2I const &bbox, std::shared_ptr<Wcs const> wcs)
+        : daf::base::Citizen(typeid(this)), _maskedImage(bbox), _info(new ExposureInfo(wcs)) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    geom::Box2I const & bbox,
-    std::shared_ptr<Wcs const> wcs
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(bbox),
-    _info(new ExposureInfo(wcs))
-{}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(MaskedImageT &maskedImage, std::shared_ptr<Wcs const> wcs)
+        : daf::base::Citizen(typeid(this)), _maskedImage(maskedImage), _info(new ExposureInfo(wcs)) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    MaskedImageT &maskedImage,
-    std::shared_ptr<Wcs const> wcs
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(maskedImage),
-    _info(new ExposureInfo(wcs))
-{}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(MaskedImageT &maskedImage, std::shared_ptr<ExposureInfo> info)
+        : daf::base::Citizen(typeid(this)),
+          _maskedImage(maskedImage),
+          _info(info ? info : std::make_shared<ExposureInfo>()) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    MaskedImageT & maskedImage,
-    std::shared_ptr<ExposureInfo> info
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(maskedImage),
-    _info(info ? info : std::make_shared<ExposureInfo>())
-{}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, bool const deep)
+        : daf::base::Citizen(typeid(this)),
+          _maskedImage(src.getMaskedImage(), deep),
+          _info(new ExposureInfo(*src.getInfo(), deep)) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    Exposure const &src,
-    bool const deep
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(src.getMaskedImage(), deep),
-    _info(new ExposureInfo(*src.getInfo(), deep))
-{}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, geom::Box2I const &bbox,
+                                             ImageOrigin const origin, bool const deep)
+        : daf::base::Citizen(typeid(this)),
+          _maskedImage(src.getMaskedImage(), bbox, origin, deep),
+          _info(new ExposureInfo(*src.getInfo(), deep)) {}
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    Exposure const &src,
-    geom::Box2I const& bbox,
-    ImageOrigin const origin,
-    bool const deep
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(src.getMaskedImage(), bbox, origin, deep),
-    _info(new ExposureInfo(*src.getInfo(), deep))
-{}
-
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    std::string const & fileName, geom::Box2I const& bbox,
-    ImageOrigin origin, bool conformMasks
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(),
-    _info(new ExposureInfo())
-{
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, geom::Box2I const &bbox,
+                                             ImageOrigin origin, bool conformMasks)
+        : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    fits::MemFileManager & manager, geom::Box2I const & bbox,
-    ImageOrigin origin, bool conformMasks
-) :
-    daf::base::Citizen(typeid(this)),
-    _maskedImage(),
-    _info(new ExposureInfo())
-{
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::MemFileManager &manager, geom::Box2I const &bbox,
+                                             ImageOrigin origin, bool conformMasks)
+        : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    fits::Fits & fitsfile, geom::Box2I const & bbox,
-    ImageOrigin origin, bool conformMasks
-) :
-    daf::base::Citizen(typeid(this))
-{
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsfile, geom::Box2I const &bbox,
+                                             ImageOrigin origin, bool conformMasks)
+        : daf::base::Citizen(typeid(this)) {
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::_readFits(
-    fits::Fits & fitsfile, geom::Box2I const & bbox,
-    ImageOrigin origin, bool conformMasks
-) {
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::_readFits(fits::Fits &fitsfile, geom::Box2I const &bbox,
+                                                   ImageOrigin origin, bool conformMasks) {
     std::shared_ptr<daf::base::PropertySet> metadata(new daf::base::PropertyList());
     std::shared_ptr<daf::base::PropertySet> imageMetadata(new daf::base::PropertyList());
     _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks, false, imageMetadata);
     _info->_readFits(fitsfile, metadata, imageMetadata);
 }
 
-
-template<typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::~Exposure() {}
 
 // SET METHODS
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImage){
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImage) {
     _maskedImage = maskedImage;
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::setXY0(geom::Point2I const& origin) {
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::setXY0(geom::Point2I const &origin) {
     geom::Point2I old(_maskedImage.getXY0());
     if (_info->hasWcs())
         _info->getWcs()->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
     _maskedImage.setXY0(origin);
 }
 
-
 // Write FITS
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const & fileName) const {
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const &fileName) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager & manager) const {
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager &manager) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits & fitsfile) const {
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile) const {
     ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
-    _maskedImage.writeFits(
-        fitsfile, data.metadata,
-        data.imageMetadata, data.maskMetadata, data.varianceMetadata
-    );
+    _maskedImage.writeFits(fitsfile, data.metadata, data.imageMetadata, data.maskMetadata,
+                           data.varianceMetadata);
     _info->_finishWriteFits(fitsfile, data);
 }
 
@@ -217,5 +162,6 @@ template class Exposure<float>;
 template class Exposure<double>;
 template class Exposure<std::uint64_t>;
 /// @endcond
-
-}}} // end lsst::afw::image
+}
+}
+}  // end lsst::afw::image

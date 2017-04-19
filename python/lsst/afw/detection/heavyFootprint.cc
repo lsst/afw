@@ -41,25 +41,24 @@ namespace detection {
 namespace {
 template <typename ImagePixelT, typename MaskPixelT = lsst::afw::image::MaskPixel,
           typename VariancePixelT = lsst::afw::image::VariancePixel>
-void declareHeavyFootprint(py::module &mod, std::string const &suffix)
-{
+void declareHeavyFootprint(py::module &mod, std::string const &suffix) {
     using Class = HeavyFootprint<ImagePixelT>;
     py::class_<Class, std::shared_ptr<Class>, Footprint> clsHeavyFootprint(
-        mod, ("HeavyFootprint" + suffix).c_str());
+            mod, ("HeavyFootprint" + suffix).c_str());
 
     /* Constructors */
     clsHeavyFootprint.def(
-        py::init<Footprint const &,
-                 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const &,
-                 HeavyFootprintCtrl const *>(),
-        "foot"_a, "mimage"_a, "ctrl"_a = nullptr);
+            py::init<Footprint const &,
+                     lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const &,
+                     HeavyFootprintCtrl const *>(),
+            "foot"_a, "mimage"_a, "ctrl"_a = nullptr);
     clsHeavyFootprint.def(py::init<Footprint const &, HeavyFootprintCtrl const *>(), "foot"_a,
                           "ctrl"_a = nullptr);
 
     /* Members */
     clsHeavyFootprint.def("isHeavy", &Class::isHeavy);
     clsHeavyFootprint.def(
-        "insert", (void (Class::*)(lsst::afw::image::MaskedImage<ImagePixelT> &) const) & Class::insert);
+            "insert", (void (Class::*)(lsst::afw::image::MaskedImage<ImagePixelT> &) const) & Class::insert);
     clsHeavyFootprint.def("insert",
                           (void (Class::*)(lsst::afw::image::Image<ImagePixelT> &) const) & Class::insert);
     clsHeavyFootprint.def("getImageArray",
@@ -72,26 +71,24 @@ void declareHeavyFootprint(py::module &mod, std::string const &suffix)
     clsHeavyFootprint.def("dot", &Class::dot);
 
     /* Module level */
-    mod.def(
-        "makeHeavyFootprint",
-        (Class (*)(
-            Footprint const &, lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const &,
-            HeavyFootprintCtrl const *))makeHeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>,
-        "foot"_a, "img"_a, "ctrl"_a = nullptr);
+    mod.def("makeHeavyFootprint",
+            (Class(*)(Footprint const &,
+                      lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const &,
+                      HeavyFootprintCtrl const *))makeHeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>,
+            "foot"_a, "img"_a, "ctrl"_a = nullptr);
 
     // In Swig this seems to be suffixed with a type (i.e. mergeHeavyFootprintsF)
     // but there really doesn't seem any good reason why that is done, so removed it
     mod.def("mergeHeavyFootprints", mergeHeavyFootprints<ImagePixelT, MaskPixelT, VariancePixelT>);
 }
-} // namespace
+}  // namespace
 
-PYBIND11_PLUGIN(_heavyFootprint)
-{
+PYBIND11_PLUGIN(_heavyFootprint) {
     py::module mod("_heavyFootprint", "Python wrapper for afw _heavyFootprint library");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
     };
 
     declareHeavyFootprint<int>(mod, "I");

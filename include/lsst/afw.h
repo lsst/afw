@@ -32,4 +32,4 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/detection.h"
 
-#endif // !defined(_LSST_AFW_H)
+#endif  // !defined(_LSST_AFW_H)

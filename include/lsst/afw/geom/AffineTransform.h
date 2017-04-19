@@ -76,48 +76,38 @@ namespace geom {
  */
 class AffineTransform {
 public:
-    enum Parameters {XX=0,YX=1,XY=2,YY=3,X=4,Y=5};
+    enum Parameters { XX = 0, YX = 1, XY = 2, YY = 3, X = 4, Y = 5 };
 
     typedef Eigen::Matrix3d Matrix;
-    typedef Eigen::Matrix<double,6,1> ParameterVector;
-    typedef Eigen::Matrix<double,2,6> TransformDerivativeMatrix;
-
+    typedef Eigen::Matrix<double, 6, 1> ParameterVector;
+    typedef Eigen::Matrix<double, 2, 6> TransformDerivativeMatrix;
 
     /** Construct an empty (identity) AffineTransform. */
     AffineTransform() : _linear(), _translation() {}
 
     /** Construct an AffineTransform from a 3x3 matrix. */
-    explicit AffineTransform(Eigen::Matrix3d const & matrix)
-      : _linear(matrix.block<2,2>(0,0)),
-        _translation(matrix.block<2,1>(0,2))
-    {}
+    explicit AffineTransform(Eigen::Matrix3d const &matrix)
+            : _linear(matrix.block<2, 2>(0, 0)), _translation(matrix.block<2, 1>(0, 2)) {}
 
     /** Construct an AffineTransform with no translation from a 2x2 matrix. */
-    explicit AffineTransform(Eigen::Matrix2d const & linear)
-      : _linear(linear), _translation() {}
+    explicit AffineTransform(Eigen::Matrix2d const &linear) : _linear(linear), _translation() {}
 
     /** Construct a translation-only AffineTransform from a vector. */
-    explicit AffineTransform(Eigen::Vector2d const & translation)
-      : _linear(), _translation(translation) {}
+    explicit AffineTransform(Eigen::Vector2d const &translation) : _linear(), _translation(translation) {}
 
     /** Construct an AffineTransform from a 2x2 matrix and vector. */
-    explicit AffineTransform(
-        Eigen::Matrix2d const & linear, Eigen::Vector2d const & translation
-    ) : _linear(linear), _translation(translation) {}
+    explicit AffineTransform(Eigen::Matrix2d const &linear, Eigen::Vector2d const &translation)
+            : _linear(linear), _translation(translation) {}
 
     /** Construct an AffineTransform from a LinearTransform. */
-    AffineTransform(LinearTransform const & linear)
-      : _linear(linear), _translation() {}
+    AffineTransform(LinearTransform const &linear) : _linear(linear), _translation() {}
 
     /** Construct a translation-only AffineTransform from an Extent2D. */
-    explicit AffineTransform(Extent2D const & translation)
-      : _linear(), _translation(translation) {}
+    explicit AffineTransform(Extent2D const &translation) : _linear(), _translation(translation) {}
 
     /** Construct an AffineTransform from a LinearTransform and Extent2D. */
-    explicit AffineTransform(
-        LinearTransform const & linear, Extent2D const & translation
-    ) : _linear(linear), _translation(translation) {}
-
+    explicit AffineTransform(LinearTransform const &linear, Extent2D const &translation)
+            : _linear(linear), _translation(translation) {}
 
     /**
      * Return the inverse transform
@@ -129,30 +119,25 @@ public:
     /** Whether the transform is a no-op. */
     bool isIdentity() const { return getMatrix().isIdentity(); }
 
-
     /**
      * Transform a Point object.
      *
      * The result is affected by the translation parameters of the transform
      */
-    Point2D operator()(Point2D const &p) const {
-        return Point2D(_linear(p) + _translation);
-    }
+    Point2D operator()(Point2D const &p) const { return Point2D(_linear(p) + _translation); }
 
     /**
      * Transform an Extent object.
      *
      * The result is unaffected by the translation parameters of the transform
      */
-    Extent2D operator()(Extent2D const &p) const {
-        return Extent2D(_linear(p));
-    }
+    Extent2D operator()(Extent2D const &p) const { return Extent2D(_linear(p)); }
 
-    Extent2D const & getTranslation() const {return _translation;}
-    Extent2D & getTranslation() {return _translation;}
+    Extent2D const &getTranslation() const { return _translation; }
+    Extent2D &getTranslation() { return _translation; }
 
-    LinearTransform const & getLinear() const {return _linear;}
-    LinearTransform & getLinear() {return _linear;}
+    LinearTransform const &getLinear() const { return _linear; }
+    LinearTransform &getLinear() { return _linear; }
 
     /**
      * Return the transform as a full 3x3 matrix
@@ -170,50 +155,44 @@ public:
      *
      * The parameter vector is ordered XX, YX, XY, YY, X, Y
      */
-    void setParameterVector(ParameterVector const & vector);
+    void setParameterVector(ParameterVector const &vector);
 
-    double & operator[](int i) {
-        return (i < 4) ? _linear[i] : _translation[i - 4];
-    }
-    double operator[](int i) const {
-        return (i < 4) ? _linear[i] : _translation[i - 4];
-    }
+    double &operator[](int i) { return (i < 4) ? _linear[i] : _translation[i - 4]; }
+    double operator[](int i) const { return (i < 4) ? _linear[i] : _translation[i - 4]; }
 
     /**
      * Construct a new AffineTransform from two others: (B * A)(p) = B(A(p))
      */
-    AffineTransform operator*(AffineTransform const & other) const {
-        return AffineTransform(
-            getLinear()*other.getLinear(),
-            getLinear()(other.getTranslation()) + getTranslation()
-        );
+    AffineTransform operator*(AffineTransform const &other) const {
+        return AffineTransform(getLinear() * other.getLinear(),
+                               getLinear()(other.getTranslation()) + getTranslation());
     }
 
-    AffineTransform & operator =(AffineTransform const & other) {
+    AffineTransform &operator=(AffineTransform const &other) {
         _linear = other._linear;
         _translation = other._translation;
         return *this;
     }
 
-    AffineTransform & operator+=(AffineTransform const & other) {
+    AffineTransform &operator+=(AffineTransform const &other) {
         _linear += other._linear;
         _translation += other._translation;
         return *this;
     }
 
-    AffineTransform operator+(AffineTransform const & other) {
+    AffineTransform operator+(AffineTransform const &other) {
         AffineTransform tmp(*this);
         tmp += other;
         return tmp;
     }
 
-    AffineTransform & operator-=(AffineTransform const & other) {
+    AffineTransform &operator-=(AffineTransform const &other) {
         _linear -= other._linear;
         _translation -= other._translation;
         return *this;
     }
 
-    AffineTransform operator-(AffineTransform const & other) {
+    AffineTransform operator-(AffineTransform const &other) {
         AffineTransform tmp(*this);
         tmp -= other;
         return tmp;
@@ -231,9 +210,7 @@ public:
      *     \end{array}\right]
      *  @f$
      */
-    static AffineTransform makeScaling(double s) {
-        return AffineTransform(LinearTransform::makeScaling(s));
-    }
+    static AffineTransform makeScaling(double s) { return AffineTransform(LinearTransform::makeScaling(s)); }
 
     /**
      *  Construct a new AffineTransform that represents a non-uniform
@@ -263,9 +240,7 @@ public:
      *     \end{array}\right]
      *  @f$
      */
-    static AffineTransform makeRotation(Angle t) {
-        return AffineTransform(LinearTransform::makeRotation(t));
-    }
+    static AffineTransform makeRotation(Angle t) { return AffineTransform(LinearTransform::makeRotation(t)); }
 
     /**
      *  Construct a new AffineTransform that represents a pure translation.
@@ -279,35 +254,31 @@ public:
      *     \end{array}\right]
      *  @f$
      */
-    static AffineTransform makeTranslation(Extent2D translation) {
-        return AffineTransform(translation);
-    }
+    static AffineTransform makeTranslation(Extent2D translation) { return AffineTransform(translation); }
 
     /**
      * Take the derivative of (*this)(input) w.r.t the transform elements
      */
-    TransformDerivativeMatrix dTransform(Point2D const & input) const;
+    TransformDerivativeMatrix dTransform(Point2D const &input) const;
     /**
      * Take the derivative of (*this)(input) w.r.t the transform elements
      */
-    TransformDerivativeMatrix dTransform(Extent2D const & input) const;
+    TransformDerivativeMatrix dTransform(Extent2D const &input) const;
 
 private:
-
     LinearTransform _linear;
     Extent2D _translation;
 };
 
-std::ostream & operator<<(std::ostream & os, lsst::afw::geom::AffineTransform const & transform);
-
+std::ostream &operator<<(std::ostream &os, lsst::afw::geom::AffineTransform const &transform);
 
 //
 // Returns the unique AffineTransform A such that A(p_i)=q_i for i=1,2,3
 //
 AffineTransform makeAffineTransformFromTriple(Point2D const &p1, Point2D const &p2, Point2D const &p3,
                                               Point2D const &q1, Point2D const &q2, Point2D const &q3);
+}
+}
+}
 
-
-}}}
-
-#endif // !LSST_AFW_MATH_AFFINE_TRANSFORM_H
+#endif  // !LSST_AFW_MATH_AFFINE_TRANSFORM_H

@@ -45,8 +45,8 @@ namespace afwTable = lsst::afw::table;
 
 namespace {
 
-math::Random & rng() {
-    static math::Random * generator = 0;
+math::Random &rng() {
+    static math::Random *generator = 0;
     if (generator == 0) {
         generator = new math::Random(math::Random::MT19937);
     }
@@ -87,12 +87,13 @@ struct CmpSourceMatch {
 };
 
 struct DistRaDec {
-    double operator()(std::shared_ptr<afwTable::SourceRecord> const &s1, std::shared_ptr<afwTable::SourceRecord> const &s2) const {
+    double operator()(std::shared_ptr<afwTable::SourceRecord> const &s1,
+                      std::shared_ptr<afwTable::SourceRecord> const &s2) const {
         // halversine distance formula
-        double sinDeltaRa = std::sin(0.5*(s2->getRa() - s1->getRa()));
-        double sinDeltaDec = std::sin(0.5*(s2->getDec() - s1->getDec()));
-        double cosDec1CosDec2 = std::cos(s1->getDec())*std::cos(s2->getDec());
-        double a = sinDeltaDec*sinDeltaDec + cosDec1CosDec2*sinDeltaRa*sinDeltaRa;
+        double sinDeltaRa = std::sin(0.5 * (s2->getRa() - s1->getRa()));
+        double sinDeltaDec = std::sin(0.5 * (s2->getDec() - s1->getDec()));
+        double cosDec1CosDec2 = std::cos(s1->getDec()) * std::cos(s2->getDec());
+        double a = sinDeltaDec * sinDeltaDec + cosDec1CosDec2 * sinDeltaRa * sinDeltaRa;
         double b = std::sqrt(a);
         double c = b > 1 ? 1 : b;
         // radians
@@ -101,17 +102,17 @@ struct DistRaDec {
 };
 
 struct DistXy {
-    double operator()(std::shared_ptr<afwTable::SourceRecord> const &s1, std::shared_ptr<afwTable::SourceRecord> const &s2) const {
+    double operator()(std::shared_ptr<afwTable::SourceRecord> const &s1,
+                      std::shared_ptr<afwTable::SourceRecord> const &s2) const {
         double dx = s2->getX() - s1->getX();
         double dy = s2->getY() - s1->getY();
-        return std::sqrt(dx*dx + dy*dy);
+        return std::sqrt(dx * dx + dy * dy);
     }
 };
 
 template <typename DistFunctorT>
-std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set,
-                                         double radius,
-                                         DistFunctorT const &distFun) {
+std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set, double radius,
+                                              DistFunctorT const &distFun) {
     std::vector<afwTable::SourceMatch> matches;
     for (afwTable::SourceCatalog::const_iterator i1(set.begin()), e(set.end()); i1 != e; ++i1) {
         for (afwTable::SourceCatalog::const_iterator i2(i1); i2 != e; ++i2) {
@@ -120,8 +121,8 @@ std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set
             }
             double d = distFun(i1, i2);
             if (d <= radius) {
-               matches.push_back(afwTable::SourceMatch(i1, i2, d));
-               matches.push_back(afwTable::SourceMatch(i2, i1, d));
+                matches.push_back(afwTable::SourceMatch(i1, i2, d));
+                matches.push_back(afwTable::SourceMatch(i2, i1, d));
             }
         }
     }
@@ -130,9 +131,8 @@ std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set
 
 template <typename DistFunctorT>
 std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set1,
-                                         afwTable::SourceCatalog const &set2,
-                                         double radius,
-                                         DistFunctorT const &distFun) {
+                                              afwTable::SourceCatalog const &set2, double radius,
+                                              DistFunctorT const &distFun) {
     if (&set1 == &set2) {
         return bruteMatch(set1, radius, distFun);
     }
@@ -153,9 +153,8 @@ std::vector<afwTable::SourceMatch> bruteMatch(afwTable::SourceCatalog const &set
 // that any tuple in one result set but not the other has a match distance very close
 // to the match radius.
 void compareMatches(std::vector<afwTable::SourceMatch> &matches,
-                    std::vector<afwTable::SourceMatch> &refMatches,
-                    double radius) {
-    double const tolerance = 1e-6; // 1 micro arcsecond
+                    std::vector<afwTable::SourceMatch> &refMatches, double radius) {
+    double const tolerance = 1e-6;  // 1 micro arcsecond
     CmpSourceMatch lessThan;
 
     std::sort(matches.begin(), matches.end(), lessThan);
@@ -186,13 +185,13 @@ void compareMatches(std::vector<afwTable::SourceMatch> &matches,
     }
 }
 
-} // namespace <anonymous>
+}  // namespace <anonymous>
 
-
-BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    int const N = 500;    // # of points to generate
-    double const M = 8.0; // avg. # of matches
-    afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
+BOOST_AUTO_TEST_CASE(
+        matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    int const N = 500;     // # of points to generate
+    double const M = 8.0;  // avg. # of matches
+    afwGeom::Angle radius = std::acos(1.0 - 2.0 * M / N) * afwGeom::radians;
 
     afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
@@ -202,10 +201,11 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     compareMatches(matches, refMatches, radius);
 }
 
-BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    int const N = 500;    // # of points to generate
-    double const M = 8.0; // avg. # of matches
-    afwGeom::Angle radius = std::acos(1.0 - 2.0*M/N) * afwGeom::radians;
+BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
+                                          "Boost non-Std" */
+    int const N = 500;                 // # of points to generate
+    double const M = 8.0;              // avg. # of matches
+    afwGeom::Angle radius = std::acos(1.0 - 2.0 * M / N) * afwGeom::radians;
 
     afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
@@ -214,10 +214,11 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     compareMatches(matches, refMatches, radius);
 }
 
-BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    int const N = 500;    // # of points to generate
-    double const M = 8.0; // avg. # of matches
-    double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
+BOOST_AUTO_TEST_CASE(
+        matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    int const N = 500;     // # of points to generate
+    double const M = 8.0;  // avg. # of matches
+    double const radius = std::sqrt(M / (afwGeom::PI * static_cast<double>(N)));
 
     afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
@@ -227,10 +228,11 @@ BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
     compareMatches(matches, refMatches, radius);
 }
 
-BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    int const N = 500;    // # of points to generate
-    double const M = 8.0; // avg. # of matches
-    double const radius = std::sqrt(M/(afwGeom::PI*static_cast<double>(N)));
+BOOST_AUTO_TEST_CASE(
+        matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    int const N = 500;     // # of points to generate
+    double const M = 8.0;  // avg. # of matches
+    double const radius = std::sqrt(M / (afwGeom::PI * static_cast<double>(N)));
 
     afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
@@ -239,10 +241,9 @@ BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     compareMatches(matches, refMatches, radius);
 }
 
-
-static void normalizeRaDec(afwTable::SourceCatalog & ss) {
-    for (size_t i=0; i<ss.size(); i++) {
-        double r,d;
+static void normalizeRaDec(afwTable::SourceCatalog &ss) {
+    for (size_t i = 0; i < ss.size(); i++) {
+        double r, d;
         r = ss[i].getRa().asRadians();
         d = ss[i].getDec().asRadians();
         // wrap Dec over the (north) pole
@@ -255,9 +256,7 @@ static void normalizeRaDec(afwTable::SourceCatalog & ss) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(matchNearPole) {
-
     afwTable::SourceCatalog set1(getGlobalTable());
     afwTable::SourceCatalog set2(getGlobalTable());
 
@@ -267,8 +266,8 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     afwGeom::Angle rad = 0.1 * afwGeom::degrees;
     int id1 = 0;
     int id2 = 1000000;
-    for (double  j=0.1; j<1; j+=0.1) {
-        for (int i=0; i<360; i+=45) {
+    for (double j = 0.1; j < 1; j += 0.1) {
+        for (int i = 0; i < 360; i += 45) {
             afwGeom::Angle ra = i * afwGeom::degrees;
             afwGeom::Angle dec = (90 - j) * afwGeom::degrees;
             afwGeom::Angle ddec1 = rad;
@@ -353,5 +352,4 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, rad, false);
     std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec());
     compareMatches(matches, refMatches, rad);
-
 }

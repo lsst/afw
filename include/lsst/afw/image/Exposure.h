@@ -32,10 +32,12 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/ExposureInfo.h"
 
-namespace lsst { namespace afw {
+namespace lsst {
+namespace afw {
 
 namespace formatters {
-    template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
+template <typename ImageT, typename MaskT, typename VarianceT>
+class ExposureFormatter;
 }
 
 namespace image {
@@ -69,10 +71,9 @@ namespace image {
   * The hasWcs member is used to determine if the Exposure has a Wcs.  It is not
   * required to have one.
   */
-template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
-         typename VarianceT=lsst::afw::image::VariancePixel>
-class Exposure : public lsst::daf::base::Persistable,
-                 public lsst::daf::base::Citizen {
+template <typename ImageT, typename MaskT = lsst::afw::image::MaskPixel,
+          typename VarianceT = lsst::afw::image::VariancePixel>
+class Exposure : public lsst::daf::base::Persistable, public lsst::daf::base::Citizen {
 public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
 
@@ -84,10 +85,8 @@ public:
       * @param height number of rows
       * @param wcs the Wcs
       */
-    explicit Exposure(
-        unsigned int width, unsigned int height,
-        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()
-    );
+    explicit Exposure(unsigned int width, unsigned int height,
+                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
       * a Wcs (which may be default constructed)
@@ -95,10 +94,8 @@ public:
       * @param dimensions desired image width/height
       * @param wcs the Wcs
       */
-    explicit Exposure(
-        lsst::afw::geom::Extent2I const & dimensions=lsst::afw::geom::Extent2I(),
-        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()
-    );
+    explicit Exposure(lsst::afw::geom::Extent2I const& dimensions = lsst::afw::geom::Extent2I(),
+                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
       * a Wcs (which may be default constructed)
@@ -106,17 +103,15 @@ public:
       * @param bbox desired image width/height, and origin
       * @param wcs the Wcs
       */
-    explicit Exposure(
-        lsst::afw::geom::Box2I const & bbox,
-        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()
-    );
+    explicit Exposure(lsst::afw::geom::Box2I const& bbox,
+                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
 
     /** Construct an Exposure from a MaskedImage and an optional Wcs
      *
      * @param maskedImage the MaskedImage
      * @param wcs the Wcs
       */
-    explicit Exposure(MaskedImageT & maskedImage,
+    explicit Exposure(MaskedImageT& maskedImage,
                       std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
 
     /** Construct an Exposure from a MaskedImage and an ExposureInfo
@@ -126,10 +121,7 @@ public:
       * @param maskedImage the MaskedImage
       * @param info the ExposureInfo
       */
-    explicit Exposure(
-        MaskedImageT & maskedImage,
-        std::shared_ptr<ExposureInfo> info
-    );
+    explicit Exposure(MaskedImageT& maskedImage, std::shared_ptr<ExposureInfo> info);
 
     /**
      *  Construct an Exposure by reading a regular FITS file.
@@ -140,10 +132,8 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(
-        std::string const & fileName, geom::Box2I const& bbox=geom::Box2I(),
-        ImageOrigin origin=PARENT, bool conformMasks=false
-    );
+    explicit Exposure(std::string const& fileName, geom::Box2I const& bbox = geom::Box2I(),
+                      ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /**
      *  Construct an Exposure by reading a FITS image in memory.
@@ -154,10 +144,8 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(
-        fits::MemFileManager & manager, geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=PARENT, bool conformMasks=false
-    );
+    explicit Exposure(fits::MemFileManager& manager, geom::Box2I const& bbox = geom::Box2I(),
+                      ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /**
      *  Construct an Exposure from an already-open FITS object.
@@ -168,20 +156,15 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(
-        fits::Fits & fitsfile, geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=PARENT, bool conformMasks=false
-    );
+    explicit Exposure(fits::Fits& fitsfile, geom::Box2I const& bbox = geom::Box2I(),
+                      ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /** Copy an Exposure
      *
      * @param src Parent Exposure
      * @param deep Should we copy the pixels?
      */
-    Exposure(
-        Exposure const &src,
-        bool const deep=false
-    );
+    Exposure(Exposure const& src, bool const deep = false);
 
     /** Construct a subExposure given an Exposure and a bounding box
      *
@@ -193,25 +176,20 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if the requested subRegion
      * is not fully contained by the original MaskedImage BBox.
      */
-    Exposure(
-        Exposure const &src,
-        lsst::afw::geom::Box2I const& bbox,
-        ImageOrigin const origin=PARENT,
-        bool const deep=false
-    );
+    Exposure(Exposure const& src, lsst::afw::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
+             bool const deep = false);
 
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
     /// N(N-1)/2 conversions between N ImageBase types.
     ///
     /// We only support converting the Image part
-    template<typename OtherPixelT>
-    Exposure(Exposure<OtherPixelT, MaskT, VarianceT> const& rhs, ///< Input Exposure
-             const bool deep        ///< Must be true; needed to disambiguate
-    ) :
-        lsst::daf::base::Citizen(typeid(this)),
-        _maskedImage(rhs.getMaskedImage(), deep),
-        _info(new ExposureInfo(*rhs.getInfo(), deep))
-    {
+    template <typename OtherPixelT>
+    Exposure(Exposure<OtherPixelT, MaskT, VarianceT> const& rhs,  ///< Input Exposure
+             const bool deep                                      ///< Must be true; needed to disambiguate
+             )
+            : lsst::daf::base::Citizen(typeid(this)),
+              _maskedImage(rhs.getMaskedImage(), deep),
+              _info(new ExposureInfo(*rhs.getInfo(), deep)) {
         if (not deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "Exposure's converting copy constructor must make a deep copy");
@@ -232,7 +210,9 @@ public:
     std::shared_ptr<Wcs> getWcs() { return _info->getWcs(); }
 
     /// Return the Exposure's Detector information
-    std::shared_ptr<lsst::afw::cameraGeom::Detector const> getDetector() const { return _info->getDetector(); }
+    std::shared_ptr<lsst::afw::cameraGeom::Detector const> getDetector() const {
+        return _info->getDetector();
+    }
     /// Return the Exposure's filter
     Filter getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
@@ -268,9 +248,7 @@ public:
      */
     geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin=PARENT) const {
-        return _maskedImage.getBBox(origin);
-    }
+    geom::Box2I getBBox(ImageOrigin const origin = PARENT) const { return _maskedImage.getBBox(origin); }
     /**
      * Set the Exposure's origin (including correcting the Wcs)
      *
@@ -279,15 +257,17 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::Point2I const & origin);
+    void setXY0(geom::Point2I const& origin);
 
     // Set Members
     /** Set the MaskedImage of the Exposure.
      */
-    void setMaskedImage(MaskedImageT &maskedImage);
+    void setMaskedImage(MaskedImageT& maskedImage);
     void setWcs(std::shared_ptr<Wcs> wcs) { _info->setWcs(wcs); }
     /// Set the Exposure's Detector information
-    void setDetector(std::shared_ptr<lsst::afw::cameraGeom::Detector const> detector) { _info->setDetector(detector); }
+    void setDetector(std::shared_ptr<lsst::afw::cameraGeom::Detector const> detector) {
+        _info->setDetector(detector);
+    }
     /// Set the Exposure's filter
     void setFilter(Filter const& filter) { _info->setFilter(filter); }
     /// Set the Exposure's Calib object
@@ -333,7 +313,7 @@ public:
      *  of CRPIX and LTV saved in the file are not the same as those in the C++ objects in memory,
      *  but are rather modified so they are interpreted by external tools (like ds9).
      */
-    void writeFits(std::string const & fileName) const;
+    void writeFits(std::string const& fileName) const;
 
     /**
      *  Write an Exposure to a multi-extension FITS file in memory.
@@ -342,7 +322,7 @@ public:
      *
      *  @see writeFits
      */
-    void writeFits(fits::MemFileManager & manager) const;
+    void writeFits(fits::MemFileManager& manager) const;
 
     /**
      *  Write an Exposure to an already-open FITS file object.
@@ -351,14 +331,14 @@ public:
      *
      *  @see writeFits
      */
-    void writeFits(fits::Fits & fitsfile) const;
+    void writeFits(fits::Fits& fitsfile) const;
 
     /**
      *  Read an Exposure from a regular FITS file.
      *
      *  @param[in] filename    Name of the file to read.
      */
-    static Exposure readFits(std::string const & filename) {
+    static Exposure readFits(std::string const& filename) {
         return Exposure<ImageT, MaskT, VarianceT>(filename);
     }
 
@@ -367,17 +347,14 @@ public:
      *
      *  @param[in] manager     Object that manages the memory to be read.
      */
-    static Exposure readFits(fits::MemFileManager & manager) {
+    static Exposure readFits(fits::MemFileManager& manager) {
         return Exposure<ImageT, MaskT, VarianceT>(manager);
     }
 
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 
-    void _readFits(
-        fits::Fits & fitsfile, geom::Box2I const & bbox,
-        ImageOrigin origin, bool conformMasks
-    );
+    void _readFits(fits::Fits& fitsfile, geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks);
 
     MaskedImageT _maskedImage;
     std::shared_ptr<ExposureInfo> _info;
@@ -388,13 +365,14 @@ private:
  */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>> makeExposure(
-    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage, ///< the Exposure's image
-    std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>() ///< the Exposure's WCS
-) {
+        MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& mimage,  ///< the Exposure's image
+        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()  ///< the Exposure's WCS
+        ) {
     return typename std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>>(
-        new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
+            new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
 }
+}
+}
+}  // lsst::afw::image
 
-}}} // lsst::afw::image
-
-#endif // LSST_AFW_IMAGE_EXPOSURE_H
+#endif  // LSST_AFW_IMAGE_EXPOSURE_H

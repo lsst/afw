@@ -54,7 +54,7 @@ using PyBaseRecord = py::class_<BaseRecord, std::shared_ptr<BaseRecord>>;
 using PyBaseTable = py::class_<BaseTable, std::shared_ptr<BaseTable>>;
 
 template <typename T>
-void declareBaseRecordOverloads(PyBaseRecord & cls, std::string const & suffix) {
+void declareBaseRecordOverloads(PyBaseRecord &cls, std::string const &suffix) {
     typedef typename Field<T>::Value (BaseRecord::*Getter)(Key<T> const &) const;
     typedef void (BaseRecord::*Setter)(Key<T> const &, typename Field<T>::Value const &);
     cls.def(("get" + suffix).c_str(), (Getter)&BaseRecord::get);
@@ -62,26 +62,25 @@ void declareBaseRecordOverloads(PyBaseRecord & cls, std::string const & suffix) 
 }
 
 template <typename T>
-void declareBaseRecordArrayOverloads(PyBaseRecord & cls, std::string const & suffix) {
-    auto getter = [](BaseRecord & self, Key<Array<T>> const & key) -> ndarray::Array<T,1,1> {
+void declareBaseRecordArrayOverloads(PyBaseRecord &cls, std::string const &suffix) {
+    auto getter = [](BaseRecord &self, Key<Array<T>> const &key) -> ndarray::Array<T, 1, 1> {
         return self[key];
     };
-    auto setter = [](BaseRecord & self, Key<Array<T>> const & key, py::object const & value) {
+    auto setter = [](BaseRecord &self, Key<Array<T>> const &key, py::object const &value) {
         if (key.getSize() == 0) {
             // Variable-length array field: do a shallow copy, which requires a non-const
             // contiguous array.
-            self.set(key, py::cast<ndarray::Array<T,1,1>>(value));
+            self.set(key, py::cast<ndarray::Array<T, 1, 1>>(value));
         } else {
             // Fixed-length array field: do a deep copy, which can work with a const
             // noncontiguous array.  But we need to check the size first, since the
             // penalty for getting that wrong is assert->abort.
-            auto v = py::cast<ndarray::Array<T const,1,0>>(value);
-            ndarray::ArrayRef<T,1,1> ref = self[key];
+            auto v = py::cast<ndarray::Array<T const, 1, 0>>(value);
+            ndarray::ArrayRef<T, 1, 1> ref = self[key];
             if (v.size() != ref.size()) {
                 throw LSST_EXCEPT(
-                    pex::exceptions::LengthError,
-                    (boost::format("Array sizes do not agree: %s != %s") % v.size() % ref.size()).str()
-                );
+                        pex::exceptions::LengthError,
+                        (boost::format("Array sizes do not agree: %s != %s") % v.size() % ref.size()).str());
             }
             ref = v;
         }
@@ -91,11 +90,11 @@ void declareBaseRecordArrayOverloads(PyBaseRecord & cls, std::string const & suf
     cls.def(("set" + suffix).c_str(), setter);
 }
 
-PyBaseRecord declareBaseRecord(py::module & mod) {
+PyBaseRecord declareBaseRecord(py::module &mod) {
     PyBaseRecord cls(mod, "BaseRecord");
     utils::python::addSharedPtrEquality<BaseRecord>(cls);
-    cls.def("assign", (void (BaseRecord::*)(BaseRecord const &)) &BaseRecord::assign);
-    cls.def("assign", (void (BaseRecord::*)(BaseRecord const &, SchemaMapper const &)) &BaseRecord::assign);
+    cls.def("assign", (void (BaseRecord::*)(BaseRecord const &)) & BaseRecord::assign);
+    cls.def("assign", (void (BaseRecord::*)(BaseRecord const &, SchemaMapper const &)) & BaseRecord::assign);
     cls.def("getSchema", &BaseRecord::getSchema);
     cls.def("getTable", &BaseRecord::getTable);
     cls.def_property_readonly("schema", &BaseRecord::getSchema);
@@ -116,14 +115,14 @@ PyBaseRecord declareBaseRecord(py::module & mod) {
 
     // These are master getters and setters that can take either strings, Keys, or
     // FunctorKeys, and dispatch to key.get.
-    auto getter = [](py::object const & self, py::object key) -> py::object {
+    auto getter = [](py::object const &self, py::object key) -> py::object {
         py::object schema = self.attr("schema");
         if (py::isinstance<py::str>(key) || py::isinstance<py::bytes>(key)) {
             key = schema.attr("find")(key).attr("key");
         }
         return key.attr("get")(self);
     };
-    auto setter = [](py::object const & self, py::object key, py::object const & value) -> void {
+    auto setter = [](py::object const &self, py::object key, py::object const &value) -> void {
         py::object schema = self.attr("schema");
         if (py::isinstance<py::str>(key) || py::isinstance<py::bytes>(key)) {
             key = schema.attr("find")(key).attr("key");
@@ -141,7 +140,7 @@ PyBaseRecord declareBaseRecord(py::module & mod) {
     return cls;
 }
 
-PyBaseTable declareBaseTable(py::module & mod) {
+PyBaseTable declareBaseTable(py::module &mod) {
     PyBaseTable cls(mod, "BaseTable");
     utils::python::addSharedPtrEquality<BaseTable>(cls);
     cls.def_static("make", &BaseTable::make);
@@ -150,10 +149,10 @@ PyBaseTable declareBaseTable(py::module & mod) {
     cls.def("popMetadata", &BaseTable::popMetadata);
     cls.def("makeRecord", &BaseTable::makeRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<BaseRecord> (BaseTable::*)(BaseRecord const &)) &BaseTable::copyRecord);
+            (std::shared_ptr<BaseRecord> (BaseTable::*)(BaseRecord const &)) & BaseTable::copyRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<BaseRecord> (BaseTable::*)(BaseRecord const &, SchemaMapper const &))
-                &BaseTable::copyRecord);
+            (std::shared_ptr<BaseRecord> (BaseTable::*)(BaseRecord const &, SchemaMapper const &)) &
+                    BaseTable::copyRecord);
     cls.def("getSchema", &BaseTable::getSchema);
     cls.def_property_readonly("schema", &BaseTable::getSchema);
     cls.def("getBufferSize", &BaseTable::getBufferSize);
@@ -170,8 +169,8 @@ PYBIND11_PLUGIN(base) {
     py::module::import("lsst.afw.table.baseColumnView");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
     };
 
     auto clsBaseTable = declareBaseTable(mod);
@@ -191,5 +190,7 @@ PYBIND11_PLUGIN(base) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

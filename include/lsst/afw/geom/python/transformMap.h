@@ -43,9 +43,8 @@ Declare an instantiation of TransformMap
 @param[in] prefix  Prefix for python class name; full name = prefix + "TransformMap"
 */
 template <typename CoordSysT>
-pybind11::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT>>>
-    declareTransformMap(pybind11::module & mod, std::string const & prefix)
-{
+pybind11::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT>>> declareTransformMap(
+        pybind11::module &mod, std::string const &prefix) {
     using namespace pybind11::literals;
 
     using Map = TransformMap<CoordSysT>;
@@ -55,8 +54,8 @@ pybind11::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT
 
     /* Constructors */
     cls.def(pybind11::init<>());
-    cls.def(pybind11::init<CoordSysT const &, typename Map::Transforms const &>(),
-            "nativeCoordSys"_a, "transforms"_a);
+    cls.def(pybind11::init<CoordSysT const &, typename Map::Transforms const &>(), "nativeCoordSys"_a,
+            "transforms"_a);
 
     /* Operators */
     cls.def("__getitem__", &Map::operator[], "coordSys"_a);
@@ -65,19 +64,20 @@ pybind11::class_<TransformMap<CoordSysT>, std::shared_ptr<TransformMap<CoordSysT
 
     /* Members */
     cls.def("transform",
-            (Point2D (Map::*)(Point2D const &, CoordSysT const &, CoordSysT const &) const)
-                &Map::transform,
+            (Point2D (Map::*)(Point2D const &, CoordSysT const &, CoordSysT const &) const) & Map::transform,
             "point"_a, "fromCoordSys"_a, "toCoordSys"_a);
-    cls.def("transform",
-            (std::vector<Point2D> (Map::*)(std::vector<Point2D> const &, CoordSysT const &, CoordSysT const &) const)
-                &Map::transform,
+    cls.def("transform", (std::vector<Point2D> (Map::*)(std::vector<Point2D> const &, CoordSysT const &,
+                                                        CoordSysT const &) const) &
+                                 Map::transform,
             "points"_a, "fromCoordSys"_a, "toCoordSys"_a);
     cls.def("getNativeCoordSys", &Map::getNativeCoordSys);
     cls.def("getCoordSysList", &Map::getCoordSysList);
 
     return cls;
 };
-
-}}}} // lsst::afw::geom::python
+}
+}
+}
+}  // lsst::afw::geom::python
 
 #endif

@@ -22,13 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 /*
  * Implementation of ImageFormatter class
  */
 
 #ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
+#define __attribute__(x) /*NOTHING*/
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
@@ -75,46 +74,42 @@ public:
     static std::string name();
 };
 
-template<> std::string ImageFormatterTraits<std::uint16_t>::name() {
+template <>
+std::string ImageFormatterTraits<std::uint16_t>::name() {
     static std::string name = "ImageU";
     return name;
 }
-template<> std::string ImageFormatterTraits<int>::name() {
+template <>
+std::string ImageFormatterTraits<int>::name() {
     static std::string name = "ImageI";
     return name;
 }
-template<> std::string ImageFormatterTraits<float>::name() {
+template <>
+std::string ImageFormatterTraits<float>::name() {
     static std::string name = "ImageF";
     return name;
 }
-template<> std::string ImageFormatterTraits<double>::name() {
+template <>
+std::string ImageFormatterTraits<double>::name() {
     static std::string name = "ImageD";
     return name;
 }
-template<> std::string ImageFormatterTraits<std::uint64_t>::name() {
+template <>
+std::string ImageFormatterTraits<std::uint64_t>::name() {
     static std::string name = "ImageL";
     return name;
 }
 
 template <typename ImagePixelT>
 lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::registration(
-    ImageFormatterTraits<ImagePixelT>::name(),
-    typeid(Image<ImagePixelT>),
-    createInstance);
+        ImageFormatterTraits<ImagePixelT>::name(), typeid(Image<ImagePixelT>), createInstance);
 
 template <typename ImagePixelT>
-ImageFormatter<ImagePixelT>::ImageFormatter(
-        std::shared_ptr<lsst::pex::policy::Policy>
-                                           )
-    :
-    lsst::daf::persistence::Formatter(typeid(this))
-{
-}
+ImageFormatter<ImagePixelT>::ImageFormatter(std::shared_ptr<lsst::pex::policy::Policy>)
+        : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename ImagePixelT>
-ImageFormatter<ImagePixelT>::~ImageFormatter(void)
-{
-}
+ImageFormatter<ImagePixelT>::~ImageFormatter(void) {}
 
 namespace {
 namespace dafBase = lsst::daf::base;
@@ -122,11 +117,8 @@ namespace afwImage = lsst::afw::image;
 }
 
 template <typename ImagePixelT>
-void ImageFormatter<ImagePixelT>::write(
-    Persistable const* persistable,
-    std::shared_ptr<Storage> storage,
-    std::shared_ptr<lsst::daf::base::PropertySet>) {
-
+void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::shared_ptr<Storage> storage,
+                                        std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
@@ -138,15 +130,13 @@ void ImageFormatter<ImagePixelT>::write(
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(XmlStorage)) {
+    } else if (typeid(*storage) == typeid(XmlStorage)) {
         LOGL_DEBUG(_log, "ImageFormatter write XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         boost->getOArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         LOGL_DEBUG(_log, "ImageFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef Image<ImagePixelT> Image;
@@ -172,17 +162,14 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(XmlStorage)) {
+    } else if (typeid(*storage) == typeid(XmlStorage)) {
         LOGL_DEBUG(_log, "ImageFormatter read XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
         boost->getIArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
-    }
-    else if(typeid(*storage) == typeid(FitsStorage)) {
-
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         LOGL_DEBUG(_log, "ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         geom::Box2I box;
@@ -191,10 +178,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = geom::Box2I(
-                geom::Point2I(llcX, llcY),
-                geom::Extent2I(width, height)
-            );
+            box = geom::Box2I(geom::Point2I(llcX, llcY), geom::Extent2I(width, height));
         }
         afwImg::ImageOrigin origin = afwImg::PARENT;
         if (additionalData->exists("imageOrigin")) {
@@ -204,22 +188,19 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
             } else if (originStr == "PARENT") {
                 origin = afwImg::PARENT;
             } else {
-                throw LSST_EXCEPT(
-                    lsst::pex::exceptions::RuntimeError,
-                    (boost::format("Unknown ImageOrigin type  %s specified in additional"
-                                   "data for retrieving Image from fits")%originStr
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                                  (boost::format("Unknown ImageOrigin type  %s specified in additional"
+                                                 "data for retrieving Image from fits") %
+                                   originStr
 
-                    ).str()
-                );
+                                   ).str());
             }
         }
         std::shared_ptr<lsst::daf::base::PropertySet> metadata;
 
-        Image<ImagePixelT>* ip = new Image<ImagePixelT>(
-            fits->getPath(), fits->getHdu(),
-            std::shared_ptr<lsst::daf::base::PropertySet>(),
-            box, origin
-        );
+        Image<ImagePixelT>* ip =
+                new Image<ImagePixelT>(fits->getPath(), fits->getHdu(),
+                                       std::shared_ptr<lsst::daf::base::PropertySet>(), box, origin);
         // @note We're throwing away the metadata
         // @todo Do something with these fields?
         // int _X0;
@@ -231,16 +212,14 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<Storage> storage,
 }
 
 template <typename ImagePixelT>
-void ImageFormatter<ImagePixelT>::update(
-    Persistable*,
-    std::shared_ptr<Storage>,
-    std::shared_ptr<lsst::daf::base::PropertySet>) {
+void ImageFormatter<ImagePixelT>::update(Persistable*, std::shared_ptr<Storage>,
+                                         std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Image");
 }
 
-template <typename ImagePixelT> template <class Archive>
-void ImageFormatter<ImagePixelT>::delegateSerialize(
-    Archive& ar, int const, Persistable* persistable) {
+template <typename ImagePixelT>
+template <class Archive>
+void ImageFormatter<ImagePixelT>::delegateSerialize(Archive& ar, int const, Persistable* persistable) {
     LOGL_DEBUG(_log, "ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
     if (ip == 0) {
@@ -251,37 +230,39 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
         width = ip->getWidth();
         height = ip->getHeight();
     }
-    ar & make_nvp("width", width) & make_nvp("height", height);
+    ar& make_nvp("width", width) & make_nvp("height", height);
     if (Archive::is_loading::value) {
-        std::unique_ptr<Image<ImagePixelT> > ni(
-            new Image<ImagePixelT>(geom::Extent2I(width, height))
-        );
+        std::unique_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(geom::Extent2I(width, height)));
         typename Image<ImagePixelT>::Array array = ni->getArray();
-        ar & make_nvp("array",
-                      boost::serialization::make_array(array.getData(), array.getNumElements()));
+        ar& make_nvp("array", boost::serialization::make_array(array.getData(), array.getNumElements()));
         ip->swap(*ni);
     } else {
         ndarray::Array<ImagePixelT, 2, 2> array = ndarray::dynamic_dimension_cast<2>(ip->getArray());
-        if(array.empty())
-            array = ndarray::copy(ip->getArray());
-        ar & make_nvp("array", boost::serialization::make_array(array.getData(), array.getNumElements()));
+        if (array.empty()) array = ndarray::copy(ip->getArray());
+        ar& make_nvp("array", boost::serialization::make_array(array.getData(), array.getNumElements()));
     }
 }
 
 template <typename ImagePixelT>
 std::shared_ptr<lsst::daf::persistence::Formatter> ImageFormatter<ImagePixelT>::createInstance(
-    std::shared_ptr<lsst::pex::policy::Policy> policy) {
+        std::shared_ptr<lsst::pex::policy::Policy> policy) {
     return std::shared_ptr<lsst::daf::persistence::Formatter>(new ImageFormatter<ImagePixelT>(policy));
 }
 
-#define InstantiateFormatter(ImagePixelT) \
-    template class ImageFormatter<ImagePixelT >; \
-    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_oarchive&, int const, Persistable*); \
-    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_iarchive&, int const, Persistable*); \
-    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::xml_oarchive&, int const, Persistable*); \
-    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::xml_iarchive&, int const, Persistable*); \
-    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_oarchive&, int const, Persistable*); \
-    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_iarchive&, int const, Persistable*);
+#define InstantiateFormatter(ImagePixelT)                                                                   \
+    template class ImageFormatter<ImagePixelT>;                                                             \
+    template void ImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::text_oarchive&, int const, \
+                                                                 Persistable*);                             \
+    template void ImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::text_iarchive&, int const, \
+                                                                 Persistable*);                             \
+    template void ImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::xml_oarchive&, int const,  \
+                                                                 Persistable*);                             \
+    template void ImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::xml_iarchive&, int const,  \
+                                                                 Persistable*);                             \
+    template void ImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::binary_oarchive&,          \
+                                                                 int const, Persistable*);                  \
+    template void ImageFormatter<ImagePixelT>::delegateSerialize(boost::archive::binary_iarchive&,          \
+                                                                 int const, Persistable*);
 
 InstantiateFormatter(std::uint16_t);
 InstantiateFormatter(int);
@@ -290,5 +271,6 @@ InstantiateFormatter(double);
 InstantiateFormatter(std::uint64_t);
 
 #undef InstantiateSerializer
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters

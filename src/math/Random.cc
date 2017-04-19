@@ -22,7 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
 /*
  * Random number generator implementaion.
  */
@@ -42,54 +41,31 @@ using lsst::pex::policy::Policy;
 
 namespace ex = lsst::pex::exceptions;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 // -- Static data --------
 
-::gsl_rng_type const * const Random::_gslRngTypes[Random::NUM_ALGORITHMS] = {
-    ::gsl_rng_mt19937,
-    ::gsl_rng_ranlxs0,
-    ::gsl_rng_ranlxs1,
-    ::gsl_rng_ranlxs2,
-    ::gsl_rng_ranlxd1,
-    ::gsl_rng_ranlxd2,
-    ::gsl_rng_ranlux,
-    ::gsl_rng_ranlux389,
-    ::gsl_rng_cmrg,
-    ::gsl_rng_mrg,
-    ::gsl_rng_taus,
-    ::gsl_rng_taus2,
-    ::gsl_rng_gfsr4
-};
+::gsl_rng_type const *const Random::_gslRngTypes[Random::NUM_ALGORITHMS] = {
+        ::gsl_rng_mt19937, ::gsl_rng_ranlxs0, ::gsl_rng_ranlxs1,   ::gsl_rng_ranlxs2, ::gsl_rng_ranlxd1,
+        ::gsl_rng_ranlxd2, ::gsl_rng_ranlux,  ::gsl_rng_ranlux389, ::gsl_rng_cmrg,    ::gsl_rng_mrg,
+        ::gsl_rng_taus,    ::gsl_rng_taus2,   ::gsl_rng_gfsr4};
 
-char const * const Random::_algorithmNames[Random::NUM_ALGORITHMS] = {
-    "MT19937",
-    "RANLXS0",
-    "RANLXS1",
-    "RANLXS2",
-    "RANLXD1",
-    "RANLXD2",
-    "RANLUX",
-    "RANLUX389",
-    "CMRG",
-    "MRG",
-    "TAUS",
-    "TAUS2",
-    "GFSR4"
-};
+char const *const Random::_algorithmNames[Random::NUM_ALGORITHMS] = {
+        "MT19937",   "RANLXS0", "RANLXS1", "RANLXS2", "RANLXD1", "RANLXD2", "RANLUX",
+        "RANLUX389", "CMRG",    "MRG",     "TAUS",    "TAUS2",   "GFSR4"};
 
-char const * const Random::_algorithmEnvVarName = "LSST_RNG_ALGORITHM";
-char const * const Random::_seedEnvVarName = "LSST_RNG_SEED";
-
+char const *const Random::_algorithmEnvVarName = "LSST_RNG_ALGORITHM";
+char const *const Random::_seedEnvVarName = "LSST_RNG_SEED";
 
 // -- Private helper functions --------
 
 void Random::initialize() {
     if (_seed == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterError,
-                          (boost::format("Invalid RNG seed: %lu") % _seed).str());
+        throw LSST_EXCEPT(ex::InvalidParameterError, (boost::format("Invalid RNG seed: %lu") % _seed).str());
     }
-    ::gsl_rng * rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
+    ::gsl_rng *rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
     if (rng == 0) {
         throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_alloc() failed");
     }
@@ -97,55 +73,45 @@ void Random::initialize() {
     _rng.reset(rng, ::gsl_rng_free);
 }
 
-void Random::initialize(std::string const & algorithm) {
-   // linear search (the number of algorithms is small)
-   for (int i = 0; i < NUM_ALGORITHMS; ++i) {
+void Random::initialize(std::string const &algorithm) {
+    // linear search (the number of algorithms is small)
+    for (int i = 0; i < NUM_ALGORITHMS; ++i) {
         if (_algorithmNames[i] == algorithm) {
             _algorithm = static_cast<Algorithm>(i);
             initialize();
             return;
         }
     }
-    throw LSST_EXCEPT(ex::InvalidParameterError, "RNG algorithm " +
-                      algorithm + " is not supported");
+    throw LSST_EXCEPT(ex::InvalidParameterError, "RNG algorithm " + algorithm + " is not supported");
 }
-
 
 // -- Constructor --------
 
-Random::Random(Algorithm const algorithm, unsigned long seed)
-    : _rng(), _seed(seed), _algorithm(algorithm)
-{
+Random::Random(Algorithm const algorithm, unsigned long seed) : _rng(), _seed(seed), _algorithm(algorithm) {
     if (_algorithm < 0 || _algorithm >= NUM_ALGORITHMS) {
         throw LSST_EXCEPT(ex::InvalidParameterError, "Invalid RNG algorithm");
     }
     initialize();
 }
 
-
-Random::Random(std::string const & algorithm, unsigned long seed)
-    : _rng(), _seed(seed)
-{
+Random::Random(std::string const &algorithm, unsigned long seed) : _rng(), _seed(seed) {
     initialize(algorithm);
 }
 
-
-Random::Random(std::shared_ptr<pex::policy::Policy> const policy)
-    : _rng(), _seed()
-{
+Random::Random(std::shared_ptr<pex::policy::Policy> const policy) : _rng(), _seed() {
     std::string const seed(policy->getString("rngSeed"));
     try {
         _seed = std::stoul(seed);
-    } catch(std::invalid_argument &) {
+    } catch (std::invalid_argument &) {
+        throw LSST_EXCEPT(
+                ex::RuntimeError,
+                (boost::format("Invalid argument in \"rngSeed\" policy value: \"%1%\"") % seed).str());
+    } catch (std::out_of_range &) {
         throw LSST_EXCEPT(ex::RuntimeError,
-        (boost::format("Invalid argument in \"rngSeed\" policy value: \"%1%\"") % seed).str());
-    } catch(std::out_of_range &) {
-        throw LSST_EXCEPT(ex::RuntimeError,
-        (boost::format("Out of range in \"rngSeed\" policy value: \"%1%\"") % seed).str());
+                          (boost::format("Out of range in \"rngSeed\" policy value: \"%1%\"") % seed).str());
     }
     initialize(policy->getString("rngAlgorithm"));
 }
-
 
 Random Random::deepCopy() const {
     Random rng = *this;
@@ -157,35 +123,29 @@ Random Random::deepCopy() const {
 }
 
 Random::State Random::getState() const {
-    return State(static_cast<char*>(::gsl_rng_state(_rng.get())), getStateSize());
+    return State(static_cast<char *>(::gsl_rng_state(_rng.get())), getStateSize());
 }
 
-void Random::setState(State const & state) {
+void Random::setState(State const &state) {
     if (state.size() != getStateSize()) {
         throw LSST_EXCEPT(
-            pex::exceptions::LengthError,
-            (boost::format("Size of given state vector (%d) does not match expected size (%d)")
-             % state.size() % getStateSize()).str()
-        );
+                pex::exceptions::LengthError,
+                (boost::format("Size of given state vector (%d) does not match expected size (%d)") %
+                 state.size() % getStateSize())
+                        .str());
     }
-    std::copy(state.begin(), state.end(), static_cast<char*>(::gsl_rng_state(_rng.get())));
+    std::copy(state.begin(), state.end(), static_cast<char *>(::gsl_rng_state(_rng.get())));
 }
 
-std::size_t Random::getStateSize() const {
-    return ::gsl_rng_size(_rng.get());
-}
+std::size_t Random::getStateSize() const { return ::gsl_rng_size(_rng.get()); }
 
 // -- Accessors --------
 
-Random::Algorithm Random::getAlgorithm() const {
-    return _algorithm;
-}
+Random::Algorithm Random::getAlgorithm() const { return _algorithm; }
 
-std::string Random::getAlgorithmName() const {
-    return std::string(_algorithmNames[_algorithm]);
-}
+std::string Random::getAlgorithmName() const { return std::string(_algorithmNames[_algorithm]); }
 
-std::vector<std::string> const & Random::getAlgorithmNames() {
+std::vector<std::string> const &Random::getAlgorithmNames() {
     static std::vector<std::string> names;
     if (names.size() == 0) {
         for (int i = 0; i < NUM_ALGORITHMS; ++i) {
@@ -195,47 +155,30 @@ std::vector<std::string> const & Random::getAlgorithmNames() {
     return names;
 }
 
-unsigned long Random::getSeed() const {
-    return _seed;
-}
-
+unsigned long Random::getSeed() const { return _seed; }
 
 // -- Mutators: generating random numbers --------
 
-double Random::uniform() {
-    return ::gsl_rng_uniform(_rng.get());
-}
+double Random::uniform() { return ::gsl_rng_uniform(_rng.get()); }
 
-double Random::uniformPos() {
-    return ::gsl_rng_uniform_pos(_rng.get());
-}
+double Random::uniformPos() { return ::gsl_rng_uniform_pos(_rng.get()); }
 
 unsigned long Random::uniformInt(unsigned long n) {
     if (n > ::gsl_rng_max(_rng.get()) - ::gsl_rng_min(_rng.get())) {
-        throw LSST_EXCEPT(ex::RangeError,
-                          "Desired random number range exceeds generator range");
+        throw LSST_EXCEPT(ex::RangeError, "Desired random number range exceeds generator range");
     }
     return ::gsl_rng_uniform_int(_rng.get(), n);
 }
 
 // -- Mutators: computing random variates for various distributions --------
 
-double Random::flat(double const a, double const b) {
-    return ::gsl_ran_flat(_rng.get(), a, b);
+double Random::flat(double const a, double const b) { return ::gsl_ran_flat(_rng.get(), a, b); }
+
+double Random::gaussian() { return ::gsl_ran_gaussian_ziggurat(_rng.get(), 1.0); }
+
+double Random::chisq(double nu) { return ::gsl_ran_chisq(_rng.get(), nu); }
+
+double Random::poisson(double mu) { return ::gsl_ran_poisson(_rng.get(), mu); }
 }
-
-double Random::gaussian() {
-    return ::gsl_ran_gaussian_ziggurat(_rng.get(), 1.0);
 }
-
-double Random::chisq(double nu) {
-    return ::gsl_ran_chisq(_rng.get(), nu);
-}
-
-
-double Random::poisson(double mu
-                            ) {
-    return ::gsl_ran_poisson(_rng.get(), mu);
-}
-
-}}} // lsst::afw::math
+}  // lsst::afw::math

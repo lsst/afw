@@ -34,13 +34,14 @@ namespace lsst {
 namespace afw {
 namespace display {
 
-template<typename ImageT>
-void writeBasicFits(int fd, ImageT const& data,
-                    lsst::afw::image::Wcs const* Wcs=NULL, char const* title=NULL);
+template <typename ImageT>
+void writeBasicFits(int fd, ImageT const& data, lsst::afw::image::Wcs const* Wcs = NULL,
+                    char const* title = NULL);
 
-template<typename ImageT>
-void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::image::Wcs const* Wcs=NULL,
-                    const char* title=NULL);
-
-}}} // namespace lsst::afw::display
+template <typename ImageT>
+void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::image::Wcs const* Wcs = NULL,
+                    const char* title = NULL);
+}
+}
+}  // namespace lsst::afw::display
 #endif

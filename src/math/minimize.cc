@@ -38,117 +38,105 @@
 #include "lsst/log/Log.h"
 #include "lsst/afw/math/minimize.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 namespace {
-    /*
-     * Minuit wrapper for a function(x)
-     */
-    template<typename ReturnT>
-    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
-    public:
-        explicit MinimizerFunctionBase1(
-            Function1<ReturnT> const &function,
-            std::vector<double> const &measurementList,
-            std::vector<double> const &varianceList,
-            std::vector<double> const &xPositionList,
-            double errorDef
-        );
-        virtual ~MinimizerFunctionBase1() {};
-        // Required by ROOT::Minuit2::FCNBase
-        virtual double Up() const { return _errorDef; }
-        virtual double operator() (const std::vector<double>&) const;
+/*
+ * Minuit wrapper for a function(x)
+ */
+template <typename ReturnT>
+class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
+public:
+    explicit MinimizerFunctionBase1(Function1<ReturnT> const &function,
+                                    std::vector<double> const &measurementList,
+                                    std::vector<double> const &varianceList,
+                                    std::vector<double> const &xPositionList, double errorDef);
+    virtual ~MinimizerFunctionBase1(){};
+    // Required by ROOT::Minuit2::FCNBase
+    virtual double Up() const { return _errorDef; }
+    virtual double operator()(const std::vector<double> &) const;
 
-#if 0                                   // not used
+#if 0  // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
         inline std::vector<double> getPositions() const {return _xPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
 #endif
-    private:
-        std::shared_ptr<Function1<ReturnT> > _functionPtr;
-        std::vector<double> _measurementList;
-        std::vector<double> _varianceList;
-        std::vector<double> _xPositionList;
-        double _errorDef;
-    };
+private:
+    std::shared_ptr<Function1<ReturnT> > _functionPtr;
+    std::vector<double> _measurementList;
+    std::vector<double> _varianceList;
+    std::vector<double> _xPositionList;
+    double _errorDef;
+};
 
-    /*
-     * Minuit wrapper for a function(x, y)
-     */
-    template<typename ReturnT>
-    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
-    public:
-        explicit MinimizerFunctionBase2(
-            Function2<ReturnT> const &function,
-            std::vector<double> const &measurementList,
-            std::vector<double> const &varianceList,
-            std::vector<double> const &xPositionList,
-            std::vector<double> const &yPositionList,
-            double errorDef
-        );
-        virtual ~MinimizerFunctionBase2() {};
-        // Required by ROOT::Minuit2::FCNBase
-        virtual double Up() const { return _errorDef; }
-        virtual double operator() (const std::vector<double>& par) const;
+/*
+ * Minuit wrapper for a function(x, y)
+ */
+template <typename ReturnT>
+class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public daf::base::Citizen {
+public:
+    explicit MinimizerFunctionBase2(Function2<ReturnT> const &function,
+                                    std::vector<double> const &measurementList,
+                                    std::vector<double> const &varianceList,
+                                    std::vector<double> const &xPositionList,
+                                    std::vector<double> const &yPositionList, double errorDef);
+    virtual ~MinimizerFunctionBase2(){};
+    // Required by ROOT::Minuit2::FCNBase
+    virtual double Up() const { return _errorDef; }
+    virtual double operator()(const std::vector<double> &par) const;
 
-#if 0                                   // not used
+#if 0  // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
         inline std::vector<double> getPosition1() const {return _xPositionList;}
         inline std::vector<double> getPosition2() const {return _yPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
 #endif
-    private:
-        std::shared_ptr<Function2<ReturnT> > _functionPtr;
-        std::vector<double> _measurementList;
-        std::vector<double> _varianceList;
-        std::vector<double> _xPositionList;
-        std::vector<double> _yPositionList;
-        double _errorDef;
-    };
+private:
+    std::shared_ptr<Function2<ReturnT> > _functionPtr;
+    std::vector<double> _measurementList;
+    std::vector<double> _varianceList;
+    std::vector<double> _xPositionList;
+    std::vector<double> _yPositionList;
+    double _errorDef;
+};
 }
 
 /// @cond
-template<typename ReturnT>
-MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    Function1<ReturnT> const &function,
-    std::vector<double> const &measurementList,
-    std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList,
-    double errorDef)
-:
-    daf::base::Citizen(typeid(this)),
-    _functionPtr(function.clone()),
-    _measurementList(measurementList),
-    _varianceList(varianceList),
-    _xPositionList(xPositionList),
-    _errorDef(errorDef)
-{}
+template <typename ReturnT>
+MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(Function1<ReturnT> const &function,
+                                                        std::vector<double> const &measurementList,
+                                                        std::vector<double> const &varianceList,
+                                                        std::vector<double> const &xPositionList,
+                                                        double errorDef)
+        : daf::base::Citizen(typeid(this)),
+          _functionPtr(function.clone()),
+          _measurementList(measurementList),
+          _varianceList(varianceList),
+          _xPositionList(xPositionList),
+          _errorDef(errorDef) {}
 
-template<typename ReturnT>
-MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    Function2<ReturnT> const &function,
-    std::vector<double> const &measurementList,
-    std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList,
-    std::vector<double> const &yPositionList,
-    double errorDef)
-:
-    daf::base::Citizen(typeid(this)),
-    _functionPtr(function.clone()),
-    _measurementList(measurementList),
-    _varianceList(varianceList),
-    _xPositionList(xPositionList),
-    _yPositionList(yPositionList),
-    _errorDef(errorDef)
-{}
-
-
+template <typename ReturnT>
+MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(Function2<ReturnT> const &function,
+                                                        std::vector<double> const &measurementList,
+                                                        std::vector<double> const &varianceList,
+                                                        std::vector<double> const &xPositionList,
+                                                        std::vector<double> const &yPositionList,
+                                                        double errorDef)
+        : daf::base::Citizen(typeid(this)),
+          _functionPtr(function.clone()),
+          _measurementList(measurementList),
+          _varianceList(varianceList),
+          _xPositionList(xPositionList),
+          _yPositionList(yPositionList),
+          _errorDef(errorDef) {}
 
 // Only method we need to set up; basically this is a chi^2 routine
-template<typename ReturnT>
-double MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
+template <typename ReturnT>
+double MinimizerFunctionBase1<ReturnT>::operator()(const std::vector<double> &par) const {
     // Initialize the function with the fit parameters
     this->_functionPtr->setParameters(par);
 
@@ -161,16 +149,15 @@ double MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& p
     return chi2;
 }
 
-
-template<typename ReturnT>
-double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
+template <typename ReturnT>
+double MinimizerFunctionBase2<ReturnT>::operator()(const std::vector<double> &par) const {
     // Initialize the function with the fit parameters
     this->_functionPtr->setParameters(par);
 
     double chi2 = 0.0;
     for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
-        double resid = (*(this->_functionPtr))(this->_xPositionList[i],
-                                               this->_yPositionList[i]) - this->_measurementList[i];
+        double resid = (*(this->_functionPtr))(this->_xPositionList[i], this->_yPositionList[i]) -
+                       this->_measurementList[i];
         chi2 += resid * resid / this->_varianceList[i];
     }
 
@@ -178,42 +165,28 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
 }
 /// @endcond
 
-template<typename ReturnT>
-FitResults minimize(
-    Function1<ReturnT> const &function,
-    std::vector<double> const &initialParameterList,
-    std::vector<double> const &stepSizeList,
-    std::vector<double> const &measurementList,
-    std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList,
-    double errorDef
-) {
+template <typename ReturnT>
+FitResults minimize(Function1<ReturnT> const &function, std::vector<double> const &initialParameterList,
+                    std::vector<double> const &stepSizeList, std::vector<double> const &measurementList,
+                    std::vector<double> const &varianceList, std::vector<double> const &xPositionList,
+                    double errorDef) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "initialParameterList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "stepSizeList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "varianceList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "xPositionList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "xPositionList is the wrong length");
     }
 
-    MinimizerFunctionBase1<ReturnT> minimizerFunc(
-        function,
-        measurementList,
-        varianceList,
-        xPositionList,
-        errorDef
-    );
+    MinimizerFunctionBase1<ReturnT> minimizerFunc(function, measurementList, varianceList, xPositionList,
+                                                  errorDef);
 
     ROOT::Minuit2::MnUserParameters fitPar;
     std::vector<std::string> paramNames;
@@ -239,56 +212,38 @@ FitResults minimize(
             fitResults.parameterErrorList.push_back(minos(i));
         } else {
             double e = min.UserState().Error(paramNames[i].c_str());
-            std::pair<double,double> ep(-1 * e, e);
+            std::pair<double, double> ep(-1 * e, e);
             fitResults.parameterErrorList.push_back(ep);
         }
     }
     return fitResults;
 }
 
-
-template<typename ReturnT>
-FitResults minimize(
-    Function2<ReturnT> const &function,
-    std::vector<double> const &initialParameterList,
-    std::vector<double> const &stepSizeList,
-    std::vector<double> const &measurementList,
-    std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList,
-    std::vector<double> const &yPositionList,
-    double errorDef
-) {
+template <typename ReturnT>
+FitResults minimize(Function2<ReturnT> const &function, std::vector<double> const &initialParameterList,
+                    std::vector<double> const &stepSizeList, std::vector<double> const &measurementList,
+                    std::vector<double> const &varianceList, std::vector<double> const &xPositionList,
+                    std::vector<double> const &yPositionList, double errorDef) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "initialParameterList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "stepSizeList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "varianceList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "xPositionList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "xPositionList is the wrong length");
     }
     if (yPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "yPositionList is the wrong length");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "yPositionList is the wrong length");
     }
 
-    MinimizerFunctionBase2<ReturnT> minimizerFunc(
-        function,
-        measurementList,
-        varianceList,
-        xPositionList,
-        yPositionList,
-        errorDef
-    );
+    MinimizerFunctionBase2<ReturnT> minimizerFunc(function, measurementList, varianceList, xPositionList,
+                                                  yPositionList, errorDef);
 
     ROOT::Minuit2::MnUserParameters fitPar;
     std::vector<std::string> paramNames;
@@ -314,7 +269,7 @@ FitResults minimize(
             fitResults.parameterErrorList.push_back(minos(i));
         } else {
             double e = min.UserState().Error(paramNames[i].c_str());
-            std::pair<double,double> ep(-1 * e, e);
+            std::pair<double, double> ep(-1 * e, e);
             fitResults.parameterErrorList.push_back(ep);
         }
     }
@@ -324,29 +279,17 @@ FitResults minimize(
 // Explicit instantiation
 /// @cond
 #define NL /* */
-#define minimizeFuncs(ReturnT) \
-    template FitResults minimize( \
-        Function1<ReturnT> const &, \
-        std::vector<double> const &,         \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        double \
-    ); NL \
-    template FitResults minimize( \
-        Function2<ReturnT> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        std::vector<double> const &, \
-        double \
-    );
+#define minimizeFuncs(ReturnT)                                                                      \
+    template FitResults minimize(Function1<ReturnT> const &, std::vector<double> const &,           \
+                                 std::vector<double> const &, std::vector<double> const &,          \
+                                 std::vector<double> const &, std::vector<double> const &, double); \
+    NL template FitResults minimize(Function2<ReturnT> const &, std::vector<double> const &,        \
+                                    std::vector<double> const &, std::vector<double> const &,       \
+                                    std::vector<double> const &, std::vector<double> const &,       \
+                                    std::vector<double> const &, double);
 
-minimizeFuncs(float)
-minimizeFuncs(double)
+minimizeFuncs(float) minimizeFuncs(double)
 /// @endcond
-
-}}} // end lsst::afw::math
+}
+}
+}  // end lsst::afw::math

@@ -27,7 +27,7 @@
 #include "boost/format.hpp"
 #include "boost/gil/gil_all.hpp"
 
-template<class ImageT>
+template <class ImageT>
 void timePixelAccess(ImageT const &image, float const pix, int nIter) {
     const int nCols = image.width();
     const int nRows = image.height();
@@ -35,32 +35,33 @@ void timePixelAccess(ImageT const &image, float const pix, int nIter) {
     clock_t startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
         for (int y = 0; y < image.height(); ++y) {
-            for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y);
-                ptr != end; ++ptr) {
+            for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y); ptr != end;
+                 ++ptr) {
                 (*ptr)[0] += pix;
             }
         }
     }
     // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
-    double secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
+    double secPerIter =
+            (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
     double const megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
-    std::cout << boost::format("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f") %
-        nCols % nRows % megaPix % secPerIter % (megaPix/secPerIter) << std::endl;
+    std::cout << boost::format("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f") % nCols % nRows % megaPix %
+                         secPerIter % (megaPix / secPerIter)
+              << std::endl;
 
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
         for (int y = 0; y < image.height(); ++y) {
-            for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y);
-                ptr != end; ++ptr.x()) {
+            for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y); ptr != end;
+                 ++ptr.x()) {
                 (*ptr)[0] += pix;
             }
         }
     }
-    secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-    std::cout << boost::format("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f") %
-        nCols % nRows % megaPix % secPerIter % (megaPix/secPerIter) << std::endl;
+    secPerIter = (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+    std::cout << boost::format("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f") % nCols % nRows % megaPix %
+                         secPerIter % (megaPix / secPerIter)
+              << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -89,7 +90,7 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "Accessor Type\tCols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
-        std::cout << "Image(" << nCols << ", " << nRows << ")" << std::endl;
+    std::cout << "Image(" << nCols << ", " << nRows << ")" << std::endl;
 
     boost::gil::gray32f_image_t image(nCols, nRows);
 
