@@ -498,6 +498,8 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      * the data-type must be at least that length. The order of the parameters supplied to the functor will
      * be the same order as they are passed to the applyFunctor method.
      *
+     * @param func Functor that is to be applied on each of the values taken from ...args.
+     *
      * @param ...args Variadic arguments, may be of type Image, MaskedImage, ndarrays, numeric values
      *                and iterators. ndarrays must be specified as either image or vector with the
      *                ndarray::ndImage or ndarray::ndFlat functions
@@ -644,7 +646,7 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
      */
     template <typename T, typename UnaryPredicate = details::AnyBitSetFunctor<T>>
     static std::shared_ptr<geom::SpanSet> fromMask(image::Mask<T> const & mask,
-                                            UnaryPredicate p = details::AnyBitSetFunctor<T>()) {
+                                            UnaryPredicate comparator = details::AnyBitSetFunctor<T>()) {
         std::vector<Span> tempVec;
         std::size_t startValue{0};
         bool started = false;
@@ -657,14 +659,14 @@ class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSe
             for (size_t x = 0; x < dimensions[1]; ++x) {
                 // If a new span has not been started, and a given x matches the functor condition
                 // start a new span
-                if (p(maskArray[y][x]) && !started) {
+                if (comparator(maskArray[y][x]) && !started) {
                     started = true;
                     startValue = x;
                 }
                 // If a span has been started, and the functor condition is false, that means the
                 // Span being created should be stopped, and appended to the Span vector
                 // Offset the x, y position by the minimum point of the mask
-                else if (started && !p(maskArray[y][x])) {
+                else if (started && !comparator(maskArray[y][x])) {
                     tempVec.push_back(Span(y + minPoint.getY(),
                                            startValue + minPoint.getX(),
                                            x - 1 + minPoint.getX()));
