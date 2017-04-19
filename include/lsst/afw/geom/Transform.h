@@ -107,7 +107,7 @@ public:
     */
     explicit Transform(ast::FrameSet const &frameSet, bool simplify = true);
 
-    ~Transform(){};
+    virtual ~Transform(){};
 
     /**
      * Test if this method has a forward transform.
@@ -220,7 +220,6 @@ protected:
     */
     explicit Transform(std::shared_ptr<ast::FrameSet> &&frameSet);
 
-private:
     FromEndpoint const _fromEndpoint;
     std::shared_ptr<const ast::FrameSet> _frameSet;
     ToEndpoint const _toEndpoint;
