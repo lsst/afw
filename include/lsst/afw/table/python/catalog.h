@@ -165,6 +165,16 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
     cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
         self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
     });
+    cls.def("_delslice_", [](Catalog & self, py::slice const & s) {
+        Py_ssize_t start=0, stop=0, step=0, length=0;
+        if (PySlice_GetIndicesEx((PySliceObject*)s.ptr(), self.size(), &start, &stop, &step, &length) != 0) {
+            throw py::error_already_set();
+        }
+        if (step != 1) {
+            throw py::index_error("Slice step must not be negative");
+        }
+        self.erase(self.begin() + start, self.begin() + stop);
+    });
     cls.def("_clear", &Catalog::clear);
 
     cls.def("set", &Catalog::set);
