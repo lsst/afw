@@ -19,10 +19,11 @@
 * the GNU General Public License along with this program. If not,
 * see <http://www.lsstcorp.org/LegalNotices/>.
 */
+#include "pybind11/pybind11.h"
+
 #include <memory>
 
 #include "astshim.h"
-#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
