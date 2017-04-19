@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008-2017 LSST/AURA.
+# Copyright 2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -19,28 +19,11 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 
-"""Application Framework geometry code including Point, Extent, and ellipses
-"""
-from __future__ import absolute_import
+__all__ = []
 
-from .angle import *
-from .coordinates import *
-from .box import *
-from .functor import *
-from .span import *
-from .spherePoint import *
-from .xyTransform import *
-from .separableXYTransform import *
-from .linearTransform import *
-from .affineTransform import *
-from .spanSet import *
+from ..python import addTransformMethods
+from .skyWcs import SkyWcs
 
-from . import python
-from .xyTransformFactory import *
-from .transformConfig import *
-from .utils import *
-from .endpoint import *
-from .transform import *
-from .skyWcs import *
-from .readTransform import *
+addTransformMethods(SkyWcs)

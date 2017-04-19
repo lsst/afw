@@ -15,7 +15,7 @@ scripts.BasicSConscript.pybind11([
     'xyTransform',
     'endpoint',
     'transform/transform',
-    'detail/frameSetUtils',
+    'skyWcs/skyWcs',
     ],
     addUnderscore=False
 )
