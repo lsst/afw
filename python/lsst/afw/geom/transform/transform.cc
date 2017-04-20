@@ -84,7 +84,11 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     cls.def("hasInverse", &Class::hasInverse);
 
     cls.def("getFromEndpoint", &Class::getFromEndpoint);
-    cls.def("getFrameSet", &Class::getFrameSet);
+    // Return a copy of the contained FrameSet in order to assure changing the returned FrameSet
+    // will not affect the contained FrameSet (since Python ignores constness)
+    cls.def("getFrameSet", [](Class const &self) {
+        return self.getFrameSet()->copy();
+    });
     cls.def("getToEndpoint", &Class::getToEndpoint);
 
     cls.def("tranForward", (ToArray (Class::*)(FromArray const &) const) & Class::tranForward, "array"_a);
