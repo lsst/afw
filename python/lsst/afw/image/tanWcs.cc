@@ -76,6 +76,10 @@ PYBIND11_PLUGIN(tanWcs) {
     cls.def("hasDistortion", &TanWcs::hasDistortion);
     cls.def("getFitsMetadata", &TanWcs::getFitsMetadata);
     cls.def("setDistortionMatrices", &TanWcs::setDistortionMatrices);
+    cls.def("getSipA", &TanWcs::getSipA, py::return_value_policy::copy);
+    cls.def("getSipB", &TanWcs::getSipB, py::return_value_policy::copy);
+    cls.def("getSipAp", &TanWcs::getSipAp, py::return_value_policy::copy);
+    cls.def("getSipBp", &TanWcs::getSipBp, py::return_value_policy::copy);
     cls.def("isPersistable", &TanWcs::isPersistable);
 
     return mod.ptr();
