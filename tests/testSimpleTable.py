@@ -684,6 +684,25 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
         self.assertFloatsAlmostEqual(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
 
+    def testDelete(self):
+        schema = lsst.afw.table.Schema()
+        key = schema.addField("a", type=np.float64, doc="doc for 'a'")
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        for i in range(10):
+            catalog.addNew().set(key, i)
+        del catalog[4]
+        self.assertEqual(len(catalog), 9)
+        self.assertEqual([r.get(key) for r in catalog],
+                         [0, 1, 2, 3, 5, 6, 7, 8, 9])
+        del catalog[4:7]
+        self.assertEqual(len(catalog), 6)
+        self.assertEqual([r.get(key) for r in catalog],
+                         [0, 1, 2, 3, 8, 9])
+        with self.assertRaises(IndexError):
+            del catalog[1:3:-1]
+        with self.assertRaises(IndexError):
+            del catalog[50]
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
