@@ -739,6 +739,19 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                     self.checkOf(fromName, midName, toName)
         self.checkOfChaining()
 
+    def testFrameSetIndependence(self):
+        """Test that the FrameSet returned by getFrameSet is independent of the contained FrameSet
+        """
+        baseFrame = makeGoodFrame("Generic", 2)
+        currFrame = makeGoodFrame("Generic", 2)
+        initialFrameSet = makeFrameSet(baseFrame, currFrame)
+        initialIdent = "Initial Ident"
+        initialFrameSet.setIdent(initialIdent)
+        transform = afwGeom.TransformGenericToGeneric(initialFrameSet)
+        extractedFrameSet = transform.getFrameSet()
+        extractedFrameSet.setIdent("Extracted Ident")
+        self.assertEqual(initialIdent, transform.getFrameSet().getIdent())
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
