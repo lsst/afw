@@ -21,8 +21,9 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
+
+#include <memory>
 
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
@@ -37,54 +38,54 @@ namespace py = pybind11;
 using namespace lsst::afw::math;
 using namespace py::literals;
 
+namespace lsst {
+namespace afw {
+namespace math {
+namespace {
+
+using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>, lsst::afw::table::io::Persistable>;
+
 template <typename PixelT>
-void declareTemplates(py::class_<BoundedField, std::shared_ptr<BoundedField>, lsst::afw::table::io::Persistable> & cls) {
-    cls.def("fillImage",
-            (void (BoundedField::*)(lsst::afw::image::Image<PixelT> &, bool) const) &BoundedField::fillImage,
-            "image"_a,
-            "overlapOnly"_a=false);
+void declareTemplates(PyClass &cls) {
+    cls.def("fillImage", &BoundedField::fillImage<PixelT>, "image"_a, "overlapOnly"_a = false);
+    cls.def("addToImage", &BoundedField::addToImage<PixelT>, "image"_a, "scaleBy"_a = 1.0,
+            "overlapOnly"_a = false);
+    cls.def("multiplyImage", &BoundedField::multiplyImage<PixelT>, "image"_a, "overlapOnly"_a = false);
+    cls.def("divideImage", &BoundedField::divideImage<PixelT>, "image"_a, "overlapOnly"_a = false);
 }
 
 PYBIND11_PLUGIN(_boundedField) {
     py::module mod("_boundedField", "Python wrapper for afw _boundedField library");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
     };
 
-    /* Bounded Field */
-    py::class_<BoundedField, std::shared_ptr<BoundedField>, lsst::afw::table::io::Persistable>
-        clsBoundedField(mod, "BoundedField");
+    PyClass cls(mod, "BoundedField");
 
-    /* Module level */
+    cls.def("__mul__", &BoundedField::operator*);
+    cls.def("__truediv__", &BoundedField::operator/);
 
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-    clsBoundedField.def("__mul__", &BoundedField::operator*);
-    clsBoundedField.def("__div__", &BoundedField::operator/);
-    clsBoundedField.def("__truediv__", &BoundedField::operator/);
-
-    /* Members */
-    clsBoundedField.def("evaluate", (double (BoundedField::*)(double, double) const)
-        &BoundedField::evaluate);
-    clsBoundedField.def("evaluate", (ndarray::Array<double,1,1>
-        (BoundedField::*)(ndarray::Array<double const,1> const &,
-                          ndarray::Array<double const,1> const &) const) &BoundedField::evaluate);
-    clsBoundedField.def("evaluate", (double (BoundedField::*)
-        (lsst::afw::geom::Point2D const &) const) &BoundedField::evaluate);
-
-    clsBoundedField.def("integrate", &BoundedField::integrate);
-    clsBoundedField.def("mean", &BoundedField::mean);
-
-    clsBoundedField.def("getBBox", &BoundedField::getBBox);
+    cls.def("evaluate", (double (BoundedField::*)(double, double) const) & BoundedField::evaluate);
+    cls.def("evaluate",
+            (ndarray::Array<double, 1, 1>(BoundedField::*)(ndarray::Array<double const, 1> const &,
+                                                           ndarray::Array<double const, 1> const &) const) &
+                    BoundedField::evaluate);
+    cls.def("evaluate",
+            (double (BoundedField::*)(lsst::afw::geom::Point2D const &) const) & BoundedField::evaluate);
+    cls.def("integrate", &BoundedField::integrate);
+    cls.def("mean", &BoundedField::mean);
+    cls.def("getBBox", &BoundedField::getBBox);
 
     // Pybind11 resolves overloads by picking the first one that might work
-    declareTemplates<double>(clsBoundedField);
-    declareTemplates<float>(clsBoundedField);
+    declareTemplates<double>(cls);
+    declareTemplates<float>(cls);
 
     return mod.ptr();
 }
+
+}  // <anonymous>
+}  // math
+}  // afw
+}  // lsst
