@@ -167,15 +167,34 @@ public:
             # when record access fails, try column access
             self.columns[k] = v
     %}
-    void __delitem__(std::ptrdiff_t i) {
-        if (i < 0) i = self->size() + i;
-        if (std::size_t(i) >= self->size()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterError,
-                (boost::format("Catalog index %d out of range.") % i).str()
-            );
+    PyObject * __delitem__(PyObject * index) {
+        Py_ssize_t start=0, stop=0, step=0, length=0;
+        if (PySlice_Check(index)) {
+            if (PySlice_GetIndicesEx((PySliceObject*)index, self->size(),
+                                     &start, &stop, &step, &length) != 0) {
+                return nullptr;
+            }
+            if (step != 1) {
+                PyErr_SetString(PyExc_IndexError, "Slice step must be exactly 1");
+                return nullptr;
+            }
+            self->erase(self->begin() + start, self->begin() + stop);
+        } else {
+            Py_ssize_t i = PyNumber_AsSsize_t(index, PyExc_IndexError);
+            if (PyErr_Occurred()) {
+                return nullptr;
+            }
+            if (i < 0) {
+                i = self->size() + i;
+            }
+            if (std::size_t(i) >= self->size()) {
+                PyErr_SetString(PyExc_IndexError, "Catalog index out of range.");
+                return nullptr;
+            }
+            self->erase(self->begin() + i);
         }
-        self->erase(self->begin() + i);
+        Py_INCREF(Py_None);
+        return Py_None;
     }
     void append(PTR(RecordT) const & p) { self->push_back(p); }
     void insert(std::ptrdiff_t i, PTR(RecordT) const & p) {
