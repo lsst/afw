@@ -140,7 +140,10 @@ class Catalog(with_metaclass(TemplateMeta, object)):
 
     def __delitem__(self, key):
         self._columns = None
-        self._delitem_(key)
+        if isinstance(key, slice):
+            self._delslice_(key)
+        else:
+            self._delitem_(key)
 
     def append(self, record):
         self._columns = None
