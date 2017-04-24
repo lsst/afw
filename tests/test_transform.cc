@@ -84,7 +84,7 @@ ast::PolyMap makeForwardPolyMap(size_t nIn, size_t nOut) {
  */
 BOOST_AUTO_TEST_CASE(getJacobianDimensions) {
     using GenericTransform = Transform<GenericEndpoint, GenericEndpoint>;
-    std::array<size_t, 6> const dimensions = {1, 2, 3, 4, 5, 6};
+    std::array<size_t, 6> const dimensions = {{1, 2, 3, 4, 5, 6}};
 
     for (auto nIn : dimensions) {
         for (auto nOut : dimensions) {
