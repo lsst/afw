@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # See COPYRIGHT file at the top of the source tree.

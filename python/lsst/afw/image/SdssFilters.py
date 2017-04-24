@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from lsst.afw.image.utils import defineFilter
 
 # Effective wavelengths from Fukugita et al., 1996AJ....111.1748F
