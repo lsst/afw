@@ -223,19 +223,17 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         secondSpanSet = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
         return firstSpanSet, secondSpanSet
 
-
     def makeMaskAndSpanSetForOperationTest(self):
         firstMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
         secondMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 8)
         spanSetMaskOperation = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 5)
 
-        mask = afwImage.MaskU(20,20)
+        mask = afwImage.MaskU(20, 20)
         firstMaskPart.setMask(mask, 3)
         secondMaskPart.setMask(mask, 3)
         spanSetMaskOperation.setMask(mask, 4)
 
         return mask, spanSetMaskOperation
-
 
     def testIntersection(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
@@ -253,7 +251,6 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         for expected, val in zip(expectedYRange, spanSetIntersectMask):
             self.assertEqual(expected, val.getY())
 
-
     def testIntersectNot(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
 
@@ -269,7 +266,6 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(len(spanSetIntersectNotMask), 1)
         self.assertEqual(next(iter(spanSetIntersectNotMask)).getY(), 5)
-
 
     def testUnion(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
@@ -288,14 +284,12 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         for yVal, span in enumerate(spanSetUnion):
             self.assertEqual(span.getY(), yVal)
 
-
     def testMaskToSpanSet(self):
         mask, _ = self.makeMaskAndSpanSetForOperationTest()
         spanSetFromMask = afwGeom.SpanSet.fromMask(mask)
 
         for yCoord, span in enumerate(spanSetFromMask):
             self.assertEqual(span, afwGeom.Span(yCoord, 0, 4))
-
 
     def testEquality(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
@@ -367,6 +361,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def set_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
