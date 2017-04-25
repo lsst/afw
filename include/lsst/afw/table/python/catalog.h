@@ -167,7 +167,13 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
     });
     cls.def("_delslice_", [](Catalog & self, py::slice const & s) {
         Py_ssize_t start=0, stop=0, step=0, length=0;
-        if (PySlice_GetIndicesEx((PySliceObject*)s.ptr(), self.size(), &start, &stop, &step, &length) != 0) {
+        if (PySlice_GetIndicesEx(
+            // The interface to this function changed in Python 3.2
+#if PY_MAJOR_VERSION < 3 || (PY_MINOR_VERSION == 3 && PY_MINOR_VERSION < 2)
+            (PySliceObject*)
+#endif
+                s.ptr(), self.size(), &start, &stop, &step, &length) != 0
+        ) {
             throw py::error_already_set();
         }
         if (step != 1) {
