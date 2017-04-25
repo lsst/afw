@@ -31,6 +31,8 @@
 //##====----------------                                ----------------====##/
 
 #include <cstdint>
+#include <iostream>
+#include <vector>
 
 #include "boost/format.hpp"
 
@@ -49,6 +51,54 @@ using lsst::daf::persistence::LogicalLocation;
 namespace lsst {
 namespace afw {
 namespace formatters {
+namespace {
+
+/**
+Format a PropertySet into a FITS header string (exactly 80 characters per "card", no line terminator)
+
+@param[in] paramNames  Names of properties to format
+@param[in] prop  Properties to format
+
+@todo Once we stop using the old WCS class we can remove the PropertySet version of formatFitsProperties
+and simplify this function to not worry about dotted names.
+*/
+std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
+                                     daf::base::PropertySet const& prop) {
+    std::ostringstream result;
+    for (auto const & fullName : paramNames) {
+        std::size_t lastPeriod = fullName.rfind(char('.'));
+        auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
+        std::type_info const& type = prop.typeOf(name);
+
+        std::string out = "";
+        if (name.size() > 8) {  // Oh dear; too long for a FITS keyword
+            out += "HIERARCH = " + name;
+        } else {
+            out = (boost::format("%-8s= ") % name).str();
+        }
+
+        if (type == typeid(int)) {
+            out += (boost::format("%20d") % prop.get<int>(name)).str();
+        } else if (type == typeid(double)) {
+            out += (boost::format("%20.15g") % prop.get<double>(name)).str();
+        } else if (type == typeid(std::string)) {
+            out += (boost::format("'%-67s' ") % prop.get<std::string>(name)).str();
+        }
+
+        int const len = out.size();
+        if (len < 80) {
+            out += std::string(80 - len, ' ');
+        } else {
+            out = out.substr(0, 80);
+        }
+
+        result << out;
+    }
+
+    return result.str();
+}
+
+} // namespace
 
 int extractSliceId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("sliceId")) {
@@ -285,46 +335,21 @@ void dropAllSliceTables(
     }
 }
 
-
-std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop) {
-    typedef std::vector<std::string> NameList;
-    std::string sout;
-
-    NameList paramNames = prop.paramNames(false);
-
-    for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
-       std::size_t lastPeriod = i->rfind(char('.'));
-       std::string name = (lastPeriod == std::string::npos) ? *i : i->substr(lastPeriod + 1);
-       std::type_info const & type = prop.typeOf(*i);
-
-       std::string out = "";
-       if (name.size() > 8) {           // Oh dear; too long for a FITS keyword
-           out += "HIERARCH = " + name;
-       } else {
-           out = (boost::format("%-8s= ") % name).str();
-       }
-
-       if (type == typeid(int)) {
-           out += (boost::format("%20d") % prop.get<int>(*i)).str();
-       } else if (type == typeid(double)) {
-           out += (boost::format("%20.15g") % prop.get<double>(*i)).str();
-       } else if (type == typeid(std::string)) {
-           out += (boost::format("'%-67s' ") % prop.get<std::string>(*i)).str();
-       }
-
-       int const len = out.size();
-       if (len < 80) {
-           out += std::string(80 - len, ' ');
-       } else {
-           out = out.substr(0, 80);
-       }
-
-       sout += out;
-    }
-
-    return sout.c_str();
+std::string formatFitsProperties(daf::base::PropertySet const& prop) {
+    auto paramNames = prop.paramNames(false);
+    return formatFitsPropertiesImpl(paramNames, prop);
 }
 
+std::string formatFitsProperties(daf::base::PropertyList const& prop,
+                                 std::set<std::string> const& excludeNames) {
+    std::vector<std::string> paramNames;
+    for (auto const & name: prop) {
+        if (excludeNames.count(name) == 0) {
+            paramNames.push_back(name);
+        }
+    }
+    return formatFitsPropertiesImpl(paramNames, prop);
+}
 
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {
     return prop.paramNames(false).size();
