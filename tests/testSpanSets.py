@@ -78,8 +78,8 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(spanSetNotCon.isContiguous())
 
     def testSplit(self):
-        spanSetOne = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
-        spanSetTwo = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(8, 8)
+        spanSetOne = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
+        spanSetTwo = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(8, 8)
 
         spanSetList = []
         for spn in spanSetOne:
@@ -99,51 +99,51 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
     def testTransform(self):
         transform = afwGeom.LinearTransform(np.array([[2.0, 0.0], [0.0, 2.0]]))
-        spanSetPreScale = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.CIRCLE)
+        spanSetPreScale = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.CIRCLE)
         spanSetPostScale = spanSetPreScale.transformedBy(transform)
 
         self.assertEqual(spanSetPostScale.getBBox().getMinX(), -4)
         self.assertEqual(spanSetPostScale.getBBox().getMinY(), -4)
 
     def testOverlaps(self):
-        spanSetNoShift = afwGeom.SpanSet.spanSetFromShape(4, afwGeom.Stencil.CIRCLE)
+        spanSetNoShift = afwGeom.SpanSet.fromShape(4, afwGeom.Stencil.CIRCLE)
         spanSetShift = spanSetNoShift.shiftedBy(2, 2)
 
         self.assertTrue(spanSetNoShift.overlaps(spanSetShift))
 
     def testContains(self):
-        spanSetLarge = afwGeom.SpanSet.spanSetFromShape(4, afwGeom.Stencil.CIRCLE)
-        spanSetSmall = afwGeom.SpanSet.spanSetFromShape(1, afwGeom.Stencil.CIRCLE)
+        spanSetLarge = afwGeom.SpanSet.fromShape(4, afwGeom.Stencil.CIRCLE)
+        spanSetSmall = afwGeom.SpanSet.fromShape(1, afwGeom.Stencil.CIRCLE)
 
         self.assertTrue(spanSetLarge.contains(spanSetSmall))
         self.assertFalse(spanSetSmall.contains(afwGeom.Point2I(100, 100)))
 
     def testComputeCentroid(self):
-        spanSetShape = afwGeom.SpanSet.spanSetFromShape(4, afwGeom.Stencil.CIRCLE).shiftedBy(2, 2)
+        spanSetShape = afwGeom.SpanSet.fromShape(4, afwGeom.Stencil.CIRCLE).shiftedBy(2, 2)
         center = spanSetShape.computeCentroid()
 
         self.assertEqual(center.getX(), 2)
         self.assertEqual(center.getY(), 2)
 
     def testComputeShape(self):
-        spanSetShape = afwGeom.SpanSet.spanSetFromShape(1, afwGeom.Stencil.CIRCLE)
+        spanSetShape = afwGeom.SpanSet.fromShape(1, afwGeom.Stencil.CIRCLE)
         quad = spanSetShape.computeShape()
 
         self.assertEqual(quad.getIxx(), 0.4)
         self.assertEqual(quad.getIyy(), 0.4)
         self.assertEqual(quad.getIxy(), 0)
 
-    def testDilate(self):
-        spanSetPreDilate = afwGeom.SpanSet.spanSetFromShape(1, afwGeom.Stencil.CIRCLE)
-        spanSetPostDilate = spanSetPreDilate.dilate(1)
+    def testdilated(self):
+        spanSetPredilated = afwGeom.SpanSet.fromShape(1, afwGeom.Stencil.CIRCLE)
+        spanSetPostdilated = spanSetPredilated.dilated(1)
 
-        bBox = spanSetPostDilate.getBBox()
+        bBox = spanSetPostdilated.getBBox()
         self.assertEqual(bBox.getMinX(), -2)
         self.assertEqual(bBox.getMinY(), -2)
 
     def testErode(self):
-        spanSetPreErode = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.CIRCLE)
-        spanSetPostErode = spanSetPreErode.erode(1)
+        spanSetPreErode = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.CIRCLE)
+        spanSetPostErode = spanSetPreErode.eroded(1)
 
         bBox = spanSetPostErode.getBBox()
         self.assertEqual(bBox.getMinX(), -1)
@@ -163,7 +163,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(flatArr.size, inputSpanSet.getArea())
 
         # Test flatttening a 3D array
-        spanSetArea = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX)
+        spanSetArea = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX)
         spanSetArea = spanSetArea.shiftedBy(2, 2)
 
         testArray = np.arange(5*5*3).reshape(5, 5, 3)
@@ -185,7 +185,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(arrayShape[1], bBox.getWidth())
 
         # Test unflattening a 2D array
-        spanSetArea = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX)
+        spanSetArea = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX)
         spanSetArea = spanSetArea.shiftedBy(2, 2)
 
         testArray = np.arange(5*5*3).reshape(5*5, 3)
@@ -196,7 +196,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
     def populateMask(self):
         msk = afwImage.MaskU(10, 10, 1)
-        spanSetMask = afwGeom.SpanSet.spanSetFromShape(3, afwGeom.Stencil.CIRCLE).shiftedBy(5, 5)
+        spanSetMask = afwGeom.SpanSet.fromShape(3, afwGeom.Stencil.CIRCLE).shiftedBy(5, 5)
         spanSetMask.setMask(msk, 2)
         return msk, spanSetMask
 
@@ -219,23 +219,21 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(mskArray[i, j], 1)
 
     def makeOverlapSpanSets(self):
-        firstSpanSet = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 4)
-        secondSpanSet = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
+        firstSpanSet = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 4)
+        secondSpanSet = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
         return firstSpanSet, secondSpanSet
 
-
     def makeMaskAndSpanSetForOperationTest(self):
-        firstMaskPart = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
-        secondMaskPart = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 8)
-        spanSetMaskOperation = afwGeom.SpanSet.spanSetFromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 5)
+        firstMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
+        secondMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 8)
+        spanSetMaskOperation = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 5)
 
-        mask = afwImage.MaskU(20,20)
+        mask = afwImage.MaskU(20, 20)
         firstMaskPart.setMask(mask, 3)
         secondMaskPart.setMask(mask, 3)
         spanSetMaskOperation.setMask(mask, 4)
 
         return mask, spanSetMaskOperation
-
 
     def testIntersection(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
@@ -253,7 +251,6 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         for expected, val in zip(expectedYRange, spanSetIntersectMask):
             self.assertEqual(expected, val.getY())
 
-
     def testIntersectNot(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
 
@@ -269,7 +266,6 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(len(spanSetIntersectNotMask), 1)
         self.assertEqual(next(iter(spanSetIntersectNotMask)).getY(), 5)
-
 
     def testUnion(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
@@ -288,14 +284,12 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         for yVal, span in enumerate(spanSetUnion):
             self.assertEqual(span.getY(), yVal)
 
-
     def testMaskToSpanSet(self):
         mask, _ = self.makeMaskAndSpanSetForOperationTest()
-        spanSetFromMask = afwGeom.maskToSpanSet(mask)
+        spanSetFromMask = afwGeom.SpanSet.fromMask(mask)
 
         for yCoord, span in enumerate(spanSetFromMask):
             self.assertEqual(span, afwGeom.Span(yCoord, 0, 4))
-
 
     def testEquality(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
@@ -309,19 +303,19 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
     def testSpanSetFromEllipse(self):
         axes = afwGeomEllipses.Axes(6, 6, 0)
         ellipse = afwGeomEllipses.Ellipse(axes, afwGeom.Point2D(5, 6))
-        spanSet = afwGeom.SpanSet.spanSetFromShape(ellipse)
+        spanSet = afwGeom.SpanSet.fromShape(ellipse)
         for ss, es in zip(spanSet, afwGeomEllipses.PixelRegion(ellipse)):
             self.assertEqual(ss, es)
 
-    def testSpanSetFromShapeOffset(self):
+    def testfromShapeOffset(self):
         shift = afwGeom.Point2I(2, 2)
-        spanSetShifted = afwGeom.SpanSet.spanSetFromShape(2, offset=shift)
+        spanSetShifted = afwGeom.SpanSet.fromShape(2, offset=shift)
         bbox = spanSetShifted.getBBox()
         self.assertEqual(bbox.getMinX(), 0)
         self.assertEqual(bbox.getMinY(), 0)
 
     def testFindEdgePixels(self):
-        spanSet = afwGeom.SpanSet.spanSetFromShape(6, afwGeom.Stencil.CIRCLE)
+        spanSet = afwGeom.SpanSet.fromShape(6, afwGeom.Stencil.CIRCLE)
         spanSetEdge = spanSet.findEdgePixels()
 
         truthSpans = [afwGeom.Span(-6, 0, 0),
@@ -351,6 +345,15 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         truthSpanSet = afwGeom.SpanSet(truthSpans)
         self.assertEqual(spanSetEdge, truthSpanSet)
 
+    def testIndices(self):
+        dataArray = np.zeros((5, 5))
+        spanSet = afwGeom.SpanSet.fromShape(2,
+                                            afwGeom.Stencil.BOX,
+                                            offset=(2, 2))
+        yind, xind = spanSet.indices()
+        dataArray[yind, xind] = 9
+        self.assertTrue((dataArray == 9).all())
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
@@ -358,6 +361,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def set_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

@@ -105,13 +105,13 @@ void declareUnflattenMethod(PyClass &cls) {
 
 template <typename Pixel, typename PyClass>
 void declareSetMaskMethod(PyClass &cls) {
-    cls.def("setMask", (void (SpanSet::*)(image::Mask<Pixel> &, Pixel) const) & SpanSet::setMask<Pixel>);
+    cls.def("setMask", (void (SpanSet::*)(image::Mask<Pixel> &, Pixel) const) & SpanSet::setMask);
 }
 
 template <typename Pixel, typename PyClass>
 void declareClearMaskMethod(PyClass & cls) {
     cls.def("clearMask",
-            (void (SpanSet::*)(image::Mask<Pixel> &, Pixel) const) &SpanSet::clearMask<Pixel>);
+            (void (SpanSet::*)(image::Mask<Pixel> &, Pixel) const) &SpanSet::clearMask);
 }
 
 template <typename Pixel, typename PyClass>
@@ -120,15 +120,15 @@ void declareIntersectMethod(PyClass & cls) {
         "intersect",
         (std::shared_ptr<SpanSet>(SpanSet::*)(
             image::Mask<Pixel> const &,
-            Pixel const &
-        ) const) &SpanSet::intersect<Pixel>,
+            Pixel
+        ) const) &SpanSet::intersect,
         "other"_a, "bitmask"_a
     );
     // Default to compare any bit set
     cls.def(
         "intersect",
         [](SpanSet const &self, image::Mask<Pixel> const &mask) {
-            auto tempSpanSet = geom::maskToSpanSet(mask);
+            auto tempSpanSet = SpanSet::fromMask(mask);
             return self.intersect(*tempSpanSet);
         },
         "other"_a
@@ -141,15 +141,15 @@ void declareIntersectNotMethod(PyClass & cls) {
         "intersectNot",
         (std::shared_ptr<SpanSet> (SpanSet::*)(
             image::Mask<Pixel> const &,
-            Pixel const &
-        ) const) &SpanSet::intersectNot<Pixel>,
+            Pixel
+        ) const) &SpanSet::intersectNot,
         "other"_a, "bitmask"_a
     );
     // Default to compare any bit set
     cls.def(
         "intersectNot",
         [](SpanSet const & self, image::Mask<Pixel> const & mask) {
-            auto tempSpanSet = geom::maskToSpanSet(mask);
+            auto tempSpanSet = SpanSet::fromMask(mask);
             return self.intersectNot(*tempSpanSet);
         },
         "other"_a
@@ -162,15 +162,15 @@ void declareUnionMethod(PyClass & cls) {
         "union",
         (std::shared_ptr<SpanSet> (SpanSet::*)(
             image::Mask<Pixel> const &,
-            Pixel const &
-        ) const) &SpanSet::union_<Pixel>,
+            Pixel
+        ) const) &SpanSet::union_,
         "other"_a, "bitmask"_a
     );
     // Default to compare any bit set
     cls.def(
         "union",
         [](SpanSet const & self, image::Mask<Pixel> const & mask) {
-             auto tempSpanSet = geom::maskToSpanSet(mask);
+             auto tempSpanSet = SpanSet::fromMask(mask);
              return self.union_(*tempSpanSet);
         },
         "other"_a
@@ -191,16 +191,16 @@ void declareCopyMaskedImage(PyClass & cls) {
 
 template <typename ImageT, typename PyClass>
 void declareSetImage(PyClass & cls) {
-    cls.def("setImage", &SpanSet::setImage<ImageT>, "image"_a, "val"_a,
+    cls.def("setImage", (void (SpanSet::*)(image::Image<ImageT> &, ImageT,
+                  geom::Box2I const &, bool) const) &SpanSet::setImage, "image"_a, "val"_a,
             "region"_a = geom::Box2I(), "doClip"_a=false);
 }
 
-template <typename Pixel>
-void declareMaskToSpanSetFunction(py::module & mod) {
-    mod.def("maskToSpanSet", [](image::Mask<Pixel> mask) { return maskToSpanSet(mask); });
-    mod.def("maskToSpanSet", [](image::Mask<Pixel> mask, Pixel const &bitmask) {
-        auto functor = [&bitmask](Pixel const &pixval) { return (pixval & bitmask) == bitmask; };
-        return maskToSpanSet(mask, functor);
+template <typename MaskPixel, typename PyClass>
+void declarefromMask(PyClass & cls) {
+    cls.def_static("fromMask", [](image::Mask<MaskPixel> mask) { return SpanSet::fromMask(mask); });
+    cls.def_static("fromMask", [](image::Mask<MaskPixel> mask, MaskPixel const &bitmask) {
+        return SpanSet::fromMask(mask, bitmask);
     });
 }
 
@@ -270,28 +270,42 @@ PYBIND11_PLUGIN(spanSet) {
     cls.def("contains", (bool (SpanSet::*)(Point2I const &) const) & SpanSet::contains);
     cls.def("computeCentroid", &SpanSet::computeCentroid);
     cls.def("computeShape", &SpanSet::computeShape);
-    cls.def("dilate", (std::shared_ptr<SpanSet>(SpanSet::*)(int, Stencil) const) & SpanSet::dilate,
+    cls.def("dilated", (std::shared_ptr<SpanSet>(SpanSet::*)(int, Stencil) const) & SpanSet::dilated,
             "radius"_a, "stencil"_a = Stencil::CIRCLE);
-    cls.def("dilate", (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::dilate);
-    cls.def("erode", (std::shared_ptr<SpanSet>(SpanSet::*)(int, Stencil) const) & SpanSet::erode,
+    cls.def("dilated", (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::dilated);
+    cls.def("eroded", (std::shared_ptr<SpanSet>(SpanSet::*)(int, Stencil) const) & SpanSet::eroded,
             "radius"_a, "stencil"_a = Stencil::CIRCLE);
-    cls.def("erode", (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::erode);
+    cls.def("eroded", (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::eroded);
     cls.def("intersect", (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::intersect);
     cls.def("intersectNot",
             (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::intersectNot);
     cls.def("union", (std::shared_ptr<SpanSet>(SpanSet::*)(SpanSet const &) const) & SpanSet::union_);
-    cls.def_static("spanSetFromShape",
-                   (std::shared_ptr<SpanSet>(*)(int, Stencil, Point2I)) & SpanSet::spanSetFromShape,
+    cls.def_static("fromShape",
+                   (std::shared_ptr<SpanSet>(*)(int, Stencil, Point2I)) & SpanSet::fromShape,
                    "radius"_a, "stencil"_a = Stencil::CIRCLE, "offset"_a = Point2I());
-    cls.def_static("spanSetFromShape",
+    cls.def_static("fromShape",
                    [](int r, Stencil s, std::pair<int, int> point) {
-                       return SpanSet::spanSetFromShape(r, s, Point2I(point.first, point.second));
+                       return SpanSet::fromShape(r, s, Point2I(point.first, point.second));
                    },
                    "radius"_a, "stencil"_a = Stencil::CIRCLE, "offset"_a = std::pair<int, int>(0, 0));
-    cls.def_static("spanSetFromShape", (std::shared_ptr<SpanSet>(*)(geom::ellipses::Ellipse const &)) &
-                                           SpanSet::spanSetFromShape);
+    cls.def_static("fromShape", (std::shared_ptr<SpanSet>(*)(geom::ellipses::Ellipse const &)) &
+                                           SpanSet::fromShape);
     cls.def("split", &SpanSet::split);
     cls.def("findEdgePixels", &SpanSet::findEdgePixels);
+    cls.def("indices", [](SpanSet const & self)->std::pair<std::vector<int>, std::vector<int>>{
+        std::vector<int> yind;
+        std::vector<int> xind;
+        yind.reserve(self.getArea());
+        xind.reserve(self.getArea());
+        for (auto const & span : self) {
+            auto y = span.getY();
+            for (int x = span.getX0(); x <= span.getX1(); ++x) {
+                yind.push_back(y);
+                xind.push_back(x);
+            }
+        }
+        return std::make_pair(yind, xind);
+    });
 
     /* SpanSet Operators */
     cls.def("__eq__", [](SpanSet const &self, SpanSet const &other) -> bool { return self == other; },
@@ -332,8 +346,8 @@ PYBIND11_PLUGIN(spanSet) {
 
     declareMaskMethods<MaskPixel>(cls);
 
-    declareImageTypes<uint16_t>(cls);
-    declareImageTypes<uint64_t>(cls);
+    declareImageTypes<std::uint16_t>(cls);
+    declareImageTypes<std::uint64_t>(cls);
     declareImageTypes<int>(cls);
     declareImageTypes<float>(cls);
     declareImageTypes<double>(cls);
@@ -342,8 +356,7 @@ PYBIND11_PLUGIN(spanSet) {
     declareFlattenMethod<long>(cls);
     declareUnflattenMethod<long>(cls);
 
-    /* Free Functions */
-    declareMaskToSpanSetFunction<MaskPixel>(mod);
+    declarefromMask<MaskPixel>(cls);
 
     return mod.ptr();
 }

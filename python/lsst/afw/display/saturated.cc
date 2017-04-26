@@ -1,3 +1,4 @@
+
 /**
  * \file
  *
@@ -13,19 +14,14 @@ namespace lsst { namespace afw { namespace display {
 
 namespace {
     template <typename ImageT>
-    class SetPixels : public detection::FootprintFunctor<ImageT> {
+    class SetPixels {
     public:
-        explicit SetPixels(ImageT const& img     // The image the source lives in
-                          ) : detection::FootprintFunctor<ImageT>(img), _value(0) {}
+        explicit SetPixels() : _value(0) {}
 
         void setValue(float value) { _value = value; }
 
-        // method called for each pixel by apply()
-        void operator()(typename ImageT::xy_locator loc,        // locator pointing at the pixel
-                        int,                                    // column-position of pixel
-                        int                                     // row-position of pixel
-                       ) {
-            *loc = _value;
+        void operator()(geom::Point2I const & point, typename ImageT::Pixel & arrayInput) {
+            arrayInput = _value;
         }
     private:
         float _value;
@@ -63,10 +59,7 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
 
     bool const useMaxPixel = !std::isfinite(saturatedPixelValue);
 
-    SetPixels<typename ImageT::Image>
-        setR(*rim.getImage()),
-        setG(*gim.getImage()),
-        setB(*bim.getImage()); // functors used to set pixel values
+    SetPixels<typename ImageT::Image> setR, setG, setB; // functors used to set pixel values
 
     // Find all the saturated pixels in any of the three image
     int const npixMin = 1;              // minimum number of pixels in an object
@@ -81,14 +74,14 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
     PTR(FootprintList) feet = sat.getFootprints();
     for (FootprintList::const_iterator ptr = feet->begin(), end = feet->end(); ptr != end; ++ptr) {
         PTR(detection::Footprint) const foot = *ptr;
-        PTR(detection::Footprint) const bigFoot = growFootprint(*foot, borderWidth);
+        PTR(detection::Footprint) const bigFoot =
+            std::make_shared<detection::Footprint>(foot->getSpans()->dilated(borderWidth), foot->getRegion());
 
         double sumR = 0, sumG = 0, sumB = 0; // sum of all non-saturated adjoining pixels
         double maxR = 0, maxG = 0, maxB = 0; // maximum of non-saturated adjoining pixels
 
-        for (detection::Footprint::SpanList::const_iterator sptr = bigFoot->getSpans().begin(),
-                 send = bigFoot->getSpans().end(); sptr != send; ++sptr) {
-            PTR(detection::Span) const span = *sptr;
+        for (auto span = bigFoot->getSpans()->begin(),
+                  send = bigFoot->getSpans()->end(); span != send; ++span) {
 
             int const y = span->getY() - y0;
             if (y < 0 || y >= height) {
@@ -157,9 +150,9 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
             }
         }
         // Now that we know R, G, and B we can fix the values
-        setR.setValue(R); setR.apply(*foot);
-        setG.setValue(G); setG.apply(*foot);
-        setB.setValue(B); setB.apply(*foot);
+        setR.setValue(R); foot->getSpans()->applyFunctor(setR, *rim.getImage());
+        setG.setValue(G); foot->getSpans()->applyFunctor(setG, *gim.getImage());
+        setB.setValue(B); foot->getSpans()->applyFunctor(setB, *bim.getImage());
     }
 }
 

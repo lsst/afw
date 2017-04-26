@@ -78,6 +78,18 @@ public:
                             HeavyFootprintCtrl const* ctrl=NULL);
 
     /**
+     * Default constructor for HeavyFootprint. Most common use for this will be in combination
+     * with the assignment operator
+     */
+    HeavyFootprint() {}
+
+    HeavyFootprint(HeavyFootprint const & other) = default;
+    HeavyFootprint(HeavyFootprint && other) = default;
+
+    HeavyFootprint & operator=(HeavyFootprint const &) = default;
+    HeavyFootprint & operator=(HeavyFootprint &&) = default;
+
+    /**
      * Is this a HeavyFootprint (yes!)
      */
     virtual bool isHeavy() const { return true; }
@@ -123,7 +135,6 @@ protected:
     virtual void write(OutputArchiveHandle & handle) const;
 
 private:
-    HeavyFootprint() {}  // private constructor, only used for persistence.
 
     ndarray::Array<ImagePixelT, 1, 1> _image;
     ndarray::Array<MaskPixelT, 1, 1> _mask;

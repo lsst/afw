@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSplit) {
 BOOST_AUTO_TEST_CASE(SpanSet_testShiftedBy) {
     afwGeom::Extent2I SSextent(afwGeom::Point2I(2, 2));
     // BBox lower corner should be at -2,-2
-    auto SpanSetNoShift = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::CIRCLE);
+    auto SpanSetNoShift = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::CIRCLE);
     auto shiftedSpanSet = SpanSetNoShift->shiftedBy(SSextent);
 
     BOOST_CHECK(shiftedSpanSet->getBBox().getMinX() == 0);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testShiftedBy) {
 BOOST_AUTO_TEST_CASE(SpanSet_testClippedTo) {
     afwGeom::Box2I clipBox(afwGeom::Box2I(afwGeom::Point2I(-2, -2), afwGeom::Point2I(2, 2)));
     // BBox lower corner shouuld be at -4,-4
-    auto SpanSetNoClip = afwGeom::SpanSet::spanSetFromShape(4, afwGeom::Stencil::CIRCLE);
+    auto SpanSetNoClip = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE);
     auto SpanSetClip = SpanSetNoClip->clippedTo(clipBox);
 
     BOOST_CHECK(SpanSetClip->getBBox().getMinX() == -2);
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testTransformed) {
     scaleMatrix.row(0) << 2, 0;
     scaleMatrix.row(1) << 0, 2;
     afwGeom::LinearTransform transform(scaleMatrix);
-    auto SpanSetPreScale = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::CIRCLE);
+    auto SpanSetPreScale = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::CIRCLE);
     // transformedBy chains from LinearTransform->AffineTransform->XYTransform
     // so testing LinearTransform tests all function overloads
     auto SpanSetPostScale = SpanSetPreScale->transformedBy(transform);
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testTransformed) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testOverlaps) {
-    auto SpanSetNoShift = afwGeom::SpanSet::spanSetFromShape(4, afwGeom::Stencil::CIRCLE);
+    auto SpanSetNoShift = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE);
     auto SpanSetShift = SpanSetNoShift->shiftedBy(2, 2);
     auto SpanSetShiftFar = SpanSetNoShift->shiftedBy(10, 10);
 
@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testOverlaps) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testContains) {
-    auto SpanSetLarge = afwGeom::SpanSet::spanSetFromShape(4, afwGeom::Stencil::CIRCLE);
-    auto SpanSetSmall = afwGeom::SpanSet::spanSetFromShape(1, afwGeom::Stencil::CIRCLE)->shiftedBy(1, 1);
-    auto SpanSetSmallFar = afwGeom::SpanSet::spanSetFromShape(1, afwGeom::Stencil::CIRCLE)->shiftedBy(8, 8);
+    auto SpanSetLarge = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE);
+    auto SpanSetSmall = afwGeom::SpanSet::fromShape(1, afwGeom::Stencil::CIRCLE)->shiftedBy(1, 1);
+    auto SpanSetSmallFar = afwGeom::SpanSet::fromShape(1, afwGeom::Stencil::CIRCLE)->shiftedBy(8, 8);
     afwGeom::Point2I pointIn(1, 1);
     afwGeom::Point2I pointOut(20, 20);
 
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testContains) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testComputeCentroid) {
-    auto SpanSetShape = afwGeom::SpanSet::spanSetFromShape(4, afwGeom::Stencil::CIRCLE)->shiftedBy(2, 2);
+    auto SpanSetShape = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE)->shiftedBy(2, 2);
     auto center = SpanSetShape->computeCentroid();
 
     BOOST_CHECK(center.getX() == 2);
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testComputeCentroid) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testComputeShape) {
-    auto SpanSetShape = afwGeom::SpanSet::spanSetFromShape(1, afwGeom::Stencil::CIRCLE);
+    auto SpanSetShape = afwGeom::SpanSet::fromShape(1, afwGeom::Stencil::CIRCLE);
     auto quad = SpanSetShape->computeShape();
 
     BOOST_CHECK(quad.getIxx() == 0.4);
@@ -288,47 +288,47 @@ BOOST_AUTO_TEST_CASE(SpanSet_testComputeShape) {
     BOOST_CHECK(std::isnan(nullShape.getIxy()));
 }
 
-BOOST_AUTO_TEST_CASE(SpanSet_testDilate) {
+BOOST_AUTO_TEST_CASE(SpanSet_testdilated) {
     // Only need to test use of a stencil as it delegates to the other function overload
-    auto SpanSetPreDilate = afwGeom::SpanSet::spanSetFromShape(1, afwGeom::Stencil::CIRCLE);
-    // This should dilate the shape by 1
-    auto SpanSetPostDilate = SpanSetPreDilate->dilate(1);
+    auto SpanSetPredilated = afwGeom::SpanSet::fromShape(1, afwGeom::Stencil::CIRCLE);
+    // This should dilated the shape by 1
+    auto SpanSetPostdilated = SpanSetPredilated->dilated(1);
 
-    BOOST_CHECK(SpanSetPostDilate->getBBox().getMinX() == -2);
-    BOOST_CHECK(SpanSetPostDilate->getBBox().getMinY() == -2);
+    BOOST_CHECK(SpanSetPostdilated->getBBox().getMinX() == -2);
+    BOOST_CHECK(SpanSetPostdilated->getBBox().getMinY() == -2);
 
     // Test with a null SpanSet
     afwGeom::SpanSet nullSpanSet;
-    auto nullSpanSetDialte = nullSpanSet.dilate(1);
+    auto nullSpanSetDialte = nullSpanSet.dilated(1);
 
     BOOST_CHECK(nullSpanSetDialte->getBBox().getMinX() == 0);
     BOOST_CHECK(nullSpanSetDialte->getBBox().getMinY() == 0);
 
-    auto SpanSetNullDilate = SpanSetPreDilate->dilate(nullSpanSet);
-    BOOST_CHECK(SpanSetNullDilate->getBBox().getMinX() == -1);
-    BOOST_CHECK(SpanSetNullDilate->getBBox().getMinY() == -1);
+    auto SpanSetNulldilated = SpanSetPredilated->dilated(nullSpanSet);
+    BOOST_CHECK(SpanSetNulldilated->getBBox().getMinX() == -1);
+    BOOST_CHECK(SpanSetNulldilated->getBBox().getMinY() == -1);
 
 }
 
-BOOST_AUTO_TEST_CASE(SpanSet_testErode) {
+BOOST_AUTO_TEST_CASE(SpanSet_testeroded) {
     // Only need to test use of a stencil as it delegates to the other function overload
-    auto SpanSetPreErode = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::CIRCLE);
-    // This should erode the shape by 1
-    auto SpanSetPostErode = SpanSetPreErode->erode(1);
+    auto SpanSetPreeroded = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::CIRCLE);
+    // This should eroded the shape by 1
+    auto SpanSetPosteroded = SpanSetPreeroded->eroded(1);
 
-    BOOST_CHECK(SpanSetPostErode->getBBox().getMinX() == -1);
-    BOOST_CHECK(SpanSetPostErode->getBBox().getMinY() == -1);
+    BOOST_CHECK(SpanSetPosteroded->getBBox().getMinX() == -1);
+    BOOST_CHECK(SpanSetPosteroded->getBBox().getMinY() == -1);
 
     // Test with a null SpanSet
     afwGeom::SpanSet nullSpanSet;
-    auto nullSpanSetErode = nullSpanSet.erode(1);
+    auto nullSpanSeteroded = nullSpanSet.eroded(1);
 
-    BOOST_CHECK(nullSpanSetErode->getBBox().getMinX() == 0);
-    BOOST_CHECK(nullSpanSetErode->getBBox().getMinY() == 0);
+    BOOST_CHECK(nullSpanSeteroded->getBBox().getMinX() == 0);
+    BOOST_CHECK(nullSpanSeteroded->getBBox().getMinY() == 0);
 
-    auto SpanSetNullErode = SpanSetPreErode->erode(nullSpanSet);
-    BOOST_CHECK(SpanSetNullErode->getBBox().getMinX() == -2);
-    BOOST_CHECK(SpanSetNullErode->getBBox().getMinY() == -2);
+    auto SpanSetNulleroded = SpanSetPreeroded->eroded(nullSpanSet);
+    BOOST_CHECK(SpanSetNulleroded->getBBox().getMinX() == -2);
+    BOOST_CHECK(SpanSetNulleroded->getBBox().getMinY() == -2);
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testFlatten) {
@@ -433,7 +433,7 @@ std::pair<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, std::shared_ptr<a
     // Create a mask and populate it with the value 2
     lsst::afw::image::Mask<lsst::afw::image::MaskPixel> msk(10, 10);
     msk.getArray().deep() = 1;
-    auto spnSt = afwGeom::SpanSet::spanSetFromShape(3, afwGeom::Stencil::CIRCLE)->shiftedBy(5, 5);
+    auto spnSt = afwGeom::SpanSet::fromShape(3, afwGeom::Stencil::CIRCLE)->shiftedBy(5, 5);
     spnSt->setMask(msk, static_cast<lsst::afw::image::MaskPixel>(2));
     return std::make_pair(msk, spnSt);
 }
@@ -494,8 +494,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testClearMask) {
 
 std::pair<std::shared_ptr<afwGeom::SpanSet>, std::shared_ptr<afwGeom::SpanSet>> makeOverlapSpanSets() {
     using SS = afwGeom::SpanSet;
-    auto firstSpanSet = SS::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 4);
-    auto secondSpanSet = SS::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
+    auto firstSpanSet = SS::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 4);
+    auto secondSpanSet = SS::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
     return std::pair<std::shared_ptr<afwGeom::SpanSet>,
                      std::shared_ptr<afwGeom::SpanSet>>(firstSpanSet, secondSpanSet);
 }
@@ -504,11 +504,11 @@ std::pair<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, std::shared_ptr<a
  makeMaskAndSpanSetForOperationTests() {
     // Create three overlapping regions in a mask, and a SpanSet to use in set operation tests
     // This box will range from 0 to 4 in y and 0 to 4 in x
-    auto firstMaskPart = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
+    auto firstMaskPart = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
     // This box will range from 6 to 10 in y and 0 to 4 in x
-    auto secondMaskPart = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 8);
+    auto secondMaskPart = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 8);
     // This box will range from 3 to 7 in y and 0 to 4 in x
-    auto spanSetMaskOperation = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2,5);
+    auto spanSetMaskOperation = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2,5);
 
     lsst::afw::image::Mask<lsst::afw::image::MaskPixel> mask(20,20);
     firstMaskPart->setMask(mask, static_cast<lsst::afw::image::MaskPixel>(3));
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_MaskToSpanSet) {
     // This is to test the free function that turns Masks to SpanSets
     auto maskAndSet = makeMaskAndSpanSetForOperationTests();
     auto mask = maskAndSet.first;
-    auto spanSetFromMask = afwGeom::maskToSpanSet(mask);
+    auto spanSetFromMask = afwGeom::SpanSet::fromMask(mask);
 
     int yCoord = 0;
     for (auto const & val : *spanSetFromMask) {
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     targetForConstMask.deep() = initialValue;
 
     int spanRadius = 2;
-    auto SSShape = afwGeom::SpanSet::spanSetFromShape(spanRadius,
+    auto SSShape = afwGeom::SpanSet::fromShape(spanRadius,
                                                       afwGeom::Stencil::BOX)->shiftedBy(spanRadius,
                                                                                        spanRadius);
     // use a constant as a test of constantGetter
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
 BOOST_AUTO_TEST_CASE(SpanSet_testPersistence) {
     namespace tableIo = lsst::afw::table::io;
     // Create a SpanSet to persist
-    auto spanSetPreArchive = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX);
+    auto spanSetPreArchive = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::BOX);
     // Create an output object to save the SpanSet to
     tableIo::OutputArchive outArchive;
     auto id = outArchive.put(spanSetPreArchive);

@@ -295,13 +295,15 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                 im.set(x, y, y * 1e6 + x * 1e3)
                 msk.set(x, y, (y << 8) | x)
                 var.set(x, y, y * 1e2 + x)
-        circ = lsst.afw.detection.Footprint(lsst.afw.geom.Point2I(50, 50), 20)
+        spanSet = lsst.afw.geom.SpanSet.fromShape(20).shiftedBy(50, 50)
+        circ = lsst.afw.detection.Footprint(spanSet)
         heavy = lsst.afw.detection.makeHeavyFootprint(circ, mim)
         src2.setFootprint(heavy)
 
         for i, src in enumerate(self.catalog):
             if src != src2:
-                src.setFootprint(lsst.afw.detection.Footprint(lsst.afw.geom.Point2I(50, 50), 1+i*2))
+                spanSet = lsst.afw.geom.SpanSet.fromShape(1+i*2).shiftedBy(50, 50)
+                src.setFootprint(lsst.afw.detection.Footprint(spanSet))
 
         # insert this HeavyFootprint into an otherwise blank image (for comparing the results)
         mim2 = lsst.afw.image.MaskedImageF(W, H)

@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2015 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -17,18 +17,11 @@
  *
  * You should have received a copy of the LSST License Statement and
  * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
-
 #if !defined(LSST_DETECTION_FOOTPRINT_H)
 #define LSST_DETECTION_FOOTPRINT_H
-/**
- * \file
- * \brief Represent a set of pixels of an arbitrary shape and size
- *
- * Footprint is fundamental in astronomical image processing, as it defines what
- * is meant by a Source.
- */
+
 #include <algorithm>
 #include <list>
 #include <set>
@@ -41,81 +34,79 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Peak.h"
-#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/Span.h"
+#include "lsst/afw/geom/SpanSet.h"
+#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/geom/LinearTransform.h"
 #include "lsst/afw/table/fwd.h"
+#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/table/io/InputArchive.h"
 
 namespace lsst { namespace afw { namespace detection {
 
-using geom::Span;
-
-/************************************************************************************************************/
-/*!
- * \brief A set of pixels in an Image
+/** @class lsst::afw::detection::Footprint
+ * @brief Class to describe the properties of a detected object from and image
  *
- * A Footprint is a set of pixels, usually but not necessarily contiguous.
- * There are constructors to find Footprints above some threshold in an Image
- * (see FootprintSet), or to create Footprints in the shape of various
- * geometrical figures
+ * A Footprint is designed to be constructed with information about a detected
+ * object in an image. Internally a Footprint holds a SpanSet which is used to
+ * describe the location of the object in the image (the x, y pixel locations
+ * which are considered part of the object). In addition a Footprint contains
+ * a PeakCatalog which is used to store the location and intensity of peaks in
+ * the detection.
  */
 class Footprint : public lsst::daf::base::Citizen,
                   public afw::table::io::PersistableFacade<lsst::afw::detection::Footprint>,
                   public afw::table::io::Persistable
 {
 public:
-    typedef std::shared_ptr<Footprint> Ptr;
-    typedef std::shared_ptr<const Footprint> ConstPtr;
-
-    /// The Footprint's Span list
-    typedef std::vector<Span::Ptr> SpanList;
-
-    /**
-     * Create a Footprint
-     *
-     * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
-     *
-     * nspan: initial number of Span%s in this Footprint
-     * region: Bounding box of MaskedImage footprint
+    /*
+     * As a note there is no constructor which accepts a unique_ptr to a SpanSet.
+     * If someone did have a unique_ptr to a SpanSet it is possible to wrap the
+     * unique_ptr in a std::move when calling the constructor of a Footprint and
+     * the compiler will implicitly turn the unique_ptr into a shared_ptr and use
+     * that to construct the Footprint.
      */
-    explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
 
-    /**
-     * Create a rectangular Footprint
-     */
-    explicit Footprint(afw::table::Schema const & peakSchema, int nspan=0,
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
                        geom::Box2I const & region=geom::Box2I());
 
-    explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
-    Footprint(geom::Point2I const & center, double const radius, geom::Box2I const & = geom::Box2I());
-    explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
+                       afw::table::Schema const & peakSchema,
+                       geom::Box2I const & region=geom::Box2I());
 
-    explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(): lsst::daf::base::Citizen(typeid(this)),
+                          _spans(std::make_shared<geom::SpanSet>()),
+                          _peaks(PeakTable::makeMinimalSchema()),
+                          _region(geom::Box2I()) {}
 
-    /**
-     * Construct a footprint from a list of spans. Resulting Footprint is
-     * not normalized.
-     */
-    Footprint(Footprint const & other);
 
-    virtual ~Footprint();
+    Footprint(Footprint const & other) = default;
+    Footprint(Footprint &&) = default;
 
-    /**
-     * Is this a HeavyFootprint?
+    Footprint & operator=(Footprint const & other) = default;
+    Footprint & operator=(Footprint &&) = default;
+
+    virtual ~Footprint() {}
+
+    /** @brief Indicates if this object is a HeavyFootprint
      */
     virtual bool isHeavy() const { return false; }
 
-    /** Return the Footprint's unique ID. */
-    int getId() const { return _fid; }
+    /** @brief Return a shared pointer to the SpanSet
+      */
+    std::shared_ptr<geom::SpanSet> getSpans() const { return _spans;}
 
-    /** Return the Span%s contained in this Footprint. */
-    SpanList& getSpans() { return _spans; }
-
-    /** Return the Span%s contained in this Footprint. */
-    const SpanList& getSpans() const { return _spans; }
+    /** @brief Sets the shared pointer to the SpanSet in the Footprint
+     *
+     * @param otherSpanSet - Shared pointer to a SpanSet
+     */
+    void setSpans(std::shared_ptr<geom::SpanSet> otherSpanSet);
 
     /**
-     * Return the Peaks contained in this Footprint
+     * @brief Return the Peaks contained in this Footprint
      *
      * The peaks should be ordered by decreasing pixel intensity at the peak position (so the most negative
      * peak appears last).  Users that add new Peaks manually are responsible for maintaining this sorting.
@@ -123,429 +114,286 @@ public:
     PeakCatalog & getPeaks() { return _peaks; }
     const PeakCatalog & getPeaks() const { return _peaks; }
 
-    /// Convenience function to add a peak (since that'd now be multiple lines without this function)
-    PTR(PeakRecord) addPeak(float fx, float fy, float value);
+    /** @brief Convenience function to add a peak
+     *
+     * @param fx - Float containing the x position of a peak
+     * @param fy - Float containing the y position of a peak
+     * @param value - The intensity value of the peak
+     */
+    std::shared_ptr<PeakRecord> addPeak(float fx, float fy, float value);
 
     /**
-     *  Sort Peaks from most positive value to most negative.
+     *  @brief Sort Peaks from most positive value to most negative.
      *
      *  If the key passed is invalid (the default) PeakTable::getPeakValueKey() will be used.
+     *
+     * @param key - A key corresponding to the field in the Scheam the PeakCatalog is to be
+     *              sorted by.
      */
     void sortPeaks(afw::table::Key<float> const & key=afw::table::Key<float>());
 
-    /// Set the Schema used by the PeakCatalog (will throw if PeakCatalog is not empty).
-    void setPeakSchema(afw::table::Schema const & peakSchema) {
-        if (!getPeaks().empty()) {
-            throw LSST_EXCEPT(
-                pex::exceptions::LogicError,
-                "Cannot change the PeakCatalog schema unless it is empty"
-            );
-        }
-        // this syntax doesn't work in Python, which is why this method has to exist
-        getPeaks() = PeakCatalog(peakSchema);
-    }
-
-    /**
-     * Return the number of pixels in this Footprint (the real number
-     * of pixels, not the area of the bbox).
+    /** @brief Set the Schema used by the PeakCatalog (will throw if PeakCatalog is not empty).
+     *
+     * This function will throw a pex::eceptions::LogicError if the PeakCatalog is not empty
+     *
+     * @param peakSchema - The schema to use in the PeakCatalog
      */
-    size_t getNpix() const { return _area; }
-    size_t getArea() const { return _area; }
+    void setPeakSchema(afw::table::Schema const & peakSchema);
+
+    /** @brief Set the peakCatalog to a copy of the supplied catalog
+     *
+     * PeakCatalog will be copied into the Footprint, but a PeakCatalog is a shallow
+     * copy, so records will not be duplicated. This function will throw an error if
+     * the PeakCatalog of *this is not empty.
+     *
+     * @param otherPeaks The PeakCatalog to copy
+     */
+    void setPeakCatalog(PeakCatalog const & otherPeaks);
 
     /**
-     * Return the Footprint's centroid
+     * @brief Return the number of pixels in this Footprint
+     *
+     * This function returns the real number of pixels, not the area of the bbox.
+     */
+    std::size_t getArea() const { return _spans->getArea(); }
+
+    /**
+     * @brief Return the Footprint's centroid
      *
      * The centroid is calculated as the mean of the pixel centers
      */
-    geom::Point2D getCentroid() const;
+    geom::Point2D getCentroid() const { return _spans->computeCentroid(); }
 
     /**
-     * Return the Footprint's shape (interpreted as an ellipse)
+     * @brief Return the Footprint's shape (interpreted as an ellipse)
      *
      * The shape is determined by measuring the moments of the pixel
      * centers about its centroid (cf. getCentroid)
      */
-    geom::ellipses::Quadrupole getShape() const;
+    geom::ellipses::Quadrupole getShape() const { return _spans->computeShape(); }
 
     /**
-     * Add a Span to a footprint, returning a reference to the new Span.
-     */
-    const Span& addSpan(const int y, const int x0, const int x1);
-    /**
-     * Add a Span to a Footprint returning a reference to the new Span
-     */
-    const Span& addSpan(Span const& span);
-    /**
-     * Add a Span to a Footprint returning a reference to the new Span
-     */
-    const Span& addSpan(Span const& span, int dx, int dy);
-
-    /**
-     * Add a Span to a Footprint, where the Spans MUST be added in order
-     * (first in increasing y, then increasing x), and MUST NOT be
-     * overlapping.  This method does NOT reset the _normalized boolean.
+     * @brief Shift a Footprint by <tt>(dx, dy)</tt>
      *
-     * This method is useful when a Footprint is being constructed in
-     * such a way that Spans are guaranteed to be produced in order.
-     * In that case, it is not necessary to normalize() the Footprint
-     * after all the Spans have been added.  This can save some
-     * computation.
-     */
-    const Span& addSpanInSeries(const int y, const int x0, const int x1);
-
-    /**
-     * Shift a Footprint by <tt>(dx, dy)</tt>
-     *
-     * dx: How much to move footprint in column direction
-     * dy: How much to move in row direction
+     * @param dx - How much to move Footprint in column direction
+     * @param dy - How much to move in row direction
      */
     void shift(int dx, int dy);
-    void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
-    /// Return the Footprint's bounding box
-    geom::Box2I getBBox() const { return _bbox; }
+    /**
+    * @brief Shift a Footprint by a given extent
+    *
+    * @param d - ExtentI object which gives the dimensions the Footprint should be shifted
+    */
+    void shift(geom::ExtentI const & d) { shift(d.getX(), d.getY()); }
 
-    /// Return the corners of the MaskedImage the footprints live in
-    geom::Box2I const & getRegion() const { return _region; }
+    /**
+     * @brief Return the Footprint's bounding box
+     */
+    geom::Box2I getBBox() const { return _spans->getBBox(); }
 
-    /// Set the corners of the MaskedImage wherein the footprints dwell
+    /**
+     * @brief Return the corners of the MaskedImage the footprints live in
+     */
+    geom::Box2I getRegion() const { return _region; }
+
+    /**
+     * @brief Set the corners of the MaskedImage wherein the footprints dwell
+     *
+     * @param region - A box describing the corners of the Image the Footprint derives from
+     */
     void setRegion(geom::Box2I const & region) { _region = region; }
 
+
+    /**
+     * @brief Clip the Footprint such that all values lie inside the supplied Bounding Box
+     *
+     * @param bbox - Integer box object that defines the boundarys the footprint should be
+     *               clipped to.
+     */
     void clipTo(geom::Box2I const & bbox);
 
     /**
-     * Clips the given *Footprint* to the region in the *Image*
-     * containing non-zero values.  The clipping drops spans that are
-     * totally zero, and moves endpoints to non-zero; it does not
-     * split spans that have internal zeros.
-     */
-    template<typename PixelT>
-    void clipToNonzero(lsst::afw::image::Image<PixelT> const& img);
-
-    /**
-     * Does this Footprint contain this pixel?
-     */
-    bool contains(geom::Point2I const& pix) const;
-
-    /**
-     * Normalise a Footprint, sorting spans and setting the BBox
-     */
-    void normalize();
-    bool isNormalized() const {return _normalized;}
-
-    /**
-     * Find the mask bit in the Mask that fall in the Footprint
+     * @brief Tests if a pixel postion falls inside the Footprint
      *
-     * \returns Return the bitwise OR of all the mask bits of all the mask pixels that fall in the Footprint
+     * @param pix - Integer point object defining the position of a pixel to test
      */
-    template<typename MaskT>
-    MaskT overlapsMask(typename image::Mask<MaskT> const& mask ///< Mask to inspect
-        ) const;
-
-    /**
-     * Set the pixels in idImage that are in Footprint by adding the
-     * specified value to the Image.
-     *
-     * idImage: Image to contain the footprint
-     * id: Add id to idImage for pixels in the Footprint
-     * region: Footprint's region (default: getRegion())
-     */
-    template<typename PixelT>
-    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
-                         std::uint64_t const id,
-                         geom::Box2I const& region=geom::Box2I()
-    ) const;
-
-    /**
-     * Set the pixels in idImage which are in Footprint by adding the
-     * specified value to the Image.
-     *
-     * The list of ids found under the new Footprint are returned.
-     *
-     * idImage: Image to contain the footprint
-     * id: Add id to idImage for pixels in the Footprint
-     * overwriteId: should id replace any value already in idImage?
-     * idMask: Don't overwrite ID bits in this mask
-     * oldIds: if non-NULL, set the IDs that were overwritten
-     * region: Footprint's region (default: getRegion())
-     */
-    template<typename PixelT>
-    void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
-                         std::uint64_t const id,
-                         bool const overwriteId, long const idMask,
-                         typename std::set<std::uint64_t> *oldIds,
-                         geom::Box2I const& region=geom::Box2I()
-    ) const;
-
-    /**
-     * Assignment operator. Will not change the id
-     */
-    Footprint & operator=(Footprint & other);
-
-    /**
-     * \brief Intersect the Footprint with a Mask
-     *
-     * The resulting Footprint contains only pixels for which (mask & bitMask) == 0;
-     * it may have disjoint pieces. Any part of the footprint that falls outside the
-     * bounds of the mask will be clipped.
-     *
-     */
-    template <typename MaskPixelT>
-    void intersectMask(
-        image::Mask<MaskPixelT> const & mask,
-        MaskPixelT bitmask=~0x0
-    );
+    bool contains(geom::Point2I const & pix) const;
 
     /**
      *  @brief Transform the footprint from one WCS to another
      *
-     *  @param[in]  source   Wcs that defines the coordinate system of the input footprint.
-     *  @param[in]  target   Wcs that defines that desired coordinate system of the returned footprint.
-     *  @param[in]  region   Used to set the "region" box of the returned footprint; note that this is
-     *                       NOT the same as the footprint's bounding box.
-     *  @param[in]  doClip   If true, clip the new footprint to the region bbox before returning it.
+     *  @param source - Wcs that defines the coordinate system of the input footprint.
+     *  @param target - Wcs that defines that desired coordinate system of the returned footprint.
+     *  @param region - Used to set the "region" box of the returned footprint; note that this is
+     *                  NOT the same as the footprint's bounding box.
+     *  @param doClip - If true, clip the new footprint to the region bbox before returning it.
      */
-    PTR(Footprint) transform(
-        image::Wcs const & source,
-        image::Wcs const & target,
+    std::shared_ptr<Footprint> transform(
+        std::shared_ptr<image::Wcs> source,
+        std::shared_ptr<image::Wcs> target,
         geom::Box2I const & region,
         bool doClip=true
     ) const;
 
-    /**
-     * @brief Find edge pixels on the footprint
+    /** Return a new Footprint who's pixels are the product of applying the specified transformation
      *
-     * Note that the resultant Footprint of edge pixels may not be contiguous.
+     * @param t A linear transform object which will be used to map the pixels
+     * @param region Used to set the "region" box of the returned footprint; note that this is
+     *               NOT the same as the footprint's bounding box.
+     * @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
-    PTR(Footprint) findEdgePixels() const;
+    std::shared_ptr<Footprint> transform(geom::LinearTransform const & t,
+                                         geom::Box2I const & region, bool doCLip=true) const;
+
+    /** Return a new Footprint who's pixels are the product of applying the specified transformation
+     *
+     * @param t An affine transform object which will be used to map the pixels
+     * @param region Used to set the "region" box of the returned footprint; note that this is
+     *               NOT the same as the footprint's bounding box.
+     * @param doClip If true, clip the new footprint to the region bbox before returning it.
+     */
+    std::shared_ptr<Footprint> transform(geom::AffineTransform const & t,
+                                         geom::Box2I const & region, bool doClip=true) const;
+
+    /** Return a new Footprint who's pixels are the product of applying the specified transformation
+     *
+     * @param t A XY transform object which will be used to map the pixels
+     * @param region Used to set the "region" box of the returned footprint; note that this is
+     *               NOT the same as the footprint's bounding box.
+     * @param doClip If true, clip the new footprint to the region bbox before returning it.
+     */
+    std::shared_ptr<Footprint> transform(geom::XYTransform const & t,
+                                         geom::Box2I const & region, bool doClip=true) const;
 
     /**
-     *  @brief Update the Footprint in-place to be the union of itself and all others provided
-     *
-     *  Only spans will be modified; peaks will be left unchanged.  If ignoreSelf is true it
-     *  will only be the union of all its children.
-     *
+     * @brief Reports if this object is persistable
      */
-    void include(std::vector<PTR(Footprint)> const & children, bool ignoreSelf=false);
-
     bool isPersistable() const { return true; }
 
-protected:
+    /**
+     * @brief Dilate the Footprint with a defined kernel
+     *
+     * This function enlarges the SpanSet which defines the area of the Footprint by
+     * an amount governed by in input kernel
+     *
+     * @param r - The radius of the stencil object used to create a dilation kernel
+     * @param s - The stencil object used to create the dilation kernel
+     */
+    void dilate(int r, geom::Stencil s = geom::Stencil::CIRCLE);
 
-    virtual std::string getPersistenceName() const;
+    /**
+     * @brief Dilate the Footprint with a defined kernel
+     *
+     * This function enlarges the SpanSet which defines the area of the Footprint by
+     * an amount governed by the input kernel
+     *
+     * @param other - SpanSet to use as the kernel in dilation
+     */
+    void dilate(geom::SpanSet const & other);
 
-    virtual std::string getPythonModule() const;
+    /**
+     * @brief Erode the Footprint with a defined kernel
+     *
+     * This function reduces the size of the SpanSet which defines the area of the Footprint
+     * by an amount governed by the input kernel
+     *
+     * @param r - The radius of the stencil object used to create a erosion kernel
+     * @param s - The stencil object used to create the erosion kernel
+     */
+    void erode(int r, geom::Stencil s = geom::Stencil::CIRCLE);
 
-    virtual void write(OutputArchiveHandle & handle) const;
+    /**
+     * @brief Erode the Footprint with a defined kernel
+     *
+     * This function reduces the size of the SpanSet which defines the area of the Footprint
+     * by an amount governed by the input kernel
+     *
+     * @param other - SpanSet to use as the kernel in erosion
+     */
+    void erode(geom::SpanSet const & other);
 
-    //@{
-    /// Persistence implementation functions made available for derived classes
-    void readSpans(afw::table::BaseCatalog const & spanCat);
-    void readPeaks(afw::table::BaseCatalog const & peakCat);
-    //@}
+    /**
+     * @brief Remove peaks from the PeakCatlog that fall ouside the area of the Footprint
+     */
+    void removeOrphanPeaks();
+
+    /**
+     * @brief Reports if the Footprint is simply connected or has multiple components
+     */
+    bool isContiguous() const { return getSpans()->isContiguous(); };
+
+    /**
+    * @brief Split a multi-component Footprint into a vector of contiguous Footprints
+    *
+    * Split a multi-component Footprint such that each Footprint in the output vector
+    * is contiguous and contains only peaks that can be found within the bounds of the
+    * Footprint
+    */
+    std::vector<std::shared_ptr<Footprint>> split() const;
+
+    /**
+    * @brief equality operator
+    *
+    * @param other - The Footprint for which equality will be computed
+    */
+    bool operator==(Footprint const & other) const;
+
+ protected:
+
+    /*
+     * Return the name correspoinging ot the persistence type
+     */
+    std::string getPersistenceName() const override;
+
+    /*
+     * Return the python module the object will live in
+     */
+    inline std::string getPythonModule() const override { return "lsst.afw.detection"; }
+
+    /*
+     * Write an instance of a Footprint to an output Archive
+     */
+    void write(OutputArchiveHandle & handle) const override;
 
     friend class FootprintFactory;
 
-private:
+    /*
+     * Static method used to unpersist the SpanSet member of the Footprint class
+     */
+    static std::unique_ptr<Footprint> readSpanSet(afw::table::BaseCatalog const &,
+                                                  afw::table::io::InputArchive const &);
+    /*
+     * Static method used to unpersit the PeakCatalog member of the Footprint class
+     */
+    static void readPeaks(afw::table::BaseCatalog const &, Footprint &);
+
+ private:
 
     friend class FootprintMerge;
 
-    static int id;
-    mutable int _fid;                    //!< unique ID
-    size_t _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
-
-    SpanList _spans;                     //!< the Spans contained in this Footprint
-    geom::Box2I _bbox;                   //!< the Footprint's bounding box
-    PeakCatalog _peaks;                     //!< the Peaks lying in this footprint
-    mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
-    bool _normalized;                    //!< Are the spans sorted?
+    std::shared_ptr<geom::SpanSet> _spans;    //!< The SpanSet representing area on image
+    PeakCatalog _peaks;                 //!< The peaks lying in this footprint
+    geom::Box2I _region;     //!< The corners of the MaskedImage the footprints live in
 };
 
 /**
- Given a vector of Footprints, fills the output "argmin" and "dist"
- images to contain the Manhattan distance to the nearest footprint (in
- "dist") and the identity of the nearest footprint (in "argmin").
-
- For example, if there are two footprints at y=0 covering x=[1,2] and [7,7],
-
- Index     :  0 1 2 3 4 5 6 7
-
- Footprints:  . 0 0 . . . . 1
-
- Argmin    :  0 0 0 0 0 1 1 1
-
- Dist      :  1 0 0 1 2 2 1 0
-
- "argmin" gives the index of the nearest footprint, and "dist" its
- Manhattan (L_1 norm) distance.  The pixel at index 4 is closest to
- footprint 0, and its distance is 2.
+ * Merges two Footprints -- appends their peaks, and unions their
+ * spans, returning a new Footprint. Region is not preserved, and is set to an empty
+ * Box2I object.
  */
-void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
-                      lsst::afw::image::Image<std::uint16_t>::Ptr argmin,
-                      lsst::afw::image::Image<std::uint16_t>::Ptr dist);
+std::shared_ptr<Footprint> mergeFootprints(Footprint const& footprint1, Footprint const& footprint2);
 
 /**
-   Merges two Footprints -- appends their peaks, and unions their
-   spans, returning a new Footprint.
-
-   This const version requires that both input footprints are
-   normalized (and will raise an exception if not).
- */
-PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2);
-
-/**
-   Merges two Footprints -- appends their peaks, and unions their
-   spans, returning a new Footprint.
- */
-PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2);
-
-/**
- * Shrink a footprint isotropically by nGrow pixels, returning a new Footprint.
- */
-PTR(Footprint) shrinkFootprint(Footprint const& foot, int nGrow, bool isotropic);
-
-/**
- * Grow a Footprint by nGrow pixels, returning a new Footprint.
- */
-PTR(Footprint) growFootprint(Footprint const& foot, int nGrow, bool isotropic=true);
-
-/**
- * \note Deprecated interface; use the Footprint const& version.
- */
-PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int nGrow, bool isotropic=true);
-
-/**
- * \brief Grow a Footprint in at least one of the cardinal directions,
- * returning a new Footprint
- *
- * Note that any left/right grow is done prior to the up/down grow, so
- * any left/right grown pixels \em are subject to a further up/down
- * grow (i.e. an initial single pixel Footprint will end up as a
- * square, not a cross.
- */
-PTR(Footprint) growFootprint(Footprint const& foot, int nGrow,
-                             bool left, bool right, bool up, bool down);
-
-/**
- * Return a list of BBox%s, whose union contains exactly the pixels in
- * foot, neither more nor less
+ * @brief Return a list of BBox%s, whose union contains exactly the pixels in
+ * the footprint, neither more nor less
  *
  * Useful in generating sets of meas::algorithms::Defects for the ISR
+ *
+ * @param footprint Footprint to turn into bounding box list
  */
-std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
+std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& footprint);
 
-/**
- * \brief Set all image pixels in a Footprint to a given value
- *
- * \return value
- */
-template<typename ImageT>
-typename ImageT::Pixel setImageFromFootprint(ImageT *image,
-                                             Footprint const& footprint,
-                                             typename ImageT::Pixel const value);
+}}} // Close namespace lsst::afw::detection
 
-/**
- * \brief Set all image pixels in a set of Footprint%s to a given value
- *
- * \return value
- */
-template<typename ImageT>
-typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 CONST_PTR(std::vector<PTR(Footprint)>) footprints,
-                                                 typename ImageT::Pixel  const value);
-
-/**
- * \brief Set all image pixels in a set of Footprint%s to a given value
- *
- * \return value
- */
-template<typename ImageT>
-typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 std::vector<PTR(Footprint)> const& footprints,
-                                                 typename ImageT::Pixel  const value);
-
-/**
- * \brief OR bitmask into all the Mask's pixels that are in the Footprint
- *
- * \return bitmask
- */
-template<typename MaskT>
-MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
-                           Footprint const& footprint,
-                           MaskT const bitmask);
-
-/**
- * \brief (AND ~bitmask) all the Mask's pixels that are in the
- * Footprint; that is, set to zero in the Mask-intersecting-Footprint
- * all bits that are 1 in then bitmask.
- *
- * \return bitmask
- */
-template<typename MaskT>
-MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
-                             Footprint const& footprint,
-                             MaskT const bitmask);
-
-/**
- Copies pixels from input image to output image within the Footprint's
- area.
-
- The input and output image must be the same type -- either Image or
- MaskedImage.
-
- Respects image xy0, so the footprints should be defined in the
- "PARENT" frame.
-
- Pixels that are in the footprint but do not overlap with both
- images are not copied.
- */
-template <typename ImageOrMaskedImageT>
-void copyWithinFootprint(Footprint const& foot,
-                         PTR(ImageOrMaskedImageT) const input,
-                         PTR(ImageOrMaskedImageT) output);
-
-/************************************************************************************************************/
-/**
- * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
- *
- * \return bitmask
- */
-template<typename MaskT>
-MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               std::vector<PTR(Footprint)> const& footprints,
-                               MaskT const bitmask);
-
-/**
- * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
- *
- * \return bitmask
- */
-template<typename MaskT>
-MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               CONST_PTR(std::vector<PTR(Footprint)>) const& footprints,
-                               MaskT const bitmask);
-
-/**
- * \brief Return a Footprint that's the intersection of a Footprint with a Mask
- *
- * The resulting Footprint contains only pixels for which (mask & bitMask) != 0;
- * it may have disjoint pieces
- *
- * \note This isn't a member of Footprint as Footprint isn't templated over MaskT
- *
- * foot: The initial Footprint
- * mask: The mask to & with foot
- * bitmask: Only consider these bits
- *
- * \returns Returns the new Footprint
- */
-template<typename MaskT>
-PTR(Footprint) footprintAndMask(PTR(Footprint) const& foot,
-                                typename image::Mask<MaskT>::Ptr const& mask,
-                                MaskT const bitmask);
-
-/************************************************************************************************************/
-
-}}} // namespace lsst::afw::detection
-
-#endif
+#endif // LSST_DETECTION_FOOTPRINT_H

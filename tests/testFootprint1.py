@@ -1,3 +1,5 @@
+
+
 #
 # LSST Data Management System
 # Copyright 2008-2017 LSST Corporation.
@@ -174,7 +176,6 @@ class ThresholdTestCase(unittest.TestCase):
         except:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
 
-
 class FootprintTestCase(lsst.utils.tests.TestCase):
     """A test case for Footprint"""
 
@@ -200,7 +201,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testIntersectMask(self):
         bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(10))
-        fp = afwDetect.Footprint(bbox)
+        fp = afwDetect.Footprint(afwGeom.SpanSet(bbox))
         maskBBox = afwGeom.BoxI(bbox)
         maskBBox.grow(-2)
         mask = afwImage.MaskU(maskBBox)
@@ -209,7 +210,10 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         subMask = mask.Factory(mask, innerBBox)
         subMask.set(1)
 
-        fp.intersectMask(mask)
+        # We only want the pixels that are unmasked, and lie in the bounding box
+        # of the mask, so not the mask (selecting only zero values) and clipped
+        fp.spans = fp.spans.intersectNot(mask).clippedTo(mask.getBBox())
+        fp.removeOrphanPeaks()
         fpBBox = fp.getBBox()
         self.assertEqual(fpBBox.getMinX(), maskBBox.getMinX())
         self.assertEqual(fpBBox.getMinY(), maskBBox.getMinY())
@@ -219,8 +223,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
 
     def testTablePersistence(self):
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25), afwGeom.Point2D(9, 15))
-        fp1 = afwDetect.Footprint(ellipse)
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25),
+                                          afwGeom.Point2D(9, 15))
+        fp1 = afwDetect.Footprint(afwGeom.SpanSet.fromShape(ellipse))
         fp1.addPeak(6, 7, 2)
         fp1.addPeak(8, 9, 3)
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -237,21 +242,12 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(peak1.getFy(), peak2.getFy())
                 self.assertEqual(peak1.getPeakValue(), peak2.getPeakValue())
 
-    def testAddSpans(self):
-        """Add spans to a Footprint"""
-        for y, x0, x1 in [(10, 100, 105), (11, 99, 104)]:
-            self.foot.addSpan(y, x0, x1)
-
-        sp = self.foot.getSpans()
-
-        self.assertEqual(sp[-1].toString(), toString(y, x0, x1))
-
     def testBbox(self):
         """Add Spans and check bounding box"""
         foot = afwDetect.Footprint()
-        for y, x0, x1 in [(10, 100, 105),
-                          (11, 99, 104)]:
-            foot.addSpan(y, x0, x1)
+        spanLists = [afwGeom.Span(10, 100, 105), afwGeom.Span(11, 99, 104)]
+        spanSet = afwGeom.SpanSet(spanLists)
+        foot.spans = spanSet
 
         bbox = foot.getBBox()
         self.assertEqual(bbox.getWidth(), 7)
@@ -266,35 +262,12 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(foot.getBBox().isEmpty())
         self.assertEqual(foot.getArea(), 0)
 
-    def testSpanShift(self):
-        """Test our ability to shift spans"""
-        span = afwDetect.Span(10, 100, 105)
-        foot = afwDetect.Footprint()
-
-        foot.addSpan(span, 1, 2)
-
-        bbox = foot.getBBox()
-        self.assertEqual(bbox.getWidth(), 6)
-        self.assertEqual(bbox.getHeight(), 1)
-        self.assertEqual(bbox.getMinX(), 101)
-        self.assertEqual(bbox.getMinY(), 12)
-        #
-        # Shift that span using Span.shift
-        #
-        foot = afwDetect.Footprint()
-        span.shift(-1, -2)
-        foot.addSpan(span)
-
-        bbox = foot.getBBox()
-        self.assertEqual(bbox.getWidth(), 6)
-        self.assertEqual(bbox.getHeight(), 1)
-        self.assertEqual(bbox.getMinX(), 99)
-        self.assertEqual(bbox.getMinY(), 8)
-
     def testFootprintFromBBox1(self):
         """Create a rectangular Footprint"""
         x0, y0, w, h = 9, 10, 7, 4
-        foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(w, h)))
+        spanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(x0, y0),
+                                  afwGeom.Extent2I(w, h)))
+        foot = afwDetect.Footprint(spanSet)
 
         bbox = foot.getBBox()
 
@@ -314,7 +287,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
     def testGetBBox(self):
         """Check that Footprint.getBBox() returns a copy"""
         x0, y0, w, h = 9, 10, 7, 4
-        foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(w, h)))
+        spanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(x0, y0),
+                                  afwGeom.Extent2I(w, h)))
+        foot = afwDetect.Footprint(spanSet)
         bbox = foot.getBBox()
 
         dx, dy = 10, 20
@@ -326,12 +301,13 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
     def testFootprintFromCircle(self):
         """Create an elliptical Footprint"""
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9, 15))
-        foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30)))
+        spanSet = afwGeom.SpanSet.fromShape(ellipse)
+        foot = afwDetect.Footprint(spanSet, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
 
-        foot.insertIntoImage(idImage, foot.getId())
+        foot.spans.setImage(idImage, foot.getId())
 
         if False:
             ds9.mtv(idImage, frame=2)
@@ -341,12 +317,13 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         cen = afwGeom.Point2D(23, 25)
         a, b, theta = 25, 15, 30
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)), cen)
-        foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
+        spanSet = afwGeom.SpanSet.fromShape(ellipse)
+        foot = afwDetect.Footprint(spanSet, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
 
-        foot.insertIntoImage(idImage, foot.getId())
+        foot.spans.setImage(idImage, foot.getId())
 
         if display:
             ds9.mtv(idImage, frame=2)
@@ -371,7 +348,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
     def testCopy(self):
         bbox = afwGeom.BoxI(afwGeom.PointI(0, 2), afwGeom.PointI(5, 6))
 
-        fp = afwDetect.Footprint(bbox, bbox)
+        fp = afwDetect.Footprint(afwGeom.SpanSet(bbox), bbox)
 
         # test copy construct
         fp2 = afwDetect.Footprint(fp)
@@ -379,7 +356,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fp2.getBBox(), bbox)
         self.assertEqual(fp2.getRegion(), bbox)
         self.assertEqual(fp2.getArea(), bbox.getArea())
-        self.assertEqual(fp2.isNormalized(), True)
 
         y = bbox.getMinY()
         for s in fp2.getSpans():
@@ -394,7 +370,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fp3.getBBox(), bbox)
         self.assertEqual(fp3.getRegion(), bbox)
         self.assertEqual(fp3.getArea(), bbox.getArea())
-        self.assertEqual(fp3.isNormalized(), True)
 
         y = bbox.getMinY()
         for s in fp3.getSpans():
@@ -408,9 +383,12 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         x0, y0 = 50, 50  # Position of footprint
         imwidth, imheight = 100, 100  # Size of image
 
-        foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
-                                   afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight)))
-        self.assertEqual(foot.getNpix(), width*height)
+        spanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(x0, y0),
+                                  afwGeom.Extent2I(width, height)))
+        region = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                               afwGeom.Extent2I(imwidth, imheight))
+        foot = afwDetect.Footprint(spanSet, region)
+        self.assertEqual(foot.getArea(), width*height)
 
         # Add some peaks to the original footprint and check that those lying outside
         # the shrunken footprint are omitted from the returned shrunken footprint.
@@ -420,8 +398,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(foot.getPeaks()), 3)  # check that all three peaks were added
 
         # Shrinking by one pixel makes each dimension *two* pixels shorter.
-        shrunk = afwDetect.shrinkFootprint(foot, 1, True)
-        self.assertEqual(3*8, shrunk.getNpix())
+        shrunk = afwDetect.Footprint().assign(foot)
+        shrunk.erode(1)
+        self.assertEqual(3*8, shrunk.getArea())
 
         # Shrunken footprint should now only contain one peak at (52, 52)
         self.assertEqual(len(shrunk.getPeaks()), 1)
@@ -432,12 +411,15 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(shrunk.getCentroid(), foot.getCentroid())
 
         # Get the same result from a Manhattan shrink
-        shrunk = afwDetect.shrinkFootprint(foot, 1, False)
-        self.assertEqual(3*8, shrunk.getNpix())
+        shrunk = afwDetect.Footprint().assign(foot)
+        shrunk.erode(1, afwGeom.Stencil.MANHATTAN)
+        self.assertEqual(3*8, shrunk.getArea())
         self.assertEqual(shrunk.getCentroid(), foot.getCentroid())
 
         # Shrinking by a large amount leaves nothing.
-        self.assertEqual(afwDetect.shrinkFootprint(foot, 100, True).getNpix(), 0)
+        shrunkToNothing = afwDetect.Footprint().assign(foot)
+        shrunkToNothing.erode(100)
+        self.assertEqual(shrunkToNothing.getArea(), 0)
 
     def testShrinkIsoVsManhattan(self):
         # Demonstrate that isotropic and Manhattan shrinks are different.
@@ -448,10 +430,15 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(1.5*radius, 2*radius, 0),
                                           afwGeom.Point2D(x0, y0))
-        foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0),
+        spanSet = afwGeom.SpanSet.fromShape(ellipse)
+        foot = afwDetect.Footprint(spanSet, afwGeom.Box2I(afwGeom.Point2I(0, 0),
                                                           afwGeom.Extent2I(imwidth, imheight)))
-        self.assertNotEqual(afwDetect.shrinkFootprint(foot, nshrink, False),
-                            afwDetect.shrinkFootprint(foot, nshrink, True))
+        footIsotropic = afwDetect.Footprint()
+        footIsotropic.assign(foot)
+
+        foot.erode(nshrink, afwGeom.Stencil.MANHATTAN)
+        footIsotropic.erode(nshrink)
+        self.assertNotEqual(foot, footIsotropic)
 
     def _fig8Test(self, x1, y1, x2, y2):
         # Construct a "figure of 8" consisting of two circles touching at the
@@ -471,26 +458,29 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         e1 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
                                      afwGeom.Point2D(x1, y1))
-        f1 = afwDetect.Footprint(e1, box)
-        self.assertEqual(f1.getNpix(), circle_npix)
+        spanSet1 = afwGeom.SpanSet.fromShape(e1)
+        f1 = afwDetect.Footprint(spanSet1, box)
+        self.assertEqual(f1.getArea(), circle_npix)
 
         e2 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
                                      afwGeom.Point2D(x2, y2))
-        f2 = afwDetect.Footprint(e2, box)
-        self.assertEqual(f2.getNpix(), circle_npix)
+        spanSet2 = afwGeom.SpanSet.fromShape(e2)
+        f2 = afwDetect.Footprint(spanSet2, box)
+        self.assertEqual(f2.getArea(), circle_npix)
 
         initial = afwDetect.mergeFootprints(f1, f2)
         initial.setRegion(f2.getRegion())  # merge does not propagate the region
-        self.assertEqual(initial_npix, initial.getNpix())
+        self.assertEqual(initial_npix, initial.getArea())
 
-        shrunk = afwDetect.shrinkFootprint(initial, nshrink, True)
-        self.assertEqual(shrunk_npix, shrunk.getNpix())
+        shrunk = afwDetect.Footprint().assign(initial)
+        shrunk.erode(nshrink)
+        self.assertEqual(shrunk_npix, shrunk.getArea())
 
         if display:
             idImage = afwImage.ImageU(imwidth, imheight)
             for i, foot in enumerate([initial, shrunk]):
-                print(foot.getNpix())
-                foot.insertIntoImage(idImage, i+1)
+                print(foot.getArea())
+                foot.spans.setImage(idImage, i+1)
             ds9.mtv(idImage)
 
     def testShrinkEightVertical(self):
@@ -509,8 +499,11 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         """Test growing a footprint"""
         x0, y0 = 20, 20
         width, height = 20, 30
-        foot1 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
-                                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(100, 100)))
+        spanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(x0, y0),
+                                  afwGeom.Extent2I(width, height)))
+        foot1 = afwDetect.Footprint(spanSet,
+                                    afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                                  afwGeom.Extent2I(100, 100)))
 
         # Add some peaks and check that they get copied into the new grown footprint
         foot1.addPeak(20, 20, 1)
@@ -530,10 +523,10 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         ngrow = 5
         for isotropic in (True, False):
-            foot2 = afwDetect.growFootprint(foot1, ngrow, isotropic)
-
-            # Check that the grown footprint is normalized
-            self.assertTrue(foot2.isNormalized())
+            foot2 = afwDetect.Footprint().assign(foot1)
+            stencil = afwGeom.Stencil.CIRCLE if isotropic else \
+                afwGeom.Stencil.MANHATTAN
+            foot2.dilate(ngrow, stencil)
 
             # Check that the grown footprint is bigger than the original
             self.assertGreater(foot2.getArea(), foot1.getArea())
@@ -570,18 +563,17 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
     def testFootprintToBBoxList(self):
         """Test footprintToBBoxList"""
         region = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(12, 10))
-        foot = afwDetect.Footprint(0, region)
-        for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
-                          (4, 2, 3), (4, 5, 7),
-                          (5, 2, 3), (5, 5, 8),
-                          (6, 3, 5),
-                          ]:
-            foot.addSpan(y, x0, x1)
+        foot = afwDetect.Footprint(afwGeom.SpanSet(), region)
+        spanList = [afwGeom.Span(*span) for span in ((3, 3, 5), (3, 7, 7),
+                                                     (4, 2, 3), (4, 5, 7),
+                                                     (5, 2, 3), (5, 5, 8),
+                                                     (6, 3, 5))]
+        foot.spans = afwGeom.SpanSet(spanList)
 
         idImage = afwImage.ImageU(region.getDimensions())
         idImage.set(0)
 
-        foot.insertIntoImage(idImage, 1)
+        foot.spans.setImage(idImage, 1)
         if display:
             ds9.mtv(idImage)
 
@@ -611,13 +603,14 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
     def testWriteDefect(self):
         """Write a Footprint as a set of Defects"""
         region = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(12, 10))
-        foot = afwDetect.Footprint(0, region)
-        for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
-                          (4, 2, 3), (4, 5, 7),
-                          (5, 2, 3), (5, 5, 8),
-                          (6, 3, 5),
-                          ]:
-            foot.addSpan(y, x0, x1)
+        spanSet = afwGeom.SpanSet([afwGeom.Span(*span) for span in [(3, 3, 5),
+                                                                    (3, 7, 7),
+                                                                    (4, 2, 3),
+                                                                    (4, 5, 7),
+                                                                    (5, 2, 3),
+                                                                    (5, 5, 8),
+                                                                    (6, 3, 5)]])
+        foot = afwDetect.Footprint(spanSet, region)
 
         if True:
             fd = open("/dev/null", "w")
@@ -625,52 +618,6 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             fd = sys.stdout
 
         afwDetectUtils.writeFootprintAsDefects(fd, foot)
-
-    def testNormalize(self):
-        """Test Footprint.normalize"""
-        w, h = 12, 10
-        region = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(w, h))
-        im = afwImage.ImageU(afwGeom.Extent2I(w, h))
-        im.set(0)
-        #
-        # Create a footprint;  note that these Spans overlap
-        #
-        for spans, box in (([(3, 5, 6),
-                             (4, 7, 7), ], afwGeom.Box2I(afwGeom.Point2I(5, 3), afwGeom.Point2I(7, 4))),
-                           ([(3, 3, 5), (3, 6, 9),
-                             (4, 2, 3), (4, 5, 7), (4, 8, 8),
-                             (5, 2, 3), (5, 5, 8), (5, 6, 7),
-                             (6, 3, 5),
-                             ], afwGeom.Box2I(afwGeom.Point2I(2, 3), afwGeom.Point2I(9, 6)))
-                           ):
-
-            foot = afwDetect.Footprint(0, region)
-            for y, x0, x1 in spans:
-                foot.addSpan(y, x0, x1)
-
-                for x in range(x0, x1 + 1):  # also insert into im
-                    im.set(x, y, 1)
-
-            idImage = afwImage.ImageU(afwGeom.Extent2I(w, h))
-            idImage.set(0)
-
-            foot.insertIntoImage(idImage, 1)
-            if display:             # overlaping pixels will be > 1
-                ds9.mtv(idImage)
-            #
-            # Normalise the Footprint, removing overlapping spans
-            #
-            foot.normalize()
-
-            idImage.set(0)
-            foot.insertIntoImage(idImage, 1)
-            if display:
-                ds9.mtv(idImage, frame=1)
-
-            idImage -= im
-
-            self.assertEqual(box, foot.getBBox())
-            self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
     def testSetFromFootprint(self):
         """Test setting mask/image pixels from a Footprint list"""
@@ -700,7 +647,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(mi.getMask().get(3, 6), 0x1)
 
         self.assertEqual(mi.getImage().get(3, 6), 20)
-        afwDetect.setImageFromFootprintList(mi.getImage(), objects, 5.0)
+        for ft in objects:
+            ft.spans.setImage(mi.getImage(), 5.0)
         self.assertEqual(mi.getImage().get(4, 2), 10)
         self.assertEqual(mi.getImage().get(3, 6), 5)
 
@@ -740,19 +688,20 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         cdMatrix = [1.0e-5, 0.0, 0.0, 1.0e-5]
         source = afwImage.makeWcs(crval, crpix, *cdMatrix)
         target = afwImage.makeWcs(crval, crpix + offset, *cdMatrix)
-        fpSource = afwDetect.Footprint(afwGeom.Point2I(12, 34), radius, bbox)
+        sourceSpanSet = afwGeom.SpanSet.fromShape(radius,
+                                                         afwGeom.Stencil.CIRCLE)
+        sourceSpanSet = sourceSpanSet.shiftedBy(12, 34)
+        fpSource = afwDetect.Footprint(sourceSpanSet, bbox)
 
         fpTarget = fpSource.transform(source, target, bbox)
 
         self.assertEqual(len(fpSource.getSpans()), len(fpTarget.getSpans()))
-        self.assertEqual(fpSource.getNpix(), fpTarget.getNpix())
         self.assertEqual(fpSource.getArea(), fpTarget.getArea())
-
         imSource = afwImage.ImageU(dims)
-        fpSource.insertIntoImage(imSource, 1)
+        fpSource.spans.setImage(imSource, 1)
 
         imTarget = afwImage.ImageU(dims)
-        fpTarget.insertIntoImage(imTarget, 1)
+        fpTarget.spans.setImage(imTarget, 1)
 
         subSource = imSource.Factory(imSource, fpSource.getBBox())
         subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
@@ -778,10 +727,12 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             for j in range(W):
                 sa[i, j] = 100 * i + j
 
-        self.foot.addSpan(4, 3, 6)
-        self.foot.addSpan(5, 2, 4)
+        footSpans = [s for s in self.foot.spans]
+        footSpans.append(afwGeom.Span(4, 3, 6))
+        footSpans.append(afwGeom.Span(5, 2, 4))
+        self.foot.spans = afwGeom.SpanSet(footSpans)
 
-        afwDetect.copyWithinFootprintImage(self.foot, source, dest)
+        self.foot.spans.copyImage(source, dest)
 
         da = dest.getArray()
         self.assertEqual(da[4, 2], 0)
@@ -808,11 +759,14 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         source.set(1.0)
 
         foot = afwDetect.Footprint()
-        foot.addSpan(50, 50, 60)  # Oversized on the source image, right; only some pixels overlap
-        foot.addSpan(60, 0, 100)  # Oversized on the source, left and right; and on sub-target image, top
-        foot.addSpan(99, 0, 1000)  # Oversized on the source image, top, left and right; aiming for segfault
+        spanList = [afwGeom.Span(*s) for s in ((50, 50, 60), # Oversized on the source image, right; only some pixels overlap
+                                               (60, 0, 100), # Oversized on the source, left and right; and on sub-target image, top
+                                               (99, 0, 1000) # Oversized on the source image, top, left and right; aiming for segfault
+                                               )]
+        foot.spans = afwGeom.SpanSet(spanList)
 
-        afwDetect.copyWithinFootprintImage(foot, source, subTarget)
+        foot.spans.clippedTo(subTarget.getBBox()).clippedTo(source.getBBox()).\
+            copyImage(source, subTarget)
 
         expected = np.zeros((100, 100))
         expected[50, 50:55] = 1.0
@@ -833,10 +787,12 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
                 sv[i, j] = 100 * j + i
                 sm[i, j] = 1
 
-        self.foot.addSpan(4, 3, 6)
-        self.foot.addSpan(5, 2, 4)
+        footSpans = [s for s in self.foot.spans]
+        footSpans.append(afwGeom.Span(4, 3, 6))
+        footSpans.append(afwGeom.Span(5, 2, 4))
+        self.foot.spans = afwGeom.SpanSet(footSpans)
 
-        afwDetect.copyWithinFootprintMaskedImage(self.foot, source, dest)
+        self.foot.spans.copyMaskedImage(source, dest)
 
         da = dest.getImage().getArray()
         dv = dest.getVariance().getArray()
@@ -881,36 +837,32 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         f1 = self.foot
         f2 = afwDetect.Footprint()
 
-        f1.addSpan(10, 10, 20)
-        f1.addSpan(10, 30, 40)
-        f1.addSpan(10, 50, 60)
+        spanList1 = [(10, 10, 20),
+                     (10, 30, 40),
+                     (10, 50, 60),
+                     (11, 30, 50),
+                     (12, 30, 50),
+                     (13, 10, 20),
+                     (13, 30, 40),
+                     (13, 50, 60),
+                     (15, 10, 20),
+                     (15, 31, 40),
+                     (15, 51, 60)]
+        spanSet1 = afwGeom.SpanSet([afwGeom.Span(*span) for span in spanList1])
+        f1.spans = spanSet1
 
-        f1.addSpan(11, 30, 50)
-        f1.addSpan(12, 30, 50)
-
-        f1.addSpan(13, 10, 20)
-        f1.addSpan(13, 30, 40)
-        f1.addSpan(13, 50, 60)
-
-        f1.addSpan(15, 10, 20)
-        f1.addSpan(15, 31, 40)
-        f1.addSpan(15, 51, 60)
-
-        f2.addSpan(8, 10, 20)
-        f2.addSpan(9, 20, 30)
-        f2.addSpan(10, 0, 9)
-        f2.addSpan(10, 35, 65)
-        f2.addSpan(10, 70, 80)
-
-        f2.addSpan(13, 49, 54)
-        f2.addSpan(14, 10, 30)
-
-        f2.addSpan(15, 21, 30)
-        f2.addSpan(15, 41, 50)
-        f2.addSpan(15, 61, 70)
-
-        f1.normalize()
-        f2.normalize()
+        spanList2 = [(8, 10, 20),
+                     (9, 20, 30),
+                     (10, 0, 9),
+                     (10, 35, 65),
+                     (10, 70, 80),
+                     (13, 49, 54),
+                     (14, 10, 30),
+                     (15, 21, 30),
+                     (15, 41, 50),
+                     (15, 61, 70)]
+        spanSet2 = afwGeom.SpanSet([afwGeom.Span(*span) for span in spanList2])
+        f2.spans = spanSet2
 
         fA = afwDetect.mergeFootprints(f1, f2)
         fB = afwDetect.mergeFootprints(f2, f1)
@@ -921,7 +873,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             im1.set(0)
             imbb = im1.getBBox()
             f.setRegion(imbb)
-            f.insertIntoImage(im1, 1)
+            f.spans.setImage(im1, 1)
             ims.append(im1)
 
         for i, merged in enumerate([ims[2], ims[3]]):
@@ -948,7 +900,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             plt.savefig('merge2.png')
 
     def testPeakSort(self):
-        footprint = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(10, 10)))
+        spanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                  afwGeom.Point2I(10, 10)))
+        footprint = afwDetect.Footprint(spanSet)
         footprint.addPeak(4, 5, 1)
         footprint.addPeak(3, 2, 5)
         footprint.addPeak(7, 8, -2)
@@ -957,104 +911,48 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual([peak.getIx() for peak in footprint.getPeaks()],
                          [3, 5, 4, 7])
 
-    def testClipToNonzero(self):
-        # create a circular footprint
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9, 15))
-        bb = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30))
-        foot = afwDetect.Footprint(ellipse, bb)
-
-        a0 = foot.getArea()
-
-        plots = False
-        if plots:
-            import matplotlib
-            matplotlib.use('Agg')
-            import pylab as plt
-
-            plt.clf()
-            img = afwImage.ImageU(bb)
-            foot.insertIntoImage(img, 1)
-            ima = dict(interpolation='nearest', origin='lower', cmap='gray')
-            plt.imshow(img.getArray(), **ima)
-            plt.savefig('clipnz1.png')
-
-        source = afwImage.ImageF(bb)
-        source.getArray()[:, :] = 1.
-        source.getArray()[:, 0:10] = 0.
-
-        foot.clipToNonzero(source)
-        foot.normalize()
-        a1 = foot.getArea()
-        self.assertLess(a1, a0)
-
-        img = afwImage.ImageU(bb)
-        foot.insertIntoImage(img, 1)
-        self.assertTrue(np.all(img.getArray()[source.getArray() == 0] == 0))
-
-        if plots:
-            plt.clf()
-            plt.subplot(1, 2, 1)
-            plt.imshow(source.getArray(), **ima)
-            plt.subplot(1, 2, 2)
-            plt.imshow(img.getArray(), **ima)
-            plt.savefig('clipnz2.png')
-
-        source.getArray()[:12, :] = 0.
-        foot.clipToNonzero(source)
-        foot.normalize()
-
-        a2 = foot.getArea()
-        self.assertLess(a2, a1)
-
-        img = afwImage.ImageU(bb)
-        foot.insertIntoImage(img, 1)
-        self.assertTrue(np.all(img.getArray()[source.getArray() == 0] == 0))
-
-        if plots:
-            plt.clf()
-            plt.subplot(1, 2, 1)
-            plt.imshow(source.getArray(), **ima)
-            plt.subplot(1, 2, 2)
-            img = afwImage.ImageU(bb)
-            foot.insertIntoImage(img, 1)
-            plt.imshow(img.getArray(), **ima)
-            plt.savefig('clipnz3.png')
-
     def testInclude(self):
         """Test that we can expand a Footprint to include the union of itself and all others provided."""
         region = afwGeom.Box2I(afwGeom.Point2I(-6, -6), afwGeom.Point2I(6, 6))
-        parent = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-2, -2), afwGeom.Point2I(2, 2)), region)
+        parentSpanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(-2, -2),
+                                                      afwGeom.Point2I(2, 2)))
+        parent = afwDetect.Footprint(parentSpanSet, region)
         parent.addPeak(0, 0, float("NaN"))
-        child1 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-3, 0), afwGeom.Point2I(0, 3)), region)
+        child1SpanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(-3, 0),
+                                                      afwGeom.Point2I(0, 3)))
+        child1 = afwDetect.Footprint(child1SpanSet, region)
         child1.addPeak(-1, 1, float("NaN"))
-        child2 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-4, -3), afwGeom.Point2I(-1, 0)), region)
-        child3 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(4, -1), afwGeom.Point2I(6, 1)))
+        child2SpanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(-4, -3),
+                                        afwGeom.Point2I(-1, 0)))
+        child2 = afwDetect.Footprint(child2SpanSet, region)
+        child3SpanSet = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(4, -1),
+                                        afwGeom.Point2I(6, 1)))
+        child3 = afwDetect.Footprint(child3SpanSet)
         merge123 = afwDetect.Footprint(parent)
-        merge123.include([child1, child2, child3])
+        merge123.spans = merge123.spans.union(child1.spans).union(child2.spans).union(child3.spans)
         self.assertTrue(merge123.getBBox().contains(parent.getBBox()))
         self.assertTrue(merge123.getBBox().contains(child1.getBBox()))
         self.assertTrue(merge123.getBBox().contains(child2.getBBox()))
         self.assertTrue(merge123.getBBox().contains(child3.getBBox()))
         mask123a = afwImage.MaskU(region)
         mask123b = afwImage.MaskU(region)
-        afwDetect.setMaskFromFootprint(mask123a, parent, 1)
-        afwDetect.setMaskFromFootprint(mask123a, child1, 1)
-        afwDetect.setMaskFromFootprint(mask123a, child2, 1)
-        afwDetect.setMaskFromFootprint(mask123a, child3, 1)
-        afwDetect.setMaskFromFootprint(mask123b, merge123, 1)
+        parent.spans.setMask(mask123a, 1)
+        child1.spans.setMask(mask123a, 1)
+        child2.spans.setMask(mask123a, 1)
+        child3.spans.setMask(mask123a, 1)
+        merge123.spans.setMask(mask123b, 1)
         self.assertEqual(mask123a.getArray().sum(), merge123.getArea())
         self.assertFloatsAlmostEqual(mask123a.getArray(), mask123b.getArray(), rtol=0, atol=0)
 
         # Test that ignoreSelf=True works for include
-        ignoreParent = True
         childOnly = afwDetect.Footprint()
-        childOnly.include([child1, child2, child3])
+        childOnly.spans = childOnly.spans.union(child1.spans).union(child2.spans).union(child3.spans)
         merge123 = afwDetect.Footprint(parent)
-        merge123.include([child1, child2, child3], ignoreParent)
+        merge123.spans = child1.spans.union(child2.spans).union(child3.spans)
         maskChildren = afwImage.MaskU(region)
         mask123 = afwImage.MaskU(region)
-        afwDetect.setMaskFromFootprint(maskChildren, childOnly, 1)
-        afwDetect.setMaskFromFootprint(mask123, merge123, 1)
+        childOnly.spans.setMask(maskChildren, 1)
+        merge123.spans.setMask(mask123, 1)
         self.assertTrue(np.all(maskChildren.getArray() == mask123.getArray()))
 
     def checkEdge(self, footprint):
@@ -1062,16 +960,19 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         bbox = footprint.getBBox()
         bbox.grow(3)
 
-        def makeImage(footprint):
+        def makeImage(area):
             """Make an ImageF with 1 in the footprint, and 0 elsewhere"""
             ones = afwImage.ImageI(bbox)
             ones.set(1)
             image = afwImage.ImageI(bbox)
             image.set(0)
-            afwDetect.copyWithinFootprintImage(footprint, ones, image)
+            if isinstance(area, afwDetect.Footprint):
+                area.spans.copyImage(ones, image)
+            if isinstance(area, afwGeom.SpanSet):
+                area.copyImage(ones, image)
             return image
 
-        edges = self.foot.findEdgePixels()
+        edges = self.foot.spans.findEdgePixels()
         edgeImage = makeImage(edges)
 
         # Find edges with an edge-detection kernel
@@ -1092,15 +993,13 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
     def testEdge(self):
         """Test for Footprint::findEdgePixels()"""
         foot = afwDetect.Footprint()
-        for span in ((3, 3, 9),
-                     (4, 2, 4),
-                     (4, 6, 7),
-                     (4, 9, 11),
-                     (5, 3, 9),
-                     (6, 6, 7),
-                     ):
-            foot.addSpanInSeries(*span)
-        foot.normalize()
+        spanList = [afwGeom.Span(*span) for span in ((3, 3, 9),
+                                                     (4, 2, 4),
+                                                     (4, 6, 7),
+                                                     (4, 9, 11),
+                                                     (5, 3, 9),
+                                                     (6, 6, 7))]
+        foot.spans = afwGeom.SpanSet(spanList)
         self.checkEdge(foot)
 
         # This footprint came from a very large Footprint in a deep HSC coadd patch
@@ -1196,7 +1095,7 @@ class FootprintSetTestCase(unittest.TestCase):
         idImage.set(0)
 
         for foot in objects:
-            foot.insertIntoImage(idImage, foot.getId())
+            foot.spans.setImage(idImage, foot.getId())
 
         if False:
             ds9.mtv(idImage, frame=2)
@@ -1239,8 +1138,8 @@ class FootprintSetTestCase(unittest.TestCase):
 
         i = 1
         for foot in ds.getFootprints()[0:1]:
-            gfoot = afwDetect.growFootprint(foot, 3, False)
-            gfoot.insertIntoImage(idImage, i)
+            foot.dilate(3, afwGeom.Stencil.MANHATTAN)
+            foot.spans.setImage(idImage, i, doClip=True)
             i += 1
 
         if display:

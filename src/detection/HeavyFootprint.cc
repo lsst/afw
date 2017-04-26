@@ -34,11 +34,10 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
-#include "lsst/afw/detection/FootprintArray.h"
-#include "lsst/afw/detection/FootprintArray.cc"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -47,30 +46,31 @@ namespace lsst {
 namespace afw {
 namespace detection {
 namespace {
-    template<typename T>
-    struct setPixel {
-        setPixel(T val) : _val(val) {}
 
-        T operator()(T) const {
-            return _val;
-        }
-    private:
-        T _val;
-    };
+template<typename T>
+struct FlattenWithSetter {
+    FlattenWithSetter(T val) : _val(val) {}
 
-    template<>
-    struct setPixel<std::uint16_t> {
-        typedef std::uint16_t T;
+    void operator()(geom::Point2I const & point, T & out, T& in) {
+        out = in;
+        in = _val;
+    }
+private:
+    T _val;
+};
 
-        setPixel(T val) : _mask(~val) {}
+template<>
+struct FlattenWithSetter<lsst::afw::image::MaskPixel> {
+    using T = lsst::afw::image::MaskPixel;
+    FlattenWithSetter(T val) : _mask(~val) {}
 
-        T operator()(T pix) const {
-            pix &= _mask;
-            return pix;
-        }
-    private:
-        T _mask;
-    };
+    void operator()(geom::Point2I const & point, T & out, T& in) {
+        out = in;
+        in &= _mask;
+    }
+private:
+    T _mask;
+};
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -79,9 +79,9 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
     HeavyFootprintCtrl const *ctrl
         ) : Footprint(foot),
-            _image(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-            _mask(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-            _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
+            _image(ndarray::allocate(ndarray::makeVector(foot.getArea()))),
+            _mask(ndarray::allocate(ndarray::makeVector(foot.getArea()))),
+            _variance(ndarray::allocate(ndarray::makeVector(foot.getArea())))
 {
     HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
 
@@ -91,9 +91,9 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 
     switch (ctrl->getModifySource()) {
       case HeavyFootprintCtrl::NONE:
-        flattenArray(*this, mimage.getImage()->getArray(),    _image,    mimage.getXY0());
-        flattenArray(*this, mimage.getMask()->getArray(),     _mask,     mimage.getXY0());
-        flattenArray(*this, mimage.getVariance()->getArray(), _variance, mimage.getXY0());
+        getSpans()->flatten(_image, mimage.getImage()->getArray(), mimage.getXY0());
+        getSpans()->flatten(_mask, mimage.getMask()->getArray(), mimage.getXY0());
+        getSpans()->flatten(_variance, mimage.getVariance()->getArray(), mimage.getXY0());
         break;
       case HeavyFootprintCtrl::SET:
         {
@@ -101,12 +101,15 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
         MaskPixelT const mval = ctrl->getMaskVal();
         VariancePixelT const vval = ctrl->getVarianceVal();
 
-        flattenArray(*this, mimage.getImage()->getArray(),    _image,
-            setPixel<ImagePixelT>(ival), mimage.getXY0());
-        flattenArray(*this, mimage.getMask()->getArray(),     _mask,
-            setPixel<MaskPixelT>(mval), mimage.getXY0());
-        flattenArray(*this, mimage.getVariance()->getArray(), _variance,
-            setPixel<VariancePixelT>(vval), mimage.getXY0());
+        getSpans()->applyFunctor(FlattenWithSetter<ImagePixelT>(ival),
+                                 ndarray::ndFlat(_image),
+                                 ndarray::ndImage(mimage.getImage()->getArray(), mimage.getXY0()));
+        getSpans()->applyFunctor(FlattenWithSetter<MaskPixelT>(mval),
+                                 ndarray::ndFlat(_mask),
+                                 ndarray::ndImage(mimage.getMask()->getArray(), mimage.getXY0()));
+        getSpans()->applyFunctor(FlattenWithSetter<VariancePixelT>(vval),
+                                 ndarray::ndFlat(_variance),
+                                 ndarray::ndImage(mimage.getVariance()->getArray(), mimage.getXY0()));
         break;
         }
     }
@@ -117,9 +120,9 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     Footprint const& foot,              ///< The Footprint defining the pixels to set
     HeavyFootprintCtrl const* ctrl)
     : Footprint(foot),
-      _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-      _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-      _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
+      _image   (ndarray::allocate(ndarray::makeVector(foot.getArea()))),
+      _mask    (ndarray::allocate(ndarray::makeVector(foot.getArea()))),
+      _variance(ndarray::allocate(ndarray::makeVector(foot.getArea())))
 {
 }
 
@@ -128,16 +131,16 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
         lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage ///< Image to set
                                                                     ) const
 {
-    expandArray(*this, _image,    mimage.getImage()->getArray(),    mimage.getXY0());
-    expandArray(*this, _mask,     mimage.getMask()->getArray(),     mimage.getXY0());
-    expandArray(*this, _variance, mimage.getVariance()->getArray(), mimage.getXY0());
+    getSpans()->unflatten(mimage.getImage()->getArray(), _image, mimage.getXY0());
+    getSpans()->unflatten(mimage.getMask()->getArray(), _mask, mimage.getXY0());
+    getSpans()->unflatten(mimage.getVariance()->getArray(), _variance, mimage.getXY0());
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
     lsst::afw::image::Image<ImagePixelT> & image) const
 {
-    expandArray(*this, _image,    image.getArray(),    image.getXY0());
+    getSpans()->unflatten(image.getArray(), _image, image.getXY0());
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -172,18 +175,14 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::dot(
     HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& rhs
     ) const
 {
-    // Require that footprints are sorted in ascending y
-    assert(isNormalized());
-    assert(rhs.isNormalized());
-
     // Coordinated cycling through the iterators while juggling the offsets into the arrays
     typedef typename ndarray::Array<ImagePixelT const, 1, 1>::Iterator ArrayIter;
     ArrayIter lhsArray = getImageArray().begin(), rhsArray = rhs.getImageArray().begin();
-    SpanList::const_iterator lhsIter = getSpans().begin(), rhsIter = rhs.getSpans().begin();
-    SpanList::const_iterator const lhsEnd = getSpans().end(), rhsEnd = rhs.getSpans().end();
+    auto lhsIter = getSpans()->begin(), rhsIter = rhs.getSpans()->begin();
+    auto const lhsEnd = getSpans()->end(), rhsEnd = rhs.getSpans()->end();
     double sum = 0.0;
     while (lhsIter != lhsEnd && rhsIter != rhsEnd) {
-        Span const& lhsSpan = **lhsIter, rhsSpan = **rhsIter;
+        geom::Span const& lhsSpan = *lhsIter, rhsSpan = *rhsIter;
         int const yLhs = lhsSpan.getY(), yRhs = rhsSpan.getY();
         if (yLhs == yRhs) {
             int const x0Lhs = lhsSpan.getX0(), x1Lhs = lhsSpan.getX1();
@@ -208,14 +207,14 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::dot(
             }
             continue;
         } else if (yLhs < yRhs) {
-            while (lhsIter != lhsEnd && (*lhsIter)->getY() < yRhs) {
-                lhsArray += (*lhsIter)->getWidth();
+            while (lhsIter != lhsEnd && lhsIter->getY() < yRhs) {
+                lhsArray += lhsIter->getWidth();
                 ++lhsIter;
             }
             continue;
         } else { // yLhs > yRhs
-            while (rhsIter != rhsEnd && (*rhsIter)->getY() < yLhs) {
-                rhsArray += (*rhsIter)->getWidth();
+            while (rhsIter != rhsEnd && rhsIter->getY() < yLhs) {
+                rhsArray += rhsIter->getWidth();
                 ++rhsIter;
             }
             continue;
@@ -318,12 +317,17 @@ public:
         HeavyFootprintPersistenceHelper<ImagePixelT,MaskPixelT,VariancePixelT> const & keys =
             HeavyFootprintPersistenceHelper<ImagePixelT,MaskPixelT,VariancePixelT>::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 3u);
-        PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>) result(
-            new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>()
-        );
-        result->readSpans(catalogs[0]); // these read methods are inherited from Footprint
-        result->readPeaks(catalogs[1]);
+
+        // Read in the SpanSet into a new Footprint object
+        std::shared_ptr<Footprint> loadedFootprint = readSpanSet(catalogs[0], archive);
+        // Now read in the PeakCatalog records
+        readPeaks(catalogs[1], *loadedFootprint);
         afw::table::BaseRecord const & record = catalogs[2].front();
+
+        // Create the HeavyFootprint from the above Footprint
+        auto result = std::make_shared<HeavyFootprint<ImagePixelT,
+                                                      MaskPixelT,
+                                                      VariancePixelT>>(*loadedFootprint);
         result->_image = ndarray::const_array_cast<ImagePixelT>(record.get(keys.image));
         result->_mask = ndarray::const_array_cast<MaskPixelT>(record.get(keys.mask));
         result->_variance = ndarray::const_array_cast<VariancePixelT>(record.get(keys.variance));

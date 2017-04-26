@@ -122,7 +122,7 @@ public:
      *  The resulting Footprints will be normalized, meaning that there peaks are sorted, and
      *  areas are calculated.
      */
-    void getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm=true);
+    void getFinalSources(afw::table::SourceCatalog &outputCat);
 
 private:
 
