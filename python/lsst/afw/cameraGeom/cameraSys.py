@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
-from lsst.afw.geom import addTransformMapMethods
+from lsst.afw.geom.python import addTransformMapMethods
 from ._cameraSys import CameraSys, CameraTransformMap
 
 __all__ = []  # import this module only for its side effects
