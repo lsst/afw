@@ -25,6 +25,7 @@
 #define LSST_AFW_GEOM_ENDPOINT_H
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "astshim.h"
@@ -226,6 +227,8 @@ public:
 
     virtual ~GenericEndpoint() {};
 
+    static std::string getPrefix() { return "Generic"; }
+
     virtual int getNPoints(Array const & arr) const override {
         return arr.getSize<0>();
     }
@@ -260,6 +263,8 @@ public:
     explicit PointEndpoint(int nAxes);
 
     virtual ~PointEndpoint() {};
+
+    static std::string getPrefix() { return "Point" + std::to_string(N); }
 
     /**
     Check that framePtr points to a Frame, not a subclass
@@ -298,6 +303,8 @@ public:
     explicit SpherePointEndpoint(int nAxes);
 
     virtual ~SpherePointEndpoint() {};
+
+    static std::string getPrefix() { return "SpherePoint"; };
 
     /**
     Create a Frame that can be used with this end point in a Transform

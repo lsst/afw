@@ -157,6 +157,8 @@ void declareGenericEndpoint(py::module& mod) {
 
     cls.def(py::init<int>(), "nAxes"_a);
 
+    cls.def_static("getPrefix", &Class::getPrefix);
+
     addStrAndRepr(cls);
 }
 
@@ -175,6 +177,8 @@ void declarePointEndpoint(py::module& mod) {
     cls.def(py::init<>());
     // do not wrap the constructor that takes nAxes; it is an implementation detail
 
+    cls.def_static("getPrefix", &Class::getPrefix);
+
     cls.def("normalizeFrame", &Class::normalizeFrame);
     addStrAndRepr(cls);
 }
@@ -190,6 +194,8 @@ void declareSpherePointEndpoint(py::module& mod) {
 
     cls.def(py::init<>());
     // do not wrap the constructor that takes nAxes; it is an implementation detail
+
+    cls.def_static("getPrefix", &Class::getPrefix);
 
     addMakeFrame(cls);
     cls.def("normalizeFrame", &Class::normalizeFrame);

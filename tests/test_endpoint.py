@@ -49,6 +49,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
         self.checkEndpointBasics(endpoint=endpoint, pointType=afwGeom.SpherePoint, nAxes=2)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.SpherePointEndpoint()")
         self.assertEqual("{}".format(endpoint), "SpherePointEndpoint()")
+        self.assertEqual(endpoint.getPrefix(), "SpherePoint")
 
         for doPermute in (False, True):
             frame = astshim.SkyFrame()
@@ -78,6 +79,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
         self.checkEndpointBasics(endpoint=endpoint, pointType=afwGeom.Point2D, nAxes=2)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.Point2Endpoint()")
         self.assertEqual("{}".format(endpoint), "Point2Endpoint()")
+        self.assertEqual(endpoint.getPrefix(), "Point2")
 
         # normalize does not check the # of axes
         for n in range(4):
@@ -95,6 +97,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
         self.checkEndpointBasics(endpoint = endpoint, pointType = afwGeom.Point3D, nAxes = 3)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.Point3Endpoint()")
         self.assertEqual("{}".format(endpoint), "Point3Endpoint()")
+        self.assertEqual(endpoint.getPrefix(), "Point3")
 
         # normalize does not check the # of axes
         for n in range(4):
@@ -113,6 +116,7 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
             self.checkEndpointBasics(endpoint=endpoint, pointType=list, nAxes=nAxes)
             self.assertEqual(repr(endpoint), "lsst.afw.geom.GenericEndpoint({})".format(nAxes))
             self.assertEqual("{}".format(endpoint), "GenericEndpoint({})".format(nAxes))
+            self.assertEqual(endpoint.getPrefix(), "Generic")
 
             newFrame = endpoint.makeFrame()
             self.assertEqual(type(newFrame), astshim.Frame)
