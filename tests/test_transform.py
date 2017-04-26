@@ -21,6 +21,7 @@ see <http://www.lsstcorp.org/LegalNotices/>.
 """
 from __future__ import absolute_import, division, print_function
 import unittest
+import os
 
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
@@ -33,6 +34,8 @@ from lsst.pex.exceptions import InvalidParameterError
 
 # names of endpoints
 NameList = ("Generic", "Point2", "Point3", "SpherePoint")
+
+TestDir = os.path.dirname(__file__)
 
 
 def makeRawArrayData(nPoints, nAxes, delta=0.123):
@@ -456,6 +459,8 @@ class TransformTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual("{}".format(transform), desStr)
                 self.assertEqual(repr(transform), "lsst.afw.geom." + desStr)
 
+                self.checkPersistence(transform)
+
                 frameSetCopy = transform.getFrameSet()
 
                 self.assertEqual(frameSet.getNframe(), frameSetCopy.getNframe())
@@ -727,6 +732,45 @@ class TransformTestCase(lsst.utils.tests.TestCase):
         inPoint = fromEndpoint.pointFromData(makeRawPointData(2))
         assert_allclose(toEndpoint.dataFromPoint(merged1.tranForward(inPoint)),
                         toEndpoint.dataFromPoint(merged2.tranForward(inPoint)))
+
+    def checkPersistence(self, transform):
+        """Check persistence of a transform
+        """
+        className = type(transform).__name__
+        fileName = "persisted_{}.dat".format(className)
+        filePath = os.path.join(TestDir, fileName)
+        transform.toFile(filePath)
+        transformRoundTrip = afwGeom.readTransform(filePath)
+        self.assertEqual(type(transform), type(transformRoundTrip))
+        self.assertEqual(transform.getFrameSet().show(),
+                         transformRoundTrip.getFrameSet().show())
+
+        fromEndpoint = transform.getFromEndpoint()
+        toEndpoint = transform.getToEndpoint()
+        frameSet = transform.getFrameSet()
+        nIn = frameSet.getNin()
+        nOut = frameSet.getNout()
+
+        if frameSet.hasForward():
+            nPoints = 7  # arbitrary
+            rawInArray = makeRawArrayData(nPoints, nIn)
+            inArray = fromEndpoint.arrayFromData(rawInArray)
+            outArray = transform.tranForward(inArray)
+            outData = toEndpoint.dataFromArray(outArray)
+            outArrayRoundTrip = transformRoundTrip.tranForward(inArray)
+            outDataRoundTrip = toEndpoint.dataFromArray(outArrayRoundTrip)
+            assert_allclose(outData, outDataRoundTrip)
+
+        if frameSet.hasInverse():
+            nPoints = 7  # arbitrary
+            rawOutArray = makeRawArrayData(nPoints, nOut)
+            outArray = toEndpoint.arrayFromData(rawOutArray)
+            inArray = transform.tranInverse(outArray)
+            inData = fromEndpoint.dataFromArray(inArray)
+            inArrayRoundTrip = transformRoundTrip.tranInverse(outArray)
+            inDataRoundTrip = fromEndpoint.dataFromArray(inArrayRoundTrip)
+            assert_allclose(inData, inDataRoundTrip)
+        os.remove(filePath)
 
     def testTransforms(self):
         for fromName in NameList:

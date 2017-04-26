@@ -21,16 +21,10 @@
 #
 from __future__ import absolute_import, division, print_function
 
-import astshim
-
 from ..python import addTransformMethods
 from . import transform
 
 __all__ = []
-
-
-
-
 
 endpoints = ("Generic", "Point2", "Point3", "SpherePoint")
 
