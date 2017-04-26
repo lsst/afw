@@ -16,6 +16,7 @@ scripts.BasicSConscript.pybind11(
         'xyTransform',
         'endpoint',
         'transform/transform',
+        'skyWcs/skyWcs',
     ],
     addUnderscore=False
 )
