@@ -83,6 +83,7 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def("skyToPixel",
             (std::vector<Point2D>(SkyWcs::*)(std::vector<SpherePoint> const &) const) & SkyWcs::skyToPixel,
             "sky"_a);
+    cls.def_static("getPyClassName", &SkyWcs::getPyClassName);
 
     return mod.ptr();
 }

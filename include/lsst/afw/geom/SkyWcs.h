@@ -190,6 +190,8 @@ public:
     }
     //@}
 
+    static std::string getPyClassName() { return "SkyWcs"; }
+
 protected:
     // Construct a SkyWcs from a shared pointer to an ast::FrameSet
     explicit SkyWcs(std::shared_ptr<ast::FrameSet> &&frameSet);

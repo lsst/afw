@@ -821,7 +821,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         className = type(transform).__name__
         fileName = "persisted_{}.dat".format(className)
         filePath = os.path.join(self.getTestDir(), fileName)
-        transform.toFile(filePath)
+        transform.saveToFile(filePath)
         transformRoundTrip = afwGeom.readTransform(filePath)
         self.assertEqual(type(transform), type(transformRoundTrip))
         self.assertEqual(transform.getFrameSet().show(),

@@ -74,12 +74,16 @@ void declareTransform(py::module &mod) {
     using FromPoint = typename FromEndpoint::Point;
     using FromArray = typename FromEndpoint::Array;
 
-    std::string const pyClassName = "Transform" + FromEndpoint::getPrefix() + "To" + ToEndpoint::getPrefix();
+    std::string const pyClassName = Class::getPyClassName();
 
     py::class_<Class, std::shared_ptr<Class>> cls(mod, pyClassName.c_str());
 
     cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a = true);
     cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a = true);
+
+    cls.def_static("fromFile", &Class::fromFile, "path"_a);
+
+    cls.def("saveToFile", &Class::saveToFile, "path"_a);
 
     cls.def("hasForward", &Class::hasForward);
     cls.def("hasInverse", &Class::hasInverse);
@@ -100,6 +104,8 @@ void declareTransform(py::module &mod) {
     /* Need some extra handling of ndarray return type in Python to prevent dimensions
      * of length 1 from being deleted */
     cls.def("_getJacobian", &Class::getJacobian);
+
+    cls.def_static("getPyClassName", &Class::getPyClassName);
 
     declareMethodTemplates<GenericEndpoint, FromEndpoint, ToEndpoint>(cls);
     declareMethodTemplates<Point2Endpoint, FromEndpoint, ToEndpoint>(cls);

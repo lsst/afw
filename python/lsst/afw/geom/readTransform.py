@@ -21,8 +21,6 @@
 #
 from __future__ import absolute_import, division, print_function
 
-import astshim
-
 from .python import transformRegistry
 
 __all__ = ["readTransform"]
@@ -39,10 +37,4 @@ def readTransform(path):
             raise RuntimeError("Unknown transform class %r specified in file %r" %
                                (transformClassName, path))
 
-        frameSetStr = inFile.read()
-        stream = astshim.StringStream(frameSetStr)
-        frameSet = astshim.Channel(stream).read()
-        if (type(frameSet) != astshim.FrameSet):
-            raise RuntimeError("Found astshim object of type %s instead of FrameSet in file %r" %
-                               (type(frameSet).__name, path))
-        return transformClass(frameSet)
+    return transformClass.fromFile(path)

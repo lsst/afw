@@ -54,16 +54,6 @@ def of(self, first):
             % (first, self))
 
 
-def toFile(self, path):
-    """Save this @ref pybind11_transform "Transform" to the specified file
-    """
-    className = type(self).__name__
-    bodyText = self.getFrameSet().show()
-    with open(path, "w") as outFile:
-        outFile.write(className + "\n")
-        outFile.write(bodyText)
-
-
 def addTransformMethods(cls):
     """Add pure python methods to the specified @ref pybind11_transform "Transform" class
 
@@ -79,4 +69,3 @@ def addTransformMethods(cls):
     transformRegistry[cls.__name__] = cls
     cls.getJacobian = getJacobian
     cls.of = of
-    cls.toFile = toFile

@@ -110,6 +110,26 @@ public:
     virtual ~Transform(){};
 
     /**
+    Construct a Transform from a file in the format saved by saveToFile
+
+    The Python function readTransform allows you to unpersist a transform
+    without knowing its type in advance.
+
+    @throw lsst::pex::exceptions::RuntimeError if the first line of the file
+        does not match the python class name (see getPyClassName).
+    */
+    static Transform fromFile(std::string const& path);
+
+    /**
+    Save this Transform to a file
+
+    The file format is a text file containing the following:
+    - The first line is the python class name (see getPyClassName)
+    - The remaining lines are the format used by AST to save the contained FrameSet
+    */
+    void saveToFile(std::string const& path) const;
+
+    /**
      * Test if this method has a forward transform.
      *
      * @exceptsafe Provides basic exception safety.
@@ -211,6 +231,15 @@ public:
     template <class FirstFromEndpoint>
     Transform<FirstFromEndpoint, ToEndpoint> of(
             Transform<FirstFromEndpoint, FromEndpoint> const &first) const;
+
+    /**
+    Get the Python class name
+
+    Returns "Transform" + FromEndpoint::getPrefix() + "To" + ToEndpoint::getPrefix(). Some examples:
+    - TransformPoint2ToSpherePoint
+    - TransformGenericToPoint3
+    */
+    static std::string getPyClassName();
 
 protected:
     /**

@@ -77,6 +77,38 @@ Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&
 }
 
 template <class FromEndpoint, class ToEndpoint>
+Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::fromFile(std::string const &path) {
+    auto pyClassName = Transform<FromEndpoint, ToEndpoint>::getPyClassName();
+    ast::FileStream stream(path, false);  // false to read
+    std::string readPyClassName = stream.source();
+    if (pyClassName != readPyClassName) {
+        std::ostringstream os;
+        os << "First line of file \"" << path << "\" is \"" << readPyClassName << "\" instead of \""
+           << pyClassName << "\"";
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
+    }
+    ast::Channel channel(stream);
+    auto object = channel.read();
+    auto frameSet = std::dynamic_pointer_cast<ast::FrameSet>(object);
+    if (!frameSet) {
+        std::ostringstream os;
+        os << "File \"" << path << "\" contained an ast::" << object->getClass()
+           << " instead of an ast::FrameSet";
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
+    }
+    return Transform<FromEndpoint, ToEndpoint>(std::move(frameSet));
+}
+
+template <class FromEndpoint, class ToEndpoint>
+void Transform<FromEndpoint, ToEndpoint>::saveToFile(std::string const &path) const {
+    auto pyClassName = Transform<FromEndpoint, ToEndpoint>::getPyClassName();
+    ast::FileStream stream(path, true);  // true to write
+    stream.sink(pyClassName.c_str());
+    ast::Channel channel(stream);
+    channel.write(*_frameSet);
+}
+
+template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranForward(
         typename FromEndpoint::Point const &point) const {
     auto const rawFromData = _fromEndpoint.dataFromPoint(point);
@@ -150,6 +182,11 @@ Transform<FirstFromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of
                        "-D to-endpoint to " + std::to_string(_fromEndpoint.getNAxes()) + "-D from-endpoint.";
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, message);
     }
+}
+
+template <class FromEndpoint, class ToEndpoint>
+std::string Transform<FromEndpoint, ToEndpoint>::getPyClassName() {
+    return "Transform" + FromEndpoint::getPrefix() + "To" + ToEndpoint::getPrefix();
 }
 
 template <class FromEndpoint, class ToEndpoint>
