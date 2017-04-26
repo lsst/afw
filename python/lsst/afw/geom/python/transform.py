@@ -37,9 +37,12 @@ In Python the templated Transform classes have names such as
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["addTransformMethods"]
+__all__ = ["addTransformMethods", "transformRegistry"]
 
 import lsst.pex.exceptions
+
+# registry of transform classes; a dict of class name: transform class
+transformRegistry = {}
 
 
 def getJacobian(self, x):
@@ -63,16 +66,34 @@ def of(self, first):
             % (first, self))
 
 
+def saveToFile(self, path):
+    """Save this @ref pybind11_transform "Transform" to the specified file
+    """
+    className = type(self).__name__
+    bodyText = self.getFrameSet().show()
+    with open(path, "w") as outFile:
+        outFile.write(className + "\n")
+        outFile.write(bodyText)
+
+
 def addTransformMethods(cls):
-    """Add pure python methods to the specified Transform class
+    """Add pure python methods to the specified Transform class, and register
+    the class in `transformRegistry`
 
     All :ref:`_pybind11_transform_classes` must call this function.
 
     Parameters
     ----------
     cls : :ref:`_pybind11_transform_classes`
-        A Transform class or subclass, e.g.
-        `lsst.afw.geom.TransformPoint2ToSpherePoint`
+    A Transform class or subclass, e.g.
+    `lsst.afw.geom.TransformPoint2ToSpherePoint`
     """
+    global transformRegistry
+    className = cls.__name__
+    if className in transformRegistry:
+        raise RuntimeError("Class %r=%s already registered; cannot register class %s" %
+                           (className, transformRegistry[className], cls))
+    transformRegistry[cls.__name__] = cls
     cls.getJacobian = getJacobian
     cls.of = of
+    cls.saveToFile = saveToFile
