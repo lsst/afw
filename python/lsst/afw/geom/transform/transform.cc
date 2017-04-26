@@ -61,9 +61,9 @@ void declareMethodTemplates(PyClass &cls) {
             "next"_a, "simplify"_a = true);
 }
 
-// Declare Transform<FromEndpoint, ToEndpoint> using python class name TransformFrom<X>To<Y>
-// where <X> and <Y> are the name of the from endpoint and to endpoint class, respectively,
-// for example TransformFromGenericToPoint2
+// Declare Transform<FromEndpoint, ToEndpoint> using python class name Transform<X>To<Y>
+// where <X> and <Y> are the prefix of the from endpoint and to endpoint class, respectively,
+// for example TransformGenericToPoint2
 template <class FromEndpoint, class ToEndpoint>
 void declareTransform(py::module &mod) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
