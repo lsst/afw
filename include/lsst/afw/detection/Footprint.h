@@ -244,7 +244,7 @@ public:
      * @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
     std::shared_ptr<Footprint> transform(geom::LinearTransform const & t,
-                                         geom::Box2I const & region, bool doCLip=true) const;
+                                         geom::Box2I const & region, bool doClip=true) const;
 
     /** Return a new Footprint who's pixels are the product of applying the specified transformation
      *

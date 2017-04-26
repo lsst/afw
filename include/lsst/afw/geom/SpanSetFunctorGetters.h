@@ -172,7 +172,7 @@ class ImageNdGetter {
 
 template <typename T, int inA, int inC>
 class FlatNdGetter {
-    // Getter class to manage iterating though an ndarray which is interpreted as a 2D image
+    // Getter class to manage iterating though an ndarray which is interpreted as a 1D image
  public:
     using Reference = typename ndarray::Array<T, inA, inC>::Reference;
 
@@ -294,6 +294,7 @@ namespace ndarray {
     /** @brief Marks a ndarray to be interpreted as an image when applying a functor from a SpanSet
      *
      * @param array - ndarray which will be used in functor calls
+     * @param xy0 - Origin to be used to translate between pixel coordinates and array indices
      *
      * @tparam T - The datatype of a pixel in the ndarray
      * @tparam inA - The number of dimensions of the array

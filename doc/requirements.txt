@@ -1,0 +1,5 @@
+Sphinx>=1.4.5
+astropy-helpers>=1.2
+documenteer>=0.1.9
+lsst-sphinx-bootstrap-theme
+ltd-mason==0.2.1
