@@ -32,9 +32,11 @@
 #ifndef LSST_AFW_FORMATTERS_UTILS_H
 #define LSST_AFW_FORMATTERS_UTILS_H
 
+#include <set>
 #include <string>
 
 #include "lsst/base.h"
+#include "lsst/daf/base.h"
 
 namespace lsst {
 namespace daf {
@@ -139,7 +141,24 @@ int extractVisitId(std::shared_ptr<lsst::daf::base::PropertySet const> const& pr
 int extractCcdId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
+/**
+Format a PropertySet into a single FITS header string
+
+@param[in] prop  Properties to format
+@return a FITS header string (exactly 80 characters per "card", no line terminators)
+
+@warning PropertySet is unordered, so the order of entries in the returned string is unpredictable.
+*/
 std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop);
+/**
+Format a PropertyList into a FITS header string
+
+@param[in] prop  Properties to format
+@param[in] excludeNames  Names of properties to exclude from the returned string
+@return a FITS header string (exactly 80 characters per "card", no line terminators)
+*/
+std::string formatFitsProperties(lsst::daf::base::PropertyList const& prop,
+                                 std::set<std::string> const& excludeNames = {});
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
 
 }
