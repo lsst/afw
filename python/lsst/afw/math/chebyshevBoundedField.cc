@@ -28,7 +28,7 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
-#include "lsst/pex/config/python.h"  // defines LSST_DECLARE_CONTROL_FIELD
+#include "lsst/pex/config/python.h" // defines LSST_DECLARE_CONTROL_FIELD
 #include "lsst/afw/table/io/python.h"
 
 #include "lsst/afw/table/io/Persistable.h"
@@ -40,10 +40,10 @@ namespace py = pybind11;
 using namespace lsst::afw::math;
 
 using ClsField = py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField,
-                            lsst::afw::table::io::PersistableFacade<ChebyshevBoundedField>>;
+                lsst::afw::table::io::PersistableFacade<ChebyshevBoundedField>>;
 
 template <typename PixelT>
-void declareTemplates(ClsField &cls) {
+void declareTemplates(ClsField & cls) {
     cls.def_static("fit", (std::shared_ptr<ChebyshevBoundedField>(*)(lsst::afw::image::Image<PixelT> const &,
                                                                      ChebyshevBoundedFieldControl const &)) &
                                   ChebyshevBoundedField::fit);
@@ -53,8 +53,8 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     py::module mod("_chebyshevBoundedField", "Python wrapper for afw _chebyshevBoundedField library");
 
     if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
     };
 
     /* Module level */
@@ -79,6 +79,8 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     clsChebyshevBoundedField.def("__mul__",
                                  [](ChebyshevBoundedField &bf, double const scale) { return bf * scale; },
                                  py::is_operator());
+    clsChebyshevBoundedField.def("__eq__", &BoundedField::operator==, py::is_operator());
+    clsChebyshevBoundedField.def("__ne__", &BoundedField::operator!=, py::is_operator());
 
     /* Members */
     LSST_DECLARE_CONTROL_FIELD(clsChebyshevBoundedFieldControl, ChebyshevBoundedFieldControl, orderX);

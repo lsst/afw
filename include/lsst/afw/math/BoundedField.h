@@ -172,13 +172,24 @@ public:
     virtual std::shared_ptr<BoundedField> operator*(double const scale) const = 0;
     std::shared_ptr<BoundedField> operator/(double scale) const { return (*this) * (1.0 / scale); }
 
+    /// BoundedFields (of the same sublcass) are equal if their bounding boxes and parameters are equal.
+    virtual bool operator==(BoundedField const& rhs) const = 0;
+    /// @copydoc operator==
+    bool operator!=(BoundedField const& rhs) const { return !(*this == rhs); };
+
     virtual ~BoundedField() {}
+
+    friend std::ostream & operator<<(std::ostream & os, BoundedField const & bf)
+    { return os << bf.toString() << " on " << bf.getBBox(); }
 
 protected:
     explicit BoundedField(geom::Box2I const& bbox) : _bbox(bbox) {}
 
 private:
     geom::Box2I const _bbox;
+
+    // String form of the mathematical component (not including the bbox)
+    virtual std::string toString() const = 0;
 };
 
 std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf);
