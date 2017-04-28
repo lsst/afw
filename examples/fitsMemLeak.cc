@@ -4,7 +4,7 @@
 
 using namespace lsst::afw::table;
 
-int main(int argc, char const * argv[]) {
+int main(int argc, char const* argv[]) {
     bool const read = (argc > 1 && std::string(argv[1]) == "read");
     int const memId = (argc > 2) ? std::atoi(argv[2]) : 0;
 

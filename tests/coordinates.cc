@@ -37,8 +37,8 @@
 // so we test the C++ version here.
 BOOST_AUTO_TEST_CASE(Operators) {
     lsst::afw::geom::Extent2I e1(12, -23);
-    BOOST_CHECK_EQUAL(e1/4, lsst::afw::geom::Extent2I(e1.getX()/4, e1.getY()/4));
+    BOOST_CHECK_EQUAL(e1 / 4, lsst::afw::geom::Extent2I(e1.getX() / 4, e1.getY() / 4));
     lsst::afw::geom::Extent2I e2(e1);
     e2 /= 3;
-    BOOST_CHECK_EQUAL(e2, lsst::afw::geom::Extent2I(e1.getX()/3, e1.getY()/3));
+    BOOST_CHECK_EQUAL(e2, lsst::afw::geom::Extent2I(e1.getX() / 3, e1.getY() / 3));
 }

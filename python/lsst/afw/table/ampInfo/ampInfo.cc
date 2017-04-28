@@ -41,11 +41,10 @@ namespace {
 using PyAmpInfoRecord = py::class_<AmpInfoRecord, std::shared_ptr<AmpInfoRecord>, BaseRecord>;
 using PyAmpInfoTable = py::class_<AmpInfoTable, std::shared_ptr<AmpInfoTable>, BaseTable>;
 
-static PyAmpInfoRecord declareAmpInfoRecord(py::module & mod) {
+static PyAmpInfoRecord declareAmpInfoRecord(py::module &mod) {
     PyAmpInfoRecord cls(mod, "AmpInfoRecord");
     cls.def("getName", &AmpInfoRecord::getName);
-    cls.def("setName", &AmpInfoRecord::setName, "name"_a,
-                         "Set name of amplifier location in camera");
+    cls.def("setName", &AmpInfoRecord::setName, "name"_a, "Set name of amplifier location in camera");
     cls.def("getTable", &AmpInfoRecord::getTable);
     cls.def_property_readonly("table", &AmpInfoRecord::getTable);
     cls.def("getBBox", &AmpInfoRecord::getBBox);
@@ -89,7 +88,7 @@ static PyAmpInfoRecord declareAmpInfoRecord(py::module & mod) {
     return cls;
 }
 
-static PyAmpInfoTable declareAmpInfoTable(py::module & mod) {
+static PyAmpInfoTable declareAmpInfoTable(py::module &mod) {
     PyAmpInfoTable cls(mod, "AmpInfoTable");
     cls.def_static("make", &AmpInfoTable::make);
     cls.def_static("makeMinimalSchema", &AmpInfoTable::makeMinimalSchema);
@@ -112,26 +111,22 @@ static PyAmpInfoTable declareAmpInfoTable(py::module & mod) {
     cls.def_static("getRawFlipXKey", &AmpInfoTable::getRawFlipXKey);
     cls.def_static("getRawFlipYKey", &AmpInfoTable::getRawFlipYKey);
     cls.def_static("getRawXYOffsetKey", &AmpInfoTable::getRawXYOffsetKey);
-    cls.def_static("getRawHorizontalOverscanBBoxMinKey",
-                               &AmpInfoTable::getRawHorizontalOverscanBBoxMinKey);
+    cls.def_static("getRawHorizontalOverscanBBoxMinKey", &AmpInfoTable::getRawHorizontalOverscanBBoxMinKey);
     cls.def_static("getRawHorizontalOverscanBBoxExtentKey",
-                               &AmpInfoTable::getRawHorizontalOverscanBBoxExtentKey);
-    cls.def_static("getRawVerticalOverscanBBoxMinKey",
-                               &AmpInfoTable::getRawVerticalOverscanBBoxMinKey);
-    cls.def_static("getRawVerticalOverscanBBoxExtentKey",
-                               &AmpInfoTable::getRawVerticalOverscanBBoxExtentKey);
+                   &AmpInfoTable::getRawHorizontalOverscanBBoxExtentKey);
+    cls.def_static("getRawVerticalOverscanBBoxMinKey", &AmpInfoTable::getRawVerticalOverscanBBoxMinKey);
+    cls.def_static("getRawVerticalOverscanBBoxExtentKey", &AmpInfoTable::getRawVerticalOverscanBBoxExtentKey);
     cls.def_static("getRawPrescanBBoxMinKey", &AmpInfoTable::getRawPrescanBBoxMinKey);
     cls.def_static("getRawPrescanBBoxExtentKey", &AmpInfoTable::getRawPrescanBBoxExtentKey);
 
     cls.def("clone", &AmpInfoTable::clone);
     cls.def("makeRecord", &AmpInfoTable::makeRecord);
     cls.def("copyRecord",
-            (std::shared_ptr<AmpInfoRecord> (AmpInfoTable::*)(BaseRecord const &))
-                &AmpInfoTable::copyRecord,
+            (std::shared_ptr<AmpInfoRecord> (AmpInfoTable::*)(BaseRecord const &)) & AmpInfoTable::copyRecord,
             "other"_a);
     cls.def("copyRecord",
-            (std::shared_ptr<AmpInfoRecord> (AmpInfoTable::*)(BaseRecord const &, SchemaMapper const &))
-                &AmpInfoTable::copyRecord,
+            (std::shared_ptr<AmpInfoRecord> (AmpInfoTable::*)(BaseRecord const &, SchemaMapper const &)) &
+                    AmpInfoTable::copyRecord,
             "other"_a, "mapper"_a);
     return cls;
 }
@@ -140,11 +135,11 @@ PYBIND11_PLUGIN(ampInfo) {
     py::module mod("ampInfo");
 
     py::enum_<ReadoutCorner>(mod, "ReadoutCorner")
-        .value("LL", ReadoutCorner::LL)
-        .value("LR", ReadoutCorner::LR)
-        .value("UR", ReadoutCorner::UR)
-        .value("UL", ReadoutCorner::UL)
-        .export_values();
+            .value("LL", ReadoutCorner::LL)
+            .value("LR", ReadoutCorner::LR)
+            .value("UR", ReadoutCorner::UR)
+            .value("UL", ReadoutCorner::UL)
+            .export_values();
 
     auto clsAmpInfoRecord = declareAmpInfoRecord(mod);
     auto clsAmpInfoTable = declareAmpInfoTable(mod);
@@ -163,6 +158,7 @@ PYBIND11_PLUGIN(ampInfo) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::table::<anonymous>
-
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

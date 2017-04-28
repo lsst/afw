@@ -78,11 +78,13 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         imi = self.mi.Factory(self.mi, True)  # copy of input image
 
         hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
-        self.assertNotEqual(hfoot.getId(), None)  # check we can call a base-class method
+        # check we can call a base-class method
+        self.assertNotEqual(hfoot.getId(), None)
         #
         # Check we didn't modify the input image
         #
-        self.assertFloatsEqual(self.mi.getImage().getArray(), imi.getImage().getArray())
+        self.assertFloatsEqual(
+            self.mi.getImage().getArray(), imi.getImage().getArray())
 
         omi = self.mi.Factory(self.mi.getDimensions())
         omi.set((1, 0x4, 0.1))
@@ -114,7 +116,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         """Check that we can create a HeavyFootprint and set the pixels under it"""
 
         ctrl = afwDetect.HeavyFootprintCtrl()
-        ctrl.setModifySource(afwDetect.HeavyFootprintCtrl.SET)  # clear the pixels in the Footprint
+        # clear the pixels in the Footprint
+        ctrl.setModifySource(afwDetect.HeavyFootprintCtrl.SET)
         ctrl.setMaskVal(self.objectPixelVal[1])
 
         afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
@@ -146,7 +149,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         for foot in fs.getFootprints():
             foot.insert(omi)
 
-        self.assertFloatsEqual(self.mi.getImage().getArray(), omi.getImage().getArray())
+        self.assertFloatsEqual(
+            self.mi.getImage().getArray(), omi.getImage().getArray())
 
     def testXY0(self):
         """Test that inserting a HeavyFootprint obeys XY0"""
@@ -166,7 +170,8 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(omi, frame=1, title="sub")
 
         submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
-        self.assertFloatsEqual(submi.getImage().getArray(), omi.getImage().getArray())
+        self.assertFloatsEqual(submi.getImage().getArray(),
+                               omi.getImage().getArray())
 
     def testMergeHeavyFootprints(self):
         mi = afwImage.MaskedImageF(20, 10)
@@ -199,19 +204,22 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         sa = msum.getImage().getArray()
 
         self.assertFloatsEqual(sa[1, 9:13], objectPixelVal[0])
-        self.assertFloatsEqual(sa[2, 12:14], objectPixelVal[0] + self.objectPixelVal[0])
+        self.assertFloatsEqual(
+            sa[2, 12:14], objectPixelVal[0] + self.objectPixelVal[0])
         self.assertFloatsEqual(sa[2, 10:12], self.objectPixelVal[0])
 
         sv = msum.getVariance().getArray()
 
         self.assertFloatsEqual(sv[1, 9:13], objectPixelVal[2])
-        self.assertFloatsEqual(sv[2, 12:14], objectPixelVal[2] + self.objectPixelVal[2])
+        self.assertFloatsEqual(
+            sv[2, 12:14], objectPixelVal[2] + self.objectPixelVal[2])
         self.assertFloatsEqual(sv[2, 10:12], self.objectPixelVal[2])
 
         sm = msum.getMask().getArray()
 
         self.assertFloatsEqual(sm[1, 9:13], objectPixelVal[1])
-        self.assertFloatsEqual(sm[2, 12:14], objectPixelVal[1] | self.objectPixelVal[1])
+        self.assertFloatsEqual(
+            sm[2, 12:14], objectPixelVal[1] | self.objectPixelVal[1])
         self.assertFloatsEqual(sm[2, 10:12], self.objectPixelVal[1])
 
         if False:
@@ -235,10 +243,12 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
     def testFitsPersistence(self):
         heavy1 = afwDetect.HeavyFootprintF(self.foot)
-        heavy1.getImageArray()[:] = np.random.randn(self.foot.getArea()).astype(np.float32)
-        heavy1.getMaskArray()[:] = np.random.randint(low=0, high=2,
-                                                     size=self.foot.getArea()).astype(np.uint16)
-        heavy1.getVarianceArray()[:] = np.random.randn(self.foot.getArea()).astype(np.float32)
+        heavy1.getImageArray()[:] = \
+            np.random.randn(self.foot.getArea()).astype(np.float32)
+        heavy1.getMaskArray()[:] = \
+            np.random.randint(low=0, high=2, size=self.foot.getArea()).astype(np.uint16)
+        heavy1.getVarianceArray()[:] = \
+            np.random.randn(self.foot.getArea()).astype(np.float32)
         filename = "heavyFootprint-testFitsPersistence.fits"
         heavy1.writeFits(filename)
         heavy2 = afwDetect.HeavyFootprintF.readFits(filename)

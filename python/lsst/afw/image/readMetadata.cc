@@ -27,16 +27,18 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
-PYBIND11_PLUGIN(readMetadata) { // wraps code in Utils.h, but there's an unrelated utils.py
+PYBIND11_PLUGIN(readMetadata) {  // wraps code in Utils.h, but there's an unrelated utils.py
     py::module mod("readMetadata");
 
     /* Module level */
-    mod.def("readMetadata", readMetadata,
-            "fileName"_a, "hdu"_a=INT_MIN, "strip"_a=false);
+    mod.def("readMetadata", readMetadata, "fileName"_a, "hdu"_a = INT_MIN, "strip"_a = false);
 
     return mod.ptr();
 }
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image

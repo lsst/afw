@@ -40,8 +40,8 @@ namespace {
 using PySchemaMapper = py::class_<SchemaMapper, std::shared_ptr<SchemaMapper>>;
 
 template <typename T>
-void declareSchemaMapperOverloads(PySchemaMapper & cls, std::string const & suffix) {
-    cls.def("getMapping", (Key<T> (SchemaMapper::*)(Key<T> const &) const) &SchemaMapper::getMapping);
+void declareSchemaMapperOverloads(PySchemaMapper &cls, std::string const &suffix) {
+    cls.def("getMapping", (Key<T> (SchemaMapper::*)(Key<T> const &) const) & SchemaMapper::getMapping);
 };
 
 PYBIND11_PLUGIN(schemaMapper) {
@@ -52,17 +52,14 @@ PYBIND11_PLUGIN(schemaMapper) {
 
     cls.def(py::init<>());
     cls.def(py::init<Schema const &, Schema const &>());
-    cls.def(py::init<Schema const &, bool>(), "input"_a, "shareAliasMap"_a=false);
+    cls.def(py::init<Schema const &, bool>(), "input"_a, "shareAliasMap"_a = false);
 
     cls.def("getInputSchema", &SchemaMapper::getInputSchema);
     cls.def("getOutputSchema", &SchemaMapper::getOutputSchema);
-    cls.def("editOutputSchema", &SchemaMapper::editOutputSchema,
-            py::return_value_policy::reference_internal);
-    cls.def("addMinimalSchema", &SchemaMapper::addMinimalSchema,
-            "minimal"_a, "doMap"_a=true);
+    cls.def("editOutputSchema", &SchemaMapper::editOutputSchema, py::return_value_policy::reference_internal);
+    cls.def("addMinimalSchema", &SchemaMapper::addMinimalSchema, "minimal"_a, "doMap"_a = true);
     cls.def_static("removeMinimalSchema", &SchemaMapper::removeMinimalSchema);
-    cls.def_static("join", &SchemaMapper::join,
-                   "inputs"_a, "prefixes"_a=std::vector<std::string>());
+    cls.def_static("join", &SchemaMapper::join, "inputs"_a, "prefixes"_a = std::vector<std::string>());
     declareSchemaMapperOverloads<std::uint16_t>(cls, "U");
     declareSchemaMapperOverloads<std::int32_t>(cls, "I");
     declareSchemaMapperOverloads<std::int64_t>(cls, "L");
@@ -78,5 +75,7 @@ PYBIND11_PLUGIN(schemaMapper) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

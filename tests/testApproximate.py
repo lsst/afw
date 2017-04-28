@@ -19,7 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 import unittest
 
 from builtins import range
@@ -53,7 +53,10 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         rampCoeffs = (1000, 1, 1)
         for i in range(ramp.getHeight()):
             for j in range(ramp.getWidth()):
-                ramp.set(j, i, (rampCoeffs[0] + rampCoeffs[1]*x[j] + rampCoeffs[2]*y[i], 0x0, var))
+                ramp.set(
+                    j, i,
+                    (rampCoeffs[0] + rampCoeffs[1]*x[j] + rampCoeffs[2]*y[i],
+                     0x0, var))
 
         return ramp, rampCoeffs, x, y
 
@@ -69,11 +72,13 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(ramp, title="Input", frame=0)
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
-        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth() - 1,
-                                                                 binsize*ramp.getHeight() - 1))
+        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0),
+                            afwGeom.PointI(binsize*ramp.getWidth() - 1,
+                                           binsize*ramp.getHeight() - 1))
 
         order = 3                       # 1 would be enough to fit the ramp
-        actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+        actrl = afwMath.ApproximateControl(
+            afwMath.ApproximateControl.CHEBYSHEV, order)
         approx = afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl)
 
         for i, aim in enumerate([approx.getImage(),
@@ -87,7 +92,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
                             ds9.dot('+', x, y, size=0.4, frame=1)
 
             for x, y in aim.getBBox().getCorners():
-                self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
+                self.assertEqual(
+                    aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
     def testChebyshevEqualOrder(self):
         """Check that we enforce the condition orderX == orderY"""
@@ -106,7 +112,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
             bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth() - 1,
                                                                      binsize*ramp.getHeight() - 1))
             order = 2
-            actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+            actrl = afwMath.ApproximateControl(
+                afwMath.ApproximateControl.CHEBYSHEV, order)
             self.assertRaises(pexExcept.RuntimeError,
                               lambda: afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl))
 
@@ -123,13 +130,16 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
 
         orderMax = 3                    # 1 would be enough to fit the ramp
         for order in range(orderMax + 1):
-            actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+            actrl = afwMath.ApproximateControl(
+                afwMath.ApproximateControl.CHEBYSHEV, order)
 
             approx = bkgd.getApproximate(actrl)
-            # Get the Image, the MaskedImage, and the Image with a truncated expansion
+            # Get the Image, the MaskedImage, and the Image with a truncated
+            # expansion
             for i, aim in enumerate([approx.getImage(),
                                      approx.getMaskedImage().getImage(),
-                                     approx.getImage(order - 1 if order > 1 else -1),
+                                     approx.getImage(
+                                         order - 1 if order > 1 else -1),
                                      ]):
                 if display and (i == 0 and order == 1):
                     ds9.mtv(aim, title="Interpolated", frame=1)
@@ -139,7 +149,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
                         rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y
 
                     self.assertEqual(aim.get(x, y), val)
-        # Check that we can't "truncate" the expansion to a higher order than we requested
+        # Check that we can't "truncate" the expansion to a higher order than
+        # we requested
         self.assertRaises(pexExcept.InvalidParameterError,
                           lambda: approx.getImage(orderMax + 1, orderMax + 1))
 

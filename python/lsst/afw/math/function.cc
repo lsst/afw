@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 #include <memory>
@@ -46,7 +46,7 @@ void declareFunction(py::module &mod, std::string const &suffix) {
 
     py::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>,
                table::io::PersistableFacade<Function<ReturnT>>, table::io::Persistable>
-        cls(mod, name.c_str());
+            cls(mod, name.c_str());
 
     cls.def(py::init<unsigned int>(), "nParams"_a);
     cls.def(py::init<std::vector<double> const &>(), "params"_a);
@@ -68,7 +68,7 @@ void declareFunction1(py::module &mod, const std::string &suffix) {
 
     py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>,
                table::io::PersistableFacade<Function1<ReturnT>>, Function<ReturnT>>
-        cls(mod, name.c_str());
+            cls(mod, name.c_str());
 
     cls.def("clone", &Function1<ReturnT>::clone);
     cls.def("__call__", &Function1<ReturnT>::operator(), "x"_a);
@@ -84,7 +84,7 @@ void declareFunction2(py::module &mod, const std::string &suffix) {
 
     py::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>,
                table::io::PersistableFacade<Function2<ReturnT>>, Function<ReturnT>>
-        cls(mod, name.c_str());
+            cls(mod, name.c_str());
 
     cls.def("clone", &Function2<ReturnT>::clone);
     cls.def("__call__", &Function2<ReturnT>::operator(), "x"_a, "y"_a);
@@ -98,12 +98,14 @@ void declareBasePolynomialFunction2(py::module &mod, const std::string &suffix) 
 
     py::class_<BasePolynomialFunction2<ReturnT>, std::shared_ptr<BasePolynomialFunction2<ReturnT>>,
                Function2<ReturnT>>
-        cls(mod, name.c_str());
+            cls(mod, name.c_str());
 
     cls.def("getOrder", &BasePolynomialFunction2<ReturnT>::getOrder);
     cls.def("isLinearCombination", &BasePolynomialFunction2<ReturnT>::isLinearCombination);
-    cls.def_static("nParametersFromOrder", &BasePolynomialFunction2<ReturnT>::nParametersFromOrder, "order"_a);
-    cls.def_static("orderFromNParameters", &BasePolynomialFunction2<ReturnT>::orderFromNParameters, "nParameters"_a);
+    cls.def_static("nParametersFromOrder", &BasePolynomialFunction2<ReturnT>::nParametersFromOrder,
+                   "order"_a);
+    cls.def_static("orderFromNParameters", &BasePolynomialFunction2<ReturnT>::orderFromNParameters,
+                   "nParameters"_a);
     cls.def("getDFuncDParameters", &BasePolynomialFunction2<ReturnT>::getDFuncDParameters, "x"_a, "y"_a);
 }
 
@@ -112,7 +114,7 @@ void declareNullFunction1(py::module &mod, const std::string &suffix) {
     auto const name = "NullFunction1" + suffix;
 
     py::class_<NullFunction1<ReturnT>, std::shared_ptr<NullFunction1<ReturnT>>, Function1<ReturnT>> cls(
-        mod, name.c_str());
+            mod, name.c_str());
 
     cls.def(py::init<>());
 
@@ -124,7 +126,7 @@ void declareNullFunction2(py::module &mod, const std::string &suffix) {
     auto const name = "NullFunction2" + suffix;
 
     py::class_<NullFunction2<ReturnT>, std::shared_ptr<NullFunction2<ReturnT>>, Function2<ReturnT>> cls(
-        mod, name.c_str());
+            mod, name.c_str());
 
     cls.def(py::init<>());
 

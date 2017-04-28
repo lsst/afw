@@ -73,10 +73,10 @@ int main(int argc, char **argv) {
     double const megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
 
     // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
-    double secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-    std::cout << "STL\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
-        static_cast<double>(megaPix)/secPerIter << std::endl;
+    double secPerIter =
+            (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+    std::cout << "STL\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t"
+              << static_cast<double>(megaPix) / secPerIter << std::endl;
     //
     // Now per-row iterators
     //
@@ -89,28 +89,26 @@ int main(int argc, char **argv) {
         }
     }
 
-    secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-    std::cout << "Per row\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
-        static_cast<double>(megaPix)/secPerIter << std::endl;
+    secPerIter = (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+    std::cout << "Per row\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t"
+              << static_cast<double>(megaPix) / secPerIter << std::endl;
     //
     // Use a fast STL compiliant iterator, but the pixel order's undefined
     //
     startTime = clock();
     for (unsigned iter = 0; iter < nIter; ++iter) {
-        for (ImageT::fast_iterator ptr = image.begin(true), end = image.end(true); ptr != end; ++ptr){
+        for (ImageT::fast_iterator ptr = image.begin(true), end = image.end(true); ptr != end; ++ptr) {
             *ptr += 1;
         }
     }
 
-    secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-    std::cout << "STL 2\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
-        static_cast<double>(megaPix)/secPerIter << std::endl;
+    secPerIter = (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+    std::cout << "STL 2\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t"
+              << static_cast<double>(megaPix) / secPerIter << std::endl;
     //
     // Now copy and iterate over whole image
     //
-    std::vector<ImageT::Pixel> vec(image.getWidth()*image.getHeight());
+    std::vector<ImageT::Pixel> vec(image.getWidth() * image.getHeight());
     std::vector<ImageT::Pixel>::iterator vptr = vec.begin();
     for (int y = 0; y != image.getHeight(); ++y) {
         std::copy(image.row_begin(y), image.row_end(y), vptr);
@@ -123,10 +121,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-    std::cout << "Vector\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
-        static_cast<double>(megaPix)/secPerIter << std::endl;
+    secPerIter = (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+    std::cout << "Vector\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t"
+              << static_cast<double>(megaPix) / secPerIter << std::endl;
 #if 0
     std::cout << image(0,0) << " " << image(image.getWidth() - 1, image.getHeight() - 1) << std::endl;
     std::cout << vec[0] << " " << vec[image.getWidth()*image.getHeight() - 1] << std::endl;
@@ -134,7 +131,7 @@ int main(int argc, char **argv) {
     //
     // Try a valarray
     //
-    std::valarray<ImageT::Pixel> varray(*image.begin(), image.getWidth()*image.getHeight());
+    std::valarray<ImageT::Pixel> varray(*image.begin(), image.getWidth() * image.getHeight());
 
     startTime = clock();
     for (unsigned iter = 0; iter < nIter; ++iter) {
@@ -143,10 +140,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-    std::cout << "Varray\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
-        static_cast<double>(megaPix)/secPerIter << std::endl;
+    secPerIter = (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
+    std::cout << "Varray\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t"
+              << static_cast<double>(megaPix) / secPerIter << std::endl;
 #if 0
     std::cout << image(0,0) << " " << image(image.getWidth() - 1, image.getHeight() - 1) << std::endl;
     std::cout << varray[0] << " " << varray[image.getWidth()*image.getHeight() - 1] << std::endl;

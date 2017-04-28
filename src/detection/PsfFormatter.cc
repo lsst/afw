@@ -1,13 +1,6 @@
 // -*- LSST-C++ -*-
-/** \file
- * \brief Implementation of PsfFormatter class
- *
- * \version $Revision: 2151 $
- * \date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * \ingroup afw
+/*
+ * Implementation of PsfFormatter class
  */
 #include <stdexcept>
 #include <string>
@@ -31,52 +24,40 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.detection.PsfFormatter");
 }
 
-namespace afwDetect = lsst::afw::detection;
-namespace afwMath = lsst::afw::math;
+namespace lsst {
+namespace afw {
+namespace detection {
+
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
 namespace pexPolicy = lsst::pex::policy;
 
 using boost::serialization::make_nvp;
 
-/** Register this Formatter subclass through a static instance of
- * FormatterRegistration.
- */
-dafPersist::FormatterRegistration
-afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
+dafPersist::FormatterRegistration PsfFormatter::registration("Psf", typeid(Psf), createInstance);
 
-/** Constructor.
- * \param[in] policy Policy for configuring this Formatter
- */
-afwDetect::PsfFormatter::PsfFormatter(
-    pexPolicy::Policy::Ptr policy) :
-    dafPersist::Formatter(typeid(this)), _policy(policy) {}
+PsfFormatter::PsfFormatter(std::shared_ptr<pexPolicy::Policy> policy)
+        : dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-/** Minimal destructor.
- */
-afwDetect::PsfFormatter::~PsfFormatter(void) {}
+PsfFormatter::~PsfFormatter(void) {}
 
-void afwDetect::PsfFormatter::write(
-    dafBase::Persistable const* persistable,
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+void PsfFormatter::write(dafBase::Persistable const* persistable,
+                         std::shared_ptr<dafPersist::Storage> storage,
+                         std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter write start");
-    afwDetect::Psf const* ps = dynamic_cast<afwDetect::Psf const*>(persistable);
+    Psf const* ps = dynamic_cast<Psf const*>(persistable);
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Psf");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         LOGL_DEBUG(_log, "PsfFormatter write BoostStorage");
-        dafPersist::BoostStorage* boost =
-            dynamic_cast<dafPersist::BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & ps;
         LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
         LOGL_DEBUG(_log, "PsfFormatter write XmlStorage");
-        dafPersist::XmlStorage* xml =
-            dynamic_cast<dafPersist::XmlStorage*>(storage.get());
+        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("psf", ps);
         LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
@@ -84,22 +65,19 @@ void afwDetect::PsfFormatter::write(
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
 }
 
-dafBase::Persistable* afwDetect::PsfFormatter::read(
-    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
+dafBase::Persistable* PsfFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+                                         std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter read start");
-    afwDetect::Psf* ps;
+    Psf* ps;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         LOGL_DEBUG(_log, "PsfFormatter read BoostStorage");
-        dafPersist::BoostStorage* boost =
-            dynamic_cast<dafPersist::BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & ps;
         LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;
-    }
-    else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
         LOGL_DEBUG(_log, "PsfFormatter read XmlStorage");
-        dafPersist::XmlStorage* xml =
-            dynamic_cast<dafPersist::XmlStorage*>(storage.get());
+        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("psf", ps);
         LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;
@@ -107,27 +85,19 @@ dafBase::Persistable* afwDetect::PsfFormatter::read(
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
 }
 
-void afwDetect::PsfFormatter::update(dafBase::Persistable* ,
-                                   dafPersist::Storage::Ptr,
-                                   dafBase::PropertySet::Ptr) {
+void PsfFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+                          std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Psf");
 }
 
-/** Serialize a Psf to a Boost archive.  Handles text or XML
- * archives, input or output.
- */
 template <class Archive>
-void afwDetect::PsfFormatter::delegateSerialize(
-        Archive& ar,                    ///< Boost archive
-        unsigned int const,             ///< Version of the Psf class
-        dafBase::Persistable* persistable ///< persistable Pointer to the Psf as a Persistable
-                                               ) {
+void PsfFormatter::delegateSerialize(Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "PsfFormatter delegateSerialize start");
-    afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
+    Psf* ps = dynamic_cast<Psf*>(persistable);
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Psf");
     }
-#if 0                                   // not present in baseclass
+#if 0  // not present in baseclass
     ar & make_nvp("width", ps->_width) & make_nvp("height", ps->_height);
     ar & make_nvp("k", ps->_kernel);
 #endif
@@ -135,11 +105,10 @@ void afwDetect::PsfFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "PsfFormatter delegateSerialize end");
 }
 
-/** Factory method for PsfFormatter.
- * \param[in] policy Policy for configuring the PsfFormatter
- * \return Shared pointer to a new instance
- */
-dafPersist::Formatter::Ptr afwDetect::PsfFormatter::createInstance(
-    pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new afwDetect::PsfFormatter(policy));
+std::shared_ptr<dafPersist::Formatter> PsfFormatter::createInstance(
+        std::shared_ptr<pexPolicy::Policy> policy) {
+    return std::shared_ptr<dafPersist::Formatter>(new PsfFormatter(policy));
 }
+}
+}
+}  // end lsst::afw::detection

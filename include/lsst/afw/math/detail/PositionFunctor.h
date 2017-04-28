@@ -22,14 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief image warping
- *
- * @author Kresimir Cosic
- *
- * @ingroup afw
+/*
+ * image warping
  */
 #ifndef LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H
 #define LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H
@@ -45,58 +39,52 @@ namespace afw {
 namespace math {
 namespace detail {
 
-    /**
-     * @brief Base class to transform pixel position for a destination image
-     *        to its position in the original source image.
-     *
-     * The different possible transform definitions (from WCS to WCS, or via AffineTransform) are handled
-     * through derived classes, and are used in warping.  When computing a warped image, one
-     * iterates over the pixels in the destination image and must ask 'for the value I wish to
-     * put *here*, where should I go to find it in the source image?'.  Instantiating a Functor derived from
-     * this base class creates a callable function which accepts (destination) col,row and returns
-     * (source image) col,row (in the form of a Point2D).
-     */
-    class PositionFunctor {
-    public:
-        typedef std::shared_ptr<PositionFunctor> Ptr;
+/**
+ * @brief Base class to transform pixel position for a destination image
+ *        to its position in the original source image.
+ *
+ * The different possible transform definitions (from WCS to WCS, or via AffineTransform) are handled
+ * through derived classes, and are used in warping.  When computing a warped image, one
+ * iterates over the pixels in the destination image and must ask 'for the value I wish to
+ * put *here*, where should I go to find it in the source image?'.  Instantiating a Functor derived from
+ * this base class creates a callable function which accepts (destination) col,row and returns
+ * (source image) col,row (in the form of a Point2D).
+ */
+class PositionFunctor {
+public:
+    explicit PositionFunctor(){};
+    virtual ~PositionFunctor(){};
 
-        explicit PositionFunctor() {};
-        virtual ~PositionFunctor() {};
+    virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
+};
 
-        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
-    };
+/**
+ * Functor class that wraps an XYTransform
+ */
+class XYTransformPositionFunctor : public PositionFunctor {
+public:
+    explicit XYTransformPositionFunctor(
+            lsst::afw::geom::Point2D const &destXY0,         ///< xy0 of destination image
+            lsst::afw::geom::XYTransform const &XYTransform  ///< xy transform mapping source position
+            ///< to destination position in the forward direction (but only the reverse direction is used)
+            )
+            : PositionFunctor(), _destXY0(destXY0), _xyTransformPtr(XYTransform.clone()) {}
 
+    virtual ~XYTransformPositionFunctor(){};
 
-    /**
-     * @brief Functor class that wraps an XYTransform
-     */
-    class XYTransformPositionFunctor : public PositionFunctor {
-    public:
-        explicit XYTransformPositionFunctor(
-            lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::geom::XYTransform const &XYTransform     ///< xy transform mapping source position
-                ///< to destination position in the forward direction (but only the reverse direction is used)
-        ) :
-            PositionFunctor(),
-            _destXY0(destXY0),
-            _xyTransformPtr(XYTransform.clone())
-        {}
+    virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
+        afw::geom::Point2D const destPos{lsst::afw::image::indexToPosition(destCol + _destXY0[0]),
+                                         lsst::afw::image::indexToPosition(destRow + _destXY0[1])};
+        return _xyTransformPtr->reverseTransform(destPos);
+    }
 
-        virtual ~XYTransformPositionFunctor() {};
+private:
+    lsst::afw::geom::Point2D const _destXY0;
+    std::shared_ptr<lsst::afw::geom::XYTransform const> _xyTransformPtr;
+};
+}
+}
+}
+}  // namespace lsst::afw::math::detail
 
-        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
-            afw::geom::Point2D const destPos{
-                lsst::afw::image::indexToPosition(destCol + _destXY0[0]),
-                lsst::afw::image::indexToPosition(destRow + _destXY0[1])
-            };
-            return _xyTransformPtr->reverseTransform(destPos);
-        }
-
-    private:
-        lsst::afw::geom::Point2D const _destXY0;
-        PTR(lsst::afw::geom::XYTransform const) _xyTransformPtr;
-    };
-
-}}}} // namespace lsst::afw::math::detail
-
-#endif // !defined(LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H)
+#endif  // !defined(LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H)

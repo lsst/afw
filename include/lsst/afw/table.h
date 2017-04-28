@@ -12,4 +12,4 @@
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/arrays.h"
 
-#endif // !LSST_AFW_table_h_INCLUDED
+#endif  // !LSST_AFW_table_h_INCLUDED

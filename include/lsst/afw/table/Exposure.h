@@ -31,49 +31,52 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace lsst { namespace afw {
+namespace lsst {
+namespace afw {
 
 namespace image {
 class Wcs;
 class Calib;
 class ApCorrMap;
 class VisitInfo;
-} // namespace image
+}  // namespace image
 
 namespace detection {
 class Psf;
-} // namespace detection
+}  // namespace detection
 
-namespace geom { namespace polygon {
+namespace geom {
+namespace polygon {
 class Polygon;
-}}
+}
+}
 
 namespace table {
 
 class ExposureRecord;
 class ExposureTable;
 
-template <typename RecordT> class ExposureCatalogT;
+template <typename RecordT>
+class ExposureCatalogT;
 
 namespace io {
 
 class OutputArchiveHandle;
 class InputArchive;
 
-} // namespace io
+}  // namespace io
 
 /**
- *  @brief Record class used to store exposure metadata.
+ *  Record class used to store exposure metadata.
  */
 class ExposureRecord : public BaseRecord {
 public:
-
     typedef ExposureTable Table;
     typedef ColumnViewT<ExposureRecord> ColumnView;
     typedef ExposureCatalogT<ExposureRecord> Catalog;
     typedef ExposureCatalogT<ExposureRecord const> ConstCatalog;
 
-    CONST_PTR(ExposureTable) getTable() const {
+    std::shared_ptr<ExposureTable const> getTable() const {
         return std::static_pointer_cast<ExposureTable const>(BaseRecord::getTable());
     }
 
@@ -81,89 +84,90 @@ public:
     void setId(RecordId id);
 
     geom::Box2I getBBox() const;
-    void setBBox(geom::Box2I const & bbox);
+    void setBBox(geom::Box2I const& bbox);
 
     /**
      *  @brief Return true if the bounding box contains the given celestial coordinate point, taking
-     *         into account the Wcs of the ExposureRecord. If includeValidPolygon is true it will also check
-     *         that the point is within the validPolygon of this ExpoureRecord if it has one; otherwise,
-     *         this argument is ignored.
+     *         into account the Wcs of the ExposureRecord.
      *
-     *  @throw LogicError if the ExposureRecord has no Wcs.
+     *  If includeValidPolygon is true it will also check
+     *  that the point is within the validPolygon of this ExpoureRecord if it has one; otherwise,
+     *  this argument is ignored.
+     *
+     *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(Coord const & coord, bool includeValidPolygon=false) const;
+    bool contains(Coord const& coord, bool includeValidPolygon = false) const;
 
     /**
      *  @brief Return true if the bounding box contains the given point, taking into account its Wcs
-     *         (given) and the Wcs of the ExposureRecord. If includeValidPolygon is true it will also check
+     *         (given) and the Wcs of the ExposureRecord.
+     *
+     *  If includeValidPolygon is true it will also check
      *         that the point is within the validPolygon of this ExposureRecord if present if it has one;
      *         otherwise, this argument is ignored.
      *
-     *  @throw LogicError if the ExposureRecord has no Wcs.
+     *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(geom::Point2D const & point, image::Wcs const & wcs, bool includeValidPolygon=false) const;
+    bool contains(geom::Point2D const& point, image::Wcs const& wcs, bool includeValidPolygon = false) const;
 
     //@{
     /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
-    CONST_PTR(image::Wcs) getWcs() const { return _wcs; }
-    void setWcs(CONST_PTR(image::Wcs) wcs) { _wcs = wcs; }
+    std::shared_ptr<image::Wcs const> getWcs() const { return _wcs; }
+    void setWcs(std::shared_ptr<image::Wcs const> wcs) { _wcs = wcs; }
 
-    CONST_PTR(detection::Psf) getPsf() const { return _psf; }
-    void setPsf(CONST_PTR(detection::Psf) psf) { _psf = psf; }
+    std::shared_ptr<detection::Psf const> getPsf() const { return _psf; }
+    void setPsf(std::shared_ptr<detection::Psf const> psf) { _psf = psf; }
 
-    CONST_PTR(image::Calib) getCalib() const { return _calib; }
-    void setCalib(CONST_PTR(image::Calib) calib) { _calib = calib; }
+    std::shared_ptr<image::Calib const> getCalib() const { return _calib; }
+    void setCalib(std::shared_ptr<image::Calib const> calib) { _calib = calib; }
 
-    CONST_PTR(image::ApCorrMap) getApCorrMap() const { return _apCorrMap; }
-    void setApCorrMap(CONST_PTR(image::ApCorrMap) apCorrMap) { _apCorrMap = apCorrMap; }
+    std::shared_ptr<image::ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
+    void setApCorrMap(std::shared_ptr<image::ApCorrMap const> apCorrMap) { _apCorrMap = apCorrMap; }
 
-    CONST_PTR(geom::polygon::Polygon) getValidPolygon() const { return _validPolygon; }
-    void setValidPolygon(CONST_PTR(geom::polygon::Polygon) polygon) { _validPolygon = polygon; }
+    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const { return _validPolygon; }
+    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon) { _validPolygon = polygon; }
 
-    CONST_PTR(image::VisitInfo) getVisitInfo() const { return _visitInfo; }
-    void setVisitInfo(CONST_PTR(image::VisitInfo) visitInfo) { _visitInfo = visitInfo; }
+    std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
+    void setVisitInfo(std::shared_ptr<image::VisitInfo const> visitInfo) { _visitInfo = visitInfo; }
     //@}
 
 protected:
+    explicit ExposureRecord(std::shared_ptr<ExposureTable> const& table);
 
-    explicit ExposureRecord(PTR(ExposureTable) const & table);
-
-    virtual void _assign(BaseRecord const & other);
+    virtual void _assign(BaseRecord const& other);
 
 private:
-
     friend class ExposureTable;
 
-    CONST_PTR(image::Wcs) _wcs;
-    CONST_PTR(detection::Psf) _psf;
-    CONST_PTR(image::Calib) _calib;
-    CONST_PTR(image::ApCorrMap) _apCorrMap;
-    CONST_PTR(geom::polygon::Polygon) _validPolygon;
-    CONST_PTR(image::VisitInfo) _visitInfo;
+    std::shared_ptr<image::Wcs const> _wcs;
+    std::shared_ptr<detection::Psf const> _psf;
+    std::shared_ptr<image::Calib const> _calib;
+    std::shared_ptr<image::ApCorrMap const> _apCorrMap;
+    std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
+    std::shared_ptr<image::VisitInfo const> _visitInfo;
 };
 
 /**
- *  @brief Table class used to store exposure metadata.
+ *  Table class used to store exposure metadata.
  *
  *  @copydetails ExposureRecord
  */
 class ExposureTable : public BaseTable {
 public:
-
     typedef ExposureRecord Record;
     typedef ColumnViewT<ExposureRecord> ColumnView;
     typedef ExposureCatalogT<Record> Catalog;
     typedef ExposureCatalogT<Record const> ConstCatalog;
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      */
-    static PTR(ExposureTable) make(Schema const & schema);
+    static std::shared_ptr<ExposureTable> make(Schema const& schema);
 
     /**
-     *  @brief Return a minimal schema for Exposure tables and records.
+     *  Return a minimal schema for Exposure tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on ExposureRecords will assume that at least the fields
@@ -176,14 +180,12 @@ public:
     }
 
     /**
-     *  @brief Return true if the given schema is a valid ExposureTable schema.
+     *  Return true if the given schema is a valid ExposureTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(Schema const & other) {
-        return other.contains(getMinimalSchema().schema);
-    }
+    static bool checkSchema(Schema const& other) { return other.contains(getMinimalSchema().schema); }
 
     //@{
     /**
@@ -191,42 +193,42 @@ public:
      *
      *  These keys are used to implement getters and setters on ExposureRecord.
      */
-    /// @brief Key for the unique ID.
+    /// Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
-    /// @brief Key for the minimum point of the bbox.
+    /// Key for the minimum point of the bbox.
     static PointKey<int> getBBoxMinKey() { return getMinimalSchema().bboxMin; }
-    /// @brief Key for the maximum point of the bbox.
+    /// Key for the maximum point of the bbox.
     static PointKey<int> getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(ExposureTable) clone() const { return std::static_pointer_cast<ExposureTable>(_clone()); }
+    std::shared_ptr<ExposureTable> clone() const { return std::static_pointer_cast<ExposureTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(ExposureRecord) makeRecord() { return std::static_pointer_cast<ExposureRecord>(_makeRecord()); }
+    std::shared_ptr<ExposureRecord> makeRecord() {
+        return std::static_pointer_cast<ExposureRecord>(_makeRecord());
+    }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(ExposureRecord) copyRecord(BaseRecord const & other) {
+    std::shared_ptr<ExposureRecord> copyRecord(BaseRecord const& other) {
         return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(ExposureRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<ExposureRecord> copyRecord(BaseRecord const& other, SchemaMapper const& mapper) {
         return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:
+    explicit ExposureTable(Schema const& schema);
 
-    explicit ExposureTable(Schema const & schema);
-
-    ExposureTable(ExposureTable const & other);
+    ExposureTable(ExposureTable const& other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 
     std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
-
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
@@ -238,23 +240,23 @@ private:
     };
 
     // Return the singleton minimal schema.
-    static MinimalSchema & getMinimalSchema();
+    static MinimalSchema& getMinimalSchema();
 
     friend class io::FitsWriter;
 
-    template <typename RecordT> friend class ExposureCatalogT;
+    template <typename RecordT>
+    friend class ExposureCatalogT;
 
-     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile, int flags) const override;
 
-    PTR(io::FitsWriter) makeFitsWriter(
-        fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags
-    ) const;
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile,
+                                                   std::shared_ptr<io::OutputArchive> archive,
+                                                   int flags) const;
 };
 
-
 /**
- *  @brief Custom catalog class for ExposureRecord/Table.
+ *  Custom catalog class for ExposureRecord/Table.
  *
  *  We don't expect to subclass ExposureRecord/Table, so unlike other Catalogs we can (and do) define
  *  some ExposureCatalogT member functions in Exposure.cc where the explicit instantiation is done.
@@ -262,8 +264,8 @@ private:
 template <typename RecordT>
 class ExposureCatalogT : public SortedCatalogT<RecordT> {
     typedef SortedCatalogT<RecordT> Base;
-public:
 
+public:
     typedef RecordT Record;
     typedef typename Record::Table Table;
 
@@ -271,18 +273,18 @@ public:
     typedef typename Base::const_iterator const_iterator;
 
     /**
-     *  @brief Construct a vector from a table (or nothing).
+     *  Construct a vector from a table (or nothing).
      *
      *  A vector with no table is considered invalid; a valid table must be assigned to it
      *  before it can be used.
      */
-    explicit ExposureCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
+    explicit ExposureCatalogT(std::shared_ptr<Table> const& table = std::shared_ptr<Table>()) : Base(table) {}
 
-    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
-    explicit ExposureCatalogT(Schema const & schema) : Base(schema) {}
+    /// Construct a vector from a schema, creating a table with Table::make(schema).
+    explicit ExposureCatalogT(Schema const& schema) : Base(schema) {}
 
     /**
-     *  @brief Construct a vector from a table and an iterator range.
+     *  Construct a vector from a table and an iterator range.
      *
      *  If deep is true, new records will be created using table->copyRecord before being inserted.
      *  If deep is false, records will be not be copied, but they must already be associated with
@@ -292,35 +294,35 @@ public:
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
      */
     template <typename InputIterator>
-    ExposureCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
-        Base(table, first, last, deep)
-    {}
+    ExposureCatalogT(std::shared_ptr<Table> const& table, InputIterator first, InputIterator last,
+                     bool deep = false)
+            : Base(table, first, last, deep) {}
 
     /**
-     *  @brief Shallow copy constructor from a container containing a related record type.
+     *  Shallow copy constructor from a container containing a related record type.
      *
      *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
      *  convertible to Table.
      */
     template <typename OtherRecordT>
-    ExposureCatalogT(ExposureCatalogT<OtherRecordT> const & other) : Base(other) {}
+    ExposureCatalogT(ExposureCatalogT<OtherRecordT> const& other) : Base(other) {}
 
     using Base::writeFits;
 
     /**
-     *  @brief Write a FITS binary table to an open file object.
+     *  Write a FITS binary table to an open file object.
      *
      *  Instead of writing nested Persistables to an internal archive and appending it
      *  to the FITS file, this overload inserts nested Persistables into the given
      *  archive and does not save it, leaving it to the user to save it later.
      */
-    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive, int flags=0) const {
-        PTR(io::FitsWriter) writer = this->getTable()->makeFitsWriter(&fitsfile, archive, flags);
+    void writeFits(fits::Fits& fitsfile, std::shared_ptr<io::OutputArchive> archive, int flags = 0) const {
+        std::shared_ptr<io::FitsWriter> writer = this->getTable()->makeFitsWriter(&fitsfile, archive, flags);
         writer->write(*this);
     }
 
     /**
-     *  @brief Read a FITS binary table from a regular file.
+     *  Read a FITS binary table from a regular file.
      *
      *  @param[in] filename    Name of the file to read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -328,12 +330,12 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static ExposureCatalogT readFits(std::string const & filename, int hdu=INT_MIN, int flags=0) {
+    static ExposureCatalogT readFits(std::string const& filename, int hdu = INT_MIN, int flags = 0) {
         return io::FitsReader::apply<ExposureCatalogT>(filename, hdu, flags);
     }
 
     /**
-     *  @brief Read a FITS binary table from a RAM file.
+     *  Read a FITS binary table from a RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
@@ -341,54 +343,55 @@ public:
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=INT_MIN, int flags=0) {
+    static ExposureCatalogT readFits(fits::MemFileManager& manager, int hdu = INT_MIN, int flags = 0) {
         return io::FitsReader::apply<ExposureCatalogT>(manager, hdu, flags);
     }
 
     /**
-     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *  Read a FITS binary table from a file object already at the correct extension.
      *
      *  @param[in] fitsfile    Fits file object to read from.
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static ExposureCatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+    static ExposureCatalogT readFits(fits::Fits& fitsfile, int flags = 0) {
         return io::FitsReader::apply<ExposureCatalogT>(fitsfile, flags);
     }
 
     /**
-     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *  Read a FITS binary table from a file object already at the correct extension.
      *
      *  This overload reads nested Persistables from the given archive instead of loading
      *  a new archive from the HDUs following the catalog.
      */
-    static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive, int flags=0) {
+    static ExposureCatalogT readFits(fits::Fits& fitsfile, std::shared_ptr<io::InputArchive> archive,
+                                     int flags = 0) {
         return io::FitsReader::apply<ExposureCatalogT>(fitsfile, flags, archive);
     }
 
     /**
-     *  @brief Convenience output function for Persistables that contain an ExposureCatalog.
+     *  Convenience output function for Persistables that contain an ExposureCatalog.
      *
      *  Unlike writeFits, this saves main catalog to one of the tables within the archive,
      *  as part of a Persistable's set of catalogs, rather than saving it to a separate HDU
      *  not managed by the archive.
      */
-    void writeToArchive(io::OutputArchiveHandle & handle, bool ignoreUnpersistable=true) const;
+    void writeToArchive(io::OutputArchiveHandle& handle, bool ignoreUnpersistable = true) const;
 
     /**
-     *  @brief Convenience input function for Persistables that contain an ExposureCatalog.
+     *  Convenience input function for Persistables that contain an ExposureCatalog.
      *
      *  Unlike the FITS read methods, this reader is not polymorphically aware - it always
      *  tries to create an ExposureTable rather than infer the type of table from the data.
      */
-    static ExposureCatalogT readFromArchive(io::InputArchive const & archive, BaseCatalog const & catalog);
+    static ExposureCatalogT readFromArchive(io::InputArchive const& archive, BaseCatalog const& catalog);
 
     /**
-     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *  Return the subset of a catalog corresponding to the True values of the given mask array.
      *
      *  The returned array's records are shallow copies, and hence will not in general be contiguous.
      */
-    ExposureCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+    ExposureCatalogT<RecordT> subset(ndarray::Array<bool const, 1> const& mask) const {
         return ExposureCatalogT(Base::subset(mask));
     }
 
@@ -401,26 +404,28 @@ public:
     }
 
     /**
-     *  @brief Return a shallow subset of the catalog with only those records that contain the given point.
-     *         If includeValidPolygon is true we check that the point is within the validPolygon of those
+     *  Return a shallow subset of the catalog with only those records that contain the given point.
+     *
+     *  If includeValidPolygon is true we check that the point is within the validPolygon of those
      *         records which have one; if they don't, this argument is ignored.
      *
-     *  @sa ExposureRecord::contains
+     *  @see ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(Coord const & coord, bool includeValidPolygon=false) const;
+    ExposureCatalogT subsetContaining(Coord const& coord, bool includeValidPolygon = false) const;
 
     /**
-     *  @brief Return a shallow subset of the catalog with only those records that contain the given point.
-     *         If includeValidPolygon is true we check that the point is within the validPolygon of those
+     *  Return a shallow subset of the catalog with only those records that contain the given point.
+     *
+     *  If includeValidPolygon is true we check that the point is within the validPolygon of those
      *         records which have one; if they don't, this argument is ignored.
      *
-     *  @sa ExposureRecord::contains
+     *  @see ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs,
-                                      bool includeValidPolygon=false) const;
+    ExposureCatalogT subsetContaining(geom::Point2D const& point, image::Wcs const& wcs,
+                                      bool includeValidPolygon = false) const;
 
 protected:
-    explicit ExposureCatalogT(Base const & other) : Base(other) {}
+    explicit ExposureCatalogT(Base const& other) : Base(other) {}
 };
 
 typedef ColumnViewT<ExposureRecord> ExposureColumnView;
@@ -429,8 +434,8 @@ typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
 
 inline RecordId ExposureRecord::getId() const { return get(ExposureTable::getIdKey()); }
 inline void ExposureRecord::setId(RecordId id) { set(ExposureTable::getIdKey(), id); }
+}
+}
+}  // namespace lsst::afw::table
 
-
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_Exposure_h_INCLUDED
+#endif  // !AFW_TABLE_Exposure_h_INCLUDED

@@ -32,7 +32,8 @@
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/VisitInfo.h"
 
-namespace lsst { namespace afw {
+namespace lsst {
+namespace afw {
 
 namespace cameraGeom {
 class Detector;
@@ -42,9 +43,11 @@ namespace detection {
 class Psf;
 }
 
-namespace geom { namespace polygon {
+namespace geom {
+namespace polygon {
 class Polygon;
-}}
+}
+}
 
 namespace fits {
 class Fits;
@@ -58,7 +61,7 @@ class ApCorrMap;
 class VisitInfo;
 
 /**
- *  @brief A collection of all the things that make an Exposure different from a MaskedImage
+ *  A collection of all the things that make an Exposure different from a MaskedImage
  *
  *  The constness semantics of the things held by ExposureInfo are admittedly a bit of a mess,
  *  but they're that way to preserve backwards compatibility for now.  Eventually I'd like to make
@@ -82,27 +85,26 @@ class VisitInfo;
  */
 class ExposureInfo {
 public:
-
     /// Does this exposure have a Wcs?
     bool hasWcs() const { return static_cast<bool>(_wcs); }
 
     /// Return the coordinate system of the exposure
-    PTR(Wcs) getWcs() { return _wcs; }
+    std::shared_ptr<Wcs> getWcs() { return _wcs; }
 
     /// Return the coordinate system of the exposure
-    CONST_PTR(Wcs) getWcs() const { return _wcs; }
+    std::shared_ptr<Wcs const> getWcs() const { return _wcs; }
 
     /// Set the coordinate system of the exposure
-    void setWcs(CONST_PTR(Wcs) wcs) { _wcs = _cloneWcs(wcs); }
+    void setWcs(std::shared_ptr<Wcs const> wcs) { _wcs = _cloneWcs(wcs); }
 
     /// Does this exposure have Detector information?
     bool hasDetector() const { return static_cast<bool>(_detector); }
 
     /// Return the exposure's Detector information
-    CONST_PTR(cameraGeom::Detector) getDetector() const { return _detector; }
+    std::shared_ptr<cameraGeom::Detector const> getDetector() const { return _detector; }
 
     /// Set the exposure's Detector information
-    void setDetector(CONST_PTR(cameraGeom::Detector) detector) { _detector = detector; }
+    void setDetector(std::shared_ptr<cameraGeom::Detector const> detector) { _detector = detector; }
 
     /// Return the exposure's filter
     Filter getFilter() const { return _filter; }
@@ -114,53 +116,53 @@ public:
     bool hasCalib() const { return static_cast<bool>(_calib); }
 
     /// Return the exposure's photometric calibration
-    PTR(Calib) getCalib() { return _calib; }
+    std::shared_ptr<Calib> getCalib() { return _calib; }
 
     /// Return the exposure's photometric calibration
-    CONST_PTR(Calib) getCalib() const { return _calib; }
+    std::shared_ptr<Calib const> getCalib() const { return _calib; }
 
     /// Set the Exposure's Calib object
-    void setCalib(CONST_PTR(Calib) calib) { _calib = _cloneCalib(calib); }
+    void setCalib(std::shared_ptr<Calib const> calib) { _calib = _cloneCalib(calib); }
 
     /// Return flexible metadata
-    PTR(daf::base::PropertySet) getMetadata() const { return _metadata; }
+    std::shared_ptr<daf::base::PropertySet> getMetadata() const { return _metadata; }
 
     /// Set the flexible metadata
-    void setMetadata(PTR(daf::base::PropertySet) metadata) { _metadata = metadata; }
+    void setMetadata(std::shared_ptr<daf::base::PropertySet> metadata) { _metadata = metadata; }
 
     /// Does this exposure have a Psf?
     bool hasPsf() const { return static_cast<bool>(_psf); }
 
     /// Return the exposure's point-spread function
-    PTR(detection::Psf) getPsf() const { return _psf; }
+    std::shared_ptr<detection::Psf> getPsf() const { return _psf; }
 
     /// Set the exposure's point-spread function
-    void setPsf(CONST_PTR(detection::Psf) psf) {
+    void setPsf(std::shared_ptr<detection::Psf const> psf) {
         // Psfs are immutable, so this is always safe; it'd be better to always just pass around
         // const or non-const pointers, instead of both, but this is more backwards-compatible.
         _psf = std::const_pointer_cast<detection::Psf>(psf);
     }
 
     /// Does this exposure have a valid Polygon
-    bool hasValidPolygon() const { return static_cast<bool>(_validPolygon);}
+    bool hasValidPolygon() const { return static_cast<bool>(_validPolygon); }
 
     /// Return the valid Polygon
-    CONST_PTR(geom::polygon::Polygon) getValidPolygon() const { return _validPolygon;}
+    std::shared_ptr<geom::polygon::Polygon const> getValidPolygon() const { return _validPolygon; }
 
     /// Set the exposure's valid Polygon
-    void setValidPolygon(CONST_PTR(geom::polygon::Polygon) polygon) { _validPolygon = polygon; }
+    void setValidPolygon(std::shared_ptr<geom::polygon::Polygon const> polygon) { _validPolygon = polygon; }
 
     /// Return true if the exposure has an aperture correction map
     bool hasApCorrMap() const { return static_cast<bool>(_apCorrMap); }
 
     /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    PTR(ApCorrMap) getApCorrMap() { return _apCorrMap; }
+    std::shared_ptr<ApCorrMap> getApCorrMap() { return _apCorrMap; }
 
     /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    PTR(ApCorrMap const) getApCorrMap() const { return _apCorrMap; }
+    std::shared_ptr<ApCorrMap const> getApCorrMap() const { return _apCorrMap; }
 
     /// Set the exposure's aperture correction map (null pointer if !hasApCorrMap())
-    void setApCorrMap(PTR(ApCorrMap) apCorrMap) { _apCorrMap = apCorrMap; }
+    void setApCorrMap(std::shared_ptr<ApCorrMap> apCorrMap) { _apCorrMap = apCorrMap; }
 
     /**
      *  Set the exposure's aperture correction map to a new, empty map
@@ -174,58 +176,60 @@ public:
     bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
 
     /// Set the exposure's coadd provenance catalogs.
-    void setCoaddInputs(PTR(CoaddInputs) coaddInputs) { _coaddInputs = coaddInputs; }
+    void setCoaddInputs(std::shared_ptr<CoaddInputs> coaddInputs) { _coaddInputs = coaddInputs; }
 
     /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
-    PTR(CoaddInputs) getCoaddInputs() const { return _coaddInputs; }
+    std::shared_ptr<CoaddInputs> getCoaddInputs() const { return _coaddInputs; }
 
     /// Return the exposure's visit info
-    CONST_PTR(image::VisitInfo) getVisitInfo() const { return _visitInfo; }
+    std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
 
     /// Does this exposure have visit info?
     bool hasVisitInfo() const { return static_cast<bool>(_visitInfo); }
 
     /// Set the exposure's visit info
-    void setVisitInfo(CONST_PTR(image::VisitInfo) const visitInfo) { _visitInfo = visitInfo; }
+    void setVisitInfo(std::shared_ptr<image::VisitInfo const> const visitInfo) { _visitInfo = visitInfo; }
 
     /**
-     *  @brief Construct an ExposureInfo from its various components.
+     *  Construct an ExposureInfo from its various components.
      *
      *  If a null Calib and/or PropertySet pointer is passed (the default),
      *  a new Calib and/or PropertyList will be created.  To set these pointers
      *  to null, you must explicitly call setCalib or setMetadata after construction.
      */
     explicit ExposureInfo(
-        CONST_PTR(Wcs) const & wcs = CONST_PTR(Wcs)(),
-        CONST_PTR(detection::Psf) const & psf = CONST_PTR(detection::Psf)(),
-        CONST_PTR(Calib) const & calib = CONST_PTR(Calib)(),
-        CONST_PTR(cameraGeom::Detector) const & detector = CONST_PTR(cameraGeom::Detector)(),
-        CONST_PTR(geom::polygon::Polygon) const & polygon = CONST_PTR(geom::polygon::Polygon)(),
-        Filter const & filter = Filter(),
-        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
-        PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)(),
-        PTR(ApCorrMap) const & apCorrMap = PTR(ApCorrMap)(),
-        CONST_PTR(image::VisitInfo) const & visitInfo = CONST_PTR(image::VisitInfo)()
-    );
+            std::shared_ptr<Wcs const> const& wcs = std::shared_ptr<Wcs const>(),
+            std::shared_ptr<detection::Psf const> const& psf = std::shared_ptr<detection::Psf const>(),
+            std::shared_ptr<Calib const> const& calib = std::shared_ptr<Calib const>(),
+            std::shared_ptr<cameraGeom::Detector const> const& detector =
+                    std::shared_ptr<cameraGeom::Detector const>(),
+            std::shared_ptr<geom::polygon::Polygon const> const& polygon =
+                    std::shared_ptr<geom::polygon::Polygon const>(),
+            Filter const& filter = Filter(), std::shared_ptr<daf::base::PropertySet> const& metadata =
+                                                     std::shared_ptr<daf::base::PropertySet>(),
+            std::shared_ptr<CoaddInputs> const& coaddInputs = std::shared_ptr<CoaddInputs>(),
+            std::shared_ptr<ApCorrMap> const& apCorrMap = std::shared_ptr<ApCorrMap>(),
+            std::shared_ptr<image::VisitInfo const> const& visitInfo =
+                    std::shared_ptr<image::VisitInfo const>());
 
     /// Copy constructor; deep-copies all components except the metadata.
-    ExposureInfo(ExposureInfo const & other);
+    ExposureInfo(ExposureInfo const& other);
 
     /// Copy constructor; deep-copies everything, possibly including the metadata.
-    ExposureInfo(ExposureInfo const & other, bool copyMetadata);
+    ExposureInfo(ExposureInfo const& other, bool copyMetadata);
 
     /// Assignment; deep-copies all components except the metadata.
-    ExposureInfo & operator=(ExposureInfo const & other);
+    ExposureInfo& operator=(ExposureInfo const& other);
 
     // Destructor defined in source file because we need access to destructors of forward-declared components
     ~ExposureInfo();
 
 private:
-
-    template <typename ImageT, typename MaskT, typename VarianceT> friend class Exposure;
+    template <typename ImageT, typename MaskT, typename VarianceT>
+    friend class Exposure;
 
     /**
-     *  @brief A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
+     *  A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
      *
      *  An ExposureInfo is generally held by an Exposure, and we implement much of Exposure persistence
      *  here in ExposureInfo.  FITS writing needs to take place in three steps:
@@ -238,25 +242,25 @@ private:
      *   3. Exposure calls ExposureInfo::_finishWriteFits to save the archive to additional table HDUs.
      */
     struct FitsWriteData {
-        PTR(daf::base::PropertyList) metadata;
-        PTR(daf::base::PropertyList) imageMetadata;
-        PTR(daf::base::PropertyList) maskMetadata;
-        PTR(daf::base::PropertyList) varianceMetadata;
+        std::shared_ptr<daf::base::PropertyList> metadata;
+        std::shared_ptr<daf::base::PropertyList> imageMetadata;
+        std::shared_ptr<daf::base::PropertyList> maskMetadata;
+        std::shared_ptr<daf::base::PropertyList> varianceMetadata;
         table::io::OutputArchive archive;
     };
 
     /**
-     *  @brief Start the process of writing an exposure to FITS.
+     *  Start the process of writing an exposure to FITS.
      *
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
      *                    install a linear offset-only WCS in the FITS header.
      *
-     *  @sa FitsWriteData
+     *  @see FitsWriteData
      */
-    FitsWriteData _startWriteFits(geom::Point2I const & xy0=geom::Point2I()) const;
+    FitsWriteData _startWriteFits(geom::Point2I const& xy0 = geom::Point2I()) const;
 
     /**
-     *  @brief Write any additional non-image HDUs to a FITS file.
+     *  Write any additional non-image HDUs to a FITS file.
      *
      *  @param[in]  fitsfile   Open FITS object to write to.  Does not need to be positioned to any
      *                         particular HDU.
@@ -266,39 +270,37 @@ private:
      *  keys included in the result of getFitsMetadata() if this is called after writing the
      *  MaskedImage HDUs.
      *
-     *  @sa FitsWriteData
+     *  @see FitsWriteData
      */
-    void _finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const;
+    void _finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& data) const;
 
     /**
-     *  @brief Read from a FITS file and metadata.
+     *  Read from a FITS file and metadata.
      *
      *  This operates in-place on this instead of returning a new object, because it will usually
      *  only be called by the exposure constructor, which starts by default-constructing the
      *  ExposureInfo.
      */
-    void _readFits(
-        fits::Fits & fitsfile,
-        PTR(daf::base::PropertySet) metadata,
-        PTR(daf::base::PropertySet) imageMetadata
-    );
+    void _readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
+                   std::shared_ptr<daf::base::PropertySet> imageMetadata);
 
-    static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
-    static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
-    static PTR(ApCorrMap) _cloneApCorrMap(PTR(ApCorrMap const) apCorrMap);
+    static std::shared_ptr<Calib> _cloneCalib(std::shared_ptr<Calib const> calib);
+    static std::shared_ptr<Wcs> _cloneWcs(std::shared_ptr<Wcs const> wcs);
+    static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
-    PTR(Wcs) _wcs;
-    PTR(detection::Psf) _psf;
-    PTR(Calib) _calib;
-    CONST_PTR(cameraGeom::Detector) _detector;
-    CONST_PTR(geom::polygon::Polygon) _validPolygon;
+    std::shared_ptr<Wcs> _wcs;
+    std::shared_ptr<detection::Psf> _psf;
+    std::shared_ptr<Calib> _calib;
+    std::shared_ptr<cameraGeom::Detector const> _detector;
+    std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     Filter _filter;
-    PTR(daf::base::PropertySet) _metadata;
-    PTR(CoaddInputs) _coaddInputs;
-    PTR(ApCorrMap) _apCorrMap;
-    CONST_PTR(image::VisitInfo) _visitInfo;
+    std::shared_ptr<daf::base::PropertySet> _metadata;
+    std::shared_ptr<CoaddInputs> _coaddInputs;
+    std::shared_ptr<ApCorrMap> _apCorrMap;
+    std::shared_ptr<image::VisitInfo const> _visitInfo;
 };
+}
+}
+}  // lsst::afw::image
 
-}}} // lsst::afw::image
-
-#endif // !LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED
+#endif  // !LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED

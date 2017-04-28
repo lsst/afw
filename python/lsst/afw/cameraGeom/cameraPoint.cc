@@ -44,16 +44,20 @@ PYBIND11_PLUGIN(_cameraPoint) {
     cls.def(py::init<geom::Point2D, CameraSys const &>(), "point"_a, "cameraSys"_a);
 
     /* Operators */
-    cls.def("__eq__",
-            [](CameraPoint const & self, CameraPoint const & other) { return self == other; },
+    cls.def("__eq__", [](CameraPoint const &self, CameraPoint const &other) { return self == other; },
             py::is_operator());
-    cls.def("__ne__",
-            [](CameraPoint const & self, CameraPoint const & other) { return self != other; },
+    cls.def("__ne__", [](CameraPoint const &self, CameraPoint const &other) { return self != other; },
             py::is_operator());
-    cls.def("__str__",
-            [](CameraPoint const & self) { std::ostringstream os; os << self; return os.str(); });
-    cls.def("__repr__",
-            [](CameraPoint & self) { std::ostringstream os; os << self; return os.str(); });
+    cls.def("__str__", [](CameraPoint const &self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
+    cls.def("__repr__", [](CameraPoint &self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
 
     /* Members */
     cls.def("getPoint", &CameraPoint::getPoint);
@@ -61,5 +65,6 @@ PYBIND11_PLUGIN(_cameraPoint) {
 
     return mod.ptr();
 }
-
-}}}
+}
+}
+}

@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief This include file includes the header files for all of lsst::afw
+/*
+ * This include file includes the header files for all of lsst::afw
  */
 #ifndef _LSST_AFW_H
 #define _LSST_AFW_H
@@ -33,4 +32,4 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/detection.h"
 
-#endif // !defined(_LSST_AFW_H)
+#endif  // !defined(_LSST_AFW_H)

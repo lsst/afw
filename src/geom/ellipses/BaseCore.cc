@@ -28,69 +28,68 @@
 #include <boost/format.hpp>
 #include <map>
 
-namespace afwGeom = lsst::afw::geom;
-
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 namespace {
 
-typedef std::map< std::string, std::shared_ptr<BaseCore> > RegistryMap;
+typedef std::map<std::string, std::shared_ptr<BaseCore> > RegistryMap;
 
-RegistryMap & getRegistry() {
+RegistryMap& getRegistry() {
     static RegistryMap instance;
     return instance;
 }
 
-BaseCore::Ptr getRegistryCopy(std::string const & name) {
+std::shared_ptr<BaseCore> getRegistryCopy(std::string const& name) {
     RegistryMap::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterError,
-            (boost::format("Ellipse core with name '%s' not found in registry.") % name).str()
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          (boost::format("Ellipse core with name '%s' not found in registry.") % name).str());
     }
     return i->second->clone();
 }
 
-} // anonymous
+}  // anonymous
 
-BaseCore::Ptr BaseCore::make(std::string const & name) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const& name) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     *result = Quadrupole();
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, ParameterVector const & parameters) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const& name, ParameterVector const& parameters) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     result->setParameterVector(parameters);
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, double v1, double v2, double v3) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const& name, double v1, double v2, double v3) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     result->setParameterVector(ParameterVector(v1, v2, v3));
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, BaseCore const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const& name, BaseCore const& other) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     *result = other;
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, Transformer const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const& name, Transformer const& other) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, Convolution const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+std::shared_ptr<BaseCore> BaseCore::make(std::string const& name, Convolution const& other) {
+    std::shared_ptr<BaseCore> result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-void BaseCore::registerSubclass(BaseCore::Ptr const & example) {
+void BaseCore::registerSubclass(std::shared_ptr<BaseCore> const& example) {
     getRegistry()[example->getName()] = example;
 }
 
@@ -113,7 +112,7 @@ void BaseCore::scale(double factor) {
 double BaseCore::getArea() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
-    return a * b * afwGeom::PI;
+    return a * b * geom::PI;
 }
 
 double BaseCore::getDeterminantRadius() const {
@@ -137,7 +136,7 @@ Extent2D BaseCore::computeDimensions() const {
     s *= s;
     b *= b;
     a *= a;
-    Extent2D dimensions(std::sqrt(b * s + a * c),std::sqrt(a * s + b * c));
+    Extent2D dimensions(std::sqrt(b * s + a * c), std::sqrt(a * s + b * c));
     dimensions *= 2;
     return dimensions;
 }
@@ -148,15 +147,13 @@ BaseCore::ParameterVector const BaseCore::getParameterVector() const {
     return r;
 }
 
-void BaseCore::setParameterVector(ParameterVector const & p) {
-    readParameters(p.data());
-}
+void BaseCore::setParameterVector(ParameterVector const& p) { readParameters(p.data()); }
 
-bool BaseCore::operator==(BaseCore const & other) const {
+bool BaseCore::operator==(BaseCore const& other) const {
     return getParameterVector() == other.getParameterVector() && getName() == other.getName();
 }
 
-BaseCore & BaseCore::operator=(BaseCore const & other) {
+BaseCore& BaseCore::operator=(BaseCore const& other) {
     if (&other != this) {
         // We use Axes instead of Quadrupole here because it allows us to copy Axes without
         // implicitly normalizing them.
@@ -167,7 +164,7 @@ BaseCore & BaseCore::operator=(BaseCore const & other) {
     return *this;
 }
 
-BaseCore::Jacobian BaseCore::dAssign(BaseCore const & other) {
+BaseCore::Jacobian BaseCore::dAssign(BaseCore const& other) {
     if (getName() == other.getName()) {
         this->operator=(other);
         return Jacobian::Identity();
@@ -182,30 +179,26 @@ BaseCore::Jacobian BaseCore::dAssign(BaseCore const & other) {
     return lhs * rhs;
 }
 
-void BaseCore::_assignQuadrupoleToAxes(
-    double ixx, double iyy, double ixy,
-    double & a, double & b, double & theta
-) {
+void BaseCore::_assignQuadrupoleToAxes(double ixx, double iyy, double ixy, double& a, double& b,
+                                       double& theta) {
     double xx_p_yy = ixx + iyy;
     double xx_m_yy = ixx - iyy;
-    double t = std::sqrt(xx_m_yy*xx_m_yy + 4*ixy*ixy);
-    a = std::sqrt(0.5*(xx_p_yy + t));
-    b = std::sqrt(0.5*(xx_p_yy - t));
-    theta = 0.5*std::atan2(2.0*ixy, xx_m_yy);
+    double t = std::sqrt(xx_m_yy * xx_m_yy + 4 * ixy * ixy);
+    a = std::sqrt(0.5 * (xx_p_yy + t));
+    b = std::sqrt(0.5 * (xx_p_yy - t));
+    theta = 0.5 * std::atan2(2.0 * ixy, xx_m_yy);
 }
 
-BaseCore::Jacobian BaseCore::_dAssignQuadrupoleToAxes(
-    double ixx, double iyy, double ixy,
-    double & a, double & b, double & theta
-) {
+BaseCore::Jacobian BaseCore::_dAssignQuadrupoleToAxes(double ixx, double iyy, double ixy, double& a,
+                                                      double& b, double& theta) {
     double xx_p_yy = ixx + iyy;
     double xx_m_yy = ixx - iyy;
-    double t2 = xx_m_yy*xx_m_yy + 4.0*ixy*ixy;
-    Eigen::Vector3d dt2(2.0*xx_m_yy, -2.0*xx_m_yy, 8.0*ixy);
+    double t2 = xx_m_yy * xx_m_yy + 4.0 * ixy * ixy;
+    Eigen::Vector3d dt2(2.0 * xx_m_yy, -2.0 * xx_m_yy, 8.0 * ixy);
     double t = std::sqrt(t2);
-    a = std::sqrt(0.5*(xx_p_yy + t));
-    b = std::sqrt(0.5*(xx_p_yy - t));
-    theta = 0.5*std::atan2(2.0*ixy, xx_m_yy);
+    a = std::sqrt(0.5 * (xx_p_yy + t));
+    b = std::sqrt(0.5 * (xx_p_yy - t));
+    theta = 0.5 * std::atan2(2.0 * ixy, xx_m_yy);
     Jacobian m = Jacobian::Zero();
     m(0, 0) = 0.25 * (1.0 + 0.5 * dt2[0] / t) / a;
     m(0, 1) = 0.25 * (1.0 + 0.5 * dt2[1] / t) / a;
@@ -221,43 +214,47 @@ BaseCore::Jacobian BaseCore::_dAssignQuadrupoleToAxes(
     return m;
 }
 
-void BaseCore::_assignAxesToQuadrupole(
-    double a, double b, double theta,
-    double & ixx, double & iyy, double & ixy
-) {
+void BaseCore::_assignAxesToQuadrupole(double a, double b, double theta, double& ixx, double& iyy,
+                                       double& ixy) {
     a *= a;
     b *= b;
     double c = std::cos(theta);
     double s = std::sin(theta);
-    ixy = (a - b)*c*s;
+    ixy = (a - b) * c * s;
     c *= c;
     s *= s;
-    ixx = c*a + s*b;
-    iyy = s*a + c*b;
+    ixx = c * a + s * b;
+    iyy = s * a + c * b;
 }
 
-BaseCore::Jacobian BaseCore::_dAssignAxesToQuadrupole(
-    double a, double b, double theta,
-    double & ixx, double & iyy, double & ixy
-) {
+BaseCore::Jacobian BaseCore::_dAssignAxesToQuadrupole(double a, double b, double theta, double& ixx,
+                                                      double& iyy, double& ixy) {
     Jacobian m;
-    m.col(0).setConstant(2*a);
-    m.col(1).setConstant(2*b);
+    m.col(0).setConstant(2 * a);
+    m.col(1).setConstant(2 * b);
     a *= a;
     b *= b;
-    m.col(2).setConstant(a-b);
+    m.col(2).setConstant(a - b);
     double c = std::cos(theta);
     double s = std::sin(theta);
-    double cs = c*s;
-    ixy = (a - b)*c*s;
+    double cs = c * s;
+    ixy = (a - b) * c * s;
     c *= c;
     s *= s;
-    ixx = c*a + s*b;
-    iyy = s*a + c*b;
-    m(0,0) *= c;  m(0,1) *= s;   m(0,2) *= -2.0*cs;
-    m(1,0) *= s;  m(1,1) *= c;   m(1,2) *= 2.0*cs;
-    m(2,0) *= cs; m(2,1) *= -cs; m(2,2) *= (c - s);
+    ixx = c * a + s * b;
+    iyy = s * a + c * b;
+    m(0, 0) *= c;
+    m(0, 1) *= s;
+    m(0, 2) *= -2.0 * cs;
+    m(1, 0) *= s;
+    m(1, 1) *= c;
+    m(1, 2) *= 2.0 * cs;
+    m(2, 0) *= cs;
+    m(2, 1) *= -cs;
+    m(2, 2) *= (c - s);
     return m;
 }
-
-}}}} // namespace lsst::afw::geom::ellipses
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

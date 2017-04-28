@@ -61,7 +61,8 @@ class SchemaMapper:
             handle unrecognized unit strings.  See also astropy.units.Unit.
         """
         if isinstance(field, basestring):
-            field = Field[type](field, doc=doc, units=units, size=size, parse_strict=parse_strict)
+            field = Field[type](field, doc=doc, units=units,
+                                size=size, parse_strict=parse_strict)
         return field._addTo(self.editOutputSchema(), doReplace)
 
     def addMapping(self, input, output=None, doReplace=True):
@@ -82,7 +83,8 @@ class SchemaMapper:
             replace it instead of raising pex.exceptions.InvalidParameterError.
         """
         # Workaround for calling positional arguments; avoids an API change during pybind11 conversion,
-        # but we should just make that change and encourage using kwargs in the future.
+        # but we should just make that change and encourage using kwargs in the
+        # future.
         if output is True or output is False:
             doReplace = output
             output = None

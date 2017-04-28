@@ -33,35 +33,26 @@
 #include "lsst/afw/image/Wcs.h"
 #include "ndarray.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 template <typename PixelT>
-inline void fits_read_array(
-    fits::Fits & fitsfile,
-    ndarray::Array<PixelT,2,2> & array,
-    geom::Point2I & xy0,
-    lsst::daf::base::PropertySet & metadata,
-    geom::Box2I bbox=geom::Box2I(),
-    ImageOrigin origin=PARENT
-) {
+inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array, geom::Point2I& xy0,
+                            lsst::daf::base::PropertySet& metadata, geom::Box2I bbox = geom::Box2I(),
+                            ImageOrigin origin = PARENT) {
     if (!fitsfile.checkImageType<PixelT>()) {
-        throw LSST_FITS_EXCEPT(
-            fits::FitsTypeError,
-            fitsfile,
-            "Incorrect image type for FITS image"
-        );
+        throw LSST_FITS_EXCEPT(fits::FitsTypeError, fitsfile, "Incorrect image type for FITS image");
     }
     int nAxis = fitsfile.getImageDim();
-    ndarray::Vector<ndarray::Size,2> shape;
+    ndarray::Vector<ndarray::Size, 2> shape;
     if (nAxis == 2) {
         shape = fitsfile.getImageShape<2>();
     } else if (nAxis == 3) {
-        ndarray::Vector<ndarray::Size,3> shape3 = fitsfile.getImageShape<3>();
+        ndarray::Vector<ndarray::Size, 3> shape3 = fitsfile.getImageShape<3>();
         if (shape3[0] != 1) {
-            throw LSST_EXCEPT(
-                fits::FitsError,
-                boost::str(boost::format("3rd dimension %d is not 1") % shape3[0])
-            );
+            throw LSST_EXCEPT(fits::FitsError,
+                              boost::str(boost::format("3rd dimension %d is not 1") % shape3[0]));
         }
         shape = shape3.last<2>();
     }
@@ -80,15 +71,13 @@ inline void fits_read_array(
         }
         xy0 = bbox.getMin();
 
-        if (bbox.getMinX() < 0 || bbox.getMinY() < 0 ||
-            bbox.getWidth() > dimensions.getX() || bbox.getHeight() > dimensions.getY()
-        ) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthError,
-                (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
-                 bbox.getMinX() % bbox.getMinY() % bbox.getWidth() % bbox.getHeight() %
-                 dimensions.getX() % dimensions.getY()).str()
-            );
+        if (bbox.getMinX() < 0 || bbox.getMinY() < 0 || bbox.getWidth() > dimensions.getX() ||
+            bbox.getHeight() > dimensions.getY()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
+                              (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
+                               bbox.getMinX() % bbox.getMinY() % bbox.getWidth() % bbox.getHeight() %
+                               dimensions.getX() % dimensions.getY())
+                                      .str());
         }
         dimensions = bbox.getDimensions();
     }
@@ -101,17 +90,17 @@ inline void fits_read_array(
 }
 
 template <typename ImageT>
-inline void fits_write_image(
-    fits::Fits & fitsfile, const ImageT & image,
-    CONST_PTR(daf::base::PropertySet) metadata=CONST_PTR(daf::base::PropertySet)()
-) {
+inline void fits_write_image(fits::Fits& fitsfile, const ImageT& image,
+                             std::shared_ptr<daf::base::PropertySet const> metadata =
+                                     std::shared_ptr<daf::base::PropertySet const>()) {
     fitsfile.createImage<typename ImageT::Pixel>(image.getArray().getShape());
     if (metadata) {
         fitsfile.writeMetadata(*metadata);
     }
     fitsfile.writeImage(image.getArray());
 }
+}
+}
+}  // namespace lsst::afw::image
 
-}}}                                     // namespace lsst::afw::image
-
-#endif // !LSST_AFW_IMAGE_fits_io_h_INCLUDED
+#endif  // !LSST_AFW_IMAGE_fits_io_h_INCLUDED

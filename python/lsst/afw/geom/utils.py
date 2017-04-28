@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -100,7 +100,8 @@ def assertPairsAlmostEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs diff
     pairDiff = [float(pair1[i] - pair0[i]) for i in range(2)]
     measDiff = math.hypot(*pairDiff)
     if measDiff > maxDiff:
-        testCase.fail("%s: measured radial distance = %s > maxDiff = %s" % (msg, measDiff, maxDiff))
+        testCase.fail("%s: measured radial distance = %s > maxDiff = %s" % (
+            msg, measDiff, maxDiff))
 
 
 @lsst.utils.tests.inTestCase
@@ -128,7 +129,7 @@ def assertPairListsAlmostEqual(testCase, list0, list1, maxDiff=1e-7, msg=None):
     testCase.assertTrue(np.all(lenList2 == 2))
 
     diffArr = np.array([(val0[0] - val1[0], val0[1] - val1[1])
-                       for val0, val1 in zip(list0, list1)], dtype=float)
+                        for val0, val1 in zip(list0, list1)], dtype=float)
     sepArr = np.hypot(diffArr[:, 0], diffArr[:, 1])
     badArr = sepArr > maxDiff
     if np.any(badArr):
@@ -165,7 +166,8 @@ def assertSpherePointListsAlmostEqual(testCase, splist0, splist1, maxSep=0.001*a
     @param[in] msg  exception message prefix; details of the error are appended after ": "
     """
     testCase.assertEqual(len(splist0), len(splist1), msg=msg)
-    sepArr = np.array([sp0.separation(sp1) for sp0, sp1 in zip(splist0, splist1)])
+    sepArr = np.array([sp0.separation(sp1)
+                       for sp0, sp1 in zip(splist0, splist1)])
     badArr = sepArr > maxSep
     if np.any(badArr):
         maxInd = np.argmax(sepArr)
@@ -189,8 +191,10 @@ def assertBoxesAlmostEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ
 
     @throw AssertionError if the radial difference of the min points or max points is greater than maxDiff
     """
-    assertPairsAlmostEqual(testCase, box0.getMin(), box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
-    assertPairsAlmostEqual(testCase, box0.getMax(), box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
+    assertPairsAlmostEqual(testCase, box0.getMin(),
+                           box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
+    assertPairsAlmostEqual(testCase, box0.getMax(),
+                           box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
 
 
 @lsst.utils.tests.inTestCase
@@ -209,7 +213,8 @@ def makeEndpoints(testCase):
 
 @lsst.utils.tests.inTestCase
 def assertAnglesNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertAnglesAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertAnglesAlmostEqual",
+                  DeprecationWarning)
     assertAnglesAlmostEqual(*args, **kwargs)
 
 

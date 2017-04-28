@@ -25,9 +25,8 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_H
 #define LSST_AFW_GEOM_ELLIPSES_H
 
-/**
- *  \file
- *  \brief Public header class for ellipse library.
+/*
+ *  Public header class for ellipse library.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -45,23 +44,28 @@
 #include "lsst/afw/geom/ellipses/Separable.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
-typedef Separable<Distortion,DeterminantRadius> SeparableDistortionDeterminantRadius;
-typedef Separable<Distortion,TraceRadius> SeparableDistortionTraceRadius;
-typedef Separable<Distortion,LogDeterminantRadius> SeparableDistortionLogDeterminantRadius;
-typedef Separable<Distortion,LogTraceRadius> SeparableDistortionLogTraceRadius;
+typedef Separable<Distortion, DeterminantRadius> SeparableDistortionDeterminantRadius;
+typedef Separable<Distortion, TraceRadius> SeparableDistortionTraceRadius;
+typedef Separable<Distortion, LogDeterminantRadius> SeparableDistortionLogDeterminantRadius;
+typedef Separable<Distortion, LogTraceRadius> SeparableDistortionLogTraceRadius;
 
-typedef Separable<ConformalShear,DeterminantRadius> SeparableConformalShearDeterminantRadius;
-typedef Separable<ConformalShear,TraceRadius> SeparableConformalShearTraceRadius;
-typedef Separable<ConformalShear,LogDeterminantRadius> SeparableConformalShearLogDeterminantRadius;
-typedef Separable<ConformalShear,LogTraceRadius> SeparableConformalShearLogTraceRadius;
+typedef Separable<ConformalShear, DeterminantRadius> SeparableConformalShearDeterminantRadius;
+typedef Separable<ConformalShear, TraceRadius> SeparableConformalShearTraceRadius;
+typedef Separable<ConformalShear, LogDeterminantRadius> SeparableConformalShearLogDeterminantRadius;
+typedef Separable<ConformalShear, LogTraceRadius> SeparableConformalShearLogTraceRadius;
 
-typedef Separable<ReducedShear,DeterminantRadius> SeparableReducedShearDeterminantRadius;
-typedef Separable<ReducedShear,TraceRadius> SeparableReducedShearTraceRadius;
-typedef Separable<ReducedShear,LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
-typedef Separable<ReducedShear,LogTraceRadius> SeparableReducedShearLogTraceRadius;
+typedef Separable<ReducedShear, DeterminantRadius> SeparableReducedShearDeterminantRadius;
+typedef Separable<ReducedShear, TraceRadius> SeparableReducedShearTraceRadius;
+typedef Separable<ReducedShear, LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
+typedef Separable<ReducedShear, LogTraceRadius> SeparableReducedShearLogTraceRadius;
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_H
+#endif  // !LSST_AFW_GEOM_ELLIPSES_H

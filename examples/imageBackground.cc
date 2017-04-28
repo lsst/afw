@@ -37,15 +37,14 @@ namespace geom = lsst::afw::geom;
 typedef image::Image<float> ImageF;
 
 int main() {
-
     // set the parameters for a fake image.
-    int const wid = 256;                // pixels
-    int const xcen = wid/2;             // pixels
-    int const ycen = wid/2;             // pixels
-    int const xsig = 2;                 // pixels
-    int const ysig = xsig;              // pixels
-    float const sky = 100.0;                 // photo-e
-    float const A = 100.0;                   // peak star brightness in photo-e
+    int const wid = 256;       // pixels
+    int const xcen = wid / 2;  // pixels
+    int const ycen = wid / 2;  // pixels
+    int const xsig = 2;        // pixels
+    int const ysig = xsig;     // pixels
+    float const sky = 100.0;   // photo-e
+    float const A = 100.0;     // peak star brightness in photo-e
     int const nStar = 100;
 
     // declare an image.
@@ -54,19 +53,19 @@ int main() {
 
     // put sky and some fake stars in the image, and add uniform noise
     for (int iS = 0; iS < nStar; ++iS) {
-        int const xStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
-        int const yStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
+        int const xStar = static_cast<int>(wid * static_cast<float>(rand()) / RAND_MAX);
+        int const yStar = static_cast<int>(wid * static_cast<float>(rand()) / RAND_MAX);
         for (int i_y = 0; i_y != img.getHeight(); ++i_y) {
             int iX = 0;
             for (ImageF::x_iterator ip = img.row_begin(i_y); ip != img.row_end(i_y); ++ip) {
-
                 // use a bivariate gaussian as a stellar PSF
-                *ip += A*exp( -((iX - xStar)*(iX - xStar) + (i_y - yStar)*(i_y - yStar))/(2.0*xsig*ysig) );
+                *ip += A * exp(-((iX - xStar) * (iX - xStar) + (i_y - yStar) * (i_y - yStar)) /
+                               (2.0 * xsig * ysig));
 
                 // add the noise on the last pass
                 if (iS == nStar - 1) {
-                    /// \todo Change to a Poisson variate
-                    *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5);
+                    // @todo Change to a Poisson variate
+                    *ip += sqrt(*ip) * 2.0 * (static_cast<float>(rand()) / RAND_MAX - 0.5);
                 }
                 ++iX;
             }
@@ -77,7 +76,7 @@ int main() {
     math::BackgroundControl bgCtrl(math::Interpolate::NATURAL_SPLINE);
 
     // could also use a string! (commented-out, but will work)
-    //math::BackgroundControl bgCtrl("NATURAL_SPLINE");
+    // math::BackgroundControl bgCtrl("NATURAL_SPLINE");
 
     // we can control the background estimate
     bgCtrl.setNxSample(5);
@@ -88,11 +87,11 @@ int main() {
     bgCtrl.getStatisticsControl()->setNumSigmaClip(2.5);
 
     // initialize a background object
-    PTR(math::Background) back = math::makeBackground(img, bgCtrl);
+    std::shared_ptr<math::Background> back = math::makeBackground(img, bgCtrl);
 
     // can get an individual pixel or a whole frame.
     float const MID = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
-    ImageF::Ptr bg = back->getImage<ImageF::Pixel>();
+    std::shared_ptr<ImageF> bg = back->getImage<ImageF::Pixel>();
 
     // create a background-subtracted image
     ImageF sub(img.getDimensions());
@@ -106,5 +105,4 @@ int main() {
     sub.writeFits("example_Background_sub.fits");
 
     return 0;
-
 }

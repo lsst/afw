@@ -47,10 +47,12 @@ Log.getLogger("afw.math.LeastSquares").setLevel(Log.DEBUG)
 class LeastSquaresTestCase(lsst.utils.tests.TestCase):
 
     def _assertClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assertFloatsAlmostEqual(a, b, rtol=rtol, atol=atol, msg="\n%s\n!=\n%s" % (a, b))
+        self.assertFloatsAlmostEqual(
+            a, b, rtol=rtol, atol=atol, msg="\n%s\n!=\n%s" % (a, b))
 
     def _assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assertFloatsNotEqual(a, b, rtol=rtol, atol=atol, msg="\n%s\n==\n%s" % (a, b))
+        self.assertFloatsNotEqual(
+            a, b, rtol=rtol, atol=atol, msg="\n%s\n==\n%s" % (a, b))
 
     def setUp(self):
         np.random.seed(500)
@@ -62,15 +64,18 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         self._assertClose(solver.getFisherMatrix(), fisher)
         self._assertClose(solver.getCovariance(), cov)
         if solver.getFactorization() != LeastSquares.NORMAL_CHOLESKY:
-            self._assertClose(solver.getDiagnostic(LeastSquares.NORMAL_EIGENSYSTEM), sv**2)
+            self._assertClose(
+                solver.getDiagnostic(LeastSquares.NORMAL_EIGENSYSTEM),
+                sv**2)
             diagnostic = solver.getDiagnostic(solver.getFactorization())
             rcond = diagnostic[0] * solver.getThreshold()
             self.assertGreater(diagnostic[rank-1], rcond)
             if rank < solver.getDimension():
                 self.assertLess(diagnostic[rank], rcond)
         else:
-            self._assertClose(np.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
-                              np.multiply.reduce(sv**2))
+            self._assertClose(
+                np.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
+                np.multiply.reduce(sv**2))
 
     def testFullRank(self):
         dimension = 10
@@ -81,11 +86,16 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         rhs = np.dot(design.transpose(), data)
         solution, residues, rank, sv = np.linalg.lstsq(design, data)
         cov = np.linalg.inv(fisher)
-        s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
-        s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
-        s_design_cholesky = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_CHOLESKY)
-        s_normal_eigen = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
-        s_normal_cholesky = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_CHOLESKY)
+        s_svd = LeastSquares.fromDesignMatrix(
+            design, data, LeastSquares.DIRECT_SVD)
+        s_design_eigen = LeastSquares.fromDesignMatrix(
+            design, data, LeastSquares.NORMAL_EIGENSYSTEM)
+        s_design_cholesky = LeastSquares.fromDesignMatrix(
+            design, data, LeastSquares.NORMAL_CHOLESKY)
+        s_normal_eigen = LeastSquares.fromNormalEquations(
+            fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
+        s_normal_cholesky = LeastSquares.fromNormalEquations(
+            fisher, rhs, LeastSquares.NORMAL_CHOLESKY)
         self.check(s_svd, solution, rank, fisher, cov, sv)
         self.check(s_design_eigen, solution, rank, fisher, cov, sv)
         self.check(s_design_cholesky, solution, rank, fisher, cov, sv)
@@ -133,18 +143,23 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         svIn[-2] = svIn[0] * 1E-4
         # Just use SVD to get a pair of orthogonal matrices; we'll use our own singular values
         # so we can control the stability of the matrix.
-        u, s, vt = np.linalg.svd(np.random.randn(dimension, nData), full_matrices=False)
+        u, s, vt = np.linalg.svd(np.random.randn(dimension, nData),
+                                 full_matrices=False)
         design = np.dot(u * svIn, vt).transpose()
         data = np.random.randn(nData)
         fisher = np.dot(design.transpose(), design)
         rhs = np.dot(design.transpose(), data)
         threshold = 10 * sys.float_info.epsilon
-        solution, residues, rank, sv = np.linalg.lstsq(design, data, rcond=threshold)
+        solution, residues, rank, sv = np.linalg.lstsq(
+            design, data, rcond=threshold)
         self._assertClose(svIn, sv)
         cov = np.linalg.pinv(fisher, rcond=threshold)
-        s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
-        s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
-        s_normal_eigen = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
+        s_svd = LeastSquares.fromDesignMatrix(
+            design, data, LeastSquares.DIRECT_SVD)
+        s_design_eigen = LeastSquares.fromDesignMatrix(
+            design, data, LeastSquares.NORMAL_EIGENSYSTEM)
+        s_normal_eigen = LeastSquares.fromNormalEquations(
+            fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
         self.check(s_svd, solution, rank, fisher, cov, sv)
         self.check(s_design_eigen, solution, rank, fisher, cov, sv)
         self.check(s_normal_eigen, solution, rank, fisher, cov, sv)

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "boost/shared_ptr.hpp" // only for ndarray
+#include "boost/shared_ptr.hpp"  // only for ndarray
 
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -12,7 +12,9 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 // =============== Block ====================================================================================
 
@@ -38,20 +40,16 @@ public:
     // If the last chunk allocated isn't needed after all (usually because of an exception in a constructor)
     // we reuse it immediately.  If it wasn't the last chunk allocated, it can't be reclaimed until
     // the entire block goes out of scope.
-    static void reclaim(std::size_t recordSize, void * data, ndarray::Manager::Ptr const & manager) {
+    static void reclaim(std::size_t recordSize, void *data, ndarray::Manager::Ptr const &manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
-        if (reinterpret_cast<char*>(data) + recordSize == block->_next) {
+        if (reinterpret_cast<char *>(data) + recordSize == block->_next) {
             block->_next -= recordSize;
         }
     }
 
     // Ensure we have space for at least the given number of records as a contiguous block.
     // May not actually allocate anything if we already do.
-    static void preallocate(
-        std::size_t recordSize,
-        std::size_t recordCount,
-        ndarray::Manager::Ptr & manager
-    ) {
+    static void preallocate(std::size_t recordSize, std::size_t recordCount, ndarray::Manager::Ptr &manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
         if (!block || static_cast<std::size_t>(block->_end - block->_next) < recordSize * recordCount) {
             block = Ptr(new Block(recordSize, recordCount));
@@ -59,23 +57,20 @@ public:
         }
     }
 
-    static std::size_t getBufferSize(
-        std::size_t recordSize,
-        ndarray::Manager::Ptr const & manager
-    ) {
+    static std::size_t getBufferSize(std::size_t recordSize, ndarray::Manager::Ptr const &manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
         return static_cast<std::size_t>(block->_end - block->_next) / recordSize;
     }
 
     // Get the next chunk from the block, making a new block and installing it into the table
     // if we're all out of space.
-    static void * get(std::size_t recordSize, ndarray::Manager::Ptr & manager) {
+    static void *get(std::size_t recordSize, ndarray::Manager::Ptr &manager) {
         Ptr block = boost::static_pointer_cast<Block>(manager);
         if (!block || block->_next == block->_end) {
             block = Ptr(new Block(recordSize, BaseTable::nRecordsPerBlock));
             manager = block;
         }
-        void * r = block->_next;
+        void *r = block->_next;
         block->_next += recordSize;
         return r;
     }
@@ -83,7 +78,7 @@ public:
     // Block is also keeper of the special number that says what alignment boundaries are needed for
     // schemas.  Before we start using a schema, we need to first ensure it meets that requirement,
     // and pad it if not.
-    static void padSchema(Schema & schema) {
+    static void padSchema(Schema &schema) {
         static int const MIN_RECORD_ALIGN = sizeof(AllocType);
         int remainder = schema.getRecordSize() % MIN_RECORD_ALIGN;
         if (remainder) {
@@ -92,32 +87,28 @@ public:
     }
 
 private:
-
     struct AllocType {
         double element[2];
     };
 
-    explicit Block(std::size_t recordSize, std::size_t recordCount) :
-        _mem(new AllocType[(recordSize * recordCount) / sizeof(AllocType)]),
-        _next(reinterpret_cast<char*>(_mem.get())),
-        _end(_next + recordSize * recordCount)
-    {
+    explicit Block(std::size_t recordSize, std::size_t recordCount)
+            : _mem(new AllocType[(recordSize * recordCount) / sizeof(AllocType)]),
+              _next(reinterpret_cast<char *>(_mem.get())),
+              _end(_next + recordSize * recordCount) {
         assert((recordSize * recordCount) % sizeof(AllocType) == 0);
-        std::fill(_next, _end, 0); // initialize to zero; we'll later initialize floats to NaN.
+        std::fill(_next, _end, 0);  // initialize to zero; we'll later initialize floats to NaN.
     }
 
     std::unique_ptr<AllocType[]> _mem;
-    char * _next;
-    char * _end;
+    char *_next;
+    char *_end;
 };
 
-} // anonymous
+}  // anonymous
 
 // =============== BaseTable implementation (see header for docs) ===========================================
 
-void BaseTable::preallocate(std::size_t n) {
-    Block::preallocate(_schema.getRecordSize(), n, _manager);
-}
+void BaseTable::preallocate(std::size_t n) { Block::preallocate(_schema.getRecordSize(), n, _manager); }
 
 std::size_t BaseTable::getBufferSize() const {
     if (_manager) {
@@ -127,23 +118,23 @@ std::size_t BaseTable::getBufferSize() const {
     }
 }
 
-PTR(BaseTable) BaseTable::make(Schema const & schema) {
+std::shared_ptr<BaseTable> BaseTable::make(Schema const &schema) {
     return std::shared_ptr<BaseTable>(new BaseTable(schema));
 }
 
-PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input) {
-    PTR(BaseRecord) output = makeRecord();
+std::shared_ptr<BaseRecord> BaseTable::copyRecord(BaseRecord const &input) {
+    std::shared_ptr<BaseRecord> output = makeRecord();
     output->assign(input);
     return output;
 }
 
-PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper const & mapper) {
-    PTR(BaseRecord) output = makeRecord();
+std::shared_ptr<BaseRecord> BaseTable::copyRecord(BaseRecord const &input, SchemaMapper const &mapper) {
+    std::shared_ptr<BaseRecord> output = makeRecord();
     output->assign(input, mapper);
     return output;
 }
 
-PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+std::shared_ptr<io::FitsWriter> BaseTable::makeFitsWriter(fits::Fits *fitsfile, int flags) const {
     return std::make_shared<io::FitsWriter>(fitsfile, flags);
 }
 
@@ -155,92 +146,82 @@ std::shared_ptr<BaseRecord> BaseTable::_makeRecord() {
     return std::shared_ptr<BaseRecord>(new BaseRecord(shared_from_this()));
 }
 
-BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema) {
+BaseTable::BaseTable(Schema const &schema) : daf::base::Citizen(typeid(this)), _schema(schema) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
     _schema.getAliasMap()->_table = this;
 }
 
-BaseTable::~BaseTable() {
-    _schema.getAliasMap()->_table = 0;
-}
+BaseTable::~BaseTable() { _schema.getAliasMap()->_table = 0; }
 
 namespace {
 
 // A Schema Functor used to set floating point-fields to NaN and initialize variable-length arrays
 // using placement new.  All other fields are left alone, as they should already be zero.
 struct RecordInitializer {
-
     template <typename T>
-    static void fill(T * element, int size) {} // this matches all non-floating-point-element fields.
+    static void fill(T *element, int size) {}  // this matches all non-floating-point-element fields.
 
-    static void fill(float * element, int size) {
+    static void fill(float *element, int size) {
         std::fill(element, element + size, std::numeric_limits<float>::quiet_NaN());
     }
 
-    static void fill(double * element, int size) {
+    static void fill(double *element, int size) {
         std::fill(element, element + size, std::numeric_limits<double>::quiet_NaN());
     }
 
-    static void fill(Angle * element, int size) {
-        fill(reinterpret_cast<double*>(element), size);
+    static void fill(Angle *element, int size) { fill(reinterpret_cast<double *>(element), size); }
+
+    template <typename T>
+    void operator()(SchemaItem<T> const &item) const {
+        fill(reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
+             item.key.getElementCount());
     }
 
     template <typename T>
-    void operator()(SchemaItem<T> const & item) const {
-        fill(
-            reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
-            item.key.getElementCount()
-        );
-    }
-
-    template <typename T>
-    void operator()(SchemaItem< Array<T> > const & item) const {
+    void operator()(SchemaItem<Array<T> > const &item) const {
         if (item.key.isVariableLength()) {
-            new (data + item.key.getOffset()) ndarray::Array<T,1,1>();
+            new (data + item.key.getOffset()) ndarray::Array<T, 1, 1>();
         } else {
-            fill(
-                reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
-                item.key.getElementCount()
-            );
+            fill(reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
+                 item.key.getElementCount());
         }
     }
 
-    void operator()(SchemaItem<Flag> const & item) const {} // do nothing for Flag fields; already 0
+    void operator()(SchemaItem<Flag> const &item) const {}  // do nothing for Flag fields; already 0
 
-    char * data;
+    char *data;
 };
 
 // A Schema Functor used to set destroy variable-length array fields using an explicit call to their
 // destructor (necessary since we used placement new).  All other fields are ignored, as they're POD.
 struct RecordDestroyer {
+    template <typename T>
+    void operator()(SchemaItem<T> const &item) const {}
 
     template <typename T>
-    void operator()(SchemaItem<T> const & item) const {}
-
-    template <typename T>
-    void operator()(SchemaItem< Array<T> > const & item) const {
-        typedef ndarray::Array<T,1,1> Element;
+    void operator()(SchemaItem<Array<T> > const &item) const {
+        typedef ndarray::Array<T, 1, 1> Element;
         if (item.key.isVariableLength()) {
-            (*reinterpret_cast< Element * >(data + item.key.getOffset())).~Element();
+            (*reinterpret_cast<Element *>(data + item.key.getOffset())).~Element();
         }
     }
 
-    char * data;
+    char *data;
 };
 
-} // anonymous
+}  // anonymous
 
-void BaseTable::_initialize(BaseRecord & record) {
+void BaseTable::_initialize(BaseRecord &record) {
     record._data = Block::get(_schema.getRecordSize(), _manager);
-    RecordInitializer f = { reinterpret_cast<char*>(record._data) };
+    RecordInitializer f = {reinterpret_cast<char *>(record._data)};
     _schema.forEach(f);
-    record._manager = _manager; // manager always points to the most recently-used block.
+    record._manager = _manager;  // manager always points to the most recently-used block.
 }
 
-void BaseTable::_destroy(BaseRecord & record) {
+void BaseTable::_destroy(BaseRecord &record) {
     assert(record._table.get() == this);
-    RecordDestroyer f = { reinterpret_cast<char*>(record._data) };
+    RecordDestroyer f = {reinterpret_cast<char *>(record._data)};
     _schema.forEach(f);
     if (record._manager == _manager) Block::reclaim(_schema.getRecordSize(), record._data, _manager);
 }
@@ -257,5 +238,6 @@ int BaseTable::nRecordsPerBlock = 100;
 
 template class CatalogT<BaseRecord>;
 template class CatalogT<BaseRecord const>;
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

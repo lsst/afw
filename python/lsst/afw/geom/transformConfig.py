@@ -1,10 +1,14 @@
+from __future__ import absolute_import, division, print_function
+
 import lsst.pex.config as pexConfig
 from lsst.afw.geom import xyTransformRegistry
 
+
 class TransformConfig(pexConfig.Config):
     transform = xyTransformRegistry.makeField(
-         doc = "an XYTransform from the registry"
+        doc = "an XYTransform from the registry"
     )
+
 
 class TransformMapConfig(pexConfig.Config):
     transforms = pexConfig.ConfigDictField(
@@ -17,4 +21,3 @@ class TransformMapConfig(pexConfig.Config):
         dtype = str,
         optional = False,
     )
-

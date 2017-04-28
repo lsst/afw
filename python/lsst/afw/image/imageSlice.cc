@@ -28,10 +28,13 @@ namespace py = pybind11;
 
 using namespace py::literals;
 
-namespace lsst { namespace afw { namespace image { namespace {
+namespace lsst {
+namespace afw {
+namespace image {
+namespace {
 
 template <typename PixelT>
-static void declareImageSlice(py::module & mod, std::string const & suffix) {
+static void declareImageSlice(py::module &mod, std::string const &suffix) {
     using Class = ImageSlice<PixelT>;
 
     py::class_<Class, std::shared_ptr<Class>, Image<PixelT>> cls(mod, ("ImageSlice" + suffix).c_str());
@@ -39,9 +42,9 @@ static void declareImageSlice(py::module & mod, std::string const & suffix) {
     cls.def(py::init<Image<PixelT> const &>(), "img"_a);
 
     py::enum_<typename Class::ImageSliceType>(cls, "ImageSliceType")
-        .value("ROW", Class::ImageSliceType::ROW)
-        .value("COLUMN", Class::ImageSliceType::COLUMN)
-        .export_values();
+            .value("ROW", Class::ImageSliceType::ROW)
+            .value("COLUMN", Class::ImageSliceType::COLUMN)
+            .export_values();
 
     cls.def("getImageSliceType", &Class::getImageSliceType);
 
@@ -98,5 +101,7 @@ PYBIND11_PLUGIN(imageSlice) {
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::image::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::image::<anonymous>

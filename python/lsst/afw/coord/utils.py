@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -56,5 +56,6 @@ def assertCoordsAlmostEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcs
 
 @lsst.utils.tests.inTestCase
 def assertCoordsNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertCoordsAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertCoordsAlmostEqual",
+                  DeprecationWarning)
     assertCoordsAlmostEqual(*args, **kwargs)

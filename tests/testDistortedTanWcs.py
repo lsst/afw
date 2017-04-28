@@ -106,7 +106,8 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(predSky, predSkyCopy)
 
                 measSky = distortedWcs.pixelToSky(pixPos)
-                self.assertLess(predSky.angularSeparation(measSky).asRadians(), 1e-7)
+                self.assertLess(
+                    predSky.angularSeparation(measSky).asRadians(), 1e-7)
 
                 pixPosRoundTrip = distortedWcs.skyToPixel(measSky)
                 for i in range(2):
@@ -161,7 +162,8 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         del exposure
         del outWcs
 
-        # return the original pure TAN WCS if the exposure's detector has no TAN_PIXELS transform
+        # return the original pure TAN WCS if the exposure's detector has no
+        # TAN_PIXELS transform
         def removeTanPixels(detectorWrapper):
             tanPixSys = detector.makeCameraSys(TAN_PIXELS)
             detectorWrapper.transMap.pop(tanPixSys)

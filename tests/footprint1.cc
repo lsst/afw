@@ -41,25 +41,23 @@ namespace geom = lsst::afw::geom;
 
 typedef float ImagePixelT;
 
-BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
+                                         "Boost non-Std" */
     LOG_CONFIG();
     LOG_SET_LVL("afw.detection", LOG_LVL_INFO);
 
-    image::MaskedImage<ImagePixelT> img(geom::Extent2I(10,20));
+    image::MaskedImage<ImagePixelT> img(geom::Extent2I(10, 20));
     *img.getImage() = 100;
 
     detection::FootprintSet ds_by_value1(img, 0);
     BOOST_CHECK(ds_by_value1.getFootprints()->size() == 1);
 
-    detection::FootprintSet ds_by_value2(img,
-                                         detection::Threshold(0, detection::Threshold::VALUE));
+    detection::FootprintSet ds_by_value2(img, detection::Threshold(0, detection::Threshold::VALUE));
     BOOST_CHECK(ds_by_value2.getFootprints()->size() == 1);
 
-    BOOST_CHECK_THROW(detection::FootprintSet(img,         \
-                                              detection::Threshold(0, detection::Threshold::STDEV)), \
+    BOOST_CHECK_THROW(detection::FootprintSet(img, detection::Threshold(0, detection::Threshold::STDEV)),
                       lsst::pex::exceptions::Exception);
 
-    BOOST_CHECK_THROW(detection::FootprintSet(img, \
-                                              detection::Threshold(0, detection::Threshold::VARIANCE)), \
+    BOOST_CHECK_THROW(detection::FootprintSet(img, detection::Threshold(0, detection::Threshold::VARIANCE)),
                       lsst::pex::exceptions::Exception);
 }

@@ -41,6 +41,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
     are not exposed to python. This test serves mainly as a way to test that the python bindings
     correctly work. Many of these tests are smaller versions of the C++ tests.
     '''
+
     def testNullSpanSet(self):
         nullSS = afwGeom.SpanSet()
         self.assertEqual(nullSS.getArea(), 0)
@@ -49,14 +50,16 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(nullSS.getBBox().getDimensions().getY(), 0)
 
     def testBBoxSpanSet(self):
-        boxSS = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Point2I(6, 6)))
+        boxSS = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(2, 2),
+                                              afwGeom.Point2I(6, 6)))
         self.assertEqual(boxSS.getArea(), 25)
         bBox = boxSS.getBBox()
         self.assertEqual(bBox.getMinX(), 2)
         self.assertEqual(bBox.getMinY(), 2)
 
     def testIteratorConstructor(self):
-        spans = [afwGeom.Span(0, 2, 4), afwGeom.Span(1, 2, 4), afwGeom.Span(2, 2, 4)]
+        spans = [afwGeom.Span(0, 2, 4), afwGeom.Span(1, 2, 4),
+                 afwGeom.Span(2, 2, 4)]
         spanSetFromList = afwGeom.SpanSet(spans)
         spanSetFromArray = afwGeom.SpanSet(np.array(spans))
 
@@ -157,7 +160,8 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         inputArray[2, 1] = 3
         inputArray[2, 2] = 4
 
-        inputSpanSet = afwGeom.SpanSet([afwGeom.Span(0, 0, 1), afwGeom.Span(1, 0, 1)])
+        inputSpanSet = afwGeom.SpanSet([afwGeom.Span(0, 0, 1),
+                                        afwGeom.Span(1, 0, 1)])
         flatArr = inputSpanSet.flatten(inputArray, afwGeom.Point2I(-1, -1))
 
         self.assertEqual(flatArr.size, inputSpanSet.getArea())

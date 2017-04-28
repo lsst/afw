@@ -85,7 +85,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.image2 = afwImage.ImageF(self.image1.getDimensions())
         self.image2.set(self.val2)
         self.function = afwMath.PolynomialFunction2D(2)
-        self.function.setParameters(list(range(self.function.getNParameters())))
+        self.function.setParameters(
+            list(range(self.function.getNParameters())))
 
     def tearDown(self):
         del self.image1
@@ -117,7 +118,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             im = ctor(10, 10, val)
             self.assertEqual(im.get(0, 0), val)
 
-            im2 = ctor(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 10)), val)
+            im2 = ctor(afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                     afwGeom.Extent2I(10, 10)), val)
             self.assertEqual(im2.get(0, 0), val)
 
     def testSetGetImages(self):
@@ -139,7 +141,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
     def testAllocateLargeImages(self):
         """Try to allocate a Very large image"""
-        bbox = afwGeom.BoxI(afwGeom.PointI(-1 << 30, -1 << 30), afwGeom.PointI(1 << 30, 1 << 30))
+        bbox = afwGeom.BoxI(afwGeom.PointI(-1 << 30, -1 << 30),
+                            afwGeom.PointI(1 << 30, 1 << 30))
 
         def tst():
             afwImage.ImageF(bbox)
@@ -158,7 +161,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1.get(i, j), self.val1 + self.function(i, j))
+                self.assertEqual(self.image1.get(i, j),
+                                 self.val1 + self.function(i, j))
 
     def testAssignWithBBox(self):
         """Test assign(rhs, bbox) with non-empty bbox
@@ -181,7 +185,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                 (0, 1),
                 (1, 2),
             )):
-                for origin in (None, afwImage.PARENT, afwImage.LOCAL):  # None to omit the argument
+                # None to omit the argument
+                for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     destIm[:] = -1.0
                     bbox = afwGeom.Box2I(validMin, srcIm.getDimensions())
                     if origin != afwImage.LOCAL:
@@ -192,9 +197,12 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                     else:
                         destIm.assign(srcIm, bbox, origin)
                         destImView = afwImage.ImageF(destIm, bbox, origin)
-                    self.assertFloatsEqual(destImView.getArray(), srcIm.getArray())
-                    numPixNotAssigned = (destImDim[0] * destImDim[1]) - (srcImDim[0] * srcImDim[1])
-                    self.assertEqual(np.sum(destIm.getArray() < -0.5), numPixNotAssigned)
+                    self.assertFloatsEqual(
+                        destImView.getArray(), srcIm.getArray())
+                    numPixNotAssigned = (destImDim[0] * destImDim[1]) - \
+                        (srcImDim[0] * srcImDim[1])
+                    self.assertEqual(
+                        np.sum(destIm.getArray() < -0.5), numPixNotAssigned)
 
             for badMin in (afwGeom.Point2I(*val) + afwGeom.Extent2I(xy0) for val in (
                 (-1, 0),
@@ -202,14 +210,16 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                 (0, -1),
                 (1, 3),
             )):
-                for origin in (None, afwImage.PARENT, afwImage.LOCAL):  # None to omit the argument
+                # None to omit the argument
+                for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     bbox = afwGeom.Box2I(badMin, srcIm.getDimensions())
                     if origin != afwImage.LOCAL:
                         bbox.shift(afwGeom.Extent2I(xy0))
                     if origin is None:
                         self.assertRaises(Exception, destIm.set, srcIm, bbox)
                     else:
-                        self.assertRaises(Exception, destIm.set, srcIm, bbox, origin)
+                        self.assertRaises(
+                            Exception, destIm.set, srcIm, bbox, origin)
 
     def testAssignWithoutBBox(self):
         """Test assign(rhs, [bbox]) with an empty bbox and with no bbox specified; both set all pixels
@@ -273,7 +283,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1.get(i, j), self.val1 - self.function(i, j))
+                self.assertEqual(self.image1.get(i, j),
+                                 self.val1 - self.function(i, j))
 
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"
@@ -355,7 +366,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(simage.get(0, 0), self.val1 + 2)
 
     def testGeneralisedCopyConstructors(self):
-        imageU = self.image1.convertU()  # these are generalised (templated) copy constructors in C++
+        # these are generalised (templated) copy constructors in C++
+        imageU = self.image1.convertU()
         imageF = imageU.convertF()
         imageD = imageF.convertD()
 
@@ -428,7 +440,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
-        simage1.setXY0(afwGeom.Point2I(0, 0))  # reset origin; doesn't affect pixel coordinate systems
+        # reset origin; doesn't affect pixel coordinate systems
+        simage1.setXY0(afwGeom.Point2I(0, 0))
 
         simage = afwImage.ImageF(
             simage1,
@@ -520,8 +533,10 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(float(im[0, 0]), 666)
         self.assertEqual(int(im[0, 0]), 666)
 
-        self.assertRaises(TypeError, int, im)  # only single pixel images may be converted
-        self.assertRaises(TypeError, float, im)  # only single pixel images may be converted
+        # only single pixel images may be converted
+        self.assertRaises(TypeError, int, im)
+        # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im)
 
     def testClone(self):
         """Test that clone works properly"""
@@ -538,7 +553,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(im2.getDimensions(), afwGeom.ExtentI(3, 5))
         self.assertEqual(im.get(0, 0), im2.get(0, 0))
         im2[0, 0] += 10
-        self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))  # equivalent to im.get(0, 0) etc.
+        # equivalent to im.get(0, 0) etc.
+        self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))
 
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):
@@ -554,7 +570,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         self.dimage1.getImage().set(self.val1)
 
         if afwdataDir is not None:
-            self.fileForMetadata = os.path.join(afwdataDir, "data", "small_MI.fits")
+            self.fileForMetadata = os.path.join(
+                afwdataDir, "data", "small_MI.fits")
             self.trueMetadata = {"RELHUMID": 10.69}
 
     def tearDown(self):
@@ -592,8 +609,10 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         hdus["msk"] = 2  # an U8 fits HDU
         hdus["var"] = 3  # an F32 fits HDU
 
-        imgU = afwImage.DecoratedImageU(self.fileForMetadata, hdus["img"])  # read as unsigned short
-        imgF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["img"])  # read as float
+        # read as unsigned short
+        imgU = afwImage.DecoratedImageU(self.fileForMetadata, hdus["img"])
+        # read as float
+        imgF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["img"])
 
         self.assertEqual(imgU.getHeight(), 256)
         self.assertEqual(imgF.getImage().getWidth(), 256)
@@ -608,8 +627,10 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         #
         # Read an F32 image
         #
-        varU = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"])  # read as unsigned short
-        varF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"])  # read as float
+        # read as unsigned short
+        varU = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"])
+        # read as float
+        varF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"])
 
         self.assertEqual(varU.getHeight(), 256)
         self.assertEqual(varF.getImage().getWidth(), 256)
@@ -617,7 +638,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         #
         # Read a char image
         #
-        maskImg = afwImage.DecoratedImageU(self.fileForMetadata, hdus["msk"]).getImage()  # read a char file
+        maskImg = afwImage.DecoratedImageU(
+            self.fileForMetadata, hdus["msk"]).getImage()  # read a char file
 
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)
@@ -646,13 +668,15 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
             #
             rimage = afwImage.DecoratedImageF(tmpFile)
 
-            self.assertEqual(self.dimage1.getImage().get(0, 0), rimage.getImage().get(0, 0))
+            self.assertEqual(self.dimage1.getImage().get(0, 0),
+                             rimage.getImage().get(0, 0))
             #
             # Check that we wrote (and read) the metadata successfully
             if self.fileForMetadata:
                 meta = self.trueMetadata
                 for k in meta.keys():
-                    self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
+                    self.assertEqual(
+                        rimage.getMetadata().getAsDouble(k), meta[k])
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
@@ -707,7 +731,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     def testLargeImage(self):
         """Test that creating an extremely large image raises, rather than segfaulting. DM-89, -527."""
         for imtype in (afwImage.ImageD, afwImage.ImageF, afwImage.ImageI, afwImage.ImageU):
-            self.assertRaises(lsst.pex.exceptions.LengthError, imtype, 60000, 60000)
+            self.assertRaises(lsst.pex.exceptions.LengthError,
+                              imtype, 60000, 60000)
 
 
 def printImg(img):
@@ -729,6 +754,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

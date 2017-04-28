@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # LSST Data Management System
 # Copyright 2016 LSST Corporation.
 #
@@ -59,10 +57,12 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         CD21 = 0
         CD22 = arcsecPerPixel
 
-        self.wcs = afwImage.makeWcs(self.crval, self.crpix, CD11, CD12, CD21, CD22)
+        self.wcs = afwImage.makeWcs(
+            self.crval, self.crpix, CD11, CD12, CD21, CD22)
 
         refSchema = afwTable.SimpleTable.makeMinimalSchema()
-        self.refCentroidKey = afwTable.Point2DKey.addFields(refSchema, "centroid", "centroid", "pixels")
+        self.refCentroidKey = afwTable.Point2DKey.addFields(
+            refSchema, "centroid", "centroid", "pixels")
         self.refCoordKey = afwTable.CoordKey(refSchema["coord"])
         self.refCat = afwTable.SimpleCatalog(refSchema)
 
@@ -124,7 +124,8 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
 
     def testLists(self):
         """Check updating lists of reference objects and sources"""
-        # arbitrary but reasonable values that are intentionally different than testCatalogs
+        # arbitrary but reasonable values that are intentionally different than
+        # testCatalogs
         maxPix = 1000
         numPoints = 10
         self.setCatalogs(maxPix=maxPix, numPoints=numPoints)
@@ -137,7 +138,8 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
 
     def testCatalogs(self):
         """Check updating catalogs of reference objects and sources"""
-        # arbitrary but reasonable values that are intentionally different than testLists
+        # arbitrary but reasonable values that are intentionally different than
+        # testLists
         maxPix = 2000
         numPoints = 9
         self.setCatalogs(maxPix=maxPix, numPoints=numPoints)
@@ -156,11 +158,13 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         for src, refObj in zip(self.sourceCat, self.refCat):
             srcCentroid = src.get(self.srcCentroidKey)
             refCentroid = refObj.get(self.refCentroidKey)
-            self.assertPairsAlmostEqual(srcCentroid, refCentroid, maxDiff=maxPixDiff)
+            self.assertPairsAlmostEqual(
+                srcCentroid, refCentroid, maxDiff=maxPixDiff)
 
             srcCoord = src.get(self.srcCoordKey)
             refCoord = refObj.get(self.refCoordKey)
-            self.assertCoordsAlmostEqual(srcCoord, refCoord, maxDiff=maxSkyDiff)
+            self.assertCoordsAlmostEqual(
+                srcCoord, refCoord, maxDiff=maxSkyDiff)
 
     def setCatalogs(self, maxPix, numPoints):
         """Set the source centroids and reference object coords

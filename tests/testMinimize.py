@@ -69,7 +69,8 @@ class MinimizeTestCase(lsst.utils.tests.TestCase):
         print("modelParams=", modelParams)
         print("fitParams  =", fitResults.parameterList)
         self.assertTrue(fitResults.isValid, "fit failed")
-        self.assertFloatsAlmostEqual(np.array(modelParams), np.array(fitResults.parameterList), 1e-11)
+        self.assertFloatsAlmostEqual(
+            np.array(modelParams), np.array(fitResults.parameterList), 1e-11)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
@@ -78,6 +79,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

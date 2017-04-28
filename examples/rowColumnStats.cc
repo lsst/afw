@@ -22,10 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file rowColumnStats.cc
- * @author Steve Bickerton
- * @brief An example executible which calls the statisticsStack function
+/*
+ * An example executible which calls the statisticsStack function
  *
  */
 #include <iostream>
@@ -40,45 +38,40 @@ namespace geom = lsst::afw::geom;
 typedef image::Image<float> ImageF;
 typedef image::ImageSlice<float> ImageSliceF;
 typedef image::MaskedImage<float> MImageF;
-typedef std::vector<float> VecF;
-typedef std::shared_ptr<VecF> VecFPtr;
 
 int main(int argc, char **argv) {
-
     int const nX = 8;
     int const nY = 8;
 
     // fill an image with a gradient
     // - we want something different in x and y so we can see the different projections
-    ImageF::Ptr img = ImageF::Ptr (new ImageF(geom::Extent2I(nX, nY), 0));
+    std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(geom::Extent2I(nX, nY), 0));
     for (int y = 0; y < img->getHeight(); ++y) {
         int x = 0;
         for (ImageF::x_iterator ptr = img->row_begin(y), end = img->row_end(y); ptr != end; ++ptr, ++x) {
-            *ptr = 1.0*x + 2.0*y;
+            *ptr = 1.0 * x + 2.0 * y;
         }
     }
 
     // collapse with a MEAN over 'x' (ie. avg all columns to one), then 'y' (avg all rows to one)
-    MImageF::Ptr imgProjectCol = math::statisticsStack(*img, math::MEAN, 'x');
-    MImageF::Ptr imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
+    std::shared_ptr<MImageF> imgProjectCol = math::statisticsStack(*img, math::MEAN, 'x');
+    std::shared_ptr<MImageF> imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
 
     ImageSliceF slc = ImageSliceF(*(imgProjectCol->getImage()));
 
-    ImageF::Ptr opColPlus(new ImageF(*img, true));
+    std::shared_ptr<ImageF> opColPlus(new ImageF(*img, true));
     *opColPlus += slc;
-    ImageF::Ptr opColMinus = *img - slc;
+    std::shared_ptr<ImageF> opColMinus = *img - slc;
 
-    ImageF::Ptr opColMult  = *img * slc;
-    ImageF::Ptr opColDiv   = *img / slc;
-
+    std::shared_ptr<ImageF> opColMult = *img * slc;
+    std::shared_ptr<ImageF> opColDiv = *img / slc;
 
     ImageSliceF rowSlice = ImageSliceF(*(imgProjectRow->getImage()));
-    std::vector<ImageF::Ptr> rows;
+    std::vector<std::shared_ptr<ImageF>> rows;
     rows.push_back(*img + rowSlice);
     rows.push_back(*img - rowSlice);
     rows.push_back(*img * rowSlice);
     rows.push_back(*img / rowSlice);
-
 
     // output the pixel values and show the statistics projections
 
@@ -95,8 +88,8 @@ int main(int argc, char **argv) {
     int y = 0;
     MImageF::y_iterator colEnd = imgProjectCol->col_end(0);
     for (MImageF::y_iterator pCol = imgProjectCol->col_begin(0); pCol != colEnd; ++pCol, ++y) {
-        printf("%5.1f %5.1f %5.1f %5.2f : ",
-               (*opColPlus)(0, y), (*opColMinus)(0, y), (*opColMult)(0, y), (*opColDiv)(0, y));
+        printf("%5.1f %5.1f %5.1f %5.2f : ", (*opColPlus)(0, y), (*opColMinus)(0, y), (*opColMult)(0, y),
+               (*opColDiv)(0, y));
         for (ImageF::x_iterator ptr = img->row_begin(y), end = img->row_end(y); ptr != end; ++ptr) {
             printf("%5.2f ", static_cast<float>(*ptr));
         }

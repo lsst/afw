@@ -55,9 +55,11 @@ else:
 
 InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
-InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
+InputCorruptFilePath = os.path.join(
+    currDir, "data", InputCorruptMaskedImageName)
 
-CoordSysList = [afwCoord.ICRS, afwCoord.FK5, afwCoord.ECLIPTIC, afwCoord.GALACTIC]
+CoordSysList = [afwCoord.ICRS, afwCoord.FK5,
+                afwCoord.ECLIPTIC, afwCoord.GALACTIC]
 
 
 def coordSysEquinoxIter(equinoxList=(1950, 1977, 2000)):
@@ -100,9 +102,11 @@ def makeWcs(
         afwCoord.GALACTIC: (("GLON", "GLAT"), None),
     }[coordSys]
 
-    ctypeList = [("%-4s-%3s" % (csysPrefixes[i], projection)).replace(" ", "-") for i in range(2)]
+    ctypeList = [("%-4s-%3s" % (csysPrefixes[i], projection)
+                  ).replace(" ", "-") for i in range(2)]
     ps = dafBase.PropertySet()
-    crPixFits = [ind + 1.0 for ind in crPixPos]  # convert pix position to FITS standard
+    # convert pix position to FITS standard
+    crPixFits = [ind + 1.0 for ind in crPixPos]
     posAngRad = posAng.asRadians()
     pixelScaleDeg = pixelScale.asDegrees()
     cdMat = np.array([[math.cos(posAngRad), math.sin(posAngRad)],
@@ -198,9 +202,11 @@ class WcsTestCase(lsst.utils.tests.TestCase):
         """
         crValDeg = (27.53, 87.123)
         for coordSys1, equinox1 in coordSysEquinoxIter():
-            wcs1 = makeWcs(crValDeg=crValDeg, coordSys=coordSys1, equinox=equinox1)
+            wcs1 = makeWcs(crValDeg=crValDeg,
+                           coordSys=coordSys1, equinox=equinox1)
             for coordSys2, equinox2 in coordSysEquinoxIter():
-                wcs2 = makeWcs(crValDeg=crValDeg, coordSys=coordSys2, equinox=equinox2)
+                wcs2 = makeWcs(crValDeg=crValDeg,
+                               coordSys=coordSys2, equinox=equinox2)
                 for sky1Deg in (crValDeg, (18.52, 46.765)):
                     coord1 = localMakeCoord(coordSys1, sky1Deg, equinox1)
                     pixPos = wcs1.skyToPixel(coord1)
@@ -231,17 +237,21 @@ class WcsTestCase(lsst.utils.tests.TestCase):
             if coordSys not in (afwCoord.ICRS, afwCoord.GALACTIC):
                 # ICRS and Galactic by definition does not have an equinox.
                 self.assertEqual(wcs.getEquinox(), equinox)
-            predIsIcrs = coordSys == afwCoord.ICRS or (coordSys == afwCoord.FK5 and equinox == 2000)
+            predIsIcrs = coordSys == afwCoord.ICRS or \
+                (coordSys == afwCoord.FK5 and equinox == 2000)
             self.assertEqual(predIsIcrs, isIcrs(wcs))
             for coordSys2, equinox2 in coordSysEquinoxIter():
                 wcs2 = makeWcs(coordSys=coordSys2, equinox=equinox2)
-                self.assertEqual(refIsSameSkySystem(wcs, wcs2), wcs.isSameSkySystem(wcs2))
+                self.assertEqual(
+                    refIsSameSkySystem(wcs, wcs2),
+                    wcs.isSameSkySystem(wcs2))
 
     def testIcrsEquinox(self):
         """Check that EQUINOX is not written to FITS for ICRS coordinates"""
         def checkEquinoxHeader(coordSysName, writeEquinox):
             coordSys = getattr(afwCoord, coordSysName)
-            # We should get the same behaviour with both Wcs and TanWcs: check them both.
+            # We should get the same behaviour with both Wcs and TanWcs: check
+            # them both.
             for dummyWcs in (makeWcs(coordSys=coordSys, projection="SIN"),
                              makeWcs(coordSys=coordSys, projection="TAN")):
                 dummyExposure = afwImage.ExposureF()
@@ -250,7 +260,8 @@ class WcsTestCase(lsst.utils.tests.TestCase):
                     dummyExposure.writeFits(tmpFile)
                     metadata = afwImage.readMetadata(tmpFile)
                     self.assertEqual(metadata.get("RADESYS"), coordSysName)
-                    self.assertTrue(("EQUINOX" in metadata.names()) == writeEquinox)
+                    self.assertTrue(
+                        ("EQUINOX" in metadata.names()) == writeEquinox)
         checkEquinoxHeader("ICRS", False)
         checkEquinoxHeader("FK5", True)
 
@@ -339,7 +350,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(xy.getX(), xy2.getX())
         self.assertAlmostEqual(xy.getY(), xy2.getY())
 
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400 * afwGeom.degrees, +19.1976583 * afwGeom.degrees)
+        raDec = afwCoord.makeCoord(
+            afwCoord.ICRS, 245.167400 * afwGeom.degrees, +19.1976583 * afwGeom.degrees)
 
         xy = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(xy)
@@ -360,7 +372,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
+        raDec = afwCoord.makeCoord(
+            afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
         if verbose:
             print('testIdentity')
             print('wcs:')
@@ -386,7 +399,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
+        raDec = afwCoord.makeCoord(
+            afwCoord.ICRS, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
 
         with self.assertRaises(lsst.pex.exceptions.Exception):
             self.wcs.skyToPixel(raDec)
@@ -409,11 +423,13 @@ class WCSTestCaseSDSS(unittest.TestCase):
         md.set("EQUINOX", 2000.0)
 
         wcs = afwImage.makeWcs(md)
-        self.assertTrue(np.all(wcs.getCDMatrix() == np.array([[1.0, 0.0], [0.0, 1.0]])))
+        self.assertTrue(np.all(wcs.getCDMatrix() ==
+                               np.array([[1.0, 0.0], [0.0, 1.0]])))
 
         md.set("PC1_1", 2)
         wcs = afwImage.makeWcs(md)
-        self.assertTrue(np.all(wcs.getCDMatrix() == np.array([[2.0, 0.0], [0.0, 1.0]])))
+        self.assertTrue(np.all(wcs.getCDMatrix() ==
+                               np.array([[2.0, 0.0], [0.0, 1.0]])))
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testStripKeywords(self):
@@ -435,11 +451,13 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testXY0(self):
         """Test that XY0 values are handled correctly when building an exposure and also when
         reading the WCS header directly.  #2205"""
-        bbox = afwGeom.Box2I(afwGeom.Point2I(1000, 1000), afwGeom.Extent2I(10, 10))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(1000, 1000),
+                             afwGeom.Extent2I(10, 10))
 
         def makeWcs(crPixPos, crValDeg, projection):
             ps = dafBase.PropertySet()
-            ctypes = [("%-5s%3s" % (("RA", "DEC")[i], projection)).replace(" ", "-") for i in range(2)]
+            ctypes = [("%-5s%3s" % (("RA", "DEC")[i], projection)
+                       ).replace(" ", "-") for i in range(2)]
             for i in range(2):
                 ip1 = i + 1
                 ps.add("CTYPE%1d" % (ip1,), ctypes[i])
@@ -478,7 +496,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
                 unpPixPos = unpWcs.skyToPixel(skyPos)
 
                 if verbose:
-                    print("useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos))
+                    print("useExposure=%s; unp pixPos=%s" %
+                          (useExposure, unpPixPos))
 
                 for i in range(2):
                     self.assertAlmostEqual(unpPixPos[i], 1009.5)
@@ -501,7 +520,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()  # position read off ds9
+        # position read off ds9
+        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
 
         self.assertAlmostEqual(raDec[0], 17.87673, 5)  # ra from ds9
         self.assertAlmostEqual(raDec[1], 7.72231, 5)  # dec from ds9
@@ -510,7 +530,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
         """Test that we can measure the area of a pixel"""
 
         p00 = afwGeom.Point2D(10, 10)
-        p00 = afwGeom.Point2D(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
+        p00 = afwGeom.Point2D(self.metadata.getAsDouble("CRPIX1"),
+                              self.metadata.getAsDouble("CRPIX2"))
 
         sky00 = self.wcs.pixelToSky(p00)
         cosdec = math.cos(sky00[1])
@@ -518,17 +539,22 @@ class WCSTestCaseCFHT(unittest.TestCase):
         side = 1e-3
         icrs = afwCoord.ICRS
         sky10 = afwCoord.makeCoord(
-            icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(side/cosdec, 0), afwGeom.degrees
+            icrs,
+            sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(side/cosdec, 0),
+            afwGeom.degrees
         )
         sky01 = afwCoord.makeCoord(
-            icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(0, side), afwGeom.degrees
+            icrs,
+            sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(0, side),
+            afwGeom.degrees
         )
         p10 = self.wcs.skyToPixel(sky10) - p00
         p01 = self.wcs.skyToPixel(sky01) - p00
 
         area = side*side/abs(p10.getX()*p01.getY() - p01.getX()*p10.getY())
 
-        self.assertAlmostEqual(math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
+        self.assertAlmostEqual(
+            math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
         #
         # Now check that the area's the same as the CD matrix gives.
         #
@@ -536,7 +562,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
               self.metadata.get("CD2_1"), self.metadata.get("CD2_2")]
         area = math.fabs(cd[0]*cd[3] - cd[1]*cd[2])
 
-        self.assertAlmostEqual(math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
+        self.assertAlmostEqual(
+            math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
 
     def testReadWcs(self):
         """Test reading a Wcs directly from a fits file"""
@@ -586,7 +613,9 @@ class WCSTestCaseCFHT(unittest.TestCase):
         self.assertAlmostEqual(pix00g.getX(), pix00gApprox.getX())
         self.assertAlmostEqual(pix00g.getY(), pix00gApprox.getY())
         b = a.invert()
-        self.assertAlmostEqual(self.wcs.pixArea(sky00g), abs(b[b.XX] * b[b.YY] - b[b.XY]*b[b.YX]))
+        self.assertAlmostEqual(
+            self.wcs.pixArea(sky00g),
+            abs(b[b.XX] * b[b.YY] - b[b.XY]*b[b.YX]))
 
 
 class TestWcsCompare(unittest.TestCase):
@@ -594,7 +623,8 @@ class TestWcsCompare(unittest.TestCase):
     def setUp(self):
         crval = afwGeom.Point2D(1.23, 5.67)
         crpix = afwGeom.Point2D(102., 201.)
-        cd = np.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]], dtype=float)
+        cd = np.array([[5.399452e-5, -1.30770e-5],
+                       [1.30770e-5, 5.399452e-5]], dtype=float)
         self.plainWcs = afwImage.Wcs(crval, crpix, cd)
         self.sipWcs = afwImage.TanWcs(crval, crpix, cd)
         self.distortedWcs = afwImage.TanWcs(crval, crpix, cd, cd, cd, cd, cd)

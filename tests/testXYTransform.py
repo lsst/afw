@@ -62,11 +62,13 @@ class RefMultiXYTransform(object):
         return point
 
     def linearizeForwardTransform(self, point):
-        affineTransformList = [tr.linearizeForwardTransform(point) for tr in self.transformList]
+        affineTransformList = [tr.linearizeForwardTransform(point) for
+                               tr in self.transformList]
         return RefMultiAffineTransform(affineTransformList)
 
     def linearizeReverseTransform(self, point):
-        affineTransformList = [tr.linearizeReverseTransform(point) for tr in reversed(self.transformList)]
+        affineTransformList = [tr.linearizeReverseTransform(point) for
+                               tr in reversed(self.transformList)]
         return RefMultiAffineTransform(affineTransformList)
 
 
@@ -93,11 +95,15 @@ class XYTransformTestCase(unittest.TestCase):
             ):
                 tweakedFromPoint = fromPoint + deltaFrom
                 tweakedToPoint = transform.forwardTransform(tweakedFromPoint)
-                linToPoint = transform.linearizeForwardTransform(fromPoint)(tweakedFromPoint)
-                linRoundTripPoint = transform.linearizeReverseTransform(toPoint)(tweakedToPoint)
+                linToPoint = transform.linearizeForwardTransform(
+                    fromPoint)(tweakedFromPoint)
+                linRoundTripPoint = transform.linearizeReverseTransform(
+                    toPoint)(tweakedToPoint)
                 for i in range(2):
-                    self.assertAlmostEqual(tweakedToPoint[i], linToPoint[i], places=2)
-                    self.assertAlmostEqual(tweakedFromPoint[i], linRoundTripPoint[i], places=2)
+                    self.assertAlmostEqual(
+                        tweakedToPoint[i], linToPoint[i], places=2)
+                    self.assertAlmostEqual(
+                        tweakedFromPoint[i], linRoundTripPoint[i], places=2)
 
     def checkConfig(self, tClass, tConfig, filePath):
         """Check round trip of config
@@ -137,7 +143,8 @@ class XYTransformTestCase(unittest.TestCase):
             self.checkBasics(inverted)
             for fromPoint in self.fromIter():
                 toPoint = inverted.forwardTransform(fromPoint)
-                predToPoint = fromPoint - Extent2D(*invertedConfig.transform.translation)
+                predToPoint = fromPoint - \
+                    Extent2D(*invertedConfig.transform.translation)
                 for i in range(2):
                     self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
@@ -189,8 +196,10 @@ class XYTransformTestCase(unittest.TestCase):
             for fromPoint in self.fromIter():
                 toPoint = affine.forwardTransform(fromPoint)
                 predToPoint = Point2D(
-                    affineConfig.linear[0] * fromPoint[0] + affineConfig.linear[1] * fromPoint[1],
-                    affineConfig.linear[2] * fromPoint[0] + affineConfig.linear[3] * fromPoint[1],
+                    affineConfig.linear[0] * fromPoint[0] +
+                    affineConfig.linear[1] * fromPoint[1],
+                    affineConfig.linear[2] * fromPoint[0] +
+                    affineConfig.linear[3] * fromPoint[1],
                 )
                 for i in range(2):
                     self.assertAlmostEqual(toPoint[i], predToPoint[i])
@@ -214,8 +223,10 @@ class XYTransformTestCase(unittest.TestCase):
             for fromPoint in self.fromIter():
                 toPoint = affine.forwardTransform(fromPoint)
                 predToPoint = Point2D(
-                    affineConfig.linear[0] * fromPoint[0] + affineConfig.linear[1] * fromPoint[1],
-                    affineConfig.linear[2] * fromPoint[0] + affineConfig.linear[3] * fromPoint[1],
+                    affineConfig.linear[0] * fromPoint[0] +
+                    affineConfig.linear[1] * fromPoint[1],
+                    affineConfig.linear[2] * fromPoint[0] +
+                    affineConfig.linear[3] * fromPoint[1],
                 )
                 predToPoint = predToPoint + Extent2D(*affineConfig.translation)
                 for i in range(2):
@@ -238,8 +249,12 @@ class XYTransformTestCase(unittest.TestCase):
             for fromPoint in self.fromIter():
                 fromRadius = math.hypot(fromPoint[0], fromPoint[1])
                 fromAngle = math.atan2(fromPoint[1], fromPoint[0])
-                predToRadius = fromRadius * (radialConfig.coeffs[2] * fromRadius + radialConfig.coeffs[1])
-                predToPoint = Point2D(predToRadius * math.cos(fromAngle), predToRadius * math.sin(fromAngle))
+                predToRadius = fromRadius * \
+                    (radialConfig.coeffs[2] *
+                     fromRadius + radialConfig.coeffs[1])
+                predToPoint = Point2D(
+                    predToRadius * math.cos(fromAngle),
+                    predToRadius * math.sin(fromAngle))
                 toPoint = radial.forwardTransform(fromPoint)
                 for i in range(2):
                     self.assertAlmostEqual(toPoint[i], predToPoint[i])

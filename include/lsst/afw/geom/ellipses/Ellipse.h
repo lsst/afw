@@ -25,22 +25,23 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED
 
-/**
- *  @file
- *  @brief Forward declarations, typedefs, and definitions for Ellipse.
+/*
+ *  Forward declarations, typedefs, and definitions for Ellipse.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
-
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 /**
- *  @brief An ellipse defined by an arbitrary BaseCore and a center point.
+ *  An ellipse defined by an arbitrary BaseCore and a center point.
  *
  *  An ellipse is composed of its center coordinate and its Core - a parametrization of the
  *  ellipticity and size of the ellipse.  Setting the core of an ellipse never changes the
@@ -49,64 +50,59 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  */
 class Ellipse {
 public:
-#ifndef SWIG
-    class Transformer; ///< Proxy return type for Ellipse::transform().
-    class GridTransform; ///< Proxy return type for Ellipse::getGridTransform().
-    class Convolution; ///< Proxy return type for Ellipse::convolve().
-#endif
+    class Transformer;    ///< Proxy return type for Ellipse::transform().
+    class GridTransform;  ///< Proxy return type for Ellipse::getGridTransform().
+    class Convolution;    ///< Proxy return type for Ellipse::convolve().
 
-    typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
+    typedef Eigen::Matrix<double, 5, 1> ParameterVector;  ///< Parameter vector type.
 
-    typedef std::shared_ptr<Ellipse> Ptr;
-    typedef std::shared_ptr<Ellipse const> ConstPtr;
+    enum ParameterEnum { X = 3, Y = 4 };  ///< Definitions for elements of an ellipse vector.
 
-    enum ParameterEnum { X=3, Y=4 }; ///< Definitions for elements of an ellipse vector.
+    /// Return the center point.
+    Point2D const& getCenter() const { return _center; }
 
-    /// @brief Return the center point.
-    Point2D const & getCenter() const { return _center; }
+    /// Return the center point.
+    Point2D& getCenter() { return _center; }
 
-    /// @brief Return the center point.
-    Point2D & getCenter() { return _center; }
+    /// Set the center point.
+    void setCenter(Point2D const& center) { _center = center; }
 
-    /// @brief Set the center point.
-    void setCenter(Point2D const & center) { _center = center; }
+    /// Return the ellipse core.
+    BaseCore const& getCore() const { return *_core; }
 
-    /// @brief Return the ellipse core.
-    BaseCore const & getCore() const { return *_core; }
+    /// Return the ellipse core.
+    BaseCore& getCore() { return *_core; }
 
-    /// @brief Return the ellipse core.
-    BaseCore & getCore() { return *_core; }
+    /// Return the ellipse core.
+    std::shared_ptr<BaseCore const> getCorePtr() const { return _core; }
 
-    /// @brief Return the ellipse core.
-    BaseCore::ConstPtr getCorePtr() const { return _core; }
+    /// Return the ellipse core.
+    std::shared_ptr<BaseCore> getCorePtr() { return _core; }
 
-    /// @brief Return the ellipse core.
-    BaseCore::Ptr getCorePtr() { return _core; }
+    /// Set the ellipse core; the type of the core is not changed.
+    void setCore(BaseCore const& core) { *_core = core; }
 
-    /// @brief Set the ellipse core; the type of the core is not changed.
-    void setCore(BaseCore const & core) { *_core = core; }
-
-    /// @brief Put the parameters in a standard form.
+    /// Put the parameters in a standard form.
     void normalize() { _core->normalize(); }
 
-    /// @brief Increase the major and minor radii of the ellipse by the given buffer.
+    /// Increase the major and minor radii of the ellipse by the given buffer.
     void grow(double buffer) { _core->grow(buffer); }
 
-    /// @brief Scale the size of the ellipse by the given factor.
+    /// Scale the size of the ellipse by the given factor.
     void scale(double factor) { _core->scale(factor); }
 
-    /// @brief Move the ellipse center by the given offset.
-    void shift(Extent2D const & offset) { _center += offset; }
+    /// Move the ellipse center by the given offset.
+    void shift(Extent2D const& offset) { _center += offset; }
 
-     /// @brief Return the ellipse parameters as a vector.
+    /// Return the ellipse parameters as a vector.
     ParameterVector const getParameterVector() const;
 
-    /// @brief Set the ellipse parameters from a vector.
-    void setParameterVector(ParameterVector const & vector);
+    /// Set the ellipse parameters from a vector.
+    void setParameterVector(ParameterVector const& vector);
 
-    void readParameters(double const * iter);
+    void readParameters(double const* iter);
 
-    void writeParameters(double * iter) const;
+    void writeParameters(double* iter) const;
 
     /**
      *  @name Coordinate transforms
@@ -116,73 +112,72 @@ public:
      *  expression object, or returned as a new shared_ptr by calling copy().
      */
     //@{
-    Transformer transform(AffineTransform const & transform);
-    Transformer const transform(AffineTransform const & transform) const;
+    Transformer transform(AffineTransform const& transform);
+    Transformer const transform(AffineTransform const& transform) const;
     //@}
 
     /**
      *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
      */
     //@{
-    Convolution convolve(Ellipse const & other);
-    Convolution const convolve(Ellipse const & other) const;
+    Convolution convolve(Ellipse const& other);
+    Convolution const convolve(Ellipse const& other) const;
     //@}
 
     /**
-     *  @brief Return the transform that maps the ellipse to the unit circle.
+     *  Return the transform that maps the ellipse to the unit circle.
      *
      *  The returned proxy object is implicitly convertible to AffineTransform
      *  and also supports differentiation.
      */
     GridTransform const getGridTransform() const;
 
-    /// @brief Return the bounding box of the ellipse.
+    /// Return the bounding box of the ellipse.
     Box2D computeBBox() const;
 
     /**
-     *  @brief Set the parameters of this ellipse from another.
+     *  Set the parameters of this ellipse from another.
      *
      *  This does not change the parametrization of the ellipse.
      */
-    Ellipse & operator=(Ellipse const & other);
+    Ellipse& operator=(Ellipse const& other);
 
     /**
-     *  @brief Compare two ellipses for equality.
+     *  Compare two ellipses for equality.
      *
      *  Ellipses are only equal if they have the same Core types.
      */
-    bool operator==(Ellipse const & other) const {
+    bool operator==(Ellipse const& other) const {
         return getCenter() == other.getCenter() && getCore() == other.getCore();
     }
 
     /**
-     *  @brief Compare two ellipses for inequality.
+     *  Compare two ellipses for inequality.
      *
      *  Ellipses are only equal if they have the same Core types.
      */
-    bool operator!=(Ellipse const & other) const { return !operator==(other); }
+    bool operator!=(Ellipse const& other) const { return !operator==(other); }
 
     virtual ~Ellipse() {}
 
-    explicit Ellipse(BaseCore const & core, Point2D const & center = Point2D()) :
-        _core(core.clone()), _center(center) {}
+    explicit Ellipse(BaseCore const& core, Point2D const& center = Point2D())
+            : _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(BaseCore::ConstPtr const & core, Point2D const & center = Point2D()) :
-        _core(core->clone()), _center(center) {}
+    explicit Ellipse(std::shared_ptr<BaseCore const> const& core, Point2D const& center = Point2D())
+            : _core(core->clone()), _center(center) {}
 
-#ifndef SWIG
-    Ellipse(Transformer const & other);
-    Ellipse(Convolution const & other);
-#endif
+    Ellipse(Transformer const& other);
+    Ellipse(Convolution const& other);
 
-    Ellipse(Ellipse const & other) :
-        _core(other.getCore().clone()), _center(other.getCenter()) {}
+    Ellipse(Ellipse const& other) : _core(other.getCore().clone()), _center(other.getCenter()) {}
 
 private:
-    BaseCore::Ptr _core;
+    std::shared_ptr<BaseCore> _core;
     Point2D _center;
 };
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED

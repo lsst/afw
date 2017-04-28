@@ -68,7 +68,8 @@ def makeCov(size, dtype):
 def makeWcs():
     crval = lsst.afw.coord.Coord(lsst.afw.geom.Point2D(1.606631, 5.090329))
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
-    return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
+    return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5,
+                                  1.30770e-5, 5.399452e-5)
 
 
 class SourceTableTestCase(lsst.utils.tests.TestCase):
@@ -99,14 +100,14 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         # the meas field is added using a functor key, but the error is added
         # as scalars, as we lack a ResultKey functor as exists in meas_base
-        self.centroidKey = lsst.afw.table.Point2DKey.addFields(self.schema,
-                                                               "b", "", "pixel")
+        self.centroidKey = lsst.afw.table.Point2DKey.addFields(
+            self.schema, "b", "", "pixel")
         self.xErrKey = self.schema.addField("b_xSigma", type="F")
         self.yErrKey = self.schema.addField("b_ySigma", type="F")
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
 
-        self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(self.schema,
-                                                               "c", "", lsst.afw.table.CoordinateType.PIXEL)
+        self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(
+            self.schema, "c", "", lsst.afw.table.CoordinateType.PIXEL)
         self.xxErrKey = self.schema.addField("c_xxSigma", type="F")
         self.xyErrKey = self.schema.addField("c_xySigma", type="F")
         self.yyErrKey = self.schema.addField("c_yySigma", type="F")
@@ -128,22 +129,31 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def checkCanonical(self):
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
-        self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
-        self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
+        self.assertEqual(self.record.get(self.fluxKey),
+                         self.record.getPsfFlux())
+        self.assertEqual(self.record.get(self.fluxFlagKey),
+                         self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
-        self.assertEqual(self.centroidKey.get(self.record), self.record.getCentroid())
-        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xErrKey)),
-                                     math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
-        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yErrKey)),
-                                     math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
+        self.assertEqual(self.centroidKey.get(self.record),
+                         self.record.getCentroid())
+        self.assertFloatsAlmostEqual(
+            math.fabs(self.record.get(self.xErrKey)),
+            math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(
+            math.fabs(self.record.get(self.yErrKey)),
+            math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
         self.assertEqual(self.table.getShapeDefinition(), "c")
-        self.assertEqual(self.shapeKey.get(self.record), self.record.getShape())
-        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xxErrKey)),
-                                     math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
-        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yyErrKey)),
-                                     math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
-        self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xyErrKey)),
-                                     math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
+        self.assertEqual(self.shapeKey.get(self.record),
+                         self.record.getShape())
+        self.assertFloatsAlmostEqual(
+            math.fabs(self.record.get(self.xxErrKey)),
+            math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(
+            math.fabs(self.record.get(self.yyErrKey)),
+            math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
+        self.assertFloatsAlmostEqual(
+            math.fabs(self.record.get(self.xyErrKey)),
+            math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
 
     def testPersisted(self):
         self.table.definePsfFlux("a")
@@ -158,23 +168,29 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             # current implementation
             self.assertEqual(table.getPsfFluxDefinition(), "a")
             self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
-            self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
+            self.assertEqual(record.get(self.fluxFlagKey),
+                             record.getPsfFluxFlag())
             self.assertEqual(table.getCentroidDefinition(), "b")
             centroid = self.centroidKey.get(self.record)
             self.assertEqual(centroid, record.getCentroid())
-            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xErrKey)),
-                                         math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
-            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yErrKey)),
-                                         math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(
+                math.fabs(self.record.get(self.xErrKey)),
+                math.sqrt(self.record.getCentroidErr()[0, 0]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(
+                math.fabs(self.record.get(self.yErrKey)),
+                math.sqrt(self.record.getCentroidErr()[1, 1]), rtol=1e-6)
             shape = self.shapeKey.get(self.record)
             self.assertEqual(table.getShapeDefinition(), "c")
             self.assertEqual(shape, record.getShape())
-            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xxErrKey)),
-                                         math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
-            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.yyErrKey)),
-                                         math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
-            self.assertFloatsAlmostEqual(math.fabs(self.record.get(self.xyErrKey)),
-                                         math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(
+                math.fabs(self.record.get(self.xxErrKey)),
+                math.sqrt(self.record.getShapeErr()[0, 0]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(
+                math.fabs(self.record.get(self.yyErrKey)),
+                math.sqrt(self.record.getShapeErr()[1, 1]), rtol=1e-6)
+            self.assertFloatsAlmostEqual(
+                math.fabs(self.record.get(self.xyErrKey)),
+                math.sqrt(self.record.getShapeErr()[2, 2]), rtol=1e-6)
 
     def testCanonical2(self):
         self.table.definePsfFlux("a")
@@ -189,7 +205,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.catalog.schema.getNames(), new.schema.getNames())
         self.assertEqual(len(self.catalog), len(new))
         for r1, r2 in zip(self.catalog, new):
-            for field in ("a_flux", "a_fluxSigma", "id"):  # Columns that are easy to test
+            # Columns that are easy to test
+            for field in ("a_flux", "a_fluxSigma", "id"):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertEqual(r1[k1], r2[k2])
@@ -220,7 +237,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.catalog.table, catalog2.table)
         self.assertNotEqual(self.catalog.table, catalog3.table)
         self.assertNotEqual(self.catalog.table, catalog3.table)
-        for r, r1, r2, r3, r4 in zip(self.catalog, catalog1, catalog2, catalog3, catalog4):
+        for r, r1, r2, r3, r4 in \
+                zip(self.catalog, catalog1, catalog2, catalog3, catalog4):
             self.assertEqual(r, r1)
             self.assertEqual(r, r2)
             self.assertNotEqual(r, r3)
@@ -249,9 +267,12 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assertFloatsEqual(self.catalog.columns["a_flux"], self.catalog["a_flux"])
-        self.assertFloatsEqual(self.catalog.columns[self.fluxKey], self.catalog.get(self.fluxKey))
-        self.assertFloatsEqual(self.catalog.columns.get(self.fluxKey), self.catalog.getPsfFlux())
+        self.assertFloatsEqual(self.catalog.columns["a_flux"],
+                               self.catalog["a_flux"])
+        self.assertFloatsEqual(self.catalog.columns[self.fluxKey],
+                               self.catalog.get(self.fluxKey))
+        self.assertFloatsEqual(self.catalog.columns.get(self.fluxKey),
+                               self.catalog.getPsfFlux())
         self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
         with self.assertRaises(AttributeError):
             self.catalog.foo()
@@ -264,11 +285,16 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(allBits.getMask("c_flag"), 0x4)
         self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
         self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
-        self.assertFloatsEqual((allBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
-        self.assertFloatsEqual((allBits.array & 0x2 != 0), self.catalog.columns["b_flag"])
-        self.assertFloatsEqual((allBits.array & 0x4 != 0), self.catalog.columns["c_flag"])
-        self.assertFloatsEqual((someBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
-        self.assertFloatsEqual((someBits.array & 0x2 != 0), self.catalog.columns["c_flag"])
+        self.assertFloatsEqual((allBits.array & 0x1 != 0),
+                               self.catalog.columns["a_flag"])
+        self.assertFloatsEqual((allBits.array & 0x2 != 0),
+                               self.catalog.columns["b_flag"])
+        self.assertFloatsEqual((allBits.array & 0x4 != 0),
+                               self.catalog.columns["c_flag"])
+        self.assertFloatsEqual((someBits.array & 0x1 != 0),
+                               self.catalog.columns["a_flag"])
+        self.assertFloatsEqual((someBits.array & 0x2 != 0),
+                               self.catalog.columns["c_flag"])
 
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
@@ -328,14 +354,18 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             if False:
                 # Write out before-n-after FITS images
                 for MI in [mim, mim2, mim3]:
-                    f, fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
+                    f, fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-',
+                                              suffix='.fits')
                     os.close(f)
                     MI.writeFits(fn2)
                     print('wrote', fn2)
 
-            self.assertFloatsEqual(mim2.getImage().getArray(), mim3.getImage().getArray())
-            self.assertFloatsEqual(mim2.getMask().getArray(), mim3.getMask().getArray())
-            self.assertFloatsEqual(mim2.getVariance().getArray(), mim3.getVariance().getArray())
+            self.assertFloatsEqual(mim2.getImage().getArray(),
+                                   mim3.getImage().getArray())
+            self.assertFloatsEqual(mim2.getMask().getArray(),
+                                   mim3.getMask().getArray())
+            self.assertFloatsEqual(mim2.getVariance().getArray(),
+                                   mim3.getVariance().getArray())
 
             im3 = mim3.getImage()
             ma3 = mim3.getMask()
@@ -351,20 +381,23 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                         self.assertEqual(ma3.get(x, y), 0.)
                         self.assertEqual(va3.get(x, y), 0.)
 
-            cat3 = lsst.afw.table.SourceCatalog.readFits(fn,
-                                                         flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+            cat3 = lsst.afw.table.SourceCatalog.readFits(
+                fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
             for src in cat3:
                 self.assertFalse(src.getFootprint().isHeavy())
-            cat4 = lsst.afw.table.SourceCatalog.readFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+            cat4 = lsst.afw.table.SourceCatalog.readFits(
+                fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
             for src in cat4:
                 self.assertIsNone(src.getFootprint())
 
-            self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+            self.catalog.writeFits(
+                fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
             cat5 = lsst.afw.table.SourceCatalog.readFits(fn)
             for src in cat5:
                 self.assertFalse(src.getFootprint().isHeavy())
 
-            self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+            self.catalog.writeFits(
+                fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
             cat6 = lsst.afw.table.SourceCatalog.readFits(fn)
             for src in cat6:
                 self.assertIsNone(src.getFootprint())
@@ -396,8 +429,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                 self.fillRecord(child)
                 child.set(parentKey, parent.getId())
         for parent in parents:
-            children, ids = self.catalog.getChildren(parent.getId(),
-                                                     [record.getId() for record in self.catalog])
+            children, ids = self.catalog.getChildren(
+                parent.getId(), [record.getId() for record in self.catalog])
             self.assertEqual(len(children), 10)
             self.assertEqual(len(children), len(ids))
             for child, id in zip(children, ids):
@@ -412,40 +445,62 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.catalog.getChildren(0)  # Just care this succeeds
 
     def testFitsReadBackwardsCompatibility(self):
-        cat = lsst.afw.table.SourceCatalog.readFits(os.path.join(testPath, "data/empty-v0.fits"))
+        cat = lsst.afw.table.SourceCatalog.readFits(
+            os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
         self.assertTrue(cat.getApFluxSlot().isValid())
         self.assertTrue(cat.getInstFluxSlot().isValid())
         self.assertTrue(cat.getModelFluxSlot().isValid())
         self.assertTrue(cat.getCentroidSlot().isValid())
         self.assertTrue(cat.getShapeSlot().isValid())
-        self.assertEqual(cat.getPsfFluxSlot().getMeasKey(), cat.schema.find("flux_psf").key)
-        self.assertEqual(cat.getApFluxSlot().getMeasKey(), cat.schema.find("flux_sinc").key)
-        self.assertEqual(cat.getInstFluxSlot().getMeasKey(), cat.schema.find("flux_naive").key)
-        self.assertEqual(cat.getModelFluxSlot().getMeasKey(), cat.schema.find("cmodel_flux").key)
-        self.assertEqual(cat.getCentroidSlot().getMeasKey().getX(), cat.schema.find("centroid_sdss_x").key)
-        self.assertEqual(cat.getCentroidSlot().getMeasKey().getY(), cat.schema.find("centroid_sdss_y").key)
+        self.assertEqual(cat.getPsfFluxSlot().getMeasKey(),
+                         cat.schema.find("flux_psf").key)
+        self.assertEqual(cat.getApFluxSlot().getMeasKey(),
+                         cat.schema.find("flux_sinc").key)
+        self.assertEqual(cat.getInstFluxSlot().getMeasKey(),
+                         cat.schema.find("flux_naive").key)
+        self.assertEqual(cat.getModelFluxSlot().getMeasKey(),
+                         cat.schema.find("cmodel_flux").key)
+        self.assertEqual(cat.getCentroidSlot().getMeasKey().getX(),
+                         cat.schema.find("centroid_sdss_x").key)
+        self.assertEqual(cat.getCentroidSlot().getMeasKey().getY(),
+                         cat.schema.find("centroid_sdss_y").key)
         self.assertEqual(cat.getShapeSlot().getMeasKey().getIxx(),
                          cat.schema.find("shape_hsm_moments_xx").key)
         self.assertEqual(cat.getShapeSlot().getMeasKey().getIyy(),
                          cat.schema.find("shape_hsm_moments_yy").key)
         self.assertEqual(cat.getShapeSlot().getMeasKey().getIxy(),
                          cat.schema.find("shape_hsm_moments_xy").key)
-        self.assertEqual(cat.getPsfFluxSlot().getErrKey(), cat.schema.find("flux_psf_err").key)
-        self.assertEqual(cat.getApFluxSlot().getErrKey(), cat.schema.find("flux_sinc_err").key)
-        self.assertEqual(cat.getInstFluxSlot().getErrKey(), cat.schema.find("flux_naive_err").key)
-        self.assertEqual(cat.getModelFluxSlot().getErrKey(), cat.schema.find("cmodel_flux_err").key)
-        self.assertEqual(cat.getCentroidSlot().getErrKey(),
-                         lsst.afw.table.CovarianceMatrix2fKey(cat.schema["centroid_sdss_err"], ["x", "y"]))
-        self.assertEqual(cat.getShapeSlot().getErrKey(),
-                         lsst.afw.table.CovarianceMatrix3fKey(cat.schema["shape_hsm_moments_err"],
-                         ["xx", "yy", "xy"]))
-        self.assertEqual(cat.getPsfFluxSlot().getFlagKey(), cat.schema.find("flux_psf_flags").key)
-        self.assertEqual(cat.getApFluxSlot().getFlagKey(), cat.schema.find("flux_sinc_flags").key)
-        self.assertEqual(cat.getInstFluxSlot().getFlagKey(), cat.schema.find("flux_naive_flags").key)
-        self.assertEqual(cat.getModelFluxSlot().getFlagKey(), cat.schema.find("cmodel_flux_flags").key)
-        self.assertEqual(cat.getCentroidSlot().getFlagKey(), cat.schema.find("centroid_sdss_flags").key)
-        self.assertEqual(cat.getShapeSlot().getFlagKey(), cat.schema.find("shape_hsm_moments_flags").key)
+        self.assertEqual(cat.getPsfFluxSlot().getErrKey(),
+                         cat.schema.find("flux_psf_err").key)
+        self.assertEqual(cat.getApFluxSlot().getErrKey(),
+                         cat.schema.find("flux_sinc_err").key)
+        self.assertEqual(cat.getInstFluxSlot().getErrKey(),
+                         cat.schema.find("flux_naive_err").key)
+        self.assertEqual(cat.getModelFluxSlot().getErrKey(),
+                         cat.schema.find("cmodel_flux_err").key)
+        self.assertEqual(
+            cat.getCentroidSlot().getErrKey(),
+            lsst.afw.table.CovarianceMatrix2fKey(
+                cat.schema["centroid_sdss_err"],
+                ["x", "y"]))
+        self.assertEqual(
+            cat.getShapeSlot().getErrKey(),
+            lsst.afw.table.CovarianceMatrix3fKey(
+                cat.schema["shape_hsm_moments_err"],
+                ["xx", "yy", "xy"]))
+        self.assertEqual(cat.getPsfFluxSlot().getFlagKey(),
+                         cat.schema.find("flux_psf_flags").key)
+        self.assertEqual(cat.getApFluxSlot().getFlagKey(),
+                         cat.schema.find("flux_sinc_flags").key)
+        self.assertEqual(cat.getInstFluxSlot().getFlagKey(),
+                         cat.schema.find("flux_naive_flags").key)
+        self.assertEqual(cat.getModelFluxSlot().getFlagKey(),
+                         cat.schema.find("cmodel_flux_flags").key)
+        self.assertEqual(cat.getCentroidSlot().getFlagKey(),
+                         cat.schema.find("centroid_sdss_flags").key)
+        self.assertEqual(cat.getShapeSlot().getFlagKey(),
+                         cat.schema.find("shape_hsm_moments_flags").key)
 
     def testDM1083(self):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
@@ -473,7 +528,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
         version of the pipeline with a different format.
         """
-        filename = os.path.join(testPath, "data", "old-footprint-persistence.fits")
+        filename = os.path.join(testPath, "data",
+                                "old-footprint-persistence.fits")
         catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
         self.assertEqual(len(catalog1), 2)
         with self.assertRaises(LookupError):
@@ -489,20 +545,24 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(fp1.getPeaks()), 1)
         self.assertEqual(len(fp2.getPeaks()), 1)
         self.assertEqual(fp1.getBBox(),
-                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(129, 2), lsst.afw.geom.Extent2I(25, 29)))
+                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(129, 2),
+                                             lsst.afw.geom.Extent2I(25, 29)))
         self.assertEqual(fp2.getBBox(),
-                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(1184, 2), lsst.afw.geom.Extent2I(78, 38)))
+                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(1184, 2),
+                                             lsst.afw.geom.Extent2I(78, 38)))
         hfp = lsst.afw.detection.HeavyFootprintF(fp2)
         self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
         self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())
         self.assertEqual(len(hfp.getVarianceArray()), fp2.getArea())
-        catalog2 = lsst.afw.table.SourceCatalog.readFits(filename,
-                                                         flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
-        self.assertEqual(list(fp1.getSpans()), list(catalog2[0].getFootprint().getSpans()))
-        self.assertEqual(list(fp2.getSpans()), list(catalog2[1].getFootprint().getSpans()))
+        catalog2 = lsst.afw.table.SourceCatalog.readFits(
+            filename, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+        self.assertEqual(list(fp1.getSpans()),
+                         list(catalog2[0].getFootprint().getSpans()))
+        self.assertEqual(list(fp2.getSpans()),
+                         list(catalog2[1].getFootprint().getSpans()))
         self.assertFalse(catalog2[1].getFootprint().isHeavy())
-        catalog3 = lsst.afw.table.SourceCatalog.readFits(filename,
-                                                         flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+        catalog3 = lsst.afw.table.SourceCatalog.readFits(
+            filename, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
         self.assertEqual(catalog3[0].getFootprint(), None)
         self.assertEqual(catalog3[1].getFootprint(), None)
 
@@ -510,21 +570,29 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Demonstrate that we can create & use the named Flux slot."""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         baseName = "afw_Test"
-        fluxKey = schema.addField("%s_flux" % (baseName,), type=np.float64, doc="flux")
-        errKey = schema.addField("%s_fluxSigma" % (baseName,), type=np.float64, doc="flux uncertainty")
-        flagKey = schema.addField("%s_flag" % (baseName,), type="Flag", doc="flux flag")
+        fluxKey = schema.addField("%s_flux" % (baseName,),
+                                  type=np.float64, doc="flux")
+        errKey = schema.addField("%s_fluxSigma" % (baseName,),
+                                 type=np.float64, doc="flux uncertainty")
+        flagKey = schema.addField("%s_flag" % (baseName,),
+                                  type="Flag", doc="flux flag")
         table = lsst.afw.table.SourceTable.make(schema)
 
         # Initially, the slot is undefined.
         # For some reason this doesn't work with a context manager for assertRaises
-        self.assertRaises(lsst.pex.exceptions.NotFoundError, getattr(table, "get%sDefinition" % (slotName,)))
+        self.assertRaises(lsst.pex.exceptions.NotFoundError,
+                          getattr(table, "get%sDefinition" % (slotName,)))
 
         # After definition, it maps to the keys defined above.
         getattr(table, "define%s" % (slotName,))(baseName)
-        self.assertEqual(getattr(table, "get%sDefinition" % (slotName,))(), baseName)
-        self.assertEqual(getattr(table, "get%sKey" % (slotName,))(), fluxKey)
-        self.assertEqual(getattr(table, "get%sErrKey" % (slotName,))(), errKey)
-        self.assertEqual(getattr(table, "get%sFlagKey" % (slotName,))(), flagKey)
+        self.assertEqual(getattr(table, "get%sDefinition" % (slotName,))(),
+                         baseName)
+        self.assertEqual(getattr(table, "get%sKey" % (slotName,))(),
+                         fluxKey)
+        self.assertEqual(getattr(table, "get%sErrKey" % (slotName,))(),
+                         errKey)
+        self.assertEqual(getattr(table, "get%sFlagKey" % (slotName,))(),
+                         flagKey)
 
         # We should be able to retrieve arbitrary values set in records.
         record = table.makeRecord()
@@ -538,13 +606,17 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         # And we should be able to delete the slot, breaking the mapping.
         table.schema.getAliasMap().erase("slot_%s" % (slotName,))
-        self.assertNotEqual(getattr(table, "get%sKey" % (slotName,))(), fluxKey)
-        self.assertNotEqual(getattr(table, "get%sErrKey" % (slotName,))(), errKey)
-        self.assertNotEqual(getattr(table, "get%sFlagKey" % (slotName,))(), flagKey)
+        self.assertNotEqual(getattr(table, "get%sKey" % (slotName,))(),
+                            fluxKey)
+        self.assertNotEqual(getattr(table, "get%sErrKey" % (slotName,))(),
+                            errKey)
+        self.assertNotEqual(getattr(table, "get%sFlagKey" % (slotName,))(),
+                            flagKey)
 
     def testFluxSlots(self):
         """Check that all the expected flux slots are present & correct."""
-        for slotName in ["ApFlux", "CalibFlux", "InstFlux", "ModelFlux", "PsfFlux"]:
+        for slotName in ["ApFlux", "CalibFlux", "InstFlux", "ModelFlux",
+                         "PsfFlux"]:
             self._testFluxSlot(slotName)
 
         # But, of course, we should not accept a slot which hasn't be defined.

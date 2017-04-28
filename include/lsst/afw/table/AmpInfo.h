@@ -29,7 +29,9 @@
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
  * Readout corner, in the frame of reference of the assembled image
@@ -41,26 +43,26 @@ enum ReadoutCorner {
     UL,
 };
 
-
 class AmpInfoRecord;
 class AmpInfoTable;
 
 /**
- *  @brief Geometry and electronic information about raw amplifier images
+ *  Geometry and electronic information about raw amplifier images
  *
  * Here is a pictorial example showing the meaning of flipX and flipY:
  *
- *    CCD with 4 amps        Desired assembled output      Use these parameters
- *
- *    --x         x--            y
- *   |  amp1    amp2 |           |                               flipX       flipY
- *   y               y           |                       amp1    False       True
- *                               | CCD image             amp2    True        True
- *   y               y           |                       amp3    False       False
- *   |  amp3    amp4 |           |                       amp4    True        False
- *    --x         x--             ----------- x
- *
- * @note:
+ @verbatim
+     CCD with 4 amps        Desired assembled output      Use these parameters
+
+     --x         x--            y
+    |  amp1    amp2 |           |                               flipX       flipY
+    y               y           |                       amp1    False       True
+                                | CCD image             amp2    True        True
+    y               y           |                       amp3    False       False
+    |  amp3    amp4 |           |                       amp4    True        False
+     --x         x--             ----------- x
+ @endverbatim
+ * @note
  * * All bounding boxes are parent boxes with respect to the raw image.
  * * The overscan and underscan bounding boxes are regions containing USABLE data,
  *   NOT the entire underscan and overscan region. These bounding boxes should exclude areas
@@ -76,111 +78,112 @@ class AmpInfoTable;
  */
 class AmpInfoRecord : public BaseRecord {
 public:
-
     typedef AmpInfoTable Table;
     typedef ColumnViewT<AmpInfoRecord> ColumnView;
     typedef CatalogT<AmpInfoRecord> Catalog;
     typedef CatalogT<AmpInfoRecord const> ConstCatalog;
 
-    CONST_PTR(AmpInfoTable) getTable() const {
+    std::shared_ptr<AmpInfoTable const> getTable() const {
         return std::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
     }
 
     //@{
-    /// @brief Convenience accessors for the keys in the minimal reference schema.
+    /// Convenience accessors for the keys in the minimal reference schema.
     std::string getName() const;
-    void setName(std::string const &name); ///< name of amplifier location in camera
+    void setName(std::string const &name);  ///< name of amplifier location in camera
 
     geom::Box2I getBBox() const;
-    void setBBox(geom::Box2I const &bbox); ///< bounding box of amplifier pixels in assembled image
+    void setBBox(geom::Box2I const &bbox);  ///< bounding box of amplifier pixels in assembled image
 
     double getGain() const;
-    void setGain(double gain); ///< amplifier gain in e-/ADU
+    void setGain(double gain);  ///< amplifier gain in e-/ADU
 
     double getReadNoise() const;
-    void setReadNoise(double readNoise); ///< amplifier read noise, in e-
+    void setReadNoise(double readNoise);  ///< amplifier read noise, in e-
 
     double getSaturation() const;
-    void setSaturation(double saturation); ///< level in ADU above which pixels are considered saturated;
-        ///< use `nan` if no such level applies",
+    void setSaturation(double saturation);  ///< level in ADU above which pixels are considered saturated;
+    ///< use `nan` if no such level applies",
 
     double getSuspectLevel() const;
-    void setSuspectLevel(double suspectLevel); ///< level in ADU above which pixels are considered suspicious,
-        ///< meaning they may be affected by unknown systematics; for example if non-linearity corrections
-        ///< above a certain level are unstable then that would be a useful value for suspectLevel;
-        ///< use `nan` if no such level applies",
+    void setSuspectLevel(
+            double suspectLevel);  ///< level in ADU above which pixels are considered suspicious,
+    ///< meaning they may be affected by unknown systematics; for example if non-linearity corrections
+    ///< above a certain level are unstable then that would be a useful value for suspectLevel;
+    ///< use `nan` if no such level applies",
 
     ReadoutCorner getReadoutCorner() const;
-    void setReadoutCorner(ReadoutCorner val); ///< set readout corner
+    void setReadoutCorner(ReadoutCorner val);  ///< set readout corner
 
     std::vector<double> getLinearityCoeffs() const;
-    void setLinearityCoeffs(std::vector<double> const &coeffs); ///< vector of linearity coefficients
+    void setLinearityCoeffs(std::vector<double> const &coeffs);  ///< vector of linearity coefficients
 
     std::string getLinearityType() const;
-    void setLinearityType(std::string const &type); ///< name of linearity parameterization
+    void setLinearityType(std::string const &type);  ///< name of linearity parameterization
 
     bool getHasRawInfo() const;
-    void setHasRawInfo(bool hasRawInfo); ///< does this table have raw amplifier information?
+    void setHasRawInfo(bool hasRawInfo);  ///< does this table have raw amplifier information?
 
     geom::Box2I getRawBBox() const;
-    void setRawBBox(geom::Box2I const &bbox); ///< bounding box of all amplifier pixels on raw image
+    void setRawBBox(geom::Box2I const &bbox);  ///< bounding box of all amplifier pixels on raw image
 
     geom::Box2I getRawDataBBox() const;
-    void setRawDataBBox(geom::Box2I const &bbox); ///< bounding box of amplifier image pixels on raw image
+    void setRawDataBBox(geom::Box2I const &bbox);  ///< bounding box of amplifier image pixels on raw image
 
     bool getRawFlipX() const;
     void setRawFlipX(bool rawFlipX);  ///< flip row order to make assembled image?
 
     bool getRawFlipY() const;
-    void setRawFlipY(bool rawFlipY); ///< flip column order to make an assembled image?
+    void setRawFlipY(bool rawFlipY);  ///< flip column order to make an assembled image?
 
     geom::Extent2I getRawXYOffset() const;
-    void setRawXYOffset(geom::Extent2I const &xy); ///< offset for assembling a raw CCD image: desired xy0 - raw xy0
+    void setRawXYOffset(
+            geom::Extent2I const &xy);  ///< offset for assembling a raw CCD image: desired xy0 - raw xy0
 
     geom::Box2I getRawHorizontalOverscanBBox() const;
-    void setRawHorizontalOverscanBBox(geom::Box2I const &bbox); ///< bounding box of usable horizontal overscan pixels
+    void setRawHorizontalOverscanBBox(
+            geom::Box2I const &bbox);  ///< bounding box of usable horizontal overscan pixels
 
     geom::Box2I getRawVerticalOverscanBBox() const;
-    void setRawVerticalOverscanBBox(geom::Box2I const &bbox); ///< bounding box of usable vertical overscan pixels
+    void setRawVerticalOverscanBBox(
+            geom::Box2I const &bbox);  ///< bounding box of usable vertical overscan pixels
 
     geom::Box2I getRawPrescanBBox() const;
-    void setRawPrescanBBox(geom::Box2I const &bbox); ///< bounding box of usable (horizontal) prescan pixels on raw image
+    void setRawPrescanBBox(
+            geom::Box2I const &bbox);  ///< bounding box of usable (horizontal) prescan pixels on raw image
 
     //@}
 
 protected:
-
     friend class AmpInfoTable;
 
-    explicit AmpInfoRecord(PTR(AmpInfoTable) const & table);
-
+    explicit AmpInfoRecord(std::shared_ptr<AmpInfoTable> const &table);
 };
 
 /**
- *  @brief Table of amplifier information (AmpInfoRecord records)
+ *  Table of amplifier information (AmpInfoRecord records)
  *
  *  @copydetails AmpInfoRecord
  */
 class AmpInfoTable : public BaseTable {
 public:
-
     typedef AmpInfoRecord Record;
     typedef ColumnViewT<AmpInfoRecord> ColumnView;
     typedef CatalogT<Record> Catalog;
     typedef CatalogT<Record const> ConstCatalog;
-    static int const MAX_NAME_LENGTH = 64; // max length for amplifier name
-    static int const MAX_LINEARITY_COEFFS = 4;  // max number of linearity coefficients
-    static int const MAX_LINEARITY_TYPE_LENGTH = 64; // max length for linearity type
+    static int const MAX_NAME_LENGTH = 64;            // max length for amplifier name
+    static int const MAX_LINEARITY_COEFFS = 4;        // max number of linearity coefficients
+    static int const MAX_LINEARITY_TYPE_LENGTH = 64;  // max length for linearity type
 
     /**
-     *  @brief Construct a new table.
+     *  Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
      */
-    static PTR(AmpInfoTable) make(Schema const & schema);
+    static std::shared_ptr<AmpInfoTable> make(Schema const &schema);
 
     /**
-     *  @brief Return a minimal schema for AmpInfo tables and records.
+     *  Return a minimal schema for AmpInfo tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on AmpInfoRecords will assume that at least the fields
@@ -193,14 +196,12 @@ public:
     }
 
     /**
-     *  @brief Return true if the given schema is a valid AmpInfoTable schema.
+     *  Return true if the given schema is a valid AmpInfoTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(Schema const & other) {
-        return other.contains(getMinimalSchema().schema);
-    }
+    static bool checkSchema(Schema const &other) { return other.contains(getMinimalSchema().schema); }
 
     //@{
     /**
@@ -216,7 +217,7 @@ public:
     static Key<double> getSaturationKey() { return getMinimalSchema().saturation; }
     static Key<double> getSuspectLevelKey() { return getMinimalSchema().suspectLevel; }
     static Key<int> getReadoutCornerKey() { return getMinimalSchema().readoutCorner; }
-    static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
+    static Key<Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
     static Key<Flag> getHasRawInfoKey() { return getMinimalSchema().hasRawInfo; }
     static PointKey<int> getRawBBoxMinKey() { return getMinimalSchema().rawBBoxMin; }
@@ -226,42 +227,50 @@ public:
     static Key<Flag> getRawFlipXKey() { return getMinimalSchema().rawFlipX; }
     static Key<Flag> getRawFlipYKey() { return getMinimalSchema().rawFlipY; }
     static PointKey<int> getRawXYOffsetKey() { return getMinimalSchema().rawXYOffset; }
-    static PointKey<int> getRawHorizontalOverscanBBoxMinKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMin; }
-    static PointKey<int> getRawHorizontalOverscanBBoxExtentKey() { return getMinimalSchema().rawHorizontalOverscanBBoxExtent; }
-    static PointKey<int> getRawVerticalOverscanBBoxMinKey() { return getMinimalSchema().rawVerticalOverscanBBoxMin; }
-    static PointKey<int> getRawVerticalOverscanBBoxExtentKey() { return getMinimalSchema().rawVerticalOverscanBBoxExtent; }
+    static PointKey<int> getRawHorizontalOverscanBBoxMinKey() {
+        return getMinimalSchema().rawHorizontalOverscanBBoxMin;
+    }
+    static PointKey<int> getRawHorizontalOverscanBBoxExtentKey() {
+        return getMinimalSchema().rawHorizontalOverscanBBoxExtent;
+    }
+    static PointKey<int> getRawVerticalOverscanBBoxMinKey() {
+        return getMinimalSchema().rawVerticalOverscanBBoxMin;
+    }
+    static PointKey<int> getRawVerticalOverscanBBoxExtentKey() {
+        return getMinimalSchema().rawVerticalOverscanBBoxExtent;
+    }
     static PointKey<int> getRawPrescanBBoxMinKey() { return getMinimalSchema().rawPrescanBBoxMin; }
     static PointKey<int> getRawPrescanBBoxExtentKey() { return getMinimalSchema().rawPrescanBBoxExtent; }
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(AmpInfoTable) clone() const { return std::static_pointer_cast<AmpInfoTable>(_clone()); }
+    std::shared_ptr<AmpInfoTable> clone() const { return std::static_pointer_cast<AmpInfoTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(AmpInfoRecord) makeRecord() { return std::static_pointer_cast<AmpInfoRecord>(_makeRecord()); }
+    std::shared_ptr<AmpInfoRecord> makeRecord() {
+        return std::static_pointer_cast<AmpInfoRecord>(_makeRecord());
+    }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(AmpInfoRecord) copyRecord(BaseRecord const & other) {
+    std::shared_ptr<AmpInfoRecord> copyRecord(BaseRecord const &other) {
         return std::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(AmpInfoRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
+    std::shared_ptr<AmpInfoRecord> copyRecord(BaseRecord const &other, SchemaMapper const &mapper) {
         return std::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:
+    explicit AmpInfoTable(Schema const &schema);
 
-    explicit AmpInfoTable(Schema const & schema);
-
-    explicit AmpInfoTable(AmpInfoTable const & other);
+    explicit AmpInfoTable(AmpInfoTable const &other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 
     std::shared_ptr<BaseRecord> _makeRecord() override;
 
 private:
-
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
@@ -273,7 +282,7 @@ private:
         Key<double> saturation;
         Key<double> suspectLevel;
         Key<int> readoutCorner;
-        Key< Array<double> > linearityCoeffs;
+        Key<Array<double> > linearityCoeffs;
         Key<std::string> linearityType;
         Key<Flag> hasRawInfo;
         PointKey<int> rawBBoxMin;
@@ -293,14 +302,15 @@ private:
     };
 
     // Return the singleton minimal schema.
-    static MinimalSchema & getMinimalSchema();
+    static MinimalSchema &getMinimalSchema();
 
     friend class io::FitsWriter;
 
-     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
+    std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits *fitsfile, int flags) const override;
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_AmpInfo_h_INCLUDED
+#endif  // !AFW_TABLE_AmpInfo_h_INCLUDED

@@ -56,9 +56,7 @@ PYBIND11_PLUGIN(spherePoint) {
 
     /* Operators */
     cls.def("__getitem__",
-            [](SpherePoint const & self, std::ptrdiff_t i) {
-                return self[utils::python::cppIndex(2, i)];
-            });
+            [](SpherePoint const &self, std::ptrdiff_t i) { return self[utils::python::cppIndex(2, i)]; });
     cls.def("__eq__", &SpherePoint::operator==, py::is_operator());
     cls.def("__ne__", &SpherePoint::operator!=, py::is_operator());
 
@@ -72,26 +70,19 @@ PYBIND11_PLUGIN(spherePoint) {
     cls.def("separation", &SpherePoint::separation, "other"_a);
     cls.def("rotated", &SpherePoint::rotated, "axis"_a, "amount"_a);
     cls.def("offset", &SpherePoint::offset, "bearing"_a, "amount"_a);
-    cls.def("__str__", [](SpherePoint const & self) {
+    cls.def("__str__", [](SpherePoint const &self) {
         std::ostringstream os;
         os << std::fixed << self;
         return os.str();
     });
     cls.def("__len__", [](SpherePoint const &) { return 2; });
-    cls.def(
-        "__reduce__",
-        [cls](SpherePoint const & self) {
-            return py::make_tuple(
-                cls,
-                py::make_tuple(
-                    py::cast(self.getLongitude()),
-                    py::cast(self.getLatitude())
-                )
-            );
-        }
-    );
+    cls.def("__reduce__", [cls](SpherePoint const &self) {
+        return py::make_tuple(cls,
+                              py::make_tuple(py::cast(self.getLongitude()), py::cast(self.getLatitude())));
+    });
 
     return mod.ptr();
 }
-
-}}}  // namespace lsst::afw::geom
+}
+}
+}  // namespace lsst::afw::geom

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -90,7 +88,8 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
         from matplotlib.collections import PatchCollection
         import matplotlib.pyplot as plt
     except ImportError:
-        raise ImportError("Can't run plotFocalPlane: matplotlib has not been set up")
+        raise ImportError(
+            "Can't run plotFocalPlane: matplotlib has not been set up")
 
     if pupilSizeDeg_x:
         if pupilSizeDeg_y is None:
@@ -139,8 +138,10 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
     patchCollection = PatchCollection(patches, alpha=0.6, facecolor=colors)
     ax.add_collection(patchCollection)
     ax.scatter(xs, ys, s=10, alpha=.7, linewidths=0., c=pcolors)
-    ax.set_xlim(min(xvals) - abs(0.1*min(xvals)), max(xvals) + abs(0.1*max(xvals)))
-    ax.set_ylim(min(yvals) - abs(0.1*min(yvals)), max(yvals) + abs(0.1*max(yvals)))
+    ax.set_xlim(min(xvals) - abs(0.1*min(xvals)),
+                max(xvals) + abs(0.1*max(xvals)))
+    ax.set_ylim(min(yvals) - abs(0.1*min(yvals)),
+                max(yvals) + abs(0.1*max(yvals)))
     ax.set_xlabel('Focal Plane X (mm)')
     ax.set_ylabel('Focal Plane Y (mm)')
     if savePath is not None:
@@ -165,7 +166,8 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     @return an untrimmed amp image
     """
     if not amp.getHasRawInfo():
-        raise RuntimeError("Can't create a raw amp image without raw amp information")
+        raise RuntimeError(
+            "Can't create a raw amp image without raw amp information")
     bbox = amp.getRawBBox()
     dbbox = amp.getRawDataBBox()
     img = imageFactory(bbox)
@@ -235,7 +237,8 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     for amp in ccd:
         if amp.getHasRawInfo():
             if showAmpGain:
-                ampImages.append(makeImageFromAmp(amp, imageFactory=imageFactory, markSize=rcMarkSize))
+                ampImages.append(makeImageFromAmp(
+                    amp, imageFactory=imageFactory, markSize=rcMarkSize))
             else:
                 ampImages.append(makeImageFromAmp(amp, imValue=(index+1)*1000,
                                                   imageFactory=imageFactory, markSize=rcMarkSize))
@@ -250,7 +253,8 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
                 assembleAmplifierRawImage(ccdImage, ampImage, amp)
     else:
         if not isTrimmed:
-            raise RuntimeError("Cannot create untrimmed CCD without amps with raw information")
+            raise RuntimeError(
+                "Cannot create untrimmed CCD without amps with raw information")
         ccdImage = imageFactory(ccd.getBBox())
     ccdImage = afwMath.binImage(ccdImage, binSize)
     return ccdImage
@@ -345,7 +349,8 @@ class ButlerImage(FakeImageDataSource):
             im = afwMath.binImage(im, binSize)
 
         if allowRotate:
-            im = afwMath.rotateImageBy90(im, ccd.getOrientation().getNQuarter())
+            im = afwMath.rotateImageBy90(
+                im, ccd.getOrientation().getNQuarter())
 
         return im
 
@@ -510,7 +515,8 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
             if not isTrimmed and amp.getHasRawInfo():
                 for bbox, ctype in ((amp.getRawHorizontalOverscanBBox(), afwDisplay.RED),
                                     (amp.getRawDataBBox(), afwDisplay.BLUE),
-                                    (amp.getRawVerticalOverscanBBox(), afwDisplay.MAGENTA),
+                                    (amp.getRawVerticalOverscanBBox(),
+                                     afwDisplay.MAGENTA),
                                     (amp.getRawPrescanBBox(), afwDisplay.YELLOW)):
                     if nQuarter != 0:
                         bbox = rotateBBoxBy90(bbox, nQuarter, ccdDim)
@@ -541,7 +547,8 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
             if ccdOrigin:
                 xc += ccdOrigin[0]
                 yc += ccdOrigin[1]
-            display.dot(str(amp.getName()), xc/binSize, yc/binSize, textAngle=nQuarter*90)
+            display.dot(str(amp.getName()), xc/binSize,
+                        yc/binSize, textAngle=nQuarter*90)
 
         displayUtils.drawBBox(ccdBbox, origin=ccdOrigin,
                               borderWidth=0.49, ctype=afwDisplay.MAGENTA, display=display, bin=binSize)
@@ -570,10 +577,13 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
             if amp.getHasRawInfo() and ampImSize == amp.getRawBBox().getDimensions():
                 bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN), ]
                 xy0 = bboxes[0][0].getMin()
-                bboxes.append((amp.getRawHorizontalOverscanBBox(), 0.49, afwDisplay.RED))
+                bboxes.append(
+                    (amp.getRawHorizontalOverscanBBox(), 0.49, afwDisplay.RED))
                 bboxes.append((amp.getRawDataBBox(), 0.49, afwDisplay.BLUE))
-                bboxes.append((amp.getRawPrescanBBox(), 0.49, afwDisplay.YELLOW))
-                bboxes.append((amp.getRawVerticalOverscanBBox(), 0.49, afwDisplay.MAGENTA))
+                bboxes.append((amp.getRawPrescanBBox(),
+                               0.49, afwDisplay.YELLOW))
+                bboxes.append((amp.getRawVerticalOverscanBBox(),
+                               0.49, afwDisplay.MAGENTA))
             else:
                 bboxes = [(amp.getBBox(), 0.49, None), ]
                 xy0 = bboxes[0][0].getMin()
@@ -583,7 +593,8 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
                     continue
                 bbox = afwGeom.Box2I(bbox)
                 bbox.shift(-afwGeom.ExtentI(xy0))
-                displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, display=display)
+                displayUtils.drawBBox(
+                    bbox, borderWidth=borderWidth, ctype=ctype, display=display)
 
 
 def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, overlay=True,
@@ -603,7 +614,8 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
 
     ccdOrigin = afwGeom.Point2I(0, 0)
     nQuarter = 0
-    ccdImage, ccd = imageSource.getCcdImage(ccd, imageFactory=imageFactory, binSize=binSize)
+    ccdImage, ccd = imageSource.getCcdImage(
+        ccd, imageFactory=imageFactory, binSize=binSize)
 
     ccdBbox = ccdImage.getBBox()
     if ccdBbox.getDimensions() == ccd.getBBox().getDimensions():
@@ -622,7 +634,8 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
         display.mtv(ccdImage, title=title)
 
         if overlay:
-            overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, display, binSize)
+            overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed,
+                            ccdOrigin, display, binSize)
 
     return ccdImage
 
@@ -650,11 +663,13 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
         cbbox = ccd.getBBox()
         ex = cbbox.getDimensions().getX()//binSize
         ey = cbbox.getDimensions().getY()//binSize
-        bbox = afwGeom.Box2I(cbbox.getMin(), afwGeom.Extent2I(int(ex), int(ey)))
+        bbox = afwGeom.Box2I(
+            cbbox.getMin(), afwGeom.Extent2I(int(ex), int(ey)))
         bbox = rotateBBoxBy90(bbox, nQuarter, bbox.getDimensions())
         bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize),
                                     int(llc.getY()//pixelSize_o.getY()/binSize)))
-        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//binSize), -int(origin.getY())//binSize))
+        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//binSize),
+                                    -int(origin.getY())//binSize))
         boxList.append(bbox)
     return boxList
 
@@ -724,8 +739,9 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         import lsst.pex.exceptions as pexExceptions
         try:
             imView[:] = im
-        except pexExceptions.LengthError as e:
-            print("Unable to fit image for detector \"%s\" into image of camera" % (det.getName()))
+        except pexExceptions.LengthError:
+            print("Unable to fit image for detector \"%s\" into image of camera" % (
+                det.getName()))
 
     return camIm
 
@@ -750,6 +766,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     @param[in] frame  specify image display (@deprecated; new code should use display)
     @param[in] overlay  Overlay Detector IDs and boundaries?
     @param[in] title  Title in display
+    @param[in] showWcs whether to include a WCS in the display
     @param[in] ctype  Color to use when drawing Detector boundaries
     @param[in] textSize  Size of detector labels
     @param[in] originAtCenter Put origin of the camera WCS at the center of the image? Else it will be LL
@@ -781,7 +798,8 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
     if showWcs:
         if originAtCenter:
-            wcsReferencePixel = afwGeom.Box2D(cameraImage.getBBox()).getCenter()
+            wcsReferencePixel = afwGeom.Box2D(
+                cameraImage.getBBox()).getCenter()
         else:
             wcsReferencePixel = afwGeom.Point2I(0, 0)
         wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
@@ -795,12 +813,16 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
         if overlay:
             with display.Buffering():
-                camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize*binSize)
-                bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
+                camBbox = getCameraImageBBox(
+                    camBbox, pixelSize, bufferSize*binSize)
+                bboxList = getCcdInCamBBoxList(
+                    ccdList, binSize, pixelSize, camBbox.getMin())
                 for bbox, ccd in zip(bboxList, ccdList):
                     nQuarter = ccd.getOrientation().getNQuarter()
-                    # borderWidth to 0.5 to align with the outside edge of the pixel
-                    displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, display=display)
+                    # borderWidth to 0.5 to align with the outside edge of the
+                    # pixel
+                    displayUtils.drawBBox(
+                        bbox, borderWidth=0.5, ctype=ctype, display=display)
                     dims = bbox.getDimensions()
                     display.dot(ccd.getName(), bbox.getMinX()+dims.getX()/2, bbox.getMinY()+dims.getY()/2,
                                 ctype=ctype, size=textSize, textAngle=nQuarter*90)

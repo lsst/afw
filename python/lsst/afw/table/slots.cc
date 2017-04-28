@@ -35,7 +35,7 @@ namespace {
 // tiny classes only used in afw::table: no need for shared_ptr.
 using PySlotDefinition = py::class_<SlotDefinition>;
 
-void declareSlotDefinition(py::module & mod) {
+void declareSlotDefinition(py::module &mod) {
     PySlotDefinition cls(mod, "SlotDefinition");
     cls.def("getName", &SlotDefinition::getName);
     cls.def("getAlias", &SlotDefinition::getAlias);
@@ -45,7 +45,7 @@ void declareSlotDefinition(py::module & mod) {
 Declare standard methods for subclasses of SlotDefinition (but not SlotDefinition itself).
 */
 template <typename Class>
-void declareSlotDefinitionSubclass(py::module & mod, std::string const & name) {
+void declareSlotDefinitionSubclass(py::module &mod, std::string const &name) {
     py::class_<Class, SlotDefinition> cls(mod, name.c_str());
     cls.def(py::init<std::string const &>(), "name"_a);
     cls.def("isValid", &Class::isValid);
@@ -66,5 +66,7 @@ PYBIND11_PLUGIN(slots) {
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

@@ -20,10 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- *
- * \brief MaskedImage iterator tutorial.
+/*
+ * MaskedImage iterator tutorial.
  */
 
 // Include the necessary headers;
@@ -38,7 +36,6 @@ namespace afwGeom = lsst::afw::geom;
 typedef afwImage::MaskedImage<int> ImageT;
 
 int main() {
-
     // Declare a MaskedImage; its pixels are not yet initialized.
     ImageT img(afwGeom::Extent2I(10, 6));
 
@@ -99,16 +96,15 @@ int main() {
     // If you must traverse the image by columns then consider doing it in batches to improve
     // cache performance, as shown here:
     int x = 0;
-    for (; x != img.getWidth()%4; ++x) {
+    for (; x != img.getWidth() % 4; ++x) {
         for (ImageT::y_iterator ptr = img.col_begin(x), end = img.col_end(x); ptr != end; ++ptr) {
             *ptr = ImageT::Pixel(100, 0x1, 10);
         }
     }
     for (; x != img.getWidth(); x += 4) {
-        for (ImageT::y_iterator ptr0 = img.col_begin(x+0), end0 = img.col_end(x+0),
-                                ptr1 = img.col_begin(x+1),
-                                ptr2 = img.col_begin(x+2),
-                                ptr3 = img.col_begin(x+3);
+        for (ImageT::y_iterator ptr0 = img.col_begin(x + 0), end0 = img.col_end(x + 0),
+                                ptr1 = img.col_begin(x + 1), ptr2 = img.col_begin(x + 2),
+                                ptr3 = img.col_begin(x + 3);
              ptr0 != end0; ++ptr0, ++ptr1, ++ptr2, ++ptr3) {
             *ptr0 = *ptr1 = *ptr2 = *ptr3 = ImageT::Pixel(100, 0x1, 10);
         }

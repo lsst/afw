@@ -41,7 +41,7 @@ namespace afw {
 namespace geom {
 
 /**
- * Make an ast::PolyMap suitable for testing.
+ * @internal Make an ast::PolyMap suitable for testing.
  *
  * The forward transform is as follows:
  * @f[ f_j(\vec{x}) = \sum_{i} C_{ij} x_{i}^2 @f]
@@ -75,7 +75,7 @@ ast::PolyMap makeForwardPolyMap(size_t nIn, size_t nOut) {
     return ast::PolyMap(forwardCoeffs, nOut, "IterInverse=0");
 }
 
-/**
+/*
  * Tests whether the result of Transform::getJacobian(FromPoint const&)
  * has the specified dimensions.
  *

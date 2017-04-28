@@ -45,24 +45,21 @@ namespace cameraGeom {
  */
 class CameraSysPrefix {
 public:
-    explicit CameraSysPrefix(
-        std::string const &sysName  ///< coordinate system name
-    ) : _sysName(sysName) {}
+    explicit CameraSysPrefix(std::string const &sysName  ///< coordinate system name
+                             )
+            : _sysName(sysName) {}
 
     /**
      * Get coordinate system name
      */
     std::string getSysName() const { return _sysName; };
 
-    bool operator==(CameraSysPrefix const &rhs) const {
-        return _sysName == rhs.getSysName();
-    }
+    bool operator==(CameraSysPrefix const &rhs) const { return _sysName == rhs.getSysName(); }
 
-    bool operator!=(CameraSysPrefix const &rhs) const {
-        return !(*this == rhs);
-    }
+    bool operator!=(CameraSysPrefix const &rhs) const { return !(*this == rhs); }
+
 private:
-    std::string _sysName;   ///< coordinate system name
+    std::string _sysName;  ///< coordinate system name
 };
 
 /**
@@ -79,21 +76,21 @@ public:
     /**
      * Construct a CameraSys from a sysName and a detectorName
      */
-    explicit CameraSys(
-        std::string const &sysName,         ///< coordinate system name
-        std::string const &detectorName=""  ///< detector name
-    ) : _sysName(sysName), _detectorName(detectorName) {};
+    explicit CameraSys(std::string const &sysName,           ///< coordinate system name
+                       std::string const &detectorName = ""  ///< detector name
+                       )
+            : _sysName(sysName), _detectorName(detectorName){};
 
     /**
      * Construct a CameraSys from a CameraSysPrefix and a detectorName
      */
-    explicit CameraSys(
-        CameraSysPrefix const &sysPrefix,   ///< coordinate system prefix
-        std::string const &detectorName=""  ///< detector name
-    ) : _sysName(sysPrefix.getSysName()), _detectorName(detectorName) {};
+    explicit CameraSys(CameraSysPrefix const &sysPrefix,     ///< coordinate system prefix
+                       std::string const &detectorName = ""  ///< detector name
+                       )
+            : _sysName(sysPrefix.getSysName()), _detectorName(detectorName){};
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
-    CameraSys() : _sysName("?"), _detectorName() {};
+    CameraSys() : _sysName("?"), _detectorName(){};
 
     /**
      * Get coordinate system name
@@ -114,9 +111,7 @@ public:
         return _sysName == rhs.getSysName() && _detectorName == rhs.getDetectorName();
     }
 
-    bool operator!=(CameraSys const &rhs) const {
-        return !(*this == rhs);
-    }
+    bool operator!=(CameraSys const &rhs) const { return !(*this == rhs); }
 
     // less-than operator required for use in std::map
     bool operator<(CameraSys const &rhs) const {
@@ -184,10 +179,11 @@ extern CameraSysPrefix const TAN_PIXELS;
  */
 extern CameraSysPrefix const ACTUAL_PIXELS;
 
-std::ostream &operator<< (std::ostream &os, CameraSysPrefix const &detSysPrefix);
+std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &detSysPrefix);
 
-std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys);
-
-}}}
+std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys);
+}
+}
+}
 
 #endif

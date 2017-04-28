@@ -22,21 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
-/** @file
- * @brief Implementation of TanWcsFormatter class
- *
- * @author $Author$
- * @version $Revision$
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of TanWcsFormatter class
  */
 
 #ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
+#define __attribute__(x) /*NOTHING*/
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
@@ -65,31 +56,27 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.TanWcsFormatter");
 }
 
-namespace afwForm = lsst::afw::formatters;
-namespace afwImg = lsst::afw::image;
+namespace lsst {
+namespace afw {
+namespace formatters {
+
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
 namespace pexPolicy = lsst::pex::policy;
 namespace pexExcept = lsst::pex::exceptions;
 
+dafPersist::FormatterRegistration TanWcsFormatter::registration("TanWcs", typeid(image::TanWcs),
+                                                                createInstance);
 
-dafPersist::FormatterRegistration afwForm::TanWcsFormatter::registration(
-    "TanWcs", typeid(afwImg::TanWcs), createInstance);
+TanWcsFormatter::TanWcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::Formatter(typeid(this)) {}
 
-afwForm::TanWcsFormatter::TanWcsFormatter(
-    pexPolicy::Policy::Ptr) :
-    dafPersist::Formatter(typeid(this)) {
-}
+TanWcsFormatter::~TanWcsFormatter(void) {}
 
-afwForm::TanWcsFormatter::~TanWcsFormatter(void) {
-}
-
-void afwForm::TanWcsFormatter::write(
-    dafBase::Persistable const* persistable,
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+void TanWcsFormatter::write(dafBase::Persistable const* persistable,
+                            std::shared_ptr<dafPersist::Storage> storage,
+                            std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "TamWcsFormatter write start");
-    afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
+    image::TanWcs const* ip = dynamic_cast<image::TanWcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-TanWcs");
     }
@@ -103,85 +90,75 @@ void afwForm::TanWcsFormatter::write(
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
 }
 
-dafBase::Persistable* afwForm::TanWcsFormatter::read(
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+dafBase::Persistable* TanWcsFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+                                            std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        afwImg::TanWcs* ip = new afwImg::TanWcs;
+        image::TanWcs* ip = new image::TanWcs;
         LOGL_DEBUG(_log, "TanWcsFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "TanWcsFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
         LOGL_DEBUG(_log, "TanWcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", INT_MIN);
-        dafBase::PropertySet::Ptr md =
-            afw::fits::readMetadata(fits->getPath(), hdu);
-        afwImg::TanWcs* ip = new afwImg::TanWcs(md);
+        std::shared_ptr<dafBase::PropertySet> md = afw::fits::readMetadata(fits->getPath(), hdu);
+        image::TanWcs* ip = new image::TanWcs(md);
         LOGL_DEBUG(_log, "TanWcsFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
 }
 
-void afwForm::TanWcsFormatter::update(
-    dafBase::Persistable*,
-    dafPersist::Storage::Ptr,
-    dafBase::PropertySet::Ptr) {
+void TanWcsFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+                             std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for TanWcs");
 }
 
-
-/// Provide a function to serialise an Eigen::Matrix so we can persist the SIP matrices
+/// @internal Provide a function to serialise an Eigen::Matrix so we can persist the SIP matrices
 template <class Archive>
 void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& m) {
     int rows = m.rows();
     int cols = m.cols();
-    ar & rows & cols;
+    ar& rows& cols;
     if (Archive::is_loading::value) {
         m = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(rows, cols);
     }
     for (int j = 0; j < m.cols(); ++j) {
         for (int i = 0; i < m.rows(); ++i) {
-            ar & m(i,j);
+            ar& m(i, j);
         }
     }
 }
 
-
-static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
-                            std::string const& which,   ///< Either A,B, Ap or Bp
+static void encodeSipHeader(std::shared_ptr<daf::base::PropertySet> wcsProps,
+                            std::string const& which,  ///< @internal Either A,B, Ap or Bp
                             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
     int order = m.rows();
     if (m.cols() != order) {
-        throw LSST_EXCEPT(pexExcept::DomainError,
-            "sip" + which + " matrix is not square");
+        throw LSST_EXCEPT(pexExcept::DomainError, "sip" + which + " matrix is not square");
     }
     if (order > 0) {
-        order -= 1; // match SIP convention
+        order -= 1;  // match SIP convention
         wcsProps->add(which + "_ORDER", static_cast<int>(order));
         for (int i = 0; i <= order; ++i) {
             for (int j = 0; j <= order; ++j) {
                 double val = m(i, j);
                 if (val != 0.0) {
-                    wcsProps->add((boost::format("%1%_%2%_%3%")
-                                   % which % i % j).str(), val);
+                    wcsProps->add((boost::format("%1%_%2%_%3%") % which % i % j).str(), val);
                 }
             }
         }
     }
 }
 
-dafBase::PropertyList::Ptr
-afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
+std::shared_ptr<dafBase::PropertyList> TanWcsFormatter::generatePropertySet(image::TanWcs const& wcs) {
     // Only generates properties for the first wcsInfo.
-    dafBase::PropertyList::Ptr wcsProps(new dafBase::PropertyList());
+    std::shared_ptr<dafBase::PropertyList> wcsProps(new dafBase::PropertyList());
 
-    if (wcs._wcsInfo == NULL) {                  // nothing to add
+    if (wcs._wcsInfo == NULL) {  // nothing to add
         return wcsProps;
     }
 
@@ -203,12 +180,12 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
 
-    //Hack. Because wcslib4.3 gets confused when it's passed RA---TAN-SIP,
-    //we set the value of ctypes to just RA---TAN, regardless of whether
-    //the SIP types are present. But when we persist to a file, we need to
-    //check whether the SIP polynomials were actually there and correct
-    //ctypes if necessary. Bad things will happen if someone tries to
-    //use a system other than RA---TAN and DEC--TAN
+    // Hack. Because wcslib4.3 gets confused when it's passed RA---TAN-SIP,
+    // we set the value of ctypes to just RA---TAN, regardless of whether
+    // the SIP types are present. But when we persist to a file, we need to
+    // check whether the SIP polynomials were actually there and correct
+    // ctypes if necessary. Bad things will happen if someone tries to
+    // use a system other than RA---TAN and DEC--TAN
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
 
@@ -231,10 +208,9 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
 }
 
 template <class Archive>
-void afwForm::TanWcsFormatter::delegateSerialize(
-    Archive& ar, int const, dafBase::Persistable* persistable) {
+void TanWcsFormatter::delegateSerialize(Archive& ar, int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "TanWcsFormatter delegateSerialize start");
-    afwImg::TanWcs* ip = dynamic_cast<afwImg::TanWcs*>(persistable);
+    image::TanWcs* ip = dynamic_cast<image::TanWcs*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-TanWcs");
     }
@@ -246,7 +222,7 @@ void afwForm::TanWcsFormatter::delegateSerialize(
 
     ar & ip->_hasDistortion;
 
-    if(ip->_hasDistortion) {
+    if (ip->_hasDistortion) {
         serializeEigenArray(ar, ip->_sipA);
         serializeEigenArray(ar, ip->_sipAp);
         serializeEigenArray(ar, ip->_sipB);
@@ -255,8 +231,7 @@ void afwForm::TanWcsFormatter::delegateSerialize(
 
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
-        ip->_wcsInfo =
-            reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
+        ip->_wcsInfo = reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
     }
 
     for (int i = 0; i < ip->_nWcsInfo; ++i) {
@@ -293,17 +268,20 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     LOGL_DEBUG(_log, "TanWcsFormatter delegateSerialize end");
 }
 
-template void afwForm::TanWcsFormatter::delegateSerialize(
-    boost::archive::text_oarchive & , int, dafBase::Persistable*);
-template void afwForm::TanWcsFormatter::delegateSerialize(
-    boost::archive::text_iarchive & , int, dafBase::Persistable*);
-template void afwForm::TanWcsFormatter::delegateSerialize(
-    boost::archive::binary_oarchive & , int, dafBase::Persistable*);
-template void afwForm::TanWcsFormatter::delegateSerialize(
-    boost::archive::binary_iarchive & , int, dafBase::Persistable*);
+// Explicit template specializations confuse Doxygen, tell it to ignore them
+/// @cond
+template void TanWcsFormatter::delegateSerialize(boost::archive::text_oarchive&, int, dafBase::Persistable*);
+template void TanWcsFormatter::delegateSerialize(boost::archive::text_iarchive&, int, dafBase::Persistable*);
+template void TanWcsFormatter::delegateSerialize(boost::archive::binary_oarchive&, int,
+                                                 dafBase::Persistable*);
+template void TanWcsFormatter::delegateSerialize(boost::archive::binary_iarchive&, int,
+                                                 dafBase::Persistable*);
+/// @endcond
 
-dafPersist::Formatter::Ptr afwForm::TanWcsFormatter::createInstance(
-    pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new afwForm::TanWcsFormatter(policy));
+std::shared_ptr<dafPersist::Formatter> TanWcsFormatter::createInstance(
+        std::shared_ptr<pexPolicy::Policy> policy) {
+    return std::shared_ptr<dafPersist::Formatter>(new TanWcsFormatter(policy));
 }
-
+}
+}
+}  // end lsst::afw::formatters

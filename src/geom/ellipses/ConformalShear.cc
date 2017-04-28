@@ -27,14 +27,17 @@
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 double ConformalShear::getAxisRatio() const {
     double e = getE();
     return std::exp(-e);
 }
 
-ConformalShear & ConformalShear::operator=(Distortion const & other) {
+ConformalShear& ConformalShear::operator=(Distortion const& other) {
     double delta = other.getE();
     if (delta < 1E-8) {
         _complex = other.getComplex() * (1.0 + delta * delta / 3.0);
@@ -45,7 +48,7 @@ ConformalShear & ConformalShear::operator=(Distortion const & other) {
     return *this;
 }
 
-ConformalShear & ConformalShear::operator=(ReducedShear const & other) {
+ConformalShear& ConformalShear::operator=(ReducedShear const& other) {
     double g = other.getE();
     if (g < 1E-8) {
         _complex = other.getComplex() * 2.0 * (1.0 + g * g / 3.0);
@@ -56,7 +59,7 @@ ConformalShear & ConformalShear::operator=(ReducedShear const & other) {
     return *this;
 }
 
-detail::EllipticityBase::Jacobian ConformalShear::dAssign(Distortion const & other) {
+detail::EllipticityBase::Jacobian ConformalShear::dAssign(Distortion const& other) {
     Jacobian result = Jacobian::Zero();
     double delta = other.getE();
     double alpha, beta;
@@ -75,7 +78,7 @@ detail::EllipticityBase::Jacobian ConformalShear::dAssign(Distortion const & oth
     return result;
 }
 
-detail::EllipticityBase::Jacobian ConformalShear::dAssign(ReducedShear const & other) {
+detail::EllipticityBase::Jacobian ConformalShear::dAssign(ReducedShear const& other) {
     Jacobian result = Jacobian::Zero();
     double g = other.getE();
     double alpha, beta;
@@ -93,5 +96,7 @@ detail::EllipticityBase::Jacobian ConformalShear::dAssign(ReducedShear const & o
     result(1, 0) = result(0, 1) = other.getE1() * other.getE2() * beta;
     return result;
 }
-
-}}}} // namespace lsst::afw::geom::ellipses
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

@@ -29,7 +29,7 @@
 #include "lsst/afw/image.h"
 
 namespace image = lsst::afw::image;
-namespace geom =lsst::afw::geom;
+namespace geom = lsst::afw::geom;
 
 int main(int argc, char **argv) {
     typedef float imageType;
@@ -67,10 +67,10 @@ int main(int argc, char **argv) {
         image1 += image2;
     }
     // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
-    double secPerIter = (clock() - startTime)/
-        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
+    double secPerIter =
+            (clock() - startTime) / (static_cast<double>(CLOCKS_PER_SEC) * static_cast<double>(nIter));
     double megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     double secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
-    std::cout << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
-        secPerMPixPerIter << std::endl;
+    std::cout << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t"
+              << secPerMPixPerIter << std::endl;
 }

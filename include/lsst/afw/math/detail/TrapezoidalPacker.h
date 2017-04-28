@@ -26,7 +26,10 @@
 
 #include "lsst/afw/math/ChebyshevBoundedField.h"
 
-namespace lsst { namespace afw { namespace math { namespace detail {
+namespace lsst {
+namespace afw {
+namespace math {
+namespace detail {
 
 /**
  *  A helper class ChebyshevBoundedField, for mapping trapezoidal matrices to 1-d arrays.
@@ -85,35 +88,27 @@ namespace lsst { namespace afw { namespace math { namespace detail {
  *      9  10  11
  */
 struct TrapezoidalPacker {
+    explicit TrapezoidalPacker(ChebyshevBoundedFieldControl const& ctrl);
 
-    explicit TrapezoidalPacker(ChebyshevBoundedFieldControl const & ctrl);
+    void pack(ndarray::Array<double, 1, 1> const& out, ndarray::Array<double const, 1, 1> const& tx,
+              ndarray::Array<double const, 1, 1> const& ty) const;
 
-    void pack(
-        ndarray::Array<double,1,1> const & out,
-        ndarray::Array<double const,1,1> const & tx,
-        ndarray::Array<double const,1,1> const & ty
-    ) const;
+    void pack(ndarray::Array<double, 1, 1> const& out,
+              ndarray::Array<double const, 2, 2> const& unpacked) const;
 
-    void pack(
-        ndarray::Array<double,1,1> const & out,
-        ndarray::Array<double const,2,2> const & unpacked
-    ) const;
+    void unpack(ndarray::Array<double, 2, 2> const& out,
+                ndarray::Array<double const, 1, 1> const& packed) const;
 
-    void unpack(
-        ndarray::Array<double,2,2> const & out,
-        ndarray::Array<double const,1,1> const & packed
-    ) const;
-
-    ndarray::Array<double,2,2> unpack(
-        ndarray::Array<double const,1,1> const & packed
-    ) const;
+    ndarray::Array<double, 2, 2> unpack(ndarray::Array<double const, 1, 1> const& packed) const;
 
     int nx;
     int ny;
     int m;
     int size;
 };
+}
+}
+}
+}  // namespace lsst::afw::math::detail
 
-}}}} // namespace lsst::afw::math::detail
-
-#endif // !LSST_AFW_MATH_DETAIL_TrapezoidalPacker_h_INCLUDED
+#endif  // !LSST_AFW_MATH_DETAIL_TrapezoidalPacker_h_INCLUDED

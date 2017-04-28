@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -39,8 +39,10 @@ PYBIND11_PLUGIN(_fits) {
 
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 
-    lsst::pex::exceptions::python::declareException<FitsError, lsst::pex::exceptions::IoError>(mod, "FitsError", "IoError");
-//    lsst::pex::exceptions::python::declareException<FitsTypeError, FitsError>(mod, "FitsTypeError", "FitsError");
+    lsst::pex::exceptions::python::declareException<FitsError, lsst::pex::exceptions::IoError>(
+            mod, "FitsError", "IoError");
+    //    lsst::pex::exceptions::python::declareException<FitsTypeError, FitsError>(mod, "FitsTypeError",
+    //    "FitsError");
 
     clsMemFileManager.def(py::init<>());
     clsMemFileManager.def(py::init<size_t>());
@@ -49,8 +51,12 @@ PYBIND11_PLUGIN(_fits) {
      * But it is what Swig did (sort of, it used the cdata.i extension), so I reckon this
      * is cleaner because it does not expose casting to the Python side. */
     clsMemFileManager.def("getLength", &MemFileManager::getLength);
-    clsMemFileManager.def("getData", [](MemFileManager & m) { return py::bytes(static_cast<char *>(m.getData()), m.getLength()); });
-    clsMemFileManager.def("setData", [](MemFileManager & m, py::bytes const & d, size_t size) { memcpy(m.getData(), PyBytes_AsString(d.ptr()), size); });
+    clsMemFileManager.def("getData", [](MemFileManager &m) {
+        return py::bytes(static_cast<char *>(m.getData()), m.getLength());
+    });
+    clsMemFileManager.def("setData", [](MemFileManager &m, py::bytes const &d, size_t size) {
+        memcpy(m.getData(), PyBytes_AsString(d.ptr()), size);
+    });
 
     /* Module level */
 

@@ -32,7 +32,7 @@ using namespace std;
 int main() {
     typedef double funcType;
     const unsigned int order = 3;
-    vector<double> params(order+1);
+    vector<double> params(order + 1);
     lsst::afw::math::Chebyshev1Function1<funcType> chebyFunc(order);
 
     for (unsigned int jj = 0; jj < params.size(); ++jj) {

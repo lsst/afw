@@ -1,5 +1,5 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE table-aliases
+#define BOOST_TEST_MODULE table - aliases
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
@@ -20,50 +20,47 @@ class TestTable;
 
 class TestRecord : public lsst::afw::table::BaseRecord {
 public:
-
-    explicit TestRecord(PTR(TestTable) const & table);
-
+    explicit TestRecord(std::shared_ptr<TestTable> const& table);
 };
 
 class TestTable : public lsst::afw::table::BaseTable {
 public:
-
     mutable std::string lastAliasChanged;
 
-    static PTR(TestTable) make(lsst::afw::table::Schema const & schema) {
+    static std::shared_ptr<TestTable> make(lsst::afw::table::Schema const& schema) {
         return std::make_shared<TestTable>(schema);
     }
 
-    explicit TestTable(lsst::afw::table::Schema const & schema) : lsst::afw::table::BaseTable(schema) {}
+    explicit TestTable(lsst::afw::table::Schema const& schema) : lsst::afw::table::BaseTable(schema) {}
 
-    TestTable(TestTable const & other) : lsst::afw::table::BaseTable(other) {}
+    TestTable(TestTable const& other) : lsst::afw::table::BaseTable(other) {}
 
 protected:
-
     // Implementing this is the whole reason we made these test classes; want to verify that this gets
     // called at the right times.
-    virtual void handleAliasChange(std::string const & alias) { lastAliasChanged = alias; }
+    virtual void handleAliasChange(std::string const& alias) { lastAliasChanged = alias; }
 
-    virtual PTR(lsst::afw::table::BaseTable) _clone() const { return std::make_shared<TestTable>(*this); }
-
-    virtual PTR(lsst::afw::table::BaseRecord) _makeRecord() {
-        return std::make_shared<TestRecord>(getSelf<TestTable>());
+    virtual std::shared_ptr<lsst::afw::table::BaseTable> _clone() const {
+        return std::make_shared<TestTable>(*this);
     }
 
+    virtual std::shared_ptr<lsst::afw::table::BaseRecord> _makeRecord() {
+        return std::make_shared<TestRecord>(getSelf<TestTable>());
+    }
 };
 
-TestRecord::TestRecord(PTR(TestTable) const & table) : lsst::afw::table::BaseRecord(table) {}
+TestRecord::TestRecord(std::shared_ptr<TestTable> const& table) : lsst::afw::table::BaseRecord(table) {}
 
-} // anonymous
+}  // anonymous
 
 BOOST_AUTO_TEST_CASE(aliasMapLinks) {
     lsst::afw::table::Schema schema;
     schema.addField<int>("a", "doc for a");
     schema.getAliasMap()->set("b", "a");
-    PTR(TestTable) table = TestTable::make(schema);
+    std::shared_ptr<TestTable> table = TestTable::make(schema);
 
     // Should have deep-copied the AliasMap, so pointers should not be equal
-    PTR(lsst::afw::table::AliasMap) aliases = table->getSchema().getAliasMap();
+    std::shared_ptr<lsst::afw::table::AliasMap> aliases = table->getSchema().getAliasMap();
     BOOST_CHECK(schema.getAliasMap() != aliases);
 
     // If we set an alias in the map attached to the table, the table should be notified

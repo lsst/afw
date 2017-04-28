@@ -47,7 +47,7 @@ namespace {
 static double const nan(std::numeric_limits<double>::quiet_NaN());
 static geom::Angle const nanAngle(nan);
 
-} // anonymous
+}  // anonymous
 
 PYBIND11_PLUGIN(visitInfo) {
     py::module mod("visitInfo");
@@ -55,54 +55,36 @@ PYBIND11_PLUGIN(visitInfo) {
     /* Module level */
     table::io::python::declarePersistableFacade<VisitInfo>(mod, "VisitInfo");
 
-    py::class_<VisitInfo, std::shared_ptr<VisitInfo>,
-               table::io::PersistableFacade<VisitInfo>,
-               table::io::Persistable> cls(mod, "VisitInfo");
+    py::class_<VisitInfo, std::shared_ptr<VisitInfo>, table::io::PersistableFacade<VisitInfo>,
+               table::io::Persistable>
+            cls(mod, "VisitInfo");
 
     /* Member types and enums */
     py::enum_<RotType>(mod, "RotType")
-        .value("UNKNOWN", RotType::UNKNOWN)
-        .value("SKY", RotType::SKY)
-        .value("HORIZON", RotType::HORIZON)
-        .value("MOUNT", RotType::MOUNT)
-        .export_values();
+            .value("UNKNOWN", RotType::UNKNOWN)
+            .value("SKY", RotType::SKY)
+            .value("HORIZON", RotType::HORIZON)
+            .value("MOUNT", RotType::MOUNT)
+            .export_values();
 
     /* Constructors */
-    cls.def(py::init<table::RecordId,
-                     double,
-                     double,
-                     daf::base::DateTime const &,
-                     double,
-                     geom::Angle const &,
-                     coord::IcrsCoord const &,
-                     coord::Coord const &,
-                     double,
-                     geom::Angle const &,
-                     RotType const &,
-                     coord::Observatory const &,
+    cls.def(py::init<table::RecordId, double, double, daf::base::DateTime const &, double,
+                     geom::Angle const &, coord::IcrsCoord const &, coord::Coord const &, double,
+                     geom::Angle const &, RotType const &, coord::Observatory const &,
                      coord::Weather const &>(),
-            "exposureId"_a=0,
-            "exposureTime"_a=nan,
-            "darkTime"_a=nan,
-            "date"_a=daf::base::DateTime(),
-            "ut1"_a=nan,
-            "era"_a=nanAngle,
-            "boresightRaDec"_a=coord::IcrsCoord(nanAngle, nanAngle),
-            "boresightAzAlt"_a=coord::Coord(nanAngle, nanAngle),
-            "boresightAirmass"_a=nan,
-            "boresightRotAngle"_a=nanAngle,
-            "rotType"_a=RotType::UNKNOWN,
-            "observatory"_a=coord::Observatory(nanAngle, nanAngle, nan),
-            "weather"_a=coord::Weather(nan, nan, nan));
+            "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan, "date"_a = daf::base::DateTime(),
+            "ut1"_a = nan, "era"_a = nanAngle, "boresightRaDec"_a = coord::IcrsCoord(nanAngle, nanAngle),
+            "boresightAzAlt"_a = coord::Coord(nanAngle, nanAngle), "boresightAirmass"_a = nan,
+            "boresightRotAngle"_a = nanAngle, "rotType"_a = RotType::UNKNOWN,
+            "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
+            "weather"_a = coord::Weather(nan, nan, nan));
     cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
     cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
 
     /* Operators */
-    cls.def("__eq__",
-            [](VisitInfo const & self, VisitInfo const & other) { return self == other; },
+    cls.def("__eq__", [](VisitInfo const &self, VisitInfo const &other) { return self == other; },
             py::is_operator());
-    cls.def("__ne__",
-            [](VisitInfo const & self, VisitInfo const & other) { return self != other; },
+    cls.def("__ne__", [](VisitInfo const &self, VisitInfo const &other) { return self != other; },
             py::is_operator());
 
     /* Members */
@@ -129,5 +111,6 @@ PYBIND11_PLUGIN(visitInfo) {
 
     return mod.ptr();
 }
-
-}}}  // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image

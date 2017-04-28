@@ -48,9 +48,9 @@ typedef afwImage::Exposure<float> ExposureF;
 
 namespace cfitsio {
 #if !defined(DOXYGEN)
-    extern "C" {
-#       include "fitsio.h"
-    }
+extern "C" {
+#include "fitsio.h"
+}
 #endif
 }
 
@@ -58,170 +58,151 @@ static int gDebugData = 0;
 static string gFilename = "", gFilename2 = "";
 static string gFilenameStripped = "", gFilename2Stripped = "";
 static string gFilter = "r";
-static string gQueryBounds = "37.8_39_1_1.3";	//This query is good for pairing 2570/6/0199 with 5902/6/0677
+static string gQueryBounds = "37.8_39_1_1.3";  // This query is good for pairing 2570/6/0199 with 5902/6/0677
 
 //================================================================================
-//tools
+// tools
 
-PTR(afwFits::MemFileManager) readFile(string filename)
-{
-    PTR(afwFits::MemFileManager) result;
+std::shared_ptr<afwFits::MemFileManager> readFile(string filename) {
+    std::shared_ptr<afwFits::MemFileManager> result;
     std::size_t fileLen = 0;
-	ifstream ifs;
-	ifs.open(filename.c_str(), ios::in|ios::binary|ios::ate);
-	if (!ifs)
-		throw runtime_error("Failed to open ifstream: " + filename);
-	if (ifs)
-	{
-		fileLen = ifs.tellg();
+    ifstream ifs;
+    ifs.open(filename.c_str(), ios::in | ios::binary | ios::ate);
+    if (!ifs) throw runtime_error("Failed to open ifstream: " + filename);
+    if (ifs) {
+        fileLen = ifs.tellg();
         result.reset(new afwFits::MemFileManager(fileLen));
-		ifs.seekg(0, ios::beg);
-		ifs.read(reinterpret_cast<char*>(result->getData()), result->getLength());
-		ifs.close();
-	}
+        ifs.seekg(0, ios::beg);
+        ifs.read(reinterpret_cast<char *>(result->getData()), result->getLength());
+        ifs.close();
+    }
 
-	cout << "Filename/length: " << gFilename << " / " << fileLen << " bytes" << endl;
+    cout << "Filename/length: " << gFilename << " / " << fileLen << " bytes" << endl;
 
-	return result;
+    return result;
 }
 
-string stripHierarchyFromPath(string filepath)
-{
-	cout << "filepath A: " << filepath << endl;
+string stripHierarchyFromPath(string filepath) {
+    cout << "filepath A: " << filepath << endl;
 
-	size_t lastSlash = filepath.rfind("/");
-	if (lastSlash != string::npos)
-		filepath = filepath.substr(lastSlash + 1);
+    size_t lastSlash = filepath.rfind("/");
+    if (lastSlash != string::npos) filepath = filepath.substr(lastSlash + 1);
 
-	cout << "filepath B: " << filepath << endl;
+    cout << "filepath B: " << filepath << endl;
 
-	return filepath;
-}
-
-/**
- Read a FITS file into an Image, write the Image to a RAM FITS file, then write the RAM FITS file to disk.
- */
-void test6()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
-
-	//Read FITS file from disk into an Image
-	PTR(dafBase::PropertySet) miMetadata(new dafBase::PropertySet);
-	PTR(ImageF) image(new ImageF(gFilename, INT_MIN, miMetadata));
-
-	//Write the Image to a RAM FITS file
-	image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
-    afwFits::MemFileManager manager;
-	image->writeFits(manager);
-
-	//Write the RAM FITS file to disk
-	ofstream ofs;
-	ofs.open(string(gFilenameStripped + "_imageRamOut.fit").c_str());
-	if (ofs)
-		ofs.write(reinterpret_cast<char*>(manager.getData()), manager.getLength());
-	ofs.close();
+    return filepath;
 }
 
 /**
- Read a FITS file into an Exposure, write the Exposure to a RAM FITS file, then write the RAM FITS file to disk.
+ @internal Read a FITS file into an Image, write the Image to a RAM FITS file, then write the RAM FITS file to
+ disk.
  */
-void test7()
-{
-	if (gFilename == "")
-		throw runtime_error("Must specify SDSS image filename on command line");
+void test6() {
+    if (gFilename == "") throw runtime_error("Must specify SDSS image filename on command line");
 
-	//Read FITS file from disk into an Exposure
-	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
-	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, INT_MIN, miMetadata));
-	MaskedImageF maskedImage(image);
-	afwImage::Wcs::Ptr wcsFromFITS = afwImage::makeWcs(miMetadata);
-	ExposureF exposure(maskedImage, wcsFromFITS);
+    // Read FITS file from disk into an Image
+    std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
+    std::shared_ptr<ImageF> image(new ImageF(gFilename, INT_MIN, miMetadata));
 
-	//Write the Exposure to a RAM FITS file
+    // Write the Image to a RAM FITS file
+    image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
     afwFits::MemFileManager manager;
-	exposure.writeFits(manager);
+    image->writeFits(manager);
 
-	//Write the RAM FITS file to disk
-	ofstream ofs;
-	ofs.open(string(gFilenameStripped + "_exposureRamOut.fit").c_str());
-	if (ofs)
-		ofs.write(reinterpret_cast<char*>(manager.getData()), manager.getLength());
-	ofs.close();
+    // Write the RAM FITS file to disk
+    ofstream ofs;
+    ofs.open(string(gFilenameStripped + "_imageRamOut.fit").c_str());
+    if (ofs) ofs.write(reinterpret_cast<char *>(manager.getData()), manager.getLength());
+    ofs.close();
+}
+
+/**
+ @internal Read a FITS file into an Exposure, write the Exposure to a RAM FITS file, then write the RAM FITS
+ file to disk.
+ */
+void test7() {
+    if (gFilename == "") throw runtime_error("Must specify SDSS image filename on command line");
+
+    // Read FITS file from disk into an Exposure
+    std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
+    std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, INT_MIN, miMetadata));
+    MaskedImageF maskedImage(image);
+    std::shared_ptr<afwImage::Wcs> wcsFromFITS = afwImage::makeWcs(miMetadata);
+    ExposureF exposure(maskedImage, wcsFromFITS);
+
+    // Write the Exposure to a RAM FITS file
+    afwFits::MemFileManager manager;
+    exposure.writeFits(manager);
+
+    // Write the RAM FITS file to disk
+    ofstream ofs;
+    ofs.open(string(gFilenameStripped + "_exposureRamOut.fit").c_str());
+    if (ofs) ofs.write(reinterpret_cast<char *>(manager.getData()), manager.getLength());
+    ofs.close();
 }
 
 //================================================================================
-//test entry point
+// test entry point
 
 /**
- Run one test as specified by ftn.
+ @internal Run one test as specified by ftn.
  */
-int test(void(*ftn)(void), string label)
-{
-	cout << endl << "Running test " << label << "..." << endl;
+int test(void (*ftn)(void), string label) {
+    cout << endl << "Running test " << label << "..." << endl;
 
-	try
-	{
-		(*ftn)();
-		cout << "  Test succeeded" << endl;
-	}
-	catch (exception &e)
-	{
-		cerr << "  Caught the following exception:" << endl;
-		cerr << "    " << e.what() << endl;
-		return 1;
-	}
-	catch (...)
-	{
-		cerr << "  Caught a default exception" << endl;
-		return 2;
-	}
+    try {
+        (*ftn)();
+        cout << "  Test succeeded" << endl;
+    } catch (exception &e) {
+        cerr << "  Caught the following exception:" << endl;
+        cerr << "    " << e.what() << endl;
+        return 1;
+    } catch (...) {
+        cerr << "  Caught a default exception" << endl;
+        return 2;
+    }
 
-	return 0;
+    return 0;
 }
 
-string GetGFilenamePath(int argc, char **argv)
-{
+string GetGFilenamePath(int argc, char **argv) {
     string inImagePath;
     if (argc < 2) {
         try {
             string dataDir = lsst::utils::getPackageDir("afwdata");
-            //inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not
+            // inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not
             // used at all in the previous avatar of this test.
             inImagePath = dataDir + "/data/fpC-005902-r6-0677_sub.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
-            cerr << "Usage: maskedImage1 [inputBaseName1] [inputBaseName2] [outputBaseName1] [outputBaseName2]" << endl;
+            cerr << "Usage: maskedImage1 [inputBaseName1] [inputBaseName2] [outputBaseName1] "
+                    "[outputBaseName2]"
+                 << endl;
             cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
             exit(EXIT_SUCCESS);
         }
-    }
-    else {
+    } else {
         inImagePath = string(argv[1]);
     }
     return inImagePath;
 }
 
 //================================================================================
-//main
+// main
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
+    gFilename = GetGFilenamePath(argc, argv);
+    gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);
 
-	gFilename = GetGFilenamePath(argc, argv);
-	gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);
+    int numerrs = 0;
 
-	int numerrs = 0;
+    cout << "Testing RAM FITS..." << endl;
 
-	cout << "Testing RAM FITS..." << endl;
+    numerrs += test(&test6, "6") ? 1 : 0;
+    if (numerrs != 0) return EXIT_FAILURE;
+    numerrs += test(&test7, "7") ? 1 : 0;
+    if (numerrs != 0) return EXIT_FAILURE;
 
-	numerrs += test(&test6, "6") ? 1 : 0;
-	if (numerrs != 0)
-		return EXIT_FAILURE;
-	numerrs += test(&test7, "7") ? 1 : 0;
-	if (numerrs != 0)
-		return EXIT_FAILURE;
+    cout << "Done testing.  Num failed tests: " << numerrs << endl;
 
-	cout << "Done testing.  Num failed tests: " << numerrs << endl;
-
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

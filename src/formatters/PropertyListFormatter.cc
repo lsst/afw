@@ -22,11 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
-/** @file
- * @brief Implementation of PropertyListFormatter class
- *
- * @ingroup afw
+/*
+ * Implementation of PropertyListFormatter class
  */
 #include <cstdint>
 #include <memory>
@@ -40,7 +37,7 @@
 #include "lsst/afw/fits.h"
 
 namespace {
-    LOG_LOGGER _log = LOG_GET("afw.PropertyListFormatter");
+LOG_LOGGER _log = LOG_GET("afw.PropertyListFormatter");
 }
 
 namespace lsst {
@@ -48,21 +45,14 @@ namespace afw {
 namespace formatters {
 
 lsst::daf::persistence::FormatterRegistration PropertyListFormatter::registration(
-    "PropertyList", typeid(lsst::daf::base::PropertyList), createInstance);
+        "PropertyList", typeid(lsst::daf::base::PropertyList), createInstance);
 
-PropertyListFormatter::PropertyListFormatter(
-    lsst::pex::policy::Policy::Ptr
-)
-    : lsst::daf::persistence::Formatter(typeid(this))
-{
-}
+PropertyListFormatter::PropertyListFormatter(std::shared_ptr<lsst::pex::policy::Policy>)
+        : lsst::daf::persistence::Formatter(typeid(this)) {}
 
-void PropertyListFormatter::write(
-    lsst::daf::base::Persistable const* persistable,
-    lsst::daf::persistence::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr
-)
-{
+void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistable,
+                                  std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                                  std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "PropertyListFormatter write start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList const*>(persistable);
     if (ip == 0) {
@@ -70,33 +60,28 @@ void PropertyListFormatter::write(
     }
     if (typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "FitsStorage for PropertyList read-only (writing is not supported)");
+                          "FitsStorage for PropertyList read-only (writing is not supported)");
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Unrecognized Storage for PropertyList");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for PropertyList");
 }
 
 namespace {
-    std::unique_ptr<daf::base::PropertyList>
-    readMetadataAsUniquePtr(std::string const & fileName, int hdu, bool strip)
-    {
-        auto metadata = std::unique_ptr<daf::base::PropertyList>(new lsst::daf::base::PropertyList);
+std::unique_ptr<daf::base::PropertyList> readMetadataAsUniquePtr(std::string const& fileName, int hdu,
+                                                                 bool strip) {
+    auto metadata = std::unique_ptr<daf::base::PropertyList>(new lsst::daf::base::PropertyList);
 
-        auto inheritedMetadata = fits::readMetadata(fileName, hdu, strip);
-        metadata->combine(inheritedMetadata);
+    auto inheritedMetadata = fits::readMetadata(fileName, hdu, strip);
+    metadata->combine(inheritedMetadata);
 
-        return metadata;
-    }
+    return metadata;
+}
 }
 
 lsst::daf::base::Persistable* PropertyListFormatter::read(
-    lsst::daf::persistence::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr
-)
-{
+        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "PropertyListFormatter read start");
-    if(typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
-
+    if (typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
         LOGL_DEBUG(_log, "PropertyListFormatter read FitsStorage");
 
         auto fits = dynamic_cast<lsst::daf::persistence::FitsStorage*>(storage.get());
@@ -105,41 +90,30 @@ lsst::daf::base::Persistable* PropertyListFormatter::read(
         LOGL_DEBUG(_log, "PropertyListFormatter read end");
         return ip.release();
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Unrecognized Storage for PropertyList");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for PropertyList");
 }
 
-void PropertyListFormatter::update(
-    lsst::daf::base::Persistable*,
-    lsst::daf::persistence::Storage::Ptr,
-    lsst::daf::base::PropertySet::Ptr
-)
-{
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "Unexpected call to update for PropertyList");
+void PropertyListFormatter::update(lsst::daf::base::Persistable*,
+                                   std::shared_ptr<lsst::daf::persistence::Storage>,
+                                   std::shared_ptr<lsst::daf::base::PropertySet>) {
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for PropertyList");
 }
 
 template <class Archive>
-void PropertyListFormatter::delegateSerialize(
-    Archive&,
-    int const,
-    lsst::daf::base::Persistable* persistable
-)
-{
+void PropertyListFormatter::delegateSerialize(Archive&, int const,
+                                              lsst::daf::base::Persistable* persistable) {
     LOGL_DEBUG(_log, "PropertyListFormatter delegateSerialize start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-PropertyList");
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                      "PropertyList serialization not yet implemented");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "PropertyList serialization not yet implemented");
 }
 
-lsst::daf::persistence::Formatter::Ptr PropertyListFormatter::createInstance(
-    lsst::pex::policy::Policy::Ptr policy
-)
-{
-    return lsst::daf::persistence::Formatter::Ptr(new PropertyListFormatter(policy));
+std::shared_ptr<lsst::daf::persistence::Formatter> PropertyListFormatter::createInstance(
+        std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(new PropertyListFormatter(policy));
 }
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters

@@ -32,21 +32,25 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace image { namespace {
+namespace lsst {
+namespace afw {
+namespace image {
+namespace {
 
 template <typename MaskPixelT>
 using PyMask = py::class_<Mask<MaskPixelT>, std::shared_ptr<Mask<MaskPixelT>>, ImageBase<MaskPixelT>>;
 
 template <typename MaskPixelT>
-static void declareMask(py::module & mod, std::string const & suffix) {
+static void declareMask(py::module &mod, std::string const &suffix) {
     PyMask<MaskPixelT> cls(mod, ("Mask" + suffix).c_str());
 
     /* Constructors */
     cls.def(py::init<unsigned int, unsigned int, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "width"_a, "height"_a, "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(
-        py::init<unsigned int, unsigned int, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
-        "width"_a, "height"_a, "initialValue"_a, "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
+    cls.def(py::init<unsigned int, unsigned int, MaskPixelT,
+                     typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
+            "width"_a, "height"_a, "initialValue"_a,
+            "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<geom::Extent2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "dimensions"_a = geom::Extent2I(), "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<geom::Extent2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
@@ -61,50 +65,49 @@ static void declareMask(py::module & mod, std::string const & suffix) {
             "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
     cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, geom::Point2I const &>(), "array"_a,
             "deep"_a = false, "xy0"_a = geom::Point2I());
-    cls.def(py::init<std::string const &, int, PTR(lsst::daf::base::PropertySet), geom::Box2I const &,
-                     ImageOrigin, bool>(),
+    cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
+                     geom::Box2I const &, ImageOrigin, bool>(),
             "fileName"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::MemFileManager &, int, PTR(lsst::daf::base::PropertySet), geom::Box2I const &,
-                     ImageOrigin, bool>(),
+    cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
+                     geom::Box2I const &, ImageOrigin, bool>(),
             "manager"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(
-        py::init<fits::Fits &, PTR(lsst::daf::base::PropertySet), geom::Box2I const &, ImageOrigin, bool>(),
-        "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
-        "conformMasks"_a = false);
+    cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, geom::Box2I const &,
+                     ImageOrigin, bool>(),
+            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+            "conformMasks"_a = false);
 
     /* Operators */
-    cls.def("__ior__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self |= other; });
-    cls.def("__ior__", [](Mask<MaskPixelT> & self, MaskPixelT const other) { return self |= other; });
-    cls.def("__ior__", [](Mask<MaskPixelT> & self, int other) { return self |= other; });
-    cls.def("__iand__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self &= other; });
-    cls.def("__iand__", [](Mask<MaskPixelT> & self, MaskPixelT const other) { return self &= other; });
-    cls.def("__iand__", [](Mask<MaskPixelT> & self, int other) { return self &= other; });
-    cls.def("__ixor__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self ^= other; });
-    cls.def("__ixor__", [](Mask<MaskPixelT> & self, MaskPixelT const other) { return self ^= other; });
-    cls.def("__ixor__", [](Mask<MaskPixelT> & self, int other) { return self ^= other; });
+    cls.def("__ior__", [](Mask<MaskPixelT> &self, Mask<MaskPixelT> &other) { return self |= other; });
+    cls.def("__ior__", [](Mask<MaskPixelT> &self, MaskPixelT const other) { return self |= other; });
+    cls.def("__ior__", [](Mask<MaskPixelT> &self, int other) { return self |= other; });
+    cls.def("__iand__", [](Mask<MaskPixelT> &self, Mask<MaskPixelT> &other) { return self &= other; });
+    cls.def("__iand__", [](Mask<MaskPixelT> &self, MaskPixelT const other) { return self &= other; });
+    cls.def("__iand__", [](Mask<MaskPixelT> &self, int other) { return self &= other; });
+    cls.def("__ixor__", [](Mask<MaskPixelT> &self, Mask<MaskPixelT> &other) { return self ^= other; });
+    cls.def("__ixor__", [](Mask<MaskPixelT> &self, MaskPixelT const other) { return self ^= other; });
+    cls.def("__ixor__", [](Mask<MaskPixelT> &self, int other) { return self ^= other; });
 
     /* Members */
     cls.def("swap", (void (Mask<MaskPixelT>::*)(Mask<MaskPixelT> &)) & Mask<MaskPixelT>::swap);
-    cls.def("writeFits",
-            (void (Mask<MaskPixelT>::*)(std::string const &, CONST_PTR(lsst::daf::base::PropertySet),
-                                        std::string const &) const) &
-                Mask<MaskPixelT>::writeFits,
-            "fileName"_a, "metadata"_a = PTR(lsst::daf::base::PropertySet)(), "mode"_a = "w");
-    cls.def("writeFits",
-            (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
-                                        CONST_PTR(lsst::daf::base::PropertySet), std::string const &) const) &
-                Mask<MaskPixelT>::writeFits,
-            "manager"_a, "metadata"_a = PTR(lsst::daf::base::PropertySet)(), "mode"_a = "w");
-    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(fits::Fits &,
-                                                     CONST_PTR(lsst::daf::base::PropertySet)) const) &
-                             Mask<MaskPixelT>::writeFits,
-            "fitsfile"_a, "metadata"_a = CONST_PTR(lsst::daf::base::PropertySet)());
+    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(std::string const &,
+                                                     std::shared_ptr<lsst::daf::base::PropertySet const>,
+                                                     std::string const &) const) &
+                                 Mask<MaskPixelT>::writeFits,
+            "fileName"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
+    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(fits::MemFileManager &,
+                                                     std::shared_ptr<lsst::daf::base::PropertySet const>,
+                                                     std::string const &) const) &
+                                 Mask<MaskPixelT>::writeFits,
+            "manager"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet>(), "mode"_a = "w");
+    cls.def("writeFits", (void (Mask<MaskPixelT>::*)(
+                                 fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet const>) const) &
+                                 Mask<MaskPixelT>::writeFits,
+            "fitsfile"_a, "metadata"_a = std::shared_ptr<lsst::daf::base::PropertySet const>());
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
                    "filename"_a, "hdu"_a = INT_MIN);
-    cls.def_static("readFits",
-                   (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
+    cls.def_static("readFits", (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
                    "manager"_a, "hdu"_a = INT_MIN);
     cls.def_static("interpret", Mask<MaskPixelT>::interpret);
     cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
@@ -129,24 +132,22 @@ static void declareMask(py::module & mod, std::string const & suffix) {
     cls.def_static("addMaskPlane", (int (*)(const std::string &))Mask<MaskPixelT>::addMaskPlane);
 
     /**
-     * Set an image to the value val
+     * @internal Set an image to the value val
      */
-    cls.def("set", [](Mask<MaskPixelT> & self, MaskPixelT val) {
-        self = val;
-    });
+    cls.def("set", [](Mask<MaskPixelT> &self, MaskPixelT val) { self = val; });
 
     /**
-     * Set pixel (x,y) to val
+     * @internal Set pixel (x,y) to val
      */
-    cls.def("set", [](Mask<MaskPixelT> & self, int x, int y, double val) {
+    cls.def("set", [](Mask<MaskPixelT> &self, int x, int y, double val) {
         self(x, y, image::CheckIndices(true)) = val;
     });
 
-    cls.def("get", [](Mask<MaskPixelT> const & self, int x, int y) -> MaskPixelT {
+    cls.def("get", [](Mask<MaskPixelT> const &self, int x, int y) -> MaskPixelT {
         return self(x, y, image::CheckIndices(true));
     });
 
-    cls.def("get", [](Mask<MaskPixelT> const & self, int x, int y, int plane) -> bool {
+    cls.def("get", [](Mask<MaskPixelT> const &self, int x, int y, int plane) -> bool {
         return self(x, y, plane, image::CheckIndices(true));
     });
 }
@@ -165,5 +166,7 @@ PYBIND11_PLUGIN(mask) {
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::image::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::image::<anonymous>

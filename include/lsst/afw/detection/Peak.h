@@ -29,28 +29,29 @@
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 class PeakRecord;
 class PeakTable;
 
 /**
- *  @brief Record class that represents a peak in a Footprint
+ *  Record class that represents a peak in a Footprint
  */
 class PeakRecord : public afw::table::BaseRecord {
 public:
-
     typedef PeakTable Table;
     typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
     typedef afw::table::CatalogT<PeakRecord> Catalog;
     typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
 
-    CONST_PTR(PeakTable) getTable() const {
+    std::shared_ptr<PeakTable const> getTable() const {
         return std::static_pointer_cast<PeakTable const>(afw::table::BaseRecord::getTable());
     }
 
     //@{
-    /// @brief Convenience accessors for the keys in the minimal schema.
+    /// Convenience accessors for the keys in the minimal schema.
     afw::table::RecordId getId() const;
     void setId(afw::table::RecordId id);
 
@@ -73,28 +74,24 @@ public:
     //@}
 
 protected:
-
-    explicit PeakRecord(PTR(PeakTable) const & table);
+    explicit PeakRecord(std::shared_ptr<PeakTable> const& table);
 
 private:
-
     friend class PeakTable;
-
 };
 
 /**
- *  @brief Table class for Peaks in Footprints.
+ *  Table class for Peaks in Footprints.
  */
 class PeakTable : public afw::table::BaseTable {
 public:
-
     typedef PeakRecord Record;
     typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
     typedef afw::table::CatalogT<Record> Catalog;
     typedef afw::table::CatalogT<Record const> ConstCatalog;
 
     /**
-     *  @brief Obtain a table that can be used to create records with given schema
+     *  Obtain a table that can be used to create records with given schema
      *
      *  @param[in] schema     Schema that defines the fields, offsets, and record size for the table.
      *  @param[in] forceNew   If true, guarantee that the returned PeakTable will be a new one, rather
@@ -108,10 +105,10 @@ public:
      *  This behavior can be disabled by setting forceNewTable=true or by cloning an existing table
      *  (in both of these cases, the new table will not be reused in the future, either)
      */
-    static PTR(PeakTable) make(afw::table::Schema const & schema, bool forceNew=false);
+    static std::shared_ptr<PeakTable> make(afw::table::Schema const& schema, bool forceNew = false);
 
     /**
-     *  @brief Return a minimal schema for Peak tables and records.
+     *  Return a minimal schema for Peak tables and records.
      *
      *  The returned schema can and generally should be modified further,
      *  but many operations on PeakRecords will assume that at least the fields
@@ -120,23 +117,23 @@ public:
     static afw::table::Schema makeMinimalSchema() { return getMinimalSchema().schema; }
 
     /**
-     *  @brief Return true if the given schema is a valid PeakTable schema.
+     *  Return true if the given schema is a valid PeakTable schema.
      *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
-    static bool checkSchema(afw::table::Schema const & other) {
+    static bool checkSchema(afw::table::Schema const& other) {
         return other.contains(getMinimalSchema().schema);
     }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
-    PTR(afw::table::IdFactory) getIdFactory() { return _idFactory; }
+    /// Return the object that generates IDs for the table (may be null).
+    std::shared_ptr<afw::table::IdFactory> getIdFactory() { return _idFactory; }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
-    CONST_PTR(afw::table::IdFactory) getIdFactory() const { return _idFactory; }
+    /// Return the object that generates IDs for the table (may be null).
+    std::shared_ptr<afw::table::IdFactory const> getIdFactory() const { return _idFactory; }
 
-    /// @brief Switch to a new IdFactory -- object that generates IDs for the table (may be null).
-    void setIdFactory(PTR(afw::table::IdFactory) f) { _idFactory = f; }
+    /// Switch to a new IdFactory -- object that generates IDs for the table (may be null).
+    void setIdFactory(std::shared_ptr<afw::table::IdFactory> f) { _idFactory = f; }
 
     //@{
     /**
@@ -153,36 +150,32 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(PeakTable) clone() const { return std::static_pointer_cast<PeakTable>(_clone()); }
+    std::shared_ptr<PeakTable> clone() const { return std::static_pointer_cast<PeakTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(PeakRecord) makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
+    std::shared_ptr<PeakRecord> makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(PeakRecord) copyRecord(afw::table::BaseRecord const & other) {
+    std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const& other) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
-    PTR(PeakRecord) copyRecord(
-        afw::table::BaseRecord const & other,
-        afw::table::SchemaMapper const & mapper
-    ) {
+    std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const& other,
+                                           afw::table::SchemaMapper const& mapper) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other, mapper));
     }
 
 protected:
+    PeakTable(afw::table::Schema const& schema, std::shared_ptr<afw::table::IdFactory> const& idFactory);
 
-    PeakTable(afw::table::Schema const & schema, PTR(afw::table::IdFactory) const & idFactory);
-
-    PeakTable(PeakTable const & other);
+    PeakTable(PeakTable const& other);
 
     std::shared_ptr<afw::table::BaseTable> _clone() const override;
 
     std::shared_ptr<afw::table::BaseRecord> _makeRecord() override;
 
 private:
-
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         afw::table::Schema schema;
@@ -197,19 +190,18 @@ private:
     };
 
     // Return the singleton minimal schema.
-    static MinimalSchema & getMinimalSchema();
+    static MinimalSchema& getMinimalSchema();
 
     friend class afw::table::io::FitsWriter;
 
-     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    std::shared_ptr<afw::table::io::FitsWriter> makeFitsWriter(fits::Fits * fitsfile, int flags) const override;
+    // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
+    std::shared_ptr<afw::table::io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile,
+                                                               int flags) const override;
 
-    PTR(afw::table::IdFactory) _idFactory;        // generates IDs for new records
+    std::shared_ptr<afw::table::IdFactory> _idFactory;  // generates IDs for new records
 };
 
-#ifndef SWIG
-
-std::ostream & operator<<(std::ostream & os, PeakRecord const & record);
+std::ostream& operator<<(std::ostream& os, PeakRecord const& record);
 
 inline afw::table::RecordId PeakRecord::getId() const { return get(PeakTable::getIdKey()); }
 inline void PeakRecord::setId(afw::table::RecordId id) { set(PeakTable::getIdKey(), id); }
@@ -227,12 +219,11 @@ inline void PeakRecord::setFy(float fy) { set(PeakTable::getFyKey(), fy); }
 inline float PeakRecord::getPeakValue() const { return get(PeakTable::getPeakValueKey()); }
 inline void PeakRecord::setPeakValue(float peakValue) { set(PeakTable::getPeakValueKey(), peakValue); }
 
-#endif // !SWIG
-
 typedef afw::table::ColumnViewT<PeakRecord> PeakColumnView;
 typedef afw::table::CatalogT<PeakRecord> PeakCatalog;
 typedef afw::table::CatalogT<PeakRecord const> ConstPeakCatalog;
+}
+}
+}  // namespace lsst::afw::detection
 
-}}} // namespace lsst::afw::detection
-
-#endif // !AFW_DETECTION_Peak_h_INCLUDED
+#endif  // !AFW_DETECTION_Peak_h_INCLUDED

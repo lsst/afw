@@ -46,5 +46,7 @@ PYBIND11_PLUGIN(idFactory) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

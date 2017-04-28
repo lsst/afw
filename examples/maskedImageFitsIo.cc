@@ -30,7 +30,6 @@
 const std::string outImagePath("rwfitsOut.fits");
 
 int main(int argc, char **argv) {
-
     std::string inImagePath;
     if (argc == 2) {
         inImagePath = std::string(argv[1]);
@@ -45,7 +44,7 @@ int main(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
     }
-    std::cout << "Running with: " <<  inImagePath << std::endl;
+    std::cout << "Running with: " << inImagePath << std::endl;
 
     lsst::afw::image::MaskedImage<float> mImage(inImagePath);
     mImage.writeFits(outImagePath);

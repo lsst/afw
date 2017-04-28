@@ -43,12 +43,8 @@ PYBIND11_PLUGIN(_orientation) {
 
     /* Constructors */
     cls.def(py::init<geom::Point2D, geom::Point2D, geom::Angle, geom::Angle, geom::Angle>(),
-                    "fpPosition"_a=geom::Point2D(0,0),
-                    "refPoint"_a=geom::Point2D(-0.5, -0.5),
-                    "yaw"_a=geom::Angle(0),
-                    "pitch"_a=geom::Angle(0),
-                    "roll"_a=geom::Angle(0)
-                    );
+            "fpPosition"_a = geom::Point2D(0, 0), "refPoint"_a = geom::Point2D(-0.5, -0.5),
+            "yaw"_a = geom::Angle(0), "pitch"_a = geom::Angle(0), "roll"_a = geom::Angle(0));
 
     /* Operators */
 
@@ -68,5 +64,6 @@ PYBIND11_PLUGIN(_orientation) {
 
     return mod.ptr();
 }
-
-}}}
+}
+}
+}

@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -31,37 +31,37 @@ namespace py = pybind11;
 
 using namespace py::literals;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 namespace {
-template<typename ImageT>
-static void declareOffsetImage(py::module & mod) {
-    mod.def("offsetImage", offsetImage<ImageT>,
-            "image"_a, "dx"_a, "dy"_a, "algorithmName"_a="lanczos5", "buffer"_a=0);
+template <typename ImageT>
+static void declareOffsetImage(py::module& mod) {
+    mod.def("offsetImage", offsetImage<ImageT>, "image"_a, "dx"_a, "dy"_a, "algorithmName"_a = "lanczos5",
+            "buffer"_a = 0);
 }
 
-template<typename ImageT>
-static void declareRotateImageBy90(py::module & mod) {
-    mod.def("rotateImageBy90", rotateImageBy90<ImageT>,
-            "image"_a, "nQuarter"_a);
+template <typename ImageT>
+static void declareRotateImageBy90(py::module& mod) {
+    mod.def("rotateImageBy90", rotateImageBy90<ImageT>, "image"_a, "nQuarter"_a);
 }
 
-template<typename ImageT>
-static void declareFlipImage(py::module & mod) {
-    mod.def("flipImage", flipImage<ImageT>,
-            "inImage"_a, "flipLR"_a, "flipTB"_a);
+template <typename ImageT>
+static void declareFlipImage(py::module& mod) {
+    mod.def("flipImage", flipImage<ImageT>, "inImage"_a, "flipLR"_a, "flipTB"_a);
 }
 
-template<typename ImageT>
-static void declareBinImage(py::module & mod) {
-    mod.def("binImage", (PTR(ImageT) (*)(ImageT const&, int const, int const, lsst::afw::math::Property const))
-            binImage<ImageT>,
-            "inImage"_a, "binX"_a, "binY"_a, "flags"_a=lsst::afw::math::MEAN);
-    mod.def("binImage", (PTR(ImageT) (*)(ImageT const&, int const, lsst::afw::math::Property const))
-            binImage<ImageT>,
-            "inImage"_a, "binsize"_a, "flags"_a=lsst::afw::math::MEAN);
+template <typename ImageT>
+static void declareBinImage(py::module& mod) {
+    mod.def("binImage", (std::shared_ptr<ImageT>(*)(ImageT const&, int const, int const,
+                                                    lsst::afw::math::Property const))binImage<ImageT>,
+            "inImage"_a, "binX"_a, "binY"_a, "flags"_a = lsst::afw::math::MEAN);
+    mod.def("binImage", (std::shared_ptr<ImageT>(*)(ImageT const&, int const,
+                                                    lsst::afw::math::Property const))binImage<ImageT>,
+            "inImage"_a, "binsize"_a, "flags"_a = lsst::afw::math::MEAN);
 }
-} // namespace
+}  // namespace
 
 PYBIND11_PLUGIN(_offsetImage) {
     py::module mod("_offsetImage", "Python wrapper for afw _offsetImage library");
@@ -105,5 +105,6 @@ PYBIND11_PLUGIN(_offsetImage) {
 
     return mod.ptr();
 }
-
-}}} // lsst::afw::math
+}
+}
+}  // lsst::afw::math

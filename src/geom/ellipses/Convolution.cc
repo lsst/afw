@@ -24,30 +24,30 @@
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
-BaseCore::Ptr BaseCore::Convolution::copy() const {
-    BaseCore::Ptr r(self.clone());
+std::shared_ptr<BaseCore> BaseCore::Convolution::copy() const {
+    std::shared_ptr<BaseCore> r(self.clone());
     apply(*r);
     return r;
 }
 
-void BaseCore::Convolution::inPlace() {
-    apply(self);
-}
+void BaseCore::Convolution::inPlace() { apply(self); }
 
-BaseCore::Convolution::DerivativeMatrix
-BaseCore::Convolution::d() const {
+BaseCore::Convolution::DerivativeMatrix BaseCore::Convolution::d() const {
     double ixx1, iyy1, ixy1;
     double ixx2, iyy2, ixy2;
     Jacobian rhs = self._dAssignToQuadrupole(ixx1, iyy1, ixy1);
     other._assignToQuadrupole(ixx2, iyy2, ixy2);
-    BaseCore::Ptr convolved(self.clone());
+    std::shared_ptr<BaseCore> convolved(self.clone());
     Jacobian lhs = convolved->_dAssignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
     return lhs * rhs;
 }
 
-void BaseCore::Convolution::apply(BaseCore & result) const {
+void BaseCore::Convolution::apply(BaseCore& result) const {
     double ixx1, iyy1, ixy1;
     double ixx2, iyy2, ixy2;
     self._assignToQuadrupole(ixx1, iyy1, ixy1);
@@ -55,11 +55,9 @@ void BaseCore::Convolution::apply(BaseCore & result) const {
     result._assignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
 }
 
-Ellipse::Ptr Ellipse::Convolution::copy() const {
-    return std::make_shared<Ellipse>(
-        self.getCore().convolve(other.getCore()).copy(),
-        PointD(self.getCenter() + Extent2D(other.getCenter()))
-    );
+std::shared_ptr<Ellipse> Ellipse::Convolution::copy() const {
+    return std::make_shared<Ellipse>(self.getCore().convolve(other.getCore()).copy(),
+                                     PointD(self.getCenter() + Extent2D(other.getCenter())));
 }
 
 void Ellipse::Convolution::inPlace() {
@@ -67,16 +65,16 @@ void Ellipse::Convolution::inPlace() {
     self.setCenter(self.getCenter() + Extent2D(other.getCenter()));
 }
 
-Ellipse::Convolution::DerivativeMatrix
-Ellipse::Convolution::d() const {
+Ellipse::Convolution::DerivativeMatrix Ellipse::Convolution::d() const {
     Ellipse::Convolution::DerivativeMatrix result = Ellipse::Convolution::DerivativeMatrix::Identity();
-    result.block<3,3>(0, 0) = self.getCore().convolve(other.getCore()).d();
+    result.block<3, 3>(0, 0) = self.getCore().convolve(other.getCore()).d();
     return result;
 }
 
-Ellipse::Ellipse(Convolution const & convolution) :
-    _core(convolution.self.getCore().convolve(convolution.other.getCore()).copy()),
-    _center(convolution.self.getCenter() + Extent2D(convolution.other.getCenter()))
-{}
-
-}}}} // namespace lsst::afw::geom::ellipses
+Ellipse::Ellipse(Convolution const& convolution)
+        : _core(convolution.self.getCore().convolve(convolution.other.getCore()).copy()),
+          _center(convolution.self.getCenter() + Extent2D(convolution.other.getCenter())) {}
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

@@ -34,7 +34,7 @@ namespace afwMath = lsst::afw::math;
 
 const std::string outImagePath("svcOut.fits");
 
-/**
+/*
  * Demonstrate convolution with a spatially varying kernel
  *
  * The kernel is a Gaussian that varies as follows:
@@ -81,12 +81,12 @@ int main(int argc, char **argv) {
     std::vector<std::vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
     // Set spatial parameters for kernel parameter 0
     polyParams[0][0] = minSigma;
-    polyParams[0][1] = (maxSigma - minSigma)/static_cast<double>(mImage.getWidth());
+    polyParams[0][1] = (maxSigma - minSigma) / static_cast<double>(mImage.getWidth());
     polyParams[0][2] = 0.0;
     // Set spatial function parameters for kernel parameter 1
     polyParams[1][0] = minSigma;
     polyParams[1][1] = 0.0;
-    polyParams[1][2] = (maxSigma - minSigma)/static_cast<double>(mImage.getHeight());
+    polyParams[1][2] = (maxSigma - minSigma) / static_cast<double>(mImage.getHeight());
     gaussSpVarKernel.setSpatialParameters(polyParams);
 
     std::cout << "Spatial Parameters:" << std::endl;

@@ -37,10 +37,10 @@ using namespace std;
 namespace lsst {
 namespace afw {
 namespace geom {
-/** Static implementation details for SpherePoint. */
+/// @internal Static implementation details for SpherePoint.
 namespace {
 /**
- * Angular distance between two points using the Haversine formula.
+ * @internal Angular distance between two points using the Haversine formula.
  *
  * Besides the differences between the two coordinates, we also input the
  * cosine of the two declinations, so as to be thrifty with the use of
@@ -50,7 +50,7 @@ namespace {
  * @param deltaLat Difference between latitudes. Must be in the same
  *                 sense as `deltaLon`.
  * @param cosLat1, cosLat2 Cosines of the two points' latitudes.
- * @return the distance between the two points
+ * @returns the distance between the two points
  */
 Angle haversine(Angle const& deltaLon, Angle const& deltaLat, double cosLat1, double cosLat2) {
     double const sinLat = sin(deltaLat / 2.0);

@@ -24,28 +24,14 @@
 
 #include "testSpatialCell.h"
 
-/**
- * Constructor
- */
-ExampleCandidate::ExampleCandidate(
-        float const xCenter,            ///< The object's column-centre
-        float const yCenter,            ///< The object's row-centre
-        std::shared_ptr<MaskedImageT const> parent, ///< the parent image
-        lsst::afw::geom::Box2I bbox     ///< The object's bounding box
-                                      ) :
-    lsst::afw::math::SpatialCellImageCandidate(xCenter, yCenter), _parent(parent), _bbox(bbox) {
-}
+ExampleCandidate::ExampleCandidate(float const xCenter, float const yCenter,
+                                   std::shared_ptr<MaskedImageT const> parent, lsst::afw::geom::Box2I bbox)
+        : lsst::afw::math::SpatialCellImageCandidate(xCenter, yCenter), _parent(parent), _bbox(bbox) {}
 
-/**
- * Return candidates rating
- */
 double ExampleCandidate::getCandidateRating() const {
     return (*_parent->getImage())(getXCenter(), getYCenter());
 }
 
-/**
- * Return the %image
- */
 std::shared_ptr<ExampleCandidate::MaskedImageT const> ExampleCandidate::getMaskedImage() const {
     if (!_image) {
         _image = std::make_shared<MaskedImageT>(*_parent, _bbox, lsst::afw::image::LOCAL);

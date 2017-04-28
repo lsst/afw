@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 from ._quadrupole import Quadrupole
 
@@ -15,6 +15,7 @@ def __reduce__(self):
 
 def __str__(self):
     return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
+
 
 Quadrupole.__repr__ = __repr__
 Quadrupole.__reduce__ = __reduce__

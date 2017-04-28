@@ -26,7 +26,9 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Key.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
  *  Base class for objects that can extract a value from a record, but are not a true Key themselves.
@@ -37,11 +39,9 @@ namespace lsst { namespace afw { namespace table {
 template <typename T>
 class OutputFunctorKey {
 public:
-
-    virtual T get(BaseRecord const & record) const = 0;
+    virtual T get(BaseRecord const& record) const = 0;
 
     virtual ~OutputFunctorKey() {}
-
 };
 
 /**
@@ -53,11 +53,9 @@ public:
 template <typename T>
 class InputFunctorKey {
 public:
-
-    virtual void set(BaseRecord & record, T const & value) const = 0;
+    virtual void set(BaseRecord& record, T const& value) const = 0;
 
     virtual ~InputFunctorKey() {}
-
 };
 
 /**
@@ -82,11 +80,9 @@ class FunctorKey : public OutputFunctorKey<T>, public InputFunctorKey<T> {};
 template <typename T>
 class ReferenceFunctorKey {
 public:
-
-    virtual T getReference(BaseRecord & record) const = 0;
+    virtual T getReference(BaseRecord& record) const = 0;
 
     virtual ~ReferenceFunctorKey() {}
-
 };
 
 /**
@@ -102,13 +98,12 @@ public:
 template <typename T>
 class ConstReferenceFunctorKey {
 public:
-
-    virtual T getConstReference(BaseRecord const & record) const = 0;
+    virtual T getConstReference(BaseRecord const& record) const = 0;
 
     virtual ~ConstReferenceFunctorKey() {}
-
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_FunctorKey_h_INCLUDED
+#endif  // !AFW_TABLE_FunctorKey_h_INCLUDED

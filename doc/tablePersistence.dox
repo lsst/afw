@@ -60,11 +60,11 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  class that inherits from it).  It is not necessary to do this at every level, but
  *  it can save users from having to do dynamic casts themselves, e.g.:
  *  @code
- *  PTR(TanWcs) wcs = TanWcs::readFits(...);
+ *  std::shared_ptr<TanWcs> wcs = TanWcs::readFits(...);
  *  @endcode
  *  rather than
  *  @code
- *  PTR(TanWcs) wcs = boost::dynamic_pointer_cast<TanWcs>(Wcs::readFits(...));
+ *  std::shared_ptr<TanWcs> wcs = boost::dynamic_pointer_cast<TanWcs>(Wcs::readFits(...));
  *  @endcode
  *
  *   - All concrete classes should reimplement Persistable::isPersistable(),
@@ -90,7 +90,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *      // some data members, just to give us interesting stuff to save
  *      double var1;
  *      std::vector< std::pair<int,float> > var2;
- *      PTR(Persistable) var3;
+ *      std::shared_ptr<Persistable> var3;
  *
  *      virtual bool isPersistable() const { return true; }
  *
@@ -141,14 +141,14 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *
  *  class DerivedFactory : public PersistableFactory {
  *  public:
- *      virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const {
+ *      virtual std::shared_ptr<Persistable> read(InputArchive const & archive, CatalogVector const & catalogs) const {
  *          DerivedSchema const & keys = DerivedSchema::get()
  *          assert(catalogs.size() == 2u);
  *          BaseCatalog const & cat1 = catalogs.front();
  *          assert(cat1.getSchema() == keys.schema1);
  *          BaseCatalog const & cat2 = catalogs.back();
  *          assert(cat2.getSchema() == keys.schema2);
- *          PTR(Derived) result(new Derived);
+ *          std::shared_ptr<Derived> result(new Derived);
  *          result->var1 = cat1.front().get(keys.var1);
  *          int var3id = cat1.front().get(keys.var3)
  *          result->var3 = archive.get(var3id);
@@ -169,11 +169,11 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *      int var3id = handle.put(var3); // save the nested thing and get an ID we can save instead
  *      BaseCatalog catalog1 = handle.makeCatalog(keys.schema1);
  *      BaseCatalog catalog2 = handle.makeCatalog(keys.schema2);
- *      PTR(BaseRecord) record1 = catalog1.addNew();
+ *      std::shared_ptr<BaseRecord> record1 = catalog1.addNew();
  *      record1->set(keys.var1, var1);
  *      record1->set(keys.var3, var3id);
  *      for (auto i = var2.begin(); i != var2.end(); ++i) {
- *          PTR(BaseRecord) record2 = catalog2.addNew();
+ *          std::shared_ptr<BaseRecord> record2 = catalog2.addNew();
  *          record2->set(keys.var2first, i->first);
  *          record2->set(keys.var2second, i->second);
  *      }

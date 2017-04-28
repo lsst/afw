@@ -25,9 +25,11 @@
 #include "lsst/afw/table/AliasMap.h"
 #include "lsst/afw/table/BaseTable.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
-void AliasMap::_apply(std::string & name) const {
+void AliasMap::_apply(std::string& name) const {
     // Loop in order to keep replacing as long as we keep finding matches,
     // but we count how many replacements we've made to avoid an infinite loop
     // due to a cycle between aliases.  That's not the most efficient way to
@@ -53,37 +55,33 @@ void AliasMap::_apply(std::string & name) const {
             return;  // no match; exit
         }
     }
-    throw LSST_EXCEPT(
-        pex::exceptions::RuntimeError,
-        (boost::format("Cycle detected in schema aliases involving name '%s'") % name).str()
-    );
+    throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                      (boost::format("Cycle detected in schema aliases involving name '%s'") % name).str());
 }
 
-std::string AliasMap::apply(std::string const & name) const {
+std::string AliasMap::apply(std::string const& name) const {
     std::string result(name);
     _apply(result);
     return result;
 }
 
-std::string AliasMap::get(std::string const & name) const {
+std::string AliasMap::get(std::string const& name) const {
     Iterator i = _internal.lower_bound(name);
     if (i == _internal.end()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::NotFoundError,
-            (boost::format("Alias '%s' not found") % name).str()
-        );
+        throw LSST_EXCEPT(pex::exceptions::NotFoundError,
+                          (boost::format("Alias '%s' not found") % name).str());
     }
     return i->second;
 }
 
-void AliasMap::set(std::string const & alias, std::string const & target) {
+void AliasMap::set(std::string const& alias, std::string const& target) {
     _internal[alias] = target;
     if (_table) {
         _table->handleAliasChange(alias);
     }
 }
 
-bool AliasMap::erase(std::string const & alias) {
+bool AliasMap::erase(std::string const& alias) {
     bool result = _internal.erase(alias);
     if (_table) {
         _table->handleAliasChange(alias);
@@ -91,12 +89,11 @@ bool AliasMap::erase(std::string const & alias) {
     return result;
 }
 
-bool AliasMap::operator==(AliasMap const & other) const {
-    return _internal == other._internal;
-}
+bool AliasMap::operator==(AliasMap const& other) const { return _internal == other._internal; }
 
-bool AliasMap::contains(AliasMap const & other) const {
+bool AliasMap::contains(AliasMap const& other) const {
     return std::includes(begin(), end(), other.begin(), other.end());
 }
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

@@ -28,7 +28,6 @@ import unittest
 from builtins import object
 
 import lsst.utils.tests
-import lsst.pex.exceptions
 import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 from lsst.afw.cameraGeom.fitsUtils import getByKey, setByKey, HeaderAmpMap, HeaderDetectorMap, DetectorBuilder
@@ -86,7 +85,8 @@ class FitsUtilsTestCase(unittest.TestCase):
         setByKey(self.metadata, 'NEWKEY', 'new key', False)
         self.assertEqual(getByKey(self.metadata, 'NEWKEY'), 'new key')
         setByKey(self.metadata, 'DONTCLOBBER', 'clobbered', False)
-        self.assertNotEqual(getByKey(self.metadata, 'DONTCLOBBER'), 'clobbered')
+        self.assertNotEqual(
+            getByKey(self.metadata, 'DONTCLOBBER'), 'clobbered')
         setByKey(self.metadata, 'COPYOVER', 'replaced', True)
         self.assertEqual(getByKey(self.metadata, 'COPYOVER'), 'replaced')
 
@@ -118,11 +118,14 @@ class FitsUtilsTestCase(unittest.TestCase):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             self.exposure.writeFits(tmpFile)
             # test that it raises without setting non-defaulted keywords
-            self.assertRaises(Exception, DetectorBuilder(tmpFile, [tmpFile, tmpFile]))
+            self.assertRaises(Exception, DetectorBuilder(
+                tmpFile, [tmpFile, tmpFile]))
             # ignore non-defaulted keywords
             detBuilder = DetectorBuilder(tmpFile, [tmpFile, ], doRaise=False)
             detBuilder.makeCalib()
-            detBuilder.makeExposure(afwImage.ImageF(10, 10), afwImage.MaskU(10, 10), afwImage.ImageF(10, 10))
+            detBuilder.makeExposure(afwImage.ImageF(10, 10),
+                                    afwImage.MaskU(10, 10),
+                                    afwImage.ImageF(10, 10))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
@@ -131,6 +134,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

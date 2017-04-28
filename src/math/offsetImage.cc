@@ -22,9 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
+/*
  * Offset an Image (or Mask or MaskedImage) by a constant vector (dx, dy)
  */
 #include <iterator>
@@ -41,34 +39,18 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-/**
- * @brief Return an image offset by (dx, dy) using the specified algorithm
- *
- * @note The image pixels are always offset by a fraction of a pixel and the image origin (XY0)
- * picks is modified to handle the integer portion of the offset.
- * In the special case that the offset in both x and y lies in the range (-1, 1) the origin is not changed.
- * Otherwise the pixels are shifted by (-0.5, 0.5] pixels and the origin shifted accordingly.
- *
- * @throw lsst::pex::exceptions::InvalidParameterError if the algorithm is invalid
- */
-template<typename ImageT>
-typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offset
-                                 float dx,               ///< move the %image this far in the column direction
-                                 float dy,               ///< move the %image this far in the row direction
-                                 std::string const& algorithmName,  ///< Type of resampling Kernel to use
-                                 unsigned int buffer ///< Width of buffer (border) around kernel image
-                                    ///< to allow for warping edge effects (pixels).
-                                    ///< Values < 0 are treated as 0.
-                                    ///< This is only used during computation; the final image
-                                    ///< has the same dimensions as the kernel.
-                                ) {
-    SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
+template <typename ImageT>
+std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
+                                    std::string const& algorithmName, unsigned int buffer
 
-    typename ImageT::Ptr buffImage;
+                                    ) {
+    std::shared_ptr<SeparableKernel> offsetKernel = makeWarpingKernel(algorithmName);
+
+    std::shared_ptr<ImageT> buffImage;
     if (buffer > 0) {
         // Paste input image into buffered image
-        afwGeom::Extent2I const &dims = inImage.getDimensions();
-        typename ImageT::Ptr buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
+        afwGeom::Extent2I const& dims = inImage.getDimensions();
+        std::shared_ptr<ImageT> buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
         buffImage = buffered;
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
         buffImage->assign(inImage, box);
@@ -82,11 +64,12 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
                           (boost::format("Image of size %dx%d is too small to offset using a %s kernel"
                                          "(minimum %dx%d)") %
                            buffImage->getWidth() % buffImage->getHeight() % algorithmName %
-                           offsetKernel->getWidth() % offsetKernel->getHeight()).str());
+                           offsetKernel->getWidth() % offsetKernel->getHeight())
+                                  .str());
     }
 
-//    typename ImageT::Ptr convImage(new ImageT(buffImage, true)); // output image, a deep copy
-    typename ImageT::Ptr convImage(new ImageT(buffImage->getDimensions())); // Convolved image
+    //    std::shared_ptr<ImageT> convImage(new ImageT(buffImage, true)); // output image, a deep copy
+    std::shared_ptr<ImageT> convImage(new ImageT(buffImage->getDimensions()));  // Convolved image
 
     int dOrigX, dOrigY;
     double fracX, fracY;
@@ -123,10 +106,10 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 
     convolve(*convImage, *buffImage, *offsetKernel, true, true);
 
-    typename ImageT::Ptr outImage;
+    std::shared_ptr<ImageT> outImage;
     if (buffer > 0) {
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), inImage.getDimensions());
-        typename ImageT::Ptr out(new ImageT(*convImage, box, afwImage::LOCAL, true));
+        std::shared_ptr<ImageT> out(new ImageT(*convImage, box, afwImage::LOCAL, true));
         outImage = out;
     } else {
         outImage = convImage;
@@ -138,20 +121,20 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
     return outImage;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
-#define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
-                                                    std::string const&, unsigned int); \
-    template afwImage::MaskedImage<TYPE>::Ptr offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
-                                                          std::string const&, unsigned int);
+/// @cond
+#define INSTANTIATE(TYPE)                                                                                   \
+    template std::shared_ptr<afwImage::Image<TYPE>> offsetImage(afwImage::Image<TYPE> const&, float, float, \
+                                                                std::string const&, unsigned int);          \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> offsetImage(                                      \
+            afwImage::MaskedImage<TYPE> const&, float, float, std::string const&, unsigned int);
 
 INSTANTIATE(double)
 INSTANTIATE(float)
 INSTANTIATE(int)
-/// \endcond
-
-}}}
+/// @endcond
+}
+}
+}

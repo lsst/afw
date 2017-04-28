@@ -17,7 +17,7 @@ namespace lsst { namespace afw { namespace table {
  *  Key< Array<double> > k3 = schema.addField< Array<double> >("f3", "doc for f3", "units for f2", 5);
  *  BaseCatalog catalog(schema);
  *  for (int i = 1; i <= 3; ++i) {
- *      PTR(BaseRecord) record = catalog.addNew();
+ *      std::shared_ptr<BaseRecord> record = catalog.addNew();
  *      record->set(k1, i);
  *      record->set(k2, i*3.14);
  *      ndarray::Array<double,1> a3 = (*record)[k3]; // operator[] allows in-place edits for some fields

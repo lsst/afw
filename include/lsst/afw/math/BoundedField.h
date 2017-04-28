@@ -32,10 +32,12 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 /**
- *  @brief An abstract base class for 2-d functions defined on an integer bounding boxes
+ *  An abstract base class for 2-d functions defined on an integer bounding boxes
  *
  *  Integer bounding boxes (afw.geom.Box2I) are inclusive of the end pixels (integer positions correspond
  *  to the centers of the pixels and include the entirety of those pixels). Thus a BoundedField defined on
@@ -52,7 +54,6 @@ namespace lsst { namespace afw { namespace math {
  */
 class BoundedField : public table::io::PersistableFacade<BoundedField>, public table::io::Persistable {
 public:
-
     /**
      *  Evaluate the field at the given point.
      *
@@ -61,7 +62,7 @@ public:
      *  Subclasses should not provide bounds checking on the given position; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    virtual double evaluate(geom::Point2D const & position) const = 0;
+    virtual double evaluate(geom::Point2D const& position) const = 0;
 
     /**
      *  Evaluate the field at the given point.
@@ -78,27 +79,25 @@ public:
      *
      *  @param[in]  x         array of x coordinates, same shape as y
      *  @param[in]  y         array of y coordinates, same shape as x
-     *  @return an array of output values, same shape as x and y
+     *  @returns an array of output values, same shape as x and y
      *
      *  There is no bounds-checking on the given positions; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    ndarray::Array<double,1,1> evaluate(
-        ndarray::Array<double const,1> const & x,
-        ndarray::Array<double const,1> const & y
-    ) const;
+    ndarray::Array<double, 1, 1> evaluate(ndarray::Array<double const, 1> const& x,
+                                          ndarray::Array<double const, 1> const& y) const;
 
     /**
      * Compute the integral of this function over its bounding-box.
      *
-     * @return The value of the integral.
+     * @returns The value of the integral.
      */
     virtual double integrate() const;
 
     /**
      * Compute the mean of this function over its bounding-box.
      *
-     * @return The value of the mean.
+     * @returns The value of the mean.
      */
     virtual double mean() const;
 
@@ -119,11 +118,11 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void fillImage(image::Image<T> & image, bool overlapOnly=false) const;
+    void fillImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Add the field or a constant multiple of it to an image in-place
@@ -133,11 +132,11 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void addToImage(image::Image<T> & image, double scaleBy=1.0, bool overlapOnly=false) const;
+    void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false) const;
 
     /**
      *  Multiply an image by the field in-place.
@@ -146,11 +145,11 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void multiplyImage(image::Image<T> & image, bool overlapOnly=false) const;
+    void multiplyImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Divide an image by the field in-place.
@@ -159,34 +158,32 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
+     *  @throws pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
-    void divideImage(image::Image<T> & image, bool overlapOnly=false) const;
+    void divideImage(image::Image<T>& image, bool overlapOnly = false) const;
 
     /**
      *  Return a scaled BoundedField
      *
      *  @param[in]  scale    Scaling factor
      */
-    virtual PTR(BoundedField) operator*(double const scale) const = 0;
-    PTR(BoundedField) operator/(double scale) const {
-        return (*this)*(1.0/scale);
-    }
+    virtual std::shared_ptr<BoundedField> operator*(double const scale) const = 0;
+    std::shared_ptr<BoundedField> operator/(double scale) const { return (*this) * (1.0 / scale); }
 
     virtual ~BoundedField() {}
 
 protected:
-
-    explicit BoundedField(geom::Box2I const & bbox) : _bbox(bbox) {}
+    explicit BoundedField(geom::Box2I const& bbox) : _bbox(bbox) {}
 
 private:
     geom::Box2I const _bbox;
 };
 
-PTR(BoundedField) operator*(double const scale, CONST_PTR(BoundedField) bf);
+std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf);
+}
+}
+}  // namespace lsst::afw::math
 
-}}} // namespace lsst::afw::math
-
-#endif // !LSST_AFW_MATH_BoundedField_h_INCLUDED
+#endif  // !LSST_AFW_MATH_BoundedField_h_INCLUDED

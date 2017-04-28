@@ -2,13 +2,13 @@
 Code that works with gdb 7.1's python pretty printing.  When gdb >= 7.2 is widely available this
 file should be deleted (it's only used after importing gdb.printing fails)
 """
-from __future__ import print_function
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 from builtins import str
 from builtins import range
 from builtins import object
 import gdb
 import re
+
 
 class CitizenPrinter(object):
     "Print a Citizen"
@@ -18,11 +18,10 @@ class CitizenPrinter(object):
 
     def to_string(self):
         return "{0x%x %d %s 0x%x}" % (self.val, self.val["_CitizenId"],
-                                    self.val["_typeName"], self.val["_sentinel"])
+                                      self.val["_typeName"], self.val["_sentinel"])
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 # afw
-
 class BaseSourceAttributesPrinter(object):
     "Print a BaseSourceAttributes"
 
@@ -30,7 +29,10 @@ class BaseSourceAttributesPrinter(object):
         self.val = val
 
     def to_string(self):
-        return "Base: {id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
+        return "Base: {id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"],
+                                                      self.val["_xAstrom"],
+                                                      self.val["_yAstrom"])
+
 
 class SourcePrinter(object):
     "Print a Source"
@@ -41,6 +43,7 @@ class SourcePrinter(object):
     def to_string(self):
         return "{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
 
+
 class FootprintPrinter(object):
     "Print a Footprint"
 
@@ -50,7 +53,6 @@ class FootprintPrinter(object):
     def to_string(self):
         return "RHL Footprint (fixme when gdb 7.3 arrives)"
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class CoordinateBasePrinter(object):
     "Print a CoordinateBase"
@@ -62,14 +64,13 @@ class CoordinateBasePrinter(object):
         # Make sure &foo works, too.
         type = self.val.type
         if type.code == gdb.TYPE_CODE_REF:
-            type = type.target ()
+            type = type.target()
 
         return self.val["_vector"]["m_storage"]["m_data"]["array"]
 
-    def display_hint (self):
+    def display_hint(self):
         return "array"
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ImagePrinter(object):
     "Print an ImageBase or derived class"
@@ -81,13 +82,13 @@ class ImagePrinter(object):
         # Make sure &foo works, too.
         type = val.type
         if type.code == gdb.TYPE_CODE_REF:
-            type = type.target ()
+            type = type.target()
 
         gilView = val["_gilView"]
         arr = val["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
 
         return "%dx%d+%d+%d" % (
-            #val["getWidth"](), val["getHeight"](),
+            # val["getWidth"](), val["getHeight"](),
             gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
             arr[0], arr[1])
 
@@ -101,11 +102,13 @@ class ImagePrinter(object):
     def to_string(self):
         return "%s(%s)" % (self.typeName(), self.dimenStr())
 
+
 class MaskedImagePrinter(ImagePrinter):
     "Print a MaskedImage"
 
     def to_string(self):
         return "%s(%s)" % (self.typeName(), self.dimenStr(self.val["_image"]["px"].dereference()))
+
 
 class ExposurePrinter(ImagePrinter):
     "Print an Exposure"
@@ -114,17 +117,16 @@ class ExposurePrinter(ImagePrinter):
         return "%s(%s)" % (self.typeName(),
                            self.dimenStr(self.val["_maskedImage"]["_image"]["px"].dereference()))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PrintImageCommand(gdb.Command):
     """Print an Image
 Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
 """
 
-    def __init__ (self):
-        super (PrintImageCommand, self).__init__ ("show image",
-                                                  gdb.COMMAND_DATA,
-                                                  gdb.COMPLETE_SYMBOL)
+    def __init__(self):
+        super(PrintImageCommand, self).__init__("show image",
+                                                gdb.COMMAND_DATA,
+                                                gdb.COMPLETE_SYMBOL)
 
     def get(self, var, x, y):
         if False:
@@ -136,11 +138,12 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
                                    (x, y, dimensions["x"] - 1, dimensions["y"] - 1))
 
             pixels = var["_gilView"]["_pixels"]["_p"]
-            step = pixels["_step_fn"]["_step"]/var.type.template_argument(0).sizeof
+            step = pixels["_step_fn"]["_step"] / \
+                var.type.template_argument(0).sizeof
 
             return pixels["m_iterator"][x + y*step]["_v0"]
 
-    def invoke (self, args, fromTty):
+    def invoke(self, args, fromTty):
         self.dont_repeat()
 
         args = gdb.string_to_argv(args)
@@ -193,7 +196,8 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
                 y0 -= arr[1]
 
         if args:
-            raise gdb.GdbError('Unexpected trailing arguments: "%s"' % '", "'.join(args))
+            raise gdb.GdbError(
+                'Unexpected trailing arguments: "%s"' % '", "'.join(args))
         #
         # OK, finally time to print
         #
@@ -218,7 +222,7 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
 
 PrintImageCommand()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 #
 # These two classes (RxPrinter and Printer) come directly from
 # python/libstdcxx/v6/printers.py and the GPL license therein applies
@@ -237,6 +241,7 @@ class RxPrinter(object):
             return None
         return self.function(self.name, value)
 
+
 # A pretty-printer that conforms to the "PrettyPrinter" protocol from
 # gdb.printing.  It can also be used directly as an old-style printer.
 #
@@ -253,7 +258,8 @@ class Printer(object):
         # A small sanity check.
         # FIXME
         if not self.compiled_rx.match(name + '<>'):
-            raise ValueError('libstdc++ programming error: "%s" does not match' % name)
+            raise ValueError(
+                'libstdc++ programming error: "%s" does not match' % name)
         printer = RxPrinter(name, function)
         self.subprinters.append(printer)
         self.lookup[name] = printer
@@ -262,10 +268,10 @@ class Printer(object):
     def get_basic_type(type):
         # If it points to a reference, get the reference.
         if type.code == gdb.TYPE_CODE_REF:
-            type = type.target ()
+            type = type.target()
 
         # Get the unqualified type, stripped of typedefs.
-        type = type.unqualified ().strip_typedefs ()
+        type = type.unqualified().strip_typedefs()
 
         return type.tag
 
@@ -287,9 +293,9 @@ class Printer(object):
         # Cannot find a pretty printer.  Return None.
         return None
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 printers = []
+
 
 def register(obj):
     "Register my pretty-printers with objfile Obj."
@@ -300,14 +306,14 @@ def register(obj):
     for p in printers:
         obj.pretty_printers.insert(0, p)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def build_afw_dictionary():
     printer = Printer("afw")
 
     printer.add('lsst::afw::detection::Footprint', FootprintPrinter)
     printer.add('lsst::afw::detection::Source', SourcePrinter)
-    printer.add('lsst::afw::detection::BaseSourceAttributes', BaseSourceAttributesPrinter)
+    printer.add('lsst::afw::detection::BaseSourceAttributes',
+                BaseSourceAttributesPrinter)
 
     printer.add('lsst::afw::geom::Point', CoordinateBasePrinter)
     printer.add('lsst::afw::geom::Extent', CoordinateBasePrinter)
@@ -320,7 +326,9 @@ def build_afw_dictionary():
 
     return printer
 
+
 printers.append(build_afw_dictionary())
+
 
 def build_daf_base_dictionary():
     printer = Printer("daf::base")
@@ -328,5 +336,6 @@ def build_daf_base_dictionary():
     printer.add('lsst::daf::base::Citizen', CitizenPrinter)
 
     return printer
+
 
 printers.append(build_daf_base_dictionary())

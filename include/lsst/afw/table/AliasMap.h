@@ -5,12 +5,14 @@
 #include <map>
 #include <string>
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 class BaseTable;
 
 /**
- *  @brief Mapping class that holds aliases for a Schema
+ *  Mapping class that holds aliases for a Schema
  *
  *  Aliases need not be complete, but they must match to the beginning of a field name to be useful.
  *  For example, if "a_b_c" is a true field name, "x_->a_b" is a valid alias that will cause
@@ -32,9 +34,9 @@ class BaseTable;
  *  aliases are set or removed.
  */
 class AliasMap {
-    typedef std::map<std::string,std::string> Internal;
-public:
+    typedef std::map<std::string, std::string> Internal;
 
+public:
     // Create an empty AliasMap
     AliasMap() : _internal(), _table(0) {}
 
@@ -43,10 +45,10 @@ public:
      *
      *  The new AliasMap will not be linked to any tables, even if other is.
      */
-    AliasMap(AliasMap const & other) : _internal(other._internal), _table(0) {}
+    AliasMap(AliasMap const& other) : _internal(other._internal), _table(0) {}
 
     /// An iterator over alias->target pairs.
-    typedef std::map<std::string,std::string>::const_iterator Iterator;
+    typedef std::map<std::string, std::string>::const_iterator Iterator;
 
     /// Return a iterator to the beginning of the map
     Iterator begin() const { return _internal.begin(); }
@@ -68,63 +70,62 @@ public:
      *  target.  The longest such alias is used.
      *
      *  For example:
-     *  @code
-     *  m = AliasMap();
-     *  m.set("q", "a");
-     *  m.set("q1", "b");
-     *  assert(m.apply("q3") == "a3");
-     *  assert(m.apply("q12") == "b2");
-     *  @endcode
+     *
+     *      m = AliasMap();
+     *      m.set("q", "a");
+     *      m.set("q1", "b");
+     *      assert(m.apply("q3") == "a3");
+     *      assert(m.apply("q12") == "b2");
      */
-    std::string apply(std::string const & name) const;
+    std::string apply(std::string const& name) const;
 
     /**
-     *  @brief Return the target of the given alias
+     *  Return the target of the given alias
      *
      *  Unlike apply(), this will not return partial matches.
      *
-     *  @throw pex::exceptions::NotFoundError if no alias with the given name exists
+     *  @throws pex::exceptions::NotFoundError if no alias with the given name exists
      */
-    std::string get(std::string const & alias) const;
+    std::string get(std::string const& alias) const;
 
     /// Add an alias to the schema or replace an existing one.
-    void set(std::string const & alias, std::string const & target);
+    void set(std::string const& alias, std::string const& target);
 
     /**
-     *  @brief Remove an alias from the schema if it is present.
+     *  Remove an alias from the schema if it is present.
      *
-     *  @return True if an alias was erased, and false if no such alias was found.
+     *  @returns True if an alias was erased, and false if no such alias was found.
      */
-    bool erase(std::string const & alias);
+    bool erase(std::string const& alias);
 
     //@{
     /**
      *  Equality comparison
      */
-    bool operator==(AliasMap const & other) const;
-    bool operator!=(AliasMap const & other) const { return !(other == *this); }
+    bool operator==(AliasMap const& other) const;
+    bool operator!=(AliasMap const& other) const { return !(other == *this); }
     //@}
 
     /// Return true if all aliases in this are also in other (with the same targets).
-    bool contains(AliasMap const & other) const;
+    bool contains(AliasMap const& other) const;
 
 private:
-
     friend class Schema;
     friend class SubSchema;
     friend class BaseTable;
 
     // Internal in-place implementation of apply()
-    void _apply(std::string & name) const;
+    void _apply(std::string& name) const;
 
     Internal _internal;
 
     // Table to notify of any changes.  We can't use a shared_ptr here because the Table needs to set
     // this in its own constructor, but the Table does guarantee that this pointer is either valid or
     // null.
-    BaseTable * _table;
+    BaseTable* _table;
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_AliasMap_h_INCLUDED
+#endif  // !AFW_TABLE_AliasMap_h_INCLUDED

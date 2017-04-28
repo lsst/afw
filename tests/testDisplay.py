@@ -61,7 +61,8 @@ class DisplayTestCase(unittest.TestCase):
             oldBackend = backend
 
         dirName = os.path.split(__file__)[0]
-        self.fileName = os.path.join(dirName, "data", "HSC-0908120-056-small.fits")
+        self.fileName = os.path.join(
+            dirName, "data", "HSC-0908120-056-small.fits")
         self.display0 = afwDisplay.getDisplay(frame=0, verbose=True)
 
     def tearDown(self):
@@ -121,11 +122,13 @@ class DisplayTestCase(unittest.TestCase):
         self.display0.erase()
 
         exp = afwImage.ExposureF(self.fileName)
-        self.display0.mtv(exp, title="parent")  # tells display0 about the image's xy0
+        # tells display0 about the image's xy0
+        self.display0.mtv(exp, title="parent")
 
         with self.display0.Buffering():
             self.display0.dot('o', 200, 220)
-            vertices = [(200, 220), (210, 230), (224, 230), (214, 220), (200, 220)]
+            vertices = [(200, 220), (210, 230), (224, 230),
+                        (214, 220), (200, 220)]
             self.display0.line(vertices, ctype=afwDisplay.CYAN)
             self.display0.line(vertices[:-1], symbs="+x+x", size=3)
 
@@ -181,7 +184,8 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    parser = argparse.ArgumentParser(description="Run the image display test suite")
+    parser = argparse.ArgumentParser(
+        description="Run the image display test suite")
 
     parser.add_argument('backend', type=str, nargs="?", default="virtualDevice",
                         help="The backend to use, e.g. ds9.  You may need to have the device setup")

@@ -41,17 +41,19 @@ public:
     CameraSys getCameraSys() const { return _cameraSys; }
 
     bool operator==(CameraPoint const &other) const {
-        return (this->getPoint() == other.getPoint()) && (this->getCameraSys() == other.getCameraSys()); }
+        return (this->getPoint() == other.getPoint()) && (this->getCameraSys() == other.getCameraSys());
+    }
 
     bool operator!=(CameraPoint const &other) const { return !(*this == other); }
 
 private:
-    geom::Point2D _point;         ///< 2-d point
-    CameraSys _cameraSys;   ///< camera coordinate system
+    geom::Point2D _point;  ///< 2-d point
+    CameraSys _cameraSys;  ///< camera coordinate system
 };
 
-std::ostream &operator<< (std::ostream &os, CameraPoint const &cameraPoint);
-
-}}}
+std::ostream &operator<<(std::ostream &os, CameraPoint const &cameraPoint);
+}
+}
+}
 
 #endif

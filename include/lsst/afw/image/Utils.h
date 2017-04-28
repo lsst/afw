@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief A set of classes of general utility in connection with images
+/*
+ * A set of classes of general utility in connection with images
  *
  * We provide representations of points, bounding boxes, circles etc.
  */
@@ -47,10 +46,12 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/fits.h"
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 /**
- *  @brief Return the metadata (header entries) from a FITS file.
+ *  Return the metadata (header entries) from a FITS file.
  *
  *  @deprecated Use lsst::afw::fits::readMetadata instead.
  *
@@ -60,26 +61,29 @@ namespace lsst { namespace afw { namespace image {
  *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
  *                                    (e.g. NAXIS).
  */
-inline PTR(daf::base::PropertyList) readMetadata(std::string const & fileName,
-                                                 int hdu=INT_MIN, bool strip=false) {
+inline std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, int hdu = INT_MIN,
+                                                             bool strip = false) {
     return afw::fits::readMetadata(fileName, hdu, strip);
 }
 
 /**
  * Return a value indicating a bad pixel for the given Image type
  *
- * A quiet NaN is returned for types that support it otherwise @c bad
+ * A quiet NaN is returned for types that support it otherwise `bad`
  *
- * @relates lsst::afw::image::Image
+ * @relatesalso lsst::afw::image::Image
  */
-template<typename ImageT>
-typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad value if NaN isn't supported
-                                     ) {
+template <typename ImageT>
+typename ImageT::SinglePixel badPixel(
+        typename ImageT::Pixel bad = 0  ///< The bad value if NaN isn't supported
+        ) {
     typedef typename ImageT::SinglePixel SinglePixelT;
-    return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
-                        std::numeric_limits<SinglePixelT>::quiet_NaN() : bad);
+    return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN
+                                ? std::numeric_limits<SinglePixelT>::quiet_NaN()
+                                : bad);
 }
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image
 
 #endif

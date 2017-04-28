@@ -29,41 +29,27 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-XYTransform::XYTransform()
-    : daf::base::Citizen(typeid(this))
-{ }
+XYTransform::XYTransform() : daf::base::Citizen(typeid(this)) {}
 
+AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const {
+    Point2D px = p + Extent2D(1, 0);
+    Point2D py = p + Extent2D(0, 1);
 
-/// default implementation; subclass may override
-AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
-{
-    Point2D px = p + Extent2D(1,0);
-    Point2D py = p + Extent2D(0,1);
-
-    return makeAffineTransformFromTriple(p, px, py,
-                                                  this->forwardTransform(p),
-                                                  this->forwardTransform(px),
-                                                  this->forwardTransform(py));
+    return makeAffineTransformFromTriple(p, px, py, this->forwardTransform(p), this->forwardTransform(px),
+                                         this->forwardTransform(py));
 }
 
+AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const {
+    Point2D px = p + Extent2D(1, 0);
+    Point2D py = p + Extent2D(0, 1);
 
-/// default implementation; subclass may override
-AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
-{
-    Point2D px = p + Extent2D(1,0);
-    Point2D py = p + Extent2D(0,1);
-
-    return makeAffineTransformFromTriple(p, px, py,
-                                                  this->reverseTransform(p),
-                                                  this->reverseTransform(px),
-                                                  this->reverseTransform(py));
+    return makeAffineTransformFromTriple(p, px, py, this->reverseTransform(p), this->reverseTransform(px),
+                                         this->reverseTransform(py));
 }
 
-
-/// default implementation; subclass may override
-PTR(XYTransform) XYTransform::invert() const
-{
-    return std::make_shared<InvertedXYTransform> (this->clone());
+std::shared_ptr<XYTransform> XYTransform::invert() const {
+    return std::make_shared<InvertedXYTransform>(this->clone());
 }
-
-}}}
+}
+}
+}

@@ -28,23 +28,18 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-DistortedTanWcs::DistortedTanWcs(
-    TanWcs const &tanWcs,
-    geom::XYTransform const &pixelsToTanPixels
-) :
-    TanWcs(tanWcs),
-    _pixelsToTanPixelsPtr(pixelsToTanPixels.clone())
-{
+DistortedTanWcs::DistortedTanWcs(TanWcs const &tanWcs, geom::XYTransform const &pixelsToTanPixels)
+        : TanWcs(tanWcs), _pixelsToTanPixelsPtr(pixelsToTanPixels.clone()) {
     if (tanWcs.hasDistortion()) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "tanWcs has distortion terms");
     }
 }
 
-PTR(Wcs) DistortedTanWcs::clone() const {
-    return PTR(Wcs)(new DistortedTanWcs(*this));
+std::shared_ptr<Wcs> DistortedTanWcs::clone() const {
+    return std::shared_ptr<Wcs>(new DistortedTanWcs(*this));
 }
 
-bool DistortedTanWcs::operator==(Wcs const & rhs) const {
+bool DistortedTanWcs::operator==(Wcs const &rhs) const {
     throw LSST_EXCEPT(pex::exceptions::LogicError, "== is not implemented");
 }
 
@@ -70,5 +65,6 @@ void DistortedTanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle s
     auto const tanPos = _pixelsToTanPixelsPtr->forwardTransform(pos);
     TanWcs::pixelToSkyImpl(tanPos[0], tanPos[1], sky);
 }
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image

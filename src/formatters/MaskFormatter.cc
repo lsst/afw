@@ -22,21 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-
-/** @file
- * @brief Implementation of MaskFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2151 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- *
- * @ingroup afw
+/*
+ * Implementation of MaskFormatter class
  */
 
 #ifndef __GNUC__
-#  define __attribute__(x) /*NOTHING*/
+#define __attribute__(x) /*NOTHING*/
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
@@ -77,35 +68,28 @@ public:
     static std::string name();
 };
 
-template<> std::string MaskFormatterTraits<MaskPixel>::name() {
+template <>
+std::string MaskFormatterTraits<MaskPixel>::name() {
     static std::string name = "Mask";
     return name;
 }
 
 template <typename MaskPixelT>
 lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registration(
-    MaskFormatterTraits<MaskPixelT>::name(),
-    typeid(Mask<MaskPixelT>),
-    createInstance);
+        MaskFormatterTraits<MaskPixelT>::name(), typeid(Mask<MaskPixelT>), createInstance);
 
 template <typename MaskPixelT>
-MaskFormatter<MaskPixelT>::MaskFormatter(
-    lsst::pex::policy::Policy::Ptr) :
-    lsst::daf::persistence::Formatter(typeid(this)) {
-}
+MaskFormatter<MaskPixelT>::MaskFormatter(std::shared_ptr<lsst::pex::policy::Policy>)
+        : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename MaskPixelT>
-MaskFormatter<MaskPixelT>::~MaskFormatter(void) {
-}
+MaskFormatter<MaskPixelT>::~MaskFormatter(void) {}
 
 template <typename MaskPixelT>
-void MaskFormatter<MaskPixelT>::write(
-    Persistable const* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::shared_ptr<Storage> storage,
+                                      std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskFormatter write start");
-    Mask<MaskPixelT> const* ip =
-        dynamic_cast<Mask<MaskPixelT> const*>(persistable);
+    Mask<MaskPixelT> const* ip = dynamic_cast<Mask<MaskPixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Mask");
     }
@@ -115,8 +99,7 @@ void MaskFormatter<MaskPixelT>::write(
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "MaskFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         LOGL_DEBUG(_log, "MaskFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         // Need to cast away const because writeFits modifies the metadata.
@@ -129,9 +112,8 @@ void MaskFormatter<MaskPixelT>::write(
 }
 
 template <typename MaskPixelT>
-Persistable* MaskFormatter<MaskPixelT>::read(
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+Persistable* MaskFormatter<MaskPixelT>::read(std::shared_ptr<Storage> storage,
+                                             std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         LOGL_DEBUG(_log, "MaskFormatter read BoostStorage");
@@ -140,8 +122,7 @@ Persistable* MaskFormatter<MaskPixelT>::read(
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "MaskFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         LOGL_DEBUG(_log, "MaskFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         Mask<MaskPixelT>* ip = new Mask<MaskPixelT>(fits->getPath(), fits->getHdu());
@@ -152,16 +133,14 @@ Persistable* MaskFormatter<MaskPixelT>::read(
 }
 
 template <typename MaskPixelT>
-void MaskFormatter<MaskPixelT>::update(
-    Persistable*,
-    Storage::Ptr,
-    lsst::daf::base::PropertySet::Ptr) {
+void MaskFormatter<MaskPixelT>::update(Persistable*, std::shared_ptr<Storage>,
+                                       std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Mask");
 }
 
-template <typename MaskPixelT> template <class Archive>
-void MaskFormatter<MaskPixelT>::delegateSerialize(
-    Archive& ar, int const version, Persistable* persistable) {
+template <typename MaskPixelT>
+template <class Archive>
+void MaskFormatter<MaskPixelT>::delegateSerialize(Archive& ar, int const version, Persistable* persistable) {
     LOGL_DEBUG(_log, "MaskFormatter delegateSerialize start");
     Mask<MaskPixelT>* ip = dynamic_cast<Mask<MaskPixelT>*>(persistable);
     if (ip == 0) {
@@ -177,29 +156,29 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
         rows = ip->_vwImagePtr->rows();
         planes = ip->_vwImagePtr->planes();
     }
-    ar & cols & rows & planes;
+    ar& cols& rows& planes;
     if (Archive::is_loading::value) {
         ip->_vwImagePtr->set_size(cols, rows, planes);
     }
     unsigned int pixels = cols * rows * planes;
     MaskPixelT* data = ip->_vwImagePtr->data();
-    ar & boost::serialization::make_array(data, pixels);
+    ar& boost::serialization::make_array(data, pixels);
     LOGL_DEBUG(_log, "MaskFormatter delegateSerialize end");
 }
 
 template <typename MaskPixelT>
-lsst::daf::persistence::Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new MaskFormatter<MaskPixelT>(policy));
+std::shared_ptr<lsst::daf::persistence::Formatter> MaskFormatter<MaskPixelT>::createInstance(
+        std::shared_ptr<lsst::pex::policy::Policy> policy) {
+    return std::shared_ptr<lsst::daf::persistence::Formatter>(new MaskFormatter<MaskPixelT>(policy));
 }
 
 template class MaskFormatter<MaskPixel>;
-//// The followings fails
-//// because the function template `delegateSerialize' is obsolete(?)
-//template void MaskFormatter<MaskPixel>::delegateSerialize(
+// The followings fails
+// because the function template `delegateSerialize' is obsolete(?)
+// template void MaskFormatter<MaskPixel>::delegateSerialize(
 //    boost::archive::binary_oarchive&, int const, Persistable*);
-//template void MaskFormatter<MaskPixel>::delegateSerialize(
+// template void MaskFormatter<MaskPixel>::delegateSerialize(
 //    boost::archive::binary_iarchive&, int const, Persistable*);
-
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters

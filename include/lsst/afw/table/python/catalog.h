@@ -46,54 +46,37 @@ Declare field-type-specific overloaded catalog member functions for one field ty
 */
 
 template <typename T, typename Record>
-void declareCatalogOverloads(PyCatalog<Record> & cls) {
-
+void declareCatalogOverloads(PyCatalog<Record> &cls) {
     namespace py = pybind11;
     using namespace pybind11::literals;
 
     typedef CatalogT<Record> Catalog;
     typedef typename Field<T>::Value Value;
 
-    cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) &Catalog::isSorted);
-    cls.def("sort", (void (Catalog::*)(Key<T> const &)) &Catalog::sort);
-    cls.def(
-        "find",
-        [](Catalog & self, Value const & value, Key<T> const & key) -> std::shared_ptr<Record>
-        {
-            auto iter = self.find(value, key);
-            if (iter == self.end()) {
-                return nullptr;
-            };
-            return iter;
-        }
-    );
-    cls.def(
-        "upper_bound",
-        [](Catalog & self, Value const & value, Key<T> const & key) -> std::ptrdiff_t {
-            return self.upper_bound(value, key) - self.begin();
-        }
-    );
-    cls.def(
-        "lower_bound",
-        [](Catalog & self, Value const & value, Key<T> const & key) -> std::ptrdiff_t {
-            return self.lower_bound(value, key) - self.begin();
-        }
-    );
-    cls.def(
-        "equal_range",
-        [](Catalog & self, Value const & value, Key<T> const & key) {
-            auto p = self.equal_range(value, key);
-            return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
-        }
-    );
-    cls.def(
-        "between",
-        [](Catalog & self, Value const & lower, Value const & upper, Key<T> const & key) {
-            std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
-            std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
-            return py::slice(a, b, 1);
-        }
-    );
+    cls.def("isSorted", (bool (Catalog::*)(Key<T> const &) const) & Catalog::isSorted);
+    cls.def("sort", (void (Catalog::*)(Key<T> const &)) & Catalog::sort);
+    cls.def("find", [](Catalog &self, Value const &value, Key<T> const &key) -> std::shared_ptr<Record> {
+        auto iter = self.find(value, key);
+        if (iter == self.end()) {
+            return nullptr;
+        };
+        return iter;
+    });
+    cls.def("upper_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
+        return self.upper_bound(value, key) - self.begin();
+    });
+    cls.def("lower_bound", [](Catalog &self, Value const &value, Key<T> const &key) -> std::ptrdiff_t {
+        return self.lower_bound(value, key) - self.begin();
+    });
+    cls.def("equal_range", [](Catalog &self, Value const &value, Key<T> const &key) {
+        auto p = self.equal_range(value, key);
+        return py::slice(p.first - self.begin(), p.second - self.begin(), 1);
+    });
+    cls.def("between", [](Catalog &self, Value const &lower, Value const &upper, Key<T> const &key) {
+        std::ptrdiff_t a = self.lower_bound(lower, key) - self.begin();
+        std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
+        return py::slice(a, b, 1);
+    });
 }
 
 /**
@@ -109,8 +92,7 @@ class object in Python.
 @param[in] isBase Whether this instantiation is only being used as a base class (used to set the class name).
 */
 template <typename Record>
-PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & name, bool isBase=false) {
-
+PyCatalog<Record> declareCatalog(pybind11::module &mod, std::string const &name, bool isBase = false) {
     namespace py = pybind11;
     using namespace pybind11::literals;
 
@@ -133,12 +115,10 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
     cls.def(py::init<Catalog const &>(), "other"_a);
 
     /* Static Methods */
-    cls.def_static("readFits",
-                   (Catalog (*)(std::string const &, int, int)) &Catalog::readFits,
-                   "filename"_a, "hdu"_a=INT_MIN, "flags"_a=0);
-    cls.def_static("readFits",
-                   (Catalog (*)(fits::MemFileManager &, int, int)) &Catalog::readFits,
-                   "manager"_a, "hdu"_a=INT_MIN, "flags"_a=0);
+    cls.def_static("readFits", (Catalog(*)(std::string const &, int, int)) & Catalog::readFits, "filename"_a,
+                   "hdu"_a = INT_MIN, "flags"_a = 0);
+    cls.def_static("readFits", (Catalog(*)(fits::MemFileManager &, int, int)) & Catalog::readFits,
+                   "manager"_a, "hdu"_a = INT_MIN, "flags"_a = 0);
     // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
 
     /* Methods */
@@ -153,27 +133,25 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
     // can manage the _column cache
     cls.def("_getColumnView", &Catalog::getColumnView);
     cls.def("_addNew", &Catalog::addNew);
-    cls.def("_extend", [](Catalog & self, Catalog const & other, bool deep){
+    cls.def("_extend", [](Catalog &self, Catalog const &other, bool deep) {
         self.insert(self.end(), other.begin(), other.end(), deep);
     });
-    cls.def("_extend", [](Catalog & self, Catalog const & other, SchemaMapper const & mapper) {
+    cls.def("_extend", [](Catalog &self, Catalog const &other, SchemaMapper const &mapper) {
         self.insert(mapper, self.end(), other.begin(), other.end());
     });
-    cls.def("_append", [](Catalog & self, std::shared_ptr<Record> const & rec) {
-        self.push_back(rec);
-    });
-    cls.def("_delitem_", [](Catalog & self, std::ptrdiff_t i) {
+    cls.def("_append", [](Catalog &self, std::shared_ptr<Record> const &rec) { self.push_back(rec); });
+    cls.def("_delitem_", [](Catalog &self, std::ptrdiff_t i) {
         self.erase(self.begin() + utils::python::cppIndex(self.size(), i));
     });
-    cls.def("_delslice_", [](Catalog & self, py::slice const & s) {
-        Py_ssize_t start=0, stop=0, step=0, length=0;
+    cls.def("_delslice_", [](Catalog &self, py::slice const &s) {
+        Py_ssize_t start = 0, stop = 0, step = 0, length = 0;
         if (PySlice_GetIndicesEx(
-            // The interface to this function changed in Python 3.2
+// The interface to this function changed in Python 3.2
 #if PY_MAJOR_VERSION < 3 || (PY_MINOR_VERSION == 3 && PY_MINOR_VERSION < 2)
-            (PySliceObject*)
+                    (PySliceObject *)
 #endif
-                s.ptr(), self.size(), &start, &stop, &step, &length) != 0
-        ) {
+                            s.ptr(),
+                    self.size(), &start, &stop, &step, &length) != 0) {
             throw py::error_already_set();
         }
         if (step != 1) {
@@ -184,20 +162,19 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
     cls.def("_clear", &Catalog::clear);
 
     cls.def("set", &Catalog::set);
-    cls.def("_getitem_", [](Catalog & self, int i) {
-        return self.get(utils::python::cppIndex(self.size(), i));
-    });
+    cls.def("_getitem_",
+            [](Catalog &self, int i) { return self.get(utils::python::cppIndex(self.size(), i)); });
     cls.def("isContiguous", &Catalog::isContiguous);
     cls.def("writeFits",
-            (void (Catalog::*)(std::string const &, std::string const &, int) const) &Catalog::writeFits,
-            "filename"_a, "mode"_a="w", "flags"_a = 0);
+            (void (Catalog::*)(std::string const &, std::string const &, int) const) & Catalog::writeFits,
+            "filename"_a, "mode"_a = "w", "flags"_a = 0);
     cls.def("writeFits",
-            (void (Catalog::*)(fits::MemFileManager &, std::string const &, int) const) &Catalog::writeFits,
-            "manager"_a, "mode"_a="w", "flags"_a=0);
+            (void (Catalog::*)(fits::MemFileManager &, std::string const &, int) const) & Catalog::writeFits,
+            "manager"_a, "mode"_a = "w", "flags"_a = 0);
     cls.def("reserve", &Catalog::reserve);
-    cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const,1> const &) const) &Catalog::subset);
+    cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset);
     cls.def("subset",
-            (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) &Catalog::subset);
+            (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset);
 
     declareCatalogOverloads<std::int32_t>(cls);
     declareCatalogOverloads<std::int64_t>(cls);
@@ -207,7 +184,9 @@ PyCatalog<Record> declareCatalog(pybind11::module & mod, std::string const & nam
 
     return cls;
 };
+}
+}
+}
+}  // lsst::afw::table::python
 
-}}}} // lsst::afw::table::python
-
-#endif // !LSST_AFW_TABLE_PYTHON_CATALOG_H_INCLUDED
+#endif  // !LSST_AFW_TABLE_PYTHON_CATALOG_H_INCLUDED

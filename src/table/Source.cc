@@ -12,7 +12,9 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 //-----------------------------------------------------------------------------------------------------------
 //----- PersistenceHelpers ----------------------------------------------------------------------------------
@@ -25,7 +27,7 @@ struct PersistenceHelper {
     afw::table::Key<int> footprintKey;
 };
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SourceFitsWriter ------------------------------------------------------------------------------------
@@ -48,16 +50,12 @@ namespace {
 
 class SourceFitsWriter : public io::FitsWriter {
 public:
-
-    explicit SourceFitsWriter(Fits * fits, int flags) :
-        io::FitsWriter(fits, flags)
-    {}
+    explicit SourceFitsWriter(Fits *fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
+    virtual void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows);
 
-    virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
-
-    virtual void _writeRecord(BaseRecord const & record);
+    virtual void _writeRecord(BaseRecord const &record);
 
     virtual void _finish() {
         if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
@@ -67,26 +65,24 @@ protected:
 
 private:
     SchemaMapper _mapper;
-    PTR(BaseRecord) _outRecord;
-    PTR(BaseTable) _outTable;
+    std::shared_ptr<BaseRecord> _outRecord;
+    std::shared_ptr<BaseTable> _outTable;
     Key<int> _footprintKey;
     io::OutputArchive _archive;
 };
 
-void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(SourceTable) table = std::dynamic_pointer_cast<SourceTable const>(t);
+void SourceFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, std::size_t nRows) {
+    std::shared_ptr<SourceTable const> table = std::dynamic_pointer_cast<SourceTable const>(t);
     if (!table) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Cannot use a SourceFitsWriter on a non-Source table."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Cannot use a SourceFitsWriter on a non-Source table.");
     }
     if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
-        _mapper = SchemaMapper(t->getSchema(), true) ;
+        _mapper = SchemaMapper(t->getSchema(), true);
         _mapper.addMinimalSchema(t->getSchema(), true);
         _footprintKey = _mapper.editOutputSchema().addField<int>("footprint", "archive ID for Footprint");
         _outTable = BaseTable::make(_mapper.getOutputSchema());
-        PTR(daf::base::PropertyList) metadata = table->getMetadata();
+        std::shared_ptr<daf::base::PropertyList> metadata = table->getMetadata();
         if (metadata) {
             metadata = std::static_pointer_cast<daf::base::PropertyList>(metadata->deepCopy());
         } else {
@@ -98,11 +94,10 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         //
         // Historically the AR_HDU keyword was 1-indexed (see RFC-304), and to maintain file compatibility
         // this is still the case so we're setting AR_HDU to 3 == 2 + 1
-        metadata->set(
-            "AR_HDU", 3, "HDU (1-indexed) containing the archive index for non-record data (e.g. Footprints)"
-        );
+        metadata->set("AR_HDU", 3,
+                      "HDU (1-indexed) containing the archive index for non-record data (e.g. Footprints)");
         _outTable->setMetadata(metadata);
-        _outRecord = _outTable->makeRecord(); // make temporary record to use as a workspace
+        _outRecord = _outTable->makeRecord();  // make temporary record to use as a workspace
         io::FitsWriter::_writeTable(_outTable, nRows);
     } else {
         io::FitsWriter::_writeTable(table, nRows);
@@ -110,11 +105,11 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
     _fits->writeKey("AFW_TYPE", "SOURCE", "Tells lsst::afw to load this as a Source table.");
 }
 
-void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
-    SourceRecord const & record = static_cast<SourceRecord const &>(r);
+void SourceFitsWriter::_writeRecord(BaseRecord const &r) {
+    SourceRecord const &record = static_cast<SourceRecord const &>(r);
     if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
         _outRecord->assign(record, _mapper);
-        PTR(afw::detection::Footprint) footprint = record.getFootprint();
+        std::shared_ptr<afw::detection::Footprint> footprint = record.getFootprint();
         if (footprint) {
             if ((_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) && footprint->isHeavy()) {
                 footprint.reset(new afw::detection::Footprint(*footprint));
@@ -128,7 +123,7 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
     }
 }
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SourceFitsReader ------------------------------------------------------------------------------------
@@ -155,13 +150,8 @@ namespace {
 // FitsColumnReader subclass for backwards-compatible Footprint reading from variable-length arrays
 class OldSourceFootprintReader : public io::FitsColumnReader {
 public:
-
-    static int readSpecialColumn(
-        io::FitsSchemaInputMapper & mapper,
-        daf::base::PropertyList & metadata,
-        bool stripMetadata,
-        std::string const & name
-    ) {
+    static int readSpecialColumn(io::FitsSchemaInputMapper &mapper, daf::base::PropertyList &metadata,
+                                 bool stripMetadata, std::string const &name) {
         int column = metadata.get(name, 0);
         --column;  // switch from 1-indexed to 0-indexed convention
         if (column >= 0) {
@@ -173,12 +163,8 @@ public:
         return column;
     }
 
-    static void setup(
-        io::FitsSchemaInputMapper & mapper,
-        daf::base::PropertyList & metadata,
-        int ioFlags,
-        bool stripMetadata
-    ) {
+    static void setup(io::FitsSchemaInputMapper &mapper, daf::base::PropertyList &metadata, int ioFlags,
+                      bool stripMetadata) {
         std::unique_ptr<OldSourceFootprintReader> reader(new OldSourceFootprintReader());
         reader->_spanCol = readSpecialColumn(mapper, metadata, stripMetadata, "SPANCOL");
         reader->_peakCol = readSpecialColumn(mapper, metadata, stripMetadata, "PEAKCOL");
@@ -186,7 +172,7 @@ public:
         reader->_heavyMaskCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYMSKCO");
         reader->_heavyVarCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYVARCO");
         if ((ioFlags & SOURCE_IO_NO_FOOTPRINTS) || mapper.hasArchive()) {
-            return; // don't want to load anything, so we're done after just removing the special columns
+            return;  // don't want to load anything, so we're done after just removing the special columns
         }
         if (ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) {
             reader->_heavyPixCol = -1;
@@ -196,39 +182,30 @@ public:
         // These checks are really basically assertions - they should only happen if we get
         // a corrupted catalog - but we still don't want to crash if that happens.
         if ((reader->_spanCol >= 0) != (reader->_peakCol >= 0)) {
-            throw LSST_EXCEPT(
-                afw::fits::FitsError,
-                "Corrupted catalog: either both or none of the Footprint Span/Peak columns must be present."
-            );
+            throw LSST_EXCEPT(afw::fits::FitsError,
+                              "Corrupted catalog: either both or none of the Footprint Span/Peak columns "
+                              "must be present.");
         }
         if (reader->_spanCol < 0) {
             return;
         }
-        if ((reader->_heavyPixCol >= 0) != (reader->_heavyMaskCol >= 0)
-            || (reader->_heavyPixCol >= 0) != (reader->_heavyVarCol >= 0)
-        ) {
+        if ((reader->_heavyPixCol >= 0) != (reader->_heavyMaskCol >= 0) ||
+            (reader->_heavyPixCol >= 0) != (reader->_heavyVarCol >= 0)) {
             throw LSST_EXCEPT(
-                afw::fits::FitsError,
-                "Corrupted catalog: either all or none of the HeavyFootprint columns must be present."
-            );
+                    afw::fits::FitsError,
+                    "Corrupted catalog: either all or none of the HeavyFootprint columns must be present.");
         }
         if (reader->_heavyPixCol >= 0 && reader->_spanCol < 0) {
-            throw LSST_EXCEPT(
-                afw::fits::FitsError,
-                "Corrupted catalog: HeavyFootprint columns with no Span/Peak columns."
-            );
+            throw LSST_EXCEPT(afw::fits::FitsError,
+                              "Corrupted catalog: HeavyFootprint columns with no Span/Peak columns.");
         }
         // If we do want to load old-style Footprints, add the column reader to the mapper.
         mapper.customize(std::move(reader));
     }
 
-    virtual void readCell(
-        BaseRecord & baseRecord,
-        std::size_t row,
-        fits::Fits & fits,
-        PTR(io::InputArchive) const & archive
-    ) const {
-        SourceRecord & record = static_cast<SourceRecord&>(baseRecord);
+    virtual void readCell(BaseRecord &baseRecord, std::size_t row, fits::Fits &fits,
+                          std::shared_ptr<io::InputArchive> const &archive) const {
+        SourceRecord &record = static_cast<SourceRecord &>(baseRecord);
         std::vector<geom::Span> spansVector;
 
         // Load a regular Footprint from the span and peak columns.
@@ -237,13 +214,11 @@ public:
         if (spanElementCount) {
             if (spanElementCount % 3) {
                 throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Number of span elements (%d) must divisible by 3 (row %d)")
-                        % spanElementCount % row
-                    )
-                );
+                        afw::fits::FitsError,
+                        afw::fits::makeErrorMessage(
+                                fits.fptr, fits.status,
+                                boost::format("Number of span elements (%d) must divisible by 3 (row %d)") %
+                                        spanElementCount % row));
             }
             std::vector<int> spanElements(spanElementCount);
             fits.readTableArray(row, _spanCol, spanElementCount, &spanElements.front());
@@ -256,17 +231,15 @@ public:
             }
         }
         std::shared_ptr<Footprint> fp = std::make_shared<detection::Footprint>(
-            std::make_shared<geom::SpanSet>(std::move(spansVector)));
+                std::make_shared<geom::SpanSet>(std::move(spansVector)));
         if (peakElementCount) {
             if (peakElementCount % 3) {
                 throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Number of peak elements (%d) must divisible by 3 (row %d)")
-                        % peakElementCount % row
-                    )
-                );
+                        afw::fits::FitsError,
+                        afw::fits::makeErrorMessage(
+                                fits.fptr, fits.status,
+                                boost::format("Number of peak elements (%d) must divisible by 3 (row %d)") %
+                                        peakElementCount % row));
             }
             std::vector<float> peakElements(peakElementCount);
             fits.readTableArray(row, _peakCol, peakElementCount, &peakElements.front());
@@ -284,28 +257,27 @@ public:
         if (_heavyPixCol < 0) {
             return;
         }
-        int heavyPixElementCount  = fits.getTableArraySize(row, _heavyPixCol);
+        int heavyPixElementCount = fits.getTableArraySize(row, _heavyPixCol);
         int heavyMaskElementCount = fits.getTableArraySize(row, _heavyMaskCol);
-        int heavyVarElementCount  = fits.getTableArraySize(row, _heavyVarCol);
+        int heavyVarElementCount = fits.getTableArraySize(row, _heavyVarCol);
         if (heavyPixElementCount > 0) {
             int N = fp->getArea();
             if ((heavyPixElementCount != N) || (heavyMaskElementCount != N) || (heavyVarElementCount != N)) {
                 throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    afw::fits::makeErrorMessage(
-                        fits.fptr, fits.status,
-                        boost::format("Number of HeavyFootprint elements (pix %d, mask %d, var %d) "
-                                      "must all be equal to footprint area (%d)")
-                        % heavyPixElementCount % heavyMaskElementCount % heavyVarElementCount % N
-                    )
-                );
+                        afw::fits::FitsError,
+                        afw::fits::makeErrorMessage(
+                                fits.fptr, fits.status,
+                                boost::format("Number of HeavyFootprint elements (pix %d, mask %d, var %d) "
+                                              "must all be equal to footprint area (%d)") %
+                                        heavyPixElementCount % heavyMaskElementCount % heavyVarElementCount %
+                                        N));
             }
             // float HeavyFootprints were the only kind we ever saved using the old format
-            typedef detection::HeavyFootprint<float,image::MaskPixel,image::VariancePixel> HeavyFootprint;
-            PTR(HeavyFootprint) heavy = std::make_shared<HeavyFootprint>(*fp);
-            fits.readTableArray(row, _heavyPixCol,  N, heavy->getImageArray().getData());
+            typedef detection::HeavyFootprint<float, image::MaskPixel, image::VariancePixel> HeavyFootprint;
+            std::shared_ptr<HeavyFootprint> heavy = std::make_shared<HeavyFootprint>(*fp);
+            fits.readTableArray(row, _heavyPixCol, N, heavy->getImageArray().getData());
             fits.readTableArray(row, _heavyMaskCol, N, heavy->getMaskArray().getData());
-            fits.readTableArray(row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
+            fits.readTableArray(row, _heavyVarCol, N, heavy->getVarianceArray().getData());
             record.setFootprint(heavy);
         }
     }
@@ -321,17 +293,12 @@ private:
 // FitsColumnReader for new-style Footprint persistence using archives.
 class SourceFootprintReader : public io::FitsColumnReader {
 public:
-
-    static void setup(
-        io::FitsSchemaInputMapper & mapper,
-        int ioFlags
-    ) {
+    static void setup(io::FitsSchemaInputMapper &mapper, int ioFlags) {
         auto item = mapper.find("footprint");
         if (item) {
             if (mapper.hasArchive()) {
                 std::unique_ptr<io::FitsColumnReader> reader(
-                    new SourceFootprintReader(ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS, item->column)
-                );
+                        new SourceFootprintReader(ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS, item->column));
                 mapper.customize(std::move(reader));
             }
             mapper.erase(item);
@@ -340,15 +307,11 @@ public:
 
     SourceFootprintReader(bool noHeavy, int column) : _noHeavy(noHeavy), _column(column) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        fits::Fits & fits,
-        PTR(io::InputArchive) const & archive
-    ) const {
+    virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
+                          std::shared_ptr<io::InputArchive> const &archive) const {
         int id = 0;
         fits.readTableScalar<int>(row, _column, id);
-        PTR(Footprint) footprint = archive->get<Footprint>(id);
+        std::shared_ptr<Footprint> footprint = archive->get<Footprint>(id);
         if (_noHeavy && footprint->isHeavy()) {
             // It sort of defeats the purpose of the flag if we have to do the I/O to read
             // a HeavyFootprint before we can downgrade it to a regular Footprint, but that's
@@ -361,7 +324,7 @@ public:
             // sources, and that still works just fine.
             footprint.reset(new Footprint(*footprint));
         }
-        static_cast<SourceRecord&>(record).setFootprint(footprint);
+        static_cast<SourceRecord &>(record).setFootprint(footprint);
     }
 
 private:
@@ -371,78 +334,66 @@ private:
 
 class SourceFitsReader : public io::FitsReader {
 public:
+    SourceFitsReader() : afw::table::io::FitsReader("SOURCE") {}
 
-        SourceFitsReader() : afw::table::io::FitsReader("SOURCE") {}
+    virtual std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
+                                                 std::shared_ptr<daf::base::PropertyList> metadata,
+                                                 int ioFlags, bool stripMetadata) const {
+        // Look for old-style persistence of Footprints.  If we have both that and an archive, we
+        // load the footprints from the archive, but still need to remove the old-style header keys
+        // from the metadata and the corresponding fields from the FitsSchemaInputMapper.
+        OldSourceFootprintReader::setup(mapper, *metadata, ioFlags, stripMetadata);
+        // Look for new-style persistence of Footprints.  We'll only read them if we have an archive,
+        // but we'll strip fields out regardless.
+        SourceFootprintReader::setup(mapper, ioFlags);
+        std::shared_ptr<SourceTable> table = SourceTable::make(mapper.finalize());
+        table->setMetadata(metadata);
+        return table;
+    }
 
-        virtual PTR(BaseTable) makeTable(
-            io::FitsSchemaInputMapper & mapper,
-            PTR(daf::base::PropertyList) metadata,
-            int ioFlags,
-            bool stripMetadata
-        ) const {
-            // Look for old-style persistence of Footprints.  If we have both that and an archive, we
-            // load the footprints from the archive, but still need to remove the old-style header keys
-            // from the metadata and the corresponding fields from the FitsSchemaInputMapper.
-            OldSourceFootprintReader::setup(mapper, *metadata, ioFlags, stripMetadata);
-            // Look for new-style persistence of Footprints.  We'll only read them if we have an archive,
-            // but we'll strip fields out regardless.
-            SourceFootprintReader::setup(mapper, ioFlags);
-            PTR(SourceTable) table = SourceTable::make(mapper.finalize());
-            table->setMetadata(metadata);
-            return table;
-        }
-
-        virtual bool usesArchive(int ioFlags) const { return !(ioFlags & SOURCE_IO_NO_FOOTPRINTS); }
-
+    virtual bool usesArchive(int ioFlags) const { return !(ioFlags & SOURCE_IO_NO_FOOTPRINTS); }
 };
-
 
 // registers the reader so FitsReader::make can use it.
 static SourceFitsReader const sourceFitsReader;
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SourceTable/Record member function implementations --------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-SourceRecord::SourceRecord(PTR(SourceTable) const & table) : SimpleRecord(table) {}
+SourceRecord::SourceRecord(std::shared_ptr<SourceTable> const &table) : SimpleRecord(table) {}
 
-void SourceRecord::updateCoord(image::Wcs const & wcs) {
-    setCoord(*wcs.pixelToSky(getCentroid()));
-}
+void SourceRecord::updateCoord(image::Wcs const &wcs) { setCoord(*wcs.pixelToSky(getCentroid())); }
 
-void SourceRecord::updateCoord(image::Wcs const & wcs, PointKey<double> const & key) {
+void SourceRecord::updateCoord(image::Wcs const &wcs, PointKey<double> const &key) {
     setCoord(*wcs.pixelToSky(get(key)));
 }
 
-void SourceRecord::_assign(BaseRecord const & other) {
+void SourceRecord::_assign(BaseRecord const &other) {
     try {
-        SourceRecord const & s = dynamic_cast<SourceRecord const &>(other);
+        SourceRecord const &s = dynamic_cast<SourceRecord const &>(other);
         _footprint = s._footprint;
-    } catch (std::bad_cast&) {}
+    } catch (std::bad_cast &) {
+    }
 }
 
-PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const & idFactory) {
+std::shared_ptr<SourceTable> SourceTable::make(Schema const &schema,
+                                               std::shared_ptr<IdFactory> const &idFactory) {
     if (!checkSchema(schema)) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterError,
-            "Schema for Source must contain at least the keys defined by getMinimalSchema()."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          "Schema for Source must contain at least the keys defined by getMinimalSchema().");
     }
     return std::shared_ptr<SourceTable>(new SourceTable(schema, idFactory));
 }
 
-SourceTable::SourceTable(
-    Schema const & schema,
-    PTR(IdFactory) const & idFactory
-) : SimpleTable(schema, idFactory), _slots(schema) {}
+SourceTable::SourceTable(Schema const &schema, std::shared_ptr<IdFactory> const &idFactory)
+        : SimpleTable(schema, idFactory), _slots(schema) {}
 
-SourceTable::SourceTable(SourceTable const & other) :
-    SimpleTable(other), _slots(other._slots)
-{}
+SourceTable::SourceTable(SourceTable const &other) : SimpleTable(other), _slots(other._slots) {}
 
-void SourceTable::handleAliasChange(std::string const & alias) {
+void SourceTable::handleAliasChange(std::string const &alias) {
     if (alias.compare(0, 4, "slot") != 0) {
         return;
     }
@@ -455,15 +406,14 @@ SourceTable::MinimalSchema::MinimalSchema() {
     schema.getCitizen().markPersistent();
 }
 
-SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
+SourceTable::MinimalSchema &SourceTable::getMinimalSchema() {
     static MinimalSchema it;
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+std::shared_ptr<io::FitsWriter> SourceTable::makeFitsWriter(fits::Fits *fitsfile, int flags) const {
     return std::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
-
 
 std::shared_ptr<BaseTable> SourceTable::_clone() const {
     return std::shared_ptr<SourceTable>(new SourceTable(*this));
@@ -480,5 +430,6 @@ template class CatalogT<SourceRecord const>;
 
 template class SortedCatalogT<SourceRecord>;
 template class SortedCatalogT<SourceRecord const>;
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

@@ -57,11 +57,7 @@ namespace geom {
  *
  * @see @ref coord::Coord
  */
-class SpherePoint
-#ifndef SWIG
-        final
-#endif
-{
+class SpherePoint final {
 public:
     /**
      * Construct a SpherePoint from a longitude and latitude.
@@ -70,7 +66,8 @@ public:
      * @param latitude The latitude of the point. Must be in the
      *                 interval [-&pi;/2, &pi;/2] radians.
      *
-     * @throws InvalidParameterError Thrown if `latitude` is out of range.
+     * @throws pex::exceptions::InvalidParameterError
+     *         Thrown if `latitude` isout of range.
      *
      * @exceptsafe Provides strong exception guarantee.
      */
@@ -81,7 +78,8 @@ public:
      *
      * @param lonLatRad Longitude, latitude, both in radians.
      *
-     * @throws InvalidParameterError Thrown if latitude is out of range.
+     * @throws pex::exceptions::InvalidParameterError
+     *         Thrown if latitude is out of range.
      *
      * @exceptsafe Provides strong exception guarantee.
      */
@@ -94,7 +92,8 @@ public:
      *               Must not be the zero vector. Need not be normalized,
      *               and the norm will not affect the value of the point.
      *
-     * @throws InvalidParameterError Thrown if `vector` is the zero vector.
+     * @throws pex::exceptions::InvalidParameterError
+     *         Thrown if `vector` is the zero vector.
      *
      * @exceptsafe Provides strong exception guarantee.
      */
@@ -125,7 +124,7 @@ public:
      * SpherePoints where swapping is not possible.
      *
      * @param other The object with which to overwrite this one.
-     * @return a reference to this object.
+     * @returns a reference to this object.
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -151,7 +150,7 @@ public:
      * allows multiple values of longitude from a pole, they shall all be
      * treated as valid representations of the same point.
      *
-     * @return the longitude, in the interval [0, 2&pi;) radians.
+     * @returns the longitude, in the interval [0, 2&pi;) radians.
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -160,7 +159,7 @@ public:
     /**
      * The latitude of this point.
      *
-     * @return the latitude, in the interval [-&pi;/2, &pi;/2] radians.
+     * @returns the latitude, in the interval [-&pi;/2, &pi;/2] radians.
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -169,7 +168,7 @@ public:
     /**
      * A unit vector representation of this point.
      *
-     * @return a unit vector whose direction corresponds to this point
+     * @returns a unit vector whose direction corresponds to this point
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -181,10 +180,11 @@ public:
      * @param index the index of the spherical coordinate to return. Must
      *              be either 0 or 1.
      *
-     * @return @ref getLongitude() if `index` = 0, or @ref getLatitude()
+     * @returns @ref getLongitude() if `index` = 0, or @ref getLatitude()
      *         if `index` = 1
      *
-     * @throws OutOfRangeError Thrown if `index` is neither 0 nor 1.
+     * @throws pex::exceptions::OutOfRangeError
+     *         Thrown if `index` is neither 0 nor 1.
      *
      * @exceptsafe Provides strong exception guarantee.
      */
@@ -193,7 +193,7 @@ public:
     /**
      * `true` if this point is either coordinate pole.
      *
-     * @return `true` if this point is at the north or south pole,
+     * @returns `true` if this point is at the north or south pole,
      *         `false` otherwise
      *
      * @exceptsafe Shall not throw exceptions.
@@ -209,7 +209,7 @@ public:
     /**
      * `true` if this point is a well-defined position.
      *
-     * @return `true` if @ref getLongitude(), @ref getLatitude(), and
+     * @returns `true` if @ref getLongitude(), @ref getLatitude(), and
      *         @ref getVector() return finite floating-point values;
      *         `false` if any return NaN or infinity.
      *
@@ -230,7 +230,7 @@ public:
      * are considered equal.
      *
      * @param other the point to test for equality
-     * @return true if this point matches `other` exactly, false otherwise
+     * @returns true if this point matches `other` exactly, false otherwise
      *
      * @exceptsafe Shall not throw exceptions.
      *
@@ -260,9 +260,10 @@ public:
      * opposite sides of the sphere, the bearing may be any value.
      *
      * @param other the point to which to measure the bearing
-     * @return the direction, as defined above, in the interval [0, 2&pi;).
+     * @returns the direction, as defined above, in the interval [0, 2&pi;).
      *
-     * @throws DomainError Thrown if `this.atPole()`.
+     * @throws pex::exceptions::DomainError
+     *         Thrown if `this.atPole()`.
      *
      * @exceptsafe Provides strong exception guarantee.
      *
@@ -275,7 +276,7 @@ public:
      * Angular distance between two points.
      *
      * @param other the point to which to measure the separation
-     * @return the length of the shortest (great circle) arc between the
+     * @returns the length of the shortest (great circle) arc between the
      *         two points. Shall not be negative.
      *
      * @exceptsafe Shall not throw exceptions.
@@ -292,7 +293,7 @@ public:
      * @param axis a point defining the north pole of the rotation axis.
      * @param amount the amount of rotation, where positive values
      *               represent right-handed rotations around `axis`.
-     * @return a new point created by rotating this point
+     * @returns a new point created by rotating this point
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -309,10 +310,12 @@ public:
      *                the conventions described in @ref bearingTo.
      * @param amount the distance by which to move along the great
      *               circle defined by `bearing`
-     * @return a new point created by shifting this point
+     * @returns a new point created by shifting this point
      *
-     * @throws DomainError Thrown if `this.atPole()`.
-     * @throws InvalidParameterError Thrown if `amount` is negative.
+     * @throws pex::exceptions::DomainError
+     *         Thrown if `this.atPole()`.
+     * @throws pex::exceptions::InvalidParameterError
+     *         Thrown if `amount` is negative.
      *
      * @exceptsafe Provides strong exception guarantee.
      */
@@ -339,11 +342,12 @@ private:
  *
  * @param os the stream to which to print `point`
  * @param point the point to print to the stream
- * @return a reference to `os`
+ * @returns a reference to `os`
  *
- * @throws std::ostream::failure Thrown if an I/O state flag was set that
- *      was registered with `os.exceptions()`. See the documentation
- *      of std::ostream for more details.
+ * @throws pex::exceptions::std::ostream::failure
+ *      Thrown if an I/O state flag was set that was registered with
+ *      `os.exceptions()`. See the documentation of std::ostream for more
+ *      details.
  *
  * @exceptsafe Provides basic exception guarantee.
  *

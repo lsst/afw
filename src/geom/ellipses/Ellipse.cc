@@ -23,7 +23,10 @@
  */
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 Ellipse::ParameterVector const Ellipse::getParameterVector() const {
     ParameterVector r;
@@ -32,18 +35,18 @@ Ellipse::ParameterVector const Ellipse::getParameterVector() const {
     return r;
 }
 
-void Ellipse::setParameterVector(Ellipse::ParameterVector const & vector) {
+void Ellipse::setParameterVector(Ellipse::ParameterVector const& vector) {
     _core->setParameterVector(vector.head<3>());
     _center = Point2D(vector.tail<2>());
 }
 
-void Ellipse::readParameters(double const * iter) {
+void Ellipse::readParameters(double const* iter) {
     _core->readParameters(iter);
     _center.setX(iter[3]);
     _center.setY(iter[4]);
 }
 
-void Ellipse::writeParameters(double * iter) const {
+void Ellipse::writeParameters(double* iter) const {
     _core->writeParameters(iter);
     iter[3] = _center.getX();
     iter[4] = _center.getY();
@@ -54,10 +57,12 @@ Box2D Ellipse::computeBBox() const {
     return Box2D(getCenter() - dimensions * 0.5, dimensions);
 }
 
-Ellipse & Ellipse::operator=(Ellipse const & other) {
+Ellipse& Ellipse::operator=(Ellipse const& other) {
     _center = other.getCenter();
     *_core = other.getCore();
     return *this;
 }
-
-}}}} // namespace lsst::afw::geom::ellipses
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses

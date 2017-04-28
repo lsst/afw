@@ -50,10 +50,8 @@ PYBIND11_PLUGIN(coaddInputs) {
 
     /* Constructors */
     cls.def(py::init<>());
-    cls.def(py::init<table::Schema const &, table::Schema const &>(),
-            "visitSchema"_a, "ccdSchema"_a);
-    cls.def(py::init<table::ExposureCatalog const &, table::ExposureCatalog const &>(),
-            "visits"_a, "ccds"_a);
+    cls.def(py::init<table::Schema const &, table::Schema const &>(), "visitSchema"_a, "ccdSchema"_a);
+    cls.def(py::init<table::ExposureCatalog const &, table::ExposureCatalog const &>(), "visits"_a, "ccds"_a);
 
     /* Members */
     cls.def_readwrite("visits", &CoaddInputs::visits);
@@ -62,5 +60,7 @@ PYBIND11_PLUGIN(coaddInputs) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::image::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::image::<anonymous>

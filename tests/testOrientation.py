@@ -86,7 +86,8 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
                   (225.1, 3), (269.9, 3), (270.1, 3), (314.9, 3), (315.1, 4),
                   (359.9, 4))
         for angle in angles:
-            orient = Orientation(fpPos, refPos, afwGeom.Angle(angle[0], afwGeom.degrees))
+            orient = Orientation(
+                fpPos, refPos, afwGeom.Angle(angle[0], afwGeom.degrees))
             self.assertEqual(orient.getNQuarter(), angle[1])
 
     def checkTransforms(self, orientWrapper, pixelSize=afwGeom.Extent2D(0.12, 0.21)):
@@ -127,8 +128,10 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
             roll=afwGeom.Angle(1.2),
         )
         for i in range(2):
-            self.assertAlmostEqual(ow.fpPosition[i], ow.orient.getFpPosition()[i])
-            self.assertAlmostEqual(ow.refPoint[i], ow.orient.getReferencePoint()[i])
+            self.assertAlmostEqual(
+                ow.fpPosition[i], ow.orient.getFpPosition()[i])
+            self.assertAlmostEqual(
+                ow.refPoint[i], ow.orient.getReferencePoint()[i])
         self.assertAlmostEqual(ow.yaw, ow.orient.getYaw())
         self.assertAlmostEqual(ow.roll, ow.orient.getRoll())
         self.assertAlmostEqual(ow.pitch, ow.orient.getPitch())

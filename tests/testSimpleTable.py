@@ -63,7 +63,8 @@ def makeArray(size, dtype):
 
 def makeCov(size, dtype):
     m = np.array(np.random.randn(size, size), dtype=dtype)
-    r = np.dot(m, m.transpose())  # not quite symmetric for single-precision on some platforms
+    # not quite symmetric for single-precision on some platforms
+    r = np.dot(m, m.transpose())
     for i in range(r.shape[0]):
         for j in range(i):
             r[i, j] = r[j, i]
@@ -144,16 +145,22 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.checkScalarAccessors(record, k2, "f2", 2, 3)
         self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
         self.checkScalarAccessors(record, k4, "f4", 2.5, 3.5)
-        self.checkArrayAccessors(record, k10b, "f10b", makeArray(k10b.getSize(), dtype=np.uint16))
-        self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=np.int32))
-        self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=np.float32))
-        self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=np.float64))
+        self.checkArrayAccessors(record, k10b, "f10b",
+                                 makeArray(k10b.getSize(), dtype=np.uint16))
+        self.checkArrayAccessors(record, k10a, "f10a",
+                                 makeArray(k10a.getSize(), dtype=np.int32))
+        self.checkArrayAccessors(record, k10, "f10",
+                                 makeArray(k10.getSize(), dtype=np.float32))
+        self.checkArrayAccessors(record, k11, "f11",
+                                 makeArray(k11.getSize(), dtype=np.float64))
         for k in (k10, k11):
             self.assertEqual(k.subfields, tuple(range(k.getSize())))
         sub1 = k11.slice(1, 3)
         sub2 = k11[0:2]
-        self.assertFloatsAlmostEqual(record.get(sub1), record.get(k11)[1:3], rtol=0, atol=0)
-        self.assertFloatsAlmostEqual(record.get(sub2), record.get(k11)[0:2], rtol=0, atol=0)
+        self.assertFloatsAlmostEqual(record.get(sub1),
+                                     record.get(k11)[1:3], rtol=0, atol=0)
+        self.assertFloatsAlmostEqual(record.get(sub2),
+                                     record.get(k11)[0:2], rtol=0, atol=0)
         self.assertEqual(sub1[0], sub2[1])
         self.assertIsNone(k18.subfields)
         k0a = lsst.afw.table.Key["D"]()
@@ -240,7 +247,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         for key in [k6]:
             array = columns[key]
             for i in [0, 1]:
-                self.assertEqual(lsst.afw.geom.Angle(array[i]), catalog[i].get(key))
+                self.assertEqual(lsst.afw.geom.Angle(array[i]),
+                                 catalog[i].get(key))
         for key in [k1, k2, k3]:
             vals = columns[key].copy()
             vals *= 2
@@ -299,16 +307,20 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("a_b_c2", type="Flag")
         schema.addField("a_d1", type=np.int32)
         schema.addField("a_d2", type=np.float32)
-        pointKey = lsst.afw.table.Point2IKey.addFields(schema, "q_e1", "doc for point field", "pixel")
+        pointKey = lsst.afw.table.Point2IKey.addFields(
+            schema, "q_e1", "doc for point field", "pixel")
         schema.addField("q_e2_xxSigma", type=np.float32)
         schema.addField("q_e2_yySigma", type=np.float32)
         schema.addField("q_e2_xySigma", type=np.float32)
         schema.addField("q_e2_xx_yy_Cov", type=np.float32)
         schema.addField("q_e2_xx_xy_Cov", type=np.float32)
         schema.addField("q_e2_yy_xy_Cov", type=np.float32)
-        covKey = lsst.afw.table.CovarianceMatrix3fKey(schema["q_e2"], ["xx", "yy", "xy"])
-        self.assertEqual(list(schema.extract("a_b_*", ordered=True).keys()), ["a_b_c1", "a_b_c2"])
-        self.assertEqual(list(schema.extract("*1", ordered=True).keys()), ["a_b_c1", "a_d1"])
+        covKey = lsst.afw.table.CovarianceMatrix3fKey(
+            schema["q_e2"], ["xx", "yy", "xy"])
+        self.assertEqual(
+            list(schema.extract("a_b_*", ordered=True).keys()), ["a_b_c1", "a_b_c2"])
+        self.assertEqual(
+            list(schema.extract("*1", ordered=True).keys()), ["a_b_c1", "a_d1"])
         self.assertEqual(list(schema.extract("a_b_*", "*2", ordered=True).keys()),
                          ["a_b_c1", "a_b_c2", "a_d2"])
         self.assertEqual(list(schema.extract(regex=r"a_(.+)1", sub=r"\1f",
@@ -320,7 +332,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             record.set("a_b_c2", True)
             record.set("a_d1", np.random.randint(100))
             record.set("a_d2", np.random.randn())
-            record.set(pointKey, lsst.afw.geom.Point2I(np.random.randint(10), np.random.randint(10)))
+            record.set(pointKey,
+                       lsst.afw.geom.Point2I(np.random.randint(10),
+                                             np.random.randint(10)))
             record.set(covKey, np.random.randn(3, 3).astype(np.float32))
         d = record.extract("*")
         self.assertEqual(set(d.keys()), set(schema.getNames()))
@@ -383,7 +397,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         mapper.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema())
         mapper.addMapping(k2)
         schema2 = mapper.getOutputSchema()
-        self.assertTrue(mapper.getOutputSchema().contains(lsst.afw.table.SourceTable.makeMinimalSchema()))
+        self.assertTrue(mapper.getOutputSchema().contains(
+            lsst.afw.table.SourceTable.makeMinimalSchema()))
         cat5 = lsst.afw.table.BaseCatalog(schema2)
         cat5.extend(cat1, mapper=mapper)
         self.assertTrue(cat5.isContiguous())
@@ -403,14 +418,18 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
     def testTicket2308(self):
         inputSchema = lsst.afw.table.SourceTable.makeMinimalSchema()
         mapper1 = lsst.afw.table.SchemaMapper(inputSchema)
-        mapper1.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema(), True)
+        mapper1.addMinimalSchema(
+            lsst.afw.table.SourceTable.makeMinimalSchema(), True)
         mapper2 = lsst.afw.table.SchemaMapper(inputSchema)
-        mapper2.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema(), False)
+        mapper2.addMinimalSchema(
+            lsst.afw.table.SourceTable.makeMinimalSchema(), False)
         inputTable = lsst.afw.table.SourceTable.make(inputSchema)
         inputRecord = inputTable.makeRecord()
         inputRecord.set("id", 42)
-        outputTable1 = lsst.afw.table.SourceTable.make(mapper1.getOutputSchema())
-        outputTable2 = lsst.afw.table.SourceTable.make(mapper2.getOutputSchema())
+        outputTable1 = lsst.afw.table.SourceTable.make(
+            mapper1.getOutputSchema())
+        outputTable2 = lsst.afw.table.SourceTable.make(
+            mapper2.getOutputSchema())
         outputRecord1 = outputTable1.makeRecord()
         outputRecord2 = outputTable2.makeRecord()
         self.assertEqual(outputRecord1.getId(), outputRecord2.getId())
@@ -441,11 +460,13 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat1.addNew().set(key, 3)
         cat2 = cat1[np.array([True, False, False], dtype=bool)]
         self.assertFloatsEqual(cat2[key], np.array([1], dtype=np.int32))
-        self.assertEqual(cat2[0], cat1[0])  # records compare using pointer equality
+        # records compare using pointer equality
+        self.assertEqual(cat2[0], cat1[0])
         cat3 = cat1[np.array([True, True, False], dtype=bool)]
         self.assertFloatsEqual(cat3[key], np.array([1, 2], dtype=np.int32))
         cat4 = cat1[np.array([True, False, True], dtype=bool)]
-        self.assertFloatsEqual(cat4.copy(deep=True)[key], np.array([1, 3], dtype=np.int32))
+        self.assertFloatsEqual(cat4.copy(deep=True)[
+                               key], np.array([1, 3], dtype=np.int32))
 
     def testTicket2938(self):
         """Test heterogenous catalogs that have records from multiple tables"""
@@ -489,7 +510,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat.sort(kf)
         self.assertTrue(cat.isSorted(kf))
         r10 = cat.find(10, kf)
-        self.assertTrue(r10 is None or r10.get(kf) == 10.0)  # latter case virtually impossible
+        # latter case virtually impossible
+        self.assertTrue(r10 is None or r10.get(kf) == 10.0)
         i0 = cat.lower_bound(-0.5, kf)
         i1 = cat.upper_bound(0.5, kf)
         for i in range(i0, i1):
@@ -534,11 +556,16 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(schema2.find(k2i).field.getName(), "i2")
         self.assertEqual(schema1.find(k1a).field.getName(), "a1")
         self.assertEqual(schema2.find(k2a).field.getName(), "a2")
-        self.assertEqual(schema1.find(k1i).field.getDoc(), schema2.find(k2i).field.getDoc())
-        self.assertEqual(schema1.find(k1a).field.getDoc(), schema2.find(k2a).field.getDoc())
-        self.assertEqual(schema1.find(k1i).field.getUnits(), schema2.find(k2i).field.getUnits())
-        self.assertEqual(schema1.find(k1a).field.getUnits(), schema2.find(k2a).field.getUnits())
-        self.assertEqual(schema1.find(k1a).field.getSize(), schema2.find(k2a).field.getSize())
+        self.assertEqual(schema1.find(k1i).field.getDoc(),
+                         schema2.find(k2i).field.getDoc())
+        self.assertEqual(schema1.find(k1a).field.getDoc(),
+                         schema2.find(k2a).field.getDoc())
+        self.assertEqual(schema1.find(k1i).field.getUnits(),
+                         schema2.find(k2i).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getUnits(),
+                         schema2.find(k2a).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getSize(),
+                         schema2.find(k2a).field.getSize())
         k3i = mapper.addMapping(k1i, "i3")
         k3a = mapper.addMapping(k1a, "a3")
         schema3 = mapper.getOutputSchema()
@@ -546,11 +573,16 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(schema3.find(k3i).field.getName(), "i3")
         self.assertEqual(schema1.find(k1a).field.getName(), "a1")
         self.assertEqual(schema3.find(k3a).field.getName(), "a3")
-        self.assertEqual(schema1.find(k1i).field.getDoc(), schema3.find(k3i).field.getDoc())
-        self.assertEqual(schema1.find(k1a).field.getDoc(), schema3.find(k3a).field.getDoc())
-        self.assertEqual(schema1.find(k1i).field.getUnits(), schema3.find(k3i).field.getUnits())
-        self.assertEqual(schema1.find(k1a).field.getUnits(), schema3.find(k3a).field.getUnits())
-        self.assertEqual(schema1.find(k1a).field.getSize(), schema3.find(k3a).field.getSize())
+        self.assertEqual(schema1.find(k1i).field.getDoc(),
+                         schema3.find(k3i).field.getDoc())
+        self.assertEqual(schema1.find(k1a).field.getDoc(),
+                         schema3.find(k3a).field.getDoc())
+        self.assertEqual(schema1.find(k1i).field.getUnits(),
+                         schema3.find(k3i).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getUnits(),
+                         schema3.find(k3a).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getSize(),
+                         schema3.find(k3a).field.getSize())
 
     def testTicket3066(self):
         """Test the doReplace option on Schema.addField
@@ -580,12 +612,14 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k2b = schema.addField("f2", doc="f2b", type="Flag", doReplace=True)
         self.assertEqual(k2a, k2b)
         self.assertEqual(schema.find(k2a).field.getDoc(), "f2b")
-        k3b = schema.addField("f3", doc="f3b", type="ArrayF", size=4, doReplace=True)
+        k3b = schema.addField(
+            "f3", doc="f3b", type="ArrayF", size=4, doReplace=True)
         self.assertEqual(k3a, k3b)
         self.assertEqual(schema.find(k3a).field.getDoc(), "f3b")
 
     def testDM352(self):
-        filename = os.path.join(os.path.split(__file__)[0], "data", "great3.fits")
+        filename = os.path.join(os.path.split(__file__)[0],
+                                "data", "great3.fits")
         cat = lsst.afw.table.BaseCatalog.readFits(filename)
         self.assertEqual(len(cat), 1)
 
@@ -621,8 +655,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record1[kb][2] = 3.5
         self.assertEqual(b1[2], 3.5)
         # Check that we throw when we try to index a variable-length array Key
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, lambda x: ka[x], 0)
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, lambda x, y: ka[x:y], 0, 1)
+        self.assertRaisesLsstCpp(
+            lsst.pex.exceptions.LogicError, lambda x: ka[x], 0)
+        self.assertRaisesLsstCpp(
+            lsst.pex.exceptions.LogicError, lambda x, y: ka[x:y], 0, 1)
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
@@ -630,14 +666,16 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(record1.get(kb), b1)
         self.assertFloatsEqual(record1.get(kc), c1)
         record1[kb][2] = 4.5
-        self.assertEqual(record2[kb][2], 3.5)  # copy in assign() should be deep
+        # copy in assign() should be deep
+        self.assertEqual(record2[kb][2], 3.5)
         mapper = lsst.afw.table.SchemaMapper(schema)
         kb2 = mapper.addMapping(kb)
         cat2 = lsst.afw.table.BaseCatalog(mapper.getOutputSchema())
         record3 = cat2.addNew()
         record3.assign(record1, mapper)
         self.assertFloatsEqual(record3.get(kb2), b1)
-        # Test that we throw if we try to get a column view of a variable-length arry
+        # Test that we throw if we try to get a column view of a
+        # variable-length arry
         self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, cat1.get, ka)
         # Test that we can round-trip variable-length arrays through FITS
         filename = "testSimpleTable_testVariableLengthArrays.fits"
@@ -663,26 +701,33 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         }
         covValues = {
             "cov_z": np.array([[4.00, 1.25, 1.50, 0.75],
-                                  [1.25, 2.25, 0.50, 0.25],
-                                  [1.50, 0.50, 6.25, 1.75],
-                                  [0.75, 0.25, 1.75, 9.00]], dtype=np.float32),
+                               [1.25, 2.25, 0.50, 0.25],
+                               [1.50, 0.50, 6.25, 1.75],
+                               [0.75, 0.25, 1.75, 9.00]], dtype=np.float32),
             "cov_p": np.array([[5.50, -2.0],
-                                  [-2.0, 3.25]], dtype=np.float32),
+                               [-2.0, 3.25]], dtype=np.float32),
             "cov_m": np.array([[3.75, -0.5, 1.25],
-                                  [-0.5, 4.50, 0.75],
-                                  [1.25, 0.75, 6.25]], dtype=np.float32),
+                               [-0.5, 4.50, 0.75],
+                               [1.25, 0.75, 6.25]], dtype=np.float32),
         }
-        filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
+        filename = os.path.join(os.path.split(__file__)[0],
+                                "data", "CompoundFieldConversion.fits")
         cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
         record2 = cat2[0]
         for k, v in geomValues.items():
             self.assertEqual(record2.get(k), v, msg=k)
-        covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
-        covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])
-        covMKey = lsst.afw.table.CovarianceMatrix3fKey(cat2.schema["cov_m"], ["xx", "yy", "xy"])
-        self.assertFloatsAlmostEqual(record2.get(covZKey), covValues["cov_z"], rtol=1E-6)
-        self.assertFloatsAlmostEqual(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
-        self.assertFloatsAlmostEqual(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
+        covZKey = lsst.afw.table.CovarianceMatrixXfKey(
+            cat2.schema["cov_z"], ["0", "1", "2", "3"])
+        covPKey = lsst.afw.table.CovarianceMatrix2fKey(
+            cat2.schema["cov_p"], ["x", "y"])
+        covMKey = lsst.afw.table.CovarianceMatrix3fKey(
+            cat2.schema["cov_m"], ["xx", "yy", "xy"])
+        self.assertFloatsAlmostEqual(record2.get(covZKey),
+                                     covValues["cov_z"], rtol=1E-6)
+        self.assertFloatsAlmostEqual(record2.get(covPKey),
+                                     covValues["cov_p"], rtol=1E-6)
+        self.assertFloatsAlmostEqual(record2.get(covMKey),
+                                     covValues["cov_m"], rtol=1E-6)
 
     def testDelete(self):
         schema = lsst.afw.table.Schema()

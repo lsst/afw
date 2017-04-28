@@ -17,7 +17,10 @@
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 namespace {
 
@@ -28,38 +31,32 @@ namespace {
 // the Boost.MultiIndex docs for more information.
 template <std::string FitsSchemaItem::*Member>
 struct SetFitsSchemaString {
-    void operator()(FitsSchemaItem & item) {
-        item.*Member = _v;
-    }
-    explicit SetFitsSchemaString(std::string const & v) : _v(v) {}
+    void operator()(FitsSchemaItem &item) { item.*Member = _v; }
+    explicit SetFitsSchemaString(std::string const &v) : _v(v) {}
+
 private:
-    std::string const & _v;
+    std::string const &_v;
 };
 
-} // anonymous
+}  // anonymous
 
 class FitsSchemaInputMapper::Impl {
 public:
-
     // A container class (based on Boost.MultiIndex) that provides three sort orders,
     // on column number, flag bit, and name (ttype).  This allows us to insert fields into the
     // schema in the correct order, regardless of which order they appear in the
     // FITS header.
     typedef boost::multi_index_container<
-        FitsSchemaItem,
-        boost::multi_index::indexed_by<
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::member<FitsSchemaItem,int,&FitsSchemaItem::column>
-            >,
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::member<FitsSchemaItem,int,&FitsSchemaItem::bit>
-            >,
-            boost::multi_index::hashed_unique<
-                boost::multi_index::member<FitsSchemaItem,std::string,&FitsSchemaItem::ttype>
-            >,
-            boost::multi_index::sequenced<>
-        >
-    > InputContainer;
+            FitsSchemaItem,
+            boost::multi_index::indexed_by<
+                    boost::multi_index::ordered_non_unique<
+                            boost::multi_index::member<FitsSchemaItem, int, &FitsSchemaItem::column>>,
+                    boost::multi_index::ordered_non_unique<
+                            boost::multi_index::member<FitsSchemaItem, int, &FitsSchemaItem::bit>>,
+                    boost::multi_index::hashed_unique<
+                            boost::multi_index::member<FitsSchemaItem, std::string, &FitsSchemaItem::ttype>>,
+                    boost::multi_index::sequenced<>>>
+            InputContainer;
 
     // Typedefs for the special functors used to set data members.
     typedef SetFitsSchemaString<&FitsSchemaItem::ttype> SetTTYPE;
@@ -75,10 +72,10 @@ public:
     typedef InputContainer::nth_index<3>::type AsList;
 
     // Getters for the different indices.
-    ByColumn & byColumn() { return inputs.get<0>(); }
-    ByBit & byBit() { return inputs.get<1>(); }
-    ByName & byName() { return inputs.get<2>(); }
-    AsList & asList() { return inputs.get<3>(); }
+    ByColumn &byColumn() { return inputs.get<0>(); }
+    ByBit &byBit() { return inputs.get<1>(); }
+    ByName &byName() { return inputs.get<2>(); }
+    AsList &asList() { return inputs.get<3>(); }
 
     Impl() : version(0), flagColumn(0), archiveHdu(-1) {}
 
@@ -89,13 +86,12 @@ public:
     std::vector<std::unique_ptr<FitsColumnReader>> readers;
     std::vector<Key<Flag>> flagKeys;
     std::unique_ptr<bool[]> flagWorkspace;
-    PTR(io::InputArchive) archive;
+    std::shared_ptr<io::InputArchive> archive;
     InputContainer inputs;
 };
 
-FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata, bool stripMetadata) :
-    _impl(std::make_shared<Impl>())
-{
+FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata)
+        : _impl(std::make_shared<Impl>()) {
     // Set the table version.  If AFW_TABLE_VERSION tag exists, use that
     // If not, set to 0 if it has an AFW_TYPE, Schema default otherwise (DM-590)
     if (!metadata.exists("AFW_TYPE")) {
@@ -112,7 +108,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     // Find a key that indicates an Archive stored on other HDUs
     _impl->archiveHdu = metadata.get("AR_HDU", -1);
     if (_impl->archiveHdu > 0) {
-        --_impl->archiveHdu;            // AR_HDU is 1-indexed for historical reasons (RFC-304; see Source.cc)
+        --_impl->archiveHdu;  // AR_HDU is 1-indexed for historical reasons (RFC-304; see Source.cc)
         if (stripMetadata) {
             metadata.remove("AR_HDU");
         }
@@ -124,12 +120,10 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
         for (std::vector<std::string>::const_iterator i = rawAliases.begin(); i != rawAliases.end(); ++i) {
             std::size_t pos = i->find_first_of(':');
             if (pos == std::string::npos) {
-                throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    (boost::format("Malformed alias definition: '%s'") % (*i)).str()
-                );
+                throw LSST_EXCEPT(afw::fits::FitsError,
+                                  (boost::format("Malformed alias definition: '%s'") % (*i)).str());
             }
-            _impl->schema.getAliasMap()->set(i->substr(0, pos), i->substr(pos+1, std::string::npos));
+            _impl->schema.getAliasMap()->set(i->substr(0, pos), i->substr(pos + 1, std::string::npos));
         }
         if (stripMetadata) {
             metadata.remove("ALIAS");
@@ -141,15 +135,14 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     if (_impl->version == 0) {
         // Read slots saved using an old mechanism in as aliases, since the new slot mechanism delegates
         // slot definition to the AliasMap.
-        static std::array<std::pair<std::string,std::string>,7> oldSlotKeys = {
-            std::make_pair("PSF_FLUX", "slot_PsfFlux"),
-            std::make_pair("AP_FLUX", "slot_ApFlux"),
-            std::make_pair("INST_FLUX", "slot_InstFlux"),
-            std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
-            std::make_pair("CALIB_FLUX", "slot_CalibFlux"),
-            std::make_pair("CENTROID", "slot_Centroid"),
-            std::make_pair("SHAPE", "slot_Shape")
-        };
+        static std::array<std::pair<std::string, std::string>, 7> oldSlotKeys = {
+                std::make_pair("PSF_FLUX", "slot_PsfFlux"),
+                std::make_pair("AP_FLUX", "slot_ApFlux"),
+                std::make_pair("INST_FLUX", "slot_InstFlux"),
+                std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
+                std::make_pair("CALIB_FLUX", "slot_CalibFlux"),
+                std::make_pair("CENTROID", "slot_Centroid"),
+                std::make_pair("SHAPE", "slot_Shape")};
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
             std::string target = metadata.get(oldSlotKeys[i].first + "_SLOT", std::string(""));
             if (!target.empty()) {
@@ -171,11 +164,10 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
-
             }
             std::string v = metadata.get<std::string>(*key);
             _impl->byColumn().modify(iter, Impl::SetTTYPE(v));
-            if (iter->doc.empty()) { // don't overwrite if already set with TDOCn
+            if (iter->doc.empty()) {  // don't overwrite if already set with TDOCn
                 _impl->byColumn().modify(iter, Impl::SetDoc(metadata.getComment(*key)));
             }
             if (stripMetadata) {
@@ -189,7 +181,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
             }
             std::string v = metadata.get<std::string>(*key);
             _impl->byBit().modify(iter, Impl::SetTTYPE(v));
-            if (iter->doc.empty())  { // don't overwrite if already set with TFDOCn
+            if (iter->doc.empty()) {  // don't overwrite if already set with TFDOCn
                 _impl->byBit().modify(iter, Impl::SetDoc(metadata.getComment(*key)));
             }
             if (stripMetadata) {
@@ -270,13 +262,12 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
         if (stripMetadata) {
             metadata.remove("FLAGCOL");
         }
-        --_impl->flagColumn; // switch from 1-indexed to 0-indexed
+        --_impl->flagColumn;  // switch from 1-indexed to 0-indexed
         auto iter = _impl->byColumn().find(_impl->flagColumn);
         if (iter == _impl->byColumn().end()) {
             throw LSST_EXCEPT(
-                afw::fits::FitsError,
-                (boost::format("Column for flag data not found; FLAGCOL=%d") % _impl->flagColumn).str()
-            );
+                    afw::fits::FitsError,
+                    (boost::format("Column for flag data not found; FLAGCOL=%d") % _impl->flagColumn).str());
         }
         // Regex to unpack a FITS TFORM value for a bit array column (TFORM code 'X').  The number
         // that precedes the code is the size of the array; the number that follows it (if present)
@@ -285,9 +276,8 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
         boost::smatch m;
         if (!boost::regex_match(iter->tform, m, regex)) {
             throw LSST_EXCEPT(
-                afw::fits::FitsError,
-                (boost::format("Invalid TFORM key for flags column: '%s'") % iter->tform).str()
-            );
+                    afw::fits::FitsError,
+                    (boost::format("Invalid TFORM key for flags column: '%s'") % iter->tform).str());
         }
         int nFlags = 1;
         if (m[1].matched) {
@@ -301,11 +291,9 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     }
 }
 
-void FitsSchemaInputMapper::setArchive(PTR(InputArchive) archive) {
-    _impl->archive = archive;
-}
+void FitsSchemaInputMapper::setArchive(std::shared_ptr<InputArchive> archive) { _impl->archive = archive; }
 
-bool FitsSchemaInputMapper::readArchive(afw::fits::Fits & fits) {
+bool FitsSchemaInputMapper::readArchive(afw::fits::Fits &fits) {
     int oldHdu = fits.getHdu();
     if (_impl->archiveHdu < 0) _impl->archiveHdu = oldHdu + 1;
     try {
@@ -323,7 +311,7 @@ bool FitsSchemaInputMapper::readArchive(afw::fits::Fits & fits) {
 
 bool FitsSchemaInputMapper::hasArchive() const { return static_cast<bool>(_impl->archive); }
 
-FitsSchemaItem const * FitsSchemaInputMapper::find(std::string const & ttype) const {
+FitsSchemaItem const *FitsSchemaInputMapper::find(std::string const &ttype) const {
     auto iter = _impl->byName().find(ttype);
     if (iter == _impl->byName().end()) {
         return 0;
@@ -331,7 +319,7 @@ FitsSchemaItem const * FitsSchemaInputMapper::find(std::string const & ttype) co
     return &(*iter);
 }
 
-FitsSchemaItem const * FitsSchemaInputMapper::find(int column) const {
+FitsSchemaItem const *FitsSchemaInputMapper::find(int column) const {
     auto iter = _impl->byColumn().lower_bound(column);
     if (iter == _impl->byColumn().end() || iter->column != column) {
         return 0;
@@ -339,13 +327,13 @@ FitsSchemaItem const * FitsSchemaInputMapper::find(int column) const {
     return &(*iter);
 }
 
-void FitsSchemaInputMapper::erase(Item const * item) {
+void FitsSchemaInputMapper::erase(Item const *item) {
     auto iter = _impl->byColumn().lower_bound(item->column);
     assert(iter != _impl->byColumn().end() && iter->column == item->column);
     _impl->byColumn().erase(iter);
 }
 
-void FitsSchemaInputMapper::erase(std::string const & ttype) {
+void FitsSchemaInputMapper::erase(std::string const &ttype) {
     auto iter = _impl->byName().find(ttype);
     if (iter != _impl->byName().end() && iter->ttype == ttype) {
         _impl->byName().erase(iter);
@@ -370,24 +358,16 @@ namespace {
 template <typename T>
 class StandardReader : public FitsColumnReader {
 public:
-
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item,
-        FieldBase<T> const & base=FieldBase<T>()
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item,
+                                                  FieldBase<T> const &base = FieldBase<T>()) {
         return std::unique_ptr<FitsColumnReader>(new StandardReader(schema, item, base));
     }
 
-    StandardReader(Schema & schema, FitsSchemaItem const & item, FieldBase<T> const & base) :
-        _column(item.column), _key(schema.addField<T>(item.ttype, item.doc, item.tunit, base))
-    {}
+    StandardReader(Schema &schema, FitsSchemaItem const &item, FieldBase<T> const &base)
+            : _column(item.column), _key(schema.addField<T>(item.ttype, item.doc, item.tunit, base)) {}
 
-    virtual void readCell(
-        BaseRecord & record, std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
         fits.readTableArray(row, _column, _key.getElementCount(), record.getElement(_key));
     }
 
@@ -398,40 +378,26 @@ private:
 
 class AngleReader : public FitsColumnReader {
 public:
-
     static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item,
-        FieldBase<afw::geom::Angle> const & base=FieldBase<afw::geom::Angle>()
-    ) {
+            Schema &schema, FitsSchemaItem const &item,
+            FieldBase<afw::geom::Angle> const &base = FieldBase<afw::geom::Angle>()) {
         return std::unique_ptr<FitsColumnReader>(new AngleReader(schema, item, base));
     }
 
-    AngleReader(
-        Schema & schema,
-        FitsSchemaItem const & item,
-        FieldBase<afw::geom::Angle> const & base
-    ) :
-        _column(item.column),
-        _key(schema.addField<afw::geom::Angle>(item.ttype, item.doc, "", base))
-    {
+    AngleReader(Schema &schema, FitsSchemaItem const &item, FieldBase<afw::geom::Angle> const &base)
+            : _column(item.column), _key(schema.addField<afw::geom::Angle>(item.ttype, item.doc, "", base)) {
         // We require an LSST-specific key in the headers before parsing a column
         // as Angle at all, so we don't need to worry about other units or other
         // spellings of radians.  We do continue to support no units for backwards
         // compatibility.
         if (!item.tunit.empty() && item.tunit != "rad") {
-            throw LSST_EXCEPT(
-                afw::fits::FitsError,
-                "Angle fields must be persisted in radians (TUNIT='rad')."
-            );
+            throw LSST_EXCEPT(afw::fits::FitsError,
+                              "Angle fields must be persisted in radians (TUNIT='rad').");
         }
     }
 
-    virtual void readCell(
-        BaseRecord & record, std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
         double tmp = 0;
         fits.readTableScalar(row, _column, tmp);
         record.set(_key, tmp * afw::geom::radians);
@@ -444,25 +410,16 @@ private:
 
 class StringReader : public FitsColumnReader {
 public:
-
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item,
-        int size
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item, int size) {
         return std::unique_ptr<FitsColumnReader>(new StringReader(schema, item, size));
     }
 
-    StringReader(Schema & schema, FitsSchemaItem const & item, int size) :
-        _column(item.column), _key(schema.addField<std::string>(item.ttype, item.doc, item.tunit, size))
-    {}
+    StringReader(Schema &schema, FitsSchemaItem const &item, int size)
+            : _column(item.column),
+              _key(schema.addField<std::string>(item.ttype, item.doc, item.tunit, size)) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
         std::string s;
         fits.readTableScalar(row, _column, s);
         record.set(_key, s);
@@ -476,26 +433,17 @@ private:
 template <typename T>
 class VariableLengthArrayReader : public FitsColumnReader {
 public:
-
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item) {
         return std::unique_ptr<FitsColumnReader>(new VariableLengthArrayReader(schema, item));
     }
 
-    VariableLengthArrayReader(Schema & schema, FitsSchemaItem const & item) :
-        _column(item.column), _key(schema.addField<Array<T>>(item.ttype, item.doc, item.tunit, 0))
-    {}
+    VariableLengthArrayReader(Schema &schema, FitsSchemaItem const &item)
+            : _column(item.column), _key(schema.addField<Array<T>>(item.ttype, item.doc, item.tunit, 0)) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
         int size = fits.getTableArraySize(row, _column);
-        ndarray::Array<T,1,1> array = ndarray::allocate(size);
+        ndarray::Array<T, 1, 1> array = ndarray::allocate(size);
         fits.readTableArray(row, _column, size, array.getData());
         record.set(_key, array);
     }
@@ -510,27 +458,18 @@ private:
 template <typename T>
 class PointConversionReader : public FitsColumnReader {
 public:
-
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item) {
         return std::unique_ptr<FitsColumnReader>(new PointConversionReader(schema, item));
     }
 
-    PointConversionReader(Schema & schema, FitsSchemaItem const & item) :
-        _column(item.column), _key(PointKey<T>::addFields(schema, item.ttype, item.doc, item.tunit))
-    {}
+    PointConversionReader(Schema &schema, FitsSchemaItem const &item)
+            : _column(item.column), _key(PointKey<T>::addFields(schema, item.ttype, item.doc, item.tunit)) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
-        std::array<T,2> buffer;
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
+        std::array<T, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
-        record.set(_key, geom::Point<T,2>(buffer[0], buffer[1]));
+        record.set(_key, geom::Point<T, 2>(buffer[0], buffer[1]));
     }
 
 private:
@@ -542,25 +481,16 @@ private:
 // from the old Coord compound field to the new CoordKey FunctorKey).
 class CoordConversionReader : public FitsColumnReader {
 public:
-
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item) {
         return std::unique_ptr<FitsColumnReader>(new CoordConversionReader(schema, item));
     }
 
-    CoordConversionReader(Schema & schema, FitsSchemaItem const & item) :
-        _column(item.column), _key(CoordKey::addFields(schema, item.ttype, item.doc))
-    {}
+    CoordConversionReader(Schema &schema, FitsSchemaItem const &item)
+            : _column(item.column), _key(CoordKey::addFields(schema, item.ttype, item.doc)) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
-        std::array<geom::Angle,2> buffer;
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
+        std::array<geom::Angle, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
         record.set(_key, coord::IcrsCoord(buffer[0], buffer[1]));
     }
@@ -574,26 +504,17 @@ private:
 // from the old Moments compound field to the new QuadrupoleKey FunctorKey).
 class MomentsConversionReader : public FitsColumnReader {
 public:
-
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item) {
         return std::unique_ptr<FitsColumnReader>(new MomentsConversionReader(schema, item));
     }
 
-    MomentsConversionReader(Schema & schema, FitsSchemaItem const & item) :
-        _column(item.column),
-        _key(QuadrupoleKey::addFields(schema, item.ttype, item.doc, CoordinateType::PIXEL))
-    {}
+    MomentsConversionReader(Schema &schema, FitsSchemaItem const &item)
+            : _column(item.column),
+              _key(QuadrupoleKey::addFields(schema, item.ttype, item.doc, CoordinateType::PIXEL)) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
-        std::array<double,3> buffer;
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
+        std::array<double, 3> buffer;
         fits.readTableArray(row, _column, 3, buffer.data());
         record.set(_key, geom::ellipses::Quadrupole(buffer[0], buffer[1], buffer[2], false));
     }
@@ -609,8 +530,7 @@ private:
 template <typename T, int N>
 class CovarianceConversionReader : public FitsColumnReader {
 public:
-
-    static std::string guessUnits(std::string const & oldUnits) {
+    static std::string guessUnits(std::string const &oldUnits) {
         static boost::regex const regex("(.*)(\\^(\\d+))?", boost::regex::perl);
         boost::smatch m;
         if (!boost::regex_match(oldUnits, m, regex)) {
@@ -621,29 +541,20 @@ public:
         return oldUnits;
     }
 
-    static std::unique_ptr<FitsColumnReader> make(
-        Schema & schema,
-        FitsSchemaItem const & item,
-        std::vector<std::string> const & names
-    ) {
+    static std::unique_ptr<FitsColumnReader> make(Schema &schema, FitsSchemaItem const &item,
+                                                  std::vector<std::string> const &names) {
         return std::unique_ptr<FitsColumnReader>(new CovarianceConversionReader(schema, item, names));
     }
 
-    CovarianceConversionReader(
-        Schema & schema, FitsSchemaItem const & item, std::vector<std::string> const & names
-    ) :
-        _column(item.column),
-        _size(names.size()),
-        _key(CovarianceMatrixKey<T,N>::addFields(schema, item.ttype, names, guessUnits(item.tunit))),
-        _buffer(new T[detail::computeCovariancePackedSize(names.size())])
-    {}
+    CovarianceConversionReader(Schema &schema, FitsSchemaItem const &item,
+                               std::vector<std::string> const &names)
+            : _column(item.column),
+              _size(names.size()),
+              _key(CovarianceMatrixKey<T, N>::addFields(schema, item.ttype, names, guessUnits(item.tunit))),
+              _buffer(new T[detail::computeCovariancePackedSize(names.size())]) {}
 
-    virtual void readCell(
-        BaseRecord & record,
-        std::size_t row,
-        afw::fits::Fits & fits,
-        PTR(InputArchive) const & archive
-    ) const {
+    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const {
         fits.readTableArray(row, _column, detail::computeCovariancePackedSize(_size), _buffer.get());
         for (int i = 0; i < _size; ++i) {
             for (int j = i; j < _size; ++j) {
@@ -655,15 +566,11 @@ public:
 private:
     int _column;
     int _size;
-    CovarianceMatrixKey<T,N> _key;
+    CovarianceMatrixKey<T, N> _key;
     std::unique_ptr<T[]> _buffer;
 };
 
-
-std::unique_ptr<FitsColumnReader> makeColumnReader(
-    Schema & schema,
-    FitsSchemaItem const & item
-) {
+std::unique_ptr<FitsColumnReader> makeColumnReader(Schema &schema, FitsSchemaItem const &item) {
     // Regex to unpack a FITS TFORM value.  The first number is the size of the array (1 if not present),
     // followed by an alpha code indicating the type (preceded by P or Q for variable size array).
     // The last number is ignored.
@@ -685,115 +592,112 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
     }
     // switch code over FITS codes that correspond to different element types
     switch (code) {
-    case 'I': // 16-bit integers - can only be scalars or Arrays (we assume they're unsigned, since
-              // that's all we ever write, and CFITSIO will complain later if they aren't)
-        if (size == 1) {
-            if (item.tccls == "Array") {
-                return StandardReader<Array<std::uint16_t>>::make(schema, item, size);
+        case 'I':  // 16-bit integers - can only be scalars or Arrays (we assume they're unsigned, since
+                   // that's all we ever write, and CFITSIO will complain later if they aren't)
+            if (size == 1) {
+                if (item.tccls == "Array") {
+                    return StandardReader<Array<std::uint16_t>>::make(schema, item, size);
+                }
+                return StandardReader<std::uint16_t>::make(schema, item);
             }
-            return StandardReader<std::uint16_t>::make(schema, item);
-        }
-        if (size == 0) {
-            return VariableLengthArrayReader<std::uint16_t>::make(schema, item);
-        }
-        return StandardReader<Array<std::uint16_t>>::make(schema, item, size);
-    case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
-        if (size == 0) {
-            return VariableLengthArrayReader<std::int32_t>::make(schema, item);
-        }
-        if (item.tccls == "Point") {
-            return PointConversionReader<std::int32_t>::make(schema, item);
-        }
-        if (size > 1 || item.tccls == "Array") {
-            return StandardReader<Array<std::int32_t>>::make(schema, item, size);
-        }
-        return StandardReader<std::int32_t>::make(schema, item);
-    case 'K': // 64-bit integers - can only be scalars.
-        if (size == 1) {
-            return StandardReader<std::int64_t>::make(schema, item);
-        }
-    case 'E': // floats
-        if (size == 0) {
-            return VariableLengthArrayReader<float>::make(schema, item);
-        }
-        if (size == 1) {
-            if (item.tccls == "Array") {
-                return StandardReader<Array<float>>::make(schema, item, 1);
+            if (size == 0) {
+                return VariableLengthArrayReader<std::uint16_t>::make(schema, item);
             }
-            // Just use scalars for Covariances of size 1, since that results in more
-            // natural field names (essentially never happens anyway).
-            return StandardReader<float>::make(schema, item);
-        }
-        if (size == 3 && item.tccls == "Covariance(Point)") {
-            std::vector<std::string> names = {"x", "y"};
-            return CovarianceConversionReader<float,2>::make(schema, item, names);
-        }
-        if (size == 6 && item.tccls == "Covariance(Moments)") {
-            std::vector<std::string> names = {"xx", "yy", "xy"};
-            return CovarianceConversionReader<float,3>::make(schema, item, names);
-        }
-        if (item.tccls == "Covariance") {
-            double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
-            int n = std::lround(v);
-            if (n * (n + 1) != size * 2) {
-                throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    "Covariance field has invalid size."
-                );
+            return StandardReader<Array<std::uint16_t>>::make(schema, item, size);
+        case 'J':  // 32-bit integers - can only be scalars, Point fields, or Arrays
+            if (size == 0) {
+                return VariableLengthArrayReader<std::int32_t>::make(schema, item);
             }
-            std::vector<std::string> names(n);
-            for (int i = 0; i < n; ++i) {
-                names[i] = std::to_string(i);
-            }
-            return CovarianceConversionReader<float,Eigen::Dynamic>::make(schema, item, names);
-        }
-        return StandardReader<Array<float>>::make(schema, item, size);
-    case 'D': // doubles
-        if (size == 0) {
-            return VariableLengthArrayReader<double>::make(schema, item);
-        }
-        if (size == 1) {
-            if (item.tccls == "Angle") {
-                return AngleReader::make(schema, item);
-            }
-            if (item.tccls == "Array") {
-                return StandardReader<Array<double>>::make(schema, item, 1);
-            }
-            return StandardReader<double>::make(schema, item);
-        }
-        if (size == 2) {
             if (item.tccls == "Point") {
-                return PointConversionReader<double>::make(schema, item);
+                return PointConversionReader<std::int32_t>::make(schema, item);
             }
-            if (item.tccls == "Coord") {
-                return CoordConversionReader::make(schema, item);
+            if (size > 1 || item.tccls == "Array") {
+                return StandardReader<Array<std::int32_t>>::make(schema, item, size);
             }
-        }
-        if (size ==3 && item.tccls == "Moments") {
-            return MomentsConversionReader::make(schema, item);
-        }
-        return StandardReader<Array<double>>::make(schema, item, size);
-    case 'A': // strings
-        return StringReader::make(schema, item, size);
-    default:
-        return std::unique_ptr<FitsColumnReader>();
+            return StandardReader<std::int32_t>::make(schema, item);
+        case 'K':  // 64-bit integers - can only be scalars.
+            if (size == 1) {
+                return StandardReader<std::int64_t>::make(schema, item);
+            }
+        case 'E':  // floats
+            if (size == 0) {
+                return VariableLengthArrayReader<float>::make(schema, item);
+            }
+            if (size == 1) {
+                if (item.tccls == "Array") {
+                    return StandardReader<Array<float>>::make(schema, item, 1);
+                }
+                // Just use scalars for Covariances of size 1, since that results in more
+                // natural field names (essentially never happens anyway).
+                return StandardReader<float>::make(schema, item);
+            }
+            if (size == 3 && item.tccls == "Covariance(Point)") {
+                std::vector<std::string> names = {"x", "y"};
+                return CovarianceConversionReader<float, 2>::make(schema, item, names);
+            }
+            if (size == 6 && item.tccls == "Covariance(Moments)") {
+                std::vector<std::string> names = {"xx", "yy", "xy"};
+                return CovarianceConversionReader<float, 3>::make(schema, item, names);
+            }
+            if (item.tccls == "Covariance") {
+                double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
+                int n = std::lround(v);
+                if (n * (n + 1) != size * 2) {
+                    throw LSST_EXCEPT(afw::fits::FitsError, "Covariance field has invalid size.");
+                }
+                std::vector<std::string> names(n);
+                for (int i = 0; i < n; ++i) {
+                    names[i] = std::to_string(i);
+                }
+                return CovarianceConversionReader<float, Eigen::Dynamic>::make(schema, item, names);
+            }
+            return StandardReader<Array<float>>::make(schema, item, size);
+        case 'D':  // doubles
+            if (size == 0) {
+                return VariableLengthArrayReader<double>::make(schema, item);
+            }
+            if (size == 1) {
+                if (item.tccls == "Angle") {
+                    return AngleReader::make(schema, item);
+                }
+                if (item.tccls == "Array") {
+                    return StandardReader<Array<double>>::make(schema, item, 1);
+                }
+                return StandardReader<double>::make(schema, item);
+            }
+            if (size == 2) {
+                if (item.tccls == "Point") {
+                    return PointConversionReader<double>::make(schema, item);
+                }
+                if (item.tccls == "Coord") {
+                    return CoordConversionReader::make(schema, item);
+                }
+            }
+            if (size == 3 && item.tccls == "Moments") {
+                return MomentsConversionReader::make(schema, item);
+            }
+            return StandardReader<Array<double>>::make(schema, item, size);
+        case 'A':  // strings
+            return StringReader::make(schema, item, size);
+        default:
+            return std::unique_ptr<FitsColumnReader>();
     }
 }
 
-bool endswith(std::string const & s, std::string const & suffix) {
+bool endswith(std::string const &s, std::string const &suffix) {
     return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 // Replace the last n characters of a string with a new suffix string, returning the result as a new string
-std::string replaceSuffix(std::string const & s, std::size_t n, std::string const & suffix) {
+std::string replaceSuffix(std::string const &s, std::size_t n, std::string const &suffix) {
     return s.substr(0, s.size() - n) + suffix;
 }
 
-} // anonymous
+}  // anonymous
 
 Schema FitsSchemaInputMapper::finalize() {
     if (_impl->version == 0) {
-        AliasMap & aliases = *_impl->schema.getAliasMap();
+        AliasMap &aliases = *_impl->schema.getAliasMap();
         for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
             std::size_t flagPos = iter->ttype.find("flags");
             if (flagPos != std::string::npos) {
@@ -842,22 +746,21 @@ Schema FitsSchemaInputMapper::finalize() {
         }
     }
     for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
-        if (iter->bit < 0) { // not a Flag column
+        if (iter->bit < 0) {  // not a Flag column
             std::unique_ptr<FitsColumnReader> reader = makeColumnReader(_impl->schema, *iter);
             if (reader) {
                 _impl->readers.push_back(std::move(reader));
             } else {
-                LOGLS_WARN("afw.FitsSchemaInputMapper",
-                    "Format " << iter->tform << " for column " << iter->ttype << " not supported; skipping."
-                );
+                LOGLS_WARN("afw.FitsSchemaInputMapper", "Format " << iter->tform << " for column "
+                                                                  << iter->ttype
+                                                                  << " not supported; skipping.");
             }
         } else {  // is a Flag column
             if (static_cast<std::size_t>(iter->bit) >= _impl->flagKeys.size()) {
-                throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    (boost::format("Flag field '%s' is is in bit %d (0-indexed) of only %d")
-                    % iter->ttype % iter->bit % _impl->flagKeys.size()).str()
-                );
+                throw LSST_EXCEPT(afw::fits::FitsError,
+                                  (boost::format("Flag field '%s' is is in bit %d (0-indexed) of only %d") %
+                                   iter->ttype % iter->bit % _impl->flagKeys.size())
+                                          .str());
             }
             _impl->flagKeys[iter->bit] = _impl->schema.addField<Flag>(iter->ttype, iter->doc);
         }
@@ -866,15 +769,9 @@ Schema FitsSchemaInputMapper::finalize() {
     return _impl->schema;
 }
 
-void FitsSchemaInputMapper::readRecord(
-    BaseRecord & record,
-    afw::fits::Fits & fits,
-    std::size_t row
-) {
+void FitsSchemaInputMapper::readRecord(BaseRecord &record, afw::fits::Fits &fits, std::size_t row) {
     if (!_impl->flagKeys.empty()) {
-        fits.readTableArray<bool>(
-            row, _impl->flagColumn, _impl->flagKeys.size(), _impl->flagWorkspace.get()
-        );
+        fits.readTableArray<bool>(row, _impl->flagColumn, _impl->flagKeys.size(), _impl->flagWorkspace.get());
         for (std::size_t bit = 0; bit < _impl->flagKeys.size(); ++bit) {
             record.set(_impl->flagKeys[bit], _impl->flagWorkspace[bit]);
         }
@@ -883,5 +780,7 @@ void FitsSchemaInputMapper::readRecord(
         (**iter).readCell(record, row, fits, _impl->archive);
     }
 }
-
-}}}} // namespace lsst::afw::table::io
+}
+}
+}
+}  // namespace lsst::afw::table::io

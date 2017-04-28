@@ -26,7 +26,9 @@
 
 #include <sstream>
 
-namespace lsst { namespace afw { namespace coord {
+namespace lsst {
+namespace afw {
+namespace coord {
 
 /**
  * Basic weather information sufficient for a simple model for air mass or refraction
@@ -35,26 +37,25 @@ namespace lsst { namespace afw { namespace coord {
  */
 class Weather {
 public:
-
     /**
      * Construct a Weather
      *
      * @param[in] airTemperature  outside air temperature (C)
      * @param[in] airPressure  outside air pressure (Pascal)
      * @param[in] humidity  outside relative humidity (%)
-     * @throw lsst::pex::exceptions::InvalidParameterError if humidity < 0
+     * @throws lsst::pex::exceptions::InvalidParameterError if humidity < 0
      */
     explicit Weather(double airTemperature, double airPressure, double humidity);
 
-    ~Weather() {};
+    ~Weather(){};
 
     Weather(Weather const &) = default;
     Weather(Weather &&) = default;
-    Weather & operator=(Weather const &) = default;
-    Weather & operator=(Weather &&) = default;
+    Weather &operator=(Weather const &) = default;
+    Weather &operator=(Weather &&) = default;
 
-    bool operator==(Weather const & other) const;
-    bool operator!=(Weather const & other) const { return !(*this == other); }
+    bool operator==(Weather const &other) const;
+    bool operator!=(Weather const &other) const { return !(*this == other); }
 
     /// get outside air temperature (C)
     double getAirTemperature() const { return _airTemperature; };
@@ -67,19 +68,20 @@ public:
 
 private:
     double _airTemperature;  ///< air temperature (C)
-    double _airPressure;   ///< air pressure (Pascals)
-    double _humidity;   ///< relative humidity (%)
+    double _airPressure;     ///< air pressure (Pascals)
+    double _humidity;        ///< relative humidity (%)
 
     /**
      * Validate the values
-     * @throw lsst::pex::exceptions::InvalidParameterError if humidity < 0
+     * @throws lsst::pex::exceptions::InvalidParameterError if humidity < 0
      */
     void validate() const;
 };
 
 /// print a Weather to an output stream
-std::ostream & operator<<(std::ostream &os, Weather const& weath);
+std::ostream &operator<<(std::ostream &os, Weather const &weath);
+}
+}
+}  // lsst::afw::coord
 
-}}} // lsst::afw::coord
-
-#endif // !LSST_AFW_COORD_WEATHER_H_INCLUDED
+#endif  // !LSST_AFW_COORD_WEATHER_H_INCLUDED

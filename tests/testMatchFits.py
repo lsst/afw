@@ -23,6 +23,7 @@
 """
 Test for match persistence via FITS
 """
+from __future__ import absolute_import, division, print_function
 import unittest
 
 from builtins import str
@@ -54,7 +55,8 @@ class MatchFitsTestCase(unittest.TestCase):
         self.matches = []
         for i in range(self.numMatches):
             index = 2*i
-            match = afwTable.SimpleMatch(self.cat1[index], self.cat2[self.size - index - 1], index)
+            match = afwTable.SimpleMatch(
+                self.cat1[index], self.cat2[self.size - index - 1], index)
             if Debug:
                 print("Inject:", match.first.getId(), match.second.getId())
             self.matches.append(match)
@@ -102,6 +104,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

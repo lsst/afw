@@ -79,7 +79,8 @@ def diffSchemas(schema1, schema2, flags=Schema.IDENTICAL):
         components.append("units")
     if not result & Schema.EQUAL_ALIASES:
         components.append("aliases")
-    diff = "\n".join(difflib.unified_diff(str(schema1).split("\n"), str(schema2).split("\n")))
+    diff = "\n".join(difflib.unified_diff(
+        str(schema1).split("\n"), str(schema2).split("\n")))
     return "%s differ:\n%s" % (joinWords(components).capitalize(), diff)
 
 

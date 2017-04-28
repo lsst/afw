@@ -31,7 +31,7 @@ namespace afw {
 namespace image {
 
 /**
- *  @brief Combination of a TAN WCS and a distortion model
+ *  Combination of a TAN WCS and a distortion model
  *
  * This object represents a common case for raw or minimally processed data; we have estimates for:
  * - a pure TAN WCS based on telescope pointing
@@ -49,7 +49,7 @@ namespace image {
 class DistortedTanWcs : public TanWcs {
 public:
     /**
-     * @brief Construct a DistortedTanWcs
+     * Construct a DistortedTanWcs
      *
      * @param[in] tanWcs  pure tangent-plane WCS
      * @param[in] pixelsToTanPixels  an XYTransform that converts from PIXELS to TAN_PIXELS coordinates
@@ -57,20 +57,17 @@ public:
      *                  detector = exposure.getDetector()
      *                  pixelsToTanPixels = detector.getTransformMap()[lsst.afw.cameraGeom.TAN_PIXELS]
      *
-     * @throw pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
+     * @throws pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
      */
-    DistortedTanWcs(
-        TanWcs const &tanWcs,
-        geom::XYTransform const &pixelsToTanPixels
-    );
+    DistortedTanWcs(TanWcs const &tanWcs, geom::XYTransform const &pixelsToTanPixels);
 
-    virtual ~DistortedTanWcs() {};
+    virtual ~DistortedTanWcs(){};
 
     /// Polymorphic deep-copy.
-    virtual PTR(Wcs) clone() const;
+    virtual std::shared_ptr<Wcs> clone() const;
 
     /// @warning not implemented (because XYTransform operator== is not implemented)
-    bool operator==(Wcs const & other) const;
+    bool operator==(Wcs const &other) const;
 
     /// @warning not implemented
     virtual void flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const;
@@ -86,13 +83,12 @@ public:
     bool hasDistortion() const { return true; }
 
     /// return the pure tan WCS component
-    PTR(Wcs) getTanWcs() const { return TanWcs::clone(); }
+    std::shared_ptr<Wcs> getTanWcs() const { return TanWcs::clone(); }
 
     /// return the PIXELS to TAN_PIXELS XYTransform
-    PTR(geom::XYTransform) getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
+    std::shared_ptr<geom::XYTransform> getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
 
 protected:
-
     /**
     Worker routine for skyToPixel
 
@@ -111,12 +107,12 @@ protected:
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
 private:
-
-    PTR(geom::XYTransform) _pixelsToTanPixelsPtr;   // XYTransform that converts from PIXELS to TAN_PIXELS
-                                                    // coordinates in the forward direction
-
+    std::shared_ptr<geom::XYTransform>
+            _pixelsToTanPixelsPtr;  // XYTransform that converts from PIXELS to TAN_PIXELS
+                                    // coordinates in the forward direction
 };
-
-}}} // namespace lsst::afw::image
+}
+}
+}  // namespace lsst::afw::image
 
 #endif

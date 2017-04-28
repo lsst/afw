@@ -21,16 +21,15 @@
 #
 
 ##
-## \file
-## \brief Support for talking to ds9 from python
-## \deprecated  New code should use lsst.afw.display and set the backend to ds9
+# \file
+# \brief Support for talking to ds9 from python
+# \deprecated  New code should use lsst.afw.display and set the backend to ds9
 
 from __future__ import absolute_import, division, print_function
 
 import lsst.afw.display
 import lsst.afw.image as afwImage
-from .interface import getDisplay as _getDisplay, getDefaultBackend, setDefaultBackend, \
-                       setDefaultFrame, getDefaultFrame, incrDefaultFrame
+from .interface import getDisplay as _getDisplay, setDefaultBackend
 try:
     loaded
 except NameError:
@@ -71,46 +70,59 @@ except NameError:
 from lsst.afw.display import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE
 
 def Buffering():
-    return _getDisplay(None, create=True).Buffering() # always use the real one
+    # always use the real one
+    return _getDisplay(None, create=True).Buffering()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Functions provided for backwards compatibility
 #
+
+
 def setMaskPlaneColor(name, color=None, frame=None):
     return getDisplay(frame, create=True).setMaskPlaneColor(name, color)
+
 
 def getMaskPlaneColor(name, frame=None):
     return getDisplay(frame, create=True).getMaskPlaneColor(name)
 
+
 def setMaskTransparency(name, frame=None):
     return getDisplay(frame, create=True).setMaskTransparency(name)
+
 
 def getMaskTransparency(name, frame=None):
     return getDisplay(frame, create=True).getMaskTransparency(name)
 
+
 def show(frame=None):
     return getDisplay(frame, create=True).show()
+
 
 def mtv(data, frame=None, title="", wcs=None, *args, **kwargs):
     return getDisplay(frame, create=True).mtv(data, title, wcs, *args, **kwargs)
 
+
 def erase(frame=None):
     return getDisplay(frame, create=True).erase()
+
 
 def dot(symb, c, r, frame=None, size=2, ctype=None, origin=afwImage.PARENT, *args, **kwargs):
     return getDisplay(frame, create=True).dot(symb, c, r, size, ctype, origin, *args, **kwargs)
 
+
 def line(points, frame=None, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
     return getDisplay(frame, create=True).line(points, origin, symbs, ctype, size)
 
+
 def scale(algorithm, min, max=None, frame=None):
     return getDisplay(frame, create=True).scale(algorithm, min, max)
+
 
 def pan(colc=None, rowc=None, frame=None, origin=afwImage.PARENT):
     disp = getDisplay(frame, create=True)
 
     disp.pan(colc, rowc, origin)
+
 
 def zoom(zoomfac=None, colc=None, rowc=None, frame=None, origin=afwImage.PARENT):
     disp = getDisplay(frame, create=True)
@@ -118,11 +130,14 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=None, origin=afwImage.PARENT)
     disp.zoom(zoomfac)
     disp.pan(colc, rowc, origin)
 
+
 def interact(frame=None):
     return getDisplay(frame, create=True).interact()
 
+
 def setCallback(k, func=lsst.afw.display.noop_callback, noRaise=False, frame=None):
     return getDisplay(frame, create=True).setCallback(k, noRaise=False)
+
 
 def getActiveCallbackKeys(onlyActive=True, frame=None):
     return getDisplay(frame, create=True).getActiveCallbackKeys(onlyActive)

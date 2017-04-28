@@ -75,7 +75,8 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.kernelSize = 51
-        self.psf = lsst.afw.detection.GaussianPsf(self.kernelSize, self.kernelSize, 4.0)
+        self.psf = lsst.afw.detection.GaussianPsf(
+            self.kernelSize, self.kernelSize, 4.0)
 
     def tearDown(self):
         del self.psf
@@ -88,20 +89,23 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def testOffsetImage(self):
         image = self.psf.computeImage(lsst.afw.geom.Point2D(0.25, 0.25))
-        check = makeGaussianImage(image.getBBox(), self.psf.getSigma(), 0.25, 0.25)
+        check = makeGaussianImage(
+            image.getBBox(), self.psf.getSigma(), 0.25, 0.25)
         self.assertFloatsAlmostEqual(image.getArray(), check.getArray(), atol=1E-4, rtol=1E-4,
                                      plotOnFailure=True)
 
     def testApertureFlux(self):
         image = self.psf.computeKernelImage(lsst.afw.geom.Point2D(0.0, 0.0))
-        # test aperture implementation is very crude; can only test to about 10%
+        # test aperture implementation is very crude; can only test to about
+        # 10%
         self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0),
                                      rtol=0.1)
         self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0),
                                      rtol=0.1)
 
     def testShape(self):
-        self.assertFloatsAlmostEqual(self.psf.computeShape().getDeterminantRadius(), 4.0)
+        self.assertFloatsAlmostEqual(
+            self.psf.computeShape().getDeterminantRadius(), 4.0)
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
@@ -120,7 +124,6 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         # Test interface. GaussianPsf does not vary spatially
         self.assertEqual(self.psf.computeKernelImage(lsst.afw.geom.Point2D(0.0, 0.0)).getBBox(),
                          self.psf.computeBBox(lsst.afw.geom.Point2D(0.0, 0.0)))
-
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

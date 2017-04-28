@@ -69,8 +69,8 @@ PYBIND11_PLUGIN(_boundedField) {
 
     cls.def("evaluate", (double (BoundedField::*)(double, double) const) & BoundedField::evaluate);
     cls.def("evaluate",
-            (ndarray::Array<double, 1, 1>(BoundedField::*)(ndarray::Array<double const, 1> const &,
-                                                           ndarray::Array<double const, 1> const &) const) &
+            (ndarray::Array<double, 1, 1> (BoundedField::*)(ndarray::Array<double const, 1> const &,
+                                                            ndarray::Array<double const, 1> const &) const) &
                     BoundedField::evaluate);
     cls.def("evaluate",
             (double (BoundedField::*)(lsst::afw::geom::Point2D const &) const) & BoundedField::evaluate);

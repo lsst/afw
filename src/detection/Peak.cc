@@ -26,7 +26,9 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/table/detail/Access.h"
 
-namespace lsst { namespace afw { namespace detection {
+namespace lsst {
+namespace afw {
+namespace detection {
 
 //-----------------------------------------------------------------------------------------------------------
 //----- PeakFitsWriter ---------------------------------------------------------------------------------
@@ -39,28 +41,23 @@ namespace {
 
 class PeakFitsWriter : public afw::table::io::FitsWriter {
 public:
-
-    explicit PeakFitsWriter(Fits * fits, int flags) : afw::table::io::FitsWriter(fits, flags) {}
+    explicit PeakFitsWriter(Fits* fits, int flags) : afw::table::io::FitsWriter(fits, flags) {}
 
 protected:
-
-    virtual void _writeTable(CONST_PTR(afw::table::BaseTable) const & table, std::size_t nRows);
-
+    virtual void _writeTable(std::shared_ptr<afw::table::BaseTable const> const& table, std::size_t nRows);
 };
 
-void PeakFitsWriter::_writeTable(CONST_PTR(afw::table::BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(PeakTable) table = std::dynamic_pointer_cast<PeakTable const>(t);
+void PeakFitsWriter::_writeTable(std::shared_ptr<afw::table::BaseTable const> const& t, std::size_t nRows) {
+    std::shared_ptr<PeakTable const> table = std::dynamic_pointer_cast<PeakTable const>(t);
     if (!table) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Cannot use a PeakFitsWriter on a non-Peak table."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Cannot use a PeakFitsWriter on a non-Peak table.");
     }
     afw::table::io::FitsWriter::_writeTable(table, nRows);
     _fits->writeKey("AFW_TYPE", "PEAK", "Tells lsst::afw to load this as a Peak table.");
 }
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- PeakFitsReader ---------------------------------------------------------------------------------
@@ -73,63 +70,51 @@ namespace {
 
 class PeakFitsReader : public afw::table::io::FitsReader {
 public:
-
     PeakFitsReader() : afw::table::io::FitsReader("PEAK") {}
 
-    virtual PTR(afw::table::BaseTable) makeTable(
-        afw::table::io::FitsSchemaInputMapper & mapper,
-        PTR(daf::base::PropertyList) metadata,
-        int ioFlags,
-        bool stripMetadata
-    ) const {
-        PTR(PeakTable) table = PeakTable::make(mapper.finalize());
+    virtual std::shared_ptr<afw::table::BaseTable> makeTable(
+            afw::table::io::FitsSchemaInputMapper& mapper, std::shared_ptr<daf::base::PropertyList> metadata,
+            int ioFlags, bool stripMetadata) const {
+        std::shared_ptr<PeakTable> table = PeakTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
     }
-
 };
 
 // registers the reader so FitsReader::make can use it.
 static PeakFitsReader const peakFitsReader;
 
-} // anonymous
+}  // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
 //----- PeakTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-PeakRecord::PeakRecord(PTR(PeakTable) const & table) : BaseRecord(table) {}
+PeakRecord::PeakRecord(std::shared_ptr<PeakTable> const& table) : BaseRecord(table) {}
 
-std::ostream & operator<<(std::ostream & os, PeakRecord const & record) {
-    return os << (boost::format("%d: (%d,%d)  (%.3f,%.3f)")
-                  % record.getId()
-                  % record.getIx() % record.getIy()
-                  % record.getFx() % record.getFy());
+std::ostream& operator<<(std::ostream& os, PeakRecord const& record) {
+    return os << (boost::format("%d: (%d,%d)  (%.3f,%.3f)") % record.getId() % record.getIx() %
+                  record.getIy() % record.getFx() % record.getFy());
 }
 
-PTR(PeakTable) PeakTable::make(
-    afw::table::Schema const & schema,
-    bool forceNewTable
-) {
-    typedef std::list< std::weak_ptr<PeakTable> > CachedTableList;
+std::shared_ptr<PeakTable> PeakTable::make(afw::table::Schema const& schema, bool forceNewTable) {
+    typedef std::list<std::weak_ptr<PeakTable> > CachedTableList;
     static CachedTableList cache;
     if (!checkSchema(schema)) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterError,
-            "Schema for Peak must contain at least the keys defined by makeMinimalSchema()."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          "Schema for Peak must contain at least the keys defined by makeMinimalSchema().");
     }
     if (forceNewTable) {
         return std::shared_ptr<PeakTable>(new PeakTable(schema, afw::table::IdFactory::makeSimple()));
     }
     CachedTableList::iterator iter = cache.begin();
     while (iter != cache.end()) {
-        PTR(PeakTable) p = iter->lock();
+        std::shared_ptr<PeakTable> p = iter->lock();
         if (!p) {
             iter = cache.erase(iter);
         } else {
-            if (p->getSchema().compare(schema, afw::table::Schema::IDENTICAL)
-                == afw::table::Schema::IDENTICAL) {
+            if (p->getSchema().compare(schema, afw::table::Schema::IDENTICAL) ==
+                afw::table::Schema::IDENTICAL) {
                 // Move the one we found to the front of the list, so it's easier to find
                 // the same thing repeatedly
                 if (iter != cache.begin()) {
@@ -146,12 +131,13 @@ PTR(PeakTable) PeakTable::make(
     return newTable;
 }
 
-PeakTable::PeakTable(afw::table::Schema const & schema, PTR(afw::table::IdFactory) const & idFactory) :
-    afw::table::BaseTable(schema), _idFactory(idFactory) {}
+PeakTable::PeakTable(afw::table::Schema const& schema,
+                     std::shared_ptr<afw::table::IdFactory> const& idFactory)
+        : afw::table::BaseTable(schema), _idFactory(idFactory) {}
 
-PeakTable::PeakTable(PeakTable const & other) :
-    afw::table::BaseTable(other),
-    _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
+PeakTable::PeakTable(PeakTable const& other)
+        : afw::table::BaseTable(other),
+          _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
 
 PeakTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<afw::table::RecordId>("id", "unique ID");
@@ -163,13 +149,12 @@ PeakTable::MinimalSchema::MinimalSchema() {
     schema.getCitizen().markPersistent();
 }
 
-PeakTable::MinimalSchema & PeakTable::getMinimalSchema() {
+PeakTable::MinimalSchema& PeakTable::getMinimalSchema() {
     static MinimalSchema it;
     return it;
 }
 
-PTR(afw::table::io::FitsWriter)
-PeakTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+std::shared_ptr<afw::table::io::FitsWriter> PeakTable::makeFitsWriter(fits::Fits* fitsfile, int flags) const {
     return std::make_shared<PeakFitsWriter>(fitsfile, flags);
 }
 
@@ -183,12 +168,12 @@ std::shared_ptr<afw::table::BaseRecord> PeakTable::_makeRecord() {
     return record;
 }
 
-} // namespace detection
+}  // namespace detection
 
 namespace table {
 
-
 template class CatalogT<afw::detection::PeakRecord>;
 template class CatalogT<afw::detection::PeakRecord const>;
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

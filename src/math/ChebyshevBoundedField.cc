@@ -32,11 +32,11 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
-int ChebyshevBoundedFieldControl::computeSize() const {
-    return detail::TrapezoidalPacker(*this).size;
-}
+int ChebyshevBoundedFieldControl::computeSize() const { return detail::TrapezoidalPacker(*this).size; }
 
 // ------------------ Constructors and helpers ---------------------------------------------------------------
 
@@ -45,29 +45,21 @@ namespace {
 // Compute an affine transform that maps an arbitrary box to [-1,1]x[-1,1]
 geom::AffineTransform makeChebyshevRangeTransform(afw::geom::Box2D const bbox) {
     return geom::AffineTransform(
-        geom::LinearTransform::makeScaling(2.0 / bbox.getWidth(), 2.0 / bbox.getHeight()),
-        geom::Extent2D(
-            -(2.0*bbox.getCenterX()) / bbox.getWidth(),
-            -(2.0*bbox.getCenterY()) / bbox.getHeight()
-        )
-    );
+            geom::LinearTransform::makeScaling(2.0 / bbox.getWidth(), 2.0 / bbox.getHeight()),
+            geom::Extent2D(-(2.0 * bbox.getCenterX()) / bbox.getWidth(),
+                           -(2.0 * bbox.getCenterY()) / bbox.getHeight()));
 }
 
-} // anonyomous
+}  // anonyomous
 
-ChebyshevBoundedField::ChebyshevBoundedField(
-    afw::geom::Box2I const & bbox,
-    ndarray::Array<double const,2,2> const & coefficients
-) : BoundedField(bbox),
-    _toChebyshevRange(makeChebyshevRangeTransform(geom::Box2D(bbox))),
-    _coefficients(coefficients)
-{}
+ChebyshevBoundedField::ChebyshevBoundedField(afw::geom::Box2I const& bbox,
+                                             ndarray::Array<double const, 2, 2> const& coefficients)
+        : BoundedField(bbox),
+          _toChebyshevRange(makeChebyshevRangeTransform(geom::Box2D(bbox))),
+          _coefficients(coefficients) {}
 
-ChebyshevBoundedField::ChebyshevBoundedField(
-    afw::geom::Box2I const & bbox
-) : BoundedField(bbox),
-    _toChebyshevRange(makeChebyshevRangeTransform(geom::Box2D(bbox)))
-{}
+ChebyshevBoundedField::ChebyshevBoundedField(afw::geom::Box2I const& bbox)
+        : BoundedField(bbox), _toChebyshevRange(makeChebyshevRangeTransform(geom::Box2D(bbox))) {}
 
 // ------------------ fit() and helpers ---------------------------------------------------------------------
 
@@ -77,10 +69,7 @@ typedef ChebyshevBoundedField::Control Control;
 typedef detail::TrapezoidalPacker Packer;
 
 // fill an array with 1-d Chebyshev functions of the 1st kind T(x), evaluated at the given point x
-void evaluateBasis1d(
-    ndarray::Array<double,1,1> const & t,
-    double x
-) {
+void evaluateBasis1d(ndarray::Array<double, 1, 1> const& t, double x) {
     int const n = t.getSize<0>();
     if (n > 0) {
         t[0] = 1.0;
@@ -89,7 +78,7 @@ void evaluateBasis1d(
         t[1] = x;
     }
     for (int i = 2; i < n; ++i) {
-        t[i] = 2.0*x*t[i-1] - t[i-2];
+        t[i] = 2.0 * x * t[i - 1] - t[i - 2];
     }
 }
 
@@ -97,24 +86,21 @@ void evaluateBasis1d(
 // Chebyshev order along columns and evaluation positions along rows.  We pack the
 // 2-d functions using the TrapezoidalPacker class, because we don't want any columns
 // that correspond to coefficients that should be set to zero.
-ndarray::Array<double,2,2> makeMatrix(
-    ndarray::Array<double const,1> const & x,
-    ndarray::Array<double const,1> const & y,
-    geom::AffineTransform const & toChebyshevRange,
-    Packer const & packer,
-    Control const & ctrl
-) {
+ndarray::Array<double, 2, 2> makeMatrix(ndarray::Array<double const, 1> const& x,
+                                        ndarray::Array<double const, 1> const& y,
+                                        geom::AffineTransform const& toChebyshevRange, Packer const& packer,
+                                        Control const& ctrl) {
     int const nPoints = x.getSize<0>();
-    ndarray::Array<double,1,1> tx = ndarray::allocate(packer.nx);
-    ndarray::Array<double,1,1> ty = ndarray::allocate(packer.ny);
-    ndarray::Array<double,2,2> out = ndarray::allocate(nPoints, packer.size);
+    ndarray::Array<double, 1, 1> tx = ndarray::allocate(packer.nx);
+    ndarray::Array<double, 1, 1> ty = ndarray::allocate(packer.ny);
+    ndarray::Array<double, 2, 2> out = ndarray::allocate(nPoints, packer.size);
     // Loop over x and y together, computing T_i(x) and T_j(y) arrays for each point,
     // then packing them together.
     for (int p = 0; p < nPoints; ++p) {
         geom::Point2D sxy = toChebyshevRange(geom::Point2D(x[p], y[p]));
         evaluateBasis1d(tx, sxy.getX());
         evaluateBasis1d(ty, sxy.getY());
-        packer.pack(out[p], tx, ty); // this sets a row of out to the packed outer product of tx and ty
+        packer.pack(out[p], tx, ty);  // this sets a row of out to the packed outer product of tx and ty
     }
     return out;
 }
@@ -123,31 +109,24 @@ ndarray::Array<double,2,2> makeMatrix(
 // Chebyshev order along columns and evaluation positions along rows.  We pack the
 // 2-d functions using the TrapezoidalPacker class, because we don't want any columns
 // that correspond to coefficients that should be set to zero.
-ndarray::Array<double,2,2> makeMatrix(
-    geom::Box2I const & bbox,
-    geom::AffineTransform const & toChebyshevRange,
-    Packer const & packer,
-    Control const & ctrl
-) {
+ndarray::Array<double, 2, 2> makeMatrix(geom::Box2I const& bbox,
+                                        geom::AffineTransform const& toChebyshevRange, Packer const& packer,
+                                        Control const& ctrl) {
     // Create a 2-d array that contains T_j(x) for each x value, with x values in rows and j in columns
-    ndarray::Array<double,2,2> tx = ndarray::allocate(bbox.getWidth(), packer.nx);
+    ndarray::Array<double, 2, 2> tx = ndarray::allocate(bbox.getWidth(), packer.nx);
     for (int x = bbox.getBeginX(), p = 0; p < bbox.getWidth(); ++p, ++x) {
-        evaluateBasis1d(
-            tx[p],
-            toChebyshevRange[geom::AffineTransform::XX]*x + toChebyshevRange[geom::AffineTransform::X]
-        );
+        evaluateBasis1d(tx[p], toChebyshevRange[geom::AffineTransform::XX] * x +
+                                       toChebyshevRange[geom::AffineTransform::X]);
     }
 
     // Loop over y values, and at each point, compute T_i(y), then loop over x and multiply by the T_j(x)
     // we already computed and stored above.
-    ndarray::Array<double,2,2> out = ndarray::allocate(bbox.getArea(),packer.size);
-    ndarray::Array<double,2,2>::Iterator outIter = out.begin();
-    ndarray::Array<double,1,1> ty = ndarray::allocate(ctrl.orderY + 1);
+    ndarray::Array<double, 2, 2> out = ndarray::allocate(bbox.getArea(), packer.size);
+    ndarray::Array<double, 2, 2>::Iterator outIter = out.begin();
+    ndarray::Array<double, 1, 1> ty = ndarray::allocate(ctrl.orderY + 1);
     for (int y = bbox.getBeginY(), i = 0; i < bbox.getHeight(); ++i, ++y) {
-        evaluateBasis1d(
-            ty,
-            toChebyshevRange[geom::AffineTransform::YY]*y + toChebyshevRange[geom::AffineTransform::Y]
-        );
+        evaluateBasis1d(ty, toChebyshevRange[geom::AffineTransform::YY] * y +
+                                    toChebyshevRange[geom::AffineTransform::Y]);
         for (int j = 0; j < bbox.getWidth(); ++j, ++outIter) {
             // this sets a row of out to the packed outer product of tx and ty
             packer.pack(*outIter, tx[j], ty);
@@ -156,22 +135,20 @@ ndarray::Array<double,2,2> makeMatrix(
     return out;
 }
 
-} // anonymous
+}  // anonymous
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
-    afw::geom::Box2I const & bbox,
-    ndarray::Array<double const,1> const & x,
-    ndarray::Array<double const,1> const & y,
-    ndarray::Array<double const,1> const & z,
-    Control const & ctrl
-) {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(afw::geom::Box2I const& bbox,
+                                                                  ndarray::Array<double const, 1> const& x,
+                                                                  ndarray::Array<double const, 1> const& y,
+                                                                  ndarray::Array<double const, 1> const& z,
+                                                                  Control const& ctrl) {
     // Initialize the result object, so we can make use of the AffineTransform it builds
-    PTR(ChebyshevBoundedField) result(new ChebyshevBoundedField(bbox));
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
     // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
     // using only those that the control says should have nonzero coefficients.
     Packer const packer(ctrl);
     // Create a "design matrix" for the linear least squares problem (A in min||Ax-b||)
-    ndarray::Array<double,2,2> matrix = makeMatrix(x, y, result->_toChebyshevRange, packer, ctrl);
+    ndarray::Array<double, 2, 2> matrix = makeMatrix(x, y, result->_toChebyshevRange, packer, ctrl);
     // Solve the linear least squares problem.
     LeastSquares lstsq = LeastSquares::fromDesignMatrix(matrix, z, LeastSquares::NORMAL_EIGENSYSTEM);
     // Unpack the solution into a 2-d matrix, with zeros for values we didn't fit.
@@ -179,25 +156,23 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
     return result;
 }
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
-    afw::geom::Box2I const & bbox,
-    ndarray::Array<double const,1> const & x,
-    ndarray::Array<double const,1> const & y,
-    ndarray::Array<double const,1> const & z,
-    ndarray::Array<double const,1> const & w,
-    Control const & ctrl
-) {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(afw::geom::Box2I const& bbox,
+                                                                  ndarray::Array<double const, 1> const& x,
+                                                                  ndarray::Array<double const, 1> const& y,
+                                                                  ndarray::Array<double const, 1> const& z,
+                                                                  ndarray::Array<double const, 1> const& w,
+                                                                  Control const& ctrl) {
     // Initialize the result object, so we can make use of the AffineTransform it builds
-    PTR(ChebyshevBoundedField) result(new ChebyshevBoundedField(bbox));
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
     // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
     // using only those that the control says should have nonzero coefficients.
     Packer const packer(ctrl);
     // Create a "design matrix" for the linear least squares problem ('A' in min||Ax-b||)
-    ndarray::Array<double,2,2> matrix = makeMatrix(x, y, result->_toChebyshevRange, packer, ctrl);
+    ndarray::Array<double, 2, 2> matrix = makeMatrix(x, y, result->_toChebyshevRange, packer, ctrl);
     // We want to do weighted least squares, so we multiply both the data vector 'b' and the
     // matrix 'A' by the weights.
     matrix.asEigen<Eigen::ArrayXpr>().colwise() *= w.asEigen<Eigen::ArrayXpr>();
-    ndarray::Array<double,1,1> wz = ndarray::copy(z);
+    ndarray::Array<double, 1, 1> wz = ndarray::copy(z);
     wz.asEigen<Eigen::ArrayXpr>() *= w.asEigen<Eigen::ArrayXpr>();
     // Solve the linear least squares problem.
     LeastSquares lstsq = LeastSquares::fromDesignMatrix(matrix, wz, LeastSquares::NORMAL_EIGENSYSTEM);
@@ -207,21 +182,19 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
 }
 
 template <typename T>
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
-    image::Image<T> const & img,
-    Control const & ctrl
-) {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(image::Image<T> const& img,
+                                                                  Control const& ctrl) {
     // Initialize the result object, so we can make use of the AffineTransform it builds
     geom::Box2I bbox = img.getBBox(image::PARENT);
-    PTR(ChebyshevBoundedField) result(new ChebyshevBoundedField(bbox));
+    std::shared_ptr<ChebyshevBoundedField> result(new ChebyshevBoundedField(bbox));
     // This packer object knows how to map the 2-d Chebyshev functions onto a 1-d array,
     // using only those that the control says should have nonzero coefficients.
     Packer const packer(ctrl);
-    ndarray::Array<double,2,2> matrix = makeMatrix(bbox, result->_toChebyshevRange, packer, ctrl);
+    ndarray::Array<double, 2, 2> matrix = makeMatrix(bbox, result->_toChebyshevRange, packer, ctrl);
     // Flatten the data image into a 1-d vector.
-    ndarray::Array<double,2,2> imgCopy = ndarray::allocate(img.getArray().getShape());
+    ndarray::Array<double, 2, 2> imgCopy = ndarray::allocate(img.getArray().getShape());
     imgCopy.deep() = img.getArray();
-    ndarray::Array<double const,1,1> z = ndarray::flatten<1>(imgCopy);
+    ndarray::Array<double const, 1, 1> z = ndarray::flatten<1>(imgCopy);
     // Solve the linear least squares problem.
     LeastSquares lstsq = LeastSquares::fromDesignMatrix(matrix, z, LeastSquares::NORMAL_EIGENSYSTEM);
     // Unpack the solution into a 2-d matrix, with zeros for values we didn't fit.
@@ -231,37 +204,33 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
 
 // ------------------ modifier factories ---------------------------------------------------------------
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::truncate(Control const & ctrl) const {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::truncate(Control const& ctrl) const {
     if (static_cast<std::size_t>(ctrl.orderX) >= _coefficients.getSize<1>()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::LengthError,
-            (boost::format("New x order (%d) exceeds old x order (%d)")
-             % ctrl.orderX % (_coefficients.getSize<1>() - 1)).str()
-        );
+        throw LSST_EXCEPT(pex::exceptions::LengthError,
+                          (boost::format("New x order (%d) exceeds old x order (%d)") % ctrl.orderX %
+                           (_coefficients.getSize<1>() -
+                            1)).str());
     }
     if (static_cast<std::size_t>(ctrl.orderY) >= _coefficients.getSize<0>()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::LengthError,
-            (boost::format("New y order (%d) exceeds old y order (%d)")
-             % ctrl.orderY % (_coefficients.getSize<0>() - 1)).str()
-        );
+        throw LSST_EXCEPT(pex::exceptions::LengthError,
+                          (boost::format("New y order (%d) exceeds old y order (%d)") % ctrl.orderY %
+                           (_coefficients.getSize<0>() -
+                            1)).str());
     }
-    ndarray::Array<double,2,2> coefficients = ndarray::allocate(ctrl.orderY + 1, ctrl.orderX + 1);
-    coefficients.deep()
-        = _coefficients[ndarray::view(0, ctrl.orderY + 1)(0, ctrl.orderX + 1)];
+    ndarray::Array<double, 2, 2> coefficients = ndarray::allocate(ctrl.orderY + 1, ctrl.orderX + 1);
+    coefficients.deep() = _coefficients[ndarray::view(0, ctrl.orderY + 1)(0, ctrl.orderX + 1)];
     if (ctrl.triangular) {
         Packer packer(ctrl);
-        ndarray::Array<double,1,1> packed = ndarray::allocate(packer.size);
+        ndarray::Array<double, 1, 1> packed = ndarray::allocate(packer.size);
         packer.pack(packed, coefficients);
         packer.unpack(coefficients, packed);
     }
     return std::make_shared<ChebyshevBoundedField>(getBBox(), coefficients);
 }
 
-PTR(ChebyshevBoundedField) ChebyshevBoundedField::relocate(geom::Box2I const & bbox) const {
+std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::relocate(geom::Box2I const& bbox) const {
     return std::make_shared<ChebyshevBoundedField>(bbox, _coefficients);
 }
-
 
 // ------------------ evaluate() and helpers ---------------------------------------------------------------
 
@@ -272,18 +241,14 @@ namespace {
 // The CoeffGetter argument g is something that behaves like an array, providing access
 // to the coefficients.
 template <typename CoeffGetter>
-double evaluateFunction1d(
-    CoeffGetter g,
-    double x,
-    int size
-) {
-    double b_kp2=0.0, b_kp1=0.0;
+double evaluateFunction1d(CoeffGetter g, double x, int size) {
+    double b_kp2 = 0.0, b_kp1 = 0.0;
     for (int k = (size - 1); k > 0; --k) {
-        double b_k = g[k] + 2*x*b_kp1 - b_kp2;
+        double b_k = g[k] + 2 * x * b_kp1 - b_kp2;
         b_kp2 = b_kp1;
         b_kp1 = b_k;
     }
-    return g[0] + x*b_kp1 - b_kp2;
+    return g[0] + x * b_kp1 - b_kp2;
 }
 
 // This class imitates a 1-d array, by running evaluateFunction1d on a nested dimension;
@@ -292,25 +257,23 @@ double evaluateFunction1d(
 // the result of that to evaluateFunction1d with the results as the "coefficients" associated
 // with the T_j(y) functions.
 struct RecursionArrayImitator {
-
     double operator[](int i) const {
         return evaluateFunction1d(coefficients[i], x, coefficients.getSize<1>());
     }
 
-    RecursionArrayImitator(ndarray::Array<double const,2,2> const & coefficients_, double x_) :
-        coefficients(coefficients_), x(x_)
-    {}
+    RecursionArrayImitator(ndarray::Array<double const, 2, 2> const& coefficients_, double x_)
+            : coefficients(coefficients_), x(x_) {}
 
-    ndarray::Array<double const,2,2> coefficients;
+    ndarray::Array<double const, 2, 2> coefficients;
     double x;
 };
 
-} // anonymous
+}  // anonymous
 
-double ChebyshevBoundedField::evaluate(geom::Point2D const & position) const {
+double ChebyshevBoundedField::evaluate(geom::Point2D const& position) const {
     geom::Point2D p = _toChebyshevRange(position);
-    return evaluateFunction1d(RecursionArrayImitator(_coefficients, p.getX()),
-                              p.getY(), _coefficients.getSize<0>());
+    return evaluateFunction1d(RecursionArrayImitator(_coefficients, p.getX()), p.getY(),
+                              _coefficients.getSize<0>());
 }
 
 // The integral of T_n(x) over [-1,1]:
@@ -319,23 +282,21 @@ double integrateTn(int n) {
     if (n % 2 == 1)
         return 0;
     else
-        return 2.0/(1.0 - double(n*n));
+        return 2.0 / (1.0 - double(n * n));
 }
 
 double ChebyshevBoundedField::integrate() const {
     double result = 0;
     double determinant = getBBox().getArea() / 4.0;
-    for (ndarray::Size j=0; j < _coefficients.getSize<0>(); j++){
-        for (ndarray::Size i=0; i < _coefficients.getSize<1>(); i++){
+    for (ndarray::Size j = 0; j < _coefficients.getSize<0>(); j++) {
+        for (ndarray::Size i = 0; i < _coefficients.getSize<1>(); i++) {
             result += _coefficients[j][i] * integrateTn(i) * integrateTn(j);
         }
     }
     return result * determinant;
 }
 
-double ChebyshevBoundedField::mean() const {
-    return integrate() / getBBox().getArea();
-}
+double ChebyshevBoundedField::mean() const { return integrate() / getBBox().getArea(); }
 
 // ------------------ persistence ---------------------------------------------------------------------------
 
@@ -346,72 +307,62 @@ struct PersistenceHelper {
     table::Key<int> orderX;
     table::PointKey<int> bboxMin;
     table::PointKey<int> bboxMax;
-    table::Key< table::Array<double> > coefficients;
+    table::Key<table::Array<double> > coefficients;
 
-    PersistenceHelper(int nx, int ny) :
-        schema(),
-        orderX(schema.addField<int>("order_x", "maximum Chebyshev function order in x")),
-        bboxMin(table::PointKey<int>::addFields(
-            schema, "bbox_min", "lower-left corner of bounding box", "pixel")),
-        bboxMax(table::PointKey<int>::addFields(
-            schema, "bbox_max", "upper-right corner of bounding box", "pixel")),
-        coefficients(
-            schema.addField< table::Array<double> >(
-                "coefficients", "Chebyshev function coefficients, ordered by y then x", nx*ny
-            )
-        )
-     {}
+    PersistenceHelper(int nx, int ny)
+            : schema(),
+              orderX(schema.addField<int>("order_x", "maximum Chebyshev function order in x")),
+              bboxMin(table::PointKey<int>::addFields(schema, "bbox_min", "lower-left corner of bounding box",
+                                                      "pixel")),
+              bboxMax(table::PointKey<int>::addFields(schema, "bbox_max",
+                                                      "upper-right corner of bounding box", "pixel")),
+              coefficients(schema.addField<table::Array<double> >(
+                      "coefficients", "Chebyshev function coefficients, ordered by y then x", nx * ny)) {}
 
-    PersistenceHelper(table::Schema const & s) :
-        schema(s),
-        orderX(s["order_x"]),
-        bboxMin(s["bbox_min"]),
-        bboxMax(s["bbox_max"]),
-        coefficients(s["coefficients"])
-    {}
-
+    PersistenceHelper(table::Schema const& s)
+            : schema(s),
+              orderX(s["order_x"]),
+              bboxMin(s["bbox_min"]),
+              bboxMax(s["bbox_max"]),
+              coefficients(s["coefficients"]) {}
 };
 
 class ChebyshevBoundedFieldFactory : public table::io::PersistableFactory {
 public:
-
-    virtual PTR(table::io::Persistable)
-    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        table::BaseRecord const & record = catalogs.front().front();
+        table::BaseRecord const& record = catalogs.front().front();
         PersistenceHelper const keys(record.getSchema());
         geom::Box2I bbox(record.get(keys.bboxMin), record.get(keys.bboxMax));
         int nx = record.get(keys.orderX) + 1;
         int ny = keys.coefficients.getSize() / nx;
         LSST_ARCHIVE_ASSERT(nx * ny == keys.coefficients.getSize());
-        ndarray::Array<double,2,2> coefficients = ndarray::allocate(ny, nx);
+        ndarray::Array<double, 2, 2> coefficients = ndarray::allocate(ny, nx);
         ndarray::flatten<1>(coefficients) = record.get(keys.coefficients);
         return std::make_shared<ChebyshevBoundedField>(bbox, coefficients);
     }
 
-    ChebyshevBoundedFieldFactory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
-
+    ChebyshevBoundedFieldFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 std::string getChebyshevBoundedFieldPersistenceName() { return "ChebyshevBoundedField"; }
 
 ChebyshevBoundedFieldFactory registration(getChebyshevBoundedFieldPersistenceName());
 
-} // anonymous
+}  // anonymous
 
 std::string ChebyshevBoundedField::getPersistenceName() const {
     return getChebyshevBoundedFieldPersistenceName();
 }
 
-std::string ChebyshevBoundedField::getPythonModule() const {
-    return "lsst.afw.math";
-}
+std::string ChebyshevBoundedField::getPythonModule() const { return "lsst.afw.math"; }
 
-void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
+void ChebyshevBoundedField::write(OutputArchiveHandle& handle) const {
     PersistenceHelper const keys(_coefficients.getSize<1>(), _coefficients.getSize<0>());
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(table::BaseRecord) record = catalog.addNew();
+    std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     record->set(keys.orderX, _coefficients.getSize<1>() - 1);
     record->set(keys.bboxMin, getBBox().getMin());
     record->set(keys.bboxMax, getBBox().getMax());
@@ -419,23 +370,22 @@ void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
-PTR(BoundedField) ChebyshevBoundedField::operator*(double const scale) const {
-    return std::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients()*scale));
+std::shared_ptr<BoundedField> ChebyshevBoundedField::operator*(double const scale) const {
+    return std::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients() * scale));
 }
 
 // ------------------ explicit instantiation ----------------------------------------------------------------
 
 #ifndef DOXYGEN
 
-#define INSTANTIATE(T)                                                 \
-    template PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(    \
-        image::Image<T> const & image,                                 \
-        Control const & ctrl                                           \
-    )
+#define INSTANTIATE(T)                                                                                       \
+    template std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(image::Image<T> const& image, \
+                                                                               Control const& ctrl)
 
 INSTANTIATE(float);
 INSTANTIATE(double);
 
 #endif
-
-}}} // namespace lsst::afw::math
+}
+}
+}  // namespace lsst::afw::math

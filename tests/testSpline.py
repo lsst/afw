@@ -114,7 +114,8 @@ class SplineTestCase(unittest.TestCase):
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
-            self.assertAlmostEqual(y, self.noDerivative(x), 1)  # fails at 2 places!
+            # fails at 2 places!
+            self.assertAlmostEqual(y, self.noDerivative(x), 1)
 
     def testTautSpline1(self):
         """Test fitting a taut spline to a smooth function"""
@@ -145,7 +146,8 @@ class SplineTestCase(unittest.TestCase):
         sp = afwMath.TautSpline(self.x, self.yND, gamma)
 
         for value in (0.1, 0.5):
-            self.assertEqual(sp.roots(value, self.x[0], self.x[-1])[0], 1 - value)
+            self.assertEqual(
+                sp.roots(value, self.x[0], self.x[-1])[0], 1 - value)
 
         if False:
             y = []
@@ -167,6 +169,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

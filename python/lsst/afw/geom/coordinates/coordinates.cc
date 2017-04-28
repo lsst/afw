@@ -39,50 +39,47 @@ namespace geom {
 namespace {
 
 template <typename Derived, typename T, int N>
-using PyCoordinateBase = py::class_<CoordinateBase<Derived,T,N>>;
+using PyCoordinateBase = py::class_<CoordinateBase<Derived, T, N>>;
 
 template <int N>
-using PyCoordinateExpr = py::class_<CoordinateExpr<N>, CoordinateBase<CoordinateExpr<N>,bool,N>>;
+using PyCoordinateExpr = py::class_<CoordinateExpr<N>, CoordinateBase<CoordinateExpr<N>, bool, N>>;
 
 template <typename T, int N>
-using PyExtentBase = py::class_<ExtentBase<T,N>, CoordinateBase<Extent<T,N>,T,N>>;
+using PyExtentBase = py::class_<ExtentBase<T, N>, CoordinateBase<Extent<T, N>, T, N>>;
 
 template <typename T, int N>
-using PyExtent = py::class_<Extent<T,N>, ExtentBase<T,N>>;
+using PyExtent = py::class_<Extent<T, N>, ExtentBase<T, N>>;
 
 template <typename T, int N>
-using PyPointBase = py::class_<PointBase<T,N>, CoordinateBase<Point<T,N>,T,N>>;
+using PyPointBase = py::class_<PointBase<T, N>, CoordinateBase<Point<T, N>, T, N>>;
 
 template <typename T, int N>
-using PyPoint = py::class_<Point<T,N>, PointBase<T,N>>;
-
+using PyPoint = py::class_<Point<T, N>, PointBase<T, N>>;
 
 template <typename Derived, typename T, int N>
-void declareCoordinateBase(py::module & mod, std::string const & suffix) {
+void declareCoordinateBase(py::module &mod, std::string const &suffix) {
     static std::string const name = "CoordinateBase" + suffix;
-    PyCoordinateBase<Derived,T,N> cls(mod, name.c_str());
+    PyCoordinateBase<Derived, T, N> cls(mod, name.c_str());
 
     /* Operators */
-    cls.def("__getitem__", [](CoordinateBase<Derived,T,N> & self, int i) -> T {
+    cls.def("__getitem__", [](CoordinateBase<Derived, T, N> &self, int i) -> T {
         return self[utils::python::cppIndex(N, i)];
     });
-    cls.def("__setitem__", [](CoordinateBase<Derived,T,N> & self, int i, T value) {
+    cls.def("__setitem__", [](CoordinateBase<Derived, T, N> &self, int i, T value) {
         self[utils::python::cppIndex(N, i)] = value;
     });
-    cls.def("__len__", [](CoordinateBase<Derived,T,N> &c) -> int {
-        return N;
-    });
+    cls.def("__len__", [](CoordinateBase<Derived, T, N> &c) -> int { return N; });
 }
 
 template <int N>
-void declareCoordinateExpr(py::module & mod, std::string const & suffix) {
+void declareCoordinateExpr(py::module &mod, std::string const &suffix) {
     static std::string const name = "CoordinateExpr" + suffix;
-    declareCoordinateBase<CoordinateExpr<N>,bool,N>(mod, name);
+    declareCoordinateBase<CoordinateExpr<N>, bool, N>(mod, name);
 
     PyCoordinateExpr<N> clsCoordinateExpr(mod, name.c_str());
 
     /* Constructors */
-    clsCoordinateExpr.def(py::init<bool>(), "val"_a=false);
+    clsCoordinateExpr.def(py::init<bool>(), "val"_a = false);
 
     /* Operators */
     clsCoordinateExpr.def("and_", &CoordinateExpr<N>::and_);
@@ -94,11 +91,11 @@ void declareCoordinateExpr(py::module & mod, std::string const & suffix) {
 }
 
 template <typename T, int N>
-void declareExtentBase(py::module & mod, std::string const & suffix) {
-    declareCoordinateBase<Extent<T,N>,T,N>(mod, "Extent" + suffix);
+void declareExtentBase(py::module &mod, std::string const &suffix) {
+    declareCoordinateBase<Extent<T, N>, T, N>(mod, "Extent" + suffix);
     static std::string const name = "ExtentBase" + suffix;
 
-    PyExtentBase<T,N> cls(mod, name.c_str());
+    PyExtentBase<T, N> cls(mod, name.c_str());
 
     // These are not the usual Python double-underscore operators - they do elementwise comparisons,
     // returning a CoordinateExpr object with boolean x and y values.  NumPy examples to the contrary
@@ -124,14 +121,14 @@ void declareExtentBase(py::module & mod, std::string const & suffix) {
 
 // Common functionality for all Extents, including declaring base classes.
 template <typename T, int N>
-PyExtent<T,N> declareExtent(py::module & mod, std::string const & suffix) {
-    declareExtentBase<T,N>(mod, suffix);
+PyExtent<T, N> declareExtent(py::module &mod, std::string const &suffix) {
+    declareExtentBase<T, N>(mod, suffix);
     static std::string const name = "Extent" + suffix;
 
-    PyExtent<T,N> cls(mod, name.c_str());
+    PyExtent<T, N> cls(mod, name.c_str());
 
     /* Constructors */
-    cls.def(py::init<T>(), "value"_a=static_cast<T>(0));
+    cls.def(py::init<T>(), "value"_a = static_cast<T>(0));
     cls.def(py::init<Point<int, N> const &>());
     cls.def(py::init<Point<T, N> const &>());
     cls.def(py::init<Extent<int, N> const &>());
@@ -139,14 +136,12 @@ PyExtent<T,N> declareExtent(py::module & mod, std::string const & suffix) {
     cls.def(py::init<typename Extent<T, N>::EigenVector>());
 
     /* Operators */
-    cls.def("__neg__", [](Extent<T, N> const & self) { return -self; });
-    cls.def("__pos__", [](Extent<T, N> const & self) { return self; });
-    cls.def("__mul__", [](Extent<T, N> const & self, int other) { return self * other; },
+    cls.def("__neg__", [](Extent<T, N> const &self) { return -self; });
+    cls.def("__pos__", [](Extent<T, N> const &self) { return self; });
+    cls.def("__mul__", [](Extent<T, N> const &self, int other) { return self * other; }, py::is_operator());
+    cls.def("__mul__", [](Extent<T, N> const &self, double other) { return self * other; },
             py::is_operator());
-    cls.def("__mul__", [](Extent<T, N> const & self, double other) { return self * other; },
-            py::is_operator());
-    cls.def("__rmul__", [](Extent<T, N> const & self, int other) { return self * other; },
-            py::is_operator());
+    cls.def("__rmul__", [](Extent<T, N> const &self, int other) { return self * other; }, py::is_operator());
     cls.def("__rmul__", [](Extent<T, N> const &self, double other) { return self * other; },
             py::is_operator());
     cls.def("__add__", [](Extent<T, N> const &self, Extent<int, N> const &other) { return self + other; },
@@ -169,14 +164,14 @@ PyExtent<T,N> declareExtent(py::module & mod, std::string const & suffix) {
             py::is_operator());
 
     /* Members */
-    cls.def("clone", [](Extent<T, N> const & self) { return Extent<T, N>{self}; });
+    cls.def("clone", [](Extent<T, N> const &self) { return Extent<T, N>{self}; });
 
     return cls;
 }
 
 // Add functionality only found in N=2 Extents (and delgate to declareExtent for the rest)
 template <typename T>
-PyExtent<T,2> declareExtent2(py::module & mod, std::string const & suffix) {
+PyExtent<T, 2> declareExtent2(py::module &mod, std::string const &suffix) {
     auto cls = declareExtent<T, 2>(mod, std::string("2") + suffix);
 
     /* Members types and enums */
@@ -187,17 +182,17 @@ PyExtent<T,2> declareExtent2(py::module & mod, std::string const & suffix) {
     cls.def(py::init<double, double>(), "x"_a, "y"_a);
 
     /* Members */
-    cls.def("getX", [](Extent<T, 2> const & self) { return self[0]; });
-    cls.def("getY", [](Extent<T, 2> const & self) { return self[1]; });
-    cls.def("setX", [](Extent<T, 2> & self, T other) { self[0] = other; });
-    cls.def("setY", [](Extent<T, 2> & self, T other) { self[1] = other; });
+    cls.def("getX", [](Extent<T, 2> const &self) { return self[0]; });
+    cls.def("getY", [](Extent<T, 2> const &self) { return self[1]; });
+    cls.def("setX", [](Extent<T, 2> &self, T other) { self[0] = other; });
+    cls.def("setY", [](Extent<T, 2> &self, T other) { self[1] = other; });
 
     return cls;
 }
 
 // Add functionality only found in N=3 Extents (and delgate to declareExtent for the rest)
 template <typename T>
-PyExtent<T,3> declareExtent3(py::module &mod, const std::string &suffix) {
+PyExtent<T, 3> declareExtent3(py::module &mod, const std::string &suffix) {
     auto cls = declareExtent<T, 3>(mod, std::string("3") + suffix);
 
     /* Member types and enums */
@@ -208,12 +203,12 @@ PyExtent<T,3> declareExtent3(py::module &mod, const std::string &suffix) {
     cls.def(py::init<double, double, double>(), "x"_a, "y"_a, "z"_a);
 
     /* Members */
-    cls.def("getX", [](Extent<T, 3> const & self) { return self[0]; });
-    cls.def("getY", [](Extent<T, 3> const & self) { return self[1]; });
-    cls.def("getZ", [](Extent<T, 3> const & self) { return self[2]; });
-    cls.def("setX", [](Extent<T, 3> & self, T other) { self[0] = other; });
-    cls.def("setY", [](Extent<T, 3> & self, T other) { self[1] = other; });
-    cls.def("setZ", [](Extent<T, 3> & self, T other) { self[2] = other; });
+    cls.def("getX", [](Extent<T, 3> const &self) { return self[0]; });
+    cls.def("getY", [](Extent<T, 3> const &self) { return self[1]; });
+    cls.def("getZ", [](Extent<T, 3> const &self) { return self[2]; });
+    cls.def("setX", [](Extent<T, 3> &self, T other) { self[0] = other; });
+    cls.def("setY", [](Extent<T, 3> &self, T other) { self[1] = other; });
+    cls.def("setZ", [](Extent<T, 3> &self, T other) { self[2] = other; });
 
     return cls;
 }
@@ -224,7 +219,7 @@ PyExtent<T,3> declareExtent3(py::module &mod, const std::string &suffix) {
 // operators that dispatch on a scalar, and hence they have to be defined here
 // instead of declareExtent.
 template <int N>
-void declareExtentOperators(py::module & mod, PyExtent<int,N> & clsI, PyExtent<double,N> & clsD) {
+void declareExtentOperators(py::module &mod, PyExtent<int, N> &clsI, PyExtent<double, N> &clsD) {
     // Python's integer division works differently than C++'s for negative numbers - Python
     // uses floor (rounds towards more negative), while C++ truncates (rounds towards zero).
     // Therefore one needs to be careful in the definition of division operators.
@@ -302,28 +297,27 @@ void declareExtentOperators(py::module & mod, PyExtent<int,N> & clsI, PyExtent<d
     clsD.def("ceil", ceil<N>);
 }
 
-
 template <typename T, int N>
-void declarePointBase(py::module &mod, std::string const & suffix) {
-    declareCoordinateBase<Point<T,N>,T,N>(mod, "Point" + suffix);
+void declarePointBase(py::module &mod, std::string const &suffix) {
+    declareCoordinateBase<Point<T, N>, T, N>(mod, "Point" + suffix);
     static std::string const name = "PointBase" + suffix;
-    PyPointBase<T,N> cls(mod, name.c_str());
+    PyPointBase<T, N> cls(mod, name.c_str());
 
     // These are not the usual Python double-underscore operators - they do elementwise comparisons,
     // returning a CoordinateExpr object with boolean x and y values.  NumPy examples to the contrary
     // notwithstanding, true Python comparison operators are expected to return scalar bools.
-    cls.def("eq", [](PointBase<T, N> const & self, Point<T, N> const & other) { return self.eq(other); });
-    cls.def("ne", [](PointBase<T, N> const & self, Point<T, N> const & other) { return self.ne(other); });
-    cls.def("lt", [](PointBase<T, N> const & self, Point<T, N> const & other) { return self.lt(other); });
-    cls.def("le", [](PointBase<T, N> const & self, Point<T, N> const & other) { return self.le(other); });
-    cls.def("gt", [](PointBase<T, N> const & self, Point<T, N> const & other) { return self.gt(other); });
-    cls.def("ge", [](PointBase<T, N> const & self, Point<T, N> const & other) { return self.ge(other); });
-    cls.def("eq", [](PointBase<T, N> const & self, T other) { return self.eq(other); });
-    cls.def("ne", [](PointBase<T, N> const & self, T other) { return self.ne(other); });
-    cls.def("lt", [](PointBase<T, N> const & self, T other) { return self.lt(other); });
-    cls.def("le", [](PointBase<T, N> const & self, T other) { return self.le(other); });
-    cls.def("gt", [](PointBase<T, N> const & self, T other) { return self.gt(other); });
-    cls.def("ge", [](PointBase<T, N> const & self, T other) { return self.ge(other); });
+    cls.def("eq", [](PointBase<T, N> const &self, Point<T, N> const &other) { return self.eq(other); });
+    cls.def("ne", [](PointBase<T, N> const &self, Point<T, N> const &other) { return self.ne(other); });
+    cls.def("lt", [](PointBase<T, N> const &self, Point<T, N> const &other) { return self.lt(other); });
+    cls.def("le", [](PointBase<T, N> const &self, Point<T, N> const &other) { return self.le(other); });
+    cls.def("gt", [](PointBase<T, N> const &self, Point<T, N> const &other) { return self.gt(other); });
+    cls.def("ge", [](PointBase<T, N> const &self, Point<T, N> const &other) { return self.ge(other); });
+    cls.def("eq", [](PointBase<T, N> const &self, T other) { return self.eq(other); });
+    cls.def("ne", [](PointBase<T, N> const &self, T other) { return self.ne(other); });
+    cls.def("lt", [](PointBase<T, N> const &self, T other) { return self.lt(other); });
+    cls.def("le", [](PointBase<T, N> const &self, T other) { return self.le(other); });
+    cls.def("gt", [](PointBase<T, N> const &self, T other) { return self.gt(other); });
+    cls.def("ge", [](PointBase<T, N> const &self, T other) { return self.ge(other); });
 
     /* Members */
     cls.def("asExtent", &PointBase<T, N>::asExtent);
@@ -335,13 +329,13 @@ void declarePointBase(py::module &mod, std::string const & suffix) {
 
 // Common functionality
 template <typename T, int N>
-PyPoint<T,N> declarePoint(py::module &mod, std::string const &suffix) {
-    declarePointBase<T,N>(mod, suffix);
+PyPoint<T, N> declarePoint(py::module &mod, std::string const &suffix) {
+    declarePointBase<T, N>(mod, suffix);
     static std::string const name = "Point" + suffix;
-    PyPoint<T,N> cls(mod, name.c_str());
+    PyPoint<T, N> cls(mod, name.c_str());
 
     /* Constructors */
-    cls.def(py::init<T>(), "value"_a=static_cast<T>(0));
+    cls.def(py::init<T>(), "value"_a = static_cast<T>(0));
     // Note that we can't use T here because both types are needed
     cls.def(py::init<Point<double, N> const &>());
     cls.def(py::init<Point<int, N> const &>());
@@ -405,8 +399,8 @@ PyPoint<T, 3> declarePoint3(py::module &mod, std::string const &suffix) {
     cls.def_property_readonly_static("dimensions", [](py::object /* cls */) { return 3; });
 
     /* Constructors */
-    cls.def(py::init<int, int, int>(),"x"_a, "y"_a, "z"_a);
-    cls.def(py::init<double, double, double>(),"x"_a, "y"_a, "z"_a);
+    cls.def(py::init<int, int, int>(), "x"_a, "y"_a, "z"_a);
+    cls.def(py::init<double, double, double>(), "x"_a, "y"_a, "z"_a);
 
     /* Members */
     cls.def("getX", [](Point<T, 3> const &self) { return self[0]; });
@@ -425,7 +419,7 @@ PyPoint<T, 3> declarePoint3(py::module &mod, std::string const &suffix) {
 // operators that dispatch on a scalar, and hence they have to be defined here
 // instead of declareExtent.
 template <int N>
-void declarePointOperators(py::module & mod, PyPoint<int,N> & clsI, PyPoint<double,N> & clsD) {
+void declarePointOperators(py::module &mod, PyPoint<int, N> &clsI, PyPoint<double, N> &clsD) {
     clsI.def("__iadd__", [](Point<int, N> &self, Extent<int, N> const &other) {
         self += other;
         return &self;
@@ -451,7 +445,6 @@ void declarePointOperators(py::module & mod, PyPoint<int,N> & clsI, PyPoint<doub
         return &self;
     });
 }
-
 
 PYBIND11_PLUGIN(coordinates) {
     py::module mod("coordinates");
@@ -485,5 +478,7 @@ PYBIND11_PLUGIN(coordinates) {
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::geom::<anonymous>

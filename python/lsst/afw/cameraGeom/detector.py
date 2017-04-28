@@ -23,7 +23,8 @@ from __future__ import absolute_import, division, print_function
 
 from ._detector import Detector, DetectorType
 
-__all__ = ["Detector", "DetectorType", "SCIENCE", "FOCUS", "GUIDER", "WAVEFRONT"]
+__all__ = ["Detector", "DetectorType",
+           "SCIENCE", "FOCUS", "GUIDER", "WAVEFRONT"]
 
 # export DetectorType enums as module globals for SWIG compatibility;
 # @TODO update our code to stop using these globals and remove this code
@@ -35,5 +36,6 @@ WAVEFRONT = DetectorType.WAVEFRONT
 
 def __iter__(self):
     return (self[i] for i in range(len(self)))
+
 
 Detector.__iter__ = __iter__

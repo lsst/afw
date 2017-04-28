@@ -28,28 +28,20 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-Detector::Detector(
-    std::string const &name,
-    int id,
-    DetectorType type,
-    std::string const &serial,
-    geom::Box2I const &bbox,
-    table::AmpInfoCatalog const &ampInfoCatalog,
-    Orientation const &orientation,
-    geom::Extent2D const & pixelSize,
-    CameraTransformMap::Transforms const &transforms
-) :
-    _name(name),
-    _id(id),
-    _type(type),
-    _serial(serial),
-    _bbox(bbox),
-    _ampInfoCatalog(ampInfoCatalog),
-    _ampNameIterMap(),
-    _orientation(orientation),
-    _pixelSize(pixelSize),
-    _transformMap(CameraSys(PIXELS.getSysName(), name), transforms)
-{
+Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+                   geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
+                   Orientation const &orientation, geom::Extent2D const &pixelSize,
+                   CameraTransformMap::Transforms const &transforms)
+        : _name(name),
+          _id(id),
+          _type(type),
+          _serial(serial),
+          _bbox(bbox),
+          _ampInfoCatalog(ampInfoCatalog),
+          _ampNameIterMap(),
+          _orientation(orientation),
+          _pixelSize(pixelSize),
+          _transformMap(CameraSys(PIXELS.getSysName(), name), transforms) {
     _init();
 }
 
@@ -71,9 +63,7 @@ CameraPoint Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
     return getCenter(makeCameraSys(cameraSysPrefix));
 }
 
-const table::AmpInfoRecord & Detector::operator[](std::string const &name) const {
-    return *(_get(name));
-}
+const table::AmpInfoRecord &Detector::operator[](std::string const &name) const { return *(_get(name)); }
 
 std::shared_ptr<table::AmpInfoRecord const> Detector::_get(int i) const {
     if (i < 0) {
@@ -82,7 +72,7 @@ std::shared_ptr<table::AmpInfoRecord const> Detector::_get(int i) const {
     return _ampInfoCatalog.get(i);
 }
 
-std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const & name) const {
+std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const &name) const {
     _AmpInfoMap::const_iterator ampIter = _ampNameIterMap.find(name);
     if (ampIter == _ampNameIterMap.end()) {
         std::ostringstream os;
@@ -92,43 +82,42 @@ std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const & n
     return ampIter->second;
 }
 
-bool Detector::hasTransform(CameraSys const &cameraSys) const {
-        return _transformMap.contains(cameraSys);
-}
+bool Detector::hasTransform(CameraSys const &cameraSys) const { return _transformMap.contains(cameraSys); }
 
 bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
     return hasTransform(makeCameraSys(cameraSysPrefix));
 }
 
-CONST_PTR(afw::geom::XYTransform) Detector::getTransform(CameraSys const &cameraSys) const {
+std::shared_ptr<afw::geom::XYTransform const> Detector::getTransform(CameraSys const &cameraSys) const {
     return _transformMap[cameraSys];
 }
 
-CONST_PTR(afw::geom::XYTransform) Detector::getTransform(CameraSysPrefix const &cameraSysPrefix) const {
+std::shared_ptr<afw::geom::XYTransform const> Detector::getTransform(
+        CameraSysPrefix const &cameraSysPrefix) const {
     return getTransform(makeCameraSys(cameraSysPrefix));
 }
-
 
 void Detector::_init() {
     // make _ampNameIterMap
     for (table::AmpInfoCatalog::const_iterator ampIter = _ampInfoCatalog.begin();
-        ampIter != _ampInfoCatalog.end(); ++ampIter) {
+         ampIter != _ampInfoCatalog.end(); ++ampIter) {
         _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
     }
     if (_ampNameIterMap.size() != _ampInfoCatalog.size()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-            "Invalid ampInfoCatalog: not all amplifier names are unique");
+                          "Invalid ampInfoCatalog: not all amplifier names are unique");
     }
 
     // check detector name in CoordSys in transform registry
     for (CameraTransformMap::Transforms::const_iterator trIter = _transformMap.begin();
-        trIter != _transformMap.end(); ++trIter) {
-            if (trIter->first.hasDetectorName() && trIter->first.getDetectorName() != _name) {
-                std::ostringstream os;
-                os << "Invalid transformMap: " << trIter->first << " detector name != \"" << _name << "\"";
-                throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
-            }
+         trIter != _transformMap.end(); ++trIter) {
+        if (trIter->first.hasDetectorName() && trIter->first.getDetectorName() != _name) {
+            std::ostringstream os;
+            os << "Invalid transformMap: " << trIter->first << " detector name != \"" << _name << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
     }
 }
-
-}}}
+}
+}
+}

@@ -20,9 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
+/*
  * Rotate an Image (or Mask or MaskedImage) by a fixed angle or number of quarter turns
  */
 #include <cstdint>
@@ -36,79 +34,68 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-/**
- * Rotate an image by an integral number of quarter turns
- */
-template<typename ImageT>
-typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to rotate
-                                     int nQuarter ///< the desired number of quarter turns
-                                    ) {
-    typename ImageT::Ptr outImage;      // output image
+template <typename ImageT>
+std::shared_ptr<ImageT> rotateImageBy90(ImageT const& inImage, int nQuarter) {
+    std::shared_ptr<ImageT> outImage;  // output image
 
     while (nQuarter < 0) {
         nQuarter += 4;
     }
 
-    switch (nQuarter%4) {
-    case 0:
-        outImage.reset(new ImageT(inImage, true)); // a deep copy of inImage
-        break;
-    case 1:
-        outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
+    switch (nQuarter % 4) {
+        case 0:
+            outImage.reset(new ImageT(inImage, true));  // a deep copy of inImage
+            break;
+        case 1:
+            outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
-        for (int y = 0; y != inImage.getHeight(); ++y) {
-            typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
-            for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                 iptr != end; ++iptr, ++optr) {
-                *optr = *iptr;
+            for (int y = 0; y != inImage.getHeight(); ++y) {
+                typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
+                for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
+                     iptr != end; ++iptr, ++optr) {
+                    *optr = *iptr;
+                }
             }
-        }
 
-        break;
-    case 2:
-        outImage.reset(new ImageT(inImage.getDimensions()));
+            break;
+        case 2:
+            outImage.reset(new ImageT(inImage.getDimensions()));
 
-        for (int y = 0; y != inImage.getHeight(); ++y) {
-            typename ImageT::x_iterator optr = outImage->x_at(inImage.getWidth() - 1,
-                                                              inImage.getHeight() - y - 1);
-            for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                 iptr != end; ++iptr, optr -= 1) {
-                *optr = *iptr;
+            for (int y = 0; y != inImage.getHeight(); ++y) {
+                typename ImageT::x_iterator optr =
+                        outImage->x_at(inImage.getWidth() - 1, inImage.getHeight() - y - 1);
+                for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
+                     iptr != end; ++iptr, optr -= 1) {
+                    *optr = *iptr;
+                }
             }
-        }
-        break;
-    case 3:
-        outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
+            break;
+        case 3:
+            outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
-        for (int y = 0; y != inImage.getHeight(); ++y) {
-            typename ImageT::y_iterator optr = outImage->y_at(y, inImage.getWidth() - 1);
-            for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
-                 iptr != end; ++iptr, optr -= 1) {
-                *optr = *iptr;
+            for (int y = 0; y != inImage.getHeight(); ++y) {
+                typename ImageT::y_iterator optr = outImage->y_at(y, inImage.getWidth() - 1);
+                for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
+                     iptr != end; ++iptr, optr -= 1) {
+                    *optr = *iptr;
+                }
             }
-        }
 
-        break;
+            break;
     }
 
     return outImage;
 }
 
-/**
- * Flip an image left--right and/or top--bottom
- */
-template<typename ImageT>
-PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
-                      bool flipLR,           ///< Flip left <--> right?
-                      bool flipTB            ///< Flip top <--> bottom?
-                     ) {
-    typename ImageT::Ptr outImage(new ImageT(inImage, true)); // Output image
+template <typename ImageT>
+std::shared_ptr<ImageT> flipImage(ImageT const& inImage, bool flipLR, bool flipTB) {
+    std::shared_ptr<ImageT> outImage(new ImageT(inImage, true));  // Output image
 
     if (flipLR) {
         if (flipTB) {
             for (int y = 0; y != inImage.getHeight(); ++y) {
-                typename ImageT::x_iterator optr = outImage->x_at(inImage.getWidth() - 1,
-                                                                  inImage.getHeight() - y - 1);
+                typename ImageT::x_iterator optr =
+                        outImage->x_at(inImage.getWidth() - 1, inImage.getHeight() - y - 1);
                 for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
                      iptr != end; ++iptr, optr -= 1) {
                     *optr = *iptr;
@@ -133,31 +120,35 @@ PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
                 }
             }
         } else {
-            ;                           // nothing to do
+            ;  // nothing to do
         }
     }
 
     return outImage;
 }
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //
-/// \cond
-#define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
-    template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int); \
-    template afwImage::Image<TYPE>::Ptr flipImage(afwImage::Image<TYPE> const&, bool flipLR, bool flipTB); \
-    template afwImage::MaskedImage<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB);
-
+/// @cond
+#define INSTANTIATE(TYPE)                                                                                \
+    template std::shared_ptr<afwImage::Image<TYPE>> rotateImageBy90(afwImage::Image<TYPE> const&, int);  \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> rotateImageBy90(                               \
+            afwImage::MaskedImage<TYPE> const&, int);                                                    \
+    template std::shared_ptr<afwImage::Image<TYPE>> flipImage(afwImage::Image<TYPE> const&, bool flipLR, \
+                                                              bool flipTB);                              \
+    template std::shared_ptr<afwImage::MaskedImage<TYPE>> flipImage(afwImage::MaskedImage<TYPE> const&,  \
+                                                                    bool flipLR, bool flipTB);
 
 INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template afwImage::Mask<std::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int);
-template afwImage::Mask<std::uint16_t>::Ptr flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB);
-/// \endcond
-
-}}}
+template std::shared_ptr<afwImage::Mask<std::uint16_t>> rotateImageBy90(afwImage::Mask<std::uint16_t> const&,
+                                                                        int);
+template std::shared_ptr<afwImage::Mask<std::uint16_t>> flipImage(afwImage::Mask<std::uint16_t> const&,
+                                                                  bool flipLR, bool flipTB);
+/// @endcond
+}
+}
+}

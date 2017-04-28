@@ -29,19 +29,19 @@ namespace py = pybind11;
 
 using namespace py::literals;
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 namespace {
 
 template <typename ImageT>
-static void declareImagePca(py::module & mod, std::string const & suffix) {
+static void declareImagePca(py::module &mod, std::string const &suffix) {
     py::class_<ImagePca<ImageT>, std::shared_ptr<ImagePca<ImageT>>> cls(mod, ("ImagePca" + suffix).c_str());
 
-    cls.def(py::init<bool>(),
-            "constantWeight"_a=true);
+    cls.def(py::init<bool>(), "constantWeight"_a = true);
 
-    cls.def("addImage", &ImagePca<ImageT>::addImage,
-            "img"_a, "flux"_a=0.0);
+    cls.def("addImage", &ImagePca<ImageT>::addImage, "img"_a, "flux"_a = 0.0);
     cls.def("getImageList", &ImagePca<ImageT>::getImageList);
     cls.def("getDimensions", &ImagePca<ImageT>::getDimensions);
     cls.def("getMean", &ImagePca<ImageT>::getMean);
@@ -52,12 +52,13 @@ static void declareImagePca(py::module & mod, std::string const & suffix) {
 }
 
 template <typename Image1T, typename Image2T>
-static void declareInnerProduct(py::module & mod) {
-    mod.def("innerProduct", (double (*)(Image1T const &, Image2T const &, int const)) innerProduct<Image1T, Image2T>,
-            "lhs"_a, "rhs"_a, "border"_a=0);
+static void declareInnerProduct(py::module &mod) {
+    mod.def("innerProduct",
+            (double (*)(Image1T const &, Image2T const &, int const))innerProduct<Image1T, Image2T>, "lhs"_a,
+            "rhs"_a, "border"_a = 0);
 }
 
-} // namespace
+}  // namespace
 
 PYBIND11_PLUGIN(imagePca) {
     py::module mod("imagePca");
@@ -84,5 +85,6 @@ PYBIND11_PLUGIN(imagePca) {
 
     return mod.ptr();
 }
-
-}}} // lsst::afw::image
+}
+}
+}  // lsst::afw::image

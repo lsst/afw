@@ -34,7 +34,9 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-namespace lsst { namespace afw { namespace image {
+namespace lsst {
+namespace afw {
+namespace image {
 
 using PyTanWcs = py::class_<TanWcs, std::shared_ptr<TanWcs>, table::io::PersistableFacade<TanWcs>, Wcs>;
 
@@ -44,9 +46,9 @@ PYBIND11_PLUGIN(tanWcs) {
     py::module::import("lsst.afw.image.wcs");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
-        }
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
 
     table::io::python::declarePersistableFacade<TanWcs>(mod, "TanWcs");
 
@@ -84,5 +86,6 @@ PYBIND11_PLUGIN(tanWcs) {
 
     return mod.ptr();
 }
-
-}}} // lsst::afw::image
+}
+}
+}  // lsst::afw::image

@@ -34,6 +34,8 @@ from .baseColumnView import _BaseColumnViewBase
 # We can't call this "BaseColumnView" because that's the typedef for
 # "ColumnViewT<BaseRecord>". This is just a mostly-invisible implementation
 # base class, so we use the same naming convention we use for those.
+
+
 @continueClass
 class _BaseColumnViewBase:
 
@@ -138,11 +140,13 @@ class _BaseColumnViewBase:
         where = kwds.pop("where", None)
         d = kwds.pop("items", None)
         # If ``items`` is given as a kwd, an extraction has already been performed and there shouldn't be
-        # any additional keywords. Otherwise call schema.extract to load the dictionary.
+        # any additional keywords. Otherwise call schema.extract to load the
+        # dictionary.
         if d is None:
             d = self.schema.extract(*patterns, **kwds).copy()
         elif kwds:
-            raise ValueError("kwd 'items' was specified, which is not compatible with additional keywords")
+            raise ValueError(
+                "kwd 'items' was specified, which is not compatible with additional keywords")
 
         def processArray(a):
             if where is not None:
@@ -151,7 +155,8 @@ class _BaseColumnViewBase:
                 a = np.ascontiguousarray(a)
             return a
 
-        for name, schemaItem in list(d.items()):  # must use list because we might be adding/deleting elements
+        # must use list because we might be adding/deleting elements
+        for name, schemaItem in list(d.items()):
             key = schemaItem.key
             if key.getTypeString() == "String":
                 del d[name]

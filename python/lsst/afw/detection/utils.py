@@ -1,5 +1,4 @@
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,6 +22,7 @@ from __future__ import absolute_import
 #
 
 from . import detectionLib as afwDetect
+
 
 def writeFootprintAsDefects(fd, foot):
     """Write foot as a set of Defects to fd"""

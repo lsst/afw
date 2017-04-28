@@ -19,15 +19,17 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 from past.builtins import basestring
 from builtins import object
 from lsst.afw.geom import Box2D
 from .cameraGeomLib import FOCAL_PLANE
 
+
 class DetectorCollection(object):
     """!An immutable collection of Detectors that can be accessed by name or ID
     """
+
     def __init__(self, detectorList):
         """!Construct a DetectorCollection
 

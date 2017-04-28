@@ -318,8 +318,6 @@ Detected pixels are manipulated using the following classes:
  - Source : The properties of a source of electrons (e.g. a star or cosmic ray)
  - Threshold : An object describing the threshold used to define a set of Footprint%s
 
-Annotated examples are available for \link FootprintFunctorsExample FootprintFunctors\endlink.
-
 */
 }}}
 

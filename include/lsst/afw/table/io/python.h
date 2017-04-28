@@ -39,7 +39,7 @@ namespace io {
 namespace python {
 
 /**
- * @brief Wraps an instantiation of @ref PersistableFacade.
+ * Wraps an instantiation of @ref PersistableFacade.
  *
  * Pybind11 shall assume that `PersistableFacade` is managed using
  * `std::shared_ptr`, as this is required for compatibility with
@@ -55,24 +55,22 @@ namespace python {
  *               `PersistableFacade<suffix>`.
  */
 template <typename T>
-void declarePersistableFacade(pybind11::module & module, std::string const & suffix) {
+void declarePersistableFacade(pybind11::module &module, std::string const &suffix) {
     using namespace pybind11::literals;
 
-    pybind11::class_<PersistableFacade<T>, std::shared_ptr<PersistableFacade<T>>>
-        cls(module, ("PersistableFacade" + suffix).c_str());
-    cls.def_static(
-        "readFits",
-        (std::shared_ptr<T> (*)(std::string const &, int)) &PersistableFacade<T>::readFits,
-        "fileName"_a, "hdu"_a=INT_MIN
-    );
-    cls.def_static(
-        "readFits",
-        (std::shared_ptr<T> (*)(fits::MemFileManager &, int)) &PersistableFacade<T>::readFits,
-        "manager"_a, "hdu"_a=INT_MIN
-    );
+    pybind11::class_<PersistableFacade<T>, std::shared_ptr<PersistableFacade<T>>> cls(
+            module, ("PersistableFacade" + suffix).c_str());
+    cls.def_static("readFits",
+                   (std::shared_ptr<T>(*)(std::string const &, int)) & PersistableFacade<T>::readFits,
+                   "fileName"_a, "hdu"_a = INT_MIN);
+    cls.def_static("readFits",
+                   (std::shared_ptr<T>(*)(fits::MemFileManager &, int)) & PersistableFacade<T>::readFits,
+                   "manager"_a, "hdu"_a = INT_MIN);
 }
-
-}}}}}     // lsst::afw::table::io::python
+}
+}
+}
+}
+}  // lsst::afw::table::io::python
 
 #endif
-

@@ -66,7 +66,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         knownMean = 0.0
         imgList = []
         for iImg in range(self.nImg):
-            imgList.append(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), iImg))
+            imgList.append(afwImage.ImageF(
+                afwGeom.Extent2I(self.nX, self.nY), iImg))
             knownMean += iImg
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
@@ -82,7 +83,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         imgList = []
         for val in self.values:
-            imgList.append(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val))
+            imgList.append(afwImage.ImageF(
+                afwGeom.Extent2I(self.nX, self.nY), val))
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
@@ -106,11 +108,15 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         wvalues = [1.0/q for q in self.values]
         wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
-        self.assertAlmostEqual(mimgStack.getImage().get(self.nX//2, self.nY//2), wmean)
+        self.assertAlmostEqual(
+            mimgStack.getImage().get(self.nX//2, self.nY//2),
+            wmean)
 
         # Test in-place stacking
         afwMath.statisticsStack(mimgStack, mimgList, afwMath.MEAN, sctrl)
-        self.assertAlmostEqual(mimgStack.getImage().get(self.nX//2, self.nY//2), wmean)
+        self.assertAlmostEqual(
+            mimgStack.getImage().get(self.nX//2, self.nY//2),
+            wmean)
 
     def testConstantWeightedStack(self):
         """ Test statisticsStack() function when weighting by a vector of weights"""
@@ -122,7 +128,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
             img = afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val)
             imgList.append(img)
             weights.append(val)
-        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl, weights)
+        imgStack = afwMath.statisticsStack(
+            imgList, afwMath.MEAN, sctrl, weights)
 
         wsum = reduce(lambda x, y: x + y, self.values)
         wvalues = [x*x for x in self.values]
@@ -139,7 +146,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
             imgList.append(img)
 
         def tst():
-            afwMath.statisticsStack(imgList, afwMath.Property(afwMath.MEAN | afwMath.MEANCLIP), sctrl)
+            afwMath.statisticsStack(
+                imgList,
+                afwMath.Property(afwMath.MEAN | afwMath.MEANCLIP),
+                sctrl)
 
         self.assertRaises(pexEx.InvalidParameterError, tst)
 
@@ -152,7 +162,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         for y in range(img.getHeight()):
             simg = img.Factory(
                 img,
-                afwGeom.Box2I(afwGeom.Point2I(0, y), afwGeom.Extent2I(img.getWidth(), 1)),
+                afwGeom.Box2I(afwGeom.Point2I(0, y),
+                              afwGeom.Extent2I(img.getWidth(), 1)),
                 afwImage.LOCAL)
             simg.set(y)
 
@@ -181,7 +192,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
         sctrl.setAndMask(INTRP | SAT)
         sctrl.setNoGoodPixelsMask(EDGE)
 
-        edgeBBox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 20))  # set these pixels to EDGE
+        # set these pixels to EDGE
+        edgeBBox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                 afwGeom.Extent2I(20, 20))
         width, height = 512, 512
         dim = afwGeom.Extent2I(width, height)
         val, maskVal = 10, DETECTED
@@ -221,18 +234,23 @@ class StackTestCase(lsst.utils.tests.TestCase):
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(afwImage.MaskU.getPlaneBitMask("EDGE"))
 
-        stats = afwMath.makeStatistics(mimgStack, afwMath.MIN | afwMath.MAX, sctrl)
+        stats = afwMath.makeStatistics(
+            mimgStack, afwMath.MIN | afwMath.MAX, sctrl)
         self.assertEqual(stats.getValue(afwMath.MIN), val)
         self.assertEqual(stats.getValue(afwMath.MAX), val)
         #
         # We have to clear EDGE in the known bad corner to check the mask
         #
         smask = mimgStack.getMask().Factory(mimgStack.getMask(), edgeBBox, afwImage.LOCAL)
-        self.assertEqual(smask.get(edgeBBox.getMinX(), edgeBBox.getMinY()), EDGE)
+        self.assertEqual(
+            smask.get(edgeBBox.getMinX(), edgeBBox.getMinY()), EDGE)
         smask &= ~EDGE
         del smask
 
-        self.assertEqual(afwMath.makeStatistics(mimgStack.getMask(), afwMath.SUM, sctrl).getValue(), maskVal)
+        self.assertEqual(
+            afwMath.makeStatistics(mimgStack.getMask(),
+                                   afwMath.SUM, sctrl).getValue(),
+            maskVal)
 
     def testTicket1412(self):
         """Ticket 1412: ignored mask bits are propegated to output stack."""
@@ -249,11 +267,13 @@ class StackTestCase(lsst.utils.tests.TestCase):
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(0x1)  # andmask only 0001
 
-        # try first with no sctrl (no andmask set), should see 0x0111 for all output mask pixels
+        # try first with no sctrl (no andmask set), should see 0x0111 for all
+        # output mask pixels
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         self.assertEqual(imgStack.get(0, 0)[1], 0x7)
 
-        # now try with sctrl (andmask = 0x0001), should see 0x0100 for all output mask pixels
+        # now try with sctrl (andmask = 0x0001), should see 0x0100 for all
+        # output mask pixels
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl)
         self.assertEqual(imgStack.get(0, 0)[1], 0x4)
 
@@ -272,7 +292,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
             maskedImageList.append(mi)
             weightList.append(1.0)
 
-        stack = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, weightList)
+        stack = afwMath.statisticsStack(
+            maskedImageList, afwMath.MEAN, statsCtrl, weightList)
         if False:
             print("image=", stack.getImage().getArray())
             print("variance=", stack.getVariance().getArray())
@@ -298,7 +319,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
             imArr[:, :] = np.ones((1, 4), dtype=np.float32)
             maskedImageList.append(mi)
             partialSum += imArr
-        # add one more image with all permutations of the first two bits set in different pixels
+        # add one more image with all permutations of the first two bits set in
+        # different pixels
         mi = afwImage.MaskedImageF(4, 1)
         imArr, maskArr, varArr = mi.getArrays()
         imArr[0, :] = finalImage
@@ -313,8 +335,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
         finalImage[3] = 0.0
 
         # Uniform weights: we should only see pixel 2 set with propagatedBit, because it's not rejected;
-        # pixel 3 is rejected, but its weight (0.2) below the propagation threshold (0.3)
-        stack1 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [1.0, 1.0, 1.0, 1.0, 1.0])
+        # pixel 3 is rejected, but its weight (0.2) below the propagation
+        # threshold (0.3)
+        stack1 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [
+                                         1.0, 1.0, 1.0, 1.0, 1.0])
         self.assertEqual(stack1.get(0, 0)[1], 0x0)
         self.assertEqual(stack1.get(1, 0)[1], 0x0)
         self.assertEqual(stack1.get(2, 0)[1], 1 << propagatedBit)
@@ -326,8 +350,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # pixel 2 because it's not rejected, and pixel 3 because the weight of the rejection (0.3333)
         # is above the threshold (0.3)
         # Note that rejectedBit is never propagated, because we didn't include it in statsCtrl (of course,
-        # normally the bits we'd propagate and the bits we'd reject would be the same)
-        stack2 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [1.0, 1.0, 1.0, 1.0, 2.0])
+        # normally the bits we'd propagate and the bits we'd reject would be
+        # the same)
+        stack2 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [
+                                         1.0, 1.0, 1.0, 1.0, 2.0])
         self.assertEqual(stack2.get(0, 0)[1], 0x0)
         self.assertEqual(stack2.get(1, 0)[1], 0x0)
         self.assertEqual(stack2.get(2, 0)[1], 1 << propagatedBit)

@@ -1,5 +1,4 @@
-from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 from builtins import object
 #
 # LSST Data Management System
@@ -24,8 +23,9 @@ from builtins import object
 #
 
 ##
-## \file
-## \brief A dummy image display
+# \file
+# \brief A dummy image display
+
 
 class DisplayImpl(object):
     def __init__(self, display, verbose=False):
@@ -62,8 +62,8 @@ class DisplayImpl(object):
         \param kwargs Extra keyword arguments
         """
         if self.verbose:
-            print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" % \
-                (self.frame, symb, c, r, size, ctype, args, kwargs))
+            print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" %
+                  (self.frame, symb, c, r, size, ctype, args, kwargs))
 
     def _drawLines(self, points, ctype):
         """!Draw line defined by the list points
@@ -71,7 +71,8 @@ class DisplayImpl(object):
         \param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
         """
         if self.verbose:
-            print("virtual[%s]._drawLines(%s, ctype=%s)" % (self.frame, points, ctype))
+            print("virtual[%s]._drawLines(%s, ctype=%s)" %
+                  (self.frame, points, ctype))
 
     def _erase(self):
         """!Erase all glyphs drawn on display
@@ -114,9 +115,9 @@ class DisplayImpl(object):
         \param title Name to display with the data
         """
         if self.verbose:
-            print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" % \
-                (self.frame, "Image" if image else None,
-                 "Mask" if mask else None, "Wcs" if wcs else None, title))
+            print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" %
+                  (self.frame, "Image" if image else None,
+                   "Mask" if mask else None, "Wcs" if wcs else None, title))
 
     def _setMaskTransparency(self, transparency, maskplane):
         """Set the transparency of a maskplane
@@ -124,7 +125,8 @@ class DisplayImpl(object):
         \param maskplane The maskplane to set (None: all)
         """
         if self.verbose:
-            print("virtual[%s]._setMaskTransparency(%g, maskplane=\"%s\")" % (self.frame, transparency, maskplane))
+            print("virtual[%s]._setMaskTransparency(%g, maskplane=\"%s\")" %
+                  (self.frame, transparency, maskplane))
 
     def _scale(self, algorithm, min, max, unit=None, *args, **kwargs):
         """Set the scaling from DN to displayed pixels
@@ -137,7 +139,7 @@ class DisplayImpl(object):
         """
         if self.verbose:
             print("virtual[%s]._scale(%s, %s, %s, %s, %s, %s)" % (self.frame, algorithm,
-                                                                 min, max, unit, args, kwargs))
+                                                                  min, max, unit, args, kwargs))
 
     def _show(self):
         """Show the requested display

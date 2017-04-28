@@ -39,19 +39,22 @@ PYBIND11_PLUGIN(_footprintMerge) {
     py::class_<FootprintMergeList> clsFootprintMergeList(mod, "FootprintMergeList");
 
     /* Constructors */
-    clsFootprintMergeList.def(py::init<afw::table::Schema &, std::vector<std::string> const &, afw::table::Schema const &>(),
+    clsFootprintMergeList.def(
+            py::init<afw::table::Schema &, std::vector<std::string> const &, afw::table::Schema const &>(),
             "sourceSchema"_a, "filterList"_a, "initialPeakSchema"_a);
     clsFootprintMergeList.def(py::init<afw::table::Schema &, std::vector<std::string> const &>(),
-           "sourceSchema"_a, "filterList"_a);
+                              "sourceSchema"_a, "filterList"_a);
 
     /* Members */
     clsFootprintMergeList.def("getPeakSchema", &FootprintMergeList::getPeakSchema);
-    clsFootprintMergeList.def("addCatalog", &FootprintMergeList::addCatalog,
-            "sourceTable"_a, "inputCat"_a, "filter"_a, "minNewPeakDist"_a=-1., "doMerge"_a=true, "maxSamePeakDist"_a=-1.);
+    clsFootprintMergeList.def("addCatalog", &FootprintMergeList::addCatalog, "sourceTable"_a, "inputCat"_a,
+                              "filter"_a, "minNewPeakDist"_a = -1., "doMerge"_a = true,
+                              "maxSamePeakDist"_a = -1.);
     clsFootprintMergeList.def("clearCatalog", &FootprintMergeList::clearCatalog);
-    clsFootprintMergeList.def("getFinalSources", &FootprintMergeList::getFinalSources,
-            "outputCat"_a);
+    clsFootprintMergeList.def("getFinalSources", &FootprintMergeList::getFinalSources, "outputCat"_a);
 
     return mod.ptr();
 }
-}}} // lsst::afw::detection
+}
+}
+}  // lsst::afw::detection

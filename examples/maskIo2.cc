@@ -35,7 +35,6 @@ namespace afwImage = lsst::afw::image;
  * of memory management
  */
 void test(char *name, char *masterName) {
-
     typedef afwImage::MaskPixel MaskPixel;
 
     afwImage::Mask<afwImage::MaskPixel> testMask(name);
@@ -61,9 +60,6 @@ void test(char *name, char *masterName) {
     testMask.printMaskPlanes();
 
     testMask.writeFits("test_msk.fits");
-
-
-
 }
 
 int main(int argc, char *argv[]) {

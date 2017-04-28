@@ -27,6 +27,7 @@ __all__ = []
 from lsst.utils import continueClass
 from .aliasMap import AliasMap
 
+
 @continueClass
 class AliasMap:
 

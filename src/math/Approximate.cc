@@ -22,9 +22,8 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @brief Approximate values for a set of x,y vector<>s
- * @ingroup afw
+/*
+ * Approximate values for a set of x,y vector<>s
  */
 #include <limits>
 #include <algorithm>
@@ -44,96 +43,86 @@ namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
 
-/// \brief ctor
-ApproximateControl::ApproximateControl(Style style, ///< Type of approximation
-                                       int orderX,  ///< Order of approximation to use in x-direction
-                                       int orderY,  ///< Order of approximation to use in y-direction
-                                       bool weighting ///< Use inverse variance weighting?
-                                       ) :
-    _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY), _weighting(weighting) {
+ApproximateControl::ApproximateControl(Style style, int orderX, int orderY, bool weighting)
+        : _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY), _weighting(weighting) {
     if (_orderX != _orderY) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           str(boost::format("X- and Y-orders must be equal (%d != %d) "
-                                            "due to a limitation in math::Chebyshev1Function2")
-                              % _orderX % _orderY));
+                                            "due to a limitation in math::Chebyshev1Function2") %
+                              _orderX % _orderY));
     }
 }
 
-/************************************************************************************************************/
-
 namespace {
 /**
- * \brief Specialisation of Approximate in Chebyshev polynomials
+ * @internal Specialisation of Approximate in Chebyshev polynomials
  */
-template<typename PixelT>
+template <typename PixelT>
 class ApproximateChebyshev : public Approximate<PixelT> {
-    template<typename T>
-    friend PTR(Approximate<T>)
-    math::makeApproximate(std::vector<double> const &xVec, std::vector<double> const &yVec,
-                          image::MaskedImage<T> const& im, geom::Box2I const& bbox,
-                          ApproximateControl const& ctrl);
+    template <typename T>
+    friend std::shared_ptr<Approximate<T>> math::makeApproximate(std::vector<double> const& xVec,
+                                                                 std::vector<double> const& yVec,
+                                                                 image::MaskedImage<T> const& im,
+                                                                 geom::Box2I const& bbox,
+                                                                 ApproximateControl const& ctrl);
+
 public:
     virtual ~ApproximateChebyshev();
+
 private:
     math::Chebyshev1Function2<double> _poly;
 
-    ApproximateChebyshev(std::vector<double> const &xVec, std::vector<double> const &yVec,
+    ApproximateChebyshev(std::vector<double> const& xVec, std::vector<double> const& yVec,
                          image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
                          ApproximateControl const& ctrl);
-    virtual PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
-            doGetImage(int orderX, int orderY) const;
-    virtual PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
-            doGetMaskedImage(int orderX, int orderY) const;
+    virtual std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>> doGetImage(
+            int orderX, int orderY) const;
+    virtual std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>> doGetMaskedImage(
+            int orderX, int orderY) const;
 };
 
-/************************************************************************************************************/
-
 namespace {
-    // N.b. physically inlining these routines into ApproximateChebyshev
-    // causes clang++ 3.1 problems; I suspect a clang bug (see http://llvm.org/bugs/show_bug.cgi?id=14162)
-    inline void
-    solveMatrix_Eigen(Eigen::MatrixXd &a,
-                      Eigen::VectorXd &b,
-                      Eigen::Map<Eigen::VectorXd> &c
-                     ) {
-        Eigen::PartialPivLU<Eigen::MatrixXd> lu(a);
-        c = lu.solve(b);
-    }
+// N.b. physically inlining these routines into ApproximateChebyshev
+// causes clang++ 3.1 problems; I suspect a clang bug (see http://llvm.org/bugs/show_bug.cgi?id=14162)
+inline void solveMatrix_Eigen(Eigen::MatrixXd& a, Eigen::VectorXd& b, Eigen::Map<Eigen::VectorXd>& c) {
+    Eigen::PartialPivLU<Eigen::MatrixXd> lu(a);
+    c = lu.solve(b);
+}
 }
 
 /**
- * \brief Fit a grid of points to a afw::math::Chebyshev1Function2D
+ * @internal Fit a grid of points to a afw::math::Chebyshev1Function2D
  */
-template<typename PixelT>
+template <typename PixelT>
 ApproximateChebyshev<PixelT>::ApproximateChebyshev(
-        std::vector<double> const &xVec,      ///< the x-values of points
-        std::vector<double> const &yVec,      ///< the y-values of points
-        image::MaskedImage<PixelT> const& im, ///< The values at (xVec, yVec)
-        geom::Box2I const& bbox,              ///< Range where approximation should be valid
-        ApproximateControl const& ctrl        ///< desired approximation algorithm
-                                                  )
-    : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
-      _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox)))
-{
+        std::vector<double> const& xVec,       ///< @internal the x-values of points
+        std::vector<double> const& yVec,       ///< @internal the y-values of points
+        image::MaskedImage<PixelT> const& im,  ///< @internal The values at (xVec, yVec)
+        geom::Box2I const& bbox,               ///< @internal Range where approximation should be valid
+        ApproximateControl const& ctrl         ///< @internal desired approximation algorithm
+        )
+        : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
+          _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox))) {
 #if !defined(NDEBUG)
     {
         std::vector<double> const& coeffs = _poly.getParameters();
-        assert(std::accumulate(coeffs.begin(), coeffs.end(), 0.0) == 0.0); // i.e. coeffs is initialised to 0.0
+        assert(std::accumulate(coeffs.begin(), coeffs.end(), 0.0) ==
+               0.0);  // i.e. coeffs is initialised to 0.0
     }
 #endif
-    int const nTerm = _poly.getNParameters();        // number of terms in polynomial
-    int const nData = im.getWidth()*im.getHeight(); // number of data points
-    /*
-     * N.b. in the comments,
-     *      i     runs over the 0..nTerm-1 coefficients
-     *      alpha runs over the 0..nData-1 data points
-     */
+    int const nTerm = _poly.getNParameters();          // number of terms in polynomial
+    int const nData = im.getWidth() * im.getHeight();  // number of data points
+                                                       /*
+                                                        * N.b. in the comments,
+                                                        *      i     runs over the 0..nTerm-1 coefficients
+                                                        *      alpha runs over the 0..nData-1 data points
+                                                        */
 
     /*
      * We need the value of the polynomials evaluated at every data point, so it's more
      * efficient to pre-calculate the values:  termCoeffs[i][alpha]
      */
-    std::vector<std::vector<double> > termCoeffs(nTerm);
+    std::vector<std::vector<double>> termCoeffs(nTerm);
 
     for (int i = 0; i != nTerm; ++i) {
         termCoeffs[i].reserve(nData);
@@ -153,29 +142,32 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         }
     }
     // We'll solve A*c = b
-    Eigen::MatrixXd A; A.setZero(nTerm, nTerm);    // We'll solve A*c = b
-    Eigen::VectorXd b; b.setZero(nTerm);
+    Eigen::MatrixXd A;
+    A.setZero(nTerm, nTerm);  // We'll solve A*c = b
+    Eigen::VectorXd b;
+    b.setZero(nTerm);
     /*
      * Go through the data accumulating the values of the A and b matrix/vector
      */
     int alpha = 0;
     for (int iy = 0; iy != im.getHeight(); ++iy) {
         for (typename image::MaskedImage<PixelT>::const_x_iterator ptr = im.row_begin(iy),
-                 end = im.row_end(iy); ptr != end; ++ptr, ++alpha) {
+                                                                   end = im.row_end(iy);
+             ptr != end; ++ptr, ++alpha) {
             double const val = ptr.image();
-            double const ivar = ctrl.getWeighting() ? 1/ptr.variance() : 1.0;
+            double const ivar = ctrl.getWeighting() ? 1 / ptr.variance() : 1.0;
             if (!std::isfinite(val + ivar)) {
                 continue;
             }
 
             for (int i = 0; i != nTerm; ++i) {
                 double const c_i = termCoeffs[i][alpha];
-                double const tmp = c_i*ivar;
-                b(i) += val*tmp;
-                A(i, i) += c_i*tmp;
+                double const tmp = c_i * ivar;
+                b(i) += val * tmp;
+                A(i, i) += c_i * tmp;
                 for (int j = 0; j < i; ++j) {
                     double const c_j = termCoeffs[j][alpha];
-                    A(i, j) += c_j*tmp;
+                    A(i, j) += c_j * tmp;
                 }
             }
         }
@@ -184,8 +176,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         if (ctrl.getWeighting()) {
             throw LSST_EXCEPT(pex::exceptions::RuntimeError,
                               "No valid points to fit. Variance is likely zero. Try weighting=False");
-        }
-        else {
+        } else {
             throw LSST_EXCEPT(pex::exceptions::RuntimeError,
                               "No valid points to fit (even though weighting is False). "
                               "Check that binSize & approxOrderX settings are appropriate for image size.");
@@ -201,47 +192,47 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
      * OK, now all we ned do is solve that...
      */
     std::vector<double> cvec(nTerm);
-    Eigen::Map<Eigen::VectorXd> c(&cvec[0], nTerm); // N.b. c shares memory with cvec
+    Eigen::Map<Eigen::VectorXd> c(&cvec[0], nTerm);  // N.b. c shares memory with cvec
 
     solveMatrix_Eigen(A, b, c);
 
     _poly.setParameters(cvec);
 }
 
-/// \brief dtor
-template<typename PixelT>
-ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {
-}
+/// @internal dtor
+template <typename PixelT>
+ApproximateChebyshev<PixelT>::~ApproximateChebyshev() {}
 
 /**
- * \brief worker function for getImage
+ * @internal worker function for getImage
  *
  * If orderX/orderY are specified the expansion will be truncated to that order
  *
- * \note As in the ApproximateControl ctor, the x- and y-orders must be equal
+ * @param orderX Order of approximation to use in x-direction
+ * @param orderY Order of approximation to use in y-direction
+ *
+ * @note As in the ApproximateControl ctor, the x- and y-orders must be equal
  */
-template<typename PixelT>
-PTR(image::Image<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximation to use in x-direction
-                                         int orderY   ///< Order of approximation to use in y-direction
-                                        ) const
-{
+template <typename PixelT>
+std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>>
+ApproximateChebyshev<PixelT>::doGetImage(int orderX, int orderY) const {
     if (orderX < 0) orderX = Approximate<PixelT>::_ctrl.getOrderX();
     if (orderY < 0) orderY = Approximate<PixelT>::_ctrl.getOrderY();
 
-    math::Chebyshev1Function2<double> poly =
-        (orderX == Approximate<PixelT>::_ctrl.getOrderX() &&
-         orderY == Approximate<PixelT>::_ctrl.getOrderY()) ? _poly : _poly.truncate(orderX);
+    math::Chebyshev1Function2<double> poly = (orderX == Approximate<PixelT>::_ctrl.getOrderX() &&
+                                              orderY == Approximate<PixelT>::_ctrl.getOrderY())
+                                                     ? _poly
+                                                     : _poly.truncate(orderX);
 
     typedef typename image::Image<typename Approximate<PixelT>::OutPixelT> ImageT;
 
-    PTR(ImageT) im(new ImageT(Approximate<PixelT>::_bbox));
+    std::shared_ptr<ImageT> im(new ImageT(Approximate<PixelT>::_bbox));
     for (int iy = 0; iy != im->getHeight(); ++iy) {
         double const y = iy;
 
         int ix = 0;
-        for (typename ImageT::x_iterator ptr = im->row_begin(iy),
-                 end = im->row_end(iy); ptr != end; ++ptr, ++ix) {
+        for (typename ImageT::x_iterator ptr = im->row_begin(iy), end = im->row_end(iy); ptr != end;
+             ++ptr, ++ix) {
             double const x = ix;
 
             *ptr = poly(x, y);
@@ -251,31 +242,29 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximatio
     return im;
 }
 /**
- * \brief Return a MaskedImage
- *
+ * @internal Return a MaskedImage
  *
  * If orderX/orderY are specified the expansion will be truncated to that order
  *
- * \note As in the ApproximateControl ctor, the x- and y-orders must be equal
+ * @param orderX Order of approximation to use in x-direction
+ * @param orderY Order of approximation to use in y-direction
+ *
+ * @note As in the ApproximateControl ctor, the x- and y-orders must be equal
  */
-template<typename PixelT>
-PTR(image::MaskedImage<typename Approximate<PixelT>::OutPixelT>)
-ApproximateChebyshev<PixelT>::doGetMaskedImage(
-        int orderX,                     ///< Order of approximation to use in x-direction
-        int orderY                      ///< Order of approximation to use in y-direction
-                                              ) const
-{
+template <typename PixelT>
+std::shared_ptr<image::MaskedImage<typename Approximate<PixelT>::OutPixelT>>
+ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const {
     typedef typename image::MaskedImage<typename Approximate<PixelT>::OutPixelT> MImageT;
 
-    PTR(MImageT) mi(new MImageT(Approximate<PixelT>::_bbox));
-    PTR(typename MImageT::Image) im = mi->getImage();
+    std::shared_ptr<MImageT> mi(new MImageT(Approximate<PixelT>::_bbox));
+    std::shared_ptr<typename MImageT::Image> im = mi->getImage();
 
     for (int iy = 0; iy != im->getHeight(); ++iy) {
         double const y = iy;
 
         int ix = 0;
-        for (typename MImageT::Image::x_iterator ptr = im->row_begin(iy),
-                 end = im->row_end(iy); ptr != end; ++ptr, ++ix) {
+        for (typename MImageT::Image::x_iterator ptr = im->row_begin(iy), end = im->row_end(iy); ptr != end;
+             ++ptr, ++ix) {
             double const x = ix;
 
             *ptr = _poly(x, y);
@@ -286,43 +275,35 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(
 }
 }
 
-/************************************************************************************************************/
-/**
- * \brief A factory function to make Approximate objects
- */
-template<typename PixelT>
-PTR(Approximate<PixelT>)
-makeApproximate(std::vector<double> const &x,            ///< the x-values of points
-                std::vector<double> const &y,            ///< the y-values of points
-                image::MaskedImage<PixelT> const& im,    ///< The values at (x, y)
-                geom::Box2I const& bbox,                 ///< Range where approximation should be valid
-                ApproximateControl const& ctrl           ///< desired approximation algorithm
-               )
-{
+template <typename PixelT>
+std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& x,
+                                                     std::vector<double> const& y,
+                                                     image::MaskedImage<PixelT> const& im,
+                                                     geom::Box2I const& bbox,
+                                                     ApproximateControl const& ctrl) {
     switch (ctrl.getStyle()) {
-      case ApproximateControl::CHEBYSHEV:
-        return PTR(Approximate<PixelT>)(new ApproximateChebyshev<PixelT>(x, y, im, bbox, ctrl));
-      default:
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
-                          str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
+        case ApproximateControl::CHEBYSHEV:
+            return std::shared_ptr<Approximate<PixelT>>(
+                    new ApproximateChebyshev<PixelT>(x, y, im, bbox, ctrl));
+        default:
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                              str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
     }
 }
-/// \cond
+/// @cond
 /*
  * Explicit instantiations
  *
  */
-#define INSTANTIATE(PIXEL_T)                                          \
-    template                                                          \
-    PTR(Approximate<PIXEL_T>) makeApproximate(                        \
-        std::vector<double> const &x, std::vector<double> const &y,   \
-        image::MaskedImage<PIXEL_T> const& im,                        \
-        geom::Box2I const& bbox,                                      \
-        ApproximateControl const& ctrl)
+#define INSTANTIATE(PIXEL_T)                                            \
+    template std::shared_ptr<Approximate<PIXEL_T>> makeApproximate(     \
+            std::vector<double> const& x, std::vector<double> const& y, \
+            image::MaskedImage<PIXEL_T> const& im, geom::Box2I const& bbox, ApproximateControl const& ctrl)
 
 INSTANTIATE(float);
-//INSTANTIATE(int);
+// INSTANTIATE(int);
 
-/// \endcond
-
-}}} // lsst::afw::math
+/// @endcond
+}
+}
+}  // lsst::afw::math

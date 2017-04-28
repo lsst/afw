@@ -41,7 +41,8 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             lsst.afw.geom.ellipses.Axes(4, 3, 1),
             lsst.afw.geom.ellipses.Quadrupole(5, 3, -1)
         ]
-        self.classes = [lsst.afw.geom.ellipses.Axes, lsst.afw.geom.ellipses.Quadrupole]
+        self.classes = [lsst.afw.geom.ellipses.Axes,
+                        lsst.afw.geom.ellipses.Quadrupole]
         for s in lsst.afw.geom.ellipses.Separable.values():
             self.cores.append(s(0.5, 0.3, 2.1))
             self.classes.append(s)
@@ -51,17 +52,22 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             detRadius = det**0.25
             traceRadius = (0.5 * trace)**0.5
             area = np.pi * det**0.5
-            self.assertFloatsAlmostEqual(core.getDeterminantRadius(), detRadius)
+            self.assertFloatsAlmostEqual(
+                core.getDeterminantRadius(), detRadius)
             self.assertFloatsAlmostEqual(core.getTraceRadius(), traceRadius)
             self.assertFloatsAlmostEqual(core.getArea(), area)
             for cls in self.classes:
                 conv = cls(core)
-                self.assertFloatsAlmostEqual(conv.getDeterminantRadius(), detRadius)
-                self.assertFloatsAlmostEqual(conv.getTraceRadius(), traceRadius)
+                self.assertFloatsAlmostEqual(
+                    conv.getDeterminantRadius(), detRadius)
+                self.assertFloatsAlmostEqual(
+                    conv.getTraceRadius(), traceRadius)
                 self.assertFloatsAlmostEqual(conv.getArea(), area)
                 conv.scale(3.0)
-                self.assertFloatsAlmostEqual(conv.getDeterminantRadius(), detRadius * 3)
-                self.assertFloatsAlmostEqual(conv.getTraceRadius(), traceRadius * 3)
+                self.assertFloatsAlmostEqual(
+                    conv.getDeterminantRadius(), detRadius * 3)
+                self.assertFloatsAlmostEqual(
+                    conv.getTraceRadius(), traceRadius * 3)
                 self.assertFloatsAlmostEqual(conv.getArea(), area * 9)
 
     def testAccessors(self):
@@ -71,15 +77,18 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             self.assertImagesEqual(core.getParameterVector(), vec)
             center = lsst.afw.geom.Point2D(*np.random.randn(2))
             ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
-            self.assertFloatsAlmostEqual(core.getParameterVector(), ellipse.getParameterVector()[:3])
+            self.assertFloatsAlmostEqual(
+                core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
             newcore = lsst.afw.geom.ellipses.Axes(1, 2, 3)
             newcore.normalize()
             core.assign(newcore)
             ellipse.setCore(core)
-            np.testing.assert_allclose(core.getParameterVector(), ellipse.getCore().getParameterVector())
-            self.assertFloatsAlmostEqual(core.clone().getParameterVector(), core.getParameterVector())
+            np.testing.assert_allclose(
+                core.getParameterVector(), ellipse.getCore().getParameterVector())
+            self.assertFloatsAlmostEqual(
+                core.clone().getParameterVector(), core.getParameterVector())
             self.assertIsNot(core, core.clone())
             self.assertFloatsAlmostEqual(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
                                          ellipse.getParameterVector())
@@ -91,11 +100,13 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assertIsNot(t1, core)
-            self.assertFloatsAlmostEqual(t1.getParameterVector(), core.getParameterVector())
+            self.assertFloatsAlmostEqual(
+                t1.getParameterVector(), core.getParameterVector())
 
     def testPixelRegion(self):
         for core in self.cores:
-            e = lsst.afw.geom.ellipses.Ellipse(core, lsst.afw.geom.Point2D(*np.random.randn(2)))
+            e = lsst.afw.geom.ellipses.Ellipse(
+                core, lsst.afw.geom.Point2D(*np.random.randn(2)))
             region = lsst.afw.geom.ellipses.PixelRegion(e)
             bbox = region.getBBox()
             bbox.grow(2)
@@ -112,9 +123,11 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
                     transformed = gt(lsst.afw.geom.Point2D(point))
                     r = (transformed.getX()**2 + transformed.getY()**2)**0.5
                     if array[adjusted.getY(), adjusted.getX()]:
-                        self.assertLessEqual(r, 1.0, "Point %s is in region but r=%f" % (point, r))
+                        self.assertLessEqual(
+                            r, 1.0, "Point %s is in region but r=%f" % (point, r))
                     else:
-                        self.assertGreater(r, 1.0, "Point %s is outside region but r=%f" % (point, r))
+                        self.assertGreater(
+                            r, 1.0, "Point %s is outside region but r=%f" % (point, r))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -41,10 +41,8 @@ PYBIND11_PLUGIN(_footprintCtrl) {
 
     /* Constructors */
     clsFootprintControl.def(py::init<>());
-    clsFootprintControl.def(py::init<bool, bool>(),
-            "circular"_a, "isotropic"_a=false);
-    clsFootprintControl.def(py::init<bool, bool, bool, bool>(),
-            "left"_a, "right"_a, "up"_a, "down"_a);
+    clsFootprintControl.def(py::init<bool, bool>(), "circular"_a, "isotropic"_a = false);
+    clsFootprintControl.def(py::init<bool, bool, bool, bool>(), "left"_a, "right"_a, "up"_a, "down"_a);
 
     /* Members */
     clsFootprintControl.def("growCircular", &FootprintControl::growCircular);
@@ -64,12 +62,12 @@ PYBIND11_PLUGIN(_footprintCtrl) {
     py::class_<HeavyFootprintCtrl> clsHeavyFootprintCtrl(mod, "HeavyFootprintCtrl");
 
     py::enum_<HeavyFootprintCtrl::ModifySource>(clsHeavyFootprintCtrl, "ModifySource")
-        .value("NONE", HeavyFootprintCtrl::ModifySource::NONE)
-        .value("SET", HeavyFootprintCtrl::ModifySource::SET)
-        .export_values();
+            .value("NONE", HeavyFootprintCtrl::ModifySource::NONE)
+            .value("SET", HeavyFootprintCtrl::ModifySource::SET)
+            .export_values();
 
     clsHeavyFootprintCtrl.def(py::init<HeavyFootprintCtrl::ModifySource>(),
-            "modifySource"_a=HeavyFootprintCtrl::ModifySource::NONE);
+                              "modifySource"_a = HeavyFootprintCtrl::ModifySource::NONE);
 
     clsHeavyFootprintCtrl.def("getModifySource", &HeavyFootprintCtrl::getModifySource);
     clsHeavyFootprintCtrl.def("setModifySource", &HeavyFootprintCtrl::setModifySource);
@@ -86,4 +84,6 @@ PYBIND11_PLUGIN(_footprintCtrl) {
 
     return mod.ptr();
 }
-}}} // lsst::afw::detection
+}
+}
+}  // lsst::afw::detection

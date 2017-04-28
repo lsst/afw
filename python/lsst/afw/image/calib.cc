@@ -42,20 +42,15 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyCalib =
-    py::class_<
-        Calib,
-        std::shared_ptr<Calib>,
-        table::io::PersistableFacade<Calib>,
-        table::io::Persistable
-    >;
+using PyCalib = py::class_<Calib, std::shared_ptr<Calib>, table::io::PersistableFacade<Calib>,
+                           table::io::Persistable>;
 
 PYBIND11_PLUGIN(calib) {
     py::module mod("calib");
 
     if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
     };
 
     /* Module level */
@@ -82,35 +77,36 @@ PYBIND11_PLUGIN(calib) {
     cls.def("__itruediv__", &Calib::operator/=);
     cls.def("__idiv__", &Calib::operator/=);
 
-    // /* Members */
-    cls.def("setFluxMag0", (void (Calib::*)(double, double)) &Calib::setFluxMag0,
-            "fluxMag0"_a, "fluxMag0Sigma"_a=0.0);
-    cls.def("setFluxMag0", (void (Calib::*)(std::pair<double, double>)) &Calib::setFluxMag0,
+    /* Members */
+    cls.def("setFluxMag0", (void (Calib::*)(double, double)) & Calib::setFluxMag0, "fluxMag0"_a,
+            "fluxMag0Sigma"_a = 0.0);
+    cls.def("setFluxMag0", (void (Calib::*)(std::pair<double, double>)) & Calib::setFluxMag0,
             "fluxMag0AndSigma"_a);
     cls.def("getFluxMag0", &Calib::getFluxMag0);
-    cls.def("getFlux", (double (Calib::*)(double const) const) &Calib::getFlux, "mag"_a);
+    cls.def("getFlux", (double (Calib::*)(double const) const) & Calib::getFlux, "mag"_a);
     cls.def("getFlux",
-            (std::pair<double, double> (Calib::*)(double const, double const) const) &Calib::getFlux,
+            (std::pair<double, double> (Calib::*)(double const, double const) const) & Calib::getFlux,
             "mag"_a, "magErr"_a);
+    cls.def("getFlux", (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const) &
+                               Calib::getFlux,
+            "mag"_a);
     cls.def("getFlux",
-            (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const)
-            &Calib::getFlux, "mag"_a);
-    cls.def("getFlux",
-            (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>>
-             (Calib::*)(ndarray::Array<double const, 1> const &,
-                        ndarray::Array<double const, 1> const &) const) &Calib::getFlux,
+            (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> (Calib::*)(
+                    ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &
+                    Calib::getFlux,
             "mag"_a, "magErr"_a);
-    cls.def("getMagnitude", (double (Calib::*)(double const) const) &Calib::getMagnitude, "flux"_a);
+    cls.def("getMagnitude", (double (Calib::*)(double const) const) & Calib::getMagnitude, "flux"_a);
     cls.def("getMagnitude",
-            (std::pair<double, double> (Calib::*)(double const, double const) const) &Calib::getMagnitude,
+            (std::pair<double, double> (Calib::*)(double const, double const) const) & Calib::getMagnitude,
             "flux"_a, "fluxErr"_a);
     cls.def("getMagnitude",
-            (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const)
-            &Calib::getMagnitude, "flux"_a);
+            (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const) &
+                    Calib::getMagnitude,
+            "flux"_a);
     cls.def("getMagnitude",
-            (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>>
-             (Calib::*)(ndarray::Array<double const, 1> const &,
-                        ndarray::Array<double const, 1> const &) const) &Calib::getMagnitude,
+            (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> (Calib::*)(
+                    ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &
+                    Calib::getMagnitude,
             "flux"_a, "fluxMag"_a);
     cls.def_static("setThrowOnNegativeFlux", Calib::setThrowOnNegativeFlux, "raiseException"_a);
     cls.def_static("getThrowOnNegativeFlux", Calib::getThrowOnNegativeFlux);
@@ -118,5 +114,7 @@ PYBIND11_PLUGIN(calib) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::image::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::image::<anonymous>

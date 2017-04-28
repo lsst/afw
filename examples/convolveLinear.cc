@@ -32,7 +32,7 @@
 #include "lsst/afw/math.h"
 
 namespace afwImage = lsst::afw::image;
-namespace afwMath= lsst::afw::math;
+namespace afwMath = lsst::afw::math;
 
 const std::string outImagePath("clOut.fits");
 
@@ -74,9 +74,8 @@ int main(int argc, char **argv) {
             double minorSigma = (ii == 2) ? MinSigma : MaxSigma;
             double angle = 0.0;
             afwMath::GaussianFunction2<afwMath::Kernel::Pixel> gaussFunc(majorSigma, minorSigma, angle);
-            PTR(afwMath::Kernel) basisKernelPtr(
-                new afwMath::AnalyticKernel(KernelCols, KernelRows, gaussFunc)
-            );
+            std::shared_ptr<afwMath::Kernel> basisKernelPtr(
+                    new afwMath::AnalyticKernel(KernelCols, KernelRows, gaussFunc));
             kernelList.push_back(basisKernelPtr);
         }
 
@@ -88,7 +87,7 @@ int main(int argc, char **argv) {
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
         std::vector<std::vector<double> > polyParams = kernel.getSpatialParameters();
         // Set spatial parameters for basis kernel 0
-        polyParams[0][0] =  1.0;
+        polyParams[0][0] = 1.0;
         polyParams[0][1] = -0.5 / static_cast<double>(mImage.getWidth());
         polyParams[0][2] = -0.5 / static_cast<double>(mImage.getHeight());
         // Set spatial function parameters for basis kernel 1
@@ -117,10 +116,9 @@ int main(int argc, char **argv) {
         std::cout << "Saved convolved image as " << outImagePath << std::endl;
     }
 
-     // Check for memory leaks
-     if (lsst::daf::base::Citizen::census(0) != 0) {
-         std::cerr << "Leaked memory blocks:" << std::endl;
-         lsst::daf::base::Citizen::census(std::cerr);
-     }
-
+    // Check for memory leaks
+    if (lsst::daf::base::Citizen::census(0) != 0) {
+        std::cerr << "Leaked memory blocks:" << std::endl;
+        lsst::daf::base::Citizen::census(std::cerr);
+    }
 }

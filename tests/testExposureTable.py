@@ -177,7 +177,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
                              1].getWcs().getId())  # compare citizen IDs
             self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
-            self.assertEqual(self.cat[0].getVisitInfo(), cat1[0].getVisitInfo())
+            self.assertEqual(self.cat[0].getVisitInfo(),
+                             cat1[0].getVisitInfo())
             self.assertIsNone(cat1[1].getVisitInfo())
 
     def testGeometry(self):
@@ -186,12 +187,14 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         points = (np.random.rand(100, 2) * np.array([bigBox.getWidth(), bigBox.getHeight()]) +
                   np.array([bigBox.getMinX(), bigBox.getMinY()]))
 
-        # make a very slightly perturbed wcs so the celestial transform isn't a no-op
+        # make a very slightly perturbed wcs so the celestial transform isn't a
+        # no-op
         crval2 = self.wcs.getSkyOrigin()
         crval2.reset(crval2.getLongitude() + 5*arcseconds,
                      crval2.getLatitude() - 5*arcseconds)
         wcs2 = lsst.afw.image.Wcs(
-            crval2.getPosition(), self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
+            crval2.getPosition(),
+            self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
             self.wcs.getCDMatrix() * 1.1
         )
         for x1, y1 in points:
@@ -235,7 +238,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
 
     def testReadV1Catalog(self):
         testDir = os.path.dirname(__file__)
-        v1CatalogPath = os.path.join(testDir, "data", "exposure_catalog_v1.fits")
+        v1CatalogPath = os.path.join(
+            testDir, "data", "exposure_catalog_v1.fits")
         catV1 = lsst.afw.table.ExposureCatalog.readFits(v1CatalogPath)
         self.assertEqual(self.cat[0].get(self.ka), catV1[0].get(self.ka))
         self.assertEqual(self.cat[0].get(self.kb), catV1[0].get(self.kb))
@@ -246,7 +250,9 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.cat[1].getWcs(), catV1[1].getWcs())
         self.assertIsNone(self.cat[1].getPsf())
         self.assertIsNone(self.cat[1].getCalib())
-        self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId())  # compare citizen IDs
+        # compare citizen IDs
+        self.assertEqual(self.cat[0].getWcs().getId(),
+                         self.cat[1].getWcs().getId())
         self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
         self.assertIsNone(catV1[0].getVisitInfo())
         self.assertIsNone(catV1[1].getVisitInfo())

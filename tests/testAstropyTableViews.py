@@ -29,7 +29,7 @@ or
    python
    >>> import testAstropyTableViews; testAstropyTableViews.run()
 """
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 import unittest
 import operator
 
@@ -55,11 +55,14 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         schema = lsst.afw.table.Schema()
-        self.k1 = schema.addField("a1", type=np.float64, units="meter", doc="a1 (meter)")
+        self.k1 = schema.addField(
+            "a1", type=np.float64, units="meter", doc="a1 (meter)")
         self.k2 = schema.addField("a2", type=np.int32, doc="a2 (unitless)")
-        self.k3 = schema.addField("a3", type="ArrayF", size=3, units="count", doc="a3 (array, counts)")
+        self.k3 = schema.addField(
+            "a3", type="ArrayF", size=3, units="count", doc="a3 (array, counts)")
         self.k4 = schema.addField("a4", type="Flag", doc="a4 (flag)")
-        self.k5 = lsst.afw.table.CoordKey.addFields(schema, "a5", "a5 coordinate")
+        self.k5 = lsst.afw.table.CoordKey.addFields(
+            schema, "a5", "a5 coordinate")
         self.k6 = schema.addField("a6", type=str, size=8, doc="a6 (str)")
         self.catalog = lsst.afw.table.BaseCatalog(schema)
         self.data = [
@@ -96,9 +99,11 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(v1["a1"].unit, astropy.units.Unit("m"))
         self.assertFloatsAlmostEqual(v1["a1"], self.catalog["a1"])
         self.assertNotIsInstance(v1["a1"], astropy.units.Quantity)
-        v2 = self.catalog.asAstropy(cls=astropy.table.QTable, unviewable="skip")
+        v2 = self.catalog.asAstropy(
+            cls=astropy.table.QTable, unviewable="skip")
         self.assertEqual(v2["a1"].unit, astropy.units.Unit("m"))
-        self.assertFloatsAlmostEqual(v2["a1"]/astropy.units.Quantity(self.catalog["a1"]*100, "cm"), 1.0)
+        self.assertFloatsAlmostEqual(
+            v2["a1"]/astropy.units.Quantity(self.catalog["a1"]*100, "cm"), 1.0)
         self.assertIsInstance(v2["a1"], astropy.units.Quantity)
 
     def testUnitlessColumn(self):
@@ -107,7 +112,8 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         v1 = self.catalog.asAstropy(cls=astropy.table.Table, unviewable="skip")
         self.assertEqual(v1["a2"].unit, None)
         self.assertFloatsAlmostEqual(v1["a2"], self.catalog["a2"])
-        v2 = self.catalog.asAstropy(cls=astropy.table.QTable, unviewable="skip")
+        v2 = self.catalog.asAstropy(
+            cls=astropy.table.QTable, unviewable="skip")
         self.assertEqual(v2["a2"].unit, None)
         self.assertFloatsAlmostEqual(v2["a2"], self.catalog["a2"])
 
@@ -135,7 +141,8 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(v1["a5_dec"], self.catalog["a5_dec"])
         self.assertEqual(v1["a5_dec"].unit, astropy.units.Unit("rad"))
         self.assertNotIsInstance(v1["a5_dec"], astropy.units.Quantity)
-        v2 = self.catalog.asAstropy(cls=astropy.table.QTable, unviewable="skip")
+        v2 = self.catalog.asAstropy(
+            cls=astropy.table.QTable, unviewable="skip")
         self.assertFloatsAlmostEqual(v2["a5_ra"]/astropy.units.Quantity(self.catalog["a5_ra"], unit="rad"),
                                      1.0)
         self.assertEqual(v2["a5_ra"].unit, astropy.units.Unit("rad"))
@@ -158,7 +165,8 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
     def testRaiseOnUnviewable(self):
         """Test that we can't view this table without copying, since it has Flag and String columns.
         """
-        self.assertRaises(ValueError, self.catalog.asAstropy, copy=False, unviewable="raise")
+        self.assertRaises(ValueError, self.catalog.asAstropy,
+                          copy=False, unviewable="raise")
 
     def testNoUnnecessaryCopies(self):
         """Test that fields that aren't Flag or String are not copied when copy=False (the default).

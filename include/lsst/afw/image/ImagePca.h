@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief Support for PCA analysis of 2-D images
+/*
+ * Support for PCA analysis of 2-D images
  */
 #ifndef LSST_AFW_IMAGE_IMAGEPCA_H
 #define LSST_AFW_IMAGE_IMAGEPCA_H
@@ -43,48 +42,86 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-    template <typename ImageT>
-    class ImagePca {
-    public:
-        typedef typename std::shared_ptr<ImageT> Ptr;
-        typedef typename std::shared_ptr<const ImageT> ConstPtr;
+template <typename ImageT>
+class ImagePca {
+public:
+    typedef std::vector<std::shared_ptr<ImageT>> ImageList;
 
-        typedef std::vector<typename ImageT::Ptr> ImageList;
+    /**
+     * ctor
+     *
+     * @param constantWeight Should all stars be weighted equally?
+     */
+    explicit ImagePca(bool constantWeight = true);
+    virtual ~ImagePca() {}
 
-        explicit ImagePca(bool constantWeight=true);
-        virtual ~ImagePca() {}
+    /**
+     * Add an image to the set to be analyzed
+     *
+     * @param img Image to add to set
+     * @param flux Image's flux
+     *
+     * @throws lsst::pex::exceptions::LengthError if all the images aren't the same size
+     */
+    void addImage(std::shared_ptr<ImageT> img, double flux = 0.0);
+    /// Return the list of images being analyzed
+    ImageList getImageList() const;
 
-        void addImage(typename ImageT::Ptr img, double flux=0.0);
-        ImageList getImageList() const;
+    /// Return the dimension of the images being analyzed
+    geom::Extent2I const getDimensions() const { return _dimensions; }
 
-        /// Return the dimension of the images being analyzed
-        geom::Extent2I const getDimensions() const { return _dimensions; }
+    /**
+     * Return the mean of the images in ImagePca's list
+     */
+    std::shared_ptr<ImageT> getMean() const;
+    virtual void analyze();
+    /**
+     * Update the bad pixels (i.e. those for which (value & mask) != 0) based on the current PCA
+     * decomposition;
+     * if none is available, use the mean of the good pixels
+     *
+     * @param mask Mask defining bad pixels
+     * @param ncomp Number of components to use in estimate
+     * @returns the maximum change made to any pixel
+     *
+     * N.b. the work is actually done in do_updateBadPixels as the code only makes sense and compiles when we
+     * are
+     * doing a PCA on a set of MaskedImages
+     */
+    virtual double updateBadPixels(unsigned long mask, int const ncomp);
 
-        typename ImageT::Ptr getMean() const;
-        virtual void analyze();
-        virtual double updateBadPixels(unsigned long mask, int const ncomp);
+    /// Return Eigen values
+    std::vector<double> const& getEigenValues() const { return _eigenValues; }
+    /// Return Eigen images
+    ImageList const& getEigenImages() const { return _eigenImages; }
 
-        /// Return Eigen values
-        std::vector<double> const& getEigenValues() const { return _eigenValues; }
-        /// Return Eigen images
-        ImageList const& getEigenImages() const { return _eigenImages; }
+private:
+    double getFlux(int i) const { return _fluxList[i]; }
 
-    private:
-        double getFlux(int i) const { return _fluxList[i]; }
+    ImageList _imageList;           // image to analyze
+    std::vector<double> _fluxList;  // fluxes of images
+    geom::Extent2I _dimensions;     // width/height of images on _imageList
 
-        ImageList _imageList;           // image to analyze
-        std::vector<double> _fluxList;  // fluxes of images
-        geom::Extent2I _dimensions;      // width/height of images on _imageList
+    bool _constantWeight;  // should all stars have the same weight?
 
-        bool _constantWeight;           // should all stars have the same weight?
+    std::vector<double> _eigenValues;  // Eigen values
+    ImageList _eigenImages;            // Eigen images
+};
 
-        std::vector<double> _eigenValues; // Eigen values
-        ImageList _eigenImages;           // Eigen images
-    };
-
+/**
+ * Calculate the inner product of two %images
+ *
+ * @param lhs first image
+ * @param rhs Other image to dot with first
+ * @param border number of pixels to ignore around the edge
+ * @returns The inner product
+ *
+ * @throws lsst::pex::exceptions::LengthError if all the images aren't the same size
+ */
 template <typename Image1T, typename Image2T>
-double innerProduct(Image1T const& lhs, Image2T const& rhs, int const border=0);
-
-}}}
+double innerProduct(Image1T const& lhs, Image2T const& rhs, int const border = 0);
+}
+}
+}
 
 #endif

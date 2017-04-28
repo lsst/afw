@@ -58,7 +58,8 @@ class SchemaTestCase(unittest.TestCase):
 
         schema = lsst.afw.table.Schema()
         ab_k = lsst.afw.table.CoordKey.addFields(schema, "a_b", "parent coord")
-        abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixel")
+        abp_k = lsst.afw.table.Point2DKey.addFields(
+            schema, "a_b_p", "point", "pixel")
         abi_k = schema.addField("a_b_i", type=np.int32, doc="int")
         acf_k = schema.addField("a_c_f", type=np.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
@@ -77,7 +78,8 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(schema.getNames(), {'a_b_dec', 'a_b_i', 'a_b_p_x', 'a_b_p_y', 'a_b_ra', 'a_c_f',
                                              'e_g_d'})
         self.assertEqual(schema.getNames(True), {"a", "e"})
-        self.assertEqual(schema["a"].getNames(), {'b_dec', 'b_i', 'b_p_x', 'b_p_y', 'b_ra', 'c_f'})
+        self.assertEqual(schema["a"].getNames(), {
+                         'b_dec', 'b_i', 'b_p_x', 'b_p_y', 'b_ra', 'c_f'})
         self.assertEqual(schema["a"].getNames(True), {"b", "c"})
         schema2 = lsst.afw.table.Schema(schema)
         self.assertEqual(schema, schema2)
@@ -147,7 +149,8 @@ class SchemaTestCase(unittest.TestCase):
 
     def testKeyAccessors(self):
         schema = lsst.afw.table.Schema()
-        arrayKey = schema.addField("a", type="ArrayF", doc="doc for array field", size=5)
+        arrayKey = schema.addField(
+            "a", type="ArrayF", doc="doc for array field", size=5)
         arrayElementKey = arrayKey[1]
         self.assertEqual(lsst.afw.table.Key["F"], type(arrayElementKey))
 
@@ -174,13 +177,15 @@ class SchemaTestCase(unittest.TestCase):
         self.assertFalse(cmp2 & lsst.afw.table.Schema.EQUAL_DOCS)
         self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_KEYS)
         self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_UNITS)
-        self.assertFalse(schema1.compare(schema3, lsst.afw.table.Schema.EQUAL_NAMES))
+        self.assertFalse(schema1.compare(
+            schema3, lsst.afw.table.Schema.EQUAL_NAMES))
 
 
 class SchemaMapperTestCase(unittest.TestCase):
 
     def testJoin(self):
-        inputs = [lsst.afw.table.Schema(), lsst.afw.table.Schema(), lsst.afw.table.Schema()]
+        inputs = [lsst.afw.table.Schema(), lsst.afw.table.Schema(),
+                  lsst.afw.table.Schema()]
         prefixes = ["u", "v", "w"]
         ka = inputs[0].addField("a", type=np.float64, doc="doc for a")
         kb = inputs[0].addField("b", type=np.int32, doc="doc for b")
@@ -190,17 +195,25 @@ class SchemaMapperTestCase(unittest.TestCase):
         flags2 = flags1 & ~lsst.afw.table.Schema.EQUAL_NAMES
         mappers1 = lsst.afw.table.SchemaMapper.join(inputs)
         mappers2 = lsst.afw.table.SchemaMapper.join(inputs, prefixes)
-        records = [lsst.afw.table.BaseTable.make(schema).makeRecord() for schema in inputs]
+        records = [lsst.afw.table.BaseTable.make(schema).makeRecord() for
+                   schema in inputs]
         records[0].set(ka, 3.14159)
         records[0].set(kb, 21623)
         records[1].set(kc, 1.5616)
         records[2].set(kd, 1261236)
         for mappers, flags in zip((mappers1, mappers2), (flags1, flags2)):
-            output = lsst.afw.table.BaseTable.make(mappers[0].getOutputSchema()).makeRecord()
+            output = lsst.afw.table.BaseTable.make(
+                mappers[0].getOutputSchema()).makeRecord()
             for mapper, record in zip(mappers, records):
                 output.assign(record, mapper)
-                self.assertEqual(mapper.getOutputSchema().compare(output.getSchema(), flags), flags)
-                self.assertEqual(mapper.getInputSchema().compare(record.getSchema(), flags), flags)
+                self.assertEqual(
+                    mapper.getOutputSchema().compare(output.getSchema(),
+                                                     flags),
+                    flags)
+                self.assertEqual(
+                    mapper.getInputSchema().compare(record.getSchema(),
+                                                    flags),
+                    flags)
             names = output.getSchema().getOrderedNames()
             self.assertEqual(output.get(names[0]), records[0].get(ka))
             self.assertEqual(output.get(names[1]), records[0].get(kb))
@@ -236,7 +249,8 @@ class SchemaMapperTestCase(unittest.TestCase):
         inputRecord.set(kb, 2)
         inputRecord.set(kc, np.exp(1))
         inputRecord.set(kd, 4)
-        outputRecord1 = lsst.afw.table.BaseTable.make(mapper1.getOutputSchema()).makeRecord()
+        outputRecord1 = lsst.afw.table.BaseTable.make(
+            mapper1.getOutputSchema()).makeRecord()
         outputRecord1.assign(inputRecord, mapper1)
         self.assertEqual(inputRecord.get(ka), outputRecord1.get(ka))
         self.assertEqual(inputRecord.get(kb), outputRecord1.get(kb))
@@ -249,7 +263,8 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertNotIn(k1, mapper.getOutputSchema())
         self.assertIn(k1, out1)
         self.assertNotIn(k1, out2)
-        k2 = mapper.addOutputField(lsst.afw.table.Field[np.float32]("a2", "doc for a2"))
+        k2 = mapper.addOutputField(
+            lsst.afw.table.Field[np.float32]("a2", "doc for a2"))
         self.assertNotIn(k2, out1)
         self.assertIn(k2, mapper.getOutputSchema())
         self.assertIn(k2, out2)
@@ -269,7 +284,8 @@ class SchemaMapperTestCase(unittest.TestCase):
         mapper1.addMapping(ka, True)
         self.assertEqual(mapper1.getMapping(ka), ka)
         mapper2 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
-        mapper2.addMapping(ka, lsst.afw.table.Field[np.int32]("b", "doc for b"), True)
+        mapper2.addMapping(
+            ka, lsst.afw.table.Field[np.int32]("b", "doc for b"), True)
         self.assertEqual(mapper2.getMapping(ka), kb)
         mapper3 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
         mapper3.addMapping(ka, "c", True)
@@ -288,6 +304,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

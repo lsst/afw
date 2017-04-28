@@ -50,6 +50,7 @@ def propertySetFromDict(keyValDict):
 
 class VisitInfoTestCase(unittest.TestCase):
     """Test lsst.afw.image.VisitInfo, a simple struct-like class"""
+
     def setUp(self):
         self.testDir = os.path.dirname(__file__)
 
@@ -77,15 +78,19 @@ class VisitInfoTestCase(unittest.TestCase):
         data1 = VisitInfoData(exposureId=10313423,
                               exposureTime=10.01,
                               darkTime=11.02,
-                              date=DateTime(65321.1, DateTime.MJD, DateTime.TAI),
+                              date=DateTime(
+                                  65321.1, DateTime.MJD, DateTime.TAI),
                               ut1=12345.1,
                               era=45.1*degrees,
-                              boresightRaDec=IcrsCoord(23.1*degrees, 73.2*degrees),
-                              boresightAzAlt=Coord(134.5*degrees, 33.3*degrees),
+                              boresightRaDec=IcrsCoord(
+                                  23.1*degrees, 73.2*degrees),
+                              boresightAzAlt=Coord(
+                                  134.5*degrees, 33.3*degrees),
                               boresightAirmass=1.73,
                               boresightRotAngle=73.2*degrees,
                               rotType=afwImage.RotType.SKY,
-                              observatory=Observatory(11.1*degrees, 22.2*degrees, 0.333),
+                              observatory=Observatory(
+                                  11.1*degrees, 22.2*degrees, 0.333),
                               weather=Weather(1.1, 2.2, 34.5),
                               )
         self.data1 = data1
@@ -93,15 +98,18 @@ class VisitInfoTestCase(unittest.TestCase):
         data2 = VisitInfoData(exposureId=1,
                               exposureTime=15.5,
                               darkTime=17.8,
-                              date=DateTime(55321.2, DateTime.MJD, DateTime.TAI),
+                              date=DateTime(
+                                  55321.2, DateTime.MJD, DateTime.TAI),
                               ut1=312345.1,
                               era=25.1*degrees,
-                              boresightRaDec=IcrsCoord(2.1*degrees, 33.2*degrees),
+                              boresightRaDec=IcrsCoord(
+                                  2.1*degrees, 33.2*degrees),
                               boresightAzAlt=Coord(13.5*degrees, 83.3*degrees),
                               boresightAirmass=2.05,
                               boresightRotAngle=-53.2*degrees,
                               rotType=afwImage.RotType.HORIZON,
-                              observatory=Observatory(22.2*degrees, 33.3*degrees, 0.444),
+                              observatory=Observatory(
+                                  22.2*degrees, 33.3*degrees, 0.444),
                               weather=Weather(2.2, 3.3, 44.4),
                               )
         self.data2 = data2
@@ -130,8 +138,10 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertEqual(visitInfo.getEra(), data.era)
         self.assertEqual(visitInfo.getBoresightRaDec(), data.boresightRaDec)
         self.assertEqual(visitInfo.getBoresightAzAlt(), data.boresightAzAlt)
-        self.assertEqual(visitInfo.getBoresightAirmass(), data.boresightAirmass)
-        self.assertEqual(visitInfo.getBoresightRotAngle(), data.boresightRotAngle)
+        self.assertEqual(visitInfo.getBoresightAirmass(),
+                         data.boresightAirmass)
+        self.assertEqual(visitInfo.getBoresightRotAngle(),
+                         data.boresightRotAngle)
         self.assertEqual(visitInfo.getRotType(), data.rotType)
         self.assertEqual(visitInfo.getObservatory(), data.observatory)
         self.assertEqual(visitInfo.getWeather(), data.weather)
@@ -146,7 +156,8 @@ class VisitInfoTestCase(unittest.TestCase):
 
     def testTablePersistence(self):
         for item in (self.data1, self.data2):
-            tablePath = os.path.join(self.testDir, "testVisitInfo_testTablePersistence.fits")
+            tablePath = os.path.join(
+                self.testDir, "testVisitInfo_testTablePersistence.fits")
             v1 = afwImage.VisitInfo(*item)
             v1.writeFits(tablePath)
             v2 = afwImage.VisitInfo.readFits(tablePath)
@@ -175,30 +186,45 @@ class VisitInfoTestCase(unittest.TestCase):
             self.assertEqual(metadata.get("EXPID"), item.exposureId)
             self.assertEqual(metadata.get("EXPTIME"), item.exposureTime)
             self.assertEqual(metadata.get("DARKTIME"), item.darkTime)
-            self.assertEqual(metadata.get("DATE-AVG"), item.date.toString(DateTime.TAI))
+            self.assertEqual(metadata.get("DATE-AVG"),
+                             item.date.toString(DateTime.TAI))
             self.assertEqual(metadata.get("TIMESYS"), "TAI")
             self.assertEqual(metadata.get("MJD-AVG-UT1"), item.ut1)
             self.assertEqual(metadata.get("AVG-ERA"), item.era.asDegrees())
-            self.assertEqual(metadata.get("BORE-RA"), item.boresightRaDec[0].asDegrees())
-            self.assertEqual(metadata.get("BORE-DEC"), item.boresightRaDec[1].asDegrees())
-            self.assertEqual(metadata.get("BORE-AZ"), item.boresightAzAlt[0].asDegrees())
-            self.assertEqual(metadata.get("BORE-ALT"), item.boresightAzAlt[1].asDegrees())
-            self.assertEqual(metadata.get("BORE-AIRMASS"), item.boresightAirmass)
-            self.assertEqual(metadata.get("BORE-ROTANG"), item.boresightRotAngle.asDegrees())
-            self.assertEqual(metadata.get("ROTTYPE"), RotTypeEnumNameDict[item.rotType])
-            self.assertEqual(metadata.get("OBS-LONG"), item.observatory.getLongitude().asDegrees())
-            self.assertEqual(metadata.get("OBS-LAT"), item.observatory.getLatitude().asDegrees())
-            self.assertEqual(metadata.get("OBS-ELEV"), item.observatory.getElevation())
-            self.assertEqual(metadata.get("AIRTEMP"), item.weather.getAirTemperature())
-            self.assertEqual(metadata.get("AIRPRESS"), item.weather.getAirPressure())
-            self.assertEqual(metadata.get("HUMIDITY"), item.weather.getHumidity())
+            self.assertEqual(metadata.get("BORE-RA"),
+                             item.boresightRaDec[0].asDegrees())
+            self.assertEqual(metadata.get("BORE-DEC"),
+                             item.boresightRaDec[1].asDegrees())
+            self.assertEqual(metadata.get("BORE-AZ"),
+                             item.boresightAzAlt[0].asDegrees())
+            self.assertEqual(metadata.get("BORE-ALT"),
+                             item.boresightAzAlt[1].asDegrees())
+            self.assertEqual(metadata.get("BORE-AIRMASS"),
+                             item.boresightAirmass)
+            self.assertEqual(metadata.get("BORE-ROTANG"),
+                             item.boresightRotAngle.asDegrees())
+            self.assertEqual(metadata.get("ROTTYPE"),
+                             RotTypeEnumNameDict[item.rotType])
+            self.assertEqual(metadata.get("OBS-LONG"),
+                             item.observatory.getLongitude().asDegrees())
+            self.assertEqual(metadata.get("OBS-LAT"),
+                             item.observatory.getLatitude().asDegrees())
+            self.assertEqual(metadata.get("OBS-ELEV"),
+                             item.observatory.getElevation())
+            self.assertEqual(metadata.get("AIRTEMP"),
+                             item.weather.getAirTemperature())
+            self.assertEqual(metadata.get("AIRPRESS"),
+                             item.weather.getAirPressure())
+            self.assertEqual(metadata.get("HUMIDITY"),
+                             item.weather.getHumidity())
 
     def testSetVisitInfoMetadataMissingValues(self):
         """If a value is unknown then it should not be written to the metadata"""
         visitInfo = afwImage.VisitInfo()  # only rot type is known
         metadata = PropertyList()
         afwImage.setVisitInfoMetadata(metadata, visitInfo)
-        self.assertEqual(metadata.get("ROTTYPE"), RotTypeEnumNameDict[afwImage.RotType.UNKNOWN])
+        self.assertEqual(metadata.get("ROTTYPE"),
+                         RotTypeEnumNameDict[afwImage.RotType.UNKNOWN])
         self.assertEqual(metadata.nameCount(), 1)
 
     def testStripVisitInfoKeywords(self):
@@ -206,7 +232,8 @@ class VisitInfoTestCase(unittest.TestCase):
             visitInfo = afwImage.VisitInfo(*argList)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
-            metadata.set("EXTRA", 5)  # add an extra keyword that will not be stripped
+            # add an extra keyword that will not be stripped
+            metadata.set("EXTRA", 5)
             self.assertEqual(metadata.nameCount(), 21)
             afwImage.stripVisitInfoKeywords(metadata)
             self.assertEqual(metadata.nameCount(), 1)
@@ -220,13 +247,18 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertTrue(math.isnan(visitInfo.getUt1()))
         self.assertTrue(math.isnan(visitInfo.getEra().asDegrees()))
         for i in range(2):
-            self.assertTrue(math.isnan(visitInfo.getBoresightRaDec()[i].asDegrees()))
-            self.assertTrue(math.isnan(visitInfo.getBoresightAzAlt()[i].asDegrees()))
+            self.assertTrue(math.isnan(
+                visitInfo.getBoresightRaDec()[i].asDegrees()))
+            self.assertTrue(math.isnan(
+                visitInfo.getBoresightAzAlt()[i].asDegrees()))
         self.assertTrue(math.isnan(visitInfo.getBoresightAirmass()))
-        self.assertTrue(math.isnan(visitInfo.getBoresightRotAngle().asDegrees()))
+        self.assertTrue(math.isnan(
+            visitInfo.getBoresightRotAngle().asDegrees()))
         self.assertEqual(visitInfo.getRotType(), afwImage.RotType.UNKNOWN)
-        self.assertTrue(math.isnan(visitInfo.getObservatory().getLongitude().asDegrees()))
-        self.assertTrue(math.isnan(visitInfo.getObservatory().getLatitude().asDegrees()))
+        self.assertTrue(math.isnan(
+            visitInfo.getObservatory().getLongitude().asDegrees()))
+        self.assertTrue(math.isnan(
+            visitInfo.getObservatory().getLatitude().asDegrees()))
         self.assertTrue(math.isnan(visitInfo.getObservatory().getElevation()))
         self.assertTrue(math.isnan(visitInfo.getWeather().getAirTemperature()))
         self.assertTrue(math.isnan(visitInfo.getWeather().getAirPressure()))
@@ -257,12 +289,14 @@ class VisitInfoTestCase(unittest.TestCase):
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
 
-        metadata = propertySetFromDict({"DATE-AVG": data.date.toString(DateTime.TAI), "TIMESYS": "TAI"})
+        metadata = propertySetFromDict(
+            {"DATE-AVG": data.date.toString(DateTime.TAI), "TIMESYS": "TAI"})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDate(), data.date)
 
         # TIME-MID in UTC is an acceptable alternative to DATE-AVG
-        metadata = propertySetFromDict({"TIME-MID": data.date.toString(DateTime.UTC)})
+        metadata = propertySetFromDict(
+            {"TIME-MID": data.date.toString(DateTime.UTC)})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getDate(), data.date)
 
@@ -275,7 +309,8 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertNotEqual(visitInfo.getDate(), data.date)
 
         # if both DATE-AVG and TIME-MID provided then use DATE-AVG
-        # use the wrong time system for TIME-MID so if it is used, an error will result
+        # use the wrong time system for TIME-MID so if it is used, an error
+        # will result
         metadata = propertySetFromDict({
             "DATE-AVG": data.date.toString(DateTime.TAI),
             "TIMESYS": "TAI",
@@ -293,50 +328,70 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertEqual(visitInfo.getEra(), data.era)
 
         for i, key in enumerate(("BORE-RA", "BORE-DEC")):
-            metadata = propertySetFromDict({key: data.boresightRaDec[i].asDegrees()})
+            metadata = propertySetFromDict(
+                {key: data.boresightRaDec[i].asDegrees()})
             visitInfo = afwImage.VisitInfo(metadata)
-            self.assertEqual(visitInfo.getBoresightRaDec()[i], data.boresightRaDec[i])
+            self.assertEqual(visitInfo.getBoresightRaDec()
+                             [i], data.boresightRaDec[i])
 
         for i, key in enumerate(("BORE-AZ", "BORE-ALT")):
-            metadata = propertySetFromDict({key: data.boresightAzAlt[i].asDegrees()})
+            metadata = propertySetFromDict(
+                {key: data.boresightAzAlt[i].asDegrees()})
             visitInfo = afwImage.VisitInfo(metadata)
-            self.assertEqual(visitInfo.getBoresightAzAlt()[i], data.boresightAzAlt[i])
+            self.assertEqual(visitInfo.getBoresightAzAlt()
+                             [i], data.boresightAzAlt[i])
 
         metadata = propertySetFromDict({"BORE-AIRMASS": data.boresightAirmass})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getBoresightAirmass(), data.boresightAirmass)
+        self.assertEqual(visitInfo.getBoresightAirmass(),
+                         data.boresightAirmass)
 
-        metadata = propertySetFromDict({"BORE-ROTANG": data.boresightRotAngle.asDegrees()})
+        metadata = propertySetFromDict(
+            {"BORE-ROTANG": data.boresightRotAngle.asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getBoresightRotAngle(), data.boresightRotAngle)
+        self.assertEqual(visitInfo.getBoresightRotAngle(),
+                         data.boresightRotAngle)
 
-        metadata = propertySetFromDict({"ROTTYPE": RotTypeEnumNameDict[data.rotType]})
+        metadata = propertySetFromDict(
+            {"ROTTYPE": RotTypeEnumNameDict[data.rotType]})
         visitInfo = afwImage.VisitInfo(metadata)
         self.assertEqual(visitInfo.getRotType(), data.rotType)
 
-        metadata = propertySetFromDict({"OBS-LONG": data.observatory.getLongitude().asDegrees()})
+        metadata = propertySetFromDict(
+            {"OBS-LONG": data.observatory.getLongitude().asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getObservatory().getLongitude(), data.observatory.getLongitude())
+        self.assertEqual(visitInfo.getObservatory().getLongitude(),
+                         data.observatory.getLongitude())
 
-        metadata = propertySetFromDict({"OBS-LAT": data.observatory.getLatitude().asDegrees()})
+        metadata = propertySetFromDict(
+            {"OBS-LAT": data.observatory.getLatitude().asDegrees()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getObservatory().getLatitude(), data.observatory.getLatitude())
+        self.assertEqual(visitInfo.getObservatory().getLatitude(),
+                         data.observatory.getLatitude())
 
-        metadata = propertySetFromDict({"OBS-ELEV": data.observatory.getElevation()})
+        metadata = propertySetFromDict(
+            {"OBS-ELEV": data.observatory.getElevation()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getObservatory().getElevation(), data.observatory.getElevation())
+        self.assertEqual(visitInfo.getObservatory().getElevation(),
+                         data.observatory.getElevation())
 
-        metadata = propertySetFromDict({"AIRTEMP": data.weather.getAirTemperature()})
+        metadata = propertySetFromDict(
+            {"AIRTEMP": data.weather.getAirTemperature()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getWeather().getAirTemperature(), data.weather.getAirTemperature())
+        self.assertEqual(visitInfo.getWeather().getAirTemperature(),
+                         data.weather.getAirTemperature())
 
-        metadata = propertySetFromDict({"AIRPRESS": data.weather.getAirPressure()})
+        metadata = propertySetFromDict(
+            {"AIRPRESS": data.weather.getAirPressure()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getWeather().getAirPressure(), data.weather.getAirPressure())
+        self.assertEqual(visitInfo.getWeather().getAirPressure(),
+                         data.weather.getAirPressure())
 
-        metadata = propertySetFromDict({"HUMIDITY": data.weather.getHumidity()})
+        metadata = propertySetFromDict(
+            {"HUMIDITY": data.weather.getHumidity()})
         visitInfo = afwImage.VisitInfo(metadata)
-        self.assertEqual(visitInfo.getWeather().getHumidity(), data.weather.getHumidity())
+        self.assertEqual(visitInfo.getWeather().getHumidity(),
+                         data.weather.getHumidity())
 
     def testConstructorKeywordArguments(self):
         """Test VisitInfo with named arguments"""
@@ -371,10 +426,13 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertEqual(visitInfo.getBoresightAzAlt(), data.boresightAzAlt)
 
         visitInfo = afwImage.VisitInfo(boresightAirmass=data.boresightAirmass)
-        self.assertEqual(visitInfo.getBoresightAirmass(), data.boresightAirmass)
+        self.assertEqual(visitInfo.getBoresightAirmass(),
+                         data.boresightAirmass)
 
-        visitInfo = afwImage.VisitInfo(boresightRotAngle=data.boresightRotAngle)
-        self.assertEqual(visitInfo.getBoresightRotAngle(), data.boresightRotAngle)
+        visitInfo = afwImage.VisitInfo(
+            boresightRotAngle=data.boresightRotAngle)
+        self.assertEqual(visitInfo.getBoresightRotAngle(),
+                         data.boresightRotAngle)
 
         visitInfo = afwImage.VisitInfo(rotType=data.rotType)
         self.assertEqual(visitInfo.getRotType(), data.rotType)
@@ -388,7 +446,8 @@ class VisitInfoTestCase(unittest.TestCase):
     def testGoodRotTypes(self):
         """Test round trip of all valid rot types"""
         for rotType in RotTypeEnumNameDict:
-            metadata = propertySetFromDict({"ROTTYPE": RotTypeEnumNameDict[rotType]})
+            metadata = propertySetFromDict(
+                {"ROTTYPE": RotTypeEnumNameDict[rotType]})
             visitInfo = afwImage.VisitInfo(metadata)
             self.assertEqual(visitInfo.getRotType(), rotType)
 
@@ -412,6 +471,7 @@ def setup_module(module):
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

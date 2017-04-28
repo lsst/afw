@@ -43,15 +43,11 @@ PYBIND11_PLUGIN(color) {
     PyColor cls(mod, "Color");
 
     /* Constructors */
-    cls.def(py::init<double>(), "g_r"_a=std::numeric_limits<double>::quiet_NaN());
+    cls.def(py::init<double>(), "g_r"_a = std::numeric_limits<double>::quiet_NaN());
 
     /* Operators */
-    cls.def("__eq__",
-            [](Color const & self, Color const & other) { return self == other; },
-            py::is_operator());
-    cls.def("__ne__",
-            [](Color const & self, Color const & other) { return self != other; },
-            py::is_operator());
+    cls.def("__eq__", [](Color const& self, Color const& other) { return self == other; }, py::is_operator());
+    cls.def("__ne__", [](Color const& self, Color const& other) { return self != other; }, py::is_operator());
 
     /* Members */
     cls.def("isIndeterminate", &Color::isIndeterminate);
@@ -59,5 +55,7 @@ PYBIND11_PLUGIN(color) {
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::image::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::image::<anonymous>

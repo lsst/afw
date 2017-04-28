@@ -20,7 +20,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/// \file
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
@@ -32,28 +31,28 @@ int main() {
 
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
-        for (ImageT::xy_locator ptr = in.xy_at(0, y), end = in.xy_at(in.getWidth(), y);
-             ptr != end; ++ptr.x()) {
+        for (ImageT::xy_locator ptr = in.xy_at(0, y), end = in.xy_at(in.getWidth(), y); ptr != end;
+             ++ptr.x()) {
             *ptr = ImageT::Pixel(y, 0x1, 10);
         }
     }
     //
     // Convolve with a pseudo-Gaussian kernel ((1, 2, 1), (2, 4, 2), (1, 2, 1))
     //
-    ImageT out(in.getDimensions()); // Make an output image the same size as the input image
+    ImageT out(in.getDimensions());  // Make an output image the same size as the input image
     out.assign(in);
     for (int y = 1; y != in.getHeight() - 1; ++y) {
-        for (ImageT::xy_locator ptr =  in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y),
-                               optr = out.xy_at(1, y); ptr != end; ++ptr.x(), ++optr.x()) {
-            *optr = ptr(-1,-1) + 2*ptr(0,-1) +   ptr(1,-1) +
-                  2*ptr(-1, 0) + 4*ptr(0, 0) + 2*ptr(1, 0) +
-                    ptr(-1, 1) + 2*ptr(0, 1) +   ptr(1, 1);
+        for (ImageT::xy_locator ptr = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y),
+                                optr = out.xy_at(1, y);
+             ptr != end; ++ptr.x(), ++optr.x()) {
+            *optr = ptr(-1, -1) + 2 * ptr(0, -1) + ptr(1, -1) + 2 * ptr(-1, 0) + 4 * ptr(0, 0) +
+                    2 * ptr(1, 0) + ptr(-1, 1) + 2 * ptr(0, 1) + ptr(1, 1);
         }
     }
     //
     // Do the same thing a faster way, using cached_location_t
     //
-    ImageT::Ptr out2(new ImageT(in.getDimensions()));
+    std::shared_ptr<ImageT> out2(new ImageT(in.getDimensions()));
     out2->assign(in);
 
     typedef ImageT::const_xy_locator xy_loc;
@@ -62,20 +61,19 @@ int main() {
         // "dot" means "cursor location" in emacs
         xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y);
 
-        xy_loc::cached_location_t nw = dot.cache_location(-1,-1);
-        xy_loc::cached_location_t n  = dot.cache_location( 0,-1);
-        xy_loc::cached_location_t ne = dot.cache_location( 1,-1);
-        xy_loc::cached_location_t w  = dot.cache_location(-1, 0);
-        xy_loc::cached_location_t c  = dot.cache_location( 0, 0);
-        xy_loc::cached_location_t e  = dot.cache_location( 1, 0);
+        xy_loc::cached_location_t nw = dot.cache_location(-1, -1);
+        xy_loc::cached_location_t n = dot.cache_location(0, -1);
+        xy_loc::cached_location_t ne = dot.cache_location(1, -1);
+        xy_loc::cached_location_t w = dot.cache_location(-1, 0);
+        xy_loc::cached_location_t c = dot.cache_location(0, 0);
+        xy_loc::cached_location_t e = dot.cache_location(1, 0);
         xy_loc::cached_location_t sw = dot.cache_location(-1, 1);
-        xy_loc::cached_location_t s  = dot.cache_location( 0, 1);
-        xy_loc::cached_location_t se = dot.cache_location( 1, 1);
+        xy_loc::cached_location_t s = dot.cache_location(0, 1);
+        xy_loc::cached_location_t se = dot.cache_location(1, 1);
 
         for (ImageT::x_iterator optr = out2->row_begin(y) + 1; dot != end; ++dot.x(), ++optr) {
-            *optr = dot[nw] + 2*dot[n] +   dot[ne] +
-                  2*dot[w]  + 4*dot[c] + 2*dot[e] +
-                    dot[sw] + 2*dot[s] +   dot[se];
+            *optr = dot[nw] + 2 * dot[n] + dot[ne] + 2 * dot[w] + 4 * dot[c] + 2 * dot[e] + dot[sw] +
+                    2 * dot[s] + dot[se];
         }
     }
     //
@@ -83,46 +81,40 @@ int main() {
     //
     xy_loc pix11 = in.xy_at(1, 1);
 
-    xy_loc::cached_location_t nw = pix11.cache_location(-1,-1);
-    xy_loc::cached_location_t n  = pix11.cache_location( 0,-1);
-    xy_loc::cached_location_t ne = pix11.cache_location( 1,-1);
-    xy_loc::cached_location_t w  = pix11.cache_location(-1, 0);
-    xy_loc::cached_location_t c  = pix11.cache_location( 0, 0);
-    xy_loc::cached_location_t e  = pix11.cache_location( 1, 0);
+    xy_loc::cached_location_t nw = pix11.cache_location(-1, -1);
+    xy_loc::cached_location_t n = pix11.cache_location(0, -1);
+    xy_loc::cached_location_t ne = pix11.cache_location(1, -1);
+    xy_loc::cached_location_t w = pix11.cache_location(-1, 0);
+    xy_loc::cached_location_t c = pix11.cache_location(0, 0);
+    xy_loc::cached_location_t e = pix11.cache_location(1, 0);
     xy_loc::cached_location_t sw = pix11.cache_location(-1, 1);
-    xy_loc::cached_location_t s  = pix11.cache_location( 0, 1);
-    xy_loc::cached_location_t se = pix11.cache_location( 1, 1);
+    xy_loc::cached_location_t s = pix11.cache_location(0, 1);
+    xy_loc::cached_location_t se = pix11.cache_location(1, 1);
 
     for (int y = 1; y != in.getHeight() - 1; ++y) {
         // "dot" means "cursor location" in emacs
         xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y);
 
         for (ImageT::x_iterator optr = out2->row_begin(y) + 1; dot != end; ++dot.x(), ++optr) {
-            *optr = dot[nw] + 2*dot[n] +   dot[ne] +
-                  2*dot[w]  + 4*dot[c] + 2*dot[e] +
-                    dot[sw] + 2*dot[s] +   dot[se];
+            *optr = dot[nw] + 2 * dot[n] + dot[ne] + 2 * dot[w] + 4 * dot[c] + 2 * dot[e] + dot[sw] +
+                    2 * dot[s] + dot[se];
         }
     }
     //
     // Normalise the kernel.  I.e. divide the smoothed parts of image2 by 16
     //
     {
-        ImageT center = ImageT(
-            *out2,
-            geom::Box2I(
-                geom::Point2I(1, 1),
-                in.getDimensions() - geom::Extent2I(-2)
-            ),
-            image::LOCAL
-        );
+        ImageT center =
+                ImageT(*out2, geom::Box2I(geom::Point2I(1, 1), in.getDimensions() - geom::Extent2I(-2)),
+                       image::LOCAL);
         center /= 16;
     }
     //
     // Clear in using the x_iterator embedded in the locator
     //
     for (int y = 0; y != in.getHeight(); ++y) {
-        for (ImageT::xy_x_iterator ptr = in.xy_at(0, y).x(), end = in.xy_at(in.getWidth(), y).x();
-             ptr != end; ++ptr) {
+        for (ImageT::xy_x_iterator ptr = in.xy_at(0, y).x(), end = in.xy_at(in.getWidth(), y).x(); ptr != end;
+             ++ptr) {
             *ptr = 0;
         }
     }

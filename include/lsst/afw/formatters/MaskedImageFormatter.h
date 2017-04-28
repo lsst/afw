@@ -25,21 +25,8 @@
 #ifndef LSST_AFW_FORMATTERS_MASKEDIMAGEFORMATTER_H
 #define LSST_AFW_FORMATTERS_MASKEDIMAGEFORMATTER_H
 
-/** @file
- * @brief Interface for MaskedImageFormatter class
- *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
- * @date $Date$
- *
- * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup afw
- */
-
-/** @class lsst::afw::formatters::MaskedImageFormatter
- * @brief Class implementing persistence and retrieval for MaskedImages.
- *
- * @ingroup afw
+/*
+ * Interface for MaskedImageFormatter class
  */
 
 #include "lsst/daf/base.h"
@@ -50,42 +37,37 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+/**
+ * Class implementing persistence and retrieval for MaskedImages.
+ */
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImageFormatter : public lsst::daf::persistence::Formatter {
 public:
     virtual ~MaskedImageFormatter(void);
 
-    virtual void write(
-        lsst::daf::base::Persistable const* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
-    );
-    virtual lsst::daf::base::Persistable* read(
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
-    );
-    virtual void update(
-        lsst::daf::base::Persistable* persistable,
-        lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr additionalData
-    );
+    virtual void write(lsst::daf::base::Persistable const* persistable,
+                       std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                                               std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual void update(lsst::daf::base::Persistable* persistable,
+                        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
-    static lsst::daf::persistence::Formatter::Ptr createInstance(
-        lsst::pex::policy::Policy::Ptr policy
-    );
+    static std::shared_ptr<lsst::daf::persistence::Formatter> createInstance(
+            std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     template <class Archive>
-    static void delegateSerialize(
-        Archive& ar,
-        unsigned int const version,
-        lsst::daf::base::Persistable* persistable
-    );
+    static void delegateSerialize(Archive& ar, unsigned int const version,
+                                  lsst::daf::base::Persistable* persistable);
+
 private:
-    explicit MaskedImageFormatter(lsst::pex::policy::Policy::Ptr policy);
+    explicit MaskedImageFormatter(std::shared_ptr<lsst::pex::policy::Policy> policy);
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters
 
 #endif

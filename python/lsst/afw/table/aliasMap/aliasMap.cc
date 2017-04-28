@@ -51,19 +51,16 @@ PYBIND11_PLUGIN(aliasMap) {
     cls.def("__setitem__", &AliasMap::set);
     cls.def("erase", &AliasMap::erase, "alias"_a);
     cls.def("__delitem__", &AliasMap::erase, "alias"_a);
-    cls.def("__eq__", [](AliasMap & self, AliasMap & other) { return self == other; });
-    cls.def("__ne__", [](AliasMap & self, AliasMap & other) { return self != other; });
+    cls.def("__eq__", [](AliasMap &self, AliasMap &other) { return self == other; });
+    cls.def("__ne__", [](AliasMap &self, AliasMap &other) { return self != other; });
     cls.def("contains", &AliasMap::contains, "other"_a);
     cls.def("__contains__", &AliasMap::contains);
-    cls.def(
-        "items",
-        [](AliasMap & self) {
-            return py::make_iterator(self.begin(), self.end());
-        },
-        py::keep_alive<0,1>()
-    );
+    cls.def("items", [](AliasMap &self) { return py::make_iterator(self.begin(), self.end()); },
+            py::keep_alive<0, 1>());
 
     return mod.ptr();
 }
-
-}}}}  // namespace lsst::afw::table::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::table::<anonymous>

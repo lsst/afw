@@ -160,7 +160,7 @@ void declareGenericEndpoint(py::module& mod) {
     addStrAndRepr(cls);
 }
 
-/// declare PointNEndpoint (for N = 2 or 3) and all subclasses
+/// @internal declare PointNEndpoint (for N = 2 or 3) and all subclasses
 template <int N>
 void declarePointEndpoint(py::module& mod) {
     using Class = PointEndpoint<N>;
@@ -179,7 +179,7 @@ void declarePointEndpoint(py::module& mod) {
     addStrAndRepr(cls);
 }
 
-/// declare SpherePointEndpoint and all subclasses
+/// @internal declare SpherePointEndpoint and all subclasses
 void declareSpherePointEndpoint(py::module& mod) {
     using Class = SpherePointEndpoint;
     using Point = typename Class::Point;

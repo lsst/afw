@@ -29,7 +29,7 @@ or
    python
    >>> import testSchema; testSchema.run()
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 import collections
 import os
 import unittest
@@ -52,10 +52,12 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         np.random.seed(100)
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
+        self.bbox = lsst.afw.geom.Box2I(
+            lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
         self.map = lsst.afw.image.ApCorrMap()
         for name in ("a", "b", "c"):
-            self.map.set(name, lsst.afw.math.ChebyshevBoundedField(self.bbox, np.random.randn(3, 3)))
+            self.map.set(name, lsst.afw.math.ChebyshevBoundedField(
+                self.bbox, np.random.randn(3, 3)))
 
     def tearDown(self):
         del self.map
@@ -70,7 +72,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
             value2 = b.get(name)
             self.assertIsNotNone(value2)
             self.assertEqual(value.getBBox(), value2.getBBox())
-            self.assertFloatsAlmostEqual(value.getCoefficients(), value2.getCoefficients(), rtol=0.0)
+            self.assertFloatsAlmostEqual(
+                value.getCoefficients(), value2.getCoefficients(), rtol=0.0)
 
     def testAccessors(self):
         """Test the accessors and other custom Swig code we've added to make ApCorrMap behave like a Python
@@ -78,13 +81,18 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(self.map), 3)
         self.assertEqual(collections.OrderedDict(self.map),
                          {name: value for (name, value) in list(self.map.items())})
-        self.assertEqual(list(collections.OrderedDict(self.map).keys()), list(self.map.keys()))
-        self.assertEqual(list(collections.OrderedDict(self.map).values()), list(self.map.values()))
-        self.assertEqual(list(collections.OrderedDict(self.map).items()), list(self.map.items()))
-        self.assertEqual(list(collections.OrderedDict(self.map).keys()), list(self.map))
+        self.assertEqual(list(collections.OrderedDict(self.map).keys()),
+                         list(self.map.keys()))
+        self.assertEqual(list(collections.OrderedDict(self.map).values()),
+                         list(self.map.values()))
+        self.assertEqual(list(collections.OrderedDict(self.map).items()),
+                         list(self.map.items()))
+        self.assertEqual(list(collections.OrderedDict(self.map).keys()),
+                         list(self.map))
         self.assertIn("b", self.map)
         self.assertNotIn("d", self.map)
-        self.map["d"] = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.random.randn(2, 2))
+        self.map["d"] = lsst.afw.math.ChebyshevBoundedField(
+            self.bbox, np.random.randn(2, 2))
         self.assertIn("d", self.map)
         self.assertIsNone(self.map.get("e"))
         with self.assertRaises(lsst.pex.exceptions.NotFoundError):
@@ -113,7 +121,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
     def testExposureRecordPersistence(self):
         """Test that the ApCorrMap is saved with an ExposureRecord"""
         filename = "testApCorrMap.fits"
-        cat1 = lsst.afw.table.ExposureCatalog(lsst.afw.table.ExposureTable.makeMinimalSchema())
+        cat1 = lsst.afw.table.ExposureCatalog(
+            lsst.afw.table.ExposureTable.makeMinimalSchema())
         record1 = cat1.addNew()
         record1.setApCorrMap(self.map)
         cat1.writeFits(filename)
@@ -125,7 +134,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
-        filename = os.path.join(os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
+        filename = os.path.join(
+            os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
         cat = lsst.afw.table.ExposureCatalog.readFits(filename)
         record = cat[0]
         self.assertIsNone(record.getApCorrMap())
@@ -152,6 +162,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

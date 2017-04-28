@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # See COPYRIGHT file at the top of the source tree.
@@ -21,11 +20,12 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import lsst.pex.config
 
-from ._chebyshevBoundedField import *
+from ._chebyshevBoundedField import ChebyshevBoundedField, ChebyshevBoundedFieldControl
+
 
 @lsst.pex.config.wrap(ChebyshevBoundedFieldControl)
 class ChebyshevBoundedFieldConfig(lsst.pex.config.Config):

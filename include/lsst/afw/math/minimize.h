@@ -24,16 +24,10 @@
 
 #ifndef LSST_AFW_MATH_MINIMIZE_H
 #define LSST_AFW_MATH_MINIMIZE_H
-/**
- * @file
- *
- * @brief Adaptor for minuit
+/*
+ * Adaptor for minuit
  *
  * Class that Minuit knows how to minimize, that contains an lsst::afw::math::Function
- *
- * @author Andrew Becker and Russell Owen
- *
- * @ingroup afw
  */
 #include <memory>
 #include "Minuit2/FCNBase.h"
@@ -45,40 +39,77 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    /**
-     * @brief Results from minimizing a function
-     */
-    struct FitResults {
-    public:
-        bool isValid;   ///< true if the fit converged; false otherwise
-        double chiSq;   ///< chi squared; may be nan or infinite, but only if isValid false
-        std::vector<double> parameterList; ///< fit parameters
-        std::vector<std::pair<double,double> > parameterErrorList; ///< negative,positive (1 sigma?) error for each parameter
-    };
+/**
+ * Results from minimizing a function
+ */
+struct FitResults {
+public:
+    bool isValid;                       ///< true if the fit converged; false otherwise
+    double chiSq;                       ///< chi squared; may be nan or infinite, but only if isValid false
+    std::vector<double> parameterList;  ///< fit parameters
+    std::vector<std::pair<double, double> >
+            parameterErrorList;  ///< negative,positive (1 sigma?) error for each parameter
+};
 
-    template<typename ReturnT>
-    FitResults minimize(
-        lsst::afw::math::Function1<ReturnT> const &function,
-        std::vector<double> const &initialParameterList,
-        std::vector<double> const &stepSizeList,
-        std::vector<double> const &measurementList,
-        std::vector<double> const &varianceList,
-        std::vector<double> const &xPositionList,
-        double errorDef
-    );
+/**
+ * Find the minimum of a function(x)
+ *
+ * @param function function(x) to be minimized
+ * @param initialParameterList initial guess for parameters
+ * @param stepSizeList step size for each parameter; use 0.0 to fix a parameter
+ * @param measurementList measured values
+ * @param varianceList variance for each measurement
+ * @param xPositionList x position of each measurement
+ * @param errorDef what is this?
+ * @returns true if minimum is valid, false otherwise
+ *
+ * Uses the Minuit fitting package with a standard definition of chiSq
+ * (see MinimizerFunctionBase1).
+ *
+ * @throws lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length
+ *
+ * To do:
+ * - Document stepSizeList better
+ * - Document errorDef
+ * - Compute stepSize automatically? (if so, find a different way to fix parameters)
+ */
+template <typename ReturnT>
+FitResults minimize(lsst::afw::math::Function1<ReturnT> const &function,
+                    std::vector<double> const &initialParameterList, std::vector<double> const &stepSizeList,
+                    std::vector<double> const &measurementList, std::vector<double> const &varianceList,
+                    std::vector<double> const &xPositionList, double errorDef);
 
-    template<typename ReturnT>
-    FitResults minimize(
-        lsst::afw::math::Function2<ReturnT> const &function,
-        std::vector<double> const &initialParameterList,
-        std::vector<double> const &stepSizeList,
-        std::vector<double> const &measurementList,
-        std::vector<double> const &varianceList,
-        std::vector<double> const &xPositionList,
-        std::vector<double> const &yPositionList,
-        double errorDef
-    );
+/**
+ * Find the minimum of a function(x, y)
+ *
+ * Uses the Minuit fitting package with a standard definition of chiSq.
+ * (see MinimizerFunctionBase2).
+ *
+ * @param function function(x,y) to be minimized
+ * @param initialParameterList initial guess for parameters
+ * @param stepSizeList step size for each parameter; use 0.0 to fix a parameter
+ * @param measurementList measured values
+ * @param varianceList variance for each measurement
+ * @param xPositionList x position of each measurement
+ * @param yPositionList y position of each measurement
+ * @param errorDef what is this?
+ * @returns true if minimum is valid, false otherwise
+ *
+ * @throws lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length
+ *
+ * To do:
+ * - Document stepSizeList better
+ * - Document errorDef
+ * - Compute stepSize automatically? (if so, find a different way to fix parameters)
+ */
+template <typename ReturnT>
+FitResults minimize(lsst::afw::math::Function2<ReturnT> const &function,
+                    std::vector<double> const &initialParameterList, std::vector<double> const &stepSizeList,
+                    std::vector<double> const &measurementList, std::vector<double> const &varianceList,
+                    std::vector<double> const &xPositionList, std::vector<double> const &yPositionList,
+                    double errorDef);
+}
+}
+}  // lsst::afw::math
 
-}}}   // lsst::afw::math
-
-#endif // !defined(LSST_AFW_MATH_MINIMIZE_H)
+#endif  // !defined(LSST_AFW_MATH_MINIMIZE_H)

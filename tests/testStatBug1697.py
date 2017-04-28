@@ -45,7 +45,8 @@ class weightedStatsBugTestCase(unittest.TestCase):
         nBadImg = np.logical_not(np.isfinite(arrayList[0])).sum()
         nBadMsk = np.sum(np.bitwise_and(arrayList[1], badPixelMask) > 0)
         nBadVar = np.logical_not(np.isfinite(arrayList[2])).sum()
-        print("%d bad image pixels, %d bad mask pixels, %d bad variance pixels" % (nBadImg, nBadMsk, nBadVar))
+        print("%d bad image pixels, %d bad mask pixels, %d bad variance pixels" % (
+            nBadImg, nBadMsk, nBadVar))
         self.assertEqual(nBadImg, 0)
         self.assertEqual(nBadMsk, 0)
         self.assertEqual(nBadVar, 0)
@@ -93,6 +94,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

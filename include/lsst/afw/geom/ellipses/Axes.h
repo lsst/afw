@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
 
-/**
- *  \file
- *  @brief Definitions and inlines for Axes.
+/*
+ * Definitions and inlines for Axes.
  *
- *  \note Do not include directly; use the main ellipse header file.
+ * Note: do not include directly; use the main ellipse header file.
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -37,18 +36,17 @@
 #include "lsst/afw/geom/ellipses/Transformer.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 /**
- *  @brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
+ * An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
  */
 class Axes : public BaseCore {
 public:
-
-    typedef std::shared_ptr<Axes> Ptr;
-    typedef std::shared_ptr<Axes const> ConstPtr;
-
-    enum ParameterEnum { A=0, B=1, THETA=2 }; ///< Definitions for elements of a core vector.
+    enum ParameterEnum { A = 0, B = 1, THETA = 2 };  ///< Definitions for elements of a core vector.
 
     double const getA() const { return _vector[A]; }
     void setA(double a) { _vector[A] = a; }
@@ -59,8 +57,8 @@ public:
     double const getTheta() const { return _vector[THETA]; }
     void setTheta(double theta) { _vector[THETA] = theta; }
 
-    /// @brief Deep copy the ellipse core.
-    Ptr clone() const { return std::static_pointer_cast<Axes>(_clone()); }
+    /// Deep copy the ellipse core.
+    std::shared_ptr<Axes> clone() const { return std::static_pointer_cast<Axes>(_clone()); }
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const;
@@ -71,55 +69,58 @@ public:
      */
     virtual void normalize();
 
-    virtual void readParameters(double const * iter);
+    virtual void readParameters(double const* iter);
 
-    virtual void writeParameters(double * iter) const;
+    virtual void writeParameters(double* iter) const;
 
-    /// @brief Standard assignment.
-    Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
-
-    /// @brief Converting assignment.
-    Axes & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
-
-    /// @brief Construct from parameter values
-    explicit Axes(double a=1.0, double b=1.0, double theta=0.0, bool normalize=false) :
-        _vector(a, b, theta) { if (normalize) this->normalize(); }
-
-    /// @brief Construct from a parameter vector.
-    explicit Axes(BaseCore::ParameterVector const & vector, bool normalize=false) :
-        _vector(vector) { if (normalize) this->normalize(); }
-
-    /// @brief Copy constructor.
-    Axes(Axes const & other) : _vector(other._vector) {}
-
-    /// @brief Converting copy constructor.
-    Axes(BaseCore const & other) { *this = other; }
-
-#ifndef SWIG
-    /// @brief Converting copy constructor.
-    Axes(BaseCore::Transformer const & transformer) {
-        transformer.apply(*this);
+    /// Standard assignment.
+    Axes& operator=(Axes const& other) {
+        _vector = other._vector;
+        return *this;
     }
 
-    /// @brief Converting copy constructor.
-    Axes(BaseCore::Convolution const & convolution) {
-        convolution.apply(*this);
+    /// Converting assignment.
+    Axes& operator=(BaseCore const& other) {
+        BaseCore::operator=(other);
+        return *this;
     }
-#endif
+
+    /// Construct from parameter values
+    explicit Axes(double a = 1.0, double b = 1.0, double theta = 0.0, bool normalize = false)
+            : _vector(a, b, theta) {
+        if (normalize) this->normalize();
+    }
+
+    /// Construct from a parameter vector.
+    explicit Axes(BaseCore::ParameterVector const& vector, bool normalize = false) : _vector(vector) {
+        if (normalize) this->normalize();
+    }
+
+    /// Copy constructor.
+    Axes(Axes const& other) : _vector(other._vector) {}
+
+    /// Converting copy constructor.
+    Axes(BaseCore const& other) { *this = other; }
+
+    /// Converting copy constructor.
+    Axes(BaseCore::Transformer const& transformer) { transformer.apply(*this); }
+
+    /// Converting copy constructor.
+    Axes(BaseCore::Convolution const& convolution) { convolution.apply(*this); }
+
 protected:
+    virtual std::shared_ptr<BaseCore> _clone() const { return std::make_shared<Axes>(*this); }
 
-    virtual BaseCore::Ptr _clone() const { return std::make_shared<Axes>(*this); }
-
-    virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
+    virtual void _assignToQuadrupole(double& ixx, double& iyy, double& ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);
 
-    virtual void _assignToAxes(double & a, double & b, double & theta) const;
+    virtual void _assignToAxes(double& a, double& b, double& theta) const;
     virtual void _assignFromAxes(double a, double b, double theta);
 
-    virtual Jacobian _dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
+    virtual Jacobian _dAssignToQuadrupole(double& ixx, double& iyy, double& ixy) const;
     virtual Jacobian _dAssignFromQuadrupole(double ixx, double iyy, double ixy);
 
-    virtual Jacobian _dAssignToAxes(double & a, double & b, double & theta) const;
+    virtual Jacobian _dAssignToAxes(double& a, double& b, double& theta) const;
     virtual Jacobian _dAssignFromAxes(double a, double b, double theta);
 
 private:
@@ -127,7 +128,9 @@ private:
 
     ParameterVector _vector;
 };
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED

@@ -25,15 +25,6 @@
 #ifndef LSST_AFW_FORMATTERS_PROPERTYLISTFORMATTER_H
 #define LSST_AFW_FORMATTERS_PROPERTYLISTFORMATTER_H
 
-/**
- * @brief Interface for PropertyListFormatter class
- *
- * @class lsst::afw::formatters::PropertyListFormatter
- * @brief Class implementing persistence and retrieval for PropertyLists.
- *
- * @ingroup afw
- */
-
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/policy/Policy.h"
@@ -42,44 +33,37 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
+/**
+ * Class implementing persistence and retrieval for PropertyLists.
+ */
 class PropertyListFormatter : public daf::persistence::Formatter {
 public:
     virtual ~PropertyListFormatter() {}
 
-    virtual void write(
-        daf::base::Persistable const* persistable,
-        daf::persistence::Storage::Ptr storage,
-        daf::base::PropertySet::Ptr additionalData
-    );
+    virtual void write(daf::base::Persistable const* persistable,
+                       std::shared_ptr<daf::persistence::Storage> storage,
+                       std::shared_ptr<daf::base::PropertySet> additionalData);
 
-    virtual daf::base::Persistable* read(
-        daf::persistence::Storage::Ptr storage,
-        daf::base::PropertySet::Ptr additionalData
-    );
+    virtual daf::base::Persistable* read(std::shared_ptr<daf::persistence::Storage> storage,
+                                         std::shared_ptr<daf::base::PropertySet> additionalData);
 
-    virtual void update(
-        daf::base::Persistable* persistable,
-        daf::persistence::Storage::Ptr storage,
-        daf::base::PropertySet::Ptr additionalData
-    );
+    virtual void update(daf::base::Persistable* persistable,
+                        std::shared_ptr<daf::persistence::Storage> storage,
+                        std::shared_ptr<daf::base::PropertySet> additionalData);
 
-    static daf::persistence::Formatter::Ptr createInstance(
-        pex::policy::Policy::Ptr policy
-    );
+    static std::shared_ptr<daf::persistence::Formatter> createInstance(
+            std::shared_ptr<pex::policy::Policy> policy);
 
     template <class Archive>
-    static void delegateSerialize(
-        Archive& ar,
-        int const version,
-        daf::base::Persistable* persistable
-    );
+    static void delegateSerialize(Archive& ar, int const version, daf::base::Persistable* persistable);
 
 private:
-    explicit PropertyListFormatter(PTR(pex::policy::Policy) policy);
+    explicit PropertyListFormatter(std::shared_ptr<pex::policy::Policy> policy);
 
     static daf::persistence::FormatterRegistration registration;
 };
-
-}}} // namespace lsst::afw::formatters
+}
+}
+}  // namespace lsst::afw::formatters
 
 #endif

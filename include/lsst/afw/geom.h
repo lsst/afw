@@ -20,9 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::geom
+/*
+ * An include file to include the header files for lsst::afw::geom
  *
  * Does not include lsst/afw/geom/ellipses.h.
  */

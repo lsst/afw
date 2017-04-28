@@ -28,7 +28,6 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 
-/************************************************************************************************************/
 /*
  * Test class for SpatialCellImageCandidate
  */
@@ -37,13 +36,22 @@ public:
     typedef float PixelT;
     typedef lsst::afw::image::MaskedImage<PixelT> MaskedImageT;
 
-    ExampleCandidate(float const xCenter, float const yCenter,
-                     std::shared_ptr<MaskedImageT const> parent, lsst::afw::geom::Box2I bbox);
+    /** Constructor
+     *
+     * @param xCenter The object's column-centre
+     * @param yCenter The object's row-centre
+     * @param parent the parent image
+     * @param bbox The object's bounding box
+     */
+    ExampleCandidate(float const xCenter, float const yCenter, std::shared_ptr<MaskedImageT const> parent,
+                     lsst::afw::geom::Box2I bbox);
 
     lsst::afw::geom::Box2I getBBox() const { return _bbox; }
 
+    /// Return candidates rating
     double getCandidateRating() const;
 
+    /// Return the %image
     std::shared_ptr<MaskedImageT const> getMaskedImage() const;
 
 private:
@@ -52,7 +60,6 @@ private:
     lsst::afw::geom::Box2I _bbox;
 };
 
-/************************************************************************************************************/
 /*
  * Class to pass around to all our ExampleCandidates.  All this one does is count acceptable candidates
  */
@@ -73,9 +80,10 @@ public:
 
     int getN() const { return _n; }
     int getNPix() const { return _npix; }
+
 private:
-    int _n;                         // number of ExampleCandidates
-    int _npix;                      // number of pixels in ExampleCandidates's bounding boxes
+    int _n;     // number of ExampleCandidates
+    int _npix;  // number of pixels in ExampleCandidates's bounding boxes
 };
 
 #endif

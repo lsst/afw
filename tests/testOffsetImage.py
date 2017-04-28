@@ -86,7 +86,8 @@ class offsetImageTestCase(unittest.TestCase):
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             for delta in [-0.49, 0.51]:
                 for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
-                    outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, algorithm)
+                    outImage = afwMath.offsetImage(
+                        self.inImage, dx + delta, dy + delta, algorithm)
 
                     if False and display:
                         frame += 1
@@ -128,7 +129,8 @@ class offsetImageTestCase(unittest.TestCase):
             for dy in (-3.7, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
                        0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
                 dOrigX, dOrigY, dFracX, dFracY = getOrigFracShift(dx, dy)
-                self.calcGaussian(unshiftedIm, xc - dFracX, yc - dFracY, amp, sigma1)
+                self.calcGaussian(unshiftedIm, xc - dFracX,
+                                  yc - dFracY, amp, sigma1)
 
                 for algorithm, maxMean, maxLim in (
                     ("lanczos5", 1e-8, 0.0015),
@@ -147,7 +149,8 @@ class offsetImageTestCase(unittest.TestCase):
                         ds9.mtv(im, frame=1)
 
                     imArr = im.getArray()
-                    imGoodVals = np.ma.array(imArr, copy=False, mask=np.isnan(imArr)).compressed()
+                    imGoodVals = np.ma.array(
+                        imArr, copy=False, mask=np.isnan(imArr)).compressed()
 
                     try:
                         imXY0 = tuple(im.getXY0())
@@ -156,7 +159,8 @@ class offsetImageTestCase(unittest.TestCase):
                         self.assertLess(abs(imGoodVals.max()), maxLim*amp)
                         self.assertLess(abs(imGoodVals.min()), maxLim*amp)
                     except:
-                        print("failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy))
+                        print("failed on algorithm=%s; dx = %s; dy = %s" %
+                              (algorithm, dx, dy))
                         raise
 
 # the following would be preferable if there was an easy way to NaN pixels
@@ -221,14 +225,16 @@ class transformImageTestCase(unittest.TestCase):
                                      (False, False, 0, 0)]:
             outImage = afwMath.flipImage(self.inImage, flipLR, flipTB)
             if display:
-                ds9.mtv(outImage, frame=frame, title="%s %s" % (flipLR, flipTB))
+                ds9.mtv(outImage, frame=frame, title="%s %s" %
+                        (flipLR, flipTB))
                 frame += 1
             self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
 
     def testMask(self):
         """Test that we can flip a Mask"""
         mask = afwImage.MaskU(10, 20)
-        afwMath.flipImage(mask, True, False)  # for a while, swig couldn't handle the resulting Mask::Ptr
+        # for a while, swig couldn't handle the resulting std::shared_ptr<Mask>
+        afwMath.flipImage(mask, True, False)
 
 
 class binImageTestCase(unittest.TestCase):
@@ -291,6 +297,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

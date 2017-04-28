@@ -28,7 +28,10 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-namespace lsst { namespace afw { namespace table { namespace io {
+namespace lsst {
+namespace afw {
+namespace table {
+namespace io {
 
 using PyPersistable = py::class_<Persistable, std::shared_ptr<Persistable>>;
 
@@ -37,18 +40,17 @@ PYBIND11_PLUGIN(persistable) {
     py::module::import("lsst.afw.fits");
 
     PyPersistable cls(mod, "Persistable");
-    cls.def(
-        "writeFits",
-        (void (Persistable::*)(std::string const &, std::string const &) const) &Persistable::writeFits,
-        "fileName"_a, "mode"_a="w");
-    cls.def(
-        "writeFits",
-        (void (Persistable::*)(fits::MemFileManager &, std::string const &) const) &Persistable::writeFits,
-        "manager"_a, "mode"_a="w"
-    );
+    cls.def("writeFits",
+            (void (Persistable::*)(std::string const &, std::string const &) const) & Persistable::writeFits,
+            "fileName"_a, "mode"_a = "w");
+    cls.def("writeFits", (void (Persistable::*)(fits::MemFileManager &, std::string const &) const) &
+                                 Persistable::writeFits,
+            "manager"_a, "mode"_a = "w");
     cls.def("isPersistable", &Persistable::isPersistable);
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::table::io
+}
+}
+}
+}  // namespace lsst::afw::table::io

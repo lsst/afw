@@ -63,9 +63,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def fillRecord(self, record):
         record.set(self.fluxKey, np.random.randn())
         record.set(self.fluxErrKey, np.random.randn())
-        record.set(self.centroidKey, lsst.afw.geom.Point2D(*np.random.randn(2)))
+        record.set(self.centroidKey,
+                   lsst.afw.geom.Point2D(*np.random.randn(2)))
         record.set(self.centroidErrKey, makeCov(2, np.float32))
-        record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*np.random.randn(3)))
+        record.set(self.shapeKey,
+                   lsst.afw.geom.ellipses.Quadrupole(*np.random.randn(3)))
         record.set(self.shapeErrKey, makeCov(3, np.float32))
         record.set(self.fluxFlagKey, np.random.randn() > 0)
         record.set(self.centroidFlagKey, np.random.randn() > 0)
@@ -74,7 +76,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def makeFlux(self, schema, prefix, uncertainty):
         self.fluxKey = self.schema.addField(prefix+"_flux", type="D")
         if uncertainty:
-            self.fluxErrKey = self.schema.addField(prefix+"_fluxSigma", type="D")
+            self.fluxErrKey = self.schema.addField(
+                prefix+"_fluxSigma", type="D")
         self.fluxFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
     def makeCentroid(self, schema, prefix, uncertainty):
@@ -83,39 +86,53 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         sigmaArray = []
         covArray = []
         if uncertainty > 0:
-            self.centroidXErrKey = self.schema.addField(prefix+"_xSigma", type="F")
-            self.centroidYErrKey = self.schema.addField(prefix+"_ySigma", type="F")
+            self.centroidXErrKey = self.schema.addField(
+                prefix+"_xSigma", type="F")
+            self.centroidYErrKey = self.schema.addField(
+                prefix+"_ySigma", type="F")
             sigmaArray.append(self.centroidXErrKey)
             sigmaArray.append(self.centroidYErrKey)
         if uncertainty > 1:
-            self.centroidXYCovKey = self.schema.addField(prefix+"_x_y_Cov", type="F")
+            self.centroidXYCovKey = self.schema.addField(
+                prefix+"_x_y_Cov", type="F")
             covArray.append(self.centroidXYCovKey)
-        self.centroidKey = lsst.afw.table.Point2DKey(self.centroidXKey, self.centroidYKey)
-        self.centroidErrKey = lsst.afw.table.CovarianceMatrix2fKey(sigmaArray, covArray)
-        self.centroidFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
+        self.centroidKey = lsst.afw.table.Point2DKey(
+            self.centroidXKey, self.centroidYKey)
+        self.centroidErrKey = lsst.afw.table.CovarianceMatrix2fKey(
+            sigmaArray, covArray)
+        self.centroidFlagKey = self.schema.addField(
+            prefix+"_flag", type="Flag")
 
     def makeShape(self, schema, prefix, uncertainty):
         self.shapeXXKey = self.schema.addField(prefix+"_xx", type="D")
         self.shapeYYKey = self.schema.addField(prefix+"_yy", type="D")
         self.shapeXYKey = self.schema.addField(prefix+"_xy", type="D")
-        self.shapeKey = lsst.afw.table.QuadrupoleKey(self.shapeXXKey, self.shapeYYKey, self.shapeXYKey)
+        self.shapeKey = lsst.afw.table.QuadrupoleKey(
+            self.shapeXXKey, self.shapeYYKey, self.shapeXYKey)
         sigmaArray = []
         covArray = []
         if uncertainty > 0:
-            self.shapeXXErrKey = self.schema.addField(prefix+"_xxSigma", type="F")
-            self.shapeYYErrKey = self.schema.addField(prefix+"_yySigma", type="F")
-            self.shapeXYErrKey = self.schema.addField(prefix+"_xySigma", type="F")
+            self.shapeXXErrKey = self.schema.addField(
+                prefix+"_xxSigma", type="F")
+            self.shapeYYErrKey = self.schema.addField(
+                prefix+"_yySigma", type="F")
+            self.shapeXYErrKey = self.schema.addField(
+                prefix+"_xySigma", type="F")
             sigmaArray.append(self.shapeXXErrKey)
             sigmaArray.append(self.shapeYYErrKey)
             sigmaArray.append(self.shapeXYErrKey)
         if uncertainty > 1:
-            self.shapeXXYYCovKey = self.schema.addField(prefix+"_xx_yy_Cov", type="F")
-            self.shapeXXXYCovKey = self.schema.addField(prefix+"_xx_xy_Cov", type="F")
-            self.shapeYYXYCovKey = self.schema.addField(prefix+"_yy_xy_Cov", type="F")
+            self.shapeXXYYCovKey = self.schema.addField(
+                prefix+"_xx_yy_Cov", type="F")
+            self.shapeXXXYCovKey = self.schema.addField(
+                prefix+"_xx_xy_Cov", type="F")
+            self.shapeYYXYCovKey = self.schema.addField(
+                prefix+"_yy_xy_Cov", type="F")
             covArray.append(self.shapeXXYYCovKey)
             covArray.append(self.shapeXXXYCovKey)
             covArray.append(self.shapeYYXYCovKey)
-        self.shapeErrKey = lsst.afw.table.CovarianceMatrix3fKey(sigmaArray, covArray)
+        self.shapeErrKey = lsst.afw.table.CovarianceMatrix3fKey(
+            sigmaArray, covArray)
         self.shapeFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
     def setUp(self):
@@ -154,27 +171,39 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             # current implementation
             self.assertEqual(table.getPsfFluxDefinition(), "a")
             self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
-            self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
+            self.assertEqual(record.get(self.fluxFlagKey),
+                             record.getPsfFluxFlag())
             self.assertEqual(table.getCentroidDefinition(), "b")
-            self.assertEqual(record.get(self.centroidKey), record.getCentroid())
-            self.assertFloatsAlmostEqual(record.get(self.centroidErrKey), record.getCentroidErr())
+            self.assertEqual(record.get(self.centroidKey),
+                             record.getCentroid())
+            self.assertFloatsAlmostEqual(
+                record.get(self.centroidErrKey),
+                record.getCentroidErr())
             self.assertEqual(table.getShapeDefinition(), "c")
             self.assertEqual(record.get(self.shapeKey), record.getShape())
-            self.assertFloatsAlmostEqual(record.get(self.shapeErrKey), record.getShapeErr())
+            self.assertFloatsAlmostEqual(
+                record.get(self.shapeErrKey),
+                record.getShapeErr())
 
     def testDefiner1(self):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
-        self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
-        self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
+        self.assertEqual(self.record.get(self.fluxKey),
+                         self.record.getPsfFlux())
+        self.assertEqual(self.record.get(self.fluxFlagKey),
+                         self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
-        self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assertFloatsAlmostEqual(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
+        self.assertEqual(self.record.get(self.centroidKey),
+                         self.record.getCentroid())
+        self.assertFloatsAlmostEqual(
+            self.record.get(self.centroidErrKey), self.record.getCentroidErr())
         self.assertEqual(self.table.getShapeDefinition(), "c")
-        self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assertFloatsAlmostEqual(self.record.get(self.shapeErrKey), self.record.getShapeErr())
+        self.assertEqual(self.record.get(self.shapeKey),
+                         self.record.getShape())
+        self.assertFloatsAlmostEqual(self.record.get(self.shapeErrKey),
+                                     self.record.getShapeErr())
 
     def testCoordUpdate(self):
         self.table.defineCentroid("b")

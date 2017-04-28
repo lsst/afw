@@ -19,13 +19,14 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 from . import cameraGeomLib
 
 DetectorTypeValNameDict = {
-    cameraGeomLib.SCIENCE:   "SCIENCE",
-    cameraGeomLib.FOCUS:     "FOCUS",
-    cameraGeomLib.GUIDER:    "GUIDER",
+    cameraGeomLib.SCIENCE: "SCIENCE",
+    cameraGeomLib.FOCUS: "FOCUS",
+    cameraGeomLib.GUIDER: "GUIDER",
     cameraGeomLib.WAVEFRONT: "WAVEFRONT",
 }
-DetectorTypeNameValDict = {val: key for key, val in DetectorTypeValNameDict.items()}
+DetectorTypeNameValDict = {val: key for key, val in
+                           DetectorTypeValNameDict.items()}

@@ -70,7 +70,8 @@ class WcsFormatterTest(unittest.TestCase):
     def testFormat(self):
         dumped = pickle.dumps(self.wcs)
         wcs = pickle.loads(dumped)
-        self.assertEqual(wcs.getFitsMetadata().toString(), self.wcs.getFitsMetadata().toString())
+        self.assertEqual(wcs.getFitsMetadata().toString(),
+                         self.wcs.getFitsMetadata().toString())
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
@@ -79,6 +80,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

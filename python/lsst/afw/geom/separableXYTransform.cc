@@ -28,14 +28,17 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace lsst { namespace afw { namespace geom { namespace {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace {
 
 using PySeparableXYTransform =
-    py::class_<SeparableXYTransform, std::shared_ptr<SeparableXYTransform>, XYTransform>;
+        py::class_<SeparableXYTransform, std::shared_ptr<SeparableXYTransform>, XYTransform>;
 
 PYBIND11_PLUGIN(separableXYTransform) {
     py::module mod("separableXYTransform");
- py::module::import("lsst.afw.geom.functor");
+    py::module::import("lsst.afw.geom.functor");
     py::module::import("lsst.afw.geom.xyTransform");
 
     PySeparableXYTransform cls(mod, "SeparableXYTransform");
@@ -50,12 +53,12 @@ PYBIND11_PLUGIN(separableXYTransform) {
     // These return const references, but the Functor classes are immutable, so it's okay
     // to return them by reference (and impossible to just let pybind11 copy them, because
     // that would require a call to clone()).
-    cls.def("getXfunctor", &SeparableXYTransform::getXfunctor,
-             py::return_value_policy::reference_internal);
-    cls.def("getYfunctor", &SeparableXYTransform::getYfunctor,
-             py::return_value_policy::reference_internal);
+    cls.def("getXfunctor", &SeparableXYTransform::getXfunctor, py::return_value_policy::reference_internal);
+    cls.def("getYfunctor", &SeparableXYTransform::getYfunctor, py::return_value_policy::reference_internal);
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::geom::<anonymous>

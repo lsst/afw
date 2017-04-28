@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 from builtins import object
 #
 # LSST Data Management System
@@ -28,6 +28,7 @@ from . import mathLib
 
 __all__ = ["Warper", "WarperConfig"]
 
+
 def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     """Compute the bounding box of a warped image
 
@@ -43,13 +44,16 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     destPosBox = afwGeom.Box2D()
     for inX in (srcPosBox.getMinX(), srcPosBox.getMaxX()):
         for inY in (srcPosBox.getMinY(), srcPosBox.getMaxY()):
-            destPos = destWcs.skyToPixel(srcWcs.pixelToSky(afwGeom.Point2D(inX, inY)))
+            destPos = destWcs.skyToPixel(
+                srcWcs.pixelToSky(afwGeom.Point2D(inX, inY)))
             destPosBox.include(destPos)
     destBBox = afwGeom.Box2I(destPosBox, afwGeom.Box2I.EXPAND)
     return destBBox
 
+
 _DefaultInterpLength = 10
 _DefaultCacheSize = 1000000
+
 
 class WarperConfig(pexConfig.Config):
     warpingKernelName = pexConfig.ChoiceField(
@@ -91,17 +95,19 @@ class WarperConfig(pexConfig.Config):
         default = afwImage.MaskU.getPlaneBitMask("EDGE"),
     )
 
+
 class Warper(object):
     """Warp images
     """
     ConfigClass = WarperConfig
+
     def __init__(self,
-        warpingKernelName,
-        interpLength = _DefaultInterpLength,
-        cacheSize = _DefaultCacheSize,
-        maskWarpingKernelName = "",
-        growFullMask = afwImage.MaskU.getPlaneBitMask("EDGE"),
-    ):
+                 warpingKernelName,
+                 interpLength = _DefaultInterpLength,
+                 cacheSize = _DefaultCacheSize,
+                 maskWarpingKernelName = "",
+                 growFullMask = afwImage.MaskU.getPlaneBitMask("EDGE"),
+                 ):
         """Create a Warper
 
         Inputs:
@@ -199,7 +205,8 @@ class Warper(object):
             destBBox = destBBox,
         )
         destImage = srcImage.Factory(destBBox)
-        mathLib.warpImage(destImage, destWcs, srcImage, srcWcs, self._warpingControl)
+        mathLib.warpImage(destImage, destWcs, srcImage,
+                          srcWcs, self._warpingControl)
         return destImage
 
     def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
@@ -220,8 +227,9 @@ class Warper(object):
             if None then border and maxBBox are used to determine the bbox,
             otherwise border and maxBBox are ignored
         """
-        if destBBox is None: # warning: == None fails due to Box2I.__eq__
-            destBBox = computeWarpedBBox(destWcs, srcImage.getBBox(afwImage.PARENT), srcWcs)
+        if destBBox is None:  # warning: == None fails due to Box2I.__eq__
+            destBBox = computeWarpedBBox(
+                destWcs, srcImage.getBBox(afwImage.PARENT), srcWcs)
             if border:
                 destBBox.grow(border)
             if maxBBox is not None:

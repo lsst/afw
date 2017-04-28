@@ -19,16 +19,18 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 from builtins import range
 from .cameraGeomLib import CameraPoint, CameraSysPrefix, PIXELS
 from .detectorCollection import DetectorCollection
 from .pupil import PupilFactory
 import lsst.afw.geom as afwGeom
 
+
 class Camera(DetectorCollection):
     """!A collection of Detectors that also supports coordinate transformation
     """
+
     def __init__(self, name, detectorList, transformMap, pupilFactoryClass=PupilFactory):
         """!Construct a Camera
 
@@ -103,7 +105,8 @@ class Camera(DetectorCollection):
         elif toSys in self._transformMap:
             # use camera transform map
             return self._transformMap.transform(positionList, fromSys, toSys)
-        raise RuntimeError("Could not find mapping from %s to %s"%(fromSys, toSys))
+        raise RuntimeError(
+            "Could not find mapping from %s to %s"%(fromSys, toSys))
 
     def _transformSingleSys(self, cameraPoint, toSys):
         """!Transform a CameraPoint with a CameraSys to another CameraSys.
@@ -124,9 +127,11 @@ class Camera(DetectorCollection):
             return det.transform(cameraPoint, toSys)
         elif toSys in self._transformMap:
             # use camera transform map
-            outPoint = self._transformMap.transform(cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
+            outPoint = self._transformMap.transform(
+                cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
             return CameraPoint(outPoint, toSys)
-        raise RuntimeError("Could not find mapping from %s to %s"%(cameraPoint.getCameraSys(), toSys))
+        raise RuntimeError("Could not find mapping from %s to %s" %
+                           (cameraPoint.getCameraSys(), toSys))
 
     def findDetectors(self, cameraPoint):
         """!Find the detectors that cover a given cameraPoint, or empty list
@@ -134,14 +139,17 @@ class Camera(DetectorCollection):
         @param[in] cameraPoint  position to use in lookup
         @return a list of zero or more Detectors that overlap the specified point
         """
-        # first convert to focalPlane since the point may be in another overlapping detector
-        nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
+        # first convert to focalPlane since the point may be in another
+        # overlapping detector
+        nativePoint = self._transformSingleSys(
+            cameraPoint, self._nativeCameraSys)
 
         detectorList = []
         for detector in self:
             cameraSys = detector.makeCameraSys(PIXELS)
             detPoint = detector.transform(nativePoint, cameraSys)
-            #This is safe because CameraPoint is not templated and getPoint() returns a Point2D.
+            # This is safe because CameraPoint is not templated and getPoint()
+            # returns a Point2D.
             if afwGeom.Box2D(detector.getBBox()).contains(detPoint.getPoint()):
                 detectorList.append(detector)
         return detectorList
@@ -155,8 +163,9 @@ class Camera(DetectorCollection):
         corresponding point
         """
 
-        #transform the points to the native coordinate system
-        nativePointList = self._transformSingleSysArray(cameraPointList, coordSys, self._nativeCameraSys)
+        # transform the points to the native coordinate system
+        nativePointList = self._transformSingleSysArray(
+            cameraPointList, coordSys, self._nativeCameraSys)
 
         detectorList = []
         for i in range(len(cameraPointList)):
@@ -165,7 +174,8 @@ class Camera(DetectorCollection):
         for detector in self:
             coordMap = detector.getTransformMap()
             cameraSys = detector.makeCameraSys(PIXELS)
-            detectorPointList = coordMap.transform(nativePointList, self._nativeCameraSys, cameraSys)
+            detectorPointList = coordMap.transform(
+                nativePointList, self._nativeCameraSys, cameraSys)
             box = afwGeom.Box2D(detector.getBBox())
             for i, pt in enumerate(detectorPointList):
                 if box.contains(pt):
@@ -190,7 +200,8 @@ class Camera(DetectorCollection):
         @return a CameraPoint in the the specified CameraSys
         """
         # All transform maps should know about the native coordinate system
-        nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
+        nativePoint = self._transformSingleSys(
+            cameraPoint, self._nativeCameraSys)
         return self._transformFromNativeSys(nativePoint, toSys)
 
     def makeCameraPoint(self, point, cameraSys):
@@ -201,7 +212,8 @@ class Camera(DetectorCollection):
         @return the CameraPoint
         """
         if isinstance(cameraSys, CameraSysPrefix):
-            raise TypeError("Use the detector method to make a camera point from a CameraSysPrefix.")
+            raise TypeError(
+                "Use the detector method to make a camera point from a CameraSysPrefix.")
         if cameraSys in self._transformMap:
             return CameraPoint(point, cameraSys)
         if cameraSys.hasDetectorName():

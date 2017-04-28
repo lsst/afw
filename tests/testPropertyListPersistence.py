@@ -24,15 +24,12 @@ from __future__ import absolute_import, division, print_function
 import os
 import unittest
 
-from builtins import range
-
 import lsst.utils
 import lsst.utils.tests
-import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
-import lsst.pex.exceptions as pexExcept
 import lsst.afw.image as afwImage       # import the formatter for PropertyList
+
 
 class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):
     """A test case for PropertyList Persistence"""
@@ -49,22 +46,28 @@ class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):
         """Test unpersisting from FITS"""
 
         # Set up the LogicalLocation.
-        logicalLocation = dafPers.LogicalLocation(os.path.join("tests", "data", "HSC-0908120-056-small.fits"))
+        logicalLocation = dafPers.LogicalLocation(
+            os.path.join("tests", "data", "HSC-0908120-056-small.fits"))
 
         # Create a FitsStorage and put it in a StorageList.
-        storage = self.persistence.getRetrieveStorage("FitsStorage", logicalLocation)
+        storage = self.persistence.getRetrieveStorage(
+            "FitsStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
 
         # Let's do the retrieval!
-        propertyList = self.persistence.unsafeRetrieve("PropertyList", storageList, None)
+        propertyList = self.persistence.unsafeRetrieve(
+            "PropertyList", storageList, None)
 
         self.assertEqual(propertyList.get("AR_HDU"), 5)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
+
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

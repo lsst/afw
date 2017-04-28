@@ -35,73 +35,39 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-Observatory::Observatory(
-    afw::geom::Angle const longitude,
-    afw::geom::Angle const latitude,
-    double const elevation
-) :
-    _latitude(latitude),
-    _longitude(longitude),
-    _elevation(elevation) {
-}
+Observatory::Observatory(afw::geom::Angle const longitude, afw::geom::Angle const latitude,
+                         double const elevation)
+        : _latitude(latitude), _longitude(longitude), _elevation(elevation) {}
 
-Observatory::Observatory(
-    std::string const & longitude,
-    std::string const & latitude,
-    double const elevation
-) :
-    _latitude(dmsStringToAngle(latitude)),
-    _longitude(dmsStringToAngle(longitude)),
-    _elevation(elevation) {
-}
+Observatory::Observatory(std::string const& longitude, std::string const& latitude, double const elevation)
+        : _latitude(dmsStringToAngle(latitude)),
+          _longitude(dmsStringToAngle(longitude)),
+          _elevation(elevation) {}
 
-afw::geom::Angle Observatory::getLongitude() const {
-    return _longitude;
-}
+afw::geom::Angle Observatory::getLongitude() const { return _longitude; }
 
-afw::geom::Angle Observatory::getLatitude() const {
-    return _latitude;
-}
+afw::geom::Angle Observatory::getLatitude() const { return _latitude; }
 
-void Observatory::setLatitude(afw::geom::Angle const latitude) {
-    _latitude = latitude;
-}
+void Observatory::setLatitude(afw::geom::Angle const latitude) { _latitude = latitude; }
 
-void Observatory::setLongitude(afw::geom::Angle const longitude) {
-    _longitude = longitude;
-}
+void Observatory::setLongitude(afw::geom::Angle const longitude) { _longitude = longitude; }
 
-void Observatory::setElevation(double const elevation) {
-    _elevation = elevation;
-}
+void Observatory::setElevation(double const elevation) { _elevation = elevation; }
 
-std::string Observatory::getLongitudeStr() const {
-    return angleToDmsString(_longitude);
-}
+std::string Observatory::getLongitudeStr() const { return angleToDmsString(_longitude); }
 
-std::string Observatory::getLatitudeStr() const {
-    return angleToDmsString(_latitude);
-}
+std::string Observatory::getLatitudeStr() const { return angleToDmsString(_latitude); }
 
-/**
- * @brief Get string representation
- */
 std::string Observatory::toString() const {
-    return (boost::format("%gW, %gN  %g")
-            % getLatitude().asDegrees()
-            % getLongitude().asDegrees()
-            % getElevation()).str();
+    return (boost::format("%gW, %gN  %g") % getLatitude().asDegrees() % getLongitude().asDegrees() %
+            getElevation())
+            .str();
 }
 
-/**
- * Print an Observatory to the stream
- */
-std::ostream & operator<<(std::ostream &os,             ///< Stream to print to
-                                 Observatory const& obs ///< the Observatory to print
-                                )
-{
+std::ostream& operator<<(std::ostream& os, Observatory const& obs) {
     os << obs.toString();
     return os;
 }
-
-}}}  // namespace lsst::afw::coord
+}
+}
+}  // namespace lsst::afw::coord

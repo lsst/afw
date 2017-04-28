@@ -22,7 +22,7 @@
 """
 Tests for lsst.afw.table.AmpInfoTable, etc.
 """
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 import unittest
 
 from builtins import zip
@@ -78,17 +78,23 @@ class AmpInfoTableTestCase(unittest.TestCase):
             readNoise = -0.523
             linearityCoeffs = (1.1, 2.2, 3.3, 4.4)
             linearityType = "Polynomial"
-            bbox = afwGeom.Box2I(afwGeom.Point2I(3, -2), afwGeom.Extent2I(231, 320))
+            bbox = afwGeom.Box2I(afwGeom.Point2I(3, -2),
+                                 afwGeom.Extent2I(231, 320))
             hasRawInfo = hasRawInfo
             rawFlipX = True
             rawFlipY = False
             readoutCorner = afwTable.UL
-            rawBBox = afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629))
+            rawBBox = afwGeom.Box2I(afwGeom.Point2I(-25, 2),
+                                    afwGeom.Extent2I(550, 629))
             rawXYOffset = afwGeom.Extent2I(-97, 253)
-            rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307))
-            rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307))
-            rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6))
-            rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307))
+            rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 29),
+                                        afwGeom.Extent2I(123, 307))
+            rawHorizontalOverscanBBox = afwGeom.Box2I(
+                afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307))
+            rawVerticalOverscanBBox = afwGeom.Box2I(
+                afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6))
+            rawPrescanBBox = afwGeom.Box2I(
+                afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307))
 
             record = self.catalog.addNew()
             record.setBBox(bbox)
@@ -115,15 +121,18 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.assertEquals(saturation, record.getSaturation())
             self.assertEquals(readNoise, record.getReadNoise())
             self.assertEquals(readoutCorner, record.getReadoutCorner())
-            self.assertEquals(list(linearityCoeffs), record.getLinearityCoeffs())
+            self.assertEquals(list(linearityCoeffs),
+                              record.getLinearityCoeffs())
             self.assertEquals(linearityType, record.getLinearityType())
             self.assertEquals(bbox, record.getBBox())
             self.assertEquals(hasRawInfo, record.getHasRawInfo())
             if hasRawInfo:
                 self.assertEquals(rawBBox, record.getRawBBox())
                 self.assertEquals(rawDataBBox, record.getRawDataBBox())
-                self.assertEquals(rawHorizontalOverscanBBox, record.getRawHorizontalOverscanBBox())
-                self.assertEquals(rawVerticalOverscanBBox, record.getRawVerticalOverscanBBox())
+                self.assertEquals(rawHorizontalOverscanBBox,
+                                  record.getRawHorizontalOverscanBBox())
+                self.assertEquals(rawVerticalOverscanBBox,
+                                  record.getRawVerticalOverscanBBox())
                 self.assertEquals(rawPrescanBBox, record.getRawPrescanBBox())
                 self.assertEquals(rawFlipX, record.getRawFlipX())
                 self.assertEquals(rawFlipY, record.getRawFlipY())
@@ -156,6 +165,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

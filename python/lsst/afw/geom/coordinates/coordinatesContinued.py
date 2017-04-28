@@ -30,13 +30,14 @@ from lsst.utils import TemplateMeta
 
 from . import coordinates
 
+
 def _coordinateStr(self):
     return "({})".format(", ".join("%0.5g" % v for v in self))
 
 
 def _coordinateRepr(self):
     return "{}({})".format(type(self).__name__,
-                            ", ".join("%0.10g" % v for v in self))
+                           ", ".join("%0.10g" % v for v in self))
 
 
 def _coordinateReduce(self):

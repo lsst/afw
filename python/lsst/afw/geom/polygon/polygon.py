@@ -20,7 +20,7 @@ def __iter__(self):
 
 
 def __getitem__(self, i):
-        return [pt for pt in self][i]
+    return [pt for pt in self][i]
 
 
 def __len__(self):
@@ -63,6 +63,7 @@ def plot(self, axes=None, **kwargs):
     y = numpy.array([p[1] for p in vertices])
     axes.scatter(x, y, **kwargs)
     return axes
+
 
 Polygon.__repr__ = __repr__
 Polygon.__reduce__ = __reduce__

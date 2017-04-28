@@ -76,8 +76,10 @@ class BaseRecord:
         if d is None:
             d = self.schema.extract(*patterns, **kwds).copy()
         elif kwds:
-            raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
-        for name, schemaItem in list(d.items()):  # must use list because we might be adding/deleting elements
+            raise ValueError(
+                "Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
+        # must use list because we might be adding/deleting elements
+        for name, schemaItem in list(d.items()):
             key = schemaItem.key
             if split and key.HAS_NAMED_SUBFIELDS:
                 for subname, subkey in zip(key.subfields, key.subkeys):
@@ -234,7 +236,8 @@ class Catalog(with_metaclass(TemplateMeta, object)):
         if cls is None:
             cls = astropy.table.Table
         if unviewable not in ("copy", "raise", "skip"):
-            raise ValueError("'unviewable'=%r must be one of 'copy', 'raise', or 'skip'" % (unviewable,))
+            raise ValueError(
+                "'unviewable'=%r must be one of 'copy', 'raise', or 'skip'" % (unviewable,))
         ps = self.getMetadata()
         meta = ps.toOrderedDict() if ps is not None else None
         columns = []
@@ -249,7 +252,8 @@ class Catalog(with_metaclass(TemplateMeta, object)):
                                          "unless copy=True or unviewable='copy' or 'skip'.")
                     elif unviewable == "skip":
                         continue
-                data = np.zeros(len(self), dtype=np.dtype((str, key.getSize())))
+                data = np.zeros(
+                    len(self), dtype=np.dtype((str, key.getSize())))
                 for i, record in enumerate(self):
                     data[i] = record.get(key)
             elif key.getTypeString() == "Flag":

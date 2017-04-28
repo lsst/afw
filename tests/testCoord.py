@@ -84,7 +84,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         for coordClass, enum, stringName in self.coordList:
             yield coordClass(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
 
-        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0)  # peyton
+        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees,
+                                   40.384 * afwGeom.degrees, 100.0)  # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
         epoch = obsDate.get(dafBase.DateTime.EPOCH)
         yield afwCoord.TopocentricCoord(
@@ -97,7 +98,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
     def testFormat(self):
         """Test formatting"""
         # make an arbitrary coord with the string constructor.
-        # check that calling the getFooStr() accessors gets back what we started with.
+        # check that calling the getFooStr() accessors gets back what we
+        # started with.
         equ = afwCoord.Fk5Coord(self.ra, self.dec)
         # FIXME -- hours here?
         self.assertAlmostEqual(equ.getRa().asHours(), self.raKnown)
@@ -112,13 +114,16 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # make a (eg galactic) coord with the constructor, and with the factory
         # and see if they agree.
         for constructor, enum, stringName in self.coordList:
-            con = constructor(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
+            con = constructor(self.l * afwGeom.degrees,
+                              self.b * afwGeom.degrees)
             self.assertEqual(con.getCoordSystem(), enum)
             factories = []
-            factories.append(afwCoord.makeCoord(enum, self.l * afwGeom.degrees, self.b * afwGeom.degrees))
+            factories.append(afwCoord.makeCoord(
+                enum, self.l * afwGeom.degrees, self.b * afwGeom.degrees))
             factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName),
                                                 self.l * afwGeom.degrees, self.b * afwGeom.degrees))
-            factories.append(afwCoord.makeCoord(enum, afwGeom.Point2D(self.l, self.b), afwGeom.degrees))
+            factories.append(afwCoord.makeCoord(
+                enum, afwGeom.Point2D(self.l, self.b), afwGeom.degrees))
 
             print("Factory: ")
             for fac in factories:
@@ -134,12 +139,15 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(c.getLongitude().asDegrees(), 1.0)
             self.assertEqual(c.getLatitude().asDegrees(), 1.0)
 
-        # verify that makeCoord throws when given an epoch for an epochless system
+        # verify that makeCoord throws when given an epoch for an epochless
+        # system
         with self.assertRaises(pexEx.Exception):
-            afwCoord.makeCoord(afwCoord.GALACTIC, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0)
+            afwCoord.makeCoord(afwCoord.GALACTIC, self.l * afwGeom.degrees,
+                               self.b * afwGeom.degrees, 2000.0)
 
         with self.assertRaises(pexEx.Exception):
-            afwCoord.makeCoord(afwCoord.ICRS, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0)
+            afwCoord.makeCoord(afwCoord.ICRS, self.l * afwGeom.degrees,
+                               self.b * afwGeom.degrees, 2000.0)
 
     def testCoordEnum(self):
         """Verify that makeCoordEnum throws an exception for non-existant systems."""
@@ -184,7 +192,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             numArgs = {
                 "IcrsCoord": 2,         # long, lat
                 "GalacticCoord": 2,     # long, lat
-                "TopocentricCoord": 5,  # long, lat, epoch, Observatory (which has 3 arguments)
+                # long, lat, epoch, Observatory (which has 3 arguments)
+                "TopocentricCoord": 5,
             }.get(className, 3)         # default to long, lat, epoch
             self.assertEqual(len(coordStr.split(",")), numArgs)
             self.assertEqual(len(coordRepr.split(",")), numArgs)
@@ -192,7 +201,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
     def testPosition(self):
         """Test the getPosition() method"""
 
-        # make a coord and verify that the DEGREES, RADIANS, and HOURS enums get the right things
+        # make a coord and verify that the DEGREES, RADIANS, and HOURS enums
+        # get the right things
         equ = afwCoord.Fk5Coord(self.ra, self.dec)
 
         # make sure we get what we asked for
@@ -210,18 +220,22 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
         # make sure we construct with the type we ask for
         equ1 = afwCoord.Fk5Coord(pDeg, afwGeom.degrees)
-        self.assertAlmostEqual(equ1.getRa().asRadians(), equ.getRa().asRadians())
+        self.assertAlmostEqual(equ1.getRa().asRadians(),
+                               equ.getRa().asRadians())
 
         equ2 = afwCoord.Fk5Coord(pRad, afwGeom.radians)
-        self.assertAlmostEqual(equ2.getRa().asRadians(), equ.getRa().asRadians())
+        self.assertAlmostEqual(equ2.getRa().asRadians(),
+                               equ.getRa().asRadians())
 
         equ3 = afwCoord.Fk5Coord(pHrs, afwGeom.hours)
-        self.assertAlmostEqual(equ3.getRa().asRadians(), equ.getRa().asRadians())
+        self.assertAlmostEqual(equ3.getRa().asRadians(),
+                               equ.getRa().asRadians())
 
     def testVector(self):
         """Test the getVector() method, and make sure the constructors take Point3D"""
 
-        # try the axes: vernal equinox should equal 1, 0, 0; ... north pole is 0, 0, 1; etc
+        # try the axes: vernal equinox should equal 1, 0, 0; ... north pole is
+        # 0, 0, 1; etc
 
         coordList = []
         coordList.append([(0.0, 0.0), (1.0, 0.0, 0.0)])
@@ -230,14 +244,16 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
         for equ, p3dknown in coordList:
             # convert to p3d
-            p3d = afwCoord.Fk5Coord(equ[0] * afwGeom.degrees, equ[1] * afwGeom.degrees).getVector()
+            p3d = afwCoord.Fk5Coord(
+                equ[0] * afwGeom.degrees, equ[1] * afwGeom.degrees).getVector()
             print("Point3d: ", p3d, p3dknown)
             for i in range(3):
                 self.assertAlmostEqual(p3d[i], p3dknown[i])
 
             # convert back
             equBack = afwCoord.Fk5Coord(p3d)
-            print("Vector (back): ", equBack.getRa().asDegrees(), equ[0],
+            print("Vector (back): ",
+                  equBack.getRa().asDegrees(), equ[0],
                   equBack.getDec().asDegrees(), equ[1])
             self.assertAlmostEqual(equBack.getRa().asDegrees(), equ[0])
             self.assertAlmostEqual(equBack.getDec().asDegrees(), equ[1])
@@ -258,7 +274,9 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             # convert to Coord
             epoch = 2000.0
             norm = True
-            c = afwCoord.Fk5Coord(afwGeom.Point3D(p3d[0], p3d[1], p3d[2]), epoch, norm)
+            c = afwCoord.Fk5Coord(
+                afwGeom.Point3D(p3d[0], p3d[1], p3d[2]),
+                epoch, norm)
             ra, dec = c.getRa().asDegrees(), c.getDec().asDegrees()
             print("Un-normed p3d: ", p3d, "-->", equKnown, ra, dec)
             self.assertAlmostEqual(equKnown[0], ra)
@@ -271,43 +289,60 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         dfltLong = 0.0 * afwGeom.radians
 
         norm = False
-        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm, dfltLong)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6, 0.6), 2000.0, norm, dfltLong)
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1),
+                            2000.0, norm, dfltLong)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6, 0.6),
+                            2000.0, norm, dfltLong)
         sep1 = c.angularSeparation(c1).asDegrees()
         sep2 = c.angularSeparation(c2).asDegrees()
         known1 = 45.286483672428574
         known2 = 55.550098012046512
         print("sep: ", sep1, sep2, known1, known2)
 
-        # these weren't normalized, and should get the following *incorrect* answers
+        # these weren't normalized, and should get the following *incorrect*
+        # answers
         self.assertAlmostEqual(sep1, known1)
         self.assertAlmostEqual(sep2, known2)
 
         ######################
         # normalize and sep1, sep2 should both equal 54.7356
         norm = True
-        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm, dfltLong)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6, 0.6), 2000.0, norm, dfltLong)
+        c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1),
+                            2000.0, norm, dfltLong)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6, 0.6),
+                            2000.0, norm, dfltLong)
         sep1 = c.angularSeparation(c1).asDegrees()
         sep2 = c.angularSeparation(c2).asDegrees()
         known = 54.735610317245339
         print("sep: ", sep1, sep2, known)
 
-        # these weren't normalized, and should get the following *incorrect* answers
+        # these weren't normalized, and should get the following *incorrect*
+        # answers
         self.assertAlmostEqual(sep1, known)
         self.assertAlmostEqual(sep2, known)
 
     def testNames(self):
         """Test the names of the Coords (Useful with Point2D form)"""
 
-        # verify that each coordinate type can tell you what its components are called.
-        radec1, known1 = afwCoord.Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
-        radec3, known3 = afwCoord.Fk5Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
-        radec4, known4 = afwCoord.IcrsCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
-        lb, known5 = afwCoord.GalacticCoord(self.ra, self.dec).getCoordNames(), ["L", "B"]
-        lambet, known6 = afwCoord.EclipticCoord(self.ra, self.dec).getCoordNames(), ["Lambda", "Beta"]
-        observatory = afwCoord.Observatory(0*afwGeom.degrees, 0*afwGeom.degrees, 0)
-        altaz = afwCoord.TopocentricCoord(self.ra, self.dec, 2000.0, observatory).getCoordNames()
+        # verify that each coordinate type can tell you what its components are
+        # called.
+        radec1, known1 = afwCoord.Coord(self.ra, self.dec).getCoordNames(), \
+            ["RA", "Dec"]
+        radec3, known3 = afwCoord.Fk5Coord(self.ra, self.dec).getCoordNames(), \
+            ["RA", "Dec"]
+        radec4, known4 = \
+            afwCoord.IcrsCoord(self.ra, self.dec).getCoordNames(), \
+            ["RA", "Dec"]
+        lb, known5 = \
+            afwCoord.GalacticCoord(self.ra, self.dec).getCoordNames(), \
+            ["L", "B"]
+        lambet, known6 = \
+            afwCoord.EclipticCoord(self.ra, self.dec).getCoordNames(), \
+            ["Lambda", "Beta"]
+        observatory = afwCoord.Observatory(
+            0*afwGeom.degrees, 0*afwGeom.degrees, 0)
+        altaz = afwCoord.TopocentricCoord(
+            self.ra, self.dec, 2000.0, observatory).getCoordNames()
         known7 = ["Az", "Alt"]
 
         pairs = [[radec1, known1],
@@ -328,7 +363,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         alpha, delta = "07:45:18.946", "28:01:34.26"
         pollux = afwCoord.Fk5Coord(alpha, delta)
 
-        # bundle up a list of coords created with the specific and generic converters
+        # bundle up a list of coords created with the specific and generic
+        # converters
         coordEnumList = [
             [pollux.toFk5(), afwCoord.FK5],
             [pollux.toIcrs(), afwCoord.ICRS],
@@ -336,7 +372,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             [pollux.toEcliptic(), afwCoord.ECLIPTIC],
         ]
 
-        # go through the list and see if specific and generic produce the same result ... they should!
+        # go through the list and see if specific and generic produce the same
+        # result ... they should!
         print("Convert: ")
         for specific, enum in coordEnumList:
             generic = pollux.convert(enum)
@@ -344,7 +381,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             # ... the same as getPosition(afwGeom.radians)
             long1, lat1 = specific[0].asRadians(), specific[1].asRadians()
             long2, lat2 = generic.getPosition(afwGeom.radians)
-            print("(specific) %.8f %.8f   (generic) %.8f %.8f" % (long1, lat1, long2, lat2))
+            print("(specific) %.8f %.8f   (generic) %.8f %.8f" %
+                  (long1, lat1, long2, lat2))
             self.assertEqual(long1, long2)
             self.assertEqual(lat1, lat2)
             self.assertEqual(specific.getCoordSystem(), enum)
@@ -358,11 +396,14 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # known ecliptic coords (example from Meeus, Astro algorithms, pg 95)
         lamb, beta = 113.215629, 6.684170
 
-        # Try converting pollux Ra,Dec to ecliptic and check that we get the right answer
+        # Try converting pollux Ra,Dec to ecliptic and check that we get the
+        # right answer
         polluxEqu = afwCoord.Fk5Coord(alpha, delta)
         polluxEcl = polluxEqu.toEcliptic()
         s = ("Ecliptic (Pollux): ",
-             polluxEcl.getLambda().asDegrees(), polluxEcl.getBeta().asDegrees(), lamb, beta)
+             polluxEcl.getLambda().asDegrees(),
+             polluxEcl.getBeta().asDegrees(),
+             lamb, beta)
         print(s)
 
         # verify to precision of known values
@@ -381,7 +422,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # Try converting Sag-A to galactic and make sure we get the right answer
         # Sagittarius A (very nearly the galactic center)
         sagAKnownEqu = afwCoord.Fk5Coord("17:45:40.04", "-29:00:28.1")
-        sagAKnownGal = afwCoord.GalacticCoord(359.94432 * afwGeom.degrees, -0.04619 * afwGeom.degrees)
+        sagAKnownGal = afwCoord.GalacticCoord(
+            359.94432 * afwGeom.degrees, -0.04619 * afwGeom.degrees)
 
         sagAGal = sagAKnownEqu.toGalactic()
         print("Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" %
@@ -389,8 +431,10 @@ class CoordTestCase(lsst.utils.tests.TestCase):
                sagAKnownGal.getL().asDegrees(), sagAKnownGal.getB().asDegrees()))
 
         # verify ... to 4 places, the accuracy of the galactic pole in Fk5
-        self.assertAlmostEqual(sagAGal.getL().asDegrees(), sagAKnownGal.getL().asDegrees(), 4)
-        self.assertAlmostEqual(sagAGal.getB().asDegrees(), sagAKnownGal.getB().asDegrees(), 4)
+        self.assertAlmostEqual(sagAGal.getL().asDegrees(),
+                               sagAKnownGal.getL().asDegrees(), 4)
+        self.assertAlmostEqual(sagAGal.getB().asDegrees(),
+                               sagAKnownGal.getB().asDegrees(), 4)
 
         # make sure it transforms back ... to machine precision
         self.assertAlmostEqual(sagAGal.toFk5().getRa().asDegrees(),
@@ -406,17 +450,20 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # sedna (from jpl) for 2010-03-03 00:00 UT
         ra, dec = "03:26:42.61", "+06:32:07.1"
         az, alt = 231.5947, 44.3375
-        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0)  # peyton
+        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees,
+                                   40.384 * afwGeom.degrees, 100.0)  # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
         epoch = obsDate.get(dafBase.DateTime.EPOCH)
         sedna = afwCoord.Fk5Coord(ra, dec, epoch)
         altaz = sedna.toTopocentric(obs, obsDate)
         print("Topocentric (Sedna): ",
-              altaz.getAltitude().asDegrees(), altaz.getAzimuth().asDegrees(), alt, az)
+              altaz.getAltitude().asDegrees(), altaz.getAzimuth().asDegrees(),
+              alt, az)
 
         self.assertEqual(altaz.getCoordSystem(), afwCoord.TOPOCENTRIC)
 
-        # precision is low as we don't account for as much as jpl (abberation, nutation, etc)
+        # precision is low as we don't account for as much as jpl (abberation,
+        # nutation, etc)
         self.assertAlmostEqual(altaz.getAltitude().asDegrees(), alt, 1)
         self.assertAlmostEqual(altaz.getAzimuth().asDegrees(), az, 1)
 
@@ -433,16 +480,18 @@ class CoordTestCase(lsst.utils.tests.TestCase):
     def testPrecess(self):
         """Test precession calculations in different coordinate systems"""
 
-        # Try precessing in the various coordinate systems, and check the results.
+        # Try precessing in the various coordinate systems, and check the
+        # results.
 
-        ### Fk5 ###
+        # Fk5
 
         # example 21.b Meeus, pg 135, for Alpha Persei ... with proper motion
         alpha0, delta0 = "2:44:11.986", "49:13:42.48"
         # proper motions per year
         dAlphaS, dDeltaAS = 0.03425, -0.0895
         # Angle/yr
-        dAlpha, dDelta = (dAlphaS*15.) * afwGeom.arcseconds, (dDeltaAS) * afwGeom.arcseconds
+        dAlpha, dDelta = (dAlphaS*15.) * afwGeom.arcseconds, \
+            (dDeltaAS) * afwGeom.arcseconds
 
         # get for 2028, Nov 13.19
         epoch = dafBase.DateTime(2028, 11, 13, 4, 33, 36,
@@ -458,9 +507,10 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
         alphaPer = afwCoord.Fk5Coord(alpha1, delta1).precess(epoch)
 
-        print("Precession (Alpha-Per): %.6f %.6f   (known) %.6f %.6f" % (alphaPer.getRa().asDegrees(),
-                                                                         alphaPer.getDec().asDegrees(),
-                                                                         alphaKnown, deltaKnown))
+        print("Precession (Alpha-Per): %.6f %.6f   (known) %.6f %.6f" % (
+            alphaPer.getRa().asDegrees(),
+            alphaPer.getDec().asDegrees(),
+            alphaKnown, deltaKnown))
         # precision 6 (with 1 digit fudged in the 'known' answers)
         self.assertAlmostEqual(alphaPer.getRa().asDegrees(), alphaKnown, 6)
         self.assertAlmostEqual(alphaPer.getDec().asDegrees(), deltaKnown, 6)
@@ -471,27 +521,32 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(alphaPer[1], alphaPer2[1])
 
         # verify that convert(FK5, epoch) also works as precess
-        alphaPer3 = afwCoord.Fk5Coord(alpha1, delta1).convert(afwCoord.FK5, epoch)
+        alphaPer3 = afwCoord.Fk5Coord(
+            alpha1, delta1).convert(afwCoord.FK5, epoch)
         self.assertEqual(alphaPer[0], alphaPer3[0])
         self.assertEqual(alphaPer[1], alphaPer3[1])
 
-        ### Galactic ###
+        # Galactic
 
-        # make sure Galactic throws an exception. As there's no epoch, there's no precess() method.
-        gal = afwCoord.GalacticCoord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
+        # make sure Galactic throws an exception. As there's no epoch, there's
+        # no precess() method.
+        gal = afwCoord.GalacticCoord(
+            self.l * afwGeom.degrees, self.b * afwGeom.degrees)
         epochNew = 2010.0
         with self.assertRaises(AttributeError):
             gal.precess(epochNew)
 
-        ### Icrs ###
+        # Icrs
 
-        # make sure Icrs throws an exception. As there's no epoch, there's no precess() method.
-        icrs = afwCoord.IcrsCoord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
+        # make sure Icrs throws an exception. As there's no epoch, there's no
+        # precess() method.
+        icrs = afwCoord.IcrsCoord(
+            self.l * afwGeom.degrees, self.b * afwGeom.degrees)
         epochNew = 2010.0
         with self.assertRaises(AttributeError):
             icrs.precess(epochNew)
 
-        ### Ecliptic ###
+        # Ecliptic
 
         # test for ecliptic with venus (example from meeus, pg 137)
         lamb2000, beta2000 = 149.48194, 1.76549
@@ -507,7 +562,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         year = 1920
         lamb214bc, beta214bc = 148.37119237032144, 1.7610036104147864
 
-        venus2000 = afwCoord.EclipticCoord(lamb2000 * afwGeom.degrees, beta2000 * afwGeom.degrees, 2000.0)
+        venus2000 = afwCoord.EclipticCoord(
+            lamb2000 * afwGeom.degrees, beta2000 * afwGeom.degrees, 2000.0)
         ep = dafBase.DateTime(year, 6, 30, 0, 0, 0,
                               dafBase.DateTime.TAI).get(dafBase.DateTime.EPOCH)
         venus214bc = venus2000.precess(ep)
@@ -516,7 +572,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
                lamb214bc, beta214bc))
 
         # 3 places precision (accuracy of our controls)
-        self.assertAlmostEqual(venus214bc.getLambda().asDegrees(), lamb214bc, 3)
+        self.assertAlmostEqual(
+            venus214bc.getLambda().asDegrees(), lamb214bc, 3)
         self.assertAlmostEqual(venus214bc.getBeta().asDegrees(), beta214bc, 3)
 
         # verify that toEcliptic(ep) does the same as precess(ep)
@@ -533,8 +590,10 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         """Test measure of angular separation between two coords"""
 
         # test from Meeus, pg 110
-        spica = afwCoord.Fk5Coord(201.2983 * afwGeom.degrees, -11.1614 * afwGeom.degrees)
-        arcturus = afwCoord.Fk5Coord(213.9154 * afwGeom.degrees, 19.1825 * afwGeom.degrees)
+        spica = afwCoord.Fk5Coord(
+            201.2983 * afwGeom.degrees, -11.1614 * afwGeom.degrees)
+        arcturus = afwCoord.Fk5Coord(
+            213.9154 * afwGeom.degrees, 19.1825 * afwGeom.degrees)
         knownDeg = 32.7930
 
         deg = spica.angularSeparation(arcturus).asDegrees()
@@ -543,13 +602,15 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # verify to precision of known
         self.assertAlmostEqual(deg, knownDeg, 4)
 
-        # verify small angles ... along a constant ra, add an arcsec to spica dec
+        # verify small angles ... along a constant ra, add an arcsec to spica
+        # dec
         epsilon = 1.0 * afwGeom.arcseconds
         spicaPlus = afwCoord.Fk5Coord(spica.getRa(),
                                       spica.getDec() + epsilon)
         deg = spicaPlus.angularSeparation(spica).asDegrees()
 
-        print("Separation (Spica+epsilon): %.8f  (known) %.8f" % (deg, epsilon.asDegrees()))
+        print("Separation (Spica+epsilon): %.8f  (known) %.8f" %
+              (deg, epsilon.asDegrees()))
         # machine precision
         self.assertAlmostEqual(deg, epsilon.asDegrees())
 
@@ -572,7 +633,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         arcLen = 10.0
         pole = afwCoord.Fk5Coord(0.0 * afwGeom.degrees, 90.0 * afwGeom.degrees)
         for latitude in latitudes:
-            c = afwCoord.Fk5Coord(longitude * afwGeom.degrees, latitude * afwGeom.degrees)
+            c = afwCoord.Fk5Coord(
+                longitude * afwGeom.degrees, latitude * afwGeom.degrees)
             c.rotate(pole, arcLen * afwGeom.degrees)
 
             lon = c.getLongitude()
@@ -586,7 +648,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # try with pole = vernal equinox and rotate up a meridian
         pole = afwCoord.Fk5Coord(0.0 * afwGeom.degrees, 0.0 * afwGeom.degrees)
         for latitude in latitudes:
-            c = afwCoord.Fk5Coord(longitude * afwGeom.degrees, latitude * afwGeom.degrees)
+            c = afwCoord.Fk5Coord(
+                longitude * afwGeom.degrees, latitude * afwGeom.degrees)
             c.rotate(pole, arcLen * afwGeom.degrees)
 
             lon = c.getLongitude()
@@ -606,9 +669,12 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
         #   lon,   lat    phi, arcLen,     expLong,      expLat, expPhi2
         trials = [
-            [lon0, lat0, 0.0, arcLen, lon0+arcLen, lat0, 0.0],  # along celestial equator
-            [lon0, lat0, 90.0, arcLen, lon0, lat0+arcLen, 90.0],  # along a meridian
-            [lon0, lat0, 45.0, 180.0, lon0+180.0, -lat0, -45.0],  # 180 arc (should go to antip. pt)
+            [lon0, lat0, 0.0, arcLen, lon0+arcLen,
+                lat0, 0.0],  # along celestial equator
+            [lon0, lat0, 90.0, arcLen, lon0, lat0 + \
+                arcLen, 90.0],  # along a meridian
+            # 180 arc (should go to antip. pt)
+            [lon0, lat0, 45.0, 180.0, lon0+180.0, -lat0, -45.0],
             [lon0, lat0, 45.0, 90.0, lon0+90.0, lat0+45.0, 0.0],  #
             [0.0, 90.0, 0.0, 90.0, 90.0, 0.0, -90.0],  # from pole, phi=0
             [0.0, 90.0, 90.0, 90.0, 180.0, 0.0, -90.0],  # from pole, phi=90
@@ -617,15 +683,18 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         for trial in trials:
 
             lon0, lat0, phi, arc, longExp, latExp, phi2Exp = trial
-            c = afwCoord.Fk5Coord(lon0 * afwGeom.degrees, lat0 * afwGeom.degrees)
-            c1 = afwCoord.Fk5Coord(longExp * afwGeom.degrees, latExp * afwGeom.degrees)
+            c = afwCoord.Fk5Coord(lon0 * afwGeom.degrees,
+                                  lat0 * afwGeom.degrees)
+            c1 = afwCoord.Fk5Coord(
+                longExp * afwGeom.degrees, latExp * afwGeom.degrees)
             offset = c.getOffsetFrom(c1)
             phi2 = c.offset(phi * afwGeom.degrees, arc * afwGeom.degrees)
 
             lon = c.getLongitude().asDegrees()
             lat = c.getLatitude().asDegrees()
 
-            print("Offset: %.10f %.10f %.10f  %.10f %.10f %.10f" % (lon, lat, phi2, longExp, latExp, phi2Exp))
+            print("Offset: %.10f %.10f %.10f  %.10f %.10f %.10f" %
+                  (lon, lat, phi2, longExp, latExp, phi2Exp))
             print("Measured: %.10f %.10f %.10f %.10f" %
                   (offset[0].asDegrees(), offset[1].asDegrees(), phi, arc))
             self.assertAlmostEqual(lon, longExp, 12)
@@ -650,14 +719,16 @@ class CoordTestCase(lsst.utils.tests.TestCase):
                 expE = math.degrees(math.tan(math.radians(dRa)))
                 expN = math.degrees(math.tan(math.radians(dDec)))
 
-                print("TP: ", dRa, dDec, offset[0].asDegrees(), offset[1].asDegrees(), expE, expN)
+                print("TP: ", dRa, dDec, offset[0].asDegrees(
+                ), offset[1].asDegrees(), expE, expN)
 
                 self.assertAlmostEqual(offset[0].asDegrees(), expE)
                 self.assertAlmostEqual(offset[1].asDegrees(), expN)
 
     def testVirtualGetName(self):
 
-        gal = afwCoord.GalacticCoord(0.0 * afwGeom.radians, 0.0 * afwGeom.radians)
+        gal = afwCoord.GalacticCoord(
+            0.0 * afwGeom.radians, 0.0 * afwGeom.radians)
         clone = gal.clone()
         gal_names = gal.getCoordNames()      # ("L", "B")
         clone_names = clone.getCoordNames()  # ("Ra", "Dec")
@@ -682,19 +753,23 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # also make sure we didn't break the original functionality
         # Test above/below +/-1
         declIn = [decl, -1.0*decl, decl - 1.0, -decl + 1.0]
-        declKnown = ["-00:40:06.48", "00:40:06.48", "-01:40:06.48", "01:40:06.48"]
+        declKnown = ["-00:40:06.48", "00:40:06.48",
+                     "-01:40:06.48", "01:40:06.48"]
 
         for i in range(len(declIn)):
-            printableCoord = afwCoord.IcrsCoord(ra, declIn[i]*afwGeom.degrees).getDecStr()
+            printableCoord = \
+                afwCoord.IcrsCoord(ra, declIn[i]*afwGeom.degrees).getDecStr()
 
-            # With bug, this prints e.g. '00:40:06.48.  It should be '-00:40:06.48'
+            # With bug, this prints e.g. '00:40:06.48.  It should be
+            # '-00:40:06.48'
             print("Decl 0 to -1 bug:", printableCoord)
 
             self.assertEqual(printableCoord, declKnown[i])
 
     def testEquality(self):
         # (In)equality is determined by value, not identity. See DM-2347, -2465.
-        # These asserts are testing the functionality of `==` and `!=` and should not be changed
+        # These asserts are testing the functionality of `==` and `!=` and
+        # should not be changed
         c1 = afwCoord.IcrsCoord(self.ra, self.dec)
         self.assertTrue(c1 == c1)
         self.assertFalse(c1 != c1)
@@ -711,10 +786,12 @@ class CoordTestCase(lsst.utils.tests.TestCase):
     def testAverage(self):
         """Tests for lsst.afw.coord.averageCoord"""
         icrs = afwCoord.IcrsCoord(self.ra, self.dec)
-        gal = afwCoord.GalacticCoord(self.l*afwGeom.degrees, self.b*afwGeom.degrees)
+        gal = afwCoord.GalacticCoord(
+            self.l*afwGeom.degrees, self.b*afwGeom.degrees)
 
         # Mixed systems, no system provided
-        self.assertRaisesLsstCpp(pexEx.InvalidParameterError, afwCoord.averageCoord, [icrs, gal])
+        self.assertRaisesLsstCpp(
+            pexEx.InvalidParameterError, afwCoord.averageCoord, [icrs, gal])
 
         # Mixed systems, but target system provided
         # Only checking this doesn't fail; will check accuracy later

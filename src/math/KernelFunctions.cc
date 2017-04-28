@@ -22,12 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- *
- * @brief Definitions of members of lsst::afw::math
- *
- * @ingroup afw
+/*
+ * Definitions of members of lsst::afw::math
  */
 #include <iostream>
 
@@ -35,29 +31,19 @@
 
 #include "lsst/afw/math/KernelFunctions.h"
 
-/**
- * @brief Print the pixel values of a Kernel to std::cout
- *
- * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
- *
- * @ingroup afw
- */
-void
-lsst::afw::math::printKernel(
-    lsst::afw::math::Kernel const &kernel,     ///< the kernel
-    bool doNormalize,                   ///< if true, normalize kernel
-    double xPos,                        ///< x at which to evaluate kernel
-    double yPos,                        ///< y at which to evaluate kernel
-    std::string pixelFmt                ///< format for pixel values
-) {
-    typedef lsst::afw::math::Kernel::Pixel Pixel;
+namespace lsst {
+namespace afw {
+namespace math {
 
-    lsst::afw::image::Image<Pixel> kImage(kernel.getDimensions());
+void printKernel(Kernel const &kernel, bool doNormalize, double xPos, double yPos, std::string pixelFmt) {
+    typedef Kernel::Pixel Pixel;
+
+    image::Image<Pixel> kImage(kernel.getDimensions());
     double kSum = kernel.computeImage(kImage, doNormalize, xPos, yPos);
 
     for (int y = kImage.getHeight() - 1; y >= 0; --y) {
-        for (lsst::afw::image::Image<Pixel>::const_x_iterator ptr = kImage.row_begin(y);
-             ptr != kImage.row_end(y); ++ptr) {
+        for (image::Image<Pixel>::const_x_iterator ptr = kImage.row_begin(y); ptr != kImage.row_end(y);
+             ++ptr) {
             std::cout << boost::format(pixelFmt) % *ptr << " ";
         }
         std::cout << std::endl;
@@ -68,3 +54,6 @@ lsst::afw::math::printKernel(
     }
     std::cout << std::endl;
 }
+}
+}
+}  // end lsst::afw::math

@@ -198,9 +198,9 @@ public:
      *          this Transform to the result. Its inverse shall first apply the
      *          inverse of this Transform, then the inverse of `first`.
      *
-     * @throws InvalidParameterErrror Thrown if `first.getToEndpoint()` and
-     *                                `this->getFromEndpoint()` do not have
-     *                                the same number of axes.
+     * @throws pex::exceptions::InvalidParameterError Thrown if
+     *         `first.getToEndpoint()` and `this->getFromEndpoint()` do not
+     *         have the same number of axes.
      * @exceptsafe Provides basic exception safety.
      *
      * More than two Transforms can be combined in series. For example:

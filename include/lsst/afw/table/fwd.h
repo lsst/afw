@@ -24,9 +24,7 @@
 #ifndef LSST_AFW_TABLE_fwd_h_INCLUDED
 #define LSST_AFW_TABLE_fwd_h_INCLUDED
 
-/**
- *  @file lsst/afw/table/fwd.h
- *
+/*
  *  Forward declarations and typedefs for afw::table
  *
  *  Because many of the types in afw::table are actually typedefs of template classes,
@@ -39,22 +37,34 @@
 
 #include "lsst/afw/table/misc.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
-template <typename T> class Key;
-template <typename T> struct Field;
-template <typename T> struct SchemaItem;
+template <typename T>
+class Key;
+template <typename T>
+struct Field;
+template <typename T>
+struct SchemaItem;
 class Schema;
 class SchemaMapper;
 
-template <typename T> class OutputFunctorKey;
-template <typename T> class InputFunctorKey;
+template <typename T>
+class OutputFunctorKey;
+template <typename T>
+class InputFunctorKey;
 
-template <typename T> class ColumnViewT;
-template <typename RecordT> class CatalogT;
-template <typename RecordT> class SortedCatalogT;
-template <typename RecordT> class SourceColumnViewT;
-template <typename RecordT> class ExposureCatalogT;
+template <typename T>
+class ColumnViewT;
+template <typename RecordT>
+class CatalogT;
+template <typename RecordT>
+class SortedCatalogT;
+template <typename RecordT>
+class SourceColumnViewT;
+template <typename RecordT>
+class ExposureCatalogT;
 
 class BaseRecord;
 class BaseTable;
@@ -87,11 +97,12 @@ typedef ColumnViewT<AmpInfoRecord> AmpInfoColumnView;
 typedef CatalogT<AmpInfoRecord> AmpInfoCatalog;
 typedef CatalogT<AmpInfoRecord const> ConstAmpInfoCatalog;
 
-template <typename Record1, typename Record2> struct Match;
+template <typename Record1, typename Record2>
+struct Match;
 
-typedef Match<SimpleRecord,SimpleRecord> SimpleMatch;
-typedef Match<SimpleRecord,SourceRecord> ReferenceMatch;
-typedef Match<SourceRecord,SourceRecord> SourceMatch;
+typedef Match<SimpleRecord, SimpleRecord> SimpleMatch;
+typedef Match<SimpleRecord, SourceRecord> ReferenceMatch;
+typedef Match<SourceRecord, SourceRecord> SourceMatch;
 
 typedef std::vector<SimpleMatch> SimpleMatchVector;
 typedef std::vector<ReferenceMatch> ReferenceMatchVector;
@@ -108,8 +119,9 @@ class InputArchive;
 class OutputArchive;
 class CatalogVector;
 
-} // namespace io
+}  // namespace io
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !LSST_AFW_TABLE_fwd_h_INCLUDED
+#endif  // !LSST_AFW_TABLE_fwd_h_INCLUDED

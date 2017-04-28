@@ -8,16 +8,18 @@
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/KeyBase.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 namespace detail {
 
 class Access;
 
-} // namespace detail
+}  // namespace detail
 
 /**
- *  @brief Specialization for Flag fields.
+ *  Specialization for Flag fields.
  *
  *  Flag fields are handled specially in many places, because their keys have both an offset into an
  *  integer element and the bit in that element; while other fields have one or more elements per field,
@@ -27,14 +29,13 @@ class Access;
  */
 template <>
 struct FieldBase<Flag> {
+    typedef bool Value;            ///< the type returned by BaseRecord::get
+    typedef std::int64_t Element;  ///< the actual storage type (shared by multiple flag fields)
 
-    typedef bool Value;        ///< @brief the type returned by BaseRecord::get
-    typedef std::int64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
-
-    /// @brief Return the number of subfield elements (always one for scalars).
+    /// Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }
 
-    /// @brief Return a string description of the field type.
+    /// Return a string description of the field type.
     static std::string getTypeString() { return "Flag"; }
 
     // Only the first of these constructors is valid for this specializations, but
@@ -42,24 +43,20 @@ struct FieldBase<Flag> {
     // by other specializations.
     FieldBase() {}
     FieldBase(int) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Constructor disabled (this Field type is not sized)."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Constructor disabled (this Field type is not sized).");
     }
 
 protected:
-
     /// Defines how fields are printed.
-    void stream(std::ostream & os) const {}
-
+    void stream(std::ostream &os) const {}
 };
 
 /**
- *  @brief A base class for Key that allows the underlying storage field to be extracted.
+ *  A base class for Key that allows the underlying storage field to be extracted.
  */
 template <>
-class KeyBase< Flag > {
+class KeyBase<Flag> {
 public:
     static bool const HAS_NAMED_SUBFIELDS = false;
 
@@ -68,7 +65,7 @@ public:
 };
 
 /**
- *  @brief Key specialization for Flag.
+ *  Key specialization for Flag.
  *
  *  Flag fields are special; their keys need to contain not only the offset to the
  *  integer element they share with other Flag fields, but also their position
@@ -81,10 +78,9 @@ public:
 template <>
 class Key<Flag> : public KeyBase<Flag>, public FieldBase<Flag> {
 public:
-
     //@{
     /**
-     *  @brief Equality comparison.
+     *  Equality comparison.
      *
      *  Two keys with different types are never equal.  Keys with the same type
      *  are equal if they point to the same location in a table, regardless of
@@ -92,21 +88,27 @@ public:
      *  different name in one Schema than another, but is otherwise the same,
      *  the two keys will be equal).
      */
-    template <typename OtherT> bool operator==(Key<OtherT> const & other) const { return false; }
-    template <typename OtherT> bool operator!=(Key<OtherT> const & other) const { return true; }
+    template <typename OtherT>
+    bool operator==(Key<OtherT> const &other) const {
+        return false;
+    }
+    template <typename OtherT>
+    bool operator!=(Key<OtherT> const &other) const {
+        return true;
+    }
 
-    bool operator==(Key const & other) const { return _offset == other._offset && _bit == other._bit; }
-    bool operator!=(Key const & other) const { return !this->operator==(other); }
+    bool operator==(Key const &other) const { return _offset == other._offset && _bit == other._bit; }
+    bool operator!=(Key const &other) const { return !this->operator==(other); }
     //@}
 
-    /// @brief Return the offset in bytes of the integer element that holds this field's bit.
+    /// Return the offset in bytes of the integer element that holds this field's bit.
     int getOffset() const { return _offset; }
 
-    /// @brief The index of this field's bit within the integer it shares with other Flag fields.
+    /// The index of this field's bit within the integer it shares with other Flag fields.
     int getBit() const { return _bit; }
 
     /**
-     *  @brief Return true if the key was initialized to valid offset.
+     *  Return true if the key was initialized to valid offset.
      *
      *  This does not guarantee that a key is valid with any particular schema, or even
      *  that any schemas still exist in which this key is valid.
@@ -116,30 +118,29 @@ public:
     bool isValid() const { return _offset >= 0; }
 
     /**
-     *  @brief Default construct a field.
+     *  Default construct a field.
      *
      *  The new field will be invalid until a valid Key is assigned to it.
      */
     Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
 
     /// Stringification.
-    inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {
+    inline friend std::ostream &operator<<(std::ostream &os, Key<Flag> const &key) {
         return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset()
                   << ", bit=" << key.getBit() << ")";
     }
 
 private:
-
     friend class detail::Access;
     friend class BaseRecord;
 
     /// Used to implement RecordBase::get.
-    Value getValue(Element const * p, ndarray::Manager::Ptr const &) const {
+    Value getValue(Element const *p, ndarray::Manager::Ptr const &) const {
         return (*p) & (Element(1) << _bit);
     }
 
     /// Used to implement RecordBase::set.
-    void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const {
+    void setValue(Element *p, ndarray::Manager::Ptr const &, Value v) const {
         if (v) {
             *p |= (Element(1) << _bit);
         } else {
@@ -152,7 +153,8 @@ private:
     int _offset;
     int _bit;
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !LSST_AFW_TABLE_Flag_h_INCLUDED
+#endif  // !LSST_AFW_TABLE_Flag_h_INCLUDED

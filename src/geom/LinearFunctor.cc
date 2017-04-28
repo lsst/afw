@@ -30,21 +30,16 @@ namespace afw {
 namespace geom {
 
 LinearFunctor::LinearFunctor(double slope, double intercept)
-   : Functor("LinearFunctor"), _slope(slope), _intercept(intercept) {
+        : Functor("LinearFunctor"), _slope(slope), _intercept(intercept) {}
+
+std::shared_ptr<Functor> LinearFunctor::clone() const {
+    return std::make_shared<LinearFunctor>(_slope, _intercept);
 }
 
-PTR(Functor) LinearFunctor::clone() const {
-   return std::make_shared<LinearFunctor>(_slope, _intercept);
-}
+double LinearFunctor::operator()(double x) const { return _slope * x + _intercept; }
 
-double LinearFunctor::operator()(double x) const {
-   return _slope*x + _intercept;
-}
+double LinearFunctor::derivative(double x) const { return _slope; }
 
-double LinearFunctor::derivative(double x) const {
-   return _slope;
-}
-
-} // namespace geom
-} // namespace afw
-} // namespace lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

@@ -45,7 +45,8 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     - variance: constant value for variance plane
     """
     npSize = (dimensions[1], dimensions[0])
-    image = np.random.normal(loc=0.0, scale=sigma, size=npSize).astype(np.float32)
+    image = np.random.normal(loc=0.0, scale=sigma,
+                             size=npSize).astype(np.float32)
     mask = np.zeros(npSize, dtype=np.uint16)
     variance = np.zeros(npSize, dtype=np.float32) + variance
 
@@ -53,23 +54,25 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
 
 
 def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
-        """!Make an image whose values are a linear ramp
+    """!Make an image whose values are a linear ramp
 
-        @param[in] bbox  bounding box of image (an lsst.afw.geom.Box2I)
-        @param[in] start  starting ramp value, inclusive
-        @param[in] stop  ending ramp value, inclusive; if None, increase by integer values
-        @param[in] imageClass  type of image (e.g. lsst.afw.image.ImageF)
-        """
-        im = imageClass(bbox)
-        imDim = im.getDimensions()
-        numPix = imDim[0]*imDim[1]
-        imArr = im.getArray()
-        if stop is None:
-            # increase by integer values
-            stop = start + numPix - 1
-        rampArr = np.linspace(start=start, stop=stop, endpoint=True, num=numPix, dtype=imArr.dtype)
-        imArr[:] = np.reshape(rampArr, (imDim[1], imDim[0]))  # numpy arrays are transposed w.r.t. afwImage
-        return im
+    @param[in] bbox  bounding box of image (an lsst.afw.geom.Box2I)
+    @param[in] start  starting ramp value, inclusive
+    @param[in] stop  ending ramp value, inclusive; if None, increase by integer values
+    @param[in] imageClass  type of image (e.g. lsst.afw.image.ImageF)
+    """
+    im = imageClass(bbox)
+    imDim = im.getDimensions()
+    numPix = imDim[0]*imDim[1]
+    imArr = im.getArray()
+    if stop is None:
+        # increase by integer values
+        stop = start + numPix - 1
+    rampArr = np.linspace(start=start, stop=stop,
+                          endpoint=True, num=numPix, dtype=imArr.dtype)
+    # numpy arrays are transposed w.r.t. afwImage
+    imArr[:] = np.reshape(rampArr, (imDim[1], imDim[0]))
+    return im
 
 
 @lsst.utils.tests.inTestCase
@@ -109,7 +112,8 @@ def assertImagesAlmostEqual(testCase, image0, image1, skipMask=None,
     @throw TypeError if the dimensions of image0, image1 and skipMask do not match,
     or any are not of a numeric data type.
     """
-    errStr = imagesDiffer(image0, image1, skipMask=skipMask, rtol=rtol, atol=atol)
+    errStr = imagesDiffer(
+        image0, image1, skipMask=skipMask, rtol=rtol, atol=atol)
     if errStr:
         testCase.fail("%s: %s" % (msg, errStr))
 
@@ -199,8 +203,10 @@ def assertMaskedImagesAlmostEqual(
     either mask plane is not of an integer type (unsigned or signed),
     or skipMask is not of a numeric data type.
     """
-    maskedImageArrList0 = maskedImage0.getArrays() if hasattr(maskedImage0, "getArrays") else maskedImage0
-    maskedImageArrList1 = maskedImage1.getArrays() if hasattr(maskedImage1, "getArrays") else maskedImage1
+    maskedImageArrList0 = maskedImage0.getArrays() if hasattr(
+        maskedImage0, "getArrays") else maskedImage0
+    maskedImageArrList1 = maskedImage1.getArrays() if hasattr(
+        maskedImage1, "getArrays") else maskedImage1
 
     for arrList, arg, name in (
         (maskedImageArrList0, maskedImage0, "maskedImage0"),
@@ -298,16 +304,19 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
             raise TypeError("%r=%r is not a supported type" % (name, arg))
         if i != 0:
             if arr.shape != imageArr0.shape:
-                raise TypeError("%s shape = %s != %s = image0 shape" % (name, arr.shape, imageArr0.shape))
+                raise TypeError("%s shape = %s != %s = image0 shape" %
+                                (name, arr.shape, imageArr0.shape))
 
     # np.allclose mis-handled unsigned ints in numpy 1.8
     # and subtraction doesn't give the desired answer in any case
     # so cast unsigned arrays into int64 (there may be a simple
     # way to safely use a smaller data type but I've not found it)
     if imageArr0.dtype.kind == "u":
-        imageArr0 = imageArr0.astype(np.promote_types(imageArr0.dtype, np.int8))
+        imageArr0 = imageArr0.astype(
+            np.promote_types(imageArr0.dtype, np.int8))
     if imageArr1.dtype.kind == "u":
-        imageArr1 = imageArr1.astype(np.promote_types(imageArr1.dtype, np.int8))
+        imageArr1 = imageArr1.astype(
+            np.promote_types(imageArr1.dtype, np.int8))
 
     if skipMaskArr is not None:
         skipMaskArr = np.array(skipMaskArr, dtype=bool)
@@ -361,7 +370,8 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
         maxPosInd = np.where(errArr == maxErr)
         maxPosTuple = (maxPosInd[1][0], maxPosInd[0][0])
         errStr = "maxDiff=%s at position %s; value=%s vs. %s" % \
-            (maxErr, maxPosTuple, valFilledArr1[maxPosInd][0], valFilledArr2[maxPosInd][0])
+            (maxErr, maxPosTuple,
+             valFilledArr1[maxPosInd][0], valFilledArr2[maxPosInd][0])
         errStrList.insert(0, errStr)
 
     return "; ".join(errStrList)
@@ -369,11 +379,13 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
 
 @lsst.utils.tests.inTestCase
 def assertImagesNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertImagesAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertImagesAlmostEqual",
+                  DeprecationWarning)
     assertImagesAlmostEqual(*args, **kwargs)
 
 
 @lsst.utils.tests.inTestCase
 def assertMaskedImagesNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertMaskedImagesAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertMaskedImagesAlmostEqual",
+                  DeprecationWarning)
     assertMaskedImagesAlmostEqual(*args, **kwargs)

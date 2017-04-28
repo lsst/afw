@@ -25,20 +25,22 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_Transformer_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Transformer_h_INCLUDED
 
-/**
- *  @file
- *  @brief Definitions for Ellipse::Transformer and BaseCore::Transformer.
+/*
+ *  Definitions for Ellipse::Transformer and BaseCore::Transformer.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 /**
- *  @brief A temporary-only expression object for ellipse core transformations.
+ *  A temporary-only expression object for ellipse core transformations.
  *
  *  Transformer simply provides a clean syntax for transform-related operations, including
  *  in-place and new-object transformations, derivatives of the transformations,
@@ -46,38 +48,35 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  */
 class BaseCore::Transformer {
 public:
-
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix3d DerivativeMatrix;
 
     /// Matrix type for derivative with respect to transform parameters.
-    typedef Eigen::Matrix<double,3,4> TransformDerivativeMatrix;
+    typedef Eigen::Matrix<double, 3, 4> TransformDerivativeMatrix;
 
-    /// @brief Standard constructor.
-    Transformer(BaseCore & input_, LinearTransform const & transform_) :
-        input(input_), transform(transform_) {}
+    /// Standard constructor.
+    Transformer(BaseCore &input_, LinearTransform const &transform_) : input(input_), transform(transform_) {}
 
-    /// @brief Return a new transformed ellipse core.
-    BaseCore::Ptr copy() const;
+    /// Return a new transformed ellipse core.
+    std::shared_ptr<BaseCore> copy() const;
 
-    /// @brief %Transform the ellipse core in-place.
+    /// %Transform the ellipse core in-place.
     void inPlace();
 
-    void apply(BaseCore & result) const;
+    void apply(BaseCore &result) const;
 
-    /// @brief Return the derivative of transformed core with respect to input core.
+    /// Return the derivative of transformed core with respect to input core.
     DerivativeMatrix d() const;
 
-    /// @brief Return the derivative of transformed core with respect to transform parameters.
+    /// Return the derivative of transformed core with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    BaseCore & input; ///< input core to be transformed
-    LinearTransform const & transform; ///< transform object
-
+    BaseCore &input;                   ///< input core to be transformed
+    LinearTransform const &transform;  ///< transform object
 };
 
 /**
- *  @brief A temporary-only expression object for ellipse transformations.
+ *  A temporary-only expression object for ellipse transformations.
  *
  *  Transformer simply provides a clean syntax for transform-related operations, including
  *  in-place and new-object transformations, derivatives of the transformations, and implicit
@@ -85,56 +84,55 @@ public:
  */
 class Ellipse::Transformer {
 public:
-
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix<double,5,5> DerivativeMatrix;
+    typedef Eigen::Matrix<double, 5, 5> DerivativeMatrix;
 
     /// Matrix type for derivative with respect to transform parameters.
-    typedef Eigen::Matrix<double,5,6> TransformDerivativeMatrix;
+    typedef Eigen::Matrix<double, 5, 6> TransformDerivativeMatrix;
 
-    /// @brief Standard constructor.
-    Transformer(Ellipse & input_, AffineTransform const & transform_) :
-        input(input_), transform(transform_) {}
+    /// Standard constructor.
+    Transformer(Ellipse &input_, AffineTransform const &transform_) : input(input_), transform(transform_) {}
 
-    /// @brief Return a new transformed ellipse.
-    Ellipse::Ptr copy() const;
+    /// Return a new transformed ellipse.
+    std::shared_ptr<Ellipse> copy() const;
 
-    /// @brief %Transform the ellipse in-place.
+    /// %Transform the ellipse in-place.
     void inPlace();
 
-    void apply(Ellipse & other) const;
+    void apply(Ellipse &other) const;
 
-    /// @brief Return the derivative of transform output ellipse with respect to input ellipse.
+    /// Return the derivative of transform output ellipse with respect to input ellipse.
     DerivativeMatrix d() const;
 
-    /// @brief Return the derivative of transform output ellipse with respect to transform parameters.
+    /// Return the derivative of transform output ellipse with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    Ellipse & input; ///< input ellipse to be transformed
-    AffineTransform const & transform; ///< transform object
+    Ellipse &input;                    ///< input ellipse to be transformed
+    AffineTransform const &transform;  ///< transform object
 };
 
-inline BaseCore::Transformer BaseCore::transform(LinearTransform const & transform) {
-    return BaseCore::Transformer(*this,transform);
+inline BaseCore::Transformer BaseCore::transform(LinearTransform const &transform) {
+    return BaseCore::Transformer(*this, transform);
 }
 
-inline BaseCore::Transformer const BaseCore::transform(LinearTransform const & transform) const {
-    return BaseCore::Transformer(const_cast<BaseCore &>(*this),transform);
+inline BaseCore::Transformer const BaseCore::transform(LinearTransform const &transform) const {
+    return BaseCore::Transformer(const_cast<BaseCore &>(*this), transform);
 }
 
-inline Ellipse::Transformer Ellipse::transform(AffineTransform const & transform) {
-    return Ellipse::Transformer(*this,transform);
+inline Ellipse::Transformer Ellipse::transform(AffineTransform const &transform) {
+    return Ellipse::Transformer(*this, transform);
 }
 
-inline Ellipse::Transformer const Ellipse::transform(AffineTransform const & transform) const {
-    return Ellipse::Transformer(const_cast<Ellipse &>(*this),transform);
+inline Ellipse::Transformer const Ellipse::transform(AffineTransform const &transform) const {
+    return Ellipse::Transformer(const_cast<Ellipse &>(*this), transform);
 }
 
-inline Ellipse::Ellipse(Ellipse::Transformer const & other) :
-    _core(other.input.getCore().transform(other.transform.getLinear()).copy()),
-    _center(other.transform(other.input.getCenter()))
-{}
+inline Ellipse::Ellipse(Ellipse::Transformer const &other)
+        : _core(other.input.getCore().transform(other.transform.getLinear()).copy()),
+          _center(other.transform(other.input.getCenter())) {}
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_Transformer_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_Transformer_h_INCLUDED

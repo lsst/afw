@@ -41,8 +41,8 @@ int main() {
     lsst::afw::math::LanczosFunction2<Pixel> lanczosFunc(order);
     lsst::afw::math::AnalyticKernel kernel(kernelCols, kernelRows, lanczosFunc);
 
-    cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has order %d\n")
-        % kernelCols % kernelRows % order;
+    cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has order %d\n") % kernelCols %
+                    kernelRows % order;
 
     double deltaOff = 1.0 / 3.0;
     vector<double> offVec(2);

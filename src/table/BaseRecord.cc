@@ -6,77 +6,71 @@
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/SchemaMapper.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 namespace {
 
 // A Schema::forEach and SchemaMapper::forEach functor that copies data from one record to another.
 struct CopyValue {
-
     template <typename U>
-    void operator()(Key<U> const & inputKey, Key<U> const & outputKey) const {
-        typename Field<U>::Element const * inputElem = _inputRecord->getElement(inputKey);
+    void operator()(Key<U> const& inputKey, Key<U> const& outputKey) const {
+        typename Field<U>::Element const* inputElem = _inputRecord->getElement(inputKey);
         std::copy(inputElem, inputElem + inputKey.getElementCount(), _outputRecord->getElement(outputKey));
     }
 
     template <typename U>
-    void operator()(Key< Array<U> > const & inputKey, Key< Array<U> > const & outputKey) const {
+    void operator()(Key<Array<U> > const& inputKey, Key<Array<U> > const& outputKey) const {
         if (inputKey.isVariableLength()) {
             assert(outputKey.isVariableLength());
-            ndarray::Array<U,1,1> value = ndarray::copy(_inputRecord->get(inputKey));
+            ndarray::Array<U, 1, 1> value = ndarray::copy(_inputRecord->get(inputKey));
             _outputRecord->set(outputKey, value);
             return;
         }
-        typename Field<U>::Element const * inputElem = _inputRecord->getElement(inputKey);
+        typename Field<U>::Element const* inputElem = _inputRecord->getElement(inputKey);
         std::copy(inputElem, inputElem + inputKey.getElementCount(), _outputRecord->getElement(outputKey));
     }
 
-    void operator()(Key<Flag> const & inputKey, Key<Flag> const & outputKey) const {
+    void operator()(Key<Flag> const& inputKey, Key<Flag> const& outputKey) const {
         _outputRecord->set(outputKey, _inputRecord->get(inputKey));
     }
 
     template <typename U>
-    void operator()(SchemaItem<U> const & item) const {
+    void operator()(SchemaItem<U> const& item) const {
         (*this)(item.key, item.key);
     }
 
-    CopyValue(BaseRecord const * inputRecord, BaseRecord * outputRecord) :
-        _inputRecord(inputRecord), _outputRecord(outputRecord)
-    {}
+    CopyValue(BaseRecord const* inputRecord, BaseRecord* outputRecord)
+            : _inputRecord(inputRecord), _outputRecord(outputRecord) {}
 
 private:
-    BaseRecord const * _inputRecord;
-    BaseRecord * _outputRecord;
+    BaseRecord const* _inputRecord;
+    BaseRecord* _outputRecord;
 };
 
-} // anonymous
+}  // anonymous
 
-void BaseRecord::assign(BaseRecord const & other) {
+void BaseRecord::assign(BaseRecord const& other) {
     if (this->getSchema() != other.getSchema()) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Unequal schemas in record assignment."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "Unequal schemas in record assignment.");
     }
     this->getSchema().forEach(CopyValue(&other, this));
-    this->_assign(other); // let derived classes assign their own stuff
+    this->_assign(other);  // let derived classes assign their own stuff
 }
 
-void BaseRecord::assign(BaseRecord const & other, SchemaMapper const & mapper) {
+void BaseRecord::assign(BaseRecord const& other, SchemaMapper const& mapper) {
     if (!other.getSchema().contains(mapper.getInputSchema())) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Unequal schemas between input record and mapper."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Unequal schemas between input record and mapper.");
     }
     if (!this->getSchema().contains(mapper.getOutputSchema())) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicError,
-            "Unequal schemas between output record and mapper."
-        );
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                          "Unequal schemas between output record and mapper.");
     }
-    mapper.forEach(CopyValue(&other, this)); // use the functor we defined above
-    this->_assign(other); // let derived classes assign their own stuff
+    mapper.forEach(CopyValue(&other, this));  // use the functor we defined above
+    this->_assign(other);                     // let derived classes assign their own stuff
 }
-
-}}} // namespace lsst::afw::table
+}
+}
+}  // namespace lsst::afw::table

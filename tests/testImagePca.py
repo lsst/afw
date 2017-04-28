@@ -74,15 +74,19 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
         val2 = 20
         im2.set(val2)
 
-        self.assertEqual(afwImage.innerProduct(im1, im1), width*height*val1*val1)
-        self.assertEqual(afwImage.innerProduct(im1, im2), width*height*val1*val2)
+        self.assertEqual(afwImage.innerProduct(im1, im1),
+                         width*height*val1*val1)
+        self.assertEqual(afwImage.innerProduct(im1, im2),
+                         width*height*val1*val2)
 
         im2.set(0, 0, 0)
-        self.assertEqual(afwImage.innerProduct(im1, im2), (width*height - 1)*val1*val2)
+        self.assertEqual(afwImage.innerProduct(im1, im2),
+                         (width*height - 1)*val1*val2)
 
         im2.set(0, 0, val2)             # reinstate value
         im2.set(width - 1, height - 1, 1)
-        self.assertEqual(afwImage.innerProduct(im1, im2), (width*height - 1)*val1*val2 + val1)
+        self.assertEqual(afwImage.innerProduct(im1, im2),
+                         (width*height - 1)*val1*val2 + val1)
 
     def testAddImages(self):
         """Test adding images to a PCA set"""
@@ -215,6 +219,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

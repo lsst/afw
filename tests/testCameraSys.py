@@ -39,7 +39,8 @@ class CameraSysTestCase(unittest.TestCase):
                 cameraSys = cameraGeom.CameraSys(sysName, detectorName)
                 self.assertEqual(cameraSys.getSysName(), sysName)
                 self.assertEqual(cameraSys.getDetectorName(), detectorName)
-                self.assertEqual(cameraSys.hasDetectorName(), bool(detectorName))
+                self.assertEqual(cameraSys.hasDetectorName(),
+                                 bool(detectorName))
 
                 noDetSys = cameraGeom.CameraSys(sysName)
                 self.assertEqual(noDetSys.getSysName(), sysName)
@@ -60,7 +61,8 @@ class CameraSysTestCase(unittest.TestCase):
                     self.assertEqual(cameraSys, noDetSys)
 
                 # The following tests are checking the functionality of the == and !=
-                # operators and should not be replaced with assertEqual ot assertNotEqual
+                # operators and should not be replaced with assertEqual ot
+                # assertNotEqual
                 self.assertTrue(cameraSys != camSysPrefix)
                 self.assertTrue(noDetSys != camSysPrefix)
                 self.assertFalse(cameraSys == camSysPrefix)

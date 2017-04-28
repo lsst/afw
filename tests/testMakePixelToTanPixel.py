@@ -41,21 +41,27 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         pupil center = focal plane center
         CCD x is along focal plane x
         """
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1000, 1000))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                             afwGeom.Extent2I(1000, 1000))
         pixelSizeMm = afwGeom.Extent2D(0.02, 0.02)
         plateScale = 25.0   # arcsec/mm
         yaw = 0 * afwGeom.degrees
-        fpPosition = afwGeom.Point2D(0, 0)  # focal-plane position of ref position on detector (mm)
-        refPoint = afwGeom.Point2D(0, 0)  # ref position on detector (pos of lower left corner)
+        # focal-plane position of ref position on detector (mm)
+        fpPosition = afwGeom.Point2D(0, 0)
+        # ref position on detector (pos of lower left corner)
+        refPoint = afwGeom.Point2D(0, 0)
         orientation = cameraGeom.Orientation(
             fpPosition,
             refPoint,
             yaw,
         )
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-        plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
-        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
-        pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
+        plateScaleRad = afwGeom.Angle(
+            plateScale, afwGeom.arcseconds).asRadians()
+        focalPlaneToPupil = afwGeom.RadialXYTransform(
+            (0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
+        pixelToPupil = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToPupil))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox=bbox,
@@ -64,14 +70,16 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             pixelSizeMm=pixelSizeMm,
         )
 
-        # pupil center should be pixel position 0, 0 and tan pixel position 0, 0
+        # pupil center should be pixel position 0, 0 and tan pixel position 0,
+        # 0
         pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
         self.assertPairsAlmostEqual(pixAtPupilCtr, [0, 0])
         tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
         self.assertPairsAlmostEqual(tanPixAtPupilCr, [0, 0])
 
         # build same camera geometry transforms without optical distortion
-        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
+        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform(
+            (0.0, plateScaleRad))
         pixelToPupilNoDistortion = afwGeom.MultiXYTransform(
             (pixelToFocalPlane, focalPlaneToPupilNoDistortion))
 
@@ -89,27 +97,34 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
                 # - pupil to pixels gives pixPos
                 # - undistorted pupil to pixels gives tanPixPos
                 pupilPos = pixelToPupil.forwardTransform(pixPos)
-                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(pupilPos)
+                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(
+                    pupilPos)
                 self.assertPairsAlmostEqual(desTanPixPos, tanPixPos)
 
     def testCurvedFocalPlane(self):
         """Test a curved focal plane (with rectangular pixels)
         """
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1000, 1000))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                             afwGeom.Extent2I(1000, 1000))
         pixelSizeMm = afwGeom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
         yaw = afwGeom.Angle(20, afwGeom.degrees)
-        fpPosition = afwGeom.Point2D(50, 25)  # focal-plane position of ref position on detector (mm)
-        refPoint = afwGeom.Point2D(-0.5, -0.5)  # ref position on detector (pos of lower left corner)
+        # focal-plane position of ref position on detector (mm)
+        fpPosition = afwGeom.Point2D(50, 25)
+        # ref position on detector (pos of lower left corner)
+        refPoint = afwGeom.Point2D(-0.5, -0.5)
         orientation = cameraGeom.Orientation(
             fpPosition,
             refPoint,
             yaw,
         )
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-        plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
-        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
-        pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
+        plateScaleRad = afwGeom.Angle(
+            plateScale, afwGeom.arcseconds).asRadians()
+        focalPlaneToPupil = afwGeom.RadialXYTransform(
+            (0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
+        pixelToPupil = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToPupil))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox=bbox,
@@ -124,7 +139,8 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         self.assertPairsAlmostEqual(pixAtPupilCtr, tanPixAtPupilCr)
 
         # build same camera geometry transforms without optical distortion
-        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
+        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform(
+            (0.0, plateScaleRad))
         pixelToPupilNoDistortion = afwGeom.MultiXYTransform(
             (pixelToFocalPlane, focalPlaneToPupilNoDistortion))
 
@@ -137,24 +153,29 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
                 # - pupil to pixels gives pixPos
                 # - undistorted pupil to pixels gives tanPixPos
                 pupilPos = pixelToPupil.forwardTransform(pixPos)
-                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(pupilPos)
+                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(
+                    pupilPos)
                 self.assertPairsAlmostEqual(desTanPixPos, tanPixPos)
 
     def testFlatFocalPlane(self):
         """Test an undistorted focal plane (with rectangular pixels)
         """
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1000, 1000))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                             afwGeom.Extent2I(1000, 1000))
         pixelSizeMm = afwGeom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
         yaw = afwGeom.Angle(20, afwGeom.degrees)
-        fpPosition = afwGeom.Point2D(50, 25)  # focal-plane position of ref position on detector (mm)
-        refPoint = afwGeom.Point2D(-0.5, -0.5)  # ref position on detector (pos of lower left corner)
+        # focal-plane position of ref position on detector (mm)
+        fpPosition = afwGeom.Point2D(50, 25)
+        # ref position on detector (pos of lower left corner)
+        refPoint = afwGeom.Point2D(-0.5, -0.5)
         orientation = cameraGeom.Orientation(
             fpPosition,
             refPoint,
             yaw,
         )
-        plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
+        plateScaleRad = afwGeom.Angle(
+            plateScale, afwGeom.arcseconds).asRadians()
         focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad))
 
         pixelToTanPixel = makePixelToTanPixel(

@@ -38,7 +38,8 @@ class MatchXyTest(unittest.TestCase):
     def setUp(self):
         nan = float('nan')
         self.schema = afwTable.SourceTable.makeMinimalSchema()
-        centroidKey = afwTable.Point2DKey.addFields(self.schema, "cen", "center", "pixels")
+        centroidKey = afwTable.Point2DKey.addFields(
+            self.schema, "cen", "center", "pixels")
         self.table = afwTable.SourceTable.make(self.schema)
         self.table.defineCentroid("cen")
         idKey = self.table.getIdKey()
@@ -64,7 +65,8 @@ class MatchXyTest(unittest.TestCase):
                 # The "2 pixels" makes it line up with a different source.
                 # The "a bit" is half a match radius, so that it's still within the matching radius, but it
                 # doesn't match another source exactly. If it matches another source exactly, then it's not
-                # clear which one will be taken as the match (in fact, it appears to depend on the compiler).
+                # clear which one will be taken as the match (in fact, it
+                # appears to depend on the compiler).
                 offset = 2 + 0.5*self.matchRadius
                 r1.set(centroidKey, afwGeom.Point2D(i, i))
                 r2.set(centroidKey, afwGeom.Point2D(j + offset, j + offset))
@@ -97,11 +99,13 @@ class MatchXyTest(unittest.TestCase):
                 mc = afwTable.MatchControl()
                 mc.findOnlyClosest = closest
                 mc.includeMismatches = includeMismatches
-                matches = afwTable.matchXy(self.cat1, self.cat2, self.matchRadius, mc)
+                matches = afwTable.matchXy(
+                    self.cat1, self.cat2, self.matchRadius, mc)
 
                 if False:
                     for m in matches:
-                        print(closest, m.first.getId(), m.second.getId(), m.distance)
+                        print(closest, m.first.getId(),
+                              m.second.getId(), m.distance)
 
                 if includeMismatches:
                     catMatches = afwTable.SourceCatalog(self.table)
@@ -112,18 +116,26 @@ class MatchXyTest(unittest.TestCase):
                                 catMatches.append(m[0])
                         else:
                             catMismatches.append(m[0])
-                    matches = afwTable.matchXy(catMatches, self.cat2, self.matchRadius, mc)
+                    matches = afwTable.matchXy(
+                        catMatches, self.cat2, self.matchRadius, mc)
                     mc.includeMismatches = False
-                    noMatches = afwTable.matchXy(catMismatches, self.cat2, self.matchRadius, mc)
+                    noMatches = afwTable.matchXy(
+                        catMismatches, self.cat2, self.matchRadius, mc)
                     self.assertEqual(len(noMatches), 0)
 
                 # If we're not getting only the closest match, then we get an extra match due to the
-                # source we offset by 2 pixels and a bit.  Everything else should match exactly.
-                self.assertEqual(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
-                self.assertEqual(sum(1 for m in matches if m.distance == 0.0), self.nUniqueMatch)
+                # source we offset by 2 pixels and a bit.  Everything else
+                # should match exactly.
+                self.assertEqual(
+                    len(matches),
+                    self.nUniqueMatch if closest else self.nUniqueMatch + 1)
+                self.assertEqual(
+                    sum(1 for m in matches if m.distance == 0.0),
+                    self.nUniqueMatch)
                 for m in matches:
                     if closest:
-                        self.assertEqual(m.first.getId() + self.nobj, m.second.getId())
+                        self.assertEqual(m.first.getId() +
+                                         self.nobj, m.second.getId())
                     else:
                         self.assertLessEqual(m.distance, self.matchRadius)
 
@@ -151,6 +163,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

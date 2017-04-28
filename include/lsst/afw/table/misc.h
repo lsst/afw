@@ -9,10 +9,12 @@
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
- *  @brief Type used for unique IDs for records.
+ *  Type used for unique IDs for records.
  *
  *  FITS isn't fond of uint64, so we can save a lot of pain by using signed ints here unless
  *  we really need unsigned.
@@ -21,18 +23,20 @@ typedef std::int64_t RecordId;
 
 //@{
 /**
- *  @brief Tag types used to declare specialized field types.
+ *  Tag types used to declare specialized field types.
  *
  *  See the documentation for specializations of FieldBase and KeyBase
  *  for more information.
  */
-template <typename T> class Array;
+template <typename T>
+class Array;
 class Flag;
 typedef lsst::afw::coord::Coord Coord;
 typedef lsst::afw::coord::IcrsCoord IcrsCoord;
 typedef lsst::afw::geom::Angle Angle;
 //@}
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_misc_h_INCLUDED
+#endif  // !AFW_TABLE_misc_h_INCLUDED

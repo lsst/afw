@@ -25,11 +25,10 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
 
-/**
- *  @file
- *  @brief Forward declarations, typedefs, and definitions for BaseCore.
+/*
+ *  Forward declarations, typedefs, and definitions for BaseCore.
  *
- *  @note Do not include directly; use the main ellipse header file.
+ *  Note: do not include directly; use the main ellipse header file.
  */
 
 #include <memory>
@@ -39,12 +38,15 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/LinearTransform.h"
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace ellipses {
 
 class Parametric;
 
 /**
- *  @brief A base class for parametrizations of the "core" of an ellipse - the ellipticity and size.
+ *  A base class for parametrizations of the "core" of an ellipse - the ellipticity and size.
  *
  *  A subclass of BaseCore provides a particular interpretation of the three pointing point values that
  *  define an ellipse's size and ellipticity (including position angle).  All core subclasses
@@ -52,38 +54,32 @@ class Parametric;
  */
 class BaseCore {
 public:
-#ifndef SWIG
     class Transformer;
     class GridTransform;
     class Convolution;
-    template <typename Output> struct Converter;
-#endif
-
-    typedef std::shared_ptr<BaseCore> Ptr;
-    typedef std::shared_ptr<BaseCore const> ConstPtr;
+    template <typename Output>
+    struct Converter;
 
     typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
-    typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
+    typedef Eigen::Matrix3d Jacobian;         ///< Parameter Jacobian matrix type.
 
-    static Ptr make(std::string const & name);
+    static std::shared_ptr<BaseCore> make(std::string const& name);
 
-    static Ptr make(std::string const & name, ParameterVector const & parameters);
+    static std::shared_ptr<BaseCore> make(std::string const& name, ParameterVector const& parameters);
 
-    static Ptr make(std::string const & name, double v1, double v2, double v3);
+    static std::shared_ptr<BaseCore> make(std::string const& name, double v1, double v2, double v3);
 
-    static Ptr make(std::string const & name, BaseCore const & other);
+    static std::shared_ptr<BaseCore> make(std::string const& name, BaseCore const& other);
 
-#ifndef SWIG
-    static Ptr make(std::string const & name, Transformer const & other);
+    static std::shared_ptr<BaseCore> make(std::string const& name, Transformer const& other);
 
-    static Ptr make(std::string const & name, Convolution const & other);
-#endif
+    static std::shared_ptr<BaseCore> make(std::string const& name, Convolution const& other);
 
-    /// @brief Return a string that identifies this parametrization.
+    /// Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
 
-    /// @brief Deep-copy the Core.
-    Ptr clone() const { return _clone(); }
+    /// Deep-copy the Core.
+    std::shared_ptr<BaseCore> clone() const { return _clone(); }
 
     /**
      *  @brief Put the parameters into a "standard form", and throw InvalidParameterError
@@ -91,17 +87,17 @@ public:
      */
     virtual void normalize() = 0;
 
-    /// @brief Increase the major and minor radii of the ellipse core by the given buffer.
+    /// Increase the major and minor radii of the ellipse core by the given buffer.
     void grow(double buffer);
 
-    /// @brief Scale the size of the ellipse core by the given factor.
+    /// Scale the size of the ellipse core by the given factor.
     void scale(double factor);
 
-    /// @brief Return the area of the ellipse core.
+    /// Return the area of the ellipse core.
     double getArea() const;
 
     /**
-     *  @brief Return the radius defined as the 4th root of the determinant of the quadrupole matrix.
+     *  Return the radius defined as the 4th root of the determinant of the quadrupole matrix.
      *
      *  The determinant radius is equal to the standard radius for a circle,
      *  and its square times pi is the area of the ellipse.
@@ -109,7 +105,7 @@ public:
     double getDeterminantRadius() const;
 
     /**
-     *  @brief Return the radius defined as the square root of one half the trace of the quadrupole matrix.
+     *  Return the radius defined as the square root of one half the trace of the quadrupole matrix.
      *
      *  The trace radius is equal to the standard radius for a circle.
      */
@@ -123,12 +119,12 @@ public:
      *  expression object, or returned as a new shared_ptr by calling copy().
      */
     //@{
-    Transformer transform(LinearTransform const & transform);
-    Transformer const transform(LinearTransform const & transform) const;
+    Transformer transform(LinearTransform const& transform);
+    Transformer const transform(LinearTransform const& transform) const;
     //@}
 
     /**
-     *  @brief Return the transform that maps the ellipse to the unit circle.
+     *  Return the transform that maps the ellipse to the unit circle.
      *
      *  The returned proxy object is implicitly convertible to LinearTransform
      *  and also supports differentiation.
@@ -139,108 +135,97 @@ public:
      *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
      */
     //@{
-    Convolution convolve(BaseCore const & other);
-    Convolution const convolve(BaseCore const & other) const;
+    Convolution convolve(BaseCore const& other);
+    Convolution const convolve(BaseCore const& other) const;
     //@}
 
-    /// @brief Return the size of the bounding box for the ellipse core.
+    /// Return the size of the bounding box for the ellipse core.
     Extent2D computeDimensions() const;
 
-    virtual void readParameters(double const * iter) = 0;
+    virtual void readParameters(double const* iter) = 0;
 
-    virtual void writeParameters(double * iter) const = 0;
+    virtual void writeParameters(double* iter) const = 0;
 
-    /// @brief Return the core parameters as a vector.
+    /// Return the core parameters as a vector.
     ParameterVector const getParameterVector() const;
 
-    /// @brief Set the core parameters from a vector.
-    void setParameterVector(ParameterVector const & vector);
+    /// Set the core parameters from a vector.
+    void setParameterVector(ParameterVector const& vector);
 
     /**
-     *  @brief Compare two ellipse cores for equality.
+     *  Compare two ellipse cores for equality.
      *
      *  Ellipse cores are only equal if they have the same type.
      */
-    bool operator==(BaseCore const & other) const;
+    bool operator==(BaseCore const& other) const;
 
     /**
-     *  @brief Compare two ellipse cores for inequality.
+     *  Compare two ellipse cores for inequality.
      *
      *  Ellipses are only equal if they have the same type.
      */
-    bool operator!=(BaseCore const & other) const { return !operator==(other); }
+    bool operator!=(BaseCore const& other) const { return !operator==(other); }
 
     /**
-     *  @brief Set the parameters of this ellipse core from another.
+     *  Set the parameters of this ellipse core from another.
      *
      *  This does not change the parametrization of the ellipse core.
      */
-    BaseCore & operator=(BaseCore const & other);
+    BaseCore& operator=(BaseCore const& other);
 
-    /// @brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
-    Jacobian dAssign(BaseCore const & other);
+    /// Assign other to this and return the derivative of the conversion, d(this)/d(other).
+    Jacobian dAssign(BaseCore const& other);
 
     /**
-     *  @brief Convert this to the core type specified as a template parameter.
+     *  Convert this to the core type specified as a template parameter.
      */
-    template <typename Output> Converter<Output> as() const;
+    template <typename Output>
+    Converter<Output> as() const;
 
     virtual ~BaseCore() {}
 
 protected:
-#ifndef SWIG
     friend class Parametric;
 
-    static void registerSubclass(Ptr const & example);
+    static void registerSubclass(std::shared_ptr<BaseCore> const& example);
 
     template <typename T>
     struct Registrar {
         Registrar() { registerSubclass(std::make_shared<T>()); }
     };
 
-    virtual BaseCore::Ptr _clone() const = 0;
+    virtual std::shared_ptr<BaseCore> _clone() const = 0;
 
-    static void _assignQuadrupoleToAxes(
-        double ixx, double iyy, double ixy,
-        double & a, double & b, double & theta
-    );
+    static void _assignQuadrupoleToAxes(double ixx, double iyy, double ixy, double& a, double& b,
+                                        double& theta);
 
-    static Jacobian _dAssignQuadrupoleToAxes(
-        double ixx, double iyy, double ixy,
-        double & a, double & b, double & theta
-    );
+    static Jacobian _dAssignQuadrupoleToAxes(double ixx, double iyy, double ixy, double& a, double& b,
+                                             double& theta);
 
-    static void _assignAxesToQuadrupole(
-        double a, double b, double theta,
-        double & ixx, double & iyy, double & ixy
-    );
+    static void _assignAxesToQuadrupole(double a, double b, double theta, double& ixx, double& iyy,
+                                        double& ixy);
 
-    static Jacobian _dAssignAxesToQuadrupole(
-        double a, double b, double theta,
-        double & ixx, double & iyy, double & ixy
-    );
+    static Jacobian _dAssignAxesToQuadrupole(double a, double b, double theta, double& ixx, double& iyy,
+                                             double& ixy);
 
-    virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const = 0;
+    virtual void _assignToQuadrupole(double& ixx, double& iyy, double& ixy) const = 0;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy) = 0;
 
-    virtual void _assignToAxes(double & a, double & b, double & theta) const = 0;
+    virtual void _assignToAxes(double& a, double& b, double& theta) const = 0;
     virtual void _assignFromAxes(double a, double b, double theta) = 0;
 
-    virtual Jacobian _dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const = 0;
+    virtual Jacobian _dAssignToQuadrupole(double& ixx, double& iyy, double& ixy) const = 0;
     virtual Jacobian _dAssignFromQuadrupole(double ixx, double iyy, double ixy) = 0;
 
-    virtual Jacobian _dAssignToAxes(double & a, double & b, double & theta) const = 0;
+    virtual Jacobian _dAssignToAxes(double& a, double& b, double& theta) const = 0;
     virtual Jacobian _dAssignFromAxes(double a, double b, double theta) = 0;
-
-#endif
 };
 
-#ifndef SWIG
 template <typename Output>
 struct BaseCore::Converter {
-    BaseCore const & input;
+    BaseCore const& input;
 
-    explicit Converter(BaseCore const & input_) : input(input_) {}
+    explicit Converter(BaseCore const& input_) : input(input_) {}
 
     operator Output() const { return Output(input); }
     std::shared_ptr<Output> copy() const { return std::shared_ptr<Output>(new Output(input)); }
@@ -250,9 +235,9 @@ template <typename Output>
 inline BaseCore::Converter<Output> BaseCore::as() const {
     return Converter<Output>(*this);
 }
+}
+}
+}
+}  // namespace lsst::afw::geom::ellipses
 
-#endif
-
-}}}} // namespace lsst::afw::geom::ellipses
-
-#endif // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
+#endif  // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED

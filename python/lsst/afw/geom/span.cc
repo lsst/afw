@@ -28,7 +28,10 @@
 
 namespace py = pybind11;
 
-namespace lsst { namespace afw { namespace geom { namespace {
+namespace lsst {
+namespace afw {
+namespace geom {
+namespace {
 
 using PySpan = py::class_<Span, std::shared_ptr<Span>>;
 
@@ -45,14 +48,15 @@ public:
         }
         return *_it++;
     };
+
 private:
     Span::Iterator _it;
     Span::Iterator _end;
 };
 
-static void declareSpanIterator(py::module & mod) {
+static void declareSpanIterator(py::module &mod) {
     py::class_<SpanIterator> cls(mod, "SpanIterator");
-    cls.def("__iter__", [](SpanIterator &it) -> SpanIterator& { return it; });
+    cls.def("__iter__", [](SpanIterator &it) -> SpanIterator & { return it; });
     cls.def("__next__", &SpanIterator::next);
 }
 
@@ -75,9 +79,9 @@ PYBIND11_PLUGIN(span) {
     // back to its container (the Span), and there's no need to keep the
     // Span alive for the lifetime of the iterator.
     cls.def("__iter__", [](const Span &s) { return SpanIterator(s); });
-    cls.def("getX0", (int (Span::*)() const) &Span::getX0);
-    cls.def("getX1", (int (Span::*)() const) &Span::getX1);
-    cls.def("getY", (int (Span::*)() const) &Span::getY);
+    cls.def("getX0", (int (Span::*)() const) & Span::getX0);
+    cls.def("getX1", (int (Span::*)() const) & Span::getX1);
+    cls.def("getY", (int (Span::*)() const) & Span::getY);
     cls.def("getWidth", &Span::getWidth);
     cls.def("getMinX", &Span::getMinX);
     cls.def("getMaxX", &Span::getMaxX);
@@ -85,14 +89,16 @@ PYBIND11_PLUGIN(span) {
     cls.def("getEndX", &Span::getEndX);
     cls.def("getMin", &Span::getMin);
     cls.def("getMax", &Span::getMax);
-    cls.def("contains", (bool (Span::*)(int) const) &Span::contains);
-    cls.def("contains", (bool (Span::*)(int, int) const) &Span::contains);
-    cls.def("contains", (bool (Span::*)(Point2I const &) const) &Span::contains);
+    cls.def("contains", (bool (Span::*)(int) const) & Span::contains);
+    cls.def("contains", (bool (Span::*)(int, int) const) & Span::contains);
+    cls.def("contains", (bool (Span::*)(Point2I const &) const) & Span::contains);
     cls.def("isEmpty", &Span::isEmpty);
     cls.def("toString", &Span::toString);
     cls.def("shift", &Span::shift);
 
     return mod.ptr();
 }
-
-}}}} // namespace lsst::afw::geom::<anonymous>
+}
+}
+}
+}  // namespace lsst::afw::geom::<anonymous>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 from past.builtins import basestring
 import sys
 import lsst.afw.table as afwTable
@@ -9,7 +9,8 @@ from functools import reduce
 
 def concatenate(catalogList):
     """Concatenate multiple catalogs (FITS tables from lsst.afw.table)"""
-    catalogList = [afwTable.BaseCatalog.readFits(c) if isinstance(c, basestring) else c for c in catalogList]
+    catalogList = [afwTable.BaseCatalog.readFits(c) if isinstance(
+        c, basestring) else c for c in catalogList]
 
     schema = catalogList[0].schema
     for i, c in enumerate(catalogList[1:]):
@@ -29,7 +30,8 @@ def concatenate(catalogList):
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print("catTables.py: Concatenate multiple FITS tables (catalogs) from lsst.afw.table")
+        print(
+            "catTables.py: Concatenate multiple FITS tables (catalogs) from lsst.afw.table")
         print("Usage: catTables.py OUT IN1 IN2 [IN3...]")
         sys.exit(1)
 

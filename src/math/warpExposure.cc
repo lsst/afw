@@ -21,12 +21,8 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-/**
- * \file
- *
- * \ingroup afw
- *
- * \brief Support for warping an %image to a new Wcs.
+/*
+ * Support for warping an %image to a new Wcs.
  */
 
 #include <cassert>
@@ -55,11 +51,10 @@
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
-namespace afwCoord = lsst::afw::coord;
-namespace afwMath = lsst::afw::math;
 
+namespace lsst {
+namespace afw {
+namespace math {
 
 //
 // A helper function for the warping kernels which provides error-checking:
@@ -73,58 +68,46 @@ namespace afwMath = lsst::afw::math;
 // FIXME eventually the 3 warping kernels will inherit from a common base class WarpingKernel
 // and this routine can be eliminated by putting the code in WarpingKernel::setKernelParameter()
 //
-static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p, unsigned int ind, double value)
-{
+static inline void checkWarpingKernelParameter(const SeparableKernel *p, unsigned int ind, double value) {
     if (ind > 1) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad ind argument in WarpingKernel::setKernelParameter()");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
+                          "bad ind argument in WarpingKernel::setKernelParameter()");
     }
     int ctr = p->getCtr()[ind];
     int size = p->getDimensions()[ind];
 
-    if (ctr == (size-1)/2) {
-        if (value < -1e-6 || value > 1+1e-6) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad coordinate in WarpingKernel::setKernelParameter()");
+    if (ctr == (size - 1) / 2) {
+        if (value < -1e-6 || value > 1 + 1e-6) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
+                              "bad coordinate in WarpingKernel::setKernelParameter()");
         }
-    } else if (ctr == (size+1)/2) {
-        if (value < -1-1e-6 || value > 1e-6) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad coordinate in WarpingKernel::setKernelParameter()");
+    } else if (ctr == (size + 1) / 2) {
+        if (value < -1 - 1e-6 || value > 1e-6) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
+                              "bad coordinate in WarpingKernel::setKernelParameter()");
         }
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad ctr value in WarpingKernel::setKernelParameter()");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
+                          "bad ctr value in WarpingKernel::setKernelParameter()");
     }
 }
 
-
-PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
-    return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
+std::shared_ptr<Kernel> LanczosWarpingKernel::clone() const {
+    return std::shared_ptr<Kernel>(new LanczosWarpingKernel(this->getOrder()));
 }
 
-/**
-* @brief get the order of the kernel
-*/
-int afwMath::LanczosWarpingKernel::getOrder() const {
-    return this->getWidth() / 2;
-}
+int LanczosWarpingKernel::getOrder() const { return this->getWidth() / 2; }
 
-void afwMath::LanczosWarpingKernel::setKernelParameter(unsigned int ind, double value) const
-{
+void LanczosWarpingKernel::setKernelParameter(unsigned int ind, double value) const {
     checkWarpingKernelParameter(this, ind, value);
     SeparableKernel::setKernelParameter(ind, value);
 }
 
-PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
-    return PTR(afwMath::Kernel)(new afwMath::BilinearWarpingKernel());
+std::shared_ptr<Kernel> BilinearWarpingKernel::clone() const {
+    return std::shared_ptr<Kernel>(new BilinearWarpingKernel());
 }
 
-/**
- * \brief Solve bilinear equation
- *
- * Only the following arguments will give reliably meaningful values:
- * *  0.0 or 1.0 if the kernel center index is 0 in this axis
- * * -1.0 or 0.0 if the kernel center index is 1 in this axis
- */
-afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const
-{
+Kernel::Pixel BilinearWarpingKernel::BilinearFunction1::operator()(double x) const {
     //
     // this->_params[0] = value of x where we want to interpolate the function
     // x = integer value of x where we evaluate the function in the interpolation
@@ -140,56 +123,41 @@ afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operat
     return 0.5 + (1.0 - (2.0 * fabs(this->_params[0]))) * (0.5 - fabs(x));
 }
 
-void afwMath::BilinearWarpingKernel::setKernelParameter(unsigned int ind, double value) const
-{
+void BilinearWarpingKernel::setKernelParameter(unsigned int ind, double value) const {
     checkWarpingKernelParameter(this, ind, value);
     SeparableKernel::setKernelParameter(ind, value);
 }
 
-/**
- * \brief Return string representation.
- */
-std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::string const& prefix) const {
+std::string BilinearWarpingKernel::BilinearFunction1::toString(std::string const &prefix) const {
     std::ostringstream os;
     os << "_BilinearFunction1: ";
     os << Function1<Kernel::Pixel>::toString(prefix);
     return os.str();
 }
 
-PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
-    return PTR(afwMath::Kernel)(new afwMath::NearestWarpingKernel());
+std::shared_ptr<Kernel> NearestWarpingKernel::clone() const {
+    std::shared_ptr<Kernel>(new NearestWarpingKernel());
 }
 
-/**
- * \brief Solve nearest neighbor equation
- *
- * Only the following arguments will give reliably meaningful values:
- * *  0.0 or 1.0 if the kernel center index is 0 in this axis
- * * -1.0 or 0.0 if the kernel center index is 1 in this axis
- */
-afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
+Kernel::Pixel NearestWarpingKernel::NearestFunction1::operator()(double x) const {
     // this expression is faster than using conditionals, but offers no sanity checking
     return static_cast<double>((fabs(this->_params[0]) < 0.5) == (fabs(x) < 0.5));
 }
 
-void afwMath::NearestWarpingKernel::setKernelParameter(unsigned int ind, double value) const
-{
+void NearestWarpingKernel::setKernelParameter(unsigned int ind, double value) const {
     checkWarpingKernelParameter(this, ind, value);
     SeparableKernel::setKernelParameter(ind, value);
 }
 
-/**
- * \brief Return string representation.
- */
-std::string afwMath::NearestWarpingKernel::NearestFunction1::toString(std::string const& prefix) const {
+std::string NearestWarpingKernel::NearestFunction1::toString(std::string const &prefix) const {
     std::ostringstream os;
     os << "_NearestFunction1: ";
     os << Function1<Kernel::Pixel>::toString(prefix);
     return os.str();
 }
 
-std::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
-    typedef std::shared_ptr<afwMath::SeparableKernel> KernelPtr;
+std::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name) {
+    typedef std::shared_ptr<SeparableKernel> KernelPtr;
     boost::cmatch matches;
     static const boost::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
@@ -202,38 +170,33 @@ std::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string
     } else if (name == "nearest") {
         return KernelPtr(new NearestWarpingKernel());
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-            "unknown warping kernel name: \"" + name + "\"");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "unknown warping kernel name: \"" + name + "\"");
     }
 }
 
-PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getWarpingKernel() const {
+std::shared_ptr<SeparableKernel> WarpingControl::getWarpingKernel() const {
     if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
         _warpingKernelPtr->computeCache(_cacheSize);
     }
     return _warpingKernelPtr;
 };
 
-void afwMath::WarpingControl::setWarpingKernelName(
-    std::string const &warpingKernelName
-) {
-    PTR(SeparableKernel) warpingKernelPtr(makeWarpingKernel(warpingKernelName));
+void WarpingControl::setWarpingKernelName(std::string const &warpingKernelName) {
+    std::shared_ptr<SeparableKernel> warpingKernelPtr(makeWarpingKernel(warpingKernelName));
     setWarpingKernel(*warpingKernelPtr);
 }
 
-void afwMath::WarpingControl::setWarpingKernel(
-    SeparableKernel const &warpingKernel
-) {
+void WarpingControl::setWarpingKernel(SeparableKernel const &warpingKernel) {
     if (_maskWarpingKernelPtr) {
         _testWarpingKernels(warpingKernel, *_maskWarpingKernelPtr);
     }
-    PTR(SeparableKernel) warpingKernelPtr(std::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
+    std::shared_ptr<SeparableKernel> warpingKernelPtr(
+            std::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
     _warpingKernelPtr = warpingKernelPtr;
 }
 
-
-PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getMaskWarpingKernel() const {
-    if (_maskWarpingKernelPtr) { // lazily update kernel cache
+std::shared_ptr<SeparableKernel> WarpingControl::getMaskWarpingKernel() const {
+    if (_maskWarpingKernelPtr) {  // lazily update kernel cache
         if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
             _maskWarpingKernelPtr->computeCache(_cacheSize);
         }
@@ -241,51 +204,35 @@ PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getMaskWarpingKernel() co
     return _maskWarpingKernelPtr;
 }
 
-void afwMath::WarpingControl::setMaskWarpingKernelName(
-    std::string const &maskWarpingKernelName
-) {
+void WarpingControl::setMaskWarpingKernelName(std::string const &maskWarpingKernelName) {
     if (!maskWarpingKernelName.empty()) {
-        PTR(SeparableKernel) maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
+        std::shared_ptr<SeparableKernel> maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
         setMaskWarpingKernel(*maskWarpingKernelPtr);
     } else {
         _maskWarpingKernelPtr.reset();
     }
 }
 
-void afwMath::WarpingControl::setMaskWarpingKernel(
-    SeparableKernel const & maskWarpingKernel
-) {
+void WarpingControl::setMaskWarpingKernel(SeparableKernel const &maskWarpingKernel) {
     _testWarpingKernels(*_warpingKernelPtr, maskWarpingKernel);
     _maskWarpingKernelPtr = std::static_pointer_cast<SeparableKernel>(maskWarpingKernel.clone());
 }
 
-
-void afwMath::WarpingControl::_testWarpingKernels(
-    SeparableKernel const &warpingKernel,
-    SeparableKernel const &maskWarpingKernel
-) const {
-    lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
-        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(warpingKernel.getCtr()),
-        warpingKernel.getDimensions()
-    );
-    lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
-        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(maskWarpingKernel.getCtr()),
-        maskWarpingKernel.getDimensions()
-    );
+void WarpingControl::_testWarpingKernels(SeparableKernel const &warpingKernel,
+                                         SeparableKernel const &maskWarpingKernel) const {
+    geom::Box2I kernelBBox = geom::Box2I(geom::Point2I(0, 0) - geom::Extent2I(warpingKernel.getCtr()),
+                                         warpingKernel.getDimensions());
+    geom::Box2I maskKernelBBox = geom::Box2I(geom::Point2I(0, 0) - geom::Extent2I(maskWarpingKernel.getCtr()),
+                                             maskWarpingKernel.getDimensions());
     if (!kernelBBox.contains(maskKernelBBox)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
-            "warping kernel is smaller than mask warping kernel");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+                          "warping kernel is smaller than mask warping kernel");
     }
 }
 
-template<typename DestExposureT, typename SrcExposureT>
-int afwMath::warpExposure(
-    DestExposureT &destExposure,
-    SrcExposureT const &srcExposure,
-    afwMath::WarpingControl const &control,
-    typename DestExposureT::MaskedImageT::SinglePixel padValue
-    )
-{
+template <typename DestExposureT, typename SrcExposureT>
+int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, WarpingControl const &control,
+                 typename DestExposureT::MaskedImageT::SinglePixel padValue) {
     if (!destExposure.hasWcs()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destExposure has no Wcs");
     }
@@ -293,288 +240,266 @@ int afwMath::warpExposure(
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
-    std::shared_ptr<afwImage::Calib> calibCopy(new afwImage::Calib(*srcExposure.getCalib()));
+    std::shared_ptr<image::Calib> calibCopy(new image::Calib(*srcExposure.getCalib()));
     destExposure.setCalib(calibCopy);
     destExposure.setFilter(srcExposure.getFilter());
-    return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(),
-        control, padValue);
+    return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(), control,
+                     padValue);
 }
 
-
-/************************************************************************************************************/
 namespace {
 
-    inline afwGeom::Point2D computeSrcPos(
-            int destCol,  ///< destination column index
-            int destRow,  ///< destination row index
-            afwGeom::Point2D const &destXY0,    ///< xy0 of destination image
-            afwImage::Wcs const &destWcs,       ///< WCS of remapped %image
-            afwImage::Wcs const &srcWcs)        ///< WCS of source %image
-    {
-        double const col = afwImage::indexToPosition(destCol + destXY0[0]);
-        double const row = afwImage::indexToPosition(destRow + destXY0[1]);
-        afwGeom::Angle sky1, sky2;
-        destWcs.pixelToSky(col, row, sky1, sky2);
-        return srcWcs.skyToPixel(sky1, sky2);
+inline geom::Point2D computeSrcPos(int destCol,                   ///< @internal destination column index
+                                   int destRow,                   ///< @internal destination row index
+                                   geom::Point2D const &destXY0,  ///< @internal xy0 of destination image
+                                   image::Wcs const &destWcs,     ///< @internal WCS of remapped %image
+                                   image::Wcs const &srcWcs)      ///< @internal WCS of source %image
+{
+    double const col = image::indexToPosition(destCol + destXY0[0]);
+    double const row = image::indexToPosition(destRow + destXY0[1]);
+    geom::Angle sky1, sky2;
+    destWcs.pixelToSky(col, row, sky1, sky2);
+    return srcWcs.skyToPixel(sky1, sky2);
+}
+
+inline double computeRelativeArea(
+        geom::Point2D const &srcPos,      /// @internal source position at desired destination pixel
+        geom::Point2D const &leftSrcPos,  /// @internal source position one destination pixel to the left
+        geom::Point2D const &upSrcPos)    /// @internal source position one destination pixel above
+{
+    geom::Extent2D dSrcA = srcPos - leftSrcPos;
+    geom::Extent2D dSrcB = srcPos - upSrcPos;
+
+    return std::abs(dSrcA.getX() * dSrcB.getY() - dSrcA.getY() * dSrcB.getX());
+}
+
+/**
+ * @internal
+ * @param destImage remapped %image
+ * @param srcImage source %image
+ * @param computeSrcPos Functor to compute source position called with dest row, column; returns
+ *                      source position (as a Point2D)
+ * @param control warping parameters
+ * @param padValue value to use for undefined pixels
+ */
+template <typename DestImageT, typename SrcImageT>
+int doWarpImage(DestImageT &destImage, SrcImageT const &srcImage,
+                detail::PositionFunctor const &computeSrcPos, WarpingControl const &control,
+                typename DestImageT::SinglePixel padValue) {
+    if (details::isSameObject(destImage, srcImage)) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destImage is srcImage; cannot warp in place");
     }
-
-
-    inline double computeRelativeArea(
-            afwGeom::Point2D const &srcPos,     /// source position at desired destination pixel
-            afwGeom::Point2D const &leftSrcPos, /// source position one destination pixel to the left
-            afwGeom::Point2D const &upSrcPos)   /// source position one destination pixel above
-    {
-        afwGeom::Extent2D dSrcA = srcPos - leftSrcPos;
-        afwGeom::Extent2D dSrcB = srcPos - upSrcPos;
-
-        return std::abs(dSrcA.getX()*dSrcB.getY() - dSrcA.getY()*dSrcB.getX());
+    if (destImage.getBBox(image::LOCAL).isEmpty()) {
+        return 0;
     }
-
-    template<typename DestImageT, typename SrcImageT>
-    int doWarpImage(
-        DestImageT &destImage,                      ///< remapped %image
-        SrcImageT const &srcImage,                  ///< source %image
-        afwMath::detail::PositionFunctor const &computeSrcPos,   ///< Functor to compute source position
-            ///< called with dest row, column; returns source position (as a Point2D)
-        afwMath::WarpingControl const &control,     ///< warping parameters
-        typename DestImageT::SinglePixel padValue   ///< value to use for undefined pixels
-    ) {
-        if (afwMath::details::isSameObject(destImage, srcImage)) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
-                "destImage is srcImage; cannot warp in place");
+    // if src image is too small then don't try to warp
+    try {
+        std::shared_ptr<SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
+        warpingKernelPtr->shrinkBBox(srcImage.getBBox(image::LOCAL));
+    } catch (...) {
+        for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
+            for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
+                 destPtr != end; ++destPtr) {
+                *destPtr = padValue;
+            }
         }
-        if (destImage.getBBox(afwImage::LOCAL).isEmpty()) {
-            return 0;
+        return 0;
+    }
+    std::shared_ptr<SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
+    int interpLength = control.getInterpLength();
+
+    std::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
+            std::dynamic_pointer_cast<LanczosWarpingKernel>(warpingKernelPtr);
+
+    int numGoodPixels = 0;
+
+    // Get the source MaskedImage and a pixel accessor to it.
+    int const srcWidth = srcImage.getWidth();
+    int const srcHeight = srcImage.getHeight();
+    LOGL_DEBUG("TRACE2.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+
+    int const destWidth = destImage.getWidth();
+    int const destHeight = destImage.getHeight();
+
+    LOGL_DEBUG("TRACE2.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+
+    // Set each pixel of destExposure's MaskedImage
+    LOGL_DEBUG("TRACE3.afw.math.warp", "Remapping masked image");
+
+    // A cache of pixel positions on the source corresponding to the previous or current row
+    // of the destination image.
+    // The first value is for column -1 because the previous source position is used to compute relative area
+    // To simplify the indexing, use an iterator that starts at begin+1, thus:
+    // srcPosView = _srcPosList.begin() + 1
+    // srcPosView[col-1] and lower indices are for this row
+    // srcPosView[col] and higher indices are for the previous row
+    std::vector<geom::Point2D> _srcPosList(1 + destWidth);
+    std::vector<geom::Point2D>::iterator const srcPosView = _srcPosList.begin() + 1;
+
+    int const maxCol = destWidth - 1;
+    int const maxRow = destHeight - 1;
+
+    detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
+
+    if (interpLength > 0) {
+        // Use interpolation. Note that 1 produces the same result as no interpolation
+        // but uses this code branch, thus providing an easy way to compare the two branches.
+
+        // Estimate for number of horizontal interpolation band edges, to reserve memory in vectors
+        int const numColEdges = 2 + ((destWidth - 1) / interpLength);
+
+        // A list of edge column indices for interpolation bands;
+        // starts at -1, increments by interpLen (except the final interval), and ends at destWidth-1
+        std::vector<int> edgeColList;
+        edgeColList.reserve(numColEdges);
+
+        // A list of 1/column width for horizontal interpolation bands; the first value is garbage.
+        // The inverse is used for speed because the values is always multiplied.
+        std::vector<double> invWidthList;
+        invWidthList.reserve(numColEdges);
+
+        // Compute edgeColList and invWidthList
+        edgeColList.push_back(-1);
+        invWidthList.push_back(0.0);
+        for (int prevEndCol = -1; prevEndCol < maxCol; prevEndCol += interpLength) {
+            int endCol = prevEndCol + interpLength;
+            if (endCol > maxCol) {
+                endCol = maxCol;
+            }
+            edgeColList.push_back(endCol);
+            assert(endCol - prevEndCol > 0);
+            invWidthList.push_back(1.0 / static_cast<double>(endCol - prevEndCol));
         }
-        // if src image is too small then don't try to warp
-        try {
-            PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
-            warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
-        } catch(...) {
-            for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
-                for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
-                    destPtr != end; ++destPtr) {
-                    *destPtr = padValue;
-                }
+        assert(edgeColList.back() == maxCol);
+
+        // A list of delta source positions along the edge columns of the horizontal interpolation bands
+        std::vector<geom::Extent2D> yDeltaSrcPosList(edgeColList.size());
+
+        // Initialize _srcPosList for row -1
+        // srcPosView[-1] = computeSrcPos(-1, -1, destXY0, destWcs, srcWcs);
+        srcPosView[-1] = computeSrcPos(-1, -1);
+        for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+            int const prevEndCol = edgeColList[colBand - 1];
+            int const endCol = edgeColList[colBand];
+            geom::Point2D leftSrcPos = srcPosView[prevEndCol];
+            geom::Point2D rightSrcPos = computeSrcPos(endCol, -1);
+            geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
+
+            for (int col = prevEndCol + 1; col <= endCol; ++col) {
+                srcPosView[col] = srcPosView[col - 1] + xDeltaSrcPos;
             }
-            return 0;
         }
-        PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
-        int interpLength = control.getInterpLength();
 
-        std::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
-            std::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(warpingKernelPtr);
+        int endRow = -1;
+        while (endRow < maxRow) {
+            // Next horizontal interpolation band
 
-
-        int numGoodPixels = 0;
-
-        // Get the source MaskedImage and a pixel accessor to it.
-        int const srcWidth = srcImage.getWidth();
-        int const srcHeight = srcImage.getHeight();
-        LOGL_DEBUG("TRACE2.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
-
-        int const destWidth = destImage.getWidth();
-        int const destHeight = destImage.getHeight();
-
-        LOGL_DEBUG("TRACE2.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
-
-        // Set each pixel of destExposure's MaskedImage
-        LOGL_DEBUG("TRACE3.afw.math.warp", "Remapping masked image");
-
-        // A cache of pixel positions on the source corresponding to the previous or current row
-        // of the destination image.
-        // The first value is for column -1 because the previous source position is used to compute relative area
-        // To simplify the indexing, use an iterator that starts at begin+1, thus:
-        // srcPosView = _srcPosList.begin() + 1
-        // srcPosView[col-1] and lower indices are for this row
-        // srcPosView[col] and higher indices are for the previous row
-        std::vector<afwGeom::Point2D> _srcPosList(1 + destWidth);
-        std::vector<afwGeom::Point2D>::iterator const srcPosView = _srcPosList.begin() + 1;
-
-        int const maxCol = destWidth - 1;
-        int const maxRow = destHeight - 1;
-
-        afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
-
-        if (interpLength > 0) {
-            // Use interpolation. Note that 1 produces the same result as no interpolation
-            // but uses this code branch, thus providing an easy way to compare the two branches.
-
-            // Estimate for number of horizontal interpolation band edges, to reserve memory in vectors
-            int const numColEdges = 2 + ((destWidth - 1) / interpLength);
-
-            // A list of edge column indices for interpolation bands;
-            // starts at -1, increments by interpLen (except the final interval), and ends at destWidth-1
-            std::vector<int> edgeColList;
-            edgeColList.reserve(numColEdges);
-
-            // A list of 1/column width for horizontal interpolation bands; the first value is garbage.
-            // The inverse is used for speed because the values is always multiplied.
-            std::vector<double> invWidthList;
-            invWidthList.reserve(numColEdges);
-
-            // Compute edgeColList and invWidthList
-            edgeColList.push_back(-1);
-            invWidthList.push_back(0.0);
-            for (int prevEndCol = -1; prevEndCol < maxCol; prevEndCol += interpLength) {
-                int endCol = prevEndCol + interpLength;
-                if (endCol > maxCol) {
-                    endCol = maxCol;
-                }
-                edgeColList.push_back(endCol);
-                assert(endCol - prevEndCol > 0);
-                invWidthList.push_back(1.0 / static_cast<double>(endCol - prevEndCol));
+            int prevEndRow = endRow;
+            endRow = prevEndRow + interpLength;
+            if (endRow > maxRow) {
+                endRow = maxRow;
             }
-            assert(edgeColList.back() == maxCol);
+            assert(endRow - prevEndRow > 0);
+            double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
 
-            // A list of delta source positions along the edge columns of the horizontal interpolation bands
-            std::vector<afwGeom::Extent2D> yDeltaSrcPosList(edgeColList.size());
-
-            // Initialize _srcPosList for row -1
-            //srcPosView[-1] = computeSrcPos(-1, -1, destXY0, destWcs, srcWcs);
-            srcPosView[-1] = computeSrcPos(-1, -1);
-            for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                int const prevEndCol = edgeColList[colBand-1];
-                int const endCol = edgeColList[colBand];
-                afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
-                afwGeom::Point2D rightSrcPos = computeSrcPos(endCol, -1);
-                afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
-
-                for (int col = prevEndCol + 1; col <= endCol; ++col) {
-                    srcPosView[col] = srcPosView[col-1] + xDeltaSrcPos;
-                }
+            // Set yDeltaSrcPosList for this horizontal interpolation band
+            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                int endCol = edgeColList[colBand];
+                geom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow);
+                yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
             }
 
-            int endRow = -1;
-            while (endRow < maxRow) {
-                // Next horizontal interpolation band
-
-                int prevEndRow = endRow;
-                endRow = prevEndRow + interpLength;
-                if (endRow > maxRow) {
-                    endRow = maxRow;
-                }
-                assert(endRow - prevEndRow > 0);
-                double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
-
-                // Set yDeltaSrcPosList for this horizontal interpolation band
-                for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                    int endCol = edgeColList[colBand];
-                    afwGeom::Point2D bottomSrcPos = computeSrcPos(endCol, endRow);
-                    yDeltaSrcPosList[colBand] = (bottomSrcPos - srcPosView[endCol]) * interpInvHeight;
-                }
-
-                for (int row = prevEndRow + 1; row <= endRow; ++row) {
-                    typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
-                    srcPosView[-1] += yDeltaSrcPosList[0];
-                    for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                        /// Next vertical interpolation band
-
-                        int const prevEndCol = edgeColList[colBand-1];
-                        int const endCol = edgeColList[colBand];
-
-                        // Compute xDeltaSrcPos; remember that srcPosView contains
-                        // positions for this row in prevEndCol and smaller indices,
-                        // and positions for the previous row for larger indices (including endCol)
-                        afwGeom::Point2D leftSrcPos = srcPosView[prevEndCol];
-                        afwGeom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
-                        afwGeom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
-
-                        for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
-                            afwGeom::Point2D leftSrcPos = srcPosView[col-1];
-                            afwGeom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
-                            double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
-
-                            srcPosView[col] = srcPos;
-
-                            if (warpAtOnePoint(destXIter, srcPos, relativeArea,
-                                typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
-                                ++numGoodPixels;
-                            }
-                        } // for col
-                    }   // for col band
-                }   // for row
-            }   // while next row band
-
-
-        } else {
-            // No interpolation
-
-            // initialize _srcPosList for row -1;
-            // the first value is not needed, but it's safer to compute it
-            std::vector<afwGeom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
-            for (int col = -1; col < destWidth; ++col) {
-                srcPosView[col] = computeSrcPos(col, -1);
-            }
-
-            for (int row = 0; row < destHeight; ++row) {
+            for (int row = prevEndRow + 1; row <= endRow; ++row) {
                 typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+                srcPosView[-1] += yDeltaSrcPosList[0];
+                for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                    // Next vertical interpolation band
 
-                srcPosView[-1] = computeSrcPos(-1, row);
+                    int const prevEndCol = edgeColList[colBand - 1];
+                    int const endCol = edgeColList[colBand];
 
-                for (int col = 0; col < destWidth; ++col, ++destXIter) {
-                    afwGeom::Point2D srcPos = computeSrcPos(col, row);
-                    double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
-                    srcPosView[col] = srcPos;
+                    // Compute xDeltaSrcPos; remember that srcPosView contains
+                    // positions for this row in prevEndCol and smaller indices,
+                    // and positions for the previous row for larger indices (including endCol)
+                    geom::Point2D leftSrcPos = srcPosView[prevEndCol];
+                    geom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
+                    geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
 
-                    if (warpAtOnePoint(destXIter, srcPos, relativeArea,
-                        typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
-                        ++numGoodPixels;
-                    }
-                }   // for col
-            }   // for row
-        } // if interp
+                    for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
+                        geom::Point2D leftSrcPos = srcPosView[col - 1];
+                        geom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
+                        double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
 
-        return numGoodPixels;
-    }
+                        srcPosView[col] = srcPos;
 
-} // namespace
+                        if (warpAtOnePoint(
+                                    destXIter, srcPos, relativeArea,
+                                    typename image::detail::image_traits<DestImageT>::image_category())) {
+                            ++numGoodPixels;
+                        }
+                    }  // for col
+                }      // for col band
+            }          // for row
+        }              // while next row band
 
-template<typename DestImageT, typename SrcImageT>
-int afwMath::warpImage(
-    DestImageT &destImage,
-    lsst::afw::image::Wcs const &destWcs,
-    SrcImageT const &srcImage,
-    lsst::afw::image::Wcs const &srcWcs,
-    afwMath::WarpingControl const &control,
-    typename DestImageT::SinglePixel padValue
-) {
-    afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwImage::XYTransformFromWcsPair xyTransform{destWcs.clone(), srcWcs.clone()};
-    afwMath::detail::XYTransformPositionFunctor const computeSrcPos{destXY0, xyTransform};
+    } else {
+        // No interpolation
+
+        // initialize _srcPosList for row -1;
+        // the first value is not needed, but it's safer to compute it
+        std::vector<geom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
+        for (int col = -1; col < destWidth; ++col) {
+            srcPosView[col] = computeSrcPos(col, -1);
+        }
+
+        for (int row = 0; row < destHeight; ++row) {
+            typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+
+            srcPosView[-1] = computeSrcPos(-1, row);
+
+            for (int col = 0; col < destWidth; ++col, ++destXIter) {
+                geom::Point2D srcPos = computeSrcPos(col, row);
+                double relativeArea = computeRelativeArea(srcPos, srcPosView[col - 1], srcPosView[col]);
+                srcPosView[col] = srcPos;
+
+                if (warpAtOnePoint(destXIter, srcPos, relativeArea,
+                                   typename image::detail::image_traits<DestImageT>::image_category())) {
+                    ++numGoodPixels;
+                }
+            }  // for col
+        }      // for row
+    }          // if interp
+
+    return numGoodPixels;
+}
+
+}  // namespace
+
+template <typename DestImageT, typename SrcImageT>
+int warpImage(DestImageT &destImage, image::Wcs const &destWcs, SrcImageT const &srcImage,
+              image::Wcs const &srcWcs, WarpingControl const &control,
+              typename DestImageT::SinglePixel padValue) {
+    geom::Point2D const destXY0(destImage.getXY0());
+    image::XYTransformFromWcsPair xyTransform{destWcs.clone(), srcWcs.clone()};
+    detail::XYTransformPositionFunctor const computeSrcPos{destXY0, xyTransform};
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
-
-template<typename DestImageT, typename SrcImageT>
-int afwMath::warpImage(
-    DestImageT &destImage,
-    SrcImageT const &srcImage,
-    afwGeom::XYTransform const &xyTransform,
-    afwMath::WarpingControl const &control,
-    typename DestImageT::SinglePixel padValue
-) {
-    afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::XYTransformPositionFunctor const computeSrcPos(destXY0, xyTransform);
+template <typename DestImageT, typename SrcImageT>
+int warpImage(DestImageT &destImage, SrcImageT const &srcImage, geom::XYTransform const &xyTransform,
+              WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
+    geom::Point2D const destXY0(destImage.getXY0());
+    detail::XYTransformPositionFunctor const computeSrcPos(destXY0, xyTransform);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
-
-template<typename DestImageT, typename SrcImageT>
-int afwMath::warpCenteredImage(
-    DestImageT &destImage,
-    SrcImageT const &srcImage,
-    afwGeom::LinearTransform const &linearTransform,
-    afwGeom::Point2D const &centerPosition,
-    afwMath::WarpingControl const &control,
-    typename DestImageT::SinglePixel padValue
-) {
+template <typename DestImageT, typename SrcImageT>
+int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
+                      geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,
+                      WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
     // force src and dest to be the same size and xy0
-    if (
-        (destImage.getWidth() != srcImage.getWidth()) ||
-        (destImage.getHeight() != srcImage.getHeight()) ||
-        (destImage.getXY0() != srcImage.getXY0())
-       ) {
+    if ((destImage.getWidth() != srcImage.getWidth()) || (destImage.getHeight() != srcImage.getHeight()) ||
+        (destImage.getXY0() != srcImage.getXY0())) {
         std::ostringstream errStream;
         errStream << "src and dest images must have same size and xy0.";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, errStream.str());
@@ -584,15 +509,15 @@ int afwMath::warpCenteredImage(
     SrcImageT srcImageCopy(srcImage, true);
     srcImageCopy.setXY0(0, 0);
     destImage.setXY0(0, 0);
-    afwGeom::Extent2D cLocal = afwGeom::Extent2D(centerPosition) - afwGeom::Extent2D(srcImage.getXY0());
+    geom::Extent2D cLocal = geom::Extent2D(centerPosition) - geom::Extent2D(srcImage.getXY0());
 
     // for the affine transform, the centerPosition will not only get sheared, but also
     // moved slightly.  So we'll include a translation to move it back by an amount
     // centerPosition - translatedCenterPosition
-    afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
-    afwGeom::AffineXYTransform affXYTransform(affTran);
+    geom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
+    geom::AffineXYTransform affXYTransform(affTran);
 
-    // now warp
+// now warp
 #if 0
     static float t = 0.0;
     float t_before = 1.0*clock()/CLOCKS_PER_SEC;
@@ -611,66 +536,42 @@ int afwMath::warpCenteredImage(
     return n;
 }
 
-
 //
 // Explicit instantiations
 //
-/// \cond
+/// @cond
 // may need to omit default params for EXPOSURE -- original code did that and it worked
-#define EXPOSURE(PIXTYPE) afwImage::Exposure<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
-#define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
-#define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
+#define EXPOSURE(PIXTYPE) image::Exposure<PIXTYPE, image::MaskPixel, image::VariancePixel>
+#define MASKEDIMAGE(PIXTYPE) image::MaskedImage<PIXTYPE, image::MaskPixel, image::VariancePixel>
+#define IMAGE(PIXTYPE) image::Image<PIXTYPE>
 #define NL /* */
 
-#define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
-    template int afwMath::warpCenteredImage( \
-        IMAGE(DESTIMAGEPIXELT) &destImage, \
-        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwGeom::LinearTransform const &linearTransform, \
-        afwGeom::Point2D const &centerPosition, \
-        afwMath::WarpingControl const &control, \
-        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
-    template int afwMath::warpCenteredImage( \
-        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
-        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwGeom::LinearTransform const &linearTransform, \
-        afwGeom::Point2D const &centerPosition, \
-        afwMath::WarpingControl const &control, \
-        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
-    template int afwMath::warpImage( \
-        IMAGE(DESTIMAGEPIXELT) &destImage, \
-        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwGeom::XYTransform const &xyTransform, \
-        afwMath::WarpingControl const &control, \
-        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
-    template int afwMath::warpImage( \
-        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
-        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwGeom::XYTransform const &xyTransform, \
-        afwMath::WarpingControl const &control, \
-        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
-    template int afwMath::warpImage( \
-        IMAGE(DESTIMAGEPIXELT) &destImage, \
-        afwImage::Wcs const &destWcs, \
-        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwImage::Wcs const &srcWcs, \
-        afwMath::WarpingControl const &control, \
-        IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
-    template int afwMath::warpImage( \
-        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
-        afwImage::Wcs const &destWcs, \
-        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwImage::Wcs const &srcWcs, \
-        afwMath::WarpingControl const &control, \
-        MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
-    template int afwMath::warpExposure( \
-        EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
-        EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        afwMath::WarpingControl const &control,\
-        EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue);
-
-
-
+#define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT)                                                         \
+    template int warpCenteredImage(                                                                          \
+            IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,                       \
+            geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,               \
+            WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                    \
+    NL template int warpCenteredImage(                                                                       \
+            MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,           \
+            geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,               \
+            WarpingControl const &control, MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);              \
+    NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,     \
+                              geom::XYTransform const &xyTransform, WarpingControl const &control,           \
+                              IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                                 \
+    NL template int warpImage(MASKEDIMAGE(DESTIMAGEPIXELT) & destImage,                                      \
+                              MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,                                   \
+                              geom::XYTransform const &xyTransform, WarpingControl const &control,           \
+                              MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
+    NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, image::Wcs const &destWcs,                 \
+                              IMAGE(SRCIMAGEPIXELT) const &srcImage, image::Wcs const &srcWcs,               \
+                              WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);  \
+    NL template int warpImage(MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, image::Wcs const &destWcs,           \
+                              MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, image::Wcs const &srcWcs,         \
+                              WarpingControl const &control,                                                 \
+                              MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
+    NL template int warpExposure(EXPOSURE(DESTIMAGEPIXELT) & destExposure,                                   \
+                                 EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, WarpingControl const &control, \
+                                 EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue);
 
 INSTANTIATE(double, double)
 INSTANTIATE(double, float)
@@ -681,4 +582,7 @@ INSTANTIATE(float, int)
 INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
-/// \endcond
+/// @endcond
+}
+}
+}  // end math

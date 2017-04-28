@@ -55,7 +55,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.val = 10
-        self.image = afwImage.ImageF(afwGeom.Box2I(afwGeom.Point2I(1000, 500), afwGeom.Extent2I(100, 200)))
+        self.image = afwImage.ImageF(afwGeom.Box2I(
+            afwGeom.Point2I(1000, 500), afwGeom.Extent2I(100, 200)))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -107,7 +108,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
     def testBackgroundTestImages(self):
         """Tests Laher's afwdata/Statistics/*.fits images (doubles)"""
         imginfolist = []
-        imginfolist.append(["v1_i1_g_m400_s20_f.fits", 399.9912966583894])  # cooked to known value
+        # cooked to known value
+        imginfolist.append(["v1_i1_g_m400_s20_f.fits", 399.9912966583894])
 
         for imginfo in imginfolist:
             imgfile, centerValue = imginfo
@@ -129,10 +131,12 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             bctrl.setNxSample(5)
             bctrl.setNySample(5)
 
-            # run the background constructor and call the getPixel() and getImage() functions.
+            # run the background constructor and call the getPixel() and
+            # getImage() functions.
             backobj = afwMath.makeBackground(img, bctrl)
 
-            pixPerSubimage = img.getWidth()*img.getHeight()/(bctrl.getNxSample()*bctrl.getNySample())
+            pixPerSubimage = img.getWidth()*img.getHeight() / \
+                (bctrl.getNxSample()*bctrl.getNySample())
             stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
 
             # test getPixel()
@@ -147,7 +151,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
     def testRamp(self):
         """tests Laher's afwdata/Statistics/*.fits images (doubles)"""
-        # make a ramping image (spline should be exact for linear increasing image
+        # make a ramping image (spline should be exact for linear increasing
+        # image
         nx = 512
         ny = 512
         x0, y0 = 9876, 54321
@@ -163,7 +168,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(6)
         bctrl.setNySample(6)
-        bctrl.getStatisticsControl().setNumSigmaClip(20.0)  # large enough to entirely avoid clipping
+        # large enough to entirely avoid clipping
+        bctrl.getStatisticsControl().setNumSigmaClip(20.0)
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(rampimg, bctrl)
 
@@ -200,7 +206,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertBackgroundEqual(backobj, new)
 
         # Check creation of sub-image
-        box = afwGeom.Box2I(afwGeom.Point2I(123, 45), afwGeom.Extent2I(45, 123))
+        box = afwGeom.Box2I(afwGeom.Point2I(123, 45),
+                            afwGeom.Extent2I(45, 123))
         box.shift(afwGeom.Extent2I(x0, y0))
         bgImage = backobj.getImageF("AKIMA_SPLINE")
         bgSubImage = afwImage.ImageF(bgImage, box)
@@ -210,18 +217,21 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertImagesEqual(testImage, bgSubImage)
 
     def getParabolaImage(self, nx, ny, pars=(1.0e-4, 1.0e-4, 0.1, 0.2, 10.0)):
-        """Make sure a quadratic map is *well* reproduced by the spline model"""
+        """Make sure a quadratic map is *well* reproduced by the spline model
+        """
         parabimg = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = pars  # no cross-terms
         for x in range(nx):
             for y in range(ny):
-                parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
+                parabimg.set(x, y, d2zdx2*x*x + d2zdy2 *
+                             y*y + dzdx*x + dzdy*y + z0)
         return parabimg
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testTicket987(self):
         """This code used to abort; so the test is that it doesn't"""
-        imagePath = os.path.join(AfwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
+        imagePath = os.path.join(
+            AfwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
         mimg = afwImage.MaskedImageF(imagePath)
         binsize = 512
         bctrl = afwMath.BackgroundControl("NATURAL_SPLINE")
@@ -282,10 +292,12 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testCFHT_oldAPI(self):
         """Test background subtraction on some real CFHT data"""
-        mi = afwImage.MaskedImageF(os.path.join(AfwdataDir,
-                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
-        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2),
-                                          afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
+        mi = afwImage.MaskedImageF(os.path.join(
+            AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits"))
+        mi = mi.Factory(mi,
+                        afwGeom.Box2I(afwGeom.Point2I(32, 2),
+                                      afwGeom.Point2I(2079, 4609)),
+                        afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bctrl.setNxSample(16)
@@ -305,8 +317,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
     def getCfhtImage(self):
         """Get a portion of a CFHT image as a MaskedImageF"""
-        bbox = afwGeom.Box2I(afwGeom.Point2I(500, 2000), afwGeom.Point2I(2079, 4609))
-        imagePath = os.path.join(AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+        bbox = afwGeom.Box2I(afwGeom.Point2I(500, 2000),
+                             afwGeom.Point2I(2079, 4609))
+        imagePath = os.path.join(
+            AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
         return afwImage.MaskedImageF(imagePath, PropertySet(), bbox)
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
@@ -317,11 +331,14 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """
         bgImageList = []  # list of background images, one per xy0
         statsImageList = []  # list of stats images, one per xy0
-        for xy0 in (afwGeom.Point2I(0, 0), afwGeom.Point2I(-100, -999), afwGeom.Point2I(1000, 500)):
+        for xy0 in (afwGeom.Point2I(0, 0),
+                    afwGeom.Point2I(-100, -999),
+                    afwGeom.Point2I(1000, 500)):
             mi = self.getCfhtImage()
             mi.setXY0(xy0)
 
-            bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
+            bctrl = afwMath.BackgroundControl(
+                mi.getWidth()//128, mi.getHeight()//128)
             backobj = afwMath.makeBackground(mi.getImage(), bctrl)
             bgImage = backobj.getImageF()
             self.assertEqual(bgImage.getBBox(), mi.getBBox())
@@ -345,9 +362,11 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """
         mi = self.getCfhtImage()
 
-        bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
+        bctrl = afwMath.BackgroundControl(
+            mi.getWidth()//128, mi.getHeight()//128)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
-        subBBox = afwGeom.Box2I(afwGeom.Point2I(1000, 3000), afwGeom.Extent2I(100, 100))
+        subBBox = afwGeom.Box2I(afwGeom.Point2I(1000, 3000),
+                                afwGeom.Extent2I(100, 100))
 
         bgFullImage = backobj.getImageF()
         self.assertEqual(bgFullImage.getBBox(), mi.getBBox())
@@ -357,7 +376,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bgSubImage = backobj.getImageF(subBBox, bctrl.getInterpStyle())
         subArr = bgSubImage.getArray()
 
-        # the pixels happen to be identical but it is safer not to rely on that; close is good enough
+        # the pixels happen to be identical but it is safer not to rely on
+        # that; close is good enough
         self.assertFloatsEqual(subArr, subFullArr)
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
@@ -365,7 +385,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """Test background subtraction on some real CFHT data"""
         mi = self.getCfhtImage()
 
-        bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
+        bctrl = afwMath.BackgroundControl(
+            mi.getWidth()//128, mi.getHeight()//128)
         bctrl.getStatisticsControl().setNumSigmaClip(3.0)
         bctrl.getStatisticsControl().setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
@@ -397,20 +418,24 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.setNxSample(3)
         bctrl.setNySample(3)
 
-        # put nx,ny back to 2 and see if it adjusts the interp style down to linear
+        # put nx,ny back to 2 and see if it adjusts the interp style down to
+        # linear
         bctrl.setNxSample(2)
         bctrl.setNySample(2)
         bctrl.setUndersampleStyle("REDUCE_INTERP_ORDER")
         backobj = afwMath.makeBackground(img, bctrl)
-        backobj.getImageF()             # Need to interpolate background to discover what we actually needed
-        self.assertEqual(backobj.getAsUsedInterpStyle(), afwMath.Interpolate.LINEAR)
+        # Need to interpolate background to discover what we actually needed
+        backobj.getImageF()
+        self.assertEqual(backobj.getAsUsedInterpStyle(),
+                         afwMath.Interpolate.LINEAR)
 
         # put interp style back up to cspline and see if it throws an exception
         bctrl.setUndersampleStyle("THROW_EXCEPTION")
 
         def tst(img, bctrl):
             backobj = afwMath.makeBackground(img, bctrl)
-            backobj.getImageF("CUBIC_SPLINE")  # only now do we see that we have too few points
+            # only now do we see that we have too few points
+            backobj.getImageF("CUBIC_SPLINE")
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
                           tst, img, bctrl)
 
@@ -451,13 +476,18 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl = afwMath.BackgroundControl("LINEAR", nx, ny)
         bkd = afwMath.makeBackground(im, bctrl)
 
-        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky)
+        self.assertEqual(
+            afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(),
+            sky)
 
         delta = 123
         bkd += delta
-        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky + delta)
+        self.assertEqual(
+            afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(),
+            sky + delta)
         bkd -= delta
-        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(), sky)
+        self.assertEqual(afwMath.makeStatistics(bkd.getImageF(), afwMath.MEAN).getValue(),
+                         sky)
 
     def testNaNFromMaskedImage(self):
         """Check that an extensively masked image doesn't lead to NaNs in the background estimation"""
@@ -486,16 +516,20 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(np.isnan(bkgdImage.get(0, 0)))
 
         # Check that the non-string API works too
-        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
+        bkgdImage = bkgd.getImageF(
+            afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
 
     def testBadAreaFailsSpline(self):
         """Check that a NaN in the stats image doesn't cause spline interpolation to fail (#2734)"""
         image = afwImage.ImageF(15, 9)
         for y in range(image.getHeight()):
             for x in range(image.getWidth()):
-                image.set(x, y, 1 + 2*y)  # n.b. linear, which is what the interpolation will fall back to
+                # n.b. linear, which is what the interpolation will fall back
+                # to
+                image.set(x, y, 1 + 2*y)
 
-        # Set the right corner to NaN.  This will mean that we have too few points for a spline interpolator
+        # Set the right corner to NaN.  This will mean that we have too few
+        # points for a spline interpolator
         binSize = 3
         image[-binSize:, -binSize:] = np.nan
 
@@ -513,14 +547,17 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertRaises(lsst.pex.exceptions.OutOfRangeError,
                           bkgd.getImageF, afwMath.Interpolate.NATURAL_SPLINE)
         # The interpolation should fall back to linear for the right part of the image
-        # where the NaNs don't permit spline interpolation (n.b. this happens to be exact)
-        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+        # where the NaNs don't permit spline interpolation (n.b. this happens
+        # to be exact)
+        bkgdImage = bkgd.getImageF(
+            afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
         if debugMode:
             ds9.mtv(bkgdImage, frame=2)
 
         image -= bkgdImage
-        self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(), 0.0)
+        self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(),
+                         0.0)
 
     def testBadPatch(self):
         """Test that a large bad patch of an image doesn't cause an absolute failure"""
@@ -531,7 +568,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         im[0:200, :] = np.nan
         del im
         msk = mi.getMask()
-        badBits = msk.getPlaneBitMask(['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
+        badBits = msk.getPlaneBitMask(
+            ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
         msk[0:400, :] |= badBits
         del msk
 
@@ -549,16 +587,21 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(statsImage, frame=1)
 
         # the test is that this doesn't fail if the bug (#2297) is fixed
-        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
-        self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+        bkgdImage = bkgd.getImageF(
+            afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+        self.assertEqual(
+            np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
         if debugMode:
             ds9.mtv(bkgdImage, frame=2)
         # Check that we can fix the NaNs in the statsImage
         sim = statsImage.getImage().getArray()
         sim[np.isnan(sim)] = initialValue  # replace NaN by initialValue
-        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+        bkgdImage = bkgd.getImageF(
+            afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
-        self.assertAlmostEqual(np.mean(bkgdImage[0:100, 0:100].getArray(), dtype=np.float64), initialValue)
+        self.assertAlmostEqual(
+            np.mean(bkgdImage[0:100, 0:100].getArray(), dtype=np.float64),
+            initialValue)
 
     def testBadRows(self):
         """Test that a bad set of rows in an image doesn't cause a failure"""
@@ -569,7 +612,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         im[:, 0:100] = np.nan
         del im
         msk = mi.getMask()
-        badBits = msk.getPlaneBitMask(['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
+        badBits = msk.getPlaneBitMask(
+            ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
         msk[0:400, :] |= badBits
         del msk
 
@@ -590,8 +634,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         for frame, interpStyle in enumerate([afwMath.Interpolate.CONSTANT, afwMath.Interpolate.LINEAR,
                                              afwMath.Interpolate.NATURAL_SPLINE,
                                              afwMath.Interpolate.AKIMA_SPLINE], 2):
-            bkgdImage = bkgd.getImageF(interpStyle, afwMath.REDUCE_INTERP_ORDER)
-            self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+            bkgdImage = bkgd.getImageF(
+                interpStyle, afwMath.REDUCE_INTERP_ORDER)
+            self.assertEqual(
+                np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
             if debugMode:
                 ds9.mtv(bkgdImage, frame=frame)
 
@@ -613,8 +659,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
             for interpStyle in [afwMath.Interpolate.CONSTANT, afwMath.Interpolate.LINEAR,
                                 afwMath.Interpolate.NATURAL_SPLINE, afwMath.Interpolate.AKIMA_SPLINE]:
-                # the test is that this doesn't fail if the bug (#2297) is fixed
-                bkgdImage = bkgd.getImageF(interpStyle, afwMath.REDUCE_INTERP_ORDER)
+                # the test is that this doesn't fail if the bug (#2297) is
+                # fixed
+                bkgdImage = bkgd.getImageF(
+                    interpStyle, afwMath.REDUCE_INTERP_ORDER)
                 val = np.mean(bkgdImage[0:100, 0:100].getArray())
 
                 if np.isfinite(pix00):
@@ -635,7 +683,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(undersampleStyle, bkgd.getAsUsedUndersampleStyle())
 
         # OK, we have our background.  Make a copy
-        bkgd2 = afwMath.BackgroundMI(self.image.getBBox(), bkgd.getStatsImage())
+        bkgd2 = afwMath.BackgroundMI(
+            self.image.getBBox(), bkgd.getStatsImage())
         del bkgd           # we should be handling the memory correctly, but let's check
         bkgdImage2 = bkgd2.getImageF(interpStyle)
 
@@ -660,14 +709,16 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 backgroundList.append((bkgd, interpStyle, undersampleStyle,
                                        approxStyle, approxOrderX, approxOrderY, approxWeighting))
             else:
-                backgroundList.append(bkgd)  # Relies on having called getImage; deprecated
+                # Relies on having called getImage; deprecated
+                backgroundList.append(bkgd)
 
         def assertBackgroundList(bgl):
             self.assertEqual(len(bgl), 2)  # check that len() works
             for a in bgl:                 # check that we can iterate
                 pass
             self.assertEqual(len(bgl[0]), 7)  # check that we can index
-            # check that we always have a tuple (bkgd, interp, under, approxStyle, orderX, orderY, weighting)
+            # check that we always have a tuple (bkgd, interp, under,
+            # approxStyle, orderX, orderY, weighting)
             self.assertEqual(len(bgl[1]), 7)
 
         assertBackgroundList(backgroundList)
@@ -729,7 +780,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             self.assertLess(diff.max(), tolSame)
             self.assertGreater(diff.max(), tolDiff)
 
-            # now see if we can reload them from files and get the same images we wrote
+            # now see if we can reload them from files and get the same images
+            # we wrote
             interpImage2 = afwMath.BackgroundList().readFits(bgiFile).getImage()
             approxImage2 = afwMath.BackgroundList().readFits(bgaFile).getImage()
 
@@ -747,7 +799,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         approxOrderY = 6
         approxWeighting = True
 
-        im = self.image.Factory(self.image, self.image.getBBox(afwImage.PARENT))
+        im = self.image.Factory(
+            self.image, self.image.getBBox(afwImage.PARENT))
         arr = im.getArray()
         arr += np.random.normal(size=(im.getHeight(), im.getWidth()))
 
@@ -764,7 +817,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                     backgroundList.append((bkgd, interpStyle, undersampleStyle,
                                            astyle, approxOrderX, approxOrderY, approxWeighting))
                 else:
-                    backgroundList.append(bkgd)  # Relies on having called getImage; deprecated
+                    # Relies on having called getImage; deprecated
+                    backgroundList.append(bkgd)
 
                 backImage += bkgd.getImageF(interpStyle, undersampleStyle)
 

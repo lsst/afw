@@ -58,7 +58,8 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
         for i in range(0, self.n, 1):
             self.x[i] = i
             self.y1[i] = self.dydx*self.x[i] + self.y0
-            self.y2[i] = self.d2ydx2*self.x[i]*self.x[i] + self.dydx*self.x[i] + self.y0
+            self.y2[i] = self.d2ydx2*self.x[i] * \
+                self.x[i] + self.dydx*self.x[i] + self.y0
 
         self.xtest = 4.5
         self.y1test = self.dydx*self.xtest + self.y0
@@ -82,7 +83,8 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
 
         # === test the Spline interpolator =======================
         # specify interp type with the string interface
-        yinterpS = afwMath.makeInterpolate(self.x, self.y1, afwMath.Interpolate.NATURAL_SPLINE)
+        yinterpS = afwMath.makeInterpolate(
+            self.x, self.y1, afwMath.Interpolate.NATURAL_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
 
         self.assertEqual(youtS, self.y1test)
@@ -90,7 +92,8 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
     def testAkimaSplineParabola(self):
         """test the Spline interpolator"""
         # specify interp type with the enum style interface
-        yinterpS = afwMath.makeInterpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
+        yinterpS = afwMath.makeInterpolate(
+            self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
 
         self.assertEqual(youtS, self.y2test)
@@ -100,11 +103,15 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
         # [xy]vec:   point samples
         # [xy]vec_c: centered values
         xvec = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-        xvec_c = np.array([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
-        yvec = np.array([1.0, 2.4, 5.0, 8.4, 13.0, 18.4, 25.0, 32.6, 41.0, 50.6])
-        yvec_c = np.array([1.0, 1.7, 3.7, 6.7, 10.7, 15.7, 21.7, 28.8, 36.8, 45.8, 50.6])
+        xvec_c = np.array(
+            [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
+        yvec = np.array([1.0, 2.4, 5.0, 8.4, 13.0,
+                         18.4, 25.0, 32.6, 41.0, 50.6])
+        yvec_c = np.array([1.0, 1.7, 3.7, 6.7, 10.7, 15.7,
+                           21.7, 28.8, 36.8, 45.8, 50.6])
 
-        interp = afwMath.makeInterpolate(xvec, yvec, afwMath.Interpolate.CONSTANT)
+        interp = afwMath.makeInterpolate(
+            xvec, yvec, afwMath.Interpolate.CONSTANT)
 
         for x, y in zip(xvec_c, yvec_c):
             self.assertAlmostEqual(interp.interpolate(x + 0.1), y)
@@ -114,7 +121,8 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
         n = len(yvec)
         self.assertEqual(interp.interpolate(xvec[n - 1] + 10), yvec[n - 1])
 
-        for x, y in reversed(list(zip(xvec_c, yvec_c))):  # test caching as we go backwards
+        # test caching as we go backwards
+        for x, y in reversed(list(zip(xvec_c, yvec_c))):
             self.assertAlmostEqual(interp.interpolate(x + 0.1), y)
             self.assertAlmostEqual(interp.interpolate(x), y)
 
@@ -143,6 +151,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

@@ -26,22 +26,22 @@
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst {
+namespace afw {
+namespace table {
 
 /**
- *  @brief A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
+ *  A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
  *
  *  ArrayKey operates on the convention that arrays are defined by a set of contiguous scalar fields
  *  (i.e. added to the Schema in order, with no interruption) of the same type, with a common field
  *  name prefix and "_0", "_1" etc. suffixes.
  */
 template <typename T>
-class ArrayKey : public FunctorKey< ndarray::Array<T const,1,1> >,
-                 public ReferenceFunctorKey< ndarray::ArrayRef<T,1,1> >,
-                 public ConstReferenceFunctorKey< ndarray::ArrayRef<T const,1,1> >
-{
+class ArrayKey : public FunctorKey<ndarray::Array<T const, 1, 1> >,
+                 public ReferenceFunctorKey<ndarray::ArrayRef<T, 1, 1> >,
+                 public ConstReferenceFunctorKey<ndarray::ArrayRef<T const, 1, 1> > {
 public:
-
     /**
      *  Add an array of fields to a Schema, and return an ArrayKey that points to them.
      *
@@ -56,13 +56,8 @@ public:
      *  @param[in]     docData Vector of values substituted into the doc fields.  The length of the vector
      *                         determines the number of fields added.
      */
-    static ArrayKey addFields(
-        Schema & schema,
-        std::string const & name,
-        std::string const & doc,
-        std::string const & unit,
-        std::vector<T> const & docData
-    );
+    static ArrayKey addFields(Schema& schema, std::string const& name, std::string const& doc,
+                              std::string const& unit, std::vector<T> const& docData);
 
     /**
      *  Add an array of fields to a Schema, and return an ArrayKey that points to them.
@@ -74,19 +69,14 @@ public:
      *  @param[in]     unit    String used as the unit for all fields.
      *  @param[in]     size    Number of fields to add.
      */
-    static ArrayKey addFields(
-        Schema & schema,
-        std::string const & name,
-        std::string const & doc,
-        std::string const & unit,
-        int size
-    );
+    static ArrayKey addFields(Schema& schema, std::string const& name, std::string const& doc,
+                              std::string const& unit, int size);
 
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
     ArrayKey() : _begin() {}
 
     /// Construct from a vector of scalar Keys
-    explicit ArrayKey(std::vector< Key<T> > const & keys);
+    explicit ArrayKey(std::vector<Key<T> > const& keys);
 
     /**
      *  Construct from a compound Key< Array<T> >
@@ -94,40 +84,37 @@ public:
      *  Key< Array<T> > is now deprecated in favor of ArrayKey; this factory function is intended to
      *  aid in the transition.
      */
-    explicit ArrayKey(Key< Array<T> > const & other);
+    explicit ArrayKey(Key<Array<T> > const& other);
 
     /**
-     *  @brief Construct from a subschema, assuming *_0, *_1, *_2, etc. subfields
+     *  Construct from a subschema, assuming *_0, *_1, *_2, etc. subfields
      *
      *  If a schema has "a_0", "a_1", and "a_2" fields, this constructor allows you to construct
      *  a 3-element ArrayKey via:
-     *  @code
-     *  ArrayKey<T> k(schema["a"]);
-     *  @endcode
+     *
+     *      ArrayKey<T> k(schema["a"]);
      */
-    ArrayKey(SubSchema const & s);
+    ArrayKey(SubSchema const& s);
 
     /// Return the number of elements in the array.
     int getSize() const { return _size; }
 
     /// Get an array from the given record
-    virtual ndarray::Array<T const,1,1> get(BaseRecord const & record) const;
+    virtual ndarray::Array<T const, 1, 1> get(BaseRecord const& record) const;
 
     /// Set an array in the given record
-    virtual void set(BaseRecord & record, ndarray::Array<T const,1,1> const & value) const;
+    virtual void set(BaseRecord& record, ndarray::Array<T const, 1, 1> const& value) const;
 
     /// Get non-const reference array from the given record
-    virtual ndarray::ArrayRef<T,1,1> getReference(BaseRecord & record) const;
+    virtual ndarray::ArrayRef<T, 1, 1> getReference(BaseRecord& record) const;
 
     /// Get const reference array from the given record
-    virtual ndarray::ArrayRef<T const,1,1> getConstReference(BaseRecord const & record) const;
+    virtual ndarray::ArrayRef<T const, 1, 1> getConstReference(BaseRecord const& record) const;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying scalar Keys
-    bool operator==(ArrayKey<T> const & other) const {
-        return other._begin == _begin && other._size == _size;
-    }
-    bool operator!=(ArrayKey<T> const & other) const { return !operator==(other); }
+    bool operator==(ArrayKey<T> const& other) const { return other._begin == _begin && other._size == _size; }
+    bool operator!=(ArrayKey<T> const& other) const { return !operator==(other); }
     //@}
 
     /// Return True if the FunctorKey contains valid scalar keys.
@@ -136,17 +123,17 @@ public:
     /// Return a scalar Key for an element of the array
     Key<T> operator[](int i) const;
 
-    /// @brief Return a FunctorKey corresponding to a range of elements
+    /// Return a FunctorKey corresponding to a range of elements
     ArrayKey slice(int begin, int end) const;
 
 private:
-
-    ArrayKey(Key<T> const & begin, int size) : _begin(begin), _size(size) {}
+    ArrayKey(Key<T> const& begin, int size) : _begin(begin), _size(size) {}
 
     Key<T> _begin;
     int _size;
 };
+}
+}
+}  // namespace lsst::afw::table
 
-}}} // namespace lsst::afw::table
-
-#endif // !AFW_TABLE_arrays_h_INCLUDED
+#endif  // !AFW_TABLE_arrays_h_INCLUDED

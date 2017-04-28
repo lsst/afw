@@ -24,7 +24,8 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
                     continue
                 predStop = start + numPix - 1  # for integer steps
                 for stop in (None, predStop):
-                    rampImage = makeRampImage(bbox=box, start=start, stop=predStop, imageClass=imageClass)
+                    rampImage = makeRampImage(
+                        bbox=box, start=start, stop=predStop, imageClass=imageClass)
                     predArr = np.arange(start, predStop+1)
                     self.assertEqual(len(predArr), numPix)
                     predArr.shape = (dim[1], dim[0])
@@ -41,9 +42,11 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
                 if imageClass == afwImage.ImageU and start < 0:
                     continue
                 for stop in (7, 1001.5, 5.4):
-                    rampImage = makeRampImage(bbox=box, start=start, stop=stop, imageClass=imageClass)
+                    rampImage = makeRampImage(
+                        bbox=box, start=start, stop=stop, imageClass=imageClass)
                     dtype = rampImage.getArray().dtype
-                    predArr = np.linspace(start, stop, num=numPix, endpoint=True, dtype=dtype)
+                    predArr = np.linspace(
+                        start, stop, num=numPix, endpoint=True, dtype=dtype)
                     predArr.shape = (dim[1], dim[0])
                     self.assertImagesAlmostEqual(rampImage, predArr)
 

@@ -56,11 +56,14 @@ class StatisticsTestCase(unittest.TestCase):
                                    afwGeom.Point2I(self.nRow - 1, self.nCol - 1))
 
         # create masked images and set the left side to valL, and right to valR
-        self.mimg = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
+        self.mimg = afwImage.MaskedImageF(
+            afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimg.set(0.0, 0x0, 0.0)
-        self.mimgL = afwImage.MaskedImageF(self.mimg, self.bboxL, afwImage.LOCAL)
+        self.mimgL = afwImage.MaskedImageF(
+            self.mimg, self.bboxL, afwImage.LOCAL)
         self.mimgL.set(self.valL, 0x0, self.valL)
-        self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR, afwImage.LOCAL)
+        self.mimgR = afwImage.MaskedImageF(
+            self.mimg, self.bboxR, afwImage.LOCAL)
         self.mimgR.set(self.valR, 0x0, self.valR)
 
     def tearDown(self):
@@ -75,10 +78,13 @@ class StatisticsTestCase(unittest.TestCase):
     def testNaN(self):
 
         # get the stats for the image with two values
-        stats = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
+        stats = afwMath.makeStatistics(
+            self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = 0.5*(self.valL + self.valR)
-        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
-        stdev = ((nL*(self.valL - mean)**2 + nR*(self.valR - mean)**2)/(nL + nR - 1))**0.5
+        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth() * \
+            self.mimgR.getHeight()
+        stdev = ((nL*(self.valL - mean)**2 + nR *
+                  (self.valR - mean)**2)/(nL + nR - 1))**0.5
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
         self.assertEqual(stats.getValue(afwMath.MEAN), mean)
@@ -87,7 +93,8 @@ class StatisticsTestCase(unittest.TestCase):
         # set the right side to NaN and stats should be just for the left side
         self.mimgR.set(np.nan, 0x0, self.valR)
 
-        statsNaN = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
+        statsNaN = afwMath.makeStatistics(
+            self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = self.valL
         stdev = 0.0
         self.assertEqual(statsNaN.getValue(afwMath.NPOINT), nL)
@@ -102,10 +109,13 @@ class StatisticsTestCase(unittest.TestCase):
 
         # get the stats for the image with two values
         self.mimgR.set(self.valR, 0x0, self.valR)
-        stats = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
+        stats = afwMath.makeStatistics(
+            self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = 0.5*(self.valL + self.valR)
-        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
-        stdev = ((nL*(self.valL - mean)**2 + nR*(self.valR - mean)**2)/(nL + nR - 1))**0.5
+        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth() * \
+            self.mimgR.getHeight()
+        stdev = ((nL*(self.valL - mean)**2 + nR *
+                  (self.valR - mean)**2)/(nL + nR - 1))**0.5
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
         self.assertEqual(stats.getValue(afwMath.MEAN), mean)
@@ -118,7 +128,8 @@ class StatisticsTestCase(unittest.TestCase):
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(maskBit)
-        statsNaN = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
+        statsNaN = afwMath.makeStatistics(
+            self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
 
         mean = self.valL
         stdev = 0.0
@@ -135,8 +146,10 @@ class StatisticsTestCase(unittest.TestCase):
         self.mimgR.set(self.valR, 0x0, self.valR)
         sctrl = afwMath.StatisticsControl()
         sctrl.setWeighted(True)
-        stats = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
-        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
+        stats = afwMath.makeStatistics(
+            self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
+        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth() * \
+            self.mimgR.getHeight()
 
         mean = 1.0*(nL + nR)/(nL/self.valL + nR/self.valR)
 
@@ -151,7 +164,8 @@ class StatisticsTestCase(unittest.TestCase):
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setWeighted(True)
-        stats = afwMath.makeStatistics(mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
+        stats = afwMath.makeStatistics(
+            mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
         vsum = 2.0
         vsum2 = self.valR + self.valL
         wsum = 1.0/self.valR + 1.0/self.valL
@@ -161,7 +175,8 @@ class StatisticsTestCase(unittest.TestCase):
 
         n = 2
         # original estimate; just a rewrite of the usual n/(n - 1) correction
-        stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) - (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
+        stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) -
+                  (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
         self.assertAlmostEqual(stddev, np.sqrt(variance*n/(n - 1)))
         #
         # The correct formula:
@@ -178,6 +193,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

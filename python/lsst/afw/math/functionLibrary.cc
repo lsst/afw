@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 #include <memory>
@@ -44,7 +44,7 @@ void declarePolynomialFunctions(py::module &mod, const std::string &suffix) {
     /* PolynomialFunction1 */
     py::class_<PolynomialFunction1<ReturnT>, std::shared_ptr<PolynomialFunction1<ReturnT>>,
                Function1<ReturnT>>
-        clsPolynomialFunction1(mod, ("PolynomialFunction1" + suffix).c_str());
+            clsPolynomialFunction1(mod, ("PolynomialFunction1" + suffix).c_str());
 
     clsPolynomialFunction1.def(py::init<std::vector<double> const &>(), "params"_a);
     clsPolynomialFunction1.def(py::init<unsigned int>(), "order"_a);
@@ -58,7 +58,7 @@ void declarePolynomialFunctions(py::module &mod, const std::string &suffix) {
     /* PolynomialFunction2 */
     py::class_<PolynomialFunction2<ReturnT>, std::shared_ptr<PolynomialFunction2<ReturnT>>,
                BasePolynomialFunction2<ReturnT>>
-        clsPolynomialFunction2(mod, ("PolynomialFunction2" + suffix).c_str());
+            clsPolynomialFunction2(mod, ("PolynomialFunction2" + suffix).c_str());
 
     clsPolynomialFunction2.def(py::init<std::vector<double> const &>(), "params"_a);
     clsPolynomialFunction2.def(py::init<unsigned int>(), "order"_a);
@@ -76,7 +76,7 @@ void declareChebyshevFunctions(py::module &mod, const std::string &suffix) {
     /* Chebyshev1Function1 */
     py::class_<Chebyshev1Function1<ReturnT>, std::shared_ptr<Chebyshev1Function1<ReturnT>>,
                Function1<ReturnT>>
-        clsChebyshev1Function1(mod, ("Chebyshev1Function1" + suffix).c_str());
+            clsChebyshev1Function1(mod, ("Chebyshev1Function1" + suffix).c_str());
 
     clsChebyshev1Function1.def(py::init<std::vector<double>, double, double>(), "params"_a, "minX"_a = -1,
                                "maxX"_a = 1);
@@ -94,7 +94,7 @@ void declareChebyshevFunctions(py::module &mod, const std::string &suffix) {
     /* Chebyshev1Function2 */
     py::class_<Chebyshev1Function2<ReturnT>, std::shared_ptr<Chebyshev1Function2<ReturnT>>,
                BasePolynomialFunction2<ReturnT>>
-        clsChebyshev1Function2(mod, ("Chebyshev1Function2" + suffix).c_str());
+            clsChebyshev1Function2(mod, ("Chebyshev1Function2" + suffix).c_str());
 
     clsChebyshev1Function2.def(py::init<std::vector<double>, geom::Box2D const &>(), "params"_a,
                                "xyRange"_a = geom::Box2D(geom::Point2D(-1.0, -1.0), geom::Point2D(1.0, 1.0)));
@@ -113,7 +113,7 @@ template <typename ReturnT>
 void declareGaussianFunctions(py::module &mod, const std::string &suffix) {
     /* GaussianFunction1 */
     py::class_<GaussianFunction1<ReturnT>, std::shared_ptr<GaussianFunction1<ReturnT>>, Function1<ReturnT>>
-        clsGaussianFunction1(mod, ("GaussianFunction1" + suffix).c_str());
+            clsGaussianFunction1(mod, ("GaussianFunction1" + suffix).c_str());
 
     clsGaussianFunction1.def(py::init<double>(), "sigma"_a);
 
@@ -123,7 +123,7 @@ void declareGaussianFunctions(py::module &mod, const std::string &suffix) {
 
     /* GaussianFunction2 */
     py::class_<GaussianFunction2<ReturnT>, std::shared_ptr<GaussianFunction2<ReturnT>>, Function2<ReturnT>>
-        clsGaussianFunction2(mod, ("GaussianFunction2" + suffix).c_str());
+            clsGaussianFunction2(mod, ("GaussianFunction2" + suffix).c_str());
 
     clsGaussianFunction2.def(py::init<double, double, double>(), "sigma1"_a, "sigma2"_a, "angle"_a = 0.0);
 
@@ -135,7 +135,7 @@ void declareGaussianFunctions(py::module &mod, const std::string &suffix) {
     /* DoubleGaussianFunction2 */
     py::class_<DoubleGaussianFunction2<ReturnT>, std::shared_ptr<DoubleGaussianFunction2<ReturnT>>,
                Function2<ReturnT>>
-        clsDoubleGaussianFunction2(mod, ("DoubleGaussianFunction2" + suffix).c_str());
+            clsDoubleGaussianFunction2(mod, ("DoubleGaussianFunction2" + suffix).c_str());
 
     clsDoubleGaussianFunction2.def(py::init<double, double, double>(), "sigma1"_a, "sigma2"_a = 0,
                                    "ampl"_a = 0);
@@ -151,7 +151,7 @@ void declareIntegerDeltaFunctions(py::module &mod, const std::string &suffix) {
     /* IntegerDeltaFunction1 */
     py::class_<IntegerDeltaFunction1<ReturnT>, std::shared_ptr<IntegerDeltaFunction1<ReturnT>>,
                Function1<ReturnT>>
-        clsIntegerDeltaFunction1(mod, ("IntegerDeltaFunction1" + suffix).c_str());
+            clsIntegerDeltaFunction1(mod, ("IntegerDeltaFunction1" + suffix).c_str());
 
     clsIntegerDeltaFunction1.def(py::init<double>(), "xo"_a);
 
@@ -162,7 +162,7 @@ void declareIntegerDeltaFunctions(py::module &mod, const std::string &suffix) {
     /* IntegerDeltaFunction2 */
     py::class_<IntegerDeltaFunction2<ReturnT>, std::shared_ptr<IntegerDeltaFunction2<ReturnT>>,
                Function2<ReturnT>>
-        clsIntegerDeltaFunction2(mod, ("IntegerDeltaFunction2" + suffix).c_str());
+            clsIntegerDeltaFunction2(mod, ("IntegerDeltaFunction2" + suffix).c_str());
 
     clsIntegerDeltaFunction2.def(py::init<double, double>(), "xo"_a, "yo"_a);
 
@@ -175,7 +175,7 @@ template <typename ReturnT>
 void declareLanczosFunctions(py::module &mod, const std::string &suffix) {
     /* LanczosFunction1 */
     py::class_<LanczosFunction1<ReturnT>, std::shared_ptr<LanczosFunction1<ReturnT>>, Function1<ReturnT>>
-        clsLanczosFunction1(mod, ("LanczosFunction1" + suffix).c_str());
+            clsLanczosFunction1(mod, ("LanczosFunction1" + suffix).c_str());
 
     clsLanczosFunction1.def(py::init<unsigned int, double>(), "n"_a, "xOffset"_a = 0.0);
 
@@ -186,7 +186,7 @@ void declareLanczosFunctions(py::module &mod, const std::string &suffix) {
 
     /* LanczosFunction2 */
     py::class_<LanczosFunction2<ReturnT>, std::shared_ptr<LanczosFunction2<ReturnT>>, Function2<ReturnT>>
-        clsLanczosFunction2(mod, ("LanczosFunction2" + suffix).c_str());
+            clsLanczosFunction2(mod, ("LanczosFunction2" + suffix).c_str());
 
     clsLanczosFunction2.def(py::init<unsigned int, double, double>(), "n"_a, "xOffset"_a = 0.0,
                             "yOffset"_a = 0.0);

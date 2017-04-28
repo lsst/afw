@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 import os.path
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog
@@ -7,10 +9,12 @@ from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
 
-__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs", "makeDetector", "copyDetector"]
+__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs",
+           "makeDetector", "copyDetector"]
 
 cameraSysList = [PUPIL, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
+
 
 def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil):
     """!Make a Detector instance from a detector config and amp info catalog
@@ -21,7 +25,8 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil):
     @return detector (an lsst.afw.cameraGeom.Detector)
     """
     orientation = makeOrientation(detectorConfig)
-    pixelSizeMm = afwGeom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y)
+    pixelSizeMm = afwGeom.Extent2D(
+        detectorConfig.pixelSize_x, detectorConfig.pixelSize_y)
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
     transforms[FOCAL_PLANE] = orientation.makePixelFpTransform(pixelSizeMm)
 
@@ -49,6 +54,7 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil):
         transforms,
     )
 
+
 def copyDetector(detector, ampInfoCatalog=None):
     """!Return a copy of a Detector
 
@@ -71,6 +77,7 @@ def copyDetector(detector, ampInfoCatalog=None):
                     ampInfoCatalog, detector.getOrientation(), detector.getPixelSize(),
                     transformDict)
 
+
 def makeOrientation(detectorConfig):
     """!Make an Orientation instance from a detector config
 
@@ -83,6 +90,7 @@ def makeOrientation(detectorConfig):
     pitch = afwGeom.Angle(detectorConfig.pitchDeg, afwGeom.degrees)
     roll = afwGeom.Angle(detectorConfig.rollDeg, afwGeom.degrees)
     return Orientation(offset, refPos, yaw, pitch, roll)
+
 
 def makeTransformDict(transformConfigDict):
     """!Make a dictionary of CameraSys: lsst.afw.geom.XYTransform from a config dict.
@@ -97,6 +105,7 @@ def makeTransformDict(transformConfigDict):
             transform = transformConfigDict[key].transform.apply()
             resMap[CameraSys(key)] = transform
     return resMap
+
 
 def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
                        pupilFactoryClass=PupilFactory):
@@ -119,6 +128,7 @@ def makeCameraFromPath(cameraConfig, ampInfoPath, shortNameFunc,
         ampInfoCatDict[detectorConfig.name] = ampInfoCatalog
 
     return makeCameraFromCatalogs(cameraConfig, ampInfoCatDict, pupilFactoryClass)
+
 
 def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
                            pupilFactoryClass=PupilFactory):

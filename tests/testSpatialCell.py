@@ -96,7 +96,8 @@ class SpatialCellTestCase(unittest.TestCase):
         self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
 
         self.assertEqual(self.cell.size(), self.nCandidate - 1)
-        self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate - 1)
+        self.assertEqual(self.cell.end() - self.cell.begin(),
+                         self.nCandidate - 1)
 
         self.cell.setIgnoreBad(False)
         self.assertEqual(self.cell.size(), self.nCandidate)
@@ -131,10 +132,12 @@ class SpatialCellTestCase(unittest.TestCase):
         self.cell[i].setCandidateRating(flux)
         ratings0[i] = flux
 
-        self.assertEqual(ratings0, [cand.getCandidateRating() for cand in self.cell])
+        self.assertEqual(ratings0, [cand.getCandidateRating()
+                                    for cand in self.cell])
 
         self.cell.sortCandidates()
-        self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in self.cell])
+        self.assertNotEqual(
+            ratings0, [cand.getCandidateRating() for cand in self.cell])
 
         def sortKey(a):
             return -a
@@ -161,14 +164,17 @@ class SpatialCellSetTestCase(unittest.TestCase):
                       cell.getLabel())
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
-        self.NTestCandidates = 0                                      # number of candidates
+        # number of candidates
+        self.NTestCandidates = 0
         for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]):  # all in cell0
             self.cellSet.insertCandidate(afwMath.TestCandidate(x, y, -x))
             self.NTestCandidates += 1
 
-        self.cellSet.insertCandidate(afwMath.TestCandidate(305, 0, 100))   # in cell1
+        # in cell1
+        self.cellSet.insertCandidate(afwMath.TestCandidate(305, 0, 100))
         self.NTestCandidates += 1
-        self.cellSet.insertCandidate(afwMath.TestCandidate(500, 500, 100))  # the top right corner of cell5
+        # the top right corner of cell5
+        self.cellSet.insertCandidate(afwMath.TestCandidate(500, 500, 100))
         self.NTestCandidates += 1
 
     def tearDown(self):
@@ -177,7 +183,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
     def testNoCells(self):
         """Test that we check for a request to make a SpatialCellSet with no cells"""
         def tst():
-            afwMath.SpatialCellSet(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(500, 500)), 0, 3)
+            afwMath.SpatialCellSet(afwGeom.Box2I(
+                afwGeom.Point2I(0, 0), afwGeom.Extent2I(500, 500)), 0, 3)
 
         self.assertRaises(pexExcept.LengthError, tst)
 
@@ -187,7 +194,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
         self.makeTestCandidateCellSet()
 
         def tst():
-            self.cellSet.insertCandidate(afwMath.TestCandidate(501, 501, 100))      # Doesn't fit
+            # Doesn't fit
+            self.cellSet.insertCandidate(afwMath.TestCandidate(501, 501, 100))
         self.assertRaises(pexExcept.OutOfRangeError, tst)
         #
         # OK, the SpatialCellList is populated
@@ -246,7 +254,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
             assert(dx//sx == float(dx)/float(sx))
             assert(dy//sy == float(dy)/float(sy))
 
-            bbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(dx, dy))
+            bbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0),
+                                 afwGeom.Extent2I(dx, dy))
             cset = afwMath.SpatialCellSet(bbox, sx, sy)
             for cell in cset.getCellList():
                 label = cell.getLabel()
@@ -275,10 +284,12 @@ class SpatialCellSetTestCase(unittest.TestCase):
         cell1[i].setCandidateRating(flux)
         ratings0[i] = flux
 
-        self.assertEqual(ratings0, [cand.getCandidateRating() for cand in cell1])
+        self.assertEqual(
+            ratings0, [cand.getCandidateRating() for cand in cell1])
 
         self.cellSet.sortCandidates()
-        self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in cell1])
+        self.assertNotEqual(
+            ratings0, [cand.getCandidateRating() for cand in cell1])
 
         def sortKey(a):
             return -a
@@ -309,7 +320,8 @@ class TestImageCandidateCase(unittest.TestCase):
         cand.setHeight(height)
 
         im = cand.getMaskedImage().getImage()
-        self.assertEqual(im.get(0, 0), flux)  # This is how TestMaskedImageCandidate sets its pixels
+        # This is how TestMaskedImageCandidate sets its pixels
+        self.assertEqual(im.get(0, 0), flux)
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
 
@@ -320,6 +332,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

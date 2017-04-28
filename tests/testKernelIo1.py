@@ -53,7 +53,8 @@ class KernelIOTestCase(unittest.TestCase):
         self.assertEqual(k1.getCtrX(), k2.getCtrX())
         self.assertEqual(k1.getCtrY(), k2.getCtrY())
         self.assertEqual(k1.getNKernelParameters(), k2.getNKernelParameters())
-        self.assertEqual(k1.getNSpatialParameters(), k2.getNSpatialParameters())
+        self.assertEqual(k1.getNSpatialParameters(),
+                         k2.getNSpatialParameters())
         self.assertEqual(k1.getKernelParameters(), k2.getKernelParameters())
         self.assertEqual(k1.getSpatialParameters(), k2.getSpatialParameters())
         self.assertEqual(k1.isSpatiallyVarying(), k2.isSpatiallyVarying())
@@ -77,7 +78,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel1.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel1.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         storageList = dafPersist.StorageList()
@@ -88,7 +90,8 @@ class KernelIOTestCase(unittest.TestCase):
         storageList2 = dafPersist.StorageList()
         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
         storageList2.append(storage2)
-        k2 = persistence.unsafeRetrieve("FixedKernel", storageList2, additionalData)
+        k2 = persistence.unsafeRetrieve(
+            "FixedKernel", storageList2, additionalData)
 
         self.kernelCheck(k, k2)
 
@@ -115,7 +118,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel2.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel2.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -141,10 +145,11 @@ class KernelIOTestCase(unittest.TestCase):
                     persistence.persist(k, storageList, additionalData)
 
                     storageList2 = dafPersist.StorageList()
-                    storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
+                    storage2 = persistence.getRetrieveStorage(
+                        "XmlStorage", loc)
                     storageList2.append(storage2)
                     k2 = persistence.unsafeRetrieve("AnalyticKernel",
-                                                   storageList2, additionalData)
+                                                    storageList2, additionalData)
 
                     self.kernelCheck(k, k2)
 
@@ -160,7 +165,8 @@ class KernelIOTestCase(unittest.TestCase):
         """
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel3.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel3.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         for kWidth in range(1, 4):
@@ -171,15 +177,18 @@ class KernelIOTestCase(unittest.TestCase):
                                                              afwGeom.Point2I(activeCol, activeRow))
 
                         storageList = dafPersist.StorageList()
-                        storage = persistence.getPersistStorage("XmlStorage", loc)
+                        storage = persistence.getPersistStorage(
+                            "XmlStorage", loc)
                         storageList.append(storage)
-                        persistence.persist(kernel, storageList, additionalData)
+                        persistence.persist(
+                            kernel, storageList, additionalData)
 
                         storageList2 = dafPersist.StorageList()
-                        storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
+                        storage2 = persistence.getRetrieveStorage(
+                            "XmlStorage", loc)
                         storageList2.append(storage2)
                         k2 = persistence.unsafeRetrieve("DeltaFunctionKernel",
-                                                       storageList2, additionalData)
+                                                        storageList2, additionalData)
 
                         self.kernelCheck(kernel, k2)
                         self.assertEqual(kernel.getPixel(), k2.getPixel())
@@ -200,7 +209,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel4.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel4.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
@@ -231,7 +241,7 @@ class KernelIOTestCase(unittest.TestCase):
                 storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                 storageList2.append(storage2)
                 k2 = persistence.unsafeRetrieve("SeparableKernel",
-                                               storageList2, additionalData)
+                                                storageList2, additionalData)
 
                 self.kernelCheck(k, k2)
 
@@ -250,7 +260,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel5.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel5.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         # create list of kernels
@@ -258,7 +269,8 @@ class KernelIOTestCase(unittest.TestCase):
         kVec = []
         for row in range(kHeight):
             for col in range(kWidth):
-                kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(col, row))
+                kernel = afwMath.DeltaFunctionKernel(
+                    kWidth, kHeight, afwGeom.Point2I(col, row))
                 basisImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(basisImage, True)
                 basisImArrList.append(basisImage.getArray().transpose().copy())
@@ -280,7 +292,7 @@ class KernelIOTestCase(unittest.TestCase):
             storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
             storageList2.append(storage2)
             k2 = persistence.unsafeRetrieve("LinearCombinationKernel",
-                                           storageList2, additionalData)
+                                            storageList2, additionalData)
 
             self.kernelCheck(k, k2)
 
@@ -299,7 +311,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel6.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel6.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         # create image arrays for the basis kernels
@@ -316,7 +329,8 @@ class KernelIOTestCase(unittest.TestCase):
         # create a list of basis kernels from the images
         kVec = []
         for basisImArr in basisImArrList:
-            basisImage = afwImage.makeImageFromArray(basisImArr.transpose().copy())
+            basisImage = afwImage.makeImageFromArray(
+                basisImArr.transpose().copy())
             kernel = afwMath.FixedKernel(basisImage)
             kVec.append(kernel)
 
@@ -342,7 +356,7 @@ class KernelIOTestCase(unittest.TestCase):
         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
         storageList2.append(storage2)
         k2 = persistence.unsafeRetrieve("LinearCombinationKernel",
-                                       storageList2, additionalData)
+                                        storageList2, additionalData)
 
         self.kernelCheck(k, k2)
 
@@ -356,7 +370,8 @@ class KernelIOTestCase(unittest.TestCase):
         ]:
             k2.computeImage(kImage, False, colPos, rowPos)
             kImArr = kImage.getArray().transpose()
-            refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
+            refKImArr = (basisImArrList[0] * coeff0) + \
+                (basisImArrList[1] * coeff1)
             if not np.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
                           (k2.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
@@ -368,7 +383,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel7.boost"))
+        loc = dafPersist.LogicalLocation(
+            os.path.join(testPath, "data", "kernel7.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -387,7 +403,7 @@ class KernelIOTestCase(unittest.TestCase):
                 storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                 storageList2.append(storage2)
                 k2 = persistence.unsafeRetrieve("AnalyticKernel",
-                                               storageList2, additionalData)
+                                                storageList2, additionalData)
 
                 self.kernelCheck(k, k2)
 
@@ -401,6 +417,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

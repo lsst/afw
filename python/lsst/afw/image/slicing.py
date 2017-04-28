@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import lsst.afw.geom as afwGeom
 from .image import LOCAL
@@ -40,7 +40,8 @@ def _getBBoxFromSliceTuple(img, imageSlice):
 
     if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and
             sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
-        raise IndexError("Images may only be indexed as a 2-D slice not %s", imageSlice)
+        raise IndexError(
+            "Images may only be indexed as a 2-D slice not %s", imageSlice)
 
     imageSlice, _imageSlice = [], imageSlice
     for s, wh in zip(_imageSlice, img.getDimensions()):
@@ -62,6 +63,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
 def supportSlicing(cls):
     """Support image slicing
     """
+
     def Factory(self, *args):
         """Return an object of this type
         """
@@ -88,14 +90,17 @@ def supportSlicing(cls):
     def __float__(self):
         """Convert a 1x1 image to a floating scalar"""
         if self.getDimensions() != afwGeom.Extent2I(1, 1):
-            raise TypeError("Only single-pixel images may be converted to python scalars")
+            raise TypeError(
+                "Only single-pixel images may be converted to python scalars")
 
         try:
             return float(self.get(0, 0))
         except AttributeError:
-            raise TypeError("Unable to extract a single pixel from a {}".format(type(self).__name__))
+            raise TypeError(
+                "Unable to extract a single pixel from a {}".format(type(self).__name__))
         except TypeError:
-            raise TypeError("Unable to convert a {} pixel to a scalar".format(type(self).__name__))
+            raise TypeError(
+                "Unable to convert a {} pixel to a scalar".format(type(self).__name__))
     cls.__float__ = __float__
 
     def __int__(self):
