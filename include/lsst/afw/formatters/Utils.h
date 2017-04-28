@@ -139,8 +139,9 @@ int extractVisitId(std::shared_ptr<lsst::daf::base::PropertySet const> const& pr
 int extractCcdId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
-std::string formatFitsProperties(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop);
-int countFitsHeaderCards(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop);
+std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop);
+int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
+
 }
 }
 }  // namespace lsst::afw::formatters
