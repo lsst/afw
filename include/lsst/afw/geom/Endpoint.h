@@ -143,9 +143,11 @@ protected:
     /**
     Construct a BaseEndpoint
 
-    @param[in] nAxes  the number of axes in a point
+    @param[in] nAxes  The number of axes in a point; must be > 0
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
     */
-    explicit BaseEndpoint(int nAxes) : _nAxes(nAxes) {}
+    explicit BaseEndpoint(int nAxes);
 
     void _assertNAxes(int nAxes) const;
 
@@ -191,7 +193,9 @@ protected:
     /**
     Construct a BaseVectorEndpoint
 
-    @param[in] nAxes  the number of axes in a point
+    @param[in] nAxes  The number of axes in a point; must be > 0
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
     */
     explicit BaseVectorEndpoint(int nAxes) : BaseEndpoint<Point, Array>(nAxes){};
 };
@@ -209,7 +213,13 @@ public:
     GenericEndpoint &operator=(GenericEndpoint const &) = default;
     GenericEndpoint &operator=(GenericEndpoint &&) = default;
 
-    /// Construct a GenericEndpoint with the specified number of axes
+    /**
+    Construct a GenericEndpoint with the specified number of axes
+
+    @param[in] nAxes  The number of axes in a point; must be > 0
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
+    */
     explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes){};
 
     virtual ~GenericEndpoint(){};

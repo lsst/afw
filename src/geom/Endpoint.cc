@@ -22,6 +22,7 @@
 
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <memory>
 #include <vector>
 
@@ -49,6 +50,14 @@ std::shared_ptr<ast::Frame> getCurrentFrame(std::shared_ptr<ast::Frame> framePtr
 }
 
 }  // <anonymous>
+
+template <typename Point, typename Array>
+BaseEndpoint<Point, Array>::BaseEndpoint(int nAxes) : _nAxes(nAxes) {
+    if (nAxes <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                          "nAxes = " + std::to_string(nAxes) + "; must be > 0");
+    }
+}
 
 template <typename Point, typename Array>
 std::shared_ptr<ast::Frame> BaseEndpoint<Point, Array>::makeFrame() const {
