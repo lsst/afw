@@ -55,11 +55,14 @@ namespace {
 /**
 Format a PropertySet into a FITS header string (exactly 80 characters per "card", no line terminator)
 
+This function is designed to format data for creating a WCS. It truncates long string
+values and skips properties whose type it cannot handle.
+
 @param[in] paramNames  Names of properties to format
 @param[in] prop  Properties to format
 
-@todo Once we stop using the old WCS class we can remove the PropertySet version of formatFitsProperties
-and simplify this function to not worry about dotted names.
+@todo DM-9679 Once we stop using the old WCS class we can remove the PropertySet version of
+formatFitsProperties and simplify this function to not worry about dotted names.
 */
 std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
                                      daf::base::PropertySet const& prop) {
@@ -70,16 +73,21 @@ std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
         std::type_info const& type = prop.typeOf(name);
 
         std::string out = "";
+        out.reserve(80);
         if (name.size() > 8) {  // Oh dear; too long for a FITS keyword
             out += "HIERARCH = " + name;
         } else {
             out = (boost::format("%-8s= ") % name).str();
         }
 
-        if (type == typeid(int)) {
+        if (type == typeid(bool)) {
+            out +=  prop.get<bool>(name) ? "1" : "0";
+        } else if (type == typeid(int)) {
             out += (boost::format("%20d") % prop.get<int>(name)).str();
         } else if (type == typeid(double)) {
             out += (boost::format("%20.15g") % prop.get<double>(name)).str();
+        } else if (type == typeid(float)) {
+            out += (boost::format("%20.15g") % prop.get<float>(name)).str();
         } else if (type == typeid(std::string)) {
             out += (boost::format("'%-67s' ") % prop.get<std::string>(name)).str();
         }

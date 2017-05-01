@@ -144,6 +144,9 @@ int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& prop
 /**
 Format a PropertySet into a single FITS header string
 
+This function is designed to format data for creating a WCS. It truncates long string
+values and skips properties whose type it cannot handle.
+
 @param[in] prop  Properties to format
 @return a FITS header string (exactly 80 characters per "card", no line terminators)
 
@@ -152,6 +155,9 @@ Format a PropertySet into a single FITS header string
 std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop);
 /**
 Format a PropertyList into a FITS header string
+
+This function is designed to format data for creating a WCS. It truncates long string
+values and skips properties whose type it cannot handle.
 
 @param[in] prop  Properties to format
 @param[in] excludeNames  Names of properties to exclude from the returned string
