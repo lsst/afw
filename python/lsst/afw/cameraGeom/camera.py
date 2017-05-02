@@ -64,6 +64,10 @@ class Camera(DetectorCollection):
         """
         return self._pupilFactoryClass(visitInfo, pupilSize, npix)
 
+    @property
+    def telescopeDiameter(self):
+        return self._pupilFactoryClass.telescopeDiameter
+
     def _transformFromNativeSys(self, nativePoint, toSys):
         """!Transform a point in the native coordinate system to another coordinate system.
 
