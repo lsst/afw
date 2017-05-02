@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2016 LSST Corporation.
+# Copyright 2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -19,18 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
 
-from lsst.afw.geom.python import addTransformMapMethods
-from ._cameraSys import CameraSys, CameraTransformMap
-
-__all__ = []  # import this module only for its side effects
-
-
-def __hash__(self):
-    return hash(repr(self))
-
-
-CameraSys.__hash__ = __hash__
-
-addTransformMapMethods(CameraTransformMap)
+from .skyWcs import *
+from .skyWcsContinued import *

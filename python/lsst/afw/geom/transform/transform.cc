@@ -19,10 +19,11 @@
 * the GNU General Public License along with this program. If not,
 * see <http://www.lsstcorp.org/LegalNotices/>.
 */
+#include "pybind11/pybind11.h"
+
 #include <memory>
 
 #include "astshim.h"
-#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
@@ -113,6 +114,7 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
 PYBIND11_PLUGIN(transform) {
     py::module mod("transform");
 
+    py::module::import("astshim");
     py::module::import("lsst.afw.geom.endpoint");
 
     // Need to import numpy for ndarray and eigen conversions

@@ -1,4 +1,4 @@
-﻿// -*- lsst-c++ -*-
+// -*- lsst-c++ -*-
 
 /*
  * LSST Data Management System
@@ -201,8 +201,8 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<daf::base::PropertySet const> const
         }
     }
 
-    // Check header isn't empty
-    int nCards = formatters::countFitsHeaderCards(access.toRead());
+    //Check header isn't empty
+    int nCards = lsst::afw::formatters::countFitsHeaderCards(*(access.toRead()));
     if (nCards <= 0) {
         string msg = "Could not parse FITS WCS: no header cards found";
         throw LSST_EXCEPT(except::InvalidParameterError, msg);
@@ -260,14 +260,14 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<daf::base::PropertySet const> const
         }
     }
 
-    // Pass the header into wcslib's formatter to extract & setup the Wcs. First need
-    // to convert to a C style string, so the compile doesn't complain about constness
-    std::string metadataStr = formatters::formatFitsProperties(access.toRead());
+    //Pass the header into wcslib's formatter to extract & setup the Wcs. First need
+    //to convert to a C style string, so the compile doesn't complain about constness
+    std::string metadataStr = formatters::formatFitsProperties(*(access.toRead()));
     // We own the data, and wcslib is slack about constness, so no qualms with casting away const
     char* hdrString = const_cast<char*>(metadataStr.c_str());
     // printf("wcspih string:\n%s\n", hdrString);
 
-    nCards = formatters::countFitsHeaderCards(access.toRead());  // we may have dropped some
+    nCards = formatters::countFitsHeaderCards(*(access.toRead()));  // we may have dropped some
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
     if (pihStatus != 0) {

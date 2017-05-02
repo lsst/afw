@@ -126,6 +126,10 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(type(newFrame), astshim.Frame)
             self.assertEqual(newFrame.getNaxes(), nAxes)
 
+        for nAxes in (-1, 0):
+            with self.assertRaises(InvalidParameterError):
+                afwGeom.GenericEndpoint(nAxes)
+
     def checkEndpointBasics(self, endpoint, pointType, nAxes):
         isAngle = pointType == afwGeom.SpherePoint  # point components are Angles
 

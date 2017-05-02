@@ -1,19 +1,22 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11([
-    'affineTransform',
-    'angle/angle',
-    'box',
-    'coordinates/coordinates',
-    'functor',
-    'spherePoint/spherePoint',
-    'separableXYTransform',
-    'span',
-    'spanSet',
-    'linearTransform',
-    'xyTransform',
-	'endpoint',
-	'transform/transform',
+scripts.BasicSConscript.pybind11(
+    [
+        'detail/frameSetUtils',
+        'affineTransform',
+        'angle/angle',
+        'box',
+        'coordinates/coordinates',
+        'functor',
+        'spherePoint/spherePoint',
+        'separableXYTransform',
+        'span',
+        'spanSet',
+        'linearTransform',
+        'xyTransform',
+        'endpoint',
+        'transform/transform',
+        'skyWcs/skyWcs',
     ],
     addUnderscore=False
 )

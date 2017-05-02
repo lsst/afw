@@ -21,29 +21,10 @@
 #
 from __future__ import absolute_import, division, print_function
 
-from lsst.pex.exceptions import InvalidParameterError
-
+from ..python import addTransformMethods
 from . import transform
 
 __all__ = []
-
-
-def getJacobian(self, x):
-    # Force 2D matrix over numpy's protests
-    matrix = self._getJacobian(x)
-    matrix.shape = (self.getToEndpoint().getNAxes(),
-                    self.getFromEndpoint().getNAxes())
-    return matrix
-
-
-def of(self, first):
-    if first.getToEndpoint() == self.getFromEndpoint():
-        return self._of(first)
-    else:
-        raise InvalidParameterError(
-            "Cannot concatenate %r and %r: endpoints do not match."
-            % (first, self))
-
 
 endpoints = ("Generic", "Point2", "Point3", "SpherePoint")
 
@@ -51,5 +32,4 @@ for fromPoint in endpoints:
     for toPoint in endpoints:
         name = "Transform" + fromPoint + "To" + toPoint
         cls = getattr(transform, name)
-        cls.getJacobian = getJacobian
-        cls.of = of
+        addTransformMethods(cls)

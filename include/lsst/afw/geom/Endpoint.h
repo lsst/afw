@@ -143,9 +143,11 @@ protected:
     /**
     Construct a BaseEndpoint
 
-    @param[in] nAxes  the number of axes in a point
+    @param[in] nAxes  The number of axes in a point; must be > 0
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
     */
-    explicit BaseEndpoint(int nAxes) : _nAxes(nAxes) {}
+    explicit BaseEndpoint(int nAxes);
 
     void _assertNAxes(int nAxes) const;
 
@@ -158,7 +160,7 @@ protected:
     int _getNPoints(ndarray::Array<double, 2, 2> const &data) const { return data.getSize<0>(); }
 
 private:
-    int _nAxes;  /// number of axes
+    int _nAxes;  /// number of axes in a point
 };
 
 /**
@@ -191,7 +193,9 @@ protected:
     /**
     Construct a BaseVectorEndpoint
 
-    @param[in] nAxes  the number of axes in a point
+    @param[in] nAxes  The number of axes in a point; must be > 0
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
     */
     explicit BaseVectorEndpoint(int nAxes) : BaseEndpoint<Point, Array>(nAxes){};
 };
@@ -209,7 +213,13 @@ public:
     GenericEndpoint &operator=(GenericEndpoint const &) = default;
     GenericEndpoint &operator=(GenericEndpoint &&) = default;
 
-    /// Construct a GenericEndpoint with the specified number of axes
+    /**
+    Construct a GenericEndpoint with the specified number of axes
+
+    @param[in] nAxes  The number of axes in a point; must be > 0
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
+    */
     explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes){};
 
     virtual ~GenericEndpoint(){};
@@ -228,7 +238,7 @@ public:
 /**
 An endpoint for Point<double, N>
 
-@tparam N  number of axes; the only allowed values are 2 or 3
+@tparam N  number of axes in a point; the only allowed values are 2 or 3
 */
 template <int N>
 class PointEndpoint : public BaseVectorEndpoint<Point<double, N>> {
@@ -238,10 +248,21 @@ public:
     PointEndpoint &operator=(PointEndpoint const &) = default;
     PointEndpoint &operator=(PointEndpoint &&) = default;
 
-    /// Construct a PointEndpoint; template parameter N specifies the number of axes
+    /**
+    Construct a PointEndpoint
+    */
     explicit PointEndpoint() : BaseVectorEndpoint<Point<double, N>>(N) {}
 
-    /// This constructor is used by Transform; nAxes must equal template parameter N
+    /**
+    Construct a PointEndpoint with nAxes specified; nAxes must equal template parameter N
+
+    This constructor is primarily used by Transform; other users are encouraged
+    to use the default constructor.
+
+    @param[in] nAxes  The number of axes in a point; must equal template parameter N
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes != N
+    */
     explicit PointEndpoint(int nAxes);
 
     virtual ~PointEndpoint(){};
@@ -265,9 +286,7 @@ using Point3Endpoint = PointEndpoint<3>;
 /**
 An endpoint for SpherePoint
 
-@warning When SpherePoint is used for celestial WCS the result is likely to obey the FITS convention
-that 1,1 is the lower left pixel of the image. If so, you can use an appropriate ast::ShiftMap
-that adjusts for both the 1 pixel offset between FITS and LSST convention and the XY0 of the image.
+A SpherePointEndpoint always has 2 axes: longitude, latitude
 */
 class SpherePointEndpoint : public BaseVectorEndpoint<SpherePoint> {
 public:
@@ -276,10 +295,21 @@ public:
     SpherePointEndpoint &operator=(SpherePointEndpoint const &) = default;
     SpherePointEndpoint &operator=(SpherePointEndpoint &&) = default;
 
-    /// Construct a SpherePointEndpoint
+    /**
+    Construct a SpherePointEndpoint
+    */
     explicit SpherePointEndpoint() : BaseVectorEndpoint(2) {}
 
-    /// This constructor is used by Transform; nAxes must be 2
+    /**
+    Construct a SpherePointEndpoint with nAxes specified; nAxes must equal 2
+
+    This constructor is primarily used by Transform; other users are encouraged
+    to use the default constructor.
+
+    @param[in] nAxes  The number of axes in a point; must equal 2
+
+    @throws lsst.pex.exceptions.InvalidParameterError if nAxes != 2
+    */
     explicit SpherePointEndpoint(int nAxes);
 
     virtual ~SpherePointEndpoint(){};
