@@ -18,6 +18,7 @@ from ._leastSquares import *
 from ._random import *
 from ._convolveImage import *
 from ._statistics import *
+from ._statistics_new import *
 from ._offsetImage import *
 from ._stack import *
 from ._kernel import *
