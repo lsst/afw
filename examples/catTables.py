@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 from past.builtins import basestring
 import sys
 import lsst.afw.table as afwTable
-from functools import reduce
 
 
 def concatenate(catalogList):
@@ -18,7 +17,7 @@ def concatenate(catalogList):
             raise RuntimeError("Schema for catalog %d not consistent" % (i+1))
 
     out = afwTable.BaseCatalog(schema)
-    num = reduce(lambda n, c: n + len(c), catalogList, 0)
+    num = sum(map(len, catalogList))
     out.preallocate(num)
 
     for catalog in catalogList:
