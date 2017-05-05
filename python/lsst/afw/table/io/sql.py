@@ -578,8 +578,6 @@ class SQLTable(object):
 
         if columns is not None and len(columns) > 0:
             cols = [self.sql_table.c[n] for n in columns]
-            if self.index is not None:
-                [cols.insert(0, self.sql_table.c[idx]) for idx in self.index[::-1]]
             sql_select = select(cols)
         else:
             sql_select = self.sql_table.select()
@@ -601,9 +599,6 @@ class SQLTable(object):
             data, columns=columns, coerce_float=coerce_float)
 
         self._harmonize_columns(parse_dates=parse_dates)
-
-        if self.index is not None:
-            self.catalog.set_index(self.index, inplace=True)
 
     def _get_column_names_and_types(self):
 
