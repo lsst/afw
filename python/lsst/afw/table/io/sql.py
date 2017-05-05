@@ -570,14 +570,7 @@ class SQLTable(object):
             if not data:
                 break
             else:
-                self.catalog = DataFrame.from_records(
-                    data, columns=columns, coerce_float=coerce_float)
-
-                self._harmonize_columns(parse_dates=parse_dates)
-
-                if self.index is not None:
-                    self.catalog.set_index(self.index, inplace=True)
-
+                self._build_result(data, columns, coerce_float, parse_dates)
                 yield self.catalog
 
     def read(self, coerce_float=True, parse_dates=None, columns=None,
@@ -592,53 +585,25 @@ class SQLTable(object):
             sql_select = self.sql_table.select()
 
         result = self.sql_io.execute(sql_select)
-        column_names = result.keys()
+        columns = result.keys()
 
         if chunksize is not None:
-            return self._query_iterator(result, chunksize, column_names,
+            return self._query_iterator(result, chunksize, columns,
                                         coerce_float=coerce_float,
                                         parse_dates=parse_dates)
         else:
             data = result.fetchall()
-            self.catalog = DataFrame.from_records(
-                data, columns=column_names, coerce_float=coerce_float)
-
-            self._harmonize_columns(parse_dates=parse_dates)
-
-            if self.index is not None:
-                self.catalog.set_index(self.index, inplace=True)
-
+            self._build_result(data, columns, coerce_float, parse_dates)
             return self.catalog
 
-    def _index_name(self, index, index_label):
-        # for writing: index=True to include index in sql table
-        if index is True:
-            nlevels = self.catalog.index.nlevels
-            # if index_label is specified, set this as index name(s)
-            if index_label is not None:
-                if not isinstance(index_label, list):
-                    index_label = [index_label]
-                if len(index_label) != nlevels:
-                    raise ValueError(
-                        "Length of 'index_label' should match number of "
-                        "levels, which is {0}".format(nlevels))
-                else:
-                    return index_label
-            # return the used column labels for the index columns
-            if (nlevels == 1 and 'index' not in self.catalog.columns and
-                    self.catalog.index.name is None):
-                return ['index']
-            else:
-                return [l if l is not None else "level_{0}".format(i)
-                        for i, l in enumerate(self.catalog.index.names)]
+    def _build_result(self, data, columns, coerce_float, parse_dates):
+        self.catalog = DataFrame.from_records(
+            data, columns=columns, coerce_float=coerce_float)
 
-        # for reading: index=(list of) string to specify column to set as index
-        elif isinstance(index, str):
-            return [index]
-        elif isinstance(index, list):
-            return index
-        else:
-            return None
+        self._harmonize_columns(parse_dates=parse_dates)
+
+        if self.index is not None:
+            self.catalog.set_index(self.index, inplace=True)
 
     def _get_column_names_and_types(self):
 
@@ -831,7 +796,7 @@ class SQLDatabase(SQLIO):
         """Simple passthrough to SQLAlchemy connectable"""
         return self.connectable.execute(*args, **kwargs)
 
-    def read_table(self, table_name, index_col=None, coerce_float=True,
+    def read_table(self, table_name, coerce_float=True,
                    parse_dates=None, columns=None, schema=None,
                    chunksize=None):
         """Read SQL database table into an afw.table.
@@ -840,8 +805,6 @@ class SQLDatabase(SQLIO):
         ----------
         table_name : string
             Name of SQL table in database
-        index_col : string, optional, default: None
-            Column to set as index
         coerce_float : boolean, default True
             Attempt to convert values of non-string, non-numeric objects
             (like decimal.Decimal) to floating point. This can result in
@@ -875,7 +838,7 @@ class SQLDatabase(SQLIO):
         SQLDatabase.read_sql
 
         """
-        table = SQLTable(table_name, self, index=index_col, schema=schema)
+        table = SQLTable(table_name, self, schema=schema)
         return table.read(coerce_float=coerce_float,
                           parse_dates=parse_dates, columns=columns,
                           chunksize=chunksize)
@@ -1043,7 +1006,7 @@ class SQLDatabase(SQLIO):
             self.meta.clear()
 
     def _create_sql_schema(self, frame, table_name, keys=None, dtype=None):
-        table = SQLTable(table_name, self, catalog=frame, index=False, keys=keys,
+        table = SQLTable(table_name, self, catalog=frame, keys=keys,
                          dtype=dtype)
         return str(table.sql_schema())
 
