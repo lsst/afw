@@ -561,18 +561,6 @@ class SQLTable(object):
                 chunk_iter = zip(*[arr[start_i:end_i] for arr in data_list])
                 self._execute_insert(conn, keys, chunk_iter)
 
-    def _query_iterator(self, result, chunksize, columns, coerce_float=True,
-                        parse_dates=None):
-        """Return generator through chunked result set"""
-
-        while True:
-            data = result.fetchmany(chunksize)
-            if not data:
-                break
-            else:
-                self._build_result(data, columns, coerce_float, parse_dates)
-                yield self.catalog
-
     def read(self, coerce_float=True, parse_dates=None, columns=None,
              chunksize=None):
 
@@ -593,6 +581,18 @@ class SQLTable(object):
             data = result.fetchall()
             self._build_result(data, columns, coerce_float, parse_dates)
             return self.catalog
+
+    def _query_iterator(self, result, chunksize, columns, coerce_float=True,
+                        parse_dates=None):
+        """Return generator through chunked result set"""
+
+        while True:
+            data = result.fetchmany(chunksize)
+            if not data:
+                break
+            else:
+                self._build_result(data, columns, coerce_float, parse_dates)
+                yield self.catalog
 
     def _build_result(self, data, columns, coerce_float, parse_dates):
         self.catalog = DataFrame.from_records(
