@@ -503,6 +503,7 @@ class SQLTable(object):
         return self.sql_table.insert()
 
     def insert_data(self):
+        # FIXME: afw table
         temp = self.catalog
 
         column_names = list(map(str, temp.columns))
@@ -512,12 +513,13 @@ class SQLTable(object):
 
         for i in range(len(blocks)):
             b = blocks[i]
-            if b.is_datetime:
-                # convert to microsecond resolution so this yields
-                # datetime.datetime
-                d = b.values.astype('M8[us]').astype(object)
-            else:
-                d = np.array(b.get_values(), dtype=object)
+            # TODO: DateTime
+            # if b.is_datetime:
+            #     # convert to microsecond resolution so this yields
+            #     # datetime.datetime
+            #     d = b.values.astype('M8[us]').astype(object)
+            # else:
+            d = np.array(b.get_values(), dtype=object)
 
             # replace NaN with None
             if b._can_hold_na:
@@ -537,6 +539,7 @@ class SQLTable(object):
         conn.execute(self.insert_statement(), data)
 
     def insert(self, chunksize=None):
+        # FIXME: afw table
         keys, data_list = self.insert_data()
 
         nrows = len(self.catalog)
@@ -595,6 +598,8 @@ class SQLTable(object):
                 yield self.catalog
 
     def _build_result(self, data, columns, coerce_float, parse_dates):
+        # FIXME: afw table
+        # row_count = len(data)
         self.catalog = DataFrame.from_records(
             data, columns=columns, coerce_float=coerce_float)
 
