@@ -388,6 +388,8 @@ public:
     iterator end() { return iterator(_internal.end()); }
     const_iterator begin() const { return const_iterator(_internal.begin()); }
     const_iterator end() const { return const_iterator(_internal.end()); }
+    const_iterator cbegin() const { return begin(); }
+    const_iterator cend() const { return end(); }
     //@}
 
     /// Return true if the catalog has no records.
