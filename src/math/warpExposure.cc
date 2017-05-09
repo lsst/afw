@@ -29,6 +29,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -38,6 +39,7 @@
 #include <memory>
 #include "boost/pointer_cast.hpp"
 #include "boost/regex.hpp"
+#include "astshim.h"
 
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
@@ -51,6 +53,8 @@
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+
+using std::swap;
 
 namespace lsst {
 namespace afw {
@@ -136,7 +140,7 @@ std::string BilinearWarpingKernel::BilinearFunction1::toString(std::string const
 }
 
 std::shared_ptr<Kernel> NearestWarpingKernel::clone() const {
-    std::shared_ptr<Kernel>(new NearestWarpingKernel());
+    return std::make_shared<NearestWarpingKernel>();
 }
 
 Kernel::Pixel NearestWarpingKernel::NearestFunction1::operator()(double x) const {
@@ -494,6 +498,228 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage, geom::XYTransfor
 }
 
 template <typename DestImageT, typename SrcImageT>
+int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
+              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,
+              WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
+    if (details::isSameObject(destImage, srcImage)) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destImage is srcImage; cannot warp in place");
+    }
+    if (destImage.getBBox(image::LOCAL).isEmpty()) {
+        return 0;
+    }
+    // if src image is too small then don't try to warp
+    std::shared_ptr<SeparableKernel> warpingKernelPtr = control.getWarpingKernel();
+    try {
+        warpingKernelPtr->shrinkBBox(srcImage.getBBox(image::LOCAL));
+    } catch (lsst::pex::exceptions::InvalidParameterError) {
+        for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
+            for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
+                 destPtr != end; ++destPtr) {
+                *destPtr = padValue;
+            }
+        }
+        return 0;
+    }
+    int interpLength = control.getInterpLength();
+
+    std::shared_ptr<LanczosWarpingKernel const> const lanczosKernelPtr =
+            std::dynamic_pointer_cast<LanczosWarpingKernel>(warpingKernelPtr);
+
+    int numGoodPixels = 0;
+
+    // transformDestToSrc transforms from parent to parent
+    // but for warping we want local to local coordinates so make a new transform
+    std::vector<double> const destLocalToParentVec = {static_cast<double>(destImage.getX0()),
+                                                      static_cast<double>(destImage.getY0())};
+    auto const destLocalToParentMap = ast::ShiftMap(destLocalToParentVec);
+    std::vector<double> const srcParentToLocalVec = {static_cast<double>(-srcImage.getX0()),
+                                                     static_cast<double>(-srcImage.getY0())};
+    auto const srcParentToLocalMap = ast::ShiftMap(srcParentToLocalVec);
+    auto const localDestToSrcMap = srcParentToLocalMap.of(destToSrc.getFrameSet()->of(destLocalToParentMap));
+    auto localDestToSrc = geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>(localDestToSrcMap);
+
+    // Get the source MaskedImage and a pixel accessor to it.
+    int const srcWidth = srcImage.getWidth();
+    int const srcHeight = srcImage.getHeight();
+    LOGL_DEBUG("TRACE2.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+
+    int const destWidth = destImage.getWidth();
+    int const destHeight = destImage.getHeight();
+    LOGL_DEBUG("TRACE2.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+
+    // Set each pixel of destExposure's MaskedImage
+    LOGL_DEBUG("TRACE3.afw.math.warp", "Remapping masked image");
+
+    int const maxCol = destWidth - 1;
+    int const maxRow = destHeight - 1;
+
+    detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
+
+    if (interpLength > 0) {
+        // Use interpolation. Note that 1 produces the same result as no interpolation
+        // but uses this code branch, thus providing an easy way to compare the two branches.
+
+        // Estimate for number of horizontal interpolation band edges, to reserve memory in vectors
+        int const numColEdges = 2 + ((destWidth - 1) / interpLength);
+
+        // A list of edge column indices for interpolation bands;
+        // starts at -1, increments by interpLen (except the final interval), and ends at destWidth-1
+        std::vector<int> edgeColList;
+        edgeColList.reserve(numColEdges);
+
+        // A list of 1/column width for horizontal interpolation bands; the first value is garbage.
+        // The inverse is used for speed because the values are always multiplied.
+        std::vector<double> invWidthList;
+        invWidthList.reserve(numColEdges);
+
+        // Compute edgeColList and invWidthList
+        edgeColList.push_back(-1);
+        invWidthList.push_back(0.0);
+        for (int prevEndCol = -1; prevEndCol < maxCol; prevEndCol += interpLength) {
+            int endCol = prevEndCol + interpLength;
+            if (endCol > maxCol) {
+                endCol = maxCol;
+            }
+            edgeColList.push_back(endCol);
+            assert(endCol - prevEndCol > 0);
+            invWidthList.push_back(1.0 / static_cast<double>(endCol - prevEndCol));
+        }
+        assert(edgeColList.back() == maxCol);
+
+        // A list of delta source positions along the edge columns of the horizontal interpolation bands
+        std::vector<geom::Extent2D> yDeltaSrcPosList(edgeColList.size());
+
+        // A cache of pixel positions on the source corresponding to the previous or current row
+        // of the destination image.
+        // The first value is for column -1 because the previous source position is used to compute relative
+        // area To simplify the indexing, use an iterator that starts at begin+1, thus: srcPosView =
+        // srcPosList.begin() + 1 srcPosView[col-1] and lower indices are for this row srcPosView[col] and
+        // higher indices are for the previous row
+        std::vector<geom::Point2D> srcPosList(1 + destWidth);
+        std::vector<geom::Point2D>::iterator const srcPosView = srcPosList.begin() + 1;
+
+        std::vector<geom::Point2D> endColPosList;
+        endColPosList.reserve(numColEdges);
+
+        // Initialize srcPosList for row -1
+        for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+            int const endCol = edgeColList[colBand];
+            endColPosList.emplace_back(geom::Point2D(endCol, -1));
+        }
+        auto rightSrcPosList = localDestToSrc.tranForward(endColPosList);
+        srcPosView[-1] = rightSrcPosList[0];
+        for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+            int const prevEndCol = edgeColList[colBand - 1];
+            int const endCol = edgeColList[colBand];
+            geom::Point2D leftSrcPos = srcPosView[prevEndCol];
+
+            geom::Extent2D xDeltaSrcPos = (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
+
+            for (int col = prevEndCol + 1; col <= endCol; ++col) {
+                srcPosView[col] = srcPosView[col - 1] + xDeltaSrcPos;
+            }
+        }
+
+        int endRow = -1;
+        while (endRow < maxRow) {
+            // Next horizontal interpolation band
+
+            int prevEndRow = endRow;
+            endRow = prevEndRow + interpLength;
+            if (endRow > maxRow) {
+                endRow = maxRow;
+            }
+            assert(endRow - prevEndRow > 0);
+            double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
+
+            // Set yDeltaSrcPosList for this horizontal interpolation band
+            std::vector<geom::Point2D> destRowPosList;
+            destRowPosList.reserve(edgeColList.size());
+            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                int endCol = edgeColList[colBand];
+                destRowPosList.emplace_back(geom::Point2D(endCol, endRow));
+            }
+            auto bottomSrcPosList = localDestToSrc.tranForward(destRowPosList);
+            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                int endCol = edgeColList[colBand];
+                yDeltaSrcPosList[colBand] =
+                        (bottomSrcPosList[colBand] - srcPosView[endCol]) * interpInvHeight;
+            }
+
+            for (int row = prevEndRow + 1; row <= endRow; ++row) {
+                typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+                srcPosView[-1] += yDeltaSrcPosList[0];
+                for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                    // Next vertical interpolation band
+
+                    int const prevEndCol = edgeColList[colBand - 1];
+                    int const endCol = edgeColList[colBand];
+
+                    // Compute xDeltaSrcPos; remember that srcPosView contains
+                    // positions for this row in prevEndCol and smaller indices,
+                    // and positions for the previous row for larger indices (including endCol)
+                    geom::Point2D leftSrcPos = srcPosView[prevEndCol];
+                    geom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
+                    geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
+
+                    for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
+                        geom::Point2D leftSrcPos = srcPosView[col - 1];
+                        geom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
+                        double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
+
+                        srcPosView[col] = srcPos;
+
+                        if (warpAtOnePoint(
+                                    destXIter, srcPos, relativeArea,
+                                    typename image::detail::image_traits<DestImageT>::image_category())) {
+                            ++numGoodPixels;
+                        }
+                    }  // for col
+                }      // for col band
+            }          // for row
+        }              // while next row band
+
+    } else {
+        // No interpolation
+
+        // prevSrcPosList = source positions from the previous row; these are used to compute pixel area;
+        // to begin, compute sources positions corresponding to destination row = -1
+        std::vector<geom::Point2D> destPosList;
+        destPosList.reserve(1 + destWidth);
+        for (int col = -1; col < destWidth; ++col) {
+            destPosList.emplace_back(geom::Point2D(col, -1));
+        }
+        auto prevSrcPosList = localDestToSrc.tranForward(destPosList);
+
+        for (int row = 0; row < destHeight; ++row) {
+            destPosList.clear();
+            for (int col = -1; col < destWidth; ++col) {
+                destPosList.emplace_back(geom::Point2D(col, row));
+            }
+            auto srcPosList = localDestToSrc.tranForward(destPosList);
+
+            typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
+            for (int col = 0; col < destWidth; ++col, ++destXIter) {
+                // column index = column + 1 because the first entry in srcPosList is for column -1
+                auto srcPos = srcPosList[col + 1];
+                double relativeArea =
+                        computeRelativeArea(srcPos, prevSrcPosList[col], prevSrcPosList[col + 1]);
+
+                if (warpAtOnePoint(destXIter, srcPos, relativeArea,
+                                   typename image::detail::image_traits<DestImageT>::image_category())) {
+                    ++numGoodPixels;
+                }
+            }  // for col
+            // move points from srcPosList to prevSrcPosList (we don't care about what ends up in srcPosList
+            // because it will be reallocated anyway)
+            swap(srcPosList, prevSrcPosList);
+        }  // for row
+    }      // if interp
+
+    return numGoodPixels;
+}
+
+template <typename DestImageT, typename SrcImageT>
 int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
                       geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,
                       WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
@@ -562,6 +788,13 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
                               MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,                                   \
                               geom::XYTransform const &xyTransform, WarpingControl const &control,           \
                               MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
+    NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,     \
+                              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,  \
+                              WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);  \
+    NL template int warpImage(                                                                               \
+            MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,           \
+            geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,                    \
+            WarpingControl const &control, MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);              \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, image::Wcs const &destWcs,                 \
                               IMAGE(SRCIMAGEPIXELT) const &srcImage, image::Wcs const &srcWcs,               \
                               WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);  \
@@ -583,6 +816,6 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-}
-}
-}  // end math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
