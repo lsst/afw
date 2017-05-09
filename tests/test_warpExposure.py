@@ -184,19 +184,12 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         exposureWithoutWcs = afwImage.ExposureF(mi.getDimensions())
         warpingControl = afwMath.WarpingControl(
             "bilinear", "", 0, interpLength)
-        try:
-            afwMath.warpExposure(
-                exposureWithWcs, exposureWithoutWcs, warpingControl)
-            self.fail("warping from a source Exception with no Wcs should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpExposure(exposureWithoutWcs,
-                                 exposureWithWcs, warpingControl)
-            self.fail(
-                "warping into a destination Exception with no Wcs should fail")
-        except Exception:
-            pass
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingControl)
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingControl)
 
     def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
@@ -218,8 +211,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             afwMath.warpImage(maskedImage, wcs, maskedImage, wcs, warpingControl)
 
         with self.assertRaises(pexExcept.InvalidParameterError):
-            afwMath.warpImage(maskedImage.getImage(), wcs,
-                              maskedImage.getImage(), wcs, warpingControl)
+            afwMath.warpImage(maskedImage.getImage(), wcs, maskedImage.getImage(), wcs, warpingControl)
 
     def testWarpingControl(self):
         """Test the basic mechanics of WarpingControl
@@ -256,19 +248,19 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             ("bilinear", "lanczos4"),
             ("lanczos3", "lanczos4"),
         ):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 afwMath.WarpingControl(kernelName, maskKernelName)
 
         # error: new mask kernel larger than main kernel
         warpingControl = afwMath.WarpingControl("bilinear")
         for maskKernelName in ("lanczos3", "lanczos4"):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 warpingControl.setMaskWarpingKernelName(maskKernelName)
 
         # error: new kernel smaller than mask kernel
         warpingControl = afwMath.WarpingControl("lanczos4", "lanczos4")
         for kernelName in ("bilinear", "lanczos3"):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 warpingControl.setWarpingKernelName(kernelName)
 
         # OK: main kernel at least as big as mask kernel
@@ -288,7 +280,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             ("lanczos3", "badname"),
             ("lanczos3", "lanczos"),
         ):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 afwMath.WarpingControl(kernelName, maskKernelName)
 
     def testWarpMask(self):
