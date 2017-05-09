@@ -461,6 +461,30 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
               );
 
 /**
+ * @brief A variant of warpImage that uses a Transform<Point2Endpoint, Point2Endpoint>
+ * instead of a pair of WCS to describe the transformation.
+ *
+ * @param[in,out] destImage  Destination image; all pixels are set
+ * @param[in] srcImage  Source image
+ * @param[in] srcFromDest  Transformation from destination to source pixels in parent coordinates.
+ *    This can be computed as srcWcs.getInverse().of(destWcs)
+ *    because WCS computes pixels to sky in the forward direction
+ * @param[in] control  Warning control parameters
+ * @param[in] padValue  Value used for pixels in the destination image that are outside
+ *   the region of pixels that can be computed from the source image
+ * @return the number of good pixels
+ */
+template <typename DestImageT, typename SrcImageT>
+int warpImage(DestImageT &destImage,
+              SrcImageT const &srcImage,
+              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const & srcFromDest,
+              WarpingControl const &control,
+              typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
+                      typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
+              );
+
+
+/**
  * Warp an image with a LinearTranform about a specified point.
  *
  * This enables warping an image of e.g. a PSF without translating the centroid.
