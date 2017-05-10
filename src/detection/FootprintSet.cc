@@ -622,7 +622,6 @@ static void findFootprints(
     int nobj = 0; /* number of objects found */
     int x0 = 0;   /* unpacked from a IdSpan */
 
-    typedef typename image::Image<ImagePixelT> ImageT;
     double includeThreshold = footprintThreshold * includeThresholdMultiplier;  // Threshold for inclusion
 
     int const row0 = img.getY0();

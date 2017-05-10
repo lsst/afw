@@ -54,7 +54,6 @@ extern "C" {
 #endif
 }
 
-static int gDebugData = 0;
 static string gFilename = "", gFilename2 = "";
 static string gFilenameStripped = "", gFilename2Stripped = "";
 static string gFilter = "r";
