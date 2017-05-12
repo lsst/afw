@@ -108,7 +108,7 @@ public:
                         0, 0 is the lower left pixel of the parent image
     @param[in] crval  Center of projection on the sky
     @param[in] cdMatrix  CD matrix, where element (i-1, j-1) corresponds to FITS keyword CDi_j
-                        and i, j have range [1, 2]
+                        and i, j have range [1, 2]. May be computed by calling makeCdMatrix.
     */
     explicit SkyWcs(Point2D const &crpix, SpherePoint const &crval, Eigen::Matrix2d const &cdMatrix);
 
