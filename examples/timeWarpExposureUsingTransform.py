@@ -44,7 +44,7 @@ InputExposurePath = os.path.join(
     afwdataDir, "ImSim/calexp/v85408556-fr/R23/S11.fits")
 
 
-def timeWarp(destMaskedImage, srcMaskedImage, srcFromDest, warpingControl):
+def timeWarp(destMaskedImage, srcMaskedImage, destToSrc, warpingControl):
     """Time warpImage
 
     Parameters
@@ -53,7 +53,7 @@ def timeWarp(destMaskedImage, srcMaskedImage, srcFromDest, warpingControl):
         Destination (output) masked image
     srcMaskedImage : `lsst.afw.image.MaskedImage`
         Source (input) masked image
-    srcFromDest : `lsst.afw.geom.TransformPoint2ToPoint2`
+    destToSrc : `lsst.afw.geom.TransformPoint2ToPoint2`
         Transform from source pixels to destination pixels
     warpingControl : `lsst.afw.geom.WarpingControl`
         Warning control parameters
@@ -67,7 +67,7 @@ def timeWarp(destMaskedImage, srcMaskedImage, srcFromDest, warpingControl):
     """
     startTime = time.time()
     for nIter in range(1, MaxIter + 1):
-        goodPix = afwMath.warpImage(destMaskedImage, srcMaskedImage, srcFromDest, warpingControl)
+        goodPix = afwMath.warpImage(destMaskedImage, srcMaskedImage, destToSrc, warpingControl)
         endTime = time.time()
         if endTime - startTime > MaxTime:
             break
@@ -136,9 +136,9 @@ def run():
                         cdMatrix = afwGeom.makeCdMatrix(scale = destScale,
                                                         orientation = rotAngDeg * afwGeom.degrees,
                                                         flipX = False))
-                    srcFromDest = srcWcs.getInverse().of(destWcs)
+                    destToSrc = srcWcs.getInverse().of(destWcs)
                     dTime, nIter, goodPix = timeWarp(
-                        destMaskedImage, srcMaskedImage, srcFromDest, warpingControl)
+                        destMaskedImage, srcMaskedImage, destToSrc, warpingControl)
                     print("%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
                         testNum, interpLength, scaleFac, offsetOrientDegLenArcsec[0],
                         offsetOrientDegLenArcsec[1], rotAngDeg, kernelName, goodPix, dTime/float(nIter)))

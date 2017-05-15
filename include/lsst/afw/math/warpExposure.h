@@ -466,7 +466,7 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
  *
  * @param[in,out] destImage  Destination image; all pixels are set
  * @param[in] srcImage  Source image
- * @param[in] srcFromDest  Transformation from destination to source pixels in parent coordinates.
+ * @param[in] destToSrc  Transformation from destination to source pixels in parent coordinates.
  *    This can be computed as srcWcs.getInverse().of(destWcs)
  *    because WCS computes pixels to sky in the forward direction
  * @param[in] control  Warning control parameters
@@ -477,7 +477,7 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage,
               SrcImageT const &srcImage,
-              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const & srcFromDest,
+              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const & destToSrc,
               WarpingControl const &control,
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())

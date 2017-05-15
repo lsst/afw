@@ -497,7 +497,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage, geom::XYTransfor
 
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
-              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &srcFromDest,
+              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,
               WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
     if (details::isSameObject(destImage, srcImage)) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destImage is srcImage; cannot warp in place");
@@ -527,15 +527,14 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
 
     // transformDestToSrc transforms from parent to parent
     // but for warping we want local to local coordinates so make a new transform
-    std::vector<double> const destParentFromLocalVec = {static_cast<double>(destImage.getX0()),
-                                                        static_cast<double>(destImage.getY0())};
-    auto const destParentFromLocalMap = ast::ShiftMap(destParentFromLocalVec);
-    std::vector<double> const srcLocalFromParentVec = {static_cast<double>(-srcImage.getX0()),
-                                                       static_cast<double>(-srcImage.getY0())};
-    auto const srcLocalFromParentMap = ast::ShiftMap(srcLocalFromParentVec);
-    auto const localSrcFromDestMap =
-            srcLocalFromParentMap.of(srcFromDest.getFrameSet()->of(destParentFromLocalMap));
-    auto localSrcFromDest = geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>(localSrcFromDestMap);
+    std::vector<double> const destLocalToParentVec = {static_cast<double>(destImage.getX0()),
+                                                      static_cast<double>(destImage.getY0())};
+    auto const destLocalToParentMap = ast::ShiftMap(destLocalToParentVec);
+    std::vector<double> const srcParentToLocalVec = {static_cast<double>(-srcImage.getX0()),
+                                                     static_cast<double>(-srcImage.getY0())};
+    auto const srcParentToLocalMap = ast::ShiftMap(srcParentToLocalVec);
+    auto const localDestToSrcMap = srcParentToLocalMap.of(destToSrc.getFrameSet()->of(destLocalToParentMap));
+    auto localDestToSrc = geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>(localDestToSrcMap);
 
     // Get the source MaskedImage and a pixel accessor to it.
     int const srcWidth = srcImage.getWidth();
@@ -590,11 +589,10 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
 
         // A cache of pixel positions on the source corresponding to the previous or current row
         // of the destination image.
-        // The first value is for column -1 because the previous source position is used to compute relative area
-        // To simplify the indexing, use an iterator that starts at begin+1, thus:
-        // srcPosView = srcPosList.begin() + 1
-        // srcPosView[col-1] and lower indices are for this row
-        // srcPosView[col] and higher indices are for the previous row
+        // The first value is for column -1 because the previous source position is used to compute relative
+        // area To simplify the indexing, use an iterator that starts at begin+1, thus: srcPosView =
+        // srcPosList.begin() + 1 srcPosView[col-1] and lower indices are for this row srcPosView[col] and
+        // higher indices are for the previous row
         std::vector<geom::Point2D> srcPosList(1 + destWidth);
         std::vector<geom::Point2D>::iterator const srcPosView = srcPosList.begin() + 1;
 
@@ -606,13 +604,13 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
             int const endCol = edgeColList[colBand];
             endColPosList.emplace_back(geom::Point2D(endCol, -1));
         }
-        auto rightSrcPosList = localSrcFromDest.tranForward(endColPosList);
+        auto rightSrcPosList = localDestToSrc.tranForward(endColPosList);
         srcPosView[-1] = rightSrcPosList[0];
         for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
             int const prevEndCol = edgeColList[colBand - 1];
             int const endCol = edgeColList[colBand];
             geom::Point2D leftSrcPos = srcPosView[prevEndCol];
-            
+
             geom::Extent2D xDeltaSrcPos = (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
 
             for (int col = prevEndCol + 1; col <= endCol; ++col) {
@@ -639,7 +637,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
                 int endCol = edgeColList[colBand];
                 destRowPosList.emplace_back(geom::Point2D(endCol, endRow));
             }
-            auto bottomSrcPosList = localSrcFromDest.tranForward(destRowPosList);
+            auto bottomSrcPosList = localDestToSrc.tranForward(destRowPosList);
             for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
                 int endCol = edgeColList[colBand];
                 yDeltaSrcPosList[colBand] =
@@ -689,14 +687,14 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         for (int col = -1; col < destWidth; ++col) {
             destPosList.emplace_back(geom::Point2D(col, -1));
         }
-        auto prevSrcPosList = localSrcFromDest.tranForward(destPosList);
+        auto prevSrcPosList = localDestToSrc.tranForward(destPosList);
 
         for (int row = 0; row < destHeight; ++row) {
             destPosList.clear();
             for (int col = -1; col < destWidth; ++col) {
                 destPosList.emplace_back(geom::Point2D(col, row));
             }
-            auto srcPosList = localSrcFromDest.tranForward(destPosList);
+            auto srcPosList = localDestToSrc.tranForward(destPosList);
 
             typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
             for (int col = 0; col < destWidth; ++col, ++destXIter) {
@@ -789,14 +787,12 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
                               geom::XYTransform const &xyTransform, WarpingControl const &control,           \
                               MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,     \
-                              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &srcFromDest,\
-                              WarpingControl const &control,                                                 \
-                              IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                                 \
-    NL template int warpImage(MASKEDIMAGE(DESTIMAGEPIXELT) & destImage,                                      \
-                              MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,                                   \
-                              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &srcFromDest,\
-                              WarpingControl const &control,                                                 \
-                              MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                           \
+                              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,  \
+                              WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);  \
+    NL template int warpImage(                                                                               \
+            MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,           \
+            geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,                    \
+            WarpingControl const &control, MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);              \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, image::Wcs const &destWcs,                 \
                               IMAGE(SRCIMAGEPIXELT) const &srcImage, image::Wcs const &srcWcs,               \
                               WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);  \
@@ -818,6 +814,6 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-}
-}
-}  // end math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

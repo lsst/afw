@@ -459,13 +459,13 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             # original image is source, warped image is destination
             # and WCS computes pixels to sky in the forward direction, so...
-            srcFromDest = originalSkyWcs.getInverse().of(warpedSkyWcs)
+            destToSrc = originalSkyWcs.getInverse().of(warpedSkyWcs)
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             originalMaskedImage = originalExposure.getMaskedImage()
 
             numGoodPix = afwMath.warpImage(afwWarpedMaskedImage, originalMaskedImage,
-                                           srcFromDest, warpingControl)
+                                           destToSrc, warpingControl)
             self.assertGreater(numGoodPix, 50)
 
             afwWarpedImage = afwWarpedMaskedImage.getImage()
