@@ -71,11 +71,28 @@ public:
      * that to construct the Footprint.
      */
 
-    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, geom::Box2I const &region = geom::Box2I());
+    /** @brief Constructor for Footprint object
+     *
+     * @param inputSpans Shared pointer to a SpanSet defining the pixels included in
+                         the Footprint.
+     * @param region Bounding box of the image in which the Footprint was created,
+                     defaults to empty box.
+     */
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, geom::Box2I const & region=geom::Box2I());
 
-    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const &peakSchema,
-                       geom::Box2I const &region = geom::Box2I());
+    /** @brief Constructor for the Footprint object
+     *
+     * @param inputSpans Shared pointer to a SpanSet defining the pixels included in
+                         the Footprint.
+     * @param peakSchema schema to be used in the PeakCatalog
+     * @param region Bounding box of the image in which the Footprint was created,
+                     defaults to empty box.
+     */
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const & peakSchema,
+                       geom::Box2I const & region=geom::Box2I());
 
+    /** @brief Constructor of a empty Footprint object
+     */
     explicit Footprint()
             : lsst::daf::base::Citizen(typeid(this)),
               _spans(std::make_shared<geom::SpanSet>()),
