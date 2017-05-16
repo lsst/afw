@@ -166,7 +166,6 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
     template class Transform<FromEndpoint, ToEndpoint>;                  \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)     \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)      \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point3Endpoint)      \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, SpherePointEndpoint) \
     template std::ostream &operator<<<FromEndpoint, ToEndpoint>(         \
             std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
@@ -174,19 +173,12 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
 // explicit instantiations
 INSTANTIATE_TRANSFORM(GenericEndpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(GenericEndpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(GenericEndpoint, Point3Endpoint);
 INSTANTIATE_TRANSFORM(GenericEndpoint, SpherePointEndpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(Point2Endpoint, Point3Endpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, SpherePointEndpoint);
-INSTANTIATE_TRANSFORM(Point3Endpoint, GenericEndpoint);
-INSTANTIATE_TRANSFORM(Point3Endpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(Point3Endpoint, Point3Endpoint);
-INSTANTIATE_TRANSFORM(Point3Endpoint, SpherePointEndpoint);
 INSTANTIATE_TRANSFORM(SpherePointEndpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(SpherePointEndpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(SpherePointEndpoint, Point3Endpoint);
 INSTANTIATE_TRANSFORM(SpherePointEndpoint, SpherePointEndpoint);
 
 }  // geom

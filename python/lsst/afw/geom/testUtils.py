@@ -27,6 +27,7 @@ from builtins import range
 from builtins import object
 
 import itertools
+import math
 import os
 
 import astshim
@@ -223,14 +224,13 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.longMessage = True
 
         # list of endpoint class name prefixes; the full name is prefix + "Endpoint"
-        self.endpointPrefixes = ("Generic", "Point2", "Point3", "SpherePoint")
+        self.endpointPrefixes = ("Generic", "Point2", "SpherePoint")
 
         # GoodNaxes is dict of endpoint class name prefix:
         #    tuple containing 0 or more valid numbers of axes
         self.goodNAxes = {
             "Generic": (1, 2, 3, 4),  # all numbers of axes are valid for GenericEndpoint
             "Point2": (2,),
-            "Point3": (3,),
             "SpherePoint": (2,),
         }
 
@@ -239,7 +239,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.badNAxes = {
             "Generic": (),  # all numbers of axes are valid for GenericEndpoint
             "Point2": (1, 3, 4),
-            "Point3": (1, 2, 4),
             "SpherePoint": (1, 3, 4),
         }
 
@@ -255,22 +254,35 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
     def makeRawArrayData(nPoints, nAxes, delta=0.123):
         """Make an array of generic point data
 
+        The data will be suitable for spherical points
+
         Parameters
         ----------
         nPoints : `int`
             Number of points in the array
         nAxes : `int`
             Number of axes in the point
-        delta : `float`
-            Increment between axis values for one point
 
         Returns
         -------
-        np.array of floats with shape (nPoints, nAxes)
-            The first point has values `[0, delta, 2*delta, ..., (nAxes-1)*delta]`
-            The Nth point has those values + N
+        np.array of floats with shape (nAxes, nPoints)
+            The values are as follows; if nAxes != 2:
+                The first point has values `[0, delta, 2*delta, ..., (nAxes-1)*delta]`
+                The Nth point has those values + N
+            if nAxes == 2 then the data is scaled so that the max value of axis 1
+                is a bit less than pi/2
         """
-        return np.array([[i + j*delta for j in range(nAxes)] for i in range(nPoints)])
+        delta = 0.123
+        # oneAxis = [0, 1, 2, ...nPoints-1]
+        oneAxis = np.arange(nPoints, dtype=float)  # [0, 1, 2...]
+        # rawData = [oneAxis, oneAxis + delta, oneAxis + 2 delta, ...]
+        rawData = np.array([j * delta + oneAxis for j in range(nAxes)], dtype=float)
+        if nAxes == 2:
+            # scale rawData so that max value of 2nd axis is a bit less than pi/2,
+            # thus making the data safe for SpherePoint
+            maxLatitude = np.max(rawData[1])
+            rawData *= math.pi * 0.4999 / maxLatitude
+        return rawData
 
     @staticmethod
     def makeRawPointData(nAxes, delta=0.123):
@@ -364,11 +376,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 astshim.SkyFrame(),
                 astshim.Frame(1),
                 astshim.Frame(3),
-            ],
-            "Point3": [
-                astshim.SkyFrame(),
-                astshim.Frame(2),
-                astshim.Frame(4),
             ],
             "SpherePoint": [
                 astshim.Frame(1),

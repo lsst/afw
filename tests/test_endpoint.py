@@ -22,24 +22,16 @@ see <http://www.lsstcorp.org/LegalNotices/>.
 from __future__ import absolute_import, division, print_function
 import unittest
 
-import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astshim
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 from lsst.pex.exceptions import InvalidParameterError
+from lsst.afw.geom.testUtils import TransformTestBaseClass
 
 
-def makeRawArrData(nPoints, nAxes, delta=0.123):
-    return np.array([[i + j*delta for j in range(nAxes)] for i in range(nPoints)])
-
-
-def makeRawPointData(nAxes, delta=0.123):
-    return [i*delta for i in range(nAxes)]
-
-
-class EndpointTestCase(lsst.utils.tests.TestCase):
+class EndpointTestCase(TransformTestBaseClass):
 
     def setUp(self):
         self.longMessage = True
@@ -93,25 +85,6 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(InvalidParameterError):
             endpoint.normalizeFrame(badFrame)
 
-    def testPoint3Endpoint(self):
-        endpoint = afwGeom.Point3Endpoint()
-        self.checkEndpointBasics(
-            endpoint = endpoint, pointType = afwGeom.Point3D, nAxes = 3)
-        self.assertEqual(repr(endpoint), "lsst.afw.geom.Point3Endpoint()")
-        self.assertEqual("{}".format(endpoint), "Point3Endpoint()")
-
-        # normalize does not check the # of axes
-        for n in range(4):
-            frame1 = astshim.Frame(n)
-            try:
-                endpoint.normalizeFrame(frame1)
-            except Exception as e:
-                self.fail(
-                    "endpoint.normalizeFrame(Frame({})) failed with error = {}".format(n, e))
-        badFrame = astshim.SkyFrame()
-        with self.assertRaises(InvalidParameterError):
-            endpoint.normalizeFrame(badFrame)
-
     def testGenericEndpoint(self):
         for nAxes in (1, 2, 3, 4, 5):
             endpoint = afwGeom.GenericEndpoint(nAxes)
@@ -138,29 +111,34 @@ class EndpointTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(endpoint.getNAxes(), nAxes, msg=baseMsg)
 
+        # generate enough points to be interesting, but no need to overdo it
         nPoints = 4
 
-        rawData = makeRawArrData(nPoints=nPoints, nAxes=nAxes)
+        rawData = self.makeRawArrayData(nPoints=nPoints, nAxes=nAxes)
         pointList = endpoint.arrayFromData(rawData)
-        self.assertEqual(len(pointList), nPoints, msg=baseMsg)
         self.assertEqual(endpoint.getNPoints(pointList), nPoints, msg=baseMsg)
-        for i, point in enumerate(pointList):
-            for axis in range(nAxes):
-                msg = "{}, endpoint={}, i={}, point={}".format(
-                    baseMsg, endpoint, i, point)
-                if isAngle:
-                    desAngle = rawData[i, axis] * afwGeom.radians
-                    self.assertAnglesAlmostEqual(
-                        point[axis], desAngle, msg=msg)
-                else:
-                    self.assertAlmostEqual(
-                        point[axis], rawData[i, axis], msg=msg)
+        if isinstance(endpoint, afwGeom.GenericEndpoint):
+            self.assertEqual(len(pointList[0]), nPoints, msg=baseMsg)
+            assert_equal(rawData, pointList)
+        else:
+            self.assertEqual(len(pointList), nPoints, msg=baseMsg)
+            for i, point in enumerate(pointList):
+                for axis in range(nAxes):
+                    msg = "{}, endpoint={}, i={}, point={}".format(
+                        baseMsg, endpoint, i, point)
+                    if isAngle:
+                        desAngle = rawData[axis, i] * afwGeom.radians
+                        self.assertAnglesAlmostEqual(
+                            point[axis], desAngle, msg=msg)
+                    else:
+                        self.assertAlmostEqual(
+                            point[axis], rawData[axis, i], msg=msg)
 
         rawDataRoundTrip = endpoint.dataFromArray(pointList)
         self.assertEqual(rawData.shape, rawDataRoundTrip.shape, msg=baseMsg)
         self.assertFloatsAlmostEqual(rawData, rawDataRoundTrip, msg=baseMsg)
 
-        pointData = makeRawPointData(nAxes=nAxes)
+        pointData = self.makeRawPointData(nAxes=nAxes)
         point = endpoint.pointFromData(pointData)
         self.assertEqual(type(point), pointType, msg=baseMsg)
         for axis in range(nAxes):
