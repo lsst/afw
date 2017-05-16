@@ -80,7 +80,18 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("getApCorrMap", &ExposureRecord::getApCorrMap);
     cls.def("setApCorrMap", &ExposureRecord::setApCorrMap, "appCorrMap"_a);
     cls.def("getValidPolygon", &ExposureRecord::getValidPolygon);
-    cls.def("setValidPolygon", &ExposureRecord::setValidPolygon, "polygon"_a);
+
+    // Workaround for DM-10289.
+    cls.def("setValidPolygon",
+            [](ExposureRecord &self, py::object polygon) {
+                if (polygon == py::none()) {
+                    self.setValidPolygon(nullptr);
+                } else {
+                    self.setValidPolygon(py::cast<std::shared_ptr<afw::geom::polygon::Polygon>>(polygon));
+                }
+            },
+            "polygon"_a);
+
     cls.def("getVisitInfo", &ExposureRecord::getVisitInfo);
     cls.def("setVisitInfo", &ExposureRecord::setVisitInfo, "visitInfo"_a);
     return cls;
