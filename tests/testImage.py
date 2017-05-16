@@ -106,11 +106,23 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(array1.shape[0], image2.getHeight())
             self.assertEqual(array1.shape[1], image2.getWidth())
             self.assertEqual(type(image3), cls)
+            array2 = image1.array
+            np.testing.assert_array_equal(array1, array2)
             array1[:, :] = np.random.uniform(low=0, high=10, size=array1.shape)
             for j in range(image1.getHeight()):
                 for i in range(image1.getWidth()):
                     self.assertEqual(image1.get(i, j), array1[j, i])
                     self.assertEqual(image2.get(i, j), array1[j, i])
+            array3 = np.random.uniform(low=0, high=10,
+                                       size=array1.shape).astype(array1.dtype)
+            image1.array = array3
+            np.testing.assert_array_equal(array1, array3)
+            image1.array[2:4, 3:] = 10
+            np.testing.assert_array_equal(array1[2:4, 3:], 10)
+            array4 = image1.array.copy()
+            array4 += 5
+            image1.array += 5
+            np.testing.assert_array_equal(image1.array, array4)
 
     def testInitializeImages(self):
         val = 666

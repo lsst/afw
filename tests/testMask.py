@@ -132,6 +132,12 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(type(image3), afwImage.MaskU)
         array1[:, :] = np.random.uniform(low=0, high=10, size=array1.shape)
         self.assertMasksEqual(image1, array1)
+        array2 = image1.array
+        np.testing.assert_array_equal(image1.array, array2)
+        array3 = np.random.uniform(low=0, high=10,
+                                   size=array1.shape).astype(array1.dtype)
+        image1.array = array3
+        np.testing.assert_array_equal(array1, array3)
 
     def testInitializeMasks(self):
         val = 0x1234
