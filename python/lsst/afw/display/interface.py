@@ -432,7 +432,7 @@ class Display(object):
             self._impl._mtv(afwImage.ImageU(data.getArray()), data, wcs, title)
         # it's a MaskedImage; display Image and overlay Mask
         elif isinstance(data, afwImage.MaskedImage):
-            self._impl._mtv(data.getImage(), data.getMask(True), wcs, title)
+            self._impl._mtv(data.getImage(), data.getMask(), wcs, title)
         else:
             raise RuntimeError("Unsupported type %s" % repr(data))
     #
