@@ -54,9 +54,91 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
+using std::swap;
+
 namespace lsst {
 namespace afw {
 namespace math {
+namespace {
+
+/**
+Information about linear interpolation over integer indices (e.g. CCD rows or columns)
+
+@property endList  A vector of indices of the end point of each interpolation band;
+            element 0 is -1, the beginning of first band - 1
+            element 1 is the end of the first band
+            the last element is `numPoints` - 1
+@property fracList  Fraction of band covered by one pixel, for each band (1 / width of band);
+            element 0 is 0 and should be ignored
+            element 1 is the fraction for the first band
+            the last element is the fraction for the last band
+*/
+class InterpolationBands {
+public:
+    int numPoints;     ///< The number of points to divide into interpolation bands
+    int interpLength;  ///< The nominal number of points per interpolation band;
+                       ///< all but the last band will have this many points.
+    std::vector<int>
+            endList;  ///< End index for each band; the first entry is -1 and the last entry is numPoints-1
+    std::vector<double>
+            fracList;  ///< Fraction of band covered by one pixel, for each band (1 / width of band)
+
+    /**
+    Construct an InterpolationBands
+
+    @param[in] numPoints  The number of points to divide into interpolation bands
+    @param[in] interpLength  The nominal number of points per interpolation band;
+                            all but the last band will have this many points.
+    */
+    InterpolationBands(int numPoints, int interpLength) : numPoints(numPoints), interpLength(interpLength) {
+        _init(numPoints, interpLength);
+    }
+
+    /**
+    Return the size of the `endList` and `fracList`
+
+    Note that this is one more than the number of bands, since the first element
+    of `endList` is -1 and the first element of `fracList` should be ignored
+    */
+    size_t size() const { return endList.size(); }
+
+private:
+    void _init(int numPoints, int interpLength) {
+        if (numPoints < 1) {
+            std::ostringstream os;
+            os << "numPoints = " << numPoints << " must be > 0";
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
+        }
+        if (interpLength < 1) {
+            std::ostringstream os;
+            os << "interpLength = " << interpLength << " must be > 0";
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
+        }
+        int const maxIndex = numPoints - 1;
+
+        // Estimate for number of interpolation bands, to reserve memory in vectors
+        int const estNumBands = maxIndex / interpLength + 2;
+
+        endList.reserve(estNumBands);
+        fracList.reserve(estNumBands);
+
+        // Compute endList and fracList
+        endList.push_back(-1);
+        fracList.push_back(0.0);
+        for (int prevEnd = -1; prevEnd < maxIndex; prevEnd += interpLength) {
+            int bandEnd = prevEnd + interpLength;
+            if (bandEnd > maxIndex) {
+                bandEnd = maxIndex;
+            }
+            endList.push_back(bandEnd);
+            assert(bandEnd - prevEnd > 0);
+            fracList.push_back(1.0 / static_cast<double>(bandEnd - prevEnd));
+        }
+        assert(endList.back() == maxIndex);
+    }
+};
+
+}  // namespace
 
 //
 // A helper function for the warping kernels which provides error-checking:
@@ -548,44 +630,13 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     // Set each pixel of destExposure's MaskedImage
     LOGL_DEBUG("TRACE3.afw.math.warp", "Remapping masked image");
 
-    int const maxCol = destWidth - 1;
-    int const maxRow = destHeight - 1;
-
     detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
 
     if (interpLength > 0) {
         // Use interpolation. Note that 1 produces the same result as no interpolation
         // but uses this code branch, thus providing an easy way to compare the two branches.
-
-        // Estimate for number of horizontal interpolation band edges, to reserve memory in vectors
-        int const numColEdges = 2 + ((destWidth - 1) / interpLength);
-
-        // A list of edge column indices for interpolation bands;
-        // starts at -1, increments by interpLen (except the final interval), and ends at destWidth-1
-        std::vector<int> edgeColList;
-        edgeColList.reserve(numColEdges);
-
-        // A list of 1/column width for horizontal interpolation bands; the first value is garbage.
-        // The inverse is used for speed because the values are always multiplied.
-        std::vector<double> invWidthList;
-        invWidthList.reserve(numColEdges);
-
-        // Compute edgeColList and invWidthList
-        edgeColList.push_back(-1);
-        invWidthList.push_back(0.0);
-        for (int prevEndCol = -1; prevEndCol < maxCol; prevEndCol += interpLength) {
-            int endCol = prevEndCol + interpLength;
-            if (endCol > maxCol) {
-                endCol = maxCol;
-            }
-            edgeColList.push_back(endCol);
-            assert(endCol - prevEndCol > 0);
-            invWidthList.push_back(1.0 / static_cast<double>(endCol - prevEndCol));
-        }
-        assert(edgeColList.back() == maxCol);
-
-        // A list of delta source positions along the edge columns of the horizontal interpolation bands
-        std::vector<geom::Extent2D> yDeltaSrcPosList(edgeColList.size());
+        InterpolationBands colInfo{destWidth, interpLength};
+        InterpolationBands rowInfo{destHeight, interpLength};
 
         // A cache of pixel positions on the source corresponding to the previous or current row
         // of the destination image.
@@ -596,69 +647,60 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         std::vector<geom::Point2D> srcPosList(1 + destWidth);
         std::vector<geom::Point2D>::iterator const srcPosView = srcPosList.begin() + 1;
 
-        std::vector<geom::Point2D> endColPosList;
-        endColPosList.reserve(numColEdges);
+        std::vector<geom::Point2D> rightDestPosList;
+        rightDestPosList.reserve(colInfo.size());
 
         // Initialize srcPosList for row -1
-        for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-            int const endCol = edgeColList[colBand];
-            endColPosList.emplace_back(geom::Point2D(endCol, -1));
+        for (int endCol : colInfo.endList) {
+            rightDestPosList.emplace_back(geom::Point2D(endCol, -1));
         }
-        auto rightSrcPosList = localDestToSrc.tranForward(endColPosList);
+        auto rightSrcPosList = localDestToSrc.tranForward(rightDestPosList);
         srcPosView[-1] = rightSrcPosList[0];
-        for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-            int const prevEndCol = edgeColList[colBand - 1];
-            int const endCol = edgeColList[colBand];
+        for (int colBand = 1, colEndBand = colInfo.size(); colBand < colEndBand; ++colBand) {
+            int const prevEndCol = colInfo.endList[colBand - 1];
+            int const endCol = colInfo.endList[colBand];
             geom::Point2D leftSrcPos = srcPosView[prevEndCol];
-
-            geom::Extent2D xDeltaSrcPos = (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
-
+            geom::Extent2D xDeltaSrcPos = (rightSrcPosList[colBand] - leftSrcPos) * colInfo.fracList[colBand];
             for (int col = prevEndCol + 1; col <= endCol; ++col) {
                 srcPosView[col] = srcPosView[col - 1] + xDeltaSrcPos;
             }
         }
 
-        int endRow = -1;
-        while (endRow < maxRow) {
-            // Next horizontal interpolation band
+        // A list of delta source positions along the edge columns of the horizontal interpolation bands
+        std::vector<geom::Extent2D> yDeltaSrcPosList(colInfo.size());
 
-            int prevEndRow = endRow;
-            endRow = prevEndRow + interpLength;
-            if (endRow > maxRow) {
-                endRow = maxRow;
-            }
-            assert(endRow - prevEndRow > 0);
-            double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
+        for (int rowBand = 1, rowEndBand = rowInfo.size(); rowBand < rowEndBand; ++rowBand) {
+            int prevEndRow = rowInfo.endList[rowBand - 1];
+            int endRow = rowInfo.endList[rowBand];
 
             // Set yDeltaSrcPosList for this horizontal interpolation band
-            std::vector<geom::Point2D> destRowPosList;
-            destRowPosList.reserve(edgeColList.size());
-            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                int endCol = edgeColList[colBand];
-                destRowPosList.emplace_back(geom::Point2D(endCol, endRow));
+            std::vector<geom::Point2D> bottomDestPosList;
+            bottomDestPosList.reserve(colInfo.size());
+            for (int endCol : colInfo.endList) {
+                bottomDestPosList.emplace_back(geom::Point2D(endCol, endRow));
             }
-            auto bottomSrcPosList = localDestToSrc.tranForward(destRowPosList);
-            for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
-                int endCol = edgeColList[colBand];
+            auto bottomSrcPosList = localDestToSrc.tranForward(bottomDestPosList);
+            for (int colBand = 0, colEndBand = colInfo.size(); colBand < colEndBand; ++colBand) {
+                int endCol = colInfo.endList[colBand];
                 yDeltaSrcPosList[colBand] =
-                        (bottomSrcPosList[colBand] - srcPosView[endCol]) * interpInvHeight;
+                        (bottomSrcPosList[colBand] - srcPosView[endCol]) * rowInfo.fracList[rowBand];
             }
 
             for (int row = prevEndRow + 1; row <= endRow; ++row) {
                 typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
                 srcPosView[-1] += yDeltaSrcPosList[0];
-                for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
+                for (int colBand = 1, colEndBand = colInfo.size(); colBand < colEndBand; ++colBand) {
                     // Next vertical interpolation band
 
-                    int const prevEndCol = edgeColList[colBand - 1];
-                    int const endCol = edgeColList[colBand];
+                    int const prevEndCol = colInfo.endList[colBand - 1];
+                    int const endCol = colInfo.endList[colBand];
 
                     // Compute xDeltaSrcPos; remember that srcPosView contains
                     // positions for this row in prevEndCol and smaller indices,
                     // and positions for the previous row for larger indices (including endCol)
                     geom::Point2D leftSrcPos = srcPosView[prevEndCol];
                     geom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
-                    geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
+                    geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * colInfo.fracList[colBand];
 
                     for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
                         geom::Point2D leftSrcPos = srcPosView[col - 1];
@@ -676,7 +718,6 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
                 }      // for col band
             }          // for row
         }              // while next row band
-
     } else {
         // No interpolation
 
@@ -710,7 +751,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
             }  // for col
             // move points from srcPosList to prevSrcPosList (we don't care about what ends up in srcPosList
             // because it will be reallocated anyway)
-            std::swap(srcPosList, prevSrcPosList);
+            swap(srcPosList, prevSrcPosList);
         }  // for row
     }      // if interp
 
