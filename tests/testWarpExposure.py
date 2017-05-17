@@ -432,6 +432,48 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
                                              skipMask=noDataMaskArr, rtol=rtol, atol=atol)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
+    def testTransformBasedWarp(self):
+        """Test warping using Transform<Point2Endpoint, Point2Endpoint>
+        """
+        for interpLength in (0, 1, 2, 4):
+            kernelName = "lanczos3"
+            rtol = 4e-5
+            atol = 1e-2
+            warpingControl = afwMath.WarpingControl(
+                warpingKernelName = kernelName,
+                interpLength = interpLength,
+            )
+
+            originalExposure = afwImage.ExposureF(originalExposurePath)
+            originalMetadata = afwImage.DecoratedImageF(originalExposurePath).getMetadata()
+            originalSkyWcs = afwGeom.SkyWcs(originalMetadata)
+
+            swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+            swarpedImagePath = os.path.join(dataDir, swarpedImageName)
+            swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
+            swarpedImage = swarpedDecoratedImage.getImage()
+
+            swarpedMetadata = swarpedDecoratedImage.getMetadata()
+            warpedSkyWcs = afwGeom.SkyWcs(swarpedMetadata)
+
+            # original image is source, warped image is destination
+            # and WCS computes pixels to sky in the forward direction, so...
+            destToSrc = originalSkyWcs.getInverse().of(warpedSkyWcs)
+
+            afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
+            originalMaskedImage = originalExposure.getMaskedImage()
+
+            numGoodPix = afwMath.warpImage(afwWarpedMaskedImage, originalMaskedImage,
+                                           destToSrc, warpingControl)
+            self.assertGreater(numGoodPix, 50)
+
+            afwWarpedImage = afwWarpedMaskedImage.getImage()
+            afwWarpedImageArr = afwWarpedImage.getArray()
+            noDataMaskArr = np.isnan(afwWarpedImageArr)
+            self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
+                                         skipMask=noDataMaskArr, rtol=rtol, atol=atol)
+
     def testTicket2441(self):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
         fromWcs = makeWcs(

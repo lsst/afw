@@ -2,7 +2,7 @@
 
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -37,6 +37,7 @@ import lsst.afw.math as afwMath
 
 MaxIter = 20
 MaxTime = 1.0  # seconds
+WarpSubregion = True  # set False to warp more pixels
 SaveImages = False
 DegPerRad = 180.0 / math.pi
 
@@ -134,7 +135,7 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
 def run():
     if len(sys.argv) < 2:
         srcExposure = afwImage.ExposureF(InputExposurePath)
-        if True:
+        if WarpSubregion:
             bbox = afwGeom.Box2I(afwGeom.Point2I(
                 0, 0), afwGeom.Extent2I(2000, 2000))
             srcExposure = afwImage.ExposureF(
