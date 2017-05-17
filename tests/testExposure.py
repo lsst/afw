@@ -154,7 +154,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
         self.assertEqual(crOnlyHeight, self.exposureCrOnly.getHeight())
 
-
     def testProperties(self):
         self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage,
                                      self.exposureMiOnly.getMaskedImage())
@@ -164,6 +163,23 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mi2.mask.array = 0x1
         self.exposureMiOnly.maskedImage = mi2
         self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage, mi2)
+        self.assertImagesEqual(self.exposureMiOnly.image,
+                               self.exposureMiOnly.maskedImage.image)
+
+        image3 = afwImage.ImageF(self.exposureMiOnly.getDimensions())
+        image3.array = 3.0
+        self.exposureMiOnly.image = image3
+        self.assertImagesEqual(self.exposureMiOnly.image, image3)
+
+        mask3 = afwImage.MaskU(self.exposureMiOnly.getDimensions())
+        mask3.array = 0x2
+        self.exposureMiOnly.mask = mask3
+        self.assertMasksEqual(self.exposureMiOnly.mask, mask3)
+
+        var3 = afwImage.ImageF(self.exposureMiOnly.getDimensions())
+        var3.array = 2.0
+        self.exposureMiOnly.variance = var3
+        self.assertImagesEqual(self.exposureMiOnly.variance, var3)
 
     def testGetWcs(self):
         """
