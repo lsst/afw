@@ -147,8 +147,11 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
     cls.def_static("readFits", (MI(*)(std::string const &))MI::readFits, "filename"_a);
     cls.def_static("readFits", (MI(*)(fits::MemFileManager &))MI::readFits, "manager"_a);
     cls.def("getImage", &MI::getImage);
+    cls.def("setImage", &MI::setImage);
     cls.def("getMask", &MI::getMask);
+    cls.def("setMask", &MI::setMask);
     cls.def("getVariance", &MI::getVariance);
+    cls.def("setVariance", &MI::setVariance);
     cls.def("getWidth", &MI::getWidth);
     cls.def("getHeight", &MI::getHeight);
     cls.def("getDimensions", &MI::getDimensions);

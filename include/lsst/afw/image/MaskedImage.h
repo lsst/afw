@@ -959,8 +959,35 @@ public:
     /// Return a (shared_ptr to) the MaskedImage's %image
     ImagePtr getImage() const { return _image; }
 
+    /**
+     *  Set the image plane's pixel values to those of another Image.
+     *
+     *  This copies pixel values, not pointers.
+     *
+     *  @throws pex::exceptions::LengthError if dimensions do not match.
+     */
+    void setImage(Image const & other) { _image->assign(other); }
+
     /// Return a (shared_ptr to) the MaskedImage's %mask
     MaskPtr getMask() const { return _mask; }
+
+    /**
+     *  Set the mask plane's pixel values to those of another Mask.
+     *
+     *  This copies pixel values, not pointers.
+     *
+     *  @throws pex::exceptions::LengthError if dimensions do not match.
+     */
+    void setMask(Mask const & other) { _mask->assign(other); }
+
+    /**
+     *  Set the variance plane's pixel values to those of another Image.
+     *
+     *  This copies pixel values, not pointers.
+     *
+     *  @throws pex::exceptions::LengthError if dimensions do not match.
+     */
+    void setVariance(Variance const & other) { _variance->assign(other); }
 
     /// Return a (shared_ptr to) the MaskedImage's variance
     VariancePtr getVariance() const { return _variance; }
