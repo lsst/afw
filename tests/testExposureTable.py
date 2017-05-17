@@ -40,7 +40,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet
 import lsst.afw.table
-from lsst.afw.geom import arcseconds, degrees, radians
+from lsst.afw.geom import arcseconds, degrees, radians, Point2D
 import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
@@ -94,6 +94,14 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             lsst.afw.coord.Weather(1.1, 2.2, 34.5),
         )
 
+    @staticmethod
+    def makePolygon():
+        # We "hide" the import of Polygon here as it has side effects due to
+        # pybind11 "order of import" issues. See the brief discussion at
+        # DM-10289.
+        from lsst.afw.geom.polygon import Polygon
+        return Polygon([Point2D(1,2), Point2D(2,1)])
+
     def comparePsfs(self, psf1, psf2):
         self.assertIsNotNone(psf1)
         self.assertIsNotNone(psf2)
@@ -131,12 +139,14 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         record0.setWcs(self.wcs)
         record0.setCalib(self.calib)
         record0.setVisitInfo(self.visitInfo)
+        record0.setValidPolygon(None)
         record1 = self.cat.addNew()
         record1.setId(2)
         record1.set(self.ka, 2.5)
         record1.set(self.kb, 2)
         record1.setWcs(self.wcs)
         record1.setBBox(self.bbox1)
+        record1.setValidPolygon(self.makePolygon())
 
     def tearDown(self):
         del self.cat
@@ -160,6 +170,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(record1.getCalib())
         self.assertEqual(record0.getVisitInfo(), self.visitInfo)
         self.assertIsNone(record1.getVisitInfo())
+        self.assertEqual(record0.getValidPolygon(), None)
+        self.assertEqual(record1.getValidPolygon(), self.makePolygon())
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
