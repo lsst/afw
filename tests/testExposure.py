@@ -154,6 +154,17 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
         self.assertEqual(crOnlyHeight, self.exposureCrOnly.getHeight())
 
+
+    def testProperties(self):
+        self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage,
+                                     self.exposureMiOnly.getMaskedImage())
+        mi2 = afwImage.MaskedImageF(self.exposureMiOnly.getDimensions())
+        mi2.image.array = 5.0
+        mi2.variance.array = 3.0
+        mi2.mask.array = 0x1
+        self.exposureMiOnly.maskedImage = mi2
+        self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage, mi2)
+
     def testGetWcs(self):
         """
         Test if a WCS can be obtained from each Exposure created with
