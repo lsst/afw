@@ -132,15 +132,15 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         self.assertMasksEqual(self.mimage.mask, self.mimage.getMask())
         self.assertImagesEqual(self.mimage.variance, self.mimage.getVariance())
         image2 = self.mimage.image.Factory(self.mimage.getDimensions())
-        image2.array = 5.0
+        image2.array[:] = 5.0
         self.mimage.image = image2
         self.assertImagesEqual(self.mimage.image, image2)
         mask2 = self.mimage.mask.Factory(self.mimage.getDimensions())
-        mask2.array = 0x4
+        mask2.array[:] = 0x4
         self.mimage.mask = mask2
         self.assertMasksEqual(self.mimage.mask, mask2)
         var2 = self.mimage.image.Factory(self.mimage.getDimensions())
-        var2.array = 3.0
+        var2.array[:] = 3.0
         self.mimage.variance = var2
         self.assertImagesEqual(self.mimage.variance, var2)
 

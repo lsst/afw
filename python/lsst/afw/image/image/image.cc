@@ -90,8 +90,11 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
     cls.def_property(
         "array",
         (Array (ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray,
-        [](py::object const & self, py::object const & array) {
-            self.attr("array")[py::slice(py::none())] = array;
+        [](ImageBase<PixelT> & self, ndarray::Array<PixelT const,2,0> const & array) {
+            // Avoid self-assignment, which is invoked when a Python in-place operator is used.
+            if (array.shallow() != self.getArray().shallow()) {
+                self.getArray().deep() = array;
+            }
         }
     );
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(geom::Point2I const)) & ImageBase<PixelT>::setXY0,

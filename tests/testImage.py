@@ -115,7 +115,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(image2.get(i, j), array1[j, i])
             array3 = np.random.uniform(low=0, high=10,
                                        size=array1.shape).astype(array1.dtype)
-            image1.array = array3
+            image1.array[:] = array3
             np.testing.assert_array_equal(array1, array3)
             image1.array[2:4, 3:] = 10
             np.testing.assert_array_equal(array1[2:4, 3:], 10)

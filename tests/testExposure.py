@@ -158,26 +158,26 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage,
                                      self.exposureMiOnly.getMaskedImage())
         mi2 = afwImage.MaskedImageF(self.exposureMiOnly.getDimensions())
-        mi2.image.array = 5.0
-        mi2.variance.array = 3.0
-        mi2.mask.array = 0x1
+        mi2.image.array[:] = 5.0
+        mi2.variance.array[:] = 3.0
+        mi2.mask.array[:] = 0x1
         self.exposureMiOnly.maskedImage = mi2
         self.assertMaskedImagesEqual(self.exposureMiOnly.maskedImage, mi2)
         self.assertImagesEqual(self.exposureMiOnly.image,
                                self.exposureMiOnly.maskedImage.image)
 
         image3 = afwImage.ImageF(self.exposureMiOnly.getDimensions())
-        image3.array = 3.0
+        image3.array[:] = 3.0
         self.exposureMiOnly.image = image3
         self.assertImagesEqual(self.exposureMiOnly.image, image3)
 
         mask3 = afwImage.MaskU(self.exposureMiOnly.getDimensions())
-        mask3.array = 0x2
+        mask3.array[:] = 0x2
         self.exposureMiOnly.mask = mask3
         self.assertMasksEqual(self.exposureMiOnly.mask, mask3)
 
         var3 = afwImage.ImageF(self.exposureMiOnly.getDimensions())
-        var3.array = 2.0
+        var3.array[:] = 2.0
         self.exposureMiOnly.variance = var3
         self.assertImagesEqual(self.exposureMiOnly.variance, var3)
 
