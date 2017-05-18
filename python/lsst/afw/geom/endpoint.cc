@@ -107,8 +107,7 @@ void addEquals(PyClass& cls) {
 template <typename SelfClass, typename PyClass>
 void addAllEquals(PyClass& cls) {
     addEquals<SelfClass, GenericEndpoint>(cls);
-    addEquals<SelfClass, PointEndpoint<2>>(cls);
-    addEquals<SelfClass, PointEndpoint<3>>(cls);
+    addEquals<SelfClass, Point2Endpoint>(cls);
     addEquals<SelfClass, SpherePointEndpoint>(cls);
 }
 
@@ -161,11 +160,10 @@ void declareGenericEndpoint(py::module& mod) {
 }
 
 /// @internal declare PointNEndpoint (for N = 2 or 3) and all subclasses
-template <int N>
-void declarePointEndpoint(py::module& mod) {
-    using Class = PointEndpoint<N>;
+void declarePoint2Endpoint(py::module& mod) {
+    using Class = Point2Endpoint;
     using Point = typename Class::Point;
-    std::string const pointNumStr = "Point" + std::to_string(N);
+    std::string const pointNumStr = "Point2";
     std::string const pyClassName = pointNumStr + "Endpoint";
 
     declareBaseVectorEndpoint<Point>(mod, pointNumStr);
@@ -209,8 +207,7 @@ PYBIND11_PLUGIN(endpoint) {
     }
 
     declareGenericEndpoint(mod);
-    declarePointEndpoint<2>(mod);
-    declarePointEndpoint<3>(mod);
+    declarePoint2Endpoint(mod);
     declareSpherePointEndpoint(mod);
 
     return mod.ptr();

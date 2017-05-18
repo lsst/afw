@@ -145,6 +145,10 @@ public:
 
     /**
     Transform an array of points in the forward direction ("from" to "to")
+
+    The first dimension of the array must match the number of input axes, and the data order is
+    values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
+        x0, x1, x2, ..., y0, y1, y2...
     */
     ToArray tranForward(FromArray const &array) const;
 
@@ -155,6 +159,10 @@ public:
 
     /**
     Transform an array of points in the inverse direction ("to" to "from")
+
+    The first dimension of the array must match the number of output axes, and the data order is
+    values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
+        x0, x1, x2, ..., y0, y1, y2...
     */
     FromArray tranInverse(ToArray const &array) const;
 
@@ -230,7 +238,7 @@ Print a Transform to an ostream
 
 The format is "Transform<_fromEndpoint_, _toEndpoint_>"
 where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to the ostream;
-for example "Transform<GenericEndpoint(4), Point3Endpoint()>"
+for example "Transform<GenericEndpoint(4), Point2Endpoint()>"
 */
 template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);

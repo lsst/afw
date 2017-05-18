@@ -87,13 +87,13 @@ template <typename Point>
 ndarray::Array<double, 2, 2> BaseVectorEndpoint<Point>::dataFromArray(Array const& arr) const {
     const int nAxes = this->getNAxes();
     const int nPoints = this->getNPoints(arr);
-    ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nPoints, nAxes));
-    auto dataRowIter = data.begin();
+    ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nAxes, nPoints));
+    auto dataColIter = data.transpose().begin();
     for (auto const& point : arr) {
         for (int axInd = 0; axInd < nAxes; ++axInd) {
-            (*dataRowIter)[axInd] = point[axInd];
+            (*dataColIter)[axInd] = point[axInd];
         }
-        ++dataRowIter;
+        ++dataColIter;
     }
     return data;
 }
@@ -102,18 +102,6 @@ template <typename Point>
 Point BaseVectorEndpoint<Point>::pointFromData(std::vector<double> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
     return Point(data.data());
-}
-
-template <typename Point>
-std::vector<Point> BaseVectorEndpoint<Point>::arrayFromData(ndarray::Array<double, 2, 2> const& data) const {
-    this->_assertNAxes(this->_getNAxes(data));
-    int const nPoints = this->_getNPoints(data);
-    Array array;
-    array.reserve(nPoints);
-    for (auto const& dataRow : data) {
-        array.emplace_back(dataRow.getData());
-    }
-    return array;
 }
 
 std::vector<double> GenericEndpoint::dataFromPoint(Point const& point) const {
@@ -136,17 +124,26 @@ ndarray::Array<double, 2, 2> GenericEndpoint::arrayFromData(ndarray::Array<doubl
     return ndarray::copy(data);
 }
 
-template <int N>
-PointEndpoint<N>::PointEndpoint(int nAxes) : BaseVectorEndpoint<Point<double, N>>(N) {
-    if (nAxes != N) {
+Point2Endpoint::Point2Endpoint(int nAxes) : BaseVectorEndpoint<Point2D>(2) {
+    if (nAxes != 2) {
         std::ostringstream os;
-        os << "nAxes = " << nAxes << " != " << N;
+        os << "nAxes = " << nAxes << " != 2";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 }
 
-template <int N>
-void PointEndpoint<N>::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
+std::vector<Point2D> Point2Endpoint::arrayFromData(ndarray::Array<double, 2, 2> const& data) const {
+    this->_assertNAxes(this->_getNAxes(data));
+    int const nPoints = this->_getNPoints(data);
+    Array array;
+    array.reserve(nPoints);
+    for (auto const& dataCol : data.transpose()) {
+        array.emplace_back(dataCol[0], dataCol[1]);
+    }
+    return array;
+}
+
+void Point2Endpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
     // use getCurrentFrame because if framePtr points to a FrameSet we want the name of its current frame
     std::string className = getCurrentFrame(framePtr)->getClass();
     if (className != "Frame") {
@@ -162,6 +159,17 @@ SpherePointEndpoint::SpherePointEndpoint(int nAxes) : BaseVectorEndpoint(2) {
         os << "nAxes = " << nAxes << " != 2";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
+}
+
+std::vector<SpherePoint> SpherePointEndpoint::arrayFromData(ndarray::Array<double, 2, 2> const& data) const {
+    this->_assertNAxes(this->_getNAxes(data));
+    int const nPoints = this->_getNPoints(data);
+    Array array;
+    array.reserve(nPoints);
+    for (auto const& dataCol : data.transpose()) {
+        array.emplace_back(dataCol[0] * radians, dataCol[1] * radians);
+    }
+    return array;
 }
 
 std::shared_ptr<ast::Frame> SpherePointEndpoint::makeFrame() const {
@@ -196,11 +204,6 @@ std::ostream& operator<<(std::ostream& os, Point2Endpoint const& endpoint) {
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, Point3Endpoint const& endpoint) {
-    os << "Point3Endpoint()";
-    return os;
-}
-
 std::ostream& operator<<(std::ostream& os, SpherePointEndpoint const& endpoint) {
     os << "SpherePointEndpoint()";
     return os;
@@ -208,16 +211,11 @@ std::ostream& operator<<(std::ostream& os, SpherePointEndpoint const& endpoint) 
 
 // explicit instantiations
 template class BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>>;
-template class BaseEndpoint<Point<double, 2>, std::vector<Point<double, 2>>>;
-template class BaseEndpoint<Point<double, 3>, std::vector<Point<double, 3>>>;
+template class BaseEndpoint<Point2D, std::vector<Point2D>>;
 template class BaseEndpoint<SpherePoint, std::vector<SpherePoint>>;
 
-template class BaseVectorEndpoint<Point<double, 2>>;
-template class BaseVectorEndpoint<Point<double, 3>>;
+template class BaseVectorEndpoint<Point2D>;
 template class BaseVectorEndpoint<SpherePoint>;
-
-template class PointEndpoint<2>;
-template class PointEndpoint<3>;
 
 }  // geom
 }  // afw

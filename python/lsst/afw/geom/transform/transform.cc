@@ -42,7 +42,7 @@ namespace geom {
 namespace {
 
 // Return a string consisting of "_pythonClassName_[_fromNAxes_->_toNAxes_]",
-// for example "TransformGenericToPoint3[4->3]"
+// for example "TransformGenericToPoint2[4->2]"
 template <class Class>
 std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
@@ -65,7 +65,7 @@ void declareMethodTemplates(PyClass &cls) {
 
 // Declare Transform<FromEndpoint, ToEndpoint> using python class name TransformFrom<X>To<Y>
 // where <X> and <Y> are the name of the from endpoint and to endpoint class, respectively,
-// for example TransformFromGenericToPoint3
+// for example TransformFromGenericToPoint2
 template <class FromEndpoint, class ToEndpoint>
 void declareTransform(py::module &mod, std::string const &fromName, std::string const &toName) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
@@ -101,7 +101,6 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
 
     declareMethodTemplates<GenericEndpoint, FromEndpoint, ToEndpoint>(cls);
     declareMethodTemplates<Point2Endpoint, FromEndpoint, ToEndpoint>(cls);
-    declareMethodTemplates<Point3Endpoint, FromEndpoint, ToEndpoint>(cls);
     declareMethodTemplates<SpherePointEndpoint, FromEndpoint, ToEndpoint>(cls);
 
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
@@ -125,19 +124,12 @@ PYBIND11_PLUGIN(transform) {
 
     declareTransform<GenericEndpoint, GenericEndpoint>(mod, "Generic", "Generic");
     declareTransform<GenericEndpoint, Point2Endpoint>(mod, "Generic", "Point2");
-    declareTransform<GenericEndpoint, Point3Endpoint>(mod, "Generic", "Point3");
     declareTransform<GenericEndpoint, SpherePointEndpoint>(mod, "Generic", "SpherePoint");
     declareTransform<Point2Endpoint, GenericEndpoint>(mod, "Point2", "Generic");
     declareTransform<Point2Endpoint, Point2Endpoint>(mod, "Point2", "Point2");
-    declareTransform<Point2Endpoint, Point3Endpoint>(mod, "Point2", "Point3");
     declareTransform<Point2Endpoint, SpherePointEndpoint>(mod, "Point2", "SpherePoint");
-    declareTransform<Point3Endpoint, GenericEndpoint>(mod, "Point3", "Generic");
-    declareTransform<Point3Endpoint, Point2Endpoint>(mod, "Point3", "Point2");
-    declareTransform<Point3Endpoint, Point3Endpoint>(mod, "Point3", "Point3");
-    declareTransform<Point3Endpoint, SpherePointEndpoint>(mod, "Point3", "SpherePoint");
     declareTransform<SpherePointEndpoint, GenericEndpoint>(mod, "SpherePoint", "Generic");
     declareTransform<SpherePointEndpoint, Point2Endpoint>(mod, "SpherePoint", "Point2");
-    declareTransform<SpherePointEndpoint, Point3Endpoint>(mod, "SpherePoint", "Point3");
     declareTransform<SpherePointEndpoint, SpherePointEndpoint>(mod, "SpherePoint", "SpherePoint");
 
     return mod.ptr();
