@@ -955,29 +955,43 @@ public:
     }
 
     // Getters
-    /// Return a (Ptr to) the MaskedImage's %image
-    ImagePtr getImage(bool const noThrow = false) const {
-        if (!_image && !noThrow) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "MaskedImage's Image is NULL");
-        }
-        return _image;
-    }
-    /// Return a (Ptr to) the MaskedImage's %mask
-    MaskPtr getMask(bool const noThrow = false) const {
-        if (!_mask && !noThrow) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "MaskedImage's Mask is NULL");
-        }
 
-        return _mask;
-    }
-    /// Return a (Ptr to) the MaskedImage's variance
-    VariancePtr getVariance(bool const noThrow = false) const {
-        if (!_variance && !noThrow) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "MaskedImage's Variance is NULL");
-        }
+    /// Return a (shared_ptr to) the MaskedImage's %image
+    ImagePtr getImage() const { return _image; }
 
-        return _variance;
-    }
+    /**
+     *  Set the image plane's pixel values to those of another Image.
+     *
+     *  This copies pixel values, not pointers.
+     *
+     *  @throws pex::exceptions::LengthError if dimensions do not match.
+     */
+    void setImage(Image const & other) { _image->assign(other); }
+
+    /// Return a (shared_ptr to) the MaskedImage's %mask
+    MaskPtr getMask() const { return _mask; }
+
+    /**
+     *  Set the mask plane's pixel values to those of another Mask.
+     *
+     *  This copies pixel values, not pointers.
+     *
+     *  @throws pex::exceptions::LengthError if dimensions do not match.
+     */
+    void setMask(Mask const & other) { _mask->assign(other); }
+
+    /**
+     *  Set the variance plane's pixel values to those of another Image.
+     *
+     *  This copies pixel values, not pointers.
+     *
+     *  @throws pex::exceptions::LengthError if dimensions do not match.
+     */
+    void setVariance(Variance const & other) { _variance->assign(other); }
+
+    /// Return a (shared_ptr to) the MaskedImage's variance
+    VariancePtr getVariance() const { return _variance; }
+
     /// Return the number of columns in the %image
     int getWidth() const { return _image->getWidth(); }
     /// Return the number of rows in the %image

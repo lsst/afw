@@ -87,6 +87,16 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
     cls.def("indexToPosition", &ImageBase<PixelT>::indexToPosition, "index"_a, "xOrY"_a);
     cls.def("getDimensions", &ImageBase<PixelT>::getDimensions);
     cls.def("getArray", (Array (ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray);
+    cls.def_property(
+        "array",
+        (Array (ImageBase<PixelT>::*)()) & ImageBase<PixelT>::getArray,
+        [](ImageBase<PixelT> & self, ndarray::Array<PixelT const,2,0> const & array) {
+            // Avoid self-assignment, which is invoked when a Python in-place operator is used.
+            if (array.shallow() != self.getArray().shallow()) {
+                self.getArray().deep() = array;
+            }
+        }
+    );
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(geom::Point2I const)) & ImageBase<PixelT>::setXY0,
             "xy0"_a);
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) & ImageBase<PixelT>::setXY0, "x0"_a,

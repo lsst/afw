@@ -60,6 +60,30 @@ class Exposure(with_metaclass(TemplateMeta, object)):
     def __setitem__(self, imageSlice, rhs):
         self.getMaskedImage[imageSlice] = rhs.getMaskedImage()
 
+    def getImage(self):
+        return self.maskedImage.image
+
+    def setImage(self, image):
+        self.maskedImage.image = image
+
+    image = property(getImage, setImage)
+
+    def getMask(self):
+        return self.maskedImage.mask
+
+    def setMask(self, mask):
+        self.maskedImage.mask = mask
+
+    mask = property(getMask, setMask)
+
+    def getVariance(self):
+        return self.maskedImage.variance
+
+    def setVariance(self, variance):
+        self.maskedImage.variance = variance
+
+    variance = property(getVariance, setVariance)
+
 
 Exposure.register(np.int32, ExposureI)
 Exposure.register(np.float32, ExposureF)
