@@ -228,9 +228,9 @@ protected:
     */
     explicit Transform(std::shared_ptr<ast::FrameSet> &&frameSet);
 
-    FromEndpoint const _fromEndpoint;
+    FromEndpoint _fromEndpoint;
     std::shared_ptr<const ast::FrameSet> _frameSet;
-    ToEndpoint const _toEndpoint;
+    ToEndpoint _toEndpoint;
 };
 
 /**
