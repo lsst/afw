@@ -210,8 +210,8 @@ public:
      *
      * @note the CameraSysPrefix version needs the detector name, which is why this is not static.
      */
-    CameraPoint makeCameraPoint(geom::Point2D point,  ///< 2-d point
-                                CameraSys cameraSys   ///< coordinate system
+    CameraPoint makeCameraPoint(geom::Point2D const &point,  ///< 2-d point
+                                CameraSys const &cameraSys   ///< coordinate system
                                 ) const {
         return CameraPoint(point, cameraSys);
     }
@@ -219,8 +219,8 @@ public:
     /**
      * Make a CameraPoint from a point and a camera system prefix
      */
-    CameraPoint makeCameraPoint(geom::Point2D point,             ///< 2-d point
-                                CameraSysPrefix cameraSysPrefix  ///< coordinate system prefix
+    CameraPoint makeCameraPoint(geom::Point2D const &point,             ///< 2-d point
+                                CameraSysPrefix const &cameraSysPrefix  ///< coordinate system prefix
                                 ) const {
         return CameraPoint(point, makeCameraSys(cameraSysPrefix));
     }

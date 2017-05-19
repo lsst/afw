@@ -107,10 +107,12 @@ PYBIND11_PLUGIN(_detector) {
                     Detector::getTransform,
             "cameraSysPrefix"_a);
     cls.def("makeCameraPoint",
-            (CameraPoint (Detector::*)(geom::Point2D, CameraSys) const) & Detector::makeCameraPoint,
+            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSys const &) const) &
+                    Detector::makeCameraPoint,
             "point"_a, "cameraSys"_a);
     cls.def("makeCameraPoint",
-            (CameraPoint (Detector::*)(geom::Point2D, CameraSysPrefix) const) & Detector::makeCameraPoint,
+            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSysPrefix const &) const) &
+                    Detector::makeCameraPoint,
             "point"_a, "cameraSysPrefix"_a);
     cls.def("makeCameraSys",
             (CameraSys const (Detector::*)(CameraSys const &) const) & Detector::makeCameraSys,
