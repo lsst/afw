@@ -206,7 +206,7 @@ public:
     std::vector<Point2D> skyToPixel(std::vector<SpherePoint> const &sky) const { return tranInverse(sky); }
     //@}
 
-protected:
+private:
     // Construct a SkyWcs from a shared pointer to an ast::FrameSet
     explicit SkyWcs(std::shared_ptr<ast::FrameSet> &&frameSet);
 

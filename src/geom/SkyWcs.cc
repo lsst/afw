@@ -101,7 +101,7 @@ Point2D SkyWcs::getPixelOrigin() const { return this->tranInverse(getSkyOrigin()
 
 SpherePoint SkyWcs::getSkyOrigin() const {
     // CRVAL is stored as the SkyRef property of the sky frame (the current frame of the SkyWcs)
-    auto const skyFrame = detail::getSkyFrame(*_frameSet, ast::FrameSet::CURRENT, false);
+    auto const skyFrame = detail::getSkyFrame(*getFrameSet(), ast::FrameSet::CURRENT, false);
     auto const crvalRad = skyFrame->getSkyRef();
     return SpherePoint(crvalRad.data());
 }
