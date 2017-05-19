@@ -71,8 +71,8 @@ public:
 
     BaseEndpoint(BaseEndpoint const &) = default;
     BaseEndpoint(BaseEndpoint &&) = default;
-    BaseEndpoint &operator=(BaseEndpoint const &) = default;
-    BaseEndpoint &operator=(BaseEndpoint &&) = default;
+    BaseEndpoint &operator=(BaseEndpoint const &) = delete;
+    BaseEndpoint &operator=(BaseEndpoint &&) = delete;
 
     virtual ~BaseEndpoint(){};
 
@@ -174,8 +174,8 @@ public:
 
     BaseVectorEndpoint(BaseVectorEndpoint const &) = default;
     BaseVectorEndpoint(BaseVectorEndpoint &&) = default;
-    BaseVectorEndpoint &operator=(BaseVectorEndpoint const &) = default;
-    BaseVectorEndpoint &operator=(BaseVectorEndpoint &&) = default;
+    BaseVectorEndpoint &operator=(BaseVectorEndpoint const &) = delete;
+    BaseVectorEndpoint &operator=(BaseVectorEndpoint &&) = delete;
 
     virtual ~BaseVectorEndpoint(){};
 
@@ -208,8 +208,8 @@ class GenericEndpoint : public BaseEndpoint<std::vector<double>, ndarray::Array<
 public:
     GenericEndpoint(GenericEndpoint const &) = default;
     GenericEndpoint(GenericEndpoint &&) = default;
-    GenericEndpoint &operator=(GenericEndpoint const &) = default;
-    GenericEndpoint &operator=(GenericEndpoint &&) = default;
+    GenericEndpoint &operator=(GenericEndpoint const &) = delete;
+    GenericEndpoint &operator=(GenericEndpoint &&) = delete;
 
     /**
     Construct a GenericEndpoint with the specified number of axes
@@ -240,8 +240,8 @@ class Point2Endpoint : public BaseVectorEndpoint<Point2D> {
 public:
     Point2Endpoint(Point2Endpoint const &) = default;
     Point2Endpoint(Point2Endpoint &&) = default;
-    Point2Endpoint &operator=(Point2Endpoint const &) = default;
-    Point2Endpoint &operator=(Point2Endpoint &&) = default;
+    Point2Endpoint &operator=(Point2Endpoint const &) = delete;
+    Point2Endpoint &operator=(Point2Endpoint &&) = delete;
 
     /**
     Construct a Point2Endpoint
@@ -285,8 +285,8 @@ class SpherePointEndpoint : public BaseVectorEndpoint<SpherePoint> {
 public:
     SpherePointEndpoint(SpherePointEndpoint const &) = default;
     SpherePointEndpoint(SpherePointEndpoint &&) = default;
-    SpherePointEndpoint &operator=(SpherePointEndpoint const &) = default;
-    SpherePointEndpoint &operator=(SpherePointEndpoint &&) = default;
+    SpherePointEndpoint &operator=(SpherePointEndpoint const &) = delete;
+    SpherePointEndpoint &operator=(SpherePointEndpoint &&) = delete;
 
     /**
     Construct a SpherePointEndpoint
