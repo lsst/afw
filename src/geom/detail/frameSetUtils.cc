@@ -200,9 +200,9 @@ std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata,
                << "instead of Frame";
             throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
         }
-        if (frameSet->getNaxes() != 2) {
+        if (frameSet->getNAxes() != 2) {
             std::ostringstream os;
-            os << "Could not find a GRID frame, and the base frame has " << frameSet->getNaxes()
+            os << "Could not find a GRID frame, and the base frame has " << frameSet->getNAxes()
                << " axes instead of 2";
             throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
         }

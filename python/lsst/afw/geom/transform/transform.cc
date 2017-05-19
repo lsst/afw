@@ -48,7 +48,7 @@ std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
     os << pyClassName;
     auto const frameSet = self.getFrameSet();
-    os << "[" << frameSet->getNin() << "->" << frameSet->getNout() << "]";
+    os << "[" << frameSet->getNIn() << "->" << frameSet->getNOut() << "]";
     return os.str();
 }
 

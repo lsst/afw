@@ -97,7 +97,7 @@ class EndpointTestCase(TransformTestBaseClass):
 
             newFrame = endpoint.makeFrame()
             self.assertEqual(type(newFrame), astshim.Frame)
-            self.assertEqual(newFrame.getNaxes(), nAxes)
+            self.assertEqual(newFrame.getNAxes(), nAxes)
 
         for nAxes in (-1, 0):
             with self.assertRaises(InvalidParameterError):

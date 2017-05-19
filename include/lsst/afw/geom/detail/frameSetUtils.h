@@ -45,7 +45,7 @@ Get the specified frame of a FrameSet as a SkyFrame
 @param[in] frameSet  FrameSet from which to get the SkyFrame
 @param[in] index  Index of SkyFrame.
         This value should lie in the range 1 to the number of frames in the FrameSet
-        (as given by getNframe). A value of FrameSet::Base or FrameSet::CURRENT
+        (as given by getNFrame). A value of FrameSet::Base or FrameSet::CURRENT
         may be given to specify the base Frame or the current Frame, respectively.
 @param[in] copy  If true return a deep copy of the SkyFrame, else a shallow copy
 */

@@ -227,9 +227,9 @@ std::shared_ptr<ast::FrameSet> SkyWcs::_checkFrameSet(ast::FrameSet const& frame
         os << "Base frame has domain " << baseDomain << " instead of PIXEL0 or ACTUAL_PIXEL0";
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
     }
-    if (baseFrame->getNaxes() != 2) {
+    if (baseFrame->getNAxes() != 2) {
         std::ostringstream os;
-        os << "Base frame has " << baseFrame->getNaxes() << " instead of 2";
+        os << "Base frame has " << baseFrame->getNAxes() << " instead of 2";
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
     }
     if (!frameSetCopy->findFrame(ast::Frame(2, "Domain=GRID"))) {
