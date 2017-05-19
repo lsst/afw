@@ -68,10 +68,10 @@ public:
     using ToArray = typename ToEndpoint::Array;
     using ToPoint = typename ToEndpoint::Point;
 
-    Transform(Transform const &) = delete;
+    Transform(Transform const &) = default;
     Transform(Transform &&) = default;
     Transform &operator=(Transform const &) = delete;
-    Transform &operator=(Transform &&) = default;
+    Transform &operator=(Transform &&) = delete;
 
     /**
     Construct a Transform from a deep copy of an ast::Mapping

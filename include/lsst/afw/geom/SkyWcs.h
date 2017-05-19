@@ -96,10 +96,10 @@ Constructors must set the following properties of the contained ast::FrameSet:
 */
 class SkyWcs : public Transform<Point2Endpoint, SpherePointEndpoint> {
 public:
-    SkyWcs(SkyWcs const &) = delete;
+    SkyWcs(SkyWcs const &) = default;
     SkyWcs(SkyWcs &&) = default;
     SkyWcs &operator=(SkyWcs const &) = delete;
-    SkyWcs &operator=(SkyWcs &&) = default;
+    SkyWcs &operator=(SkyWcs &&) = delete;
 
     /**
     Construct a pure tangent SkyWcs
