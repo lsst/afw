@@ -193,8 +193,20 @@ class Display(object):
     def __del__(self):
         self.close()
 
-    def __getattr__(self, name, *args, **kwargs):
-        """Try to call self._impl.name(*args, *kwargs)"""
+    def __getattr__(self, name):
+        """Return the attribute of self._impl, or ._impl if it is requested
+        Parameters:
+        -----------
+            name : string
+                name of the attribute requested
+        Returns:
+        --------
+            attribute : object
+                the attribute of self._impl for the requested name
+        """
+
+        if name == '_impl':
+            return object.__getattr__(self, name)
 
         if not (hasattr(self, "_impl") and self._impl):
             raise AttributeError("Device has no _impl attached")
