@@ -104,16 +104,16 @@ public:
     /** Get the bounding box */
     lsst::afw::geom::Box2I getBBox() const { return _bbox; }
 
-    /** Get the corners of the detector in the specified coordinate system */
+    /** Get the corners of the detector in the specified camera coordinate system */
     std::vector<geom::Point2D> getCorners(CameraSys const &cameraSys) const;
 
-    /** Get the corners of the detector in the specified coordinate system prefix */
+    /** Get the corners of the detector in the specified camera coordinate system prefix */
     std::vector<geom::Point2D> getCorners(CameraSysPrefix const &cameraSysPrefix) const;
 
-    /** Get the center of the detector in the specified coordinate system */
+    /** Get the center of the detector in the specified camera coordinate system */
     CameraPoint getCenter(CameraSys const &cameraSys) const;
 
-    /** Get the center of the detector in the specified coordinate system prefix */
+    /** Get the center of the detector in the specified camera coordinate system prefix */
     CameraPoint getCenter(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the amplifier information catalog */
@@ -149,9 +149,9 @@ public:
     lsst::afw::table::AmpInfoRecord const &operator[](std::string const &name) const;
 
     /**
-     * Get the amplifier specified by index as a shared_ptr
+     * Get the amplifier specified by index, returning a shared pointer to an AmpInfo record
      *
-     * @warning Intended only for internal use by pybind11. This exists because
+     * @warning Intended only for use by pybind11. This exists because
      * Operator[] returns a data type that is difficult for pybind11 to use.
      * Since we have it, we also take advantage of the fact that it is only for pybind11
      * to support negative indices in the python style.
@@ -163,9 +163,9 @@ public:
     std::shared_ptr<lsst::afw::table::AmpInfoRecord const> _get(int i) const;
 
     /**
-     * Get the amplifier specified by name as a shared_ptr
+     * Get the amplifier specified by name, returning a shared pointer to an AmpInfo record
      *
-     * @warning Intended only for internal use by pybind11. This exists because
+     * @warning Intended only for internal and pybind11 use. This exists because
      * Operator[] returns a data type that is difficult for pybind11 to use.
      *
      * @param[in] name  Amplifier name
@@ -175,23 +175,23 @@ public:
     std::shared_ptr<lsst::afw::table::AmpInfoRecord const> _get(std::string const &name) const;
 
     /**
-     * Get number of amplifiers. Renamed to __len__ in Python.
+     * Get the number of amplifiers. Renamed to `__len__` in Python.
      */
     size_t size() const { return _ampInfoCatalog.size(); }
 
-    /** Does the specified CameraSys exist in the transform registry */
+    /** Does the specified camera coordinate system exist in the transform registry? */
     bool hasTransform(CameraSys const &cameraSys) const;
 
-    /** Does the specified CameraSysPrefix exist in the transform registry */
+    /** Does the specified camera coordiante system prefix exist in the transform registry? */
     bool hasTransform(CameraSysPrefix const &cameraSysPrefix) const;
 
     /**
-     * Get an XYTransform that transforms from cameraSys to the native system in the forward direction
+     * Get an XYTransform that transforms from `cameraSys` to the native system in the forward direction
      *
      * @param[in] cameraSys  camera coordinate system
      * @returns a shared_ptr to an lsst::afw::XYTransform
      *
-     * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
+     * @throws pex::exceptions::InvalidParameterError if `cameraSys` is unknown
      */
     std::shared_ptr<afw::geom::XYTransform const> getTransform(CameraSys const &cameraSys) const;
 
@@ -208,6 +208,9 @@ public:
     /**
      * Make a CameraPoint from a point and a camera system
      *
+     * @param[in] point  2D point
+     * @param[in] cameraSys  Camera coordinate system
+     *
      * @note the CameraSysPrefix version needs the detector name, which is why this is not static.
      */
     CameraPoint makeCameraPoint(geom::Point2D const &point,  ///< 2-d point
@@ -218,9 +221,12 @@ public:
 
     /**
      * Make a CameraPoint from a point and a camera system prefix
+     *
+     * @param[in] point  2D point
+     * @param[in] cameraSysPrefix  Camera coordinate system prefix
      */
-    CameraPoint makeCameraPoint(geom::Point2D const &point,             ///< 2-d point
-                                CameraSysPrefix const &cameraSysPrefix  ///< coordinate system prefix
+    CameraPoint makeCameraPoint(geom::Point2D const &point,
+                                CameraSysPrefix const &cameraSysPrefix
                                 ) const {
         return CameraPoint(point, makeCameraSys(cameraSysPrefix));
     }
@@ -228,12 +234,18 @@ public:
     /**
      * Get a coordinate system from a coordinate system (return input unchanged and untested)
      *
+     * @param[in] cameraSys  Camera coordinate system
+     * @return `cameraSys` unchanged
+     *
      * @note the CameraSysPrefix version needs the detector name, which is why this is not static.
      */
     CameraSys const makeCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
 
     /**
      * Get a coordinate system from a detector system prefix (add detector name)
+     *
+     * @param[in] cameraSysPrefix  Camera coordinate system prefix
+     * @return `cameraSysPrefix` with the detector name added
      */
     CameraSys const makeCameraSys(CameraSysPrefix const &cameraSysPrefix) const {
         return CameraSys(cameraSysPrefix.getSysName(), _name);
@@ -242,10 +254,14 @@ public:
     /**
      * Convert a CameraPoint from one coordinate system to another
      *
+     * @param[in] fromCameraPoint  Camera point to transform
+     * @param[in] toSys  To camera coordinate system
+     * @return The transformed camera point
+     *
      * @throws pex::exceptions::InvalidParameterError if from or to coordinate system is unknown
      */
-    CameraPoint transform(CameraPoint const &fromCameraPoint,  ///< camera point to transform
-                          CameraSys const &toSys               ///< coordinate system to which to transform
+    CameraPoint transform(CameraPoint const &fromCameraPoint,
+                          CameraSys const &toSys
                           ) const {
         return CameraPoint(
                 _transformMap.transform(fromCameraPoint.getPoint(), fromCameraPoint.getCameraSys(), toSys),
@@ -255,12 +271,14 @@ public:
     /**
      * Convert a CameraPoint from one coordinate system to a coordinate system prefix
      *
-     * The coordinate system prefix is filled in with this detector's name
+     * @param[in] fromCameraPoint  Camera point to transform
+     * @param[in] toSys  To camera coordinate system prefix (this detector is used)
+     * @return The transformed camera point; the detector will be this detector
      *
      * @throws pex::exceptions::InvalidParameterError if from or to coordinate system is unknown
      */
-    CameraPoint transform(CameraPoint const &fromCameraPoint,  ///< camera point to transform
-                          CameraSysPrefix const &toSys  ///< coordinate system prefix to which to transform
+    CameraPoint transform(CameraPoint const &fromCameraPoint,
+                          CameraSysPrefix const &toSys
                           ) const {
         return transform(fromCameraPoint, makeCameraSys(toSys));
     }
