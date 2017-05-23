@@ -118,6 +118,6 @@ void Detector::_init() {
         }
     }
 }
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst

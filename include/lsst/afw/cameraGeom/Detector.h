@@ -225,9 +225,7 @@ public:
      * @param[in] point  2D point
      * @param[in] cameraSysPrefix  Camera coordinate system prefix
      */
-    CameraPoint makeCameraPoint(geom::Point2D const &point,
-                                CameraSysPrefix const &cameraSysPrefix
-                                ) const {
+    CameraPoint makeCameraPoint(geom::Point2D const &point, CameraSysPrefix const &cameraSysPrefix) const {
         return CameraPoint(point, makeCameraSys(cameraSysPrefix));
     }
 
@@ -260,9 +258,7 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if from or to coordinate system is unknown
      */
-    CameraPoint transform(CameraPoint const &fromCameraPoint,
-                          CameraSys const &toSys
-                          ) const {
+    CameraPoint transform(CameraPoint const &fromCameraPoint, CameraSys const &toSys) const {
         return CameraPoint(
                 _transformMap.transform(fromCameraPoint.getPoint(), fromCameraPoint.getCameraSys(), toSys),
                 toSys);
@@ -277,9 +273,7 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if from or to coordinate system is unknown
      */
-    CameraPoint transform(CameraPoint const &fromCameraPoint,
-                          CameraSysPrefix const &toSys
-                          ) const {
+    CameraPoint transform(CameraPoint const &fromCameraPoint, CameraSysPrefix const &toSys) const {
         return transform(fromCameraPoint, makeCameraSys(toSys));
     }
 
@@ -308,8 +302,8 @@ private:
     geom::Extent2D _pixelSize;              ///< pixel size (mm)
     CameraTransformMap _transformMap;       ///< registry of coordinate transforms
 };
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst
 
 #endif
