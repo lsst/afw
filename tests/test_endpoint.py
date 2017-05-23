@@ -109,7 +109,7 @@ class EndpointTestCase(TransformTestBaseClass):
         baseMsg = "endpoint={}, pointType={}, nAxes={}".format(
             endpoint, pointType, nAxes)
 
-        self.assertEqual(endpoint.getNAxes(), nAxes, msg=baseMsg)
+        self.assertEqual(endpoint.nAxes, nAxes, msg=baseMsg)
 
         # generate enough points to be interesting, but no need to overdo it
         nPoints = 4

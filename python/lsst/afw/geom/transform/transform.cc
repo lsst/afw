@@ -81,14 +81,14 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     cls.def(py::init<ast::FrameSet const &, bool>(), "frameSet"_a, "simplify"_a = true);
     cls.def(py::init<ast::Mapping const &, bool>(), "mapping"_a, "simplify"_a = true);
 
-    cls.def("hasForward", &Class::hasForward);
-    cls.def("hasInverse", &Class::hasInverse);
+    cls.def_property_readonly("hasForward", &Class::hasForward);
+    cls.def_property_readonly("hasInverse", &Class::hasInverse);
+    cls.def_property_readonly("fromEndpoint", &Class::getFromEndpoint);
+    cls.def_property_readonly("toEndpoint", &Class::getToEndpoint);
 
-    cls.def("getFromEndpoint", &Class::getFromEndpoint);
     // Return a copy of the contained FrameSet in order to assure changing the returned FrameSet
     // will not affect the contained FrameSet (since Python ignores constness)
     cls.def("getFrameSet", [](Class const &self) { return self.getFrameSet()->copy(); });
-    cls.def("getToEndpoint", &Class::getToEndpoint);
 
     cls.def("tranForward", (ToArray (Class::*)(FromArray const &) const) & Class::tranForward, "array"_a);
     cls.def("tranForward", (ToPoint (Class::*)(FromPoint const &) const) & Class::tranForward, "point"_a);

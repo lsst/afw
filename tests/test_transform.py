@@ -73,8 +73,8 @@ class TransformTestCase(TransformTestBaseClass):
         merged1 = transform3.of(transform2).of(transform1)
         merged2 = transform3.of(transform2.of(transform1))
 
-        fromEndpoint = transform1.getFromEndpoint()
-        toEndpoint = transform3.getToEndpoint()
+        fromEndpoint = transform1.fromEndpoint
+        toEndpoint = transform3.toEndpoint
 
         inPoint = fromEndpoint.pointFromData(self.makeRawPointData(2))
         assert_allclose(toEndpoint.dataFromPoint(merged1.tranForward(inPoint)),

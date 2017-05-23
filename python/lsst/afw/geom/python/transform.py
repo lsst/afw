@@ -48,8 +48,8 @@ transformRegistry = {}
 def getJacobian(self, x):
     # Force 2D matrix over numpy's protests
     matrix = self._getJacobian(x)
-    matrix.shape = (self.getToEndpoint().getNAxes(),
-                    self.getFromEndpoint().getNAxes())
+    matrix.shape = (self.toEndpoint.nAxes,
+                    self.fromEndpoint.nAxes)
     return matrix
 
 
@@ -58,7 +58,7 @@ def of(self, first):
 
     The result of B.of(A) is C(x) = B(A(x))
     """
-    if first.getToEndpoint() == self.getFromEndpoint():
+    if first.toEndpoint == self.fromEndpoint:
         return self._of(first)
     else:
         raise lsst.pex.exceptions.InvalidParameterError(
