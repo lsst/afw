@@ -47,15 +47,15 @@ class EndpointTestCase(TransformTestBaseClass):
             frame = astshim.SkyFrame()
             if doPermute:
                 frame.permAxes([2, 1])
-                self.assertEqual(frame.getLonAxis(), 2)
-                self.assertEqual(frame.getLatAxis(), 1)
+                self.assertEqual(frame.lonAxis, 2)
+                self.assertEqual(frame.latAxis, 1)
             else:
-                self.assertEqual(frame.getLonAxis(), 1)
-                self.assertEqual(frame.getLatAxis(), 2)
+                self.assertEqual(frame.lonAxis, 1)
+                self.assertEqual(frame.latAxis, 2)
             endpoint.normalizeFrame(frame)
             # the normalized frame always has axis in order Lon, Lat
-            self.assertEqual(frame.getLonAxis(), 1)
-            self.assertEqual(frame.getLatAxis(), 2)
+            self.assertEqual(frame.lonAxis, 1)
+            self.assertEqual(frame.latAxis, 2)
 
         badFrame = astshim.Frame(2)
         with self.assertRaises(InvalidParameterError):
@@ -63,8 +63,8 @@ class EndpointTestCase(TransformTestBaseClass):
 
         newFrame = endpoint.makeFrame()
         self.assertEqual(type(newFrame), astshim.SkyFrame)
-        self.assertEqual(newFrame.getLonAxis(), 1)
-        self.assertEqual(newFrame.getLatAxis(), 2)
+        self.assertEqual(newFrame.lonAxis, 1)
+        self.assertEqual(newFrame.latAxis, 2)
 
     def testPoint2Endpoint(self):
         endpoint = afwGeom.Point2Endpoint()
@@ -97,7 +97,7 @@ class EndpointTestCase(TransformTestBaseClass):
 
             newFrame = endpoint.makeFrame()
             self.assertEqual(type(newFrame), astshim.Frame)
-            self.assertEqual(newFrame.getNAxes(), nAxes)
+            self.assertEqual(newFrame.nAxes, nAxes)
 
         for nAxes in (-1, 0):
             with self.assertRaises(InvalidParameterError):

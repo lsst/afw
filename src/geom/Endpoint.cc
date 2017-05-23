@@ -145,7 +145,7 @@ std::vector<Point2D> Point2Endpoint::arrayFromData(ndarray::Array<double, 2, 2> 
 
 void Point2Endpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
     // use getCurrentFrame because if framePtr points to a FrameSet we want the name of its current frame
-    std::string className = getCurrentFrame(framePtr)->getClass();
+    std::string className = getCurrentFrame(framePtr)->getClassName();
     if (className != "Frame") {
         std::ostringstream os;
         os << "frame is a " << className << ", not a Frame";
@@ -182,7 +182,7 @@ void SpherePointEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) c
     auto skyFramePtr = std::dynamic_pointer_cast<ast::SkyFrame>(currentFramePtr);
     if (!skyFramePtr) {
         std::ostringstream os;
-        os << "frame is a " << currentFramePtr->getClass() << ", not a SkyFrame";
+        os << "frame is a " << currentFramePtr->getClassName() << ", not a SkyFrame";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     if (skyFramePtr->getLonAxis() != 1) {

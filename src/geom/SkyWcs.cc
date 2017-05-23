@@ -239,7 +239,7 @@ std::shared_ptr<ast::FrameSet> SkyWcs::_checkFrameSet(ast::FrameSet const& frame
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, "No frame with domain IWC found");
     }
     auto currentFrame = frameSetCopy->getFrame(currentIndex, false);
-    auto currentClass = currentFrame->getClass();
+    auto currentClass = currentFrame->getClassName();
     if (currentClass != "SkyFrame") {
         std::ostringstream os;
         os << "Current frame has type " << currentClass << " instead of SkyFrame";
