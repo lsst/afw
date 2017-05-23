@@ -46,6 +46,7 @@ std::shared_ptr<Wcs> makeWcs(std::shared_ptr<daf::base::PropertySet> const& _met
         ctype1 = metadata->getAsString("CTYPE1");
         ctype2 = metadata->getAsString("CTYPE2");
     } else {
+        LOGL_WARN("makeWcs", "Unable to construct valid WCS due to missing CTYPE1 or CTYPE2");
         return std::shared_ptr<Wcs>();
     }
     //
