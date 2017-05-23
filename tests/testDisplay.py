@@ -65,17 +65,6 @@ class DisplayTestCase(unittest.TestCase):
             dirName, "data", "HSC-0908120-056-small.fits")
         self.display0 = afwDisplay.getDisplay(frame=0, verbose=True)
 
-    def tearDown(self):
-        for d in self.display0._displays.values():
-            d.verbose = False           # ensure that display9.close() call is quiet
-
-        del self.display0
-        afwDisplay.delAllDisplays()
-
-    def testClose(self):
-        """Test that we can close devices."""
-        self.display0.close()
-
     def testMtv(self):
         """Test basic image display"""
         exp = afwImage.ExposureF(self.fileName)
@@ -170,6 +159,18 @@ class DisplayTestCase(unittest.TestCase):
         If running the tests using ds9 you will be expected to do this manually.
         """
         self.display0.interact()
+
+    def testClose(self):
+        """Test that we can close devices."""
+        self.display0.close()
+
+    def tearDown(self):
+        for d in self.display0._displays.values():
+            d.verbose = False           # ensure that display9.close() call is quiet
+
+        del self.display0
+        afwDisplay.delAllDisplays()
+
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
