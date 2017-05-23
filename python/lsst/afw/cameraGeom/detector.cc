@@ -67,9 +67,9 @@ PYBIND11_PLUGIN(_detector) {
 
     /* Operators */
     cls.def("__getitem__",
-            (std::shared_ptr<table::AmpInfoRecord const> (Detector::*)(int) const) & Detector::_get, "i"_a);
+            (std::shared_ptr<table::AmpInfoRecord const>(Detector::*)(int) const) & Detector::_get, "i"_a);
     cls.def("__getitem__",
-            (std::shared_ptr<table::AmpInfoRecord const> (Detector::*)(std::string const &) const) &
+            (std::shared_ptr<table::AmpInfoRecord const>(Detector::*)(std::string const &) const) &
                     Detector::_get,
             "name"_a);
     cls.def("__len__", &Detector::size);
@@ -81,14 +81,14 @@ PYBIND11_PLUGIN(_detector) {
     cls.def("getSerial", &Detector::getSerial);
     cls.def("getBBox", &Detector::getBBox);
     cls.def("getCorners",
-            (std::vector<geom::Point2D> (Detector::*)(CameraSys const &) const) & Detector::getCorners,
+            (std::vector<geom::Point2D>(Detector::*)(CameraSys const &) const) & Detector::getCorners,
             "cameraSys"_a);
     cls.def("getCorners",
-            (std::vector<geom::Point2D> (Detector::*)(CameraSysPrefix const &) const) & Detector::getCorners,
+            (std::vector<geom::Point2D>(Detector::*)(CameraSysPrefix const &) const) & Detector::getCorners,
             "cameraSysPrefix"_a);
-    cls.def("getCenter", (CameraPoint (Detector::*)(CameraSys const &) const) & Detector::getCenter,
+    cls.def("getCenter", (CameraPoint(Detector::*)(CameraSys const &) const) & Detector::getCenter,
             "getCenter"_a);
-    cls.def("getCenter", (CameraPoint (Detector::*)(CameraSysPrefix const &) const) & Detector::getCenter,
+    cls.def("getCenter", (CameraPoint(Detector::*)(CameraSysPrefix const &) const) & Detector::getCenter,
             "getCenterPrefix"_a);
     cls.def("getAmpInfoCatalog", &Detector::getAmpInfoCatalog);
     cls.def("getOrientation", &Detector::getOrientation);
@@ -99,18 +99,20 @@ PYBIND11_PLUGIN(_detector) {
     cls.def("hasTransform", (bool (Detector::*)(CameraSysPrefix const &) const) & Detector::hasTransform,
             "cameraSysPrefix"_a);
     cls.def("getTransform",
-            (std::shared_ptr<geom::XYTransform const> (Detector::*)(CameraSys const &) const) &
+            (std::shared_ptr<geom::XYTransform const>(Detector::*)(CameraSys const &) const) &
                     Detector::getTransform,
             "cameraSys"_a);
     cls.def("getTransform",
-            (std::shared_ptr<geom::XYTransform const> (Detector::*)(CameraSysPrefix const &) const) &
+            (std::shared_ptr<geom::XYTransform const>(Detector::*)(CameraSysPrefix const &) const) &
                     Detector::getTransform,
             "cameraSysPrefix"_a);
     cls.def("makeCameraPoint",
-            (CameraPoint (Detector::*)(geom::Point2D, CameraSys) const) & Detector::makeCameraPoint,
+            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSys const &) const) &
+                    Detector::makeCameraPoint,
             "point"_a, "cameraSys"_a);
     cls.def("makeCameraPoint",
-            (CameraPoint (Detector::*)(geom::Point2D, CameraSysPrefix) const) & Detector::makeCameraPoint,
+            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSysPrefix const &) const) &
+                    Detector::makeCameraPoint,
             "point"_a, "cameraSysPrefix"_a);
     cls.def("makeCameraSys",
             (CameraSys const (Detector::*)(CameraSys const &) const) & Detector::makeCameraSys,
@@ -119,14 +121,15 @@ PYBIND11_PLUGIN(_detector) {
             (CameraSys const (Detector::*)(CameraSysPrefix const &) const) & Detector::makeCameraSys,
             "cameraSysPrefix"_a);
     cls.def("transform",
-            (CameraPoint (Detector::*)(CameraPoint const &, CameraSys const &) const) & Detector::transform,
+            (CameraPoint(Detector::*)(CameraPoint const &, CameraSys const &) const) & Detector::transform,
             "fromCameraPoint"_a, "toSys"_a);
-    cls.def("transform", (CameraPoint (Detector::*)(CameraPoint const &, CameraSysPrefix const &) const) &
-                                 Detector::transform,
+    cls.def("transform",
+            (CameraPoint(Detector::*)(CameraPoint const &, CameraSysPrefix const &) const) &
+                    Detector::transform,
             "fromCameraPoint"_a, "toSys"_a);
 
     return mod.ptr();
 }
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst

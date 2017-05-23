@@ -151,6 +151,7 @@ class GroupView(collections.Mapping):
     def build(cls, catalog, groupField="object"):
         """!Construct a GroupView from a concatenated catalog.
 
+        @param[in]  cls         (Class; omit this argument, but Doxygen wants it mentioned)
         @param[in]  catalog     Input catalog, containing records grouped by a field in which all records
                                 in the same group have the same value.  Must be sorted by the group field.
         @param[in]  groupField  Name or Key for the field that indicates groups.
