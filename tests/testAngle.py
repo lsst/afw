@@ -170,7 +170,6 @@ class AngleTestCase(unittest.TestCase):
 
     def testWrap(self):
         eps = np.finfo(float).eps
-        oneEightyWithSlop = 180 * (1 + eps)
         self.assertNotEqual(1 + eps, eps)
         for wrap, offset, epsMult in itertools.product(
             (-1000, -10, -1, 0, 1, 10, 1000),
@@ -231,7 +230,7 @@ class AngleTestCase(unittest.TestCase):
 
             for refAngBase, refAngWrap, refEpsMult in itertools.product(
                 (-math.pi, 0.0, math.pi, math.pi*2.0),
-                (-10, 0, 5),
+                range(-10, 11, 2),
                 (-3, -2, -1, 0, 1, 2, 3),
             ):
                 refAngRad = refAngBase * (1 + (eps * refEpsMult)) + refAngWrap * math.pi * 2.0
@@ -244,20 +243,23 @@ class AngleTestCase(unittest.TestCase):
                 nearAngDeg = nearAng.asDegrees()
                 nearAngArcmin = nearAng.asArcminutes()
                 nearAngArcsec = nearAng.asArcseconds()
+
+                fudgeFactor = 5  # 1 and 2 are too small for one case, 3 works; 5 has margin
+                relEps = max(1, nearAngRad / math.pi, refAngRad / math.pi) * eps * fudgeFactor
+                piWithSlop = math.pi * (1 + relEps)
+                oneEightyWithSlop = 180 * (1 + relEps)
+
                 # wrapNear promises nearAngRad - refAngRad >= -pi
                 # for radians but has known failures due to
-                # roundoff error for other units
+                # roundoff error for other units and for < pi
                 self.assertGreaterEqual(nearAngRad - refAngRad, -math.pi)
                 self.assertGreaterEqual(nearAngDeg - refAngDeg, -oneEightyWithSlop)
                 self.assertGreaterEqual(nearAngArcmin - refAngArcmin, -oneEightyWithSlop * 60)
                 self.assertGreaterEqual(nearAngArcsec - refAngArcsec, -oneEightyWithSlop * 3600)
-                # wrapNear promises nearAngRad - refAngRad < pi
-                # for radians but has known failures due to
-                # roundoff error for other units
-                self.assertLess(nearAngRad - refAngRad, math.pi)
-                self.assertLess(nearAngDeg - refAngDeg, oneEightyWithSlop)
-                self.assertLess(nearAngArcmin - refAngArcmin, oneEightyWithSlop * 60)
-                self.assertLess(nearAngArcsec - refAngArcsec, oneEightyWithSlop * 3600)
+                self.assertLessEqual(nearAngRad - refAngRad, piWithSlop)
+                self.assertLessEqual(nearAngDeg - refAngDeg, oneEightyWithSlop)
+                self.assertLessEqual(nearAngArcmin - refAngArcmin, oneEightyWithSlop * 60)
+                self.assertLessEqual(nearAngArcsec - refAngArcsec, oneEightyWithSlop * 3600)
                 # prove that nearAng and ang are the same angle
                 nearErrAng = ((nearAngRad - angRad) * afwGeom.radians).wrapCtr()
                 self.assertAlmostEqual(nearErrAng.asRadians(), 0)
