@@ -30,6 +30,7 @@ or
    >>> import angle; angle.run()
 """
 from __future__ import absolute_import, division, print_function
+import itertools
 import math
 import unittest
 
@@ -171,107 +172,97 @@ class AngleTestCase(unittest.TestCase):
         eps = np.finfo(float).eps
         oneEightyWithSlop = 180 * (1 + eps)
         self.assertNotEqual(1 + eps, eps)
-        for wrap in (-1000, -10, -1, 0, 1, 10, 1000):
-            for offset in (-2*math.pi, -math.pi, -math.pi*0.5, 0.0,
-                           math.pi*0.5, math.pi*0.75, math.pi, math.pi*2.0):
-                for epsMult in (-3, -2, -1, 0, 1, 2, 3):
-                    angRad = (offset + (wrap*math.pi)) * (1 + (eps*epsMult))
-                    ang = angRad * afwGeom.radians
-                    angDeg = ang.asDegrees()
-                    sinAng = math.sin(angRad)
-                    cosAng = math.cos(angRad)
+        for wrap, offset, epsMult in itertools.product(
+            (-1000, -10, -1, 0, 1, 10, 1000),
+            (-2*math.pi, -math.pi, -math.pi*0.5, 0.0, math.pi*0.5, math.pi*0.75, math.pi, math.pi*2.0),
+            (-3, -2, -1, 0, 1, 2, 3),
+        ):
+            angRad = (offset + (wrap*math.pi)) * (1 + (eps*epsMult))
+            ang = angRad * afwGeom.radians
+            angDeg = ang.asDegrees()
+            sinAng = math.sin(angRad)
+            cosAng = math.cos(angRad)
 
-                    posAng = (angRad * afwGeom.radians).wrap()
-                    posAngRad = posAng.asRadians()
-                    posAngDeg = posAng.asDegrees()
-                    posAngArcmin = posAng.asArcminutes()
-                    posAngArcsec = posAng.asArcseconds()
-                    # the code promises 0 <= posAng for all units
-                    self.assertGreaterEqual(posAngRad, 0)
-                    self.assertGreaterEqual(posAngDeg, 0)
-                    self.assertGreaterEqual(posAngArcmin, 0)
-                    self.assertGreaterEqual(posAngArcsec, 0)
-                    # wrap promises posAng < 2*pi only for radians,
-                    # but it seems to work for all units
-                    self.assertLess(posAngRad, 2*math.pi)
-                    self.assertLess(posAngDeg, 360)
-                    self.assertLess(posAngArcmin, 360 * 60)
-                    self.assertLess(posAngArcsec, 360 * 3600)
-                    # prove that posAngDeg and angDeg are the same angle
-                    posErrAng = ((posAngDeg - angDeg) * afwGeom.degrees) \
-                        .wrapCtr()
-                    self.assertAlmostEqual(posErrAng.asDegrees(), 0)
-                    # a sanity check in case wrapCtr gives the wrong answer
-                    self.assertAlmostEqual(math.sin(posAngRad), sinAng)
-                    self.assertAlmostEqual(math.cos(posAngRad), cosAng)
+            posAng = (angRad * afwGeom.radians).wrap()
+            posAngRad = posAng.asRadians()
+            posAngDeg = posAng.asDegrees()
+            posAngArcmin = posAng.asArcminutes()
+            posAngArcsec = posAng.asArcseconds()
+            # the code promises 0 <= posAng for all units
+            self.assertGreaterEqual(posAngRad, 0)
+            self.assertGreaterEqual(posAngDeg, 0)
+            self.assertGreaterEqual(posAngArcmin, 0)
+            self.assertGreaterEqual(posAngArcsec, 0)
+            # wrap promises posAng < 2*pi only for radians,
+            # but it seems to work for all units
+            self.assertLess(posAngRad, 2*math.pi)
+            self.assertLess(posAngDeg, 360)
+            self.assertLess(posAngArcmin, 360 * 60)
+            self.assertLess(posAngArcsec, 360 * 3600)
+            # prove that posAngDeg and angDeg are the same angle
+            posErrAng = ((posAngDeg - angDeg) * afwGeom.degrees) \
+                .wrapCtr()
+            self.assertAlmostEqual(posErrAng.asDegrees(), 0)
+            # a sanity check in case wrapCtr gives the wrong answer
+            self.assertAlmostEqual(math.sin(posAngRad), sinAng)
+            self.assertAlmostEqual(math.cos(posAngRad), cosAng)
 
-                    ctrAng = (angRad * afwGeom.radians).wrapCtr()
-                    ctrAngRad = ctrAng.asRadians()
-                    ctrAngDeg = ctrAng.asDegrees()
-                    ctrAngArcmin = ctrAng.asArcminutes()
-                    ctrAngArcsec = ctrAng.asArcseconds()
-                    # wrapCtr promises -pi <= ctrAngRad < pi only for radians,
-                    # but it seems to work for all units
-                    self.assertGreaterEqual(ctrAngRad, -math.pi)
-                    self.assertGreaterEqual(ctrAngDeg, -180)
-                    self.assertGreaterEqual(ctrAngArcmin, -180 * 60)
-                    self.assertGreaterEqual(ctrAngArcsec, -180 * 3600)
-                    self.assertLess(ctrAngRad, math.pi)
-                    self.assertLess(ctrAngDeg, 180)
-                    self.assertLess(ctrAngArcmin, 180 * 60)
-                    self.assertLess(ctrAngArcsec, 180 * 3600)
-                    # prove that ctrAngDeg and ang are the same angle
-                    ctrErrAng = ((ctrAngDeg - angDeg) * afwGeom.degrees) \
-                        .wrapCtr()
-                    self.assertAlmostEqual(ctrErrAng.asDegrees(), 0)
-                    self.assertAlmostEqual(math.sin(ctrAngRad), sinAng)
-                    self.assertAlmostEqual(math.cos(ctrAngRad), cosAng)
+            ctrAng = (angRad * afwGeom.radians).wrapCtr()
+            ctrAngRad = ctrAng.asRadians()
+            ctrAngDeg = ctrAng.asDegrees()
+            ctrAngArcmin = ctrAng.asArcminutes()
+            ctrAngArcsec = ctrAng.asArcseconds()
+            # wrapCtr promises -pi <= ctrAngRad < pi only for radians,
+            # but it seems to work for all units
+            self.assertGreaterEqual(ctrAngRad, -math.pi)
+            self.assertGreaterEqual(ctrAngDeg, -180)
+            self.assertGreaterEqual(ctrAngArcmin, -180 * 60)
+            self.assertGreaterEqual(ctrAngArcsec, -180 * 3600)
+            self.assertLess(ctrAngRad, math.pi)
+            self.assertLess(ctrAngDeg, 180)
+            self.assertLess(ctrAngArcmin, 180 * 60)
+            self.assertLess(ctrAngArcsec, 180 * 3600)
+            # prove that ctrAngDeg and ang are the same angle
+            ctrErrAng = ((ctrAngDeg - angDeg) * afwGeom.degrees) \
+                .wrapCtr()
+            self.assertAlmostEqual(ctrErrAng.asDegrees(), 0)
+            self.assertAlmostEqual(math.sin(ctrAngRad), sinAng)
+            self.assertAlmostEqual(math.cos(ctrAngRad), cosAng)
 
-                    for refAngBase in (-math.pi, 0.0, math.pi, math.pi*2.0):
-                        for refEpsMult in (-3, -2, -1, 0, 1, 2, 3):
-                            refAngRad = refAngBase * (1 + (eps * refEpsMult))
-                            refAng = refAngRad * afwGeom.radians
-                            refAngDeg = refAng.asDegrees()
-                            refAngArcmin = refAng.asArcminutes()
-                            refAngArcsec = refAng.asArcseconds()
-                            nearAng = (angRad * afwGeom.radians) \
-                                .wrapNear(refAng)
-                            nearAngRad = nearAng.asRadians()
-                            nearAngDeg = nearAng.asDegrees()
-                            nearAngArcmin = nearAng.asArcminutes()
-                            nearAngArcsec = nearAng.asArcseconds()
-                            # wrapNear promises nearAngRad - refAngRad >= -pi
-                            # for radians but has known failures due to
-                            # roundoff error for other units
-                            self.assertGreaterEqual(nearAngRad - refAngRad,
-                                                    -math.pi)
-                            self.assertGreaterEqual(nearAngDeg - refAngDeg,
-                                                    -oneEightyWithSlop)
-                            self.assertGreaterEqual(
-                                nearAngArcmin - refAngArcmin,
-                                -oneEightyWithSlop * 60)
-                            self.assertGreaterEqual(
-                                nearAngArcsec - refAngArcsec,
-                                -oneEightyWithSlop * 3600)
-                            # wrapNear promises nearAngRad - refAngRad < pi
-                            # for radians but has known failures due to
-                            # roundoff error for other units
-                            self.assertLess(nearAngRad - refAngRad,
-                                            math.pi)
-                            self.assertLess(nearAngDeg - refAngDeg,
-                                            oneEightyWithSlop)
-                            self.assertLess(nearAngArcmin - refAngArcmin,
-                                            oneEightyWithSlop * 60)
-                            self.assertLess(nearAngArcsec - refAngArcsec,
-                                            oneEightyWithSlop * 3600)
-                            # prove that nearAng and ang are the same angle
-                            nearErrAng = ((nearAngRad - angRad) *
-                                          afwGeom.radians).wrapCtr()
-                            self.assertAlmostEqual(nearErrAng.asRadians(), 0)
-                            self.assertAlmostEqual(math.sin(nearAngRad),
-                                                   sinAng)
-                            self.assertAlmostEqual(math.cos(nearAngRad),
-                                                   cosAng)
+            for refAngBase, refAngWrap, refEpsMult in itertools.product(
+                (-math.pi, 0.0, math.pi, math.pi*2.0),
+                (-10, 0, 5),
+                (-3, -2, -1, 0, 1, 2, 3),
+            ):
+                refAngRad = refAngBase * (1 + (eps * refEpsMult)) + refAngWrap * math.pi * 2.0
+                refAng = refAngRad * afwGeom.radians
+                refAngDeg = refAng.asDegrees()
+                refAngArcmin = refAng.asArcminutes()
+                refAngArcsec = refAng.asArcseconds()
+                nearAng = (angRad * afwGeom.radians).wrapNear(refAng)
+                nearAngRad = nearAng.asRadians()
+                nearAngDeg = nearAng.asDegrees()
+                nearAngArcmin = nearAng.asArcminutes()
+                nearAngArcsec = nearAng.asArcseconds()
+                # wrapNear promises nearAngRad - refAngRad >= -pi
+                # for radians but has known failures due to
+                # roundoff error for other units
+                self.assertGreaterEqual(nearAngRad - refAngRad, -math.pi)
+                self.assertGreaterEqual(nearAngDeg - refAngDeg, -oneEightyWithSlop)
+                self.assertGreaterEqual(nearAngArcmin - refAngArcmin, -oneEightyWithSlop * 60)
+                self.assertGreaterEqual(nearAngArcsec - refAngArcsec, -oneEightyWithSlop * 3600)
+                # wrapNear promises nearAngRad - refAngRad < pi
+                # for radians but has known failures due to
+                # roundoff error for other units
+                self.assertLess(nearAngRad - refAngRad, math.pi)
+                self.assertLess(nearAngDeg - refAngDeg, oneEightyWithSlop)
+                self.assertLess(nearAngArcmin - refAngArcmin, oneEightyWithSlop * 60)
+                self.assertLess(nearAngArcsec - refAngArcsec, oneEightyWithSlop * 3600)
+                # prove that nearAng and ang are the same angle
+                nearErrAng = ((nearAngRad - angRad) * afwGeom.radians).wrapCtr()
+                self.assertAlmostEqual(nearErrAng.asRadians(), 0)
+                self.assertAlmostEqual(math.sin(nearAngRad), sinAng)
+                self.assertAlmostEqual(math.cos(nearAngRad), cosAng)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

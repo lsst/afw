@@ -407,9 +407,10 @@ inline Angle Angle::wrapNear(Angle const& refAng) const noexcept {
     if (wrapped - refAngRad >= PI) {
         wrapped -= TWOPI;
     }
-    // maximum relative roundoff error for subtraction is 2 epsilon
+    // This may push the final value a bit over the desired limit, but it's either that
+    // or add a tiny amount
     if (wrapped - refAngRad < -PI) {
-        wrapped -= wrapped * 2.0 * std::numeric_limits<double>::epsilon();
+        wrapped += TWOPI;
     }
     return wrapped * radians;
 }
