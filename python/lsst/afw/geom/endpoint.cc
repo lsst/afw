@@ -122,7 +122,7 @@ void declareBaseEndpoint(py::module& mod, std::string const& suffix) {
 
     py::class_<Class, std::shared_ptr<Class>> cls(mod, pyClassName.c_str());
 
-    cls.def("getNAxes", &Class::getNAxes);
+    cls.def_property_readonly("nAxes", &Class::getNAxes);
     addDataConverters(cls);
     addMakeFrame(cls);
     cls.def("normalizeFrame", &Class::normalizeFrame);

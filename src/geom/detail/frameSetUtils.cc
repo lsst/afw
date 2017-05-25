@@ -55,7 +55,7 @@ std::shared_ptr<ast::SkyFrame> getSkyFrame(ast::FrameSet const& frameSet, int in
     auto skyFrame = std::dynamic_pointer_cast<ast::SkyFrame>(frame);
     if (!skyFrame) {
         std::ostringstream os;
-        os << "Bug! Frame at index=" << index << " is a " << frame->getClass() << ", not a SkyFrame";
+        os << "Bug! Frame at index=" << index << " is a " << frame->getClassName() << ", not a SkyFrame";
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
     }
     return skyFrame;
@@ -93,7 +93,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertyList& metadata, bo
     auto frameSet = std::dynamic_pointer_cast<ast::FrameSet>(obj);
     if (!frameSet) {
         std::ostringstream os;
-        os << "metadata describes a " << obj->getClass() << ", not a FrameSet";
+        os << "metadata describes a " << obj->getClassName() << ", not a FrameSet";
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
     }
     if (strip) {
@@ -193,16 +193,16 @@ std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata,
 
         // set current frame to initial base frame so we can operate on it via the frame set
         frameSet->setCurrent(initialBaseIndex);
-        auto const baseClassName = frameSet->getClass();
+        auto const baseClassName = frameSet->getClassName();
         if (baseClassName != "Frame") {
             std::ostringstream os;
             os << "Could not find a GRID frame, and the base frame is of type " << baseClassName
                << "instead of Frame";
             throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
         }
-        if (frameSet->getNaxes() != 2) {
+        if (frameSet->getNAxes() != 2) {
             std::ostringstream os;
-            os << "Could not find a GRID frame, and the base frame has " << frameSet->getNaxes()
+            os << "Could not find a GRID frame, and the base frame has " << frameSet->getNAxes()
                << " axes instead of 2";
             throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
         }

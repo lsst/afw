@@ -39,7 +39,7 @@ namespace geom {
 
 template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool simplify)
-        : _fromEndpoint(mapping.getNin()), _frameSet(), _toEndpoint(mapping.getNout()) {
+        : _fromEndpoint(mapping.getNIn()), _frameSet(), _toEndpoint(mapping.getNOut()) {
     auto fromFrame = _fromEndpoint.makeFrame();
     auto toFrame = _toEndpoint.makeFrame();
     if (simplify) {
@@ -56,7 +56,7 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
 
 template <typename FromEndpoint, typename ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&frameSet)
-        : _fromEndpoint(frameSet->getNin()), _frameSet(frameSet), _toEndpoint(frameSet->getNout()) {
+        : _fromEndpoint(frameSet->getNIn()), _frameSet(frameSet), _toEndpoint(frameSet->getNOut()) {
     // Normalize the base and current frame in a way that affects its behavior as a mapping.
     // To do this one must set the current frame to the frame to be normalized
     // and normalize the frame set as a frame (i.e. normalize the frame "in situ").

@@ -49,11 +49,11 @@ class TransformTestCase(TransformTestBaseClass):
         currFrame = self.makeGoodFrame("Generic", 2)
         initialFrameSet = self.makeFrameSet(baseFrame, currFrame)
         initialIdent = "Initial Ident"
-        initialFrameSet.setIdent(initialIdent)
+        initialFrameSet.ident = initialIdent
         transform = afwGeom.TransformGenericToGeneric(initialFrameSet)
         extractedFrameSet = transform.getFrameSet()
-        extractedFrameSet.setIdent("Extracted Ident")
-        self.assertEqual(initialIdent, transform.getFrameSet().getIdent())
+        extractedFrameSet.ident = "Extracted Ident"
+        self.assertEqual(initialIdent, transform.getFrameSet().ident)
 
     def testOfChaining(self):
         """Test that the order of chaining Transform.of does not matter
@@ -73,8 +73,8 @@ class TransformTestCase(TransformTestBaseClass):
         merged1 = transform3.of(transform2).of(transform1)
         merged2 = transform3.of(transform2.of(transform1))
 
-        fromEndpoint = transform1.getFromEndpoint()
-        toEndpoint = transform3.getToEndpoint()
+        fromEndpoint = transform1.fromEndpoint
+        toEndpoint = transform3.toEndpoint
 
         inPoint = fromEndpoint.pointFromData(self.makeRawPointData(2))
         assert_allclose(toEndpoint.dataFromPoint(merged1.tranForward(inPoint)),

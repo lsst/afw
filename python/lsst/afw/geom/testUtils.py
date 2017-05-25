@@ -126,10 +126,10 @@ class FrameSetInfo(object):
         frameSet : `astshim.FrameSet`
             The FrameSet about which you want information
         """
-        self.baseInd = frameSet.getBase()
-        self.currInd = frameSet.getCurrent()
-        self.isBaseSkyFrame = frameSet.getFrame(self.baseInd).getClass() == "SkyFrame"
-        self.isCurrSkyFrame = frameSet.getFrame(self.currInd).getClass() == "SkyFrame"
+        self.baseInd = frameSet.base
+        self.currInd = frameSet.current
+        self.isBaseSkyFrame = frameSet.getFrame(self.baseInd).className == "SkyFrame"
+        self.isCurrSkyFrame = frameSet.getFrame(self.currInd).className == "SkyFrame"
 
 
 class PermutedFrameSet(object):
@@ -176,17 +176,17 @@ class PermutedFrameSet(object):
         self.isBaseSkyFrame = fsInfo.isBaseSkyFrame
         self.isCurrSkyFrame = fsInfo.isCurrSkyFrame
         if permuteBase:
-            baseNAxes = self.frameSet.getFrame(fsInfo.baseInd).getNaxes()
+            baseNAxes = self.frameSet.getFrame(fsInfo.baseInd).nAxes
             if baseNAxes != 2:
                 raise RuntimeError("Base frame has {} axes; 2 required to permute".format(baseNAxes))
-            self.frameSet.setCurrent(fsInfo.baseInd)
+            self.frameSet.current = fsInfo.baseInd
             self.frameSet.permAxes([2, 1])
-            self.frameSet.setCurrent(fsInfo.currInd)
+            self.frameSet.current = fsInfo.currInd
         if permuteCurr:
-            currNAxes = self.frameSet.getFrame(fsInfo.currInd).getNaxes()
+            currNAxes = self.frameSet.getFrame(fsInfo.currInd).nAxes
             if currNAxes != 2:
                 raise RuntimeError("Current frame has {} axes; 2 required to permute".format(currNAxes))
-            assert self.frameSet.getFrame(fsInfo.currInd).getNaxes() == 2
+            assert self.frameSet.getFrame(fsInfo.currInd).nAxes == 2
             self.frameSet.permAxes([2, 1])
         self.isBasePermuted = permuteBase
         self.isCurrPermuted = permuteCurr
@@ -226,7 +226,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         # list of endpoint class name prefixes; the full name is prefix + "Endpoint"
         self.endpointPrefixes = ("Generic", "Point2", "SpherePoint")
 
-        # GoodNaxes is dict of endpoint class name prefix:
+        # GoodNAxes is dict of endpoint class name prefix:
         #    tuple containing 0 or more valid numbers of axes
         self.goodNAxes = {
             "Generic": (1, 2, 3, 4),  # all numbers of axes are valid for GenericEndpoint
@@ -397,8 +397,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         `currFrame`   4
 
         where:
-        - `nIn` = `baseFrame.getNaxes()`
-        - `nOut` = `currFrame.getNaxes()`
+        - `nIn` = `baseFrame.nAxes`
+        - `nOut` = `currFrame.nAxes`
         - `polyMap` = `makeTwoWayPolyMap(nIn, nOut)`
 
         Return
@@ -413,23 +413,23 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         currFrame : `astshim.Frame`
             current frame
         """
-        nIn = baseFrame.getNaxes()
-        nOut = currFrame.getNaxes()
+        nIn = baseFrame.nAxes
+        nOut = currFrame.nAxes
         polyMap = makeTwoWayPolyMap(nIn, nOut)
 
         # The only way to set the Ident of a frame in a FrameSet is to set it in advance,
         # and I don't want to modify the inputs, so replace the input frames with copies
         baseFrame = baseFrame.copy()
-        baseFrame.setIdent(self.frameIdentDict[1])
+        baseFrame.ident = self.frameIdentDict[1]
         currFrame = currFrame.copy()
-        currFrame.setIdent(self.frameIdentDict[4])
+        currFrame.ident = self.frameIdentDict[4]
 
         frameSet = astshim.FrameSet(baseFrame)
         frame2 = astshim.Frame(nIn)
-        frame2.setIdent(self.frameIdentDict[2])
+        frame2.ident = self.frameIdentDict[2]
         frameSet.addFrame(astshim.FrameSet.CURRENT, astshim.UnitMap(nIn), frame2)
         frame3 = astshim.Frame(nOut)
-        frame3.setIdent(self.frameIdentDict[3])
+        frame3.ident = self.frameIdentDict[3]
         frameSet.addFrame(astshim.FrameSet.CURRENT, polyMap, frame3)
         frameSet.addFrame(astshim.FrameSet.CURRENT, astshim.UnitMap(nOut), currFrame)
         return frameSet
@@ -502,14 +502,14 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         msg : `str`
             Error message suffix describing test parameters
         """
-        fromEndpoint = transform.getFromEndpoint()
-        toEndpoint = transform.getToEndpoint()
+        fromEndpoint = transform.fromEndpoint
+        toEndpoint = transform.toEndpoint
         frameSet = transform.getFrameSet()
 
-        nIn = mapping.getNin()
-        nOut = mapping.getNout()
-        self.assertEqual(nIn, fromEndpoint.getNAxes(), msg=msg)
-        self.assertEqual(nOut, toEndpoint.getNAxes(), msg=msg)
+        nIn = mapping.nIn
+        nOut = mapping.nOut
+        self.assertEqual(nIn, fromEndpoint.nAxes, msg=msg)
+        self.assertEqual(nOut, toEndpoint.nAxes, msg=msg)
 
         # forward transformation of one point
         rawInPoint = self.makeRawPointData(nIn)
@@ -520,8 +520,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         rawInArray = self.makeRawArrayData(nPoints, nIn)
         inArray = fromEndpoint.arrayFromData(rawInArray)
 
-        if mapping.hasForward():
-            self.assertTrue(transform.hasForward())
+        if mapping.hasForward:
+            self.assertTrue(transform.hasForward)
             outPoint = transform.tranForward(inPoint)
             rawOutPoint = toEndpoint.dataFromPoint(outPoint)
             assert_allclose(rawOutPoint, mapping.tranForward(rawInPoint), err_msg=msg)
@@ -538,10 +538,10 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             rawOutArray = self.makeRawArrayData(nPoints, nOut)
             outArray = toEndpoint.arrayFromData(rawOutArray)
 
-            self.assertFalse(transform.hasForward())
+            self.assertFalse(transform.hasForward)
 
-        if mapping.hasInverse():
-            self.assertTrue(transform.hasInverse())
+        if mapping.hasInverse:
+            self.assertTrue(transform.hasInverse)
             # inverse transformation of one point;
             # remember that the inverse need not give the original values
             # (see the description of the `mapping` parameter)
@@ -558,7 +558,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             self.assertFloatsAlmostEqual(rawInverseArray, mapping.tranInverse(rawOutArray), msg=msg)
             self.assertFloatsAlmostEqual(rawInverseArray, frameSet.tranInverse(rawOutArray), msg=msg)
         else:
-            self.assertFalse(transform.hasInverse())
+            self.assertFalse(transform.hasInverse)
 
     def checkInverseTransformation(self, forward, inverse, msg=""):
         """Check that two Transforms are each others' inverses.
@@ -572,35 +572,35 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         msg : `str`
             error message suffix describing test parameters
         """
-        fromEndpoint = forward.getFromEndpoint()
-        toEndpoint = forward.getToEndpoint()
+        fromEndpoint = forward.fromEndpoint
+        toEndpoint = forward.toEndpoint
         frameSet = forward.getFrameSet()
         invFrameSet = inverse.getFrameSet()
 
         # properties
-        self.assertEqual(forward.getFromEndpoint(),
-                         inverse.getToEndpoint(), msg=msg)
-        self.assertEqual(forward.getToEndpoint(),
-                         inverse.getFromEndpoint(), msg=msg)
-        self.assertEqual(forward.hasForward(), inverse.hasInverse(), msg=msg)
-        self.assertEqual(forward.hasInverse(), inverse.hasForward(), msg=msg)
+        self.assertEqual(forward.fromEndpoint,
+                         inverse.toEndpoint, msg=msg)
+        self.assertEqual(forward.toEndpoint,
+                         inverse.fromEndpoint, msg=msg)
+        self.assertEqual(forward.hasForward, inverse.hasInverse, msg=msg)
+        self.assertEqual(forward.hasInverse, inverse.hasForward, msg=msg)
 
         # transformations of one point
         # we don't care about whether the transformation itself is correct
         # (see checkTransformation), so inPoint/outPoint need not be related
-        rawInPoint = self.makeRawPointData(fromEndpoint.getNAxes())
+        rawInPoint = self.makeRawPointData(fromEndpoint.nAxes)
         inPoint = fromEndpoint.pointFromData(rawInPoint)
-        rawOutPoint = self.makeRawPointData(toEndpoint.getNAxes())
+        rawOutPoint = self.makeRawPointData(toEndpoint.nAxes)
         outPoint = toEndpoint.pointFromData(rawOutPoint)
 
         # transformations of arrays of points
         nPoints = 7  # arbitrary
-        rawInArray = self.makeRawArrayData(nPoints, fromEndpoint.getNAxes())
+        rawInArray = self.makeRawArrayData(nPoints, fromEndpoint.nAxes)
         inArray = fromEndpoint.arrayFromData(rawInArray)
-        rawOutArray = self.makeRawArrayData(nPoints, toEndpoint.getNAxes())
+        rawOutArray = self.makeRawArrayData(nPoints, toEndpoint.nAxes)
         outArray = toEndpoint.arrayFromData(rawOutArray)
 
-        if forward.hasForward():
+        if forward.hasForward:
             self.assertEqual(forward.tranForward(inPoint),
                              inverse.tranInverse(inPoint), msg=msg)
             self.assertEqual(frameSet.tranForward(rawInPoint),
@@ -613,7 +613,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                                invFrameSet.tranInverse(rawInArray),
                                err_msg=msg)
 
-        if forward.hasInverse():
+        if forward.hasInverse:
             self.assertEqual(forward.tranInverse(outPoint),
                              inverse.tranForward(outPoint), msg=msg)
             self.assertEqual(frameSet.tranInverse(rawOutPoint),
@@ -665,18 +665,18 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             self.checkTransformation(transform, polyMap, msg=msg)
 
         # check invalid # of output against valid # of inputs
-        for nIn, badNout in itertools.product(self.goodNAxes[fromName],
+        for nIn, badNOut in itertools.product(self.goodNAxes[fromName],
                                               self.badNAxes[toName]):
-            badPolyMap = makeTwoWayPolyMap(nIn, badNout)
-            msg = "{}, nIn={}, badNout={}".format(baseMsg, nIn, badNout)
+            badPolyMap = makeTwoWayPolyMap(nIn, badNOut)
+            msg = "{}, nIn={}, badNOut={}".format(baseMsg, nIn, badNOut)
             with self.assertRaises(InvalidParameterError, msg=msg):
                 TransformClass(badPolyMap)
 
         # check invalid # of inputs against valid and invalid # of outputs
-        for badNin, nOut in itertools.product(self.badNAxes[fromName],
+        for badNIn, nOut in itertools.product(self.badNAxes[fromName],
                                               self.goodNAxes[toName] + self.badNAxes[toName]):
-                badPolyMap = makeTwoWayPolyMap(badNin, nOut)
-                msg = "{}, badNin={}, nOut={}".format(baseMsg, nIn, nOut)
+                badPolyMap = makeTwoWayPolyMap(badNIn, nOut)
+                msg = "{}, badNIn={}, nOut={}".format(baseMsg, nIn, nOut)
                 with self.assertRaises(InvalidParameterError, msg=msg):
                     TransformClass(badPolyMap)
 
@@ -699,7 +699,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             baseFrame = self.makeGoodFrame(fromName, nIn)
             currFrame = self.makeGoodFrame(toName, nOut)
             frameSet = self.makeFrameSet(baseFrame, currFrame)
-            self.assertEqual(frameSet.getNframe(), 4)
+            self.assertEqual(frameSet.nFrame, 4)
 
             # construct 0 or more frame sets that are invalid for this transform class
             for badBaseFrame in self.makeBadFrames(fromName):
@@ -725,11 +725,11 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
             frameSetCopy = transform.getFrameSet()
 
-            desNframe = 4  # desired number of frames
-            self.assertEqual(frameSet.getNframe(), desNframe)
-            self.assertEqual(frameSetCopy.getNframe(), desNframe)
-            for frameInd in range(1, 1 + desNframe):
-                self.assertEqual(frameSet.getFrame(frameInd).getIdent(),
+            desNFrame = 4  # desired number of frames
+            self.assertEqual(frameSet.nFrame, desNFrame)
+            self.assertEqual(frameSetCopy.nFrame, desNFrame)
+            for frameInd in range(1, 1 + desNFrame):
+                self.assertEqual(frameSet.getFrame(frameInd).ident,
                                  self.frameIdentDict[frameInd])
 
             polyMap = makeTwoWayPolyMap(nIn, nOut)
@@ -746,21 +746,21 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                     baseFrame = permutedFS.frameSet.getFrame(astshim.FrameSet.BASE)
                     # desired base longitude axis
                     desBaseLonAxis = 2 if permutedFS.isBasePermuted else 1
-                    self.assertEqual(baseFrame.getLonAxis(), desBaseLonAxis)
+                    self.assertEqual(baseFrame.lonAxis, desBaseLonAxis)
                 if permutedFS.isCurrSkyFrame:
                     currFrame = permutedFS.frameSet.getFrame(astshim.FrameSet.CURRENT)
                     # desired current base longitude axis
                     desCurrLonAxis = 2 if permutedFS.isCurrPermuted else 1
-                    self.assertEqual(currFrame.getLonAxis(), desCurrLonAxis)
+                    self.assertEqual(currFrame.lonAxis, desCurrLonAxis)
 
                 permTransform = TransformClass(permutedFS.frameSet)
                 # If the base and/or current frame is a SkyFrame then make sure the frame
                 # in the *Transform* has axes in standard (longitude, latitude) order
                 unpermFrameSet = permTransform.getFrameSet()
                 if permutedFS.isBaseSkyFrame:
-                    self.assertEqual(unpermFrameSet.getFrame(astshim.FrameSet.BASE).getLonAxis(), 1)
+                    self.assertEqual(unpermFrameSet.getFrame(astshim.FrameSet.BASE).lonAxis, 1)
                 if permutedFS.isCurrSkyFrame:
-                    self.assertEqual(unpermFrameSet.getFrame(astshim.FrameSet.CURRENT).getLonAxis(), 1)
+                    self.assertEqual(unpermFrameSet.getFrame(astshim.FrameSet.CURRENT).lonAxis, 1)
 
                 self.checkTransformation(permTransform, mapping=polyMap, msg=msg)
 
@@ -828,30 +828,30 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             the frames to between which `TransformClass` shall convert. Must be
             compatible with `TransformClass`.
         """
-        desNframe = 4  # desired number of frames
+        desNFrame = 4  # desired number of frames
         frameSet = self.makeFrameSet(frameIn, frameOut)
-        self.assertEqual(frameSet.getNframe(), desNframe)
+        self.assertEqual(frameSet.nFrame, desNFrame)
 
         baseMsg = "TransformClass={}, nIn={}, nOut={}".format(
-            TransformClass.__name__, frameIn.getNaxes(), frameOut.getNaxes())
+            TransformClass.__name__, frameIn.nAxes, frameOut.nAxes)
         transform = TransformClass(frameSet)
         forwardFrames = transform.getFrameSet()
-        self.assertFalse(forwardFrames.isInverted())
-        self.assertEqual(forwardFrames.getBase(), 1)
-        self.assertEqual(forwardFrames.getCurrent(), desNframe)
+        self.assertFalse(forwardFrames.isInverted)
+        self.assertEqual(forwardFrames.base, 1)
+        self.assertEqual(forwardFrames.current, desNFrame)
 
-        self.assertEqual(forwardFrames.getNframe(), desNframe, msg=baseMsg)
-        for frameInd in range(1, 1 + desNframe):
-            self.assertEqual(forwardFrames.getFrame(frameInd).getIdent(),
+        self.assertEqual(forwardFrames.nFrame, desNFrame, msg=baseMsg)
+        for frameInd in range(1, 1 + desNFrame):
+            self.assertEqual(forwardFrames.getFrame(frameInd).ident,
                              self.frameIdentDict[frameInd], msg=baseMsg)
 
         reverseFrames = transform.getInverse().getFrameSet()
-        self.assertTrue(reverseFrames.isInverted())
-        self.assertEqual(reverseFrames.getBase(), desNframe)
-        self.assertEqual(reverseFrames.getCurrent(), 1)
-        self.assertEqual(reverseFrames.getNframe(), desNframe, msg=baseMsg)
-        for frameInd in range(1, 1 + desNframe):
-            self.assertEqual(reverseFrames.getFrame(frameInd).getIdent(),
+        self.assertTrue(reverseFrames.isInverted)
+        self.assertEqual(reverseFrames.base, desNFrame)
+        self.assertEqual(reverseFrames.current, 1)
+        self.assertEqual(reverseFrames.nFrame, desNFrame, msg=baseMsg)
+        for frameInd in range(1, 1 + desNFrame):
+            self.assertEqual(reverseFrames.getFrame(frameInd).ident,
                              self.frameIdentDict[frameInd], msg=baseMsg)
 
     def checkGetJacobian(self, fromName, toName):
@@ -871,7 +871,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
             polyMap = makeForwardPolyMap(nIn, nOut)
             transform = TransformClass(polyMap)
-            fromEndpoint = transform.getFromEndpoint()
+            fromEndpoint = transform.fromEndpoint
 
             # Test multiple points to ensure correct functional form
             rawInPoint = self.makeRawPointData(nIn)
@@ -918,8 +918,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             transform2 = TransformClass2(polyMap)
             transform = transform2.of(transform1)
 
-            fromEndpoint = transform1.getFromEndpoint()
-            toEndpoint = transform2.getToEndpoint()
+            fromEndpoint = transform1.fromEndpoint
+            toEndpoint = transform2.toEndpoint
 
             inPoint = fromEndpoint.pointFromData(self.makeRawPointData(nIn))
             outPointMerged = transform.tranForward(inPoint)
@@ -953,11 +953,11 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         if fromName != midName:
             # Use TransformClass1 for both args to keep test logic simple
             outName = midName
-            joinNaxes = set(self.goodNAxes[fromName]).intersection(
+            joinNAxes = set(self.goodNAxes[fromName]).intersection(
                 self.goodNAxes[outName])
 
             for nIn, nMid, nOut in itertools.product(self.goodNAxes[fromName],
-                                                     joinNaxes,
+                                                     joinNAxes,
                                                      self.goodNAxes[outName]):
                 polyMap = makeTwoWayPolyMap(nIn, nMid)
                 transform1 = TransformClass1(polyMap)
@@ -978,13 +978,13 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.assertEqual(transform.getFrameSet().show(),
                          transformRoundTrip.getFrameSet().show())
 
-        fromEndpoint = transform.getFromEndpoint()
-        toEndpoint = transform.getToEndpoint()
+        fromEndpoint = transform.fromEndpoint
+        toEndpoint = transform.toEndpoint
         frameSet = transform.getFrameSet()
-        nIn = frameSet.getNin()
-        nOut = frameSet.getNout()
+        nIn = frameSet.nIn
+        nOut = frameSet.nOut
 
-        if frameSet.hasForward():
+        if frameSet.hasForward:
             nPoints = 7  # arbitrary
             rawInArray = self.makeRawArrayData(nPoints, nIn)
             inArray = fromEndpoint.arrayFromData(rawInArray)
@@ -994,7 +994,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             outDataRoundTrip = toEndpoint.dataFromArray(outArrayRoundTrip)
             assert_allclose(outData, outDataRoundTrip)
 
-        if frameSet.hasInverse():
+        if frameSet.hasInverse:
             nPoints = 7  # arbitrary
             rawOutArray = self.makeRawArrayData(nPoints, nOut)
             outArray = toEndpoint.arrayFromData(rawOutArray)
