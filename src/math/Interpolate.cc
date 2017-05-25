@@ -161,6 +161,9 @@ namespace {
             throw LSST_EXCEPT(pex::exceptions::LogicError,
                               str(boost::format("You can't get here: style == %") % style));
     }
+    // don't use default statement to let compiler check switch coverage
+    throw LSST_EXCEPT(pex::exceptions::LogicError,
+                      str(boost::format("You can't get here: style == %") % style));
 }
 }
 
