@@ -188,28 +188,7 @@ geom::Angle meanSiderealTimeGreenwich(double const jd  ///< Julian Day
            geom::degrees;
 }
 
-/*
- * A pair of utility functions to go from cartesian to spherical
- */
 double const atPoleEpsilon = 0.0;  // std::numeric_limits<double>::epsilon();
-geom::Angle pointToLongitude(geom::Point3D const &p3d, double const defaultLongitude = 0.0) {
-    geom::Angle lon;
-    if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
-        lon = geom::Angle(0.0);
-    } else {
-        lon = (std::atan2(p3d.getY(), p3d.getX()) * geom::radians).wrap();
-    }
-    return lon;
-}
-geom::Angle pointToLatitude(geom::Point3D const &p3d) {
-    geom::Angle lat;
-    if (fabs(p3d.getX()) <= atPoleEpsilon && fabs(p3d.getY()) <= atPoleEpsilon) {
-        lat = (p3d.getZ() >= 0) ? geom::Angle(geom::HALFPI) : geom::Angle(-geom::HALFPI);
-    } else {
-        lat = std::asin(p3d.getZ()) * geom::radians;
-    }
-    return lat;
-}
 std::pair<geom::Angle, geom::Angle> pointToLonLat(geom::Point3D const &p3d,
                                                   double const defaultLongitude = 0.0,
                                                   bool normalize = true) {
