@@ -212,25 +212,36 @@ SpanSet::SpanSet(std::vector<Span>&& vec, bool normalize) : _spanVector(std::mov
 }
 
 void SpanSet::_runNormalize() {
-    // This bit of code will only be executed with a non-empty _spanVector internally
-    // and is not accessable from outside the class
+    // This bit of code is not safe if the _spanVector is empty. However, this function will only be executed
+    // with a non-empty _spanVector as it is called internally by the class constructors, and cannot be
+    // executed from outside the class
 
     // Ensure the span set is sorted according to Span < operator
     std::sort(_spanVector.begin(), _spanVector.end());
 
-    // Now that the span is sorted, overlapping spans should be combined
-    // Start from 1 as the comparison will always be with the previous element
-    for (auto iter = ++(_spanVector.begin()); iter != _spanVector.end(); iter++) {
-        if (spansContiguous(*std::prev(iter, 1), *iter)) {
-            // These spans overlap, create one new one, covering the whole expanse
-            *(iter - 1) = Span((*(iter - 1)).getY(), std::min((*(iter - 1)).getMinX(), (*iter).getMinX()),
-                               std::max((*(iter - 1)).getMaxX(), (*iter).getMaxX()));
-            // Erase the current Span, as it is now contained in the previous element
-            iter = _spanVector.erase(iter);
-            // Move the iterator back one to make sure the element gets run in the loop
-            --iter;
+    // Create a new vector to hold the possibly combined Spans
+    std::vector<Span> newSpans;
+    // Reserve the size of the original as it is the maximum possible size
+    newSpans.reserve(_spanVector.size());
+    // push back the first element, as it is certain to be included
+    newSpans.push_back(*_spanVector.begin());
+
+    // With the sorted span array, spans that are contiguous with the end of the last span in the new vector
+    // should be combined with the last span in the new vector. Only when there is no longer continuity
+    // between spans should a new span be added.
+    // Start iteration from "1" as the 0th element is already in the newSpans vector
+    for (auto iter = ++(_spanVector.begin()); iter != _spanVector.end(); ++iter) {
+        auto & newSpansEnd = newSpans.back();
+        if (spansContiguous(newSpansEnd, *iter)) {
+            newSpansEnd = Span(newSpansEnd.getY(), std::min(newSpansEnd.getMinX(), iter->getMinX()),
+                                 std::max(newSpansEnd.getMaxX(), iter->getMaxX()));
+        } else {
+            newSpans.push_back(Span(*iter));
         }
     }
+
+    // Set the new normalized vector of spans to the internal span vector container
+    _spanVector = std::move(newSpans);
 }
 
 void SpanSet::_initialize() {
