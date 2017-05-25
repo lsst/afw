@@ -1,3 +1,4 @@
+
 /*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
@@ -97,6 +98,71 @@ bool spansContiguous(Span const& a, Span const& b, bool compareY = true) {
                        (b.getMaxX() + 1 >= a.getMinX() && b.getMinX() <= a.getMinX())))
                    ? true
                    : false;
+}
+
+/* Determine the intersection with a mask or its logical inverse
+ *
+ * spanSet - SpanSet object with which to intersect the mask
+ * mask - Mask object to be intersectedNot
+ * bitmask - bitpattern to used when deciding pixel membership in the mask
+ *
+ * Templates:
+ * T - pixel type of the mask
+ * invert - boolean indicating if the intersection is with the mask or the inverse of the mask
+            templated parameter to ensure the check is compiled away if it can be
+*/
+template <typename T, bool invert>
+std::shared_ptr<SpanSet> maskIntersect(SpanSet const & spanSet, image::Mask<T> const & mask, T bitmask) {
+    // This vector will store our output spans
+    std::vector<Span> newVec;
+    auto maskBBox = mask.getBBox();
+    for (auto const & spn : spanSet) {
+        // Variable to mark if a new span has been started
+        // Reset the started flag for each different span
+        bool started = false;
+        // Limit the y iteration to be within the mask's bounding box
+        int y = spn.getY();
+        if (y < maskBBox.getMinY() || y > maskBBox.getMaxY()) {
+            continue;
+        }
+        // Reset the min and max variables
+        int minX = 0;
+        int maxX = 0;
+        // Limit the scope of iteration to be within the mask's bounds
+        int startX = std::max(spn.getMinX(), maskBBox.getMinX());
+        int endX = std::min(spn.getMaxX(), maskBBox.getMaxX());
+        for (int x = startX; x <= endX; ++x){
+            // Find if the pixel matches the given bit pattern
+            bool pixelCompare = mask.get0(x, y) & bitmask;
+            // if the templated boolean indicates the compliment of the mask is desired, invert the
+            // pixel comparison
+            if (invert) {
+                pixelCompare = !pixelCompare;
+            }
+            // If the pixel is to be included in the operation, start or append recording values
+            // needed to later construct a Span
+            if (pixelCompare) {
+                if (!started) {
+                    started = true;
+                    minX = x;
+                    maxX = x;
+                } else {
+                    maxX = x;
+                }
+                if (x == endX) {
+                    // We have reached the end of a row and the pixel evaluates true, should add the
+                    // Span
+                    newVec.push_back(Span(y, minX, maxX));
+                }
+            } else if(started) {
+                // A span was started but the current pixel is not to be included in the new SpanSet,
+                // the current SpanSet should be close and added to the vector
+                newVec.push_back(Span(y, minX, maxX));
+                started = false;
+            }
+        }
+    }
+    return std::make_shared<SpanSet>(std::move(newVec));
 }
 
 }  // namespace
@@ -779,16 +845,12 @@ void SpanSet::clearMask(image::Mask<T>& target, T bitmask) const {
 
 template <typename T>
 std::shared_ptr<SpanSet> SpanSet::intersect(image::Mask<T> const& other, T bitmask) const {
-    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
-    auto spanSetFromMask = SpanSet::fromMask(other, comparator);
-    return intersect(*spanSetFromMask);
+    return maskIntersect<T, false>(*this, other, bitmask);
 }
 
 template <typename T>
 std::shared_ptr<SpanSet> SpanSet::intersectNot(image::Mask<T> const& other, T bitmask) const {
-    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
-    auto spanSetFromMask = SpanSet::fromMask(other, comparator);
-    return intersectNot(*spanSetFromMask);
+    return maskIntersect<T, true>(*this, other, bitmask);
 }
 
 template <typename T>
