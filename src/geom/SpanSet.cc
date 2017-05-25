@@ -694,14 +694,16 @@ std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const& other) const {
         return std::make_shared<SpanSet>();
     }
     std::vector<Span> tempVec;
+    auto otherIter = other.begin();
     for (auto const& spn : _spanVector) {
-        for (auto const& otherSpn : other) {
-            if (spansOverlap(spn, otherSpn)) {
-                auto newMin = std::max(spn.getMinX(), otherSpn.getMinX());
-                auto newMax = std::min(spn.getMaxX(), otherSpn.getMaxX());
+        while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
+            if (spansOverlap(spn, *otherIter)) {
+                auto newMin = std::max(spn.getMinX(), otherIter->getMinX());
+                auto newMax = std::min(spn.getMaxX(), otherIter->getMaxX());
                 auto newSpan = Span(spn.getY(), newMin, newMax);
                 tempVec.push_back(newSpan);
             }
+            ++otherIter;
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
@@ -719,11 +721,12 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
      * or with other containing this  b1|    a1|    a2|   b2|
      */
     std::vector<Span> tempVec;
+    auto otherIter = other.begin();
     bool added;
     for (auto const& spn : _spanVector) {
         added = false;
-        for (auto const& otherSpn : other) {
-            if (spansOverlap(spn, otherSpn)) {
+        while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
+            if (spansOverlap(spn, *otherIter)) {
                 added = true;
                 /* To handle one span containing the other, the spans will be added
                  * piecewise, and let the SpanSet constructor normalize spans which
@@ -731,13 +734,14 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
                  * these statements will all be false, and nothing will be added,
                  * which is the expected behavior.
                  */
-                if (spn.getMinX() < otherSpn.getMinX()) {
-                    tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherSpn.getMinX() - 1));
+                if (spn.getMinX() < otherIter->getMinX()) {
+                    tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherIter->getMinX() - 1));
                 }
-                if (spn.getMaxX() > otherSpn.getMaxX()) {
-                    tempVec.push_back(Span(spn.getY(), otherSpn.getMaxX() + 1, spn.getMaxX()));
+                if (spn.getMaxX() > otherIter->getMaxX()) {
+                    tempVec.push_back(Span(spn.getY(), otherIter->getMaxX() + 1, spn.getMaxX()));
                 }
             }
+            ++otherIter;
         }
         /* If added is still zero, that means it did not overlap any of the spans in other
          * and should be included in the new span
