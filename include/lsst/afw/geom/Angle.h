@@ -1,7 +1,6 @@
 #if !defined(LSST_AFW_GEOM_ANGLE_H)
 #define LSST_AFW_GEOM_ANGLE_H
 
-#include <limits>
 #include <iostream>
 #include <type_traits>
 
@@ -180,7 +179,7 @@ public:
     Angle wrapCtr() const noexcept;
 
     /**
-     * Wrap this angle to a value `x` such that -&pi; &le; `x - refAng` < &pi;.
+     * Wrap this angle to a value `x` such that -&pi; &le; `x - refAng` &le; &pi;, approximately.
      *
      * @param refAng reference angle to match
      *
@@ -188,9 +187,8 @@ public:
      *
      * @exceptsafe Shall not throw exceptions.
      *
-     * @warning Exact limits are only guaranteed for radians; limits for other
-     * units may be slightly squishy due to roundoff errors. There are known
-     * violations that are demonstrated in testWrap in tests/angle.py.
+     * @warning The only firm limit is -&pi; &le; `x - refAng` in radians. The upper limit in radians
+     * and both limits in other units are somewhat squishy, due to roundoff error.
      */
     Angle wrapNear(Angle const& refAng) const noexcept;
 
@@ -403,13 +401,14 @@ inline Angle Angle::wrapNear(Angle const& refAng) const noexcept {
     double const refAngRad = refAng.asRadians();
     double wrapped = (*this - refAng).wrapCtr().asRadians() + refAngRad;
 
-    // roundoff can cause slightly out-of-range values; fix those
+    // roundoff can cause slightly out-of-range values; fix those as bast we can;
+    // note that both conditionals are wanted, since either or both may execute
+    // (though if/else could be used if the lower limit was squishy for radians)
     if (wrapped - refAngRad >= PI) {
         wrapped -= TWOPI;
     }
-    // maximum relative roundoff error for subtraction is 2 epsilon
     if (wrapped - refAngRad < -PI) {
-        wrapped -= wrapped * 2.0 * std::numeric_limits<double>::epsilon();
+        wrapped += TWOPI;
     }
     return wrapped * radians;
 }
