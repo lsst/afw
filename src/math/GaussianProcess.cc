@@ -144,12 +144,12 @@ void KdTree<T>::findNeighbors(ndarray::Array<int, 1, 1> neighdex, ndarray::Array
                           "Asked for zero or a negative number of neighbors\n");
     }
 
-    if (neighdex.getNumElements() != n_nn) {
+    if (neighdex.getNumElements() != static_cast<ndarray::Size>(n_nn)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Size of neighdex does not equal n_nn in KdTree.findNeighbors\n");
     }
 
-    if (dd.getNumElements() != n_nn) {
+    if (dd.getNumElements() != static_cast<ndarray::Size>(n_nn)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Size of dd does not equal n_nn in KdTree.findNeighbors\n");
     }
@@ -208,7 +208,7 @@ ndarray::Array<T, 1, 1> KdTree<T>::getData(int ipt) const {
 
 template <typename T>
 void KdTree<T>::addPoint(ndarray::Array<const T, 1, 1> const &v) {
-    if (v.getNumElements() != _dimensions) {
+    if (v.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are trying to add a point of the incorrect dimensionality to KdTree\n");
     }
@@ -765,7 +765,7 @@ GaussianProcess<T>::GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarr
     _nFunctions = 1;
     _function = allocate(ndarray::makeVector(_npts, 1));
 
-    if (ff.getNumElements() != _npts) {
+    if (ff.getNumElements() != static_cast<ndarray::Size>(_npts)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
@@ -796,12 +796,13 @@ GaussianProcess<T>::GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarr
     _room = _npts;
     _roomStep = 5000;
 
-    if (ff.getNumElements() != _npts) {
+    if (ff.getNumElements() != static_cast<ndarray::Size>(_npts)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
 
-    if (mn.getNumElements() != _dimensions || mx.getNumElements() != _dimensions) {
+    if (mn.getNumElements() != static_cast<ndarray::Size>(_dimensions) ||
+        mx.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your min/max values have different dimensionality than your data points\n");
     }
@@ -843,7 +844,7 @@ GaussianProcess<T>::GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarr
     _room = _npts;
     _roomStep = 5000;
 
-    if (ff.template getSize<0>() != _npts) {
+    if (ff.template getSize<0>() != static_cast<ndarray::Size>(_npts)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
@@ -878,12 +879,13 @@ GaussianProcess<T>::GaussianProcess(ndarray::Array<T, 2, 2> const &dataIn, ndarr
     _room = _npts;
     _roomStep = 5000;
 
-    if (ff.template getSize<0>() != _npts) {
+    if (ff.template getSize<0>() != static_cast<ndarray::Size>(_npts)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
 
-    if (mn.getNumElements() != _dimensions || mx.getNumElements() != _dimensions) {
+    if (mn.getNumElements() != static_cast<ndarray::Size>(_dimensions) ||
+        mx.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your min/max values have different dimensionality than your data points\n");
     }
@@ -932,7 +934,7 @@ void GaussianProcess<T>::getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 
                           "in your GaussianProcess.\n");
     }
 
-    if (pts.template getSize<1>() != _dimensions) {
+    if (pts.template getSize<1>() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your pts array is constructed for points of the wrong dimensionality.\n");
     }
@@ -949,13 +951,12 @@ void GaussianProcess<T>::getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 
                           "for all of the points you requested in your indices array.\n");
     }
 
-    int i, j;
-    for (i = 0; i < indices.template getSize<0>(); i++) {
+    for (ndarray::Size i = 0; i < indices.template getSize<0>(); i++) {
         pts[i] = _kdTree.getData(indices[i]);  // do this first in case one of the indices is invalid.
                                                // _kdTree.getData() will raise an exception in that case
         fn[i] = _function[indices[i]][0];
         if (_useMaxMin == 1) {
-            for (j = 0; j < _dimensions; j++) {
+            for (int j = 0; j < _dimensions; j++) {
                 pts[i][j] *= (_max[j] - _min[j]);
                 pts[i][j] += _min[j];
             }
@@ -966,13 +967,13 @@ void GaussianProcess<T>::getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 
 template <typename T>
 void GaussianProcess<T>::getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 2, 2> fn,
                                  ndarray::Array<int, 1, 1> indices) const {
-    if (fn.template getSize<1>() != _nFunctions) {
+    if (fn.template getSize<1>() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your function value array does not have enough room for all of the functions "
                           "in your GaussianProcess.\n");
     }
 
-    if (pts.template getSize<1>() != _dimensions) {
+    if (pts.template getSize<1>() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your pts array is constructed for points of the wrong dimensionality.\n");
     }
@@ -989,15 +990,14 @@ void GaussianProcess<T>::getData(ndarray::Array<T, 2, 2> pts, ndarray::Array<T, 
                           "for all of the points you requested in your indices array.\n");
     }
 
-    int i, j;
-    for (i = 0; i < indices.template getSize<0>(); i++) {
+    for (ndarray::Size i = 0; i < indices.template getSize<0>(); i++) {
         pts[i] = _kdTree.getData(indices[i]);  // do this first in case one of the indices is invalid.
                                                // _kdTree.getData() will raise an exception in that case
-        for (j = 0; j < _nFunctions; j++) {
+        for (int j = 0; j < _nFunctions; j++) {
             fn[i][j] = _function[indices[i]][j];
         }
         if (_useMaxMin == 1) {
-            for (j = 0; j < _dimensions; j++) {
+            for (int j = 0; j < _dimensions; j++) {
                 pts[i][j] *= (_max[j] - _min[j]);
                 pts[i][j] += _min[j];
             }
@@ -1025,13 +1025,13 @@ T GaussianProcess<T>::interpolate(ndarray::Array<T, 1, 1> variance, ndarray::Arr
                           "Asked for more neighbors than you have data points\n");
     }
 
-    if (variance.getNumElements() != _nFunctions) {
+    if (variance.getNumElements() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your variance array is the incorrect size for the number "
                           "of functions you are trying to interpolate\n");
     }
 
-    if (vin.getNumElements() != _dimensions) {
+    if (vin.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are interpolating at a point with different dimensionality than you data\n");
     }
@@ -1140,12 +1140,13 @@ void GaussianProcess<T>::interpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<
                           "Asked for more neighbors than you have data points\n");
     }
 
-    if (vin.getNumElements() != _dimensions) {
+    if (vin.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are interpolating at a point with different dimensionality than you data\n");
     }
 
-    if (mu.getNumElements() != _nFunctions || variance.getNumElements() != _nFunctions) {
+    if (mu.getNumElements() != static_cast<ndarray::Size>(_nFunctions) ||
+        variance.getNumElements() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your mu and/or var arrays are improperly sized for the number of functions "
                           "you are interpolating\n");
@@ -1249,7 +1250,7 @@ T GaussianProcess<T>::selfInterpolate(ndarray::Array<T, 1, 1> variance, int dex,
                           "You are interpolating more than one function.");
     }
 
-    if (variance.getNumElements() != _nFunctions) {
+    if (variance.getNumElements() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your variance array is the incorrect size for the number "
                           "of functions you are trying to interpolate\n");
@@ -1365,7 +1366,8 @@ T GaussianProcess<T>::selfInterpolate(ndarray::Array<T, 1, 1> variance, int dex,
 template <typename T>
 void GaussianProcess<T>::selfInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<T, 1, 1> variance,
                                          int dex, int numberOfNeighbors) const {
-    if (mu.getNumElements() != _nFunctions || variance.getNumElements() != _nFunctions) {
+    if (mu.getNumElements() != static_cast<ndarray::Size>(_nFunctions) ||
+        variance.getNumElements() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your mu and/or var arrays are improperly sized for the number of functions "
                           "you are interpolating\n");
@@ -1485,9 +1487,9 @@ void GaussianProcess<T>::selfInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::Ar
 template <typename T>
 void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::Array<T, 1, 1> variance,
                                           ndarray::Array<T, 2, 2> const &queries) const {
-    int i, j, ii, nQueries;
+    int i, j;
 
-    nQueries = queries.template getSize<0>();
+    ndarray::Size nQueries = queries.template getSize<0>();
 
     if (_nFunctions != 1) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -1501,7 +1503,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::A
                           "at which you are trying to interpolate your function.\n");
     }
 
-    if (queries.template getSize<1>() != _dimensions) {
+    if (queries.template getSize<1>() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "The points you passed to batchInterpolate are of the wrong "
                           "dimensionality for your Gaussian Process\n");
@@ -1545,7 +1547,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::A
     batchxx = ldlt.solve(batchbb);
     _timer.addToEigen();
 
-    for (ii = 0; ii < nQueries; ii++) {
+    for (ndarray::Size ii = 0; ii < nQueries; ii++) {
         for (i = 0; i < _dimensions; i++) v1[i] = queries[ii][i];
         if (_useMaxMin == 1) {
             for (i = 0; i < _dimensions; i++) v1[i] = (v1[i] - _min[i]) / (_max[i] - _min[i]);
@@ -1557,7 +1559,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::A
     }
     _timer.addToIteration();
 
-    for (ii = 0; ii < nQueries; ii++) {
+    for (ndarray::Size ii = 0; ii < nQueries; ii++) {
         for (i = 0; i < _dimensions; i++) v1[i] = queries[ii][i];
         if (_useMaxMin == 1) {
             for (i = 0; i < _dimensions; i++) v1[i] = (v1[i] - _min[i]) / (_max[i] - _min[i]);
@@ -1585,9 +1587,9 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu, ndarray::A
 template <typename T>
 void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::Array<T, 2, 2> variance,
                                           ndarray::Array<T, 2, 2> const &queries) const {
-    int i, j, ii, nQueries, ifn;
+    int i, j, ifn;
 
-    nQueries = queries.template getSize<0>();
+    ndarray::Size nQueries = queries.template getSize<0>();
 
     if (mu.template getSize<0>() != nQueries || variance.template getSize<0>() != nQueries) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -1595,13 +1597,14 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::A
                           "you are interpolating your functions.\n");
     }
 
-    if (mu.template getSize<1>() != _nFunctions || variance.template getSize<1>() != _nFunctions) {
+    if (mu.template getSize<1>() != static_cast<ndarray::Size>(_nFunctions) ||
+        variance.template getSize<1>() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your output arrays do not have room for all of the functions you are "
                           "interpolating\n");
     }
 
-    if (queries.template getSize<1>() != _dimensions) {
+    if (queries.template getSize<1>() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "The points at which you are interpolating your functions have the "
                           "wrong dimensionality.\n");
@@ -1650,7 +1653,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::A
         batchxx = ldlt.solve(batchbb);
         _timer.addToEigen();
 
-        for (ii = 0; ii < nQueries; ii++) {
+        for (ndarray::Size ii = 0; ii < nQueries; ii++) {
             for (i = 0; i < _dimensions; i++) v1[i] = queries[ii][i];
             if (_useMaxMin == 1) {
                 for (i = 0; i < _dimensions; i++) v1[i] = (v1[i] - _min[i]) / (_max[i] - _min[i]);
@@ -1664,7 +1667,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::A
     }  // ifn = 0 to _nFunctions
 
     _timer.addToIteration();
-    for (ii = 0; ii < nQueries; ii++) {
+    for (ndarray::Size ii = 0; ii < nQueries; ii++) {
         for (i = 0; i < _dimensions; i++) v1[i] = queries[ii][i];
         if (_useMaxMin == 1) {
             for (i = 0; i < _dimensions; i++) v1[i] = (v1[i] - _min[i]) / (_max[i] - _min[i]);
@@ -1692,9 +1695,9 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu, ndarray::A
 template <typename T>
 void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu,
                                           ndarray::Array<T, 2, 2> const &queries) const {
-    int i, j, ii, nQueries;
+    int i, j;
 
-    nQueries = queries.template getSize<0>();
+    ndarray::Size nQueries = queries.template getSize<0>();
 
     if (_nFunctions != 1) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -1702,7 +1705,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu,
                           "you are trying to interpolate.\n");
     }
 
-    if (queries.template getSize<1>() != _dimensions) {
+    if (queries.template getSize<1>() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "The points at which you are trying to interpolate your function are "
                           "of the wrong dimensionality.\n");
@@ -1753,7 +1756,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu,
     batchxx = ldlt.solve(batchbb);
     _timer.addToEigen();
 
-    for (ii = 0; ii < nQueries; ii++) {
+    for (ndarray::Size ii = 0; ii < nQueries; ii++) {
         for (i = 0; i < _dimensions; i++) v1[i] = queries[ii][i];
         if (_useMaxMin == 1) {
             for (i = 0; i < _dimensions; i++) v1[i] = (v1[i] - _min[i]) / (_max[i] - _min[i]);
@@ -1771,9 +1774,9 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 1, 1> mu,
 template <typename T>
 void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu,
                                           ndarray::Array<T, 2, 2> const &queries) const {
-    int i, j, ii, nQueries, ifn;
+    int i, j, ifn;
 
-    nQueries = queries.template getSize<0>();
+    ndarray::Size nQueries = queries.template getSize<0>();
 
     if (mu.template getSize<0>() != nQueries) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -1781,13 +1784,13 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu,
                           "at which you want to interpolate your functions.\n");
     }
 
-    if (mu.template getSize<1>() != _nFunctions) {
+    if (mu.template getSize<1>() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Your output array does not have enough room for all of the functions "
                           "you are trying to interpolate.\n");
     }
 
-    if (queries.template getSize<1>() != _dimensions) {
+    if (queries.template getSize<1>() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "The points at which you are interpolating your functions do not "
                           "have the correct dimensionality.\n");
@@ -1838,7 +1841,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T, 2, 2> mu,
         batchxx = ldlt.solve(batchbb);
         _timer.addToEigen();
 
-        for (ii = 0; ii < nQueries; ii++) {
+        for (ndarray::Size ii = 0; ii < nQueries; ii++) {
             for (i = 0; i < _dimensions; i++) v1[i] = queries[ii][i];
             if (_useMaxMin == 1) {
                 for (i = 0; i < _dimensions; i++) v1[i] = (v1[i] - _min[i]) / (_max[i] - _min[i]);
@@ -1864,7 +1867,7 @@ void GaussianProcess<T>::addPoint(ndarray::Array<T, 1, 1> const &vin, T f) {
                           "You are calling the wrong addPoint; you need a vector of functions\n");
     }
 
-    if (vin.getNumElements() != _dimensions) {
+    if (vin.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are trying to add a point of the wrong dimensionality to "
                           "your GaussianProcess.\n");
@@ -1902,13 +1905,13 @@ void GaussianProcess<T>::addPoint(ndarray::Array<T, 1, 1> const &vin, T f) {
 
 template <typename T>
 void GaussianProcess<T>::addPoint(ndarray::Array<T, 1, 1> const &vin, ndarray::Array<T, 1, 1> const &f) {
-    if (vin.getNumElements() != _dimensions) {
+    if (vin.getNumElements() != static_cast<ndarray::Size>(_dimensions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are trying to add a point of the wrong dimensionality to "
                           "your GaussianProcess.\n");
     }
 
-    if (f.template getSize<0>() != _nFunctions) {
+    if (f.template getSize<0>() != static_cast<ndarray::Size>(_nFunctions)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are not adding the correct number of function values to "
                           "your GaussianProcess.\n");
@@ -2006,10 +2009,8 @@ void SquaredExpCovariogram<T>::setEllSquared(double ellSquared) {
 template <typename T>
 T SquaredExpCovariogram<T>::operator()(ndarray::Array<const T, 1, 1> const &p1,
                                        ndarray::Array<const T, 1, 1> const &p2) const {
-    int i;
-    T d;
-    d = 0.0;
-    for (i = 0; i < p1.template getSize<0>(); i++) {
+    T d = 0.0;
+    for (ndarray::Size i = 0; i < p1.template getSize<0>(); i++) {
         d += (p1[i] - p2[i]) * (p1[i] - p2[i]);
     }
 

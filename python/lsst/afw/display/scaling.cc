@@ -31,8 +31,8 @@ static void getSample(image::Image<T> const& image, std::size_t const nSamples, 
     for (int stride = initialStride; stride >= 1; --stride) {
         vSample.clear();
 
-        for (std::size_t y = 0; y < height; y += stride) {
-            for (std::size_t x = 0; x < width; x += stride) {
+        for (int y = 0; y < height; y += stride) {
+            for (int x = 0; x < width; x += stride) {
                 T const elem = image(x, y);
                 if (std::isfinite(elem)) {
                     vSample.push_back(elem);
@@ -85,8 +85,8 @@ static std::pair<double, double> fitLine(
     // Mask that is used in k-sigma clipping
     std::vector<int> vBadPix(vSample.size(), 0);
 
-    std::size_t nGoodPix = vSample.size();
-    std::size_t nGoodPixOld = nGoodPix + 1;
+    int nGoodPix = vSample.size();
+    int nGoodPixOld = nGoodPix + 1;
 
     // values to be obtained
     double intercept = 0;
