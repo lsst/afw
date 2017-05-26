@@ -693,6 +693,10 @@ std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const& other) const {
     if (!_bbox.overlaps(other.getBBox())) {
         return std::make_shared<SpanSet>();
     }
+    // Handel intersecting a SpanSet with itself
+    if (other == *this) {
+        return std::make_shared<SpanSet>(this->_spanVector);
+    }
     std::vector<Span> tempVec;
     auto otherIter = other.begin();
     for (auto const& spn : _spanVector) {
@@ -713,6 +717,10 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
     // Check if the bounding boxes overlap, if not simply return a copy of this
     if (!getBBox().overlaps(other.getBBox())) {
         return std::make_shared<SpanSet>(this->begin(), this->end());
+    }
+    // Handle calling a SpanSet's intersectNot with itself as an argument
+    if (other == *this) {
+        return std::make_shared<SpanSet>();
     }
     /* This function must find all the areas in this and not in other. These SpanSets
      * may be overlapping with this less than other a1|    b1|   a2|    b2|,
