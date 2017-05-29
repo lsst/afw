@@ -65,6 +65,14 @@ class DisplayImpl(object):
             print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" %
                   (self.frame, symb, c, r, size, ctype, args, kwargs))
 
+    def _overlayCatalog(self, sourceCat):
+        """! Overlay catalog
+        \param sourceCat Source catalog
+        """
+        if self.verbose:
+                        print("virtual[%s]._overlayCatalog(%s)" %
+                  (self.frame, sourceCat))
+
     def _drawLines(self, points, ctype):
         """!Draw line defined by the list points
         \param points A list of 0-indexed positions [(x, y), (x, y), ...]
