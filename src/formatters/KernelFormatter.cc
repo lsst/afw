@@ -132,7 +132,7 @@ KernelFormatter::KernelFormatter(std::shared_ptr<pexPolicy::Policy> policy)
 KernelFormatter::~KernelFormatter(void) {}
 
 void KernelFormatter::write(dafBase::Persistable const* persistable,
-                            std::shared_ptr<dafPersist::Storage> storage,
+                            std::shared_ptr<dafPersist::FormatterStorage> storage,
                             std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter write start");
     math::Kernel const* kp = dynamic_cast<math::Kernel const*>(persistable);
@@ -152,10 +152,10 @@ void KernelFormatter::write(dafBase::Persistable const* persistable,
         LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
+    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Kernel");
 }
 
-dafBase::Persistable* KernelFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+dafBase::Persistable* KernelFormatter::read(std::shared_ptr<dafPersist::FormatterStorage> storage,
                                             std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter read start");
     math::Kernel* kp;
@@ -172,10 +172,10 @@ dafBase::Persistable* KernelFormatter::read(std::shared_ptr<dafPersist::Storage>
         LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;
     }
-    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
+    throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Kernel");
 }
 
-void KernelFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+void KernelFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::FormatterStorage>,
                              std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Unexpected call to update for Kernel");
 }

@@ -32,7 +32,7 @@
 #include <lsst/afw/math/Kernel.h>
 #include <lsst/daf/base/Persistable.h>
 #include <lsst/daf/persistence/Formatter.h>
-#include <lsst/daf/persistence/Storage.h>
+#include <lsst/daf/persistence/FormatterStorage.h>
 #include <lsst/pex/policy/Policy.h>
 
 namespace lsst {
@@ -49,14 +49,14 @@ public:
     virtual ~KernelFormatter(void);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
-                       std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                       std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
-    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::Storage> storage,
+    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                                                std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     virtual void update(lsst::daf::base::Persistable* persistable,
-                        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                         std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     /** Serialize a Kernel to a Boost archive.  Handles text or XML

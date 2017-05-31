@@ -73,7 +73,7 @@ TanWcsFormatter::TanWcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersis
 TanWcsFormatter::~TanWcsFormatter(void) {}
 
 void TanWcsFormatter::write(dafBase::Persistable const* persistable,
-                            std::shared_ptr<dafPersist::Storage> storage,
+                            std::shared_ptr<dafPersist::FormatterStorage> storage,
                             std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "TamWcsFormatter write start");
     image::TanWcs const* ip = dynamic_cast<image::TanWcs const*>(persistable);
@@ -87,10 +87,10 @@ void TanWcsFormatter::write(dafBase::Persistable const* persistable,
         LOGL_DEBUG(_log, "TanWcsFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized FormatterStorage for TanWcs");
 }
 
-dafBase::Persistable* TanWcsFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+dafBase::Persistable* TanWcsFormatter::read(std::shared_ptr<dafPersist::FormatterStorage> storage,
                                             std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
@@ -109,10 +109,10 @@ dafBase::Persistable* TanWcsFormatter::read(std::shared_ptr<dafPersist::Storage>
         LOGL_DEBUG(_log, "TanWcsFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized FormatterStorage for TanWcs");
 }
 
-void TanWcsFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+void TanWcsFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::FormatterStorage>,
                              std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for TanWcs");
 }

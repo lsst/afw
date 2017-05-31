@@ -40,6 +40,8 @@ namespace {
 LOG_LOGGER _log = LOG_GET("afw.PropertyListFormatter");
 }
 
+using lsst::daf::persistence::FormatterStorage;
+
 namespace lsst {
 namespace afw {
 namespace formatters {
@@ -51,7 +53,7 @@ PropertyListFormatter::PropertyListFormatter(std::shared_ptr<lsst::pex::policy::
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistable,
-                                  std::shared_ptr<lsst::daf::persistence::Storage> storage,
+                                  std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                                   std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "PropertyListFormatter write start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList const*>(persistable);
@@ -62,7 +64,7 @@ void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistabl
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "FitsStorage for PropertyList read-only (writing is not supported)");
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for PropertyList");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for PropertyList");
 }
 
 namespace {
@@ -78,7 +80,7 @@ std::unique_ptr<daf::base::PropertyList> readMetadataAsUniquePtr(std::string con
 }
 
 lsst::daf::base::Persistable* PropertyListFormatter::read(
-        std::shared_ptr<lsst::daf::persistence::Storage> storage,
+        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "PropertyListFormatter read start");
     if (typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
@@ -90,11 +92,11 @@ lsst::daf::base::Persistable* PropertyListFormatter::read(
         LOGL_DEBUG(_log, "PropertyListFormatter read end");
         return ip.release();
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for PropertyList");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for PropertyList");
 }
 
 void PropertyListFormatter::update(lsst::daf::base::Persistable*,
-                                   std::shared_ptr<lsst::daf::persistence::Storage>,
+                                   std::shared_ptr<lsst::daf::persistence::FormatterStorage>,
                                    std::shared_ptr<lsst::daf::base::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for PropertyList");
 }

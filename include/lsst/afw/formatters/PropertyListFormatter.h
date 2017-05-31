@@ -41,14 +41,14 @@ public:
     virtual ~PropertyListFormatter() {}
 
     virtual void write(daf::base::Persistable const* persistable,
-                       std::shared_ptr<daf::persistence::Storage> storage,
+                       std::shared_ptr<daf::persistence::FormatterStorage> storage,
                        std::shared_ptr<daf::base::PropertySet> additionalData);
 
-    virtual daf::base::Persistable* read(std::shared_ptr<daf::persistence::Storage> storage,
+    virtual daf::base::Persistable* read(std::shared_ptr<daf::persistence::FormatterStorage> storage,
                                          std::shared_ptr<daf::base::PropertySet> additionalData);
 
     virtual void update(daf::base::Persistable* persistable,
-                        std::shared_ptr<daf::persistence::Storage> storage,
+                        std::shared_ptr<daf::persistence::FormatterStorage> storage,
                         std::shared_ptr<daf::base::PropertySet> additionalData);
 
     static std::shared_ptr<daf::persistence::Formatter> createInstance(

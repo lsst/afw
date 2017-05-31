@@ -42,7 +42,7 @@ PsfFormatter::PsfFormatter(std::shared_ptr<pexPolicy::Policy> policy)
 PsfFormatter::~PsfFormatter(void) {}
 
 void PsfFormatter::write(dafBase::Persistable const* persistable,
-                         std::shared_ptr<dafPersist::Storage> storage,
+                         std::shared_ptr<dafPersist::FormatterStorage> storage,
                          std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter write start");
     Psf const* ps = dynamic_cast<Psf const*>(persistable);
@@ -62,10 +62,10 @@ void PsfFormatter::write(dafBase::Persistable const* persistable,
         LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Psf");
 }
 
-dafBase::Persistable* PsfFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+dafBase::Persistable* PsfFormatter::read(std::shared_ptr<dafPersist::FormatterStorage> storage,
                                          std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter read start");
     Psf* ps;
@@ -82,10 +82,10 @@ dafBase::Persistable* PsfFormatter::read(std::shared_ptr<dafPersist::Storage> st
         LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for Psf");
 }
 
-void PsfFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+void PsfFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::FormatterStorage>,
                           std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Psf");
 }

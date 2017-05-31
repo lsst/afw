@@ -73,7 +73,7 @@ WcsFormatter::WcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::For
 WcsFormatter::~WcsFormatter(void) {}
 
 void WcsFormatter::write(dafBase::Persistable const* persistable,
-                         std::shared_ptr<dafPersist::Storage> storage,
+                         std::shared_ptr<dafPersist::FormatterStorage> storage,
                          std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "WcsFormatter write start");
     image::Wcs const* ip = dynamic_cast<image::Wcs const*>(persistable);
@@ -87,10 +87,10 @@ void WcsFormatter::write(dafBase::Persistable const* persistable,
         LOGL_DEBUG(_log, "WcsFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized FormatterStorage for Wcs");
 }
 
-dafBase::Persistable* WcsFormatter::read(std::shared_ptr<dafPersist::Storage> storage,
+dafBase::Persistable* WcsFormatter::read(std::shared_ptr<dafPersist::FormatterStorage> storage,
                                          std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "WcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
@@ -109,10 +109,10 @@ dafBase::Persistable* WcsFormatter::read(std::shared_ptr<dafPersist::Storage> st
         LOGL_DEBUG(_log, "WcsFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized FormatterStorage for Wcs");
 }
 
-void WcsFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::Storage>,
+void WcsFormatter::update(dafBase::Persistable*, std::shared_ptr<dafPersist::FormatterStorage>,
                           std::shared_ptr<dafBase::PropertySet>) {
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for Wcs");
 }
