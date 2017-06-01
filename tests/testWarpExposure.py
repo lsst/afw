@@ -457,9 +457,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
             warpedSkyWcs = afwGeom.SkyWcs(swarpedMetadata)
 
-            # original image is source, warped image is destination
+            # warped image is destination, original image is source
             # and WCS computes pixels to sky in the forward direction, so...
-            destToSrc = originalSkyWcs.getInverse().of(warpedSkyWcs)
+            destToSrc = warpedSkyWcs.then(originalSkyWcs.getInverse())
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             originalMaskedImage = originalExposure.getMaskedImage()

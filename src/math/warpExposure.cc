@@ -535,7 +535,8 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
     std::vector<double> const srcParentToLocalVec = {static_cast<double>(-srcImage.getX0()),
                                                      static_cast<double>(-srcImage.getY0())};
     auto const srcParentToLocalMap = ast::ShiftMap(srcParentToLocalVec);
-    auto const localDestToSrcMap = srcParentToLocalMap.of(destToSrc.getFrameSet()->of(destLocalToParentMap));
+    auto const localDestToSrcMap =
+            destLocalToParentMap.then(*(destToSrc.getFrameSet())).then(srcParentToLocalMap);
     auto localDestToSrc = geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>(localDestToSrcMap);
 
     // Get the source MaskedImage and a pixel accessor to it.

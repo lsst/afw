@@ -200,25 +200,25 @@ public:
     /**
      * Concatenate two Transforms.
      *
-     * @tparam FirstFromEndpoint the starting Endpoint of `first`
-     * @param first the Transform to apply before this one
-     * @returns a Transform that first applies `first` to its input, and then
-     *          this Transform to the result. Its inverse shall first apply the
-     *          inverse of this Transform, then the inverse of `first`.
+     * @tparam NextToEndpoint the "to" Endpoint of `next`
+     * @tparam FromEndpoint the 
+     * @param next the Transform to apply after this one
+     * @returns a Transform that first applies this transform to its input, and then
+     *          `next` to the result. Its inverse shall first apply the
+     *          inverse of `next`, and then the inverse of this transform.
      *
      * @throws pex::exceptions::InvalidParameterError Thrown if
-     *         `first.getToEndpoint()` and `this->getFromEndpoint()` do not
+     *         `getToEndpoint()` and `next.getFromEndpoint()` do not
      *         have the same number of axes.
      * @exceptsafe Provides basic exception safety.
      *
      * More than two Transforms can be combined in series. For example:
      *
-     *     auto skyFromPixels = skyFromPupil.of(pupilFromFp)
-     *                                      .of(fpFromPixels);
+     *     auto pixelsToSky = pixelsToFP.then(fpToPupil.then(pupilToSky));
      */
-    template <class FirstFromEndpoint>
-    Transform<FirstFromEndpoint, ToEndpoint> of(
-            Transform<FirstFromEndpoint, FromEndpoint> const &first) const;
+    template <class NextToEndpoint>
+    Transform<FromEndpoint, NextToEndpoint> then(
+            Transform<ToEndpoint, NextToEndpoint> const &next) const;
 
 protected:
     /**

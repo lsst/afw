@@ -467,7 +467,7 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
  * @param[in,out] destImage  Destination image; all pixels are set
  * @param[in] srcImage  Source image
  * @param[in] destToSrc  Transformation from destination to source pixels in parent coordinates.
- *    This can be computed as srcWcs.getInverse().of(destWcs)
+ *    This can be computed as destWcs.then(srcWcs.getInverse())
  *    because WCS computes pixels to sky in the forward direction
  * @param[in] control  Warning control parameters
  * @param[in] padValue  Value used for pixels in the destination image that are outside

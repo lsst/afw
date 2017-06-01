@@ -160,7 +160,7 @@ SkyWcs SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) const {
     // Compute new mapping from GRID to PIXEL0
     std::vector<double> shiftVec{shift[0], shift[1]};
     auto deltaShiftMap = ast::ShiftMap(shiftVec);
-    auto newGridToPixel0Map = deltaShiftMap.of(*oldGridToPixel0Map).simplify();
+    auto newGridToPixel0Map = oldGridToPixel0Map->then(deltaShiftMap).simplify();
 
     // Replace the mapping from GRID to PIXEL0.
     // We actually remove the old PIXEL0 and ACTUAL_PIXEL0 frames (if present)

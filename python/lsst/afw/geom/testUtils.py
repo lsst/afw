@@ -886,8 +886,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             assert_allclose(jacobian, self.makeJacobian(nIn, nOut, rawInPoint),
                             err_msg=msg)
 
-    def checkOf(self, fromName, midName, toName):
-        """Test Transform<midName>To<toName>.of(Transform<fromName>To<midName>)
+    def checkThen(self, fromName, midName, toName):
+        """Test Transform<fromName>To<midName>.then(Transform<midName>To<toName>)
 
         Parameters
         ----------
@@ -905,18 +905,18 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                                   "Transform{}To{}".format(fromName, midName))
         TransformClass2 = getattr(afwGeom,
                                   "Transform{}To{}".format(midName, toName))
-        baseMsg = "{}.of({})".format(TransformClass2.__name__,
-                                     TransformClass1.__name__)
+        baseMsg = "{}.then({})".format(TransformClass1.__name__,
+                                       TransformClass2.__name__)
         for nIn, nMid, nOut in itertools.product(self.goodNAxes[fromName],
                                                  self.goodNAxes[midName],
                                                  self.goodNAxes[toName]):
             msg = "{}, nIn={}, nMid={}, nOut={}".format(
                 baseMsg, nIn, nMid, nOut)
-            polyMap = makeTwoWayPolyMap(nIn, nMid)
-            transform1 = TransformClass1(polyMap)
-            polyMap = makeTwoWayPolyMap(nMid, nOut)
-            transform2 = TransformClass2(polyMap)
-            transform = transform2.of(transform1)
+            polyMap1 = makeTwoWayPolyMap(nIn, nMid)
+            transform1 = TransformClass1(polyMap1)
+            polyMap2 = makeTwoWayPolyMap(nMid, nOut)
+            transform2 = TransformClass2(polyMap2)
+            transform = transform1.then(transform2)
 
             fromEndpoint = transform1.fromEndpoint
             toEndpoint = transform2.toEndpoint
@@ -947,7 +947,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             polyMap = makeTwoWayPolyMap(2, nOut)
             transform2 = TransformClass2(polyMap)
             with self.assertRaises(InvalidParameterError):
-                transform = transform2.of(transform1)
+                transform = transform1.then(transform2)
 
         # Mismatched types of endpoints should fail
         if fromName != midName:
@@ -964,7 +964,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 polyMap = makeTwoWayPolyMap(nMid, nOut)
                 transform2 = TransformClass1(polyMap)
                 with self.assertRaises(InvalidParameterError):
-                    transform = transform2.of(transform1)
+                    transform = transform1.then(transform2)
 
     def checkPersistence(self, transform):
         """Check persistence of a transform

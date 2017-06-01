@@ -140,14 +140,14 @@ Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const
 }
 
 template <class FromEndpoint, class ToEndpoint>
-template <class FirstFromEndpoint>
-Transform<FirstFromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of(
-        Transform<FirstFromEndpoint, FromEndpoint> const &first) const {
-    if (_fromEndpoint.getNAxes() == first.getToEndpoint().getNAxes()) {
-        return Transform<FirstFromEndpoint, ToEndpoint>(*ast::prepend(*_frameSet, *(first.getFrameSet())));
+template <class NextToEndpoint>
+Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::then(
+        Transform<ToEndpoint, NextToEndpoint> const &next) const {
+    if (_toEndpoint.getNAxes() == next.getFromEndpoint().getNAxes()) {
+        return Transform<FromEndpoint, NextToEndpoint>(*ast::append(*_frameSet, *(next.getFrameSet())));
     } else {
-        auto message = "Cannot match " + std::to_string(first.getToEndpoint().getNAxes()) +
-                       "-D to-endpoint to " + std::to_string(_fromEndpoint.getNAxes()) + "-D from-endpoint.";
+        auto message = "Cannot match " + std::to_string(_toEndpoint.getNAxes()) +
+                       "-D to-endpoint to " + std::to_string(next.getFromEndpoint().getNAxes()) + "-D from-endpoint.";
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, message);
     }
 }
@@ -159,9 +159,11 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
     return os;
 };
 
-#define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, ExtraEndpoint)                                    \
-    template Transform<ExtraEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::of<ExtraEndpoint>( \
-            Transform<ExtraEndpoint, FromEndpoint> const &) const;
+#define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, NextToEndpoint) \
+    template Transform<FromEndpoint, NextToEndpoint>                    \
+    Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
+            Transform<ToEndpoint, NextToEndpoint> const &next) const;
+
 #define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                  \
     template class Transform<FromEndpoint, ToEndpoint>;                  \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)     \

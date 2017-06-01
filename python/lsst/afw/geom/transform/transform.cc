@@ -52,15 +52,15 @@ std::string formatStr(Class const &self, std::string const &pyClassName) {
     return os.str();
 }
 
-template <class ExtraEndpoint, class FromEndpoint, class ToEndpoint, class PyClass>
+template <class FromEndpoint, class ToEndpoint, class NextToEndpoint, class PyClass>
 void declareMethodTemplates(PyClass &cls) {
-    using FirstTransform = Transform<ExtraEndpoint, FromEndpoint>;
-    using SecondTransform = Transform<FromEndpoint, ToEndpoint>;
-    using FinalTransform = Transform<ExtraEndpoint, ToEndpoint>;
+    using ThisTransform = Transform<FromEndpoint, ToEndpoint>;
+    using NextTransform = Transform<ToEndpoint, NextToEndpoint>;
+    using SeriesTransform = Transform<FromEndpoint, NextToEndpoint>;
     // Need Python-specific logic to give sensible errors for mismatched Transform types
-    cls.def("_of", (FinalTransform (SecondTransform::*)(FirstTransform const &) const) &
-                           SecondTransform::template of<ExtraEndpoint>,
-            "first"_a);
+    cls.def("_then", (SeriesTransform (ThisTransform::*)(NextTransform const &) const) &
+                           ThisTransform::template then<NextToEndpoint>,
+            "next"_a);
 }
 
 // Declare Transform<FromEndpoint, ToEndpoint> using python class name TransformFrom<X>To<Y>
@@ -99,9 +99,9 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
      * of length 1 from being deleted */
     cls.def("_getJacobian", &Class::getJacobian);
 
-    declareMethodTemplates<GenericEndpoint, FromEndpoint, ToEndpoint>(cls);
-    declareMethodTemplates<Point2Endpoint, FromEndpoint, ToEndpoint>(cls);
-    declareMethodTemplates<SpherePointEndpoint, FromEndpoint, ToEndpoint>(cls);
+    declareMethodTemplates<FromEndpoint, ToEndpoint, GenericEndpoint>(cls);
+    declareMethodTemplates<FromEndpoint, ToEndpoint, Point2Endpoint>(cls);
+    declareMethodTemplates<FromEndpoint, ToEndpoint, SpherePointEndpoint>(cls);
 
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
     cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
