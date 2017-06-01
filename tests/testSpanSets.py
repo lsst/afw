@@ -271,6 +271,60 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(spanSetIntersectNotMask), 1)
         self.assertEqual(next(iter(spanSetIntersectNotMask)).getY(), 5)
 
+        # More complicated intersection with disconnected SpanSets
+        spanList1 = [afwGeom.Span(0, 0, 10),
+                     afwGeom.Span(1, 0, 10),
+                     afwGeom.Span(2, 0, 10)]
+
+        spanList2 = [afwGeom.Span(1, 2, 4), afwGeom.Span(1, 7, 8)]
+
+        resultList = [afwGeom.Span(0, 0, 10),
+                      afwGeom.Span(1, 0, 1),
+                      afwGeom.Span(1, 5, 6),
+                      afwGeom.Span(1, 9, 10),
+                      afwGeom.Span(2, 0, 10)]
+
+        spanSet1 = afwGeom.SpanSet(spanList1)
+        spanSet2 = afwGeom.SpanSet(spanList2)
+        expectedSpanSet = afwGeom.SpanSet(resultList)
+
+        outputSpanSet = spanSet1.intersectNot(spanSet2)
+
+        self.assertEqual(outputSpanSet, expectedSpanSet)
+
+        numIntersectNotTrials = 100
+        spanRow = 5
+        # Set a seed for random functions
+        np.random.seed(400)
+        for N in range(numIntersectNotTrials):
+            # Create two random SpanSets, both with holes in them
+            listOfRandomSpanSets = []
+            for i in range(2):
+                # Make two rectangles to be turned into a SpanSet
+                rand1 = np.random.randint(0, 26, 2)
+                rand2 = np.random.randint(rand1.max(), 51, 2)
+                tempList = [afwGeom.Span(spanRow, rand1.min(), rand1.max()),
+                            afwGeom.Span(spanRow, rand2.min(), rand2.max())]
+                listOfRandomSpanSets.append(afwGeom.SpanSet(tempList))
+
+            # IntersectNot the SpanSets, randomly choosing which one is the one
+            # to be the negated SpanSet
+            randChoice = np.random.randint(0, 2)
+            negatedRandChoice = int(not randChoice)
+            sourceSpanSet = listOfRandomSpanSets[randChoice]
+            targetSpanSet = listOfRandomSpanSets[negatedRandChoice]
+            resultSpanSet = sourceSpanSet.intersectNot(targetSpanSet)
+            for span in resultSpanSet:
+                for point in span:
+                    self.assertTrue(sourceSpanSet.contains(point))
+                    self.assertFalse(targetSpanSet.contains(point))
+
+            for x in range(51):
+                point = afwGeom.Point2I(x, spanRow)
+                if sourceSpanSet.contains(point) and not\
+                        targetSpanSet.contains(point):
+                    self.assertTrue(resultSpanSet.contains(point))
+
     def testUnion(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
 

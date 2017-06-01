@@ -730,9 +730,10 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
      */
     std::vector<Span> tempVec;
     auto otherIter = other.begin();
-    bool added;
     for (auto const& spn : _spanVector) {
-        added = false;
+        bool added = false;
+        bool spanStarted = false;
+        int spanBottom = 0;
         while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
             if (spansOverlap(spn, *otherIter)) {
                 added = true;
@@ -741,15 +742,48 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
                  * end up contiguous. In the case where this is contained in other,
                  * these statements will all be false, and nothing will be added,
                  * which is the expected behavior.
+                 *
+                 * Intersection with the logical not of another SpanSet requires that the Intersection
+                 * be tested against the condition that multiple Spans may be present in the other
+                 * SpanSet at the same Y coordinate. I.E. If one row in *this would contain two
+                 * disconnected Spans in other, the result should be three new Spans.
                  */
-                if (spn.getMinX() < otherIter->getMinX()) {
-                    tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherIter->getMinX() - 1));
-                }
-                if (spn.getMaxX() > otherIter->getMaxX()) {
-                    tempVec.push_back(Span(spn.getY(), otherIter->getMaxX() + 1, spn.getMaxX()));
+                // Check if a span is in the process of being created
+                if (!spanStarted) {
+                    // If the minimum value of the Span in  *this is less than that of other, add a new Span
+                    if (spn.getMinX() < otherIter->getMinX()) {
+                        tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherIter->getMinX() - 1));
+                    }
+                    // Conversely if the maximum value of the Span in *this is greater than that of other,
+                    // Start a new span, and record what the minimum value of that span should be. This is
+                    // because SpanSets can be disconnected, and the function must check if there are any
+                    // additional Spans which fall in the same row
+                    if (spn.getMaxX() > otherIter->getMaxX()) {
+                        spanStarted = true;
+                        spanBottom = otherIter->getMaxX() + 1;
+                    }
+                } else {
+                    // A span is in the process of being created and should be finished and added
+                    tempVec.push_back(Span(spn.getY(), spanBottom,
+                                           std::min(spn.getMaxX(), otherIter->getMinX() - 1)));
+                    spanStarted = false;
+                    // Check if the span in *this extends past that of the Span from other, if so
+                    // begin a new Span
+                    if (spn.getMaxX() > otherIter->getMaxX()){
+                        spanStarted = true;
+                        spanBottom = otherIter->getMaxX() + 1;
+                    }
                 }
             }
+            if (otherIter->getMaxX() > spn.getMaxX()) {
+                break;
+            }
             ++otherIter;
+        }
+        // Check if a span has been started but not finished, if that is the case that means there are
+        // no further spans on this row to consider and the span should be closed and added
+        if (spanStarted) {
+            tempVec.push_back(Span(spn.getY(), spanBottom, spn.getMaxX()));
         }
         /* If added is still zero, that means it did not overlap any of the spans in other
          * and should be included in the new span
