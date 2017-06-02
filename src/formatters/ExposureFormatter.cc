@@ -183,22 +183,25 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     if (ip == 0) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Persisting non-Exposure");
     }
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "ExposureFormatter write BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<dafPersist::FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "ExposureFormatter write FitsStorage");
-        dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
 
         ip->writeFits(fits->getPath());
         LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
+    }
+    auto db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
+    if (db) {
         LOGL_DEBUG(_log, "ExposureFormatter write DbStorage");
-        dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Get the Wcs headers.
         std::shared_ptr<daf::base::PropertySet> wcsProps = ip->getWcs()->getFitsMetadata();
@@ -291,17 +294,19 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
         std::shared_ptr<dafPersist::FormatterStorage> storage,
         std::shared_ptr<daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ExposureFormatter read start");
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "ExposureFormatter read BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
                 new image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>;
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "ExposureFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<dafPersist::FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "ExposureFormatter read FitsStorage");
-        dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
@@ -330,9 +335,10 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
                 new image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(fits->getPath(), box, origin);
         LOGL_DEBUG(_log, "ExposureFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
+    }
+    auto db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
+    if (db) {
         LOGL_DEBUG(_log, "ExposureFormatter read DbStorage");
-        dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Select a table to retrieve from based on the itemName.
         std::string itemName = additionalData->get<std::string>("itemName");

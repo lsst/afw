@@ -49,15 +49,17 @@ void PsfFormatter::write(dafBase::Persistable const* persistable,
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Psf");
     }
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "PsfFormatter write BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & ps;
         LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<dafPersist::XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "PsfFormatter write XmlStorage");
-        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("psf", ps);
         LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
@@ -69,15 +71,18 @@ dafBase::Persistable* PsfFormatter::read(std::shared_ptr<dafPersist::FormatterSt
                                          std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter read start");
     Psf* ps;
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "PsfFormatter read BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & ps;
         LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;
-    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<dafPersist::XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "PsfFormatter read XmlStorage");
-        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("psf", ps);
         LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;

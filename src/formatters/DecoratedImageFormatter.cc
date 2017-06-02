@@ -115,21 +115,25 @@ void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-DecoratedImage");
     }
-    if (typeid(*storage) == typeid(BoostStorage)) {
+
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter write BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter write XmlStorage");
-        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
-        boost->getOArchive() & make_nvp("img", *ip);
+        xml->getOArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter write FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef DecoratedImage<ImagePixelT> DecoratedImage;
 
         ip->writeFits(fits->getPath());
@@ -146,23 +150,26 @@ template <typename ImagePixelT>
 Persistable* DecoratedImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage> storage,
                                                         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter read start");
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter read BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>;
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter read XmlStorage");
-        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>;
         boost->getIArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter read FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu());
         // @todo Do something with these fields?

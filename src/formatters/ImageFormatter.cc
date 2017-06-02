@@ -124,21 +124,24 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::sha
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Image");
     }
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "ImageFormatter write BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "ImageFormatter write XmlStorage");
-        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
-        boost->getOArchive() & make_nvp("img", *ip);
+        xml->getOArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter write FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef Image<ImagePixelT> Image;
 
         ip->writeFits(fits->getPath());
@@ -155,23 +158,26 @@ template <typename ImagePixelT>
 Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage> storage,
                                                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ImageFormatter read start");
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "ImageFormatter read BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "ImageFormatter read XmlStorage");
-        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
-        boost->getIArchive() & make_nvp("img", *ip);
+        xml->getIArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter read FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");

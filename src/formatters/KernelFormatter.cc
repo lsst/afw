@@ -139,15 +139,17 @@ void KernelFormatter::write(dafBase::Persistable const* persistable,
     if (kp == 0) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Persisting non-Kernel");
     }
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "KernelFormatter write BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & kp;
         LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<dafPersist::XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "KernelFormatter write XmlStorage");
-        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("ptr", kp);
         LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
@@ -159,15 +161,17 @@ dafBase::Persistable* KernelFormatter::read(std::shared_ptr<dafPersist::Formatte
                                             std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter read start");
     math::Kernel* kp;
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "KernelFormatter read BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & kp;
         LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;
-    } else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<dafPersist::XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "KernelFormatter read XmlStorage");
-        dafPersist::XmlStorage* xml = dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("ptr", kp);
         LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;

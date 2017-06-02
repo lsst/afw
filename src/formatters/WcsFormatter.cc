@@ -80,9 +80,10 @@ void WcsFormatter::write(dafBase::Persistable const* persistable,
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-Wcs");
     }
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "WcsFormatter write BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "WcsFormatter write end");
         return;
@@ -93,16 +94,18 @@ void WcsFormatter::write(dafBase::Persistable const* persistable,
 dafBase::Persistable* WcsFormatter::read(std::shared_ptr<dafPersist::FormatterStorage> storage,
                                          std::shared_ptr<dafBase::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "WcsFormatter read start");
-    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<dafPersist::BoostStorage>(storage);
+    if (boost) {
         image::Wcs* ip = new image::Wcs;
         LOGL_DEBUG(_log, "WcsFormatter read BoostStorage");
-        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "WcsFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<dafPersist::FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "WcsFormatter read FitsStorage");
-        dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", INT_MIN);
         std::shared_ptr<dafBase::PropertySet> md = afw::fits::readMetadata(fits->getPath(), hdu);
         image::Wcs* ip = new image::Wcs(md);

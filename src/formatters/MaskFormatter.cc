@@ -93,15 +93,17 @@ void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::share
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Mask");
     }
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "MaskFormatter write BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "MaskFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "MaskFormatter write FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         // Need to cast away const because writeFits modifies the metadata.
         Mask<MaskPixelT>* vip = const_cast<Mask<MaskPixelT>*>(ip);
         vip->writeFits(fits->getPath());
@@ -115,16 +117,18 @@ template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(std::shared_ptr<FormatterStorage> storage,
                                              std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "MaskFormatter read start");
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "MaskFormatter read BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         Mask<MaskPixelT>* ip = new Mask<MaskPixelT>;
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "MaskFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "MaskFormatter read FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         Mask<MaskPixelT>* ip = new Mask<MaskPixelT>(fits->getPath(), fits->getHdu());
         LOGL_DEBUG(_log, "MaskFormatter read end");
         return ip;
