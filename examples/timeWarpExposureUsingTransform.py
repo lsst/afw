@@ -136,7 +136,7 @@ def run():
                         cdMatrix = afwGeom.makeCdMatrix(scale = destScale,
                                                         orientation = rotAngDeg * afwGeom.degrees,
                                                         flipX = False))
-                    destToSrc = srcWcs.getInverse().of(destWcs)
+                    destToSrc = destWcs.then(srcWcs.getInverse())
                     dTime, nIter, goodPix = timeWarp(
                         destMaskedImage, srcMaskedImage, destToSrc, warpingControl)
                     print("%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (

@@ -53,17 +53,17 @@ def getJacobian(self, x):
     return matrix
 
 
-def of(self, first):
+def then(self, next):
     """Concatenate two transforms
 
-    The result of B.of(A) is C(x) = B(A(x))
+    The result of A.then(B) is is C(x) = B(A(x))
     """
-    if first.toEndpoint == self.fromEndpoint:
-        return self._of(first)
+    if self.toEndpoint == next.fromEndpoint:
+        return self._then(next)
     else:
         raise lsst.pex.exceptions.InvalidParameterError(
             "Cannot concatenate %r and %r: endpoints do not match."
-            % (first, self))
+            % (self, next))
 
 
 def saveToFile(self, path):
@@ -95,5 +95,5 @@ def addTransformMethods(cls):
                            (className, transformRegistry[className], cls))
     transformRegistry[cls.__name__] = cls
     cls.getJacobian = getJacobian
-    cls.of = of
+    cls.then = then
     cls.saveToFile = saveToFile

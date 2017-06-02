@@ -40,7 +40,7 @@ class TransformTestCase(TransformTestBaseClass):
                 self.checkGetInverse(fromName, toName)
                 self.checkGetJacobian(fromName, toName)
                 for midName in self.endpointPrefixes:
-                    self.checkOf(fromName, midName, toName)
+                    self.checkThen(fromName, midName, toName)
 
     def testFrameSetIndependence(self):
         """Test that the FrameSet returned by getFrameSet is independent of the contained FrameSet
@@ -55,10 +55,11 @@ class TransformTestCase(TransformTestBaseClass):
         extractedFrameSet.ident = "Extracted Ident"
         self.assertEqual(initialIdent, transform.getFrameSet().ident)
 
-    def testOfChaining(self):
-        """Test that the order of chaining Transform.of does not matter
+    def testThenChaining(self):
+        """Test that the order of chaining Transform.then does not matter
 
-        Test that C.of(B.of(A)) gives the same transformation as (C.of(B)).of(A)
+        Test that A.then(B.then(C)) gives the same transformation as
+        (A.then(B)).then(C)
         Internal details may differ (e.g. frame indices if the frames in the
         contained FrameSet), but the mathematical result of the two transforms
         should be the same.
@@ -70,8 +71,8 @@ class TransformTestCase(TransformTestBaseClass):
         transform3 = afwGeom.TransformGenericToGeneric(
             makeForwardPolyMap(4, 1))
 
-        merged1 = transform3.of(transform2).of(transform1)
-        merged2 = transform3.of(transform2.of(transform1))
+        merged1 = transform1.then(transform2.then(transform3))
+        merged2 = transform1.then(transform2).then(transform3)
 
         fromEndpoint = transform1.fromEndpoint
         toEndpoint = transform3.toEndpoint
