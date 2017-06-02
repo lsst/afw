@@ -77,34 +77,34 @@ Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&
 }
 
 template <class FromEndpoint, class ToEndpoint>
-typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranForward(
+typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyForward(
         typename FromEndpoint::Point const &point) const {
     auto const rawFromData = _fromEndpoint.dataFromPoint(point);
-    auto rawToData = _frameSet->tranForward(rawFromData);
+    auto rawToData = _frameSet->applyForward(rawFromData);
     return _toEndpoint.pointFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
-typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranForward(
+typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyForward(
         typename FromEndpoint::Array const &array) const {
     auto const rawFromData = _fromEndpoint.dataFromArray(array);
-    auto rawToData = _frameSet->tranForward(rawFromData);
+    auto rawToData = _frameSet->applyForward(rawFromData);
     return _toEndpoint.arrayFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
-typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::tranInverse(
+typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyInverse(
         typename ToEndpoint::Point const &point) const {
     auto const rawFromData = _toEndpoint.dataFromPoint(point);
-    auto rawToData = _frameSet->tranInverse(rawFromData);
+    auto rawToData = _frameSet->applyInverse(rawFromData);
     return _fromEndpoint.pointFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
-typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::tranInverse(
+typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
         typename ToEndpoint::Array const &array) const {
     auto const rawFromData = _toEndpoint.dataFromArray(array);
-    auto rawToData = _frameSet->tranInverse(rawFromData);
+    auto rawToData = _frameSet->applyInverse(rawFromData);
     return _fromEndpoint.arrayFromData(rawToData);
 }
 

@@ -90,10 +90,10 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     // will not affect the contained FrameSet (since Python ignores constness)
     cls.def("getFrameSet", [](Class const &self) { return self.getFrameSet()->copy(); });
 
-    cls.def("tranForward", (ToArray (Class::*)(FromArray const &) const) & Class::tranForward, "array"_a);
-    cls.def("tranForward", (ToPoint (Class::*)(FromPoint const &) const) & Class::tranForward, "point"_a);
-    cls.def("tranInverse", (FromArray (Class::*)(ToArray const &) const) & Class::tranInverse, "array"_a);
-    cls.def("tranInverse", (FromPoint (Class::*)(ToPoint const &) const) & Class::tranInverse, "point"_a);
+    cls.def("applyForward", (ToArray (Class::*)(FromArray const &) const) & Class::applyForward, "array"_a);
+    cls.def("applyForward", (ToPoint (Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
+    cls.def("applyInverse", (FromArray (Class::*)(ToArray const &) const) & Class::applyInverse, "array"_a);
+    cls.def("applyInverse", (FromPoint (Class::*)(ToPoint const &) const) & Class::applyInverse, "point"_a);
     cls.def("getInverse", &Class::getInverse);
     /* Need some extra handling of ndarray return type in Python to prevent dimensions
      * of length 1 from being deleted */

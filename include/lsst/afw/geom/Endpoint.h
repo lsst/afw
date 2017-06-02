@@ -46,7 +46,7 @@ Each type of endpoint is used for a particular LSST data type, for example:
 - Point2Endpoint is used for Point2D data
 - SpherePointEndpoint for SpherePoint data
 - GenericEndpoint is used when no other form will do; its LSST data type
-  is identical to the type used for ast::Mapping.tranForward.
+  is identical to the type used for ast::Mapping.applyForward.
 
 Endpoints use the following forms of data for raw data:
 - std::vector<double> for a single point

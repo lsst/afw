@@ -607,7 +607,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
             int const endCol = edgeColList[colBand];
             endColPosList.emplace_back(geom::Point2D(endCol, -1));
         }
-        auto rightSrcPosList = localDestToSrc.tranForward(endColPosList);
+        auto rightSrcPosList = localDestToSrc.applyForward(endColPosList);
         srcPosView[-1] = rightSrcPosList[0];
         for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
             int const prevEndCol = edgeColList[colBand - 1];
@@ -640,7 +640,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
                 int endCol = edgeColList[colBand];
                 destRowPosList.emplace_back(geom::Point2D(endCol, endRow));
             }
-            auto bottomSrcPosList = localDestToSrc.tranForward(destRowPosList);
+            auto bottomSrcPosList = localDestToSrc.applyForward(destRowPosList);
             for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
                 int endCol = edgeColList[colBand];
                 yDeltaSrcPosList[colBand] =
@@ -690,14 +690,14 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         for (int col = -1; col < destWidth; ++col) {
             destPosList.emplace_back(geom::Point2D(col, -1));
         }
-        auto prevSrcPosList = localDestToSrc.tranForward(destPosList);
+        auto prevSrcPosList = localDestToSrc.applyForward(destPosList);
 
         for (int row = 0; row < destHeight; ++row) {
             destPosList.clear();
             for (int col = -1; col < destWidth; ++col) {
                 destPosList.emplace_back(geom::Point2D(col, row));
             }
-            auto srcPosList = localDestToSrc.tranForward(destPosList);
+            auto srcPosList = localDestToSrc.applyForward(destPosList);
 
             typename DestImageT::x_iterator destXIter = destImage.row_begin(row);
             for (int col = 0; col < destWidth; ++col, ++destXIter) {

@@ -76,7 +76,7 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     pixVec.push_back(pixel + Extent2D(0.5, -0.5));  // lower right corner
     pixVec.push_back(pixel + Extent2D(-0.5, 0.5));  // upper left corner
 
-    auto skyVec = tranForward(pixVec);
+    auto skyVec = applyForward(pixVec);
 
     // Work in 3-space to avoid RA wrapping and pole issues.
     auto skyLL = skyVec[0].getVector();
@@ -97,7 +97,7 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
 
 Angle SkyWcs::getPixelScale() const { return getPixelScale(getPixelOrigin()); }
 
-Point2D SkyWcs::getPixelOrigin() const { return this->tranInverse(getSkyOrigin()); }
+Point2D SkyWcs::getPixelOrigin() const { return this->applyInverse(getSkyOrigin()); }
 
 SpherePoint SkyWcs::getSkyOrigin() const {
     // CRVAL is stored as the SkyRef property of the sky frame (the current frame of the SkyWcs)
@@ -121,7 +121,7 @@ Eigen::Matrix2d SkyWcs::getCdMatrix(Point2D const& pixel) const {
 Eigen::Matrix2d SkyWcs::getCdMatrix() const { return getCdMatrix(getPixelOrigin()); }
 
 SkyWcs SkyWcs::getTanWcs(Point2D const& pixel) const {
-    auto const crval = tranForward(pixel);
+    auto const crval = applyForward(pixel);
     auto const cdMatrix = getCdMatrix(pixel);
     return SkyWcs(pixel, crval, cdMatrix);
 }
@@ -199,7 +199,7 @@ SkyWcs SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) const {
 }
 
 std::pair<Angle, Angle> SkyWcs::pixelToSky(double x, double y) const {
-    auto sky = tranForward(Point2D(x, y));
+    auto sky = applyForward(Point2D(x, y));
     return std::pair<Angle, Angle>(sky[0], sky[1]);
 }
 
@@ -207,7 +207,7 @@ std::pair<Angle, Angle> SkyWcs::pixelToSky(double x, double y) const {
 Compute the pixel position from the sky position
 */
 std::pair<double, double> SkyWcs::skyToPixel(Angle const& ra, Angle const& dec) const {
-    auto pixel = tranInverse(SpherePoint(ra, dec));
+    auto pixel = applyInverse(SpherePoint(ra, dec));
     return std::pair<double, double>(pixel[0], pixel[1]);
 };
 

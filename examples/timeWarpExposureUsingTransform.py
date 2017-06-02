@@ -90,7 +90,7 @@ def run():
     srcWcs = afwGeom.SkyWcs(srcMetadata)
     srcDim = srcExposure.getDimensions()
     srcCtrPos = afwGeom.Box2D(srcMaskedImage.getBBox()).getCenter()
-    srcCtrSky = srcWcs.tranForward(srcCtrPos)
+    srcCtrSky = srcWcs.applyForward(srcCtrPos)
     srcScale = srcWcs.getPixelScale()
 
     # make the destination exposure small enough that even after rotation and offset
