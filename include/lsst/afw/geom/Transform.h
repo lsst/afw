@@ -201,7 +201,6 @@ public:
      * Concatenate two Transforms.
      *
      * @tparam NextToEndpoint the "to" Endpoint of `next`
-     * @tparam FromEndpoint the 
      * @param next the Transform to apply after this one
      * @returns a Transform that first applies this transform to its input, and then
      *          `next` to the result. Its inverse shall first apply the
@@ -214,7 +213,7 @@ public:
      *
      * More than two Transforms can be combined in series. For example:
      *
-     *     auto pixelsToSky = pixelsToFP.then(fpToPupil.then(pupilToSky));
+     *     auto pixelsToSky = pixelsToFP.then(fpToPupil).then(pupilToSky);
      */
     template <class NextToEndpoint>
     Transform<FromEndpoint, NextToEndpoint> then(
