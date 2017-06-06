@@ -41,7 +41,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
     if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and
             sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
         raise IndexError(
-            "Images may only be indexed as a 2-D slice not %s", imageSlice)
+            "Images may only be indexed as a 2-D slice not %s" % imageSlice)
 
     imageSlice, _imageSlice = [], imageSlice
     for s, wh in zip(_imageSlice, img.getDimensions()):
