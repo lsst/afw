@@ -228,9 +228,9 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         return firstSpanSet, secondSpanSet
 
     def makeMaskAndSpanSetForOperationTest(self):
-        firstMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 2)
-        secondMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 8)
-        spanSetMaskOperation = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(2, 5)
+        firstMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(3, 2)
+        secondMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(3, 8)
+        spanSetMaskOperation = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(3, 5)
 
         mask = afwImage.MaskU(20, 20)
         firstMaskPart.setMask(mask, 3)
@@ -347,7 +347,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         spanSetFromMask = afwGeom.SpanSet.fromMask(mask)
 
         for yCoord, span in enumerate(spanSetFromMask):
-            self.assertEqual(span, afwGeom.Span(yCoord, 0, 4))
+            self.assertEqual(span, afwGeom.Span(yCoord, 1, 5))
 
     def testEquality(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
