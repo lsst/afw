@@ -47,11 +47,14 @@ using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>, lsst::af
 
 template <typename PixelT>
 void declareTemplates(PyClass &cls) {
-    cls.def("fillImage", &BoundedField::fillImage<PixelT>, "image"_a, "overlapOnly"_a = false);
+    cls.def("fillImage", &BoundedField::fillImage<PixelT>,
+            "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
     cls.def("addToImage", &BoundedField::addToImage<PixelT>, "image"_a, "scaleBy"_a = 1.0,
-            "overlapOnly"_a = false);
-    cls.def("multiplyImage", &BoundedField::multiplyImage<PixelT>, "image"_a, "overlapOnly"_a = false);
-    cls.def("divideImage", &BoundedField::divideImage<PixelT>, "image"_a, "overlapOnly"_a = false);
+            "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
+    cls.def("multiplyImage", &BoundedField::multiplyImage<PixelT>,
+            "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
+    cls.def("divideImage", &BoundedField::divideImage<PixelT>,
+            "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
 }
 
 PYBIND11_PLUGIN(_boundedField) {
