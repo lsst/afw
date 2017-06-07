@@ -300,7 +300,6 @@ class Catalog(with_metaclass(TemplateMeta, object)):
                     result |= recursive_get_class_dir(subcls)
             result |= set(cls.__dict__.keys())
             return result
-
         return sorted(set(dir(self.columns)) | set(dir(self.table)) |
                       recursive_get_class_dir(type(self)) | set(self.__dict__.keys()))
 
