@@ -89,6 +89,23 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
     def tearDown(self):
         del self.bbox
 
+    def testFillImageInterpolation(self):
+        ctrl, coefficients = self.cases[-2]
+        bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(10, 15),
+                                   lsst.afw.geom.Extent2I(360, 350))
+        field = lsst.afw.math.ChebyshevBoundedField(bbox, coefficients)
+        image1 = lsst.afw.image.ImageF(bbox)
+        image2 = lsst.afw.image.ImageF(bbox)
+        image3 = lsst.afw.image.ImageF(bbox)
+        image4 = lsst.afw.image.ImageF(bbox)
+        field.fillImage(image1)
+        field.fillImage(image2, xStep=3)
+        field.fillImage(image3, yStep=4)
+        field.fillImage(image4, xStep=3, yStep=4)
+        self.assertFloatsAlmostEqual(image1.array, image2.array, rtol=2E-2, atol=2E-2)
+        self.assertFloatsAlmostEqual(image1.array, image3.array, rtol=2E-2, atol=2E-2)
+        self.assertFloatsAlmostEqual(image1.array, image4.array, rtol=2E-2, atol=2E-2)
+
     def testEvaluate(self):
         """Test the single-point evaluate method against explicitly-defined 1-d Chebyshevs
         (at the top of this file).
