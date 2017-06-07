@@ -1,3 +1,4 @@
+
 /*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
@@ -99,6 +100,71 @@ bool spansContiguous(Span const& a, Span const& b, bool compareY = true) {
                    : false;
 }
 
+/* Determine the intersection with a mask or its logical inverse
+ *
+ * spanSet - SpanSet object with which to intersect the mask
+ * mask - Mask object to be intersectedNot
+ * bitmask - bitpattern to used when deciding pixel membership in the mask
+ *
+ * Templates:
+ * T - pixel type of the mask
+ * invert - boolean indicating if the intersection is with the mask or the inverse of the mask
+            templated parameter to ensure the check is compiled away if it can be
+*/
+template <typename T, bool invert>
+std::shared_ptr<SpanSet> maskIntersect(SpanSet const & spanSet, image::Mask<T> const & mask, T bitmask) {
+    // This vector will store our output spans
+    std::vector<Span> newVec;
+    auto maskBBox = mask.getBBox();
+    for (auto const & spn : spanSet) {
+        // Variable to mark if a new span has been started
+        // Reset the started flag for each different span
+        bool started = false;
+        // Limit the y iteration to be within the mask's bounding box
+        int y = spn.getY();
+        if (y < maskBBox.getMinY() || y > maskBBox.getMaxY()) {
+            continue;
+        }
+        // Reset the min and max variables
+        int minX = 0;
+        int maxX = 0;
+        // Limit the scope of iteration to be within the mask's bounds
+        int startX = std::max(spn.getMinX(), maskBBox.getMinX());
+        int endX = std::min(spn.getMaxX(), maskBBox.getMaxX());
+        for (int x = startX; x <= endX; ++x){
+            // Find if the pixel matches the given bit pattern
+            bool pixelCompare = mask.get0(x, y) & bitmask;
+            // if the templated boolean indicates the compliment of the mask is desired, invert the
+            // pixel comparison
+            if (invert) {
+                pixelCompare = !pixelCompare;
+            }
+            // If the pixel is to be included in the operation, start or append recording values
+            // needed to later construct a Span
+            if (pixelCompare) {
+                if (!started) {
+                    started = true;
+                    minX = x;
+                    maxX = x;
+                } else {
+                    maxX = x;
+                }
+                if (x == endX) {
+                    // We have reached the end of a row and the pixel evaluates true, should add the
+                    // Span
+                    newVec.push_back(Span(y, minX, maxX));
+                }
+            } else if(started) {
+                // A span was started but the current pixel is not to be included in the new SpanSet,
+                // the current SpanSet should be close and added to the vector
+                newVec.push_back(Span(y, minX, maxX));
+                started = false;
+            }
+        }
+    }
+    return std::make_shared<SpanSet>(std::move(newVec));
+}
+
 }  // namespace
 
 // Default constructor, creates a null SpanSet which may be useful for
@@ -146,25 +212,36 @@ SpanSet::SpanSet(std::vector<Span>&& vec, bool normalize) : _spanVector(std::mov
 }
 
 void SpanSet::_runNormalize() {
-    // This bit of code will only be executed with a non-empty _spanVector internally
-    // and is not accessable from outside the class
+    // This bit of code is not safe if the _spanVector is empty. However, this function will only be executed
+    // with a non-empty _spanVector as it is called internally by the class constructors, and cannot be
+    // executed from outside the class
 
     // Ensure the span set is sorted according to Span < operator
     std::sort(_spanVector.begin(), _spanVector.end());
 
-    // Now that the span is sorted, overlapping spans should be combined
-    // Start from 1 as the comparison will always be with the previous element
-    for (auto iter = ++(_spanVector.begin()); iter != _spanVector.end(); iter++) {
-        if (spansContiguous(*std::prev(iter, 1), *iter)) {
-            // These spans overlap, create one new one, covering the whole expanse
-            *(iter - 1) = Span((*(iter - 1)).getY(), std::min((*(iter - 1)).getMinX(), (*iter).getMinX()),
-                               std::max((*(iter - 1)).getMaxX(), (*iter).getMaxX()));
-            // Erase the current Span, as it is now contained in the previous element
-            iter = _spanVector.erase(iter);
-            // Move the iterator back one to make sure the element gets run in the loop
-            --iter;
+    // Create a new vector to hold the possibly combined Spans
+    std::vector<Span> newSpans;
+    // Reserve the size of the original as it is the maximum possible size
+    newSpans.reserve(_spanVector.size());
+    // push back the first element, as it is certain to be included
+    newSpans.push_back(*_spanVector.begin());
+
+    // With the sorted span array, spans that are contiguous with the end of the last span in the new vector
+    // should be combined with the last span in the new vector. Only when there is no longer continuity
+    // between spans should a new span be added.
+    // Start iteration from "1" as the 0th element is already in the newSpans vector
+    for (auto iter = ++(_spanVector.begin()); iter != _spanVector.end(); ++iter) {
+        auto & newSpansEnd = newSpans.back();
+        if (spansContiguous(newSpansEnd, *iter)) {
+            newSpansEnd = Span(newSpansEnd.getY(), std::min(newSpansEnd.getMinX(), iter->getMinX()),
+                                 std::max(newSpansEnd.getMaxX(), iter->getMaxX()));
+        } else {
+            newSpans.push_back(Span(*iter));
         }
     }
+
+    // Set the new normalized vector of spans to the internal span vector container
+    _spanVector = std::move(newSpans);
 }
 
 void SpanSet::_initialize() {
@@ -616,15 +693,21 @@ std::shared_ptr<SpanSet> SpanSet::intersect(SpanSet const& other) const {
     if (!_bbox.overlaps(other.getBBox())) {
         return std::make_shared<SpanSet>();
     }
+    // Handel intersecting a SpanSet with itself
+    if (other == *this) {
+        return std::make_shared<SpanSet>(this->_spanVector);
+    }
     std::vector<Span> tempVec;
+    auto otherIter = other.begin();
     for (auto const& spn : _spanVector) {
-        for (auto const& otherSpn : other) {
-            if (spansOverlap(spn, otherSpn)) {
-                auto newMin = std::max(spn.getMinX(), otherSpn.getMinX());
-                auto newMax = std::min(spn.getMaxX(), otherSpn.getMaxX());
+        while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
+            if (spansOverlap(spn, *otherIter)) {
+                auto newMin = std::max(spn.getMinX(), otherIter->getMinX());
+                auto newMax = std::min(spn.getMaxX(), otherIter->getMaxX());
                 auto newSpan = Span(spn.getY(), newMin, newMax);
                 tempVec.push_back(newSpan);
             }
+            ++otherIter;
         }
     }
     return std::make_shared<SpanSet>(std::move(tempVec));
@@ -635,6 +718,10 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
     if (!getBBox().overlaps(other.getBBox())) {
         return std::make_shared<SpanSet>(this->begin(), this->end());
     }
+    // Handle calling a SpanSet's intersectNot with itself as an argument
+    if (other == *this) {
+        return std::make_shared<SpanSet>();
+    }
     /* This function must find all the areas in this and not in other. These SpanSets
      * may be overlapping with this less than other a1|    b1|   a2|    b2|,
      * with this greater than other b1|    a1|     b2|    a2|,
@@ -642,25 +729,61 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
      * or with other containing this  b1|    a1|    a2|   b2|
      */
     std::vector<Span> tempVec;
-    bool added;
+    auto otherIter = other.begin();
     for (auto const& spn : _spanVector) {
-        added = false;
-        for (auto const& otherSpn : other) {
-            if (spansOverlap(spn, otherSpn)) {
+        bool added = false;
+        bool spanStarted = false;
+        int spanBottom = 0;
+        while (otherIter != other.end() && otherIter->getY() <= spn.getY()) {
+            if (spansOverlap(spn, *otherIter)) {
                 added = true;
                 /* To handle one span containing the other, the spans will be added
                  * piecewise, and let the SpanSet constructor normalize spans which
                  * end up contiguous. In the case where this is contained in other,
                  * these statements will all be false, and nothing will be added,
                  * which is the expected behavior.
+                 *
+                 * Intersection with the logical not of another SpanSet requires that the Intersection
+                 * be tested against the condition that multiple Spans may be present in the other
+                 * SpanSet at the same Y coordinate. I.E. If one row in *this would contain two
+                 * disconnected Spans in other, the result should be three new Spans.
                  */
-                if (spn.getMinX() < otherSpn.getMinX()) {
-                    tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherSpn.getMinX() - 1));
-                }
-                if (spn.getMaxX() > otherSpn.getMaxX()) {
-                    tempVec.push_back(Span(spn.getY(), otherSpn.getMaxX() + 1, spn.getMaxX()));
+                // Check if a span is in the process of being created
+                if (!spanStarted) {
+                    // If the minimum value of the Span in  *this is less than that of other, add a new Span
+                    if (spn.getMinX() < otherIter->getMinX()) {
+                        tempVec.push_back(Span(spn.getY(), spn.getMinX(), otherIter->getMinX() - 1));
+                    }
+                    // Conversely if the maximum value of the Span in *this is greater than that of other,
+                    // Start a new span, and record what the minimum value of that span should be. This is
+                    // because SpanSets can be disconnected, and the function must check if there are any
+                    // additional Spans which fall in the same row
+                    if (spn.getMaxX() > otherIter->getMaxX()) {
+                        spanStarted = true;
+                        spanBottom = otherIter->getMaxX() + 1;
+                    }
+                } else {
+                    // A span is in the process of being created and should be finished and added
+                    tempVec.push_back(Span(spn.getY(), spanBottom,
+                                           std::min(spn.getMaxX(), otherIter->getMinX() - 1)));
+                    spanStarted = false;
+                    // Check if the span in *this extends past that of the Span from other, if so
+                    // begin a new Span
+                    if (spn.getMaxX() > otherIter->getMaxX()){
+                        spanStarted = true;
+                        spanBottom = otherIter->getMaxX() + 1;
+                    }
                 }
             }
+            if (otherIter->getMaxX() > spn.getMaxX()) {
+                break;
+            }
+            ++otherIter;
+        }
+        // Check if a span has been started but not finished, if that is the case that means there are
+        // no further spans on this row to consider and the span should be closed and added
+        if (spanStarted) {
+            tempVec.push_back(Span(spn.getY(), spanBottom, spn.getMaxX()));
         }
         /* If added is still zero, that means it did not overlap any of the spans in other
          * and should be included in the new span
@@ -779,16 +902,12 @@ void SpanSet::clearMask(image::Mask<T>& target, T bitmask) const {
 
 template <typename T>
 std::shared_ptr<SpanSet> SpanSet::intersect(image::Mask<T> const& other, T bitmask) const {
-    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
-    auto spanSetFromMask = SpanSet::fromMask(other, comparator);
-    return intersect(*spanSetFromMask);
+    return maskIntersect<T, false>(*this, other, bitmask);
 }
 
 template <typename T>
 std::shared_ptr<SpanSet> SpanSet::intersectNot(image::Mask<T> const& other, T bitmask) const {
-    auto comparator = [bitmask](T pixelValue) { return (pixelValue & bitmask); };
-    auto spanSetFromMask = SpanSet::fromMask(other, comparator);
-    return intersectNot(*spanSetFromMask);
+    return maskIntersect<T, true>(*this, other, bitmask);
 }
 
 template <typename T>
