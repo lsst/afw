@@ -309,8 +309,9 @@ private:
             return algorithm;
         } else {
             size_t mid = n / 2;
-            return collect(img, msk, wgt, var, mid) +
-                   collect(img + mid, msk + mid, wgt + mid, var + mid, n - mid);
+            auto lhs = collect(img, msk, wgt, var, mid);
+            lhs.combineWith(collect(img + mid, msk + mid, wgt + mid, var + mid, n - mid));
+            return lhs;
         }
     }
 
@@ -344,7 +345,7 @@ public:
     StandardStatistics &operator=(StandardStatistics const &) = default;
     StandardStatistics &operator=(StandardStatistics &&) = default;
 
-    StandardStatistics &operator+=(const StandardStatistics &rhs) {
+    void combineWith(const StandardStatistics &rhs) {
         _count += rhs._count;
         _sumwx += rhs._sumwx;
         _sumwx2 += rhs._sumwx2;
@@ -354,7 +355,6 @@ public:
         _min = std::min(_min, rhs._min);
         _max = std::max(_max, rhs._max);
         _allPixelOrMask |= rhs._allPixelOrMask;
-        return *this;
     }
 
     template <typename ImageIter, typename MaskIter, typename WeightIter, typename VarianceIter,
@@ -460,13 +460,6 @@ private:
     double _max;
     typename image::MaskPixel _allPixelOrMask;
 };
-
-template <bool useMask, bool useWeight, bool useVariance, bool computeRange, bool computeMedian>
-StandardStatistics<useMask, useWeight, useVariance, computeRange, computeMedian> operator+(
-        StandardStatistics<useMask, useWeight, useVariance, computeRange, computeMedian> lhs,
-        const StandardStatistics<useMask, useWeight, useVariance, computeRange, computeMedian> &rhs) {
-    return lhs += rhs;
-}
 
 template <bool useMask, bool useWeight, bool useVariance, bool computeRange, bool computeMedian,
           bool sigmaClipped, typename ImageT, typename MaskT, typename WeightT, typename VarianceT>
