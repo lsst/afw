@@ -39,8 +39,9 @@ namespace py = pybind11;
 
 using namespace lsst::afw::math;
 
-using ClsField = py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField,
-                lsst::afw::table::io::PersistableFacade<ChebyshevBoundedField>>;
+using ClsField = py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>,
+                            lsst::afw::table::io::PersistableFacade<ChebyshevBoundedField>,
+                            BoundedField>;
 
 template <typename PixelT>
 void declareTemplates(ClsField & cls) {
