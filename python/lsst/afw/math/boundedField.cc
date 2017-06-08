@@ -71,8 +71,11 @@ PYBIND11_PLUGIN(_boundedField) {
     afw::table::io::python::declarePersistableFacade<BoundedField>(mod, "BoundedField");
     PyClass cls(mod, "BoundedField");
 
-    cls.def("__mul__", &BoundedField::operator*);
-    cls.def("__truediv__", &BoundedField::operator/);
+    cls.def("__rmul__", [](BoundedField &bf, double const scale) { return bf * scale; }, py::is_operator());
+    cls.def("__mul__", &BoundedField::operator*, py::is_operator());
+    cls.def("__truediv__", &BoundedField::operator/, py::is_operator());
+    cls.def("__eq__", &BoundedField::operator==, py::is_operator());
+    cls.def("__ne__", &BoundedField::operator!=, py::is_operator());
 
     cls.def("evaluate", (double (BoundedField::*)(double, double) const) & BoundedField::evaluate);
     cls.def("evaluate",
