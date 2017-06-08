@@ -370,7 +370,7 @@ public:
      */
     template <typename T, int N, int C>
     void writeImage(ndarray::Array<T const, N, C> const& array) {
-        ndarray::Array<T const, N, N> contiguous = ndarray::dynamic_dimension_cast<2>(array);
+        ndarray::Array<T const, N, N> contiguous = ndarray::dynamic_dimension_cast<N>(array);
         if (contiguous.empty()) contiguous = ndarray::copy(array);
         writeImageImpl(contiguous.getData(), contiguous.getNumElements());
     }
