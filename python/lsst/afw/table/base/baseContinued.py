@@ -283,6 +283,26 @@ class Catalog(with_metaclass(TemplateMeta, object)):
             )
         return cls(columns, meta=meta, copy=False)
 
+    def __dir__(self):
+        """
+        This custom dir is necessary due to the custom getattr below.
+        Without it, not all of the methods available are returned with dir.
+        See DM-7199
+        """
+        def recursive_get_class_dir(cls):
+            """
+            Return a set containing the names of all methods
+            for a given class *and* all of its subclasses.
+            """
+            result = set()
+            if cls.__bases__:
+                for subcls in cls.__bases__:
+                    result |= recursive_get_class_dir(subcls)
+            result |= set(cls.__dict__.keys())
+            return result
+        return sorted(set(dir(self.columns)) | set(dir(self.table)) |
+                      recursive_get_class_dir(type(self)) | set(self.__dict__.keys()))
+
     def __getattr__(self, name):
         # Catalog forwards unknown method calls to its table and column view
         # for convenience.  (Feature requested by RHL; complaints about magic
