@@ -346,6 +346,7 @@ void declareSchema(py::module &mod) {
         try {
             self.attr("find")(key);
         } catch (py::error_already_set &err) {
+            err.clear();
             return false;
         }
         return true;
