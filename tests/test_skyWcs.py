@@ -75,7 +75,7 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             Point2D(self.crpix[0] + 1, self.crpix[1]),
             Point2D(self.crpix[0], self.crpix[1] + 1),
         ]
-        skyList = wcs.tranForward(pixelList)
+        skyList = wcs.applyForward(pixelList)
 
         # check pixels to sky
         predSkyList = [
@@ -91,8 +91,8 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             self.assertSpherePointsAlmostEqual(predSky, SpherePoint(*anglePair))
 
         # check sky to pixels
-        self.assertPairListsAlmostEqual(pixelList, wcs.tranInverse(skyList))
-        self.assertPairListsAlmostEqual(pixelList, wcs.tranInverse(skyList))
+        self.assertPairListsAlmostEqual(pixelList, wcs.applyInverse(skyList))
+        self.assertPairListsAlmostEqual(pixelList, wcs.applyInverse(skyList))
         for pixel, sky in zip(pixelList, skyList):
             self.assertPairsAlmostEqual(pixel, wcs.skyToPixel(sky))
             xyPair = wcs.skyToPixel(*sky)
@@ -119,7 +119,7 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
         self.assertSpherePointsAlmostEqual(shiftedWcs.getSkyOrigin(), crval, maxSep=self.tinyAngle)
 
         shiftedPixelList = [p + offset for p in pixelList]
-        shiftedSkyList = shiftedWcs.tranForward(shiftedPixelList)
+        shiftedSkyList = shiftedWcs.applyForward(shiftedPixelList)
         self.assertSpherePointListsAlmostEqual(skyList, shiftedSkyList, maxSep=self.tinyAngle)
 
         return wcs

@@ -56,7 +56,7 @@ internal errors within AST.
 @note You gain some safety by constructing a Transform from an ast::FrameSet,
 since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
 
-@note "In place" versions of `tranForward` and `tranInverse` are not available
+@note "In place" versions of `applyForward` and `applyInverse` are not available
 because data must be copied when converting from LSST data types to the type used by astshim,
 so it didn't seem worth the bother.
 */
@@ -141,7 +141,7 @@ public:
     /**
     Transform one point in the forward direction ("from" to "to")
     */
-    ToPoint tranForward(FromPoint const &point) const;
+    ToPoint applyForward(FromPoint const &point) const;
 
     /**
     Transform an array of points in the forward direction ("from" to "to")
@@ -150,12 +150,12 @@ public:
     values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
         x0, x1, x2, ..., y0, y1, y2...
     */
-    ToArray tranForward(FromArray const &array) const;
+    ToArray applyForward(FromArray const &array) const;
 
     /**
     Transform one point in the inverse direction ("to" to "from")
     */
-    FromPoint tranInverse(ToPoint const &point) const;
+    FromPoint applyInverse(ToPoint const &point) const;
 
     /**
     Transform an array of points in the inverse direction ("to" to "from")
@@ -164,13 +164,13 @@ public:
     values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
         x0, x1, x2, ..., y0, y1, y2...
     */
-    FromArray tranInverse(ToArray const &array) const;
+    FromArray applyInverse(ToArray const &array) const;
 
     /**
      * The inverse of this Transform.
      *
-     * @returns a Transform whose `tranForward` is equivalent to this Transform's
-     *          `tranInverse`, and vice versa.
+     * @returns a Transform whose `applyForward` is equivalent to this Transform's
+     *          `applyInverse`, and vice versa.
      *
      * @exceptsafe Provides basic exception safety.
      */
@@ -193,7 +193,7 @@ public:
      * @note The derivatives may be estimated by sampling and interpolating
      *       this Transform in the neighborhood of `x`. If the implementation
      *       requires interpolation, computation of the Jacobian may require
-     *       hundreds of evaluations of @ref tranForward.
+     *       hundreds of evaluations of @ref applyForward.
      */
     Eigen::MatrixXd getJacobian(FromPoint const &x) const;
 

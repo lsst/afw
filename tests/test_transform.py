@@ -78,8 +78,8 @@ class TransformTestCase(TransformTestBaseClass):
         toEndpoint = transform3.toEndpoint
 
         inPoint = fromEndpoint.pointFromData(self.makeRawPointData(2))
-        assert_allclose(toEndpoint.dataFromPoint(merged1.tranForward(inPoint)),
-                        toEndpoint.dataFromPoint(merged2.tranForward(inPoint)))
+        assert_allclose(toEndpoint.dataFromPoint(merged1.applyForward(inPoint)),
+                        toEndpoint.dataFromPoint(merged2.applyForward(inPoint)))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

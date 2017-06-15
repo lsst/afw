@@ -185,25 +185,25 @@ public:
     /**
     Compute sky position(s) from pixel position(s)
 
-    This is another name for tranForward, plus an overload that takes a pair of doubles.
+    This is another name for applyForward, plus an overload that takes a pair of doubles.
     */
     //@{
     std::pair<Angle, Angle> pixelToSky(double x, double y) const;
-    SpherePoint pixelToSky(Point2D const &pixel) const { return tranForward(pixel); };
+    SpherePoint pixelToSky(Point2D const &pixel) const { return applyForward(pixel); };
     std::vector<SpherePoint> pixelToSky(std::vector<Point2D> const &pixels) const {
-        return tranForward(pixels);
+        return applyForward(pixels);
     }
     //@}
 
     /**
     Compute pixel position(s) from sky position(s)
 
-    This is another name for tranInverse, plus an overload that takes a pair of lsst:afw::geom::Angle.
+    This is another name for applyInverse, plus an overload that takes a pair of lsst:afw::geom::Angle.
     */
     //@{
     std::pair<double, double> skyToPixel(Angle const &ra, Angle const &dec) const;
-    Point2D skyToPixel(SpherePoint const &sky) const { return tranInverse(sky); }
-    std::vector<Point2D> skyToPixel(std::vector<SpherePoint> const &sky) const { return tranInverse(sky); }
+    Point2D skyToPixel(SpherePoint const &sky) const { return applyInverse(sky); }
+    std::vector<Point2D> skyToPixel(std::vector<SpherePoint> const &sky) const { return applyInverse(sky); }
     //@}
 
 private:
