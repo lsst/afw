@@ -4,6 +4,7 @@ import sys
 import unittest
 
 import lsst.utils.tests
+import lsst.daf.base
 from lsst.afw.geom import SkyWcs, SpherePoint, Extent2D, Point2D, degrees, \
     arcseconds, radians, makeCdMatrix
 from lsst.afw.geom.testUtils import TransformTestBaseClass
@@ -75,7 +76,7 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             Point2D(self.crpix[0] + 1, self.crpix[1]),
             Point2D(self.crpix[0], self.crpix[1] + 1),
         ]
-        skyList = wcs.applyForward(pixelList)
+        skyList = wcs.tranForward(pixelList)
 
         # check pixels to sky
         predSkyList = [
@@ -119,7 +120,7 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
         self.assertSpherePointsAlmostEqual(shiftedWcs.getSkyOrigin(), crval, maxSep=self.tinyAngle)
 
         shiftedPixelList = [p + offset for p in pixelList]
-        shiftedSkyList = shiftedWcs.applyForward(shiftedPixelList)
+        shiftedSkyList = shiftedWcs.tranForward(shiftedPixelList)
         self.assertSpherePointListsAlmostEqual(skyList, shiftedSkyList, maxSep=self.tinyAngle)
 
         return wcs
@@ -134,6 +135,57 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
                              orientation = orientation,
                              flipX = flipX,
                              )
+
+
+class MetadataWcsTestCase(TransformTestBaseClass):
+    """Test metadata constructor of SkyWcs
+    """
+
+    def setUp(self):
+        self.metadata = lsst.daf.base.PropertySet()
+
+        self.metadata.set("SIMPLE", "T")
+        self.metadata.set("BITPIX", -32)
+        self.metadata.set("NAXIS", 2)
+        self.metadata.set("NAXIS1", 1024)
+        self.metadata.set("NAXIS2", 1153)
+        self.metadata.set("RADECSYS", 'FK5')
+        self.metadata.set("EQUINOX", 2000.)
+
+        self.metadata.setDouble("CRVAL1", 215.604025685476)
+        self.metadata.setDouble("CRVAL2", 53.1595451514076)
+        self.metadata.setDouble("CRPIX1", 1109.99981456774)
+        self.metadata.setDouble("CRPIX2", 560.018167811613)
+        self.metadata.set("CTYPE1", 'RA---SIN')
+        self.metadata.set("CTYPE2", 'DEC--SIN')
+
+        self.metadata.setDouble("CD1_1", 5.10808596133527E-05)
+        self.metadata.setDouble("CD1_2", 1.85579539217196E-07)
+        self.metadata.setDouble("CD2_2", -5.10281493481982E-05)
+        self.metadata.setDouble("CD2_1", -8.27440751733828E-07)
+
+    def checkWcs(self, skyWcs):
+        cdMatrix = skyWcs.getCdMatrix()
+        for i, j in itertools.izip(range(2), range(2)):
+            self.assertAlmostEqual(cdMatrix[i, j], self.metadata.get("CD%s_%s" % (i+1, j+1)))
+        pixelOrigin = skyWcs.getPixelOrigin()
+        skyOrigin = skyWcs.getSkyOrigin()
+        for i in range(2):
+            self.assertAlmostEqual(pixelOrigin[i], self.metadata.get("CRPIX%s" % (i+1,)))
+            self.assertAlmostEqual(skyOrigin[i], self.metadata.get("CRVAL%s" % (i+1,)))
+
+    def testBasics(self):
+        skyWcs = SkyWcs(self.metadata)
+        self.checkWcs(skyWcs)
+
+    def testReadDESHeader(self):
+        """Verify that we can read a DES header"""
+        self.metadata.set("RADESYS", "FK5    ")  # note trailing white space
+        self.metadata.set("CTYPE1", 'RA---TPV')
+        self.metadata.set("CTYPE2", 'DEC--TPV')
+
+        skyWcs = SkyWcs(self.metadata)
+        self.checkWcs(skyWcs)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
