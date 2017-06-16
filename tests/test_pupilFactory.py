@@ -51,7 +51,7 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
         pupilFactory = afwCameraGeom.PupilFactory(
             self.visitInfo, self.size, self.npix)
         pupil = pupilFactory._fullPupil()
-        self.assertFloatsEqual(pupil.illuminated, True)
+        self.assertTrue(np.all(pupil.illuminated))
         nFull = np.sum(pupil.illuminated)
 
         # Cut out a primary aperture
@@ -59,32 +59,32 @@ class PupilFactoryTestCase(lsst.utils.tests.TestCase):
         nCircle = np.sum(pupil.illuminated)
         self.assertFloatsAlmostEqual(
             nCircle/nFull, np.pi*(8.4/2)**2 / 16.8**2, rtol=3e-4)
-        self.assertFloatsEqual(pupil.illuminated, pupil.illuminated.T)
+        np.testing.assert_array_equal(pupil.illuminated, pupil.illuminated.T)
 
         # Cut out a central obstruction making an annulus
         pupilFactory._cutCircleInterior(pupil, (0.0, 0.0), 8.4/2 * 0.6)
         nAnnulus = np.sum(pupil.illuminated)
         self.assertFloatsAlmostEqual(
             nAnnulus/nFull, nCircle/nFull * (1-0.6**2), rtol=3e-4)
-        self.assertFloatsEqual(pupil.illuminated, pupil.illuminated.T)
+        np.testing.assert_array_equal(pupil.illuminated, pupil.illuminated.T)
 
         # Cut a horizontal ray, which preserves vertical reflection symmetry
         # but removes horizontal reflection symmetry, and transpositional
         # symmetry.
         pupilFactory._cutRay(pupil, (0.0, 0.0), 0*degrees, 0.1)
-        self.assertFloatsEqual(pupil.illuminated, pupil.illuminated[::-1, :])
-        self.assertFloatsNotEqual(
-            pupil.illuminated, pupil.illuminated[:, ::-1])
-        self.assertFloatsNotEqual(pupil.illuminated, pupil.illuminated.T)
+        np.testing.assert_array_equal(pupil.illuminated, pupil.illuminated[::-1, :])
+        self.assertTrue(np.any(pupil.illuminated !=
+                        pupil.illuminated[:, ::-1]))
+        self.assertTrue(np.any(pupil.illuminated != pupil.illuminated.T))
 
         # Cut a vertical ray, which then gives transpositional symmetry but
         # removes vertical and horizontal reflection symmetry
         pupilFactory._cutRay(pupil, (0.0, 0.0), 90*degrees, 0.1)
-        self.assertFloatsNotEqual(
-            pupil.illuminated, pupil.illuminated[::-1, :])
-        self.assertFloatsNotEqual(
-            pupil.illuminated, pupil.illuminated[:, ::-1])
-        self.assertFloatsEqual(pupil.illuminated, pupil.illuminated.T)
+        self.assertTrue(np.any(pupil.illuminated !=
+                        pupil.illuminated[::-1, :]))
+        self.assertTrue(np.any(pupil.illuminated !=
+                        pupil.illuminated[:, ::-1]))
+        self.assertTrue(np.any(pupil.illuminated == pupil.illuminated.T))
 
 
 def setup_module(module):

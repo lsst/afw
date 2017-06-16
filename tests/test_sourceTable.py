@@ -278,6 +278,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.catalog.foo()
 
     def testBitsColumn(self):
+
         allBits = self.catalog.getBits()
         someBits = self.catalog.getBits(["a_flag", "c_flag"])
         self.assertEqual(allBits.getMask("a_flag"), 0x1)
@@ -285,16 +286,16 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(allBits.getMask("c_flag"), 0x4)
         self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
         self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
-        self.assertFloatsEqual((allBits.array & 0x1 != 0),
-                               self.catalog.columns["a_flag"])
-        self.assertFloatsEqual((allBits.array & 0x2 != 0),
-                               self.catalog.columns["b_flag"])
-        self.assertFloatsEqual((allBits.array & 0x4 != 0),
-                               self.catalog.columns["c_flag"])
-        self.assertFloatsEqual((someBits.array & 0x1 != 0),
-                               self.catalog.columns["a_flag"])
-        self.assertFloatsEqual((someBits.array & 0x2 != 0),
-                               self.catalog.columns["c_flag"])
+        np.testing.assert_array_equal(
+            (allBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
+        np.testing.assert_array_equal(
+            (allBits.array & 0x2 != 0), self.catalog.columns["b_flag"])
+        np.testing.assert_array_equal(
+            (allBits.array & 0x4 != 0), self.catalog.columns["c_flag"])
+        np.testing.assert_array_equal(
+            (someBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
+        np.testing.assert_array_equal(
+            (someBits.array & 0x2 != 0), self.catalog.columns["c_flag"])
 
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
@@ -328,7 +329,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         for i, src in enumerate(self.catalog):
             if src != src2:
-                spanSet = lsst.afw.geom.SpanSet.fromShape(1+i*2).shiftedBy(50, 50)
+                spanSet = lsst.afw.geom.SpanSet.fromShape(
+                    1+i*2).shiftedBy(50, 50)
                 src.setFootprint(lsst.afw.detection.Footprint(spanSet))
 
         # insert this HeavyFootprint into an otherwise blank image (for comparing the results)

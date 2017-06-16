@@ -356,12 +356,18 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             ({"where": sliceIdx, "copy": True}, sliceIdx),
         ]:
             d = catalog.extract("*", **kwds)
-            self.assertFloatsEqual(d["a_b_c1"], catalog.get("a_b_c1")[idx])
-            self.assertFloatsEqual(d["a_b_c2"], catalog.get("a_b_c2")[idx])
-            self.assertFloatsEqual(d["a_d1"], catalog.get("a_d1")[idx])
-            self.assertFloatsEqual(d["a_d2"], catalog.get("a_d2")[idx])
-            self.assertFloatsEqual(d["q_e1_x"], catalog.get("q_e1_x")[idx])
-            self.assertFloatsEqual(d["q_e1_y"], catalog.get("q_e1_y")[idx])
+            np.testing.assert_array_equal(
+                d["a_b_c1"], catalog.get("a_b_c1")[idx])
+            np.testing.assert_array_equal(
+                d["a_b_c2"], catalog.get("a_b_c2")[idx])
+            np.testing.assert_array_equal(
+                d["a_d1"], catalog.get("a_d1")[idx])
+            np.testing.assert_array_equal(
+                d["a_d2"], catalog.get("a_d2")[idx])
+            np.testing.assert_array_equal(
+                d["q_e1_x"], catalog.get("q_e1_x")[idx])
+            np.testing.assert_array_equal(
+                d["q_e1_y"], catalog.get("q_e1_y")[idx])
             if "copy" in kwds or idx is boolIdx:
                 for col in d.values():
                     self.assertTrue(col.flags.c_contiguous)
