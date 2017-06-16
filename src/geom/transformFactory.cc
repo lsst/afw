@@ -107,8 +107,7 @@ Transform<From, To> linearizeTransform(Transform<From, To> const &original,
                        .getInverse()
                        ->then(ast::MatrixMap(toNdArray(jacobian)))
                        .then(ast::ShiftMap(toEndpoint.dataFromPoint(outPoint)));
-    // TODO: remove false flag as part of DM-10947
-    return Transform(map, false);
+    return Transform(map);
 }
 
 #define INSTANTIATE_FACTORIES(From, To)                                                             \
