@@ -43,7 +43,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 import lsst.pex.exceptions as pexExcept
 
-from testKernel import makeDeltaFunctionKernelList, makeGaussianKernelList
+from test_kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 from lsst.log import Log
 
 import lsst.afw.display.ds9 as ds9

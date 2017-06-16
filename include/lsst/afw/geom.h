@@ -46,5 +46,6 @@
 #include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
+#include "lsst/afw/geom/transformFactory.h"
 
 #endif  // LSST_GEOM_H
