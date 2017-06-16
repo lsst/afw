@@ -24,6 +24,10 @@ struct TypeTraits<std::uint16_t> {
     static char const *getName() { return "U"; }
 };
 template <>
+struct TypeTraits<std::uint32_t> {
+    static char const *getName() { return "X"; }
+};
+template <>
 struct TypeTraits<std::int32_t> {
     static char const *getName() { return "I"; }
 };

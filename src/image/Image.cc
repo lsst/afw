@@ -678,6 +678,7 @@ Image<LhsPixelT>& operator/=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs)
     INSTANTIATE_OPERATOR(/=, T)
 
 INSTANTIATE(std::uint16_t);
+INSTANTIATE(std::uint32_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
