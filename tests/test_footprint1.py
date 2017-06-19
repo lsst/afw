@@ -682,6 +682,18 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         self.assertTrue(objects[1].contains(afwGeom.Point2I(3, 6)))
 
+        # Verify the FootprintSet footprint list setter can accept inputs from
+        # the footprint list getter
+        # Create a copy of the ds' FootprintList
+        dsFpList = ds.getFootprints()
+        footprintListCopy = [afwDetect.Footprint().assign(f) for f in dsFpList]
+        # Use the FootprintList setter with the output from the getter
+        ds.setFootprints(ds.getFootprints()[:-1])
+        dsFpListNew = ds.getFootprints()
+        self.assertTrue(len(dsFpListNew) == len(footprintListCopy)-1)
+        for new, old in zip(dsFpListNew, footprintListCopy[:-1]):
+            self.assertEqual(new, old)
+
     def testMakeFootprintSetXY0(self):
         """Test setting mask/image pixels from a Footprint list"""
         mi = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
