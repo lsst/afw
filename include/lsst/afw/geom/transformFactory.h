@@ -43,7 +43,8 @@ namespace geom {
  * @param original the Transform to linearize
  * @param point the point at which a linear approximation is desired
  * @returns a linear Transform whose value and Jacobian at `point` match those
- *         of `original`.
+ *          of `original`. It may be invertible; in general, linearizations
+ *          are invertible if the Jacobian at `point` is invertible.
  *
  * @throws pex::exceptions::InvalidParameterError Thrown if `original` does not
  *             have a well-defined value and Jacobian at `point`

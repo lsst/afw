@@ -106,6 +106,38 @@ class transformFactoryTestSuite(TransformTestBaseClass):
                     atol=1e-3,
                     err_msg=msg)
 
+            # Is linearized invertible?
+            # AST lets all-zero MatrixMaps be invertible though inverse
+            # ill-defined; exclude this case
+            if jacobian.any():
+                invertible = \
+                    np.linalg.cond(jacobian) < 1/np.finfo(jacobian.dtype).eps
+                if nIn == nOut and invertible:
+                    inverse = linearized.getInverse()
+                    deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
+                    for i in range(nDelta):
+                        pointMsg = "{}, point={}".format(msg, tweakedInPoint)
+                        tweakedInPoint = fromEndpoint.pointFromData(
+                            rawLinPoint + deltaFrom[:, i])
+                        tweakedOutPoint = linearized.applyForward(
+                            tweakedInPoint)
+
+                        roundTrip = inverse.applyForward(tweakedOutPoint)
+                        assert_allclose(
+                            roundTrip, tweakedInPoint,
+                            err_msg=pointMsg)
+                        assert_allclose(
+                            roundTrip,
+                            linearized.applyInverse(tweakedOutPoint),
+                            err_msg=pointMsg)
+                        assert_allclose(
+                            inverse.getJacobian(tweakedOutPoint),
+                            np.linalg.inv(jacobian),
+                            err_msg=pointMsg)
+                else:
+                    with self.assertRaises(RuntimeError):
+                        linearized.applyInverse(outPoint)
+
         # Can't test exceptions without reliable way to make invalid transform
 
 
