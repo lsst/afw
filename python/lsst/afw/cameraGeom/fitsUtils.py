@@ -330,7 +330,7 @@ class DetectorBuilder(object):
            @param[out] Exposure object
         """
         if mask is None:
-            mask = afwImage.MaskU(im.getDimensions())
+            mask = afwImage.Mask(im.getDimensions())
         if variance is None:
             variance = im
         mi = afwImage.makeMaskedImage(im, mask, variance)

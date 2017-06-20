@@ -232,7 +232,7 @@ class transformImageTestCase(unittest.TestCase):
 
     def testMask(self):
         """Test that we can flip a Mask"""
-        mask = afwImage.MaskU(10, 20)
+        mask = afwImage.Mask(10, 20)
         # for a while, swig couldn't handle the resulting std::shared_ptr<Mask>
         afwMath.flipImage(mask, True, False)
 

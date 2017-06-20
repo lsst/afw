@@ -57,7 +57,7 @@ except pexExcept.NotFoundError:
 
 def showMaskDict(d=None, msg=None):
     if not d:
-        d = afwImage.MaskU(0, 0)
+        d = afwImage.Mask(0, 0)
         if not msg:
             msg = "default"
 
@@ -76,7 +76,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def setUp(self):
         np.random.seed(1)
-        self.Mask = afwImage.MaskU
+        self.Mask = afwImage.Mask[afwImage.MaskPixel]
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
@@ -95,9 +95,9 @@ class MaskTestCase(utilsTests.TestCase):
         self.val1 = self.BAD | self.CR
         self.val2 = self.val1 | self.EDGE
 
-        self.mask1 = afwImage.MaskU(100, 200)
+        self.mask1 = afwImage.Mask(100, 200)
         self.mask1.set(self.val1)
-        self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
+        self.mask2 = afwImage.Mask(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
         # TBD: #DM-609 this should be refactored to use @unittest.skipif checks
@@ -118,18 +118,18 @@ class MaskTestCase(utilsTests.TestCase):
             self.Mask.addMaskPlane(p)
 
     def testArrays(self):
-        # could use MaskU(5, 6) but check extent(5, 6) form too
-        image1 = afwImage.MaskU(afwGeom.ExtentI(5, 6))
+        # could use Mask(5, 6) but check extent(5, 6) form too
+        image1 = afwImage.Mask(afwGeom.ExtentI(5, 6))
         array1 = image1.getArray()
         self.assertEqual(array1.shape[0], image1.getHeight())
         self.assertEqual(array1.shape[1], image1.getWidth())
-        image2 = afwImage.MaskU(array1, False)
+        image2 = afwImage.Mask(array1, False)
         self.assertEqual(array1.shape[0], image2.getHeight())
         self.assertEqual(array1.shape[1], image2.getWidth())
         image3 = afwImage.makeMaskFromArray(array1)
         self.assertEqual(array1.shape[0], image2.getHeight())
         self.assertEqual(array1.shape[1], image2.getWidth())
-        self.assertEqual(type(image3), afwImage.MaskU)
+        self.assertEqual(type(image3), afwImage.Mask[afwImage.MaskPixel])
         array1[:, :] = np.random.uniform(low=0, high=10, size=array1.shape)
         self.assertMasksEqual(image1, array1)
         array2 = image1.array
@@ -141,7 +141,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testInitializeMasks(self):
         val = 0x1234
-        msk = afwImage.MaskU(afwGeom.ExtentI(10, 10), val)
+        msk = afwImage.Mask(afwGeom.ExtentI(10, 10), val)
         self.assertEqual(msk.get(0, 0), val)
 
     def testSetGetMasks(self):
@@ -176,9 +176,9 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
-        i1 = afwImage.MaskU(afwGeom.ExtentI(100, 100))
+        i1 = afwImage.Mask(afwGeom.ExtentI(100, 100))
         i1.set(100)
-        i2 = afwImage.MaskU(afwGeom.ExtentI(10, 10))
+        i2 = afwImage.Mask(afwGeom.ExtentI(10, 10))
         i2.set(10)
 
         with self.assertRaises(lsst.pex.exceptions.LengthError):
@@ -198,8 +198,8 @@ class MaskTestCase(utilsTests.TestCase):
             self.assertEqual(planes[k], self.Mask.getMaskPlane(k))
 
     def testCopyConstructors(self):
-        dmask = afwImage.MaskU(self.mask1, True)  # deep copy
-        smask = afwImage.MaskU(self.mask1)  # shallow copy
+        dmask = afwImage.Mask(self.mask1, True)  # deep copy
+        smask = afwImage.Mask(self.mask1)  # shallow copy
 
         self.mask1 |= 32767             # should only change smask
         temp = np.zeros_like(self.mask1.getArray()) | self.val1
@@ -208,11 +208,11 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertMasksEqual(smask, temp | 32767)
 
     def testSubmasks(self):
-        smask = afwImage.MaskU(self.mask1,
-                               afwGeom.Box2I(afwGeom.Point2I(1, 1),
-                                             afwGeom.ExtentI(3, 2)),
-                               afwImage.LOCAL)
-        mask2 = afwImage.MaskU(smask.getDimensions())
+        smask = afwImage.Mask(self.mask1,
+                              afwGeom.Box2I(afwGeom.Point2I(1, 1),
+                                            afwGeom.ExtentI(3, 2)),
+                              afwImage.LOCAL)
+        mask2 = afwImage.Mask(smask.getDimensions())
 
         mask2.set(666)
         smask[:] = mask2
@@ -238,8 +238,8 @@ class MaskTestCase(utilsTests.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFitsConform(self):
         hdu = 2
-        mask = afwImage.MaskU(self.maskFile, hdu, None,
-                              afwGeom.Box2I(), afwImage.LOCAL, True)
+        mask = afwImage.Mask(self.maskFile, hdu, None,
+                             afwGeom.Box2I(), afwImage.LOCAL, True)
 
         self.assertMasksEqual(mask, self.expect)
 
@@ -266,7 +266,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        mask = afwImage.MaskU(afwGeom.ExtentI(10, 20))
+        mask = afwImage.Mask(afwGeom.ExtentI(10, 20))
 
         x0, y0 = 1, 2
         mask.setXY0(x0, y0)
@@ -318,7 +318,7 @@ class MaskTestCase(utilsTests.TestCase):
     def testCtorWithPlaneDefs(self):
         """Test that we can create a Mask with a given MaskPlaneDict"""
         FOO, val = "FOO", 2
-        mask = afwImage.MaskU(100, 200, {FOO: val}
+        mask = afwImage.Mask(100, 200, {FOO: val}
                               )
         mpd = mask.getMaskPlaneDict()
         self.assertIn(FOO, mpd.keys())
@@ -326,7 +326,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
-        im = afwImage.MaskU(10, 20)
+        im = afwImage.Mask(10, 20)
         im[-3:, -2:] = 0x4
         im[4, 10] = 0x2
         sim = im[1:4, 6:10]
@@ -364,11 +364,11 @@ class MaskTestCase(utilsTests.TestCase):
 
 
 class OldMaskTestCase(unittest.TestCase):
-    """A test case for Mask (based on MaskU_1.cc); these are taken over from the DC2 fw tests
+    """A test case for Mask (based on Mask_1.cc); these are taken over from the DC2 fw tests
     and modified to run with the new (DC3) APIs"""
 
     def setUp(self):
-        self.Mask = afwImage.MaskU           # the class
+        self.Mask = afwImage.Mask[afwImage.MaskPixel]           # the class
 
         self.testMask = self.Mask(afwGeom.Extent2I(300, 400), 0)
 
@@ -594,7 +594,7 @@ class OldMaskTestCase(unittest.TestCase):
     def testConformMaskPlanes2(self):
         """Test conformMaskPlanes() when the two planes are different"""
 
-        testMask3 = afwImage.MaskU(self.testMask.getDimensions())
+        testMask3 = afwImage.Mask(self.testMask.getDimensions())
 
         name1 = "Great Timothy"
         name2 = "Our Boss"

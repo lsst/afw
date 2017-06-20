@@ -57,9 +57,9 @@ class weightedStatsBugTestCase(unittest.TestCase):
         rand = afwMath.Random()
         mu = 10000
 
-        afwImage.MaskU.getPlaneBitMask("EDGE")
+        afwImage.Mask.getPlaneBitMask("EDGE")
 
-        badPixelMask = afwImage.MaskU.getPlaneBitMask("EDGE")
+        badPixelMask = afwImage.Mask.getPlaneBitMask("EDGE")
         statsCtrl = afwMath.StatisticsControl()
         statsCtrl.setNumSigmaClip(3.0)
         statsCtrl.setNumIter(2)

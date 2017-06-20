@@ -31,7 +31,7 @@ import lsst.pex.policy as pexPolicy
 from lsst.afw.cameraGeom import TAN_PIXELS
 import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
-from .mask import MaskU
+from .mask import Mask
 from .tanWcs import TanWcs
 from .distortedTanWcs import DistortedTanWcs
 from .filter import Filter, FilterProperty
@@ -43,7 +43,7 @@ def clipImage(im, minClip, maxClip):
     if isinstance(im, MaskedImage):
         mi = im
     else:
-        mi = makeMaskedImage(im, MaskU(im.getDimensions()))
+        mi = makeMaskedImage(im, Mask(im.getDimensions()))
 
     if minClip is not None:
         ds = afwDetect.FootprintSet(

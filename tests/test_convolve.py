@@ -71,8 +71,8 @@ InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
 # fully overwrites it
 ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
 
-EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
-NoDataMaskPixel = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+EdgeMaskPixel = 1 << afwImage.Mask.getMaskPlane("EDGE")
+NoDataMaskPixel = afwImage.Mask.getPlaneBitMask("NO_DATA")
 
 # Ignore kernel pixels whose value is exactly 0 when smearing the mask plane?
 # Set this to match the afw code

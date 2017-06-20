@@ -59,6 +59,7 @@ def simpleBackground(image):
 
 
 def complexBackground(image):
+    MaskPixel = afwImage.MaskPixel
     binsize = 128
     nx = int(image.getWidth()/binsize) + 1
     ny = int(image.getHeight()/binsize) + 1
@@ -66,8 +67,9 @@ def complexBackground(image):
     sctrl = afwMath.StatisticsControl()
     sctrl.setNumSigmaClip(3)
     sctrl.setNumIter(4)
-    sctrl.setAndMask(afwImage.MaskU.getPlaneBitMask(["INTRP", "EDGE"]))
-    sctrl.setNoGoodPixelsMask(afwImage.MaskU.getPlaneBitMask("BAD"))
+    sctrl.setAndMask(afwImage.Mask[MaskPixel].getPlaneBitMask(["INTRP",
+                                                               "EDGE"]))
+    sctrl.setNoGoodPixelsMask(afwImage.Mask[MaskPixel].getPlaneBitMask("BAD"))
     sctrl.setNanSafe(True)
     if False:
         sctrl.setWeighted(True)

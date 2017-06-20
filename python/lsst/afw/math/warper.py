@@ -92,7 +92,7 @@ class WarperConfig(pexConfig.Config):
     growFullMask = pexConfig.Field(
         dtype = int,
         doc = "mask bits to grow to full width of image/variance kernel,",
-        default = afwImage.MaskU.getPlaneBitMask("EDGE"),
+        default = afwImage.Mask.getPlaneBitMask("EDGE"),
     )
 
 
@@ -106,8 +106,7 @@ class Warper(object):
                  interpLength = _DefaultInterpLength,
                  cacheSize = _DefaultCacheSize,
                  maskWarpingKernelName = "",
-                 growFullMask = afwImage.MaskU.getPlaneBitMask("EDGE"),
-                 ):
+                 growFullMask = afwImage.Mask.getPlaneBitMask("EDGE"),):
         """Create a Warper
 
         Inputs:

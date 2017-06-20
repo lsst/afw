@@ -156,7 +156,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             except FitsError:
                 break
 
-            msk = afwImage.MaskU(fileName, hdu)
+            msk = afwImage.Mask(fileName, hdu)
             hdu += 1
             var = afwImage.ImageF(fileName, hdu)
 

@@ -325,7 +325,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
                          stats.getValue(afwMath.MEANCLIP))
 
     def testMask(self):
-        mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
+        mask = afwImage.Mask(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)
@@ -501,7 +501,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         """Test that we get an exception when there's a size mismatch"""
         scale = 5
         dims = self.image.getDimensions()
-        mask = afwImage.MaskU(dims*scale)
+        mask = afwImage.Mask(dims*scale)
         mask.set(0xFF)
         ctrl = afwMath.StatisticsControl()
         ctrl.setAndMask(0xFF)
@@ -509,7 +509,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         # completely masked).
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, afwMath.makeStatistics,
                           self.image, mask, afwMath.MEDIAN, ctrl)
-        subMask = afwImage.MaskU(
+        subMask = afwImage.Mask(
             mask,
             afwGeom.Box2I(afwGeom.Point2I(dims*(scale - 1)), dims))
         subMask.set(0)
