@@ -105,7 +105,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
         # assert that warpedExposure and warpedExposure2 have the same number of non-no_data pixels
         # and that warpedExposure3 has fewer
-        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+        noDataBitMask = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("NO_DATA")
         mask1Arr = warpedExposure1.getMaskedImage().getMask().getArray()
         mask2Arr = warpedExposure2.getMaskedImage().getMask().getArray()
         mask3Arr = warpedExposure3.getMaskedImage().getMask().getArray()
@@ -217,7 +217,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
 
         afwWarpedMask = afwWarpedMaskedImage.getMask()
-        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+        noDataBitMask = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("NO_DATA")
         noDataMask = afwWarpedMask.getArray() & noDataBitMask
 
         msg = "afw and swarp %s-warped %s (ignoring bad pixels)"

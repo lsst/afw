@@ -17,7 +17,7 @@ BadPixelList = ["BAD", "SAT", "CR"]
 def getMaskBitNameDict(mask):
     """Compute a dictionary of bit index: bit plane name
 
-    @param[in] mask: an afwImage.MaskU
+    @param[in] mask: an afwImage.Mask
 
     @return maskBitNameDict: a dictionary of bit index: bit plane name
     """
@@ -38,8 +38,8 @@ def countInterp(maskedImage):
     - numInterp: number of pixels that are interpolated
     - numBadAndInterp: number of pixels that are bad and interpolated
     """
-    interpMask = afwImage.MaskU.getPlaneBitMask("INTRP")
-    badMask = afwImage.MaskU.getPlaneBitMask(BadPixelList)
+    interpMask = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("INTRP")
+    badMask = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask(BadPixelList)
 
     maskArr = maskedImage.getMask().getArray()
     isBadArr = maskArr & badMask > 0
@@ -66,7 +66,7 @@ def countNotFinite(maskedImage):
     maskArr = maskedImage.getMask().getArray()
     numImNotFinite = numpy.sum(numpy.logical_not(numpy.isfinite(imArr)))
     numVarNotFinite = numpy.sum(numpy.logical_not(numpy.isfinite(varArr)))
-    edgeMask = afwImage.MaskU.getPlaneBitMask("EDGE")
+    edgeMask = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("EDGE")
     isEdge = maskArr & edgeMask
     numImNotEdgeOrFinite = numpy.sum(numpy.logical_not(
         numpy.logical_or(numpy.isfinite(imArr), isEdge)))

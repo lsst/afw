@@ -47,7 +47,7 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     npSize = (dimensions[1], dimensions[0])
     image = np.random.normal(loc=0.0, scale=sigma,
                              size=npSize).astype(np.float32)
-    mask = np.zeros(npSize, dtype=np.uint16)
+    mask = np.zeros(npSize, dtype=np.int32)
     variance = np.zeros(npSize, dtype=np.float32) + variance
 
     return makeMaskedImageFromArrays(image, mask, variance)
@@ -144,7 +144,7 @@ def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
     @param[in] msg  exception message prefix; details of the error are appended after ": "
 
     @warning the axes of numpy arrays are transposed with respect to Mask and Image.
-    Thus for example if mask0 and mask1 are both lsst.afw.image.MaskU with dimensions (2, 3)
+    Thus for example if mask0 and mask1 are both lsst.afw.image.Mask with dimensions (2, 3)
     and skipMask is a numpy array, then skipMask must have shape (3, 2).
 
     @throw self.failureException (usually AssertionError) if any any un-skipped pixels differ

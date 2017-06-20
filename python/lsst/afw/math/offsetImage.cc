@@ -65,6 +65,7 @@ static void declareBinImage(py::module& mod) {
 
 PYBIND11_PLUGIN(_offsetImage) {
     py::module mod("_offsetImage", "Python wrapper for afw _offsetImage library");
+    using MaskPixel = lsst::afw::image::MaskPixel;
 
     /* Module level */
     declareOffsetImage<lsst::afw::image::Image<int>>(mod);
@@ -82,7 +83,7 @@ PYBIND11_PLUGIN(_offsetImage) {
     declareRotateImageBy90<lsst::afw::image::MaskedImage<int>>(mod);
     declareRotateImageBy90<lsst::afw::image::MaskedImage<float>>(mod);
     declareRotateImageBy90<lsst::afw::image::MaskedImage<double>>(mod);
-    declareRotateImageBy90<lsst::afw::image::Mask<std::uint16_t>>(mod);
+    declareRotateImageBy90<lsst::afw::image::Mask<MaskPixel>>(mod);
 
     declareFlipImage<lsst::afw::image::Image<std::uint16_t>>(mod);
     declareFlipImage<lsst::afw::image::Image<int>>(mod);
@@ -92,7 +93,7 @@ PYBIND11_PLUGIN(_offsetImage) {
     declareFlipImage<lsst::afw::image::MaskedImage<int>>(mod);
     declareFlipImage<lsst::afw::image::MaskedImage<float>>(mod);
     declareFlipImage<lsst::afw::image::MaskedImage<double>>(mod);
-    declareFlipImage<lsst::afw::image::Mask<std::uint16_t>>(mod);
+    declareFlipImage<lsst::afw::image::Mask<MaskPixel>>(mod);
 
     declareBinImage<lsst::afw::image::Image<std::uint16_t>>(mod);
     declareBinImage<lsst::afw::image::Image<int>>(mod);

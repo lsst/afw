@@ -182,10 +182,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
         no good pixels"""
         mimgVec = []
 
-        DETECTED = afwImage.MaskU.getPlaneBitMask("DETECTED")
-        EDGE = afwImage.MaskU.getPlaneBitMask("EDGE")
-        INTRP = afwImage.MaskU.getPlaneBitMask("INTRP")
-        SAT = afwImage.MaskU.getPlaneBitMask("SAT")
+        DETECTED = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("DETECTED")
+        EDGE = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("EDGE")
+        INTRP = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("INTRP")
+        SAT = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("SAT")
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setNanSafe(False)
@@ -232,7 +232,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # Check the output, ignoring EDGE pixels
         #
         sctrl = afwMath.StatisticsControl()
-        sctrl.setAndMask(afwImage.MaskU.getPlaneBitMask("EDGE"))
+        sctrl.setAndMask(afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("EDGE"))
 
         stats = afwMath.makeStatistics(
             mimgStack, afwMath.MIN | afwMath.MAX, sctrl)

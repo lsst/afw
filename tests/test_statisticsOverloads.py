@@ -177,7 +177,7 @@ class StatisticsTestCase(unittest.TestCase):
 
     # Test the Mask specialization
     def testMask(self):
-        mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
+        mask = afwImage.Mask(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)

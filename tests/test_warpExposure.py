@@ -549,7 +549,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
         self.assertTrue(np.all(np.isnan(imArr)))
         self.assertTrue(np.all(np.isinf(varArr)))
-        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+        noDataBitMask = afwImage.Mask[afwImage.MaskPixel].getPlaneBitMask("NO_DATA")
         self.assertTrue(np.all(maskArr == noDataBitMask))
 
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
