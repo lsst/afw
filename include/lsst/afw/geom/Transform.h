@@ -243,8 +243,8 @@ for example "Transform<GenericEndpoint(4), Point2Endpoint()>"
 template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif

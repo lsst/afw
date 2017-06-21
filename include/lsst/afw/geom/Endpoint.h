@@ -331,8 +331,8 @@ std::ostream &operator<<(std::ostream &os, Point2Endpoint const &endpoint);
 /// Print "SpherePointEndpoint()" to the ostream
 std::ostream &operator<<(std::ostream &os, SpherePointEndpoint const &endpoint);
 
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif

@@ -183,6 +183,6 @@ INSTANTIATE_TRANSFORM(SpherePointEndpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(SpherePointEndpoint, Point2Endpoint);
 INSTANTIATE_TRANSFORM(SpherePointEndpoint, SpherePointEndpoint);
 
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

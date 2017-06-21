@@ -49,7 +49,7 @@ std::shared_ptr<ast::Frame> getCurrentFrame(std::shared_ptr<ast::Frame> framePtr
     return framePtr;
 }
 
-}  // <anonymous>
+}  // namespace
 
 template <typename Point, typename Array>
 BaseEndpoint<Point, Array>::BaseEndpoint(int nAxes) : _nAxes(nAxes) {
@@ -217,6 +217,6 @@ template class BaseEndpoint<SpherePoint, std::vector<SpherePoint>>;
 template class BaseVectorEndpoint<Point2D>;
 template class BaseVectorEndpoint<SpherePoint>;
 
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

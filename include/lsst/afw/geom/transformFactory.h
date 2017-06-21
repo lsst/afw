@@ -70,8 +70,8 @@ DISABLE(SpherePointEndpoint, Point2Endpoint);
 DISABLE(SpherePointEndpoint, SpherePointEndpoint);
 #undef DISABLE
 
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_GEOM_TRANSFORMFACTORY_H
