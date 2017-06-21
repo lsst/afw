@@ -38,7 +38,7 @@ namespace afw {
 namespace geom {
 
 /**
-Transform LSST spatial data, such as Point2D and SpherePoint, using an AST transform.
+Transform LSST spatial data, such as Point2D and IcrsCoord, using an AST transform.
 
 This class contains two Endpoints, to specify the "from" and "to" LSST data type,
 and an ast::FrameSet or ast::Mapping to specify the transformation.
@@ -216,8 +216,7 @@ public:
      *     auto pixelsToSky = pixelsToFP.then(fpToPupil).then(pupilToSky);
      */
     template <class NextToEndpoint>
-    Transform<FromEndpoint, NextToEndpoint> then(
-            Transform<ToEndpoint, NextToEndpoint> const &next) const;
+    Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next) const;
 
 protected:
     /**

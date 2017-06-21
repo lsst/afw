@@ -31,8 +31,8 @@ lsst::afw::geom::Transform<FromEndpoint, ToEndpoint>
 and subclasses, such as lsst::afw::geom::SkyWcs.
 
 In Python the templated Transform classes have names such as
-`lsst.afw.geom.TransformSpherePointToPoint2` for
-`lsst::afw::geom::Transform<SpherePointEndpoint, Point2Endpoint>`
+`lsst.afw.geom.TransformIcrsCoordToPoint2` for
+`lsst::afw::geom::Transform<IcrsCoordEndpoint, Point2Endpoint>`
 """
 
 from __future__ import absolute_import, division, print_function
@@ -86,7 +86,7 @@ def addTransformMethods(cls):
     ----------
     cls : :ref:`_pybind11_transform_classes`
     A Transform class or subclass, e.g.
-    `lsst.afw.geom.TransformPoint2ToSpherePoint`
+    `lsst.afw.geom.TransformPoint2ToIcrsCoord`
     """
     global transformRegistry
     className = cls.__name__

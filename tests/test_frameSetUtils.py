@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import unittest
 
-from lsst.afw.geom import arcseconds, degrees, makeCdMatrix, Point2D, SpherePoint
+from lsst.afw.coord import IcrsCoord
+from lsst.afw.geom import arcseconds, degrees, makeCdMatrix, Point2D
 from lsst.afw.geom.detail import makeTanWcsMetadata, readFitsWcs, readLsstSkyWcs
 import lsst.utils.tests
 
@@ -15,7 +16,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         # arbitrary values
         self.crpix = Point2D(100, 100)
-        self.crval = SpherePoint(30 * degrees, 45 * degrees)
+        self.crval = IcrsCoord(30 * degrees, 45 * degrees)
         self.scale = 1.0 * arcseconds
 
     def makeMetadata(self):

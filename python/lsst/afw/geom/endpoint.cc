@@ -29,8 +29,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 
 namespace py = pybind11;
@@ -45,7 +45,7 @@ namespace {
 Add `__str__` and `__repr__` methods to an Endpoint pybind11 wrapper
 
 str(self) = "GenericEndpoint(_nAxes_)" for GenericEndpoint, e.g. "GenericEndpoint(4)";
-            "_typeName_()" for all other Endpoint classes, e.g. "SpherePointEndpoint()",
+            "_typeName_()" for all other Endpoint classes, e.g. "IcrsCoordEndpoint()",
 repr(self) = "lsst.afw.geom." + str(self), e.g. "lsst.afw.geom.GenericEndpoint(4)"
 */
 template <typename PyClass>
@@ -108,7 +108,7 @@ template <typename SelfClass, typename PyClass>
 void addAllEquals(PyClass& cls) {
     addEquals<SelfClass, GenericEndpoint>(cls);
     addEquals<SelfClass, Point2Endpoint>(cls);
-    addEquals<SelfClass, SpherePointEndpoint>(cls);
+    addEquals<SelfClass, IcrsCoordEndpoint>(cls);
 }
 
 /*
@@ -177,14 +177,14 @@ void declarePoint2Endpoint(py::module& mod) {
     addStrAndRepr(cls);
 }
 
-/// @internal declare SpherePointEndpoint and all subclasses
-void declareSpherePointEndpoint(py::module& mod) {
-    using Class = SpherePointEndpoint;
+/// @internal declare IcrsCoordEndpoint and all subclasses
+void declareIcrsCoordEndpoint(py::module& mod) {
+    using Class = IcrsCoordEndpoint;
     using Point = typename Class::Point;
 
-    declareBaseVectorEndpoint<Point>(mod, "SpherePoint");
+    declareBaseVectorEndpoint<Point>(mod, "IcrsCoord");
 
-    py::class_<Class, std::shared_ptr<Class>, BaseVectorEndpoint<Point>> cls(mod, "SpherePointEndpoint");
+    py::class_<Class, std::shared_ptr<Class>, BaseVectorEndpoint<Point>> cls(mod, "IcrsCoordEndpoint");
 
     cls.def(py::init<>());
     // do not wrap the constructor that takes nAxes; it is an implementation detail
@@ -198,7 +198,9 @@ PYBIND11_PLUGIN(endpoint) {
     py::module mod("endpoint");
 
     py::module::import("lsst.afw.geom.coordinates");
-    py::module::import("lsst.afw.geom.spherePoint");
+    // The following import causes a circular import. Uncomment or delete once DM-10999 is fixed.
+    // Until then a user must manually `import lsst.afw.coord` before using `IcrsEndpoint`
+    // py::module::import("lsst.afw.coord.coord");
 
     // Need to import numpy for ndarray and eigen conversions
     if (_import_array() < 0) {
@@ -208,7 +210,7 @@ PYBIND11_PLUGIN(endpoint) {
 
     declareGenericEndpoint(mod);
     declarePoint2Endpoint(mod);
-    declareSpherePointEndpoint(mod);
+    declareIcrsCoordEndpoint(mod);
 
     return mod.ptr();
 }

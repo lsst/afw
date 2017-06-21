@@ -55,7 +55,7 @@ Transform<FromEndpoint, ToEndpoint> linearizeTransform(
         typename Transform<FromEndpoint, ToEndpoint>::FromPoint const &point);
 
 /*
- * The correct behavior for linearization is unclear where SpherePoints are involved (see discussion on
+ * The correct behavior for linearization is unclear where IcrsCoords are involved (see discussion on
  * DM-10542). Forbid usage until somebody needs it. Note to maintainers: the template specializations MUST
  * be deleted in the header for compilers to complain correctly.
  */
@@ -63,11 +63,11 @@ Transform<FromEndpoint, ToEndpoint> linearizeTransform(
     template <>                                                                   \
     Transform<From, To> linearizeTransform<From, To>(Transform<From, To> const &, \
                                                      Transform<From, To>::FromPoint const &) = delete;
-DISABLE(GenericEndpoint, SpherePointEndpoint);
-DISABLE(Point2Endpoint, SpherePointEndpoint);
-DISABLE(SpherePointEndpoint, GenericEndpoint);
-DISABLE(SpherePointEndpoint, Point2Endpoint);
-DISABLE(SpherePointEndpoint, SpherePointEndpoint);
+DISABLE(GenericEndpoint, IcrsCoordEndpoint);
+DISABLE(Point2Endpoint, IcrsCoordEndpoint);
+DISABLE(IcrsCoordEndpoint, GenericEndpoint);
+DISABLE(IcrsCoordEndpoint, Point2Endpoint);
+DISABLE(IcrsCoordEndpoint, IcrsCoordEndpoint);
 #undef DISABLE
 
 }  // namespace geom
