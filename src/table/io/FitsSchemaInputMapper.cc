@@ -38,7 +38,7 @@ private:
     std::string const &_v;
 };
 
-}  // anonymous
+}  // namespace
 
 class FitsSchemaInputMapper::Impl {
 public:
@@ -136,13 +136,10 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
         // Read slots saved using an old mechanism in as aliases, since the new slot mechanism delegates
         // slot definition to the AliasMap.
         static std::array<std::pair<std::string, std::string>, 7> oldSlotKeys = {
-                std::make_pair("PSF_FLUX", "slot_PsfFlux"),
-                std::make_pair("AP_FLUX", "slot_ApFlux"),
-                std::make_pair("INST_FLUX", "slot_InstFlux"),
-                std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
-                std::make_pair("CALIB_FLUX", "slot_CalibFlux"),
-                std::make_pair("CENTROID", "slot_Centroid"),
-                std::make_pair("SHAPE", "slot_Shape")};
+                {std::make_pair("PSF_FLUX", "slot_PsfFlux"), std::make_pair("AP_FLUX", "slot_ApFlux"),
+                 std::make_pair("INST_FLUX", "slot_InstFlux"), std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
+                 std::make_pair("CALIB_FLUX", "slot_CalibFlux"), std::make_pair("CENTROID", "slot_Centroid"),
+                 std::make_pair("SHAPE", "slot_Shape")}};
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
             std::string target = metadata.get(oldSlotKeys[i].first + "_SLOT", std::string(""));
             if (!target.empty()) {
@@ -693,7 +690,7 @@ std::string replaceSuffix(std::string const &s, std::size_t n, std::string const
     return s.substr(0, s.size() - n) + suffix;
 }
 
-}  // anonymous
+}  // namespace
 
 Schema FitsSchemaInputMapper::finalize() {
     if (_impl->version == 0) {
@@ -780,7 +777,7 @@ void FitsSchemaInputMapper::readRecord(BaseRecord &record, afw::fits::Fits &fits
         (**iter).readCell(record, row, fits, _impl->archive);
     }
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
