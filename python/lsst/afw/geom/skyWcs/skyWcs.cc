@@ -30,9 +30,9 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/SkyWcs.h"
 
@@ -57,10 +57,10 @@ PYBIND11_PLUGIN(skyWcs) {
 
     mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * degrees, "flipX"_a = false);
 
-    py::class_<SkyWcs, std::shared_ptr<SkyWcs>, Transform<Point2Endpoint, SpherePointEndpoint>> cls(mod,
-                                                                                                    "SkyWcs");
+    py::class_<SkyWcs, std::shared_ptr<SkyWcs>, Transform<Point2Endpoint, IcrsCoordEndpoint>> cls(mod,
+                                                                                                  "SkyWcs");
 
-    cls.def(py::init<Point2D const &, SpherePoint const &, Eigen::Matrix2d const &>(), "crpix"_a, "crval"_a,
+    cls.def(py::init<Point2D const &, coord::IcrsCoord const &, Eigen::Matrix2d const &>(), "crpix"_a, "crval"_a,
             "cdMatrix"_a);
     cls.def(py::init<daf::base::PropertyList &>(), "metadata"_a);
     cls.def(py::init<ast::FrameSet const&>(), "frameSet"_a);
@@ -75,16 +75,16 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
     cls.def("pixelToSky", (std::pair<Angle, Angle>(SkyWcs::*)(double, double) const) & SkyWcs::pixelToSky,
             "x"_a, "y"_a);
-    cls.def("pixelToSky", (SpherePoint(SkyWcs::*)(Point2D const &) const) & SkyWcs::pixelToSky, "pixel"_a);
+    cls.def("pixelToSky", (coord::IcrsCoord(SkyWcs::*)(Point2D const &) const) & SkyWcs::pixelToSky, "pixel"_a);
     cls.def("pixelToSky",
-            (std::vector<SpherePoint>(SkyWcs::*)(std::vector<Point2D> const &) const) & SkyWcs::pixelToSky,
+            (std::vector<coord::IcrsCoord>(SkyWcs::*)(std::vector<Point2D> const &) const) & SkyWcs::pixelToSky,
             "pixel"_a);
     cls.def("skyToPixel",
             (std::pair<double, double>(SkyWcs::*)(Angle const &, Angle const &) const) & SkyWcs::skyToPixel,
             "ra"_a, "dec"_a);
-    cls.def("skyToPixel", (Point2D(SkyWcs::*)(SpherePoint const &) const) & SkyWcs::skyToPixel, "sky"_a);
+    cls.def("skyToPixel", (Point2D(SkyWcs::*)(coord::IcrsCoord const &) const) & SkyWcs::skyToPixel, "sky"_a);
     cls.def("skyToPixel",
-            (std::vector<Point2D>(SkyWcs::*)(std::vector<SpherePoint> const &) const) & SkyWcs::skyToPixel,
+            (std::vector<Point2D>(SkyWcs::*)(std::vector<coord::IcrsCoord> const &) const) & SkyWcs::skyToPixel,
             "sky"_a);
 
     return mod.ptr();

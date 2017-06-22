@@ -38,7 +38,7 @@ import numpy as np
 
 import lsst.utils.tests
 from .angle import arcseconds
-from .endpoint import GenericEndpoint, Point2Endpoint, SpherePointEndpoint
+from .endpoint import GenericEndpoint, Point2Endpoint, IcrsCoordEndpoint
 
 
 def extraMsg(msg):
@@ -208,7 +208,7 @@ def makeEndpoints(testCase):
         code. Each invocation of this method shall return independent objects.
     """
     return [GenericEndpoint(n) for n in range(1, 6)] + \
-           [Point2Endpoint(), SpherePointEndpoint()]
+           [Point2Endpoint(), IcrsCoordEndpoint()]
 
 
 @lsst.utils.tests.inTestCase

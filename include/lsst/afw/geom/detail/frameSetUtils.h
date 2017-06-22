@@ -30,6 +30,7 @@
 #include "astshim.h"
 #include "ndarray.h"
 
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/daf/base/PropertyList.h"
@@ -60,7 +61,8 @@ Make FITS metadata for a pure tangent WCS
 @param[in] cdMatrix  CD matrix where element (i-1, j-1) corresponds to FITS keyword CDi_j
                         and i, j have range [1, 2]
 */
-std::shared_ptr<daf::base::PropertyList> makeTanWcsMetadata(Point2D const& crpix, SpherePoint const& crval,
+std::shared_ptr<daf::base::PropertyList> makeTanWcsMetadata(Point2D const& crpix,
+                                                            coord::IcrsCoord const& crval,
                                                             Eigen::Matrix2d const& cdMatrix);
 
 /**

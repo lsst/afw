@@ -27,8 +27,8 @@
 #include <vector>
 
 #include "astshim.h"
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 
 namespace lsst {
@@ -49,7 +49,7 @@ std::shared_ptr<ast::Frame> getCurrentFrame(std::shared_ptr<ast::Frame> framePtr
     return framePtr;
 }
 
-}  // <anonymous>
+}  // namespace
 
 template <typename Point, typename Array>
 BaseEndpoint<Point, Array>::BaseEndpoint(int nAxes) : _nAxes(nAxes) {
@@ -74,34 +74,8 @@ void BaseEndpoint<Point, Array>::_assertNAxes(int nAxes) const {
 }
 
 template <typename Point>
-std::vector<double> BaseVectorEndpoint<Point>::dataFromPoint(Point const& point) const {
-    const int nAxes = this->getNAxes();
-    std::vector<double> result(nAxes);
-    for (int axInd = 0; axInd < nAxes; ++axInd) {
-        result[axInd] = point[axInd];
-    }
-    return result;
-}
-
-template <typename Point>
-ndarray::Array<double, 2, 2> BaseVectorEndpoint<Point>::dataFromArray(Array const& arr) const {
-    const int nAxes = this->getNAxes();
-    const int nPoints = this->getNPoints(arr);
-    ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nAxes, nPoints));
-    auto dataColIter = data.transpose().begin();
-    for (auto const& point : arr) {
-        for (int axInd = 0; axInd < nAxes; ++axInd) {
-            (*dataColIter)[axInd] = point[axInd];
-        }
-        ++dataColIter;
-    }
-    return data;
-}
-
-template <typename Point>
-Point BaseVectorEndpoint<Point>::pointFromData(std::vector<double> const& data) const {
-    this->_assertNAxes(this->_getNAxes(data));
-    return Point(data.data());
+int BaseVectorEndpoint<Point>::getNPoints(Array const& arr) const {
+    return arr.size();
 }
 
 std::vector<double> GenericEndpoint::dataFromPoint(Point const& point) const {
@@ -132,6 +106,39 @@ Point2Endpoint::Point2Endpoint(int nAxes) : BaseVectorEndpoint<Point2D>(2) {
     }
 }
 
+std::vector<double> Point2Endpoint::dataFromPoint(Point const& point) const {
+    const int nAxes = this->getNAxes();
+    std::vector<double> result(nAxes);
+    for (int axInd = 0; axInd < nAxes; ++axInd) {
+        result[axInd] = point[axInd];
+    }
+    return result;
+}
+
+ndarray::Array<double, 2, 2> Point2Endpoint::dataFromArray(Array const& arr) const {
+    const int nAxes = this->getNAxes();
+    const int nPoints = this->getNPoints(arr);
+    ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nAxes, nPoints));
+    auto dataColIter = data.transpose().begin();
+    for (auto const& point : arr) {
+        for (int axInd = 0; axInd < nAxes; ++axInd) {
+            (*dataColIter)[axInd] = point[axInd];
+        }
+        ++dataColIter;
+    }
+    return data;
+}
+
+Point2D Point2Endpoint::pointFromData(std::vector<double> const& data) const {
+    const int nAxes = this->getNAxes();
+    this->_assertNAxes(this->_getNAxes(data));
+    Point result;
+    for (int axInd = 0; axInd < nAxes; ++axInd) {
+        result[axInd] = data[axInd];
+    }
+    return result;
+}
+
 std::vector<Point2D> Point2Endpoint::arrayFromData(ndarray::Array<double, 2, 2> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
     int const nPoints = this->_getNPoints(data);
@@ -153,7 +160,7 @@ void Point2Endpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const 
     }
 }
 
-SpherePointEndpoint::SpherePointEndpoint(int nAxes) : BaseVectorEndpoint(2) {
+IcrsCoordEndpoint::IcrsCoordEndpoint(int nAxes) : BaseVectorEndpoint(2) {
     if (nAxes != 2) {
         std::ostringstream os;
         os << "nAxes = " << nAxes << " != 2";
@@ -161,22 +168,49 @@ SpherePointEndpoint::SpherePointEndpoint(int nAxes) : BaseVectorEndpoint(2) {
     }
 }
 
-std::vector<SpherePoint> SpherePointEndpoint::arrayFromData(ndarray::Array<double, 2, 2> const& data) const {
+std::vector<double> IcrsCoordEndpoint::dataFromPoint(Point const& point) const {
+    const int nAxes = this->getNAxes();
+    std::vector<double> result(nAxes);
+    for (int axInd = 0; axInd < nAxes; ++axInd) {
+        result[axInd] = point[axInd].asRadians();
+    }
+    return result;
+}
+
+ndarray::Array<double, 2, 2> IcrsCoordEndpoint::dataFromArray(Array const& arr) const {
+    const int nAxes = this->getNAxes();
+    const int nPoints = this->getNPoints(arr);
+    ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nAxes, nPoints));
+    auto dataColIter = data.transpose().begin();
+    for (auto const& point : arr) {
+        for (int axInd = 0; axInd < nAxes; ++axInd) {
+            (*dataColIter)[axInd] = point[axInd].asRadians();
+        }
+        ++dataColIter;
+    }
+    return data;
+}
+
+coord::IcrsCoord IcrsCoordEndpoint::pointFromData(std::vector<double> const& data) const {
+    this->_assertNAxes(this->_getNAxes(data));
+    return coord::IcrsCoord(data[0] * radians, data[1] * radians);
+}
+
+std::vector<coord::IcrsCoord> IcrsCoordEndpoint::arrayFromData(
+        ndarray::Array<double, 2, 2> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
     int const nPoints = this->_getNPoints(data);
     Array array;
     array.reserve(nPoints);
     for (auto const& dataCol : data.transpose()) {
-        array.emplace_back(dataCol[0] * radians, dataCol[1] * radians);
+        array.emplace_back(coord::IcrsCoord(dataCol[0] * radians, dataCol[1] * radians));
     }
     return array;
 }
 
-std::shared_ptr<ast::Frame> SpherePointEndpoint::makeFrame() const {
-    return std::make_shared<ast::SkyFrame>();
-}
+std::shared_ptr<ast::Frame> IcrsCoordEndpoint::makeFrame() const { return std::make_shared<ast::SkyFrame>(); }
 
-void SpherePointEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
+void IcrsCoordEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
     // use getCurrentFrame because if framePtr points to a FrameSet we want its current frame
     auto currentFramePtr = getCurrentFrame(framePtr);
     auto skyFramePtr = std::dynamic_pointer_cast<ast::SkyFrame>(currentFramePtr);
@@ -204,19 +238,19 @@ std::ostream& operator<<(std::ostream& os, Point2Endpoint const& endpoint) {
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, SpherePointEndpoint const& endpoint) {
-    os << "SpherePointEndpoint()";
+std::ostream& operator<<(std::ostream& os, IcrsCoordEndpoint const& endpoint) {
+    os << "IcrsCoordEndpoint()";
     return os;
 }
 
 // explicit instantiations
 template class BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>>;
 template class BaseEndpoint<Point2D, std::vector<Point2D>>;
-template class BaseEndpoint<SpherePoint, std::vector<SpherePoint>>;
+template class BaseEndpoint<coord::IcrsCoord, std::vector<coord::IcrsCoord>>;
 
 template class BaseVectorEndpoint<Point2D>;
-template class BaseVectorEndpoint<SpherePoint>;
+template class BaseVectorEndpoint<coord::IcrsCoord>;
 
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

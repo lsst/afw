@@ -30,7 +30,6 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 
 namespace py = pybind11;

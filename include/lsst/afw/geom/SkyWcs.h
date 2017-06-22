@@ -32,9 +32,9 @@
 #include "astshim.h"
 #include "ndarray.h"
 
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/daf/base/PropertyList.h"
@@ -94,7 +94,7 @@ Constructors must set the following properties of the contained ast::FrameSet:
     SkyWcs uses this to look up CRVAL; "Ignored" is required to prevent CRVAL from being used as an offset
     from the desired WCS.
 */
-class SkyWcs : public Transform<Point2Endpoint, SpherePointEndpoint> {
+class SkyWcs : public Transform<Point2Endpoint, IcrsCoordEndpoint> {
 public:
     SkyWcs(SkyWcs const &) = default;
     SkyWcs(SkyWcs &&) = default;
@@ -110,7 +110,7 @@ public:
     @param[in] cdMatrix  CD matrix, where element (i-1, j-1) corresponds to FITS keyword CDi_j
                         and i, j have range [1, 2]. May be computed by calling makeCdMatrix.
     */
-    explicit SkyWcs(Point2D const &crpix, SpherePoint const &crval, Eigen::Matrix2d const &cdMatrix);
+    explicit SkyWcs(Point2D const &crpix, coord::IcrsCoord const &crval, Eigen::Matrix2d const &cdMatrix);
 
     /**
     Construct a WCS from FITS keywords
@@ -160,7 +160,7 @@ public:
     /**
     Get CRVAL, the sky origin or celestial fiducial point
     */
-    SpherePoint getSkyOrigin() const;
+    coord::IcrsCoord getSkyOrigin() const;
 
     /**
     Get the 2x2 CD matrix at the specified pixel position
@@ -189,8 +189,8 @@ public:
     */
     //@{
     std::pair<Angle, Angle> pixelToSky(double x, double y) const;
-    SpherePoint pixelToSky(Point2D const &pixel) const { return applyForward(pixel); };
-    std::vector<SpherePoint> pixelToSky(std::vector<Point2D> const &pixels) const {
+    coord::IcrsCoord pixelToSky(Point2D const &pixel) const { return applyForward(pixel); };
+    std::vector<coord::IcrsCoord> pixelToSky(std::vector<Point2D> const &pixels) const {
         return applyForward(pixels);
     }
     //@}
@@ -202,8 +202,10 @@ public:
     */
     //@{
     std::pair<double, double> skyToPixel(Angle const &ra, Angle const &dec) const;
-    Point2D skyToPixel(SpherePoint const &sky) const { return applyInverse(sky); }
-    std::vector<Point2D> skyToPixel(std::vector<SpherePoint> const &sky) const { return applyInverse(sky); }
+    Point2D skyToPixel(coord::IcrsCoord const &sky) const { return applyInverse(sky); }
+    std::vector<Point2D> skyToPixel(std::vector<coord::IcrsCoord> const &sky) const {
+        return applyInverse(sky);
+    }
     //@}
 
 private:

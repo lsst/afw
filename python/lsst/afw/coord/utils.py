@@ -28,6 +28,8 @@ __all__ = ["assertCoordsAlmostEqual", "assertCoordsNearlyEqual"]
 
 import warnings
 
+import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 
@@ -52,6 +54,31 @@ def assertCoordsAlmostEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcs
     if measDiff > maxDiff:
         testCase.fail("%s: measured angular separation %s arcsec > max allowed %s arcsec" %
                       (msg, measDiff.asArcseconds(), maxDiff.asArcseconds()))
+
+
+@lsst.utils.tests.inTestCase
+def assertCoordListsAlmostEqual(testCase, coordlist0, coordlist1, maxDiff=0.001*afwGeom.arcseconds, msg=None):
+    """!Assert that two lists of IcrsCoords represent almost the same point on the sky
+
+    @warning the coordinate systems are not compared; instead both sets of angles are converted to ICRS
+    and the angular separation measured.
+
+    @param[in] testCase  unittest.TestCase instance the test is part of;
+                        an object supporting one method: fail(self, msgStr)
+    @param[in] coordlist0  list of IcrsCoords 0
+    @param[in] coordlist1  list of IcrsCoords 1
+    @param[in] maxDiff  maximum angular separation, an lsst.afw.geom.Angle
+    @param[in] msg  exception message prefix; details of the error are appended after ": "
+    """
+    testCase.assertEqual(len(coordlist0), len(coordlist1), msg=msg)
+    sepArr = np.array([sp0.toIcrs().angularSeparation(sp1.toIcrs())
+                       for sp0, sp1 in zip(coordlist0, coordlist1)])
+    badArr = sepArr > maxDiff
+    if np.any(badArr):
+        maxInd = np.argmax(sepArr)
+        testCase.fail("%s: IcrsCoordLists differ in %s places; max separation is at %s: %s\" > %s\"%s" %
+                      (msg, np.sum(badArr), maxInd, sepArr[maxInd].asArcseconds(),
+                       maxDiff.asArcseconds()))
 
 
 @lsst.utils.tests.inTestCase

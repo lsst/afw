@@ -50,7 +50,7 @@ namespace geom {
  * The equation is chosen for the following reasons:
  * - It is well defined for any value of `nIn`, `nOut`.
  * - It stays small for small `x`, to avoid wraparound of angles for
- *      SpherePoint endpoints.
+ *      IcrsCoord endpoints.
  *
  * @param nIn,nOut The input and output dimensions of the desired PolyMap.
  * @returns a Mapping with a forward transform described by the equation above

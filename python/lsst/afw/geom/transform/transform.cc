@@ -1,24 +1,24 @@
 /*
-* LSST Data Management System
-* See COPYRIGHT file at the top of the source tree.
-*
-* This product includes software developed by the
-* LSST Project (http://www.lsst.org/).
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the LSST License Statement and
-* the GNU General Public License along with this program. If not,
-* see <http://www.lsstcorp.org/LegalNotices/>.
-*/
+ * LSST Data Management System
+ * See COPYRIGHT file at the top of the source tree.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program. If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
 #include "pybind11/pybind11.h"
 
 #include <memory>
@@ -29,8 +29,6 @@
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/Endpoint.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Transform.h"
 
 namespace py = pybind11;
@@ -58,8 +56,9 @@ void declareMethodTemplates(PyClass &cls) {
     using NextTransform = Transform<ToEndpoint, NextToEndpoint>;
     using SeriesTransform = Transform<FromEndpoint, NextToEndpoint>;
     // Need Python-specific logic to give sensible errors for mismatched Transform types
-    cls.def("_then", (SeriesTransform (ThisTransform::*)(NextTransform const &) const) &
-                           ThisTransform::template then<NextToEndpoint>,
+    cls.def("_then",
+            (SeriesTransform(ThisTransform::*)(NextTransform const &) const) &
+                    ThisTransform::template then<NextToEndpoint>,
             "next"_a);
 }
 
@@ -90,10 +89,10 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     // will not affect the contained FrameSet (since Python ignores constness)
     cls.def("getFrameSet", [](Class const &self) { return self.getFrameSet()->copy(); });
 
-    cls.def("applyForward", (ToArray (Class::*)(FromArray const &) const) & Class::applyForward, "array"_a);
-    cls.def("applyForward", (ToPoint (Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
-    cls.def("applyInverse", (FromArray (Class::*)(ToArray const &) const) & Class::applyInverse, "array"_a);
-    cls.def("applyInverse", (FromPoint (Class::*)(ToPoint const &) const) & Class::applyInverse, "point"_a);
+    cls.def("applyForward", (ToArray(Class::*)(FromArray const &) const) & Class::applyForward, "array"_a);
+    cls.def("applyForward", (ToPoint(Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
+    cls.def("applyInverse", (FromArray(Class::*)(ToArray const &) const) & Class::applyInverse, "array"_a);
+    cls.def("applyInverse", (FromPoint(Class::*)(ToPoint const &) const) & Class::applyInverse, "point"_a);
     cls.def("getInverse", &Class::getInverse);
     /* Need some extra handling of ndarray return type in Python to prevent dimensions
      * of length 1 from being deleted */
@@ -101,7 +100,7 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
 
     declareMethodTemplates<FromEndpoint, ToEndpoint, GenericEndpoint>(cls);
     declareMethodTemplates<FromEndpoint, ToEndpoint, Point2Endpoint>(cls);
-    declareMethodTemplates<FromEndpoint, ToEndpoint, SpherePointEndpoint>(cls);
+    declareMethodTemplates<FromEndpoint, ToEndpoint, IcrsCoordEndpoint>(cls);
 
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
     cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
@@ -124,18 +123,18 @@ PYBIND11_PLUGIN(transform) {
 
     declareTransform<GenericEndpoint, GenericEndpoint>(mod, "Generic", "Generic");
     declareTransform<GenericEndpoint, Point2Endpoint>(mod, "Generic", "Point2");
-    declareTransform<GenericEndpoint, SpherePointEndpoint>(mod, "Generic", "SpherePoint");
+    declareTransform<GenericEndpoint, IcrsCoordEndpoint>(mod, "Generic", "IcrsCoord");
     declareTransform<Point2Endpoint, GenericEndpoint>(mod, "Point2", "Generic");
     declareTransform<Point2Endpoint, Point2Endpoint>(mod, "Point2", "Point2");
-    declareTransform<Point2Endpoint, SpherePointEndpoint>(mod, "Point2", "SpherePoint");
-    declareTransform<SpherePointEndpoint, GenericEndpoint>(mod, "SpherePoint", "Generic");
-    declareTransform<SpherePointEndpoint, Point2Endpoint>(mod, "SpherePoint", "Point2");
-    declareTransform<SpherePointEndpoint, SpherePointEndpoint>(mod, "SpherePoint", "SpherePoint");
+    declareTransform<Point2Endpoint, IcrsCoordEndpoint>(mod, "Point2", "IcrsCoord");
+    declareTransform<IcrsCoordEndpoint, GenericEndpoint>(mod, "IcrsCoord", "Generic");
+    declareTransform<IcrsCoordEndpoint, Point2Endpoint>(mod, "IcrsCoord", "Point2");
+    declareTransform<IcrsCoordEndpoint, IcrsCoordEndpoint>(mod, "IcrsCoord", "IcrsCoord");
 
     return mod.ptr();
 }
 
-}  // <anonymous>
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

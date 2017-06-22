@@ -1,24 +1,24 @@
 /*
-* LSST Data Management System
-* See COPYRIGHT file at the top of the source tree.
-*
-* This product includes software developed by the
-* LSST Project (http://www.lsst.org/).
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the LSST License Statement and
-* the GNU General Public License along with this program. If not,
-* see <http://www.lsstcorp.org/LegalNotices/>.
-*/
+ * LSST Data Management System
+ * See COPYRIGHT file at the top of the source tree.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program. If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
 #include <ostream>
 #include <memory>
 #include <string>
@@ -29,8 +29,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 
 namespace py = pybind11;
@@ -45,7 +45,7 @@ namespace {
 Add `__str__` and `__repr__` methods to an Endpoint pybind11 wrapper
 
 str(self) = "GenericEndpoint(_nAxes_)" for GenericEndpoint, e.g. "GenericEndpoint(4)";
-            "_typeName_()" for all other Endpoint classes, e.g. "SpherePointEndpoint()",
+            "_typeName_()" for all other Endpoint classes, e.g. "IcrsCoordEndpoint()",
 repr(self) = "lsst.afw.geom." + str(self), e.g. "lsst.afw.geom.GenericEndpoint(4)"
 */
 template <typename PyClass>
@@ -108,13 +108,13 @@ template <typename SelfClass, typename PyClass>
 void addAllEquals(PyClass& cls) {
     addEquals<SelfClass, GenericEndpoint>(cls);
     addEquals<SelfClass, Point2Endpoint>(cls);
-    addEquals<SelfClass, SpherePointEndpoint>(cls);
+    addEquals<SelfClass, IcrsCoordEndpoint>(cls);
 }
 
 /*
-* Declare BaseVectorEndpoint<Point, Array>;
-* this is meant to be called by other `declare...` functions;
-*/
+ * Declare BaseVectorEndpoint<Point, Array>;
+ * this is meant to be called by other `declare...` functions;
+ */
 template <typename Point, typename Array>
 void declareBaseEndpoint(py::module& mod, std::string const& suffix) {
     using Class = BaseEndpoint<Point, Array>;
@@ -177,14 +177,14 @@ void declarePoint2Endpoint(py::module& mod) {
     addStrAndRepr(cls);
 }
 
-/// @internal declare SpherePointEndpoint and all subclasses
-void declareSpherePointEndpoint(py::module& mod) {
-    using Class = SpherePointEndpoint;
+/// @internal declare IcrsCoordEndpoint and all subclasses
+void declareIcrsCoordEndpoint(py::module& mod) {
+    using Class = IcrsCoordEndpoint;
     using Point = typename Class::Point;
 
-    declareBaseVectorEndpoint<Point>(mod, "SpherePoint");
+    declareBaseVectorEndpoint<Point>(mod, "IcrsCoord");
 
-    py::class_<Class, std::shared_ptr<Class>, BaseVectorEndpoint<Point>> cls(mod, "SpherePointEndpoint");
+    py::class_<Class, std::shared_ptr<Class>, BaseVectorEndpoint<Point>> cls(mod, "IcrsCoordEndpoint");
 
     cls.def(py::init<>());
     // do not wrap the constructor that takes nAxes; it is an implementation detail
@@ -198,7 +198,9 @@ PYBIND11_PLUGIN(endpoint) {
     py::module mod("endpoint");
 
     py::module::import("lsst.afw.geom.coordinates");
-    py::module::import("lsst.afw.geom.spherePoint");
+    // The following import causes a circular import. Uncomment or delete once DM-10999 is fixed.
+    // Until then a user must manually `import lsst.afw.coord` before using `IcrsEndpoint`
+    // py::module::import("lsst.afw.coord.coord");
 
     // Need to import numpy for ndarray and eigen conversions
     if (_import_array() < 0) {
@@ -208,12 +210,12 @@ PYBIND11_PLUGIN(endpoint) {
 
     declareGenericEndpoint(mod);
     declarePoint2Endpoint(mod);
-    declareSpherePointEndpoint(mod);
+    declareIcrsCoordEndpoint(mod);
 
     return mod.ptr();
 }
 
-}  // <anonymous>
-}  // geom
-}  // afw
-}  // lsst
+}  // namespace
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
