@@ -246,6 +246,22 @@ private:
     std::shared_ptr<ast::FrameSet> _checkFrameSet(ast::FrameSet const &frameSet) const;
 };
 
+/**
+ * A Transform obtained by putting two SkyWcs objects "back to back".
+ *
+ * @param dst the WCS for the destination pixels
+ * @param src the WCS for the source pixels
+ * @returns a Transform whose forward transformation converts from `src`
+ *          pixels to `dst` pixels, and whose inverse transformation converts
+ *          in the opposite direction.
+ *
+ * @exceptsafe Provides basic exception safety.
+ *
+ * @note Parameters are provided in the order `dst`, `src` for consistency with
+ *       XYTransformFromWcsPair.
+ */
+Transform<Point2Endpoint, Point2Endpoint> makeWcsPairTransform(SkyWcs const &dst, SkyWcs const &src);
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst

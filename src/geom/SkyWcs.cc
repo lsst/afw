@@ -60,6 +60,10 @@ Eigen::Matrix2d makeCdMatrix(Angle const& scale, Angle const& orientation, bool 
     return cdMatrix;
 }
 
+Transform<Point2Endpoint, Point2Endpoint> makeWcsPairTransform(SkyWcs const &dst, SkyWcs const &src) {
+    return src.then(dst.getInverse());
+}
+
 SkyWcs::SkyWcs(Point2D const& crpix, coord::IcrsCoord const& crval, Eigen::Matrix2d const& cdMatrix)
         : SkyWcs(detail::readLsstSkyWcs(*detail::makeTanWcsMetadata(crpix, crval, cdMatrix))) {}
 

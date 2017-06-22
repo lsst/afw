@@ -29,6 +29,7 @@
  * Functions for producing Transforms with commonly desired properties.
  */
 
+#include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
 
 namespace lsst {
@@ -70,6 +71,72 @@ DISABLE(IcrsCoordEndpoint, GenericEndpoint);
 DISABLE(IcrsCoordEndpoint, Point2Endpoint);
 DISABLE(IcrsCoordEndpoint, IcrsCoordEndpoint);
 #undef DISABLE
+
+/**
+ * Wrap an AffineTransform as a Transform.
+ *
+ * @param affine The AffineTransform to wrap.
+ * @returns a Transform that that maps any Point2D `x` to `affine(x)`. It shall
+ *          be invertible iff `affine` is invertible.
+ *
+ * @exceptsafe Provides basic exception safety.
+ */
+Transform<Point2Endpoint, Point2Endpoint> makeTransform(AffineTransform const &affine);
+
+/**
+ * A purely radial polynomial distortion.
+ *
+ * The Transform transforms an input @f$x@f$ to
+ * @f[ \frac{x}{r} \sum_{i=1}^{N} \mathrm{coeffs[i]} \ r^i @f]
+ * where @f$r@f$ is the magnitude of @f$x@f$.
+ *
+ * @param coeffs radial polynomial coefficients. May be an empty vector to
+ *               represent the identity transformation; otherwise must have
+ *               `size` > 1, `coeffs[0]` = 0, and `coeffs[1]` &ne; 0.
+ * @returns the radial distortion represented by `coeffs`. The Transform shall
+ *          have an inverse, which may be approximate.
+ *
+ * @throws pex::exceptions::InvalidParameterError Thrown if `coeffs` does not
+ *         have the required format.
+ * @exceptsafe Provides basic exception safety.
+ */
+Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double> const &coeffs);
+
+/**
+ * A purely radial polynomial distortion.
+ *
+ * Similar to makeRadialTransform(std::vector<double> const &), but allows the
+ * user to provide an inverse.
+ *
+ * @param forwardCoeffs radial polynomial coefficients. May be an empty vector
+ *                      to represent the identity transformation; otherwise
+ *                      must have `size` > 1, `coeffs[0]` = 0, and
+ *                      `coeffs[1]` &ne; 0.
+ * @param inverseCoeffs coefficients for the inverse transform, as above. Does
+ *                      not need to have the same degree as `forwardCoeffs`,
+ *                      but either both must be empty or neither must be empty.
+ * @returns the radial distortion represented by `coeffs`. The Transform shall
+ *          have an inverse, whose accuracy is determined by the relationship
+ *          between `forwardCoeffs` and `inverseCoeffs`.
+ *
+ * @throws pex::exceptions::InvalidParameterError Thrown if `forwardCoeffs` or
+ *         `inverseCoeffs` does not have the required format.
+ * @exceptsafe Provides basic exception safety.
+ */
+Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double> const &forwardCoeffs,
+                                                              std::vector<double> const &inverseCoeffs);
+
+/**
+ * Trivial Transform x &rarr; x.
+ *
+ * @param nDimensions The number of dimensions in the supported point.
+ * @returns a Transform mapping any N-dimensional point to itself. The
+ *          Transform's inverse shall be itself.
+ *
+ * @throws pex::exceptions::InvalidParameterError Thrown if `nDimensions` is not positive.
+ * @exceptsafe Provides basic exception safety.
+ */
+Transform<GenericEndpoint, GenericEndpoint> makeIdentityTransform(int nDimensions);
 
 }  // namespace geom
 }  // namespace afw

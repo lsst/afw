@@ -56,6 +56,7 @@ PYBIND11_PLUGIN(skyWcs) {
     }
 
     mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * degrees, "flipX"_a = false);
+    mod.def("makeWcsPairTransform", makeWcsPairTransform, "dst"_a, "src"_a);
 
     py::class_<SkyWcs, std::shared_ptr<SkyWcs>, Transform<Point2Endpoint, IcrsCoordEndpoint>> cls(mod,
                                                                                                   "SkyWcs");

@@ -43,5 +43,6 @@ from .utils import *
 from .endpoint import *
 from .transform import *
 from .transformFactory import *
+from .transformFromConfig import *
 from .skyWcs import *
 from .transformFromString import *

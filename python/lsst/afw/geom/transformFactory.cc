@@ -20,7 +20,7 @@
 * see <http://www.lsstcorp.org/LegalNotices/>.
 */
 #include "pybind11/pybind11.h"
-#include "pybind11/stl.h"  // Needed because some Endpoints are vectors
+#include "pybind11/stl.h"
 
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
@@ -42,7 +42,8 @@ void declareFunctionTemplates(py::module &mod) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
 
     mod.def("linearizeTransform",
-            (Class(*)(Class const &, typename Class::FromPoint const &)) & linearizeTransform);
+            (Class(*)(Class const &, typename Class::FromPoint const &)) & linearizeTransform, "original"_a,
+            "point"_a);
 }
 
 PYBIND11_PLUGIN(transformFactory) {
@@ -60,6 +61,18 @@ PYBIND11_PLUGIN(transformFactory) {
     declareFunctionTemplates<GenericEndpoint, Point2Endpoint>(mod);
     declareFunctionTemplates<Point2Endpoint, GenericEndpoint>(mod);
     declareFunctionTemplates<Point2Endpoint, Point2Endpoint>(mod);
+
+    mod.def("makeTransform",
+            (Transform<Point2Endpoint, Point2Endpoint>(*)(AffineTransform const &)) & makeTransform,
+            "affine"_a);
+    mod.def("makeRadialTransform",
+            (Transform<Point2Endpoint, Point2Endpoint>(*)(std::vector<double> const &)) & makeRadialTransform,
+            "coeffs"_a);
+    mod.def("makeRadialTransform", (Transform<Point2Endpoint, Point2Endpoint>(*)(
+                                           std::vector<double> const &, std::vector<double> const &)) &
+                                           makeRadialTransform,
+            "forwardCoeffs"_a, "inverseCoeffs"_a);
+    mod.def("makeIdentityTransform", &makeIdentityTransform, "nDimentions"_a);
 
     return mod.ptr();
 }
