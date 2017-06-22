@@ -134,7 +134,6 @@ void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,
     auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter write FitsStorage");
-        typedef DecoratedImage<ImagePixelT> DecoratedImage;
 
         ip->writeFits(fits->getPath());
         // @todo Do something with these fields?
@@ -143,7 +142,8 @@ void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,
         LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                      "Unrecognized FormatterStorage for DecoratedImage");
 }
 
 template <typename ImagePixelT>
@@ -178,7 +178,8 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(std::shared_ptr<Formatte
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized FormatterStorage for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                      "Unrecognized FormatterStorage for DecoratedImage");
 }
 
 template <typename ImagePixelT>
@@ -225,6 +226,6 @@ InstantiateFormatter(double);
 InstantiateFormatter(std::uint64_t);
 
 #undef InstantiateFormatter
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

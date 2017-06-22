@@ -114,10 +114,11 @@ ImageFormatter<ImagePixelT>::~ImageFormatter(void) {}
 namespace {
 namespace dafBase = lsst::daf::base;
 namespace afwImage = lsst::afw::image;
-}
+}  // namespace
 
 template <typename ImagePixelT>
-void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
+void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
+                                        std::shared_ptr<FormatterStorage> storage,
                                         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
@@ -142,7 +143,6 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::sha
     auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter write FitsStorage");
-        typedef Image<ImagePixelT> Image;
 
         ip->writeFits(fits->getPath());
         // @todo Do something with these fields?
@@ -197,9 +197,8 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage>
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                                   (boost::format("Unknown ImageOrigin type  %s specified in additional"
                                                  "data for retrieving Image from fits") %
-                                   originStr
-
-                                   ).str());
+                                   originStr)
+                                          .str());
             }
         }
         std::shared_ptr<lsst::daf::base::PropertySet> metadata;
@@ -277,6 +276,6 @@ InstantiateFormatter(double);
 InstantiateFormatter(std::uint64_t);
 
 #undef InstantiateSerializer
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst
