@@ -101,8 +101,8 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             xyPair = wcs.skyToPixel(*sky)
             self.assertPairsAlmostEqual(pixel, Point2D(*xyPair))
 
-        crval = wcs.getSkyOrigin()
-        self.assertCoordsAlmostEqual(crval, crval, maxDiff=self.tinyAngle)
+        self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), crval,
+                                     maxDiff=self.tinyAngle)
 
         crpix = wcs.getPixelOrigin()
         self.assertPairsAlmostEqual(crpix, self.crpix, maxDiff=self.tinyPixels)
