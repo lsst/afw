@@ -163,8 +163,11 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
             this->_spatialFunctionList.begin();
     KernelList::const_iterator kIter = _kernelList.begin();
     KernelList::const_iterator const kEnd = _kernelList.end();
+    auto & firstSpFunc = *firstSpFuncPtr;
+    auto & firstType = typeid(firstSpFunc);     // noncopyable object of static storage duration
     for (; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
-        if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
+        auto & spFunc = **spFuncPtrIter;
+        if (typeid(spFunc) != firstType) {
             return std::shared_ptr<Kernel>();
         }
 

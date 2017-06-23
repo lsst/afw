@@ -114,32 +114,35 @@ ImageFormatter<ImagePixelT>::~ImageFormatter(void) {}
 namespace {
 namespace dafBase = lsst::daf::base;
 namespace afwImage = lsst::afw::image;
-}
+}  // namespace
 
 template <typename ImagePixelT>
-void ImageFormatter<ImagePixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
+void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
+                                        std::shared_ptr<FormatterStorage> storage,
                                         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Image");
     }
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "ImageFormatter write BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "ImageFormatter write XmlStorage");
-        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
-        boost->getOArchive() & make_nvp("img", *ip);
+        xml->getOArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "ImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter write FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        typedef Image<ImagePixelT> Image;
 
         ip->writeFits(fits->getPath());
         // @todo Do something with these fields?
@@ -155,23 +158,26 @@ template <typename ImagePixelT>
 Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage> storage,
                                                std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ImageFormatter read start");
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
+    if (boost) {
         LOGL_DEBUG(_log, "ImageFormatter read BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
         boost->getIArchive() & *ip;
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(XmlStorage)) {
+    }
+    auto xml = std::dynamic_pointer_cast<XmlStorage>(storage);
+    if (xml) {
         LOGL_DEBUG(_log, "ImageFormatter read XmlStorage");
-        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
-        boost->getIArchive() & make_nvp("img", *ip);
+        xml->getIArchive() & make_nvp("img", *ip);
         LOGL_DEBUG(_log, "ImageFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter read FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
@@ -191,9 +197,8 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage>
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                                   (boost::format("Unknown ImageOrigin type  %s specified in additional"
                                                  "data for retrieving Image from fits") %
-                                   originStr
-
-                                   ).str());
+                                   originStr)
+                                          .str());
             }
         }
         std::shared_ptr<lsst::daf::base::PropertySet> metadata;
@@ -271,6 +276,6 @@ InstantiateFormatter(double);
 InstantiateFormatter(std::uint64_t);
 
 #undef InstantiateSerializer
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

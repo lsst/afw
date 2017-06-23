@@ -50,7 +50,6 @@ namespace image {
 namespace {
 
 auto const nan = std::numeric_limits<double>::quiet_NaN();
-auto const nanAngle = nan * geom::radians;
 
 /**
  * @internal Get a specified double from a PropertySet, or nan if not present
@@ -253,7 +252,7 @@ std::string getVisitInfoPersistenceName() { return "VisitInfo"; }
 
 VisitInfoFactory registration(getVisitInfoPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 namespace detail {
 
@@ -305,7 +304,7 @@ void setVisitInfoMetadata(daf::base::PropertyList& metadata, VisitInfo const& vi
     setDouble(metadata, "HUMIDITY", weather.getHumidity(), "Relative humidity (%)");
 }
 
-}  // lsst::afw::image::detail
+}  // namespace detail
 
 VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
         : _exposureId(0),
@@ -414,6 +413,6 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
 geom::Angle VisitInfo::getLocalEra() const { return getEra() + getObservatory().getLongitude(); }
 
 geom::Angle VisitInfo::getBoresightHourAngle() const { return getLocalEra() - getBoresightRaDec()[0]; }
-}
-}
-}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

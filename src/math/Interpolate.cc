@@ -161,6 +161,9 @@ namespace {
             throw LSST_EXCEPT(pex::exceptions::LogicError,
                               str(boost::format("You can't get here: style == %") % style));
     }
+    // don't use default statement to let compiler check switch coverage
+    throw LSST_EXCEPT(pex::exceptions::LogicError,
+                      str(boost::format("You can't get here: style == %") % style));
 }
 }
 
@@ -301,7 +304,7 @@ std::vector<double> Interpolate::interpolate(std::vector<double> const &x) const
 ndarray::Array<double, 1> Interpolate::interpolate(ndarray::Array<double const, 1> const &x) const {
     int const num = x.getShape()[0];
     ndarray::Array<double, 1> out = ndarray::allocate(ndarray::makeVector(num));
-    for (size_t i = 0; i < num; ++i) {
+    for (int i = 0; i < num; ++i) {
         std::cout << "Interpolating " << x[i] << std::endl;
         out[i] = interpolate(x[i]);
     }

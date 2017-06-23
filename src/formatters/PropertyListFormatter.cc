@@ -60,7 +60,9 @@ void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistabl
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-PropertyList");
     }
-    if (typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto & actualStorage = *storage;
+    if (typeid(actualStorage) == typeid(lsst::daf::persistence::FitsStorage)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "FitsStorage for PropertyList read-only (writing is not supported)");
     }
@@ -83,10 +85,11 @@ lsst::daf::base::Persistable* PropertyListFormatter::read(
         std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
         std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "PropertyListFormatter read start");
-    if (typeid(*storage) == typeid(lsst::daf::persistence::FitsStorage)) {
+    // TODO: Replace this with something better in DM-10776
+    auto fits = std::dynamic_pointer_cast<lsst::daf::persistence::FitsStorage>(storage);
+    if (fits) {
         LOGL_DEBUG(_log, "PropertyListFormatter read FitsStorage");
 
-        auto fits = dynamic_cast<lsst::daf::persistence::FitsStorage*>(storage.get());
         auto ip = readMetadataAsUniquePtr(fits->getPath(), fits->getHdu(), false);
 
         LOGL_DEBUG(_log, "PropertyListFormatter read end");

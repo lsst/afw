@@ -109,7 +109,7 @@ struct SortEvalueDecreasing
         return a.first > b.first;  // N.b. sort on greater
     }
 };
-}
+}  // namespace
 
 template <typename ImageT>
 void ImagePca<ImageT>::analyze() {
@@ -219,10 +219,10 @@ std::shared_ptr<typename MaskedImageT::Image> fitEigenImagesToImage(
     if (nEigen == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "You must have at least one eigen image");
     } else if (nEigen > static_cast<int>(eigenImages.size())) {
-        throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthError,
-                (boost::format("You only have %d eigen images (you asked for %d)") % eigenImages.size() %
-                 nEigen).str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
+                          (boost::format("You only have %d eigen images (you asked for %d)") %
+                           eigenImages.size() % nEigen)
+                                  .str());
     }
     /*
      * Solve the linear problem  image = sum x_i K_i + epsilon; we solve this for x_i by constructing the
@@ -343,10 +343,10 @@ double do_updateBadPixels(detail::MaskedImage_tag const&,
         }
     } else {
         if (ncomp > static_cast<int>(eigenImages.size())) {
-            throw LSST_EXCEPT(
-                    lsst::pex::exceptions::LengthError,
-                    (boost::format("You only have %d eigen images (you asked for %d)") % eigenImages.size() %
-                     ncomp).str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
+                              (boost::format("You only have %d eigen images (you asked for %d)") %
+                               eigenImages.size() % ncomp)
+                                      .str());
         }
 
         for (int i = 0; i != nImage; ++i) {
@@ -359,7 +359,7 @@ double do_updateBadPixels(detail::MaskedImage_tag const&,
                                                               end = fitted->row_end(y);
                      fptr != end; ++fptr, ++iptr) {
                     if (iptr.mask() & mask) {
-                        double const delta = ::fabs(*fptr - iptr.image());
+                        double const delta = fabs(static_cast<double>(*fptr) - iptr.image());
                         if (delta > maxChange) {
                             maxChange = delta;
                         }
@@ -373,7 +373,7 @@ double do_updateBadPixels(detail::MaskedImage_tag const&,
 
     return maxChange;
 }
-}
+}  // namespace
 template <typename ImageT>
 double ImagePca<ImageT>::updateBadPixels(unsigned long mask, int const ncomp) {
     return do_updateBadPixels<ImageT>(typename ImageT::image_category(), _imageList, _fluxList, _eigenImages,
@@ -401,7 +401,7 @@ template <typename Image1T, typename Image2T>
 bool imagesAreIdentical(Image1T const& im1, Image2T const& im2) {
     return IsSame<Image1T, Image2T>(im1, im2)();
 }
-}
+}  // namespace
 template <typename Image1T, typename Image2T>
 double innerProduct(Image1T const& lhs, Image2T const& rhs, int border) {
     if (lhs.getWidth() <= 2 * border || lhs.getHeight() <= 2 * border) {
@@ -471,6 +471,6 @@ INSTANTIATE(double)
 
 INSTANTIATE2(float, double)  // the two types must be different
 /// @endcond
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

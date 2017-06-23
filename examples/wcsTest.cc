@@ -68,7 +68,6 @@ int main(int argc, char **argv) {
     }
     std::cout << "Opening exposure " << inImagePath << std::endl;
 
-    auto miMetadata(new PropertySet);
     afwImage::Exposure<Pixel> exposure(inImagePath);
     if (!exposure.hasWcs()) {
         std::cerr << "Exposure does not have a WCS." << std::endl;
