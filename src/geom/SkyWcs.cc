@@ -196,7 +196,9 @@ std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) 
     // and the SkyFrame to the current frame
     frameSet->setBase(frameSet->getCurrent());
     frameSet->setCurrent(skyFrameIndex);
-    return std::make_shared<SkyWcs>(std::move(frameSet));
+    // `return std::make_shared<SkyWcs>(std::move(frameSet));` fails with:
+    //    error: field of type 'lsst::afw::geom::SkyWcs' has private constructor
+    return std::shared_ptr<SkyWcs>(new SkyWcs(std::move(frameSet)));
 }
 
 std::pair<Angle, Angle> SkyWcs::pixelToSky(double x, double y) const {
