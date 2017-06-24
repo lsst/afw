@@ -127,9 +127,9 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         """Test that Flag columns can be viewed if copy=True or unviewable="copy".
         """
         v1 = self.catalog.asAstropy(unviewable="copy")
-        self.assertFloatsAlmostEqual(v1["a4"], self.catalog["a4"])
+        np.testing.assert_array_equal(v1["a4"], self.catalog["a4"])
         v2 = self.catalog.asAstropy(copy=True)
-        self.assertFloatsAlmostEqual(v2["a4"], self.catalog["a4"])
+        np.testing.assert_array_equal(v2["a4"], self.catalog["a4"])
 
     def testCoordColumn(self):
         """Test that Coord columns appears as a pair of columns with correct angle units.
