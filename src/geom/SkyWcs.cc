@@ -121,13 +121,13 @@ Eigen::Matrix2d SkyWcs::getCdMatrix(Point2D const& pixel) const {
 
 Eigen::Matrix2d SkyWcs::getCdMatrix() const { return getCdMatrix(getPixelOrigin()); }
 
-SkyWcs SkyWcs::getTanWcs(Point2D const& pixel) const {
+std::shared_ptr<SkyWcs> SkyWcs::getTanWcs(Point2D const& pixel) const {
     auto const crval = applyForward(pixel);
     auto const cdMatrix = getCdMatrix(pixel);
-    return SkyWcs(pixel, crval, cdMatrix);
+    return std::make_shared<SkyWcs>(pixel, crval, cdMatrix);
 }
 
-SkyWcs SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) const {
+std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) const {
     auto frameSet = getFrameSet()->copy();
 
     // Save the SkyFrame so we can search for it at the end, to make it current again
@@ -196,7 +196,7 @@ SkyWcs SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) const {
     // and the SkyFrame to the current frame
     frameSet->setBase(frameSet->getCurrent());
     frameSet->setCurrent(skyFrameIndex);
-    return SkyWcs(std::move(frameSet));
+    return std::make_shared<SkyWcs>(std::move(frameSet));
 }
 
 std::pair<Angle, Angle> SkyWcs::pixelToSky(double x, double y) const {
