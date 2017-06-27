@@ -60,6 +60,10 @@ void declareCommonSysMethods(PyClass &cls) {
         os << self;
         return os.str();
     });
+    cls.def("__hash__", [](CppClass const &self) {
+        using std::hash;
+        return hash<CppClass>()(self);
+    });
 
     /* Methods */
     cls.def("getSysName", &CppClass::getSysName);

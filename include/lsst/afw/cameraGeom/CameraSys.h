@@ -58,18 +58,23 @@ public:
 
     bool operator!=(CameraSysPrefix const &rhs) const { return !(*this == rhs); }
 
+    /**
+     * Hash function for this object.
+     *
+     * @return a value that is guaranteed equal for any two equal
+     *         CameraSysPrefix, and unlikely to be equal for any two unequal
+     *         CameraSysPrefix.
+     *
+     * @note Workhorse for std::hash<CameraSysPrefix>.
+     */
+    size_t hash() const noexcept;
+
 private:
     std::string _sysName;  ///< coordinate system name
 };
 
 /**
  * Camera coordinate system; used as a key in in TransformMap
- *
- * @note When TransformMap switches to using unordered_map, a good way to compute the hash is:
- *   size_t hash = 0;
- *   boost::hash_combine(hash, cameraSys.getSysName());
- *   boost::hash_combine(hash, cameraSys.getDetectorName());
- *   return hash;
  */
 class CameraSys {
 public:
@@ -121,6 +126,16 @@ public:
             return _sysName < rhs.getSysName();
         }
     }
+
+    /**
+     * Hash function for this object.
+     *
+     * @return a value that is guaranteed equal for any two equal CameraSys,
+     *         and unlikely to be equal for any two unequal CameraSys.
+     *
+     * @note Workhorse for std::hash<CameraSys>.
+     */
+    size_t hash() const noexcept;
 
 private:
     std::string _sysName;       ///< coordinate system name
@@ -184,6 +199,18 @@ std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &detSysPrefix);
 std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys);
 }
 }
+}
+
+namespace std {
+template <>
+struct hash<lsst::afw::cameraGeom::CameraSysPrefix> {
+    size_t operator()(lsst::afw::cameraGeom::CameraSysPrefix const &obj) const noexcept { return obj.hash(); }
+};
+
+template <>
+struct hash<lsst::afw::cameraGeom::CameraSys> {
+    size_t operator()(lsst::afw::cameraGeom::CameraSys const &obj) const noexcept { return obj.hash(); }
+};
 }
 
 #endif

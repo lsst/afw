@@ -22,15 +22,9 @@
 from __future__ import absolute_import, division, print_function
 
 from lsst.afw.geom.python import addTransformMapMethods
-from ._cameraSys import CameraSys, CameraTransformMap
+from ._cameraSys import CameraTransformMap
 
 __all__ = []  # import this module only for its side effects
 
-
-def __hash__(self):
-    return hash(repr(self))
-
-
-CameraSys.__hash__ = __hash__
 
 addTransformMapMethods(CameraTransformMap)

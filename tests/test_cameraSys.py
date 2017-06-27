@@ -60,9 +60,9 @@ class CameraSysTestCase(unittest.TestCase):
                 else:
                     self.assertEqual(cameraSys, noDetSys)
 
-                # The following tests are checking the functionality of the == and !=
-                # operators and should not be replaced with assertEqual ot
-                # assertNotEqual
+                # The following tests are checking the functionality of the
+                # == and != operators and should not be replaced with
+                # assertEqual or assertNotEqual
                 self.assertTrue(cameraSys != camSysPrefix)
                 self.assertTrue(noDetSys != camSysPrefix)
                 self.assertFalse(cameraSys == camSysPrefix)
@@ -95,12 +95,13 @@ class CameraSysTestCase(unittest.TestCase):
         self.assertEqual(repr(dsp), "CameraSysPrefix(pixels)")
 
     def testHashing(self):
-        """Test that hashing works as expected"""
+        """Test that hashing gives equal CameraSys equal hashes"""
+        # Not sure CameraSys has diverse enough values for testing
+        # hash uniformity to be worthwhile
         cs1 = cameraGeom.CameraSys("pixels", "det1")
         cs1Copy = cameraGeom.CameraSys("pixels", "det1")
         cs2 = cameraGeom.CameraSys("pixels", "det2")
         cs2Copy = cameraGeom.CameraSys("pixels", "det2")
-        # import pdb; pdb.set_trace()
         csSet = set((cs1, cs1Copy, cs2, cs2Copy))
         self.assertEqual(len(csSet), 2)
 
