@@ -22,8 +22,12 @@ struct CopyValue {
 
     template <typename U>
     void operator()(Key<Array<U> > const& inputKey, Key<Array<U> > const& outputKey) const {
+        if (inputKey.isVariableLength() != outputKey.isVariableLength()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                              "At least one input array field is variable-length"
+                              " and the correponding output is not, or vice-versa");
+        }
         if (inputKey.isVariableLength()) {
-            assert(outputKey.isVariableLength());
             ndarray::Array<U, 1, 1> value = ndarray::copy(_inputRecord->get(inputKey));
             _outputRecord->set(outputKey, value);
             return;
