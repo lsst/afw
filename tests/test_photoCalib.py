@@ -65,11 +65,11 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         self.instFluxKeyName = "SomeFlux"
         lsst.afw.table.Point2DKey.addFields(self.schema, "centroid", "centroid", "pixels")
         self.instFluxKey = self.schema.addField(
-            self.instFluxKeyName+"_instFlux", type="D", doc="post-ISR instFlux")
-        self.instFluxErrKey = self.schema.addField(self.instFluxKeyName+"_instFluxErr", type="D",
+            self.instFluxKeyName+"_flux", type="D", doc="post-ISR instFlux")
+        self.instFluxErrKey = self.schema.addField(self.instFluxKeyName+"_fluxSigma", type="D",
                                                    doc="post-ISR instFlux stddev")
-        self.maggiesKey = self.schema.addField(self.instFluxKeyName+"_flux", type="D", doc="maggies")
-        self.maggiesErrKey = self.schema.addField(self.instFluxKeyName+"_fluxErr", type="D",
+        self.maggiesKey = self.schema.addField(self.instFluxKeyName+"_calFlux", type="D", doc="maggies")
+        self.maggiesErrKey = self.schema.addField(self.instFluxKeyName+"_calFluxErr", type="D",
                                                   doc="maggies stddev")
         self.magnitudeKey = self.schema.addField(self.instFluxKeyName+"_mag", type="D", doc="magnitude")
         self.magnitudeErrKey = self.schema.addField(self.instFluxKeyName+"_magErr", type="D",
@@ -81,14 +81,14 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         record.set('id', 1)
         record.set('centroid_x', self.point0[0])
         record.set('centroid_y', self.point0[1])
-        record.set(self.instFluxKeyName+'_instFlux', self.instFlux)
-        record.set(self.instFluxKeyName+'_instFluxErr', self.instFluxErr)
+        record.set(self.instFluxKeyName+'_flux', self.instFlux)
+        record.set(self.instFluxKeyName+'_fluxSigma', self.instFluxErr)
         record = self.catalog.addNew()
         record.set('id', 2)
         record.set('centroid_x', self.pointYShift[0])
         record.set('centroid_y', self.pointYShift[1])
-        record.set(self.instFluxKeyName+'_instFlux', self.instFlux*1e-9)
-        record.set(self.instFluxKeyName+'_instFluxErr', self.instFluxErr)
+        record.set(self.instFluxKeyName+'_flux', self.instFlux*1e-9)
+        record.set(self.instFluxKeyName+'_fluxSigma', self.instFluxErr)
 
         self.constantZeroPoint = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.array([[self.instFlux0]]))
         self.linearXZeroPoint = lsst.afw.math.ChebyshevBoundedField(self.bbox,
