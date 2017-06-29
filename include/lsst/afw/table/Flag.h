@@ -134,12 +134,12 @@ private:
     friend class detail::Access;
     friend class BaseRecord;
 
-    /// Used to implement RecordBase::get.
+    /// Used to implement BaseRecord::get.
     Value getValue(Element const *p, ndarray::Manager::Ptr const &) const {
         return (*p) & (Element(1) << _bit);
     }
 
-    /// Used to implement RecordBase::set.
+    /// Used to implement BaseRecord::set.
     void setValue(Element *p, ndarray::Manager::Ptr const &, Value v) const {
         if (v) {
             *p |= (Element(1) << _bit);

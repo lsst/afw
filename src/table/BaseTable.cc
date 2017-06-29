@@ -181,6 +181,7 @@ struct RecordInitializer {
     template <typename T>
     void operator()(SchemaItem<Array<T> > const &item) const {
         if (item.key.isVariableLength()) {
+            // Use placement new because the memory (for one ndarray) is already allocated
             new (data + item.key.getOffset()) ndarray::Array<T, 1, 1>();
         } else {
             fill(reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),

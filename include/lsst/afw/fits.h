@@ -451,7 +451,7 @@ public:
     template <typename T>
     void writeTableArray(std::size_t row, int col, int nElements, T const* value);
 
-    /// Write an scalar value to a binary table.
+    /// Write a scalar value to a binary table.
     template <typename T>
     void writeTableScalar(std::size_t row, int col, T value) {
         writeTableArray(row, col, 1, &value);

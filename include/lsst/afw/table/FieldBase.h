@@ -39,8 +39,6 @@ inline int computeCovariancePackedSize(int size) { return size * (size + 1) / 2;
 
 /**
  *  Field base class default implementation (used for numeric scalars and Angle).
- *
- *  FieldBase is where all the implementation
  */
 template <typename T>
 struct FieldBase {
@@ -71,16 +69,16 @@ protected:
     /// Defines how Fields are printed.
     void stream(std::ostream &os) const {}
 
-    /// Used to implement RecordBase::operator[] (non-const).
+    /// Used to implement BaseRecord::operator[] (non-const).
     Reference getReference(Element *p, ndarray::Manager::Ptr const &) const { return *p; }
 
-    /// Used to implement RecordBase::operator[] (const).
+    /// Used to implement BaseRecord::operator[] (const).
     ConstReference getConstReference(Element const *p, ndarray::Manager::Ptr const &) const { return *p; }
 
-    /// Used to implement RecordBase::get.
+    /// Used to implement BaseRecord::get.
     Value getValue(Element const *p, ndarray::Manager::Ptr const &) const { return *p; }
 
-    /// Used to implement RecordBase::set.
+    /// Used to implement BaseRecord::set.
     void setValue(Element *p, ndarray::Manager::Ptr const &, Value v) const { *p = v; }
 };
 
@@ -88,7 +86,7 @@ protected:
  *  Field base class specialization for arrays.
  *
  *  The Array tag is used for both fixed-length (same size in every record, accessible via ColumnView)
- *  and variable-length arrays; variable-length arrays are initialized with a negative size.  Ideally,
+ *  and variable-length arrays; variable-length arrays are initialized with a size of 0.  Ideally,
  *  we'd use complete different tag classes for those two very different types, but boost::variant and
  *  boost::mpl put a limit of 20 on the number of field types, and we're running out.  In a future
  *  reimplementation of afw::table, we should fix this.
@@ -127,10 +125,12 @@ struct FieldBase<Array<U> > {
     /// Return a string description of the field type.
     static std::string getTypeString();
 
-    /// Return the number of subfield elements (equal to the size of the array).
+    /// Return the number of subfield elements (equal to the size of the array),
+    /// or 0 for a variable-length array.
     int getElementCount() const { return _size; }
 
-    /// Return the size of the array (equal to the number of subfield elements).
+    /// Return the size of the array (equal to the number of subfield elements),
+    /// or 0 for a variable-length array.
     int getSize() const { return _size; }
 
     /// Return true if the field is variable-length (each record can have a different size array).
@@ -143,7 +143,7 @@ protected:
     /// Defines how Fields are printed.
     void stream(std::ostream &os) const { os << ", size=" << _size; }
 
-    /// Used to implement RecordBase::operator[] (non-const).
+    /// Used to implement BaseRecord::operator[] (non-const).
     Reference getReference(Element *p, ndarray::Manager::Ptr const &m) const {
         if (isVariableLength()) {
             return reinterpret_cast<ndarray::Array<Element, 1, 1> *>(p)->deep();
@@ -151,7 +151,7 @@ protected:
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
-    /// Used to implement RecordBase::operator[] (const).
+    /// Used to implement BaseRecord::operator[] (const).
     ConstReference getConstReference(Element const *p, ndarray::Manager::Ptr const &m) const {
         if (isVariableLength()) {
             return reinterpret_cast<ndarray::Array<Element, 1, 1> const *>(p)->deep();
@@ -159,7 +159,7 @@ protected:
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
-    /// Used to implement RecordBase::get.
+    /// Used to implement BaseRecord::get.
     Value getValue(Element const *p, ndarray::Manager::Ptr const &m) const {
         if (isVariableLength()) {
             return *reinterpret_cast<ndarray::Array<Element, 1, 1> const *>(p);
@@ -167,7 +167,7 @@ protected:
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
-    /// Used to implement RecordBase::set; accepts only non-const arrays of the right type,
+    /// Used to implement BaseRecord::set; accepts only non-const arrays of the right type,
     /// and allows shallow assignment of variable-length arrays (which is the only kind of
     /// assignment allowed for variable-length arrays - if you want deep assignment, use
     /// operator[] to get a reference and assign to that.
@@ -180,7 +180,7 @@ protected:
         }
     }
 
-    /// Used to implement RecordBase::set; accepts any ndarray expression.
+    /// Used to implement BaseRecord::set; accepts any ndarray expression.
     template <typename Derived>
     void setValue(Element *p, ndarray::Manager::Ptr const &,
                   ndarray::ExpressionBase<Derived> const &value) const {
@@ -251,16 +251,16 @@ protected:
     /// Defines how Fields are printed.
     void stream(std::ostream &os) const { os << ", size=" << _size; }
 
-    /// Used to implement RecordBase::operator[] (non-const).
+    /// Used to implement BaseRecord::operator[] (non-const).
     Reference getReference(Element *p, ndarray::Manager::Ptr const &m) const { return p; }
 
-    /// Used to implement RecordBase::operator[] (const).
+    /// Used to implement BaseRecord::operator[] (const).
     ConstReference getConstReference(Element const *p, ndarray::Manager::Ptr const &m) const { return p; }
 
-    /// Used to implement RecordBase::get.
+    /// Used to implement BaseRecord::get.
     Value getValue(Element const *p, ndarray::Manager::Ptr const &m) const;
 
-    /// Used to implement RecordBase::set
+    /// Used to implement BaseRecord::set
     void setValue(Element *p, ndarray::Manager::Ptr const &, std::string const &value) const;
 
 private:
