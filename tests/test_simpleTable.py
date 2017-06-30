@@ -668,9 +668,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
-        self.assertFloatsEqual(record1.get(ka), a1)
-        self.assertFloatsEqual(record1.get(kb), b1)
-        self.assertFloatsEqual(record1.get(kc), c1)
+        self.assertFloatsEqual(record2.get(ka), a1)
+        self.assertFloatsEqual(record2.get(kb), b1)
+        self.assertFloatsEqual(record2.get(kc), c1)
         record1[kb][2] = 4.5
         # copy in assign() should be deep
         self.assertEqual(record2[kb][2], 3.5)
