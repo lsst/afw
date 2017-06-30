@@ -189,6 +189,16 @@ struct RecordInitializer {
         }
     }
 
+    void operator()(SchemaItem<std::string> const &item) const {
+        if (item.key.isVariableLength()) {
+            // Use placement new because the memory (for one std::string) is already allocated
+            new (reinterpret_cast<std::string *>(data + item.key.getOffset())) std::string();
+        } else {
+            fill(reinterpret_cast<char *>(data + item.key.getOffset()),
+                 item.key.getElementCount());
+        }
+    }
+
     void operator()(SchemaItem<Flag> const &item) const {}  // do nothing for Flag fields; already 0
 
     char *data;
@@ -205,6 +215,14 @@ struct RecordDestroyer {
         typedef ndarray::Array<T, 1, 1> Element;
         if (item.key.isVariableLength()) {
             (*reinterpret_cast<Element *>(data + item.key.getOffset())).~Element();
+        }
+    }
+
+    void operator()(SchemaItem<std::string> const &item) const {
+        if (item.key.isVariableLength()) {
+            using std::string;  // invoking the destructor on a qualified name doesn't compile in gcc 4.8.1
+                                // https://stackoverflow.com/q/24593942
+            (*reinterpret_cast<string*>(data + item.key.getOffset())).~string();
         }
     }
 

@@ -131,6 +131,9 @@ public:
     template <typename T>
     Key<Array<T> > addField(Field<Array<T> > const& field, bool doReplace = false);
 
+    /// Add a field to the schema (used to implement Schema::addField).
+    Key<std::string> addField(Field<std::string> const& field, bool doReplace = false);
+
     /// Replace the Field in an existing SchemaItem without changing the Key.
     template <typename T>
     void replaceField(Key<T> const& key, Field<T> const& field);

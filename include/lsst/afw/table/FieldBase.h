@@ -167,10 +167,12 @@ protected:
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
-    /// Used to implement BaseRecord::set; accepts only non-const arrays of the right type,
-    /// and allows shallow assignment of variable-length arrays (which is the only kind of
-    /// assignment allowed for variable-length arrays - if you want deep assignment, use
-    /// operator[] to get a reference and assign to that.
+    /// Used to implement BaseRecord::set; accepts only non-const arrays of the right type.
+    /// Fixed-length arrays are handled by copying the data from `value` to `p` through `p + _size`.
+    /// Variable-length arrays are handled by setting `p` to the address of `value`, an ndarray,
+    /// hence a shallow copy (ndarray arrays are reference-counted so this will not leak memory).
+    /// If you want deep assignment of variable-length data, use operator[] to get a reference
+    /// and assign to that.
     void setValue(Element *p, ndarray::Manager::Ptr const &,
                   ndarray::Array<Element, 1, 1> const &value) const {
         if (isVariableLength()) {
@@ -223,6 +225,8 @@ struct FieldBase<std::string> {
     /**
      *  Construct a FieldBase with the given size.
      *
+     *  A size == 0 indicates a variable-length string.  Negative sizes are not permitted.
+     *
      *  This constructor is implicit and has an invalid default so it can be used in the Field
      *  constructor (as if it were an int argument) without specializing Field.  In other words,
      *  it allows one to construct a 25-character string field like this:
@@ -237,13 +241,15 @@ struct FieldBase<std::string> {
     static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (equal to the size of the string,
-    ///        including a null terminator).
+    ///        including a null terminator), or 0 for a variable-length string.
     int getElementCount() const { return _size; }
 
     /// @brief Return the maximum length of the string, including a null terminator
-    ///        (equal to the number of subfield elements).
+    ///        (equal to the number of subfield elements), or 0 for a variable-length string.
     int getSize() const { return _size; }
 
+    /// Return true if the field is variable-length (each record can have a different size array).
+    bool isVariableLength() const { return _size == 0; }
 protected:
     /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(0); }
@@ -252,15 +258,33 @@ protected:
     void stream(std::ostream &os) const { os << ", size=" << _size; }
 
     /// Used to implement BaseRecord::operator[] (non-const).
-    Reference getReference(Element *p, ndarray::Manager::Ptr const &m) const { return p; }
+    Reference getReference(Element *p, ndarray::Manager::Ptr const &m) const {
+        if (isVariableLength()) {
+            // Can't be done until C++17, which allows read/write access to std::string's internal buffer
+            throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
+                              "non-const operator[] not supported for variable-length strings");
+        } else {
+            return p;
+        }
+    }
 
     /// Used to implement BaseRecord::operator[] (const).
-    ConstReference getConstReference(Element const *p, ndarray::Manager::Ptr const &m) const { return p; }
+    ConstReference getConstReference(Element const *p, ndarray::Manager::Ptr const &m) const {
+        if (isVariableLength()) {
+            return reinterpret_cast<std::string const *>(p)->data();
+        } else {
+            return p;
+        }
+    }
 
     /// Used to implement BaseRecord::get.
     Value getValue(Element const *p, ndarray::Manager::Ptr const &m) const;
 
     /// Used to implement BaseRecord::set
+    /// Fixed-lengths strings are handled by copying the data into `p` through `p + _size`,
+    /// nulling extra characters, if any. The data is only null-terminated if value.size() < _size.
+    /// Variable-length strings are handled by setting `p` to the address of a `std::string`
+    /// that is a copy of `value`
     void setValue(Element *p, ndarray::Manager::Ptr const &, std::string const &value) const;
 
 private:

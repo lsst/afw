@@ -36,6 +36,21 @@ struct CopyValue {
         std::copy(inputElem, inputElem + inputKey.getElementCount(), _outputRecord->getElement(outputKey));
     }
 
+    void operator()(Key<std::string> const& inputKey, Key<std::string> const& outputKey) const {
+        if (inputKey.isVariableLength() != outputKey.isVariableLength()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
+                              "At least one input string field is variable-length "
+                              "and the correponding output is not, or vice-versa");
+        }
+        if (inputKey.isVariableLength()) {
+            std::string value = _inputRecord->get(inputKey);
+            _outputRecord->set(outputKey, value);
+            return;
+        }
+        char const* inputElem = _inputRecord->getElement(inputKey);
+        std::copy(inputElem, inputElem + inputKey.getElementCount(), _outputRecord->getElement(outputKey));
+    }
+
     void operator()(Key<Flag> const& inputKey, Key<Flag> const& outputKey) const {
         _outputRecord->set(outputKey, _inputRecord->get(inputKey));
     }

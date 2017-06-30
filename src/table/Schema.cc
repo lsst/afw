@@ -489,6 +489,15 @@ Key<Array<T> > SchemaImpl::addField(Field<Array<T> > const &field, bool doReplac
     return addFieldImpl(sizeof(typename Field<T>::Element), field.getElementCount(), field, doReplace);
 }
 
+Key<std::string> SchemaImpl::addField(Field<std::string> const &field, bool doReplace) {
+    if (field.isVariableLength()) {
+        // Variable-length string: allocate space for one std::string
+        return addFieldImpl(sizeof(std::string), 1, field, doReplace);
+    }
+    // Fixed-length string: allocate space for getElementCount() chars
+    return addFieldImpl(sizeof(typename Field<std::string>::Element), field.getElementCount(), field, doReplace);
+}
+
 template <typename T>
 Key<T> SchemaImpl::addField(Field<T> const &field, bool doReplace) {
     return addFieldImpl(sizeof(typename Field<T>::Element), field.getElementCount(), field, doReplace);

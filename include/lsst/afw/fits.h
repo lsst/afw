@@ -456,7 +456,6 @@ public:
     void writeTableScalar(std::size_t row, int col, T value) {
         writeTableArray(row, col, 1, &value);
     }
-
     /// Write a string to a binary table.
     void writeTableScalar(std::size_t row, int col, std::string const& value);
 
@@ -471,7 +470,7 @@ public:
     }
 
     /// Read a string from a binary table.
-    void readTableScalar(std::size_t row, int col, std::string& value);
+    void readTableScalar(std::size_t row, int col, std::string& value, bool isVariableLength);
 
     /// Return the size of an array column.
     long getTableArraySize(int col);

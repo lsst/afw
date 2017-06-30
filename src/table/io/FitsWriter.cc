@@ -152,6 +152,7 @@ struct FitsWriter::ProcessRecords {
     }
 
     void operator()(SchemaItem<std::string> const& item) const {
+        // Write fixed-length and variable-length strings the same way
         fits->writeTableScalar(row, col, record->get(item.key));
         ++col;
     }
