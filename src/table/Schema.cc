@@ -482,9 +482,20 @@ std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const &pref
 template <typename T>
 Key<Array<T> > SchemaImpl::addField(Field<Array<T> > const &field, bool doReplace) {
     if (field.isVariableLength()) {
+        // Variable-length array: allocate space for one ndarray
         return addFieldImpl(sizeof(ndarray::Array<T, 1, 1>), 1, field, doReplace);
     }
+    // Fixed-length array: allocate space for getElementCount() elements of type T
     return addFieldImpl(sizeof(typename Field<T>::Element), field.getElementCount(), field, doReplace);
+}
+
+Key<std::string> SchemaImpl::addField(Field<std::string> const &field, bool doReplace) {
+    if (field.isVariableLength()) {
+        // Variable-length string: allocate space for one std::string
+        return addFieldImpl(sizeof(std::string), 1, field, doReplace);
+    }
+    // Fixed-length string: allocate space for getElementCount() chars
+    return addFieldImpl(sizeof(typename Field<std::string>::Element), field.getElementCount(), field, doReplace);
 }
 
 template <typename T>

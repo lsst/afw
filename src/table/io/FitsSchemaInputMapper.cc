@@ -413,18 +413,20 @@ public:
 
     StringReader(Schema &schema, FitsSchemaItem const &item, int size)
             : _column(item.column),
-              _key(schema.addField<std::string>(item.ttype, item.doc, item.tunit, size)) {}
+              _key(schema.addField<std::string>(item.ttype, item.doc, item.tunit, size)),
+              _isVariableLength(size == 0) {}
 
     virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
                           std::shared_ptr<InputArchive> const &archive) const {
         std::string s;
-        fits.readTableScalar(row, _column, s);
+        fits.readTableScalar(row, _column, s, _isVariableLength);
         record.set(_key, s);
     }
 
 private:
     int _column;
     Key<std::string> _key;
+    bool _isVariableLength;
 };
 
 template <typename T>
@@ -675,6 +677,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(Schema &schema, FitsSchemaIte
             }
             return StandardReader<Array<double>>::make(schema, item, size);
         case 'A':  // strings
+            // StringReader can read both fixed-length and variable-length (size=0) strings
             return StringReader::make(schema, item, size);
         default:
             return std::unique_ptr<FitsColumnReader>();

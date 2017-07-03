@@ -71,20 +71,33 @@ FieldBase<std::string>::FieldBase(int size) : _size(size) {
 std::string FieldBase<std::string>::getTypeString() { return "String"; }
 
 std::string FieldBase<std::string>::getValue(Element const *p, ndarray::Manager::Ptr const &m) const {
-    Element const *end = p + _size;
-    end = std::find(p, end, 0);
-    return std::string(p, end);
+    if (isVariableLength()) {
+        // p is a pointer to a std::string; return a copy
+        return std::string(*reinterpret_cast<std::string const *>(p));
+    } else {
+        // p is a char * that is null-terminated only if the string has fewer than _size chars;
+        // return a copy as a std::string
+        Element const *end = p + _size;
+        end = std::find(p, end, 0);
+        return std::string(p, end);
+    }
 }
 
 void FieldBase<std::string>::setValue(Element *p, ndarray::Manager::Ptr const &,
                                       std::string const &value) const {
-    if (value.size() > std::size_t(_size)) {
-        throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthError,
-                (boost::format("String (%d) is too large for field (%d).") % value.size() % _size).str());
+    if (isVariableLength()) {
+        // p is a pointer to a std::string; replace its contents with a copy of `value`
+        *reinterpret_cast<std::string *>(p) = value;
+    } else {
+        // copy the contents of `value` to p through p + _size, null extra characters, if any
+        if (value.size() > std::size_t(_size)) {
+            throw LSST_EXCEPT(
+                    lsst::pex::exceptions::LengthError,
+                    (boost::format("String (%d) is too large for field (%d).") % value.size() % _size).str());
+        }
+        std::copy(value.begin(), value.end(), p);
+        std::fill(p + value.size(), p + _size, char(0));  // null extra characters, if any
     }
-    std::copy(value.begin(), value.end(), p);
-    std::fill(p + value.size(), p + _size, char(0));
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

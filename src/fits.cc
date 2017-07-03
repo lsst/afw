@@ -848,10 +848,10 @@ void Fits::readTableArray(std::size_t row, int col, int nElements, T *value) {
     }
 }
 
-void Fits::readTableScalar(std::size_t row, int col, std::string &value) {
+void Fits::readTableScalar(std::size_t row, int col, std::string &value, bool isVariableLength) {
     int anynul = false;
-    long size = getTableArraySize(col);
-    // We can't directly write into a std::string (may be changing in C++11).
+    long size = isVariableLength ? getTableArraySize(row, col) : getTableArraySize(col);
+    // We can't directly write into a std::string until C++17.
     std::vector<char> buf(size + 1, 0);
     // cfitsio wants a char** because they imagine we might want an array of strings,
     // but we only want one element.

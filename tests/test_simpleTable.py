@@ -642,35 +642,41 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         ka = schema.addField("a", doc="integer", type="ArrayI", size=0)
         kb = schema.addField("b", doc="single-precision", type="ArrayF")
         kc = schema.addField("c", doc="double-precision", type="ArrayD")
+        kd = schema.addField("d", doc="string", type="String", size=0)
         cat1 = lsst.afw.table.BaseCatalog(schema)
         record1 = cat1.addNew()
         self.assertEqual(list(record1.get(ka)), [])
         self.assertEqual(list(record1.get(kb)), [])
         self.assertEqual(list(record1.get(kc)), [])
+        self.assertEqual(record1.get(kd), "")
         a1 = np.random.randint(low=3, high=6, size=4).astype(np.int32)
         b1 = np.random.randn(5).astype(np.float32)
         c1 = np.random.randn(6).astype(np.float64)
+        d1 = "the quick brown fox jumps over the lazy dog"
         # Test get/set
         record1.set(ka, a1)
         record1.set(kb, b1)
         record1.set(kc, c1)
+        record1.set(kd, d1)
         self.assertFloatsEqual(record1.get(ka), a1)
         self.assertFloatsEqual(record1.get(kb), b1)
         self.assertFloatsEqual(record1.get(kc), c1)
+        self.assertEqual(record1.get(kd), d1)
         # Test __getitem__ and view semantics
         record1[kb][2] = 3.5
         self.assertEqual(b1[2], 3.5)
         # Check that we throw when we try to index a variable-length array Key
-        self.assertRaisesLsstCpp(
-            lsst.pex.exceptions.LogicError, lambda x: ka[x], 0)
-        self.assertRaisesLsstCpp(
-            lsst.pex.exceptions.LogicError, lambda x, y: ka[x:y], 0, 1)
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            ka[0]
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            ka[0:1]
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
-        self.assertFloatsEqual(record1.get(ka), a1)
-        self.assertFloatsEqual(record1.get(kb), b1)
-        self.assertFloatsEqual(record1.get(kc), c1)
+        self.assertFloatsEqual(record2.get(ka), a1)
+        self.assertFloatsEqual(record2.get(kb), b1)
+        self.assertFloatsEqual(record2.get(kc), c1)
+        self.assertEqual(record2.get(kd), d1)
         record1[kb][2] = 4.5
         # copy in assign() should be deep
         self.assertEqual(record2[kb][2], 3.5)
@@ -682,7 +688,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(record3.get(kb2), b1)
         # Test that we throw if we try to get a column view of a
         # variable-length arry
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, cat1.get, ka)
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            cat1.get(ka)
         # Test that we can round-trip variable-length arrays through FITS
         filename = "testSimpleTable_testVariableLengthArrays.fits"
         cat1.writeFits(filename)
@@ -693,6 +700,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(record4.get(ka), a1)
         self.assertFloatsEqual(record4.get(kb), b1)
         self.assertFloatsEqual(record4.get(kc), c1)
+        self.assertEqual(record4.get(kd), d1)
         os.remove(filename)
 
     def testCompoundFieldFitsConversion(self):
