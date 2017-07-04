@@ -102,8 +102,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         field.fillImage(image2, xStep=3)
         field.fillImage(image3, yStep=4)
         field.fillImage(image4, xStep=3, yStep=4)
-        self.assertFloatsAlmostEqual(image1.array, image2.array, rtol=2E-2, atol=2E-2)
-        self.assertFloatsAlmostEqual(image1.array, image3.array, rtol=2E-2, atol=2E-2)
+        self.assertFloatsAlmostEqual(image1.array, image2.array, rtol=1E-2, atol=1E-2)
+        self.assertFloatsAlmostEqual(image1.array, image3.array, rtol=1.5E-2, atol=1.5E-2)
         self.assertFloatsAlmostEqual(image1.array, image4.array, rtol=2E-2, atol=2E-2)
 
     def testEvaluate(self):
