@@ -84,8 +84,8 @@ public:
      *  There is no bounds-checking on the given positions; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    ndarray::Array<double, 1, 1> evaluate(ndarray::Array<double const, 1> const& x,
-                                          ndarray::Array<double const, 1> const& y) const;
+    virtual ndarray::Array<double, 1, 1> evaluate(ndarray::Array<double const, 1> const& x,
+                                                  ndarray::Array<double const, 1> const& y) const;
 
     /**
      * Compute the integral of this function over its bounding-box.
