@@ -34,7 +34,7 @@ import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
-from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
+from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
     CameraPoint, Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
@@ -86,7 +86,7 @@ class CameraGeomTestCase(unittest.TestCase):
         point = afwGeom.Point2D(0, 0)
         for cw in self.cameraList:
             camera = cw.camera
-            for coordSys in (PUPIL, FOCAL_PLANE):
+            for coordSys in (FIELD_ANGLE, FOCAL_PLANE):
                 pt1 = afwGeom.Point2D(0.1, 0.3)
                 pt2 = afwGeom.Point2D(0., 0.)
                 pt3 = afwGeom.Point2D(-0.2, 0.2)
@@ -117,7 +117,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def testCameraSysRepr(self):
         """Test CameraSys.__repr__ and CameraSysPrefix.__repr__
         """
-        for sysName in ("FocalPlane", "Pupil", "Pixels", "foo"):
+        for sysName in ("FocalPlane", "FieldAngle", "Pixels", "foo"):
             cameraSys = CameraSys(sysName)
             predRepr = "CameraSys(%s)" % (sysName)
             self.assertEqual(repr(cameraSys), predRepr)
@@ -179,15 +179,15 @@ class CameraGeomTestCase(unittest.TestCase):
             for point in testData:
                 fpGivenPos = afwGeom.Point2D(point[2], point[3])
                 fpGivenCP = camera.makeCameraPoint(fpGivenPos, FOCAL_PLANE)
-                pupilGivenPos = afwGeom.Point2D(
+                fieldGivenPos = afwGeom.Point2D(
                     afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
-                pupilGivenCP = camera.makeCameraPoint(pupilGivenPos, PUPIL)
+                fieldGivenCP = camera.makeCameraPoint(fieldGivenPos, FIELD_ANGLE)
 
-                fpComputedCP = camera.transform(pupilGivenCP, FOCAL_PLANE)
+                fpComputedCP = camera.transform(fieldGivenCP, FOCAL_PLANE)
                 self.assertCamPointAlmostEquals(fpComputedCP, fpGivenCP)
 
-                pupilComputedCP = camera.transform(fpGivenCP, PUPIL)
-                self.assertCamPointAlmostEquals(pupilComputedCP, pupilGivenCP)
+                fieldComputedCP = camera.transform(fpGivenCP, FIELD_ANGLE)
+                self.assertCamPointAlmostEquals(fieldComputedCP, fieldGivenCP)
 
     def testTransformDet(self):
         """Test Camera.transform with detector-based coordinate systems (PIXELS)
@@ -202,12 +202,12 @@ class CameraGeomTestCase(unittest.TestCase):
                 # test transforms using a point on the detector
                 pixCP = det.makeCameraPoint(afwGeom.Point2D(10, 10), PIXELS)
                 fpCP = camera.transform(pixCP, FOCAL_PLANE)
-                pupilCP = camera.transform(pixCP, PUPIL)
+                fieldCP = camera.transform(pixCP, FIELD_ANGLE)
 
-                pupilCP2 = camera.transform(fpCP, PUPIL)
-                self.assertCamPointAlmostEquals(pupilCP, pupilCP2)
+                fieldCP2 = camera.transform(fpCP, FIELD_ANGLE)
+                self.assertCamPointAlmostEquals(fieldCP, fieldCP2)
 
-                for intermedCP in (pixCP, fpCP, pupilCP):
+                for intermedCP in (pixCP, fpCP, fieldCP):
                     pixRoundTripCP = camera.transform(
                         intermedCP, det.makeCameraSys(PIXELS))
                     self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP)
@@ -247,7 +247,7 @@ class CameraGeomTestCase(unittest.TestCase):
             for det in cw.camera:
                 # This currently assumes there is only one detector at the center
                 # position of any detector.  That is not enforced and multiple detectors
-                # at a given PUPIL position is supported.  Change this if the default
+                # at a given FIELD_ANGLE position is supported.  Change this if the default
                 # camera changes.
                 cp = det.getCenter(FOCAL_PLANE)
                 detPointsList.append(cp.getPoint())

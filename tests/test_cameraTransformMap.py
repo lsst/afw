@@ -70,14 +70,14 @@ class CameraTransformMapTestCase(unittest.TestCase):
 
     def setUp(self):
         self.nativeSys = cameraGeom.FOCAL_PLANE
-        self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
-        transforms = {cameraGeom.PUPIL: self.pupilTransform}
+        self.fieldTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
+        transforms = {cameraGeom.FIELD_ANGLE: self.fieldTransform}
         self.transformMap = cameraGeom.CameraTransformMap(
             self.nativeSys, transforms)
 
     def tearDown(self):
         self.nativeSys = None
-        self.pupilTransform = None
+        self.fieldTransform = None
         self.transformMap = None
 
     def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None, nVal=5):
@@ -103,13 +103,13 @@ class CameraTransformMapTestCase(unittest.TestCase):
             self.assertFalse(hasattr(self.transformMap, methodName))
 
         self.assertIn(self.nativeSys, self.transformMap)
-        self.assertIn(cameraGeom.PUPIL, self.transformMap)
+        self.assertIn(cameraGeom.FIELD_ANGLE, self.transformMap)
         self.assertNotIn(cameraGeom.CameraSys("garbage"), self.transformMap)
 
         csList = self.transformMap.getCoordSysList()
         self.assertEqual(len(csList), 2)
         self.assertIn(self.nativeSys, csList)
-        self.assertIn(cameraGeom.PUPIL, csList)
+        self.assertIn(cameraGeom.FIELD_ANGLE, csList)
 
     def testIteration(self):
         """Test iteration, len and indexing
@@ -132,11 +132,11 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.compare2DFunctions(nativeTr.forwardTransform, unityTransform)
         self.compare2DFunctions(nativeTr.reverseTransform, unityTransform)
 
-        pupilTr = self.transformMap[cameraGeom.PUPIL]
-        self.compare2DFunctions(pupilTr.forwardTransform,
-                                self.pupilTransform.forwardTransform)
-        self.compare2DFunctions(pupilTr.reverseTransform,
-                                self.pupilTransform.reverseTransform)
+        fieldTr = self.transformMap[cameraGeom.FIELD_ANGLE]
+        self.compare2DFunctions(fieldTr.forwardTransform,
+                                self.fieldTransform.forwardTransform)
+        self.compare2DFunctions(fieldTr.reverseTransform,
+                                self.fieldTransform.reverseTransform)
 
         missingCamSys = cameraGeom.CameraSys("missing")
         with self.assertRaises(lsst.pex.exceptions.Exception):

@@ -82,7 +82,7 @@ PYBIND11_PLUGIN(_cameraSys) {
     // The following must come after the associated pybind11 class is declared
     // (e.g. FOCAL_PLANE is a CameraSys, so clsCameraSys must have been declared
     mod.attr("FOCAL_PLANE") = py::cast(FOCAL_PLANE);
-    mod.attr("PUPIL") = py::cast(PUPIL);
+    mod.attr("FIELD_ANGLE") = py::cast(FIELD_ANGLE);
     mod.attr("PIXELS") = py::cast(PIXELS);
     mod.attr("TAN_PIXELS") = py::cast(TAN_PIXELS);
     mod.attr("ACTUAL_PIXELS") = py::cast(ACTUAL_PIXELS);

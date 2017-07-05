@@ -34,7 +34,7 @@ class CameraSysTestCase(unittest.TestCase):
     def testBasics(self):
         """Test CameraSys and CameraSysPrefix
         """
-        for sysName in ("pupil", "pixels"):
+        for sysName in ("fieldAngle", "pixels"):
             for detectorName in ("", "det1", "det2"):
                 cameraSys = cameraGeom.CameraSys(sysName, detectorName)
                 self.assertEqual(cameraSys.getSysName(), sysName)
@@ -68,7 +68,7 @@ class CameraSysTestCase(unittest.TestCase):
                 self.assertFalse(cameraSys == camSysPrefix)
                 self.assertFalse(noDetSys == camSysPrefix)
 
-            for sysName2 in ("pupil", "pixels"):
+            for sysName2 in ("fieldAngle", "pixels"):
                 for detectorName2 in ("", "det1", "det2"):
                     cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
                     if sysName == sysName2 and detectorName == detectorName2:

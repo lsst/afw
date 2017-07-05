@@ -14,13 +14,13 @@ camera = testUtils.CameraWrapper(isLsstLike=True).camera
 # you prefer).
 det = camera["R:1,0 S:1,1"]
 
-# Convert a 2-d point from PIXELS to both FOCAL_PLANE and PUPIL coordinates.
+# Convert a 2-d point from PIXELS to both FOCAL_PLANE and FIELD_ANGLE coordinates.
 detPoint = det.makeCameraPoint(afwGeom.Point2D(
     25, 43.2), cameraGeom.PIXELS)  # position on detector in pixels
 # position in focal plane in mm
 fpPoint = det.transform(detPoint, cameraGeom.FOCAL_PLANE)
-# position in pupil, in radians
-pupilPoint = camera.transform(detPoint, cameraGeom.PUPIL)
+# position in field of view, in radians
+fieldPoint = camera.transform(detPoint, cameraGeom.FIELD_ANGLE)
 
 # Find all detectors that overlap a specific point (in this case find the
 # detector we already have)
@@ -28,7 +28,7 @@ detList = camera.findDetectors(fpPoint)
 assert len(detList) == 1
 assert detList[0].getName() == det.getName()
 
-# Convert a point from PUPIL to PIXELS coordinates.
+# Convert a point from FIELD_ANGLE to PIXELS coordinates.
 # For a detector-based coordinate system, such as PIXELS, may specify a particular detector
 # or let the Camera find a detector:
 # * To specify a particular detector, specify the target coordinate system as a CameraSys
@@ -41,6 +41,6 @@ assert detList[0].getName() == det.getName()
 # If it finds no detectors, or more than one detector, then it will raise
 # an exception.
 detPixelsSys = det.makeCameraSys(cameraGeom.PIXELS)
-detPointOnSpecifiedDetector = camera.transform(pupilPoint, detPixelsSys)
-detPointOnFoundDetector = camera.transform(pupilPoint, cameraGeom.PIXELS)
+detPointOnSpecifiedDetector = camera.transform(fieldPoint, detPixelsSys)
+detPointOnFoundDetector = camera.transform(fieldPoint, cameraGeom.PIXELS)
 assert detPointOnFoundDetector.getCameraSys() == detPixelsSys  # same detector

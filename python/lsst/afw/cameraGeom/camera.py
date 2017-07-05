@@ -37,7 +37,7 @@ class Camera(DetectorCollection):
         @param[in] name  name of camera
         @param[in] detectorList  a sequence of detectors in index order
         @param[in] transformMap  a CameraTransformMap whose native system is FOCAL_PLANE
-            and that at least supports PUPIL coordinates
+            and that at least supports FIELD_ANGLE coordinates
         @param[in] pupilFactoryClass  a PupilFactory class for this camera
             [default: afw.cameraGeom.PupilFactory]
         """

@@ -213,7 +213,7 @@ public:
      *
      * More than two Transforms can be combined in series. For example:
      *
-     *     auto pixelsToSky = pixelsToFP.then(fpToPupil).then(pupilToSky);
+     *     auto pixelsToSky = pixelsToFp.then(fpToField).then(fieldToSky);
      */
     template <class NextToEndpoint>
     Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next) const;

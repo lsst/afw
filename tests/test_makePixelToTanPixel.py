@@ -58,30 +58,30 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
         plateScaleRad = afwGeom.Angle(
             plateScale, afwGeom.arcseconds).asRadians()
-        focalPlaneToPupil = afwGeom.RadialXYTransform(
+        focalPlaneToField = afwGeom.RadialXYTransform(
             (0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
-        pixelToPupil = afwGeom.MultiXYTransform(
-            (pixelToFocalPlane, focalPlaneToPupil))
+        pixelToField = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToField))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox=bbox,
             orientation=orientation,
-            focalPlaneToPupil=focalPlaneToPupil,
+            focalPlaneToField=focalPlaneToField,
             pixelSizeMm=pixelSizeMm,
         )
 
-        # pupil center should be pixel position 0, 0 and tan pixel position 0,
+        # field center should be pixel position 0, 0 and tan pixel position 0,
         # 0
-        pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
-        self.assertPairsAlmostEqual(pixAtPupilCtr, [0, 0])
-        tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
-        self.assertPairsAlmostEqual(tanPixAtPupilCr, [0, 0])
+        pixAtFieldCtr = pixelToField.reverseTransform(afwGeom.Point2D(0, 0))
+        self.assertPairsAlmostEqual(pixAtFieldCtr, [0, 0])
+        tanPixAtFieldCr = pixelToTanPixel.forwardTransform(pixAtFieldCtr)
+        self.assertPairsAlmostEqual(tanPixAtFieldCr, [0, 0])
 
         # build same camera geometry transforms without optical distortion
-        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform(
+        focalPlaneToFieldNoDistortion = afwGeom.RadialXYTransform(
             (0.0, plateScaleRad))
-        pixelToPupilNoDistortion = afwGeom.MultiXYTransform(
-            (pixelToFocalPlane, focalPlaneToPupilNoDistortion))
+        pixelToFieldNoDistortion = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToFieldNoDistortion))
 
         for x in (100, 200, 1000):
             for y in (100, 500, 800):
@@ -93,12 +93,12 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
                     math.atan2(tanPixPos[1], tanPixPos[0]),
                 )
 
-                # for a given pupil angle (which, together with a pointing, gives a position on the sky):
-                # - pupil to pixels gives pixPos
-                # - undistorted pupil to pixels gives tanPixPos
-                pupilPos = pixelToPupil.forwardTransform(pixPos)
-                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(
-                    pupilPos)
+                # for a given field angle (which, together with a pointing, gives a position on the sky):
+                # - field angle to pixels gives pixPos
+                # - undistorted field anle to pixels gives tanPixPos
+                fieldPos = pixelToField.forwardTransform(pixPos)
+                desTanPixPos = pixelToFieldNoDistortion.reverseTransform(
+                    fieldPos)
                 self.assertPairsAlmostEqual(desTanPixPos, tanPixPos)
 
     def testCurvedFocalPlane(self):
@@ -121,40 +121,40 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
         plateScaleRad = afwGeom.Angle(
             plateScale, afwGeom.arcseconds).asRadians()
-        focalPlaneToPupil = afwGeom.RadialXYTransform(
+        focalPlaneToField = afwGeom.RadialXYTransform(
             (0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
-        pixelToPupil = afwGeom.MultiXYTransform(
-            (pixelToFocalPlane, focalPlaneToPupil))
+        pixelToField = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToField))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox=bbox,
             orientation=orientation,
-            focalPlaneToPupil=focalPlaneToPupil,
+            focalPlaneToField=focalPlaneToField,
             pixelSizeMm=pixelSizeMm,
         )
 
-        # the center point of the pupil frame should not move
-        pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
-        tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
-        self.assertPairsAlmostEqual(pixAtPupilCtr, tanPixAtPupilCr)
+        # the center point of the field angle frame should not move
+        pixAtFieldCtr = pixelToField.reverseTransform(afwGeom.Point2D(0, 0))
+        tanPixAtFieldCr = pixelToTanPixel.forwardTransform(pixAtFieldCtr)
+        self.assertPairsAlmostEqual(pixAtFieldCtr, tanPixAtFieldCr)
 
         # build same camera geometry transforms without optical distortion
-        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform(
+        focalPlaneToFieldNoDistortion = afwGeom.RadialXYTransform(
             (0.0, plateScaleRad))
-        pixelToPupilNoDistortion = afwGeom.MultiXYTransform(
-            (pixelToFocalPlane, focalPlaneToPupilNoDistortion))
+        pixelToFieldNoDistortion = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToFieldNoDistortion))
 
         for x in (100, 200, 1000):
             for y in (100, 500, 800):
                 pixPos = afwGeom.Point2D(x, y)
                 tanPixPos = pixelToTanPixel.forwardTransform(pixPos)
 
-                # for a given pupil position (which, together with a pointing, gives a position on the sky):
-                # - pupil to pixels gives pixPos
-                # - undistorted pupil to pixels gives tanPixPos
-                pupilPos = pixelToPupil.forwardTransform(pixPos)
-                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(
-                    pupilPos)
+                # for a given field angle (which, together with a pointing, gives a position on the sky):
+                # - field anle to pixels gives pixPos
+                # - undistorted field angle to pixels gives tanPixPos
+                fieldPos = pixelToField.forwardTransform(pixPos)
+                desTanPixPos = pixelToFieldNoDistortion.reverseTransform(
+                    fieldPos)
                 self.assertPairsAlmostEqual(desTanPixPos, tanPixPos)
 
     def testFlatFocalPlane(self):
@@ -176,12 +176,12 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         )
         plateScaleRad = afwGeom.Angle(
             plateScale, afwGeom.arcseconds).asRadians()
-        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad))
+        focalPlaneToField = afwGeom.RadialXYTransform((0.0, plateScaleRad))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox=bbox,
             orientation=orientation,
-            focalPlaneToPupil=focalPlaneToPupil,
+            focalPlaneToField=focalPlaneToField,
             pixelSizeMm=pixelSizeMm,
         )
 

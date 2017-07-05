@@ -155,10 +155,10 @@ typedef geom::TransformMap<CameraSys> CameraTransformMap;
 extern CameraSys const FOCAL_PLANE;
 
 /**
- * Pupil coordinates:
- * Angular x,y offset from the vertex at the pupil (radians).
+ * Field angle coordinates:
+ * Angular x,y offset from the optic axis (radians).
  */
-extern CameraSys const PUPIL;
+extern CameraSys const FIELD_ANGLE;
 
 /**
  * Nominal pixels on the detector (unbinned)
@@ -176,7 +176,7 @@ extern CameraSysPrefix const PIXELS;
  * (and the distortion due to rectangular pixels)
  * with the point at the center of the detector being unaffected by the transformation.
  *
- * In detail, PIXELS->TAN_PIXELS is PIXELS->PUPIL plus an affine transformation, such that:
+ * In detail, PIXELS->TAN_PIXELS is PIXELS->FIELD_ANGLE plus an affine transformation, such that:
  * * The x,y axes are parallel to the detector axes
  * * The dimensions are nominal pixels at the center of the focal plane
  *   (where nominal pixels size is mean of x, y pixel size).

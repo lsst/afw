@@ -128,7 +128,7 @@ class DetectorBuilder(object):
             self._sanitizeHeaderMetadata(
                 self.ampMetadataList[-1], clobber=clobberMetadata)
         self.plateScale = plateScale
-        self.focalPlaneToPupil = self._makeRadialTransform(radialCoeffs)
+        self.focalPlaneToField = self._makeRadialTransform(radialCoeffs)
 
     def _sanitizeHeaderMetadata(self, metadata, clobber):
         """This method is called for all metadata and gives an opportunity to add/modify
@@ -312,7 +312,7 @@ class DetectorBuilder(object):
         self.defaultDetectorMap.setAttributes(
             detConfig, self.detectorMetadata, self.doRaise)
         self.detector = afwCameraGeom.makeDetector(
-            detConfig, ampInfo, self.focalPlaneToPupil)
+            detConfig, ampInfo, self.focalPlaneToField)
         return self.detector
 
     def makeCalib(self):

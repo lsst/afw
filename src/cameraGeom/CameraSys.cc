@@ -28,7 +28,7 @@ namespace cameraGeom {
 
 CameraSys const FOCAL_PLANE = CameraSys("FocalPlane");
 
-CameraSys const PUPIL = CameraSys("Pupil");
+CameraSys const FIELD_ANGLE = CameraSys("FieldAngle");
 
 CameraSysPrefix const PIXELS = CameraSysPrefix("Pixels");
 
