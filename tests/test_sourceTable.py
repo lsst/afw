@@ -625,6 +625,27 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(AttributeError):
             self._testFluxSlot("NotExtantFlux")
 
+    def testStr(self):
+        """Check that the str() produced on a catalog contains expected things."""
+        string = str(self.catalog)
+        for field in ('id', 'coord_ra', 'coord_dec'):
+            self.assertIn(field, string)
+
+    def testRepr(self):
+        """Check that the repr() produced on a catalog contains expected things."""
+        string = repr(self.catalog)
+        self.assertIn(str(type(self.catalog)), string)
+        for field in ('id', 'coord_ra', 'coord_dec'):
+            self.assertIn(field, string)
+
+    def testStrNonContiguous(self):
+        """Check that str() doesn't fail on non-contiguous tables."""
+        del self.catalog[1]
+        string = str(self.catalog)
+        self.assertIn('Non-contiguous afw.Catalog of 2 rows.', string)
+        for field in ('id', 'coord_ra', 'coord_dec'):
+            self.assertIn(field, string)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
