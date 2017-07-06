@@ -646,6 +646,19 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         for field in ('id', 'coord_ra', 'coord_dec'):
             self.assertIn(field, string)
 
+    def testRecordStr(self):
+        """Test that str(record) contains expected things."""
+        string = str(self.catalog[0])
+        for field in ('id: 50', 'coord_ra: nan', 'coord_dec: nan'):
+            self.assertIn(field, string)
+
+    def testRecordRepr(self):
+        """Test that repr(record) contains expected things."""
+        string = repr(self.catalog[0])
+        self.assertIn(str(type(self.catalog[0])), string)
+        for field in ('id: 50', 'coord_ra: nan', 'coord_dec: nan'):
+            self.assertIn(field, string)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

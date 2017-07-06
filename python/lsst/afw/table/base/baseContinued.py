@@ -89,6 +89,13 @@ class BaseRecord:
                 d[name] = self.get(schemaItem.key)
         return d
 
+    def __str__(self):
+        return '\n'.join("%s: %s"%(x.field.getName(), self.extract("*")[x.field.getName()])
+                         for x in self.schema)
+
+    def __repr__(self):
+        return "%s\n%s" % (type(self), str(self))
+
 
 class Catalog(with_metaclass(TemplateMeta, object)):
 
