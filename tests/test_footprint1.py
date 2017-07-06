@@ -747,6 +747,22 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(fpTarget.getArea(), fpTarget2.getArea())
         self.assertEqual(fpTarget.getArea(), fpTarget3.getArea())
 
+        # Test that peakCatalogs get Transformed correctly
+        truthList = [(x, y, 10) for x, y in zip(range(-2, 2), range(-1, 3))]
+        for value in truthList:
+            fpSource.addPeak(*value)
+        scaleFactor = 2
+        linTrans = afwGeom.LinearTransform(np.matrix([[scaleFactor, 0],
+                                                      [0, scaleFactor]],
+                                                     dtype=float))
+        linTransFootprint = fpSource.transform(linTrans, fpSource.getBBox(),
+                                               False)
+        for peak, truth in zip(linTransFootprint.peaks, truthList):
+            # Multiplied by two because that is the linear transform scaling
+            # factor
+            self.assertEqual(peak.getIx(), truth[0]*scaleFactor)
+            self.assertEqual(peak.getIy(), truth[1]*scaleFactor)
+
     def testCopyWithinFootprintImage(self):
         W, H = 10, 10
         dims = afwGeom.Extent2I(W, H)
