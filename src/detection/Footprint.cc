@@ -102,7 +102,7 @@ std::shared_ptr<Footprint> Footprint::transform(geom::XYTransform const& t, geom
     // now populate the new Footprint with transformed Peaks
     for (auto const& peak : getPeaks()) {
         // Transform the x y Point
-        auto newPoint = t.forwardTransform(geom::Point2D(peak.getFx(), peak.getFx()));
+        auto newPoint = t.forwardTransform(peak.getF());
         newFootprint->addPeak(newPoint.getX(), newPoint.getY(), peak.getPeakValue());
     }
     if (doClip) {
