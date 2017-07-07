@@ -66,14 +66,14 @@ void declareMethodTemplates(PyClass &cls) {
 // where <X> and <Y> are the name of the from endpoint and to endpoint class, respectively,
 // for example TransformFromGenericToPoint2
 template <class FromEndpoint, class ToEndpoint>
-void declareTransform(py::module &mod, std::string const &fromName, std::string const &toName) {
+void declareTransform(py::module &mod) {
     using Class = Transform<FromEndpoint, ToEndpoint>;
     using ToPoint = typename ToEndpoint::Point;
     using ToArray = typename ToEndpoint::Array;
     using FromPoint = typename FromEndpoint::Point;
     using FromArray = typename FromEndpoint::Array;
 
-    std::string const pyClassName = "Transform" + fromName + "To" + toName;
+    std::string const pyClassName = Class::getShortClassName();
 
     py::class_<Class, std::shared_ptr<Class>> cls(mod, pyClassName.c_str());
 
@@ -97,6 +97,7 @@ void declareTransform(py::module &mod, std::string const &fromName, std::string 
     /* Need some extra handling of ndarray return type in Python to prevent dimensions
      * of length 1 from being deleted */
     cls.def("_getJacobian", &Class::getJacobian);
+    // Do not wrap getShortClassName because it returns the name of the class;
 
     declareMethodTemplates<FromEndpoint, ToEndpoint, GenericEndpoint>(cls);
     declareMethodTemplates<FromEndpoint, ToEndpoint, Point2Endpoint>(cls);
@@ -121,15 +122,15 @@ PYBIND11_PLUGIN(transform) {
         return nullptr;
     }
 
-    declareTransform<GenericEndpoint, GenericEndpoint>(mod, "Generic", "Generic");
-    declareTransform<GenericEndpoint, Point2Endpoint>(mod, "Generic", "Point2");
-    declareTransform<GenericEndpoint, IcrsCoordEndpoint>(mod, "Generic", "IcrsCoord");
-    declareTransform<Point2Endpoint, GenericEndpoint>(mod, "Point2", "Generic");
-    declareTransform<Point2Endpoint, Point2Endpoint>(mod, "Point2", "Point2");
-    declareTransform<Point2Endpoint, IcrsCoordEndpoint>(mod, "Point2", "IcrsCoord");
-    declareTransform<IcrsCoordEndpoint, GenericEndpoint>(mod, "IcrsCoord", "Generic");
-    declareTransform<IcrsCoordEndpoint, Point2Endpoint>(mod, "IcrsCoord", "Point2");
-    declareTransform<IcrsCoordEndpoint, IcrsCoordEndpoint>(mod, "IcrsCoord", "IcrsCoord");
+    declareTransform<GenericEndpoint, GenericEndpoint>(mod);
+    declareTransform<GenericEndpoint, Point2Endpoint>(mod);
+    declareTransform<GenericEndpoint, IcrsCoordEndpoint>(mod);
+    declareTransform<Point2Endpoint, GenericEndpoint>(mod);
+    declareTransform<Point2Endpoint, Point2Endpoint>(mod);
+    declareTransform<Point2Endpoint, IcrsCoordEndpoint>(mod);
+    declareTransform<IcrsCoordEndpoint, GenericEndpoint>(mod);
+    declareTransform<IcrsCoordEndpoint, Point2Endpoint>(mod);
+    declareTransform<IcrsCoordEndpoint, IcrsCoordEndpoint>(mod);
 
     return mod.ptr();
 }

@@ -148,6 +148,13 @@ Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const
 }
 
 template <class FromEndpoint, class ToEndpoint>
+std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
+    std::ostringstream os;
+    os << "Transform" << FromEndpoint::getClassPrefix() << "To" << ToEndpoint::getClassPrefix();
+    return os.str();
+}
+
+template <class FromEndpoint, class ToEndpoint>
 template <class NextToEndpoint>
 Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::then(
         Transform<ToEndpoint, NextToEndpoint> const &next) const {

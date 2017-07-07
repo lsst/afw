@@ -218,6 +218,16 @@ public:
     template <class NextToEndpoint>
     Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next) const;
 
+    /**
+     * Return a short version of the class name with no punctuation
+     *
+     * Used as the Python class name and for persistence as a string
+     *
+     * Returns "Transform" + fromEndpoint.getClassPrefix() + "To" + toEndpoint.getClassPrefix(),
+     * for example "TransformPoint2ToIcrsCoord" or "TransformPoint2ToGeneric".
+     */
+    static std::string getShortClassName();
+
 protected:
     /**
     Construct a Transform from a shared pointer to a FrameSet
