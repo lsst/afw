@@ -329,6 +329,9 @@ struct PersistenceHelper {
 
 class ChebyshevBoundedFieldFactory : public table::io::PersistableFactory {
 public:
+    explicit ChebyshevBoundedFieldFactory(std::string const& name)
+            : afw::table::io::PersistableFactory(name) {}
+
     virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                          CatalogVector const& catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
@@ -344,8 +347,6 @@ public:
         ndarray::flatten<1>(coefficients) = record.get(keys.coefficients);
         return std::make_shared<ChebyshevBoundedField>(bbox, coefficients);
     }
-
-    ChebyshevBoundedFieldFactory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
 };
 
 std::string getChebyshevBoundedFieldPersistenceName() { return "ChebyshevBoundedField"; }
@@ -373,7 +374,7 @@ void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
 
 // ------------------ operators -----------------------------------------------------------------------------
 
-PTR(BoundedField) ChebyshevBoundedField::operator*(double const scale) const {
+std::shared_ptr<BoundedField> ChebyshevBoundedField::operator*(double const scale) const {
     return std::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients()*scale));
 }
 
