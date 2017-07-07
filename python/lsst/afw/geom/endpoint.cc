@@ -42,7 +42,7 @@ namespace geom {
 namespace {
 
 /*
-Add `__str__` and `__repr__` methods to an Endpoint pybind11 wrapper
+Add `__str__`, `__repr__` and `getClassPrefix` methods to an Endpoint pybind11 wrapper
 
 str(self) = "GenericEndpoint(_nAxes_)" for GenericEndpoint, e.g. "GenericEndpoint(4)";
             "_typeName_()" for all other Endpoint classes, e.g. "IcrsCoordEndpoint()",
@@ -61,6 +61,7 @@ void addStrAndRepr(PyClass& cls) {
         os << "lsst.afw.geom." << self;
         return os.str();
     });
+    cls.def_static("getClassPrefix", &Class::getClassPrefix);
 }
 
 /*
