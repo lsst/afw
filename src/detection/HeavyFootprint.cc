@@ -293,6 +293,8 @@ public:
                                                               CatalogVector const& catalogs) const {
         HeavyFootprintPersistenceHelper<ImagePixelT, MaskPixelT, VariancePixelT> const& keys =
                 HeavyFootprintPersistenceHelper<ImagePixelT, MaskPixelT, VariancePixelT>::get();
+        HeavyFootprintPersistenceHelper<ImagePixelT, std::uint16_t, VariancePixelT> const& legacyKeys =
+                HeavyFootprintPersistenceHelper<ImagePixelT, std::uint16_t, VariancePixelT>::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 3u);
 
         // Read in the SpanSet into a new Footprint object
@@ -305,7 +307,14 @@ public:
         auto result =
                 std::make_shared<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>>(*loadedFootprint);
         result->_image = ndarray::const_array_cast<ImagePixelT>(record.get(keys.image));
-        result->_mask = ndarray::const_array_cast<MaskPixelT>(record.get(keys.mask));
+
+        // Handle legacy Masks prior to change to int32
+        if (catalogs[2].getSchema() == legacyKeys.schema) {
+            auto legacyMask = ndarray::const_array_cast<std::uint16_t>(record.get(legacyKeys.mask));
+            result->_mask.deep() = legacyMask;
+        } else {
+            result->_mask = ndarray::const_array_cast<MaskPixelT>(record.get(keys.mask));
+        }
         result->_variance = ndarray::const_array_cast<VariancePixelT>(record.get(keys.variance));
         return result;
     }
