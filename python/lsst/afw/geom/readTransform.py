@@ -21,28 +21,22 @@
 #
 from __future__ import absolute_import, division, print_function
 
-import astshim
-
 from .python import transformRegistry
 
 __all__ = ["readTransform"]
 
 
-def readTransform(path):
-    """Read a Transform from a file that was saved using Transform method `saveToFile`
-    """
-    with open(path, "r") as inFile:
-        transformClassName = inFile.readline().strip()
-        try:
-            transformClass = transformRegistry[transformClassName]
-        except LookupError:
-            raise RuntimeError("Unknown transform class %r specified in file %r" %
-                               (transformClassName, path))
+def readTransform(data):
+    """Read a Transform from a string that was saved using
+    Transform.writeString
 
-        frameSetStr = inFile.read()
-        stream = astshim.StringStream(frameSetStr)
-        frameSet = astshim.Channel(stream).read()
-        if not isinstance(frameSet, astshim.FrameSet):
-            raise RuntimeError("Found astshim object of type %s instead of FrameSet in file %r" %
-                               (type(frameSet).__name, path))
-        return transformClass(frameSet)
+    Unlike Transform.readString, you need not know the Transform class in
+    advance
+    """
+    version, transformClassName, remainder = data.split(" ", 2)
+    try:
+        transformClass = transformRegistry[transformClassName]
+    except LookupError:
+        raise RuntimeError("Unknown transform class %r" % (transformClassName,))
+
+    return transformClass.readString(data)

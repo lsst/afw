@@ -32,6 +32,7 @@
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
+#include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/SkyWcs.h"
@@ -211,6 +212,27 @@ std::pair<double, double> SkyWcs::skyToPixel(Angle const& ra, Angle const& dec) 
     auto pixel = applyInverse(coord::IcrsCoord(ra, dec));
     return std::pair<double, double>(pixel[0], pixel[1]);
 };
+
+std::string SkyWcs::getShortClassName() { return "SkyWcs"; };
+
+SkyWcs SkyWcs::readStream(std::istream &is) {
+    return detail::readStream<SkyWcs>(is);
+}
+
+SkyWcs SkyWcs::readString(std::string & str) {
+    std::istringstream is(str);
+    return SkyWcs::readStream(is);
+}
+
+void SkyWcs::writeStream(std::ostream &os) const {
+    detail::writeStream<SkyWcs>(*this, os);
+}
+
+std::string SkyWcs::writeString() const {
+    std::ostringstream os;
+    writeStream(os);
+    return os.str();
+}
 
 SkyWcs::SkyWcs(std::shared_ptr<ast::FrameSet>&& frameSet)
         : Transform<Point2Endpoint, IcrsCoordEndpoint>(std::move(frameSet)){};

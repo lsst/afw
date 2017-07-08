@@ -86,6 +86,11 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def("skyToPixel",
             (std::vector<Point2D>(SkyWcs::*)(std::vector<coord::IcrsCoord> const &) const) & SkyWcs::skyToPixel,
             "sky"_a);
+    // Do not wrap getShortClassName because it returns the name of the class;
+    // use `<class>.__name__` or `type(<instance>).__name__` instead.
+    // Do not wrap readStream or writeStream because C++ streams are not easy to wrap.
+    cls.def_static("readString", &SkyWcs::readString);
+    cls.def("writeString", &SkyWcs::writeString);
 
     return mod.ptr();
 }

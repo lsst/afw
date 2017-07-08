@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "astshim.h"
+#include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/pex/exceptions/Exception.h"
@@ -151,6 +152,29 @@ template <class FromEndpoint, class ToEndpoint>
 std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
     std::ostringstream os;
     os << "Transform" << FromEndpoint::getClassPrefix() << "To" << ToEndpoint::getClassPrefix();
+    return os.str();
+}
+
+template <class FromEndpoint, class ToEndpoint>
+Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readStream(std::istream &is) {
+    return detail::readStream<Transform<FromEndpoint, ToEndpoint>>(is);
+}
+
+template <class FromEndpoint, class ToEndpoint>
+Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readString(std::string & str) {
+    std::istringstream is(str);
+    return Transform<FromEndpoint, ToEndpoint>::readStream(is);
+}
+
+template <class FromEndpoint, class ToEndpoint>
+void Transform<FromEndpoint, ToEndpoint>::writeStream(std::ostream &os) const {
+    detail::writeStream<Transform<FromEndpoint, ToEndpoint>>(*this, os);
+}
+
+template <class FromEndpoint, class ToEndpoint>
+std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
+    std::ostringstream os;
+    writeStream(os);
     return os.str();
 }
 

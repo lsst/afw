@@ -725,6 +725,9 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             self.checkPersistence(transform)
 
             frameSetCopy = transform.getFrameSet()
+            transformCopy = TransformClass(frameSetCopy)
+            self.assertEqual(type(transform), type(transformCopy))
+            self.assertEqual(transform.getFrameSet(), transformCopy.getFrameSet())
 
             desNFrame = 4  # desired number of frames
             self.assertEqual(frameSet.nFrame, desNFrame)
@@ -971,13 +974,27 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         """Check persistence of a transform
         """
         className = type(transform).__name__
-        fileName = "persisted_{}.dat".format(className)
-        filePath = os.path.join(self.getTestDir(), fileName)
-        transform.saveToFile(filePath)
-        transformRoundTrip = afwGeom.readTransform(filePath)
-        self.assertEqual(type(transform), type(transformRoundTrip))
-        self.assertEqual(transform.getFrameSet().show(),
-                         transformRoundTrip.getFrameSet().show())
+
+        # check writeString and readString
+        transformStr = transform.writeString()
+        serialVersion, serialClassName, serialRest = transformStr.split(" ", 2)
+        self.assertEqual(int(serialVersion), 1)
+        self.assertEqual(serialClassName, className)
+        badStr1 = " ".join(["2", serialClassName, serialRest])
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            transform.readString(badStr1)
+        badClassName = "x" + serialClassName
+        badStr2 = " ".join(["1", badClassName, serialRest])
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            transform.readString(badStr2)
+        transformFromStr1 = transform.readString(transformStr)
+        self.assertEqual(type(transform), type(transformFromStr1))
+        self.assertEqual(transform.getFrameSet(), transformFromStr1.getFrameSet())
+
+        # check readTransform
+        transformFromStr2 = afwGeom.readTransform(transformStr)
+        self.assertEqual(type(transform), type(transformFromStr2))
+        self.assertEqual(transform.getFrameSet(), transformFromStr2.getFrameSet())
 
         fromEndpoint = transform.fromEndpoint
         toEndpoint = transform.toEndpoint
@@ -991,7 +1008,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             inArray = fromEndpoint.arrayFromData(rawInArray)
             outArray = transform.applyForward(inArray)
             outData = toEndpoint.dataFromArray(outArray)
-            outArrayRoundTrip = transformRoundTrip.applyForward(inArray)
+            outArrayRoundTrip = transformFromStr1.applyForward(inArray)
             outDataRoundTrip = toEndpoint.dataFromArray(outArrayRoundTrip)
             assert_allclose(outData, outDataRoundTrip)
 
@@ -1001,8 +1018,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             outArray = toEndpoint.arrayFromData(rawOutArray)
             inArray = transform.applyInverse(outArray)
             inData = fromEndpoint.dataFromArray(inArray)
-            inArrayRoundTrip = transformRoundTrip.applyInverse(outArray)
+            inArrayRoundTrip = transformFromStr1.applyInverse(outArray)
             inDataRoundTrip = fromEndpoint.dataFromArray(inArrayRoundTrip)
             assert_allclose(inData, inDataRoundTrip)
-        # remove the file (if the test passes)
-        os.remove(filePath)

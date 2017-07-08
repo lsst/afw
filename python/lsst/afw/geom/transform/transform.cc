@@ -98,6 +98,10 @@ void declareTransform(py::module &mod) {
      * of length 1 from being deleted */
     cls.def("_getJacobian", &Class::getJacobian);
     // Do not wrap getShortClassName because it returns the name of the class;
+    // use `<class>.__name__` or `type(<instance>).__name__` instead.
+    // Do not wrap readStream or writeStream because C++ streams are not easy to wrap.
+    cls.def_static("readString", &Class::readString);
+    cls.def("writeString", &Class::writeString);
 
     declareMethodTemplates<FromEndpoint, ToEndpoint, GenericEndpoint>(cls);
     declareMethodTemplates<FromEndpoint, ToEndpoint, Point2Endpoint>(cls);

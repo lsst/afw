@@ -69,11 +69,8 @@ def then(self, next):
 def saveToFile(self, path):
     """Save this @ref pybind11_transform "Transform" to the specified file
     """
-    className = type(self).__name__
-    bodyText = self.getFrameSet().show()
     with open(path, "w") as outFile:
-        outFile.write(className + "\n")
-        outFile.write(bodyText)
+        outFile.write(self.writeString())
 
 
 def addTransformMethods(cls):

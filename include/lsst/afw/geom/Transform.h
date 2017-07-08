@@ -228,6 +228,33 @@ public:
      */
     static std::string getShortClassName();
 
+    /**
+     * Deserialize a Transform of this type from an input stream
+     *
+     * @param[in] is  input stream from which to deserialize this Transform
+     */
+    static Transform<FromEndpoint, ToEndpoint> readStream(std::istream & is);
+
+    /// Deserialize a Transform of this type from a string, using the same format as readStream
+    static Transform<FromEndpoint, ToEndpoint> readString(std::string & str);
+
+    /**
+     * Serialize this Transform to an output stream
+     *
+     * Version 1 format is as follows:
+     * - The version number (an integer)
+     * - A space
+     * - The short class name, as obtained from getShortClassName
+     * - A space
+     * - The contained ast::FrameSet written using FrameSet.show(os, false)
+     *
+     * @param[out] os  outpu stream to which to serialize this Transform
+     */
+    virtual void writeStream(std::ostream & os) const;
+
+    /// Serialize this Transform to a string, using the same format as writeStream
+    virtual std::string writeString() const;
+
 protected:
     /**
     Construct a Transform from a shared pointer to a FrameSet
