@@ -991,8 +991,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.assertEqual(type(transform), type(transformFromStr1))
         self.assertEqual(transform.getFrameSet(), transformFromStr1.getFrameSet())
 
-        # check readTransform
-        transformFromStr2 = afwGeom.readTransform(transformStr)
+        # check transformFromString
+        transformFromStr2 = afwGeom.transformFromString(transformStr)
         self.assertEqual(type(transform), type(transformFromStr2))
         self.assertEqual(transform.getFrameSet(), transformFromStr2.getFrameSet())
 

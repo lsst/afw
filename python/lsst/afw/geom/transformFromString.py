@@ -23,10 +23,10 @@ from __future__ import absolute_import, division, print_function
 
 from .python import transformRegistry
 
-__all__ = ["readTransform"]
+__all__ = ["transformFromString"]
 
 
-def readTransform(data):
+def transformFromString(data):
     """Read a Transform from a string that was saved using
     Transform.writeString
 

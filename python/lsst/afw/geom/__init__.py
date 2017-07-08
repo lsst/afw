@@ -44,4 +44,4 @@ from .endpoint import *
 from .transform import *
 from .transformFactory import *
 from .skyWcs import *
-from .readTransform import *
+from .transformFromString import *
