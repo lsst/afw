@@ -66,12 +66,22 @@ Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&
 
     // Normalize the base frame by temporarily making it the current frame,
     // normalizing the frameset as a frame, then making it the base frame again
-    const int currIndex = frameSet->getCurrent();
+    bool baseWasSet = frameSet->test("Base");
     const int baseIndex = frameSet->getBase();
+    bool currentWasSet = frameSet->test("Current");
+    const int currentIndex = frameSet->getCurrent();
     frameSet->setCurrent(baseIndex);
     _fromEndpoint.normalizeFrame(frameSet);
-    frameSet->setBase(baseIndex);
-    frameSet->setCurrent(currIndex);
+    if (baseWasSet) {
+        frameSet->setBase(baseIndex);
+    } else {
+        frameSet->clear("Base");
+    }
+    if (currentWasSet) {
+        frameSet->setCurrent(currentIndex);
+    } else {
+        frameSet->clear("Current");
+    }
 }
 
 template <class FromEndpoint, class ToEndpoint>
