@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /*
  * LSST Data Management System
- * See COPYRIGHT file at the top of the source tree.
+ * Copyright 2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
