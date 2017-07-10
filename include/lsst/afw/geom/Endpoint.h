@@ -225,6 +225,9 @@ public:
     virtual Point pointFromData(std::vector<double> const &data) const override;
 
     virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
+
+    /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
+    static std::string getClassPrefix() { return "Generic"; };
 };
 
 /**
@@ -274,6 +277,9 @@ public:
     (however, a cartesian CmpFrame ought to simplify to a Frame).
     */
     virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
+
+    /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
+    static std::string getClassPrefix() { return "Point2"; };
 };
 
 /**
@@ -324,6 +330,9 @@ public:
     Check that framePtr points to a SkyFrame and set longitude axis to 0, latitude to 1
     */
     virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
+
+    /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
+    static std::string getClassPrefix() { return "IcrsCoord"; };
 };
 
 /**

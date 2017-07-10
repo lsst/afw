@@ -66,16 +66,6 @@ def then(self, next):
             % (self, next))
 
 
-def saveToFile(self, path):
-    """Save this @ref pybind11_transform "Transform" to the specified file
-    """
-    className = type(self).__name__
-    bodyText = self.getFrameSet().show()
-    with open(path, "w") as outFile:
-        outFile.write(className + "\n")
-        outFile.write(bodyText)
-
-
 def addTransformMethods(cls):
     """Add pure python methods to the specified Transform class, and register
     the class in `transformRegistry`
@@ -96,4 +86,3 @@ def addTransformMethods(cls):
     transformRegistry[cls.__name__] = cls
     cls.getJacobian = getJacobian
     cls.then = then
-    cls.saveToFile = saveToFile

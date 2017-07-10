@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /*
  * LSST Data Management System
- * See COPYRIGHT file at the top of the source tree.
+ * Copyright 2017 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -207,6 +207,35 @@ public:
         return applyInverse(sky);
     }
     //@}
+
+    static std::string getShortClassName();
+
+    /**
+     * Deserialize a SkyWcs from an input stream
+     *
+     * @param[in] is  input stream from which to deserialize this SkyWcs
+     */
+    static SkyWcs readStream(std::istream & is);
+
+    /// Deserialize a SkyWcs from a string, using the same format as readStream
+    static SkyWcs readString(std::string & str);
+
+    /**
+     * Serialize this SkyWcs to an output stream
+     *
+     * Version 1 format is as follows:
+     * - The version number (an integer)
+     * - A space
+     * - The short class name, as obtained from getShortClassName
+     * - A space
+     * - The contained ast::FrameSet written using FrameSet.show(os, false)
+     *
+     * @param[out] os  output stream to which to serialize this SkyWcs
+     */
+    void writeStream(std::ostream & os) const override;
+
+    /// Serialize this SkyWcs to a string, using the same format as writeStream
+    std::string writeString() const override;
 
 private:
     // Construct a SkyWcs from a shared pointer to an ast::FrameSet

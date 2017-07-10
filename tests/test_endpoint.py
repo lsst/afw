@@ -38,6 +38,7 @@ class EndpointTestCase(TransformTestBaseClass):
         self.longMessage = True
 
     def testIcrsCoordEndpoint(self):
+        self.assertEqual("IcrsCoord", afwGeom.IcrsCoordEndpoint.getClassPrefix())
         endpoint = afwGeom.IcrsCoordEndpoint()
         self.checkEndpointBasics(
             endpoint=endpoint, pointType=IcrsCoord, nAxes=2)
@@ -68,6 +69,7 @@ class EndpointTestCase(TransformTestBaseClass):
         self.assertEqual(newFrame.latAxis, 2)
 
     def testPoint2Endpoint(self):
+        self.assertEqual("Point2", afwGeom.Point2Endpoint.getClassPrefix())
         endpoint = afwGeom.Point2Endpoint()
         self.checkEndpointBasics(
             endpoint=endpoint, pointType=afwGeom.Point2D, nAxes=2)
@@ -87,6 +89,7 @@ class EndpointTestCase(TransformTestBaseClass):
             endpoint.normalizeFrame(badFrame)
 
     def testGenericEndpoint(self):
+        self.assertEqual("Generic", afwGeom.GenericEndpoint.getClassPrefix())
         for nAxes in (1, 2, 3, 4, 5):
             endpoint = afwGeom.GenericEndpoint(nAxes)
             self.checkEndpointBasics(

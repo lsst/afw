@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "astshim.h"
+#include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/pex/exceptions/Exception.h"
@@ -66,12 +67,22 @@ Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&
 
     // Normalize the base frame by temporarily making it the current frame,
     // normalizing the frameset as a frame, then making it the base frame again
-    const int currIndex = frameSet->getCurrent();
+    bool baseWasSet = frameSet->test("Base");
     const int baseIndex = frameSet->getBase();
+    bool currentWasSet = frameSet->test("Current");
+    const int currentIndex = frameSet->getCurrent();
     frameSet->setCurrent(baseIndex);
     _fromEndpoint.normalizeFrame(frameSet);
-    frameSet->setBase(baseIndex);
-    frameSet->setCurrent(currIndex);
+    if (baseWasSet) {
+        frameSet->setBase(baseIndex);
+    } else {
+        frameSet->clear("Base");
+    }
+    if (currentWasSet) {
+        frameSet->setCurrent(currentIndex);
+    } else {
+        frameSet->clear("Current");
+    }
 }
 
 template <class FromEndpoint, class ToEndpoint>
@@ -135,6 +146,36 @@ Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const
     } catch (std::bad_alloc const &e) {
         std::throw_with_nested(LSST_EXCEPT(pex::exceptions::MemoryError, "Could not allocate Jacobian."));
     }
+}
+
+template <class FromEndpoint, class ToEndpoint>
+std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
+    std::ostringstream os;
+    os << "Transform" << FromEndpoint::getClassPrefix() << "To" << ToEndpoint::getClassPrefix();
+    return os.str();
+}
+
+template <class FromEndpoint, class ToEndpoint>
+Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readStream(std::istream &is) {
+    return detail::readStream<Transform<FromEndpoint, ToEndpoint>>(is);
+}
+
+template <class FromEndpoint, class ToEndpoint>
+Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readString(std::string & str) {
+    std::istringstream is(str);
+    return Transform<FromEndpoint, ToEndpoint>::readStream(is);
+}
+
+template <class FromEndpoint, class ToEndpoint>
+void Transform<FromEndpoint, ToEndpoint>::writeStream(std::ostream &os) const {
+    detail::writeStream<Transform<FromEndpoint, ToEndpoint>>(*this, os);
+}
+
+template <class FromEndpoint, class ToEndpoint>
+std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
+    std::ostringstream os;
+    writeStream(os);
+    return os.str();
 }
 
 template <class FromEndpoint, class ToEndpoint>

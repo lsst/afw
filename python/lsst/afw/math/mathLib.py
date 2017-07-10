@@ -13,6 +13,7 @@ from .spatialCell import *
 from ._boundedField import *
 from ._chebyshevBoundedField import *
 from .chebyshevBoundedFieldConfig import ChebyshevBoundedFieldConfig
+from ._transformBoundedField import *
 from ._leastSquares import *
 from ._random import *
 from ._convolveImage import *

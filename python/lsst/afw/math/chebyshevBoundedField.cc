@@ -73,14 +73,8 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
             py::init<lsst::afw::geom::Box2I const &, ndarray::Array<double const, 2, 2> const &>());
 
     /* Operators */
-    clsChebyshevBoundedField.def("__rmul__",
-                                 [](ChebyshevBoundedField &bf, double const scale) { return bf * scale; },
-                                 py::is_operator());
-    clsChebyshevBoundedField.def("__mul__",
-                                 [](ChebyshevBoundedField &bf, double const scale) { return bf * scale; },
-                                 py::is_operator());
-    clsChebyshevBoundedField.def("__eq__", &BoundedField::operator==, py::is_operator());
-    clsChebyshevBoundedField.def("__ne__", &BoundedField::operator!=, py::is_operator());
+    clsChebyshevBoundedField.def("__mul__", &ChebyshevBoundedField::operator*, py::is_operator());
+    clsChebyshevBoundedField.def("__eq__", &ChebyshevBoundedField::operator==, py::is_operator());
 
     /* Members */
     LSST_DECLARE_CONTROL_FIELD(clsChebyshevBoundedFieldControl, ChebyshevBoundedFieldControl, orderX);
