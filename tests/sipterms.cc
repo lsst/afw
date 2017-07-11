@@ -42,6 +42,11 @@ using namespace std;
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/log/Log.h"
+
+namespace {
+static LOG_LOGGER logger = LOG_GET("test_sipterms");
+}
 
 namespace math = lsst::afw::math;
 namespace afwImg = lsst::afw::image;
@@ -87,14 +92,6 @@ void testSip(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd sip
             afwCoord::Fk5Coord lin = linWcs.pixelToSky(x0 + u + distortX, y0 + v + distortY)->toFk5();
             afwCoord::Fk5Coord sip = sipWcs.pixelToSky(x0 + u, y0 + v)->toFk5();
 
-            if (1) {
-                printf("\n%.1f %.1f : %.3f\n", u, v, distortX);
-                printf("%.7f %.7f \n", lin.getRa().asDegrees(), lin.getDec().asDegrees());
-                printf("%.7f %.7f \n", sip.getRa().asDegrees(), sip.getDec().asDegrees());
-                printf("Diff: %.7f %.7f \n", sip.getRa().asDegrees() - lin.getRa().asDegrees(),
-                       sip.getDec().asDegrees() - lin.getDec().asDegrees());
-            }
-
             BOOST_CHECK_CLOSE(lin.getRa().asDegrees(), sip.getRa().asDegrees(), 1e-7);
             BOOST_CHECK_CLOSE(lin.getDec().asDegrees(), sip.getDec().asDegrees(), 1e-7);
 
@@ -134,14 +131,6 @@ void testSipP(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd si
 
             double distortX = calculateDistortion(sipAp, u, v);
             double distortY = calculateDistortion(sipBp, u, v);
-
-            {
-                printf("\ntestSipP()\n%.7f %.7f\n", ra, dec);
-                printf("%.4f %.4f : %.4f %.4f\n", u, v, distortX, distortY);
-                printf("%.4f %.4f \n", xy[0], xy[1]);
-                printf("%.4f %.4f \n", xySip[0], xySip[1]);
-                printf("Diff: %.4f %.4f \n", xySip[0] - xy[0], xySip[1] - xy[1]);
-            }
 
             BOOST_CHECK_CLOSE(xy[0] + distortX, xySip[0], 1e-4);
             BOOST_CHECK_CLOSE(xy[1] + distortY, xySip[1], 1e-4);
@@ -183,7 +172,7 @@ BOOST_AUTO_TEST_CASE(basic) {
 
     // Test x direction
     //
-    printf("Quadratic in x\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing quadratic in x.");
     // quadratic in x direction
     sipA(2, 0) = 1e-4;
     afwImg::TanWcs sipWcs1(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
@@ -191,14 +180,14 @@ BOOST_AUTO_TEST_CASE(basic) {
     sipA(2, 0) = 0;
 
     // Quadratic in y
-    printf("Quadratic in y\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing quadratic in y.");
     sipA(0, 2) = 1e-4;
     afwImg::TanWcs sipWcs2(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs2, sipA, sipB);
     sipA(0, 2) = 0;
 
     // Cross term
-    printf("Cross terms\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing cross terms.");
     sipA(1, 1) = 1e-4;
     afwImg::TanWcs sipWcs3(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs3, sipA, sipB);
@@ -206,21 +195,21 @@ BOOST_AUTO_TEST_CASE(basic) {
 
     // test y direction
     //
-    printf("Quadratic in y\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing quadratic in y.");
     sipB(2, 0) = 1e-4;
     afwImg::TanWcs sipWcs4(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs4, sipA, sipB);
     sipB(2, 0) = 0;
 
     // Quadratic in y
-    printf("Quadratic in x(y)\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing quadratic in x(y).");
     sipA(0, 2) = 1e-4;
     afwImg::TanWcs sipWcs5(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs5, sipA, sipB);
     sipA(0, 2) = 0;
 
     // Cross term
-    printf("x' = f(x,y)\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing x' = f(x,y).");
     sipA(1, 1) = 1e-4;
     afwImg::TanWcs sipWcs6(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSip(linWcs, sipWcs6, sipA, sipB);
@@ -229,27 +218,27 @@ BOOST_AUTO_TEST_CASE(basic) {
     //
     // Test reverse coeff.
     //
-    printf("inverse 1\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing inverse 1.");
     sipAp(2, 0) = 1.e-4;
     afwImg::TanWcs sipWcs7(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs7, sipAp, sipBp);
     sipAp(2, 0) = 0;
 
     // The linear term is allowed in the reverse matrix
-    printf("inverse 2\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing inverse 2.");
     sipAp(1, 0) = 1.e-4;
     afwImg::TanWcs sipWcs8(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs8, sipAp, sipBp);
     sipAp(1, 0) = 0;
 
-    printf("inverse 3\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing inverse 3.");
     sipBp(2, 0) = 1.e-4;
     afwImg::TanWcs sipWcs9(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs9, sipAp, sipBp);
     sipBp(2, 0) = 0;
 
     // The linear term is allowed in the reverse matrix
-    printf("inverse 4\n");
+    LOG(logger, LOG_LVL_DEBUG, "Testing inverse 4.");
     sipBp(1, 0) = 1.e-4;
     afwImg::TanWcs sipWcs10(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
     testSipP(linWcs, sipWcs10, sipAp, sipBp);
@@ -274,10 +263,6 @@ void createSipTests(afwImg::TanWcs &wcs1, afwImg::TanWcs &wcs2) {
         while (v <= range) {
             afwCoord::Fk5Coord pos1 = wcs1.pixelToSky(x0 + u, y0 + v)->toFk5();
             afwCoord::Fk5Coord pos2 = wcs2.pixelToSky(x0 + u, y0 + v)->toFk5();
-
-            printf("\n%.1f %.1f \n", u, v);
-            printf("%.7f %.7f \n", pos1.getRa().asDegrees(), pos1.getDec().asDegrees());
-            printf("%.7f %.7f \n", pos2.getRa().asDegrees(), pos2.getDec().asDegrees());
 
             BOOST_CHECK_CLOSE(pos1.getRa().asDegrees(), pos2.getRa().asDegrees(), 1e-7);
             BOOST_CHECK_CLOSE(pos1.getDec().asDegrees(), pos2.getDec().asDegrees(), 1e-7);
