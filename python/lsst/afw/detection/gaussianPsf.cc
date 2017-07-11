@@ -48,6 +48,7 @@ PYBIND11_PLUGIN(_gaussianPsf) {
 
     /* Members */
     clsGaussianPsf.def("clone", &GaussianPsf::clone);
+    clsGaussianPsf.def("resized", &GaussianPsf::resized, "width"_a, "height"_a);
     clsGaussianPsf.def("getDimensions", &GaussianPsf::getDimensions);
     clsGaussianPsf.def("getSigma", &GaussianPsf::getSigma);
     clsGaussianPsf.def("isPersistable", &GaussianPsf::isPersistable);

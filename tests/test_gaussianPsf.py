@@ -125,6 +125,21 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.psf.computeKernelImage(lsst.afw.geom.Point2D(0.0, 0.0)).getBBox(),
                          self.psf.computeBBox(lsst.afw.geom.Point2D(0.0, 0.0)))
 
+    def testResized(self):
+        for pad in [0, -10, 10]:
+            newLen = self.kernelSize - pad
+            resizedPsf = self.psf.resized(newLen, newLen)
+            newBBox = resizedPsf.computeBBox()
+            self.assertEqual(newBBox.getWidth(), newLen)
+            self.assertEqual(newBBox.getHeight(), newLen)
+            self.assertEqual(resizedPsf.getSigma(), self.psf.getSigma())
+
+            image = resizedPsf.computeKernelImage()
+            check = makeGaussianImage(newBBox, self.psf.getSigma())
+            self.assertFloatsAlmostEqual(image.getArray(), check.getArray())
+            # tolerance same as in self.testKernelImage
+            self.assertFloatsAlmostEqual(image.getArray().sum(), 1.0, atol=1E-14)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

@@ -107,6 +107,10 @@ std::shared_ptr<afw::detection::Psf> GaussianPsf::clone() const {
     return std::make_shared<GaussianPsf>(_dimensions, _sigma);
 }
 
+std::shared_ptr<afw::detection::Psf> GaussianPsf::resized(int width, int height) const {
+    return std::make_shared<GaussianPsf>(geom::Extent2I(width, height), _sigma);
+}
+
 std::string GaussianPsf::getPersistenceName() const { return "GaussianPsf"; }
 
 std::string GaussianPsf::getPythonModule() const { return "lsst.afw.detection"; }
