@@ -39,6 +39,9 @@ MaskPixel = np.int32
 class Mask(with_metaclass(TemplateMeta, object)):
     TEMPLATE_PARAMS = ("dtype",)
     TEMPLATE_DEFAULTS = (MaskPixel,)
+    STATIC_METHODS = ("readFits", "interpret", "parseMaskPlaneMetadata", "clearMaskPlaneDict",
+                      "addMaskPlane", "removeMaskPlane", "getMaskPlane", "getPlaneBitMask",
+                      "getNumPlanesMax", "getNumPlanesUsed", "addMaskPlanesToMetadata",)
 
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
