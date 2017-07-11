@@ -46,6 +46,7 @@ PYBIND11_PLUGIN(_kernel) {
             clsKernel(mod, "Kernel");
 
     clsKernel.def("clone", &Kernel::clone);
+    clsKernel.def("resized", &Kernel::resized, "width"_a, "height"_a);
     clsKernel.def("computeImage", &Kernel::computeImage, "image"_a, "doNormalize"_a, "x"_a = 0.0,
                   "y"_a = 0.0);
     clsKernel.def("getDimensions", &Kernel::getDimensions);
@@ -89,6 +90,7 @@ PYBIND11_PLUGIN(_kernel) {
     clsFixedKernel.def(py::init<lsst::afw::math::Kernel const &, lsst::afw::geom::Point2D const &>(),
                        "kernel"_a, "pos"_a);
     clsFixedKernel.def("clone", &FixedKernel::clone);
+    clsFixedKernel.def("resized", &FixedKernel::resized, "width"_a, "height"_a);
     clsFixedKernel.def("toString", &FixedKernel::toString, "prefix"_a = "");
     clsFixedKernel.def("getSum", &FixedKernel::getSum);
     clsFixedKernel.def("isPersistable", &FixedKernel::isPersistable);
@@ -106,6 +108,7 @@ PYBIND11_PLUGIN(_kernel) {
                                    std::vector<Kernel::SpatialFunctionPtr> const &>(),
                           "width"_a, "height"_a, "kernelFunction"_a, "spatialFunctionList"_a);
     clsAnalyticKernel.def("clone", &AnalyticKernel::clone);
+    clsAnalyticKernel.def("resized", &AnalyticKernel::resized, "width"_a, "height"_a);
     clsAnalyticKernel.def("computeImage", &AnalyticKernel::computeImage, "image"_a, "doNormalize"_a,
                           "x"_a = 0.0, "y"_a = 0.0);
     clsAnalyticKernel.def("getKernelParameters", &AnalyticKernel::getKernelParameters);
@@ -119,6 +122,7 @@ PYBIND11_PLUGIN(_kernel) {
     clsDeltaFunctionKernel.def(py::init<int, int, lsst::afw::geom::Point2I const &>(), "width"_a, "height"_a,
                                "point"_a);
     clsDeltaFunctionKernel.def("clone", &DeltaFunctionKernel::clone);
+    clsDeltaFunctionKernel.def("resized", &DeltaFunctionKernel::resized, "width"_a, "height"_a);
     clsDeltaFunctionKernel.def("getPixel", &DeltaFunctionKernel::getPixel);
     clsDeltaFunctionKernel.def("toString", &DeltaFunctionKernel::toString, "prefix"_a = "");
     clsDeltaFunctionKernel.def("isPersistable", &DeltaFunctionKernel::isPersistable);
@@ -135,6 +139,7 @@ PYBIND11_PLUGIN(_kernel) {
             py::init<KernelList const &, std::vector<Kernel::SpatialFunctionPtr> const &>(), "kernelList"_a,
             "spatialFunctionList"_a);
     clsLinearCombinationKernel.def("clone", &LinearCombinationKernel::clone);
+    clsLinearCombinationKernel.def("resized", &LinearCombinationKernel::resized, "width"_a, "height"_a);
     clsLinearCombinationKernel.def("getKernelParameters", &LinearCombinationKernel::getKernelParameters);
     clsLinearCombinationKernel.def("getKernelList", &LinearCombinationKernel::getKernelList);
     clsLinearCombinationKernel.def("getKernelSumList", &LinearCombinationKernel::getKernelSumList);
@@ -163,6 +168,7 @@ PYBIND11_PLUGIN(_kernel) {
                            "width"_a, "height"_a, "kernelColFunction"_a, "kernelRowFunction"_a,
                            "spatialFunctionList"_a);
     clsSeparableKernel.def("clone", &SeparableKernel::clone);
+    clsSeparableKernel.def("resized", &SeparableKernel::resized, "width"_a, "height"_a);
     clsSeparableKernel.def("computeVectors", &SeparableKernel::computeVectors);
     clsSeparableKernel.def("getKernelParameter", &SeparableKernel::getKernelParameter);
     clsSeparableKernel.def("getKernelParameters", &SeparableKernel::getKernelParameters);

@@ -76,6 +76,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         self.basicTests(kernel, 3, dimMustMatch=False)
+
+        kernelResized = self.verifyResized(kernel)
+        self.basicTests(kernelResized, 3, dimMustMatch=False)
+
         fArr = np.zeros(
             shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
@@ -111,6 +115,61 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 "Clone was modified by changing original's kernel parameters")
 
         self.verifyCache(kernel, hasCache=False)
+
+    def verifyResized(self, kernel, testClip=True, oddPadRaises=False):
+        """Verify kernels can be resized properly.
+
+        Parameters
+        ----------
+        testClip : bool
+            Test whether a kernel can be safely resized such that one
+            dimension is shorter than original.
+        oddPadRaises : bool
+            Test that attempting to resize by an odd number of pixels raises
+            an InvalidParameterError.
+            Fixed/Delta Kernels cannot be resized by an odd amount because
+            they are padded/clipped rather than reevalutated like Analytic Kernels.
+
+        Returns
+        -------
+        kernelResized: `Kernel`
+            The last resized Kernel that was instantiated and tested
+        """
+
+        kWidth, kHeight = kernel.getDimensions()
+
+        badDims = [(0, 0), (0, 1), (1, 0), (-1, 1), (3, -3)]  # impossible kernel dimensions
+        goodPads = [(0, 0), (4, 2), (2, 4)]  # all kernels can resize by even, non-negative number of pixels
+        oddPads = [(3, 3), (1, 3), (3, 2), (0, 3)]  # at least one padding dimension is odd
+        clippingPads = [(-2, -2), (2, -2), (-2, 2)]  # at least one dimension is smaller than orig
+
+        if oddPadRaises:
+            badDims.extend([(kWidth + w, kHeight + h) for (w, h) in oddPads])
+        else:
+            goodPads.extend(oddPads)
+
+        if testClip:
+            goodPads.extend(clippingPads)
+
+        # Check that error is raised when bad dimensions specified (and optionally odd padding amounts)
+        for badWidth, badHeight in badDims:
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                kernelResized = kernel.resized(badWidth, badHeight)
+
+        # Check that resizing is successful
+        for padX, padY in goodPads:
+            # Do not test if padding will make resized kernel smaller than 0
+            if kWidth <= -padX or kHeight <= -padY:
+                with self.assertRaises(pexExcept.InvalidParameterError):
+                    kernelResized = kernel.resized(kWidth + padX, kHeight + padY)
+            kernelResized = kernel.resized(kWidth + padX, kHeight + padY)
+            self.assertEquals(kernel.getWidth() + padX, kernelResized.getWidth())
+            self.assertEquals(kernel.getHeight() + padY, kernelResized.getHeight())
+            errStr = self.compareResizedKernels(kernel, kernelResized)
+            if errStr:
+                self.fail(errStr)
+
+        return kernelResized
 
     def verifyCache(self, kernel, hasCache=False):
         """Verify the kernel cache
@@ -186,6 +245,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
         self.basicTests(kernel, 0)
 
+        kernelResized = self.verifyResized(kernel, oddPadRaises=True)
+        self.basicTests(kernelResized, 0)
         self.verifyCache(kernel, hasCache=False)
 
     def testFixedKernel(self):
@@ -204,6 +265,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         kernel = afwMath.FixedKernel(inImage)
         self.basicTests(kernel, 0)
+
+        kernelResized = self.verifyResized(kernel, oddPadRaises=True)
+        self.basicTests(kernelResized, 0)
+
         outImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(outImage, False)
 
@@ -244,6 +309,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
         self.assertTrue(kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
+        kernelResized = self.verifyResized(kernel, testClip=False, oddPadRaises=True)
+        self.basicTests(kernelResized, len(kParams))
         for ii in range(len(basisKernelList)):
             kParams = [0.0]*len(basisKernelList)
             kParams[ii] = 1.0
@@ -328,6 +395,9 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
 
+        kernelResized = self.verifyResized(kernel)
+        self.basicTests(kernelResized, len(kParams))
+
         # make sure the linear combination kernel has private copies of its basis kernels
         # by altering the local basis kernels and making sure the new images do
         # NOT match
@@ -369,6 +439,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel = afwMath.SeparableKernel(
             kWidth, kHeight, gaussFunc1, gaussFunc1)
         self.basicTests(kernel, 2)
+
+        kernelResized = self.verifyResized(kernel)
+        self.basicTests(kernelResized, 2)
+
         fArr = np.zeros(
             shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -807,6 +881,44 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 self.fail(kernelDescr +
                           ".computeImage should not have raised an exception")
 
+    def compareResizedKernels(self, kernel1, kernel2):
+        """Compare kernels' parameters and images where overlapping,
+        ignorning sizes and centers.
+
+        return None if they match, else return a string describing
+        all differences.
+        """
+        retStrs = []
+        if kernel1.isSpatiallyVarying() != kernel2.isSpatiallyVarying():
+            retStrs.append("isSpatiallyVarying differs: %s != %s" %
+                           (kernel1.isSpatiallyVarying(), kernel2.isSpatiallyVarying()))
+        retStrs = self._compareParams(kernel1, kernel2, retStrs)
+        if retStrs:
+            return "; ".join(retStrs)
+
+        # New BBox; nothing is being modified.
+        bboxIntersection = kernel1.getBBox()
+        bboxIntersection.clip(kernel2.getBBox())
+
+        im1 = afwImage.ImageD(kernel1.getDimensions())
+        im2 = afwImage.ImageD(kernel2.getDimensions())
+        posList = self._makePositionList(kernel1)
+
+        doNormalize = False
+        for pos in posList:
+            kernel1.computeImage(im1, doNormalize, pos[0], pos[1])
+            kernel2.computeImage(im2, doNormalize, pos[0], pos[1])
+
+            im1Intersection = afwImage.ImageD(im1, bboxIntersection)
+            im2Intersection = afwImage.ImageD(im2, bboxIntersection)
+
+            im1Arr = im1Intersection.getArray()
+            im2Arr = im2Intersection.getArray()
+            if not np.allclose(im1Arr, im2Arr):
+                print("im1Arr =", im1Arr)
+                print("im2Arr =", im2Arr)
+                return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
+
     def compareKernels(self, kernel1, kernel2, compareParams=True, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
 
@@ -828,25 +940,14 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                            (kernel1.isSpatiallyVarying(), kernel2.isSpatiallyVarying()))
 
         if compareParams:
-            if kernel1.getSpatialParameters() != kernel2.getSpatialParameters():
-                retStrs.append("spatial parameters differ: %s != %s" %
-                               (kernel1.getSpatialParameters(), kernel2.getSpatialParameters()))
-            if kernel1.getNSpatialParameters() != kernel2.getNSpatialParameters():
-                retStrs.append("# spatial parameters differs: %s != %s" %
-                               (kernel1.getNSpatialParameters(), kernel2.getNSpatialParameters()))
-            if not kernel1.isSpatiallyVarying() and hasattr(kernel1, "getKernelParameters"):
-                if kernel1.getKernelParameters() != kernel2.getKernelParameters():
-                    retStrs.append("kernel parameters differs: %s != %s" %
-                                   (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
+            retStrs = self._compareParams(kernel1, kernel2, retStrs)
+
         if retStrs:
             return "; ".join(retStrs)
 
         im1 = afwImage.ImageD(kernel1.getDimensions())
         im2 = afwImage.ImageD(kernel2.getDimensions())
-        if kernel1.isSpatiallyVarying():
-            posList = [(0, 0), (200, 0), (0, 200), (200, 200)]
-        else:
-            posList = [(0, 0)]
+        posList = self._makePositionList(kernel1)
 
         for doNormalize in (False, True):
             for pos in posList:
@@ -867,6 +968,25 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 return "changing center of kernel1 to %s changed the center of kernel2 from %s to %s" % \
                     (newCtr1, ctr2, newCtr2)
 
+    def _compareParams(self, kernel1, kernel2, retStrs=None):
+        """!Compare two kernels' Parameters"""
+        if kernel1.getSpatialParameters() != kernel2.getSpatialParameters():
+            retStrs.append("spatial parameters differ: %s != %s" %
+                           (kernel1.getSpatialParameters(), kernel2.getSpatialParameters()))
+        if kernel1.getNSpatialParameters() != kernel2.getNSpatialParameters():
+            retStrs.append("# spatial parameters differs: %s != %s" %
+                           (kernel1.getNSpatialParameters(), kernel2.getNSpatialParameters()))
+        if not kernel1.isSpatiallyVarying() and hasattr(kernel1, "getKernelParameters"):
+            if kernel1.getKernelParameters() != kernel2.getKernelParameters():
+                retStrs.append("kernel parameters differs: %s != %s" %
+                               (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
+        return retStrs
+
+    def _makePositionList(self, kernel1):
+        if kernel1.isSpatiallyVarying():
+            return [(0, 0), (200, 0), (0, 200), (200, 200)]
+        else:
+            return [(0, 0)]
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

@@ -185,6 +185,18 @@ public:
     virtual std::shared_ptr<Kernel> clone() const = 0;
 
     /**
+     * Return a pointer to a clone with specified kernel dimensions
+     *
+     * @param width  Number of columns in pixels
+     * @param height Number of rows in pixels
+     *
+     * @returns a pointer to a clone with new dimensions.
+     *
+     * Must be implemented by derived classes.
+     */
+    virtual std::shared_ptr<Kernel> resized(int width, int height) const = 0;
+
+    /**
      * Compute an image (pixellized representation of the kernel) in place
      *
      * @param image image whose pixels are to be set (output); xy0 of the image will be
@@ -530,6 +542,8 @@ public:
 
     virtual std::shared_ptr<Kernel> clone() const;
 
+    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+
     virtual std::string toString(std::string const &prefix = "") const;
 
     virtual Pixel getSum() const { return _sum; }
@@ -616,6 +630,8 @@ public:
 
     virtual std::shared_ptr<Kernel> clone() const;
 
+    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+
     /**
      * Compute an image (pixellized representation of the kernel) in place
      *
@@ -699,6 +715,8 @@ public:
 
     virtual std::shared_ptr<Kernel> clone() const;
 
+    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
+
     lsst::afw::geom::Point2I getPixel() const { return _pixel; }
 
     virtual std::string toString(std::string const &prefix = "") const;
@@ -781,6 +799,8 @@ public:
     virtual ~LinearCombinationKernel() {}
 
     virtual std::shared_ptr<Kernel> clone() const;
+
+    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
 
     virtual std::vector<double> getKernelParameters() const;
 
@@ -949,6 +969,8 @@ public:
     virtual ~SeparableKernel() {}
 
     virtual std::shared_ptr<Kernel> clone() const;
+
+    virtual std::shared_ptr<Kernel> resized(int width, int height) const;
 
     /**
      * Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)

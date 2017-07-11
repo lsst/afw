@@ -51,6 +51,22 @@ std::shared_ptr<Kernel> DeltaFunctionKernel::clone() const {
     return retPtr;
 }
 
+std::shared_ptr<Kernel> DeltaFunctionKernel::resized(int width, int height) const {
+    int padX = width - getWidth();
+    int padY = height - getHeight();
+    if ((padX % 2) || (padY % 2)) {
+        std::ostringstream os;
+        os << "Cannot resize DeltaFunctionKernel from (" << getWidth() << ", " << getHeight() << ") to ("
+           << width << ", " << height << "), because at least one dimension would change by an odd value.";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+    }
+    int newPixelX = getPixel().getX() + padX/2;
+    int newPixelY = getPixel().getY() + padY/2;
+    std::shared_ptr<Kernel> retPtr = std::make_shared<DeltaFunctionKernel>(
+            width, height, lsst::afw::geom::Point2I(newPixelX, newPixelY));
+    return retPtr;
+}
+
 std::string DeltaFunctionKernel::toString(std::string const& prefix) const {
     const int pixelX = getPixel().getX();  // active pixel in Kernel
     const int pixelY = getPixel().getY();

@@ -59,6 +59,44 @@ std::shared_ptr<Kernel> FixedKernel::clone() const {
     return retPtr;
 }
 
+std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
+    if ((width <= 0) || (height <= 0)) {
+        std::ostringstream os;
+        os << "Cannot create FixedKernel with dimensions (" << width << ", " << height << "). ";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+    }
+    if ((width - getWidth()) % 2 || (height - getHeight()) % 2) {
+        std::ostringstream os;
+        os << "Cannot resize FixedKernel from (" << getWidth() << ", " << getHeight() << ") to ("
+           << width << ", " << height << "), because at least one dimension would change by an odd value.";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+    }
+
+    lsst::afw::geom::Box2I bboxNew(lsst::afw::geom::Point2I((1 - width) / 2, (1 - height) / 2),
+                                   lsst::afw::geom::Extent2I(width, height));
+    std::shared_ptr<image::Image<Pixel>> imNew = std::make_shared<image::Image<Pixel>>(bboxNew);
+
+    // getBBox() instantiates a new BBox from member data _width, _height, _ctrX, _ctrY
+    // so modifying it is OK
+    lsst::afw::geom::Box2I bboxIntersect = getBBox();
+    bboxIntersect.clip(bboxNew);
+
+    // Kernel (this) and member image (this->_image) do not always have same XY0.
+    // Member image of resized kernel will not have same BBox as orig,
+    // but BBox of member image is ignored by the kernel.
+    int offsetX = _image.getX0() - getBBox().getMinX();
+    int offsetY = _image.getY0() - getBBox().getMinY();
+    lsst::afw::geom::Box2I bboxIntersectShifted = lsst::afw::geom::Box2I(
+            lsst::afw::geom::Point2I(bboxIntersect.getMinX() + offsetX,
+                                     bboxIntersect.getMinY() + offsetY),
+            bboxIntersect.getDimensions());
+    image::Image<Pixel> imIntersect = image::Image<Pixel>(_image, bboxIntersectShifted);
+
+    imNew->assign(imIntersect, bboxIntersect);
+    std::shared_ptr<Kernel> retPtr = std::make_shared<FixedKernel>(*imNew);
+    return retPtr;
+}
+
 double FixedKernel::doComputeImage(image::Image<Pixel>& image, bool doNormalize) const {
     double multFactor = 1.0;
     double imSum = this->_sum;
