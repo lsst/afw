@@ -263,6 +263,13 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
                                      heavy2.getVarianceArray(), rtol=0.0, atol=0.0)
         os.remove(filename)
 
+    def testLegacyHeavyFootprintMaskLoading(self):
+        filename = os.path.join(os.path.split(__file__)[0],
+                                "data", "legacyHeavyFootprint.fits")
+        heavyFp = afwDetect.HeavyFootprintF.readFits(filename)
+        self.assertTrue(all(heavyFp.getMaskArray() == 32))
+        self.assertTrue(heavyFp.getMaskArray().dtype == afwImage.MaskPixel)
+
     def testDot(self):
         """Test HeavyFootprint::dot"""
         size = 20, 20
