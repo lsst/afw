@@ -461,7 +461,7 @@ Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::Property
                        afw::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
     // These are the permitted input file types
-    typedef boost::mpl::vector<unsigned char, unsigned short, short> fits_mask_types;
+    typedef boost::mpl::vector<unsigned char, unsigned short, short, std::int32_t> fits_mask_types;
 
     if (!metadata) {
         metadata = std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList);

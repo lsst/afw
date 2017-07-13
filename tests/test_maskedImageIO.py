@@ -69,7 +69,7 @@ class MaskedImageTestCase(unittest.TestCase):
         # Ideally we'd use the standard dictionary and a non-standard file, but
         # a standard file's what we have
         #
-        self.Mask = afwImage.MaskU
+        self.Mask = afwImage.Mask
         mask = self.Mask()
 
         # Store the default mask planes for later use
@@ -151,7 +151,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadNoConform2(self):
         """Check that reading a mask doesn't invalidate the plane dictionary"""
 
-        testMask = afwImage.MaskU(self.fileName, hdu=2)
+        testMask = afwImage.Mask(self.fileName, hdu=2)
 
         mask = self.mi.getMask()
         mask |= testMask
@@ -161,8 +161,8 @@ class MaskedImageTestCase(unittest.TestCase):
         """Check that conforming a mask invalidates the plane dictionary"""
 
         hdu, metadata, bbox, conformMasks = 2, None, afwGeom.Box2I(), True
-        testMask = afwImage.MaskU(self.fileName,
-                                  hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
+        testMask = afwImage.Mask(self.fileName,
+                                 hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         mask = self.mi.getMask()
 

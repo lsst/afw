@@ -22,27 +22,31 @@
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["Mask"]
+__all__ = ["Mask", "MaskPixel"]
 
 from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
-from .mask import MaskU
+from .mask import MaskX
 from ..slicing import supportSlicing
 
-supportSlicing(MaskU)
+supportSlicing(MaskX)
+
+MaskPixel = np.int32
 
 
 class Mask(with_metaclass(TemplateMeta, object)):
+    TEMPLATE_PARAMS = ("dtype",)
+    TEMPLATE_DEFAULTS = (MaskPixel,)
 
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
         return reduceToFits(self)
 
 
-Mask.register(np.uint16, MaskU)
-Mask.alias("U", MaskU)
+Mask.register(MaskPixel, MaskX)
+Mask.alias("X", MaskX)
 
-for cls in (MaskU, ):
+for cls in (MaskX, ):
     supportSlicing(cls)

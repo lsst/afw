@@ -26,6 +26,7 @@
 #include <cstdint>
 
 #include "lsst/afw/math/offsetImage.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
@@ -144,10 +145,10 @@ INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template std::shared_ptr<afwImage::Mask<std::uint16_t>> rotateImageBy90(afwImage::Mask<std::uint16_t> const&,
-                                                                        int);
-template std::shared_ptr<afwImage::Mask<std::uint16_t>> flipImage(afwImage::Mask<std::uint16_t> const&,
-                                                                  bool flipLR, bool flipTB);
+template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
+    rotateImageBy90(afwImage::Mask<afwImage::MaskPixel> const&, int);
+template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
+    flipImage(afwImage::Mask<afwImage::MaskPixel> const&, bool flipLR, bool flipTB);
 /// @endcond
 }
 }

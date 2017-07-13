@@ -441,7 +441,7 @@ class Display(object):
             # Some displays can't display a Mask without an image; so display an Image too,
             # with pixel values set to the mask
             #
-            self._impl._mtv(afwImage.ImageU(data.getArray()), data, wcs, title)
+            self._impl._mtv(afwImage.ImageI(data.getArray()), data, wcs, title)
         # it's a MaskedImage; display Image and overlay Mask
         elif isinstance(data, afwImage.MaskedImage):
             self._impl._mtv(data.getImage(), data.getMask(), wcs, title)

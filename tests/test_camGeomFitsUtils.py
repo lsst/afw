@@ -124,7 +124,7 @@ class FitsUtilsTestCase(unittest.TestCase):
             detBuilder = DetectorBuilder(tmpFile, [tmpFile, ], doRaise=False)
             detBuilder.makeCalib()
             detBuilder.makeExposure(afwImage.ImageF(10, 10),
-                                    afwImage.MaskU(10, 10),
+                                    afwImage.Mask(10, 10),
                                     afwImage.ImageF(10, 10))
 
 

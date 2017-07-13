@@ -26,6 +26,7 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/fits.h"
 
@@ -162,7 +163,7 @@ PYBIND11_PLUGIN(mask) {
         return nullptr;
     }
 
-    declareMask<std::uint16_t>(mod, "U");
+    declareMask<MaskPixel>(mod, "X");
 
     return mod.ptr();
 }

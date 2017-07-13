@@ -34,6 +34,7 @@
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
+#include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
@@ -42,7 +43,7 @@ namespace geom = lsst::afw::geom;
 using namespace std;
 
 typedef float PixelT;
-typedef unsigned short MaskPixelT;
+typedef image::MaskPixel MaskPixelT;
 typedef image::Image<PixelT> ImageT;
 typedef image::Mask<MaskPixelT> MaskT;
 

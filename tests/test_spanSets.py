@@ -199,7 +199,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(unflattened3DArray, truthArray)
 
     def populateMask(self):
-        msk = afwImage.MaskU(10, 10, 1)
+        msk = afwImage.Mask(10, 10, 1)
         spanSetMask = afwGeom.SpanSet.fromShape(3, afwGeom.Stencil.CIRCLE).shiftedBy(5, 5)
         spanSetMask.setMask(msk, 2)
         return msk, spanSetMask
@@ -232,7 +232,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         secondMaskPart = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(3, 8)
         spanSetMaskOperation = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.BOX).shiftedBy(3, 5)
 
-        mask = afwImage.MaskU(20, 20)
+        mask = afwImage.Mask(20, 20)
         firstMaskPart.setMask(mask, 3)
         secondMaskPart.setMask(mask, 3)
         spanSetMaskOperation.setMask(mask, 4)

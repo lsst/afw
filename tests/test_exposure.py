@@ -171,7 +171,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.exposureMiOnly.image = image3
         self.assertImagesEqual(self.exposureMiOnly.image, image3)
 
-        mask3 = afwImage.MaskU(self.exposureMiOnly.getDimensions())
+        mask3 = afwImage.MaskX(self.exposureMiOnly.getDimensions())
         mask3.array[:] = 0x2
         self.exposureMiOnly.mask = mask3
         self.assertMasksEqual(self.exposureMiOnly.mask, mask3)

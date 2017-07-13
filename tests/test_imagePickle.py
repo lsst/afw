@@ -86,7 +86,7 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
                       afwImage.ImageI,
                       afwImage.ImageF,
                       afwImage.ImageD,
-                      afwImage.MaskU,
+                      afwImage.Mask,
                       ):
             image = self.createImage(Image)
             self.checkImages(image)
