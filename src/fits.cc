@@ -1044,7 +1044,7 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
             // because PropertySet::get will return the last value added when multiple values
             // are present and a scalar is requested; in that case, we want the non-inherited
             // value to be added last, so it's the one that takes precedence.
-            std::shared_ptr<daf::base::PropertyList> inherited(new daf::base::PropertyList);
+            auto inherited = std::make_shared<daf::base::PropertyList>();
             fitsfile.readMetadata(*inherited, strip);
             inherited->combine(metadata);
             inherited.swap(metadata);
