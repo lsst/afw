@@ -62,6 +62,9 @@ public:
     /// Polymorphic deep copy; should usually be unnecessary because Psfs are immutable.
     virtual std::shared_ptr<afw::detection::Psf> clone() const;
 
+    /// Return a clone with specified kernel dimensions
+    virtual std::shared_ptr<afw::detection::Psf> resized(int width, int height) const;
+
     /// Return the dimensions of the images returned by computeImage()
     geom::Extent2I getDimensions() const { return _dimensions; }
 

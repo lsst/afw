@@ -43,6 +43,10 @@ public:
         return std::shared_ptr<lsst::afw::detection::Psf>(new DummyPsf(_x));
     }
 
+    virtual std::shared_ptr<lsst::afw::detection::Psf> resized(int width, int height) const {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "Not Implemented");
+    }
+
     virtual bool isPersistable() const { return true; }
 
     double getValue() const { return _x; }
@@ -142,6 +146,7 @@ PYBIND11_PLUGIN(_testTableArchivesLib) {
 
     cls.def("doComputeBBox", &DummyPsf::doComputeBBox);
     cls.def("clone", &DummyPsf::clone);
+    cls.def("resized", &DummyPsf::resized);
     cls.def("isPersistable", &DummyPsf::isPersistable);
     cls.def("getValue", &DummyPsf::getValue);
 

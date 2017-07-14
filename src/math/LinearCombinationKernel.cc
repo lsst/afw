@@ -107,6 +107,23 @@ std::shared_ptr<Kernel> LinearCombinationKernel::clone() const {
     return retPtr;
 }
 
+std::shared_ptr<Kernel> LinearCombinationKernel::resized(int width, int height) const {
+    KernelList kernelList;
+    kernelList.reserve(getKernelList().size());
+    for (const std::shared_ptr<Kernel> &kIter : getKernelList()) {
+        kernelList.push_back(kIter->resized(width, height));
+    }
+
+    std::shared_ptr<Kernel> retPtr;
+    if (isSpatiallyVarying()) {
+        retPtr = std::make_shared<LinearCombinationKernel>(kernelList, _spatialFunctionList);
+    } else {
+        retPtr = std::make_shared<LinearCombinationKernel>(kernelList, _kernelParams);
+    }
+
+    return retPtr;
+}
+
 void LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelList has no elements");

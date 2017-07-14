@@ -64,6 +64,16 @@ std::shared_ptr<Kernel> AnalyticKernel::clone() const {
     return retPtr;
 }
 
+std::shared_ptr<Kernel> AnalyticKernel::resized(int width, int height) const {
+    std::shared_ptr<Kernel> retPtr;
+    if (isSpatiallyVarying()) {
+        retPtr = std::make_shared<AnalyticKernel>(width, height, *_kernelFunctionPtr, _spatialFunctionList);
+    } else {
+        retPtr = std::make_shared<AnalyticKernel>(width, height, *_kernelFunctionPtr);
+    }
+    return retPtr;
+}
+
 double AnalyticKernel::computeImage(image::Image<Pixel> &image, bool doNormalize, double x, double y) const {
     geom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
     image.setXY0(geom::Point2I(-geom::Extent2I(getCtr() + llBorder)));

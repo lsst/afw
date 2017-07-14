@@ -102,6 +102,18 @@ std::shared_ptr<Kernel> SeparableKernel::clone() const {
     return retPtr;
 }
 
+std::shared_ptr<Kernel> SeparableKernel::resized(int width, int height) const {
+    std::shared_ptr<Kernel> retPtr;
+    if (isSpatiallyVarying()) {
+        retPtr = std::make_shared<SeparableKernel>(width, height, *_kernelColFunctionPtr,
+                                                   *_kernelRowFunctionPtr, _spatialFunctionList);
+    } else {
+        retPtr = std::make_shared<SeparableKernel>(width, height, *_kernelColFunctionPtr,
+                                                   *_kernelRowFunctionPtr);
+    }
+    return retPtr;
+}
+
 double SeparableKernel::computeVectors(std::vector<Pixel>& colList, std::vector<Pixel>& rowList,
                                        bool doNormalize, double x, double y) const {
     if (static_cast<int>(colList.size()) != this->getWidth() ||

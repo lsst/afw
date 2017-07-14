@@ -65,6 +65,7 @@ PYBIND11_PLUGIN(_psf) {
 
     /* Members */
     cls.def("clone", &Psf::clone);
+    cls.def("resized", &Psf::resized, "width"_a, "height"_a);
     cls.def("computeImage", &Psf::computeImage, "position"_a = NullPoint, "color"_a = image::Color(),
             "owner"_a = Psf::ImageOwnerEnum::COPY);
     cls.def("computeKernelImage", &Psf::computeKernelImage, "position"_a = NullPoint,

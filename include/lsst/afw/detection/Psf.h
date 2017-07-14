@@ -98,6 +98,16 @@ public:
     virtual std::shared_ptr<Psf> clone() const = 0;
 
     /**
+     *  Return clone with specified kernel dimensions
+     *
+     *  @param[in]  width        Number of columns in pixels
+     *  @param[in]  height       Number of rows in pixels
+     *
+     *  Must be implemented by derived classes.
+     */
+    virtual std::shared_ptr<Psf> resized(int width, int height)  const = 0;
+
+    /**
      *  Return an Image of the PSF, in a form that can be compared directly with star images.
      *
      *  The specified position is a floating point number, and the resulting image will have a Psf
