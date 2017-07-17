@@ -276,7 +276,7 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
             if (archiveWcs) {
                 _wcs = archiveWcs;
             } else {
-                LOGLS_INFO(_log, "Empty WCS extension, using FITS header");
+                LOGLS_DEBUG(_log, "Null WCS seen in binary table");
             }
         } catch (pex::exceptions::NotFoundError& err) {
             auto msg = str(boost::format("Could not read WCS extension; setting to null: %s") % err.what());
