@@ -184,15 +184,13 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         result = photoCalib.instFluxToMagnitude(catalog, self.instFluxKeyName)
         self.assertFloatsAlmostEqual(expectMag, result)
 
-        # test calculations on a sourceCatalog, setting values in the catalog
-        # TODO: see RFC-322 and DM-10155
-        RFC322_implemented = False
-        if RFC322_implemented:
-            photoCalib.instFluxToMaggiesAndMagnitude(self.catalog, self.instFluxKeyName, self.instFluxKeyName)
-            self.assertFloatsAlmostEqual(self.catalog[self.instFluxKeyName+'flux'], expectMaggies[:, 0])
-            self.assertFloatsAlmostEqual(self.catalog[self.instFluxKeyName+'fluxErr'], expectMaggies[:, 1])
-            self.assertFloatsAlmostEqual(self.catalog[self.instFluxKeyName+'magnitude'], expectMag[:, 0])
-            self.assertFloatsAlmostEqual(self.catalog[self.instFluxKeyName+'magnitudeErr'], expectMag[:, 1])
+        photoCalib.instFluxToMagnitude(catalog, self.instFluxKeyName, self.instFluxKeyName)
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_mag'], expectMag[:, 0])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_magErr'], expectMag[:, 1])
+
+        photoCalib.instFluxToMaggies(catalog, self.instFluxKeyName, self.instFluxKeyName)
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_calFlux'], expectMaggies[:, 0])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_calFluxErr'], expectMaggies[:, 1])
 
     def testNonVarying(self):
         """Tests a non-spatially-varying zeropoint."""
