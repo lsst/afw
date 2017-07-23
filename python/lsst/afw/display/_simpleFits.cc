@@ -59,6 +59,7 @@ PYBIND11_PLUGIN(_simpleFits) {
     declareAll<image::Image<float>>(mod);
     declareAll<image::Image<double>>(mod);
     declareAll<image::Mask<std::uint16_t>>(mod);
+    declareAll<image::Mask<image::MaskPixel>>(mod);
 
     return mod.ptr();
 }
