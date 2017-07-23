@@ -615,7 +615,7 @@ class Display(object):
                     interactFinished = self._callbacks[k](k, x, y)
                 except Exception as e:
                     logger.error(
-                        "Display._callbacks[{0}]({0},{1},{2}) failed: {3}".format(k, x, y, e))
+                        "Display._callbacks['{0}']({0},{1},{2}) failed: {3}".format(k, x, y, e))
 
     def setCallback(self, k, func=None, noRaise=False):
         """!Set the callback for key k to be func, returning the old callback
