@@ -115,7 +115,19 @@ def makeUpdatedDetector(ccd):
 
     for amp in ampInfoCatalog:
         assert amp.getHasRawInfo()
-        awidth, aheight = amp.getRawBBox().getDimensions()
+
+        bbox = amp.getRawBBox()
+        awidth, aheight = bbox.getDimensions()
+        #
+        # Figure out how far flipping the amp LR and/or TB offsets the bboxes
+        #
+        boxMin0 = bbox.getMin()     # initial position of rawBBox's LLC corner
+        if amp.getRawFlipX():
+            bbox.flipLR(awidth)
+        if amp.getRawFlipY():
+            bbox.flipTB(aheight)
+        shift = boxMin0 - bbox.getMin()
+
         for bboxName in ("",
                          "HorizontalOverscan",
                          "Data",
@@ -126,7 +138,7 @@ def makeUpdatedDetector(ccd):
                 bbox.flipLR(awidth)
             if amp.getRawFlipY():
                 bbox.flipTB(aheight)
-            bbox.shift(amp.getRawXYOffset())
+            bbox.shift(amp.getRawXYOffset() + shift)
 
             getattr(amp, "setRaw%sBBox" % bboxName)(bbox)
         #
