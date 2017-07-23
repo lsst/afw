@@ -495,6 +495,7 @@ INSTANTIATE_IMAGE(double);
 INSTANTIATE_IMAGE(std::uint64_t);
 
 INSTANTIATE_MASK(std::uint16_t);
+INSTANTIATE_MASK(image::MaskPixel);
 /// @endcond
 }
 }
