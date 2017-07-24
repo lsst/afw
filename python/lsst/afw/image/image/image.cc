@@ -324,6 +324,8 @@ PYBIND11_PLUGIN(image) {
     declareCastConstructor<std::uint64_t, float>(clsImageF);
     declareCastConstructor<std::uint64_t, double>(clsImageD);
 
+    mod.def("bboxFromMetadata", &bboxFromMetadata);
+
     return mod.ptr();
 }
 }

@@ -864,6 +864,13 @@ private:
 
 template <typename PixelT>
 void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
+
+/// Determine the image bounding box from its metadata (FITS header)
+///
+/// Note that this modifies the metadata, stripping the WCS headers that
+/// provide the xy0.
+geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata);
+
 }
 }
 }  // lsst::afw::image

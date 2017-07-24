@@ -170,6 +170,22 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             expNew = afwImage.ExposureF(tmpFile)
             self.assertEqual(expNew.getMetadata().get(keyWord), longString)
 
+    def checkBBoxFromMetadata(self, filename, expected, hdu=0):
+        metadata = afwImage.readMetadata(filename, hdu)
+        bbox = afwImage.bboxFromMetadata(metadata)
+        self.assertEqual(bbox, expected)
+
+    def testBBoxFromMetadata(self):
+        self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_img.fits"),
+                                   afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2112, 4644)))
+        for hdu in range(1, 4):
+            self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_MI.fits"),
+                                       afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2112, 4644)),
+                                       hdu=hdu)
+            self.checkBBoxFromMetadata(os.path.join(dataDir, "medsub.fits"),
+                                       afwGeom.Box2I(afwGeom.Point2I(40, 150), afwGeom.Extent2I(145, 200)),
+                                       hdu=hdu)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
