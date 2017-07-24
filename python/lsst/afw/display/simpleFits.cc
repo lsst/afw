@@ -333,7 +333,25 @@ int write_fits_data(int fd, int bitpix, char *begin, char *end) {
         delete buff;
     }
 
+
     return (nbyte == 0 ? 0 : -1);
+}
+
+void
+addWcs(std::string const & wcsName, std::list<Card> & cards, int x0=0.0, int y0=0.0)
+{
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
+                         x0, "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
+                         y0, "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0,
+                         "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0,
+                         "Row Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
+    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
+    cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
+    cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
 }
 }
 
@@ -365,33 +383,11 @@ void writeBasicFits(int fd,                 // file descriptor to write to
     /*
      * Generate WcsA, pixel coordinates, allowing for X0 and Y0
      */
-    std::string wcsName = "A";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), data.getX0(),
-                         "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), data.getY0(),
-                         "(output) Row pixel of Reference Pixel"));
-    cards.push_back(
-            Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
-    cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+    addWcs("A", cards, data.getX0(), data.getY0());
     /*
      * Now WcsB, so that pixel (0,0) is correctly labelled (but ignoring XY0)
      */
-    wcsName = "B";
-    cards.push_back(
-            Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(
-            Card(str(boost::format("CRVAL2%s") % wcsName), 0, "(output) Row pixel of Reference Pixel"));
-    cards.push_back(
-            Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
-    cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+    addWcs("B", cards);
 
     if (title) {
         cards.push_back(Card("OBJECT", title, "Image being displayed"));
@@ -399,7 +395,9 @@ void writeBasicFits(int fd,                 // file descriptor to write to
     /*
      * Was there something else?
      */
-    if (Wcs != NULL) {
+    if (Wcs == NULL) {
+        addWcs("", cards);              // works around a ds9 bug that WCSA/B is ignored if no Wcs is present
+    } else {
         typedef std::vector<std::string> NameList;
 
         std::shared_ptr<image::Wcs> newWcs = Wcs->clone();  // Create a copy
