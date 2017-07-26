@@ -28,6 +28,8 @@ import unittest
 from builtins import range
 from builtins import zip
 
+import numpy as np
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom as afwGeom
@@ -90,6 +92,18 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 afwGeom.makeIdentityTransform()
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=addBadCameraSys)
+
+        # These break in the pybind layer
+        for crosstalk in ([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],  # 1D and not numpy
+                          np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]),  # 1D, wrong numpy type
+                          np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], dtype=np.float32),  # 1D
+                          ):
+            self.assertRaises(TypeError, DetectorWrapper, crosstalk=crosstalk)
+        # These break in the Detector ctor: wrong shape
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
+                          DetectorWrapper, crosstalk=np.array([[1.0, 2.0], [3.0, 4.0]]))
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
+                          DetectorWrapper, crosstalk=np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
 
     def testTransform(self):
         """Test the transform method

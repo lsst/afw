@@ -26,6 +26,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+
 #include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
@@ -46,6 +49,12 @@ namespace cameraGeom {
 PYBIND11_PLUGIN(_detector) {
     py::module mod("_detector", "Python wrapper for afw _detector library");
 
+    // Need to import numpy for ndarray and eigen conversions
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
+
     /* Module level */
     py::class_<Detector, std::shared_ptr<Detector>> cls(mod, "Detector");
 
@@ -60,9 +69,9 @@ PYBIND11_PLUGIN(_detector) {
     /* Constructors */
     cls.def(py::init<std::string const &, int, DetectorType, std::string const &, geom::Box2I const &,
                      table::AmpInfoCatalog const &, Orientation const &, geom::Extent2D const &,
-                     TransformMap::Transforms const &>(),
+                     TransformMap::Transforms const &, Detector::CrosstalkMatrix const &>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
-            "pixelSize"_a, "transforms"_a);
+            "pixelSize"_a, "transforms"_a, "crosstalk"_a=Detector::CrosstalkMatrix());
 
     /* Operators */
     cls.def("__getitem__",
@@ -92,6 +101,8 @@ PYBIND11_PLUGIN(_detector) {
     cls.def("getAmpInfoCatalog", &Detector::getAmpInfoCatalog);
     cls.def("getOrientation", &Detector::getOrientation);
     cls.def("getPixelSize", &Detector::getPixelSize);
+    cls.def("hasCrosstalk", &Detector::hasCrosstalk);
+    cls.def("getCrosstalk", &Detector::getCrosstalk);
     cls.def("getTransformMap", &Detector::getTransformMap);
     cls.def("hasTransform", (bool (Detector::*)(CameraSys const &) const) & Detector::hasTransform,
             "cameraSys"_a);

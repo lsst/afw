@@ -63,6 +63,8 @@ enum DetectorType {
  */
 class Detector {
 public:
+    typedef ndarray::Array<float const, 2> CrosstalkMatrix;
+
     /**
      * Make a Detector
      *
@@ -77,6 +79,7 @@ public:
      * @param transforms map of CameraSys: afw::geom::Transform, where each
      *                   Transform's forward transform transforms from PIXELS
      *                   to the specified camera system
+     * @param crosstalk matrix of crosstalk coefficients
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if:
      * - any amplifier names are not unique
@@ -89,7 +92,8 @@ public:
     explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                       geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
                       Orientation const &orientation, geom::Extent2D const &pixelSize,
-                      TransformMap::Transforms const &transforms);
+                      TransformMap::Transforms const &transforms,
+                      CrosstalkMatrix const &crosstalk=CrosstalkMatrix());
 
     ~Detector() {}
 
@@ -130,6 +134,14 @@ public:
 
     /** Get the transform registry */
     TransformMap const getTransformMap() const { return _transformMap; }
+
+    /** Have we got crosstalk coefficients? */
+    bool hasCrosstalk() const {
+        return !(_crosstalk.isEmpty() || _crosstalk.getShape() == ndarray::makeVector(0, 0));
+    }
+
+    /** Get the crosstalk coefficients */
+    CrosstalkMatrix const getCrosstalk() const { return _crosstalk; }
 
     /** Get iterator to beginning of amplifier list */
     lsst::afw::table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
@@ -304,6 +316,7 @@ private:
     geom::Extent2D _pixelSize;              ///< pixel size (mm)
     CameraSys _nativeSys;                   ///< native coordinate system of this detector
     TransformMap _transformMap;             ///< registry of coordinate transforms
+    CrosstalkMatrix _crosstalk;             ///< crosstalk coefficients
 };
 }  // namespace cameraGeom
 }  // namespace afw
