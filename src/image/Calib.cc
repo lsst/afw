@@ -158,13 +158,13 @@ inline double convertToFluxErr(double fluxMag0InvSNR, double flux, double magErr
     return flux * std::abs(a) * std::sqrt(1 + std::pow(b / a, 2));
 }
 inline double convertToMag(double fluxMag0, double flux) { return -2.5 * ::log10(flux / fluxMag0); }
-inline void convertToMagWithErr(double* mag, double* magErr, double fluxMag0, double fluxMag0InvSNR,
-                                double flux, double fluxErr) {
-    double const rat = flux / fluxMag0;
-    double const ratErr = ::sqrt((::pow(fluxErr, 2) + ::pow(flux * fluxMag0InvSNR, 2)) / ::pow(fluxMag0, 2));
 
-    *mag = -2.5 * ::log10(rat);
-    *magErr = 2.5 / ::log(10.0) * ratErr / rat;
+inline void convertToMagWithErr(double* mag, double* magErr, double fluxMag0, double fluxMag0Err,
+                                double flux, double fluxErr) {
+    *mag = -2.5*std::log10(flux/fluxMag0);
+    double const x = fluxErr/flux;
+    double const y = fluxMag0Err/fluxMag0;
+    *magErr = (2.5/std::log(10.0))*std::sqrt(x*x + y*y);
 }
 
 }  // anonymous namespace
@@ -233,7 +233,7 @@ std::pair<double, double> Calib::getMagnitude(double const flux, double const fl
     }
 
     double mag, magErr;
-    convertToMagWithErr(&mag, &magErr, _fluxMag0, _fluxMag0Sigma / _fluxMag0, flux, fluxErr);
+    convertToMagWithErr(&mag, &magErr, _fluxMag0, _fluxMag0Sigma, flux, fluxErr);
     return std::make_pair(mag, magErr);
 }
 
@@ -275,7 +275,6 @@ std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> Calib::getMagnit
     ndarray::Array<double, 1>::Iterator magIter = mag.begin();
     ndarray::Array<double, 1>::Iterator magErrIter = magErr.begin();
     int nonPositive = 0;
-    double fluxMag0InvSNR = _fluxMag0Sigma / _fluxMag0;
     for (; fluxIter != flux.end(); ++fluxIter, ++fluxErrIter, ++magIter, ++magErrIter) {
         if (isNegativeFlux(*fluxIter, false)) {
             ++nonPositive;
@@ -285,7 +284,7 @@ std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> Calib::getMagnit
             continue;
         }
         double f, df;
-        convertToMagWithErr(&f, &df, _fluxMag0, fluxMag0InvSNR, *fluxIter, *fluxErrIter);
+        convertToMagWithErr(&f, &df, _fluxMag0, _fluxMag0Sigma, *fluxIter, *fluxErrIter);
         *magIter = f;
         *magErrIter = df;
     }

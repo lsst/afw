@@ -173,10 +173,10 @@ public:
      *             (sourceRecord.get('x'), sourceRecord.get('y')) (pixels) to maggies and maggie error.
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
-     * @param[in]  instFluxField The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
+     * @param[in]  instFluxField The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
      * exist.
-     *                           For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     * "PsfFlux_instFluxErr"
+     *                           For example: instFluxField = "PsfFlux" -> "PsfFlux_flux",
+     * "PsfFlux_fluxSigma"
      *
      * @returns    The flux in maggies and error (err) for this source.
      */
@@ -188,10 +188,10 @@ public:
      *             (sourceCatalog.get('x'), sourceCatalog.get('y')) (pixels) to maggies.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
-     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
+     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
      * exist.
-     *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     * "PsfFlux_instFluxErr"
+     *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_flux",
+     * "PsfFlux_fluxSigma"
      *
      * @returns    The flux in maggies and error (err) for this source.
      */
@@ -204,12 +204,12 @@ public:
      *             and write the results back to sourceCatalog[outField_mag].
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
-     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
+     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
      * exist.
-     *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     * "PsfFlux_instFluxErr"
+     *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_flux",
+     * "PsfFlux_fluxSigma"
      * @param[in]  outField       The field to write the maggies and maggie errors to.
-     *                            Keys of the form "*_flux" and "*_fluxErr" must exist in the schema.
+     *                            Keys of the form "*_flux" and "*_fluxSigma" must exist in the schema.
      *
      * @warning Not implemented yet: See DM-10155.
      */
@@ -253,10 +253,10 @@ public:
      *             (sourceRecord.get('x'), sourceRecord.get('y')) (pixels) to AB magnitude.
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
-     * @param[in]  instFluxField The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
+     * @param[in]  instFluxField The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
      * exist.
      *                           For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     * "PsfFlux_instFluxErr"
+     * "PsfFlux_fluxSigma"
      *
      * @returns    The magnitude and magnitude error for this source.
      */
@@ -268,10 +268,10 @@ public:
      *             (sourceCatalog.get('x'), sourceCatalog.get('y')) (pixels) to AB magnitudes.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
-     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
+     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
      * exist.
      *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     * "PsfFlux_instFluxErr"
+     * "PsfFlux_fluxSigma"
      *
      * @returns    The magnitudes and magnitude errors for the sources.
      */
@@ -284,12 +284,12 @@ public:
      *             and write the results back to sourceCatalog[outField_mag].
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
-     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_instFlux" and "*_instFluxErr" must
+     * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
      * exist.
      *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_instFlux",
-     * "PsfFlux_instFluxErr"
+     * "PsfFlux_fluxSigma"
      * @param[in]  outField       The field to write the magnitudes and magnitude errors to.
-     *                            Keys of the form "*_flux", "*_fluxErr", *_mag", and "*_magErr"
+     *                            Keys of the form "*_flux", "*_fluxSigma", *_mag", and "*_magErr"
      *                            must exist in the schema.
      *
      * @warning Not implemented yet: See DM-10155.

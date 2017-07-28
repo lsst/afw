@@ -32,6 +32,7 @@
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/math/BoundedField.h"
+#include "lsst/afw/table/io/python.h"
 
 namespace py = pybind11;
 
@@ -43,15 +44,20 @@ namespace afw {
 namespace math {
 namespace {
 
-using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>, lsst::afw::table::io::Persistable>;
+using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>,
+                           afw::table::io::PersistableFacade<BoundedField>,
+                           afw::table::io::Persistable>;
 
 template <typename PixelT>
 void declareTemplates(PyClass &cls) {
-    cls.def("fillImage", &BoundedField::fillImage<PixelT>, "image"_a, "overlapOnly"_a = false);
+    cls.def("fillImage", &BoundedField::fillImage<PixelT>,
+            "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
     cls.def("addToImage", &BoundedField::addToImage<PixelT>, "image"_a, "scaleBy"_a = 1.0,
-            "overlapOnly"_a = false);
-    cls.def("multiplyImage", &BoundedField::multiplyImage<PixelT>, "image"_a, "overlapOnly"_a = false);
-    cls.def("divideImage", &BoundedField::divideImage<PixelT>, "image"_a, "overlapOnly"_a = false);
+            "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
+    cls.def("multiplyImage", &BoundedField::multiplyImage<PixelT>,
+            "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
+    cls.def("divideImage", &BoundedField::divideImage<PixelT>,
+            "image"_a, "overlapOnly"_a = false, "xStep"_a = 1, "yStep"_a = 1);
 }
 
 PYBIND11_PLUGIN(_boundedField) {
@@ -62,13 +68,14 @@ PYBIND11_PLUGIN(_boundedField) {
         return nullptr;
     };
 
+    afw::table::io::python::declarePersistableFacade<BoundedField>(mod, "BoundedField");
     PyClass cls(mod, "BoundedField");
 
     cls.def("__rmul__", [](BoundedField &bf, double const scale) { return bf * scale; }, py::is_operator());
-    cls.def("__mul__", &BoundedField::operator*);
-    cls.def("__truediv__", &BoundedField::operator/);
-    cls.def("__eq__", &BoundedField::operator==);
-    cls.def("__ne__", &BoundedField::operator!=);
+    cls.def("__mul__", &BoundedField::operator*, py::is_operator());
+    cls.def("__truediv__", &BoundedField::operator/, py::is_operator());
+    cls.def("__eq__", &BoundedField::operator==, py::is_operator());
+    cls.def("__ne__", &BoundedField::operator!=, py::is_operator());
 
     cls.def("evaluate", (double (BoundedField::*)(double, double) const) & BoundedField::evaluate);
     cls.def("evaluate",

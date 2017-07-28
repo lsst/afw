@@ -39,8 +39,8 @@ namespace py = pybind11;
 
 using namespace lsst::afw::math;
 
-using ClsField = py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField,
-                lsst::afw::table::io::PersistableFacade<ChebyshevBoundedField>>;
+using ClsField = py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>,
+                            BoundedField>;
 
 template <typename PixelT>
 void declareTemplates(ClsField & cls) {
@@ -58,8 +58,6 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     };
 
     /* Module level */
-    lsst::afw::table::io::python::declarePersistableFacade<ChebyshevBoundedField>(mod,
-                                                                                  "ChebyshevBoundedField");
     py::class_<ChebyshevBoundedFieldControl> clsChebyshevBoundedFieldControl(mod,
                                                                              "ChebyshevBoundedFieldControl");
     ClsField clsChebyshevBoundedField(mod, "ChebyshevBoundedField");
@@ -72,9 +70,8 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     clsChebyshevBoundedField.def(
             py::init<lsst::afw::geom::Box2I const &, ndarray::Array<double const, 2, 2> const &>());
 
-    /* Operators */
-    clsChebyshevBoundedField.def("__mul__", &ChebyshevBoundedField::operator*, py::is_operator());
-    clsChebyshevBoundedField.def("__eq__", &ChebyshevBoundedField::operator==, py::is_operator());
+    /* Operators are defined only in the BoundedField base class;
+       we let Python inheritance provide them here. */
 
     /* Members */
     LSST_DECLARE_CONTROL_FIELD(clsChebyshevBoundedFieldControl, ChebyshevBoundedFieldControl, orderX);
