@@ -89,6 +89,13 @@ class BaseRecord:
                 d[name] = self.get(schemaItem.key)
         return d
 
+    def __str__(self):
+        return '\n'.join("%s: %s"%(x.field.getName(), self.extract("*")[x.field.getName()])
+                         for x in self.schema)
+
+    def __repr__(self):
+        return "%s\n%s" % (type(self), str(self))
+
 
 class Catalog(with_metaclass(TemplateMeta, object)):
 
@@ -314,6 +321,21 @@ class Catalog(with_metaclass(TemplateMeta, object)):
             return getattr(self.table, name)
         except AttributeError:
             return getattr(self.columns, name)
+
+    def __str__(self):
+        if self.isContiguous():
+            return str(self.asAstropy())
+        else:
+            fields = ' '.join(x.field.getName() for x in self.schema)
+            string = "Non-contiguous afw.Catalog of %d rows.\ncolumns: %s" % (len(self), fields)
+            return string
+
+    def __repr__(self):
+        return "%s\n%s" % (type(self), self)
+
+    def _repr_html_(self):
+        """To allow pretty-printed HTML in jupyter notebooks."""
+        return self.asAstropy()._repr_html_()
 
 
 Catalog.register("Base", BaseCatalog)
