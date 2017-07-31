@@ -175,6 +175,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         bbox = afwImage.bboxFromMetadata(metadata)
         self.assertEqual(bbox, expected)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBBoxFromMetadata(self):
         self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_img.fits"),
                                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2112, 4644)))
