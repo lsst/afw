@@ -21,14 +21,14 @@
 #
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["Catalog"]
-
 from future.utils import with_metaclass
 
 import numpy as np
 
 from lsst.utils import continueClass, TemplateMeta
 from .base import BaseRecord, BaseCatalog
+
+__all__ = ["Catalog"]
 
 
 @continueClass
@@ -88,6 +88,13 @@ class BaseRecord:
             else:
                 d[name] = self.get(schemaItem.key)
         return d
+
+    def __str__(self):
+        return '\n'.join("%s: %s"%(x.field.getName(), self.extract("*")[x.field.getName()])
+                         for x in self.schema)
+
+    def __repr__(self):
+        return "%s\n%s" % (type(self), str(self))
 
 
 class Catalog(with_metaclass(TemplateMeta, object)):
@@ -321,5 +328,15 @@ class Catalog(with_metaclass(TemplateMeta, object)):
         except AttributeError:
             return getattr(self.columns, name)
 
+    def __str__(self):
+        if self.isContiguous():
+            return str(self.asAstropy())
+        else:
+            fields = ' '.join(x.field.getName() for x in self.schema)
+            string = "Non-contiguous afw.Catalog of %d rows.\ncolumns: %s" % (len(self), fields)
+            return string
+
+    def __repr__(self):
+        return "%s\n%s" % (type(self), self)
 
 Catalog.register("Base", BaseCatalog)
