@@ -185,6 +185,32 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         self.assertRaises(KeyError, operator.getitem, v1, "a4")
         self.assertRaises(KeyError, operator.getitem, v1, "a6")
 
+    def testVariableLengthArray(self):
+        """Variable-length arrays have 0-size in the schema, and can't be made
+        into an astropy view, but should be gracefully skipped."""
+        schema = lsst.afw.table.Schema()
+        schema.addField("a1", type=np.float64, units="meter", doc="a1 (meter)")
+        schema.addField("array1", doc="integer", units="arcsecond", type="ArrayI", size=0)
+        schema.addField("array2", doc="double-precision", units="count", type="ArrayD")
+        schema.addField("arrayOk", doc="not-variable-length", units="meter", type="ArrayD", size=3)
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.addNew()
+        with self.assertRaises(ValueError) as cm:
+            catalog.asAstropy(unviewable="raise")
+        self.assertIn("Cannot extract variable-length array fields", str(cm.exception))
+        v1 = catalog.asAstropy(unviewable="skip")
+        # NOTE: Just check that the columns are included or not in the output:
+        # the above tests do a good job checking that "safe" arrays work.
+        self.assertIn("a1", v1.columns)
+        self.assertNotIn("array1", v1.columns)
+        self.assertNotIn("array2", v1.columns)
+        self.assertIn("arrayOk", v1.columns)
+        v1 = catalog.asAstropy(unviewable="copy")
+        self.assertIn("a1", v1.columns)
+        self.assertNotIn("array1", v1.columns)
+        self.assertNotIn("array2", v1.columns)
+        self.assertIn("arrayOk", v1.columns)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

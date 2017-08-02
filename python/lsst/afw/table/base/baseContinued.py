@@ -269,6 +269,12 @@ class Catalog(with_metaclass(TemplateMeta, object)):
                 unit = "radian"
                 if copy:
                     data = data.copy()
+            elif "Array" in key.getTypeString() and key.isVariableLength():
+                # Can't get columns for variable-length array fields.
+                if unviewable == "raise":
+                    raise ValueError("Cannot extract variable-length array fields unless unviewable='skip'.")
+                elif unviewable == "skip" or unviewable == "copy":
+                    continue
             else:
                 data = self.columns.get(key)
                 if copy:
