@@ -31,7 +31,7 @@ namespace cameraGeom {
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                    geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
                    Orientation const &orientation, geom::Extent2D const &pixelSize,
-                   CameraTransformMap::Transforms const &transforms)
+                   TransformMap::Transforms const &transforms)
         : _name(name),
           _id(id),
           _type(type),
@@ -41,13 +41,14 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
           _ampNameIterMap(),
           _orientation(orientation),
           _pixelSize(pixelSize),
-          _transformMap(CameraSys(PIXELS.getSysName(), name), transforms) {
+          _nativeSys(CameraSys(PIXELS, name)),
+          _transformMap(_nativeSys, transforms) {
     _init();
 }
 
 std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
     std::vector<geom::Point2D> fromVec = geom::Box2D(_bbox).getCorners();
-    return _transformMap.transform(fromVec, _transformMap.getNativeCoordSys(), cameraSys);
+    return _transformMap.transform(fromVec, _nativeSys, cameraSys);
 }
 
 std::vector<geom::Point2D> Detector::getCorners(CameraSysPrefix const &cameraSysPrefix) const {
@@ -55,7 +56,7 @@ std::vector<geom::Point2D> Detector::getCorners(CameraSysPrefix const &cameraSys
 }
 
 CameraPoint Detector::getCenter(CameraSys const &cameraSys) const {
-    CameraPoint ctrPix = makeCameraPoint(geom::Box2D(_bbox).getCenter(), _transformMap.getNativeCoordSys());
+    CameraPoint ctrPix = makeCameraPoint(geom::Box2D(_bbox).getCenter(), _nativeSys);
     return transform(ctrPix, cameraSys);
 }
 
@@ -88,11 +89,11 @@ bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
     return hasTransform(makeCameraSys(cameraSysPrefix));
 }
 
-std::shared_ptr<afw::geom::XYTransform const> Detector::getTransform(CameraSys const &cameraSys) const {
-    return _transformMap[cameraSys];
+std::shared_ptr<TransformMap::Transform> Detector::getTransform(CameraSys const &cameraSys) const {
+    return _transformMap.getTransform(_nativeSys, cameraSys);
 }
 
-std::shared_ptr<afw::geom::XYTransform const> Detector::getTransform(
+std::shared_ptr<TransformMap::Transform> Detector::getTransform(
         CameraSysPrefix const &cameraSysPrefix) const {
     return getTransform(makeCameraSys(cameraSysPrefix));
 }
@@ -109,11 +110,10 @@ void Detector::_init() {
     }
 
     // check detector name in CoordSys in transform registry
-    for (CameraTransformMap::Transforms::const_iterator trIter = _transformMap.begin();
-         trIter != _transformMap.end(); ++trIter) {
-        if (trIter->first.hasDetectorName() && trIter->first.getDetectorName() != _name) {
+    for (CameraSys sys : _transformMap) {
+        if (sys.hasDetectorName() && sys.getDetectorName() != _name) {
             std::ostringstream os;
-            os << "Invalid transformMap: " << trIter->first << " detector name != \"" << _name << "\"";
+            os << "Invalid transformMap: " << sys << " detector name != \"" << _name << "\"";
             throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
         }
     }

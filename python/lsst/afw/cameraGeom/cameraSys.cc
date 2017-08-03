@@ -25,8 +25,6 @@
 #include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
-#include "lsst/afw/geom/TransformMap.h"
-#include "lsst/afw/geom/python/transformMap.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
 namespace py = pybind11;
@@ -76,8 +74,6 @@ PYBIND11_PLUGIN(_cameraSys) {
     /* Module level */
     py::class_<CameraSysPrefix> clsCameraSysPrefix(mod, "CameraSysPrefix");
     py::class_<CameraSys> clsCameraSys(mod, "CameraSys");
-
-    geom::python::declareTransformMap<CameraSys>(mod, "Camera");
 
     // The following must come after the associated pybind11 class is declared
     // (e.g. FOCAL_PLANE is a CameraSys, so clsCameraSys must have been declared

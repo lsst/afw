@@ -37,10 +37,9 @@ CameraSysPrefix const TAN_PIXELS = CameraSysPrefix("TanPixels");
 CameraSysPrefix const ACTUAL_PIXELS = CameraSysPrefix("ActualPixels");
 
 size_t CameraSysPrefix::hash() const noexcept {
-    using std::hash;
     // Java community algorithm; see Effective Java, Item 9 for rationale
     size_t result = 42;
-    result = 31 * result + hash<std::string>()(_sysName);
+    result = 31 * result + std::hash<std::string>()(_sysName);
     return result;
 }
 
@@ -67,7 +66,5 @@ std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys) {
     return os;
 }
 }
-// instantiate CameraTransformMap = TransformMap<CameraSys>
-template class geom::TransformMap<cameraGeom::CameraSys>;
 }
 }

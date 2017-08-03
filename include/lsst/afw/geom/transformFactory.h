@@ -42,35 +42,17 @@ namespace geom {
  * @tparam FromEndpoint, ToEndpoint The endpoints of the transform.
  *
  * @param original the Transform to linearize
- * @param point the point at which a linear approximation is desired
- * @returns a linear Transform whose value and Jacobian at `point` match those
+ * @param inPoint the point at which a linear approximation is desired
+ * @returns an AffineTransform whose value and Jacobian at `inPoint` match those
  *          of `original`. It may be invertible; in general, linearizations
- *          are invertible if the Jacobian at `point` is invertible.
+ *          are invertible if the Jacobian at `inPoint` is invertible.
  *
  * @throws pex::exceptions::InvalidParameterError Thrown if `original` does not
- *             have a well-defined value and Jacobian at `point`
- * @exceptsafe Provides basic exception safety.
+ *             have a well-defined value and Jacobian at `inPoint`
+ * @exceptsafe Not exception safe.
  */
-template <class FromEndpoint, class ToEndpoint>
-Transform<FromEndpoint, ToEndpoint> linearizeTransform(
-        Transform<FromEndpoint, ToEndpoint> const &original,
-        typename Transform<FromEndpoint, ToEndpoint>::FromPoint const &point);
-
-/*
- * The correct behavior for linearization is unclear where IcrsCoords are involved (see discussion on
- * DM-10542). Forbid usage until somebody needs it. Note to maintainers: the template specializations MUST
- * be deleted in the header for compilers to complain correctly.
- */
-#define DISABLE(From, To)                                                         \
-    template <>                                                                   \
-    Transform<From, To> linearizeTransform<From, To>(Transform<From, To> const &, \
-                                                     Transform<From, To>::FromPoint const &) = delete;
-DISABLE(GenericEndpoint, IcrsCoordEndpoint);
-DISABLE(Point2Endpoint, IcrsCoordEndpoint);
-DISABLE(IcrsCoordEndpoint, GenericEndpoint);
-DISABLE(IcrsCoordEndpoint, Point2Endpoint);
-DISABLE(IcrsCoordEndpoint, IcrsCoordEndpoint);
-#undef DISABLE
+AffineTransform linearizeTransform(Transform<Point2Endpoint, Point2Endpoint> const &original,
+                                   Point2D const &inPoint);
 
 /**
  * Wrap an AffineTransform as a Transform.
@@ -129,14 +111,12 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
 /**
  * Trivial Transform x &rarr; x.
  *
- * @param nDimensions The number of dimensions in the supported point.
- * @returns a Transform mapping any N-dimensional point to itself. The
- *          Transform's inverse shall be itself.
+ * @returns a Transform mapping any Point2D to itself. The Transform's inverse
+ *          shall be itself.
  *
- * @throws pex::exceptions::InvalidParameterError Thrown if `nDimensions` is not positive.
  * @exceptsafe Provides basic exception safety.
  */
-Transform<GenericEndpoint, GenericEndpoint> makeIdentityTransform(int nDimensions);
+Transform<Point2Endpoint, Point2Endpoint> makeIdentityTransform();
 
 }  // namespace geom
 }  // namespace afw

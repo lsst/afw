@@ -24,4 +24,3 @@ from __future__ import absolute_import
 """pybind11 utilities"""
 
 from .transform import *
-from .transformMap import *

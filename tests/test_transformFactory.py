@@ -24,7 +24,6 @@
 """
 
 from __future__ import absolute_import, division, print_function
-import itertools
 import math
 import unittest
 
@@ -52,98 +51,75 @@ class transformFactoryTestSuite(TransformTestBaseClass):
                 yield afwGeom.Point2D(x, y)
 
     def testLinearize(self):
-        for fromName in self.endpointPrefixes:
-            for toName in self.endpointPrefixes:
-                self.checkLinearization(fromName, toName)
-
-    def checkLinearization(self, fromName, toName):
-        transformClassName = "Transform{}To{}".format(fromName, toName)
+        transformClassName = "TransformPoint2ToPoint2"
         TransformClass = getattr(afwGeom, transformClassName)
         baseMsg = "TransformClass={}".format(TransformClass.__name__)
 
-        for nIn, nOut in itertools.product(self.goodNAxes[fromName],
-                                           self.goodNAxes[toName]):
-            msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
-            polyMap = makeForwardPolyMap(nIn, nOut)
-            transform = TransformClass(polyMap)
-            fromEndpoint = transform.fromEndpoint
-            toEndpoint = transform.toEndpoint
+        nIn = nOut = 2
+        msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
+        polyMap = makeForwardPolyMap(nIn, nOut)
+        transform = TransformClass(polyMap)
+        fromEndpoint = transform.fromEndpoint
+        toEndpoint = transform.toEndpoint
 
-            rawLinPoint = self.makeRawPointData(nIn)
-            linPoint = fromEndpoint.pointFromData(rawLinPoint)
-            linearized = afwGeom.linearizeTransform(transform, linPoint)
+        rawLinPoint = self.makeRawPointData(nIn)
+        linPoint = fromEndpoint.pointFromData(rawLinPoint)
+        affine = afwGeom.linearizeTransform(transform, linPoint)
+        self.assertIsInstance(affine, afwGeom.AffineTransform)
 
-            # Does linearized match exact transform at linPoint?
-            outPoint = transform.applyForward(linPoint)
-            outPointLinearized = linearized.applyForward(linPoint)
-            assert_allclose(toEndpoint.dataFromPoint(outPoint),
-                            toEndpoint.dataFromPoint(outPointLinearized),
-                            err_msg=msg)
-            # First derivative will be tested in next section
+        # Does affine match exact transform at linPoint?
+        outPoint = transform.applyForward(linPoint)
+        outPointLinearized = affine(linPoint)
+        assert_allclose(toEndpoint.dataFromPoint(outPoint),
+                        toEndpoint.dataFromPoint(outPointLinearized),
+                        err_msg = msg)
+        jacobian = transform.getJacobian(linPoint)
+        jacobianLinearized = affine.getLinear().getMatrix()
+        assert_allclose(jacobian, jacobianLinearized)
 
-            # Is linearized linear?
-            # Test that jacobian always has the same value, and also matches
-            # Jacobian of original transform at linPoint
-            jacobian = transform.getJacobian(linPoint)
-            rng = np.random.RandomState(42)
-            nDelta = 100
-            deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
-            for i in range(nDelta):
-                tweakedInPoint = fromEndpoint.pointFromData(
-                    rawLinPoint + deltaFrom[:, i])
-                assert_allclose(jacobian,
-                                linearized.getJacobian(tweakedInPoint),
-                                err_msg="{}, point={}".format(
-                                    msg, tweakedInPoint))
+        # Is affine a local approximation around linPoint?
+        for deltaFrom in (
+            np.zeros(nIn),
+            np.full(nIn, 0.1),
+            np.array([0.1, -0.15, 0.20, -0.05, 0.0, -0.1][0:nIn])
+        ):
+            tweakedInPoint = fromEndpoint.pointFromData(
+                rawLinPoint + deltaFrom)
+            tweakedOutPoint = transform.applyForward(tweakedInPoint)
+            tweakedOutPointLinearized = affine(tweakedInPoint)
+            assert_allclose(
+                toEndpoint.dataFromPoint(tweakedOutPoint),
+                toEndpoint.dataFromPoint(tweakedOutPointLinearized),
+                atol = 1e-3,
+                err_msg = msg)
 
-            # Is linearized a local approximation around linPoint?
-            for deltaFrom in (
-                np.zeros(nIn),
-                np.full(nIn, 0.1),
-                np.array([0.1, -0.15, 0.20, -0.05, 0.0, -0.1][0:nIn])
-            ):
-                tweakedInPoint = fromEndpoint.pointFromData(
-                    rawLinPoint + deltaFrom)
-                tweakedOutPoint = transform.applyForward(tweakedInPoint)
-                tweakedOutPointLinearized = linearized.applyForward(
-                    tweakedInPoint)
-                assert_allclose(
-                    toEndpoint.dataFromPoint(tweakedOutPoint),
-                    toEndpoint.dataFromPoint(tweakedOutPointLinearized),
-                    atol = 1e-3,
-                    err_msg = msg)
+        # Is affine invertible?
+        # AST lets all-zero MatrixMaps be invertible though inverse
+        # ill-defined; exclude this case
+        if jacobian.any():
+            invertible = \
+                np.linalg.cond(jacobian) < 1/np.finfo(jacobian.dtype).eps
+            if nIn == nOut and invertible:
+                inverse = affine.invert()
+                deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
+                for i in range(nDelta):
+                    pointMsg = "{}, point={}".format(msg, tweakedInPoint)
+                    tweakedInPoint = fromEndpoint.pointFromData(
+                        rawLinPoint + deltaFrom[:, i])
+                    tweakedOutPoint = affine(tweakedInPoint)
 
-            # Is linearized invertible?
-            # AST lets all-zero MatrixMaps be invertible though inverse
-            # ill-defined; exclude this case
-            if jacobian.any():
-                invertible = \
-                    np.linalg.cond(jacobian) < 1/np.finfo(jacobian.dtype).eps
-                if nIn == nOut and invertible:
-                    inverse = linearized.getInverse()
-                    deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
-                    for i in range(nDelta):
-                        pointMsg = "{}, point={}".format(msg, tweakedInPoint)
-                        tweakedInPoint = fromEndpoint.pointFromData(
-                            rawLinPoint + deltaFrom[:, i])
-                        tweakedOutPoint = linearized.applyForward(
-                            tweakedInPoint)
-
-                        roundTrip = inverse.applyForward(tweakedOutPoint)
-                        assert_allclose(
-                            roundTrip, tweakedInPoint,
-                            err_msg=pointMsg)
-                        assert_allclose(
-                            roundTrip,
-                            linearized.applyInverse(tweakedOutPoint),
-                            err_msg=pointMsg)
-                        assert_allclose(
-                            inverse.getJacobian(tweakedOutPoint),
-                            np.linalg.inv(jacobian),
-                            err_msg=pointMsg)
-                else:
-                    with self.assertRaises(RuntimeError):
-                        linearized.applyInverse(outPoint)
+                    roundTrip = inverse(tweakedOutPoint)
+                    assert_allclose(
+                        roundTrip, tweakedInPoint,
+                        err_msg = pointMsg)
+                    assert_allclose(
+                        inverse.getLinear().getMatrix(),
+                        np.linalg.inv(jacobian),
+                        err_msg = pointMsg)
+            else:
+                # TODO: replace with correct type after fixing DM-11248
+                with self.assertRaises(Exception):
+                    affine.invert()
 
         # Can't test exceptions without reliable way to make invalid transform
 
@@ -188,19 +164,6 @@ class transformFactoryTestSuite(TransformTestBaseClass):
         for fromPoint in self.point2DList():
             toPoint = transform.applyForward(fromPoint)
             self.assertPairsAlmostEqual(fromPoint, toPoint)
-
-    def testBadIdentity(self):
-        """Test identity with invalid dimensions.
-        """
-        for badDim in (-1, 0):
-            with self.assertRaises(pexExcept.InvalidParameterError):
-                afwGeom.makeIdentityTransform(badDim)
-
-            identityFactory = afwGeom.transformRegistry["identity"]
-            config = identityFactory.ConfigClass()
-            config.nDimensions = badDim
-            with self.assertRaises(Exception):
-                config.validate()
 
     def testDefaultAffine(self):
         """Test affine = affine Transform with default coeffs (identity transform)

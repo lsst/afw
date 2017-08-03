@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import lsst.pex.config as pexConfig
-from lsst.afw.geom import TransformMapConfig
+from .transformConfig import TransformMapConfig
 
 __all__ = ["CameraConfig", "DetectorConfig"]
 
@@ -61,7 +61,7 @@ class CameraConfig(pexConfig.Config):
     # scaled by the plate scale in appropriate units
     radialCoeffs = pexConfig.ListField(
         "Coefficients for radial distortion", float)
-    # The following is commented until radialXYTransform supports an offset (ticket/3155)
+    # The following is commented until radialTransform supports an offset (ticket/3155)
     # boresiteOffset_x = pexConfig.Field("Offset of the camera coordinates " +
     #                                    "system relative to the boresite (x value)", float)
     # boresiteOffset_y = pexConfig.Field("Offset of the camera coordinates " +

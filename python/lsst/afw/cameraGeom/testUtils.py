@@ -15,6 +15,7 @@ from .cameraGeomLib import PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, SCIENCE
 from .cameraConfig import DetectorConfig, CameraConfig
 from .cameraFactory import makeCameraFromCatalogs
 from .makePixelToTanPixel import makePixelToTanPixel
+from .transformConfig import TransformMapConfig
 
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
@@ -91,7 +92,7 @@ class DetectorWrapper(object):
         pScaleRad = afwGeom.arcsecToRad(self.plateScale)
         radialDistortCoeffs = [0.0, 1.0/pScaleRad,
                                0.0, self.radialDistortion/pScaleRad]
-        focalPlaneToField = afwGeom.RadialXYTransform(radialDistortCoeffs)
+        focalPlaneToField = afwGeom.makeRadialTransform(radialDistortCoeffs)
         pixelToTanPixel = makePixelToTanPixel(
             bbox = self.bbox,
             orientation = self.orientation,
@@ -102,7 +103,7 @@ class DetectorWrapper(object):
         self.transMap = {
             FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
             CameraSys(TAN_PIXELS, self.name): pixelToTanPixel,
-            CameraSys(ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
+            CameraSys(ACTUAL_PIXELS, self.name): afwGeom.makeRadialTransform([0, 0.95, 0.01]),
         }
         if modFunc:
             modFunc(self)
@@ -351,10 +352,10 @@ class CameraWrapper(object):
                                0.0, self.radialDistortion/pScaleRad]
         tConfig = afwGeom.TransformConfig()
         tConfig.transform.name = 'inverted'
-        radialClass = afwGeom.xyTransformRegistry['radial']
+        radialClass = afwGeom.transformRegistry['radial']
         tConfig.transform.active.transform.retarget(radialClass)
         tConfig.transform.active.transform.coeffs = radialDistortCoeffs
-        tmc = afwGeom.TransformMapConfig()
+        tmc = TransformMapConfig()
         tmc.nativeSys = FOCAL_PLANE.getSysName()
         tmc.transforms = {FIELD_ANGLE.getSysName(): tConfig}
         camConfig.transformDict = tmc

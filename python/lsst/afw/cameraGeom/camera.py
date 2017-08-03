@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 from builtins import range
-from .cameraGeomLib import CameraPoint, CameraSysPrefix, PIXELS
+from .cameraGeomLib import CameraPoint, CameraSysPrefix, FOCAL_PLANE, PIXELS
 from .detectorCollection import DetectorCollection
 from .pupil import PupilFactory
 import lsst.afw.geom as afwGeom
@@ -36,14 +36,14 @@ class Camera(DetectorCollection):
 
         @param[in] name  name of camera
         @param[in] detectorList  a sequence of detectors in index order
-        @param[in] transformMap  a CameraTransformMap whose native system is FOCAL_PLANE
-            and that at least supports FIELD_ANGLE coordinates
+        @param[in] transformMap  a TransformMap that at least supports
+            FOCAL_PLANE and FIELD_ANGLE coordinates
         @param[in] pupilFactoryClass  a PupilFactory class for this camera
             [default: afw.cameraGeom.PupilFactory]
         """
         self._name = name
         self._transformMap = transformMap
-        self._nativeCameraSys = self._transformMap.getNativeCoordSys()
+        self._nativeCameraSys = FOCAL_PLANE
         self._pupilFactoryClass = pupilFactoryClass
         super(Camera, self).__init__(detectorList)
 

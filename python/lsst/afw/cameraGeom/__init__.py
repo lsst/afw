@@ -34,4 +34,5 @@ from .makePixelToTanPixel import *
 from .assembleImage import *
 from .rotateBBoxBy90 import *
 from .pupil import *
+from .transformConfig import *
 NullLinearityType = "None"  # linearity type indicating no linearity correction wanted

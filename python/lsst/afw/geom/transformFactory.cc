@@ -36,16 +36,6 @@ namespace afw {
 namespace geom {
 namespace {
 
-// Declare methods on Transform<FromEndpoint, ToEndpoint>
-template <class FromEndpoint, class ToEndpoint>
-void declareFunctionTemplates(py::module &mod) {
-    using Class = Transform<FromEndpoint, ToEndpoint>;
-
-    mod.def("linearizeTransform",
-            (Class(*)(Class const &, typename Class::FromPoint const &)) & linearizeTransform, "original"_a,
-            "point"_a);
-}
-
 PYBIND11_PLUGIN(transformFactory) {
     py::module mod("transformFactory");
 
@@ -57,11 +47,10 @@ PYBIND11_PLUGIN(transformFactory) {
         return nullptr;
     }
 
-    declareFunctionTemplates<GenericEndpoint, GenericEndpoint>(mod);
-    declareFunctionTemplates<GenericEndpoint, Point2Endpoint>(mod);
-    declareFunctionTemplates<Point2Endpoint, GenericEndpoint>(mod);
-    declareFunctionTemplates<Point2Endpoint, Point2Endpoint>(mod);
-
+    mod.def("linearizeTransform",
+            (AffineTransform(*)(Transform<Point2Endpoint, Point2Endpoint> const &, Point2D const &)) &
+                    linearizeTransform,
+            "original"_a, "point"_a);
     mod.def("makeTransform",
             (Transform<Point2Endpoint, Point2Endpoint>(*)(AffineTransform const &)) & makeTransform,
             "affine"_a);
@@ -72,7 +61,7 @@ PYBIND11_PLUGIN(transformFactory) {
                                            std::vector<double> const &, std::vector<double> const &)) &
                                            makeRadialTransform,
             "forwardCoeffs"_a, "inverseCoeffs"_a);
-    mod.def("makeIdentityTransform", &makeIdentityTransform, "nDimentions"_a);
+    mod.def("makeIdentityTransform", &makeIdentityTransform);
 
     return mod.ptr();
 }

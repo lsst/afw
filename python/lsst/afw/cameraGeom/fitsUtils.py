@@ -288,10 +288,10 @@ class DetectorBuilder(object):
            the constructor.
            @param[in]  radialCoeffs  List of coefficients describing a polynomial radial distortion in
                                      normalized units.
-           @return     RadialXYTransform object describing the radial distortion
+           @return     Transform object describing the radial distortion
         """
         pScaleRad = afwGeom.arcsecToRad(self.plateScale)
-        return afwGeom.RadialXYTransform([el/pScaleRad for el in radialCoeffs])
+        return afwGeom.makeRadialTransform([el/pScaleRad for el in radialCoeffs])
 
     def buildDetector(self):
         """Take all the information and build a Detector object.  The Detector object is necessary for doing

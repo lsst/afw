@@ -27,8 +27,6 @@
 #include <string>
 #include <ostream>
 #include <sstream>
-#include "lsst/afw/geom/TransformMap.h"
-#include "lsst/afw/geom/TransformMapImpl.h"
 
 namespace lsst {
 namespace afw {
@@ -141,9 +139,6 @@ private:
     std::string _sysName;       ///< coordinate system name
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
 };
-
-// CameraSys is intended as a key for geom::TransformMap, so define this useful type
-typedef geom::TransformMap<CameraSys> CameraTransformMap;
 
 // *** Standard camera coordinate systems ***
 

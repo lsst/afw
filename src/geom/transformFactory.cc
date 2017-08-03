@@ -71,10 +71,16 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &v) {
  *
  * @param matrix The matrix to convert.
  * @returns an ndarray containing a copy of the data in `matrix`
+ *
+ * @note Returning a copy is safer that returning a view because ndarray cannot share
+ * management of the memory with Eigen. So as long as the matrix is small,
+ * making a copy is preferred even if a view would suffice.
  */
-template <class T, int Rows, int Cols>
-ndarray::Array<T, 2, 2> toNdArray(Eigen::Matrix<T, Rows, Cols> const &matrix) {
-    ndarray::Array<T, 2, 2> array = ndarray::allocate(ndarray::makeVector(matrix.rows(), matrix.cols()));
+template <typename Derived>
+ndarray::Array<typename Eigen::MatrixBase<Derived>::Scalar, 2, 2> toNdArray(
+        Eigen::MatrixBase<Derived> const &matrix) {
+    ndarray::Array<typename Eigen::MatrixBase<Derived>::Scalar, 2, 2> array =
+            ndarray::allocate(ndarray::makeVector(matrix.rows(), matrix.cols()));
     array.asEigen() = matrix;
     return array;
 }
@@ -95,7 +101,7 @@ bool areRadialCoefficients(std::vector<double> const &coeffs) noexcept {
 }
 
 /**
- * A one-dimensional polynomial distortion.
+ * Make a one-dimensional polynomial distortion.
  *
  * The Mapping computes a scalar function
  * @f[ f(x) = \sum_{i=1}^{N} \mathrm{coeffs[i]} \ x^i @f]
@@ -110,7 +116,7 @@ bool areRadialCoefficients(std::vector<double> const &coeffs) noexcept {
  * @warning Input to this function is not validated.
  */
 ast::PolyMap makeOneDDistortion(std::vector<double> const &coeffs) {
-    int const nCoeffs = coeffs.size() - 1;
+    int const nCoeffs = coeffs.size() - 1;  // ignore coeffs[0]
     ndarray::Array<double, 2, 2> const polyCoeffs = ndarray::allocate(ndarray::makeVector(nCoeffs, 3));
     for (size_t i = 1; i < coeffs.size(); ++i) {
         polyCoeffs[i - 1][0] = coeffs[i];
@@ -121,34 +127,13 @@ ast::PolyMap makeOneDDistortion(std::vector<double> const &coeffs) {
     return ast::PolyMap(polyCoeffs, 1, "IterInverse=1, TolInverse=1e-8, NIterInverse=20");
 }
 
-/**
- * Wraps a one-dimensional mapping as a radial mapping.
- *
- * @param oneDMapping a 1D -> 1D mapping
- * @return a Transform that applies `oneDMapping` to the radius of
- *         two-dimensional points. It shall be invertible if and only if
- *         `oneDMapping` is.
- *
- * @warning Input to this function is not validated.
- */
-Transform<Point2Endpoint, Point2Endpoint> wrapRadialMapping(ast::Mapping const &oneDMapping) {
-    ast::UnitNormMap const splitNorm(std::vector<double>(2));
-    auto const map =
-            splitNorm.then(ast::ParallelMap(ast::UnitMap(2), oneDMapping)).then(*(splitNorm.getInverse()));
-    return Transform<Point2Endpoint, Point2Endpoint>(map);
-}
-
 }  // namespace
 
-template <class From, class To>
-Transform<From, To> linearizeTransform(Transform<From, To> const &original,
-                                       typename Transform<From, To>::FromPoint const &inPoint) {
-    auto fromEndpoint = original.getFromEndpoint();
-    auto toEndpoint = original.getToEndpoint();
-
+AffineTransform linearizeTransform(Transform<Point2Endpoint, Point2Endpoint> const &original,
+                                   Point2D const &inPoint) {
     auto outPoint = original.applyForward(inPoint);
-    auto jacobian = original.getJacobian(inPoint);
-    for (int i = 0; i < toEndpoint.getNAxes(); ++i) {
+    Eigen::Matrix2d jacobian = original.getJacobian(inPoint);
+    for (int i = 0; i < 2; ++i) {
         if (!std::isfinite(outPoint[i])) {
             std::ostringstream buffer;
             buffer << "Transform ill-defined: " << inPoint << " -> " << outPoint;
@@ -161,12 +146,9 @@ Transform<From, To> linearizeTransform(Transform<From, To> const &original,
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
     }
 
-    // y(x) = J (x - x0) + y0
-    auto map = ast::ShiftMap(fromEndpoint.dataFromPoint(inPoint))
-                       .getInverse()
-                       ->then(ast::MatrixMap(toNdArray(jacobian)))
-                       .then(ast::ShiftMap(toEndpoint.dataFromPoint(outPoint)));
-    return Transform<From, To>(map);
+    // y(x) = J (x - x0) + y0 = J x + (y0 - J x0)
+    auto offset = outPoint.asEigen() - jacobian * inPoint.asEigen();
+    return AffineTransform(jacobian, offset);
 }
 
 Transform<Point2Endpoint, Point2Endpoint> makeTransform(AffineTransform const &affine) {
@@ -189,9 +171,11 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
     if (coeffs.empty()) {
         return Transform<Point2Endpoint, Point2Endpoint>(ast::UnitMap(2));
     } else {
-        // Easier to compute invertible transform in one dimension
+        // distortion is a radial polynomial with center at focal plane center;
+        // the polynomial has an iterative inverse
+        std::vector<double> center = {0.0, 0.0};
         ast::PolyMap const distortion = makeOneDDistortion(coeffs);
-        return wrapRadialMapping(distortion);
+        return Transform<Point2Endpoint, Point2Endpoint>(*ast::makeRadialMapping(center, distortion));
     }
 }
 
@@ -214,32 +198,22 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
     }
 
     if (forwardCoeffs.empty()) {
+        // no forward or inverse coefficients, so no distortion
         return Transform<Point2Endpoint, Point2Endpoint>(ast::UnitMap(2));
     } else {
+        // distortion is a 1-d radial polynomial centered at focal plane center;
+        // the polynomial has coefficients specified for both the forward and inverse directions
+        std::vector<double> center = {0.0, 0.0};
         ast::PolyMap const forward = makeOneDDistortion(forwardCoeffs);
         auto inverse = makeOneDDistortion(inverseCoeffs).getInverse();
-        return wrapRadialMapping(ast::TranMap(forward, *inverse));
+        auto distortion = ast::TranMap(forward, *inverse);
+        return Transform<Point2Endpoint, Point2Endpoint>(*ast::makeRadialMapping(center, distortion));
     }
 }
 
-Transform<GenericEndpoint, GenericEndpoint> makeIdentityTransform(int nDimensions) {
-    if (nDimensions <= 0) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
-                          "Cannot create identity Transform with dimension " + std::to_string(nDimensions));
-    }
-
-    return Transform<GenericEndpoint, GenericEndpoint>(ast::UnitMap(nDimensions));
+Transform<Point2Endpoint, Point2Endpoint> makeIdentityTransform() {
+    return Transform<Point2Endpoint, Point2Endpoint>(ast::UnitMap(2));
 }
-
-#define INSTANTIATE_FACTORIES(From, To)                                                             \
-    template Transform<From, To> linearizeTransform<From, To>(Transform<From, To> const &transform, \
-                                                              Transform<From, To>::FromPoint const &point);
-
-// explicit instantiations
-INSTANTIATE_FACTORIES(GenericEndpoint, GenericEndpoint);
-INSTANTIATE_FACTORIES(GenericEndpoint, Point2Endpoint);
-INSTANTIATE_FACTORIES(Point2Endpoint, GenericEndpoint);
-INSTANTIATE_FACTORIES(Point2Endpoint, Point2Endpoint);
 }
 }
 } /* namespace lsst::afw::geom */

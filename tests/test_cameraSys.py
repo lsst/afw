@@ -73,8 +73,14 @@ class CameraSysTestCase(unittest.TestCase):
                     cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
                     if sysName == sysName2 and detectorName == detectorName2:
                         self.assertEqual(cameraSys, cameraSys2)
+                        # test __eq__ and __ne__
+                        self.assertTrue(cameraSys == cameraSys2)
+                        self.assertFalse(cameraSys != cameraSys2)
                     else:
                         self.assertNotEqual(cameraSys, cameraSys2)
+                        # test __eq__ and __ne__
+                        self.assertTrue(cameraSys != cameraSys2)
+                        self.assertFalse(cameraSys == cameraSys2)
 
                     camSysPrefix2 = cameraGeom.CameraSysPrefix(sysName2)
                     if sysName2 == sysName:

@@ -20,7 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
-Tests for lsst.afw.cameraGeom.CameraTransformMap
+Tests for lsst.afw.cameraGeom.TransformMap
 """
 from __future__ import absolute_import, division, print_function
 import unittest
@@ -48,8 +48,10 @@ class TransformWrapper(object):
         return self.transformMap.transform(point, self.fromSys, self.toSys)
 
 
-class FuncPair(object):
-    """Wrap a pair of function(Point2D)->Point2D functions as a single such function
+class Composition(object):
+    """Wrap a pair of function(Point2D)->Point2D functions as a single
+    function that calls the first function, then the second function on the
+    result
     """
 
     def __init__(self, func1, func2):
@@ -66,13 +68,13 @@ def unityTransform(point):
     return point
 
 
-class CameraTransformMapTestCase(unittest.TestCase):
+class CameraTransformMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.nativeSys = cameraGeom.FOCAL_PLANE
-        self.fieldTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
+        self.fieldTransform = afwGeom.makeRadialTransform([0, 0.5, 0.005])
         transforms = {cameraGeom.FIELD_ANGLE: self.fieldTransform}
-        self.transformMap = cameraGeom.CameraTransformMap(
+        self.transformMap = cameraGeom.TransformMap(
             self.nativeSys, transforms)
 
     def tearDown(self):
@@ -80,7 +82,8 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.fieldTransform = None
         self.transformMap = None
 
-    def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None, nVal=5):
+    def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None,
+                           nVal=5):
         """Compare two functions(Point2D) -> Point2D over a range of values
         """
         if maxVal is None:
@@ -93,8 +96,7 @@ class CameraTransformMapTestCase(unittest.TestCase):
                 fromPoint = afwGeom.Point2D(x, y)
                 res1 = func1(fromPoint)
                 res2 = func2(fromPoint)
-                self.assertAlmostEqual(res1[0], res2[0])
-                self.assertAlmostEqual(res1[1], res2[1])
+                self.assertPairsAlmostEqual(res1, res2)
 
     def testBasics(self):
         """Test basic attributes
@@ -106,71 +108,62 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.assertIn(cameraGeom.FIELD_ANGLE, self.transformMap)
         self.assertNotIn(cameraGeom.CameraSys("garbage"), self.transformMap)
 
-        csList = self.transformMap.getCoordSysList()
-        self.assertEqual(len(csList), 2)
-        self.assertIn(self.nativeSys, csList)
-        self.assertIn(cameraGeom.FIELD_ANGLE, csList)
+        self.assertIn(self.nativeSys, self.transformMap)
+        self.assertIn(cameraGeom.FIELD_ANGLE, self.transformMap)
 
     def testIteration(self):
         """Test iteration, len and indexing
         """
         self.assertEqual(len(self.transformMap), 2)
 
-        csList = self.transformMap.getCoordSysList()
-        csList2 = [cs for cs in self.transformMap]
-        self.assertEqual(len(csList), len(self.transformMap))
-        self.assertEqual(tuple(csList), tuple(csList2))
+        systems = list(self.transformMap)
+        self.assertEqual(len(systems), 2)
 
-        for cs in csList:
-            xyTrans = self.transformMap[cs]
-            self.assertIsInstance(xyTrans, afwGeom.XYTransform)
+        for cs in systems:
+            self.assertIsInstance(cs, cameraGeom.CameraSys)
 
     def testGetItem(self):
         """Test that the contained transforms are the ones expected
         """
-        nativeTr = self.transformMap[self.nativeSys]
-        self.compare2DFunctions(nativeTr.forwardTransform, unityTransform)
-        self.compare2DFunctions(nativeTr.reverseTransform, unityTransform)
+        nativeTr = self.transformMap.getTransform(self.nativeSys,
+                                                  self.nativeSys)
+        self.compare2DFunctions(nativeTr.applyForward, unityTransform)
+        self.compare2DFunctions(nativeTr.applyInverse, unityTransform)
 
-        fieldTr = self.transformMap[cameraGeom.FIELD_ANGLE]
-        self.compare2DFunctions(fieldTr.forwardTransform,
-                                self.fieldTransform.forwardTransform)
-        self.compare2DFunctions(fieldTr.reverseTransform,
-                                self.fieldTransform.reverseTransform)
+        fieldTr = self.transformMap.getTransform(self.nativeSys,
+                                                 cameraGeom.FIELD_ANGLE)
+        self.compare2DFunctions(fieldTr.applyForward,
+                                self.fieldTransform.applyForward)
+        self.compare2DFunctions(fieldTr.applyInverse,
+                                self.fieldTransform.applyInverse)
+
+        fieldTrInv = self.transformMap.getTransform(cameraGeom.FIELD_ANGLE,
+                                                    self.nativeSys)
+        self.compare2DFunctions(fieldTrInv.applyForward,
+                                self.fieldTransform.applyInverse)
+        self.compare2DFunctions(fieldTrInv.applyInverse,
+                                self.fieldTransform.applyForward)
 
         missingCamSys = cameraGeom.CameraSys("missing")
         with self.assertRaises(lsst.pex.exceptions.Exception):
-            self.transformMap.__getitem__(missingCamSys)
-
-    def testGet(self):
-        """Test the get method
-        """
-        for cs in self.transformMap.getCoordSysList():
-            xyTrans2 = self.transformMap.get(cs)
-            self.assertIsInstance(xyTrans2, afwGeom.XYTransform)
-
-        missingCamSys = cameraGeom.CameraSys("missing")
-        shouldBeNone = self.transformMap.get(missingCamSys)
-        self.assertIsNone(shouldBeNone)
-        with self.assertRaises(Exception):
-            self.transformMap.get("badDataType")
-
-        for default in (1, "hello", cameraGeom.CameraSys("default")):
-            res = self.transformMap.get(missingCamSys, default)
-            self.assertEqual(res, default)
+            self.transformMap.getTransform(missingCamSys, self.nativeSys)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            self.transformMap.getTransform(self.nativeSys, missingCamSys)
 
     def testTransform(self):
         """Test transform method, point version
         """
-        for fromSys in self.transformMap.getCoordSysList():
-            for toSys in self.transformMap.getCoordSysList():
+        for fromSys in self.transformMap:
+            for toSys in self.transformMap:
                 trConvFunc = TransformWrapper(
                     self.transformMap, fromSys, toSys)
                 if fromSys == toSys:
                     self.compare2DFunctions(trConvFunc, unityTransform)
-                funcPair = FuncPair(
-                    self.transformMap[fromSys].reverseTransform,
-                    self.transformMap[toSys].forwardTransform,
+                funcPair = Composition(
+                    self.transformMap
+                        .getTransform(self.nativeSys, fromSys).applyInverse,
+                    self.transformMap
+                        .getTransform(self.nativeSys, toSys).applyForward
                 )
                 self.compare2DFunctions(trConvFunc, funcPair)
 
@@ -182,16 +175,15 @@ class CameraTransformMapTestCase(unittest.TestCase):
             for y in (-23.4, 0.0, 2.3):
                 fromList.append(afwGeom.Point2D(x, y))
 
-        for fromSys in self.transformMap.getCoordSysList():
-            for toSys in self.transformMap.getCoordSysList():
+        for fromSys in self.transformMap:
+            for toSys in self.transformMap:
                 toList = self.transformMap.transform(fromList, fromSys, toSys)
 
                 self.assertEqual(len(fromList), len(toList))
                 for fromPoint, toPoint in zip(fromList, toList):
                     predToPoint = self.transformMap.transform(
                         fromPoint, fromSys, toSys)
-                    for i in range(2):
-                        self.assertAlmostEqual(predToPoint[i], toPoint[i])
+                    self.assertPairsAlmostEqual(predToPoint, toPoint)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

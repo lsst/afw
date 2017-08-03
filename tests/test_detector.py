@@ -45,10 +45,10 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for methodName in ("begin", "end", "size"):
             if hasattr(detector, methodName):
                 self.assertFalse(hasattr(detector, methodName))
-        self.assertEqual(dw.name, detector.getName())
-        self.assertEqual(dw.id, detector.getId())
-        self.assertEqual(dw.type, detector.getType())
-        self.assertEqual(dw.serial, detector.getSerial())
+        self.assertEquals(dw.name, detector.getName())
+        self.assertEquals(dw.id, detector.getId())
+        self.assertEquals(dw.type, detector.getType())
+        self.assertEquals(dw.serial, detector.getSerial())
         bbox = detector.getBBox()
         for i in range(2):
             self.assertEqual(bbox.getMin()[i], dw.bbox.getMin()[i])
@@ -67,11 +67,11 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         # make sure some complex objects stick around after detector is deleted
 
         detectorName = detector.getName()
+        nativeCoordSys = detector.getNativeCoordSys()
         offset = dw.orientation.getFpPosition()
         del detector
         del dw
         self.assertEqual(orientation.getFpPosition(), offset)
-        nativeCoordSys = transformMap.getNativeCoordSys()
         self.assertEqual(nativeCoordSys,
                           cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
 
@@ -87,7 +87,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         def addBadCameraSys(dw):
             """Add an invalid camera system"""
             dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = \
-                afwGeom.IdentityXYTransform()
+                afwGeom.makeIdentityTransform()
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=addBadCameraSys)
 

@@ -26,27 +26,28 @@ __all__ = ["makePixelToTanPixel"]
 
 
 def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
-    """!Make an XYTransform whose forward direction converts PIXEL to TAN_PIXEL for one detector
+    """!Make a Transform whose forward direction converts PIXEL to TAN_PIXEL for one detector
 
     PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in doc/cameraGeom.dox
 
     @param[in] bbox  detector bounding box (an lsst.afw.geom.Box2I)
     @param[in] orientation  orientation of detector in focal plane (an lsst.afw.cameraGeom.Orientation)
-    @param[in] focalPlaneToField  an lsst.afw.math.XYTransform that converts from focal plane (mm)
+    @param[in] focalPlaneToField  an lsst.afw.geom.Transform that converts from focal plane (mm)
         to field angle coordinates (radians) in the forward direction
     @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.afw.geom.Extent2D)
+    @return a TransformPoint2ToPoint2 whose forward direction converts PIXEL to TAN_PIXEL
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-    pixelToField = afwGeom.MultiXYTransform(
-        (pixelToFocalPlane, focalPlaneToField))
+    pixelToField = pixelToFocalPlane.then(focalPlaneToField)
     # fieldToTanPix is affine and matches fieldToPix at field center
     # Note: focal plane to field angle is typically a radial transform,
     # and linearizing the inverse transform of that may fail,
     # so linearize the forward direction instead. (pixelToField is pixelToFocalPlane,
     # an affine transform, followed by focalPlaneToField,
     # so the same consideration applies to pixelToField)
-    pixAtFieldCtr = pixelToField.reverseTransform(afwGeom.Point2D(0, 0))
-    tanPixToFieldAffine = pixelToField.linearizeForwardTransform(pixAtFieldCtr)
-    fieldToTanPix = afwGeom.AffineXYTransform(tanPixToFieldAffine.invert())
+    pixAtFieldCtr = pixelToField.applyInverse(afwGeom.Point2D(0, 0))
+    tanPixToFieldAffine = afwGeom.linearizeTransform(pixelToField,
+                                                     pixAtFieldCtr)
+    fieldToTanPix = afwGeom.makeTransform(tanPixToFieldAffine.invert())
 
-    return afwGeom.MultiXYTransform((pixelToField, fieldToTanPix))
+    return pixelToField.then(fieldToTanPix)

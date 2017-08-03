@@ -4,7 +4,7 @@ import os.path
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
-    Detector, DetectorType, Orientation, CameraTransformMap
+    Detector, DetectorType, Orientation, TransformMap
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 from .pupil import PupilFactory
@@ -21,7 +21,7 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
 
     @param detectorConfig  config for this detector (an lsst.pex.config.Config)
     @param ampInfoCatalog  amplifier information for this detector (an lsst.afw.table.AmpInfoCatalog)
-    @param focalPlaneToField  FOCAL_PLANE to FIELD_ANGLE XYTransform
+    @param focalPlaneToField  FOCAL_PLANE to FIELD_ANGLE Transform
     @return detector (an lsst.afw.cameraGeom.Detector)
     """
     orientation = makeOrientation(detectorConfig)
@@ -67,10 +67,11 @@ def copyDetector(detector, ampInfoCatalog=None):
         ampInfoCatalog = detector.getAmpInfoCatalog()
 
     tm = detector.getTransformMap()
+    native = detector.getNativeCoordSys()
     transformDict = dict()
-    for cs in tm.getCoordSysList():
-        if cs != tm.getNativeCoordSys():
-            transformDict[cs] = tm.get(cs)
+    for cs in tm:
+        if cs != native:
+            transformDict[cs] = tm.getTransform(native, cs)
 
     return Detector(detector.getName(), detector.getId(), detector.getType(),
                     detector.getSerial(), detector.getBBox(),
@@ -93,11 +94,11 @@ def makeOrientation(detectorConfig):
 
 
 def makeTransformDict(transformConfigDict):
-    """!Make a dictionary of CameraSys: lsst.afw.geom.XYTransform from a config dict.
+    """!Make a dictionary of CameraSys: lsst.afw.geom.Transform from a config dict.
 
-    @param transformConfigDict  an lsst.pex.config.ConfigDictField from an lsst.afw.geom.XYTransform
+    @param transformConfigDict  an lsst.pex.config.ConfigDictField from an lsst.afw.geom.Transform
         registry; keys are camera system names.
-    @return a dict of CameraSys or CameraSysPrefix: lsst.afw.geom.XYTransform
+    @return a dict of CameraSys or CameraSysPrefix: lsst.afw.geom.Transform
     """
     resMap = dict()
     if transformConfigDict is not None:
@@ -142,7 +143,7 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
     nativeSys = cameraSysMap[cameraConfig.transformDict.nativeSys]
     transformDict = makeTransformDict(cameraConfig.transformDict.transforms)
     focalPlaneToField = transformDict[FIELD_ANGLE]
-    transformMap = CameraTransformMap(nativeSys, transformDict)
+    transformMap = TransformMap(nativeSys, transformDict)
 
     detectorList = []
     for detectorConfig in cameraConfig.detectorList.values():

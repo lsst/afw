@@ -48,25 +48,27 @@ namespace image {
  */
 class DistortedTanWcs : public TanWcs {
 public:
+    using Transform = geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>;
+
     /**
      * Construct a DistortedTanWcs
      *
      * @param[in] tanWcs  pure tangent-plane WCS
-     * @param[in] pixelsToTanPixels  an XYTransform that converts from PIXELS to TAN_PIXELS coordinates
+     * @param[in] pixelsToTanPixels  a Transform that converts from PIXELS to TAN_PIXELS coordinates
      *              in the forward direction. This can be obtained from an exposure using:
      *                  detector = exposure.getDetector()
      *                  pixelsToTanPixels = detector.getTransformMap()[lsst.afw.cameraGeom.TAN_PIXELS]
      *
      * @throws pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
      */
-    DistortedTanWcs(TanWcs const &tanWcs, geom::XYTransform const &pixelsToTanPixels);
+    DistortedTanWcs(TanWcs const &tanWcs, Transform const &pixelsToTanPixels);
 
     virtual ~DistortedTanWcs(){};
 
     /// Polymorphic deep-copy.
     virtual std::shared_ptr<Wcs> clone() const;
 
-    /// @warning not implemented (because XYTransform operator== is not implemented)
+    /// @warning not implemented (because Transform operator== is not implemented)
     bool operator==(Wcs const &other) const;
 
     /// @warning not implemented
@@ -85,8 +87,10 @@ public:
     /// return the pure tan WCS component
     std::shared_ptr<Wcs> getTanWcs() const { return TanWcs::clone(); }
 
-    /// return the PIXELS to TAN_PIXELS XYTransform
-    std::shared_ptr<geom::XYTransform> getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
+    /// return the PIXELS to TAN_PIXELS Transform
+    std::shared_ptr<Transform> getPixelToTanPixel() const {
+        return std::make_shared<Transform>(*_pixelsToTanPixelsPtr);
+    }
 
 protected:
     /**
@@ -107,9 +111,8 @@ protected:
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
 private:
-    std::shared_ptr<geom::XYTransform>
-            _pixelsToTanPixelsPtr;  // XYTransform that converts from PIXELS to TAN_PIXELS
-                                    // coordinates in the forward direction
+    std::shared_ptr<Transform> _pixelsToTanPixelsPtr;  // Transform that converts from PIXELS to TAN_PIXELS
+                                                       // coordinates in the forward direction
 };
 }
 }

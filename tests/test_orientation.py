@@ -70,9 +70,9 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
                 xy = afwGeom.Point2D(x, y)
-                fwdXY = fwdTransform.forwardTransform(xy)
+                fwdXY = fwdTransform.applyForward(xy)
                 for i in range(2):
-                    self.assertAlmostEqual(xy[i] - 0.5, fwdXY[i])
+                    self.assertPairsAlmostEqual(xy - afwGeom.Extent2D(0.5), fwdXY)
         self.compareTransforms(orient)
 
     def testGetNQuarter(self):
@@ -107,15 +107,14 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
                 pixPos = afwGeom.Point2D(x, y)
-                fwdFPPos = fwdTransform.forwardTransform(pixPos)
-                fwdPixPos = fwdTransform.reverseTransform(fwdFPPos)
-                revPixPos = revTransform.forwardTransform(fwdFPPos)
-                revFPPos = revTransform.reverseTransform(pixPos)
+                fwdFPPos = fwdTransform.applyForward(pixPos)
+                fwdPixPos = fwdTransform.applyInverse(fwdFPPos)
+                revPixPos = revTransform.applyForward(fwdFPPos)
+                revFPPos = revTransform.applyInverse(pixPos)
 
-                for i in range(2):
-                    self.assertAlmostEqual(pixPos[i], fwdPixPos[i])
-                    self.assertAlmostEqual(pixPos[i], revPixPos[i])
-                    self.assertAlmostEqual(fwdFPPos[i], revFPPos[i])
+                self.assertPairsAlmostEqual(pixPos, fwdPixPos)
+                self.assertPairsAlmostEqual(pixPos, revPixPos)
+                self.assertPairsAlmostEqual(fwdFPPos, revFPPos)
 
     def testGetters(self):
         """Test getters

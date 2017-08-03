@@ -27,11 +27,11 @@
 #include <vector>
 #include <unordered_map>
 #include "lsst/base.h"
-#include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
+#include "lsst/afw/cameraGeom/TransformMap.h"
 
 namespace lsst {
 namespace afw {
@@ -66,26 +66,36 @@ public:
     /**
      * Make a Detector
      *
-     * @warning
-     * * The keys for the detector-specific coordinate systems in the transform registry
-     *   must include the detector name (even though this is redundant).
+     * @param name name of detector's location in the camera
+     * @param id detector integer ID; used as keys in some tables
+     * @param type type of detector
+     * @param serial serial "number" that identifies the physical detector
+     * @param bbox bounding box
+     * @param ampInfoCatalog catalog of amplifier information
+     * @param orientation detector position and orientation in focal plane
+     * @param pixelSize pixel size (mm)
+     * @param transforms map of CameraSys: afw::geom::Transform, where each
+     *                   Transform's forward transform transforms from PIXELS
+     *                   to the specified camera system
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if:
      * - any amplifier names are not unique
      * - any CamerSys in transformMap has a detector name other than "" or this detector's name
+     *
+     * @warning
+     * * The keys for the detector-specific coordinate systems in the transform registry
+     *   must include the detector name (even though this is redundant).
      */
     explicit Detector(
-            std::string const &name,    ///< name of detector's location in the camera
-            int id,                     ///< detector integer ID; used as keys in some tables
-            DetectorType type,          ///< type of detector
-            std::string const &serial,  ///< serial "number" that identifies the physical detector
-            geom::Box2I const &bbox,    ///< bounding box
-            lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,  ///< catalog of amplifier information
-            Orientation const &orientation,   ///< detector position and orientation in focal plane
-            geom::Extent2D const &pixelSize,  ///< pixel size (mm)
-            CameraTransformMap::Transforms const &transforms  ///< map of
-            ///< CameraSys: lsst::afw::geom::XYTransform, where each transform's "forwardTransform" method
-            ///< transforms from PIXELS to the specified camera system
+            std::string const &name,
+            int id,
+            DetectorType type,
+            std::string const &serial,
+            geom::Box2I const &bbox,
+            lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+            Orientation const &orientation,
+            geom::Extent2D const &pixelSize,
+            TransformMap::Transforms const &transforms
             );
 
     ~Detector() {}
@@ -126,7 +136,7 @@ public:
     geom::Extent2D getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
-    CameraTransformMap const getTransformMap() const { return _transformMap; }
+    TransformMap const getTransformMap() const { return _transformMap; }
 
     /** Get iterator to beginning of amplifier list */
     lsst::afw::table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
@@ -179,31 +189,31 @@ public:
      */
     size_t size() const { return _ampInfoCatalog.size(); }
 
-    /** Does the specified camera coordinate system exist in the transform registry? */
+    /** Can this object convert between PIXELS and the specified camera coordinate system? */
     bool hasTransform(CameraSys const &cameraSys) const;
 
-    /** Does the specified camera coordiante system prefix exist in the transform registry? */
+    /** Can this object convert between PIXELS and the specified camera coordinate system prefix? */
     bool hasTransform(CameraSysPrefix const &cameraSysPrefix) const;
 
     /**
-     * Get an XYTransform that transforms from `cameraSys` to the native system in the forward direction
+     * Get a Transform that transforms from PIXELS to `cameraSys` in the forward direction
      *
      * @param[in] cameraSys  camera coordinate system
-     * @returns a shared_ptr to an lsst::afw::XYTransform
+     * @returns a shared_ptr to an lsst::afw::geom::Transform
      *
      * @throws pex::exceptions::InvalidParameterError if `cameraSys` is unknown
      */
-    std::shared_ptr<afw::geom::XYTransform const> getTransform(CameraSys const &cameraSys) const;
+    std::shared_ptr<TransformMap::Transform> getTransform(CameraSys const &cameraSys) const;
 
     /**
-     * Get an XYTransform that transforms from cameraSysPrefix to the native system in the forward direction
+     * Get a Transform that transforms from PIXELS to `cameraSysPrefix` in the forward direction
      *
      * @param[in] cameraSysPrefix  camera coordinate system prefix
-     * @returns a shared_ptr to an lsst::afw::geom::XYTransform
+     * @returns a shared_ptr to an lsst::afw::geom::Transform
      *
      * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
      */
-    std::shared_ptr<afw::geom::XYTransform const> getTransform(CameraSysPrefix const &cameraSysPrefix) const;
+    std::shared_ptr<TransformMap::Transform> getTransform(CameraSysPrefix const &cameraSysPrefix) const;
 
     /**
      * Make a CameraPoint from a point and a camera system
@@ -246,7 +256,7 @@ public:
      * @return `cameraSysPrefix` with the detector name added
      */
     CameraSys const makeCameraSys(CameraSysPrefix const &cameraSysPrefix) const {
-        return CameraSys(cameraSysPrefix.getSysName(), _name);
+        return CameraSys(cameraSysPrefix, _name);
     }
 
     /**
@@ -277,6 +287,9 @@ public:
         return transform(fromCameraPoint, makeCameraSys(toSys));
     }
 
+    /// The "native" coordinate system of this detector.
+    CameraSys getNativeCoordSys() const { return _nativeSys; }
+
 private:
     typedef std::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
     /**
@@ -300,7 +313,8 @@ private:
     _AmpInfoMap _ampNameIterMap;            ///< map of amplifier name: catalog iterator
     Orientation _orientation;               ///< position and orientation of detector in focal plane
     geom::Extent2D _pixelSize;              ///< pixel size (mm)
-    CameraTransformMap _transformMap;       ///< registry of coordinate transforms
+    CameraSys _nativeSys;                   ///< native coordinate system of this detector
+    TransformMap _transformMap;             ///< registry of coordinate transforms
 };
 }  // namespace cameraGeom
 }  // namespace afw

@@ -28,8 +28,8 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-DistortedTanWcs::DistortedTanWcs(TanWcs const &tanWcs, geom::XYTransform const &pixelsToTanPixels)
-        : TanWcs(tanWcs), _pixelsToTanPixelsPtr(pixelsToTanPixels.clone()) {
+DistortedTanWcs::DistortedTanWcs(TanWcs const &tanWcs, Transform const &pixelsToTanPixels)
+        : TanWcs(tanWcs), _pixelsToTanPixelsPtr(std::make_shared<Transform>(pixelsToTanPixels)) {
     if (tanWcs.hasDistortion()) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "tanWcs has distortion terms");
     }
@@ -57,12 +57,12 @@ void DistortedTanWcs::shiftReferencePixel(double dx, double dy) {
 
 geom::Point2D DistortedTanWcs::skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const {
     auto const tanPos = TanWcs::skyToPixelImpl(sky1, sky2);
-    return _pixelsToTanPixelsPtr->reverseTransform(tanPos);
+    return _pixelsToTanPixelsPtr->applyInverse(tanPos);
 }
 
 void DistortedTanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const {
     auto const pos = geom::Point2D(pixel1, pixel2);
-    auto const tanPos = _pixelsToTanPixelsPtr->forwardTransform(pos);
+    auto const tanPos = _pixelsToTanPixelsPtr->applyForward(pos);
     TanWcs::pixelToSkyImpl(tanPos[0], tanPos[1], sky);
 }
 }
