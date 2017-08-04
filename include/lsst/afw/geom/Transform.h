@@ -93,7 +93,7 @@ public:
     and the "to" endpoint is used to normalize the "current" frame.
 
     This is pickier than the constructor that takes an ast::Mapping in that:
-    - SphereEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
+    - IcrsCoordEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
       are swapped if necessary to the standard order: longitude, latitude.
     - Point2Endpoint must be associated with an ast::Frame (not a subclass),
       because Frame is the only kind of Frame that is sure to be Cartesian.
