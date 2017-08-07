@@ -286,11 +286,14 @@ Box2I SpanSet::getBBox() const { return _bbox; }
    If the whole SpanSet is connected than there will only be one region and every
    Span will be labeled with a 1. If there are two regions (i.e. there are points
    in between not contained in the SpanSet) then Some of the Spans will be labeled
-   1, and the rest labeled 2.
+   1, and the rest labeled 2. _makeLabels also sorts each of the Spans in the
+   current span into an unordered map that is indexed by the y position of each
+   span. This allows efficient lookups of corresponding rows.
 
    The function loops over all the Spans in the Spanset. If the Span has not been
    labeled, the _label function is called, with the current span, the vector
-   containing the labels, and the label for the current region under consideration.
+   containing the labels, the label for the current region under consideration,
+   and the indexed map of Spans.
 
    The _label function will then loop over all Spans in the SpanSet looking for
    rows adjacent to the currently being labeled Span which overlap in the x
@@ -304,23 +307,31 @@ Box2I SpanSet::getBBox() const { return _bbox; }
    function then moves onto the next Span in the SpanSet which has not been
    labeled. If all spans were labeled in the recursive call the loop falls to the
    end, and the label vector and one past the last label number (number of labels +1)
-   are returned to the caller. If _makeLabels finds a Span that has not been labeled,
-   the next label is assigned and the process is repeated until all Spans have
-   been labeled.
+   are returned to the caller. If instead _makeLabels finds a Span that has not
+   been labeled, the next label is assigned and the process is repeated until
+   all Spans have been labeled.
  */
 
-void SpanSet::_label(Span const& spn, std::vector<std::size_t>& labelVector, std::size_t currentLabel) const {
-    std::size_t index = 0;
-    // Loop over all Spans and if it is before or after the current span then consider it
-    for (auto const& currentSpan : _spanVector) {
-        if (!labelVector[index] &&
-            (currentSpan.getY() == spn.getY() - 1 || currentSpan.getY() == spn.getY() + 1)) {
-            if (spansOverlap(spn, currentSpan, /* compareY= */ false)) {
-                labelVector[index] = currentLabel;
-                _label(currentSpan, labelVector, currentLabel);
+void SpanSet::_label(Span const& spn, std::vector<std::size_t>& labelVector, std::size_t currentLabel,
+    std::unordered_map<int, std::vector<std::pair<std::size_t, const Span * >>> & sortMap) const {
+    auto currentIndex = spn.getY();
+    if (currentIndex > 0) {
+        // loop over the prevous row
+        for (auto const & tup : sortMap[currentIndex-1]){
+            if (!labelVector[tup.first] && spansOverlap(spn, *(tup.second), false)) {
+                labelVector[tup.first] = currentLabel;
+                _label(*(tup.second), labelVector, currentLabel, sortMap);
             }
         }
-        ++index;
+    }
+    if (currentIndex <= _spanVector.back().getY()-1) {
+        // loop over the next row
+        for (auto & tup : sortMap[currentIndex+1]){
+            if (!labelVector[tup.first] && spansOverlap(spn, *(tup.second), false)) {
+                labelVector[tup.first] = currentLabel;
+                _label(*(tup.second), labelVector, currentLabel, sortMap);
+            }
+        }
     }
 }
 
@@ -328,10 +339,17 @@ std::pair<std::vector<std::size_t>, std::size_t> SpanSet::_makeLabels() const {
     std::vector<std::size_t> labelVector(_spanVector.size(), 0);
     std::size_t currentLabel = 1;
     std::size_t index = 0;
+    // Create a sorted array of arrays
+    std::unordered_map<int, std::vector<std::pair<std::size_t, const Span *>>> sortMap;
+    std::size_t tempIndex = 0;
+    for (auto const& spn : _spanVector) {
+        sortMap[spn.getY()].push_back(std::make_pair(tempIndex, &spn));
+        tempIndex++;
+    }
     for (auto const& currentSpan : _spanVector) {
         if (!labelVector[index]) {
             labelVector[index] = currentLabel;
-            _label(currentSpan, labelVector, currentLabel);
+            _label(currentSpan, labelVector, currentLabel, sortMap);
             /* At this point we have recursed enough to reach all of the connected
              * region, and should increment the label such that any spans not
              * labeled in the first loop will get a new value. If all of the spans
@@ -359,6 +377,9 @@ std::vector<std::shared_ptr<SpanSet>> SpanSet::split() const {
     auto labels = labeledPair.first;
     auto numberOfLabels = labeledPair.second;
     std::vector<std::shared_ptr<SpanSet>> subRegions;
+    // As the number of labels is known, the number of SpanSets to be created is also known
+    // make a vector of vectors to hold the Spans which will correspond to each SpanSet
+    std::vector<std::vector<Span>> subSpanLists(numberOfLabels - 1);
 
     // if numberOfLabels is 1, that means a null SpanSet is being operated on,
     // and we should return like
@@ -367,14 +388,15 @@ std::vector<std::shared_ptr<SpanSet>> SpanSet::split() const {
         return subRegions;
     }
     subRegions.reserve(numberOfLabels - 1);
-    for (std::size_t i = 1; i < numberOfLabels; ++i) {
-        std::vector<Span> tempVec;
-        for (std::size_t j = 0; j < _spanVector.size(); ++j) {
-            if (labels[j] == i) {
-                tempVec.push_back(_spanVector[j]);
-            }
-        }
-        subRegions.push_back(std::make_shared<SpanSet>(std::move(tempVec)));
+
+    // loop over the current SpanSet's spans sorting each of the spans according to the label
+    // that was assigned
+    for (auto i=0; i < _spanVector.size(); ++i){
+        subSpanLists[labels[i]-1].push_back(_spanVector[i]);
+    }
+    // Transform each of the vectors of Spans into a SpanSet
+    for (auto i=0; i < numberOfLabels-1; ++i){
+        subRegions.push_back(std::make_shared<SpanSet>(subSpanLists[i]));
     }
     return subRegions;
 }
