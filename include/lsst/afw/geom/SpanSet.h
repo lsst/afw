@@ -633,44 +633,53 @@ public:
     template <typename T, typename UnaryPredicate = details::AnyBitSetFunctor<T>>
     static std::shared_ptr<geom::SpanSet> fromMask(
             image::Mask<T> const &mask, UnaryPredicate comparator = details::AnyBitSetFunctor<T>()) {
+        // Create a vector which will hold all the spans created from the mask
         std::vector<Span> tempVec;
-        std::size_t startValue{0};
-        bool started = false;
+        // Grab some variables that will be used in the loop, so that they do not need to be fetched
+        // every iteration.
         auto const maskArray = mask.getArray();
         auto const minPoint = mask.getBBox().getMin();
-        auto dimensions = maskArray.getShape();
-        for (size_t y = 0; y < dimensions[0]; ++y) {
-            startValue = 0;
-            started = false;
-            for (size_t x = 0; x < dimensions[1]; ++x) {
-                // If a new span has not been started, and a given x matches the functor condition
-                // start a new span
-                if (comparator(maskArray[y][x]) && !started) {
-                    started = true;
-                    startValue = x;
-                }
-                // If a span has been started, and the functor condition is false, that means the
-                // Span being created should be stopped, and appended to the Span vector
-                // Offset the x, y position by the minimum point of the mask
-                else if (started && !comparator(maskArray[y][x])) {
-                    tempVec.push_back(
-                            Span(y + minPoint.getY(), startValue + minPoint.getX(), x - 1 + minPoint.getX()));
-                    started = false;
-                }
-                // If this is the last value in the Span's x range (dimension minux one), and started
-                // is still true that means the last value does not evaluate false in the functor
-                // and should be included in the Span under construction. The Span should be completed
-                // and added to the Span Vector before the next span is concidered.
-                // offset the x, y position by the minimum point of the mask
-                if (started && x == dimensions[1] - 1) {
-                    tempVec.push_back(
-                            Span(y + minPoint.getY(), startValue + minPoint.getX(), x + minPoint.getX()));
+        auto const dimensions = maskArray.getShape();
+        auto const minY = minPoint.getY();
+        auto const minX = minPoint.getX();
+        auto const dimMinusOne = dimensions[1] - 1;
+        auto const yDim = dimensions[0];
+        auto const xDim = dimensions[1];
+        // The runCounter variable will be used to keep track of how many pixels are encountered which
+        // satisfy the comparator functor in a row.
+        std::size_t runCounter = 0;
+        auto arrIter = maskArray.begin();
+        for (size_t y = 0; y < yDim; ++y) {
+            // Reset the run counter to zero before each new row
+            runCounter = 0;
+            auto yWithOffset = y + minY;
+            for (size_t x = 0; x < xDim; ++x) {
+                // Compare the current y, x pixel with the comparitor functor generating a true
+                // or false value. Add this value to the run counter. If only true values will
+                // contribute to the length
+                auto compareValue = comparator((*arrIter)[x]);
+                runCounter += compareValue;
+                // if the compareValue is false, and we have a non-zero run length, it means there
+                // was a run of pixels to be turned into a Span that has now ended. Count backward
+                // from the current x to get the start of the run, and end at one before the current
+                // x (both adjusted for the x0 of the masked image)
+                if (!compareValue && runCounter) {
+                    tempVec.push_back(Span(yWithOffset, x - runCounter + minX, x - 1 + minX));
+                    runCounter = 0;
                 }
             }
+            // Since the x loop is over, if runCounter is not zero, this means the Span was not
+            // closed out and added to the vector. The last pixel should be included in the Span
+            // and the Span should be closed and added to the vector of spans.
+            if (runCounter) {
+                tempVec.push_back(
+                        Span(yWithOffset, dimMinusOne - (runCounter - 1) + minX, dimMinusOne + minX));
+            }
+            ++arrIter;
         }
 
         // construct a SpanSet from the spans determined above
-        return std::make_shared<SpanSet>(std::move(tempVec));
+        return std::make_shared<SpanSet>(std::move(tempVec), false);
     }
 
     /** Create a SpanSet from a mask.
