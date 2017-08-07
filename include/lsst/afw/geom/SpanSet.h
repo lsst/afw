@@ -736,7 +736,8 @@ private:
     /* Label Spans according to contiguous group. If the SpanSet is contiguous, all Spans will be labeled 1.
      * If there is more than one group each group will receive a label one higher than the previous.
      */
-    void _label(geom::Span const &spn, std::vector<std::size_t> &labelVector, std::size_t currentLabel) const;
+    void _label(geom::Span const &spn, std::vector<std::size_t> &labelVector, std::size_t currentLabel,
+                std::unordered_map<int, std::vector<std::pair<std::size_t, const Span *>>> &sortVector) const;
     std::pair<std::vector<std::size_t>, std::size_t> _makeLabels() const;
 
     std::shared_ptr<SpanSet> makeShift(int x, int y) const;
