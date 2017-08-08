@@ -271,7 +271,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
 
-def set_module(module):
+def setup_module(module):
     lsst.utils.tests.init()
 
 
