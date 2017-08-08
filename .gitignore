@@ -8,6 +8,7 @@ _build.*
 *~
 *.dSYM/
 core.*
+.cache/
 .sconf_temp
 .sconsign.dblite
 config.log
