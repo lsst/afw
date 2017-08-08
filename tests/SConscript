@@ -5,16 +5,11 @@ pybind11_test_modules = ['testTableArchivesLib']
 
 scripts.BasicSConscript.pybind11(pybind11_test_modules)
 
+# copy AFWDATA_DIR to the test's environment
 afwdataDir = env.ProductDir("afwdata")
+if afwdataDir:
+    env["ENV"]["AFWDATA_DIR"] = afwdataDir
 
-if not afwdataDir:
-        testArgs = dict(statistics = "--run_test=!StatisticsTestImages",
-                        background = "--run_test=!BackgroundTestImages",)
-        scripts.BasicSConscript.tests(noBuildList=[name + '.cc' for name in pybind11_test_modules],
-                                      args=testArgs)
-else:
-        # copy AFWDATA_DIR to the test's environment
-        env["ENV"]["AFWDATA_DIR"] = afwdataDir
-        scripts.BasicSConscript.tests(noBuildList=[name + '.cc' for name in pybind11_test_modules])
+scripts.BasicSConscript.tests(noBuildList=[name + '.cc' for name in pybind11_test_modules])
 
 env.Clean(targets["tests"], "#testTable.fits")
