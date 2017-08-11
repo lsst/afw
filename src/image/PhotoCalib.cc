@@ -102,8 +102,16 @@ ndarray::Array<double, 2, 2> PhotoCalib::instFluxToMaggies(afw::table::SourceCat
 
 void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std::string const &instFluxField,
                                    std::string const &outField) const {
-    throw LSST_EXCEPT(pex::exceptions::LogicError,
-                      "Will not be implemented until RFC-322 is implemented. See DM-10155");
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
+    auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_calFlux").key;
+    auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_calFluxErr").key;
+    for (auto & record : sourceCatalog) {
+        auto result = instFluxToMaggies(record.get(instFluxKey), record.get(instFluxErrKey),
+                                        record.getCentroid());
+        record.set(maggiesKey, result.value);
+        record.set(maggiesErrKey, result.err);
+    }
 }
 
 // ------------------- Conversions to Magnitudes -------------------
@@ -153,8 +161,16 @@ ndarray::Array<double, 2, 2> PhotoCalib::instFluxToMagnitude(afw::table::SourceC
 
 void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
                                      std::string const &instFluxField, std::string const &outField) const {
-    throw LSST_EXCEPT(pex::exceptions::LogicError,
-                      "Will not be implemented until RFC-322 is implemented. See DM-10155.");
+    auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
+    auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
+    auto magKey = sourceCatalog.getSchema().find<double>(outField + "_mag").key;
+    auto magErrKey = sourceCatalog.getSchema().find<double>(outField + "_magErr").key;
+    for (auto & record : sourceCatalog) {
+        auto result = instFluxToMagnitude(record.get(instFluxKey), record.get(instFluxErrKey),
+                                          record.getCentroid());
+        record.set(magKey, result.value);
+        record.set(magErrKey, result.err);
+    }
 }
 
 // ------------------- other utility methods -------------------
