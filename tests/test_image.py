@@ -521,11 +521,55 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(im.get(2, 2), 10)
         self.assertEqual(im.get(0, 0), -1)
 
+    def testImageSlicesOrigin(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        im = afwImage.ImageF(10, 20)
+        im.setXY0(50, 100)
+        im[-1, :, afwImage.PARENT] = -5
+        im[..., 118, afwImage.PARENT] = -5              # equivalent to im[:, 118]
+        im[54, 110, afwImage.PARENT] = 10
+        im[-3:, -2:, afwImage.PARENT] = 100
+        im[-2, -2, afwImage.PARENT] = -10
+        sim = im[51:54, 106:110, afwImage.PARENT]
+        sim[:] = -1
+        im[50:54, 100:104, afwImage.PARENT] = im[2:6, 8:12, afwImage.LOCAL]
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0, 6), 0)
+        self.assertEqual(im.get(9, 15), -5)
+        self.assertEqual(im.get(5, 18), -5)
+        self.assertEqual(im.get(6, 17), 0)
+        self.assertEqual(im.get(7, 18), 100)
+        self.assertEqual(im.get(9, 19), 100)
+        self.assertEqual(im.get(8, 18), -10)
+        self.assertEqual(im.get(1, 6), -1)
+        self.assertEqual(im.get(3, 9), -1)
+        self.assertEqual(im.get(4, 10), 10)
+        self.assertEqual(im.get(4, 9), 0)
+        self.assertEqual(im.get(2, 2), 10)
+        self.assertEqual(im.get(0, 0), -1)
+
     def testImageSliceFromBox(self):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         bbox = afwGeom.BoxI(afwGeom.PointI(1, 3), afwGeom.PointI(6, 9))
         im[bbox] = -1
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0, 6), 0)
+        self.assertEqual(im.get(1, 6), -1)
+        self.assertEqual(im.get(3, 9), -1)
+
+    def testImageSliceFromBoxOrigin(self):
+        """Test using a Box2I to index an Image"""
+        im = afwImage.ImageF(10, 20)
+        im.setXY0(50, 100)
+        bbox = afwGeom.BoxI(afwGeom.PointI(51, 103), afwGeom.ExtentI(6, 7))
+        im[bbox, afwImage.PARENT] = -1
 
         if display:
             ds9.mtv(im)
