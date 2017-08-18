@@ -134,8 +134,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
-        filename = os.path.join(
-            os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
+        testPath = os.path.abspath(os.path.dirname(__file__))
+        filename = os.path.join(testPath, "data", "version-0-ExposureCatalog.fits")
         cat = lsst.afw.table.ExposureCatalog.readFits(filename)
         record = cat[0]
         self.assertIsNone(record.getApCorrMap())

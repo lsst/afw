@@ -88,14 +88,13 @@ class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
-        filename = os.path.join(
-            os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
+        testPath = os.path.abspath(os.path.dirname(__file__))
+        filename = os.path.join(testPath, "data", "version-0-ExposureCatalog.fits")
         cat = afwTable.ExposureCatalog.readFits(filename)
         record = cat[0]
         self.assertIsNone(record.getValidPolygon())
 
-        filename2 = os.path.join(
-            os.environ["AFW_DIR"], "tests", "data", "version-1-ExposureCatalog.fits")
+        filename2 = os.path.join(testPath, "data", "version-1-ExposureCatalog.fits")
         cat2 = afwTable.ExposureCatalog.readFits(filename2)
         record2 = cat2[0]
         self.assertIsNone(record2.getValidPolygon())
