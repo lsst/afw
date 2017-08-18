@@ -399,8 +399,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                         fKey2.getElement(record, i, j), v, rtol=1E-7)
                     fKey2.setElement(record, i, j, (i+1)*10 + (j+1))
                 else:
-                    self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError,
-                                             fKey1.setElement, record, i, j, 0.0)
+                    with self.assertRaises(lsst.pex.exceptions.LogicError):
+                        fKey1.setElement(record, i, j, 0.0)
                 k += 1
 
     def testCovarianceMatrixKey(self):

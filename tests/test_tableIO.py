@@ -47,6 +47,7 @@ class TableIoTestCase(lsst.utils.tests.TestCase):
             inFits = astropy.io.fits.open(tmpFile)
             self.assertEqual(inFits[1].header["TTYPE1"], "a")
             self.assertEqual(inFits[1].header["TUNIT1"], "rad")
+            inFits.close()
 
     def testSchemaReading(self):
         """Test that a Schema can be read from a FITS file

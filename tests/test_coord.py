@@ -790,8 +790,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             self.l*afwGeom.degrees, self.b*afwGeom.degrees)
 
         # Mixed systems, no system provided
-        self.assertRaisesLsstCpp(
-            pexEx.InvalidParameterError, afwCoord.averageCoord, [icrs, gal])
+        with self.assertRaises(pexEx.InvalidParameterError):
+            afwCoord.averageCoord([icrs, gal])
 
         # Mixed systems, but target system provided
         # Only checking this doesn't fail; will check accuracy later

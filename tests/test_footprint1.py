@@ -630,12 +630,16 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
                                                                     (6, 3, 5)]])
         foot = afwDetect.Footprint(spanSet, region)
 
+        openedFile = False
         if True:
             fd = open("/dev/null", "w")
+            openedFile = True
         else:
             fd = sys.stdout
 
         afwDetectUtils.writeFootprintAsDefects(fd, foot)
+        if openedFile:
+            fd.close()
 
     def testSetFromFootprint(self):
         """Test setting mask/image pixels from a Footprint list"""
