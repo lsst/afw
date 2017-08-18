@@ -109,7 +109,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def testExposurePersistence(self):
         """Test that the ApCorrMap is saved with an Exposure"""
-        filename = "testApCorrMap.fits"
+        filename = "testApCorrMap-exposure.fits"
         exposure1 = lsst.afw.image.ExposureF(self.bbox)
         exposure1.getInfo().setApCorrMap(self.map)
         exposure1.writeFits(filename)
@@ -120,7 +120,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def testExposureRecordPersistence(self):
         """Test that the ApCorrMap is saved with an ExposureRecord"""
-        filename = "testApCorrMap.fits"
+        filename = "testApCorrMap-exposure-record.fits"
         cat1 = lsst.afw.table.ExposureCatalog(
             lsst.afw.table.ExposureTable.makeMinimalSchema())
         record1 = cat1.addNew()
