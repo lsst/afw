@@ -84,5 +84,5 @@ def assertCoordListsAlmostEqual(testCase, coordlist0, coordlist1, maxDiff=0.001*
 @lsst.utils.tests.inTestCase
 def assertCoordsNearlyEqual(*args, **kwargs):
     warnings.warn("Deprecated. Use assertCoordsAlmostEqual",
-                  DeprecationWarning)
+                  DeprecationWarning, 2)
     assertCoordsAlmostEqual(*args, **kwargs)
