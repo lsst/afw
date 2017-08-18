@@ -101,36 +101,33 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def testPersistence(self):
         """Test that we can round-trip an ApCorrMap through FITS persistence."""
-        filename = "testApCorrMap.fits"
-        self.map.writeFits(filename)
-        map2 = lsst.afw.image.ApCorrMap.readFits(filename)
-        self.compare(self.map, map2)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.map.writeFits(filename)
+            map2 = lsst.afw.image.ApCorrMap.readFits(filename)
+            self.compare(self.map, map2)
 
     def testExposurePersistence(self):
         """Test that the ApCorrMap is saved with an Exposure"""
-        filename = "testApCorrMap-exposure.fits"
-        exposure1 = lsst.afw.image.ExposureF(self.bbox)
-        exposure1.getInfo().setApCorrMap(self.map)
-        exposure1.writeFits(filename)
-        exposure2 = lsst.afw.image.ExposureF(filename)
-        map2 = exposure2.getInfo().getApCorrMap()
-        self.compare(self.map, map2)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            exposure1 = lsst.afw.image.ExposureF(self.bbox)
+            exposure1.getInfo().setApCorrMap(self.map)
+            exposure1.writeFits(filename)
+            exposure2 = lsst.afw.image.ExposureF(filename)
+            map2 = exposure2.getInfo().getApCorrMap()
+            self.compare(self.map, map2)
 
     def testExposureRecordPersistence(self):
         """Test that the ApCorrMap is saved with an ExposureRecord"""
-        filename = "testApCorrMap-exposure-record.fits"
-        cat1 = lsst.afw.table.ExposureCatalog(
-            lsst.afw.table.ExposureTable.makeMinimalSchema())
-        record1 = cat1.addNew()
-        record1.setApCorrMap(self.map)
-        cat1.writeFits(filename)
-        cat2 = lsst.afw.table.ExposureCatalog.readFits(filename)
-        record2 = cat2[0]
-        map2 = record2.getApCorrMap()
-        self.compare(self.map, map2)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            cat1 = lsst.afw.table.ExposureCatalog(
+                lsst.afw.table.ExposureTable.makeMinimalSchema())
+            record1 = cat1.addNew()
+            record1.setApCorrMap(self.map)
+            cat1.writeFits(filename)
+            cat2 = lsst.afw.table.ExposureCatalog.readFits(filename)
+            record2 = cat2[0]
+            map2 = record2.getApCorrMap()
+            self.compare(self.map, map2)
 
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
