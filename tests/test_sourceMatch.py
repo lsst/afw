@@ -181,6 +181,7 @@ class SourceMatchTestCase(unittest.TestCase):
             s.setDec(dec * afwGeom.degrees)
             s.set(self.table.getPsfFluxKey(), psfMags[band])
 
+        ifd.close()
         del ifd
 
         # Read catalalogue built from the template image
@@ -211,6 +212,7 @@ class SourceMatchTestCase(unittest.TestCase):
                   dec * afwGeom.degrees)
             s.set(self.table.getPsfFluxKey(), flux[0])
 
+        ifd.close()
         del ifd
 
         # Actually do the match
