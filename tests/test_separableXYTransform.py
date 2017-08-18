@@ -63,7 +63,7 @@ class SeparableXYTransformTestCase(unittest.TestCase):
             pt0 = afwGeom.Point2D(x, y)
             tmp = transform.forwardTransform(pt0)
             pt1 = transform.reverseTransform(tmp)
-            self.assertAlmostEquals((pt1 - pt0).computeNorm(), 0, places=6)
+            self.assertAlmostEqual((pt1 - pt0).computeNorm(), 0, places=6)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

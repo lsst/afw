@@ -357,7 +357,7 @@ class CameraGeomTestCase(unittest.TestCase):
         """
         self.assertEqual(cp1.getCameraSys(), cp2.getCameraSys())
         for i in range(2):
-            self.assertAlmostEquals(cp1.getPoint()[i], cp2.getPoint()[i], 6)
+            self.assertAlmostEqual(cp1.getPoint()[i], cp2.getPoint()[i], 6)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

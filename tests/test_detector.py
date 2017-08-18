@@ -53,7 +53,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for i in range(2):
             self.assertEqual(bbox.getMin()[i], dw.bbox.getMin()[i])
             self.assertEqual(bbox.getMax()[i], dw.bbox.getMax()[i])
-        self.assertAlmostEquals(dw.pixelSize, detector.getPixelSize())
+        self.assertAlmostEqual(dw.pixelSize, detector.getPixelSize())
         self.assertEqual(len(detector), len(dw.ampInfo))
 
         orientation = detector.getOrientation()
@@ -103,19 +103,19 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             pixCamPoint = dw.detector.transform(fpCamPoint, cameraGeom.PIXELS)
             pixPoint = pixCamPoint.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(
+                self.assertAlmostEqual(
                     fpPoint[i]/dw.pixelSize[i] + pixOffset[i], pixPoint[i])
             fpCamPoint2 = dw.detector.transform(
                 pixCamPoint, cameraGeom.FOCAL_PLANE)
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(fpPoint[i], fpPoint2[i])
+                self.assertAlmostEqual(fpPoint[i], fpPoint2[i])
 
             # test pix to pix
             pixCamPoint2 = dw.detector.transform(
                 pixCamPoint, cameraGeom.PIXELS)
             for i in range(2):
-                self.assertAlmostEquals(pixCamPoint.getPoint()[
+                self.assertAlmostEqual(pixCamPoint.getPoint()[
                                         i], pixCamPoint2.getPoint()[i])
 
         # make sure you cannot transform to a different detector
@@ -210,9 +210,9 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                     predToCameraPoint.getCameraSys().getSysName(),
                     cameraSys.getSysName())
                 for i in range(2):
-                    self.assertAlmostEquals(predToPoint[i], toPoint[i])
+                    self.assertAlmostEqual(predToPoint[i], toPoint[i])
                     if cameraSys == cameraGeom.PIXELS:
-                        self.assertAlmostEquals(fromPoint[i], toPoint[i])
+                        self.assertAlmostEqual(fromPoint[i], toPoint[i])
 
     def testGetCenter(self):
         """Test the getCenter method
@@ -231,9 +231,9 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 ctrPixCameraPoint, cameraSys)
             predCtrPoint = predCtrCameraPoint.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(ctrPoint[i], predCtrPoint[i])
+                self.assertAlmostEqual(ctrPoint[i], predCtrPoint[i])
                 if cameraSys == cameraGeom.PIXELS:
-                    self.assertAlmostEquals(ctrPixPoint[i], ctrPoint[i])
+                    self.assertAlmostEqual(ctrPixPoint[i], ctrPoint[i])
 
     def testCopyDetector(self):
         """Test copyDetector() method
