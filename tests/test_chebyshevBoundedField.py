@@ -303,30 +303,29 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         """Test that we can fit 1-d arrays produced by a ChebyshevBoundedField and
         get the same coefficients back.
         """
-        filename = "testChebyshevBoundedField.fits"
         boxD = lsst.afw.geom.Box2D(self.bbox)
         nPoints = 50
-        for ctrl, coefficients in self.cases:
-            inField = lsst.afw.math.ChebyshevBoundedField(
-                self.bbox, coefficients)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            for ctrl, coefficients in self.cases:
+                inField = lsst.afw.math.ChebyshevBoundedField(
+                    self.bbox, coefficients)
+                inField.writeFits(filename)
+                outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
+                self.assertEqual(inField.getBBox(), outField.getBBox())
+                self.assertFloatsAlmostEqual(
+                    inField.getCoefficients(), outField.getCoefficients())
+                x = np.random.rand(nPoints)*boxD.getWidth() + boxD.getMinX()
+                y = np.random.rand(nPoints)*boxD.getHeight() + boxD.getMinY()
+                z1 = inField.evaluate(x, y)
+                z2 = inField.evaluate(x, y)
+                self.assertFloatsAlmostEqual(z1, z2, rtol=1E-13)
+
+            # test with an empty bbox
+            inField = lsst.afw.math.ChebyshevBoundedField(lsst.afw.geom.Box2I(),
+                                                          np.array([[1.0, 2.0], [3.0, 4.0]]))
             inField.writeFits(filename)
             outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
             self.assertEqual(inField.getBBox(), outField.getBBox())
-            self.assertFloatsAlmostEqual(
-                inField.getCoefficients(), outField.getCoefficients())
-            x = np.random.rand(nPoints)*boxD.getWidth() + boxD.getMinX()
-            y = np.random.rand(nPoints)*boxD.getHeight() + boxD.getMinY()
-            z1 = inField.evaluate(x, y)
-            z2 = inField.evaluate(x, y)
-            self.assertFloatsAlmostEqual(z1, z2, rtol=1E-13)
-
-        # test with an empty bbox
-        inField = lsst.afw.math.ChebyshevBoundedField(lsst.afw.geom.Box2I(),
-                                                      np.array([[1.0, 2.0], [3.0, 4.0]]))
-        inField.writeFits(filename)
-        outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
-        self.assertEqual(inField.getBBox(), outField.getBBox())
-        os.remove(filename)
 
     def testTruncate(self):
         """Test that truncate() works as expected

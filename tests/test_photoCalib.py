@@ -48,9 +48,6 @@ def computeMagnitudeErr(instFluxErr, instFlux, instFlux0Err, instFlux0, flux):
 class PhotoCalibTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        self.testDir = os.path.dirname(__file__)
-        self.persistenceFile = "testPhotoCalib_testPersistence.fits"
-
         self.point0 = lsst.afw.geom.Point2D(0, 0)
         self.pointXShift = lsst.afw.geom.Point2D(-10, 0)
         self.pointYShift = lsst.afw.geom.Point2D(0, -10)
@@ -308,10 +305,10 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
             scaling = photoCalib1.computeScalingTo(photoCalibNoBBox)
 
     def _testPersistence(self, photoCalib):
-        photoCalib.writeFits(self.persistenceFile)
-        result = lsst.afw.image.PhotoCalib.readFits(self.persistenceFile)
-        self.assertEqual(result, photoCalib)
-        os.remove(self.persistenceFile)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            photoCalib.writeFits(filename)
+            result = lsst.afw.image.PhotoCalib.readFits(filename)
+            self.assertEqual(result, photoCalib)
 
     def testPersistence(self):
         photoCalib = lsst.afw.image.PhotoCalib(self.instFlux0)

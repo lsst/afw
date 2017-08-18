@@ -40,7 +40,6 @@ class MatchFitsTestCase(unittest.TestCase):
     def setUp(self):
         self.size = 10
         self.numMatches = self.size//2
-        self.filename = "matches.fits"
         self.schema = afwTable.SimpleTable.makeMinimalSchema()
         self.cat1 = afwTable.SimpleCatalog(self.schema)
         self.cat2 = afwTable.SimpleCatalog(self.schema)
@@ -79,8 +78,9 @@ class MatchFitsTestCase(unittest.TestCase):
 
     def testIO(self):
         packed = afwTable.packMatches(self.matches)
-        packed.writeFits(self.filename)
-        matches = afwTable.BaseCatalog.readFits(self.filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            packed.writeFits(filename)
+            matches = afwTable.BaseCatalog.readFits(filename)
         cat1 = self.cat1.copy()
         cat2 = self.cat2.copy()
         cat1.sort()

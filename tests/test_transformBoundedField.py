@@ -142,9 +142,9 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
         Also test operator==
         """
-        filename = "testTransformBoundedField.fits"
-        self.boundedField.writeFits(filename)
-        readField = TransformBoundedField.readFits(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.boundedField.writeFits(filename)
+            readField = TransformBoundedField.readFits(filename)
 
         self.assertTrue(self.boundedField == readField)
         self.assertFalse(self.boundedField != readField)
@@ -154,7 +154,6 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
         readResArr = readField.evaluate(self.xList, self.yList)
         assert_allclose(resArr, readResArr)
         self.assertEqual(readField.getBBox(), self.bbox)
-        os.remove(filename)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
