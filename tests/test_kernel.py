@@ -163,8 +163,8 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 with self.assertRaises(pexExcept.InvalidParameterError):
                     kernelResized = kernel.resized(kWidth + padX, kHeight + padY)
             kernelResized = kernel.resized(kWidth + padX, kHeight + padY)
-            self.assertEquals(kernel.getWidth() + padX, kernelResized.getWidth())
-            self.assertEquals(kernel.getHeight() + padY, kernelResized.getHeight())
+            self.assertEqual(kernel.getWidth() + padX, kernelResized.getWidth())
+            self.assertEqual(kernel.getHeight() + padY, kernelResized.getHeight())
             errStr = self.compareResizedKernels(kernel, kernelResized)
             if errStr:
                 self.fail(errStr)

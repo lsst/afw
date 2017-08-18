@@ -193,10 +193,10 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         hsum = afwDetect.mergeHeavyFootprints(hfoot1, hfoot2)
 
         bb = hsum.getBBox()
-        self.assertEquals(bb.getMinX(), 9)
-        self.assertEquals(bb.getMaxX(), 15)
-        self.assertEquals(bb.getMinY(), 1)
-        self.assertEquals(bb.getMaxY(), 3)
+        self.assertEqual(bb.getMinX(), 9)
+        self.assertEqual(bb.getMaxX(), 15)
+        self.assertEqual(bb.getMinY(), 1)
+        self.assertEqual(bb.getMaxY(), 3)
 
         msum = afwImage.MaskedImageF(20, 10)
         hsum.insert(msum)
