@@ -214,17 +214,17 @@ def makeEndpoints(testCase):
 @lsst.utils.tests.inTestCase
 def assertAnglesNearlyEqual(*args, **kwargs):
     warnings.warn("Deprecated. Use assertAnglesAlmostEqual",
-                  DeprecationWarning)
+                  DeprecationWarning, 2)
     assertAnglesAlmostEqual(*args, **kwargs)
 
 
 @lsst.utils.tests.inTestCase
 def assertPairsNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertPairsAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertPairsAlmostEqual", DeprecationWarning, 2)
     assertPairsAlmostEqual(*args, **kwargs)
 
 
 @lsst.utils.tests.inTestCase
 def assertBoxesNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertBoxesAlmostEqual", DeprecationWarning)
+    warnings.warn("Deprecated. Use assertBoxesAlmostEqual", DeprecationWarning, 2)
     assertBoxesAlmostEqual(*args, **kwargs)

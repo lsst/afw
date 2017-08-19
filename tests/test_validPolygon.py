@@ -55,47 +55,43 @@ class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def testPersistence(self):
         """Test that we can round-trip an ValidPolygon through FITS persistence."""
-        filename = "testValidPolygon.fits"
-        self.polygon.writeFits(filename)
-        polygon2 = Polygon.readFits(filename)
-        self.assertEqual(self.polygon, polygon2)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.polygon.writeFits(filename)
+            polygon2 = Polygon.readFits(filename)
+            self.assertEqual(self.polygon, polygon2)
 
     def testExposurePersistence(self):
         """Test that the ValidPolygon is saved with an Exposure"""
-        filename = "testValidPolygon.fits"
-        exposure1 = afwImage.ExposureF(self.bbox)
-        exposure1.getInfo().setValidPolygon(self.polygon)
-        exposure1.writeFits(filename)
-        exposure2 = afwImage.ExposureF(filename)
-        polygon2 = exposure2.getInfo().getValidPolygon()
-        self.assertEqual(self.polygon, polygon2)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            exposure1 = afwImage.ExposureF(self.bbox)
+            exposure1.getInfo().setValidPolygon(self.polygon)
+            exposure1.writeFits(filename)
+            exposure2 = afwImage.ExposureF(filename)
+            polygon2 = exposure2.getInfo().getValidPolygon()
+            self.assertEqual(self.polygon, polygon2)
 
     def testExposureRecordPersistence(self):
         """Test that the ValidPolygon is saved with an ExposureRecord"""
-        filename = "testValidPolygon.fits"
-        cat1 = afwTable.ExposureCatalog(
-            afwTable.ExposureTable.makeMinimalSchema())
-        record1 = cat1.addNew()
-        record1.setValidPolygon(self.polygon)
-        cat1.writeFits(filename)
-        cat2 = afwTable.ExposureCatalog.readFits(filename)
-        record2 = cat2[0]
-        polygon2 = record2.getValidPolygon()
-        self.assertEqual(self.polygon, polygon2)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            cat1 = afwTable.ExposureCatalog(
+                afwTable.ExposureTable.makeMinimalSchema())
+            record1 = cat1.addNew()
+            record1.setValidPolygon(self.polygon)
+            cat1.writeFits(filename)
+            cat2 = afwTable.ExposureCatalog.readFits(filename)
+            record2 = cat2[0]
+            polygon2 = record2.getValidPolygon()
+            self.assertEqual(self.polygon, polygon2)
 
     def testExposureCatalogBackwardsCompatibility(self):
         """Test that we can read an ExposureCatalog written with an old version of the code."""
-        filename = os.path.join(
-            os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
+        testPath = os.path.abspath(os.path.dirname(__file__))
+        filename = os.path.join(testPath, "data", "version-0-ExposureCatalog.fits")
         cat = afwTable.ExposureCatalog.readFits(filename)
         record = cat[0]
         self.assertIsNone(record.getValidPolygon())
 
-        filename2 = os.path.join(
-            os.environ["AFW_DIR"], "tests", "data", "version-1-ExposureCatalog.fits")
+        filename2 = os.path.join(testPath, "data", "version-1-ExposureCatalog.fits")
         cat2 = afwTable.ExposureCatalog.readFits(filename2)
         record2 = cat2[0]
         self.assertIsNone(record2.getValidPolygon())

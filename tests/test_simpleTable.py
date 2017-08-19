@@ -275,14 +275,13 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record1 = cat1.addNew()
         record1.set(k1, 4)
         record1.set(k2, np.array([5, 6, 7, 8], dtype=np.uint16))
-        filename = "testSimpleTable-testUnsignedFitsPersistence.fits"
-        cat1.writeFits(filename)
-        cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            cat1.writeFits(filename)
+            cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
         record2 = cat2[0]
         self.assertEqual(cat1.schema, cat2.schema)
         self.assertEqual(record1.get(k1), record2.get(k1))
         self.assertFloatsEqual(record1.get(k2), record2.get(k2))
-        os.remove(filename)
 
     def testIteration(self):
         schema = lsst.afw.table.Schema()
@@ -691,9 +690,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(lsst.pex.exceptions.LogicError):
             cat1.get(ka)
         # Test that we can round-trip variable-length arrays through FITS
-        filename = "testSimpleTable_testVariableLengthArrays.fits"
-        cat1.writeFits(filename)
-        cat3 = lsst.afw.table.BaseCatalog.readFits(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            cat1.writeFits(filename)
+            cat3 = lsst.afw.table.BaseCatalog.readFits(filename)
         self.assertEqual(schema.compare(cat3.schema, lsst.afw.table.Schema.IDENTICAL),
                          lsst.afw.table.Schema.IDENTICAL)
         record4 = cat3[0]
@@ -701,7 +700,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsEqual(record4.get(kb), b1)
         self.assertFloatsEqual(record4.get(kc), c1)
         self.assertEqual(record4.get(kd), d1)
-        os.remove(filename)
 
     def testCompoundFieldFitsConversion(self):
         """Test that we convert compound fields saved with an older version of the pipeline

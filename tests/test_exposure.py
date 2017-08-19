@@ -217,20 +217,20 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(exposure.hasWcs())
         self.assertEqual(exposure.getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
-        self.assertEquals(exposure.getDetector().getName(),
+        self.assertEqual(exposure.getDetector().getName(),
                           self.detector.getName())
-        self.assertEquals(exposure.getDetector().getSerial(),
+        self.assertEqual(exposure.getDetector().getSerial(),
                           self.detector.getSerial())
-        self.assertEquals(exposure.getFilter(), gFilter)
+        self.assertEqual(exposure.getFilter(), gFilter)
 
         self.assertTrue(exposure.getInfo().hasWcs())
         self.assertEqual(exposure.getInfo().getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
-        self.assertEquals(exposure.getInfo().getDetector().getName(),
+        self.assertEqual(exposure.getInfo().getDetector().getName(),
                           self.detector.getName())
-        self.assertEquals(exposure.getInfo().getDetector().getSerial(),
+        self.assertEqual(exposure.getInfo().getDetector().getSerial(),
                           self.detector.getSerial())
-        self.assertEquals(exposure.getInfo().getFilter(), gFilter)
+        self.assertEqual(exposure.getInfo().getFilter(), gFilter)
 
     def testNullWcs(self):
         """Test that an Exposure constructed with second argument None is usable
@@ -269,11 +269,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(exposure.hasWcs())
         self.assertEqual(exposure.getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
-        self.assertEquals(exposure.getDetector().getName(),
+        self.assertEqual(exposure.getDetector().getName(),
                           self.detector.getName())
-        self.assertEquals(exposure.getDetector().getSerial(),
+        self.assertEqual(exposure.getDetector().getSerial(),
                           self.detector.getSerial())
-        self.assertEquals(exposure.getFilter(), gFilter)
+        self.assertEqual(exposure.getFilter(), gFilter)
 
     def testVisitInfoFitsPersistence(self):
         """Test saving an exposure to FITS and reading it back in preserves (some) VisitInfo fields"""
@@ -318,11 +318,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposure.setDetector(self.detector)
         exposure.setFilter(afwImage.Filter("g"))
 
-        self.assertEquals(exposure.getDetector().getName(),
+        self.assertEqual(exposure.getDetector().getName(),
                           self.detector.getName())
-        self.assertEquals(exposure.getDetector().getSerial(),
+        self.assertEqual(exposure.getDetector().getSerial(),
                           self.detector.getSerial())
-        self.assertEquals(exposure.getFilter().getName(), "g")
+        self.assertEqual(exposure.getFilter().getName(), "g")
 
         try:
             exposure.getWcs()

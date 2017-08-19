@@ -61,5 +61,5 @@ def makeVisitInfo(**kwargs):
                     (lsst.afw.coord.Weather, defaults to Weather(NaN, NaN, NaN))
     """
     warnings.warn(
-        "makeVisitInfo is deprecated; use VisitInfo directly, instead", DeprecationWarning)
+        "makeVisitInfo is deprecated; use VisitInfo directly, instead", DeprecationWarning, 2)
     return VisitInfo(**kwargs)

@@ -190,12 +190,12 @@ def assertWcsAlmostEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afw
 
 
 def wcsNearlyEqualOverBBox(*args, **kwargs):
-    warnings.warn("Deprecated. Use wcsAlmostEqualOverBBox", DeprecationWarning)
+    warnings.warn("Deprecated. Use wcsAlmostEqualOverBBox", DeprecationWarning, 2)
     return wcsAlmostEqualOverBBox(*args, **kwargs)
 
 
 @lsst.utils.tests.inTestCase
 def assertWcsNearlyEqualOverBBox(*args, **kwargs):
     warnings.warn("Deprecated. Use assertWcsAlmostEqualOverBBox",
-                  DeprecationWarning)
+                  DeprecationWarning, 2)
     assertWcsAlmostEqualOverBBox(*args, **kwargs)

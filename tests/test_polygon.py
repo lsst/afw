@@ -359,11 +359,10 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test that polygons can be read and written to fits files"""
         for num in range(3, 30):
             poly = self.polygon(num)
-            filename = 'polygon.fits'
-            poly.writeFits(filename)
-            poly2 = Polygon.readFits(filename)
+            with lsst.utils.tests.getTempFilePath(".fits") as filename:
+                poly.writeFits(filename)
+                poly2 = Polygon.readFits(filename)
             self.assertEqual(poly, poly2)
-            os.remove(filename)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

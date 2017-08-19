@@ -34,7 +34,6 @@ class HeaderTestCase(lsst.utils.tests.TestCase):
     """Test that headers round-trip"""
 
     def testHeaders(self):
-        filename = "tests/header.fits"
         header = {"STR": "String",
                   "INT": 12345,
                   "FLOAT": 678.9,
@@ -49,9 +48,10 @@ class HeaderTestCase(lsst.utils.tests.TestCase):
         for k, v in header.items():
             metadata.add(k, v)
 
-        exp.writeFits(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            exp.writeFits(filename)
+            exp = afwImage.ExposureI(filename)
 
-        exp = afwImage.ExposureI(filename)
         metadata = exp.getMetadata()
         for k, v in header.items():
             self.assertTrue(metadata.exists(k))

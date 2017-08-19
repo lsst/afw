@@ -171,6 +171,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
             fits[1].header.remove("CTYPE1")
             fits[1].header.remove("CTYPE2")
             fits.writeto(fileName, clobber=True)
+            fits.close()
             # now load it using afw
             expOut = lsst.afw.image.ExposureF(fileName)
             wcsOut = expOut.getWcs()

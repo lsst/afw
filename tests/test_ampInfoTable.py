@@ -116,44 +116,44 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 record.setRawVerticalOverscanBBox(rawVerticalOverscanBBox)
                 record.setRawPrescanBBox(rawPrescanBBox)
 
-            self.assertEquals(name, record.getName())
-            self.assertEquals(gain, record.getGain())
-            self.assertEquals(saturation, record.getSaturation())
-            self.assertEquals(readNoise, record.getReadNoise())
-            self.assertEquals(readoutCorner, record.getReadoutCorner())
-            self.assertEquals(list(linearityCoeffs),
+            self.assertEqual(name, record.getName())
+            self.assertEqual(gain, record.getGain())
+            self.assertEqual(saturation, record.getSaturation())
+            self.assertEqual(readNoise, record.getReadNoise())
+            self.assertEqual(readoutCorner, record.getReadoutCorner())
+            self.assertEqual(list(linearityCoeffs),
                               record.getLinearityCoeffs())
-            self.assertEquals(linearityType, record.getLinearityType())
-            self.assertEquals(bbox, record.getBBox())
-            self.assertEquals(hasRawInfo, record.getHasRawInfo())
+            self.assertEqual(linearityType, record.getLinearityType())
+            self.assertEqual(bbox, record.getBBox())
+            self.assertEqual(hasRawInfo, record.getHasRawInfo())
             if hasRawInfo:
-                self.assertEquals(rawBBox, record.getRawBBox())
-                self.assertEquals(rawDataBBox, record.getRawDataBBox())
-                self.assertEquals(rawHorizontalOverscanBBox,
+                self.assertEqual(rawBBox, record.getRawBBox())
+                self.assertEqual(rawDataBBox, record.getRawDataBBox())
+                self.assertEqual(rawHorizontalOverscanBBox,
                                   record.getRawHorizontalOverscanBBox())
-                self.assertEquals(rawVerticalOverscanBBox,
+                self.assertEqual(rawVerticalOverscanBBox,
                                   record.getRawVerticalOverscanBBox())
-                self.assertEquals(rawPrescanBBox, record.getRawPrescanBBox())
-                self.assertEquals(rawFlipX, record.getRawFlipX())
-                self.assertEquals(rawFlipY, record.getRawFlipY())
-                self.assertEquals(rawXYOffset, record.getRawXYOffset())
+                self.assertEqual(rawPrescanBBox, record.getRawPrescanBBox())
+                self.assertEqual(rawFlipX, record.getRawFlipX())
+                self.assertEqual(rawFlipY, record.getRawFlipY())
+                self.assertEqual(rawXYOffset, record.getRawXYOffset())
 
-        self.assertEquals(len(self.catalog), 2)
+        self.assertEqual(len(self.catalog), 2)
         for i, data in enumerate(zip(nameRawInfoList, self.catalog)):
             name, hasRawInfo = data[0]
             record = data[1]
-            self.assertEquals(name, self.catalog[i].getName())
-            self.assertEquals(name, record.getName())
-            self.assertEquals(hasRawInfo, self.catalog[i].getHasRawInfo())
-            self.assertEquals(hasRawInfo, record.getHasRawInfo())
+            self.assertEqual(name, self.catalog[i].getName())
+            self.assertEqual(name, record.getName())
+            self.assertEqual(hasRawInfo, self.catalog[i].getHasRawInfo())
+            self.assertEqual(hasRawInfo, record.getHasRawInfo())
 
         with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             self.catalog.writeFits(fileName)
             catCopy = afwTable.AmpInfoCatalog.readFits(fileName)
-            self.assertEquals(type(self.catalog), type(catCopy))
+            self.assertEqual(type(self.catalog), type(catCopy))
             for rec1, rec2 in zip(self.catalog, catCopy):
-                self.assertEquals(rec1.getName(), rec2.getName())
-                self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
+                self.assertEqual(rec1.getName(), rec2.getName())
+                self.assertEqual(rec1.getHasRawInfo(), rec2.getHasRawInfo())
 
         self.assertEqual(self.catalog.table.schema, self.schema)
         self.assertEqual(self.catalog.schema, self.schema)

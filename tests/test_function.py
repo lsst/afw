@@ -516,7 +516,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
         errMsg = "{} = {} != {} for n={}, x={}, xOffset={}, xAdj={}"
         for n in range(1, 5):
             f = afwMath.LanczosFunction1D(n)
-            self.assertEquals(f.getOrder(), n)
+            self.assertEqual(f.getOrder(), n)
 
             for xOffset in (-10.0, 0.0, 0.05):
                 f.setParameters((xOffset,))
@@ -540,7 +540,7 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
         errMsg = "{} = {} != {} for n={}, x={}, xOffset={}, yOffset={}, xAdj={}, yAdj={}"
         for n in range(1, 5):
             f = afwMath.LanczosFunction2D(n)
-            self.assertEquals(f.getOrder(), n)
+            self.assertEqual(f.getOrder(), n)
 
             for xOffset in (-10.0, 0.0, 0.05):
                 for yOffset in (-0.01, 0.0, 7.5):

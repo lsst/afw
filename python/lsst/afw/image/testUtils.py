@@ -380,12 +380,12 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
 @lsst.utils.tests.inTestCase
 def assertImagesNearlyEqual(*args, **kwargs):
     warnings.warn("Deprecated. Use assertImagesAlmostEqual",
-                  DeprecationWarning)
+                  DeprecationWarning, 2)
     assertImagesAlmostEqual(*args, **kwargs)
 
 
 @lsst.utils.tests.inTestCase
 def assertMaskedImagesNearlyEqual(*args, **kwargs):
     warnings.warn("Deprecated. Use assertMaskedImagesAlmostEqual",
-                  DeprecationWarning)
+                  DeprecationWarning, 2)
     assertMaskedImagesAlmostEqual(*args, **kwargs)

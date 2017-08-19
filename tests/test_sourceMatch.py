@@ -152,64 +152,64 @@ class SourceMatchTestCase(unittest.TestCase):
         band = 2                        # SDSS r
 
         # Read SDSS catalogue
-        ifd = open(os.path.join(afwdataDir, "CFHT", "D2", "sdss.dat"), "r")
+        with open(os.path.join(afwdataDir, "CFHT", "D2", "sdss.dat"), "r") as ifd:
 
-        sdss = afwTable.SourceCatalog(self.table)
-        sdssSecondary = afwTable.SourceCatalog(self.table)
+            sdss = afwTable.SourceCatalog(self.table)
+            sdssSecondary = afwTable.SourceCatalog(self.table)
 
-        PRIMARY, SECONDARY = 1, 2       # values of mode
+            PRIMARY, SECONDARY = 1, 2       # values of mode
 
-        id = 0
-        for line in ifd.readlines():
-            if re.search(r"^\s*#", line):
-                continue
+            id = 0
+            for line in ifd.readlines():
+                if re.search(r"^\s*#", line):
+                    continue
 
-            fields = line.split()
-            objId = int(fields[0])
-            fields[1]
-            mode = int(fields[2])
-            ra, dec = [float(f) for f in fields[3:5]]
-            psfMags = [float(f) for f in fields[5:]]
+                fields = line.split()
+                objId = int(fields[0])
+                fields[1]
+                mode = int(fields[2])
+                ra, dec = [float(f) for f in fields[3:5]]
+                psfMags = [float(f) for f in fields[5:]]
 
-            if mode == PRIMARY:
-                s = sdss.addNew()
-            elif SECONDARY:
-                s = sdssSecondary.addNew()
+                if mode == PRIMARY:
+                    s = sdss.addNew()
+                elif SECONDARY:
+                    s = sdssSecondary.addNew()
 
-            s.setId(objId)
-            s.setRa(ra * afwGeom.degrees)
-            s.setDec(dec * afwGeom.degrees)
-            s.set(self.table.getPsfFluxKey(), psfMags[band])
+                s.setId(objId)
+                s.setRa(ra * afwGeom.degrees)
+                s.setDec(dec * afwGeom.degrees)
+                s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         del ifd
 
         # Read catalalogue built from the template image
         # Read SDSS catalogue
-        ifd = open(os.path.join(afwdataDir, "CFHT", "D2", "template.dat"), "r")
+        with open(os.path.join(afwdataDir, "CFHT", "D2", "template.dat"), "r") as ifd:
 
-        template = afwTable.SourceCatalog(self.table)
+            template = afwTable.SourceCatalog(self.table)
 
-        id = 0
-        for line in ifd.readlines():
-            if re.search(r"^\s*#", line):
-                continue
+            id = 0
+            for line in ifd.readlines():
+                if re.search(r"^\s*#", line):
+                    continue
 
-            fields = line.split()
-            id, flags = [int(f) for f in fields[0:2]]
-            ra, dec = [float(f) for f in fields[2:4]]
-            flux = [float(f) for f in fields[4:]]
+                fields = line.split()
+                id, flags = [int(f) for f in fields[0:2]]
+                ra, dec = [float(f) for f in fields[2:4]]
+                flux = [float(f) for f in fields[4:]]
 
-            if flags & 0x1:             # EDGE
-                continue
+                if flags & 0x1:             # EDGE
+                    continue
 
-            s = template.addNew()
-            s.setId(id)
-            id += 1
-            s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                  ra * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                  dec * afwGeom.degrees)
-            s.set(self.table.getPsfFluxKey(), flux[0])
+                s = template.addNew()
+                s.setId(id)
+                id += 1
+                s.set(afwTable.SourceTable.getCoordKey().getRa(),
+                      ra * afwGeom.degrees)
+                s.set(afwTable.SourceTable.getCoordKey().getDec(),
+                      dec * afwGeom.degrees)
+                s.set(self.table.getPsfFluxKey(), flux[0])
 
         del ifd
 

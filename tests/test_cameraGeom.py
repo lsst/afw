@@ -94,8 +94,8 @@ class CameraGeomTestCase(unittest.TestCase):
                 pt5 = afwGeom.Point2D(-0.2, -0.03)
                 for pt in (pt1, pt2, pt3, pt4, pt5):
                     cp = camera.makeCameraPoint(pt, coordSys)
-                    self.assertEquals(cp.getPoint(), pt)
-                    self.assertEquals(
+                    self.assertEqual(cp.getPoint(), pt)
+                    self.assertEqual(
                         cp.getCameraSys().getSysName(), coordSys.getSysName())
 
                     # test == and !=
@@ -252,12 +252,12 @@ class CameraGeomTestCase(unittest.TestCase):
                 cp = det.getCenter(FOCAL_PLANE)
                 detPointsList.append(cp.getPoint())
                 detList = cw.camera.findDetectors(cp)
-                self.assertEquals(len(detList), 1)
-                self.assertEquals(det.getName(), detList[0].getName())
+                self.assertEqual(len(detList), 1)
+                self.assertEqual(det.getName(), detList[0].getName())
             detList = cw.camera.findDetectorsList(detPointsList, FOCAL_PLANE)
-            self.assertEquals(len(cw.camera), len(detList))
+            self.assertEqual(len(cw.camera), len(detList))
             for dets in detList:
-                self.assertEquals(len(dets), 1)
+                self.assertEqual(len(dets), 1)
 
     def testFpBbox(self):
         for cw in self.cameraList:
@@ -275,18 +275,18 @@ class CameraGeomTestCase(unittest.TestCase):
             camera = cw.camera
             for det in camera:
                 for amp in det:
-                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
+                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
                                       amp.get('linearityThreshold'))
-                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
+                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
                                       amp.get('linearityMaximum'))
-                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
+                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
                                       amp.get('linearityUnits'))
-                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
+                    self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
                                       amp.getLinearityType())
                     for c1, c2 in zip(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
                                       amp.getLinearityCoeffs()):
                         if np.isfinite(c1) and np.isfinite(c2):
-                            self.assertEquals(c1, c2)
+                            self.assertEqual(c1, c2)
 
     def testAssembly(self):
         ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
@@ -349,15 +349,15 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def checkCamPoint(self, cp, testPt, testSys):
         """Assert that a CameraPoint contains the specified Point2D and CameraSys"""
-        self.assertEquals(cp.getCameraSys(), testSys)
-        self.assertEquals(cp.getPoint(), testPt)
+        self.assertEqual(cp.getCameraSys(), testSys)
+        self.assertEqual(cp.getPoint(), testPt)
 
     def assertCamPointAlmostEquals(self, cp1, cp2, ndig=6):
         """Assert that two CameraPoints are nearly equal
         """
-        self.assertEquals(cp1.getCameraSys(), cp2.getCameraSys())
+        self.assertEqual(cp1.getCameraSys(), cp2.getCameraSys())
         for i in range(2):
-            self.assertAlmostEquals(cp1.getPoint()[i], cp2.getPoint()[i], 6)
+            self.assertAlmostEqual(cp1.getPoint()[i], cp2.getPoint()[i], 6)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

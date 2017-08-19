@@ -193,10 +193,10 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         hsum = afwDetect.mergeHeavyFootprints(hfoot1, hfoot2)
 
         bb = hsum.getBBox()
-        self.assertEquals(bb.getMinX(), 9)
-        self.assertEquals(bb.getMaxX(), 15)
-        self.assertEquals(bb.getMinY(), 1)
-        self.assertEquals(bb.getMaxY(), 3)
+        self.assertEqual(bb.getMinX(), 9)
+        self.assertEqual(bb.getMaxX(), 15)
+        self.assertEqual(bb.getMinY(), 1)
+        self.assertEqual(bb.getMaxY(), 3)
 
         msum = afwImage.MaskedImageF(20, 10)
         hsum.insert(msum)
@@ -249,9 +249,9 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             np.random.randint(low=0, high=2, size=self.foot.getArea()).astype(np.uint16)
         heavy1.getVarianceArray()[:] = \
             np.random.randn(self.foot.getArea()).astype(np.float32)
-        filename = "heavyFootprint-testFitsPersistence.fits"
-        heavy1.writeFits(filename)
-        heavy2 = afwDetect.HeavyFootprintF.readFits(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            heavy1.writeFits(filename)
+            heavy2 = afwDetect.HeavyFootprintF.readFits(filename)
         self.assertEqual(heavy1.getArea(), heavy2.getArea())
         self.assertEqual(list(heavy1.getSpans()), list(heavy2.getSpans()))
         self.assertEqual(list(heavy1.getPeaks()), list(heavy2.getPeaks()))
@@ -261,7 +261,6 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
                                      heavy2.getMaskArray(), rtol=0.0, atol=0.0)
         self.assertFloatsAlmostEqual(heavy1.getVarianceArray(),
                                      heavy2.getVarianceArray(), rtol=0.0, atol=0.0)
-        os.remove(filename)
 
     def testLegacyHeavyFootprintMaskLoading(self):
         filename = os.path.join(os.path.split(__file__)[0],
