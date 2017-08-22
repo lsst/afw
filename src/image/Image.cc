@@ -228,21 +228,6 @@ void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
     a.swap(b);
 }
 
-template <typename PixelT>
-typename ImageBase<PixelT>::Array ImageBase<PixelT>::getArray() {
-    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    return ndarray::external(reinterpret_cast<PixelT*>(row_begin(0)),
-                             ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
-                             this->_manager);
-}
-
-template <typename PixelT>
-typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
-    int rowStride = reinterpret_cast<PixelT*>(row_begin(1)) - reinterpret_cast<PixelT*>(row_begin(0));
-    return ndarray::external(reinterpret_cast<PixelT*>(row_begin(0)),
-                             ndarray::makeVector(getHeight(), getWidth()), ndarray::makeVector(rowStride, 1),
-                             this->_manager);
-}
 //
 // Iterators
 //
