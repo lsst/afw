@@ -199,7 +199,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Mask");
                 throw e;
             }
-            LOGLS_WARN(_log, "Mask unreadable; using default");
+            LOGLS_WARN(_log, "Mask unreadable (" << e << "); using default");
             // By resetting the status we are able to read the next HDU (the variance).
             fitsfile.status = 0;
             _mask.reset(new Mask(_image->getBBox()));
@@ -215,7 +215,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Variance");
                 throw e;
             }
-            LOGLS_WARN(_log, "Variance unreadable; using default");
+            LOGLS_WARN(_log, "Variance unreadable (" << e << "); using default");
             fitsfile.status = 0;
             _variance.reset(new Variance(_image->getBBox()));
         }
