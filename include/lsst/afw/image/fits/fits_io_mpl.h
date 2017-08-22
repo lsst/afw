@@ -92,9 +92,11 @@ void fits_read_image(fits::Fits& fitsfile, ImageT& img, lsst::daf::base::Propert
                      geom::Box2I const& bbox = geom::Box2I(), ImageOrigin const origin = PARENT) {
     ndarray::Array<typename ImageT::Pixel, 2, 2> array;
     geom::Point2I xy0;
+    fitsfile.checkCompressedImagePhu();
     try {
-        boost::mpl::for_each<supported_fits_types>(
-                try_fits_read_array<ImageT, found_type>(fitsfile, array, xy0, metadata, bbox, origin));
+        try_fits_read_array<ImageT, found_type> reader{fitsfile, array, xy0, metadata, bbox, origin};
+        reader.operator()(typename ImageT::Pixel());  // attempt first the type we were explicitly asked for
+        boost::mpl::for_each<supported_fits_types>(reader);
     } catch (found_type&) {
         img = ImageT(array, false, xy0);
         return;

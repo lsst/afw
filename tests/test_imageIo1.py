@@ -32,6 +32,7 @@ from builtins import range
 import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+import lsst.afw.fits as afwFits
 import lsst.utils.tests
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
@@ -119,9 +120,12 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(im2.getY0(), sim.getY0())
 
     def testMEF(self):
-        """Test writing a set of images to an MEF fits file, and then reading them back"""
+        """Test writing a set of images to an MEF fits file, and then reading them back
 
-        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+        We disable compression to avoid the empty PHU that comes when writing FITS
+        compressed images.
+        """
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile, afwFits.imageCompressionDisabled():
             im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
 
             for hdu in range(4):

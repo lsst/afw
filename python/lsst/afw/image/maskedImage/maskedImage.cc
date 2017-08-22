@@ -144,6 +144,30 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
             "maskMetadata"_a = std::shared_ptr<daf::base::PropertySet const>(),
             "varianceMetadata"_a = std::shared_ptr<daf::base::PropertySet const>());
 
+    cls.def("writeFits", [](MI & self, std::string const& filename,
+                            fits::ImageWriteOptions const& imageOptions,
+                            fits::ImageWriteOptions const& maskOptions,
+                            fits::ImageWriteOptions const& varianceOptions,
+                            std::shared_ptr<daf::base::PropertySet const> header) {
+                            self.writeFits(filename, imageOptions, maskOptions, varianceOptions, header); },
+            "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
+            "header"_a=std::shared_ptr<daf::base::PropertyList>());
+    cls.def("writeFits", [](MI & self, fits::MemFileManager &manager,
+                            fits::ImageWriteOptions const& imageOptions,
+                            fits::ImageWriteOptions const& maskOptions,
+                            fits::ImageWriteOptions const& varianceOptions,
+                            std::shared_ptr<daf::base::PropertySet const> header) {
+                            self.writeFits(manager, imageOptions, maskOptions, varianceOptions, header); },
+            "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
+            "header"_a=std::shared_ptr<daf::base::PropertyList>());
+    cls.def("writeFits", [](MI & self, fits::Fits &fits, fits::ImageWriteOptions const& imageOptions,
+                            fits::ImageWriteOptions const& maskOptions,
+                            fits::ImageWriteOptions const& varianceOptions,
+                            std::shared_ptr<daf::base::PropertySet const> header) {
+                                self.writeFits(fits, imageOptions, maskOptions, varianceOptions, header); },
+            "fits"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a,
+            "header"_a=std::shared_ptr<daf::base::PropertyList>());
+
     cls.def_static("readFits", (MI(*)(std::string const &))MI::readFits, "filename"_a);
     cls.def_static("readFits", (MI(*)(fits::MemFileManager &))MI::readFits, "manager"_a);
     cls.def("getImage", &MI::getImage);

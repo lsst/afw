@@ -390,18 +390,44 @@ void Image<PixelT>::writeFits(fits::MemFileManager& manager,
 
 template <typename PixelT>
 void Image<PixelT>::writeFits(fits::Fits& fitsfile,
-                              std::shared_ptr<daf::base::PropertySet const> metadata_i) const {
-    std::shared_ptr<daf::base::PropertySet> metadata;
-    std::shared_ptr<daf::base::PropertySet> wcsAMetadata =
-            detail::createTrivialWcsAsPropertySet(detail::wcsNameForXY0, this->getX0(), this->getY0());
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-        metadata->combine(wcsAMetadata);
-    } else {
-        metadata = wcsAMetadata;
-    }
-    fits_write_image(fitsfile, *this, metadata);
+                              std::shared_ptr<daf::base::PropertySet const> metadata) const {
+    fitsfile.writeImage(*this, fits::ImageWriteOptions(*this), metadata);
 }
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(
+    std::string const& filename,
+    fits::ImageWriteOptions const& options,
+    std::string const& mode,
+    std::shared_ptr<daf::base::PropertySet const> header,
+    std::shared_ptr<Mask<MaskPixel> const> mask
+) const {
+    fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, options, header, mask);
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(
+    fits::MemFileManager& manager,
+    fits::ImageWriteOptions const& options,
+    std::string const& mode,
+    std::shared_ptr<daf::base::PropertySet const> header,
+    std::shared_ptr<Mask<MaskPixel> const> mask
+) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, options, header, mask);
+}
+
+template <typename PixelT>
+void Image<PixelT>::writeFits(
+    fits::Fits& fitsfile,
+    fits::ImageWriteOptions const& options,
+    std::shared_ptr<daf::base::PropertySet const> header,
+    std::shared_ptr<Mask<MaskPixel> const> mask
+) const {
+    fitsfile.writeImage(*this, options, header, mask);
+}
+
 
 #endif  // !DOXYGEN
 

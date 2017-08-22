@@ -48,6 +48,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/formatters/MaskFormatter.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/fits.h"
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.MaskedImageFormatter");
@@ -114,7 +115,7 @@ MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~MaskedImageForma
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
-        std::shared_ptr<lsst::daf::base::PropertySet>) {
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
             dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
@@ -132,7 +133,19 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "MaskedImageFormatter write FitsStorage");
-        ip->writeFits(fits->getPath());
+
+        fits::ImageWriteOptions imageOptions, maskOptions, varianceOptions;
+        if (additionalData) {
+            try {
+                imageOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("image"));
+                maskOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
+                varianceOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("variance"));
+            } catch (std::exception const& exc) {
+                LOGLS_WARN(_log, "Unable to construct MaskedImage write options (" << exc.what() <<
+                           "); writing with default options");
+            }
+        }
+        ip->writeFits(fits->getPath(), imageOptions, maskOptions, varianceOptions);
         LOGL_DEBUG(_log, "MaskedImageFormatter write end");
         return;
     }

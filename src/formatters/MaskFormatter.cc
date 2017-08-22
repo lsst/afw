@@ -44,6 +44,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/daf/persistence.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/Mask.h"
+#include "lsst/afw/fits.h"
 
 #include "lsst/afw/image/LsstImageTypes.h"
 
@@ -87,7 +88,7 @@ MaskFormatter<MaskPixelT>::~MaskFormatter(void) {}
 
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
-                                      std::shared_ptr<lsst::daf::base::PropertySet>) {
+                                      std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "MaskFormatter write start");
     Mask<MaskPixelT> const* ip = dynamic_cast<Mask<MaskPixelT> const*>(persistable);
     if (ip == 0) {
@@ -105,8 +106,19 @@ void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::share
     if (fits) {
         LOGL_DEBUG(_log, "MaskFormatter write FitsStorage");
         // Need to cast away const because writeFits modifies the metadata.
+
+        fits::ImageWriteOptions options;
+        if (additionalData) {
+            try {
+                options = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
+            } catch (std::exception const& exc) {
+                LOGLS_WARN(_log, "Unable to construct mask write options (" << exc.what() <<
+                           "); writing with default options");
+            }
+        }
+
         Mask<MaskPixelT>* vip = const_cast<Mask<MaskPixelT>*>(ip);
-        vip->writeFits(fits->getPath());
+        vip->writeFits(fits->getPath(), options);
         LOGL_DEBUG(_log, "MaskFormatter write end");
         return;
     }

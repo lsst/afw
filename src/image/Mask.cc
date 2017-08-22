@@ -503,22 +503,42 @@ void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager,
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile,
-                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata_i) const {
-    std::shared_ptr<dafBase::PropertySet> metadata;
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-    } else {
-        metadata = std::shared_ptr<dafBase::PropertySet>(new dafBase::PropertyList());
-    }
-    addMaskPlanesToMetadata(metadata);
-    //
-    // Add WCS with (X0, Y0) information
-    //
-    std::shared_ptr<dafBase::PropertySet> wcsAMetadata =
-            detail::createTrivialWcsAsPropertySet(detail::wcsNameForXY0, this->getX0(), this->getY0());
-    metadata->combine(wcsAMetadata);
+                                 std::shared_ptr<lsst::daf::base::PropertySet const> metadata) const {
+    writeFits(fitsfile, fits::ImageWriteOptions(*this), metadata);
+}
 
-    fits_write_image(fitsfile, *this, metadata);
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(
+    std::string const& filename,
+    fits::ImageWriteOptions const& options,
+    std::string const& mode,
+    std::shared_ptr<daf::base::PropertySet const> header
+) const {
+    fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, options, header);
+}
+
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(
+    fits::MemFileManager& manager,
+    fits::ImageWriteOptions const& options,
+    std::string const& mode,
+    std::shared_ptr<daf::base::PropertySet const> header
+) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, options, header);
+}
+
+template <typename MaskPixelT>
+void Mask<MaskPixelT>::writeFits(
+    fits::Fits& fitsfile,
+    fits::ImageWriteOptions const& options,
+    std::shared_ptr<daf::base::PropertySet const> header
+) const {
+    std::shared_ptr<daf::base::PropertySet> useHeader = header ? header->deepCopy() :
+        std::make_shared<dafBase::PropertySet>();
+    addMaskPlanesToMetadata(useHeader);
+    fitsfile.writeImage(*this, options, useHeader);
 }
 
 #endif  // !DOXYGEN

@@ -349,6 +349,50 @@ public:
                                                  std::shared_ptr<lsst::daf::base::PropertySet const>()) const;
 
     /**
+     *  Write a mask to a regular FITS file.
+     *
+     *  @param[in] filename      Name of the file to write.
+     *  @param[in] options       Options controlling writing of FITS image.
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] header        Additional values to write to the header (may be null).
+     */
+    void writeFits(
+        std::string const& filename,
+        fits::ImageWriteOptions const& options,
+        std::string const& mode = "w",
+        std::shared_ptr<daf::base::PropertySet const> header=nullptr
+    ) const;
+
+    /**
+     *  Write a mask to a FITS RAM file.
+     *
+     *  @param[in] manager       Manager object for the memory block to write to.
+     *  @param[in] options       Options controlling writing of FITS image.
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] header        Additional values to write to the header (may be null).
+     */
+    void writeFits(
+        fits::MemFileManager& manager,
+        fits::ImageWriteOptions const& options,
+        std::string const& mode = "w",
+        std::shared_ptr<daf::base::PropertySet const> header=nullptr
+    ) const;
+
+    /**
+     *  Write a mask to an open FITS file object.
+     *
+     *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+     *  @param[in] options       Options controlling writing of FITS image.
+     *  @param[in] header        Additional values to write to the header (may be null).
+     */
+    void writeFits(
+        fits::Fits& fitsfile,
+        fits::ImageWriteOptions const& options,
+        std::shared_ptr<daf::base::PropertySet const> header=nullptr
+    ) const;
+
+
+    /**
      *  Read a Mask from a regular FITS file.
      *
      *  @param[in] filename    Name of the file to read.
