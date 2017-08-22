@@ -645,7 +645,12 @@ Image<LhsPixelT>& operator/=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs)
 
 geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
 {
-    geom::Extent2I dims{metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2")};
+    geom::Extent2I dims;
+    if (metadata.exists("ZNAXIS1") && metadata.exists("ZNAXIS2")) {
+        dims = geom::Extent2I(metadata.getAsInt("ZNAXIS1"), metadata.getAsInt("ZNAXIS2"));
+    } else {
+        dims = geom::Extent2I(metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2"));
+    }
     geom::Point2I xy0 = detail::getImageXY0FromMetadata(detail::wcsNameForXY0, &metadata);
     return geom::Box2I(xy0, dims);
 }
