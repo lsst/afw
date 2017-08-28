@@ -276,13 +276,13 @@ class CameraGeomTestCase(unittest.TestCase):
             for det in camera:
                 for amp in det:
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
-                                      amp.get('linearityThreshold'))
+                                     amp.get('linearityThreshold'))
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
-                                      amp.get('linearityMaximum'))
+                                     amp.get('linearityMaximum'))
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
-                                      amp.get('linearityUnits'))
+                                     amp.get('linearityUnits'))
                     self.assertEqual(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
-                                      amp.getLinearityType())
+                                     amp.getLinearityType())
                     for c1, c2 in zip(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
                                       amp.getLinearityCoeffs()):
                         if np.isfinite(c1) and np.isfinite(c2):

@@ -45,10 +45,10 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for methodName in ("begin", "end", "size"):
             if hasattr(detector, methodName):
                 self.assertFalse(hasattr(detector, methodName))
-        self.assertEquals(dw.name, detector.getName())
-        self.assertEquals(dw.id, detector.getId())
-        self.assertEquals(dw.type, detector.getType())
-        self.assertEquals(dw.serial, detector.getSerial())
+        self.assertEqual(dw.name, detector.getName())
+        self.assertEqual(dw.id, detector.getId())
+        self.assertEqual(dw.type, detector.getType())
+        self.assertEqual(dw.serial, detector.getSerial())
         bbox = detector.getBBox()
         for i in range(2):
             self.assertEqual(bbox.getMin()[i], dw.bbox.getMin()[i])
@@ -73,7 +73,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         del dw
         self.assertEqual(orientation.getFpPosition(), offset)
         self.assertEqual(nativeCoordSys,
-                          cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
+                         cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
 
     def testConstructorErrors(self):
         """Test constructor errors
@@ -116,7 +116,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 pixCamPoint, cameraGeom.PIXELS)
             for i in range(2):
                 self.assertAlmostEqual(pixCamPoint.getPoint()[
-                                        i], pixCamPoint2.getPoint()[i])
+                                       i], pixCamPoint2.getPoint()[i])
 
         # make sure you cannot transform to a different detector
         pixCamPoint = dw.detector.makeCameraPoint(

@@ -218,18 +218,18 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
         self.assertEqual(exposure.getDetector().getName(),
-                          self.detector.getName())
+                         self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
-                          self.detector.getSerial())
+                         self.detector.getSerial())
         self.assertEqual(exposure.getFilter(), gFilter)
 
         self.assertTrue(exposure.getInfo().hasWcs())
         self.assertEqual(exposure.getInfo().getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
         self.assertEqual(exposure.getInfo().getDetector().getName(),
-                          self.detector.getName())
+                         self.detector.getName())
         self.assertEqual(exposure.getInfo().getDetector().getSerial(),
-                          self.detector.getSerial())
+                         self.detector.getSerial())
         self.assertEqual(exposure.getInfo().getFilter(), gFilter)
 
     def testNullWcs(self):
@@ -270,9 +270,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(exposure.getWcs().getPixelOrigin(),
                          self.wcs.getPixelOrigin())
         self.assertEqual(exposure.getDetector().getName(),
-                          self.detector.getName())
+                         self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
-                          self.detector.getSerial())
+                         self.detector.getSerial())
         self.assertEqual(exposure.getFilter(), gFilter)
 
     def testVisitInfoFitsPersistence(self):
@@ -319,9 +319,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposure.setFilter(afwImage.Filter("g"))
 
         self.assertEqual(exposure.getDetector().getName(),
-                          self.detector.getName())
+                         self.detector.getName())
         self.assertEqual(exposure.getDetector().getSerial(),
-                          self.detector.getSerial())
+                         self.detector.getSerial())
         self.assertEqual(exposure.getFilter().getName(), "g")
 
         try:
