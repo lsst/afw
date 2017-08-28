@@ -98,16 +98,29 @@ PYBIND11_PLUGIN(_detector) {
     cls.def("hasTransform", (bool (Detector::*)(CameraSysPrefix const &) const) & Detector::hasTransform,
             "cameraSysPrefix"_a);
     cls.def("getTransform",
-            (std::shared_ptr<TransformMap::Transform> (Detector::*)(CameraSys const &) const) &
+            (std::shared_ptr<TransformMap::Transform>(Detector::*)(CameraSys const &, CameraSys const &)
+                     const) &
                     Detector::getTransform,
-            "cameraSys"_a);
+            "fromSys"_a, "toSys"_a);
     cls.def("getTransform",
-            (std::shared_ptr<TransformMap::Transform> (Detector::*)(CameraSysPrefix const &) const) &
+            (std::shared_ptr<TransformMap::Transform>(Detector::*)(CameraSys const &, CameraSysPrefix const &)
+                     const) &
                     Detector::getTransform,
-            "cameraSysPrefix"_a);
+            "fromSys"_a, "toSys"_a);
+    cls.def("getTransform",
+            (std::shared_ptr<TransformMap::Transform>(Detector::*)(CameraSysPrefix const &, CameraSys const &)
+                     const) &
+                    Detector::getTransform,
+            "fromSys"_a, "toSys"_a);
+    cls.def("getTransform",
+            (std::shared_ptr<TransformMap::Transform>(Detector::*)(CameraSysPrefix const &,
+                                                                   CameraSysPrefix const &) const) &
+                    Detector::getTransform,
+            "fromSys"_a, "toSys"_a);
     cls.def("getNativeCoordSys", &Detector::getNativeCoordSys);
-    cls.def("makeCameraPoint", (CameraPoint (Detector::*)(geom::Point2D const &, CameraSys const &) const) &
-                                       Detector::makeCameraPoint,
+    cls.def("makeCameraPoint",
+            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSys const &) const) &
+                    Detector::makeCameraPoint,
             "point"_a, "cameraSys"_a);
     cls.def("makeCameraPoint",
             (CameraPoint (Detector::*)(geom::Point2D const &, CameraSysPrefix const &) const) &

@@ -196,24 +196,20 @@ public:
     bool hasTransform(CameraSysPrefix const &cameraSysPrefix) const;
 
     /**
-     * Get a Transform that transforms from PIXELS to `cameraSys` in the forward direction
+     * Get a Transform from one camera coordinate system, or camera coordinate system prefix, to another.
      *
-     * @param[in] cameraSys  camera coordinate system
-     * @returns a shared_ptr to an lsst::afw::geom::Transform
+     * @tparam FromSysT, ToSysT  Type of `fromSys`, `toSys`: one of `CameraSys` or `CameraSysPrefix`
      *
-     * @throws pex::exceptions::InvalidParameterError if `cameraSys` is unknown
+     * @param fromSys, fromSys camera coordinate systems or prefixes between which to transform
+     * @returns a Transform that converts from `fromSys` to `fromSys` in the forward direction.
+     *      The Transform will be invertible.
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
+     *         `fromSys` or `fromSys` is not supported.
      */
-    std::shared_ptr<TransformMap::Transform> getTransform(CameraSys const &cameraSys) const;
-
-    /**
-     * Get a Transform that transforms from PIXELS to `cameraSysPrefix` in the forward direction
-     *
-     * @param[in] cameraSysPrefix  camera coordinate system prefix
-     * @returns a shared_ptr to an lsst::afw::geom::Transform
-     *
-     * @throws pex::exceptions::InvalidParameterError if coordSys is unknown
-     */
-    std::shared_ptr<TransformMap::Transform> getTransform(CameraSysPrefix const &cameraSysPrefix) const;
+    template<typename FromSysT, typename ToSysT>
+    std::shared_ptr<TransformMap::Transform> getTransform(FromSysT const &fromSys,
+                                                          ToSysT const &toSys) const;
 
     /**
      * Make a CameraPoint from a point and a camera system
