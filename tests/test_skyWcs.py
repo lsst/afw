@@ -182,7 +182,7 @@ class WcsPairTransformTestCase(TransformTestBaseClass):
         """
         for wcs1 in self.wcsList:
             for wcs2 in self.wcsList:
-                transform = makeWcsPairTransform(wcs2, wcs1)
+                transform = makeWcsPairTransform(wcs1, wcs2)
                 for point1 in self.points():
                     point2 = transform.applyForward(point1)
                     self.assertPairsNearlyEqual(

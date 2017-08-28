@@ -249,8 +249,8 @@ private:
 /**
  * A Transform obtained by putting two SkyWcs objects "back to back".
  *
- * @param dst the WCS for the destination pixels
  * @param src the WCS for the source pixels
+ * @param dst the WCS for the destination pixels
  * @returns a Transform whose forward transformation converts from `src`
  *          pixels to `dst` pixels, and whose inverse transformation converts
  *          in the opposite direction.
@@ -260,7 +260,7 @@ private:
  * @note Parameters are provided in the order `dst`, `src` for consistency with
  *       XYTransformFromWcsPair.
  */
-TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const &dst, SkyWcs const &src);
+TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const &src, SkyWcs const &dst);
 
 }  // namespace geom
 }  // namespace afw
