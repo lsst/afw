@@ -90,8 +90,8 @@ bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
 }
 
 template <typename FromSysT, typename ToSysT>
-std::shared_ptr<TransformMap::Transform> Detector::getTransform(FromSysT const &fromSys,
-                                                                ToSysT const &toSys) const {
+std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FromSysT const &fromSys,
+                                                                      ToSysT const &toSys) const {
     return _transformMap.getTransform(makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
@@ -119,9 +119,9 @@ void Detector::_init() {
 //
 // Explicit instantiations
 //
-#define INSTANTIATE(FROMSYS, TOSYS)                                                                          \
-    template std::shared_ptr<TransformMap::Transform> Detector::getTransform(FROMSYS const &, TOSYS const &) \
-            const;
+#define INSTANTIATE(FROMSYS, TOSYS)                                                                 \
+    template std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FROMSYS const &, \
+                                                                                   TOSYS const &) const;
 
 INSTANTIATE(CameraSys, CameraSys);
 INSTANTIATE(CameraSys, CameraSysPrefix);

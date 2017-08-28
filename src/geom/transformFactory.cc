@@ -129,8 +129,7 @@ ast::PolyMap makeOneDDistortion(std::vector<double> const &coeffs) {
 
 }  // namespace
 
-AffineTransform linearizeTransform(Transform<Point2Endpoint, Point2Endpoint> const &original,
-                                   Point2D const &inPoint) {
+AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Point2D const &inPoint) {
     auto outPoint = original.applyForward(inPoint);
     Eigen::Matrix2d jacobian = original.getJacobian(inPoint);
     for (int i = 0; i < 2; ++i) {
@@ -151,17 +150,17 @@ AffineTransform linearizeTransform(Transform<Point2Endpoint, Point2Endpoint> con
     return AffineTransform(jacobian, offset);
 }
 
-Transform<Point2Endpoint, Point2Endpoint> makeTransform(AffineTransform const &affine) {
+TransformPoint2ToPoint2 makeTransform(AffineTransform const &affine) {
     auto const offset = Point2D(affine.getTranslation());
     auto const jacobian = affine.getLinear().getMatrix();
 
     Point2Endpoint toEndpoint;
     auto const map =
             ast::MatrixMap(toNdArray(jacobian)).then(ast::ShiftMap(toEndpoint.dataFromPoint(offset)));
-    return Transform<Point2Endpoint, Point2Endpoint>(map);
+    return TransformPoint2ToPoint2(map);
 }
 
-Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double> const &coeffs) {
+TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs) {
     if (!areRadialCoefficients(coeffs)) {
         std::ostringstream buffer;
         buffer << "Invalid coefficient vector: " << coeffs;
@@ -169,18 +168,18 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
     }
 
     if (coeffs.empty()) {
-        return Transform<Point2Endpoint, Point2Endpoint>(ast::UnitMap(2));
+        return TransformPoint2ToPoint2(ast::UnitMap(2));
     } else {
         // distortion is a radial polynomial with center at focal plane center;
         // the polynomial has an iterative inverse
         std::vector<double> center = {0.0, 0.0};
         ast::PolyMap const distortion = makeOneDDistortion(coeffs);
-        return Transform<Point2Endpoint, Point2Endpoint>(*ast::makeRadialMapping(center, distortion));
+        return TransformPoint2ToPoint2(*ast::makeRadialMapping(center, distortion));
     }
 }
 
-Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double> const &forwardCoeffs,
-                                                              std::vector<double> const &inverseCoeffs) {
+TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCoeffs,
+                                            std::vector<double> const &inverseCoeffs) {
     if (!areRadialCoefficients(forwardCoeffs)) {
         std::ostringstream buffer;
         buffer << "Invalid forward coefficient vector: " << forwardCoeffs;
@@ -199,7 +198,7 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
 
     if (forwardCoeffs.empty()) {
         // no forward or inverse coefficients, so no distortion
-        return Transform<Point2Endpoint, Point2Endpoint>(ast::UnitMap(2));
+        return TransformPoint2ToPoint2(ast::UnitMap(2));
     } else {
         // distortion is a 1-d radial polynomial centered at focal plane center;
         // the polynomial has coefficients specified for both the forward and inverse directions
@@ -207,13 +206,11 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
         ast::PolyMap const forward = makeOneDDistortion(forwardCoeffs);
         auto inverse = makeOneDDistortion(inverseCoeffs).getInverse();
         auto distortion = ast::TranMap(forward, *inverse);
-        return Transform<Point2Endpoint, Point2Endpoint>(*ast::makeRadialMapping(center, distortion));
+        return TransformPoint2ToPoint2(*ast::makeRadialMapping(center, distortion));
     }
 }
 
-Transform<Point2Endpoint, Point2Endpoint> makeIdentityTransform() {
-    return Transform<Point2Endpoint, Point2Endpoint>(ast::UnitMap(2));
-}
-}
-}
-} /* namespace lsst::afw::geom */
+TransformPoint2ToPoint2 makeIdentityTransform() { return TransformPoint2ToPoint2(ast::UnitMap(2)); }
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

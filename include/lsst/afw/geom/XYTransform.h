@@ -44,7 +44,7 @@ namespace geom {
  * Virtual base class for 2D transforms
  *
  * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
- *             by @ref lsst::afw::geom::Transform "Transform<Point2Endpoint, Point2Endpoint>".
+ *             by @ref lsst::afw::geom::Transform "TransformPoint2ToPoint2".
  */
 class XYTransform : public daf::base::Citizen {
 public:
@@ -112,7 +112,7 @@ public:
  * Wrap an XYTransform, swapping forward and reverse transforms.
  *
  * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
- *             by Transform<Point2Endpoint, Point2Endpoint>::getInverse.
+ *             by TransformPoint2ToPoint2::getInverse.
  */
 class InvertedXYTransform : public XYTransform {
 public:
@@ -134,7 +134,7 @@ protected:
  * Wrap a sequence of multiple XYTransforms
  *
  * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
- *             by Transform<Point2Endpoint, Point2Endpoint>::then.
+ *             by TransformPoint2ToPoint2::then.
  *
  * forwardTransform executes transformList[i].forwardTransform in order 0, 1, 2..., e.g.
  *

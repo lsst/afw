@@ -60,7 +60,7 @@ Eigen::Matrix2d makeCdMatrix(Angle const& scale, Angle const& orientation, bool 
     return cdMatrix;
 }
 
-Transform<Point2Endpoint, Point2Endpoint> makeWcsPairTransform(SkyWcs const &dst, SkyWcs const &src) {
+TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const& dst, SkyWcs const& src) {
     return src.then(dst.getInverse());
 }
 
@@ -70,8 +70,7 @@ SkyWcs::SkyWcs(Point2D const& crpix, coord::IcrsCoord const& crval, Eigen::Matri
 SkyWcs::SkyWcs(daf::base::PropertyList& metadata, bool strip)
         : SkyWcs(detail::readLsstSkyWcs(metadata, strip)) {}
 
-SkyWcs::SkyWcs(ast::FrameSet const& frameSet)
-        : Transform<Point2Endpoint, IcrsCoordEndpoint>(_checkFrameSet(frameSet)) {}
+SkyWcs::SkyWcs(ast::FrameSet const& frameSet) : TransformPoint2ToIcrsCoord(_checkFrameSet(frameSet)) {}
 
 Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     // Compute pixVec containing the pixel position of three corners of the pixel
@@ -120,7 +119,7 @@ Eigen::Matrix2d SkyWcs::getCdMatrix(Point2D const& pixel) const {
     if (!iwcFrameSet) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "IWC frame not found");
     }
-    auto iwcTransform = Transform<Point2Endpoint, Point2Endpoint>(*iwcFrameSet);
+    auto iwcTransform = TransformPoint2ToPoint2(*iwcFrameSet);
     return iwcTransform.getJacobian(pixel);
 }
 
@@ -219,18 +218,14 @@ std::pair<double, double> SkyWcs::skyToPixel(Angle const& ra, Angle const& dec) 
 
 std::string SkyWcs::getShortClassName() { return "SkyWcs"; };
 
-SkyWcs SkyWcs::readStream(std::istream &is) {
-    return detail::readStream<SkyWcs>(is);
-}
+SkyWcs SkyWcs::readStream(std::istream& is) { return detail::readStream<SkyWcs>(is); }
 
-SkyWcs SkyWcs::readString(std::string & str) {
+SkyWcs SkyWcs::readString(std::string& str) {
     std::istringstream is(str);
     return SkyWcs::readStream(is);
 }
 
-void SkyWcs::writeStream(std::ostream &os) const {
-    detail::writeStream<SkyWcs>(*this, os);
-}
+void SkyWcs::writeStream(std::ostream& os) const { detail::writeStream<SkyWcs>(*this, os); }
 
 std::string SkyWcs::writeString() const {
     std::ostringstream os;
@@ -238,8 +233,7 @@ std::string SkyWcs::writeString() const {
     return os.str();
 }
 
-SkyWcs::SkyWcs(std::shared_ptr<ast::FrameSet>&& frameSet)
-        : Transform<Point2Endpoint, IcrsCoordEndpoint>(std::move(frameSet)){};
+SkyWcs::SkyWcs(std::shared_ptr<ast::FrameSet>&& frameSet) : TransformPoint2ToIcrsCoord(std::move(frameSet)){};
 
 std::shared_ptr<ast::FrameSet> SkyWcs::_checkFrameSet(ast::FrameSet const& frameSet) const {
     // checking alters the frameSet current pointer, so use a copy

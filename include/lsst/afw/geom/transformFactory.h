@@ -51,8 +51,7 @@ namespace geom {
  *             have a well-defined value and Jacobian at `inPoint`
  * @exceptsafe Not exception safe.
  */
-AffineTransform linearizeTransform(Transform<Point2Endpoint, Point2Endpoint> const &original,
-                                   Point2D const &inPoint);
+AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Point2D const &inPoint);
 
 /**
  * Wrap an AffineTransform as a Transform.
@@ -63,7 +62,7 @@ AffineTransform linearizeTransform(Transform<Point2Endpoint, Point2Endpoint> con
  *
  * @exceptsafe Provides basic exception safety.
  */
-Transform<Point2Endpoint, Point2Endpoint> makeTransform(AffineTransform const &affine);
+TransformPoint2ToPoint2 makeTransform(AffineTransform const &affine);
 
 /**
  * A purely radial polynomial distortion.
@@ -82,7 +81,7 @@ Transform<Point2Endpoint, Point2Endpoint> makeTransform(AffineTransform const &a
  *         have the required format.
  * @exceptsafe Provides basic exception safety.
  */
-Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double> const &coeffs);
+TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs);
 
 /**
  * A purely radial polynomial distortion.
@@ -105,8 +104,8 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
  *         `inverseCoeffs` does not have the required format.
  * @exceptsafe Provides basic exception safety.
  */
-Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double> const &forwardCoeffs,
-                                                              std::vector<double> const &inverseCoeffs);
+TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCoeffs,
+                                            std::vector<double> const &inverseCoeffs);
 
 /**
  * Trivial Transform x &rarr; x.
@@ -116,7 +115,7 @@ Transform<Point2Endpoint, Point2Endpoint> makeRadialTransform(std::vector<double
  *
  * @exceptsafe Provides basic exception safety.
  */
-Transform<Point2Endpoint, Point2Endpoint> makeIdentityTransform();
+TransformPoint2ToPoint2 makeIdentityTransform();
 
 }  // namespace geom
 }  // namespace afw

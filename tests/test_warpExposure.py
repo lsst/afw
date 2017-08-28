@@ -434,7 +434,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testTransformBasedWarp(self):
-        """Test warping using Transform<Point2Endpoint, Point2Endpoint>
+        """Test warping using TransformPoint2ToPoint2
         """
         for interpLength in (0, 1, 2, 4):
             kernelName = "lanczos3"

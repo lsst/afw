@@ -60,8 +60,7 @@ private:
     };
 
 public:
-    using Transform = afw::geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>;
-    using Transforms = std::unordered_map<CameraSys, std::shared_ptr<Transform>>;
+    using Transforms = std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>>;
     using CameraSysFrameIdMap = std::unordered_map<CameraSys, int>;
     using CameraSysIterator = boost::transform_iterator<GetKey, CameraSysFrameIdMap::const_iterator>;
 
@@ -79,15 +78,16 @@ public:
      *         invertible.
      */
     TransformMap(CameraSys const &reference,
-                 std::map<CameraSys, std::shared_ptr<Transform>> const &transforms);
+                 std::map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms);
 
     /**
      * Define a set of camera transforms.
      *
      * @overload
      */
-    TransformMap(CameraSys const &reference,
-                 std::unordered_map<CameraSys, std::shared_ptr<Transform>> const &transforms);
+    TransformMap(
+            CameraSys const &reference,
+            std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms);
 
     /**
      * Create a TransformMap supporting the same Transforms.
@@ -156,7 +156,8 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
      *         `fromSys` or `toSys` is not supported.
      */
-    std::shared_ptr<Transform> getTransform(CameraSys const &fromSys, CameraSys const &toCoordSys) const;
+    std::shared_ptr<geom::TransformPoint2ToPoint2> getTransform(CameraSys const &fromSys,
+                                                                CameraSys const &toCoordSys) const;
 
     /**
      * Get the number of supported coordinate systems.

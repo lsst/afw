@@ -94,7 +94,7 @@ Constructors must set the following properties of the contained ast::FrameSet:
     SkyWcs uses this to look up CRVAL; "Ignored" is required to prevent CRVAL from being used as an offset
     from the desired WCS.
 */
-class SkyWcs : public Transform<Point2Endpoint, IcrsCoordEndpoint> {
+class SkyWcs : public TransformPoint2ToIcrsCoord {
 public:
     SkyWcs(SkyWcs const &) = default;
     SkyWcs(SkyWcs &&) = default;
@@ -260,7 +260,7 @@ private:
  * @note Parameters are provided in the order `dst`, `src` for consistency with
  *       XYTransformFromWcsPair.
  */
-Transform<Point2Endpoint, Point2Endpoint> makeWcsPairTransform(SkyWcs const &dst, SkyWcs const &src);
+TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const &dst, SkyWcs const &src);
 
 }  // namespace geom
 }  // namespace afw

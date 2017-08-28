@@ -86,17 +86,10 @@ public:
      * * The keys for the detector-specific coordinate systems in the transform registry
      *   must include the detector name (even though this is redundant).
      */
-    explicit Detector(
-            std::string const &name,
-            int id,
-            DetectorType type,
-            std::string const &serial,
-            geom::Box2I const &bbox,
-            lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
-            Orientation const &orientation,
-            geom::Extent2D const &pixelSize,
-            TransformMap::Transforms const &transforms
-            );
+    explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
+                      geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+                      Orientation const &orientation, geom::Extent2D const &pixelSize,
+                      TransformMap::Transforms const &transforms);
 
     ~Detector() {}
 
@@ -200,16 +193,16 @@ public:
      *
      * @tparam FromSysT, ToSysT  Type of `fromSys`, `toSys`: one of `CameraSys` or `CameraSysPrefix`
      *
-     * @param fromSys, fromSys camera coordinate systems or prefixes between which to transform
-     * @returns a Transform that converts from `fromSys` to `fromSys` in the forward direction.
+     * @param fromSys, toSys camera coordinate systems or prefixes between which to transform
+     * @returns a Transform that converts from `fromSys` to `toSys` in the forward direction.
      *      The Transform will be invertible.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
-     *         `fromSys` or `fromSys` is not supported.
+     *         `fromSys` or `toSys` is not supported.
      */
-    template<typename FromSysT, typename ToSysT>
-    std::shared_ptr<TransformMap::Transform> getTransform(FromSysT const &fromSys,
-                                                          ToSysT const &toSys) const;
+    template <typename FromSysT, typename ToSysT>
+    std::shared_ptr<geom::TransformPoint2ToPoint2> getTransform(FromSysT const &fromSys,
+                                                                ToSysT const &toSys) const;
 
     /**
      * Make a CameraPoint from a point and a camera system

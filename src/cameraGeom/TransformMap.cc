@@ -38,7 +38,7 @@ namespace {
  * Represent a set of camera Transforms as a FrameSet.
  *
  * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
- *             shared_ptr<Transform>.
+ *             shared_ptr<geom::TransformPoint2ToPoint2>.
  *
  * @param root Common coordinate system serving as root of FrameSet's tree.
  * @param transforms A map whose keys are coordinate systems, and whose
@@ -57,7 +57,7 @@ std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &root, Map const &
 
     for (auto keyValue : transforms) {
         CameraSys const key = keyValue.first;
-        std::shared_ptr<TransformMap::Transform> const value = keyValue.second;
+        std::shared_ptr<geom::TransformPoint2ToPoint2> const value = keyValue.second;
 
         if (key == root) {
             std::ostringstream buffer;
@@ -86,7 +86,7 @@ std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &root, Map const &
  * Identify the frames in to a FrameSet constructed by makeTransforms.
  *
  * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
- *             shared_ptr<Transform>.
+ *             shared_ptr<geom::TransformPoint2ToPoint2>.
  *
  * @param reference Coordinate system to which `transforms` converts.
  * @param transforms A map whose keys are coordinate systems, and whose
@@ -115,12 +115,12 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
 geom::Point2Endpoint TransformMap::_pointConverter;
 
 TransformMap::TransformMap(CameraSys const &reference,
-                           std::map<CameraSys, std::shared_ptr<Transform>> const &transforms)
+                           std::map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
         : _transforms(makeTransforms(reference, transforms)),
           _frameIds(makeTranslator(reference, transforms)) {}
 
 TransformMap::TransformMap(CameraSys const &reference,
-                           std::unordered_map<CameraSys, std::shared_ptr<Transform>> const &transforms)
+                           std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
         : _transforms(makeTransforms(reference, transforms)),
           _frameIds(makeTranslator(reference, transforms)) {}
 
@@ -137,17 +137,16 @@ geom::Point2D TransformMap::transform(geom::Point2D const &point, CameraSys cons
 }
 
 std::vector<geom::Point2D> TransformMap::transform(std::vector<geom::Point2D> const &pointList,
-                                                   CameraSys const &fromSys,
-                                                   CameraSys const &toSys) const {
+                                                   CameraSys const &fromSys, CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
     return _pointConverter.arrayFromData(mapping->applyForward(_pointConverter.dataFromArray(pointList)));
 }
 
 bool TransformMap::contains(CameraSys const &system) const noexcept { return _frameIds.count(system) > 0; }
 
-std::shared_ptr<TransformMap::Transform> TransformMap::getTransform(CameraSys const &fromSys,
-                                                                    CameraSys const &toSys) const {
-    return std::make_shared<Transform>(*_getMapping(fromSys, toSys));
+std::shared_ptr<geom::TransformPoint2ToPoint2> TransformMap::getTransform(CameraSys const &fromSys,
+                                                                          CameraSys const &toSys) const {
+    return std::make_shared<geom::TransformPoint2ToPoint2>(*_getMapping(fromSys, toSys));
 }
 
 int TransformMap::_getFrame(CameraSys const &system) const {

@@ -461,7 +461,7 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
               );
 
 /**
- * @brief A variant of warpImage that uses a Transform<Point2Endpoint, Point2Endpoint>
+ * @brief A variant of warpImage that uses a TransformPoint2ToPoint2
  * instead of a pair of WCS to describe the transformation.
  *
  * @param[in,out] destImage  Destination image; all pixels are set
