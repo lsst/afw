@@ -115,11 +115,6 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
 geom::Point2Endpoint TransformMap::_pointConverter;
 
 TransformMap::TransformMap(CameraSys const &reference,
-                           std::map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
-        : _transforms(makeTransforms(reference, transforms)),
-          _frameIds(makeTranslator(reference, transforms)) {}
-
-TransformMap::TransformMap(CameraSys const &reference,
                            std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
         : _transforms(makeTransforms(reference, transforms)),
           _frameIds(makeTranslator(reference, transforms)) {}

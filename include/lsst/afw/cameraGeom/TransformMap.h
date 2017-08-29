@@ -77,14 +77,6 @@ public:
      *         `transforms` contains `reference`, or if any Transform is not
      *         invertible.
      */
-    TransformMap(CameraSys const &reference,
-                 std::map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms);
-
-    /**
-     * Define a set of camera transforms.
-     *
-     * @overload
-     */
     TransformMap(
             CameraSys const &reference,
             std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms);

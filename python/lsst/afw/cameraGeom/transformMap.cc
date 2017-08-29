@@ -44,7 +44,6 @@ PYBIND11_PLUGIN(_transformMap) {
     /* Member types and enums */
 
     /* Constructors */
-    // Need only wrap one in Python because dict can translate to either
     cls.def(pybind11::init<
                     CameraSys const &,
                     std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &>(),
