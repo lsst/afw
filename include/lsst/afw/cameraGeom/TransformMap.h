@@ -41,13 +41,15 @@ namespace cameraGeom {
 /**
  * A registry of 2-dimensional coordinate transforms for a specific camera.
  *
- * Represents the interrelationships between camera coordinate systems for a
- * particular camera. It can be seen as a mapping between a pair of CameraSys
- * and a Transform between them, but does not conform to either the C++ map or
- * Python dictionary APIs.
+ * Represents the interrelationships between camera coordinate systems for a particular camera.
+ * It can be seen as a mapping between a pair of CameraSys and a Transform between them
+ * (though it does not conform to either the C++ map or Python dictionary APIs).
  *
- * TransformMap supports transforming between any two supported CameraSys using
- * the @ref transform methods, even if no explicit transform was provided.
+ * TransformMap supports:
+ * * Transforming between any two supported CameraSys using the @ref transform methods.
+ * * Retrieving a transform between any two supported CameraSys using @ref getTransform.
+ * * Iteration over supported CameraSys using @ref begin and @ref end in C++
+ *   and standard Python iteration in Python.
  *
  * @exceptsafe Unless otherwise specified, all methods guarantee only basic
  *             exception safety.
@@ -67,15 +69,13 @@ public:
     /**
      * Define a set of camera transforms.
      *
-     * @param reference Coordinate system to which `transforms` converts.
-     * @param transforms A map whose keys are coordinate systems, and whose
-     *                   values point to Transforms that convert from
-     *                   `reference` to the corresponding key. All Transforms
-     *                   must be invertible.
+     * @param reference  Coordinate system from which each Transform in `transforms` converts.
+     * @param transforms  A map whose keys are camera coordinate systems, and whose values
+     *                    point to Transforms that convert from `reference` to the corresponding key.
+     *                    All Transforms must be invertible.
      *
-     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if
-     *         `transforms` contains `reference`, or if any Transform is not
-     *         invertible.
+     * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
+     *         the `reference` camera system as a key, or if any Transform is not invertible.
      */
     TransformMap(
             CameraSys const &reference,
@@ -84,15 +84,14 @@ public:
     /**
      * Create a TransformMap supporting the same Transforms.
      *
-     * @param other the map to copy.
+     * @param other  The map to copy.
      */
     TransformMap(TransformMap const &other);
 
     /**
      * Create a TransformMap supporting the same Transforms using move semantics.
      *
-     * @param other the map to move from. It shall be left unchanged, as
-     *              required by immutability.
+     * @param other  The map to move from. It shall be left unchanged, as required by immutability.
      */
     TransformMap(TransformMap const &&other);
 
@@ -103,18 +102,18 @@ public:
     ///@}
 
     /**
-     * Convert a point from one coordinate system to another.
+     * Convert a point from one camera coordinate system to another.
      *
-     * @param point point from which to transform
-     * @param fromSys, toCoordSys coordinate systems between which to transform
+     * @param point  Point from which to transform
+     * @param fromSys, toSys  Camera coordinate systems between which to transform
      * @returns the transformed value. Equivalent to
-     *          `getTransform(fromSys, toCoordSys).applyForward(point)`.
+     *          `getTransform(fromSys, toSys).applyForward(point)`.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
-     *         `fromSys` or `toCoordSys` is not supported.
+     *         `fromSys` or `toSys` is not supported.
      */
     geom::Point2D transform(geom::Point2D const &point, CameraSys const &fromSys,
-                            CameraSys const &toCoordSys) const;
+                            CameraSys const &toSys) const;
 
     /**
      * Convert a list of points from one coordinate system to another.
@@ -122,7 +121,7 @@ public:
      * @overload
      */
     std::vector<geom::Point2D> transform(std::vector<geom::Point2D> const &pointList,
-                                         CameraSys const &fromSys, CameraSys const &toCoordSys) const;
+                                         CameraSys const &fromSys, CameraSys const &toSys) const;
 
     CameraSysIterator begin() const { return boost::make_transform_iterator(_frameIds.begin(), GetKey()); }
 
@@ -131,7 +130,7 @@ public:
     /**
      * Can this transform to and from the specified coordinate system?
      *
-     * @param system the coordinate system to search for
+     * @param system  The coordinate system to search for
      * @returns `true` if `system` is supported, `false` otherwise
      *
      * @exceptsafe Shall not throw exceptions.
@@ -141,7 +140,7 @@ public:
     /**
      * Get a Transform from one camera coordinate system to another.
      *
-     * @param fromSys, toSys camera coordinate systems between which to transform
+     * @param fromSys, toSys  Camera coordinate systems between which to transform
      * @returns a Transform that converts from `fromSys` to `toSys` in the forward direction.
      *      The Transform will be invertible.
      *
@@ -149,7 +148,7 @@ public:
      *         `fromSys` or `toSys` is not supported.
      */
     std::shared_ptr<geom::TransformPoint2ToPoint2> getTransform(CameraSys const &fromSys,
-                                                                CameraSys const &toCoordSys) const;
+                                                                CameraSys const &toSys) const;
 
     /**
      * Get the number of supported coordinate systems.
@@ -162,7 +161,7 @@ private:
     /**
      * The internal frame ID corresponding to a coordinate system.
      *
-     * @param system The system to convert.
+     * @param system  The system to convert.
      * @return the ID by which the coordinate system can be found in transforms.
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `system`
@@ -175,14 +174,14 @@ private:
     /**
      * An ast::Mapping that transforms between two coordinate systems.
      *
-     * @param fromSys, toCoordSys coordinate systems between which to transform
-     * @return an invertible Mapping that converts from `fromSys` to `toCoordSys`
+     * @param fromSys, toSys  Coordinate systems between which to transform
+     * @return an invertible Mapping that converts from `fromSys` to `toSys`
      *
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
-     *         `fromSys` or `toCoordSys` is not supported.
+     *         `fromSys` or `toSys` is not supported.
      */
     std::shared_ptr<ast::Mapping const> _getMapping(CameraSys const &fromSys,
-                                                    CameraSys const &toCoordSys) const;
+                                                    CameraSys const &toSys) const;
 
     /// Allows conversions between LSST and AST data formats
     static geom::Point2Endpoint _pointConverter;
