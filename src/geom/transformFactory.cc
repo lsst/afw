@@ -40,7 +40,7 @@ namespace afw {
 namespace geom {
 
 namespace {
-/**
+/*
  * Print a vector to a stream.
  *
  * The exact details of the representation are unspecified and subject to
@@ -66,7 +66,7 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &v) {
     return os;
 }
 
-/**
+/*
  * Convert a Matrix to the equivalent ndarray.
  *
  * @param matrix The matrix to convert.
@@ -85,7 +85,7 @@ ndarray::Array<typename Eigen::MatrixBase<Derived>::Scalar, 2, 2> toNdArray(
     return array;
 }
 
-/**
+/*
  * Tests whether polynomial coefficients match the expected format.
  *
  * @param coeffs radial polynomial coefficients.
@@ -100,7 +100,7 @@ bool areRadialCoefficients(std::vector<double> const &coeffs) noexcept {
     }
 }
 
-/**
+/*
  * Make a one-dimensional polynomial distortion.
  *
  * The Mapping computes a scalar function

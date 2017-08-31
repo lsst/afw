@@ -34,7 +34,7 @@ namespace cameraGeom {
 
 namespace {
 
-/**
+/*
  * Represent a set of camera Transforms as a FrameSet.
  *
  * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
@@ -82,7 +82,7 @@ std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &root, Map const &
     return result;
 }
 
-/**
+/*
  * Identify the frames in to a FrameSet constructed by makeTransforms.
  *
  * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
