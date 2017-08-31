@@ -35,33 +35,33 @@ namespace cameraGeom {
 namespace {
 
 /*
- * Represent a set of camera Transforms as a FrameSet.
+ * Make a FrameSet from a map of camera system: transform
  *
  * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
  *             shared_ptr<geom::TransformPoint2ToPoint2>.
  *
- * @param root Common coordinate system serving as root of FrameSet's tree.
- * @param transforms A map whose keys are coordinate systems, and whose
- *                   values point to Transforms that convert from `root` to the
- *                   corresponding key. All Transforms must be invertible.
- * @return a newly allocated FrameSet corresponding to the method arguments
+ * @param reference  Coordinate system from which each Transform in `transforms` converts.
+ * @param transforms  A map whose keys are camera coordinate systems, and whose values
+ *                    point to Transforms that convert from `reference` to the corresponding key.
+ *                    All Transforms must be invertible.
+ * @return an ast::FrameSet containing one ast::Frame(2) for `reference` and an ast::Frame(2)
+ *      for each Transform in `transforms`, connected by suitable mappings.
  *
- * @throws lsst::pex::exceptions::InvalidParameterError Thrown if
- *         `transforms` contains `root`, or if any Transform is not
- *         invertible.
+ * @throws lsst::pex::exceptions::InvalidParameterError Thrown if `transforms` contains
+ *         the `reference` camera system as a key, or if any Transform is not invertible.
  */
 template <class Map>
-std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &root, Map const &transforms) {
-    ast::Frame rootFrame(2, "Ident=" + root.getSysName());
+std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &reference, Map const &transforms) {
+    ast::Frame rootFrame(2, "Ident=" + reference.getSysName());
     auto result = std::unique_ptr<ast::FrameSet>(new ast::FrameSet(rootFrame));
 
-    for (auto keyValue : transforms) {
+    for (auto const & keyValue : transforms) {
         CameraSys const key = keyValue.first;
         std::shared_ptr<geom::TransformPoint2ToPoint2> const value = keyValue.second;
 
-        if (key == root) {
+        if (key == reference) {
             std::ostringstream buffer;
-            buffer << "Cannot specify a Transform from " << root << " to itself.";
+            buffer << "Cannot specify a Transform from " << reference << " to itself.";
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
         }
         if (!value->hasForward()) {
@@ -83,18 +83,17 @@ std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &root, Map const &
 }
 
 /*
- * Identify the frames in to a FrameSet constructed by makeTransforms.
+ * Make a map of camera system: frame number for a FrameSet constructed by makeTransforms.
  *
  * @tparam Map Any type satisfying the STL map API and mapping CameraSys to
  *             shared_ptr<geom::TransformPoint2ToPoint2>.
  *
- * @param reference Coordinate system to which `transforms` converts.
- * @param transforms A map whose keys are coordinate systems, and whose
- *                   values point to Transforms that convert from `reference`
- *                   to the corresponding key. All Transforms must be
- *                   invertible.
- * @return a map from `reference` and each key in `transforms` to the
- *         corresponding frame number in `makeTransforms(reference, transforms)`.
+ * @param reference  Coordinate system from which each Transform in `transforms` converts.
+ * @param transforms  A map whose keys are camera coordinate systems, and whose values
+ *                    point to Transforms that convert from `reference` to the corresponding key.
+ *                    All Transforms must be invertible.
+ * @return a map from `reference` and each key in `transforms` to the corresponding frame number
+ *         in the ast::FrameSet returned by `makeTransforms(reference, transforms)`.
  *
  * @warning Does not perform input validation.
  */
@@ -103,7 +102,7 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
     std::unordered_map<CameraSys, int> result({std::make_pair(reference, 1)});
     int nFrames = 1;
 
-    for (auto keyValue : transforms) {
+    for (auto const & keyValue : transforms) {
         CameraSys const key = keyValue.first;
         result.emplace(key, ++nFrames);
     }
