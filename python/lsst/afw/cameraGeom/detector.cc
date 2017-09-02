@@ -32,10 +32,9 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/XYTransform.h"
-#include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/cameraGeom/TransformMap.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -61,7 +60,7 @@ PYBIND11_PLUGIN(_detector) {
     /* Constructors */
     cls.def(py::init<std::string const &, int, DetectorType, std::string const &, geom::Box2I const &,
                      table::AmpInfoCatalog const &, Orientation const &, geom::Extent2D const &,
-                     CameraTransformMap::Transforms const &>(),
+                     TransformMap::Transforms const &>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
             "pixelSize"_a, "transforms"_a);
 
@@ -99,13 +98,26 @@ PYBIND11_PLUGIN(_detector) {
     cls.def("hasTransform", (bool (Detector::*)(CameraSysPrefix const &) const) & Detector::hasTransform,
             "cameraSysPrefix"_a);
     cls.def("getTransform",
-            (std::shared_ptr<geom::XYTransform const>(Detector::*)(CameraSys const &) const) &
+            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSys const &, CameraSys const &)
+                     const) &
                     Detector::getTransform,
-            "cameraSys"_a);
+            "fromSys"_a, "toSys"_a);
     cls.def("getTransform",
-            (std::shared_ptr<geom::XYTransform const>(Detector::*)(CameraSysPrefix const &) const) &
+            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSys const &,
+                                                                         CameraSysPrefix const &) const) &
                     Detector::getTransform,
-            "cameraSysPrefix"_a);
+            "fromSys"_a, "toSys"_a);
+    cls.def("getTransform",
+            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSysPrefix const &,
+                                                                         CameraSys const &) const) &
+                    Detector::getTransform,
+            "fromSys"_a, "toSys"_a);
+    cls.def("getTransform",
+            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSysPrefix const &,
+                                                                         CameraSysPrefix const &) const) &
+                    Detector::getTransform,
+            "fromSys"_a, "toSys"_a);
+    cls.def("getNativeCoordSys", &Detector::getNativeCoordSys);
     cls.def("makeCameraPoint",
             (CameraPoint(Detector::*)(geom::Point2D const &, CameraSys const &) const) &
                     Detector::makeCameraPoint,

@@ -68,7 +68,8 @@ possible to add others:
   CCD rows.
   Note: location and orientation of detectors are defined in a 3-d version of FOCAL_PLANE coordinates
   (the z axis is also relevant).
-- \anchor afwCameraGeomPUPIL __PUPIL__: angle of a ray relative to the optical axis (x,y radians).
+- \anchor afwCameraGeomFIELD_ANGLE __FIELD_ANGLE__: angle of a principal ray relative to the optical axis
+  (x,y radians). The orientation of the x,y axes is the same as \ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE".
 - \anchor afwCameraGeomPIXELS __PIXELS__: nominal position on the entry surface of a given detector
   (x, y unbinned pixels).
   For CCD detectors the x axis __must__ be along rows (the direction of the serial register).
@@ -76,7 +77,7 @@ possible to add others:
 - \anchor afwCameraGeomACTUAL_PIXELS __ACTUAL_PIXELS__: like PIXELS, but takes into account pixel-level
   distortions (deviations from the nominal model of uniformly spaced rectangular pixels).
 - \anchor afwCameraGeomTAN_IXELS __TAN_PIXELS__: is a variant of PIXELS with estimated optical distortion
-  removed. TAN_PIXELS is an affine transformation from PUPIL coordinates, where PIXELS and TAN_PIXELS match
+  removed. TAN_PIXELS is an affine transformation from FIELD_ANGLE coordinates, where PIXELS and TAN_PIXELS match
   at the center of the pupil frame.
 
 \section afwCameraGeomBasicUsage Basic Usage
@@ -110,7 +111,7 @@ Detector also supports transforms between \ref afwCameraGeomFOCAL_PLANE "focal p
 CameraSys represents a \ref afwCameraGeomCoordSys "camera coordinate system". It contains
 a coordinate system name and a detector name. The detector name is blank for non-detector-based
 \ref afwCameraGeomCoordSys "camera coordinate systems" such as
-\ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" and \ref afwCameraGeomPUPIL "PUPIL",
+\ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" and \ref afwCameraGeomFIELD_ANGLE "FIELD_ANGLE",
 but must always name a specific detector for detector-based coordinate systems.
 
 CameraSysPrefix is a specialized variant of CameraSys that represents a detector-based coordinate system
@@ -118,7 +119,7 @@ when the detector is not specified. CameraSysPrefix contains a coordinate system
 
 A constant is provided each \ref afwCameraGeomCoordSys "camera coordinate system":
 - __FOCAL_PLANE__ (a CoordSys) for the \ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" system
-- __PUPIL__ (a CoordSys) for the \ref afwCameraGeomPUPIL "PUPIL" system
+- __FIELD_ANGLE__ (a CoordSys) for the \ref afwCameraGeomFIELD_ANGLE "FIELD_ANGLE" system
 - __PIXELS__ (a CoordSysPrefix) for the \ref afwCameraGeomPIXELS "PIXELS" system
 - __ACTUAL_PIXELS__ (a CoordSysPrefix) for the \ref afwCameraGeomACTUAL_PIXELS "ACTUAL_PIXELS" system
 
@@ -139,19 +140,15 @@ never a CameraSysPrefix)
 
 The intent is to make transformation more robust and less confusing by keeping a 2-d point and its camera
 coordinate system together. This is appropriate for transforming small numbers of points, but does not
-scale well when transforming large numbers of points, so CameraTransformMap also supports a version of
-transform that takes and returns a vector of geom::Point2D.
+scale well when transforming large numbers of points. For large numbers of points use
+camera.getTransformMap().transform(pointList, fromSys, toSys).
 
-### \anchor afwCameraGeomCameraTransformMap CameraTransformMap
+### \anchor afwCameraGeomTransformMap TransformMap
 
-A registry of \ref afwCameraGeomCoordSys "camera coordinate system" transforms, keyed by CameraSys.
-Specifically CameraTransformMap is geom::TransformMap&lt;CameraSys&gt;. Each CameraTransformMap has a native
-(aka "reference") coordinate system, and each transform in CameraTransformMap is an geom::XYTransform that
-transforms a 2-d point from the native system to the key's coordinate system in the forward direction.
-\ref geom::TransformMap.transform "CameraTransformMap.transform" transforms a point between any two
-supported coordinate systems.
+TransformMap is a collection of \ref geom::TransformPoint2ToPoint2 "Transforms"
+from one \ref afwCameraGeomCoordSys "camera coordinate system" to another.
 
-\ref camera.Camera "Camera" and Detector both contain CameraTransformMaps.
+\ref camera.Camera "Camera" and Detector both contain TransformMaps.
  */
 
 }}} // namespace lsst::afw::cameraGeom

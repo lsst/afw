@@ -213,7 +213,7 @@ public:
      *
      * More than two Transforms can be combined in series. For example:
      *
-     *     auto pixelsToSky = pixelsToFP.then(fpToPupil).then(pupilToSky);
+     *     auto pixelsToSky = pixelsToFp.then(fpToField).then(fieldToSky);
      */
     template <class NextToEndpoint>
     Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next) const;
@@ -278,6 +278,12 @@ for example "Transform<GenericEndpoint(4), Point2Endpoint()>"
 */
 template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
+
+// typedefs for the most common transforms; names match Python names
+
+using TransformPoint2ToPoint2 = Transform<Point2Endpoint, Point2Endpoint>;
+using TransformPoint2ToGeneric = Transform<Point2Endpoint, GenericEndpoint>;
+using TransformPoint2ToIcrsCoord = Transform<Point2Endpoint, IcrsCoordEndpoint>;
 
 }  // namespace geom
 }  // namespace afw

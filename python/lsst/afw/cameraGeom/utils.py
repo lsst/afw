@@ -39,7 +39,7 @@ import lsst.daf.base as dafBase
 
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
-from .cameraGeomLib import PUPIL, FOCAL_PLANE
+from .cameraGeomLib import FIELD_ANGLE, FOCAL_PLANE
 from lsst.afw.display.utils import _getDisplayFromDisplayOrFrame
 
 import lsst.afw.display as afwDisplay
@@ -69,13 +69,13 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     wcs.shiftReferencePixel(offset.getX(), offset.getY())
 
 
-def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
+def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
                    useIds=False, showFig=True, savePath=None):
-    """!Make a plot of the focal plane along with a set points that sample the Pupil
+    """!Make a plot of the focal plane along with a set points that sample the field of view
 
     @param[in] camera  a camera object
-    @param[in] pupilSizeDeg_x  Amount of the pupil to sample in x in degrees
-    @param[in] pupilSizeDeg_y  Amount of the pupil to sample in y in degrees
+    @param[in] fieldSizeDeg_x  Amount of the field to sample in x in degrees
+    @param[in] fieldSizeDeg_y  Amount of the field to sample in y in degrees
     @param[in] dx  Spacing of sample points in x in degrees
     @param[in] dy  Spacing of sample points in y in degrees
     @param[in] figsize  matplotlib style tuple indicating the size of the figure in inches
@@ -91,22 +91,22 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
         raise ImportError(
             "Can't run plotFocalPlane: matplotlib has not been set up")
 
-    if pupilSizeDeg_x:
-        if pupilSizeDeg_y is None:
-            pupilSizeDeg_y = pupilSizeDeg_x
+    if fieldSizeDeg_x:
+        if fieldSizeDeg_y is None:
+            fieldSizeDeg_y = fieldSizeDeg_x
 
-        pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2.,
-                                                  numpy.arange(0., pupilSizeDeg_y+dy, dy) - pupilSizeDeg_y/2.)
-        pupil_gridx, pupil_gridy = pupil_gridx.flatten(), pupil_gridy.flatten()
+        field_gridx, field_gridy = numpy.meshgrid(numpy.arange(0., fieldSizeDeg_x+dx, dx) - fieldSizeDeg_x/2.,
+                                                  numpy.arange(0., fieldSizeDeg_y+dy, dy) - fieldSizeDeg_y/2.)
+        field_gridx, field_gridy = field_gridx.flatten(), field_gridy.flatten()
     else:
-        pupil_gridx, pupil_gridy = [], []
+        field_gridx, field_gridy = [], []
 
     xs = []
     ys = []
     pcolors = []
-    for pos in zip(pupil_gridx, pupil_gridy):
+    for pos in zip(field_gridx, field_gridy):
         posRad = afwGeom.Point2D(math.radians(pos[0]), math.radians(pos[1]))
-        cp = camera.makeCameraPoint(posRad, PUPIL)
+        cp = camera.makeCameraPoint(posRad, FIELD_ANGLE)
         ncp = camera.transform(cp, FOCAL_PLANE)
         xs.append(ncp.getPoint().getX())
         ys.append(ncp.getPoint().getY())

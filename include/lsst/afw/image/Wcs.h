@@ -496,6 +496,9 @@ int stripWcsKeywords(
 /**
  * XYTransformFromWcsPair: An XYTransform obtained by putting two Wcs objects "back to back".
  *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by geom::makeWcsPairTransform.
+ *
  * Eventually there will be an XYTransform subclass which represents a camera distortion.
  * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
  * with a SIP-distorted TanWcs and an undistorted Wcs.

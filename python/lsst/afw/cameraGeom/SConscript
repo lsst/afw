@@ -3,7 +3,8 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['cameraPoint',
                                   'cameraSys',
                                   'detector',
-                                  'orientation'])
+                                  'orientation',
+                                  'transformMap'])
 
 #from lsst.sconsUtils import env, targets
 #

@@ -27,8 +27,6 @@
 #include <string>
 #include <ostream>
 #include <sstream>
-#include "lsst/afw/geom/TransformMap.h"
-#include "lsst/afw/geom/TransformMapImpl.h"
 
 namespace lsst {
 namespace afw {
@@ -58,18 +56,23 @@ public:
 
     bool operator!=(CameraSysPrefix const &rhs) const { return !(*this == rhs); }
 
+    /**
+     * Hash function for this object.
+     *
+     * @return a value that is guaranteed equal for any two equal
+     *         CameraSysPrefix, and unlikely to be equal for any two unequal
+     *         CameraSysPrefix.
+     *
+     * @note Workhorse for std::hash<CameraSysPrefix>.
+     */
+    size_t hash() const noexcept;
+
 private:
     std::string _sysName;  ///< coordinate system name
 };
 
 /**
  * Camera coordinate system; used as a key in in TransformMap
- *
- * @note When TransformMap switches to using unordered_map, a good way to compute the hash is:
- *   size_t hash = 0;
- *   boost::hash_combine(hash, cameraSys.getSysName());
- *   boost::hash_combine(hash, cameraSys.getDetectorName());
- *   return hash;
  */
 class CameraSys {
 public:
@@ -122,13 +125,20 @@ public:
         }
     }
 
+    /**
+     * Hash function for this object.
+     *
+     * @return a value that is guaranteed equal for any two equal CameraSys,
+     *         and unlikely to be equal for any two unequal CameraSys.
+     *
+     * @note Workhorse for std::hash<CameraSys>.
+     */
+    size_t hash() const noexcept;
+
 private:
     std::string _sysName;       ///< coordinate system name
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
 };
-
-// CameraSys is intended as a key for geom::TransformMap, so define this useful type
-typedef geom::TransformMap<CameraSys> CameraTransformMap;
 
 // *** Standard camera coordinate systems ***
 
@@ -140,10 +150,10 @@ typedef geom::TransformMap<CameraSys> CameraTransformMap;
 extern CameraSys const FOCAL_PLANE;
 
 /**
- * Pupil coordinates:
- * Angular x,y offset from the vertex at the pupil (radians).
+ * Field angle coordinates:
+ * Angular x,y offset from the optic axis (radians).
  */
-extern CameraSys const PUPIL;
+extern CameraSys const FIELD_ANGLE;
 
 /**
  * Nominal pixels on the detector (unbinned)
@@ -161,7 +171,7 @@ extern CameraSysPrefix const PIXELS;
  * (and the distortion due to rectangular pixels)
  * with the point at the center of the detector being unaffected by the transformation.
  *
- * In detail, PIXELS->TAN_PIXELS is PIXELS->PUPIL plus an affine transformation, such that:
+ * In detail, PIXELS->TAN_PIXELS is PIXELS->FIELD_ANGLE plus an affine transformation, such that:
  * * The x,y axes are parallel to the detector axes
  * * The dimensions are nominal pixels at the center of the focal plane
  *   (where nominal pixels size is mean of x, y pixel size).
@@ -184,6 +194,18 @@ std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &detSysPrefix);
 std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys);
 }
 }
+}
+
+namespace std {
+template <>
+struct hash<lsst::afw::cameraGeom::CameraSysPrefix> {
+    size_t operator()(lsst::afw::cameraGeom::CameraSysPrefix const &obj) const noexcept { return obj.hash(); }
+};
+
+template <>
+struct hash<lsst::afw::cameraGeom::CameraSys> {
+    size_t operator()(lsst::afw::cameraGeom::CameraSys const &obj) const noexcept { return obj.hash(); }
+};
 }
 
 #endif

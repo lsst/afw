@@ -45,7 +45,8 @@ PYBIND11_PLUGIN(distortedTanWcs) {
     PyDistortedTanWcs cls(mod, "DistortedTanWcs");
 
     /* Constructors */
-    cls.def(py::init<TanWcs const &, geom::XYTransform const &>(), "tanWcs"_a, "pixelsToTanPixels"_a);
+    cls.def(py::init<TanWcs const &, DistortedTanWcs::Transform const &>(), "tanWcs"_a,
+            "pixelsToTanPixels"_a);
 
     /* Members */
     cls.def("clone", &DistortedTanWcs::clone);

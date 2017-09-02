@@ -83,20 +83,20 @@ public:
     int getNQuarter() const;
 
     /**
-     * Generate an XYTransform from pixel to focal plane coordinates
+     * Generate a Transform from pixel to focal plane coordinates
      *
-     * @returns lsst::afw::geom::AffineXYTransform from pixel to focal plane coordinates
+     * @returns lsst::afw::geom::Transform from pixel to focal plane coordinates
      */
-    geom::AffineXYTransform makePixelFpTransform(
+    geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> makePixelFpTransform(
             geom::Extent2D const pixelSizeMm  ///< Size of the pixel in mm in X and Y
             ) const;
 
     /**
-     * Generate an XYTransform from focal plane to pixel coordinates
+     * Generate a Transform from focal plane to pixel coordinates
      *
-     * @returns lsst::afw::geom::AffineXYTransform from focal plane to pixel coordinates
+     * @returns lsst::afw::geom::Transform from focal plane to pixel coordinates
      */
-    geom::AffineXYTransform makeFpPixelTransform(
+    geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> makeFpPixelTransform(
             geom::Extent2D const pixelSizeMm  ///< Size of the pixel in mm in X and Y
             ) const;
 

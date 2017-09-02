@@ -3,10 +3,11 @@ import itertools
 import sys
 import unittest
 
+import lsst.afw.coord   # needed for assertCoordsNearlyEqual
 import lsst.utils.tests
 from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import SkyWcs, Extent2D, Point2D, degrees, \
-    arcseconds, radians, makeCdMatrix
+    arcseconds, radians, makeCdMatrix, makeWcsPairTransform
 from lsst.afw.geom.testUtils import TransformTestBaseClass
 
 
@@ -101,8 +102,8 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             xyPair = wcs.skyToPixel(*sky)
             self.assertPairsAlmostEqual(pixel, Point2D(*xyPair))
 
-        crval = wcs.getSkyOrigin()
-        self.assertCoordsAlmostEqual(crval, crval, maxDiff=self.tinyAngle)
+        self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), crval,
+                                     maxDiff=self.tinyAngle)
 
         crpix = wcs.getPixelOrigin()
         self.assertPairsAlmostEqual(crpix, self.crpix, maxDiff=self.tinyPixels)
@@ -137,6 +138,70 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
                              orientation = orientation,
                              flipX = flipX,
                              )
+
+
+class WcsPairTransformTestCase(TransformTestBaseClass):
+    """Test functionality of makeWcsPairTransform.
+    """
+    def setUp(self):
+        TransformTestBaseClass.setUp(self)
+        crpix = Point2D(100, 100)
+        crvalList = [
+            IcrsCoord(0 * degrees, 45 * degrees),
+            IcrsCoord(0.00001 * degrees, 45 * degrees),
+            IcrsCoord(359.99999 * degrees, 45 * degrees),
+            IcrsCoord(30 * degrees, 89.99999 * degrees),
+            ]
+        orientationList = [
+            0 * degrees,
+            0.00001 * degrees,
+            -0.00001 * degrees,
+            -45 * degrees,
+            90 * degrees,
+        ]
+        scale = 1.0 * arcseconds
+
+        self.wcsList = []
+        for crval in crvalList:
+            for orientation in orientationList:
+                cd = makeCdMatrix(scale=scale, orientation=orientation)
+                self.wcsList.append(SkyWcs(
+                    crpix=crpix,
+                    crval=crval,
+                    cdMatrix=cd))
+
+    def points(self):
+        for x in (0.0, -2.0, 42.5, 1042.3):
+            for y in (27.6, -0.1, 0.0, 196.0):
+                yield Point2D(x, y)
+
+    def testGenericWcs(self):
+        """Test that input and output points represent the same sky position.
+
+        Would prefer a black-box test, but don't have the numbers for it.
+        """
+        for wcs1 in self.wcsList:
+            for wcs2 in self.wcsList:
+                transform = makeWcsPairTransform(wcs1, wcs2)
+                for point1 in self.points():
+                    point2 = transform.applyForward(point1)
+                    self.assertPairsNearlyEqual(
+                        transform.applyInverse(point2),
+                        point1)
+                    self.assertCoordsNearlyEqual(
+                        wcs1.pixelToSky(point1),
+                        wcs2.pixelToSky(point2))
+
+    def testSameWcs(self):
+        """Confirm that pairing two identical Wcs gives an identity transform.
+        """
+        for wcs in self.wcsList:
+            transform = makeWcsPairTransform(wcs, wcs)
+            for point in self.points():
+                outPoint1 = transform.applyForward(point)
+                outPoint2 = transform.applyInverse(outPoint1)
+                self.assertPairsNearlyEqual(point, outPoint1)
+                self.assertPairsNearlyEqual(outPoint1, outPoint2)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

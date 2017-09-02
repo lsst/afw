@@ -43,7 +43,6 @@
 #include "lsst/afw/geom/Functor.h"
 #include "lsst/afw/geom/SeparableXYTransform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
-#include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/transformFactory.h"

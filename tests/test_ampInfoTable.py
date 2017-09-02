@@ -122,7 +122,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.assertEqual(readNoise, record.getReadNoise())
             self.assertEqual(readoutCorner, record.getReadoutCorner())
             self.assertEqual(list(linearityCoeffs),
-                              record.getLinearityCoeffs())
+                             record.getLinearityCoeffs())
             self.assertEqual(linearityType, record.getLinearityType())
             self.assertEqual(bbox, record.getBBox())
             self.assertEqual(hasRawInfo, record.getHasRawInfo())
@@ -130,9 +130,9 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEqual(rawBBox, record.getRawBBox())
                 self.assertEqual(rawDataBBox, record.getRawDataBBox())
                 self.assertEqual(rawHorizontalOverscanBBox,
-                                  record.getRawHorizontalOverscanBBox())
+                                 record.getRawHorizontalOverscanBBox())
                 self.assertEqual(rawVerticalOverscanBBox,
-                                  record.getRawVerticalOverscanBBox())
+                                 record.getRawVerticalOverscanBBox())
                 self.assertEqual(rawPrescanBBox, record.getRawPrescanBBox())
                 self.assertEqual(rawFlipX, record.getRawFlipX())
                 self.assertEqual(rawFlipY, record.getRawFlipY())

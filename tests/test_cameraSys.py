@@ -34,7 +34,7 @@ class CameraSysTestCase(unittest.TestCase):
     def testBasics(self):
         """Test CameraSys and CameraSysPrefix
         """
-        for sysName in ("pupil", "pixels"):
+        for sysName in ("fieldAngle", "pixels"):
             for detectorName in ("", "det1", "det2"):
                 cameraSys = cameraGeom.CameraSys(sysName, detectorName)
                 self.assertEqual(cameraSys.getSysName(), sysName)
@@ -60,21 +60,27 @@ class CameraSysTestCase(unittest.TestCase):
                 else:
                     self.assertEqual(cameraSys, noDetSys)
 
-                # The following tests are checking the functionality of the == and !=
-                # operators and should not be replaced with assertEqual ot
-                # assertNotEqual
+                # The following tests are checking the functionality of the
+                # == and != operators and should not be replaced with
+                # assertEqual or assertNotEqual
                 self.assertTrue(cameraSys != camSysPrefix)
                 self.assertTrue(noDetSys != camSysPrefix)
                 self.assertFalse(cameraSys == camSysPrefix)
                 self.assertFalse(noDetSys == camSysPrefix)
 
-            for sysName2 in ("pupil", "pixels"):
+            for sysName2 in ("fieldAngle", "pixels"):
                 for detectorName2 in ("", "det1", "det2"):
                     cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
                     if sysName == sysName2 and detectorName == detectorName2:
                         self.assertEqual(cameraSys, cameraSys2)
+                        # test __eq__ and __ne__
+                        self.assertTrue(cameraSys == cameraSys2)
+                        self.assertFalse(cameraSys != cameraSys2)
                     else:
                         self.assertNotEqual(cameraSys, cameraSys2)
+                        # test __eq__ and __ne__
+                        self.assertTrue(cameraSys != cameraSys2)
+                        self.assertFalse(cameraSys == cameraSys2)
 
                     camSysPrefix2 = cameraGeom.CameraSysPrefix(sysName2)
                     if sysName2 == sysName:
@@ -95,12 +101,13 @@ class CameraSysTestCase(unittest.TestCase):
         self.assertEqual(repr(dsp), "CameraSysPrefix(pixels)")
 
     def testHashing(self):
-        """Test that hashing works as expected"""
+        """Test that hashing gives equal CameraSys equal hashes"""
+        # Not sure CameraSys has diverse enough values for testing
+        # hash uniformity to be worthwhile
         cs1 = cameraGeom.CameraSys("pixels", "det1")
         cs1Copy = cameraGeom.CameraSys("pixels", "det1")
         cs2 = cameraGeom.CameraSys("pixels", "det2")
         cs2Copy = cameraGeom.CameraSys("pixels", "det2")
-        # import pdb; pdb.set_trace()
         csSet = set((cs1, cs1Copy, cs2, cs2Copy))
         self.assertEqual(len(csSet), 2)
 

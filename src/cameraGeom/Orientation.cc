@@ -26,6 +26,8 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+using Transform = geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint>;
+
 Orientation::Orientation(geom::Point2D const fpPosition, geom::Point2D const refPoint, geom::Angle const yaw,
                          geom::Angle const pitch, geom::Angle const roll)
         : _fpPosition(fpPosition), _refPoint(refPoint), _yaw(yaw), _pitch(pitch), _roll(roll), _rotMat() {
@@ -53,7 +55,7 @@ int Orientation::getNQuarter() const {
     return std::floor((yawDeg + 45.) / 90.);
 }
 
-geom::AffineXYTransform Orientation::makePixelFpTransform(geom::Extent2D const pixelSizeMm) const {
+Transform Orientation::makePixelFpTransform(geom::Extent2D const pixelSizeMm) const {
     // jacobian = coeffA*pixelSizeMmX, coeffB*pixelSizeMmY,
     //            coeffD*pixelSizeMmX, coeffE*pixelSizeMmY
     Eigen::Matrix2d jacobian =
@@ -63,11 +65,11 @@ geom::AffineXYTransform Orientation::makePixelFpTransform(geom::Extent2D const p
     Eigen::Vector2d translation = _fpPosition.asEigen() - (_rotMat * refMm);
 
     geom::AffineTransform affineTransform = geom::AffineTransform(jacobian, translation);
-    return geom::AffineXYTransform(affineTransform);
+    return geom::makeTransform(affineTransform);
 }
 
-geom::AffineXYTransform Orientation::makeFpPixelTransform(geom::Extent2D const pixelSizeMm) const {
-    return geom::AffineXYTransform(makePixelFpTransform(pixelSizeMm).getReverseTransform());
+Transform Orientation::makeFpPixelTransform(geom::Extent2D const pixelSizeMm) const {
+    return makePixelFpTransform(pixelSizeMm).getInverse();
 }
 }
 }

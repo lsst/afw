@@ -94,7 +94,7 @@ Constructors must set the following properties of the contained ast::FrameSet:
     SkyWcs uses this to look up CRVAL; "Ignored" is required to prevent CRVAL from being used as an offset
     from the desired WCS.
 */
-class SkyWcs : public Transform<Point2Endpoint, IcrsCoordEndpoint> {
+class SkyWcs : public TransformPoint2ToIcrsCoord {
 public:
     SkyWcs(SkyWcs const &) = default;
     SkyWcs(SkyWcs &&) = default;
@@ -245,6 +245,22 @@ private:
     // Return a copy so that it can be used as an argument to the SkyWcs(shared_ptr<FrameSet>) constructor
     std::shared_ptr<ast::FrameSet> _checkFrameSet(ast::FrameSet const &frameSet) const;
 };
+
+/**
+ * A Transform obtained by putting two SkyWcs objects "back to back".
+ *
+ * @param src the WCS for the source pixels
+ * @param dst the WCS for the destination pixels
+ * @returns a Transform whose forward transformation converts from `src`
+ *          pixels to `dst` pixels, and whose inverse transformation converts
+ *          in the opposite direction.
+ *
+ * @exceptsafe Provides basic exception safety.
+ *
+ * @note Parameters are provided in the order `dst`, `src` for consistency with
+ *       XYTransformFromWcsPair.
+ */
+TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const &src, SkyWcs const &dst);
 
 }  // namespace geom
 }  // namespace afw

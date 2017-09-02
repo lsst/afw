@@ -31,6 +31,10 @@ __all__ = ["xyTransformRegistry", "OneXYTransformConfig"]
 xyTransformRegistry = makeRegistry(
     '''A registry of XYTransform factories
 
+    .. note:: Deprecated in 14.0
+           Will be removed in 15.0; it is superseded by
+           afw.geom.transformRegistry.
+
         An XYTransform factory is a function that obeys these rules:
         - has an attribute ConfigClass
         - takes one argument, config (an instance of ConfigClass) by name
@@ -50,6 +54,13 @@ xyTransformRegistry.register("identity", makeIdentityTransform)
 
 
 class OneXYTransformConfig(Config):
+    '''Specifies a dependent XYTransform for creating InvertedXYTransform and
+    MultiXYTransform.
+
+    .. note:: Deprecated in 14.0
+           Will be removed in 15.0; it is superseded by
+           afw.geom.OneTransformConfig.
+    '''
     transform = ConfigurableField(
         doc = "XYTransform factory",
         target = makeIdentityTransform,
@@ -66,7 +77,7 @@ makeInvertedTransform.ConfigClass = OneXYTransformConfig
 xyTransformRegistry.register("inverted", makeInvertedTransform)
 
 
-class AffineXYTransformConfig(Config):
+class AffineTransformConfig(Config):
     linear = ListField(
         doc = """2x2 linear matrix in the usual numpy order;
             to rotate a vector by theta use: cos(theta), sin(theta), -sin(theta), cos(theta)""",
@@ -82,7 +93,7 @@ class AffineXYTransformConfig(Config):
     )
 
 
-def makeAffineXYTransform(config):
+def affineFactory(config):
     """Make an AffineXYTransform
     """
     linear = numpy.array(config.linear)
@@ -91,11 +102,11 @@ def makeAffineXYTransform(config):
     return AffineXYTransform(AffineTransform(linear, translation))
 
 
-makeAffineXYTransform.ConfigClass = AffineXYTransformConfig
-xyTransformRegistry.register("affine", makeAffineXYTransform)
+affineFactory.ConfigClass = AffineTransformConfig
+xyTransformRegistry.register("affine", affineFactory)
 
 
-class RadialXYTransformConfig(Config):
+class RadialTransformConfig(Config):
     coeffs = ListField(
         doc = "Coefficients for the radial polynomial; coeff[0] must be 0",
         dtype = float,
@@ -112,17 +123,17 @@ class RadialXYTransformConfig(Config):
                 " need len(coeffs)=0 or len(coeffs)>1, coeffs[0]==0, and coeffs[1]!=0")
 
 
-def makeRadialXYTransform(config):
+def radialFactory(config):
     """Make a RadialXYTransform
     """
     return RadialXYTransform(config.coeffs._list)
 
 
-makeRadialXYTransform.ConfigClass = RadialXYTransformConfig
-xyTransformRegistry.register("radial", makeRadialXYTransform)
+radialFactory.ConfigClass = RadialTransformConfig
+xyTransformRegistry.register("radial", radialFactory)
 
 
-class MultiXYTransformConfig(Config):
+class MultiTransformConfig(Config):
     transformDict = ConfigDictField(
         doc = "Dict of index: OneXYTransformConfig (a transform wrapper); key order is transform order",
         keytype = int,
@@ -130,7 +141,7 @@ class MultiXYTransformConfig(Config):
     )
 
 
-def makeMultiTransform(config):
+def multiFactory(config):
     """Make an MultiXYTransform
     """
     transformKeys = sorted(config.transformDict.keys())
@@ -139,5 +150,5 @@ def makeMultiTransform(config):
     return MultiXYTransform(transformList)
 
 
-makeMultiTransform.ConfigClass = MultiXYTransformConfig
-xyTransformRegistry.register("multi", makeMultiTransform)
+multiFactory.ConfigClass = MultiTransformConfig
+xyTransformRegistry.register("multi", multiFactory)

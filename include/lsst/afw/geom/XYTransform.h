@@ -42,6 +42,9 @@ namespace geom {
 
 /**
  * Virtual base class for 2D transforms
+ *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by @ref lsst::afw::geom::Transform "TransformPoint2ToPoint2".
  */
 class XYTransform : public daf::base::Citizen {
 public:
@@ -71,6 +74,9 @@ public:
     /**
      * linearized forward and reversed transforms
      *
+     * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+     *             by geom::linearizeTransform.
+     *
      * These are virtual but not pure virtual; there is a default implementation which
      * calls forwardTransform() or reverseTransform() and takes finite differences with step
      * size equal to one.
@@ -87,6 +93,9 @@ public:
 
 /**
  * A trivial XYTransform satisfying f(x)=x.
+ *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by geom::makeIdentityTransform.
  */
 class IdentityXYTransform : public XYTransform {
 public:
@@ -101,6 +110,9 @@ public:
 
 /**
  * Wrap an XYTransform, swapping forward and reverse transforms.
+ *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by TransformPoint2ToPoint2::getInverse.
  */
 class InvertedXYTransform : public XYTransform {
 public:
@@ -120,6 +132,9 @@ protected:
 
 /**
  * Wrap a sequence of multiple XYTransforms
+ *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by TransformPoint2ToPoint2::then.
  *
  * forwardTransform executes transformList[i].forwardTransform in order 0, 1, 2..., e.g.
  *
@@ -144,6 +159,8 @@ private:
 /**
  * Wrap an AffineTransform
  *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by @ref lsst::afw::geom::makeTransform(AffineTransform const &) "geom::makeTransform".
  */
 class AffineXYTransform : public XYTransform {
 public:
@@ -166,6 +183,9 @@ protected:
 
 /**
  * A purely radial polynomial distortion, up to 6th order.
+ *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0; it is superseded
+ *             by geom::makeRadialTransform.
  *
  * forwardTransform(pt) = pt * scale
  * where:

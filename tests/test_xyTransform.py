@@ -79,7 +79,7 @@ class XYTransformTestCase(unittest.TestCase):
             for y in (3.1, 0, 2.1):
                 yield Point2D(x, y)
 
-    def checkBasics(self, transform):
+    def checkRoundTrip(self, transform):
         """Check round trip and linearization of transform
         """
         for fromPoint in self.fromIter():
@@ -105,14 +105,14 @@ class XYTransformTestCase(unittest.TestCase):
                     self.assertAlmostEqual(
                         tweakedFromPoint[i], linRoundTripPoint[i], places=2)
 
-    def checkConfig(self, tClass, tConfig, filePath):
+    def checkConfig(self, tFactory, tConfig, filePath):
         """Check round trip of config
         """
         tConfig.save(filePath)
         loadConfig = tConfig.__class__()
         loadConfig.load(filePath)
-        transform = tClass(loadConfig)
-        self.checkBasics(transform)
+        transform = tFactory(loadConfig)
+        self.checkRoundTrip(transform)
 
     def testIdentity(self):
         """Test identity = IdentityXYTransform
@@ -122,7 +122,7 @@ class XYTransformTestCase(unittest.TestCase):
             self.checkConfig(identClass, identClass.ConfigClass(), filePath)
             ident = identClass(identClass.ConfigClass())
             self.assertEqual(type(ident), IdentityXYTransform)
-            self.checkBasics(ident)
+            self.checkRoundTrip(ident)
             for fromPoint in self.fromIter():
                 toPoint = ident.forwardTransform(fromPoint)
                 for i in range(2):
@@ -140,7 +140,7 @@ class XYTransformTestCase(unittest.TestCase):
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
             self.checkConfig(invertedClass, invertedConfig, filePath)
             inverted = invertedClass(invertedConfig)
-            self.checkBasics(inverted)
+            self.checkRoundTrip(inverted)
             for fromPoint in self.fromIter():
                 toPoint = inverted.forwardTransform(fromPoint)
                 predToPoint = fromPoint - \
@@ -157,7 +157,7 @@ class XYTransformTestCase(unittest.TestCase):
             self.checkConfig(affineClass, affineConfig, filePath)
             affine = affineClass(affineConfig)
             self.assertEqual(type(affine), AffineXYTransform)
-            self.checkBasics(affine)
+            self.checkRoundTrip(affine)
             for fromPoint in self.fromIter():
                 toPoint = affine.forwardTransform(fromPoint)
                 for i in range(2):
@@ -245,7 +245,7 @@ class XYTransformTestCase(unittest.TestCase):
             self.assertEqual(len(radial.getCoeffs()), len(radialConfig.coeffs))
             for coeff, predCoeff in zip(radial.getCoeffs(), radialConfig.coeffs):
                 self.assertAlmostEqual(coeff, predCoeff)
-            self.checkBasics(radial)
+            self.checkRoundTrip(radial)
             for fromPoint in self.fromIter():
                 fromRadius = math.hypot(fromPoint[0], fromPoint[1])
                 fromAngle = math.atan2(fromPoint[1], fromPoint[0])
@@ -320,7 +320,7 @@ class XYTransformTestCase(unittest.TestCase):
             transformList = (affine0, affine1)
             refMultiXYTransform = RefMultiXYTransform(transformList)
 
-            self.checkBasics(refMultiXYTransform)
+            self.checkRoundTrip(refMultiXYTransform)
 
             for fromPoint in self.fromIter():
                 toPoint = multiXYTransform.forwardTransform(fromPoint)

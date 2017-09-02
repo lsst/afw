@@ -41,6 +41,11 @@ class Functor;
 /** @brief A 2D transform for which the pixel distortions in the in
  *  the x- and y-directions are separable.
  *
+ * @deprecated Deprecated in 14.0. Will be removed in 15.0. It is partially
+ *             replaced by ast::ParallelMap or ast::Mapping::under, but the
+ *             replacement of Functors with Mappings must be done on a
+ *             case-by-case basis.
+ *
  *  The transformations in each direction are implemented as separate
  *  instances of concrete subclasses of the Functor base class.
  */

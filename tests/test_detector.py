@@ -67,13 +67,13 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         # make sure some complex objects stick around after detector is deleted
 
         detectorName = detector.getName()
+        nativeCoordSys = detector.getNativeCoordSys()
         offset = dw.orientation.getFpPosition()
         del detector
         del dw
         self.assertEqual(orientation.getFpPosition(), offset)
-        nativeCoordSys = transformMap.getNativeCoordSys()
         self.assertEqual(nativeCoordSys,
-                          cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
+                         cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
 
     def testConstructorErrors(self):
         """Test constructor errors
@@ -87,7 +87,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         def addBadCameraSys(dw):
             """Add an invalid camera system"""
             dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = \
-                afwGeom.IdentityXYTransform()
+                afwGeom.makeIdentityTransform()
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=addBadCameraSys)
 
@@ -116,7 +116,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 pixCamPoint, cameraGeom.PIXELS)
             for i in range(2):
                 self.assertAlmostEqual(pixCamPoint.getPoint()[
-                                        i], pixCamPoint2.getPoint()[i])
+                                       i], pixCamPoint2.getPoint()[i])
 
         # make sure you cannot transform to a different detector
         pixCamPoint = dw.detector.makeCameraPoint(
@@ -141,21 +141,27 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """Test hasTransform and getTransform
         """
         detector = DetectorWrapper().detector
-        for camSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS, cameraGeom.TAN_PIXELS):
-            # camSys may be a CameraSys or a CameraSysPrefix
-            fullCamSys = detector.makeCameraSys(camSys)
-            self.assertTrue(detector.hasTransform(camSys))
-            self.assertTrue(detector.hasTransform(fullCamSys))
-            detector.getTransform(camSys)
-            detector.getTransform(fullCamSys)
+        for fromSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS, cameraGeom.TAN_PIXELS):
+            fullFromSys = detector.makeCameraSys(fromSys)
+            for toSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS, cameraGeom.TAN_PIXELS):
+                fullToSys = detector.makeCameraSys(toSys)
+                self.assertTrue(detector.hasTransform(fromSys))
+                self.assertTrue(detector.hasTransform(fullFromSys))
+                self.assertTrue(detector.hasTransform(toSys))
+                self.assertTrue(detector.hasTransform(fullToSys))
+                detector.getTransform(fromSys, toSys)
+                detector.getTransform(fromSys, fullToSys)
+                detector.getTransform(fullFromSys, toSys)
+                detector.getTransform(fullFromSys, fullToSys)
 
         for badCamSys in (
             cameraGeom.CameraSys("badName"),
             cameraGeom.CameraSys("pixels", "badDetectorName")
         ):
             self.assertFalse(detector.hasTransform(badCamSys))
+            self.assertTrue(detector.hasTransform(cameraGeom.PIXELS))
             with self.assertRaises(lsst.pex.exceptions.Exception):
-                detector.getTransform(badCamSys)
+                detector.getTransform(cameraGeom.PIXELS, badCamSys)
 
     def testMakeCameraPoint(self):
         """Test the makeCameraPoint method

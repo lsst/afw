@@ -67,7 +67,7 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         del self.tanWcs
 
     def testBasics(self):
-        pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        pixelsToTanPixels = afwGeom.makeRadialTransform([0, 1.001, 0.00003])
         distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
         tanWcsCopy = distortedWcs.getTanWcs()
 
@@ -88,7 +88,7 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
     def testTransform(self):
         """Test pixelToSky, skyToPixel, getTanWcs and getPixelToTanPixel
         """
-        pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        pixelsToTanPixels = afwGeom.makeRadialTransform([0, 1.001, 0.00003])
         distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
         tanWcsCopy = distortedWcs.getTanWcs()
         pixToTanCopy = distortedWcs.getPixelToTanPixel()
@@ -96,9 +96,9 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         for x in (0, 1000, 5000):
             for y in (0, 560, 2000):
                 pixPos = afwGeom.Point2D(x, y)
-                tanPixPos = pixelsToTanPixels.forwardTransform(pixPos)
+                tanPixPos = pixelsToTanPixels.applyForward(pixPos)
 
-                tanPixPosCopy = pixToTanCopy.forwardTransform(pixPos)
+                tanPixPosCopy = pixToTanCopy.applyForward(pixPos)
                 self.assertEqual(tanPixPos, tanPixPosCopy)
 
                 predSky = self.tanWcs.pixelToSky(tanPixPos)
@@ -132,7 +132,7 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         del outWcs
 
         # return the original WCS if the exposure's WCS has distortion
-        pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        pixelsToTanPixels = afwGeom.makeRadialTransform([0, 1.001, 0.00003])
         distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
         self.assertTrue(distortedWcs.hasDistortion())
         exposure = afwImage.ExposureF(10, 10)

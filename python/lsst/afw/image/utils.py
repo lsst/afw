@@ -28,7 +28,7 @@ from past.builtins import basestring
 from builtins import object
 
 import lsst.pex.policy as pexPolicy
-from lsst.afw.cameraGeom import TAN_PIXELS
+from lsst.afw.cameraGeom import PIXELS, TAN_PIXELS
 import lsst.afw.detection as afwDetect
 from .maskedImage import MaskedImage, makeMaskedImage
 from .mask import Mask
@@ -94,7 +94,7 @@ def getDistortedWcs(exposureInfo, log=None):
                     "Could not create a DistortedTanWcs: exposure has no Detector")
             return wcs
 
-        pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
+        pixelsToTanPixels = detector.getTransform(PIXELS, TAN_PIXELS)
         return DistortedTanWcs(wcs, pixelsToTanPixels)
     return wcs
 
