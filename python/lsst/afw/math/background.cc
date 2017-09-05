@@ -42,33 +42,33 @@ void declareMakeBackground(py::module &mod) {
     mod.def("makeBackground", makeBackground<ImageT>, "img"_a, "bgCtrl"_a);
 }
 
-template <typename PixelT, typename PyClass>
+template <typename PixelT, typename Class, typename PyClass>
 void declareGetImage(PyClass &cls, std::string const &suffix) {
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
-                    Interpolate::Style const, UndersampleStyle const) const) &
-                    BackgroundMI::getImage<PixelT>,
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>>(Class::*)(Interpolate::Style const,
+                                                                        UndersampleStyle const) const) &
+                    Class::template getImage<PixelT>,
             "interpStyle"_a, "undersampleStyle"_a = THROW_EXCEPTION);
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(std::string const &,
-                                                                                std::string const &) const) &
-                    BackgroundMI::getImage<PixelT>,
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>>(Class::*)(std::string const &,
+                                                                        std::string const &) const) &
+                    Class::template getImage<PixelT>,
             "interpStyle"_a, "undersampleStyle"_a = "THROW_EXCEPTION");
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>>(Class::*)(
                     lsst::afw::geom::Box2I const &, Interpolate::Style const, UndersampleStyle const) const) &
-                    BackgroundMI::getImage<PixelT>,
+                    Class::template getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a = THROW_EXCEPTION);
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>>(Class::*)(
                     lsst::afw::geom::Box2I const &, std::string const &, std::string const &) const) &
-                    BackgroundMI::getImage<PixelT>,
+                    Class::template getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a = "THROW_EXCEPTION");
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)() const) &
-                    BackgroundMI::getImage<PixelT>);
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>>(Class::*)() const) &
+                    Class::template getImage<PixelT>);
 }
-}
+}  // namespace
 
 PYBIND11_PLUGIN(_background) {
     py::module mod("_background", "Python wrapper for afw _background library");
@@ -142,7 +142,7 @@ PYBIND11_PLUGIN(_background) {
     py::class_<Background, std::unique_ptr<Background, py::nodelete>> clsBackground(mod, "Background");
 
     /* Members */
-    declareGetImage<float>(clsBackground, "F");
+    declareGetImage<float, Background>(clsBackground, "F");
 
     clsBackground.def("getAsUsedInterpStyle", &Background::getAsUsedInterpStyle);
     clsBackground.def("getAsUsedUndersampleStyle", &Background::getAsUsedUndersampleStyle);
@@ -163,7 +163,7 @@ PYBIND11_PLUGIN(_background) {
     clsBackgroundMI.def("__isub__", &BackgroundMI::operator-=);
 
     /* Members */
-    declareGetImage<float>(clsBackgroundMI, "F");
+    declareGetImage<float, BackgroundMI>(clsBackgroundMI, "F");
 
     clsBackgroundMI.def("getPixel",
                         (double (BackgroundMI::*)(Interpolate::Style const, int const, int const) const) &

@@ -127,8 +127,8 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
 PYBIND11_PLUGIN(exposure) {
     py::module mod("exposure");
 
-    py::module::import("lsst.afw.image.exposureInfo");
-    py::module::import("lsst.afw.image.maskedImage");
+//    py::module::import("lsst.afw.image.exposureInfo");
+//    py::module::import("lsst.afw.image.maskedImage");
 
     auto clsExposureF = declareExposure<float>(mod, "F");
     auto clsExposureD = declareExposure<double>(mod, "D");

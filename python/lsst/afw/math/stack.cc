@@ -78,12 +78,6 @@ void declareStatisticsStackVectorOverloads2(py::module &mod) {
                     std::vector<lsst::afw::image::VariancePixel> const &))statisticsStack<PixelT>,
             "images"_a, "flags"_a, "sctrl"_a = StatisticsControl(),
             "wvector"_a = std::vector<lsst::afw::image::VariancePixel>(0));
-    mod.def("statisticsStack",
-            (std::shared_ptr<std::vector<PixelT>>(*)(
-                    std::vector<std::shared_ptr<std::vector<PixelT>>> &, Property, StatisticsControl const &,
-                    std::vector<lsst::afw::image::VariancePixel> const &))statisticsStack<PixelT>,
-            "vectors"_a, "flags"_a, "sctrl"_a = StatisticsControl(),
-            "wvector"_a = std::vector<lsst::afw::image::VariancePixel>(0));
 }
 
 PYBIND11_PLUGIN(_stack) {

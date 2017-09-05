@@ -104,14 +104,9 @@ PYBIND11_PLUGIN(_footprintSet) {
     // The pybind11 wrapped getFootprints dereferences the shared pointer to the std::vector of Footprints
     // held by the FootprintSet when returning to python to work around an STL caster issue. However this
     // creates a problem for the setter that now expects a shared pointer, making the setter unable to
-    // operate on the output from the getter. Below defines two overrides for the setter function, one
-    // that can handle a shared pointer (in case somewhere else in the stack has one somehow) and one
-    // that will accept a standard vector of Footprints, which will be internally placed in a shared
+    // operate on the output from the getter.
+    // Thus wrap in setter that will accept a standard vector of Footprints, which will be internally placed in a shared
     // pointer to match the underlying C++ function signature
-    clsFootprintSet.def("setFootprints",
-                            [](FootprintSet &self, std::shared_ptr<FootprintSet::FootprintList> footListPtr) {
-                                self.setFootprints(footListPtr);
-                            });
     clsFootprintSet.def("setFootprints", [](FootprintSet &self, FootprintSet::FootprintList footList) {
         self.setFootprints(std::make_shared<FootprintSet::FootprintList>(footList));
     });
