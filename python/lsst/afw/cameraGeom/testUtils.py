@@ -39,6 +39,7 @@ class DetectorWrapper(object):
                  orientation=Orientation(),
                  plateScale=20.0,
                  radialDistortion=0.925,
+                 crosstalk=None,
                  modFunc=None,
                  ):
         """!Construct a DetectorWrapper
@@ -57,6 +58,7 @@ class DetectorWrapper(object):
             (the r^3 coefficient of the radial distortion polynomial
             that converts FIELD_ANGLE in radians to FOCAL_PLANE in mm);
             0.925 is the value Dave Monet measured for lsstSim data
+        @param[in] crosstalk  crosstalk coefficient matrix
         @param[in] modFunc  a function that can modify attributes just before constructing the detector;
             modFunc receives one argument: a DetectorWrapper with all attributes except detector set.
         """
@@ -105,6 +107,9 @@ class DetectorWrapper(object):
             CameraSys(TAN_PIXELS, self.name): pixelToTanPixel,
             CameraSys(ACTUAL_PIXELS, self.name): afwGeom.makeRadialTransform([0, 0.95, 0.01]),
         }
+        if crosstalk is None:
+            crosstalk = [[0.0 for _ in range(numAmps)] for _ in range(numAmps)]
+        self.crosstalk = crosstalk
         if modFunc:
             modFunc(self)
         self.detector = Detector(
@@ -117,6 +122,7 @@ class DetectorWrapper(object):
             self.orientation,
             self.pixelSize,
             self.transMap,
+            np.array(self.crosstalk, dtype=np.float32),
         )
 
 

@@ -31,7 +31,7 @@ namespace cameraGeom {
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
                    geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
                    Orientation const &orientation, geom::Extent2D const &pixelSize,
-                   TransformMap::Transforms const &transforms)
+                   TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk)
         : _name(name),
           _id(id),
           _type(type),
@@ -42,7 +42,8 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
           _orientation(orientation),
           _pixelSize(pixelSize),
           _nativeSys(CameraSys(PIXELS, name)),
-          _transformMap(_nativeSys, transforms) {
+          _transformMap(_nativeSys, transforms),
+          _crosstalk(crosstalk) {
     _init();
 }
 
@@ -111,6 +112,22 @@ void Detector::_init() {
         if (sys.hasDetectorName() && sys.getDetectorName() != _name) {
             std::ostringstream os;
             os << "Invalid transformMap: " << sys << " detector name != \"" << _name << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
+    }
+
+    // ensure crosstalk coefficients matrix is square
+    if (hasCrosstalk()) {
+        auto shape = _crosstalk.getShape();
+        assert(shape.size() == 2);  // we've declared this as a 2D array
+        if (shape[0] != shape[1]) {
+            std::ostringstream os;
+            os << "Non-square crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+        }
+        if (shape[0] != _ampInfoCatalog.size()) {
+            std::ostringstream os;
+            os << "Wrong size crosstalk matrix: " << _crosstalk << " for detector \"" << _name << "\"";
             throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
         }
     }

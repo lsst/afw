@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import numpy as np
 import lsst.pex.config as pexConfig
 from .transformConfig import TransformMapConfig
 
@@ -44,6 +45,22 @@ class DetectorConfig(pexConfig.Config):
     # to be transposed before rotation to put it in camera coordinates.
     transposeDetector = pexConfig.Field(
         "Transpose the pixel grid before orienting in focal plane?", bool)
+
+    crosstalk = pexConfig.ListField(
+        dtype=float,
+        doc=("Flattened crosstalk coefficient matrix; should have nAmps x nAmps entries. "
+             "Once 'reshape'-ed, ``coeffs[i][j]`` is the fraction of the j-th amp present on the i-th amp."),
+        optional=True
+    )
+
+    def getCrosstalk(self, numAmps):
+        """Return a 2-D numpy array of crosstalk coefficients of the proper shape"""
+        if not self.crosstalk:
+            return None
+        try:
+            return np.array(self.crosstalk, dtype=np.float32).reshape((numAmps, numAmps))
+        except:
+            raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix")
 
 
 class CameraConfig(pexConfig.Config):
