@@ -148,9 +148,43 @@ void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager &manager
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile) const {
+    writeFits(fitsfile, fits::ImageWriteOptions(*_maskedImage.getImage()),
+              fits::ImageWriteOptions(*_maskedImage.getMask()),
+              fits::ImageWriteOptions(*_maskedImage.getVariance()));
+}
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(
+    std::string const& fileName,
+    fits::ImageWriteOptions const& imageOptions,
+    fits::ImageWriteOptions const& maskOptions,
+    fits::ImageWriteOptions const& varianceOptions
+) const {
+    fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions);
+}
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(
+    fits::MemFileManager& manager,
+    fits::ImageWriteOptions const& imageOptions,
+    fits::ImageWriteOptions const& maskOptions,
+    fits::ImageWriteOptions const& varianceOptions
+) const {
+    fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions);
+}
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(
+    fits::Fits &fitsfile,
+    fits::ImageWriteOptions const& imageOptions,
+    fits::ImageWriteOptions const& maskOptions,
+    fits::ImageWriteOptions const& varianceOptions
+) const {
     ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
-    _maskedImage.writeFits(fitsfile, data.metadata, data.imageMetadata, data.maskMetadata,
-                           data.varianceMetadata);
+    _maskedImage.writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, data.metadata,
+                           data.imageMetadata, data.maskMetadata, data.varianceMetadata);
     _info->_finishWriteFits(fitsfile, data);
 }
 

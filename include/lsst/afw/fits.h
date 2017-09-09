@@ -22,6 +22,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "ndarray.h"
+#include "lsst/afw/fitsCompression.h"
 
 namespace lsst {
 namespace afw {
@@ -180,6 +181,85 @@ private:
     bool _managed;
 };
 
+
+/// Construct a contiguous ndarray
+///
+/// A deep copy is only performed if the array is not already contiguous.
+template <typename T, int N, int C>
+ndarray::Array<T const, N, N> const makeContiguousArray(ndarray::Array<T, N, C> const& array) {
+    ndarray::Array<T const, N, N> contiguous = ndarray::dynamic_dimension_cast<N>(array);
+    if (contiguous.empty()) contiguous = ndarray::copy(array);
+    return contiguous;
+}
+
+
+/// Options for writing an image to FITS
+///
+/// An image being written to FITS may be scaled (quantised) and/or
+/// compressed. This struct is a container for options controlling
+/// each of those separately.
+struct ImageWriteOptions {
+    ImageCompressionOptions compression;  ///< Options controlling compression
+    ImageScalingOptions scaling;  ///< Options controlling scaling
+
+    /// Construct with default options for images
+    template <typename T>
+    explicit ImageWriteOptions(image::Image<T> const& image) : compression(image) {}
+
+    /// Construct with default options for masks
+    template <typename T>
+    explicit ImageWriteOptions(image::Mask<T> const& mask) : compression(mask) {}
+
+    /// Construct with specific compression and scaling options
+    explicit ImageWriteOptions(
+        ImageCompressionOptions const& compression_=ImageCompressionOptions(ImageCompressionOptions::NONE),
+        ImageScalingOptions const& scaling_=ImageScalingOptions())
+      : compression(compression_), scaling(scaling_) {}
+
+    /// Construct with specific scaling options
+    explicit ImageWriteOptions(ImageScalingOptions const& scaling_)
+      : compression(ImageCompressionOptions::NONE), scaling(scaling_) {}
+
+    /// Construct from a PropertySet
+    ///
+    /// The PropertySet should include the following elements:
+    /// * compression.scheme (string): compression algorithm to use
+    /// * compression.columns (int): number of columns per tile (0 = entire dimension)
+    /// * compression.rows (int): number of rows per tile (0 = 1 row; that's what cfitsio does)
+    /// * compression.quantizeLevel (float): cfitsio quantization level
+    /// * scaling.scheme (string): scaling algorithm to use
+    /// * scaling.bitpix (int): bits per pixel (0, 8,16,32,64,-32,-64)
+    /// * scaling.fuzz (bool): fuzz the values when quantising floating-point values?
+    /// * scaling.seed (long): seed for random number generator when fuzzing
+    /// * scaling.maskPlanes (list of string): mask planes to ignore when doing statistics
+    /// * scaling.quantizeLevel: divisor of the standard deviation for STDEV_* scaling
+    /// * scaling.quantizePad: number of stdev to allow on the low side (for STDEV_POSITIVE/NEGATIVE)
+    /// * scaling.bscale: manually specified BSCALE (for MANUAL scaling)
+    /// * scaling.bzero: manually specified BSCALE (for MANUAL scaling)
+    ///
+    /// Use the 'validate' method to set default values for the above.
+    ///
+    /// 'scaling.maskPlanes' is the only entry that is allowed to be missing
+    /// (because PropertySet can't represent an empty array); when it is missing,
+    /// it is interpreted as an empty array.
+    ///
+    /// @param[in] config  Configuration of image write options
+    ImageWriteOptions(daf::base::PropertySet const& config);
+
+    /// Validate a PropertySet
+    ///
+    /// Returns a validated PropertySet with default values added,
+    /// suitable for use with the constructor.
+    ///
+    /// For details on what elements may be included in the input, see
+    /// ImageWriteOptions::ImageWriteOptions(daf::base::PropertySet const&).
+    ///
+    /// @param[in] config  Configuration of image write options
+    /// @return validated configuration
+    /// @throw lsst::pex::exceptions::RuntimeError if entry is not recognized.
+    static std::shared_ptr<daf::base::PropertySet> validate(daf::base::PropertySet const& config);
+};
+
 /**
  *  @brief A simple struct that combines the two arguments that must be passed to most cfitsio routines
  *         and contains thin and/or templated wrappers around common cfitsio routines.
@@ -197,8 +277,7 @@ private:
  *  calls are all 1-indexed.
  */
 class Fits {
-    template <typename T>
-    void createImageImpl(int nAxis, long* nAxes);
+    void createImageImpl(int bitpix, int nAxis, long const* nAxes);
     template <typename T>
     void writeImageImpl(T const* data, int nElements);
     template <typename T>
@@ -346,7 +425,13 @@ public:
     template <typename PixelT, int N>
     void createImage(ndarray::Vector<ndarray::Size, N> const& shape) {
         ndarray::Vector<long, N> nAxes(shape.reverse());
-        createImageImpl<PixelT>(N, nAxes.elems);
+        createImageImpl(detail::Bitpix<PixelT>::value, N, nAxes.elems);
+    }
+
+    template <int N>
+    void createImage(int bitpix, ndarray::Vector<ndarray::Size, N> const& shape) {
+        ndarray::Vector<long, N> nAxes(shape.reverse());
+        createImageImpl(bitpix, N, nAxes.elems);
     }
 
     /**
@@ -358,7 +443,7 @@ public:
     template <typename PixelT>
     void createImage(long x, long y) {
         long naxes[2] = {x, y};
-        createImageImpl<PixelT>(2, naxes);
+        createImageImpl(detail::Bitpix<PixelT>::value, 2, naxes);
     }
 
     /**
@@ -367,13 +452,34 @@ public:
      *  The HDU must already exist and have the correct bitpix.
      *
      *  An extra deep-copy may be necessary if the array is not fully contiguous.
+     *
+     *  No compression or scaling is performed.
      */
     template <typename T, int N, int C>
     void writeImage(ndarray::Array<T const, N, C> const& array) {
-        ndarray::Array<T const, N, N> contiguous = ndarray::dynamic_dimension_cast<N>(array);
-        if (contiguous.empty()) contiguous = ndarray::copy(array);
-        writeImageImpl(contiguous.getData(), contiguous.getNumElements());
+        writeImageImpl(makeContiguousArray(array).getData(), array.getNumElements());
     }
+
+    /**
+     *  Write an image to FITS
+     *
+     *  This method is all-inclusive, and covers creating the HDU (with the
+     *  correct BITPIX), writing the header and optional scaling and
+     *  compression of the image.
+     *
+     *  @param[in] image  Image to write to FITS.
+     *  @param[in] options  Options controlling the write (scaling, compression).
+     *  @param[in] header  FITS header to write.
+     *  @param[in] mask  Mask for image (used for statistics when scaling).
+     */
+    template <typename T>
+    void writeImage(
+        image::ImageBase<T> const& image,
+        ImageWriteOptions const& options,
+        std::shared_ptr<daf::base::PropertySet const> header=std::shared_ptr<daf::base::PropertyList>(),
+        std::shared_ptr<image::Mask<image::MaskPixel> const> mask=
+            std::shared_ptr<image::Mask<image::MaskPixel>>()
+    );
 
     /// Return the number of dimensions in the current HDU.
     int getImageDim();
@@ -396,9 +502,9 @@ public:
     }
 
     /**
-     *  Return true if the current HDU has the given pixel type.
+     *  Return true if the current HDU is compatible with the given pixel type.
      *
-     *  This takes into account the BUNIT and BSCALE keywords, which can allow integer
+     *  This takes into account the BSCALE and BZERO keywords, which can allow integer
      *  images to be interpreted as floating point.
      */
     template <typename T>
@@ -490,6 +596,23 @@ public:
     /// Close a FITS file.
     void closeFile();
 
+    /// Set compression options for writing FITS images
+    ///
+    /// \sa ImageCompressionContext
+    void setImageCompression(ImageCompressionOptions const& options);
+
+    /// Return the current image compression settings
+    ImageCompressionOptions getImageCompression();
+
+    /// Go to the first image header in the FITS file
+    ///
+    /// If a single image is written compressed, it appears as an extension,
+    /// rather than the primary HDU (PHU). This method is useful before reading
+    /// an image, as it checks whether we are positioned on an empty PHU and if
+    /// the next HDU is a compressed image; if so, it leaves the file pointer on
+    /// the compresed image, ready for reading.
+    bool checkCompressedImagePhu();
+
     ~Fits() {
         if ((fptr) && (behavior & AUTO_CLOSE)) closeFile();
     }
@@ -541,6 +664,11 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& mana
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
 std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits& fitsfile, bool strip = false);
+
+
+void setAllowImageCompression(bool allow);
+bool getAllowImageCompression();
+
 }
 }
 }  /// namespace lsst::afw::fits

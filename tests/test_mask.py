@@ -250,6 +250,8 @@ class MaskTestCase(utilsTests.TestCase):
 
         self.assertMasksEqual(mask, self.expect << nMaskPlanes0)
 
+        mask.clearMaskPlaneDict()
+
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             mask.writeFits(tmpFile)
 

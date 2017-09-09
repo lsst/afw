@@ -199,7 +199,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Mask");
                 throw e;
             }
-            LOGLS_WARN(_log, "Mask unreadable; using default");
+            LOGLS_WARN(_log, "Mask unreadable (" << e << "); using default");
             // By resetting the status we are able to read the next HDU (the variance).
             fitsfile.status = 0;
             _mask.reset(new Mask(_image->getBBox()));
@@ -215,7 +215,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Variance");
                 throw e;
             }
-            LOGLS_WARN(_log, "Variance unreadable; using default");
+            LOGLS_WARN(_log, "Variance unreadable (" << e << "); using default");
             fitsfile.status = 0;
             _variance.reset(new Variance(_image->getBBox()));
         }
@@ -518,11 +518,58 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         std::shared_ptr<daf::base::PropertySet const> imageMetadata,
         std::shared_ptr<daf::base::PropertySet const> maskMetadata,
         std::shared_ptr<daf::base::PropertySet const> varianceMetadata) const {
-    std::shared_ptr<daf::base::PropertySet> hdr;
+    writeFits(fitsfile, fits::ImageWriteOptions(*_image), fits::ImageWriteOptions(*_mask),
+              fits::ImageWriteOptions(*_variance), metadata, imageMetadata, maskMetadata, varianceMetadata);
+}
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+    std::string const& fileName,
+    fits::ImageWriteOptions const& imageOptions,
+    fits::ImageWriteOptions const& maskOptions,
+    fits::ImageWriteOptions const& varianceOptions,
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
+) const {
+    fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, metadata, imageMetadata,
+              maskMetadata, varianceMetadata);
+}
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+    fits::MemFileManager& manager,
+    fits::ImageWriteOptions const& imageOptions,
+    fits::ImageWriteOptions const& maskOptions,
+    fits::ImageWriteOptions const& varianceOptions,
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
+) const {
+    fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, metadata, imageMetadata,
+              maskMetadata, varianceMetadata);
+}
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+    fits::Fits& fitsfile,
+    fits::ImageWriteOptions const& imageOptions,
+    fits::ImageWriteOptions const& maskOptions,
+    fits::ImageWriteOptions const& varianceOptions,
+    std::shared_ptr<daf::base::PropertySet const> metadata,
+    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
+) const {
+    std::shared_ptr<daf::base::PropertySet> header;
     if (metadata) {
-        hdr = metadata->deepCopy();
+        header = metadata->deepCopy();
     } else {
-        hdr.reset(new daf::base::PropertyList());
+        header = std::make_shared<daf::base::PropertyList>();
     }
 
     if (fitsfile.countHdus() != 0) {
@@ -535,16 +582,16 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     } else {
         fitsfile.setHdu(0);
     }
-    fitsfile.writeMetadata(*hdr);
+    fitsfile.writeMetadata(*header);
 
-    processPlaneMetadata(imageMetadata, hdr, "IMAGE");
-    _image->writeFits(fitsfile, hdr);
+    processPlaneMetadata(imageMetadata, header, "IMAGE");
+    _image->writeFits(fitsfile, imageOptions, header, _mask);
 
-    processPlaneMetadata(maskMetadata, hdr, "MASK");
-    _mask->writeFits(fitsfile, hdr);
+    processPlaneMetadata(maskMetadata, header, "MASK");
+    _mask->writeFits(fitsfile, maskOptions, header);
 
-    processPlaneMetadata(varianceMetadata, hdr, "VARIANCE");
-    _variance->writeFits(fitsfile, hdr);
+    processPlaneMetadata(varianceMetadata, header, "VARIANCE");
+    _variance->writeFits(fitsfile, varianceOptions, header, _mask);
 }
 
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions

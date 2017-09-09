@@ -915,7 +915,7 @@ public:
                            std::shared_ptr<daf::base::PropertySet const>()) const;
 
     /**
-     *  Write a MaskedImage to a FITS RAM file.
+     *  Write a MaskedImage to a FITS file.
      *
      *  @param[in] fitsfile           An empty FITS file object.
      *  @param[in] metadata           Additional values to write to the primary HDU header (may be null).
@@ -935,6 +935,87 @@ public:
                            std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> varianceMetadata =
                            std::shared_ptr<daf::base::PropertySet const>()) const;
+
+    /**
+     *  Write a MaskedImage to a FITS file.
+     *
+     *  @param[in] fileName           Name of the file to write.
+     *  @param[in] imageOptions       Options controlling writing of image as FITS.
+     *  @param[in] maskOptions        Options controlling writing of mask as FITS.
+     *  @param[in] varianceOptions    Options controlling writing of variance as FITS.
+     *  @param[in] metadata           Additional values to write to the primary HDU header (may be null).
+     *  @param[in] imageMetadata      Metadata to be written to the image header.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
+     *
+     *  The FITS file will have four HDUs; the primary HDU will contain only metadata,
+     *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
+     *  to indicate that the primary metadata applies to those HDUs as well.
+     */
+    void writeFits(
+        std::string const& fileName,
+        fits::ImageWriteOptions const& imageOptions,
+        fits::ImageWriteOptions const& maskOptions,
+        fits::ImageWriteOptions const& varianceOptions,
+        std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr
+    ) const;
+
+    /**
+     *  Write a MaskedImage to a FITS file.
+     *
+     *  @param[in] manager            Manager object for the memory block to write to.
+     *  @param[in] imageOptions       Options controlling writing of image as FITS.
+     *  @param[in] maskOptions        Options controlling writing of mask as FITS.
+     *  @param[in] varianceOptions    Options controlling writing of variance as FITS.
+     *  @param[in] metadata           Additional values to write to the primary HDU header (may be null).
+     *  @param[in] imageMetadata      Metadata to be written to the image header.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
+     *
+     *  The FITS file will have four HDUs; the primary HDU will contain only metadata,
+     *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
+     *  to indicate that the primary metadata applies to those HDUs as well.
+     */
+    void writeFits(
+        fits::MemFileManager& manager,
+        fits::ImageWriteOptions const& imageOptions,
+        fits::ImageWriteOptions const& maskOptions,
+        fits::ImageWriteOptions const& varianceOptions,
+        std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr
+    ) const;
+
+    /**
+     *  Write a MaskedImage to a FITS file.
+     *
+     *  @param[in] fitsfile           An empty FITS file object.
+     *  @param[in] imageOptions       Options controlling writing of image as FITS.
+     *  @param[in] maskOptions        Options controlling writing of mask as FITS.
+     *  @param[in] varianceOptions    Options controlling writing of variance as FITS.
+     *  @param[in] metadata           Additional values to write to the primary HDU header (may be null).
+     *  @param[in] imageMetadata      Metadata to be written to the image header.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
+     *
+     *  The FITS file will have four HDUs; the primary HDU will contain only metadata,
+     *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
+     *  to indicate that the primary metadata applies to those HDUs as well.
+     */
+    void writeFits(
+        fits::Fits& fitsfile,
+        fits::ImageWriteOptions const& imageOptions,
+        fits::ImageWriteOptions const& maskOptions,
+        fits::ImageWriteOptions const& varianceOptions,
+        std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr
+    ) const;
 
     /**
      *  Read a MaskedImage from a regular FITS file.

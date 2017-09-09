@@ -41,6 +41,7 @@ template <typename PixelT>
 inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array, geom::Point2I& xy0,
                             lsst::daf::base::PropertySet& metadata, geom::Box2I bbox = geom::Box2I(),
                             ImageOrigin origin = PARENT) {
+    fitsfile.checkCompressedImagePhu();
     if (!fitsfile.checkImageType<PixelT>()) {
         throw LSST_FITS_EXCEPT(fits::FitsTypeError, fitsfile, "Incorrect image type for FITS image");
     }
@@ -95,16 +96,6 @@ inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& 
     xy0 += xyOffset;
 }
 
-template <typename ImageT>
-inline void fits_write_image(fits::Fits& fitsfile, const ImageT& image,
-                             std::shared_ptr<daf::base::PropertySet const> metadata =
-                                     std::shared_ptr<daf::base::PropertySet const>()) {
-    fitsfile.createImage<typename ImageT::Pixel>(image.getArray().getShape());
-    if (metadata) {
-        fitsfile.writeMetadata(*metadata);
-    }
-    fitsfile.writeImage(image.getArray());
-}
 }
 }
 }  // namespace lsst::afw::image

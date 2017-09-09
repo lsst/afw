@@ -25,7 +25,7 @@ import os
 import lsst.daf.base as dafBase
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
+from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits
 from . import mathLib as afwMath
 
 
@@ -145,6 +145,11 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         else:
             # we want to start at 0 (post RFC-304), but are about to increment
             hdu -= 1
+
+        fits = Fits(fileName, "r")
+        fits.setHdu(hdu + 1)
+        if fits.checkCompressedImagePhu():
+            hdu += 1
 
         while True:
             hdu += 1

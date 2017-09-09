@@ -195,7 +195,19 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     if (fits) {
         LOGL_DEBUG(_log, "ExposureFormatter write FitsStorage");
 
-        ip->writeFits(fits->getPath());
+        fits::ImageWriteOptions imageOptions, maskOptions, varianceOptions;
+        if (additionalData) {
+            try {
+                imageOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("image"));
+                maskOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
+                varianceOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("variance"));
+            } catch (std::exception const& exc) {
+                LOGLS_WARN(_log, "Unable to construct Exposure write options (" << exc.what() <<
+                           "); writing with default options");
+            }
+        }
+
+        ip->writeFits(fits->getPath(), imageOptions, maskOptions, varianceOptions);
         LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
     }

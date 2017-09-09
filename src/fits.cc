@@ -20,6 +20,8 @@ extern "C" {
 #include "lsst/log/Log.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/fitsCompression.h"
 
 namespace lsst {
 namespace afw {
@@ -189,6 +191,23 @@ struct FitsBitPix<double> {
     static int const CONSTANT = DOUBLE_IMG;
 };
 
+static bool allowImageCompression = true;
+
+int fitsTypeForBitpix(int bitpix) {
+    switch (bitpix) {
+      case 8: return TBYTE;
+      case 16: return TSHORT;
+      case 32: return TINT;
+      case 64: return TLONGLONG;
+      case -32: return TFLOAT;
+      case -64: return TDOUBLE;
+      default:
+        std::ostringstream os;
+        os << "Invalid bitpix value: " << bitpix;
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
+    }
+}
+
 }  // anonymous
 
 // ----------------------------------------------------------------------------------------------------------
@@ -208,6 +227,11 @@ std::string makeErrorMessage(std::string const &fileName, int status, std::strin
     }
     if (msg != "") {
         os << " : " << msg;
+    }
+    os << "\ncfitsio error stack:\n";
+    char cfitsioMsg[FLEN_ERRMSG];
+    while (fits_read_errmsg(cfitsioMsg) != 0) {
+        os << "  " << cfitsioMsg << "\n";
     }
     return os.str();
 }
@@ -895,9 +919,9 @@ void Fits::createEmpty() {
     }
 }
 
-template <typename T>
-void Fits::createImageImpl(int naxis, long *naxes) {
-    fits_create_img(reinterpret_cast<fitsfile *>(fptr), FitsBitPix<T>::CONSTANT, naxis, naxes, &status);
+void Fits::createImageImpl(int bitpix, int naxis, long const *naxes) {
+    fits_create_img(reinterpret_cast<fitsfile *>(fptr), bitpix, naxis,
+                    const_cast<long*>(naxes), &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating new image HDU");
     }
@@ -912,10 +936,165 @@ void Fits::writeImageImpl(T const *data, int nElements) {
     }
 }
 
+namespace {
+
+/// RAII for activating compression
+///
+/// Compression is a property of the file in cfitsio, so we need to set it,
+/// do our stuff and then disable it.
+struct ImageCompressionContext {
+  public:
+    ImageCompressionContext(Fits & fits_, ImageCompressionOptions const& useThis)
+        : fits(fits_), old(fits.getImageCompression()) {
+        fits.setImageCompression(useThis);
+    }
+    ~ImageCompressionContext() {
+        int status = 0;
+        std::swap(status, fits.status);
+        try {
+             fits.setImageCompression(old);
+        } catch (...) {
+            LOGLS_WARN("afw.fits",
+                       makeErrorMessage(fits.fptr, fits.status, "Failed to restore compression settings"));
+        }
+        std::swap(status, fits.status);
+    }
+  private:
+    Fits & fits;  // FITS file we're working on
+    ImageCompressionOptions old;  // Former compression options, to be restored
+};
+
+} // anonymous namespace
+
+template <typename T>
+void Fits::writeImage(
+    image::ImageBase<T> const& image,
+    ImageWriteOptions const& options,
+    std::shared_ptr<daf::base::PropertySet const> header,
+    std::shared_ptr<image::Mask<image::MaskPixel> const> mask
+) {
+    auto fits = reinterpret_cast<fitsfile *>(fptr);
+    ImageCompressionOptions const& compression = image.getBBox().getArea() > 0 ? options.compression :
+        ImageCompressionOptions(ImageCompressionOptions::NONE);  // cfitsio can't compress empty images
+    ImageCompressionContext comp(*this, compression);  // RAII
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Activating compression for write image");
+    }
+
+    ImageScale scale = options.scaling.determine(image, mask);
+
+    // We need a place to put the image+header, and CFITSIO needs to know the dimenions.
+    ndarray::Vector<long, 2> dims(image.getArray().getShape().reverse());
+    createImageImpl(scale.bitpix == 0 ? detail::Bitpix<T>::value : scale.bitpix, 2, dims.elems);
+
+    // Write the header
+    std::shared_ptr<daf::base::PropertyList> wcsMetadata =
+        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+                                                     image.getX0(), image.getY0());
+    if (header) {
+        std::shared_ptr<daf::base::PropertySet> copy = header->deepCopy();
+        copy->combine(wcsMetadata);
+        header = copy;
+    } else {
+        header = wcsMetadata;
+    }
+    writeMetadata(*header);
+
+    // Scale the image how we want it on disk
+    ndarray::Array<T const, 2, 2> array = makeContiguousArray(image.getArray());
+    auto pixels = scale.toFits(array, compression.quantizeLevel != 0, options.scaling.fuzz,
+                               options.compression.tiles, options.scaling.seed);
+
+    // We only want cfitsio to do the scale and zero for unsigned 64-bit integer types. For those,
+    // "double bzero" has sufficient precision to represent the appropriate value. We'll let
+    // cfitsio handle it itself.
+    // In all other cases, we will convert the image to use the appropriate scale and zero
+    // (because we want to fuzz the numbers in the quantisation), so we don't want cfitsio
+    // rescaling.
+    if (!std::is_same<T, std::uint64_t>::value) {
+        fits_set_bscale(fits, 1.0, 0.0, &status);
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, "Setting bscale,bzero");
+        }
+    }
+
+    // Write the pixels
+    int const fitsType = scale.bitpix == 0 ? FitsType<T>::CONSTANT : fitsTypeForBitpix(scale.bitpix);
+    fits_write_img(fits, fitsType, 1, pixels->getNumElements(),
+                   const_cast<void*>(pixels->getData()), &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Writing image");
+    }
+
+    // Now write the headers we didn't want cfitsio to know about when we were writing the pixels
+    // (because we don't want it using them to modify the pixels, and we don't want it overwriting
+    // these values).
+    if (!std::is_same<T, std::int64_t>::value && !std::is_same<T, std::uint64_t>::value &&
+        std::isfinite(scale.bzero) && std::isfinite(scale.bscale) && (scale.bscale != 0.0)) {
+        if (std::numeric_limits<T>::is_integer) {
+            if (scale.bzero != 0.0) {
+                fits_write_key_lng(fits, "BZERO", static_cast<long>(scale.bzero),
+                                   "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
+            }
+            if (scale.bscale != 1.0) {
+                fits_write_key_lng(fits, "BSCALE", static_cast<long>(scale.bscale),
+                                   "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
+            }
+        } else {
+            fits_write_key_dbl(fits, "BZERO", scale.bzero, 12,
+                               "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
+            fits_write_key_dbl(fits, "BSCALE", scale.bscale, 12,
+                               "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
+        }
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, "Writing BSCALE,BZERO");
+        }
+    }
+
+    if (scale.bitpix > 0) {
+        fits_write_key_lng(fits, "BLANK", scale.blank, "Value for undefined pixels", &status);
+        fits_write_key_lng(fits, "ZBLANK", scale.blank, "Value for undefined pixels", &status);
+        if (!std::numeric_limits<T>::is_integer) {
+            fits_write_key_lng(fits, "ZDITHER0", options.scaling.seed, "Dithering seed", &status);
+            fits_write_key_str(fits, "ZQUANTIZ", "SUBTRACTIVE_DITHER_1", "Dithering algorithm", &status);
+        }
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, "Writing [Z]BLANK");
+        }
+    }
+
+    // cfitsio says this is deprecated, but Pan-STARRS found that it was sometimes necessary, writing:
+    // "This forces a re-scan of the header to ensure everything's kosher.
+    // Without this, compressed HDUs have been written out with PCOUNT=0 and TFORM1 not correctly set."
+    fits_set_hdustruc(fits, &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Finalizing header");
+    }
+}
+
+
+namespace {
+
+/// Value for BLANK pixels
+template <typename T, class Enable=void>
+struct NullValue {
+    static T constexpr value = 0;
+};
+
+/// Floating-point values
+template <typename T>
+struct NullValue<T, typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN>::type> {
+    static T constexpr value = std::numeric_limits<T>::quiet_NaN();
+};
+
+}
+
 template <typename T>
 void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *increment) {
-    fits_read_subset(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, begin, end, increment, 0,
-                     data, 0, &status);
+    T null = NullValue<T>::value;
+    int anyNulls = 0;
+    fits_read_subset(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, begin, end, increment,
+                     reinterpret_cast<void*>(&null), data, &anyNulls, &status);
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Reading image");
 }
 
@@ -933,10 +1112,89 @@ void Fits::getImageShapeImpl(int maxDim, long *nAxes) {
 
 template <typename T>
 bool Fits::checkImageType() {
-    int bitpix = 0;
-    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fptr), &bitpix, &status);
+    int imageType = 0;
+    fits_get_img_equivtype(reinterpret_cast<fitsfile *>(fptr), &imageType, &status);
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting image type");
-    return bitpix == FitsBitPix<T>::CONSTANT;
+    if (std::numeric_limits<T>::is_integer) {
+        if (imageType < 0) {
+            return false;  // can't represent floating-point with integer
+        }
+        return imageType <= FitsBitPix<T>::CONSTANT;  // can represent a small int by a larger int
+    }
+    if (std::is_same<T, double>::value) {
+        // Everything can be represented by double
+        return true;
+    }
+    assert((std::is_same<T, float>::value)); // Everything else has been dealt with
+    switch (imageType) {
+      case TLONGLONG:
+      case TDOUBLE:
+        // Not enough precision in 'float'
+        return false;
+      default:
+        return true;
+    }
+}
+
+ImageCompressionOptions Fits::getImageCompression()
+{
+    auto fits = reinterpret_cast<fitsfile *>(fptr);
+    int compType = 0;  // cfitsio compression type
+    fits_get_compression_type(fits, &compType, &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Getting compression type");
+    }
+
+    ImageCompressionOptions::Tiles tiles = ndarray::allocate(MAX_COMPRESS_DIM);
+    fits_get_tile_dim(fits, tiles.getNumElements(), tiles.getData(), &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Getting tile dimensions");
+    }
+
+    float quantizeLevel;
+    fits_get_quantize_level(fits, &quantizeLevel, &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Getting quantizeLevel");
+    }
+
+    return ImageCompressionOptions(compressionAlgorithmFromCfitsio(compType), tiles, quantizeLevel);
+}
+
+void Fits::setImageCompression(ImageCompressionOptions const& comp)
+{
+    auto fits = reinterpret_cast<fitsfile *>(fptr);
+    fits_unset_compression_request(fits, &status);  // wipe the slate and start over
+    ImageCompressionOptions::CompressionAlgorithm const algorithm = allowImageCompression ? comp.algorithm :
+        ImageCompressionOptions::NONE;
+    fits_set_compression_type(fits, compressionAlgorithmToCfitsio(algorithm), &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Setting compression type");
+    }
+
+    if (algorithm == ImageCompressionOptions::NONE) {
+        // Nothing else worth doing
+        return;
+    }
+
+    fits_set_tile_dim(fits, comp.tiles.getNumElements(), comp.tiles.getData(), &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Setting tile dimensions");
+    }
+
+    if (comp.algorithm != ImageCompressionOptions::PLIO && std::isfinite(comp.quantizeLevel)) {
+        fits_set_quantize_level(fits, comp.quantizeLevel, &status);
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, "Setting quantization level");
+        }
+    }
+}
+
+void setAllowImageCompression(bool allow) {
+    allowImageCompression = allow;
+}
+
+bool getAllowImageCompression() {
+    return allowImageCompression;
 }
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
@@ -1012,7 +1270,10 @@ Fits::Fits(MemFileManager &manager, std::string const &mode, int behavior_)
     }
 }
 
-void Fits::closeFile() { fits_close_file(reinterpret_cast<fitsfile *>(fptr), &status); }
+void Fits::closeFile() {
+    fits_close_file(reinterpret_cast<fitsfile *>(fptr), &status);
+    fptr = nullptr;
+}
 
 std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const &fileName, int hdu, bool strip) {
     fits::Fits fp(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -1053,6 +1314,146 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     return metadata;
 }
 
+namespace {
+
+// RAII for moving the HDU
+class HduMove {
+  public:
+    HduMove() = delete;
+    HduMove(HduMove const&) = delete;
+
+    HduMove(Fits & fits, int hdu) : _fits(fits), _enabled(true) {
+        _fits.setHdu(hdu);
+    }
+    ~HduMove() {
+        if (!_enabled) {
+            return;
+        }
+        int status = 0;
+        std::swap(status, _fits.status);
+        try {
+             _fits.setHdu(0);
+        } catch (...) {
+            LOGLS_WARN("afw.fits",
+                       makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to PHU"));
+        }
+        std::swap(status, _fits.status);
+    }
+    void disable() { _enabled = false; }
+
+  private:
+    Fits & _fits;  // FITS file we're working on
+    bool _enabled;  // Move back to PHU on destruction?
+};
+
+} // anonymous namespace
+
+bool Fits::checkCompressedImagePhu() {
+    auto fits = reinterpret_cast<fitsfile *>(fptr);
+    if (getHdu() != 0 || countHdus() == 1) {
+        return false;  // Can't possibly be the PHU leading a compressed image
+    }
+    // Check NAXIS = 0
+    int naxis;
+    fits_get_img_dim(fits, &naxis, &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Checking NAXIS of PHU");
+    }
+    if (naxis != 0) {
+        return false;
+    }
+    // Check first extension (and move back there when we're done if we're not compressed)
+    HduMove move{*this, 1};
+    bool isCompressed = fits_is_compressed_image(fits, &status);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Checking compression");
+    }
+    if (isCompressed) {
+        move.disable();
+    }
+    return isCompressed;
+}
+
+
+ImageWriteOptions::ImageWriteOptions(daf::base::PropertySet const& config)
+  : compression(
+        fits::compressionAlgorithmFromString(config.get<std::string>("compression.algorithm")),
+        std::vector<long>{config.getAsInt64("compression.columns"), config.getAsInt64("compression.rows")},
+        config.getAsDouble("compression.quantizeLevel")
+    ),
+    scaling(
+        fits::scalingAlgorithmFromString(config.get<std::string>("scaling.algorithm")),
+        config.getAsInt("scaling.bitpix"),
+        config.exists("scaling.maskPlanes") ? config.getArray<std::string>("scaling.maskPlanes") :
+            std::vector<std::string>{},
+        config.getAsInt("scaling.seed"),
+        config.getAsDouble("scaling.quantizeLevel"),
+        config.getAsDouble("scaling.quantizePad"),
+        config.get<bool>("scaling.fuzz"),
+        config.getAsDouble("scaling.bscale"),
+        config.getAsDouble("scaling.bzero")
+    )
+{}
+
+
+namespace {
+
+template <typename T>
+void validateEntry(
+    daf::base::PropertySet & output,
+    daf::base::PropertySet const& input,
+    std::string const& name,
+    T defaultValue
+) {
+    output.add(name, input.get<T>(name, defaultValue));
+}
+
+
+template <typename T>
+void validateEntry(
+    daf::base::PropertySet & output,
+    daf::base::PropertySet const& input,
+    std::string const& name,
+    std::vector<T> defaultValue
+) {
+    output.add(name, input.exists(name) ? input.getArray<T>(name) : defaultValue);
+}
+
+} // anonymous namespace
+
+
+std::shared_ptr<daf::base::PropertySet>
+ImageWriteOptions::validate(daf::base::PropertySet const& config) {
+    auto validated = std::make_shared<daf::base::PropertySet>();
+
+    validateEntry(*validated, config, "compression.algorithm", std::string("NONE"));
+    validateEntry(*validated, config, "compression.columns", 0);
+    validateEntry(*validated, config, "compression.rows", 1);
+    validateEntry(*validated, config, "compression.quantizeLevel", 0.0);
+
+    validateEntry(*validated, config, "scaling.algorithm", std::string("NONE"));
+    validateEntry(*validated, config, "scaling.bitpix", 0);
+    validateEntry(*validated, config, "scaling.maskPlanes", std::vector<std::string>{"NO_DATA"});
+    validateEntry(*validated, config, "scaling.seed", 1);
+    validateEntry(*validated, config, "scaling.quantizeLevel", 5.0);
+    validateEntry(*validated, config, "scaling.quantizePad", 10.0);
+    validateEntry(*validated, config, "scaling.fuzz", true);
+    validateEntry(*validated, config, "scaling.bscale", 1.0);
+    validateEntry(*validated, config, "scaling.bzero", 0.0);
+
+    // Check for additional entries that we don't support (e.g., from typos)
+    for (auto const& name : config.names(false)) {
+        if (!validated->exists(name)) {
+            std::ostringstream os;
+            os << "Invalid image write option: " << name;
+            throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
+        }
+    }
+
+    return validated;
+}
+
+
 #define INSTANTIATE_KEY_OPS(r, data, T)                                                            \
     template void Fits::updateKey(std::string const &, T const &, std::string const &);            \
     template void Fits::writeKey(std::string const &, T const &, std::string const &);             \
@@ -1065,8 +1466,11 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
     template void Fits::readKey(std::string const &, T &);
 
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                                \
-    template void Fits::createImageImpl<T>(int, long *);                 \
     template void Fits::writeImageImpl(T const *, int);                  \
+    template void Fits::writeImage(image::ImageBase<T> const&, \
+                                   ImageWriteOptions const&, \
+                                   std::shared_ptr<daf::base::PropertySet const>, \
+                                   std::shared_ptr<image::Mask<image::MaskPixel> const>); \
     template void Fits::readImageImpl(int, T *, long *, long *, long *); \
     template bool Fits::checkImageType<T>();                             \
     template int getBitPix<T>();

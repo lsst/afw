@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from lsst.afw.fits.fitsLib import MemFileManager  # , cdata, memmove
+from lsst.afw.fits.fitsLib import MemFileManager, ImageWriteOptions, ImageCompressionOptions
 
 
 def reduceToFits(obj):
@@ -11,7 +11,11 @@ def reduceToFits(obj):
     Assumes the existence of a "writeFits" method on the object.
     """
     manager = MemFileManager()
-    obj.writeFits(manager)
+    options = ImageWriteOptions(ImageCompressionOptions(ImageCompressionOptions.NONE))
+    try:
+        obj.writeFits(manager, options)
+    except:
+        obj.writeFits(manager)
     size = manager.getLength()
     data = manager.getData()
     return (unreduceFromFits, (obj.__class__, data, size))

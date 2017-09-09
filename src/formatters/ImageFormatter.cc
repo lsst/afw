@@ -48,6 +48,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/log/Log.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/fits.h"
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.ImageFormatter");
@@ -119,7 +120,7 @@ namespace afwImage = lsst::afw::image;
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
                                         std::shared_ptr<FormatterStorage> storage,
-                                        std::shared_ptr<lsst::daf::base::PropertySet>) {
+                                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
@@ -144,7 +145,17 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
     if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter write FitsStorage");
 
-        ip->writeFits(fits->getPath());
+        fits::ImageWriteOptions options;
+        if (additionalData) {
+            try {
+                options = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("image"));
+            } catch (std::exception const& exc) {
+                LOGLS_WARN(_log, "Unable to construct image write options (" << exc.what() <<
+                           "); writing with default options");
+            }
+        }
+
+        ip->writeFits(fits->getPath(), options);
         // @todo Do something with these fields?
         // int _X0;
         // int _Y0;
