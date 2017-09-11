@@ -22,11 +22,13 @@
 from __future__ import absolute_import, division, print_function
 
 from future.utils import with_metaclass
+from past.types import basestring
 
 import numpy as np
 
 from lsst.utils import continueClass, TemplateMeta
 from .base import BaseRecord, BaseCatalog
+from ..schema import Key
 
 __all__ = ["Catalog"]
 
@@ -126,13 +128,10 @@ class Catalog(with_metaclass(TemplateMeta, object)):
             return self.subset(start, stop, step)
         elif isinstance(key, np.ndarray):
             return self.subset(key)
-        try:
-            # this works only for integer arguments (single record access)
+        elif isinstance(key, Key) or isinstance(key, basestring):
+            return self.columns[key]
+        else:
             return self._getitem_(key)
-        except TypeError:
-            pass
-        # when record access fails, try column access
-        return self.columns[key]
 
     def __setitem__(self, key, value):
         """
@@ -140,12 +139,10 @@ class Catalog(with_metaclass(TemplateMeta, object)):
         and set it to ``value``.
         """
         self._columns = None
-        try:
-            # this works only for integer arguments (single record access)
+        if isinstance(key, Key) or isinstance(key, basestring):
+            self.columns[key] = value
+        else:
             return self.set(key, value)
-        except TypeError:
-            pass
-        self.columns[key] = value
 
     def __delitem__(self, key):
         self._columns = None
