@@ -175,12 +175,12 @@ public:
     /**
     Get a local TAN WCS approximation to this WCS at the specified pixel position
     */
-    SkyWcs getTanWcs(Point2D const &pixel) const;
+    std::shared_ptr<SkyWcs> getTanWcs(Point2D const &pixel) const;
 
     /**
     Return a copy of this SkyWcs with the pixel origin by the specified amount
     */
-    SkyWcs copyAtShiftedPixelOrigin(Extent2D const &shift) const;
+    std::shared_ptr<SkyWcs> copyAtShiftedPixelOrigin(Extent2D const &shift) const;
 
     /**
     Compute sky position(s) from pixel position(s)
