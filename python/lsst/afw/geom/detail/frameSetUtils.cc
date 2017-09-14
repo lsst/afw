@@ -59,6 +59,7 @@ PYBIND11_PLUGIN(frameSetUtils) {
     mod.def("makeTanWcsMetadata", makeTanWcsMetadata, "crpix"_a, "crval"_a, "cdMatrix"_a);
     mod.def("readFitsWcs", readFitsWcs, "metadata"_a, "strip"_a = true);
     mod.def("readLsstSkyWcs", readLsstSkyWcs, "metadata"_a, "strip"_a = true);
+    mod.def("getPropertyListFromFitsChan", getPropertyListFromFitsChan, "fitsChan"_a);
 
     return mod.ptr();
 }

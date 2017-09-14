@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function
 import unittest
 
+import astshim as ast
 from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import arcseconds, degrees, makeCdMatrix, Point2D
-from lsst.afw.geom.detail import makeTanWcsMetadata, readFitsWcs, readLsstSkyWcs
+from lsst.afw.geom.detail import makeTanWcsMetadata, readFitsWcs, readLsstSkyWcs, getPropertyListFromFitsChan
 import lsst.utils.tests
 
 PrintStrippedNames = False
@@ -78,6 +79,79 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(metadata.toList()), 32)
         readLsstSkyWcs(metadata, strip=True)
         self.assertEqual(len(metadata.toList()), 18)
+
+    def testGetPropertyListFromFitsChanWithComments(self):
+        fc = ast.FitsChan(ast.StringStream())
+        self.assertEqual(fc.className, "FitsChan")
+
+        # add one card for each supported type, with a comment
+        continueVal = "This is a continue card"
+        floatVal = 1.5
+        intVal = 99
+        logicalVal = True
+        stringVal = "This is a string"
+        fc.setFitsCN("ACONT", continueVal, "Comment for ACONT")
+        fc.setFitsF("AFLOAT", floatVal, "Comment for AFLOAT")
+        fc.setFitsI("ANINT", intVal, "Comment for ANINT")
+        fc.setFitsL("ALOGICAL", logicalVal, "Comment for ALOGICAL")
+        fc.setFitsS("ASTRING", stringVal, "Comment for ASTRING")
+        fc.setFitsCM("a comment, which will be ignored by getPropertyListFromFitsChan")
+        expectedNames = ["ACONT", "AFLOAT", "ANINT", "ALOGICAL", "ASTRING"]
+
+        self.assertEqual(fc.nCard, 6)
+        metadata = getPropertyListFromFitsChan(fc)
+        self.assertEqual(metadata.getOrderedNames(), expectedNames)
+
+        self.assertEqual(metadata.get("ACONT"), continueVal)
+        self.assertAlmostEqual(metadata.get("AFLOAT"), floatVal)
+        self.assertEqual(metadata.get("ANINT"), intVal)
+        self.assertEqual(metadata.get("ALOGICAL"), logicalVal)
+        self.assertEqual(metadata.get("ASTRING"), stringVal)
+        self.assertEqual(metadata.get("ACONT"), continueVal)
+
+        for name in expectedNames:
+            self.assertEqual(metadata.getComment(name), "Comment for %s" % (name,))
+
+    def testGtFitsCardsNoComments(self):
+        fc = ast.FitsChan(ast.StringStream())
+        self.assertEqual(fc.className, "FitsChan")
+
+        # add one card for each supported type, with a comment
+        continueVal = "This is a continue card"
+        floatVal = 1.5
+        intVal = 99
+        logicalVal = True
+        stringVal = "This is a string"
+        fc.setFitsCN("ACONT", continueVal)
+        fc.setFitsF("AFLOAT", floatVal)
+        fc.setFitsI("ANINT", intVal)
+        fc.setFitsL("ALOGICAL", logicalVal)
+        fc.setFitsS("ASTRING", stringVal)
+        fc.setFitsCM("a comment, which will be ignored by getPropertyListFromFitsChan")
+
+        self.assertEqual(fc.nCard, 6)
+        metadata = getPropertyListFromFitsChan(fc)
+        self.assertEqual(metadata.getOrderedNames(), ["ACONT", "AFLOAT", "ANINT", "ALOGICAL", "ASTRING"])
+
+        self.assertEqual(metadata.get("ACONT"), continueVal)
+        self.assertAlmostEqual(metadata.get("AFLOAT"), floatVal)
+        self.assertEqual(metadata.get("ANINT"), intVal)
+        self.assertEqual(metadata.get("ALOGICAL"), logicalVal)
+        self.assertEqual(metadata.get("ASTRING"), stringVal)
+        self.assertEqual(metadata.get("ACONT"), continueVal)
+
+    def testGetPropertyListFromFitsChanUnsupportedTypes(self):
+        fc = ast.FitsChan(ast.StringStream())
+        self.assertEqual(fc.className, "FitsChan")
+        fc.setFitsCF("ACOMPLEX", complex(1, 1))
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            getPropertyListFromFitsChan(fc)
+
+        fc = ast.FitsChan(ast.StringStream())
+        self.assertEqual(fc.className, "FitsChan")
+        fc.setFitsU("UNDEFVAL")
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            getPropertyListFromFitsChan(fc)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

@@ -103,6 +103,16 @@ The frames of the returned WCS will be as follows:
 */
 std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata, bool strip = true);
 
+/**
+Copy values from an AST FitsChan into a PropertyList
+
+@warning COMMENT and HISTORY cards are treated as string values
+
+@throws lsst::pex::exceptions::InvalidParameterError if `fitsChan` contains cards whose
+    type is not supported by `PropertyList`: complex numbers, or cards with no value
+*/
+std::shared_ptr<daf::base::PropertyList> getPropertyListFromFitsChan(ast::FitsChan &fitsChan);
+
 }  // namespace detail
 }  // namespace geom
 }  // namespace afw

@@ -49,7 +49,35 @@ std::set<std::string> setFromVector(std::vector<std::string>&& vec) {
     return std::set<std::string>(std::make_move_iterator(vec.begin()), std::make_move_iterator(vec.end()));
 }
 
-} // namespace
+/*
+ * Copy a FITS header card from a FitsChan to a PropertyList.
+ *
+ * Internal function for use by getPropertyListFromFitsChan.
+ *
+ * @param[in,out] metadata  PropertyList to which to copy the value
+ * @param[in] name  FITS header card name; used as the name for the new entry in `metadata`
+ * @param[in] foundValue  Value and found flag returned by ast::FitsChan.getFits{X};
+ *      foundValue.found must be true.
+ * @param[in] comment  Card comment; if blank then no comment is written
+ *
+ * @throw lsst::pex::exceptions::LogicError if foundValue.found false.
+ */
+template <typename T>
+void setMetadataFromFoundValue(daf::base::PropertyList& metadata, std::string const& name,
+                               ast::FoundValue<T> const& foundValue, std::string const& comment = "") {
+    if (!foundValue.found) {
+        std::ostringstream os;
+        os << "Bug! FitsChan card \"" << name << "\" not found";
+        throw LSST_EXCEPT(pex::exceptions::LogicError, os.str());
+    }
+    if (comment.empty()) {
+        metadata.set(name, foundValue.value);
+    } else {
+        metadata.set(name, foundValue.value, comment);
+    }
+}
+
+}  // namespace
 
 std::shared_ptr<ast::SkyFrame> getSkyFrame(ast::FrameSet const& frameSet, int index, bool copy) {
     auto frame = frameSet.getFrame(index, false);
@@ -57,7 +85,7 @@ std::shared_ptr<ast::SkyFrame> getSkyFrame(ast::FrameSet const& frameSet, int in
     if (!skyFrame) {
         std::ostringstream os;
         os << "Bug! Frame at index=" << index << " is a " << frame->getClassName() << ", not a SkyFrame";
-        throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
+        throw LSST_EXCEPT(pex::exceptions::LogicError, os.str());
     }
     return skyFrame;
 }
@@ -211,11 +239,11 @@ std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata,
         auto const baseDomain = frameSet->getDomain();
         if (baseDomain != "") {
             std::ostringstream os;
-            os << "Could not find a GRID frame, and the base frame has domain \""
-               << baseDomain << "\" instead of blank";
+            os << "Could not find a GRID frame, and the base frame has domain \"" << baseDomain
+               << "\" instead of blank";
             throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
         }
-        // Original base frame has 
+        // Original base frame has
         // Set its domain to GRID, and set some other potentially useful attributes.
         frameSet->setDomain("GRID");
         frameSet->setTitle("FITS pixel coordinates - first pixel at (1,1)");
@@ -251,6 +279,64 @@ std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata,
     frameSet->setCurrent(stdSkyIndex);
 
     return frameSet;
+}
+
+std::shared_ptr<daf::base::PropertyList> getPropertyListFromFitsChan(ast::FitsChan& fitsChan) {
+    int const numCards = fitsChan.getNCard();
+    auto metadata = std::make_shared<daf::base::PropertyList>();
+    for (int cardNum = 1; cardNum <= numCards; ++cardNum) {
+        fitsChan.setCard(cardNum);
+        auto const cardType = fitsChan.getCardType();
+        auto const cardName = fitsChan.getCardName();
+        auto const cardComment = fitsChan.getCardComm();
+        switch (cardType) {
+            case ast::CardType::FLOAT: {
+                auto foundValue = fitsChan.getFitsF();
+                setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
+                break;
+            }
+            case ast::CardType::INT: {
+                auto foundValue = fitsChan.getFitsI();
+                setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
+                break;
+            }
+            case ast::CardType::STRING: {
+                auto foundValue = fitsChan.getFitsS();
+                setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
+                break;
+            }
+            case ast::CardType::LOGICAL: {
+                auto foundValue = fitsChan.getFitsL();
+                setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
+                break;
+            }
+            case ast::CardType::CONTINUE: {
+                auto foundValue = fitsChan.getFitsCN();
+                setMetadataFromFoundValue(*metadata, cardName, foundValue, cardComment);
+                break;
+            }
+            case ast::CardType::COMMENT:
+                // Drop HISTORY and COMMENT cards
+                break;
+            case ast::CardType::COMPLEXF:
+            case ast::CardType::COMPLEXI:
+            case ast::CardType::UNDEF: {
+                // PropertyList supports neither complex numbers nor cards with no value
+                std::ostringstream os;
+                os << "Card " << cardNum << " with name \"" << cardName << "\" has type "
+                   << static_cast<int>(cardType) << ", which is not supported by PropertyList";
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
+            }
+            case ast::CardType::NOTYPE: {
+                // This should only occur if cardNum is invalid, and that should be impossible
+                std::ostringstream os;
+                os << "Bug! Card " << cardNum << " with name \"" << cardName
+                   << "\" has type NOTYPE, which should not be possible";
+                throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, os.str());
+            }
+        }
+    }
+    return metadata;
 }
 
 }  // namespace detail
