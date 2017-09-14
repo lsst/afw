@@ -151,7 +151,7 @@ class WcsPairTransformTestCase(TransformTestBaseClass):
             IcrsCoord(0.00001 * degrees, 45 * degrees),
             IcrsCoord(359.99999 * degrees, 45 * degrees),
             IcrsCoord(30 * degrees, 89.99999 * degrees),
-            ]
+        ]
         orientationList = [
             0 * degrees,
             0.00001 * degrees,
