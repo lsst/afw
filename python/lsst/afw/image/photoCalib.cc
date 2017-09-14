@@ -71,39 +71,42 @@ PYBIND11_PLUGIN(photoCalib) {
     cls.def(py::init<>());
     cls.def(py::init<double, double, afw::geom::Box2I>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
             "bbox"_a = afw::geom::Box2I());
-    cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double>(), "zeroPoint"_a,
+    cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double>(), "calibration"_a,
             "instFluxMag0Err"_a = 0.0);
     cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "instFluxMag0"_a,
-            "instFluxMag0Err"_a, "zeroPoint"_a, "isConstant"_a);
+            "instFluxMag0Err"_a, "calibration"_a, "isConstant"_a);
 
     /* Members - maggies */
-    cls.def("instFluxToMaggies", (double (PhotoCalib::*)(double, afw::geom::Point<double, 2> const &) const) &
-                                         PhotoCalib::instFluxToMaggies,
+    cls.def("instFluxToMaggies",
+            (double (PhotoCalib::*)(double, afw::geom::Point<double, 2> const &) const) &
+                    PhotoCalib::instFluxToMaggies,
             "instFlux"_a, "point"_a);
     cls.def("instFluxToMaggies", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMaggies,
             "instFlux"_a);
 
     cls.def("instFluxToMaggies",
-            (Measurement (PhotoCalib::*)(double, double, afw::geom::Point<double, 2> const &) const) &
+            (Measurement(PhotoCalib::*)(double, double, afw::geom::Point<double, 2> const &) const) &
                     PhotoCalib::instFluxToMaggies,
             "instFlux"_a, "instFluxErr"_a, "point"_a);
     cls.def("instFluxToMaggies",
-            (Measurement (PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToMaggies, "instFlux"_a,
+            (Measurement(PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToMaggies, "instFlux"_a,
             "instFluxErr"_a);
 
     cls.def("instFluxToMaggies",
-            (Measurement (PhotoCalib::*)(afw::table::SourceRecord const &, std::string const &) const) &
+            (Measurement(PhotoCalib::*)(afw::table::SourceRecord const &, std::string const &) const) &
                     PhotoCalib::instFluxToMaggies,
             "sourceRecord"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMaggies", (ndarray::Array<double, 2, 2> (PhotoCalib::*)(
-                                         afw::table::SourceCatalog const &, std::string const &) const) &
-                                         PhotoCalib::instFluxToMaggies,
+    cls.def("instFluxToMaggies",
+            (ndarray::Array<double, 2, 2>(PhotoCalib::*)(afw::table::SourceCatalog const &,
+                                                         std::string const &) const) &
+                    PhotoCalib::instFluxToMaggies,
             "sourceCatalog"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMaggies", (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &,
-                                                       std::string const &) const) &
-                                         PhotoCalib::instFluxToMaggies,
+    cls.def("instFluxToMaggies",
+            (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &, std::string const &)
+                     const) &
+                    PhotoCalib::instFluxToMaggies,
             "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
     /* Members - magnitudes */
@@ -115,36 +118,39 @@ PYBIND11_PLUGIN(photoCalib) {
             "instFlux"_a);
 
     cls.def("instFluxToMagnitude",
-            (Measurement (PhotoCalib::*)(double, double, afw::geom::Point<double, 2> const &) const) &
+            (Measurement(PhotoCalib::*)(double, double, afw::geom::Point<double, 2> const &) const) &
                     PhotoCalib::instFluxToMagnitude,
             "instFlux"_a, "instFluxErr"_a, "point"_a);
     cls.def("instFluxToMagnitude",
-            (Measurement (PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToMagnitude,
+            (Measurement(PhotoCalib::*)(double, double) const) & PhotoCalib::instFluxToMagnitude,
             "instFlux"_a, "instFluxErr"_a);
 
     cls.def("instFluxToMagnitude",
-            (Measurement (PhotoCalib::*)(afw::table::SourceRecord const &, std::string const &) const) &
+            (Measurement(PhotoCalib::*)(afw::table::SourceRecord const &, std::string const &) const) &
                     PhotoCalib::instFluxToMagnitude,
             "sourceRecord"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMagnitude", (ndarray::Array<double, 2, 2> (PhotoCalib::*)(
-                                           afw::table::SourceCatalog const &, std::string const &) const) &
-                                           PhotoCalib::instFluxToMagnitude,
+    cls.def("instFluxToMagnitude",
+            (ndarray::Array<double, 2, 2>(PhotoCalib::*)(afw::table::SourceCatalog const &,
+                                                         std::string const &) const) &
+                    PhotoCalib::instFluxToMagnitude,
             "sourceCatalog"_a, "instFluxField"_a);
 
-    cls.def("instFluxToMagnitude", (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &,
-                                                         std::string const &) const) &
-                                           PhotoCalib::instFluxToMagnitude,
+    cls.def("instFluxToMagnitude",
+            (void (PhotoCalib::*)(afw::table::SourceCatalog &, std::string const &, std::string const &)
+                     const) &
+                    PhotoCalib::instFluxToMagnitude,
             "sourceCatalog"_a, "instFluxField"_a, "outField"_a);
 
     /* utilities */
+    cls.def("getCalibrationMean", &PhotoCalib::getCalibrationMean);
+    cls.def("getCalibrationErr", &PhotoCalib::getCalibrationErr);
     cls.def("getInstFluxMag0", &PhotoCalib::getInstFluxMag0);
-    cls.def("getInstFluxMag0Err", &PhotoCalib::getInstFluxMag0Err);
 
     cls.def("magnitudeToInstFlux", (double (PhotoCalib::*)(double) const) & PhotoCalib::magnitudeToInstFlux,
             "magnitude"_a);
 
-    cls.def("computeScaledZeroPoint", &PhotoCalib::computeScaledZeroPoint);
+    cls.def("computeScaledCalibration", &PhotoCalib::computeScaledCalibration);
     cls.def("computeScalingTo", &PhotoCalib::computeScalingTo);
 
     /* Operators */
@@ -164,7 +170,7 @@ PYBIND11_PLUGIN(photoCalib) {
 
     return mod.ptr();
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

@@ -40,18 +40,16 @@ namespace image {
 
 namespace {
 
-double pow2(double value) { return value * value; }
+double toMaggies(double instFlux, double scale) { return instFlux * scale; }
 
-double toMaggies(double instFlux, double scale) { return instFlux / scale; }
-
-double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux / scale); }
+double toMagnitude(double instFlux, double scale) { return -2.5 * log10(instFlux * scale); }
 
 double toMaggiesErr(double instFlux, double instFluxErr, double scale, double scaleErr, double maggies) {
-    return maggies * sqrt(pow2(instFluxErr / instFlux) + pow2(scaleErr / scale));
+    return maggies * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
 
 double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double scaleErr) {
-    return 2.5 / log(10.0) * sqrt(pow2(instFluxErr / instFlux) + pow2(scaleErr / scale));
+    return 2.5 / log(10.0) * hypot(instFluxErr / instFlux, scaleErr / scale);
 }
 
 }  // anonymous namespace
@@ -60,28 +58,28 @@ double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double 
 
 double PhotoCalib::instFluxToMaggies(double instFlux, afw::geom::Point<double, 2> const &point) const {
     if (_isConstant)
-        return toMaggies(instFlux, _instFluxMag0);
+        return toMaggies(instFlux, _calibrationMean);
     else
-        return toMaggies(instFlux, _zeroPoint->evaluate(point));
+        return toMaggies(instFlux, _calibration->evaluate(point));
 }
 
-double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(instFlux, _instFluxMag0); }
+double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(instFlux, _calibrationMean); }
 
 Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr,
                                           afw::geom::Point<double, 2> const &point) const {
-    double instFluxMag0, err, maggies;
+    double calibration, err, maggies;
     if (_isConstant)
-        instFluxMag0 = _instFluxMag0;
+        calibration = _calibrationMean;
     else
-        instFluxMag0 = _zeroPoint->evaluate(point);
-    maggies = toMaggies(instFlux, instFluxMag0);
-    err = toMaggiesErr(instFlux, instFluxErr, instFluxMag0, _instFluxMag0Err, maggies);
+        calibration = _calibration->evaluate(point);
+    maggies = toMaggies(instFlux, calibration);
+    err = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
     return Measurement(maggies, err);
 }
 
 Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr) const {
-    double maggies = toMaggies(instFlux, _instFluxMag0);
-    double err = toMaggiesErr(instFlux, instFluxErr, _instFluxMag0, _instFluxMag0Err, maggies);
+    double maggies = toMaggies(instFlux, _calibrationMean);
+    double err = toMaggiesErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr, maggies);
     return Measurement(maggies, err);
 }
 
@@ -106,9 +104,9 @@ void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
     auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_calFlux").key;
     auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_calFluxErr").key;
-    for (auto & record : sourceCatalog) {
-        auto result = instFluxToMaggies(record.get(instFluxKey), record.get(instFluxErrKey),
-                                        record.getCentroid());
+    for (auto &record : sourceCatalog) {
+        auto result =
+                instFluxToMaggies(record.get(instFluxKey), record.get(instFluxErrKey), record.getCentroid());
         record.set(maggiesKey, result.value);
         record.set(maggiesErrKey, result.err);
     }
@@ -118,28 +116,30 @@ void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std
 
 double PhotoCalib::instFluxToMagnitude(double instFlux, afw::geom::Point<double, 2> const &point) const {
     if (_isConstant)
-        return toMagnitude(instFlux, _instFluxMag0);
+        return toMagnitude(instFlux, _calibrationMean);
     else
-        return toMagnitude(instFlux, _zeroPoint->evaluate(point));
+        return toMagnitude(instFlux, _calibration->evaluate(point));
 }
 
-double PhotoCalib::instFluxToMagnitude(double instFlux) const { return toMagnitude(instFlux, _instFluxMag0); }
+double PhotoCalib::instFluxToMagnitude(double instFlux) const {
+    return toMagnitude(instFlux, _calibrationMean);
+}
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
                                             afw::geom::Point<double, 2> const &point) const {
-    double instFluxMag0, err, magnitude;
+    double calibration, err, magnitude;
     if (_isConstant)
-        instFluxMag0 = _instFluxMag0;
+        calibration = _calibrationMean;
     else
-        instFluxMag0 = _zeroPoint->evaluate(point);
-    magnitude = toMagnitude(instFlux, instFluxMag0);
-    err = toMagnitudeErr(instFlux, instFluxErr, instFluxMag0, _instFluxMag0Err);
+        calibration = _calibration->evaluate(point);
+    magnitude = toMagnitude(instFlux, calibration);
+    err = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
     return Measurement(magnitude, err);
 }
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr) const {
-    double magnitude = toMagnitude(instFlux, _instFluxMag0);
-    double err = toMagnitudeErr(instFlux, instFluxErr, _instFluxMag0, _instFluxMag0Err);
+    double magnitude = toMagnitude(instFlux, _calibrationMean);
+    double err = toMagnitudeErr(instFlux, instFluxErr, _calibrationMean, _calibrationErr);
     return Measurement(magnitude, err);
 }
 
@@ -165,7 +165,7 @@ void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
     auto magKey = sourceCatalog.getSchema().find<double>(outField + "_mag").key;
     auto magErrKey = sourceCatalog.getSchema().find<double>(outField + "_magErr").key;
-    for (auto & record : sourceCatalog) {
+    for (auto &record : sourceCatalog) {
         auto result = instFluxToMagnitude(record.get(instFluxKey), record.get(instFluxErrKey),
                                           record.getCentroid());
         record.set(magKey, result.value);
@@ -176,11 +176,11 @@ void PhotoCalib::instFluxToMagnitude(afw::table::SourceCatalog &sourceCatalog,
 // ------------------- other utility methods -------------------
 
 double PhotoCalib::magnitudeToInstFlux(double magnitude) const {
-    return pow(10, magnitude / -2.5) * _instFluxMag0;
+    return pow(10, magnitude / -2.5) / _calibrationMean;
 }
 
-std::shared_ptr<math::BoundedField> PhotoCalib::computeScaledZeroPoint() const {
-    return *(_zeroPoint) / _instFluxMag0;
+std::shared_ptr<math::BoundedField> PhotoCalib::computeScaledCalibration() const {
+    return *(_calibration) / _calibrationMean;
 }
 
 std::shared_ptr<math::BoundedField> PhotoCalib::computeScalingTo(std::shared_ptr<PhotoCalib> other) const {
@@ -188,20 +188,20 @@ std::shared_ptr<math::BoundedField> PhotoCalib::computeScalingTo(std::shared_ptr
 }
 
 bool PhotoCalib::operator==(PhotoCalib const &rhs) const {
-    return (_instFluxMag0 == rhs._instFluxMag0 && _instFluxMag0Err == rhs._instFluxMag0Err &&
-            (*_zeroPoint) == *(rhs._zeroPoint));
+    return (_calibrationMean == rhs._calibrationMean && _calibrationErr == rhs._calibrationErr &&
+            (*_calibration) == *(rhs._calibration));
 }
 
-double PhotoCalib::computeInstFluxMag0(std::shared_ptr<afw::math::BoundedField> zeroPoint) const {
-    return zeroPoint->mean();
+double PhotoCalib::computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const {
+    return calibration->mean();
 }
 
 std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib) {
     if (photoCalib._isConstant)
         os << "spatially constant with ";
     else
-        os << *(photoCalib._zeroPoint) << " with ";
-    return os << "mean: " << photoCalib._instFluxMag0 << " err: " << photoCalib._instFluxMag0Err;
+        os << *(photoCalib._calibration) << " with ";
+    return os << "mean: " << photoCalib._calibrationMean << " err: " << photoCalib._calibrationErr;
 }
 
 // ------------------- persistence -------------------
@@ -211,8 +211,8 @@ namespace {
 class PhotoCalibSchema {
 public:
     table::Schema schema;
-    table::Key<double> instFluxMag0;
-    table::Key<double> instFluxMag0Err;
+    table::Key<double> calibrationMean;
+    table::Key<double> calibrationErr;
     table::Key<table::Flag> isConstant;
     table::Key<int> field;
 
@@ -231,10 +231,10 @@ public:
 private:
     PhotoCalibSchema()
             : schema(),
-              instFluxMag0(schema.addField<double>("instFluxMag0", "instFlux of a zero-magnitude object",
-                                                   "count")),
-              instFluxMag0Err(
-                      schema.addField<double>("instFluxMag0Err", "1-err error on instFluxmag0", "count")),
+              calibrationMean(schema.addField<double>(
+                      "calibrationMean", "mean calibration on this PhotoCalib's domain", "count")),
+              calibrationErr(
+                      schema.addField<double>("calibrationErr", "1-sigma error on calibrationMean", "count")),
               isConstant(schema.addField<table::Flag>("isConstant", "Is this spatially-constant?")),
               field(schema.addField<int>("field", "archive ID of the BoundedField object")) {
         schema.getCitizen().markPersistent();
@@ -247,7 +247,7 @@ public:
             read(InputArchive const &archive, CatalogVector const &catalogs) const {
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
-        return std::make_shared<PhotoCalib>(record.get(keys.instFluxMag0), record.get(keys.instFluxMag0Err),
+        return std::make_shared<PhotoCalib>(record.get(keys.calibrationMean), record.get(keys.calibrationErr),
                                             archive.get<afw::math::BoundedField>(record.get(keys.field)),
                                             record.get(keys.isConstant));
     }
@@ -267,10 +267,10 @@ void PhotoCalib::write(OutputArchiveHandle &handle) const {
     PhotoCalibSchema const &keys = PhotoCalibSchema::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     auto record = catalog.addNew();
-    record->set(keys.instFluxMag0, _instFluxMag0);
-    record->set(keys.instFluxMag0Err, _instFluxMag0Err);
+    record->set(keys.calibrationMean, _calibrationMean);
+    record->set(keys.calibrationErr, _calibrationErr);
     record->set(keys.isConstant, _isConstant);
-    record->set(keys.field, handle.put(_zeroPoint));
+    record->set(keys.field, handle.put(_calibration));
     handle.saveCatalog(catalog);
 }
 
@@ -279,7 +279,7 @@ void PhotoCalib::write(OutputArchiveHandle &handle) const {
 void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceCatalog,
                                         std::string const &instFluxField,
                                         ndarray::Array<double, 2, 2> result) const {
-    double instFlux, instFluxErr, maggies, instFluxMag0;
+    double instFlux, instFluxErr, maggies, calibration;
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
     auto iter = result.begin();
@@ -287,12 +287,12 @@ void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceC
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
         if (_isConstant)
-            instFluxMag0 = _instFluxMag0;
+            calibration = _calibrationMean;
         else
-            instFluxMag0 = _zeroPoint->evaluate(rec.getCentroid());
-        maggies = toMaggies(instFlux, instFluxMag0);
+            calibration = _calibration->evaluate(rec.getCentroid());
+        maggies = toMaggies(instFlux, calibration);
         (*iter)[0] = maggies;
-        (*iter)[1] = toMaggiesErr(instFlux, instFluxErr, instFluxMag0, _instFluxMag0Err, maggies);
+        (*iter)[1] = toMaggiesErr(instFlux, instFluxErr, calibration, _calibrationErr, maggies);
         iter++;
     }
 }
@@ -300,7 +300,7 @@ void PhotoCalib::instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceC
 void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourceCatalog,
                                           std::string const &instFluxField,
                                           ndarray::Array<double, 2, 2> result) const {
-    double instFlux, instFluxErr, instFluxMag0;
+    double instFlux, instFluxErr, calibration;
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
     auto iter = result.begin();
@@ -308,14 +308,14 @@ void PhotoCalib::instFluxToMagnitudeArray(afw::table::SourceCatalog const &sourc
         instFlux = rec.get(instFluxKey);
         instFluxErr = rec.get(instFluxErrKey);
         if (_isConstant)
-            instFluxMag0 = _instFluxMag0;
+            calibration = _calibrationMean;
         else
-            instFluxMag0 = _zeroPoint->evaluate(rec.getCentroid());
-        (*iter)[0] = toMagnitude(instFlux, instFluxMag0);
-        (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, instFluxMag0, _instFluxMag0Err);
+            calibration = _calibration->evaluate(rec.getCentroid());
+        (*iter)[0] = toMagnitude(instFlux, calibration);
+        (*iter)[1] = toMagnitudeErr(instFlux, instFluxErr, calibration, _calibrationErr);
         iter++;
     }
 }
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

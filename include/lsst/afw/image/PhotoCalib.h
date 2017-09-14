@@ -52,31 +52,30 @@ struct Measurement {
  *
  * @brief The photometric calibration of an exposure.
  *
- * A PhotoCalib is a BoundedField (a function with a specified domain) that converts between post-ISR
+ * A PhotoCalib is a BoundedField (a function with a specified domain) that converts from post-ISR
  * counts-on-chip (ADU) to flux and magnitude. It is defined in terms of "maggies", which are a linear
  * unit defined in SDSS (definition given in nanomaggies):
  *     http://www.sdss.org/dr12/algorithms/magnitudes/#nmgy
  *
  * PhotoCalib is immutable.
  *
- * The spatially varying flux/magnitude zero point is defined such that,
- * at a position (x,y) in the domain of the boundedField zeroPoint
- * and for a given measured source instFlux:
+ * The spatially varying flux calibration has units of maggies/ADU, and is defined such that,
+ * at a position (x,y) in the domain of the boundedField calibration and for a given measured source instFlux:
  * @f[
- *     instFlux / zeroPoint(x,y) = flux [maggies]
+ *     instFlux*calibration(x,y) = flux [maggies]
  * @f]
  * while the errors (constant on the domain) are defined as:
  * @f[
- *     sqrt((instFluxErr/instFlux)^2 + (zeroPointErr/zeroPoint)^2)*flux = fluxErr [maggies]
+ *     sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration)^2)*flux = fluxErr [maggies]
  * @f]
  * This implies that the conversions from instFlux and instFlux error to magnitude and magnitude error
  * are as follows:
  * @f[
- *     -2.5 * log_{10}(instFlux / zeroPoint(x,y)) = magnitude
+ *     -2.5*log_{10}(instFlux*calibration(x,y)) = magnitude
  * @f]
  * and
  * @f[
- *     2.5/log(10) * sqrt((instFluxErr/instFlux)^2 + (zeroPointErr/zeroPoint)^2) = magnitudeErr
+ *     2.5/log(10)*sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration)^2) = magnitudeErr
  * @f]
  */
 class PhotoCalib : public table::io::PersistableFacade<PhotoCalib>, public table::io::Persistable {
@@ -95,45 +94,45 @@ public:
     /**
      * Create a non-spatially-varying calibration.
      *
-     * @param[in]  instFluxMag0     The constant instFlux/magnitude zero point (instFlux at magnitude 0).
-     * @param[in]  instFluxMag0Err  The error on the zero point.
-     * @param[in]  bbox             The bounding box on which this PhotoCalib is valid. If not specified,
-     *                              this PhotoCalib is valid at any point (i.e. an empty bbox).
+     * @param[in]  calibrationMean The spatially-constant calibration.
+     * @param[in]  calibrationErr  The error on the calibration.
+     * @param[in]  bbox            The bounding box on which this PhotoCalib is valid. If not specified,
+     *                             this PhotoCalib is valid at any point (i.e. an empty bbox).
      */
-    explicit PhotoCalib(double instFluxMag0, double instFluxMag0Err = 0,
+    explicit PhotoCalib(double calibrationMean, double calibrationErr = 0,
                         afw::geom::Box2I const &bbox = afw::geom::Box2I())
-            : _instFluxMag0(instFluxMag0), _instFluxMag0Err(instFluxMag0Err), _isConstant(true) {
+            : _calibrationMean(calibrationMean), _calibrationErr(calibrationErr), _isConstant(true) {
         ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(1, 1));
-        coeffs[0][0] = instFluxMag0;
-        _zeroPoint = std::make_shared<afw::math::ChebyshevBoundedField>(
+        coeffs[0][0] = calibrationMean;
+        _calibration = std::make_shared<afw::math::ChebyshevBoundedField>(
                 afw::math::ChebyshevBoundedField(bbox, coeffs));
     }
 
     /**
      * Create a spatially-varying calibration.
      *
-     * @param[in]  zeroPoint       The spatially varying photometric zero point.
-     * @param[in]  instFluxMag0Err The error on the zero point.
+     * @param[in]  calibration    The spatially varying photometric calibration.
+     * @param[in]  calibrationErr The error on the calibration.
      */
-    PhotoCalib(std::shared_ptr<afw::math::BoundedField> zeroPoint, double instFluxMag0Err = 0)
-            : _zeroPoint(zeroPoint),
-              _instFluxMag0(computeInstFluxMag0(zeroPoint)),
-              _instFluxMag0Err(instFluxMag0Err),
+    PhotoCalib(std::shared_ptr<afw::math::BoundedField> calibration, double calibrationErr = 0)
+            : _calibration(calibration),
+              _calibrationMean(computeCalibrationMean(calibration)),
+              _calibrationErr(calibrationErr),
               _isConstant(false) {}
 
     /**
      * Create a calibration with a pre-computed mean. Primarily for de-persistence.
      *
-     * @param[in]  instFluxMag0    The mean of the zeroPoint() over its bounding box.
-     * @param[in]  zeroPoint       The spatially varying photometric zero point.
-     * @param[in]  instFluxMag0Err The error on the zero point.
+     * @param[in]  calibrationMean The mean of the calibration() over its bounding box.
+     * @param[in]  calibration     The spatially varying photometric calibration.
+     * @param[in]  calibrationErr  The error on the calibration.
      * @param[in]  isConstant      Is this PhotoCalib spatially constant?
      */
-    PhotoCalib(double instFluxMag0, double instFluxMag0Err,
-               std::shared_ptr<afw::math::BoundedField> zeroPoint, bool isConstant)
-            : _zeroPoint(zeroPoint),
-              _instFluxMag0(instFluxMag0),
-              _instFluxMag0Err(instFluxMag0Err),
+    PhotoCalib(double calibrationMean, double calibrationErr,
+               std::shared_ptr<afw::math::BoundedField> calibration, bool isConstant)
+            : _calibration(calibration),
+              _calibrationMean(calibrationMean),
+              _calibrationErr(calibrationErr),
               _isConstant(isConstant) {}
 
     /**
@@ -157,10 +156,10 @@ public:
      * If passed point, use the exact calculation at that point, otherwise, use the mean scaling factor.
      *
      * @param[in]  instFlux     The source fluxinstFlux in ADU.
-     * @param[in]  instFluxErr  The instFlux error (err).
+     * @param[in]  instFluxErr  The instFlux error.
      * @param[in]  point        The point that instFlux is measured at.
      *
-     * @returns    The flux in maggies and error (err).
+     * @returns    The flux in maggies and error.
      */
     Measurement instFluxToMaggies(double instFlux, double instFluxErr,
                                   afw::geom::Point<double, 2> const &point) const;
@@ -169,8 +168,8 @@ public:
     Measurement instFluxToMaggies(double instFlux, double instFluxErr) const;
 
     /**
-     * Convert sourceRecord[instFluxField_instFlux] (ADU) at location
-     *             (sourceRecord.get('x'), sourceRecord.get('y')) (pixels) to maggies and maggie error.
+     * Convert `sourceRecord[instFluxField_instFlux]` (ADU) at location
+     * `(sourceRecord.get("x"), sourceRecord.get("y"))` (pixels) to maggies and maggie error.
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
      * @param[in]  instFluxField The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
@@ -178,14 +177,14 @@ public:
      *                           For example: instFluxField = "PsfFlux" -> "PsfFlux_flux",
      * "PsfFlux_fluxSigma"
      *
-     * @returns    The flux in maggies and error (err) for this source.
+     * @returns    The flux in maggies and error for this source.
      */
     Measurement instFluxToMaggies(const afw::table::SourceRecord &sourceRecord,
                                   std::string const &instFluxField) const;
 
     /**
-     * Convert sourceCatalog[instFluxField_instFlux] (ADU) at locations
-     *             (sourceCatalog.get('x'), sourceCatalog.get('y')) (pixels) to maggies.
+     * Convert `sourceCatalog[instFluxField_instFlux]` (ADU) at locations
+     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to maggies.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
@@ -193,15 +192,15 @@ public:
      *                            For example: instFluxField = "PsfFlux" -> "PsfFlux_flux",
      * "PsfFlux_fluxSigma"
      *
-     * @returns    The flux in maggies and error (err) for this source.
+     * @returns    The flux in maggies and error for this source.
      */
     ndarray::Array<double, 2, 2> instFluxToMaggies(afw::table::SourceCatalog const &sourceCatalog,
                                                    std::string const &instFluxField) const;
 
     /**
-     * Convert sourceCatalog[instFluxField_instFlux] (ADU) at locations
-     *             (sourceCatalog.get('x'), sourceCatalog.get('x')) (pixels) to maggies
-     *             and write the results back to sourceCatalog[outField_mag].
+     * Convert `sourceCatalog[instFluxField_instFlux]` (ADU) at locations
+     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to maggies
+     * and write the results back to `sourceCatalog[outField_mag]`.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
@@ -240,7 +239,7 @@ public:
      * @param[in]  instFluxErr  The instFlux error (standard deviation).
      * @param[in]  point        The point that instFlux is measured at.
      *
-     * @returns    The AB magnitude and error (err).
+     * @returns    The AB magnitude and error.
      */
     Measurement instFluxToMagnitude(double instFlux, double instFluxErr,
                                     afw::geom::Point<double, 2> const &point) const;
@@ -249,8 +248,8 @@ public:
     Measurement instFluxToMagnitude(double instFlux, double instFluxErr) const;
 
     /**
-     * Convert sourceRecord[instFluxField_instFlux] (ADU) at location
-     *             (sourceRecord.get('x'), sourceRecord.get('y')) (pixels) to AB magnitude.
+     * Convert `sourceRecord[instFluxField_instFlux]` (ADU) at location
+     * `(sourceRecord.get("x"), sourceRecord.get("y"))` (pixels) to AB magnitude.
      *
      * @param[in]  sourceRecord  The source record to get instFlux and position from.
      * @param[in]  instFluxField The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
@@ -264,8 +263,8 @@ public:
                                     std::string const &instFluxField) const;
 
     /**
-     * Convert sourceCatalog[instFluxField_instFlux] (ADU) at locations
-     *             (sourceCatalog.get('x'), sourceCatalog.get('y')) (pixels) to AB magnitudes.
+     * Convert `sourceCatalog[instFluxField_instFlux]` (ADU) at locations
+     * `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to AB magnitudes.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
@@ -279,9 +278,11 @@ public:
                                                      std::string const &instFluxField) const;
 
     /**
-     * Convert sourceCatalog[instFluxField_instFlux] (ADU) at locations
-     *             (sourceCatalog.get('x'), sourceCatalog.get('x')) (pixels) to AB magnitudes
-     *             and write the results back to sourceCatalog[outField_mag].
+     * Convert instFluxes in a catalog to AB magnitudes and write back into the catalog.
+     *
+     * Convert `sourceCatalog[instFluxField_instFlux]` (ADU) at
+     * locations `(sourceCatalog.get("x"), sourceCatalog.get("y"))` (pixels) to AB magnitudes
+     * and write the results back to `sourceCatalog[outField_mag]`.
      *
      * @param[in]  sourceCatalog  The source catalog to get instFlux and position from.
      * @param[in]  instFluxField  The instFlux field: Keys of the form "*_flux" and "*_fluxSigma" must
@@ -307,40 +308,62 @@ public:
     double magnitudeToInstFlux(double magnitude) const;
 
     /**
-     * Get the mean instFlux/magnitude zero point.
+     * Get the mean photometric calibration (equal to 1 / getInstFluxMag0()).
      *
      * This value is defined, for instFlux at (x,y), such that:
-     *   instFlux * computeScaledZeroPoint()(x,y) / getInstFluxMag0() = instFluxToMaggies(instFlux, (x,y))
+     * @f[
+     *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToMaggies(instFlux,
+     * (x,y))
+     * @f]
      *
-     * @see PhotoCalib::computeScaledZeroPoint(), getinstFluxMag0Err()
+     * @see PhotoCalib::computeScaledCalibration(), getCalibrationErr(), getInstFluxMag0()
+     *
+     * @returns     The spatial mean of this calibration.
+     */
+    double getCalibrationMean() const { return _calibrationMean; }
+
+    /**
+     * Get the mean photometric calibration error.
+     *
+     * This value is defined such that for some instFluxErr, instFlux, and flux:
+     * @f[
+     *     sqrt((instFluxErr/instFlux)^2 + (calibrationErr/calibration(x,y))^2)*flux = fluxErr (in maggies)
+     * @f]
+     *
+     * @see PhotoCalib::computeScaledCalibration(), getCalibrationMean()
+     *
+     * @returns    The calibration error.
+     */
+    double getCalibrationErr() const { return _calibrationErr; }
+
+    /**
+     * Get the magnitude zero point (equal to 1 / mean(calibration)).
+     *
+     * This value is defined, for instFlux at (x,y), such that:
+     * @f[
+     *   instFlux*computeScaledCalibration()(x,y)/getInstFluxMag0() = instFluxToMaggies(instFlux, (x,y))
+     * @f]
+     *
+     * @see PhotoCalib::computeScaledCalibration(), getCalibrationMean()
      *
      * @returns     The instFlux magnitude zero point.
      */
-    double getInstFluxMag0() const { return _instFluxMag0; }
+    double getInstFluxMag0() const { return 1.0 / _calibrationMean; }
 
     /**
-     * Get the mean instFlux/magnitude zero point error.
-     *
-     * This value is defined such that for some instFluxErr, instFlux, and flux:
-     *     sqrt((instFluxErr/instFlux)^2 + (zeroPointErr/zeroPoint(x,y))^2)*flux = fluxErr (in maggies)
-     *
-     * @see PhotoCalib::computeScaledZeroPoint(), getInstFluxMag0()
-     *
-     * @returns    The instFlux magnitude zero point error.
-     */
-    double getInstFluxMag0Err() const { return _instFluxMag0Err; }
-
-    /**
-     * Calculates the spatially-variable zero point, normalized by the mean in the valid domain.
+     * Calculates the spatially-variable calibration, normalized by the mean in the valid domain.
      *
      * This value is defined, for instFlux at (x,y), such that:
-     *   instFlux * computeScaledZeroPoint()(x,y) * getInstFluxMag0() = instFluxToMaggies(instFlux, (x,y))
+     * @f[
+     *   instFlux*computeScaledCalibration()(x,y)*getCalibrationMean() = instFluxToMaggies(instFlux,
+     * (x,y))
+     * @f]
      *
-     * @see PhotoCalib::getInstFluxMag0()
+     * @see PhotoCalib::getCalibrationMean()
      *
-     * @returns    The normalized spatially-variable zero point.
+     * @returns    The normalized spatially-variable calibration.
      */
-    std::shared_ptr<afw::math::BoundedField> computeScaledZeroPoint() const;
+    std::shared_ptr<afw::math::BoundedField> computeScaledCalibration() const;
 
     /**
      * Calculates the scaling between this PhotoCalib and another PhotoCalib.
@@ -348,12 +371,14 @@ public:
      * The BoundedFields of these PhotoCalibs must have the same BBoxes (or one or both must be empty).
      *
      * With:
-     *   c = instFlux at position (x,y)
-     *   this = this PhotoCalib
-     *   other = other PhotoCalib
-     *   return = BoundedField returned by this method
+     *   - c = instFlux at position (x,y)
+     *   - this = this PhotoCalib
+     *   - other = other PhotoCalib
+     *   - return = BoundedField returned by this method
      * the return value from this method is defined as:
-     *   this.instFluxToMaggies(c, (x,y)) * return(x, y) = other.instFluxToMaggies(c, (x,y))
+     * @f[
+     *   this.instFluxToMaggies(c, (x,y))*return(x, y) = other.instFluxToMaggies(c, (x,y))
+     * @f]
      *
      * @param[in]  other  The PhotoCalib to scale to.
      *
@@ -363,7 +388,7 @@ public:
      */
     std::shared_ptr<afw::math::BoundedField> computeScalingTo(std::shared_ptr<PhotoCalib> other) const;
 
-    /// Two PhotoCalibs are equal if their component bounded fields and instFluxMag0Err are equal.
+    /// Two PhotoCalibs are equal if their component bounded fields and calibrationErr are equal.
     bool operator==(PhotoCalib const &rhs) const;
 
     /// @copydoc operator==
@@ -379,21 +404,21 @@ protected:
     virtual void write(OutputArchiveHandle &handle) const;
 
 private:
-    std::shared_ptr<afw::math::BoundedField> _zeroPoint;
+    std::shared_ptr<afw::math::BoundedField> _calibration;
 
-    // The "mean" zero point, defined as the geometric mean of _zeroPoint evaluated over _zeroPoint's bbox.
-    // Computed on instantiation as a convinience.
-    // Also, the actual zeroPoint for a spatially-constant calibration.
-    double _instFluxMag0;
+    // The "mean" calibration, defined as the geometric mean of _calibration evaluated over _calibration's
+    // bbox. Computed on instantiation as a convinience. Also, the actual calibration for a spatially-constant
+    // calibration.
+    double _calibrationMean;
 
     // The standard deviation of this PhotoCalib.
-    double _instFluxMag0Err;
+    double _calibrationErr;
 
     // Is this spatially-constant? Used to short-circuit getting centroids.
     bool _isConstant;
 
-    /// Returns the spatially-constant calibration (for setting _instFluxMag0)
-    double computeInstFluxMag0(std::shared_ptr<afw::math::BoundedField> zeroPoint) const;
+    /// Returns the spatially-constant calibration (for setting _calibrationMean)
+    double computeCalibrationMean(std::shared_ptr<afw::math::BoundedField> calibration) const;
 
     /// Helpers for converting arrays of instFlux
     void instFluxToMaggiesArray(afw::table::SourceCatalog const &sourceCatalog,
@@ -402,8 +427,8 @@ private:
                                   std::string const &instFluxField,
                                   ndarray::Array<double, 2, 2> result) const;
 };
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_PHOTOCALIB_H
