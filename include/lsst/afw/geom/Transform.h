@@ -202,6 +202,8 @@ public:
      *
      * @tparam NextToEndpoint the "to" Endpoint of `next`
      * @param next the Transform to apply after this one
+     * @param simplify if true then produce a transform containing a single simplified mapping
+     *          with no intermediate frames.
      * @returns a Transform that first applies this transform to its input, and then
      *          `next` to the result. Its inverse shall first apply the
      *          inverse of `next`, and then the inverse of this transform.
@@ -216,7 +218,8 @@ public:
      *     auto pixelsToSky = pixelsToFp.then(fpToField).then(fieldToSky);
      */
     template <class NextToEndpoint>
-    Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next) const;
+    Transform<FromEndpoint, NextToEndpoint> then(
+            Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify=true) const;
 
     /**
      * Return a short version of the class name with no punctuation

@@ -55,6 +55,24 @@ class TransformTestCase(TransformTestBaseClass):
         extractedFrameSet.ident = "Extracted Ident"
         self.assertEqual(initialIdent, transform.getFrameSet().ident)
 
+    def testThen(self):
+        """Test that Transform.then behaves as expected
+        """
+        transform1 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(2, 3))
+        transform2 = afwGeom.TransformGenericToGeneric(
+            makeForwardPolyMap(3, 4))
+
+        for simplify in (False, True):
+            merged = transform1.then(transform2, simplify = simplify)
+
+            inPoint = self.makeRawPointData(2)
+            assert_allclose(merged.applyForward(inPoint),
+                            transform2.applyForward(transform1.applyForward(inPoint)))
+
+            expectedNumFrames = 2 if simplify else 4
+            self.assertEqual(merged.getFrameSet().nFrame, expectedNumFrames)
+
     def testThenChaining(self):
         """Test that the order of chaining Transform.then does not matter
 
