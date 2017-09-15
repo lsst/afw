@@ -262,6 +262,14 @@ private:
  */
 TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const &src, SkyWcs const &dst);
 
+
+/**
+ * Return FITS metadata for a FITS WCS that is an approximation to the provided WCS
+ *
+ * The current implementation returns a TAN WCS; thus it makes no attempt to model distortion.
+ */
+std::shared_ptr<daf::base::PropertyList> getApproximateFitsWcsMetadata(SkyWcs const &wcs);
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst

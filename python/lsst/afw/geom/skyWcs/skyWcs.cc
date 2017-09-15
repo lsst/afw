@@ -57,6 +57,7 @@ PYBIND11_PLUGIN(skyWcs) {
 
     mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * degrees, "flipX"_a = false);
     mod.def("makeWcsPairTransform", makeWcsPairTransform, "src"_a, "dst"_a);
+    mod.def("getApproximateFitsWcsMetadata", getApproximateFitsWcsMetadata, "skyWcs"_a);
 
     py::class_<SkyWcs, std::shared_ptr<SkyWcs>, TransformPoint2ToIcrsCoord> cls(mod, "SkyWcs");
 
@@ -72,6 +73,7 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def("getCdMatrix", (Eigen::Matrix2d(SkyWcs::*)(Point2D const &) const) & SkyWcs::getCdMatrix,
             "pixel"_a);
     cls.def("getCdMatrix", (Eigen::Matrix2d(SkyWcs::*)() const) & SkyWcs::getCdMatrix);
+    cls.def("getTanWcs", &SkyWcs::getTanWcs, "pixel"_a);
     cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
     cls.def("pixelToSky", (std::pair<Angle, Angle>(SkyWcs::*)(double, double) const) & SkyWcs::pixelToSky,
             "x"_a, "y"_a);

@@ -271,6 +271,40 @@ std::shared_ptr<ast::FrameSet> SkyWcs::_checkFrameSet(ast::FrameSet const& frame
     return frameSetCopy;
 }
 
+std::shared_ptr<daf::base::PropertyList> getApproximateFitsWcsMetadata(SkyWcs const &wcs) {
+    auto tanWcs = wcs.getTanWcs(wcs.getPixelOrigin());
+    auto frameSet = tanWcs->getFrameSet()->copy();
+
+    // Save SkyIndex, before we change it by searching for other frames
+    auto const skyFrameIndex = frameSet->getCurrent();
+
+    // Compute XY0 = (GRID - PIXEL0) + 1
+    if (!frameSet->findFrame(ast::Frame(2, "Domain=PIXEL0"))) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "No frame with domain PIXEL0 found");
+    }
+    auto const pixel0FrameIndex = frameSet->getCurrent();
+    if (!frameSet->findFrame(ast::Frame(2, "Domain=GRID"))) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "No frame with domain GRID found");
+    }
+    auto const gridFrameIndex = frameSet->getCurrent();
+    auto const gridToPixel0Map = frameSet->getMapping(gridFrameIndex, pixel0FrameIndex);
+    auto const gridToPixel0Transform = TransformPoint2ToPoint2(*gridToPixel0Map);
+    auto const xy0 = Point2I(gridToPixel0Transform.applyForward(Point2D(0, 0)) + Extent2D(1, 1));
+
+    // Set FrameSet to transform from GRID to sky and get standard WCS headers for that
+    frameSet->setBase(gridFrameIndex);
+    frameSet->setCurrent(skyFrameIndex);
+    ast::StringStream strStream;
+    ast::FitsChan fitsChan(strStream, "Encoding=FITS-WCS");
+    fitsChan.write(*frameSet);
+    auto metadata = detail::getPropertyListFromFitsChan(fitsChan);
+
+    // Save XY0 as LTV1, LTV2
+    metadata->set("LTV1", xy0[0]);
+    metadata->set("LTV2", xy0[1]);
+    return metadata;
+}
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
