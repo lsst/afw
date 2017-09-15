@@ -181,9 +181,15 @@ std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
 template <class FromEndpoint, class ToEndpoint>
 template <class NextToEndpoint>
 Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::then(
-        Transform<ToEndpoint, NextToEndpoint> const &next) const {
+        Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
     if (_toEndpoint.getNAxes() == next.getFromEndpoint().getNAxes()) {
-        return Transform<FromEndpoint, NextToEndpoint>(*ast::append(*_frameSet, *(next.getFrameSet())));
+        auto nextFrameSet = next.getFrameSet();
+        if (simplify) {
+            auto simplifiedMap = getFrameSet()->then(*nextFrameSet).simplify();
+            return Transform<FromEndpoint, NextToEndpoint>(*simplifiedMap);
+        } else {
+            return Transform<FromEndpoint, NextToEndpoint>(*ast::append(*getFrameSet(), *nextFrameSet));
+        }
     } else {
         auto message = "Cannot match " + std::to_string(_toEndpoint.getNAxes()) + "-D to-endpoint to " +
                        std::to_string(next.getFromEndpoint().getNAxes()) + "-D from-endpoint.";
@@ -201,7 +207,7 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
 #define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, NextToEndpoint) \
     template Transform<FromEndpoint, NextToEndpoint>                    \
     Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
-            Transform<ToEndpoint, NextToEndpoint> const &next) const;
+            Transform<ToEndpoint, NextToEndpoint> const &next, bool) const;
 
 #define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                \
     template class Transform<FromEndpoint, ToEndpoint>;                \
