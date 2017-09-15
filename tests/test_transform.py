@@ -74,12 +74,9 @@ class TransformTestCase(TransformTestBaseClass):
         merged1 = transform1.then(transform2.then(transform3))
         merged2 = transform1.then(transform2).then(transform3)
 
-        fromEndpoint = transform1.fromEndpoint
-        toEndpoint = transform3.toEndpoint
-
-        inPoint = fromEndpoint.pointFromData(self.makeRawPointData(2))
-        assert_allclose(toEndpoint.dataFromPoint(merged1.applyForward(inPoint)),
-                        toEndpoint.dataFromPoint(merged2.applyForward(inPoint)))
+        inPoint = self.makeRawPointData(2)
+        assert_allclose(merged1.applyForward(inPoint),
+                        merged2.applyForward(inPoint))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
