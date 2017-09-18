@@ -46,6 +46,7 @@ class Psf;
 namespace geom {
 namespace polygon {
 class Polygon;
+class SkyWcs;
 }
 }
 
@@ -56,7 +57,6 @@ class Fits;
 namespace image {
 
 class Calib;
-class Wcs;
 class ApCorrMap;
 class VisitInfo;
 
@@ -89,13 +89,13 @@ public:
     bool hasWcs() const { return static_cast<bool>(_wcs); }
 
     /// Return the coordinate system of the exposure
-    std::shared_ptr<Wcs> getWcs() { return _wcs; }
+    std::shared_ptr<geom::SkyWcs> getWcs() { return _wcs; }
 
     /// Return the coordinate system of the exposure
-    std::shared_ptr<Wcs const> getWcs() const { return _wcs; }
+    std::shared_ptr<geom::SkyWcs const> getWcs() const { return _wcs; }
 
     /// Set the coordinate system of the exposure
-    void setWcs(std::shared_ptr<Wcs const> wcs) { _wcs = _cloneWcs(wcs); }
+    void setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { _wcs = _cloneWcs(wcs); }
 
     /// Does this exposure have Detector information?
     bool hasDetector() const { return static_cast<bool>(_detector); }
@@ -198,7 +198,7 @@ public:
      *  to null, you must explicitly call setCalib or setMetadata after construction.
      */
     explicit ExposureInfo(
-            std::shared_ptr<Wcs const> const& wcs = std::shared_ptr<Wcs const>(),
+            std::shared_ptr<geom::SkyWcs const> const& wcs = std::shared_ptr<geom::SkyWcs const>(),
             std::shared_ptr<detection::Psf const> const& psf = std::shared_ptr<detection::Psf const>(),
             std::shared_ptr<Calib const> const& calib = std::shared_ptr<Calib const>(),
             std::shared_ptr<cameraGeom::Detector const> const& detector =
@@ -285,10 +285,10 @@ private:
                    std::shared_ptr<daf::base::PropertySet> imageMetadata);
 
     static std::shared_ptr<Calib> _cloneCalib(std::shared_ptr<Calib const> calib);
-    static std::shared_ptr<Wcs> _cloneWcs(std::shared_ptr<Wcs const> wcs);
+    static std::shared_ptr<geom::SkyWcs> _cloneWcs(std::shared_ptr<geom::SkyWcs const> wcs);
     static std::shared_ptr<ApCorrMap> _cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap);
 
-    std::shared_ptr<Wcs> _wcs;
+    std::shared_ptr<geom::SkyWcs> _wcs;
     std::shared_ptr<detection::Psf> _psf;
     std::shared_ptr<Calib> _calib;
     std::shared_ptr<cameraGeom::Detector const> _detector;

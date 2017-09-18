@@ -42,7 +42,7 @@ class WCSTestRaWrap(unittest.TestCase):
     def test1(self):
         wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs2')
         hdr = afwImage.readMetadata(wcsfn)
-        wcs1 = afwImage.makeWcs(hdr)
+        wcs1 = afwGeom.SkyWcs(hdr)
 
         crval = wcs1.getSkyOrigin()
         cd = wcs1.getCDMatrix()
@@ -52,7 +52,7 @@ class WCSTestRaWrap(unittest.TestCase):
         origin = wcs1.getPixelOrigin()
         print(crval_p)
         print(origin)
-        wcs2 = afwImage.Wcs(crval_p, origin, cd)
+        wcs2 = afwGeom.SkyWcs(crval_p, origin, cd)
 
         for wcs in [wcs1, wcs2]:
             print(wcs)

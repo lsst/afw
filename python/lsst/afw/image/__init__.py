@@ -39,8 +39,6 @@ from .wcs import *
 from .exposureInfo import *
 from .exposure import *
 from .photoCalib import *
-from .tanWcs import *
-from .distortedTanWcs import *
 from .imagePca import *
 from .imageUtils import *
 from .readMetadata import *

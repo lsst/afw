@@ -32,13 +32,14 @@
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/geom/LinearTransform.h"
+#include "lsst/afw/geom/SkyWcs.h"
+#include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/Key.h"
@@ -244,8 +245,8 @@ public:
      *                NOT the same as the footprint's bounding box.
      *  @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
-    std::shared_ptr<Footprint> transform(std::shared_ptr<image::Wcs> source,
-                                         std::shared_ptr<image::Wcs> target, geom::Box2I const &region,
+    std::shared_ptr<Footprint> transform(std::shared_ptr<geom::SkyWcs> source,
+                                         std::shared_ptr<geom::SkyWcs> target, geom::Box2I const &region,
                                          bool doClip = true) const;
 
     /** Return a new Footprint who's pixels are the product of applying the specified transformation
@@ -270,13 +271,13 @@ public:
 
     /** Return a new Footprint who's pixels are the product of applying the specified transformation
      *
-     * @param t A XY transform object which will be used to map the pixels
+     * @param t A 2-D transform which will be used to map the pixels
      * @param region Used to set the "region" box of the returned footprint; note that this is
      *               NOT the same as the footprint's bounding box.
      * @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
-    std::shared_ptr<Footprint> transform(geom::XYTransform const &t, geom::Box2I const &region,
-                                         bool doClip = true) const;
+    std::shared_ptr<Footprint> transform(geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &t,
+                                         geom::Box2I const &region, bool doClip = true) const;
 
     /**
      * Report if this object is persistable

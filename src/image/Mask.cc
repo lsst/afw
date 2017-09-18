@@ -56,7 +56,7 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
-#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/detail/wcsUtils.h"
 #include "lsst/afw/image/Mask.h"
 
 #include "lsst/afw/image/LsstImageTypes.h"

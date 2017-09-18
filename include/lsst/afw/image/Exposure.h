@@ -48,7 +48,7 @@ namespace image {
   *
   * An Exposure is required to take one afwImage::MaskedImage or a region (col,
   * row) defining the size of a MaskedImage (this can be of size 0,0).  An
-  * Exposure can (but is not required to) contain a afwImage::Wcs.
+  * Exposure can (but is not required to) contain an afwImage::SkyWcs.
   *
   * The template types should optimally be a float, double, unsigned int 16 bit,
   * or unsigned int 32 bit for the image (pixel) type and an unsigned int 32 bit
@@ -56,19 +56,19 @@ namespace image {
   * Exposure class.  All MaskedImage and Wcs constructors are 'const' to allow
   * for views and copying.
   *
-  * An Exposure can get and return its MaskedImage, Wcs, and a subExposure.
+  * An Exposure can get and return its MaskedImage, SkyWcs, and a subExposure.
   * The getSubExposure member takes a BBox region defining the subRegion of
   * the original Exposure to be returned.  The member retrieves the MaskedImage
   * corresponding to the subRegion.  The MaskedImage class throws an exception
   * for any subRegion extending beyond the original MaskedImage bounding
-  * box. This member is not yet fully implemented because it requires the Wcs
-  * class to return the Wcs metadata to the member so the CRPIX values of the
-  * Wcs can be adjusted to reflect the new subMaskedImage origin.  The
+  * box. This member is not yet fully implemented because it requires the SkyWcs
+  * class to return the SkyWcs metadata to the member so the CRPIX values of the
+  * SkyWcs can be adjusted to reflect the new subMaskedImage origin.  The
   * getSubExposure member will eventually return a subExposure consisting of
-  * the subMAskedImage and the Wcs object with its corresponding adjusted
+  * the subMAskedImage and the SkyWcs object with its corresponding adjusted
   * metadata.
   *
-  * The hasWcs member is used to determine if the Exposure has a Wcs.  It is not
+  * The hasWcs member is used to determine if the Exposure has a SkyWcs.  It is not
   * required to have one.
   */
 template <typename ImageT, typename MaskT = lsst::afw::image::MaskPixel,
@@ -79,40 +79,39 @@ public:
 
     // Class Constructors and Destructor
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-      * a Wcs (which may be default constructed)
+      * a SkyWcs (which may be default constructed)
       *
       * @param width number of columns
       * @param height number of rows
-      * @param wcs the Wcs
+      * @param wcs the SkyWcs
       */
     explicit Exposure(unsigned int width, unsigned int height,
-                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
+                      std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-      * a Wcs (which may be default constructed)
+      * a SkyWcs (which may be default constructed)
       *
       * @param dimensions desired image width/height
-      * @param wcs the Wcs
+      * @param wcs the SkyWcs
       */
     explicit Exposure(lsst::afw::geom::Extent2I const& dimensions = lsst::afw::geom::Extent2I(),
-                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
+                      std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
-    /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-      * a Wcs (which may be default constructed)
+    /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and a SkyWcs
       *
       * @param bbox desired image width/height, and origin
-      * @param wcs the Wcs
+      * @param wcs the SkyWcs
       */
     explicit Exposure(lsst::afw::geom::Box2I const& bbox,
-                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
+                      std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
-    /** Construct an Exposure from a MaskedImage and an optional Wcs
+    /** Construct an Exposure from a MaskedImage and an optional SkyWcs
      *
      * @param maskedImage the MaskedImage
-     * @param wcs the Wcs
+     * @param wcs the SkyWcs
       */
     explicit Exposure(MaskedImageT& maskedImage,
-                      std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>());
+                      std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** Construct an Exposure from a MaskedImage and an ExposureInfo
       *
@@ -206,8 +205,8 @@ public:
     /// Return the MaskedImage
     MaskedImageT getMaskedImage() const { return _maskedImage; }
 
-    std::shared_ptr<Wcs const> getWcs() const { return _info->getWcs(); }
-    std::shared_ptr<Wcs> getWcs() { return _info->getWcs(); }
+    std::shared_ptr<geom::SkyWcs const> getWcs() const { return _info->getWcs(); }
+    std::shared_ptr<geom::SkyWcs> getWcs() { return _info->getWcs(); }
 
     /// Return the Exposure's Detector information
     std::shared_ptr<lsst::afw::cameraGeom::Detector const> getDetector() const {
@@ -263,7 +262,7 @@ public:
     /** Set the MaskedImage of the Exposure.
      */
     void setMaskedImage(MaskedImageT& maskedImage);
-    void setWcs(std::shared_ptr<Wcs> wcs) { _info->setWcs(wcs); }
+    void setWcs(std::shared_ptr<geom::SkyWcs> wcs) { _info->setWcs(wcs); }
     /// Set the Exposure's Detector information
     void setDetector(std::shared_ptr<lsst::afw::cameraGeom::Detector const> detector) {
         _info->setDetector(detector);
@@ -411,7 +410,7 @@ private:
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>> makeExposure(
         MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& mimage,  ///< the Exposure's image
-        std::shared_ptr<Wcs const> wcs = std::shared_ptr<Wcs const>()  ///< the Exposure's WCS
+        std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>()  ///< the Exposure's WCS
         ) {
     return typename std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>>(
             new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));

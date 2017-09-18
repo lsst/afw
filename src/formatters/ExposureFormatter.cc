@@ -47,11 +47,8 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/log/Log.h"
 #include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
-#include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Exposure.h"
-#include "lsst/afw/image/Wcs.h"
 
 // #include "lsst/afw/image/LSSTFitsResource.h"
 

@@ -35,11 +35,11 @@ namespace afw {
 namespace display {
 
 template <typename ImageT>
-void writeBasicFits(int fd, ImageT const& data, lsst::afw::image::Wcs const* Wcs = NULL,
+void writeBasicFits(int fd, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = NULL,
                     char const* title = NULL);
 
 template <typename ImageT>
-void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::image::Wcs const* Wcs = NULL,
+void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = NULL,
                     const char* title = NULL);
 }
 }

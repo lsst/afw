@@ -278,9 +278,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         metadata.set("CD1_2", 0.0)
         metadata.set("CD2_2", -5.1e-05)
         metadata.set("CD2_1", 0.0)
-        wcs0 = afwImage.makeWcs(metadata)
+        wcs0 = afwGeom.SkyWcs(metadata)
         metadata.set("CRVAL2", 53.000001)  # tweak CRVAL2 for wcs1
-        wcs1 = afwImage.makeWcs(metadata)
+        wcs1 = afwGeom.SkyWcs(metadata)
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
                                           maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)

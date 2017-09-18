@@ -126,7 +126,7 @@ void test7() {
     std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
     std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, INT_MIN, miMetadata));
     MaskedImageF maskedImage(image);
-    std::shared_ptr<afwImage::Wcs> wcsFromFITS = afwImage::makeWcs(miMetadata);
+    auto wcsFromFITS = std::make_shared<afwGeom::SkyWcs>(miMetadata);
     ExposureF exposure(maskedImage, wcsFromFITS);
 
     // Write the Exposure to a RAM FITS file

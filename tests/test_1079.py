@@ -99,8 +99,6 @@ class SavingSubImagesTest(unittest.TestCase):
         if False:
             print(self.parent.getMaskedImage().getXY0())
             print(subImg.getMaskedImage().getXY0())
-            print(self.parent.getWcs().getFitsMetadata().toString())
-            print(subImg.getWcs().getFitsMetadata().toString())
             print(self.oParent, oSubImage)
 
         for i in range(2):
@@ -124,8 +122,6 @@ class SavingSubImagesTest(unittest.TestCase):
         if False:
             print(self.parent.getMaskedImage().getXY0())
             print(subImg.getMaskedImage().getXY0())
-            print(self.parent.getWcs().getFitsMetadata().toString())
-            print(subImg.getWcs().getFitsMetadata().toString())
             print(self.oParent, oSubImage)
 
         for i in range(2):

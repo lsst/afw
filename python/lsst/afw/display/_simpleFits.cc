@@ -39,11 +39,11 @@ namespace {
 template <typename ImageT>
 void declareAll(py::module &mod) {
     mod.def("writeFitsImage",
-            (void (*)(int, ImageT const &, image::Wcs const *, char const *)) & writeBasicFits<ImageT>,
+            (void (*)(int, ImageT const &, geom::SkyWcs const *, char const *)) & writeBasicFits<ImageT>,
             "fd"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
 
     mod.def("writeFitsImage",
-            (void (*)(std::string const &, ImageT const &, image::Wcs const *, char const *)) &
+            (void (*)(std::string const &, ImageT const &, geom::SkyWcs const *, char const *)) &
                     writeBasicFits<ImageT>,
             "filename"_a, "data"_a, "wcs"_a = NULL, "title"_a = NULL);
 }

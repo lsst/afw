@@ -109,7 +109,7 @@ PYBIND11_PLUGIN(_footprint) {
     clsFootprint.def("clipTo", &Footprint::clipTo);
     clsFootprint.def("contains", &Footprint::contains);
     clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          std::shared_ptr<image::Wcs>, std::shared_ptr<image::Wcs>,
+                                          std::shared_ptr<geom::SkyWcs>, std::shared_ptr<geom::SkyWcs>,
                                           geom::Box2I const &, bool) const) &
                                           Footprint::transform,
                      "source"_a, "target"_a, "region"_a, "doClip"_a = true);

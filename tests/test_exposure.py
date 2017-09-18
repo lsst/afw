@@ -75,7 +75,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width = maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.makeWcs(maskedImageMD)
+        self.wcs = afwGeom.SkyWcs(maskedImageMD)
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
 

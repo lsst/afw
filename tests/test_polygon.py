@@ -32,7 +32,6 @@ import numpy as np
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-import lsst.afw.coord as afwCoord
 from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
@@ -275,9 +274,10 @@ class PolygonTest(lsst.utils.tests.TestCase):
                             afwGeom.Point2D(123.4, 567.8))
         poly1 = Polygon(box)
         scale = (0.2*afwGeom.arcseconds).asDegrees()
-        wcs = afwImage.makeWcs(afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
-                               afwGeom.Point2D(0.0, 0.0), scale, 0.0, 0.0, scale)
-        transform = afwImage.XYTransformFromWcsPair(wcs, wcs)
+        wcs = afwGeom.SkyWcs(afwGeom.Point2D(0, 0),
+                             afwGeom.SpherePoint(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
+                             afwGeom.makeCdMatrix(scale, 0.0))
+        transform = wcs.then(wcs.getInverse())
         poly2 = Polygon(box, transform)
 
         # We lose some very small precision in the XYTransformFromWcsPair

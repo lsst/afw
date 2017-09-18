@@ -27,10 +27,10 @@
 #include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/warpExposure.h"
 
@@ -87,7 +87,7 @@ template <typename DestImageT, typename SrcImageT>
 void declareImageWarpingFunctions(py::module &mod) {
     auto const EdgePixel =
             edgePixel<DestImageT>(typename image::detail::image_traits<DestImageT>::image_category());
-    mod.def("warpImage", (int (*)(DestImageT &, image::Wcs const &, SrcImageT const &, image::Wcs const &,
+    mod.def("warpImage", (int (*)(DestImageT &, geom::SkyWcs const &, SrcImageT const &, geom::SkyWcs const &,
                                   WarpingControl const &, typename DestImageT::SinglePixel)) &
                                  warpImage<DestImageT, SrcImageT>,
             "destImage"_a, "destWcs"_a, "srcImage"_a, "srcWcs"_a, "control"_a, "padValue"_a = EdgePixel);
