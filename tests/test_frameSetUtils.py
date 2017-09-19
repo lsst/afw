@@ -23,17 +23,9 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
     def makeMetadata(self):
         """Return a WCS that is typical for an image
 
-        It will contain 32 cards:
-        - 14 standard WCS cards
-        - 15 standard cards:
-            - SIMPLE, BITPIX, NAXIS, NAXIS1, NAXIS2, BZERO, BSCALE
-            - DATE-OBS, MJD-OBS, TIMESYS
-            - EXPTIME
-            - 2 COMMENT cards
-            - INHERIT
-            - EXTEND
-        - LTV1 and LTV2, an IRAF convention LSST uses for image XY0
-        - 1 nonstandard card
+        It will contain 14 cards that describe a WCS, added by makeTanWcsMetadata,
+        plus 25 additional cards, including a set for WCS "A", which is what
+        LSST uses to store xy0, and LTV1 and LTV2, which LSST used to use for xy0
         """
         # arbitrary values
         orientation = 0 * degrees
@@ -57,28 +49,36 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         metadata.add("EXPTIME", 5.0)
         metadata.add("COMMENT", "a comment")
         metadata.add("COMMENT", "another comment")
+        metadata.add("HISTORY", "some history")
         metadata.add("EXTEND", True)
         metadata.add("INHERIT", False)
-        metadata.add("LTV1", 5)
-        metadata.add("LTV2", -10)
+        metadata.add("CRPIX1A", 1.0)
+        metadata.add("CRPIX2A", 1.0)
+        metadata.add("CRVAL1A", 300)
+        metadata.add("CRVAL2A", 400)
+        metadata.add("CUNIT1A", "pixels")
+        metadata.add("CUNIT2A", "pixels")
+        metadata.add("LTV1", -300)
+        metadata.add("LTV2", -400)
         metadata.add("ZOTHER", "non-standard")
         return metadata
 
     def testReadFitsWcsStripMetadata(self):
         metadata = self.makeMetadata()
-        self.assertEqual(len(metadata.toList()), 32)
+        self.assertEqual(len(metadata.toList()), 39)
         readFitsWcs(metadata, strip=False)
-        self.assertEqual(len(metadata.toList()), 32)
+        self.assertEqual(len(metadata.toList()), 39)
         readFitsWcs(metadata, strip=True)
-        self.assertEqual(len(metadata.toList()), 18)
+        # this should strip the 14 items added by makeTanWcsMetadata
+        self.assertEqual(len(metadata.toList()), 25)
 
     def testReadLsstSkyWcsStripMetadata(self):
         metadata = self.makeMetadata()
-        self.assertEqual(len(metadata.toList()), 32)
+        self.assertEqual(len(metadata.toList()), 39)
         readLsstSkyWcs(metadata, strip=False)
-        self.assertEqual(len(metadata.toList()), 32)
+        self.assertEqual(len(metadata.toList()), 39)
         readLsstSkyWcs(metadata, strip=True)
-        self.assertEqual(len(metadata.toList()), 18)
+        self.assertEqual(len(metadata.toList()), 25)
 
     def testGetPropertyListFromFitsChanWithComments(self):
         fc = ast.FitsChan(ast.StringStream())

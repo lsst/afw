@@ -62,8 +62,15 @@ Eigen::Matrix2d makeCdMatrix(Angle const &scale, Angle const &orientation = 0 * 
 A WCS that transform pixels to ICRS RA/Dec using the LSST standard for pixels
 
 @anchor pixel_position_standards
-The LSST standard for pixel position is: 0,0 is the center of the lower left pixel of the parent image
-(unlike FITS standard, which uses 1,1 as the center of the lower left pixel of the subimage).
+The LSST standard for pixel position is: 0,0 is the center of the lower left image pixel.
+The FITS standard for pixel position is: 1,1 is the center of the lower left image pixel.
+In addition, LSST and FITS use a different origin for subimages:
+- LSST pixel position is in the frame of reference of the parent image
+- FITS pixel position is in the frame of reference of the subimage
+However, SkyWcs does *not* keep track of this difference. Thus:
+- The GRID and PIXEL0 frames are always offset by (1, 1)
+- Code that persists and unpersists SkyWcs using FITS-WCS header cards must handle the offset,
+  e.g. by calling `copyAtShiftedPixelOrigin`
 
 The forward direction transforms from pixels (actual, if known, else nominal) to ICRS RA, Dec.
 
@@ -75,9 +82,9 @@ All are of class ast::Frame except the sky frame. The domain is listed first, if
     This frame should only be provided if there is a reasonable model for these imperfections.
 - PIXEL0: nominal pixel position, using the @ref pixel_position_standards "LSST standard";
     The 0 is to remind users that this frame is 0-based.
-    Nominal pixels are rectangular; the positions have been compensated for effects such as "tree ring"
-    distortions (if an ACTUAL_PIXEL0 frame was provided) or such effects are assumed negligible (if not).
+    Nominal pixels can be rectangular, but are uniform in size and spacing.
 - GRID: nominal pixel position, using the @ref pixel_position_standards "FITS standard".
+    GRID = PIXEL0 + (1, 1).
 - IWC: intermediate world coordinates (the FITS WCS concept).
 - An ast::SkyFrame with System=ICRS and standard axis order RA, Dec.
 
@@ -115,13 +122,10 @@ public:
     /**
     Construct a WCS from FITS keywords
 
-    In addition to standard FITS WCS keywords uses these IRAF keywords:
-    LTV1, LTV2: offset of subimage with respect to parent image
-
     @param[in] metadata  FITS header metadata
     @param[in] strip  Strip keywords used to create the SkyWcs?
                 Even if true. keywords that might used for other purposes are retained,
-                including LTV1, LTV2 and all date and time keywords except EQUINOX
+                including all date and time keywords except EQUINOX
     */
     explicit SkyWcs(daf::base::PropertyList &metadata, bool strip = true);
 

@@ -35,6 +35,7 @@
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
+#include "lsst/afw/geom/detail/wcsUtils.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 
@@ -112,9 +113,13 @@ std::shared_ptr<daf::base::PropertyList> makeTanWcsMetadata(Point2D const& crpix
 }
 
 std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertyList& metadata, bool strip) {
-    // exclude LTV1/2 from the FitsChan because afw handles those specially
-    // exclude comments to reduce clutter
-    std::set<std::string> excludeNames = {"LTV1", "LTV2", "COMMENT"};
+    // Exclude WCS A keywords because LSST uses them to store XY0
+    auto wcsANames = createTrivialWcsAsPropertySet("A")->names();
+    std::set<std::string> excludeNames(wcsANames.begin(), wcsANames.end());
+    // Exclude LTV1/2 because LSST adds it and used to make use of it.
+    // Exclude comments and history to reduce clutter.
+    std::set<std::string> moreNames{"LTV1", "LTV2", "COMMENT", "HISTORY"};
+    excludeNames.insert(moreNames.begin(), moreNames.end());
     std::string hdr = formatters::formatFitsProperties(metadata, excludeNames);
     ast::StringStream stream(hdr);
     ast::FitsChan channel(stream, "Encoding=FITS-WCS, IWC=1");
@@ -243,10 +248,10 @@ std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata,
                << "\" instead of blank";
             throw LSST_EXCEPT(pex::exceptions::RuntimeError, os.str());
         }
-        // Original base frame has
+        // Original base frame has a blank Domain, is of type Frame, and has 2 axes, so
         // Set its domain to GRID, and set some other potentially useful attributes.
         frameSet->setDomain("GRID");
-        frameSet->setTitle("FITS pixel coordinates - first pixel at (1,1)");
+        frameSet->setTitle("FITS pixel position - first pixel at (1,1)");
         frameSet->setLabel(1, "Grid x");
         frameSet->setLabel(2, "Grid y");
         frameSet->setUnit(1, "Pixel");
@@ -259,19 +264,18 @@ std::shared_ptr<ast::FrameSet> readLsstSkyWcs(daf::base::PropertyList& metadata,
     // Create the PIXEL0 frame, connecting it to the GRID Frame with a ShiftMap
     // that compensates for LSST's zero-based indexing vs. FITS 1-based indexing
     // and moves the origin to the position indicated by xy0.
-    auto xy0 = Extent2I(metadata.get("LTV1", 0), metadata.get("LTV2", 0));
-    std::vector<double> offsetArray = {xy0[0] - 1.0, xy0[1] - 1.0};
-    auto offsetMapping = ast::ShiftMap(offsetArray);
+    std::vector<double> gridToPixelArray = {-1.0, -1.0};
+    auto gridToPixelMapping = ast::ShiftMap(gridToPixelArray);
     auto pixelFrame = ast::Frame(2);
     pixelFrame.setDomain("PIXEL0");
-    pixelFrame.setTitle("Title=Pixel coordinates within parent image -- first pixel at (0, 0)");
+    pixelFrame.setTitle("LSST pixel position - first pixel at (0, 0)");
     pixelFrame.setLabel(1, "Pixel x");
     pixelFrame.setLabel(2, "Pixel y");
     pixelFrame.setUnit(1, "Pixel");
     pixelFrame.setUnit(2, "Pixel");
     pixelFrame.setSymbol(1, "px");
     pixelFrame.setSymbol(2, "py");
-    frameSet->addFrame(gridIndex, offsetMapping, pixelFrame);
+    frameSet->addFrame(gridIndex, gridToPixelMapping, pixelFrame);
     auto pixel0Index = frameSet->getCurrent();
 
     // Set PIXEL0 as the base frame and our ICRS sky frame as the current frame

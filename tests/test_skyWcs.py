@@ -1,14 +1,18 @@
 from __future__ import absolute_import, division, print_function
 import itertools
+import os
 import sys
 import unittest
+
+from astropy.io import fits
 
 import lsst.afw.coord   # needed for assertCoordsAlmostEqual
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
 from lsst.afw.coord import IcrsCoord
-from lsst.afw.geom import SkyWcs, Extent2D, Point2D, degrees, \
-    arcseconds, radians, makeCdMatrix, makeWcsPairTransform
+from lsst.afw.geom import SkyWcs, Extent2D, Point2D, Extent2I, Point2I, \
+    Box2I, degrees, arcseconds, radians, makeCdMatrix, makeWcsPairTransform, \
+    getApproximateFitsWcsMetadata, wcsAlmostEqualOverBBox
 from lsst.afw.geom.testUtils import TransformTestBaseClass
 
 
@@ -311,6 +315,28 @@ class WcsPairTransformTestCase(TransformTestBaseClass):
                 outPoint2 = transform.applyInverse(outPoint1)
                 self.assertPairsAlmostEqual(point, outPoint1)
                 self.assertPairsAlmostEqual(outPoint1, outPoint2)
+
+
+class GetApproximateFitsWcsTestCase(TransformTestBaseClass):
+    def setUp(self):
+        self.dataPath = os.path.join(os.path.dirname(__file__), "data")
+
+    def testTanSip(self):
+        filePath = os.path.join(self.dataPath, "HSC-0908120-056-small.fits")
+        # TODO DM-10765 read this using standard afw code once Wcs replaced with SkyWcs
+        hdr = fits.getheader(filePath, 1)
+        metadata = PropertyList()
+        for name, value in hdr.items():
+            metadata.set(name, value)
+
+        wcs = SkyWcs(metadata)
+        localTanWcs = wcs.getTanWcs(wcs.getPixelOrigin())
+        bbox = Box2I(Point2I(0, 0), Extent2I(1000, 1000))  # arbitrary
+        self.assertFalse(wcsAlmostEqualOverBBox(wcs, localTanWcs, bbox))
+
+        approxMetadata = getApproximateFitsWcsMetadata(wcs)
+        reconstitutedWcs = SkyWcs(approxMetadata)
+        self.assertWcsAlmostEqualOverBBox(localTanWcs, reconstitutedWcs, bbox)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
