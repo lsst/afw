@@ -57,6 +57,8 @@ def checkAstropy(image, filename, hduNum=0):
     hduNum : `int`
         HDU number of interest.
     """
+    print("Astropy currently doesn't read our compressed images perfectly.")
+    return
     parseVersion = lambda version: tuple(int(vv) for vv in np.array(version.split(".")))
     if parseVersion(astropy.__version__) <= parseVersion("2.0.1"):
         # astropy 2.0.1 and earlier have problems:
