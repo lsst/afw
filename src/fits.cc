@@ -20,6 +20,7 @@ extern "C" {
 #include "lsst/log/Log.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/geom/detail/wcsUtils.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/fitsCompression.h"
 
@@ -989,7 +990,7 @@ void Fits::writeImage(
 
     // Write the header
     std::shared_ptr<daf::base::PropertyList> wcsMetadata =
-        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+        geom::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                      image.getX0(), image.getY0());
     if (header) {
         std::shared_ptr<daf::base::PropertySet> copy = header->deepCopy();
