@@ -103,11 +103,13 @@ PyBaseRecord declareBaseRecord(py::module &mod) {
     declareBaseRecordOverloads<double>(cls, "D");
     declareBaseRecordOverloads<float>(cls, "F");
     declareBaseRecordOverloads<lsst::afw::table::Flag>(cls, "Flag");
+    declareBaseRecordOverloads<std::uint8_t>(cls, "B");
     declareBaseRecordOverloads<std::uint16_t>(cls, "U");
     declareBaseRecordOverloads<std::int32_t>(cls, "I");
     declareBaseRecordOverloads<std::int64_t>(cls, "L");
     declareBaseRecordOverloads<std::string>(cls, "String");
     declareBaseRecordOverloads<lsst::afw::geom::Angle>(cls, "Angle");
+    declareBaseRecordArrayOverloads<std::uint8_t>(cls, "ArrayB");
     declareBaseRecordArrayOverloads<std::uint16_t>(cls, "ArrayU");
     declareBaseRecordArrayOverloads<int>(cls, "ArrayI");
     declareBaseRecordArrayOverloads<float>(cls, "ArrayF");

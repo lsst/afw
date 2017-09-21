@@ -42,6 +42,7 @@ from .schema import _Key, _Field, _SchemaItem, Schema
 # Key/Field/SchemaItem types.
 _dtypes = {
     "String": str,
+    "B": np.uint8,
     "U": np.uint16,
     "I": np.int32,
     "L": np.int64,

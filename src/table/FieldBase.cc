@@ -20,6 +20,10 @@ template <typename T>
 struct TypeTraits;
 
 template <>
+struct TypeTraits<std::uint8_t> {
+    static char const *getName() { return "B"; }
+};
+template <>
 struct TypeTraits<std::uint16_t> {
     static char const *getName() { return "U"; }
 };
