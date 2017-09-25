@@ -21,11 +21,13 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
 #include "ndarray/eigen.h"
 #include "astshim.h"
+#include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/math/TransformBoundedField.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -81,7 +83,8 @@ struct PersistenceHelper {
     table::Schema schema;
     table::PointKey<int> bboxMin;
     table::PointKey<int> bboxMax;
-    table::Key<std::string> frameSet;
+    // store the FrameSet as string encoded as a variable-length vector of bytes
+    table::Key<table::Array<std::uint8_t>> frameSet;
 
     PersistenceHelper()
             : schema(),
@@ -89,8 +92,8 @@ struct PersistenceHelper {
                                                       "pixel")),
               bboxMax(table::PointKey<int>::addFields(schema, "bbox_max",
                                                       "upper-right corner of bounding box", "pixel")),
-              frameSet(schema.addField<std::string>("frameSet", "FrameSet contained in the Transform", 0,
-                                                    false)) {}
+              frameSet(schema.addField<table::Array<std::uint8_t>>(
+                      "frameSet", "FrameSet contained in the Transform", "", 0)) {}
 
     PersistenceHelper(table::Schema const& s)
             : schema(s), bboxMin(s["bbox_min"]), bboxMax(s["bbox_max"]), frameSet(s["frameSet"]) {}
@@ -109,7 +112,7 @@ public:
         PersistenceHelper const keys(record.getSchema());
         // NOTE: needed invert=false in case min=-1, max=0 (empty bbox). See RFC-324 and DM-10200
         geom::Box2I bbox(record.get(keys.bboxMin), record.get(keys.bboxMax), false);
-        auto frameSetStr = record.get(keys.frameSet);
+        auto frameSetStr = formatters::bytesToString(record.get(keys.frameSet));
         auto transform =
                 geom::Transform<geom::Point2Endpoint, geom::GenericEndpoint>::readString(frameSetStr);
         return std::make_shared<TransformBoundedField>(bbox, transform);
@@ -134,7 +137,7 @@ void TransformBoundedField::write(OutputArchiveHandle& handle) const {
     std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     record->set(keys.bboxMin, getBBox().getMin());
     record->set(keys.bboxMax, getBBox().getMax());
-    record->set(keys.frameSet, getTransform().writeString());
+    record->set(keys.frameSet, formatters::stringToBytes(getTransform().writeString()));
     handle.saveCatalog(catalog);
 }
 
