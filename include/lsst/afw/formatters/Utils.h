@@ -32,8 +32,12 @@
 #ifndef LSST_AFW_FORMATTERS_UTILS_H
 #define LSST_AFW_FORMATTERS_UTILS_H
 
+#include <cstdint>
 #include <set>
 #include <string>
+#include <vector>
+
+#include "ndarray.h"
 
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
@@ -166,6 +170,16 @@ values and skips properties whose type it cannot handle.
 std::string formatFitsProperties(lsst::daf::base::PropertyList const& prop,
                                  std::set<std::string> const& excludeNames = {});
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
+
+/**
+ * Encode a std::string as a vector of uint8
+ */
+ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const &str);
+
+/**
+ * Decode a std::string from a vector of uint8 returned by stringToBytes
+ */
+std::string bytesToString(ndarray::Array<std::uint8_t const, 1, 1> const& bytes);
 
 }
 }

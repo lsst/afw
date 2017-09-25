@@ -286,6 +286,24 @@ std::string formatFitsProperties(daf::base::PropertyList const& prop,
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {
     return prop.paramNames(false).size();
 }
+
+ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const& str) {
+    auto nbytes = str.size() * sizeof(char) / sizeof(std::uint8_t);
+    std::uint8_t const* byteCArr = reinterpret_cast<std::uint8_t const*>(str.data());
+    auto shape = ndarray::makeVector(nbytes);
+    auto strides = ndarray::makeVector(1);
+    // Make an Array that shares memory with `str` (and does not free that memory when destroyed),
+    // then return a copy; this is simpler than manually copying the data into a newly allocated array
+    ndarray::Array<std::uint8_t const, 1, 1> localArray = ndarray::external(byteCArr, shape, strides);
+    return ndarray::copy(localArray);
+}
+
+std::string bytesToString(ndarray::Array<std::uint8_t const, 1, 1> const& bytes) {
+    auto nchars = bytes.size() * sizeof(std::uint8_t) / sizeof(char);
+    char const* charCArr = reinterpret_cast<char const*>(bytes.getData());
+    return std::string(charCArr, nchars);
+}
+
 }
 }
 }  // namespace lsst::afw::formatters

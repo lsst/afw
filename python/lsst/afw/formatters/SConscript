@@ -1,3 +1,8 @@
 ## -*- python -*-
-#from lsst.sconsUtils import scripts
-#scripts.BasicSConscript.pybind11([])
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(
+    [
+        "utils",
+    ],
+    addUnderscore=False,
+)
