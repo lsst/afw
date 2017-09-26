@@ -82,6 +82,8 @@ PYBIND11_PLUGIN(_interpolate) {
             "x"_a, "y"_a, "style"_a = Interpolate::AKIMA_SPLINE);
 
     mod.def("stringToInterpStyle", stringToInterpStyle, "style"_a);
+    mod.def("lookupMaxInterpStyle", lookupMaxInterpStyle, "n"_a);
+    mod.def("lookupMinInterpPoints", lookupMinInterpPoints, "style"_a);
 
     return mod.ptr();
 }
