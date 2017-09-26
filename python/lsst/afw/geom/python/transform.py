@@ -66,6 +66,32 @@ def then(self, next):
             % (self, next))
 
 
+def unpickleTransform(cls, state):
+    """Unpickle a Transform object
+
+    Parameters
+    ----------
+    cls : `type`
+        A `Transform` class.
+    state : `str`
+        Pickled state.
+
+    Returns
+    -------
+    transform : `cls`
+        The unpickled Transform.
+    """
+    return cls.readString(state)
+
+
+def reduceTransform(transform):
+    """Pickle a Transform object
+
+    This provides the `__reduce__` implementation for a Transform.
+    """
+    return unpickleTransform, (type(transform), transform.writeString())
+
+
 def addTransformMethods(cls):
     """Add pure python methods to the specified Transform class, and register
     the class in `transformRegistry`
@@ -86,3 +112,4 @@ def addTransformMethods(cls):
     transformRegistry[cls.__name__] = cls
     cls.getJacobian = getJacobian
     cls.then = then
+    cls.__reduce__ = reduceTransform
