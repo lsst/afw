@@ -210,6 +210,21 @@ TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCo
     }
 }
 
+TransformPoint2ToPoint2 makeAffineTransformPoint2(Extent2D const &offset, Angle const &rotation,
+                                                  double scale) {
+    // Note: rather than omitting unneeded mappings here, we ask AST to simplify the mapping
+    // (using the simplify argument to TransformPoint2Point2)
+
+    double rotationRad = rotation.asRadians();
+    std::vector<double> rotCoeffs{std::cos(rotationRad) * scale, -std::sin(rotationRad) * scale,
+                                  std::sin(rotationRad) * scale, std::cos(rotationRad) * scale};
+    ndarray::Array<double, 2, 2> rotArray = ndarray::external(rotCoeffs.data(), ndarray::makeVector(2, 2));
+    ast::MatrixMap matrixMap(rotArray);
+    std::vector<double> offsetVec{offset[0], offset[1]};
+    auto affineMap = ast::ShiftMap(offsetVec).then(matrixMap);
+    return TransformPoint2ToPoint2(affineMap, true);
+}
+
 TransformPoint2ToPoint2 makeIdentityTransform() { return TransformPoint2ToPoint2(ast::UnitMap(2)); }
 }  // namespace geom
 }  // namespace afw
