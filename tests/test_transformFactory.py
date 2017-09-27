@@ -394,6 +394,39 @@ class transformFactoryTestSuite(TransformTestBaseClass):
                 predToPoint = transform.applyForward(predToPoint)
             self.assertPairsAlmostEqual(toPoint, predToPoint)
 
+    def testMakeAffine(self):
+        """Test makeAffineTransformPoint2
+        """
+        # pick arbitrary values and check individually and in combination
+        offset = afwGeom.Extent2D(1.5, -3.4)
+        rotation = 30 * afwGeom.degrees
+        scale = 21.6
+        inPoints = list(self.point2DList())
+        offsetTransform = afwGeom.makeAffineTransformPoint2(offset = offset)
+        desiredOffsetOutPoints = [pt + offset for pt in inPoints]
+        assert_allclose(offsetTransform.applyForward(inPoints), desiredOffsetOutPoints)
+
+        rotationTransform = afwGeom.makeAffineTransformPoint2(rotation = rotation)
+        cosRot = math.cos(rotation.asRadians())
+        sinRot = math.sin(rotation.asRadians())
+        self.assertPairsAlmostEqual(rotationTransform.applyForward(afwGeom.Point2D(0, 0)),
+                                    afwGeom.Point2D(0, 0))
+        self.assertPairsAlmostEqual(rotationTransform.applyForward(afwGeom.Point2D(1, 0)),
+                                    afwGeom.Point2D(cosRot, sinRot))
+        self.assertPairsAlmostEqual(rotationTransform.applyForward(afwGeom.Point2D(0, 1)),
+                                    afwGeom.Point2D(-sinRot, cosRot))
+        rotMat = np.array([[cosRot, -sinRot], [sinRot, cosRot]])
+        desiredRotatedOutPoints = [afwGeom.Point2D(rotMat.dot(pt)) for pt in inPoints]
+        assert_allclose(rotationTransform.applyForward(inPoints), desiredRotatedOutPoints)
+
+        scaleTransform = afwGeom.makeAffineTransformPoint2(scale = scale)
+        desiredScaledOutPoints = [afwGeom.Point2D(pt[0] * scale, pt[1] * scale) for pt in inPoints]
+        assert_allclose(scaleTransform.applyForward(inPoints), desiredScaledOutPoints)
+
+        fullTransform = afwGeom.makeAffineTransformPoint2(offset = offset, rotation = rotation, scale = scale)
+        desiredFullTransform = offsetTransform.then(rotationTransform).then(scaleTransform)
+        assert_allclose(fullTransform.applyForward(inPoints), desiredFullTransform.applyForward(inPoints))
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
