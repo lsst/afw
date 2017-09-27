@@ -25,6 +25,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/transformFactory.h"
 
@@ -59,6 +61,8 @@ PYBIND11_PLUGIN(transformFactory) {
                     makeRadialTransform,
             "forwardCoeffs"_a, "inverseCoeffs"_a);
     mod.def("makeIdentityTransform", &makeIdentityTransform);
+    mod.def("makeAffineTransformPoint2", &makeAffineTransformPoint2, "offset"_a = Extent2D(0, 0),
+            "rotation"_a = 0 * radians, "scale"_a = 1.0);
 
     return mod.ptr();
 }

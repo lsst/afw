@@ -31,6 +31,8 @@
 
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
+#include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -106,6 +108,20 @@ TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs);
  */
 TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCoeffs,
                                             std::vector<double> const &inverseCoeffs);
+
+/**
+ * Make an affine transform
+ *
+ * In the forward direction the returned transform is a shift followed by rotation and scaling:
+ * @f$
+ *      out = scale \times \left[\begin{array}{ c c }
+ *      \cos(rotation) & -\sin(rotation) \\
+ *      \sin(rotation) & \cos(rotation)  \\
+ *      \end{array}\right] \times (in + shift)
+ * @f$
+ */
+TransformPoint2ToPoint2 makeAffineTransformPoint2(Extent2D const &offset = Extent2D(0, 0),
+                                                  Angle const &rotation = 0 * radians, double scale = 1.0);
 
 /**
  * Trivial Transform x &rarr; x.
