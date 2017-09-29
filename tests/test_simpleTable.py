@@ -37,12 +37,6 @@ from builtins import zip
 from builtins import range
 import numpy as np
 
-try:
-    import pyfits
-except ImportError:
-    pyfits = None
-    print("WARNING: pyfits not available; some tests will not be run")
-
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.daf.base

@@ -16,7 +16,7 @@ setupRequired(python_future)
 setupRequired(log)
 setupRequired(pybind11)
 setupRequired(astshim)
-setupOptional(pyfits)
+setupOptional(astropy)
 setupOptional(matplotlib)
 
 setupOptional(afwdata)
