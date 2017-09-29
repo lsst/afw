@@ -20,6 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import absolute_import, division, print_function
+import contextlib
 import math
 import unittest
 import re
@@ -39,6 +40,20 @@ from lsst.afw.image.basicUtils import _compareWcsOverBBox
 class TestTestUtils(lsst.utils.tests.TestCase):
     """Test test methods added to lsst.utils.tests.TestCase
     """
+    def setUp(self):
+        # unittest did not get `assertWarns` until Python 3.2
+        self._addedAssertWarns = False
+        if not hasattr(self, "assertWarns"):
+            self._addedAssertWarns = True
+
+            @contextlib.contextmanager
+            def nullContextManger(dummy):
+                yield
+            self.assertWarns = nullContextManger
+
+    def tearDown(self):
+        if self._addedAssertWarns:
+            del self.assertWarns
 
     def testAssertAnglesAlmostEqual(self):
         """Test assertAnglesAlmostEqual"""
@@ -50,11 +65,12 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                 maxDiff=0.010001*afwGeom.arcseconds,
             )
             # sanity-check deprecated version
-            self.assertAnglesNearlyEqual(
-                ang0,
-                ang0 + 0.01*afwGeom.arcseconds,
-                maxDiff=0.010001*afwGeom.arcseconds,
-            )
+            with self.assertWarns(DeprecationWarning):
+                self.assertAnglesNearlyEqual(
+                    ang0,
+                    ang0 + 0.01*afwGeom.arcseconds,
+                    maxDiff=0.010001*afwGeom.arcseconds,
+                )
             with self.assertRaises(AssertionError):
                 self.assertAnglesAlmostEqual(
                     ang0,
@@ -128,8 +144,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     self.assertBoxesAlmostEqual(
                         box0, box1, maxDiff=radDiff*1.00001)
                     # sanity-check deprecated version
-                    self.assertBoxesNearlyEqual(
-                        box0, box1, maxDiff=radDiff*1.00001)
+                    with self.assertWarns(DeprecationWarning):
+                        self.assertBoxesNearlyEqual(
+                            box0, box1, maxDiff=radDiff*1.00001)
                     with self.assertRaises(AssertionError):
                         self.assertBoxesAlmostEqual(
                             box0, box1, maxDiff=radDiff*0.99999)
@@ -158,8 +175,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             self.assertCoordsAlmostEqual(
                 coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
             # sanity-check deprecated version
-            self.assertCoordsNearlyEqual(
-                coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
+            with self.assertWarns(DeprecationWarning):
+                self.assertCoordsNearlyEqual(
+                    coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
 
             for offAng in (0, 45, 90):
                 offAng = offAng*afwGeom.degrees
@@ -246,7 +264,8 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         for pair0 in ((-5, 4), (-5, 0.001), (0, 0), (49, 0.1)):
             self.assertPairsAlmostEqual(pair0, pair0, maxDiff=1e-7)
             # sanity-check deprecated version
-            self.assertPairsNearlyEqual(pair0, pair0, maxDiff=1e-7)
+            with self.assertWarns(DeprecationWarning):
+                self.assertPairsNearlyEqual(pair0, pair0, maxDiff=1e-7)
             self.assertPairsAlmostEqual(afwGeom.Point2D(*pair0),
                                         afwGeom.Extent2D(*pair0), maxDiff=1e-7)
             for diff in ((0.001, 0), (-0.01, 0.03)):
@@ -285,8 +304,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
                                           maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
         # sanity-check deprecated version
-        self.assertWcsNearlyEqualOverBBox(wcs0, wcs0, bbox,
-                                          maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
+        with self.assertWarns(DeprecationWarning):
+            self.assertWcsNearlyEqualOverBBox(wcs0, wcs0, bbox,
+                                              maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
         self.assertTrue(afwImage.wcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
                                                         maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7))
 
@@ -335,7 +355,8 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
         # sanity-check deprecated version
-        self.assertMaskedImagesNearlyEqual(mi1, mi0, atol=0, rtol=0)
+        with self.assertWarns(DeprecationWarning):
+            self.assertMaskedImagesNearlyEqual(mi1, mi0, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
             mi0.getArrays(), mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
@@ -349,7 +370,8 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             self.assertImagesEqual(plane1, plane0)
             self.assertImagesAlmostEqual(plane0, plane1, atol=0, rtol=0)
             # sanity-check deprecated version
-            self.assertImagesNearlyEqual(plane0, plane1, atol=0, rtol=0)
+            with self.assertWarns(DeprecationWarning):
+                self.assertImagesNearlyEqual(plane0, plane1, atol=0, rtol=0)
             self.assertImagesAlmostEqual(plane1, plane0, atol=0, rtol=0)
             self.assertImagesAlmostEqual(
                 plane0.getArray(), plane1, atol=0, rtol=0)
