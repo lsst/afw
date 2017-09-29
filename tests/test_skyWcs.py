@@ -3,7 +3,6 @@ import itertools
 import sys
 import unittest
 
-import lsst.afw.coord   # needed for assertCoordsAlmostEqual
 import lsst.utils.tests
 from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import SkyWcs, Extent2D, Point2D, degrees, \
