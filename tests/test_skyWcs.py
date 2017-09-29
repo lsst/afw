@@ -3,7 +3,7 @@ import itertools
 import sys
 import unittest
 
-import lsst.afw.coord   # needed for assertCoordsNearlyEqual
+import lsst.afw.coord   # needed for assertCoordsAlmostEqual
 import lsst.utils.tests
 from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import SkyWcs, Extent2D, Point2D, degrees, \
@@ -185,10 +185,10 @@ class WcsPairTransformTestCase(TransformTestBaseClass):
                 transform = makeWcsPairTransform(wcs1, wcs2)
                 for point1 in self.points():
                     point2 = transform.applyForward(point1)
-                    self.assertPairsNearlyEqual(
+                    self.assertPairsAlmostEqual(
                         transform.applyInverse(point2),
                         point1)
-                    self.assertCoordsNearlyEqual(
+                    self.assertCoordsAlmostEqual(
                         wcs1.pixelToSky(point1),
                         wcs2.pixelToSky(point2))
 
@@ -200,8 +200,8 @@ class WcsPairTransformTestCase(TransformTestBaseClass):
             for point in self.points():
                 outPoint1 = transform.applyForward(point)
                 outPoint2 = transform.applyInverse(outPoint1)
-                self.assertPairsNearlyEqual(point, outPoint1)
-                self.assertPairsNearlyEqual(outPoint1, outPoint2)
+                self.assertPairsAlmostEqual(point, outPoint1)
+                self.assertPairsAlmostEqual(outPoint1, outPoint2)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
