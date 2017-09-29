@@ -199,7 +199,6 @@ Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::the
 
 template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform) {
-    auto const frameSet = transform.getFrameSet();
     os << "Transform<" << transform.getFromEndpoint() << ", " << transform.getToEndpoint() << ">";
     return os;
 };
