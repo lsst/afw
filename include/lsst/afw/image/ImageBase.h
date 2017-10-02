@@ -385,7 +385,7 @@ public:
      * @throws lsst::pex::exceptions::RuntimeError Argument `contiguous` is false, or the pixels are not in
      * fact contiguous
      */
-    fast_iterator begin(bool) const;
+    fast_iterator begin(bool contiguous) const;
     /** Return a fast STL compliant iterator to the end of the %image which must be contiguous
      *
      * @param contiguous Pixels are contiguous (must be true)
@@ -393,7 +393,7 @@ public:
      * @throws lsst::pex::exceptions::RuntimeError Argument `contiguous` is false, or the pixels are not in
      * fact contiguous
      */
-    fast_iterator end(bool) const;
+    fast_iterator end(bool contiguous) const;
 
     /** Return an `x_iterator` to the start of the `y`'th row
      *
