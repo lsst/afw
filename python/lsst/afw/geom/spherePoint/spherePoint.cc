@@ -51,7 +51,6 @@ PYBIND11_PLUGIN(spherePoint) {
     /* Constructors */
     cls.def(py::init<Angle const &, Angle const &>(), "longitude"_a, "latitude"_a);
     cls.def(py::init<Point3D const &>(), "vector"_a);
-    // do not wrap SpherePoint(double const lonLatRad[2]) because it is not as safe as the other constructors
     cls.def(py::init<SpherePoint const &>(), "other"_a);
 
     /* Operators */

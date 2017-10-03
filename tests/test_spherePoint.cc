@@ -127,17 +127,6 @@ BOOST_AUTO_TEST_CASE(getItemError) {
     BOOST_CHECK_THROW(point[-1], pex::exceptions::OutOfRangeError);
 }
 
-/*
- * Test the SpherePoint(double const lonLatRad[2]) constructor
- */
-BOOST_AUTO_TEST_CASE(SpherePointArrayConstructor, *boost::unit_test::tolerance(1e-14)) {
-    double lonLatRad[2] = {1.23, -0.34};
-    SpherePoint point(lonLatRad);
-
-    BOOST_TEST(point[0].asRadians() == lonLatRad[0]);
-    BOOST_TEST(point[1].asRadians() == lonLatRad[1]);
-}
-
 // TODO: add a test for propagation of ostream errors
 }
 }
