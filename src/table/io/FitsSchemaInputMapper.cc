@@ -591,6 +591,18 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(Schema &schema, FitsSchemaIte
     }
     // switch code over FITS codes that correspond to different element types
     switch (code) {
+        case 'B':  // 8-bit unsigned integers -- can only be scalars or Arrays
+            if (size == 1) {
+                if (item.tccls == "Array") {
+                    return StandardReader<Array<std::uint8_t>>::make(schema, item, size);
+                }
+                return StandardReader<std::uint8_t>::make(schema, item);
+            }
+            if (size == 0) {
+                return VariableLengthArrayReader<std::uint8_t>::make(schema, item);
+            }
+            return StandardReader<Array<std::uint8_t>>::make(schema, item, size);
+
         case 'I':  // 16-bit integers - can only be scalars or Arrays (we assume they're unsigned, since
                    // that's all we ever write, and CFITSIO will complain later if they aren't)
             if (size == 1) {

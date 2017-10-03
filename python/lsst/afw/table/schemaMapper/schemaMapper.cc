@@ -60,6 +60,7 @@ PYBIND11_PLUGIN(schemaMapper) {
     cls.def("addMinimalSchema", &SchemaMapper::addMinimalSchema, "minimal"_a, "doMap"_a = true);
     cls.def_static("removeMinimalSchema", &SchemaMapper::removeMinimalSchema);
     cls.def_static("join", &SchemaMapper::join, "inputs"_a, "prefixes"_a = std::vector<std::string>());
+    declareSchemaMapperOverloads<std::uint8_t>(cls, "B");
     declareSchemaMapperOverloads<std::uint16_t>(cls, "U");
     declareSchemaMapperOverloads<std::int32_t>(cls, "I");
     declareSchemaMapperOverloads<std::int64_t>(cls, "L");
@@ -68,6 +69,7 @@ PYBIND11_PLUGIN(schemaMapper) {
     declareSchemaMapperOverloads<std::string>(cls, "String");
     declareSchemaMapperOverloads<lsst::afw::geom::Angle>(cls, "Angle");
     declareSchemaMapperOverloads<lsst::afw::table::Flag>(cls, "Flag");
+    declareSchemaMapperOverloads<lsst::afw::table::Array<std::uint8_t>>(cls, "ArrayB");
     declareSchemaMapperOverloads<lsst::afw::table::Array<std::uint16_t>>(cls, "ArrayU");
     declareSchemaMapperOverloads<lsst::afw::table::Array<int>>(cls, "ArrayI");
     declareSchemaMapperOverloads<lsst::afw::table::Array<float>>(cls, "ArrayF");

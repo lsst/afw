@@ -87,6 +87,10 @@ struct FitsType<char> {
     static int const CONSTANT = TSTRING;
 };
 template <>
+struct FitsType<signed char> {
+    static int const CONSTANT = TSBYTE;
+};
+template <>
 struct FitsType<unsigned char> {
     static int const CONSTANT = TBYTE;
 };
@@ -689,6 +693,15 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
             }
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<bool>(key), comment);
+        }
+    } else if (valueType == typeid(std::uint8_t)) {
+        if (metadata.isArray(key)) {
+            std::vector<std::uint8_t> tmp = metadata.getArray<std::uint8_t>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<std::uint8_t>(key), comment);
         }
     } else if (valueType == typeid(int)) {
         if (metadata.isArray(key)) {

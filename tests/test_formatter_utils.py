@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -19,7 +19,33 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-"""lsst.afw.formatters
-"""
-from __future__ import absolute_import
-from .utils import *
+
+from __future__ import absolute_import, division, print_function
+import unittest
+
+import lsst.utils.tests
+import lsst.afw.formatters.utils as formatterUtils
+
+
+class FormatterUtilsTestCase(unittest.TestCase):
+
+    def testStringToBytes(self):
+        for fromStr in (
+            "a\rstring\tcontaining\rspecial\0characters",
+            "01234567890"*100000,
+        ):
+            toStr = formatterUtils.bytesToString(formatterUtils.stringToBytes(fromStr))
+            self.assertEqual(fromStr, toStr)
+
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
+
+
+def setup_module(module):
+    lsst.utils.tests.init()
+
+
+if __name__ == "__main__":
+    lsst.utils.tests.init()
+    unittest.main()

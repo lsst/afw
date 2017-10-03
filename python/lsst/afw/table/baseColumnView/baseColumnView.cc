@@ -85,6 +85,7 @@ static void declareBaseColumnView(py::module &mod) {
     // _getBits supports a Python version of getBits that accepts None and field names as keys
     cls.def("_getBits", &BaseColumnView::getBits);
     cls.def("getAllBits", &BaseColumnView::getAllBits);
+    declareBaseColumnViewOverloads<std::uint8_t>(cls);
     declareBaseColumnViewOverloads<std::uint16_t>(cls);
     declareBaseColumnViewOverloads<std::int32_t>(cls);
     declareBaseColumnViewOverloads<std::int64_t>(cls);
@@ -94,6 +95,7 @@ static void declareBaseColumnView(py::module &mod) {
     // std::string columns are not supported, because numpy string arrays
     // do not have the same memory model as ours.
     declareBaseColumnViewOverloads<lsst::afw::geom::Angle>(cls);
+    declareBaseColumnViewArrayOverloads<std::uint8_t>(cls);
     declareBaseColumnViewArrayOverloads<std::uint16_t>(cls);
     declareBaseColumnViewArrayOverloads<int>(cls);
     declareBaseColumnViewArrayOverloads<float>(cls);

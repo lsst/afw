@@ -117,46 +117,56 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testRecordAccess(self):
         schema = lsst.afw.table.Schema()
-        k0 = schema.addField("f0", type="U")
-        k1 = schema.addField("f1", type="I")
-        k2 = schema.addField("f2", type="L")
-        k3 = schema.addField("f3", type="F")
-        k4 = schema.addField("f4", type="D")
-        k10b = schema.addField("f10b", type="ArrayU", size=2)
-        k10a = schema.addField("f10a", type="ArrayI", size=3)
-        k10 = schema.addField("f10", type="ArrayF", size=4)
-        k11 = schema.addField("f11", type="ArrayD", size=5)
-        k18 = schema.addField("f18", type="Angle")
-        schema.addField("f20", type="String", size=4)
+        kB = schema.addField("fB", type="B")
+        kU = schema.addField("fU", type="U")
+        kI = schema.addField("fI", type="I")
+        kL = schema.addField("fL", type="L")
+        kF = schema.addField("fF", type="F")
+        kD = schema.addField("fD", type="D")
+        kAngle = schema.addField("fAngle", type="Angle")
+        kString = schema.addField("fString", type="String", size=4)
+        kArrayB = schema.addField("fArrayB", type="ArrayB", size=6)
+        kArrayU = schema.addField("fArrayU", type="ArrayU", size=2)
+        kArrayI = schema.addField("fArrayI", type="ArrayI", size=3)
+        kArrayF = schema.addField("fArrayF", type="ArrayF", size=4)
+        kArrayD = schema.addField("fArrayD", type="ArrayD", size=5)
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
-        self.assertEqual(record[k1], 0)
-        self.assertEqual(record[k2], 0)
-        self.assertTrue(np.isnan(record[k3]))
-        self.assertTrue(np.isnan(record[k4]))
-        self.checkScalarAccessors(record, k0, "f0", 5, 6)
-        self.checkScalarAccessors(record, k1, "f1", 2, 3)
-        self.checkScalarAccessors(record, k2, "f2", 2, 3)
-        self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
-        self.checkScalarAccessors(record, k4, "f4", 2.5, 3.5)
-        self.checkArrayAccessors(record, k10b, "f10b",
-                                 makeArray(k10b.getSize(), dtype=np.uint16))
-        self.checkArrayAccessors(record, k10a, "f10a",
-                                 makeArray(k10a.getSize(), dtype=np.int32))
-        self.checkArrayAccessors(record, k10, "f10",
-                                 makeArray(k10.getSize(), dtype=np.float32))
-        self.checkArrayAccessors(record, k11, "f11",
-                                 makeArray(k11.getSize(), dtype=np.float64))
-        for k in (k10, k11):
+        self.assertEqual(record[kB], 0)
+        self.assertEqual(record[kU], 0)
+        self.assertEqual(record[kI], 0)
+        self.assertEqual(record[kL], 0)
+        self.assertTrue(np.isnan(record[kF]))
+        self.assertTrue(np.isnan(record[kD]))
+        self.checkScalarAccessors(record, kB, "fB", 4, 5)
+        self.checkScalarAccessors(record, kU, "fU", 5, 6)
+        self.checkScalarAccessors(record, kI, "fI", 2, 3)
+        self.checkScalarAccessors(record, kL, "fL", 2, 3)
+        self.checkScalarAccessors(record, kF, "fF", 2.5, 3.5)
+        self.checkScalarAccessors(record, kD, "fD", 2.5, 3.5)
+        self.checkScalarAccessors(record, kAngle, "fAngle",
+                                  5.1 * lsst.afw.geom.degrees, -4.1 * lsst.afw.geom.degrees)
+        self.checkScalarAccessors(record, kString, "fString", "ab", "abcd")
+        self.checkArrayAccessors(record, kArrayB, "fArrayB",
+                                 makeArray(kArrayB.getSize(), dtype=np.uint8))
+        self.checkArrayAccessors(record, kArrayU, "fArrayU",
+                                 makeArray(kArrayU.getSize(), dtype=np.uint16))
+        self.checkArrayAccessors(record, kArrayI, "fArrayI",
+                                 makeArray(kArrayI.getSize(), dtype=np.int32))
+        self.checkArrayAccessors(record, kArrayF, "fArrayF",
+                                 makeArray(kArrayF.getSize(), dtype=np.float32))
+        self.checkArrayAccessors(record, kArrayD, "fArrayD",
+                                 makeArray(kArrayD.getSize(), dtype=np.float64))
+        for k in (kArrayF, kArrayD):
             self.assertEqual(k.subfields, tuple(range(k.getSize())))
-        sub1 = k11.slice(1, 3)
-        sub2 = k11[0:2]
+        sub1 = kArrayD.slice(1, 3)
+        sub2 = kArrayD[0:2]
         self.assertFloatsAlmostEqual(record.get(sub1),
-                                     record.get(k11)[1:3], rtol=0, atol=0)
+                                     record.get(kArrayD)[1:3], rtol=0, atol=0)
         self.assertFloatsAlmostEqual(record.get(sub2),
-                                     record.get(k11)[0:2], rtol=0, atol=0)
+                                     record.get(kArrayD)[0:2], rtol=0, atol=0)
         self.assertEqual(sub1[0], sub2[1])
-        self.assertIsNone(k18.subfields)
+        self.assertIsNone(kAngle.subfields)
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
         with self.assertRaises(lsst.pex.exceptions.LogicError):
@@ -189,61 +199,64 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testColumnView(self):
         schema = lsst.afw.table.Schema()
-        k0 = schema.addField("f0", type="U")
-        k1 = schema.addField("f1", type="I")
-        kb1 = schema.addField("fb1", type="Flag")
-        k2 = schema.addField("f2", type="F")
-        kb2 = schema.addField("fb2", type="Flag")
-        k3 = schema.addField("f3", type="D")
-        kb3 = schema.addField("fb3", type="Flag")
-        k4 = schema.addField("f4", type="ArrayF", size=2)
-        k5 = schema.addField("f5", type="ArrayD", size=3)
-        k6 = schema.addField("f6", type="Angle")
-        k7 = schema.addField("f7", type="ArrayU", size=4)
+        kB = schema.addField("fB", type="B")
+        kU = schema.addField("fU", type="U")
+        kI = schema.addField("fI", type="I")
+        kFlag1 = schema.addField("fFlag1", type="Flag")
+        kF = schema.addField("fF", type="F")
+        kFlag2 = schema.addField("fFlag2", type="Flag")
+        kD = schema.addField("fD", type="D")
+        kFlag3 = schema.addField("fFlag3", type="Flag")
+        kArrayF = schema.addField("fArrayF", type="ArrayF", size=2)
+        kArrayD = schema.addField("fArrayD", type="ArrayD", size=3)
+        kAngle = schema.addField("fAngle", type="Angle")
+        kArrayU = schema.addField("fArrayU", type="ArrayU", size=4)
         catalog = lsst.afw.table.BaseCatalog(schema)
         catalog.addNew()
-        catalog[0].set(k0, 1)
-        catalog[0].set(k1, 2)
-        catalog[0].set(k2, 0.5)
-        catalog[0].set(k3, 0.25)
-        catalog[0].set(kb1, False)
-        catalog[0].set(kb2, True)
-        catalog[0].set(kb3, False)
-        catalog[0].set(k4, np.array([-0.5, -0.25], dtype=np.float32))
-        catalog[0].set(k5, np.array([-1.5, -1.25, 3.375], dtype=np.float64))
-        catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
-        catalog[0].set(k7, np.array([2, 3, 4, 1], dtype=np.uint16))
-        col1a = catalog[k1]
+        catalog[0].set(kB, 5)
+        catalog[0].set(kU, 1)
+        catalog[0].set(kI, 2)
+        catalog[0].set(kF, 0.5)
+        catalog[0].set(kD, 0.25)
+        catalog[0].set(kFlag1, False)
+        catalog[0].set(kFlag2, True)
+        catalog[0].set(kFlag3, False)
+        catalog[0].set(kArrayF, np.array([-0.5, -0.25], dtype=np.float32))
+        catalog[0].set(kArrayD, np.array([-1.5, -1.25, 3.375], dtype=np.float64))
+        catalog[0].set(kAngle, lsst.afw.geom.Angle(0.25))
+        catalog[0].set(kArrayU, np.array([2, 3, 4, 1], dtype=np.uint16))
+        col1a = catalog[kI]
         self.assertEqual(col1a.shape, (1,))
         catalog.addNew()
-        catalog[1].set(k0, 4)
-        catalog[1].set(k1, 3)
-        catalog[1].set(k2, 2.5)
-        catalog[1].set(k3, 0.75)
-        catalog[1].set(kb1, True)
-        catalog[1].set(kb2, False)
-        catalog[1].set(kb3, True)
-        catalog[1].set(k4, np.array([-3.25, -0.75], dtype=np.float32))
-        catalog[1].set(k5, np.array([-1.25, -2.75, 0.625], dtype=np.float64))
-        catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
-        catalog[1].set(k7, np.array([5, 6, 8, 7], dtype=np.uint16))
-        col1b = catalog[k1]
+        catalog[1].set(kB, 6)
+        catalog[1].set(kU, 4)
+        catalog[1].set(kI, 3)
+        catalog[1].set(kF, 2.5)
+        catalog[1].set(kD, 0.75)
+        catalog[1].set(kFlag1, True)
+        catalog[1].set(kFlag2, False)
+        catalog[1].set(kFlag3, True)
+        catalog[1].set(kArrayF, np.array([-3.25, -0.75], dtype=np.float32))
+        catalog[1].set(kArrayD, np.array([-1.25, -2.75, 0.625], dtype=np.float64))
+        catalog[1].set(kAngle, lsst.afw.geom.Angle(0.15))
+        catalog[1].set(kArrayU, np.array([5, 6, 8, 7], dtype=np.uint16))
+        col1b = catalog[kI]
         self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
-        for key in [k0, k1, k2, k3, kb1, kb2, kb3]:
+        for key in [kB, kU, kI, kF, kD, kFlag1, kFlag2, kFlag3]:
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(array[i], catalog[i].get(key))
-        for key in [k4, k5, k7]:
+        for key in [kArrayF, kArrayD, kArrayU]:
             array = columns[key]
             for i in [0, 1]:
                 self.assertFloatsEqual(array[i], catalog[i].get(key))
-        for key in [k6]:
+        for key in [kAngle]:
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(lsst.afw.geom.Angle(array[i]),
                                  catalog[i].get(key))
-        for key in [k1, k2, k3]:
+        for key in [kB, kU, kI, kF, kD]:
             vals = columns[key].copy()
             vals *= 2
             array = columns[key]
@@ -251,12 +264,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             for i in [0, 1]:
                 self.assertEqual(catalog[i].get(key), vals[i])
                 self.assertEqual(array[i], vals[i])
-        catalog[k1] = 4
+        catalog[kI] = 4
         f3v = np.random.randn(2)
-        catalog["f3"] = f3v
+        catalog["fD"] = f3v
         for i in [0, 1]:
-            self.assertEqual(catalog[i].get(k1), 4)
-            self.assertEqual(catalog[i].get(k3), f3v[i])
+            self.assertEqual(catalog[i].get(kI), 4)
+            self.assertEqual(catalog[i].get(kD), f3v[i])
 
     def testUnsignedFitsPersistence(self):
         """Test FITS round-trip of unsigned short ints, since FITS handles unsigned columns differently
@@ -632,57 +645,69 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testVariableLengthArrays(self):
         schema = lsst.afw.table.Schema()
-        ka = schema.addField("a", doc="integer", type="ArrayI", size=0)
-        kb = schema.addField("b", doc="single-precision", type="ArrayF")
-        kc = schema.addField("c", doc="double-precision", type="ArrayD")
-        kd = schema.addField("d", doc="string", type="String", size=0)
+        kArrayB = schema.addField("fArrayB", doc="uint8", type="ArrayB", size=0)
+        kArrayU = schema.addField("fArrayU", doc="uint16", type="ArrayU", size=0)
+        kArrayI = schema.addField("fArrayI", doc="int32", type="ArrayI", size=0)
+        kArrayF = schema.addField("fArrayF", doc="single-precision", type="ArrayF")
+        kArrayD = schema.addField("fArrayD", doc="double-precision", type="ArrayD")
+        kString = schema.addField("fString", doc="string", type="String", size=0)
         cat1 = lsst.afw.table.BaseCatalog(schema)
         record1 = cat1.addNew()
-        self.assertEqual(list(record1.get(ka)), [])
-        self.assertEqual(list(record1.get(kb)), [])
-        self.assertEqual(list(record1.get(kc)), [])
-        self.assertEqual(record1.get(kd), "")
-        a1 = np.random.randint(low=3, high=6, size=4).astype(np.int32)
-        b1 = np.random.randn(5).astype(np.float32)
-        c1 = np.random.randn(6).astype(np.float64)
-        d1 = "the quick brown fox jumps over the lazy dog"
+        self.assertEqual(list(record1.get(kArrayB)), [])
+        self.assertEqual(list(record1.get(kArrayU)), [])
+        self.assertEqual(list(record1.get(kArrayI)), [])
+        self.assertEqual(list(record1.get(kArrayF)), [])
+        self.assertEqual(list(record1.get(kArrayD)), [])
+        self.assertEqual(record1.get(kString), "")
+        dataB = np.random.randint(low=3, high=6, size=4).astype(np.uint8)
+        dataU = np.random.randint(low=3, high=6, size=4).astype(np.uint16)
+        dataI = np.random.randint(low=3, high=6, size=4).astype(np.int32)
+        dataF = np.random.randn(5).astype(np.float32)
+        dataD = np.random.randn(6).astype(np.float64)
+        dataString = "the\nquick\tbrown\rfox jumps over the lazy dog"
         # Test get/set
-        record1.set(ka, a1)
-        record1.set(kb, b1)
-        record1.set(kc, c1)
-        record1.set(kd, d1)
-        self.assertFloatsEqual(record1.get(ka), a1)
-        self.assertFloatsEqual(record1.get(kb), b1)
-        self.assertFloatsEqual(record1.get(kc), c1)
-        self.assertEqual(record1.get(kd), d1)
+        record1.set(kArrayB, dataB)
+        record1.set(kArrayU, dataU)
+        record1.set(kArrayI, dataI)
+        record1.set(kArrayF, dataF)
+        record1.set(kArrayD, dataD)
+        record1.set(kString, dataString)
+        self.assertFloatsEqual(record1.get(kArrayB), dataB)
+        self.assertFloatsEqual(record1.get(kArrayU), dataU)
+        self.assertFloatsEqual(record1.get(kArrayI), dataI)
+        self.assertFloatsEqual(record1.get(kArrayF), dataF)
+        self.assertFloatsEqual(record1.get(kArrayD), dataD)
+        self.assertEqual(record1.get(kString), dataString)
         # Test __getitem__ and view semantics
-        record1[kb][2] = 3.5
-        self.assertEqual(b1[2], 3.5)
+        record1[kArrayF][2] = 3.5
+        self.assertEqual(dataF[2], 3.5)
         # Check that we throw when we try to index a variable-length array Key
         with self.assertRaises(lsst.pex.exceptions.LogicError):
-            ka[0]
+            kArrayI[0]
         with self.assertRaises(lsst.pex.exceptions.LogicError):
-            ka[0:1]
+            kArrayI[0:1]
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
-        self.assertFloatsEqual(record2.get(ka), a1)
-        self.assertFloatsEqual(record2.get(kb), b1)
-        self.assertFloatsEqual(record2.get(kc), c1)
-        self.assertEqual(record2.get(kd), d1)
-        record1[kb][2] = 4.5
+        self.assertFloatsEqual(record2.get(kArrayB), dataB)
+        self.assertFloatsEqual(record2.get(kArrayU), dataU)
+        self.assertFloatsEqual(record2.get(kArrayI), dataI)
+        self.assertFloatsEqual(record2.get(kArrayF), dataF)
+        self.assertFloatsEqual(record2.get(kArrayD), dataD)
+        self.assertEqual(record2.get(kString), dataString)
+        record1[kArrayF][2] = 4.5
         # copy in assign() should be deep
-        self.assertEqual(record2[kb][2], 3.5)
+        self.assertEqual(record2[kArrayF][2], 3.5)
         mapper = lsst.afw.table.SchemaMapper(schema)
-        kb2 = mapper.addMapping(kb)
+        kb2 = mapper.addMapping(kArrayF)
         cat2 = lsst.afw.table.BaseCatalog(mapper.getOutputSchema())
         record3 = cat2.addNew()
         record3.assign(record1, mapper)
-        self.assertFloatsEqual(record3.get(kb2), b1)
+        self.assertFloatsEqual(record3.get(kb2), dataF)
         # Test that we throw if we try to get a column view of a
         # variable-length arry
         with self.assertRaises(lsst.pex.exceptions.LogicError):
-            cat1.get(ka)
+            cat1.get(kArrayI)
         # Test that we can round-trip variable-length arrays through FITS
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             cat1.writeFits(filename)
@@ -690,10 +715,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(schema.compare(cat3.schema, lsst.afw.table.Schema.IDENTICAL),
                          lsst.afw.table.Schema.IDENTICAL)
         record4 = cat3[0]
-        self.assertFloatsEqual(record4.get(ka), a1)
-        self.assertFloatsEqual(record4.get(kb), b1)
-        self.assertFloatsEqual(record4.get(kc), c1)
-        self.assertEqual(record4.get(kd), d1)
+        np.testing.assert_array_equal(record4.get(kArrayB), dataB)
+        np.testing.assert_array_equal(record4.get(kArrayU), dataU)
+        np.testing.assert_array_equal(record4.get(kArrayI), dataI)
+        np.testing.assert_array_equal(record4.get(kArrayF), dataF)
+        np.testing.assert_array_equal(record4.get(kArrayD), dataD)
+        self.assertEqual(record4.get(kString), dataString)
 
     def testCompoundFieldFitsConversion(self):
         """Test that we convert compound fields saved with an older version of the pipeline

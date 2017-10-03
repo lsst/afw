@@ -298,6 +298,7 @@ struct Bzero<T, typename std::enable_if<std::numeric_limits<T>::is_integer &&
 };
 
 
+#ifndef DOXYGEN  // suppress a bogus Doxygen complaint about an documented symbol
 template <typename T, int N>
 ImageScale ImageScalingOptions::determine(
     ndarray::Array<T const, N, N> const& image,
@@ -322,6 +323,7 @@ ImageScale ImageScalingOptions::determine(
         std::abort();  // should never get here
     }
 }
+#endif
 
 namespace {
 

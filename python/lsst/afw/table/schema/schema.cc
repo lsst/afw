@@ -407,6 +407,7 @@ PYBIND11_PLUGIN(schema) {
     mod.attr("_Key") = py::dict();
     mod.attr("_SchemaItem") = py::dict();
 
+    declareSchemaType<std::uint8_t>(mod);
     declareSchemaType<std::uint16_t>(mod);
     declareSchemaType<std::int32_t>(mod);
     declareSchemaType<std::int64_t>(mod);
@@ -414,6 +415,7 @@ PYBIND11_PLUGIN(schema) {
     declareSchemaType<double>(mod);
     declareSchemaType<std::string>(mod);
     declareSchemaType<geom::Angle>(mod);
+    declareSchemaType<Array<std::uint8_t>>(mod);
     declareSchemaType<Array<std::uint16_t>>(mod);
     declareSchemaType<Array<int>>(mod);
     declareSchemaType<Array<float>>(mod);

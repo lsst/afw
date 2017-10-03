@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2008-2016  AURA/LSST.
+ * Copyright 2017  AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -21,25 +21,38 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+
+#include "lsst/afw/formatters/Utils.h"
 
 namespace py = pybind11;
+using namespace py::literals;
 
-using namespace lsst::afw::formatters;
+namespace py = pybind11;
+namespace lsst {
+namespace afw {
+namespace formatters {
+namespace {
 
-PYBIND11_PLUGIN(_utils) {
-    py::module mod("_utils", "Python wrapper for afw _utils library");
+PYBIND11_PLUGIN(utils) {
+    py::module mod("utils");
 
-    /* Module level */
+    // Need to import numpy for ndarray and eigen conversions
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
 
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    mod.def("stringToBytes", stringToBytes);
+    mod.def("bytesToString", bytesToString);
 
     return mod.ptr();
 }
+
+}  // namespace
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

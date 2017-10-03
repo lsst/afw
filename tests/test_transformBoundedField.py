@@ -155,6 +155,42 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
         assert_allclose(resArr, readResArr)
         self.assertEqual(readField.getBBox(), self.bbox)
 
+    def testComplexPersistence(self):
+        """Test persistence of a TransformBoundedField whose string representation is huge
+        """
+        # DM-11964 shows that CFITSIO cannot handle string fields
+        # in binary tables that have more than 28799 characters
+        # make sure the test has plenty of margin
+        minChars = 10 * 28799
+        degree = 100  # make large enough that len(transform.writeString()) > minChars
+        n_coeffs = (degree + 1) * (degree + 2) // 2
+        coeffs = np.zeros((n_coeffs, 4), dtype=float)
+        k = 0
+        for j in range(degree+1):
+            for i in range(degree-j+1):
+                coeffs[k][0] = np.random.random()
+                coeffs[k][1] = 1
+                coeffs[k][2] = i
+                coeffs[k][3] = j
+                k += 1
+        chebyMap = astshim.PolyMap(coeffs, 1)
+        transform = lsst.afw.geom.TransformPoint2ToGeneric(chebyMap)
+        print("nchar=%s; minChar=%s" % (len(transform.writeString()), minChars))
+        self.assertGreater(len(transform.writeString()), minChars)
+        complexBoundedField = TransformBoundedField(self.bbox, transform)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            complexBoundedField.writeFits(filename)
+            readField = TransformBoundedField.readFits(filename)
+
+        self.assertTrue(complexBoundedField == readField)
+        self.assertFalse(complexBoundedField != readField)
+        self.assertEqual(complexBoundedField, readField)
+
+        resArr = complexBoundedField.evaluate(self.xList, self.yList)
+        readResArr = readField.evaluate(self.xList, self.yList)
+        assert_allclose(resArr, readResArr)
+        self.assertEqual(readField.getBBox(), self.bbox)
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
