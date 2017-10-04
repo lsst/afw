@@ -23,7 +23,7 @@
 from __future__ import absolute_import, division, print_function
 import unittest
 
-import astropy.io
+import astropy.io.fits
 
 import lsst.afw.image
 import lsst.afw.geom
