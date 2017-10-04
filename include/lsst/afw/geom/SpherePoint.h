@@ -74,21 +74,6 @@ public:
     SpherePoint(Angle const& longitude, Angle const& latitude);
 
     /**
-     * Construct a SpherePoint from double longitude and latitude.
-     *
-     * @param longitude The longitude of the point.
-     * @param latitude The latitude of the point. Must be in the
-     *                 interval [-&pi;/2, &pi;/2] radians.
-     * @param units The units of longitude and latitude
-     *
-     * @throws pex::exceptions::InvalidParameterError
-     *         Thrown if `latitude` isout of range.
-     *
-     * @exceptsafe Provides strong exception guarantee.
-     */
-    SpherePoint(double longitude, double latitude, AngleUnit units);
-
-    /**
      * Construct a SpherePoint from a vector representing a direction.
      *
      * @param vector A position whose direction will be stored as a SpherePoint.

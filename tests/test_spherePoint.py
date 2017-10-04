@@ -128,14 +128,6 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         spcopy = SpherePoint(sp)
         self.assertEqual(sp, spcopy)
 
-    def testDoubleDoubleUnitsConstructor(self):
-        sp1 = SpherePoint(42.0, 45.0, degrees)
-        self.assertEqual(sp1, SpherePoint(42.0 * degrees, 45.0 * degrees))
-        sp2 = SpherePoint(1.1, -0.6, radians)
-        self.assertEqual(sp2, SpherePoint(1.1 * radians, -0.6 * radians))
-        with self.assertRaises(TypeError):
-            SpherePoint(-42.0, 45.0)  # units must be specified
-
     def testInitNArgFail(self):
         """Tests if only 1- or 2-argument initializers are allowed.
         """
@@ -209,12 +201,14 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         ]
 
         for lonLat, vector in pointList:
+            # Convert to Point3D.
             point = SpherePoint(lonLat[0]*degrees, lonLat[1]*degrees)
             newVector = point.getVector()
             self.assertIsInstance(newVector, afwGeom.Point3D)
             for oldElement, newElement in zip(vector, newVector):
                 self.assertAlmostEqual(oldElement, newElement)
 
+            # Convert back to spherical.
             newLon, newLat = SpherePoint(newVector)
             self.assertAlmostEqual(newLon.asDegrees(), lonLat[0])
             self.assertAlmostEqual(newLat.asDegrees(), lonLat[1])
