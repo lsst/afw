@@ -135,6 +135,10 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         self.assertEqual(sp2, SpherePoint(1.1 * radians, -0.6 * radians))
         with self.assertRaises(TypeError):
             SpherePoint(-42.0, 45.0)  # units must be specified
+        with self.assertRaises(pexEx.InvalidParameterError):
+            SpherePoint(-42.0, 91.0, degrees)  # latitude out of range
+        with self.assertRaises(pexEx.InvalidParameterError):
+            SpherePoint(-42.0, -91.0, degrees)  # latitude out of range
 
     def testInitNArgFail(self):
         """Tests if only 1- or 2-argument initializers are allowed.
