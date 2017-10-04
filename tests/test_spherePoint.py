@@ -61,6 +61,16 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             324000.0*afwGeom.arcseconds,
         ]
 
+    @property
+    def pointSet(self):
+        for lon, lat in self._dataset:
+            for point in (
+                SpherePoint(lon, lat),
+                SpherePoint(lon.asDegrees(), lat.asDegrees(), degrees),
+                SpherePoint(lon.asRadians(), lat.asRadians(), radians),
+            ):
+                yield point
+
     @staticmethod
     def positions():
         """Provide valid coordinates for nominal-case testing.
@@ -92,26 +102,37 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         ]
         return points
 
-    def testInit2ArgErrors(self):
-        """Test if 2-argument form of __init__ handles invalid input.
+    def testLonLatConstructorErrors(self):
+        """Test if the longitude, latitude constructors handle invalid input
         """
         # Latitude should be checked for out-of-range.
         for lat in self._poleLatitudes:
             with self.assertRaises(pexEx.InvalidParameterError):
                 SpherePoint(0.0*degrees, self.nextUp(lat))
             with self.assertRaises(pexEx.InvalidParameterError):
-                SpherePoint(0.0*degrees, self.nextDown(0.0*radians - lat))
+                SpherePoint(0.0, self.nextUp(lat).asDegrees(), degrees)
+            with self.assertRaises(pexEx.InvalidParameterError):
+                SpherePoint(0.0*degrees, self.nextDown(-lat))
+            with self.assertRaises(pexEx.InvalidParameterError):
+                SpherePoint(0.0, self.nextDown(-lat).asDegrees(), degrees)
 
         # Longitude should not be checked for out of range.
         SpherePoint(360.0*degrees, 45.0*degrees)
+        SpherePoint(360.0, 45.0, degrees)
         SpherePoint(-42.0*degrees, 45.0*degrees)
+        SpherePoint(-42.0, 45.0, degrees)
         SpherePoint(391.0*degrees, 45.0*degrees)
+        SpherePoint(391.0, 45.0, degrees)
 
         # Infinite latitude is not allowed.
         with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(-42.0*degrees, inf*degrees)
         with self.assertRaises(pexEx.InvalidParameterError):
+            SpherePoint(-42.0, inf, degrees)
+        with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(-42.0*degrees, -inf*degrees)
+        with self.assertRaises(pexEx.InvalidParameterError):
+            SpherePoint(-42.0, -inf, degrees)
 
     def testInit1ArgErrors(self):
         """Test if 1-argument form of __init__ handles invalid input.
@@ -128,18 +149,6 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         spcopy = SpherePoint(sp)
         self.assertEqual(sp, spcopy)
 
-    def testDoubleDoubleUnitsConstructor(self):
-        sp1 = SpherePoint(42.0, 45.0, degrees)
-        self.assertEqual(sp1, SpherePoint(42.0 * degrees, 45.0 * degrees))
-        sp2 = SpherePoint(1.1, -0.6, radians)
-        self.assertEqual(sp2, SpherePoint(1.1 * radians, -0.6 * radians))
-        with self.assertRaises(TypeError):
-            SpherePoint(-42.0, 45.0)  # units must be specified
-        with self.assertRaises(pexEx.InvalidParameterError):
-            SpherePoint(-42.0, 91.0, degrees)  # latitude out of range
-        with self.assertRaises(pexEx.InvalidParameterError):
-            SpherePoint(-42.0, -91.0, degrees)  # latitude out of range
-
     def testInitNArgFail(self):
         """Tests if only 1- or 2-argument initializers are allowed.
         """
@@ -151,23 +160,29 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             SpherePoint(42)
         with self.assertRaises(TypeError):
             SpherePoint("ICRS", 34.0, -56.0)
+        with self.assertRaises(TypeError):
+            SpherePoint(34.0, -56.0)  # missing units
 
     def testGetLongitudeValue(self):
         """Test if getLongitude() returns the expected value.
         """
         for lon, lat in self._dataset:
-            point = SpherePoint(lon, lat)
-            self.assertIsInstance(point.getLongitude(), afwGeom.Angle)
-            # Behavior for non-finite points is undefined; depends on internal
-            # data representation
-            if point.isFinite():
-                self.assertGreaterEqual(point.getLongitude().asDegrees(), 0.0)
-                self.assertLess(point.getLongitude().asDegrees(), 360.0)
+            for point in (
+                SpherePoint(lon, lat),
+                SpherePoint(lon.asDegrees(), lat.asDegrees(), degrees),
+                SpherePoint(lon.asRadians(), lat.asRadians(), radians),
+            ):
+                self.assertIsInstance(point.getLongitude(), afwGeom.Angle)
+                # Behavior for non-finite points is undefined; depends on internal
+                # data representation
+                if point.isFinite():
+                    self.assertGreaterEqual(point.getLongitude().asDegrees(), 0.0)
+                    self.assertLess(point.getLongitude().asDegrees(), 360.0)
 
-                # Longitude not guaranteed to match input at pole
-                if not point.atPole():
-                    # assertAnglesAlmostEqual handles angle wrapping internally
-                    self.assertAnglesAlmostEqual(lon, point.getLongitude())
+                    # Longitude not guaranteed to match input at pole
+                    if not point.atPole():
+                        # assertAnglesAlmostEqual handles angle wrapping internally
+                        self.assertAnglesAlmostEqual(lon, point.getLongitude())
 
         # Vector construction should return valid longitude even in edge cases.
         point = SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0))
@@ -192,38 +207,43 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """Test if getLatitude() returns the expected value.
         """
         for lon, lat in self._dataset:
-            point = SpherePoint(lon, lat)
-            self.assertIsInstance(point.getLatitude(), afwGeom.Angle)
-            # Behavior for non-finite points is undefined; depends on internal
-            # data representation
-            if point.isFinite():
-                self.assertGreaterEqual(point.getLatitude().asDegrees(), -90.0)
-                self.assertLessEqual(point.getLatitude().asDegrees(), 90.0)
-                self.assertAnglesAlmostEqual(lat, point.getLatitude())
+            for point in (
+                SpherePoint(lon, lat),
+                SpherePoint(lon.asDegrees(), lat.asDegrees(), degrees),
+                SpherePoint(lon.asRadians(), lat.asRadians(), radians),
+            ):
+                self.assertIsInstance(point.getLatitude(), afwGeom.Angle)
+                # Behavior for non-finite points is undefined; depends on internal
+                # data representation
+                if point.isFinite():
+                    self.assertGreaterEqual(point.getLatitude().asDegrees(), -90.0)
+                    self.assertLessEqual(point.getLatitude().asDegrees(), 90.0)
+                    self.assertAnglesAlmostEqual(lat, point.getLatitude())
 
     def testGetVectorValue(self):
         """Test if getVector() returns the expected value.
 
         The test includes conformance to vector-angle conventions.
         """
-        pointList = [
-            ((0.0, 0.0), afwGeom.Point3D(1.0, 0.0, 0.0)),
-            ((90.0, 0.0), afwGeom.Point3D(0.0, 1.0, 0.0)),
-            ((0.0, 90.0), afwGeom.Point3D(0.0, 0.0, 1.0)),
-        ]
+        for lon, lat, vector in [
+            (0.0*degrees, 0.0*degrees, afwGeom.Point3D(1.0, 0.0, 0.0)),
+            (90.0*degrees, 0.0*degrees, afwGeom.Point3D(0.0, 1.0, 0.0)),
+            (0.0*degrees, 90.0*degrees, afwGeom.Point3D(0.0, 0.0, 1.0)),
+        ]:
+            for point in (
+                SpherePoint(lon, lat),
+                SpherePoint(lon.asDegrees(), lat.asDegrees(), degrees),
+                SpherePoint(lon.asRadians(), lat.asRadians(), radians),
+            ):
+                newVector = point.getVector()
+                self.assertIsInstance(newVector, afwGeom.Point3D)
+                for oldElement, newElement in zip(vector, newVector):
+                    self.assertAlmostEqual(oldElement, newElement)
 
-        for lonLat, vector in pointList:
-            # Convert to Point3D.
-            point = SpherePoint(lonLat[0]*degrees, lonLat[1]*degrees)
-            newVector = point.getVector()
-            self.assertIsInstance(newVector, afwGeom.Point3D)
-            for oldElement, newElement in zip(vector, newVector):
-                self.assertAlmostEqual(oldElement, newElement)
-
-            # Convert back to spherical.
-            newLon, newLat = SpherePoint(newVector)
-            self.assertAlmostEqual(newLon.asDegrees(), lonLat[0])
-            self.assertAlmostEqual(newLat.asDegrees(), lonLat[1])
+                # Convert back to spherical.
+                newLon, newLat = SpherePoint(newVector)
+                self.assertAlmostEqual(newLon.asDegrees(), lon.asDegrees())
+                self.assertAlmostEqual(newLat.asDegrees(), lat.asDegrees())
 
         # Try some un-normalized ones, too.
         pointList = [
@@ -275,17 +295,26 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testAtPoleValue(self):
         """Test if atPole() returns the expected value.
         """
-        poleList = [SpherePoint(42.0*degrees, lat) for lat in self._poleLatitudes] + \
-            [SpherePoint(42.0*degrees, 0.0*radians - lat) for lat in self._poleLatitudes] + [
-            SpherePoint(afwGeom.Point3D(0.0, 0.0, 1.0)),
-            SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0)),
-        ]
-        nonPoleList = [SpherePoint(42.0*degrees, self.nextDown(lat)) for lat in self._poleLatitudes] + \
-            [SpherePoint(42.0*degrees, self.nextUp(0.0*radians - lat)) for lat in self._poleLatitudes] + [
-            SpherePoint(afwGeom.Point3D(9.9e-7, 0.0, 1.0)),
-            SpherePoint(afwGeom.Point3D(9.9e-7, 0.0, -1.0)),
-            SpherePoint(0.0*degrees, nan*degrees),
-        ]
+        poleList = \
+            [SpherePoint(42.0*degrees, lat) for lat in self._poleLatitudes] + \
+            [SpherePoint(42.0, lat.asDegrees(), degrees) for lat in self._poleLatitudes] + \
+            [SpherePoint(42.0*degrees, -lat) for lat in self._poleLatitudes] + \
+            [SpherePoint(42.0, -lat.asDegrees(), degrees) for lat in self._poleLatitudes] + \
+            [
+                SpherePoint(afwGeom.Point3D(0.0, 0.0, 1.0)),
+                SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0)),
+            ]
+        nonPoleList = \
+            [SpherePoint(42.0*degrees, self.nextDown(lat)) for lat in self._poleLatitudes] + \
+            [SpherePoint(42.0, self.nextDown(lat).asDegrees(), degrees) for lat in self._poleLatitudes] + \
+            [SpherePoint(42.0*degrees, self.nextUp(-lat)) for lat in self._poleLatitudes] + \
+            [SpherePoint(42.0, self.nextUp(-lat).asDegrees(), degrees)
+             for lat in self._poleLatitudes] + \
+            [
+                SpherePoint(afwGeom.Point3D(9.9e-7, 0.0, 1.0)),
+                SpherePoint(afwGeom.Point3D(9.9e-7, 0.0, -1.0)),
+                SpherePoint(0.0*degrees, nan*degrees),
+            ]
 
         for pole in poleList:
             self.assertIsInstance(pole.atPole(), bool)
@@ -300,13 +329,18 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """
         finiteList = [
             SpherePoint(0.0*degrees, -90.0*degrees),
+            SpherePoint(0.0, -90.0, degrees),
             SpherePoint(afwGeom.Point3D(0.1, 0.2, 0.3)),
         ]
         nonFiniteList = [
             SpherePoint(0.0*degrees, nan*degrees),
+            SpherePoint(0.0, nan, degrees),
             SpherePoint(nan*degrees, 0.0*degrees),
+            SpherePoint(nan, 0.0, degrees),
             SpherePoint(inf*degrees, 0.0*degrees),
+            SpherePoint(inf, 0.0, degrees),
             SpherePoint(-inf*degrees, 0.0*degrees),
+            SpherePoint(-inf, 0.0, degrees),
             SpherePoint(afwGeom.Point3D(nan, 0.2, 0.3)),
             SpherePoint(afwGeom.Point3D(0.1, inf, 0.3)),
             SpherePoint(afwGeom.Point3D(0.1, 0.2, -inf)),
@@ -333,8 +367,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testGetItemValue(self):
         """Test if indexing returns the expected value.
         """
-        for lon, lat in self._dataset:
-            point = SpherePoint(lon, lat)
+        for point in self.pointSet:
             self.assertIsInstance(point[-2], afwGeom.Angle)
             self.assertIsInstance(point[-1], afwGeom.Angle)
             self.assertIsInstance(point[0], afwGeom.Angle)
@@ -420,22 +453,22 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """Test if == handles coordinate degeneracies correctly.
         """
         # Longitude wrapping
-        self.assertEqual(SpherePoint(360.0*degrees, -42.0*degrees),
-                         SpherePoint(0.0*degrees, -42.0*degrees))
-        self.assertEqual(SpherePoint(-90.0*degrees, -42.0*degrees),
-                         SpherePoint(270.0*degrees, -42.0*degrees))
+        self.assertEqual(SpherePoint(360.0, -42.0, degrees),
+                         SpherePoint(0.0, -42.0, degrees))
+        self.assertEqual(SpherePoint(-90.0, -42.0, degrees),
+                         SpherePoint(270.0, -42.0, degrees))
 
         # Polar degeneracy
-        self.assertEqual(SpherePoint(42.0*degrees, 90.0*degrees),
-                         SpherePoint(270.0*degrees, 90.0*degrees))
-        self.assertEqual(SpherePoint(-42.0*degrees, -90.0*degrees),
-                         SpherePoint(83.0*degrees, -90.0*degrees))
+        self.assertEqual(SpherePoint(42.0, 90.0, degrees),
+                         SpherePoint(270.0, 90.0, degrees))
+        self.assertEqual(SpherePoint(-42.0, -90.0, degrees),
+                         SpherePoint(83.0, -90.0, degrees))
 
-        self.assertNotEqual(SpherePoint(83.0*degrees, 90.0*degrees),
-                            SpherePoint(83.0*degrees, -90.0*degrees))
+        self.assertNotEqual(SpherePoint(83.0, 90.0, degrees),
+                            SpherePoint(83.0, -90.0, degrees))
         # White-box test: how are pole/non-pole comparisons handled?
-        self.assertNotEqual(SpherePoint(42.0*degrees, 90.0*degrees),
-                            SpherePoint(42.0*degrees, 0.0*degrees))
+        self.assertNotEqual(SpherePoint(42.0, 90.0, degrees),
+                            SpherePoint(42.0, 0.0, degrees))
 
     def testInquality(self):
         """Test if == and != give mutually consistent results.
@@ -451,9 +484,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testBearingToError(self):
         """Test if bearingTo() correctly handles invalid input.
         """
-        northPole = SpherePoint(0.0*degrees, 90.0*degrees)
-        southPole = SpherePoint(0.0*degrees, -90.0*degrees)
-        safe = SpherePoint(0.0*degrees, 0.0*degrees)
+        northPole = SpherePoint(0.0, 90.0, degrees)
+        southPole = SpherePoint(0.0, -90.0, degrees)
+        safe = SpherePoint(0.0, 0.0, degrees)
 
         with self.assertRaises(pexEx.DomainError):
             northPole.bearingTo(safe)
@@ -565,8 +598,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         """
         # Test from "Meeus, p. 110" (test originally written for coord::Coord;
         # don't know exact reference)
-        spica = SpherePoint(201.2983*degrees, -11.1614*degrees)
-        arcturus = SpherePoint(213.9154*degrees, 19.1825*degrees)
+        spica = SpherePoint(201.2983, -11.1614, degrees)
+        arcturus = SpherePoint(213.9154, 19.1825, degrees)
 
         # Verify to precision of quoted distance and positions.
         self.assertAlmostEqual(
@@ -582,10 +615,10 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testSeparationPoles(self):
         """White-box test: all representations of a pole should have the same distance to another point.
         """
-        southPole1 = SpherePoint(-30.0*degrees, -90.0*degrees)
-        southPole2 = SpherePoint(183.0*degrees, -90.0*degrees)
-        regularPoint = SpherePoint(42.0*degrees, 45.0*degrees)
-        expectedSep = (45.0+90.0)*degrees
+        southPole1 = SpherePoint(-30.0, -90.0, degrees)
+        southPole2 = SpherePoint(183.0, -90.0, degrees)
+        regularPoint = SpherePoint(42.0, 45.0, degrees)
+        expectedSep = (45.0 + 90.0)*degrees
 
         self.assertAnglesAlmostEqual(
             expectedSep, southPole1.separation(regularPoint))
@@ -785,20 +818,21 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testIterResult(self):
         """Test if iteration returns the expected values.
         """
-        for lon, lat in self._dataset:
-            point = SpherePoint(lon, lat)
-            if point.isFinite():
-                # Test mechanics directly
-                it = iter(point)
-                self.assertEqual(point.getLongitude(), next(it))
-                self.assertEqual(point.getLatitude(), next(it))
-                with self.assertRaises(StopIteration):
-                    next(it)
+        for point in self.pointSet:
+            if not point.isFinite():
+                continue
 
-                # Intended use case
-                lon, lat = point
-                self.assertEqual(point.getLongitude(), lon)
-                self.assertEqual(point.getLatitude(), lat)
+            # Test mechanics directly
+            it = iter(point)
+            self.assertEqual(point.getLongitude(), next(it))
+            self.assertEqual(point.getLatitude(), next(it))
+            with self.assertRaises(StopIteration):
+                next(it)
+
+            # Intended use case
+            lon, lat = point
+            self.assertEqual(point.getLongitude(), lon)
+            self.assertEqual(point.getLatitude(), lat)
 
     def testStrValue(self):
         """Test if __str__ produces output consistent with its spec.
@@ -806,8 +840,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         This is necessarily a loose test, as the behavior of __str__
         is (deliberately) incompletely specified.
         """
-        for lon, lat in self._dataset:
-            point = SpherePoint(lon, lat)
+        for point in self.pointSet:
             numbers = re.findall(r'(?:\+|-)?(?:[\d.]+|nan|inf)', str(point))
             self.assertEqual(2, len(numbers),
                              "String '%s' should have exactly two coordinates." % (point,))
@@ -831,8 +864,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testReprValue(self):
         """Test if __repr__ is a machine-readable representation.
         """
-        for lon, lat in self._dataset:
-            point = SpherePoint(lon, lat)
+        for point in self.pointSet:
             pointRepr = repr(point)
             self.assertIn("degrees", pointRepr)
             self.assertEqual(2, len(pointRepr.split(",")))
