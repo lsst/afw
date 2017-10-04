@@ -377,7 +377,8 @@ class ImageScalingOptions {
     std::vector<std::string> maskPlanes;  ///< Mask planes to ignore when doing statistics
     float quantizeLevel;  ///< Divisor of the standard deviation for STDEV_* scaling
     float quantizePad;  ///< Number of stdev to allow on the low/high side (for STDEV_POSITIVE/NEGATIVE)
-    double bscale, bzero;  ///< Manually specified BSCALE and BZERO (for MANUAL scaling)
+    double bscale;  ///< Manually specified BSCALE (for MANUAL scaling)
+    double bzero;  ///< Manually specified BZERO (for MANUAL scaling)
 
     /// Default Ctor
     ///
@@ -417,7 +418,7 @@ class ImageScalingOptions {
     ImageScalingOptions(int bitpix_, double bscale_=1.0, double bzero_=0.0)
       : ImageScalingOptions(MANUAL, bitpix_, {}, 1, 4.0, 5.0, false, bscale_, bzero_) {}
 
-    //{
+    //@{
     /// Determine the scaling for a particular image
     ///
     /// @param[in] image  Image for which to determine scaling
@@ -436,7 +437,7 @@ class ImageScalingOptions {
         ndarray::Array<T const, N, N> const& image,
         ndarray::Array<bool, N, N> const& mask
     ) const;
-    //}
+    //@}
 
   private:
     /// Convert image,mask to arrays
