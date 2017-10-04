@@ -63,6 +63,9 @@ Angle haversine(Angle const& deltaLon, Angle const& deltaLat, double cosLat1, do
 }
 }  // end namespace
 
+SpherePoint::SpherePoint(double longitude, double latitude, AngleUnit units)
+        : SpherePoint(longitude * units, latitude * units) {}
+
 SpherePoint::SpherePoint(Angle const& longitude, Angle const& latitude)
         : _longitude(longitude.wrap().asRadians()), _latitude(latitude.asRadians()) {
     if (fabs(_latitude) > HALFPI) {
