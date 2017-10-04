@@ -39,7 +39,7 @@ import tempfile
 
 from builtins import object
 import numpy as np
-import astropy.io
+import astropy.io.fits
 
 import lsst.utils
 import lsst.utils.tests
