@@ -51,16 +51,34 @@ class transformFactoryTestSuite(TransformTestBaseClass):
                 yield afwGeom.Point2D(x, y)
 
     def testLinearize(self):
-        transformClassName = "TransformPoint2ToPoint2"
-        TransformClass = getattr(afwGeom, transformClassName)
-        baseMsg = "TransformClass={}".format(TransformClass.__name__)
+        for transform, invertible in (
+            (afwGeom.TransformPoint2ToPoint2(makeForwardPolyMap(2, 2)), False),
+            (afwGeom.makeIdentityTransform(), True),
+            (afwGeom.makeTransform(afwGeom.AffineTransform(np.array([[3.0, -2.0], [2.0, -1.0]]))), True),
+            (afwGeom.makeRadialTransform([0.0, 8.0e-05, 0.0, -4.5e-12]), True),
+        ):
+            self.checkLinearize(transform, invertible)
 
-        nIn = nOut = 2
-        msg = "{}, nIn={}, nOut={}".format(baseMsg, nIn, nOut)
-        polyMap = makeForwardPolyMap(nIn, nOut)
-        transform = TransformClass(polyMap)
+    def checkLinearize(self, transform, invertible):
+        """Test whether a specific transform is correctly linearized.
+
+        Parameters
+        ----------
+        transform: `lsst.afw.geom.Transform`
+            the transform whose linearization will be tested. Should not be
+            strongly curved within ~1 unit of the origin, or the test may rule
+            the approximation isn't good enough.
+        invertible: `bool`
+            whether `transform` is invertible. The test will verify that the
+            linearized form is invertible iff `transform` is. If `transform`
+            is invertible, the test will also verify that the inverse of the
+            linearization approximates the inverse of `transform`.
+        """
         fromEndpoint = transform.fromEndpoint
         toEndpoint = transform.toEndpoint
+        nIn = fromEndpoint.nAxes
+        nOut = toEndpoint.nAxes
+        msg = "TransformClass={}, nIn={}, nOut={}".format(type(transform).__name__, nIn, nOut)
 
         rawLinPoint = self.makeRawPointData(nIn)
         linPoint = fromEndpoint.pointFromData(rawLinPoint)
@@ -96,30 +114,29 @@ class transformFactoryTestSuite(TransformTestBaseClass):
         # Is affine invertible?
         # AST lets all-zero MatrixMaps be invertible though inverse
         # ill-defined; exclude this case
-        if jacobian.any():
-            invertible = \
-                np.linalg.cond(jacobian) < 1/np.finfo(jacobian.dtype).eps
-            if nIn == nOut and invertible:
-                inverse = affine.invert()
-                deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
-                for i in range(nDelta):
-                    pointMsg = "{}, point={}".format(msg, tweakedInPoint)
-                    tweakedInPoint = fromEndpoint.pointFromData(
-                        rawLinPoint + deltaFrom[:, i])
-                    tweakedOutPoint = affine(tweakedInPoint)
+        if invertible:
+            rng = np.random.RandomState(42)
+            nDelta = 100
+            inverse = affine.invert()
+            deltaFrom = rng.normal(0.0, 10.0, (nIn, nDelta))
+            for i in range(nDelta):
+                pointMsg = "{}, point={}".format(msg, tweakedInPoint)
+                tweakedInPoint = fromEndpoint.pointFromData(
+                    rawLinPoint + deltaFrom[:, i])
+                tweakedOutPoint = affine(tweakedInPoint)
 
-                    roundTrip = inverse(tweakedOutPoint)
-                    assert_allclose(
-                        roundTrip, tweakedInPoint,
-                        err_msg = pointMsg)
-                    assert_allclose(
-                        inverse.getLinear().getMatrix(),
-                        np.linalg.inv(jacobian),
-                        err_msg = pointMsg)
-            else:
-                # TODO: replace with correct type after fixing DM-11248
-                with self.assertRaises(Exception):
-                    affine.invert()
+                roundTrip = inverse(tweakedOutPoint)
+                assert_allclose(
+                    roundTrip, tweakedInPoint,
+                    err_msg = pointMsg)
+                assert_allclose(
+                    inverse.getLinear().getMatrix(),
+                    np.linalg.inv(jacobian),
+                    err_msg = pointMsg)
+        else:
+            # TODO: replace with correct type after fixing DM-11248
+            with self.assertRaises(Exception):
+                affine.invert()
 
         # Can't test exceptions without reliable way to make invalid transform
 
@@ -221,7 +238,7 @@ class transformFactoryTestSuite(TransformTestBaseClass):
             self.assertPairsAlmostEqual(toPoint, predToPoint)
 
     def testFullAffine(self):
-        """Test affine = affine Transform with just linear coefficients
+        """Test affine = affine Transform with arbitrary coefficients
         """
         affineFactory = afwGeom.transformRegistry["affine"]
         affineConfig = affineFactory.ConfigClass()
