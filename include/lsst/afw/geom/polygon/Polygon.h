@@ -35,6 +35,7 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -63,6 +64,9 @@ public:
     //@{
     /// Constructors
     explicit Polygon(Box const& box);
+    Polygon(Box const& box,                           ///< Box to convert to polygon
+            TransformPoint2ToPoint2 const& transform  ///< Transform from original to target frame
+            );
     Polygon(Box const& box,                                      ///< Box to convert to polygon
             std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
             );
@@ -190,6 +194,9 @@ public:
     /// The transformation is only applied to the vertices.  If the transformation
     /// is non-linear, the edges will not reflect that, but simply join the vertices.
     /// Greater fidelity might be achieved by using "subSample" before transforming.
+    std::shared_ptr<Polygon> transform(
+            TransformPoint2ToPoint2 const& transform  ///< Transform from original to target frame
+            ) const;
     std::shared_ptr<Polygon> transform(
             std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
             ) const;

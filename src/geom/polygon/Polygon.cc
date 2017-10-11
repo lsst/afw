@@ -273,6 +273,13 @@ Polygon::Polygon(Polygon::Box const& box) : _impl(new Polygon::Impl(box)) {}
 
 Polygon::Polygon(std::vector<LsstPoint> const& vertices) : _impl(new Polygon::Impl(vertices)) {}
 
+Polygon::Polygon(Polygon::Box const& box, afw::geom::TransformPoint2ToPoint2 const & transform)
+        : _impl(new Polygon::Impl()) {
+    auto corners = transform.applyForward(boxToCorners(box));
+    boost::geometry::assign(_impl->poly, corners);
+    _impl->check();
+}
+
 Polygon::Polygon(Polygon::Box const& box, std::shared_ptr<afw::geom::XYTransform const> const& transform)
         : _impl(new Polygon::Impl()) {
     std::vector<LsstPoint> corners = boxToCorners(box);
@@ -386,6 +393,12 @@ std::shared_ptr<Polygon> Polygon::convexHull() const {
     boost::geometry::convex_hull(_impl->poly, hull);
     return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(hull))));
 }
+
+std::shared_ptr<Polygon> Polygon::transform(TransformPoint2ToPoint2 const& transform) const {
+    auto newVertices = transform.applyForward(getVertices());
+    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(newVertices))));
+}
+
 
 std::shared_ptr<Polygon> Polygon::transform(std::shared_ptr<XYTransform const> const& transform) const {
     std::vector<LsstPoint> vertices;  // New vertices
