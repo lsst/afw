@@ -974,6 +974,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
     def assertTransformsEqual(self, transform1, transform2):
         """Assert that two transforms are equal"""
         self.assertEqual(type(transform1), type(transform2))
+        self.assertEqual(transform1.fromEndpoint, transform2.fromEndpoint)
+        self.assertEqual(transform1.toEndpoint, transform2.toEndpoint)
         self.assertEqual(transform1.getFrameSet(), transform2.getFrameSet())
 
         fromEndpoint = transform1.fromEndpoint
