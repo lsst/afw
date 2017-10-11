@@ -38,7 +38,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.utils.tests
 
 
-class transformFactoryTestSuite(TransformTestBaseClass):
+class TransformFactoryTestSuite(TransformTestBaseClass):
 
     def setUp(self):
         TransformTestBaseClass.setUp(self)
