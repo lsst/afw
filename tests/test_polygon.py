@@ -23,7 +23,6 @@
 from __future__ import absolute_import, division, print_function
 import pickle
 import unittest
-import os
 
 from builtins import zip
 from builtins import range
@@ -31,8 +30,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
-import lsst.afw.image as afwImage
-import lsst.afw.coord as afwCoord
+import lsst.afw.image  # required by Polygon.createImage
 from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
@@ -274,22 +272,20 @@ class PolygonTest(lsst.utils.tests.TestCase):
         box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0),
                             afwGeom.Point2D(123.4, 567.8))
         poly1 = Polygon(box)
-        scale = (0.2*afwGeom.arcseconds).asDegrees()
-        wcs = afwImage.makeWcs(afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
-                               afwGeom.Point2D(0.0, 0.0), scale, 0.0, 0.0, scale)
-        transform = afwImage.XYTransformFromWcsPair(wcs, wcs)
-        poly2 = Polygon(box, transform)
-
-        # We lose some very small precision in the XYTransformFromWcsPair
-        # so we can't compare the polygons directly.
-        self.assertEqual(poly1.getNumEdges(), poly2.getNumEdges())
-        for p1, p2 in zip(poly1.getVertices(), poly2.getVertices()):
-            self.assertAlmostEqual(p1.getX(), p2.getX())
-            self.assertAlmostEqual(p1.getY(), p2.getY())
-
-        transform = afwGeom.AffineTransform.makeScaling(1.0)
-        poly3 = Polygon(box, transform)
-        self.assertEqual(poly1, poly3)
+        scale = 1.5
+        shift = afwGeom.Extent2D(3.0, 4.0)
+        affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
+            afwGeom.AffineTransform.makeScaling(scale)
+        xyTransform = afwGeom.AffineXYTransform(affineTransform)
+        transform22 = afwGeom.makeTransform(affineTransform)
+        transformedVertices = transform22.applyForward(box.getCorners())
+        expect = Polygon(transformedVertices)
+        poly1 = Polygon(box, affineTransform)
+        poly2 = Polygon(box, xyTransform)
+        poly3 = Polygon(box, transform22)
+        self.assertEqual(poly1, expect)
+        self.assertEqual(poly2, expect)
+        self.assertEqual(poly3, expect)
 
     def testIteration(self):
         """Test iteration over polygon"""
@@ -341,18 +337,24 @@ class PolygonTest(lsst.utils.tests.TestCase):
     def testTransform2(self):
         scale = 2.0
         shift = afwGeom.Extent2D(3.0, 4.0)
-        transform = afwGeom.AffineTransform.makeTranslation(shift) * \
+        affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
             afwGeom.AffineTransform.makeScaling(scale)
+        xyTransform = afwGeom.AffineXYTransform(affineTransform)
+        transform22 = afwGeom.makeTransform(affineTransform)
         for num in range(3, 30):
             small = self.polygon(num, 1.0, 0.0, 0.0)
-            large = small.transform(transform)
+            large1 = small.transform(affineTransform)
+            large2 = small.transform(xyTransform)
+            large3 = small.transform(transform22)
             expect = self.polygon(num, scale, shift[0], shift[1])
-            self.assertEqual(large, expect)
+            self.assertEqual(large1, expect)
+            self.assertEqual(large2, expect)
+            self.assertEqual(large3, expect)
 
             if DEBUG:
                 import matplotlib.pyplot as plt
                 axes = small.plot(c='k')
-                large.plot(axes, c='b')
+                large1.plot(axes, c='b')
                 plt.show()
 
     def testReadWrite(self):

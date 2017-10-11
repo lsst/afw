@@ -35,6 +35,7 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -60,15 +61,51 @@ public:
     typedef Box2D Box;
     typedef Point2D Point;
 
-    //@{
-    /// Constructors
+
+    /**
+     * Construct a rectangular Polygon whose vertices are the corners of a box
+     */
     explicit Polygon(Box const& box);
-    Polygon(Box const& box,                                      ///< Box to convert to polygon
-            std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
+
+    /**
+     * Construct a 4-sided Polygon from a transformed box
+     *
+     * The resulting polygon has 4 vertices: transform.applyForward(bbox.getCorners())
+     *
+     * @param[in] box  Initial box
+     * @param[in] transform  Coordinate transform
+     */
+    Polygon(Box const& box,
+            TransformPoint2ToPoint2 const& transform
             );
-    Polygon(Box const& box,                   ///< Box to convert to polygon
-            AffineTransform const& transform  ///< Transform from original to target frame
+
+    /**
+     * Construct a 4-sided Polygon from a transformed box
+     *
+     * The resulting polygon has 4 vertices: the corners of the box
+     * transformed by `transform` in the forward direction
+     *
+     * @param[in] box  Initial box
+     * @param[in] transform  Coordinate transform
+     */
+    Polygon(Box const& box,
+            std::shared_ptr<XYTransform const> const& transform
             );
+
+    /**
+     * Construct a 4-sided Polygon from a transformed box
+     *
+     * The resulting polygon has 4 vertices: the corners of the box
+     * transformed by `transform`
+     *
+     * @param[in] box  Initial box
+     * @param[in] transform  Coordinate transform
+     */
+    Polygon(Box const& box,
+            AffineTransform const& transform
+            );
+
+    /// Construct a Polygon from a list of vertices
     explicit Polygon(std::vector<Point> const& vertices);
     //@}
 
@@ -190,6 +227,9 @@ public:
     /// The transformation is only applied to the vertices.  If the transformation
     /// is non-linear, the edges will not reflect that, but simply join the vertices.
     /// Greater fidelity might be achieved by using "subSample" before transforming.
+    std::shared_ptr<Polygon> transform(
+            TransformPoint2ToPoint2 const& transform  ///< Transform from original to target frame
+            ) const;
     std::shared_ptr<Polygon> transform(
             std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
             ) const;
