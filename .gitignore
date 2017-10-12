@@ -13,6 +13,7 @@ core.*
 .sconsign.dblite
 config.log
 memleak.fits
+pytest_session.txt
 bin/filter-gcc
 doc/*.tag
 doc/html
