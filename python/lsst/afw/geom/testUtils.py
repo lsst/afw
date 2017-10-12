@@ -29,6 +29,7 @@ from builtins import object
 import itertools
 import math
 import os
+import pickle
 
 import astshim
 import numpy as np
@@ -970,6 +971,39 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 with self.assertRaises(InvalidParameterError):
                     transform = transform1.then(transform2)
 
+    def assertTransformsEqual(self, transform1, transform2):
+        """Assert that two transforms are equal"""
+        self.assertEqual(type(transform1), type(transform2))
+        self.assertEqual(transform1.fromEndpoint, transform2.fromEndpoint)
+        self.assertEqual(transform1.toEndpoint, transform2.toEndpoint)
+        self.assertEqual(transform1.getFrameSet(), transform2.getFrameSet())
+
+        fromEndpoint = transform1.fromEndpoint
+        toEndpoint = transform1.toEndpoint
+        frameSet = transform1.getFrameSet()
+        nIn = frameSet.nIn
+        nOut = frameSet.nOut
+
+        if frameSet.hasForward:
+            nPoints = 7  # arbitrary
+            rawInArray = self.makeRawArrayData(nPoints, nIn)
+            inArray = fromEndpoint.arrayFromData(rawInArray)
+            outArray = transform1.applyForward(inArray)
+            outData = toEndpoint.dataFromArray(outArray)
+            outArrayRoundTrip = transform2.applyForward(inArray)
+            outDataRoundTrip = toEndpoint.dataFromArray(outArrayRoundTrip)
+            assert_allclose(outData, outDataRoundTrip)
+
+        if frameSet.hasInverse:
+            nPoints = 7  # arbitrary
+            rawOutArray = self.makeRawArrayData(nPoints, nOut)
+            outArray = toEndpoint.arrayFromData(rawOutArray)
+            inArray = transform1.applyInverse(outArray)
+            inData = fromEndpoint.dataFromArray(inArray)
+            inArrayRoundTrip = transform2.applyInverse(outArray)
+            inDataRoundTrip = fromEndpoint.dataFromArray(inArrayRoundTrip)
+            assert_allclose(inData, inDataRoundTrip)
+
     def checkPersistence(self, transform):
         """Check persistence of a transform
         """
@@ -988,36 +1022,11 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
             transform.readString(badStr2)
         transformFromStr1 = transform.readString(transformStr)
-        self.assertEqual(type(transform), type(transformFromStr1))
-        self.assertEqual(transform.getFrameSet(), transformFromStr1.getFrameSet())
+        self.assertTransformsEqual(transform, transformFromStr1)
 
         # check transformFromString
         transformFromStr2 = afwGeom.transformFromString(transformStr)
-        self.assertEqual(type(transform), type(transformFromStr2))
-        self.assertEqual(transform.getFrameSet(), transformFromStr2.getFrameSet())
+        self.assertTransformsEqual(transform, transformFromStr2)
 
-        fromEndpoint = transform.fromEndpoint
-        toEndpoint = transform.toEndpoint
-        frameSet = transform.getFrameSet()
-        nIn = frameSet.nIn
-        nOut = frameSet.nOut
-
-        if frameSet.hasForward:
-            nPoints = 7  # arbitrary
-            rawInArray = self.makeRawArrayData(nPoints, nIn)
-            inArray = fromEndpoint.arrayFromData(rawInArray)
-            outArray = transform.applyForward(inArray)
-            outData = toEndpoint.dataFromArray(outArray)
-            outArrayRoundTrip = transformFromStr1.applyForward(inArray)
-            outDataRoundTrip = toEndpoint.dataFromArray(outArrayRoundTrip)
-            assert_allclose(outData, outDataRoundTrip)
-
-        if frameSet.hasInverse:
-            nPoints = 7  # arbitrary
-            rawOutArray = self.makeRawArrayData(nPoints, nOut)
-            outArray = toEndpoint.arrayFromData(rawOutArray)
-            inArray = transform.applyInverse(outArray)
-            inData = fromEndpoint.dataFromArray(inArray)
-            inArrayRoundTrip = transformFromStr1.applyInverse(outArray)
-            inDataRoundTrip = fromEndpoint.dataFromArray(inArrayRoundTrip)
-            assert_allclose(inData, inDataRoundTrip)
+        # Check pickling
+        self.assertTransformsEqual(transform, pickle.loads(pickle.dumps(transform)))

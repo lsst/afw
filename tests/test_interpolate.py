@@ -144,6 +144,54 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
             afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
                                     afwMath.Interpolate.LINEAR)
 
+    def testLookupMaxInterpStyle(self):
+        for numPoints in range(1, 6):
+            maxInterpStyle = afwMath.lookupMaxInterpStyle(numPoints)
+            desiredMax = {
+                1: afwMath.Interpolate.Style.CONSTANT,
+                2: afwMath.Interpolate.Style.LINEAR,
+                3: afwMath.Interpolate.Style.CUBIC_SPLINE,
+                4: afwMath.Interpolate.Style.CUBIC_SPLINE,
+            }.get(numPoints, afwMath.Interpolate.Style.AKIMA_SPLINE)
+            self.assertEqual(maxInterpStyle, desiredMax)
+
+        for badNumPoints in (-5, -1, 0):
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                afwMath.lookupMaxInterpStyle(badNumPoints)
+
+    def testLookupMinInterpPoints(self):
+        for style in afwMath.Interpolate.Style.__members__.values():
+            if style in (afwMath.Interpolate.Style.UNKNOWN, afwMath.Interpolate.Style.NUM_STYLES):
+                with self.assertRaises(pexExcept.OutOfRangeError):
+                    afwMath.lookupMinInterpPoints(style)
+            else:
+                minPoints = afwMath.lookupMinInterpPoints(style)
+                desiredMin = {
+                    afwMath.Interpolate.Style.CONSTANT: 1,
+                    afwMath.Interpolate.Style.LINEAR: 2,
+                    afwMath.Interpolate.Style.NATURAL_SPLINE: 3,
+                    afwMath.Interpolate.Style.CUBIC_SPLINE: 3,
+                    afwMath.Interpolate.Style.CUBIC_SPLINE_PERIODIC: 3,
+                    afwMath.Interpolate.Style.AKIMA_SPLINE: 5,
+                    afwMath.Interpolate.Style.AKIMA_SPLINE_PERIODIC: 5,
+                }.get(style, None)
+                if desiredMin is None:
+                    self.fail("Unrecognized style: %s" % (style,))
+                self.assertEqual(minPoints, desiredMin)
+
+    def testStringToInterpStyle(self):
+        for name, desiredStyle in afwMath.Interpolate.Style.__members__.items():
+            if name in ("UNKNOWN", "NUM_STYLES"):
+                with self.assertRaises(pexExcept.InvalidParameterError):
+                    afwMath.stringToInterpStyle(name)
+            else:
+                style = afwMath.stringToInterpStyle(name)
+                self.assertEqual(style, desiredStyle)
+
+        for badName in ("BOGUS", ""):
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                afwMath.stringToInterpStyle(badName)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
