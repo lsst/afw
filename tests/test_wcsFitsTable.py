@@ -170,7 +170,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
             fits = astropy.io.fits.open(fileName)
             fits[1].header.remove("CTYPE1")
             fits[1].header.remove("CTYPE2")
-            fits.writeto(fileName, clobber=True)
+            fits.writeto(fileName, overwrite=True)
             fits.close()
             # now load it using afw
             expOut = lsst.afw.image.ExposureF(fileName)
