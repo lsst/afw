@@ -381,10 +381,16 @@ class Display(object):
 
         self._maskPlaneColors[name] = color
 
-    def getMaskPlaneColor(self, name):
-        """!Return the colour associated with the specified mask plane name"""
+    def getMaskPlaneColor(self, name=None):
+        """!Return the colour associated with the specified mask plane name
 
-        return self._maskPlaneColors.get(name)
+        @param name  Desired mask plane;  if None, return entire dict
+        """
+
+        if name is None:
+            return self._maskPlaneColors
+        else:
+            return self._maskPlaneColors.get(name)
 
     def setMaskTransparency(self, transparency=None, name=None):
         """!Specify display's mask transparency (percent); or None to not set it when loading masks"""

@@ -160,6 +160,14 @@ class DisplayTestCase(unittest.TestCase):
         """
         self.display0.interact()
 
+    def testGetMaskPlaneColor(self):
+        """Test that we can return mask colours either as a dict or maskplane by maskplane
+        """
+        mpc = self.display0.getMaskPlaneColor()
+
+        maskPlane = 'DETECTED'
+        self.assertEqual(mpc[maskPlane], self.display0.getMaskPlaneColor(maskPlane))
+
     def testClose(self):
         """Test that we can close devices."""
         self.display0.close()
