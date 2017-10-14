@@ -154,7 +154,7 @@ class Display(object):
         self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
         self.name = backend
 
-        self._xy0 = None                # the data displayed on the frame's XY0
+        self._xy0 = None                # displayed data's XY0
         self.setMaskTransparency(Display._defaultMaskTransparency)
         self._maskPlaneColors = {}
         self.setMaskPlaneColor(Display._defaultMaskPlaneColor)
@@ -589,8 +589,8 @@ class Display(object):
         if rowc is not None:
             if origin == afwImage.PARENT and self._xy0 is not None:
                 x0, y0 = self._xy0
-                rowc -= x0
-                colc -= y0
+                colc -= x0
+                rowc -= y0
 
             self._impl._pan(colc, rowc)
 
