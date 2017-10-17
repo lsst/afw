@@ -219,7 +219,8 @@ class Display(object):
                 "Device %s has no attribute \"%s\"" % (self.name, name))
 
     def close(self):
-        if hasattr(self, "_impl") and self._impl:
+        if getattr(self, "_impl", None) is not None:
+            self._impl._close()
             del self._impl
             self._impl = None
 
