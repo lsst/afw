@@ -37,7 +37,7 @@ import lsst.log
 logger = lsst.log.Log.getLogger("afw.display.interface")
 
 __all__ = (
-    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE",
+    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE", "IGNORE",
     "Display", "Event", "noop_callback", "h_callback",
     "setDefaultBackend", "getDefaultBackend",
     "setDefaultFrame", "getDefaultFrame", "incrDefaultFrame",
@@ -57,6 +57,7 @@ CYAN = "cyan"
 MAGENTA = "magenta"
 YELLOW = "yellow"
 ORANGE = "orange"
+IGNORE = "ignore"
 
 
 def _makeDisplayImpl(display, backend, *args, **kwargs):
@@ -365,6 +366,8 @@ class Display(object):
         Colours may be specified as any X11-compliant string (e.g. <tt>"orchid"</tt>), or by one
         of the following constants defined in \c afwDisplay: \c BLACK, \c WHITE, \c RED, \c BLUE,
         \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
+
+        If the colour is "ignore" (or \c IGNORE) then that mask plane is not displayed
 
         The advantage of using the symbolic names is that the python interpreter can detect typos.
 
