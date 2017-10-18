@@ -158,7 +158,16 @@ class DisplayTestCase(unittest.TestCase):
         If this is run using the virtualDevice a "q" is automatically triggered.
         If running the tests using ds9 you will be expected to do this manually.
         """
+        print("Hit q to exit interactive mode")
         self.display0.interact()
+
+    def testGetMaskPlaneColor(self):
+        """Test that we can return mask colours either as a dict or maskplane by maskplane
+        """
+        mpc = self.display0.getMaskPlaneColor()
+
+        maskPlane = 'DETECTED'
+        self.assertEqual(mpc[maskPlane], self.display0.getMaskPlaneColor(maskPlane))
 
     def testClose(self):
         """Test that we can close devices."""

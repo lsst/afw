@@ -37,7 +37,7 @@ import lsst.log
 logger = lsst.log.Log.getLogger("afw.display.interface")
 
 __all__ = (
-    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE",
+    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE", "IGNORE",
     "Display", "Event", "noop_callback", "h_callback",
     "setDefaultBackend", "getDefaultBackend",
     "setDefaultFrame", "getDefaultFrame", "incrDefaultFrame",
@@ -57,6 +57,7 @@ CYAN = "cyan"
 MAGENTA = "magenta"
 YELLOW = "yellow"
 ORANGE = "orange"
+IGNORE = "ignore"
 
 
 def _makeDisplayImpl(display, backend, *args, **kwargs):
@@ -153,7 +154,7 @@ class Display(object):
         self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
         self.name = backend
 
-        self._xy0 = None                # the data displayed on the frame's XY0
+        self._xy0 = None                # displayed data's XY0
         self.setMaskTransparency(Display._defaultMaskTransparency)
         self._maskPlaneColors = {}
         self.setMaskPlaneColor(Display._defaultMaskPlaneColor)
@@ -218,7 +219,8 @@ class Display(object):
                 "Device %s has no attribute \"%s\"" % (self.name, name))
 
     def close(self):
-        if hasattr(self, "_impl") and self._impl:
+        if getattr(self, "_impl", None) is not None:
+            self._impl._close()
             del self._impl
             self._impl = None
 
@@ -366,6 +368,8 @@ class Display(object):
         of the following constants defined in \c afwDisplay: \c BLACK, \c WHITE, \c RED, \c BLUE,
         \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
 
+        If the colour is "ignore" (or \c IGNORE) then that mask plane is not displayed
+
         The advantage of using the symbolic names is that the python interpreter can detect typos.
 
         """
@@ -378,10 +382,16 @@ class Display(object):
 
         self._maskPlaneColors[name] = color
 
-    def getMaskPlaneColor(self, name):
-        """!Return the colour associated with the specified mask plane name"""
+    def getMaskPlaneColor(self, name=None):
+        """!Return the colour associated with the specified mask plane name
 
-        return self._maskPlaneColors.get(name)
+        @param name  Desired mask plane;  if None, return entire dict
+        """
+
+        if name is None:
+            return self._maskPlaneColors
+        else:
+            return self._maskPlaneColors.get(name)
 
     def setMaskTransparency(self, transparency=None, name=None):
         """!Specify display's mask transparency (percent); or None to not set it when loading masks"""
@@ -580,8 +590,8 @@ class Display(object):
         if rowc is not None:
             if origin == afwImage.PARENT and self._xy0 is not None:
                 x0, y0 = self._xy0
-                rowc -= x0
-                colc -= y0
+                colc -= x0
+                rowc -= y0
 
             self._impl._pan(colc, rowc)
 
