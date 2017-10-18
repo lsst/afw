@@ -179,6 +179,8 @@ public:
     /**
      * The Jacobian matrix of this Transform.
      *
+     * Radians are used for each axis of an IcrsCoordEndpoint.
+     *
      * The matrix is defined only if this object has a forward transform.
      *
      * @param x the position at which the Jacobian shall be evaluated
