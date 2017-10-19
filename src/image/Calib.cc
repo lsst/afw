@@ -44,6 +44,60 @@
 namespace lsst {
 namespace afw {
 namespace image {
+
+/// Compute AB magnitude from flux in Janskys
+template <typename T>
+ndarray::Array<T, 1> abMagFromFlux(ndarray::Array<T const, 1> const& flux) {
+    ndarray::Array<T, 1> out = ndarray::allocate(flux.getShape());
+    for (std::size_t ii = 0; ii < flux.getNumElements(); ++ii) {
+        out[ii] = abMagFromFlux(flux[ii]);
+    }
+    return out;
+}
+
+/// Compute AB magnitude error from flux and flux error in Janskys
+template <typename T>
+ndarray::Array<T, 1> abMagErrFromFluxErr(ndarray::Array<T const, 1> const& fluxErr,
+                                         ndarray::Array<T const, 1> const& flux) {
+    if (flux.getNumElements() != fluxErr.getNumElements()) {
+        throw LSST_EXCEPT(pex::exceptions::LengthError,
+                          (boost::format("Length mismatch: %d vs %d") % flux.getNumElements() %
+                           fluxErr.getNumElements()).str());
+    }
+    ndarray::Array<T, 1> out = ndarray::allocate(flux.getShape());
+    for (std::size_t ii = 0; ii < flux.getNumElements(); ++ii) {
+        out[ii] = abMagErrFromFluxErr(fluxErr[ii], flux[ii]);
+    }
+    return out;
+}
+
+/// Compute flux in Janskys from AB magnitude
+template <typename T>
+ndarray::Array<T, 1> fluxFromABMag(ndarray::Array<T const, 1> const& mag) {
+    ndarray::Array<T, 1> out = ndarray::allocate(mag.getShape());
+    for (std::size_t ii = 0; ii < mag.getNumElements(); ++ii) {
+        out[ii] = fluxFromABMag(mag[ii]);
+    }
+    return out;
+}
+
+/// Compute flux error in Janskys from AB magnitude error and AB magnitude
+template <typename T>
+ndarray::Array<T, 1> fluxErrFromABMagErr(ndarray::Array<T const, 1> const& magErr,
+                                         ndarray::Array<T const, 1> const& mag) {
+    if (mag.getNumElements() != magErr.getNumElements()) {
+        throw LSST_EXCEPT(pex::exceptions::LengthError,
+                          (boost::format("Length mismatch: %d vs %d") % mag.getNumElements() %
+                           magErr.getNumElements()).str());
+    }
+    ndarray::Array<T, 1> out = ndarray::allocate(mag.getShape());
+    for (std::size_t ii = 0; ii < mag.getNumElements(); ++ii) {
+        out[ii] = fluxErrFromABMagErr(magErr[ii], mag[ii]);
+    }
+    return out;
+}
+
+
 Calib::Calib() : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 Calib::Calib(double fluxMag0) : _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
 Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs) : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {
@@ -378,6 +432,20 @@ Calib& Calib::operator*=(double const scale) {
     _fluxMag0Sigma *= scale;
     return *this;
 }
+
+
+// Explicit instantiation
+#define INSTANTIATE(TYPE) \
+template ndarray::Array<TYPE, 1> abMagFromFlux(ndarray::Array<TYPE const, 1> const& flux); \
+template ndarray::Array<TYPE, 1> abMagErrFromFluxErr(ndarray::Array<TYPE const, 1> const& fluxErr, \
+                                                     ndarray::Array<TYPE const, 1> const& flux); \
+template ndarray::Array<TYPE, 1> fluxFromABMag(ndarray::Array<TYPE const, 1> const& mag); \
+template ndarray::Array<TYPE, 1> fluxErrFromABMagErr(ndarray::Array<TYPE const, 1> const& magErr, \
+                                                     ndarray::Array<TYPE const, 1> const& mag);
+
+INSTANTIATE(float);
+INSTANTIATE(double);
+
 }
 }
 }  // lsst::afw::image

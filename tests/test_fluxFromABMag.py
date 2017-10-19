@@ -24,21 +24,22 @@ Tests for lsst.afw.table.FluxFromABMagTable, etc.
 """
 from __future__ import absolute_import, division, print_function
 import unittest
-import math
+
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 
 
 def refABMagFromFlux(flux):
-    return -(5.0/2.0) * math.log10(flux/3631.0)
+    return -(5.0/2.0) * np.log10(flux/3631.0)
 
 
 def refABMagErrFromFluxErr(fluxErr, flux):
-    return math.fabs(fluxErr/(-0.4*flux*math.log(10)))
+    return np.fabs(fluxErr/(-0.4*flux*np.log(10)))
 
 
-class FluxFromABMagTableTestCase(unittest.TestCase):
+class FluxFromABMagTableTestCase(lsst.utils.tests.TestCase):
 
     def testBasics(self):
         for flux in (1, 210, 3210, 43210, 543210):
@@ -55,6 +56,21 @@ class FluxFromABMagTableTestCase(unittest.TestCase):
                 fluxErrRoundTrip = afwImage.fluxErrFromABMagErr(
                     abMagErr, abMag)
                 self.assertAlmostEqual(fluxErr, fluxErrRoundTrip)
+
+    def testVector(self):
+        flux = np.array([1.0, 210.0, 3210.0, 43210.0, 543210.0])
+        flux.flags.writeable = False  # Put the 'const' into ndarray::Array<double const, 1, 0>
+        abMag = afwImage.abMagFromFlux(flux)
+        self.assertFloatsAlmostEqual(abMag, refABMagFromFlux(flux))
+        fluxRoundTrip = afwImage.fluxFromABMag(abMag)
+        self.assertFloatsAlmostEqual(flux, fluxRoundTrip, rtol=1.0e-15)
+
+        for fluxErrFrac in (0.001, 0.01, 0.1):
+            fluxErr = flux * fluxErrFrac
+            abMagErr = afwImage.abMagErrFromFluxErr(fluxErr, flux)
+            self.assertFloatsAlmostEqual(abMagErr, refABMagErrFromFluxErr(fluxErr, flux))
+            fluxErrRoundTrip = afwImage.fluxErrFromABMagErr(abMagErr, abMag)
+            self.assertFloatsAlmostEqual(fluxErr, fluxErrRoundTrip, rtol=1.0e-15)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

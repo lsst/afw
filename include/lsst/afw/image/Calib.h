@@ -35,6 +35,7 @@
 #include "ndarray_fwd.h"
 #include "lsst/base.h"
 #include "lsst/daf/base/DateTime.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -68,6 +69,25 @@ inline double fluxFromABMag(double mag) { return std::pow(10.0, -0.4 * mag) * Ja
 inline double fluxErrFromABMagErr(double magErr, double mag) {
     return std::abs(-0.4 * magErr * fluxFromABMag(mag) * std::log(10.0));
 }
+
+
+/// Compute AB magnitude from flux in Janskys
+template <typename T>
+ndarray::Array<T, 1> abMagFromFlux(ndarray::Array<T const, 1> const& flux);
+
+/// Compute AB magnitude error from flux and flux error in Janskys
+template <typename T>
+ndarray::Array<T, 1> abMagErrFromFluxErr(ndarray::Array<T const, 1> const& fluxErr,
+                                         ndarray::Array<T const, 1> const& flux);
+
+/// Compute flux in Janskys from AB magnitude
+template <typename T>
+ndarray::Array<T, 1> fluxFromABMag(ndarray::Array<T const, 1> const& mag);
+
+/// Compute flux error in Janskys from AB magnitude error and AB magnitude
+template <typename T>
+ndarray::Array<T, 1> fluxErrFromABMagErr(ndarray::Array<T const, 1> const& magErr,
+                                         ndarray::Array<T const, 1> const& mag);
 
 /**
  * Describe an exposure's calibration
