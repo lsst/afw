@@ -659,6 +659,33 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         for field in ('id: 50', 'coord_ra: nan', 'coord_dec: nan'):
             self.assertIn(field, string)
 
+    def testGetNonContiguous(self):
+        """Check that we can index on non-contiguous tables"""
+        # Make a non-contiguous catalog
+        nonContiguous = type(self.catalog)(self.catalog.table)
+        for rr in reversed(self.catalog):
+            nonContiguous.append(rr)
+        num = len(self.catalog)
+        # Check assumptions
+        self.assertFalse(nonContiguous.isContiguous())  # We managed to produce a non-contiguous catalog
+        self.assertEqual(len(set(self.catalog["id"])), num)  # ID values are unique
+        # Indexing with boolean array
+        select = np.zeros(num, dtype=bool)
+        select[1] = True
+        self.assertEqual(nonContiguous[np.flip(select, 0)]["id"], self.catalog[select]["id"])
+        # Extracting a number column
+        column = "a_flux"
+        array = nonContiguous[column]
+        self.assertFloatsEqual(np.flip(array, 0), self.catalog[column])
+        with self.assertRaises(ValueError):
+            array[1] = 1.2345  # Should be immutable
+        # Extracting a flag column
+        column = "a_flag"
+        array = nonContiguous[column]
+        self.assertFloatsEqual(np.flip(array, 0), self.catalog[column])
+        with self.assertRaises(ValueError):
+            array[1] = True  # Should be immutable
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
