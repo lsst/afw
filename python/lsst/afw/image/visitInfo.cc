@@ -47,7 +47,7 @@ namespace {
 static double const nan(std::numeric_limits<double>::quiet_NaN());
 static geom::Angle const nanAngle(nan);
 
-}  // anonymous
+}  // namespace
 
 PYBIND11_PLUGIN(visitInfo) {
     py::module mod("visitInfo");
@@ -111,6 +111,6 @@ PYBIND11_PLUGIN(visitInfo) {
 
     return mod.ptr();
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
