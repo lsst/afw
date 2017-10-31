@@ -464,6 +464,28 @@ class VisitInfoTestCase(unittest.TestCase):
             with self.assertRaises(lsst.pex.exceptions.RuntimeError):
                 afwImage.VisitInfo(metadata)
 
+    def test_str(self):
+        """Check that we get something reasonable for str()"""
+        visitInfo = afwImage.VisitInfo(self.data1.exposureId,
+                                       self.data1.exposureTime,
+                                       self.data1.darkTime,
+                                       self.data1.date,
+                                       self.data1.ut1,
+                                       self.data1.era,
+                                       self.data1.boresightRaDec,
+                                       self.data1.boresightAzAlt,
+                                       self.data1.boresightAirmass,
+                                       self.data1.boresightRotAngle,
+                                       self.data1.rotType,
+                                       self.data1.observatory,
+                                       self.data1.weather,
+                                       )
+        string = str(visitInfo)
+        self.assertIn("exposureId=10313423", string)
+        self.assertIn("exposureTime=10.01", string)
+        self.assertIn("darkTime=11.02", string)
+        self.assertIn("rotType=1", string)
+
 
 def setup_module(module):
     lsst.utils.tests.init()

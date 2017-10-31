@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <limits>
+#include <sstream>
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/coord/Coord.h"
@@ -47,7 +48,7 @@ namespace {
 static double const nan(std::numeric_limits<double>::quiet_NaN());
 static geom::Angle const nanAngle(nan);
 
-}  // anonymous
+}  // namespace
 
 PYBIND11_PLUGIN(visitInfo) {
     py::module mod("visitInfo");
@@ -105,12 +106,18 @@ PYBIND11_PLUGIN(visitInfo) {
     cls.def("getLocalEra", &VisitInfo::getLocalEra);
     cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
 
+    cls.def("__str__", [](VisitInfo const &self) {
+        std::stringstream os;
+        os << self;
+        return os.str();
+    });
+
     /* Free Functions */
     mod.def("setVisitInfoMetadata", &detail::setVisitInfoMetadata, "metadata"_a, "visitInfo"_a);
     mod.def("stripVisitInfoKeywords", &detail::stripVisitInfoKeywords, "metadata"_a);
 
     return mod.ptr();
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

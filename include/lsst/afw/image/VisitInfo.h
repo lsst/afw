@@ -150,11 +150,11 @@ public:
     double getBoresightAirmass() const { return _boresightAirmass; }
 
     /**
-    * Get rotation angle at boresight at middle of exposure
-    *
-    * The meaning of rotation angle depends on @ref RotType "rotType".  For example, if `rotType` is SKY
-    * the angle is the position angle of the focal plane +Y with respect to North.
-    */
+     * Get rotation angle at boresight at middle of exposure
+     *
+     * The meaning of rotation angle depends on @ref RotType "rotType".  For example, if `rotType` is SKY
+     * the angle is the position angle of the focal plane +Y with respect to North.
+     */
     geom::Angle getBoresightRotAngle() const { return _boresightRotAngle; }
 
     /// get rotation type of boresightRotAngle
@@ -195,6 +195,8 @@ private:
     coord::Weather _weather;
 };
 
+std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);
+
 namespace detail {
 
 /**
@@ -214,9 +216,9 @@ void setVisitInfoMetadata(daf::base::PropertyList &metadata, VisitInfo const &vi
  */
 int stripVisitInfoKeywords(daf::base::PropertySet &metadata);
 
-}  // lsst::afw::image::detail
-}
-}
-}  // lsst::afw::image
+}  // namespace detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_IMAGE_VISITINFO_H_INCLUDED
