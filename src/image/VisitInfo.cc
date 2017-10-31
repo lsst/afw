@@ -413,6 +413,26 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
 geom::Angle VisitInfo::getLocalEra() const { return getEra() + getObservatory().getLongitude(); }
 
 geom::Angle VisitInfo::getBoresightHourAngle() const { return getLocalEra() - getBoresightRaDec()[0]; }
+
+std::ostream& operator<<(std::ostream& os, VisitInfo const& visitInfo) {
+    os << "VisitInfo(";
+    os << "exposureId=" << visitInfo.getExposureId() << ", ";
+    os << "exposureTime=" << visitInfo.getExposureTime() << ", ";
+    os << "darkTime=" << visitInfo.getDarkTime() << ", ";
+    os << "date=" << visitInfo.getDate().toString(daf::base::DateTime::TAI) << ", ";
+    os << "UT1=" << visitInfo.getUt1() << ", ";
+    os << "ERA=" << visitInfo.getEra() << ", ";
+    os << "boresightRaDec=" << visitInfo.getBoresightRaDec() << ", ";
+    os << "boresightAzAlt=" << visitInfo.getBoresightAzAlt() << ", ";
+    os << "boresightAirmass=" << visitInfo.getBoresightAirmass() << ", ";
+    os << "boresightRotAngle=" << visitInfo.getBoresightRotAngle() << ", ";
+    os << "rotType=" << static_cast<int>(visitInfo.getRotType()) << ", ";
+    os << "observatory=" << visitInfo.getObservatory() << ", ";
+    os << "weather=" << visitInfo.getWeather();
+    os << ")";
+    return os;
+}
+
 }  // namespace image
 }  // namespace afw
 }  // namespace lsst

@@ -195,6 +195,8 @@ private:
     coord::Weather _weather;
 };
 
+std::ostream &operator<<(std::ostream &os, VisitInfo const &visitInfo);
+
 namespace detail {
 
 /**

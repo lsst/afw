@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <limits>
+#include <sstream>
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/coord/Coord.h"
@@ -104,6 +105,12 @@ PYBIND11_PLUGIN(visitInfo) {
     cls.def("isPersistable", &VisitInfo::isPersistable);
     cls.def("getLocalEra", &VisitInfo::getLocalEra);
     cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
+
+    cls.def("__str__", [](VisitInfo const &self) {
+        std::stringstream os;
+        os << self;
+        return os.str();
+    });
 
     /* Free Functions */
     mod.def("setVisitInfoMetadata", &detail::setVisitInfoMetadata, "metadata"_a, "visitInfo"_a);
