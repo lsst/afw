@@ -101,7 +101,7 @@ PYBIND11_PLUGIN(box) {
     clsBox2I.def("getCorners", &Box2I::getCorners);
     clsBox2I.def("toString", &Box2I::toString);
     clsBox2I.def("__repr__", [](Box2I const &self) {
-        return py::str("Box2D(minimum={}, dimensions={})")
+        return py::str("Box2I(minimum={}, dimensions={})")
                 .format(py::repr(py::cast(self.getMin())), py::repr(py::cast(self.getDimensions())));
     });
     clsBox2I.def("__str__", [](Box2I const &self) {
@@ -120,8 +120,8 @@ PYBIND11_PLUGIN(box) {
 
     PyBox2D clsBox2D(mod, "Box2D");
 
-    clsBox2I.attr("Point") = modCoordinates.attr("Point2D");
-    clsBox2I.attr("Extent") = modCoordinates.attr("Extent2D");
+    clsBox2D.attr("Point") = modCoordinates.attr("Point2D");
+    clsBox2D.attr("Extent") = modCoordinates.attr("Extent2D");
 
     clsBox2D.attr("EPSILON") = py::float_(Box2D::EPSILON);
     clsBox2D.attr("INVALID") = py::float_(Box2D::INVALID);
