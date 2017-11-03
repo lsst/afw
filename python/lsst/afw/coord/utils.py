@@ -75,8 +75,9 @@ def assertCoordListsAlmostEqual(testCase, coordlist0, coordlist1, maxDiff=0.001*
                        for sp0, sp1 in zip(coordlist0, coordlist1)])
     badArr = sepArr > maxDiff
     if np.any(badArr):
+        msg = "" if msg is None else msg + ": "
         maxInd = np.argmax(sepArr)
-        testCase.fail("%s: IcrsCoordLists differ in %s places; max separation is at %s: %s\" > %s\"%s" %
+        testCase.fail("%sIcrsCoordLists differ in %s places; max separation is at %s: %s\" > %s\"" %
                       (msg, np.sum(badArr), maxInd, sepArr[maxInd].asArcseconds(),
                        maxDiff.asArcseconds()))
 
