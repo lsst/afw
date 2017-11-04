@@ -80,37 +80,37 @@ class MultiMatch(object):
                 self.nextObjId += 1
             self.reference = self.result.copy(deep=False)
             return
-        # Temporary dict mapping object ID to reference record
-        # Will remove from this dict as objects are matched.
-        objById = {record.get(self.objectKey):
-                   record for record in self.reference}
-        # Temporary dict mapping source ID to new catalog record.
-        # Will remove from this dict as objects are matched.
-        newById = {record.get(self.idKey): record for record in catalog}
+        catalog.sort(self.idKey)  # pre-sort for speedy by-id access later.
+        # Will remove from this set as objects are matched.
+        unmatchedIds = {record.get(self.idKey) for record in catalog}
         # Temporary dict mapping new source ID to a set of associated objects.
         newToObj = {}
-        matches = lsst.afw.table.matchRaDec(
-            self.reference, catalog, self.radius)
+        matches = lsst.afw.table.matchRaDec(self.reference, catalog, self.radius)
+        matchedRefIds = set()
+        matchedCatIds = set()
         for refRecord, newRecord, distance in matches:
             objId = refRecord.get(self.objectKey)
-            if objById.pop(objId, None) is None:
+            if objId in matchedRefIds:
                 # We've already matched this object against another new source,
                 # mark it as ambiguous.
                 self.ambiguous.add(objId)
-            if newById.pop(newRecord.get(self.idKey), None) is None:
+            matchedRefIds.add(objId)
+            if newRecord.get(self.idKey) in matchedCatIds:
                 # We've already matched this new source to one or more other objects
                 # Mark all involved objects as ambiguous
                 self.ambiguous.add(objId)
-                self.ambiguous |= newToObj.get(
-                    newRecord.get(self.idKey), set())
+                self.ambiguous |= newToObj.get(newRecord.get(self.idKey), set())
+            matchedCatIds.add(newRecord.get(self.idKey))
+            unmatchedIds.discard(newRecord.get(self.idKey))
             # Populate the newToObj dict (setdefault trick is an idiom for
             # appending to a dict-of-sets)
             newToObj.setdefault(newRecord.get(self.idKey), set()).add(objId)
             # Add a new result record for this match.
             self.result.append(self.makeRecord(newRecord, dataId, objId))
-        # Add any unmatched sources from the new catalog as new objects to both the joined result catalog
-        # and the reference catalog.
-        for newRecord in newById.values():
+        # Add any unmatched sources from the new catalog as new objects to both
+        # the joined result catalog and the reference catalog.
+        for objId in unmatchedIds:
+            newRecord = catalog.find(objId, self.idKey)
             resultRecord = self.makeRecord(newRecord, dataId, self.nextObjId)
             self.nextObjId += 1
             self.result.append(resultRecord)
