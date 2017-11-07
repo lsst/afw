@@ -52,7 +52,7 @@ class Camera(DetectorCollection):
         """
         return self._name
 
-    def getPupilFactory(self, visitInfo, pupilSize, npix):
+    def getPupilFactory(self, visitInfo, pupilSize, npix, **kwargs):
         """!Construct a PupilFactory.
 
         @param[in] visitInfo  VisitInfo object for a particular exposure.
@@ -62,7 +62,7 @@ class Camera(DetectorCollection):
                               accommodate zero-padding.
         @param[in] npix       Constructed Pupils will be npix x npix.
         """
-        return self._pupilFactoryClass(visitInfo, pupilSize, npix)
+        return self._pupilFactoryClass(visitInfo, pupilSize, npix, **kwargs)
 
     @property
     def telescopeDiameter(self):

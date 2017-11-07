@@ -138,3 +138,22 @@ class PupilFactory(object):
         pupil.illuminated[(d < 0.5*thickness) &
                           ((self.u - p0[0])*np.cos(angleRad) +
                            (self.v - p0[1])*np.sin(angleRad) >= 0)] = False
+
+    def _centerPupil(self, pupil):
+        """Center the illuminated portion of the pupil in array.
+
+        @param[in,out] pupil  Pupil to modify in place
+        """
+        def center(arr, axis):
+            smash = np.sum(arr, axis=axis)
+            w = np.where(smash)[0]
+            return int(0.5*(np.min(w)+np.max(w)))
+        ycenter = center(pupil.illuminated, 0)
+        xcenter = center(pupil.illuminated, 1)
+        ytarget = pupil.illuminated.shape[0]//2
+        xtarget = pupil.illuminated.shape[1]//2
+        pupil.illuminated = np.roll(np.roll(pupil.illuminated,
+                                            xtarget-xcenter,
+                                            axis=0),
+                                    ytarget-ycenter,
+                                    axis=1)
