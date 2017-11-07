@@ -36,6 +36,23 @@ namespace python {
 template <typename Record>
 using PyCatalog = pybind11::class_<CatalogT<Record>, std::shared_ptr<CatalogT<Record>>>;
 
+
+/// Extract a column from a potentially non-contiguous Catalog
+template <typename T, typename Record>
+ndarray::Array<typename Field<T>::Value const, 1, 0> _getArrayFromCatalog(
+    CatalogT<Record> const& catalog,  ///< Catalog
+    Key<T> const& key  ///< Key to column to extract
+) {
+    ndarray::Array<typename Field<T>::Value, 1, 0> out = ndarray::allocate(catalog.size());
+    auto outIter = out.begin();
+    auto inIter = catalog.begin();
+    for (; inIter != catalog.end(); ++inIter, ++outIter) {
+        *outIter = inIter->get(key);
+    }
+    return out;
+}
+
+
 /**
 Declare field-type-specific overloaded catalog member functions for one field type
 
@@ -77,6 +94,13 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
         std::ptrdiff_t b = self.upper_bound(upper, key) - self.begin();
         return py::slice(a, b, 1);
     });
+
+    // Not extracting afw::geom::Angle columns because the units would be ambiguous
+    if (!std::is_same<T, geom::Angle>::value) {
+        cls.def("_getitem_", [](Catalog const& self, Key<T> const& key) -> ndarray::Array<T const, 1, 0> {
+            return _getArrayFromCatalog(self, key);
+        });
+    }
 }
 
 /**
@@ -181,6 +205,10 @@ PyCatalog<Record> declareCatalog(pybind11::module &mod, std::string const &name,
     declareCatalogOverloads<float>(cls);
     declareCatalogOverloads<double>(cls);
     declareCatalogOverloads<lsst::afw::geom::Angle>(cls);
+
+    cls.def("_getitem_", [](Catalog const& self, Key<Flag> const& key) -> ndarray::Array<bool const, 1, 0> {
+        return _getArrayFromCatalog(self, key);
+    });
 
     return cls;
 };

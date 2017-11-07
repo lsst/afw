@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 
 from future.utils import with_metaclass
 from past.types import basestring
+from builtins import zip
 
 import numpy as np
 
@@ -127,8 +128,22 @@ class Catalog(with_metaclass(TemplateMeta, object)):
                 stop = len(self)
             return self.subset(start, stop, step)
         elif isinstance(key, np.ndarray):
-            return self.subset(key)
+            if key.dtype == bool:
+                return self.subset(key)
+            raise RuntimeError("Unsupported array type for indexing non-contiguous Catalog: %s" %
+                               (key.dtype,))
         elif isinstance(key, Key) or isinstance(key, basestring):
+            if not self.isContiguous():
+                if isinstance(key, basestring):
+                    key = self.schema[key].asKey()
+                array = self._getitem_(key)
+                # This array doesn't share memory with the Catalog, so don't let it be modified by
+                # the user who thinks that the Catalog itself is being modified.
+                # Just be aware that this array can only be passed down to C++ as an ndarray::Array<T const>
+                # instead of an ordinary ndarray::Array<T>. If pybind isn't letting it down into C++,
+                # you may have left off the 'const' in the definition.
+                array.flags.writeable = False
+                return array
             return self.columns[key]
         else:
             return self._getitem_(key)

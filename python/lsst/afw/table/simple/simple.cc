@@ -21,6 +21,8 @@
  */
 
 #include "pybind11/pybind11.h"
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
 
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -90,6 +92,12 @@ PYBIND11_PLUGIN(simple) {
     py::module::import("lsst.afw.table.idFactory");
 
     py::module mod("simple");
+
+    // Need to import numpy for ndarray and eigen conversions
+    if (_import_array() < 0) {
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return nullptr;
+    }
 
     auto clsSimpleRecord = declareSimpleRecord(mod);
     auto clsSimpleTable = declareSimpleTable(mod);

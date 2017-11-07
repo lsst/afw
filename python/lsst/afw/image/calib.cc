@@ -45,6 +45,20 @@ namespace {
 using PyCalib = py::class_<Calib, std::shared_ptr<Calib>, table::io::PersistableFacade<Calib>,
                            table::io::Persistable>;
 
+template <typename T>
+void declareVectorOperations(py::module & mod)
+{
+    typedef ndarray::Array<T, 1> Array;
+    typedef ndarray::Array<T const, 1> ConstArray;
+    mod.def("abMagFromFlux", (Array(*)(ConstArray const&))&abMagFromFlux<T>, "flux"_a);
+    mod.def("abMagErrFromFluxErr", (Array(*)(ConstArray const&, ConstArray const&))&abMagErrFromFluxErr<T>,
+            "fluxErr"_a, "flux"_a);
+    mod.def("fluxFromABMag", (Array(*)(ConstArray const&))&fluxFromABMag<T>, "mag"_a);
+    mod.def("fluxErrFromABMagErr", (Array(*)(ConstArray const&, ConstArray const&))&fluxErrFromABMagErr<T>,
+            "magErr"_a, "mag"_a);
+}
+
+
 PYBIND11_PLUGIN(calib) {
     py::module mod("calib");
 
@@ -54,10 +68,12 @@ PYBIND11_PLUGIN(calib) {
     };
 
     /* Module level */
-    mod.def("abMagFromFlux", &abMagFromFlux, "flux"_a);
-    mod.def("abMagErrFromFluxErr", &abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
-    mod.def("fluxFromABMag", &fluxFromABMag, "mag"_a);
-    mod.def("fluxErrFromABMagErr", &fluxErrFromABMagErr, "magErr"_a, "mag"_a);
+    mod.def("abMagFromFlux", (double(*)(double))&abMagFromFlux, "flux"_a);
+    mod.def("abMagErrFromFluxErr", (double(*)(double, double))&abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
+    mod.def("fluxFromABMag", (double(*)(double))&fluxFromABMag, "mag"_a);
+    mod.def("fluxErrFromABMagErr", (double(*)(double, double))&fluxErrFromABMagErr, "magErr"_a, "mag"_a);
+    declareVectorOperations<float>(mod);
+    declareVectorOperations<double>(mod);
     mod.def("stripCalibKeywords", &detail::stripCalibKeywords, "metadata"_a);
 
     table::io::python::declarePersistableFacade<Calib>(mod, "Calib");
