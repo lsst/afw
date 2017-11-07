@@ -15,7 +15,7 @@ spirit of the STL was more important.  There are variants of @c for_each_pixel c
 pixel to a function, setting it to a function of an Image, and setting it to a
 function of its value and a second Image's pixel value.  The selection of which of these operations is desired
 is done by requiring the functor to inherit from a class such as @c pixelOp0 or @c pixelOp1XY, each of which
-is a @c tr1::function with a virtual @c operator() added.
+is a @c std::function with a virtual @c operator() added.
 
 <DL>
 <DT> <TT>for_each_pixel(Image<LhsT> &lhs, pixelOp0<LhsT> const& func)</TT>
