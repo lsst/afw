@@ -44,5 +44,7 @@ from .endpoint import *
 from .transform import *
 from .transformFactory import *
 from .transformConfig import *
-from .skyWcs import *
 from .transformFromString import *
+# TODO: enable these imports as part of DM-11162
+# from .skyWcs import *
+# from .wcsUtils import *

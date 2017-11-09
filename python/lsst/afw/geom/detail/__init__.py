@@ -23,3 +23,4 @@
 from __future__ import absolute_import
 
 from .frameSetUtils import *
+from .wcsUtils import *
