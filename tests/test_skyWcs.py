@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 import itertools
-import sys
 import unittest
 
 import lsst.utils.tests
@@ -32,8 +31,8 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             90 * degrees,
         ]
         self.scale = 1.0 * arcseconds
-        self.tinyPixels = 10 * sys.float_info.epsilon
-        self.tinyAngle = 10 * sys.float_info.epsilon * radians
+        self.tinyPixels = 1.0e-10
+        self.tinyAngle = 1.0e-10 * radians
 
     def checkTanWcs(self, crval, orientation, flipX):
         """Construct a pure TAN SkyWcs and check that it operates as specified
@@ -101,6 +100,7 @@ class TanSkyWcsTestCase(TransformTestBaseClass):
             xyPair = wcs.skyToPixel(*sky)
             self.assertPairsAlmostEqual(pixel, Point2D(*xyPair))
 
+        # check CRVAL round trip
         self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), crval,
                                      maxDiff=self.tinyAngle)
 
