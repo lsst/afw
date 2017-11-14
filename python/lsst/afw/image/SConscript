@@ -19,6 +19,7 @@ scripts.BasicSConscript.pybind11(
      'imageSlice',
      'readMetadata',
      'imagePca',
+     'transmissionCurve',
      'visitInfo',
      'defect'],
     addUnderscore=False
