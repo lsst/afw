@@ -187,8 +187,9 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def testMeanClip(self):
         """Test the 3-sigma clipped mean"""
-        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
+        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
 
     def testStdevClip(self):
         """Test the 3-sigma clipped standard deviation"""
@@ -485,8 +486,9 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def testMeanClipSingleValue(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
-        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
+        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
 
         # this bug was caused by the iterative nature of the MEANCLIP.
         # With only one point, the sample variance returns NaN to avoid a divide by zero error
@@ -494,8 +496,9 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         #   all further calculations.
         img = afwImage.ImageF(afwGeom.Extent2I(1, 1))
         img.set(0)
-        stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
-        self.assertEqual(stats.getValue(), 0)
+        stats = afwMath.makeStatistics(img, afwMath.MEANCLIP | afwMath.NCLIPPED)
+        self.assertEqual(stats.getValue(afwMath.MEANCLIP), 0)
+        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 0)
 
     def testMismatch(self):
         """Test that we get an exception when there's a size mismatch"""
@@ -517,6 +520,16 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(afwMath.makeStatistics(self.image, subMask, afwMath.MEDIAN, ctrl).getValue(),
                          self.val)
 
+    def testClipping(self):
+        """Test that clipping statistics work
+
+        Insert a single bad pixel; it should be clipped.
+        """
+        self.image.set(0, 0, 0)
+        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED | afwMath.NPOINT)
+        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+        self.assertEqual(stats.getValue(afwMath.NCLIPPED), 1)
+        self.assertEqual(stats.getValue(afwMath.NPOINT), self.image.getBBox().getArea())
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

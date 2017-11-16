@@ -86,6 +86,7 @@ PYBIND11_PLUGIN(_statistics) {
             .value("SUM", Property::SUM)
             .value("MEANSQUARE", Property::MEANSQUARE)
             .value("ORMASK", Property::ORMASK)
+            .value("NCLIPPED", Property::NCLIPPED)
             .export_values();
 
     mod.def("stringToStatisticsProperty", stringToStatisticsProperty);
