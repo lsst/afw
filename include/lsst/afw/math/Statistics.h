@@ -78,7 +78,8 @@ enum Property {
     SUM = 0x1000,          ///< find sum of pixels in the image
     MEANSQUARE = 0x2000,   ///< find mean value of square of pixel values
     ORMASK = 0x4000,       ///< get the or-mask of all pixels used.
-    NCLIPPED = 0x8000      ///< number of clipped points
+    NCLIPPED = 0x8000,     ///< number of clipped points
+    NMASKED = 0x10000      ///< number of masked points
 };
 /// Conversion function to switch a string to a Property (see Statistics.h)
 Property stringToStatisticsProperty(std::string const property);
@@ -288,6 +289,7 @@ private:
     Value _varianceclip;                          // the image's N-sigma clipped variance
     Value _median;                                // the image's median
     int _nClipped;                                // number of pixels clipped
+    int _nMasked;                                 // number of pixels masked
     double _iqrange;                              // the image's interquartile range
     lsst::afw::image::MaskPixel _allPixelOrMask;  //  the 'or' of all masked pixels
 

@@ -636,6 +636,7 @@ Property stringToStatisticsProperty(std::string const property) {
         statisticsProperty["MEANSQUARE"] = MEANSQUARE;
         statisticsProperty["ORMASK"] = ORMASK;
         statisticsProperty["NCLIPPED"] = NCLIPPED;
+        statisticsProperty["NMASKED"] = NMASKED;
     }
     return statisticsProperty[property];
 }
@@ -653,6 +654,7 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
           _varianceclip(NaN, NaN),
           _median(NaN, NaN),
           _nClipped(0),
+          _nMasked(0),
           _iqrange(NaN),
           _sctrl(sctrl),
           _weightsAreMultiplicative(false) {
@@ -701,6 +703,7 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
           _varianceclip(NaN, NaN),
           _median(NaN, NaN),
           _nClipped(0),
+          _nMasked(0),
           _iqrange(NaN),
           _sctrl(sctrl),
           _weightsAreMultiplicative(true) {
@@ -718,7 +721,8 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
 template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT const &var,
                               WeightT const &weights, int const flags, StatisticsControl const &sctrl) {
-    _n = img.getWidth() * img.getHeight();
+    int const num = img.getWidth() * img.getHeight();
+    _n = num;
     if (_n == 0) {
         throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Image contains no pixels");
     }
@@ -747,6 +751,10 @@ void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT con
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
+
+    if (flags & NMASKED) {
+        _nMasked = num - _n;
+    }
 
     // copy the image for any routines that will use median or quantiles
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
@@ -812,6 +820,13 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
 
         case NCLIPPED:
             ret.first = static_cast<double>(_nClipped);
+            if (_flags & ERRORS) {
+                ret.second = 0;
+            }
+            break;
+
+        case NMASKED:
+            ret.first = static_cast<double>(_nMasked);
             if (_flags & ERRORS) {
                 ret.second = 0;
             }

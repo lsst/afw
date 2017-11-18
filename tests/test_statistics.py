@@ -531,6 +531,17 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(stats.getValue(afwMath.NCLIPPED), 1)
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.image.getBBox().getArea())
 
+    def testNMasked(self):
+        """Test that NMASKED works"""
+        maskVal = 0xBE
+        ctrl = afwMath.StatisticsControl()
+        ctrl.setAndMask(maskVal)
+        mask = afwImage.Mask(self.image.getBBox())
+        mask.set(0)
+        self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 0)
+        mask.set(1, 1, maskVal)
+        self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 1)
+
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
