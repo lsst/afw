@@ -392,11 +392,11 @@ std::vector<std::shared_ptr<SpanSet>> SpanSet::split() const {
 
     // loop over the current SpanSet's spans sorting each of the spans according to the label
     // that was assigned
-    for (auto i = 0; i < _spanVector.size(); ++i) {
+    for (std::size_t i = 0; i < _spanVector.size(); ++i) {
         subSpanLists[labels[i] - 1].push_back(_spanVector[i]);
     }
     // Transform each of the vectors of Spans into a SpanSet
-    for (auto i = 0; i < numberOfLabels - 1; ++i) {
+    for (std::size_t i = 0; i < numberOfLabels - 1; ++i) {
         subRegions.push_back(std::make_shared<SpanSet>(subSpanLists[i]));
     }
     return subRegions;
