@@ -189,6 +189,14 @@ private:
  *  @note PersistableFacade should usually be the first class in a list of base classes;
  *  if it appears after a base class that inherits from different specialization of
  *  PersistableFacade, those base class member functions will hide the desired ones.
+ *
+ *  @note pybind11 wrappers should *not* reference PersistableFacade at all; its
+ *  only purpose is to provide readFits methods with downcasted return types,
+ *  but pybind11 almost always does this automatically.  The only exception is
+ *  when the most-derived type is not actually exposed to Python at all.  In
+ *  this case, the afw::table::io::python::declarePersistableFacade function
+ *  should be used, *without* declaring inheritance from PersistableFacade to
+ *  Python.
  */
 template <typename T>
 class PersistableFacade {

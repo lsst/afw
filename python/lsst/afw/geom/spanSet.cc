@@ -45,7 +45,7 @@ namespace geom {
 
 namespace {
 
-using PySpanSet = py::class_<SpanSet, std::shared_ptr<SpanSet>, table::io::PersistableFacade<SpanSet>>;
+using PySpanSet = py::class_<SpanSet, std::shared_ptr<SpanSet>>;
 
 // SpanSet's inheritance from afw::table::io::Persistable is not exposed to
 // Python because doing so introduces a circular dependency between afw.table
@@ -62,6 +62,7 @@ void declarePersistable(PySpanSet &cls) {
             (void (SpanSet::*)(fits::MemFileManager &, std::string const &) const) & SpanSet::writeFits,
             "manager"_a, "mode"_a = "w");
     cls.def("isPersistable", &SpanSet::isPersistable);
+    table::io::python::declarePersistableFacade(cls);
 }
 
 template <typename Pixel, typename PyClass>
@@ -216,8 +217,6 @@ PYBIND11_PLUGIN(spanSet) {
             .value("CIRCLE", Stencil::CIRCLE)
             .value("BOX", Stencil::BOX)
             .value("MANHATTAN", Stencil::MANHATTAN);
-
-    table::io::python::declarePersistableFacade<SpanSet>(mod, "SpanSet");
 
     PySpanSet cls(mod, "SpanSet");
 

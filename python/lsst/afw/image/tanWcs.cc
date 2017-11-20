@@ -29,8 +29,6 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-#include "lsst/afw/table/io/python.h"
-
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -38,7 +36,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-using PyTanWcs = py::class_<TanWcs, std::shared_ptr<TanWcs>, table::io::PersistableFacade<TanWcs>, Wcs>;
+using PyTanWcs = py::class_<TanWcs, std::shared_ptr<TanWcs>, Wcs>;
 
 PYBIND11_PLUGIN(tanWcs) {
     py::module mod("tanWcs");
@@ -49,8 +47,6 @@ PYBIND11_PLUGIN(tanWcs) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
         return nullptr;
     }
-
-    table::io::python::declarePersistableFacade<TanWcs>(mod, "TanWcs");
 
     PyTanWcs cls(mod, "TanWcs");
 

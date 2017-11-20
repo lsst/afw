@@ -33,7 +33,6 @@
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -50,10 +49,8 @@ PYBIND11_PLUGIN(_polygon) {
     // Add tests for it and enable it or remove it before the final pybind11 merge.
 
     /* Module level */
-    table::io::python::declarePersistableFacade<Polygon>(mod, "Polygon");
 
-    py::class_<Polygon, std::shared_ptr<Polygon>, table::io::PersistableFacade<Polygon>,
-               table::io::Persistable>
+    py::class_<Polygon, std::shared_ptr<Polygon>, table::io::Persistable>
             clsPolygon(mod, "Polygon");
 
     pex::exceptions::python::declareException<SinglePolygonException, pex::exceptions::RuntimeError>(

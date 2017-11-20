@@ -46,6 +46,12 @@ PYBIND11_PLUGIN(persistable) {
     cls.def("writeFits", (void (Persistable::*)(fits::MemFileManager &, std::string const &) const) &
                                  Persistable::writeFits,
             "manager"_a, "mode"_a = "w");
+    cls.def_static("readFits",
+                   (std::shared_ptr<Persistable>(*)(std::string const &, int)) & Persistable::readFits,
+                   "fileName"_a, "hdu"_a = INT_MIN);
+    cls.def_static("readFits",
+                   (std::shared_ptr<Persistable>(*)(fits::MemFileManager &, int)) & Persistable::readFits,
+                   "manager"_a, "hdu"_a = INT_MIN);
     cls.def("isPersistable", &Persistable::isPersistable);
 
     return mod.ptr();

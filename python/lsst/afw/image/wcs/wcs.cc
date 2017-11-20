@@ -35,7 +35,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/image/Wcs.h"
 
 namespace py = pybind11;
@@ -47,15 +47,13 @@ namespace image {
 
 namespace {
 
-using PyWcs = py::class_<Wcs, std::shared_ptr<Wcs>, daf::base::Citizen, table::io::Persistable,
-                         table::io::PersistableFacade<Wcs>>;
+using PyWcs = py::class_<Wcs, std::shared_ptr<Wcs>, daf::base::Citizen, table::io::Persistable>;
 
 using PyXYTransformFromWcsPair =
         py::class_<XYTransformFromWcsPair, std::shared_ptr<XYTransformFromWcsPair>, geom::XYTransform>;
 
 /// @internal Create the pybind11 wrapper for Wcs
 void declareWcs(py::module &mod) {
-    table::io::python::declarePersistableFacade<Wcs>(mod, "Wcs");
 
     /* Module level */
     PyWcs cls(mod, "Wcs");
@@ -66,6 +64,10 @@ void declareWcs(py::module &mod) {
                      std::string const &, std::string const &>(),
             "crval"_a, "crpix"_a, "CD"_a, "ctype1"_a = "RA---TAN", "ctype2"_a = "DEC--TAN",
             "equinox"_a = 2000, "raDecSys"_a = "ICRS", "cunits1"_a = "deg", "cunits2"_a = "deg");
+
+    // TODO: The following line should not be necessary.  But without it we get segfaults.
+    // Might need to try again with a newer pybind11 version, or build with -O0 and debug further.
+    table::io::python::declarePersistableFacade(cls);
 
     /* Operators */
     cls.def("__eq__", [](Wcs const &self, Wcs const &other) { return self == other; }, py::is_operator());

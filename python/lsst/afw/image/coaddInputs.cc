@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/image/CoaddInputs.h"
@@ -36,15 +35,12 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>,
-                                 table::io::PersistableFacade<CoaddInputs>, table::io::Persistable>;
+using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>, table::io::Persistable>;
 
 PYBIND11_PLUGIN(coaddInputs) {
     py::module mod("coaddInputs");
 
     /* Module level */
-
-    table::io::python::declarePersistableFacade<CoaddInputs>(mod, "CoaddInputs");
 
     PyCoaddInputs cls(mod, "CoaddInputs");
 

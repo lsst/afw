@@ -39,34 +39,30 @@ namespace io {
 namespace python {
 
 /**
- * Wraps an instantiation of @ref PersistableFacade.
+ * Add Python readFits overrides that work with hidden subclasses.
  *
- * Pybind11 shall assume that `PersistableFacade` is managed using
- * `std::shared_ptr`, as this is required for compatibility with
- * existing subclasses of `PersistableFacade`. This means that wrapping
- * will only work if new classes also use `std::shared_ptr` as their
- * holder type.
+ * Most classes that inherit from PersistableFacade do not need to do anything
+ * to expose its interface to Python, and PersistableFacade itself should *never*
+ * be included in the list of base classes exposed to pybind11.
  *
- * @tparam T The type of object this `PersistableFacade` is for.
+ * The only time this function is needed is when some subclasses of the class
+ * being wrapped are directly wrapped (i.e. they are constructed by a factory,
+ * and only available via the base class interface).  In all other cases,
+ * pybind11 should be able to do the downcasting itself.
  *
- * @param module The pybind11 module that shall contain `PersistableFacade<T>`
- * @param suffix A string to disambiguate this class from other
- *               `PersistableFacades`. The Python name of this class shall be
- *               `PersistableFacade<suffix>`.
+ * @param  The pybind11 class wrapper to add methods to.
  */
-template <typename T>
-void declarePersistableFacade(pybind11::module &module, std::string const &suffix) {
+template <typename T, typename ...E>
+void declarePersistableFacade(pybind11::class_<T, E...> & cls) {
     using namespace pybind11::literals;
-
-    pybind11::class_<PersistableFacade<T>, std::shared_ptr<PersistableFacade<T>>> cls(
-            module, ("PersistableFacade" + suffix).c_str());
     cls.def_static("readFits",
-                   (std::shared_ptr<T>(*)(std::string const &, int)) & PersistableFacade<T>::readFits,
+                   (std::shared_ptr<T>(*)(std::string const &, int)) &PersistableFacade<T>::readFits,
                    "fileName"_a, "hdu"_a = INT_MIN);
     cls.def_static("readFits",
-                   (std::shared_ptr<T>(*)(fits::MemFileManager &, int)) & PersistableFacade<T>::readFits,
+                   (std::shared_ptr<T>(*)(fits::MemFileManager &, int)) &PersistableFacade<T>::readFits,
                    "manager"_a, "hdu"_a = INT_MIN);
 }
+
 }
 }
 }

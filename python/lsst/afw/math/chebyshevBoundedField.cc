@@ -29,7 +29,6 @@
 #include "ndarray/converter.h"
 
 #include "lsst/pex/config/python.h" // defines LSST_DECLARE_CONTROL_FIELD
-#include "lsst/afw/table/io/python.h"
 
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/math/BoundedField.h"

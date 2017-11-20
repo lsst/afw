@@ -32,7 +32,6 @@
 #include "lsst/afw/coord/Weather.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/image/VisitInfo.h"
 
@@ -53,11 +52,7 @@ static geom::Angle const nanAngle(nan);
 PYBIND11_PLUGIN(visitInfo) {
     py::module mod("visitInfo");
 
-    /* Module level */
-    table::io::python::declarePersistableFacade<VisitInfo>(mod, "VisitInfo");
-
-    py::class_<VisitInfo, std::shared_ptr<VisitInfo>, table::io::PersistableFacade<VisitInfo>,
-               table::io::Persistable>
+    py::class_<VisitInfo, std::shared_ptr<VisitInfo>, table::io::Persistable>
             cls(mod, "VisitInfo");
 
     /* Member types and enums */

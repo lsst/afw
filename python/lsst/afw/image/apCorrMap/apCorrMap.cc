@@ -26,8 +26,6 @@
 #include <string>
 #include <vector>
 
-#include "lsst/afw/table/io/python.h"
-
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -39,16 +37,12 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>, table::io::PersistableFacade<ApCorrMap>,
-                               table::io::Persistable>;
+using PyApCorrMap = py::class_<ApCorrMap, std::shared_ptr<ApCorrMap>, table::io::Persistable>;
 
 PYBIND11_PLUGIN(apCorrMap) {
     py::module mod("apCorrMap");
 
     py::module::import("lsst.afw.table.io");
-
-    /* Declare CRTP base class. */
-    table::io::python::declarePersistableFacade<ApCorrMap>(mod, "ApCorrMap");
 
     PyApCorrMap cls(mod, "ApCorrMap");
 

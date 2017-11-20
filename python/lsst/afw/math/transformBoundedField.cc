@@ -28,7 +28,6 @@
 #include "ndarray/converter.h"
 
 #include "lsst/pex/config/python.h"  // defines LSST_DECLARE_CONTROL_FIELD
-#include "lsst/afw/table/io/python.h"
 
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/math/BoundedField.h"
@@ -42,8 +41,7 @@ namespace afw {
 namespace math {
 namespace {
 
-using ClsField = py::class_<TransformBoundedField, std::shared_ptr<TransformBoundedField>, BoundedField,
-                            lsst::afw::table::io::PersistableFacade<TransformBoundedField>>;
+using ClsField = py::class_<TransformBoundedField, std::shared_ptr<TransformBoundedField>, BoundedField>;
 
 PYBIND11_PLUGIN(_transformBoundedField) {
     py::module mod("_transformBoundedField");
@@ -53,9 +51,6 @@ PYBIND11_PLUGIN(_transformBoundedField) {
         return nullptr;
     };
 
-    /* Module level */
-    lsst::afw::table::io::python::declarePersistableFacade<TransformBoundedField>(mod,
-                                                                                  "TransformBoundedField");
     ClsField cls(mod, "TransformBoundedField");
 
     cls.def(py::init<lsst::afw::geom::Box2I const &, TransformBoundedField::Transform const &>(), "bbox"_a,
