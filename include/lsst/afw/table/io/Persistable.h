@@ -72,6 +72,33 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
  */
 class Persistable {
 public:
+
+    /**
+     *  Read an object from an already open FITS object.
+     *
+     *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
+     */
+    static std::shared_ptr<Persistable> readFits(fits::Fits& fitsfile);
+
+    /**
+     *  Read an object from a regular FITS file.
+     *
+     *  @param[in]  fileName     Name of the file to read.
+     *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
+     *                           skips the primary HDU if it is empty.
+     */
+    static std::shared_ptr<Persistable> readFits(std::string const& fileName, int hdu = INT_MIN);
+
+    /**
+     *  Read an object from a FITS file in memory.
+     *
+     *  @param[in]  manager      Manager for the memory to read from.
+     *  @param[in]  hdu          HDU to read, where 0 is the primary.  The special value of INT_MIN
+     *                           skips the primary HDU if it is empty.
+     */
+    static std::shared_ptr<Persistable> readFits(fits::MemFileManager& manager, int hdu = INT_MIN);
+
+
     /**
      *  Write the object to a regular FITS file.
      *
@@ -144,12 +171,6 @@ private:
 
     template <typename T>
     friend class PersistableFacade;
-
-    static std::shared_ptr<Persistable> _readFits(std::string const& fileName, int hdu = INT_MIN);
-
-    static std::shared_ptr<Persistable> _readFits(fits::MemFileManager& manager, int hdu = INT_MIN);
-
-    static std::shared_ptr<Persistable> _readFits(fits::Fits& fitsfile);
 };
 
 /**
@@ -172,13 +193,14 @@ private:
 template <typename T>
 class PersistableFacade {
 public:
+
     /**
      *  Read an object from an already open FITS object.
      *
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
     static std::shared_ptr<T> readFits(fits::Fits& fitsfile) {
-        return std::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
+        return std::dynamic_pointer_cast<T>(Persistable::readFits(fitsfile));
     }
 
     /**
@@ -189,7 +211,7 @@ public:
      *                           skips the primary HDU if it is empty.
      */
     static std::shared_ptr<T> readFits(std::string const& fileName, int hdu = INT_MIN) {
-        return std::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
+        return std::dynamic_pointer_cast<T>(Persistable::readFits(fileName, hdu));
     }
 
     /**
@@ -200,7 +222,7 @@ public:
      *                           skips the primary HDU if it is empty.
      */
     static std::shared_ptr<T> readFits(fits::MemFileManager& manager, int hdu = INT_MIN) {
-        return std::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
+        return std::dynamic_pointer_cast<T>(Persistable::readFits(manager, hdu));
     }
 };
 

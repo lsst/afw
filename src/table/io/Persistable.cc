@@ -41,19 +41,19 @@ void Persistable::write(OutputArchiveHandle &) const {
                       "afw::table-based persistence is not supported for this object.");
 }
 
-std::shared_ptr<Persistable> Persistable::_readFits(std::string const &fileName, int hdu) {
+std::shared_ptr<Persistable> Persistable::readFits(std::string const &fileName, int hdu) {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
-    return _readFits(fitsfile);
+    return readFits(fitsfile);
 }
 
-std::shared_ptr<Persistable> Persistable::_readFits(fits::MemFileManager &manager, int hdu) {
+std::shared_ptr<Persistable> Persistable::readFits(fits::MemFileManager &manager, int hdu) {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
-    return _readFits(fitsfile);
+    return readFits(fitsfile);
 }
 
-std::shared_ptr<Persistable> Persistable::_readFits(fits::Fits &fitsfile) {
+std::shared_ptr<Persistable> Persistable::readFits(fits::Fits &fitsfile) {
     InputArchive archive = InputArchive::readFits(fitsfile);
     return archive.get(1);  // the first object saved always has id=1
 }
