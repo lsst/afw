@@ -152,23 +152,14 @@ This function is designed to format data for creating a WCS. It truncates long s
 values and skips properties whose type it cannot handle.
 
 @param[in] prop  Properties to format
+@param[in] excludeNames  Names of properties to exclude from the returned string
 @return a FITS header string (exactly 80 characters per "card", no line terminators)
 
 @warning PropertySet is unordered, so the order of entries in the returned string is unpredictable.
 */
-std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop);
-/**
-Format a PropertyList into a FITS header string
-
-This function is designed to format data for creating a WCS. It truncates long string
-values and skips properties whose type it cannot handle.
-
-@param[in] prop  Properties to format
-@param[in] excludeNames  Names of properties to exclude from the returned string
-@return a FITS header string (exactly 80 characters per "card", no line terminators)
-*/
-std::string formatFitsProperties(lsst::daf::base::PropertyList const& prop,
+std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop,
                                  std::set<std::string> const& excludeNames = {});
+
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
 
 /**
