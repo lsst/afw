@@ -60,9 +60,6 @@ values and skips properties whose type it cannot handle.
 
 @param[in] paramNames  Names of properties to format
 @param[in] prop  Properties to format
-
-@todo DM-9679 Once we stop using the old WCS class we can remove the PropertySet version of
-formatFitsProperties and simplify this function to not worry about dotted names.
 */
 std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
                                      daf::base::PropertySet const& prop) {
@@ -267,20 +264,16 @@ void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
     }
 }
 
-std::string formatFitsProperties(daf::base::PropertySet const& prop) {
-    auto paramNames = prop.paramNames(false);
-    return formatFitsPropertiesImpl(paramNames, prop);
-}
-
-std::string formatFitsProperties(daf::base::PropertyList const& prop,
+std::string formatFitsProperties(daf::base::PropertySet const& prop,
                                  std::set<std::string> const& excludeNames) {
-    std::vector<std::string> paramNames;
-    for (auto const & name: prop) {
+    auto const allParamNames = prop.paramNames(false);
+    std::vector<std::string> desiredParamNames;
+    for (auto const & name: allParamNames) {
         if (excludeNames.count(name) == 0) {
-            paramNames.push_back(name);
+            desiredParamNames.push_back(name);
         }
     }
-    return formatFitsPropertiesImpl(paramNames, prop);
+    return formatFitsPropertiesImpl(desiredParamNames, prop);
 }
 
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {
