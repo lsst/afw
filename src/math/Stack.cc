@@ -114,6 +114,8 @@ template <typename PixelT, bool isWeighted, bool useVariance>
 void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                              std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> const &images,
                              Property flags, StatisticsControl const &sctrl,
+                             image::MaskPixel const clipped,
+                             image::MaskPixel const excuse,
                              WeightVector const &wvector = WeightVector()) {
     // get a list of row_begin iterators
     typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
@@ -161,7 +163,7 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                 }
             }
 
-            Property const eflags = static_cast<Property>(flags | NPOINT | ERRORS);
+            Property const eflags = static_cast<Property>(flags | NPOINT | ERRORS | NCLIPPED | NMASKED);
             Statistics stat = isWeighted ? makeStatistics(pixelSet, weights, eflags, sctrlTmp)
                                          : makeStatistics(pixelSet, eflags, sctrlTmp);
 
@@ -176,6 +178,28 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                  * getting a variance of NaN when you only have one input
                  */
             }
+            // Check to see if any pixels were rejected
+            if (stat.getValue(NCLIPPED) > 0) {
+                msk |= clipped;
+            } else if (stat.getValue(NMASKED) > 0) {
+                bool maskIt = false;
+                if (excuse != 0) {
+                    // Might the masking be excused?
+                    image::MaskPixel const maskVal = sctrl.getAndMask() & ~excuse;
+                    for (auto pp = pixelSet.begin(); pp != pixelSet.end(); ++pp) {
+                        if ((*pp).mask() & maskVal) {
+                            maskIt = true;
+                            break;
+                        }
+                    }
+                } else {
+                    maskIt = true;
+                }
+
+                if (maskIt) {
+                    msk |= clipped;
+                }
+            }
 
             *ptr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(flags), msk, variance);
         }
@@ -187,32 +211,35 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
 template <typename PixelT>
 std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(
         std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> &images, Property flags,
-        StatisticsControl const &sctrl, WeightVector const &wvector) {
+        StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel clipped,
+        image::MaskPixel excuse) {
     if (images.size() == 0) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
     std::shared_ptr<image::MaskedImage<PixelT>> out(
             new image::MaskedImage<PixelT>(images[0]->getDimensions()));
-    statisticsStack(*out, images, flags, sctrl, wvector);
+    statisticsStack(*out, images, flags, sctrl, wvector, clipped, excuse);
     return out;
 }
 template <typename PixelT>
 void statisticsStack(image::MaskedImage<PixelT> &out,
                      std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> &images, Property flags,
-                     StatisticsControl const &sctrl, WeightVector const &wvector) {
+                     StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel clipped,
+                     image::MaskPixel excuse) {
     checkObjectsAndWeights(images, wvector);
     checkOnlyOneFlag(flags);
     checkImageSizes(out, images);
 
     if (sctrl.getWeighted()) {
         if (wvector.empty()) {
-            return computeMaskedImageStack<PixelT, true, true>(out, images, flags, sctrl);  // use variance
+            return computeMaskedImageStack<PixelT, true, true>(out, images, flags, sctrl,
+                                                               clipped, excuse);  // use variance
         } else {
-            return computeMaskedImageStack<PixelT, true, false>(out, images, flags, sctrl,
+            return computeMaskedImageStack<PixelT, true, false>(out, images, flags, sctrl, clipped, excuse,
                                                                 wvector);  // use wvector
         }
     } else {
-        return computeMaskedImageStack<PixelT, false, false>(out, images, flags, sctrl);
+        return computeMaskedImageStack<PixelT, false, false>(out, images, flags, sctrl, clipped, excuse);
     }
 }
 
@@ -458,10 +485,12 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
             Property flags, StatisticsControl const &sctrl, WeightVector const &wvector);                    \
     template std::shared_ptr<image::MaskedImage<TYPE>> statisticsStack<TYPE>(                                \
             std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, Property flags,                 \
-            StatisticsControl const &sctrl, WeightVector const &wvector);                                    \
+            StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,                   \
+            image::MaskPixel);                                                                               \
     template void statisticsStack<TYPE>(                                                                     \
             image::MaskedImage<TYPE> & out, std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, \
-            Property flags, StatisticsControl const &sctrl, WeightVector const &wvector);                    \
+            Property flags, StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,   \
+            image::MaskPixel);                                                                               \
     template std::shared_ptr<std::vector<TYPE>> statisticsStack<TYPE>(                                       \
             std::vector<std::shared_ptr<std::vector<TYPE>>> & vectors, Property flags,                       \
             StatisticsControl const &sctrl, WeightVector const &wvector);                                    \

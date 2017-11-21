@@ -29,6 +29,7 @@
  */
 #include <vector>
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
 #include "lsst/afw/math/Statistics.h"
 
 namespace lsst {
@@ -81,7 +82,9 @@ std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
         Property flags,                                        ///< statistics requested
         StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
-                std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
+                std::vector<lsst::afw::image::VariancePixel>(0),  ///< vector containing weights
+        image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped
+        image::MaskPixel excuse=0 ///< bitmask to excuse from marking as clipped
         );
 
 /**
@@ -94,7 +97,9 @@ void statisticsStack(lsst::afw::image::MaskedImage<PixelT>& out,  ///< Output im
                      Property flags,                                        ///< statistics requested
                      StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
                      std::vector<lsst::afw::image::VariancePixel> const& wvector =
-                             std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
+                             std::vector<lsst::afw::image::VariancePixel>(0),  ///< vector containing weights
+                     image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped
+                     image::MaskPixel excuse=0 ///< bitmask to excuse from marking as clipped
                      );
 
 /**

@@ -361,6 +361,43 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(stack2.getImage().getArray(),
                                      (partialSum + 2*finalImage) / np.array([6.0, 4.0, 6.0, 4.0]), rtol=1E-7)
 
+    def testClipped(self):
+        """Test that we set mask bits when pixels are clipped"""
+        box = afwGeom.Box2I(afwGeom.Point2I(12345, 67890), afwGeom.Extent2I(3, 3))
+        num = 10
+        maskVal = 0xAD
+        value = 0.0
+
+        images = [afwImage.MaskedImageF(box) for _ in range(num)]
+        statsCtrl = afwMath.StatisticsControl()
+        statsCtrl.setAndMask(maskVal)
+        clipped = 1 << afwImage.Mask().addMaskPlane("CLIPPED")
+
+        # No clipping: check that vanilla is working
+        for img in images:
+            img.getImage().set(value)
+            img.getMask().set(0)
+        stack = afwMath.statisticsStack(images, afwMath.MEANCLIP, clipped=clipped)
+        self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
+        self.assertFloatsAlmostEqual(stack.getMask().getArray(), 0, atol=0.0)  # Not floats, but that's OK
+
+        # Clip a pixel; the CLIPPED bit should be set
+        images[0].getImage().set(1, 1, value + 1.0)
+        stack = afwMath.statisticsStack(images, afwMath.MEANCLIP, clipped=clipped)
+        self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
+        self.assertEqual(stack.getMask().get(1, 1), clipped)
+
+        # Mask a pixel; the CLIPPED bit should be set
+        images[0].getMask().set(1, 1, maskVal)
+        stack = afwMath.statisticsStack(images, afwMath.MEAN, statsCtrl, clipped=clipped)
+        self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
+        self.assertEqual(stack.getMask().get(1, 1), clipped)
+
+        # Excuse that mask; the CLIPPED bit should not be set
+        stack = afwMath.statisticsStack(images, afwMath.MEAN, statsCtrl, clipped=clipped, excuse=maskVal)
+        self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
+        self.assertEqual(stack.getMask().get(1, 1), 0)
+
 #################################################################
 # Test suite boiler plate
 #################################################################

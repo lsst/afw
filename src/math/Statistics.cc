@@ -635,6 +635,8 @@ Property stringToStatisticsProperty(std::string const property) {
         statisticsProperty["SUM"] = SUM;
         statisticsProperty["MEANSQUARE"] = MEANSQUARE;
         statisticsProperty["ORMASK"] = ORMASK;
+        statisticsProperty["NCLIPPED"] = NCLIPPED;
+        statisticsProperty["NMASKED"] = NMASKED;
     }
     return statisticsProperty[property];
 }
@@ -651,6 +653,8 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
           _meanclip(NaN, NaN),
           _varianceclip(NaN, NaN),
           _median(NaN, NaN),
+          _nClipped(0),
+          _nMasked(0),
           _iqrange(NaN),
           _sctrl(sctrl),
           _weightsAreMultiplicative(false) {
@@ -698,6 +702,8 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
           _meanclip(NaN, NaN),
           _varianceclip(NaN, NaN),
           _median(NaN, NaN),
+          _nClipped(0),
+          _nMasked(0),
           _iqrange(NaN),
           _sctrl(sctrl),
           _weightsAreMultiplicative(true) {
@@ -715,7 +721,8 @@ Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var
 template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT const &var,
                               WeightT const &weights, int const flags, StatisticsControl const &sctrl) {
-    _n = img.getWidth() * img.getHeight();
+    int const num = img.getWidth() * img.getHeight();
+    _n = num;
     if (_n == 0) {
         throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Image contains no pixels");
     }
@@ -744,6 +751,10 @@ void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT con
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
+
+    if (flags & NMASKED) {
+        _nMasked = num - _n;
+    }
 
     // copy the image for any routines that will use median or quantiles
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
@@ -777,7 +788,8 @@ void Statistics::doStatistics(ImageT const &img, MaskT const &msk, VarianceT con
                         _sctrl.getAndMask(), _sctrl.getCalcErrorFromInputVariance(), _sctrl.getNanSafe(),
                         _sctrl.getWeighted(), _sctrl._maskPropagationThresholds);
 
-                int const nClip = std::get<0>(clipped);
+                int const nClip = std::get<0>(clipped);             // number after clipping
+                _nClipped = _n - nClip;                             // number clipped
                 _meanclip = std::get<2>(clipped);                   // clipped mean
                 double const varClip = std::get<3>(clipped).first;  // clipped variance
 
@@ -801,6 +813,20 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
     switch (prop) {
         case NPOINT:
             ret.first = static_cast<double>(_n);
+            if (_flags & ERRORS) {
+                ret.second = 0;
+            }
+            break;
+
+        case NCLIPPED:
+            ret.first = static_cast<double>(_nClipped);
+            if (_flags & ERRORS) {
+                ret.second = 0;
+            }
+            break;
+
+        case NMASKED:
+            ret.first = static_cast<double>(_nMasked);
             if (_flags & ERRORS) {
                 ret.second = 0;
             }
@@ -924,6 +950,7 @@ Statistics::Statistics(image::Mask<image::MaskPixel> const &msk, image::Mask<ima
           _meanclip(NaN, NaN),
           _varianceclip(NaN, NaN),
           _median(NaN, NaN),
+          _nClipped(0),
           _iqrange(NaN),
           _sctrl(sctrl) {
     if ((flags & ~(NPOINT | SUM)) != 0x0) {
