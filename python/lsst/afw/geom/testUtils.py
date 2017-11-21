@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["BoxGrid"]
+__all__ = ["BoxGrid", "makeFitsHeaderFromMetadata", "makeSipIwcToPixel", "makeSipPixelToIwc"]
 
 from builtins import range
 from builtins import object
@@ -31,11 +31,12 @@ import math
 import os
 import pickle
 
-import astshim
+import astshim as ast
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 from astshim.test import makeForwardPolyMap, makeTwoWayPolyMap
 import lsst.afw.coord  # required to use IcrsCoordEndpoint
+from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata
 
 from .box import Box2I, Box2D
 import lsst.afw.geom as afwGeom
@@ -116,22 +117,111 @@ class FrameSetInfo(object):
     currInd : `int`
         Index of current frame
     isBaseSkyFrame : `bool`
-        Is the base frame an `astshim.SkyFrame`?
+        Is the base frame an `ast.SkyFrame`?
     isCurrSkyFrame : `bool`
-        Is the current frame an `astshim.SkyFrame`?
+        Is the current frame an `ast.SkyFrame`?
     """
     def __init__(self, frameSet):
         """Construct a FrameSetInfo
 
         Parameters
         ----------
-        frameSet : `astshim.FrameSet`
+        frameSet : `ast.FrameSet`
             The FrameSet about which you want information
         """
         self.baseInd = frameSet.base
         self.currInd = frameSet.current
         self.isBaseSkyFrame = frameSet.getFrame(self.baseInd).className == "SkyFrame"
         self.isCurrSkyFrame = frameSet.getFrame(self.currInd).className == "SkyFrame"
+
+
+def makeFitsHeaderFromMetadata(metadata):
+    """Make a FITS header string from metadata
+    """
+    strList = []
+    for name in metadata.names(False):
+        value = metadata.get(name)
+        if len(name) > 8:
+            raise RuntimeError("Name %r too long" % (name,))
+        if isinstance(value, float):
+            # keep astropy.wcs from warning about invalid format for floats
+            nameValStr = "%-8s= %0.25f" % (name, value)
+        else:
+            nameValStr = "%-8s= %r" % (name, value)
+        strList.append("%-80s" % (nameValStr,))
+    return "".join(strList)
+
+
+def makeSipPolyMapCoeffs(metadata, name):
+    """Return a list of ast.PolyMap coefficients for the specified SIP matrix
+
+    Include a term for out = in
+
+    This is an internal function for use by makeSipIwcToPixel and makeSipPixelToIwc
+    """
+    outAxisDict = dict(A=1, B=2, AP=1, BP=2)
+    outAxis = outAxisDict.get(name)
+    if outAxis is None:
+        raise RuntimeError("%s not a supported SIP name" % (name,))
+    width = metadata.getAsInt("%s_ORDER" % (name,)) + 1
+    found = False
+    # start with a term for out = in
+    coeffs = []
+    if outAxis == 1:
+        coeffs.append([1.0, outAxis, 1, 0])
+    else:
+        coeffs.append([1.0, outAxis, 0, 1])
+    # add SIP distortion terms
+    for xPower in range(width):
+        for yPower in range(width):
+            coeffName = "%s_%s_%s" % (name, xPower, yPower)
+            if not metadata.exists(coeffName):
+                continue
+            found = True
+            coeff = metadata.getAsDouble(coeffName)
+            coeffs.append([coeff, outAxis, xPower, yPower])
+    if not found:
+        raise RuntimeError("No %s coefficients found" % (name,))
+    return coeffs
+
+
+def makeSipIwcToPixel(metadata):
+    """Make an iwcToPixel transform witH SIP distortion from FITS-WCS metadata
+
+    pixelPos = crpix + uv + sipMatrix(uv)
+    where uv = inverseCdMatrix(iwcPos)
+
+    The transform has no inverse
+    """
+    crpix = (metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
+    pixelRelativeToAbsoluteMap = ast.ShiftMap(crpix)
+    cdMatrix = getCdMatrixFromMetadata(metadata)
+    cdMatrixMap = ast.MatrixMap(cdMatrix.copy())
+    coeffList = makeSipPolyMapCoeffs(metadata, "AP") + makeSipPolyMapCoeffs(metadata, "BP")
+    coeffArr = np.array(coeffList, dtype=float)
+    sipPolyMap = ast.PolyMap(coeffArr, 2, "IterInverse=0")
+
+    iwcToPixelMap = cdMatrixMap.getInverse().then(sipPolyMap).then(pixelRelativeToAbsoluteMap)
+    return afwGeom.TransformPoint2ToPoint2(iwcToPixelMap)
+
+
+def makeSipPixelToIwc(metadata):
+    """Make a pixelToIwc transform with SIP distortion from FITS-WCS metadata
+
+    iwcPos = cdMatrix[dxy + sipMatrix(dxy)]
+    where dxy = pixelPos - crpix
+
+    The transform has no inverse
+    """
+    crpix = (metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
+    pixelAbsoluteToRelativeMap = ast.ShiftMap(crpix).getInverse()
+    cdMatrix = getCdMatrixFromMetadata(metadata)
+    cdMatrixMap = ast.MatrixMap(cdMatrix.copy())
+    coeffList = makeSipPolyMapCoeffs(metadata, "A") + makeSipPolyMapCoeffs(metadata, "B")
+    coeffArr = np.array(coeffList, dtype=float)
+    sipPolyMap = ast.PolyMap(coeffArr, 2, "IterInverse=0")
+    pixelToIwcMap = pixelAbsoluteToRelativeMap.then(sipPolyMap).then(cdMatrixMap)
+    return afwGeom.TransformPoint2ToPoint2(pixelToIwcMap)
 
 
 class PermutedFrameSet(object):
@@ -142,12 +232,12 @@ class PermutedFrameSet(object):
 
     Attributes
     ----------
-    frameSet : `astshim.FrameSet`
+    frameSet : `ast.FrameSet`
         The FrameSet that may be permuted. A local copy is made.
     isBaseSkyFrame : `bool`
-        Is the base frame an `astshim.SkyFrame`?
+        Is the base frame an `ast.SkyFrame`?
     isCurrSkyFrame : `bool`
-        Is the current frame an `astshim.SkyFrame`?
+        Is the current frame an `ast.SkyFrame`?
     isBasePermuted : `bool`
         Are the base frame axes permuted?
     isCurrPermuted : `bool`
@@ -161,7 +251,7 @@ class PermutedFrameSet(object):
 
         Parameters
         ----------
-        frameSet : `astshim.FrameSet`
+        frameSet : `ast.FrameSet`
             The FrameSet you wish to permute. A deep copy is made.
         permuteBase : `bool`
             Permute the base frame's axes?
@@ -347,7 +437,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
         Returns
         -------
-        `astshim.Frame`
+        `ast.Frame`
             The constructed frame
 
         Raises
@@ -369,20 +459,20 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
         Returns
         -------
-        Collection of `astshim.Frame`
+        Collection of `ast.Frame`
             A collection of 0 or more frames
         """
         return {
             "Generic": [],
             "Point2": [
-                astshim.SkyFrame(),
-                astshim.Frame(1),
-                astshim.Frame(3),
+                ast.SkyFrame(),
+                ast.Frame(1),
+                ast.Frame(3),
             ],
             "IcrsCoord": [
-                astshim.Frame(1),
-                astshim.Frame(2),
-                astshim.Frame(3),
+                ast.Frame(1),
+                ast.Frame(2),
+                ast.Frame(3),
             ],
         }[name]
 
@@ -393,9 +483,9 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         The idenity of each frame is provided by self.frameIdentDict
 
         Frame       Index   Mapping from this frame to the next
-        `baseFrame`   1     `astshim.UnitMap(nIn)`
+        `baseFrame`   1     `ast.UnitMap(nIn)`
         Frame(nIn)    2     `polyMap`
-        Frame(nOut)   3     `astshim.UnitMap(nOut)`
+        Frame(nOut)   3     `ast.UnitMap(nOut)`
         `currFrame`   4
 
         where:
@@ -405,14 +495,14 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
         Return
         ------
-        `astshim.FrameSet`
+        `ast.FrameSet`
             The FrameSet as described above
 
         Parameters
         ----------
-        baseFrame : `astshim.Frame`
+        baseFrame : `ast.Frame`
             base frame
-        currFrame : `astshim.Frame`
+        currFrame : `ast.Frame`
             current frame
         """
         nIn = baseFrame.nAxes
@@ -426,14 +516,14 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         currFrame = currFrame.copy()
         currFrame.ident = self.frameIdentDict[4]
 
-        frameSet = astshim.FrameSet(baseFrame)
-        frame2 = astshim.Frame(nIn)
+        frameSet = ast.FrameSet(baseFrame)
+        frame2 = ast.Frame(nIn)
         frame2.ident = self.frameIdentDict[2]
-        frameSet.addFrame(astshim.FrameSet.CURRENT, astshim.UnitMap(nIn), frame2)
-        frame3 = astshim.Frame(nOut)
+        frameSet.addFrame(ast.FrameSet.CURRENT, ast.UnitMap(nIn), frame2)
+        frame3 = ast.Frame(nOut)
         frame3.ident = self.frameIdentDict[3]
-        frameSet.addFrame(astshim.FrameSet.CURRENT, polyMap, frame3)
-        frameSet.addFrame(astshim.FrameSet.CURRENT, astshim.UnitMap(nOut), currFrame)
+        frameSet.addFrame(ast.FrameSet.CURRENT, polyMap, frame3)
+        frameSet.addFrame(ast.FrameSet.CURRENT, ast.UnitMap(nOut), currFrame)
         return frameSet
 
     @staticmethod
@@ -496,7 +586,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         ----------
         transform : `lsst.afw.geom.Transform`
             The transform to check
-        mapping : `astshim.Mapping`
+        mapping : `ast.Mapping`
             The mapping the transform should use. This mapping
             must contain valid forward or inverse transformations,
             but they need not match if both present. Hence the
@@ -748,12 +838,12 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             # forcing the axes of the SkyFrame into standard (longitude, latitude) order
             for permutedFS in self.permuteFrameSetIter(frameSet):
                 if permutedFS.isBaseSkyFrame:
-                    baseFrame = permutedFS.frameSet.getFrame(astshim.FrameSet.BASE)
+                    baseFrame = permutedFS.frameSet.getFrame(ast.FrameSet.BASE)
                     # desired base longitude axis
                     desBaseLonAxis = 2 if permutedFS.isBasePermuted else 1
                     self.assertEqual(baseFrame.lonAxis, desBaseLonAxis)
                 if permutedFS.isCurrSkyFrame:
-                    currFrame = permutedFS.frameSet.getFrame(astshim.FrameSet.CURRENT)
+                    currFrame = permutedFS.frameSet.getFrame(ast.FrameSet.CURRENT)
                     # desired current base longitude axis
                     desCurrLonAxis = 2 if permutedFS.isCurrPermuted else 1
                     self.assertEqual(currFrame.lonAxis, desCurrLonAxis)
@@ -763,9 +853,9 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 # in the *Transform* has axes in standard (longitude, latitude) order
                 unpermFrameSet = permTransform.getFrameSet()
                 if permutedFS.isBaseSkyFrame:
-                    self.assertEqual(unpermFrameSet.getFrame(astshim.FrameSet.BASE).lonAxis, 1)
+                    self.assertEqual(unpermFrameSet.getFrame(ast.FrameSet.BASE).lonAxis, 1)
                 if permutedFS.isCurrSkyFrame:
-                    self.assertEqual(unpermFrameSet.getFrame(astshim.FrameSet.CURRENT).lonAxis, 1)
+                    self.assertEqual(unpermFrameSet.getFrame(ast.FrameSet.CURRENT).lonAxis, 1)
 
                 self.checkTransformation(permTransform, mapping=polyMap, msg=msg)
 
@@ -808,7 +898,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         ----------
         TransformClass : `type`
             The class of transform to test, such as TransformPoint2ToIcrsCoord
-        mapping : `astshim.Mapping`
+        mapping : `ast.Mapping`
             The mapping to use for the transform
         msg : `str`
             Error message suffix
@@ -829,7 +919,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         ----------
         TransformClass : `type`
             the transform to test
-        frameIn, frameOut : `astshim.Frame`
+        frameIn, frameOut : `ast.Frame`
             the frames to between which `TransformClass` shall convert. Must be
             compatible with `TransformClass`.
         """
