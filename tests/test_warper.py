@@ -173,7 +173,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        swarpedWcs = afwImage.makeWcs(swarpedMetadata)
+        swarpedWcs = afwGeom.makeSkyWcs(swarpedMetadata)
         return (originalExposure, swarpedImage, swarpedWcs)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")

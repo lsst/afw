@@ -94,28 +94,21 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
         dest sky pos at destCtrInd = src sky pos at destCtrInd + skyOffset
     @param rotAng: change of orientation with respect to srcWcs, in degrees
     @param scaleFac: output resolution / input resolution
-    @param srcWcs: reference WCS
+    @param srcWcs: reference WCS, an lsst.afw.geom.SkyWcs
     @param srcCtrInd: index of source pixel whose sky matches destCtrInd on new WCS
         typically the center of the source exposure
     """
     ps = dafBase.PropertySet()
+    srcCtrPix = afwGeom.Point2D(*[float(val) for val in srcCtrInd])
     destCtrFitsPix = afwGeom.Point2D(*[ind + 1.0 for ind in destCtrInd])
     srcCtrFitsPix = afwGeom.Point2D(*[ind + 1.0 for ind in srcCtrInd])
-    # offset 1 pixel in x to compute orient & scale
+    # offset 1 pixel in x to compute orientation
     srcOffFitsPix = srcCtrFitsPix + afwGeom.Extent2D(1.0, 0.0)
-    try:
-        srcCtrSkyPos = srcWcs.pixelToSky(
-            srcCtrFitsPix).getPosition(DegreesFlag)
-    except Exception:
-        import lsst.afw.coord as afwCoord
-        setDegreesFlag(afwCoord.DEGREES)
-        srcCtrSkyPos = srcWcs.pixelToSky(
-            srcCtrFitsPix).getPosition(DegreesFlag)
-    srcOffSkyPos = srcWcs.pixelToSky(srcOffFitsPix).getPosition(DegreesFlag)
-    srcSkyOff = srcOffSkyPos - srcCtrSkyPos
-    srcAngleRad = math.atan2(srcSkyOff[1], srcSkyOff[0])
+    srcCtrSkyPos = srcWcs.pixelToSky(srcCtrFitsPix)
+    srcOffSkyPos = srcWcs.pixelToSky(srcOffFitsPix)
+    srcAngleRad = srcCtrSkyPos.bearingTo(srcOffSkyPos).asRadians()
     destAngleRad = srcAngleRad + (rotAng / DegPerRad)
-    srcScale = math.sqrt(srcSkyOff[0]**2 + srcSkyOff[1]**2)  # in degrees/pixel
+    srcScale = srcWcs.getPixelScale(srcCtrPix).asDegrees()
     destScale = srcScale / scaleFac
     for i in range(2):
         ip1 = i + 1
@@ -129,7 +122,7 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
     ps.add("CD2_1", destScale * math.sin(destAngleRad))
     ps.add("CD1_2", destScale * math.sin(destAngleRad))
     ps.add("CD2_2", destScale * math.cos(destAngleRad))
-    return afwImage.makeWcs(ps)
+    return afwGeom.makeSkyWcs(ps)
 
 
 def run():

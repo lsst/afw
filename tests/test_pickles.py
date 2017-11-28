@@ -30,7 +30,6 @@ import pickle
 
 import lsst.daf.base as dafBase
 import lsst.utils.tests
-import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as geomEllip
 import lsst.afw.coord as afwCoord
@@ -194,28 +193,7 @@ class LinearTransformTestCase(PickleBase, unittest.TestCase):
 class WcsPickleBase(PickleBase, unittest.TestCase):
 
     def setUp(self):
-        hdr = dafBase.PropertyList()
-        hdr.add("NAXIS", 2)
-        hdr.add("EQUINOX", 2000.0000000000)
-        hdr.add("RADESYS", "FK5")
-        hdr.add("CRPIX1", 947.04531175212)
-        hdr.add("CRPIX2", -305.70042176782)
-        hdr.add("CD1_1", -5.6081060666063e-05)
-        hdr.add("CD1_2", 1.1941349711530e-10)
-        hdr.add("CD2_1", 1.1938226362497e-10)
-        hdr.add("CD2_2", 5.6066392248206e-05)
-        hdr.add("CRVAL1", 5.5350859380564)
-        hdr.add("CRVAL2", -0.57805534748292)
-        hdr.add("CUNIT1", "deg")
-        hdr.add("CUNIT2", "deg")
-        hdr.add("CTYPE1", "RA---TAN")
-        hdr.add("CTYPE2", "DEC--TAN")
-        self.data = afwImage.makeWcs(hdr)
-
-
-class TanWcsPickleBase(PickleBase, unittest.TestCase):
-
-    def setUp(self):
+        # define a TAN-SIP WCS
         hdr = dafBase.PropertyList()
         hdr.add("NAXIS", 2)
         hdr.add("EQUINOX", 2000.0000000000)
@@ -295,7 +273,7 @@ class TanWcsPickleBase(PickleBase, unittest.TestCase):
         hdr.add("BP_5_0", 2.8085458107813e-19)
         hdr.add("CTYPE1", "RA---TAN-SIP")
         hdr.add("CTYPE2", "DEC--TAN-SIP")
-        self.data = afwImage.makeWcs(hdr)
+        self.data = afwGeom.makeSkyWcs(hdr)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

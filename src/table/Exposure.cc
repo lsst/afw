@@ -11,7 +11,7 @@
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
-#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
@@ -102,7 +102,7 @@ struct PersistenceHelper {
             output.setPsf(archive.get<detection::Psf>(input.get(psf)));
         }
         if (wcs.isValid()) {
-            output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
+            output.setWcs(archive.get<geom::SkyWcs>(input.get(wcs)));
         }
         if (calib.isValid()) {
             output.setCalib(archive.get<image::Calib>(input.get(calib)));
@@ -269,7 +269,7 @@ public:
         // older than what this routine supports.
         auto tableVersion = getTableVersion(*metadata);
         PersistableObjectColumnReader<detection::Psf, &ExposureRecord::setPsf>::setup("psf", mapper);
-        PersistableObjectColumnReader<image::Wcs, &ExposureRecord::setWcs>::setup("wcs", mapper);
+        PersistableObjectColumnReader<geom::SkyWcs, &ExposureRecord::setWcs>::setup("wcs", mapper);
         PersistableObjectColumnReader<image::Calib, &ExposureRecord::setCalib>::setup("calib", mapper);
         PersistableObjectColumnReader<image::ApCorrMap, &ExposureRecord::setApCorrMap>::setup("apCorrMap",
                                                                                               mapper);
@@ -315,8 +315,9 @@ bool ExposureRecord::contains(Coord const &coord, bool includeValidPolygon) cons
         includeValidPolygon = false;
     }
 
+    IcrsCoord icrsCoord(coord[0], coord[1]);
     try {
-        geom::Point2D point = getWcs()->skyToPixel(coord);
+        geom::Point2D point = getWcs()->skyToPixel(icrsCoord);
         if (includeValidPolygon)
             return (geom::Box2D(getBBox()).contains(point) && getValidPolygon()->contains(point));
         else
@@ -328,9 +329,9 @@ bool ExposureRecord::contains(Coord const &coord, bool includeValidPolygon) cons
     }
 }
 
-bool ExposureRecord::contains(geom::Point2D const &point, image::Wcs const &wcs,
+bool ExposureRecord::contains(geom::Point2D const &point, geom::SkyWcs const &wcs,
                               bool includeValidPolygon) const {
-    return contains(*wcs.pixelToSky(point), includeValidPolygon);
+    return contains(wcs.pixelToSky(point), includeValidPolygon);
 }
 
 ExposureRecord::ExposureRecord(std::shared_ptr<ExposureTable> const &table) : BaseRecord(table) {}
@@ -436,7 +437,7 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(Coord cons
 
 template <typename RecordT>
 ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(geom::Point2D const &point,
-                                                                      image::Wcs const &wcs,
+                                                                      geom::SkyWcs const &wcs,
                                                                       bool includeValidPolygon) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {

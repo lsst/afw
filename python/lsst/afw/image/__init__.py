@@ -35,12 +35,9 @@ from .imageSlice import *
 from .mask import *
 from .maskedImage import *
 from .visitInfo import *
-from .wcs import *
 from .exposureInfo import *
 from .exposure import *
 from .photoCalib import *
-from .tanWcs import *
-from .distortedTanWcs import *
 from .imagePca import *
 from .imageUtils import *
 from .readMetadata import *

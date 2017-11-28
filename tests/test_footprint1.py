@@ -717,11 +717,12 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), dims)
         radius = 5
         offset = afwGeom.Extent2D(123, 456)
-        crval = afwCoord.Coord(0*afwGeom.degrees, 0*afwGeom.degrees)
+        crval = afwCoord.IcrsCoord(0*afwGeom.degrees, 0*afwGeom.degrees)
         crpix = afwGeom.Point2D(0, 0)
-        cdMatrix = [1.0e-5, 0.0, 0.0, 1.0e-5]
-        source = afwImage.makeWcs(crval, crpix, *cdMatrix)
-        target = afwImage.makeWcs(crval, crpix + offset, *cdMatrix)
+        cdMatrix = np.array([1.0e-5, 0.0, 0.0, 1.0e-5])
+        cdMatrix.shape = (2, 2)
+        source = afwGeom.makeSkyWcs(crval=crval, crpix=crpix, cdMatrix=cdMatrix)
+        target = afwGeom.makeSkyWcs(crval=crval, crpix=crpix + offset, cdMatrix=cdMatrix)
         sourceSpanSet = afwGeom.SpanSet.fromShape(radius,
                                                   afwGeom.Stencil.CIRCLE)
         sourceSpanSet = sourceSpanSet.shiftedBy(12, 34)
