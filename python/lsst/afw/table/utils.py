@@ -34,7 +34,7 @@ def updateRefCentroids(wcs, refList):
 
         updateRefCentroids(wcs, refList=[match.first for match in matches])
 
-    @param[in] wcs  WCS to map from sky to pixels; an lsst.afw.image.Wcs
+    @param[in] wcs  WCS to map from sky to pixels; an lsst.afw.geom.SkyWcs
     @param[in,out] refList  collection of reference objects (lsst.afw.table.SimpleRecords); for each:
                             - read field "coords", an lsst.afw.coord.Coord
                             - write field "centroid", an lsst.afw.geom.Point2D
@@ -56,7 +56,7 @@ def updateSourceCoords(wcs, sourceList):
 
         updateSourceCoords(wcs, sourceList=[match.second for match in matches])
 
-    @param[in] wcs  WCS to map from pixels to sky; an lsst.afw.image.Wcs
+    @param[in] wcs  WCS to map from pixels to sky; an lsst.afw.geom.SkyWcs
     @param[in,out] sourceList   collection of sources (lsst.afw.table.SourceRecords); for each:
                                 - read centroid using getCentroid()
                                 - write field "coord", an lsst.afw.coord.Coord

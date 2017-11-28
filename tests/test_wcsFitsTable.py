@@ -66,12 +66,12 @@ class WcsFitsTableTestCase(unittest.TestCase):
 
     def doFitsRoundTrip(self, fileName, wcsIn):
         wcsIn.writeFits(fileName)
-        wcsOut = lsst.afw.image.Wcs.readFits(fileName)
+        wcsOut = lsst.afw.geom.SkyWcs.readFits(fileName)
         return wcsOut
 
     def testSimpleWcs(self):
         with lsst.utils.tests.getTempFilePath(".fits") as fileName:
-            wcsIn = lsst.afw.image.makeWcs(self.metadata)
+            wcsIn = lsst.afw.geom.makeSkyWcs(self.metadata)
             wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
             self.assertEqual(wcsIn, wcsOut)
 
@@ -144,21 +144,19 @@ class WcsFitsTableTestCase(unittest.TestCase):
 
     def testTanWcs(self):
         self.addSipMetadata()
-        wcsIn = lsst.afw.image.makeWcs(self.metadata)
+        wcsIn = lsst.afw.geom.makeSkyWcs(self.metadata)
         with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
             wcsIn1 = wcsIn
             wcsOut1 = wcsOut
             self.assertIsNotNone(wcsIn1)
             self.assertIsNotNone(wcsOut1)
-            self.assertTrue(wcsIn1.hasDistortion())
-            self.assertTrue(wcsOut1.hasDistortion())
             self.assertEqual(wcsIn1, wcsOut1)
 
     def testExposure(self):
         """Test that we load the Wcs from the binary table instead of headers when possible."""
         self.addSipMetadata()
-        wcsIn = lsst.afw.image.makeWcs(self.metadata)
+        wcsIn = lsst.afw.geom.makeSkyWcs(self.metadata)
         dim = lsst.afw.geom.Extent2I(20, 30)
         expIn = lsst.afw.image.ExposureF(dim)
         expIn.setWcs(wcsIn)
@@ -176,22 +174,6 @@ class WcsFitsTableTestCase(unittest.TestCase):
             expOut = lsst.afw.image.ExposureF(fileName)
             wcsOut = expOut.getWcs()
             self.assertEqual(wcsIn, wcsOut)
-
-    def testWcsWhenNonPersistable(self):
-        """Test that we can round-trip a WCS even when it is not persistable"""
-        import os
-
-        fileName = os.path.join(os.path.split(__file__)[0], "data", "ZPN.fits")
-        exp = lsst.afw.image.ExposureF(fileName)
-        del fileName
-
-        self.assertFalse(exp.getWcs().isPersistable(),
-                         "Test assumes that ZPN projections are not persistable")
-
-        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
-            exp.writeFits(fileName)
-            exp2 = lsst.afw.image.ExposureF(fileName)
-            self.assertEqual(exp.getWcs(), exp2.getWcs())
 
     def testSkyOriginPrecision(self):
         """Test that we don't lose precision in CRVAL when round-tripping
@@ -212,10 +194,10 @@ class WcsFitsTableTestCase(unittest.TestCase):
         metadata.add('CUNIT2', 'deg')
         metadata.add('NAXIS', 2)
         metadata.add('RADESYS', 'ICRS')
-        wcs1 = lsst.afw.image.makeWcs(metadata)
+        wcs1 = lsst.afw.geom.makeSkyWcs(metadata)
         with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             wcs1.writeFits(fileName)
-            wcs2 = lsst.afw.image.Wcs.readFits(fileName)
+            wcs2 = lsst.afw.geom.SkyWcs.readFits(fileName)
             self.assertEqual(wcs1, wcs2)
 
 

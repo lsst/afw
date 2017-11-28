@@ -31,7 +31,6 @@
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/wcsUtils.h"
-#include "lsst/afw/image/Wcs.h"
 #include "ndarray.h"
 
 namespace lsst {

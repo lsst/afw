@@ -53,9 +53,10 @@ def makeCov(size, dtype):
 
 
 def makeWcs():
-    crval = lsst.afw.coord.Coord(lsst.afw.geom.Point2D(1.606631, 5.090329))
+    crval = lsst.afw.coord.IcrsCoord(lsst.afw.geom.Point2D(1.606631, 5.090329))
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
-    return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
+    cdMatrix = np.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]])
+    return lsst.afw.geom.makeSkyWcs(crval=crval, crpix=crpix, cdMatrix=cdMatrix)
 
 
 class SourceTableTestCase(lsst.utils.tests.TestCase):

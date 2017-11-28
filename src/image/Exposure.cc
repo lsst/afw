@@ -33,10 +33,10 @@
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/Calib.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
 
@@ -48,19 +48,21 @@ namespace image {
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(unsigned int width, unsigned int height,
-                                             std::shared_ptr<Wcs const> wcs)
+                                             std::shared_ptr<geom::SkyWcs const> wcs)
         : daf::base::Citizen(typeid(this)), _maskedImage(width, height), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Extent2I const &dimensions, std::shared_ptr<Wcs const> wcs)
+Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Extent2I const &dimensions,
+                                             std::shared_ptr<geom::SkyWcs const> wcs)
         : daf::base::Citizen(typeid(this)), _maskedImage(dimensions), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Box2I const &bbox, std::shared_ptr<Wcs const> wcs)
+Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Box2I const &bbox, std::shared_ptr<geom::SkyWcs const> wcs)
         : daf::base::Citizen(typeid(this)), _maskedImage(bbox), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(MaskedImageT &maskedImage, std::shared_ptr<Wcs const> wcs)
+Exposure<ImageT, MaskT, VarianceT>::Exposure(MaskedImageT &maskedImage,
+                                             std::shared_ptr<geom::SkyWcs const> wcs)
         : daf::base::Citizen(typeid(this)), _maskedImage(maskedImage), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
@@ -130,8 +132,11 @@ void Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImag
 template <typename ImageT, typename MaskT, typename VarianceT>
 void Exposure<ImageT, MaskT, VarianceT>::setXY0(geom::Point2I const &origin) {
     geom::Point2I old(_maskedImage.getXY0());
-    if (_info->hasWcs())
-        _info->getWcs()->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
+    if (_info->hasWcs()) {
+        auto shift = geom::Extent2D(origin - old);
+        auto newWcs = _info->getWcs()->copyAtShiftedPixelOrigin(shift);
+        _info->setWcs(newWcs);
+    }
     _maskedImage.setXY0(origin);
 }
 

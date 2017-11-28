@@ -40,7 +40,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet
 import lsst.afw.table
-from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Polygon
+from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D, makeSkyWcs, Polygon
 import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
@@ -74,7 +74,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         metadata.setDouble("CD1_2", 1.85579539217196E-07)
         metadata.setDouble("CD2_2", -5.10281493481982E-05)
         metadata.setDouble("CD2_1", -8.27440751733828E-07)
-        return lsst.afw.image.makeWcs(metadata)
+        return makeSkyWcs(metadata)
 
     @staticmethod
     def createVisitInfo():
@@ -182,8 +182,6 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
             self.assertIsNone(self.cat[1].getPsf())
             self.assertIsNone(self.cat[1].getCalib())
-            self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
-                             1].getWcs().getId())  # compare citizen IDs
             self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
             self.assertEqual(self.cat[0].getVisitInfo(),
                              cat1[0].getVisitInfo())
@@ -200,14 +198,14 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         crval2 = self.wcs.getSkyOrigin()
         crval2.reset(crval2.getLongitude() + 5*arcseconds,
                      crval2.getLatitude() - 5*arcseconds)
-        wcs2 = lsst.afw.image.Wcs(
-            crval2.getPosition(),
-            self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
-            self.wcs.getCDMatrix() * 1.1
+        wcs2 = makeSkyWcs(
+            crval = crval2,
+            crpix = self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
+            cdMatrix = self.wcs.getCdMatrix() * 1.1,
         )
         for x1, y1 in points:
             p1 = lsst.afw.geom.Point2D(x1, y1)
-            c = self.wcs.pixelToSky(x1, y1)
+            c = self.wcs.pixelToSky(p1)
             p2 = wcs2.skyToPixel(c)
             subset1 = self.cat.subsetContaining(c)
             subset2 = self.cat.subsetContaining(p2, wcs2)
@@ -252,15 +250,13 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.cat[0].get(self.ka), catV1[0].get(self.ka))
         self.assertEqual(self.cat[0].get(self.kb), catV1[0].get(self.kb))
         self.comparePsfs(self.cat[0].getPsf(), catV1[0].getPsf())
-        self.assertEqual(self.cat[0].getWcs(), catV1[0].getWcs())
+        bbox = Box2D(Point2D(0, 0), Extent2D(2000, 2000))
+        self.assertWcsAlmostEqualOverBBox(self.cat[0].getWcs(), catV1[0].getWcs(), bbox)
         self.assertEqual(self.cat[1].get(self.ka), catV1[1].get(self.ka))
         self.assertEqual(self.cat[1].get(self.kb), catV1[1].get(self.kb))
         self.assertEqual(self.cat[1].getWcs(), catV1[1].getWcs())
         self.assertIsNone(self.cat[1].getPsf())
         self.assertIsNone(self.cat[1].getCalib())
-        # compare citizen IDs
-        self.assertEqual(self.cat[0].getWcs().getId(),
-                         self.cat[1].getWcs().getId())
         self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
         self.assertIsNone(catV1[0].getVisitInfo())
         self.assertIsNone(catV1[1].getVisitInfo())

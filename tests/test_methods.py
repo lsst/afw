@@ -277,7 +277,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     self.assertPairsAlmostEqual(
                         pair0, pair1, maxDiff=radialDiff-1e-7)
 
-    def testAssertWcssAlmostEqualOverBBox(self):
+    def testAssertWcsAlmostEqualOverBBox(self):
         """Test assertWcsAlmostEqualOverBBox and wcsAlmostEqualOverBBox"""
         bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
                              afwGeom.Extent2I(3001, 3001))
@@ -297,9 +297,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         metadata.set("CD1_2", 0.0)
         metadata.set("CD2_2", -5.1e-05)
         metadata.set("CD2_1", 0.0)
-        wcs0 = afwImage.makeWcs(metadata)
+        wcs0 = lsst.afw.geom.makeSkyWcs(metadata, strip=False)
         metadata.set("CRVAL2", 53.000001)  # tweak CRVAL2 for wcs1
-        wcs1 = afwImage.makeWcs(metadata)
+        wcs1 = lsst.afw.geom.makeSkyWcs(metadata)
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
                                           maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
