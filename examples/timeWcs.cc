@@ -35,7 +35,7 @@ const unsigned DefNIter = 100000;
 @internal Transform pix to sky and back again nIter times using points distributed evenly
 from bbox.getMin() to bbox.getMax() and return the max round trip pixel error
 */
-void timeWcs(lsst::afw::image::Wcs &wcs, lsst::afw::geom::Box2D &bbox, unsigned int nIter) {
+void timeWcs(lsst::afw::geom::SkyWcs const &wcs, lsst::afw::geom::Box2D &bbox, unsigned int nIter) {
     lsst::afw::geom::Extent2D maxErr;
     auto const dxy = bbox.getDimensions() / static_cast<float>(nIter);
     auto const xy0 = bbox.getMin();
@@ -43,7 +43,7 @@ void timeWcs(lsst::afw::image::Wcs &wcs, lsst::afw::geom::Box2D &bbox, unsigned 
     for (unsigned int iter = 0; iter < nIter; ++iter) {
         auto pixPos = xy0 + dxy * static_cast<double>(iter);
         auto skyPos = wcs.pixelToSky(pixPos);
-        auto retPixPos = wcs.skyToPixel(*skyPos);
+        auto retPixPos = wcs.skyToPixel(skyPos);
         for (int i = 0; i < 2; ++i) {
             maxErr[i] = std::fmax(maxErr[i], std::fabs(retPixPos[i] - pixPos[i]));
         }

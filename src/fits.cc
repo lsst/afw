@@ -21,7 +21,6 @@ extern "C" {
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/wcsUtils.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/fitsCompression.h"
 
 namespace lsst {

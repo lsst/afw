@@ -24,9 +24,9 @@
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Filter.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"
 
@@ -62,17 +62,17 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     PyExposure<PixelT> cls(mod, ("Exposure" + suffix).c_str());
 
     mod.def("makeExposure", &makeExposure<PixelT, MaskPixel, VariancePixel>, "maskedImage"_a,
-            "wcs"_a = std::shared_ptr<Wcs const>());
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
 
     /* Constructors */
-    cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<Wcs const>>(), "width"_a, "height"_a,
-            "wcs"_a = std::shared_ptr<Wcs const>());
-    cls.def(py::init<geom::Extent2I const &, std::shared_ptr<Wcs const>>(), "dimensions"_a = geom::Extent2I(),
-            "wcs"_a = std::shared_ptr<Wcs const>());
-    cls.def(py::init<geom::Box2I const &, std::shared_ptr<Wcs const>>(), "bbox"_a,
-            "wcs"_a = std::shared_ptr<Wcs const>());
-    cls.def(py::init<MaskedImageT &, std::shared_ptr<Wcs const>>(), "maskedImage"_a,
-            "wcs"_a = std::shared_ptr<Wcs const>());
+    cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<geom::SkyWcs const>>(), "width"_a, "height"_a,
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
+    cls.def(py::init<geom::Extent2I const &, std::shared_ptr<geom::SkyWcs const>>(), "dimensions"_a = geom::Extent2I(),
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
+    cls.def(py::init<geom::Box2I const &, std::shared_ptr<geom::SkyWcs const>>(), "bbox"_a,
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
+    cls.def(py::init<MaskedImageT &, std::shared_ptr<geom::SkyWcs const>>(), "maskedImage"_a,
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
     cls.def(py::init<MaskedImageT &, std::shared_ptr<ExposureInfo>>(), "maskedImage"_a, "exposureInfo"_a);
     cls.def(py::init<std::string const &, geom::Box2I const &, ImageOrigin, bool>(), "fileName"_a,
             "bbox"_a = geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
@@ -100,7 +100,7 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("getXY0", &ExposureT::getXY0);
     cls.def("setXY0", &ExposureT::setXY0, "xy0"_a);
     cls.def("getBBox", &ExposureT::getBBox, "origin"_a = PARENT);
-    cls.def("getWcs", (std::shared_ptr<Wcs> (ExposureT::*)()) & ExposureT::getWcs);
+    cls.def("getWcs", (std::shared_ptr<geom::SkyWcs> (ExposureT::*)()) & ExposureT::getWcs);
     cls.def("setWcs", &ExposureT::setWcs, "wcs"_a);
     cls.def("hasWcs", &ExposureT::hasWcs);
     cls.def("getDetector", &ExposureT::getDetector);

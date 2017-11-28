@@ -21,6 +21,7 @@ from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeFitsHeaderFromMetadata, makeSipIwcToPixel, makeSipPixelToIwc
+from lsst.afw.image import ExposureF
 
 
 class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
@@ -806,11 +807,8 @@ class GetApproximateFitsWcsTestCase(SkyWcsBaseTestCase):
 
     def testTanSip(self):
         filePath = os.path.join(self.dataPath, "HSC-0908120-056-small.fits")
-        # TODO: DM-10765 replace with the following when Exposure contains a SkyWcs:
-        # exposure = ExposureF(filePath)
-        # wcs = exposure.getWcs()
-        metadata = readMetadata(filePath)
-        wcs = SkyWcs(metadata)
+        exposure = ExposureF(filePath)
+        wcs = exposure.getWcs()
 
         localTanWcs = wcs.getTanWcs(wcs.getPixelOrigin())
         bbox = Box2I(Point2I(0, 0), Extent2I(1000, 1000))  # arbitrary

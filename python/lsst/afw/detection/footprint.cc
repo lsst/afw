@@ -107,7 +107,7 @@ PYBIND11_PLUGIN(_footprint) {
     clsFootprint.def("clipTo", &Footprint::clipTo);
     clsFootprint.def("contains", &Footprint::contains);
     clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          std::shared_ptr<image::Wcs>, std::shared_ptr<image::Wcs>,
+                                          std::shared_ptr<geom::SkyWcs>, std::shared_ptr<geom::SkyWcs>,
                                           geom::Box2I const &, bool) const) &
                                           Footprint::transform,
                      "source"_a, "target"_a, "region"_a, "doClip"_a = true);
@@ -117,9 +117,10 @@ PYBIND11_PLUGIN(_footprint) {
     clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
                                           geom::AffineTransform const &, geom::Box2I const &, bool) const) &
                                           Footprint::transform);
-    clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          geom::XYTransform const &, geom::Box2I const &, bool) const) &
-                                          Footprint::transform);
+    clsFootprint.def("transform",
+                     (std::shared_ptr<Footprint>(Footprint::*)(geom::TransformPoint2ToPoint2 const &,
+                                                               geom::Box2I const &, bool) const) &
+                             Footprint::transform);
     clsFootprint.def("dilate", (void (Footprint::*)(int, geom::Stencil)) & Footprint::dilate, "r"_a,
                      "stencil"_a = geom::Stencil::CIRCLE);
     clsFootprint.def("dilate", (void (Footprint::*)(geom::SpanSet const &)) & Footprint::dilate);

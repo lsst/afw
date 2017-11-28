@@ -37,6 +37,8 @@
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/geom.h"
+#include "lsst/afw/coord.h"
 
 /*
  * This test code incorporates some very simple tests of the Wcs class and related classes.
@@ -73,20 +75,20 @@ int main(int argc, char **argv) {
         std::cerr << "Exposure does not have a WCS." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::shared_ptr<afwImage::Wcs> wcs = exposure.getWcs();
+    auto wcs = exposure.getWcs();
 
     // Testing input col, row values
 
-    afwGeom::Point2D minCoord = afwGeom::Point2D(1.0, 1.0);
-    afwGeom::Point2D xy = afwGeom::Point2D(exposure.getWidth(), exposure.getHeight());
+    auto minCoord = afwGeom::Point2D(1.0, 1.0);
+    auto xy = afwGeom::Point2D(exposure.getWidth(), exposure.getHeight());
 
-    std::shared_ptr<afwCoord::Coord const> sky1 = wcs->pixelToSky(minCoord);
-    std::shared_ptr<afwCoord::Coord const> sky2 = wcs->pixelToSky(xy);
+    auto sky1 = wcs->pixelToSky(minCoord);
+    auto sky2 = wcs->pixelToSky(xy);
 
-    afwGeom::Angle miRa1 = sky1->getLongitude();
-    afwGeom::Angle miDecl1 = sky1->getLatitude();
-    afwGeom::Angle miRa2 = sky2->getLongitude();
-    afwGeom::Angle miDecl2 = sky2->getLatitude();
+    auto miRa1 = sky1.getLongitude();
+    auto miDecl1 = sky1.getLatitude();
+    auto miRa2 = sky2.getLongitude();
+    auto miDecl2 = sky2.getLatitude();
 
     std::cout << "ra, decl of " << inImagePath << " at (" << minCoord[0] << " " << minCoord[1] << ") = "
               << "ra: " << miRa1.asDegrees() << " decl: " << miDecl1.asDegrees() << std::endl
@@ -96,15 +98,16 @@ int main(int argc, char **argv) {
               << "ra: " << miRa2.asDegrees() << " decl: " << miDecl2.asDegrees() << std::endl
               << std::endl;
 
-    double pixArea0 = wcs->pixArea(minCoord);
-    double pixArea1 = wcs->pixArea(xy);
+    auto pixelScale0 = wcs->getPixelScale(minCoord);
+    auto pixelScale1 = wcs->getPixelScale(xy);
 
-    std::cout << "pixel areas: " << pixArea0 << " " << pixArea1 << std::endl;
+    std::cout << "pixel scales: " << pixelScale0.asArcseconds() << ", " << pixelScale1.asArcseconds()
+              << " arcsec/pixel\n";
 
     // Testing input ra, dec values using output from above for now
 
-    afwGeom::Point2D pix1 = wcs->skyToPixel(miRa1, miDecl1);
-    afwGeom::Point2D pix2 = wcs->skyToPixel(miRa2, miDecl2);
+    auto pix1 = wcs->skyToPixel(sky1);
+    auto pix2 = wcs->skyToPixel(sky2);
 
     std::cout << "col, row of " << inImagePath << " at (" << miRa1.asDegrees() << " " << miDecl1.asDegrees()
               << ") = "
@@ -116,17 +119,17 @@ int main(int argc, char **argv) {
               << "col: " << pix2[0] << " row: " << pix2[1] << std::endl
               << std::endl;
 
-    std::shared_ptr<afwCoord::Coord const> raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
-    std::shared_ptr<afwCoord::Coord const> raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
+    auto raDecl1 = lsst::afw::coord::IcrsCoord(miRa1, miDecl1);
+    auto raDecl2 = lsst::afw::coord::IcrsCoord(miRa2, miDecl2);
 
-    afwGeom::Point2D pix3 = wcs->skyToPixel(*raDecl1);
-    afwGeom::Point2D pix4 = wcs->skyToPixel(*raDecl2);
+    auto pix3 = wcs->skyToPixel(raDecl1);
+    auto pix4 = wcs->skyToPixel(raDecl2);
 
-    std::cout << "col, row of " << inImagePath << " at (" << (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
+    std::cout << "col, row of " << inImagePath << " at " << raDecl1 << " = "
               << "col: " << pix3[0] << " row: " << pix3[1] << std::endl
               << std::endl;
 
-    std::cout << "col, row of " << inImagePath << " at (" << (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
+    std::cout << "col, row of " << inImagePath << " at " << raDecl2 << " = "
               << "col: " << pix4[0] << " row: " << pix4[1] << std::endl
               << std::endl;
 }

@@ -49,9 +49,10 @@ import lsst.afw.display.utils as displayUtils
 def prepareWcsData(wcs, amp, isTrimmed=True):
     """!Put Wcs from an Amp image into CCD coordinates
 
-    @param[in, out] wcs  WCS object to modify in place
+    @param[in] wcs  WCS object
     @param[in] amp  Amp object to use
     @param[in] isTrimmed  Is the image to which the WCS refers trimmed of non-imaging pixels?
+    @returns modified wcs
     """
     if not amp.getHasRawInfo():
         raise RuntimeError("Cannot modify wcs without raw amp information")
@@ -59,14 +60,15 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
         ampBox = amp.getRawDataBBox()
     else:
         ampBox = amp.getRawBBox()
-    wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampBox.getDimensions())
+    ampCenter = afwGeom.Point2D(ampBox.getDimensions() / 2.0)
+    wcs = afwGeom.makeFlippedWcs(wcs, amp.getRawFlipX(), amp.getRawFlipY(), ampCenter)
     # Shift WCS for trimming
     if isTrimmed:
         trim_shift = ampBox.getMin() - amp.getBBox().getMin()
-        wcs.shiftReferencePixel(-trim_shift.getX(), -trim_shift.getY())
+        wcs = wcs.copyAtShiftedPixelOrigin(afwGeom.Extent2D(-trim_shift.getX(), -trim_shift.getY()))
     # Account for shift of amp data in larger ccd matrix
     offset = amp.getRawXYOffset()
-    wcs.shiftReferencePixel(offset.getX(), offset.getY())
+    return wcs.copyAtShiftedPixelOrigin(afwGeom.Extent2D(offset))
 
 
 def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
@@ -851,7 +853,7 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
     md.set("CUNIT1", "mm")
     md.set("CUNIT2", "mm")
 
-    return afwImage.makeWcs(md)
+    return afwGeom.makeSkyWcs(md)
 
 
 def findAmp(ccd, pixelPosition):

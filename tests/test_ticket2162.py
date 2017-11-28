@@ -24,9 +24,8 @@ from __future__ import absolute_import, division, print_function
 import unittest
 
 import lsst.daf.base as dafBase
-import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.utils.tests
+from lsst.afw.geom import makeSkyWcs
 
 
 def headerToPropertyList(header):
@@ -141,18 +140,16 @@ class WcsTestCase(unittest.TestCase):
 
     def testInputInvariance(self):
         pl = headerToPropertyList(self.header)
-        afwImage.makeWcs(pl)
+        makeSkyWcs(pl, strip=False)
         for key, value in self.header.items():
             self.assertEqual(value, pl.get(
                 key), "%s not invariant: %s vs %s" % (key, value, pl.get(key)))
 
     def testRepeat(self):
         pl = headerToPropertyList(self.header)
-        wcs1 = afwImage.makeWcs(pl)
-        wcs2 = afwImage.makeWcs(pl)
-        for x, y in ((0, 0), (0, self.height), (self.width, 0), (self.width, self.height)):
-            point = afwGeom.Point2D(x, y)
-            self.assertEqual(wcs1.pixelToSky(point), wcs2.pixelToSky(point))
+        wcs1 = makeSkyWcs(pl, strip=False)
+        wcs2 = makeSkyWcs(pl, strip=False)
+        self.assertEqual(wcs1, wcs2)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
