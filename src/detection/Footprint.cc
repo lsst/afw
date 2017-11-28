@@ -24,6 +24,7 @@
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/geom/transformFactory.h"
 
 namespace lsst {
 namespace afw {
@@ -75,12 +76,11 @@ void Footprint::clipTo(geom::Box2I const& box) {
 
 bool Footprint::contains(geom::Point2I const& pix) const { return getSpans()->contains(pix); }
 
-std::shared_ptr<Footprint> Footprint::transform(std::shared_ptr<image::Wcs> source,
-                                                std::shared_ptr<image::Wcs> target, geom::Box2I const& region,
+std::shared_ptr<Footprint> Footprint::transform(std::shared_ptr<geom::SkyWcs> source,
+                                                std::shared_ptr<geom::SkyWcs> target, geom::Box2I const& region,
                                                 bool doClip) const {
-    // Build a transform from the two wcs objects
-    image::XYTransformFromWcsPair xyTransform(target, source);
-    return transform(xyTransform, region, doClip);
+    auto srcToTarget = geom::makeWcsPairTransform(*source, *target);
+    return transform(*srcToTarget, region, doClip);
 }
 
 std::shared_ptr<Footprint> Footprint::transform(geom::LinearTransform const& t, geom::Box2I const& region,
@@ -90,20 +90,25 @@ std::shared_ptr<Footprint> Footprint::transform(geom::LinearTransform const& t, 
 
 std::shared_ptr<Footprint> Footprint::transform(geom::AffineTransform const& t, geom::Box2I const& region,
                                                 bool doClip) const {
-    return transform(geom::AffineXYTransform(t), region, doClip);
+    return transform(*geom::makeTransform(t), region, doClip);
 }
 
-std::shared_ptr<Footprint> Footprint::transform(geom::XYTransform const& t, geom::Box2I const& region,
-                                                bool doClip) const {
+std::shared_ptr<Footprint> Footprint::transform(geom::TransformPoint2ToPoint2 const& t,
+                                                geom::Box2I const& region, bool doClip) const {
     // Transfrom the SpanSet first
     auto transformedSpan = getSpans()->transformedBy(t);
     // Use this new SpanSet and the peakSchema to create a new Footprint
     auto newFootprint = std::make_shared<Footprint>(transformedSpan, getPeaks().getSchema(), region);
     // now populate the new Footprint with transformed Peaks
+    std::vector<geom::Point2D> peakPosList;
+    peakPosList.reserve(_peaks.size());
     for (auto const& peak : getPeaks()) {
-        // Transform the x y Point
-        auto newPoint = t.forwardTransform(peak.getF());
-        newFootprint->addPeak(newPoint.getX(), newPoint.getY(), peak.getPeakValue());
+        peakPosList.emplace_back(peak.getF());
+    }
+    auto newPeakPosList = t.applyForward(peakPosList);
+    auto newPeakPos = newPeakPosList.cbegin();
+    for (auto peak = getPeaks().cbegin(), endPeak = getPeaks().cend(); peak != endPeak; ++peak, ++newPeakPos) {
+        newFootprint->addPeak(newPeakPos->getX(), newPeakPos->getY(), peak->getPeakValue());
     }
     if (doClip) {
         newFootprint->clipTo(region);

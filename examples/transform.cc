@@ -34,7 +34,6 @@
 #include "lsst/afw/geom/LinearTransform.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Utils.h"
 
 using namespace std;

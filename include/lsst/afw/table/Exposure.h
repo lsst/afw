@@ -36,7 +36,6 @@ namespace lsst {
 namespace afw {
 
 namespace image {
-class Wcs;
 class Calib;
 class ApCorrMap;
 class VisitInfo;
@@ -47,6 +46,7 @@ class Psf;
 }  // namespace detection
 
 namespace geom {
+class SkyWcs;
 namespace polygon {
 class Polygon;
 }
@@ -109,12 +109,12 @@ public:
      *
      *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(geom::Point2D const& point, image::Wcs const& wcs, bool includeValidPolygon = false) const;
+    bool contains(geom::Point2D const& point, geom::SkyWcs const& wcs, bool includeValidPolygon = false) const;
 
     //@{
     /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
-    std::shared_ptr<image::Wcs const> getWcs() const { return _wcs; }
-    void setWcs(std::shared_ptr<image::Wcs const> wcs) { _wcs = wcs; }
+    std::shared_ptr<geom::SkyWcs const> getWcs() const { return _wcs; }
+    void setWcs(std::shared_ptr<geom::SkyWcs const> wcs) { _wcs = wcs; }
 
     std::shared_ptr<detection::Psf const> getPsf() const { return _psf; }
     void setPsf(std::shared_ptr<detection::Psf const> psf) { _psf = psf; }
@@ -140,7 +140,7 @@ protected:
 private:
     friend class ExposureTable;
 
-    std::shared_ptr<image::Wcs const> _wcs;
+    std::shared_ptr<geom::SkyWcs const> _wcs;
     std::shared_ptr<detection::Psf const> _psf;
     std::shared_ptr<image::Calib const> _calib;
     std::shared_ptr<image::ApCorrMap const> _apCorrMap;
@@ -426,7 +426,7 @@ public:
      *
      *  @see ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(geom::Point2D const& point, image::Wcs const& wcs,
+    ExposureCatalogT subsetContaining(geom::Point2D const& point, geom::SkyWcs const& wcs,
                                       bool includeValidPolygon = false) const;
 
 protected:

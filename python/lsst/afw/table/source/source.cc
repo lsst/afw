@@ -98,8 +98,8 @@ PySourceRecord declareSourceRecord(py::module &mod) {
     cls.def("getIxx", &SourceRecord::getIxx);
     cls.def("getIyy", &SourceRecord::getIyy);
     cls.def("getIxy", &SourceRecord::getIxy);
-    cls.def("updateCoord", (void (SourceRecord::*)(image::Wcs const &)) & SourceRecord::updateCoord, "wcs"_a);
-    cls.def("updateCoord", (void (SourceRecord::*)(image::Wcs const &, PointKey<double> const &)) &
+    cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &)) & SourceRecord::updateCoord, "wcs"_a);
+    cls.def("updateCoord", (void (SourceRecord::*)(geom::SkyWcs const &, PointKey<double> const &)) &
                                    SourceRecord::updateCoord,
             "wcs"_a, "key"_a);
     return cls;

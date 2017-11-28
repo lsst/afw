@@ -34,9 +34,9 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
 
     The bounding box includes all warped pixels and it may be a bit oversize.
 
-    @param destWcs: WCS of warped exposure
+    @param destWcs: WCS of warped exposure, an lsst.afw.geom.SkyWcs
     @param srcBBox: parent bounding box of unwarped image
-    @param srcWcs: WCS of unwarped image
+    @param srcWcs: WCS of unwarped image, an lsst.afw.geom.SkyWcs
 
     @return destBBox: bounding box of warped exposure
     """
@@ -44,8 +44,7 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     destPosBox = afwGeom.Box2D()
     for inX in (srcPosBox.getMinX(), srcPosBox.getMaxX()):
         for inY in (srcPosBox.getMinY(), srcPosBox.getMaxY()):
-            destPos = destWcs.skyToPixel(
-                srcWcs.pixelToSky(afwGeom.Point2D(inX, inY)))
+            destPos = destWcs.skyToPixel(srcWcs.pixelToSky(inX, inY))
             destPosBox.include(destPos)
     destBBox = afwGeom.Box2I(destPosBox, afwGeom.Box2I.EXPAND)
     return destBBox
@@ -144,7 +143,7 @@ class Warper(object):
     def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
         """Warp an exposure
 
-        @param destWcs: WCS of warped exposure
+        @param destWcs: WCS of warped exposure, an lsst.afw.geom.SkyWcs
         @param srcExposure: exposure to warp
         @param border: grow bbox of warped exposure by this amount in all directions (int pixels);
             if negative then the bbox is shrunk;
@@ -178,9 +177,9 @@ class Warper(object):
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
         """Warp an image or masked image
 
-        @param destWcs: WCS of warped image
+        @param destWcs: WCS of warped image, an lsst.afw.geom.SkyWcs
         @param srcImage: image or masked image to warp
-        @param srcWcs: WCS of image
+        @param srcWcs: WCS of image, an lsst.afw.geom.SkyWcs
         @param border: grow bbox of warped image by this amount in all directions (int pixels);
             if negative then the bbox is shrunk;
             border is applied before maxBBox;
@@ -211,9 +210,9 @@ class Warper(object):
     def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
         """Process destBBox argument for warpImage and warpExposure
 
-        @param destWcs: WCS of warped image
+        @param destWcs: WCS of warped image, an lsst.afw.geom.SkyWcs
         @param srcImage: image or masked image to warp
-        @param srcWcs: WCS of image
+        @param srcWcs: WCS of image, an lsst.afw.geom.SkyWcs
         @param border: grow bbox of warped image by this amount in all directions (int pixels);
             if negative then the bbox is shrunk;
             border is applied before maxBBox;

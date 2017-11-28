@@ -39,7 +39,6 @@ import numpy as np
 import lsst.utils.tests
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
-import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 
 
@@ -52,13 +51,8 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         self.crpix = afwGeom.Point2D(15000, 4000)
 
         arcsecPerPixel = 1/3600.0
-        CD11 = arcsecPerPixel
-        CD12 = 0
-        CD21 = 0
-        CD22 = arcsecPerPixel
-
-        self.wcs = afwImage.makeWcs(
-            self.crval, self.crpix, CD11, CD12, CD21, CD22)
+        cdMatrix = afwGeom.makeCdMatrix(arcsecPerPixel * afwGeom.arcseconds)
+        self.wcs = afwGeom.makeSkyWcs(crval=self.crval, crpix=self.crpix, cdMatrix=cdMatrix)
 
         refSchema = afwTable.SimpleTable.makeMinimalSchema()
         self.refCentroidKey = afwTable.Point2DKey.addFields(
@@ -151,7 +145,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         # check that centroids and coords match
         self.checkCatalogs()
 
-    def checkCatalogs(self, maxPixDiff=1e-7, maxSkyDiff=0.001*afwGeom.arcseconds):
+    def checkCatalogs(self, maxPixDiff=1e-5, maxSkyDiff=0.001*afwGeom.arcseconds):
         """Check that the source and reference object catalogs have equal centroids and coords"""
         self.assertEqual(len(self.sourceCat), len(self.refCat))
 

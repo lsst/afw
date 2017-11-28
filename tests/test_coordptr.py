@@ -29,11 +29,9 @@ Run with:
 """
 
 from __future__ import absolute_import, division, print_function
-import os
 import unittest
 
 import lsst.utils
-import lsst.afw.image as image
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord.coordLib as coord
 import lsst.utils.tests
@@ -47,17 +45,6 @@ class CoordPtrTestCase(unittest.TestCase):
         c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees,
                             2 * afwGeom.degrees)
         print(type(c))
-
-    def testMakeWcs(self):
-        afwdataDir = lsst.utils.getPackageDir("afw")
-        path = os.path.join(afwdataDir, "tests", "data", "parent.fits")
-        fitsHdr = image.readMetadata(path)
-
-        wcs = image.makeWcs(fitsHdr)
-
-        c = wcs.pixelToSky(0, 0)
-        print(type(c))
-        c.getPosition()
 
     def testCoordCast(self):
         for CoordClass in (coord.IcrsCoord, coord.Fk5Coord, coord.GalacticCoord, coord.EclipticCoord):

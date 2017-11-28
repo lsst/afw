@@ -336,9 +336,8 @@ class DetectorBuilder(object):
         mi = afwImage.makeMaskedImage(im, mask, variance)
         detector = self.buildDetector()
 
-        wcs = afwImage.makeWcs(self.detectorMetadata)
         calib = self.makeCalib()
-        exp = afwImage.makeExposure(mi, wcs)
+        exp = afwImage.makeExposure(mi)
         exp.setCalib(calib)
         exp.setDetector(detector)
         return exp

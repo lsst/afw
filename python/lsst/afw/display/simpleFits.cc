@@ -362,7 +362,7 @@ namespace display {
 template <typename ImageT>
 void writeBasicFits(int fd,                 // file descriptor to write to
                     ImageT const &data,     // The data to write
-                    image::Wcs const *Wcs,  // which Wcs to use for pixel
+                    geom::SkyWcs const *Wcs,  // which Wcs to use for pixel
                     char const *title       // title to write to DS9
                     ) {
     /*
@@ -400,10 +400,10 @@ void writeBasicFits(int fd,                 // file descriptor to write to
     } else {
         typedef std::vector<std::string> NameList;
 
-        std::shared_ptr<image::Wcs> newWcs = Wcs->clone();  // Create a copy
-        newWcs->shiftReferencePixel(-data.getX0(), -data.getY0());
+        auto shift = geom::Extent2D(-data.getX0(), -data.getY0());
+        auto newWcs = Wcs->copyAtShiftedPixelOrigin(shift);
 
-        std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata();
+        std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata(false);
 
         NameList paramNames = metadata->paramNames();
 
@@ -448,7 +448,7 @@ void writeBasicFits(int fd,                 // file descriptor to write to
 template <typename ImageT>
 void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
                     ImageT const &data,           // The data to write
-                    image::Wcs const *Wcs,        // which Wcs to use for pixel
+                    geom::SkyWcs const *Wcs,        // which Wcs to use for pixel
                     char const *title             // title to write to DS9
                     ) {
     int fd;
@@ -480,8 +480,8 @@ void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
 
 /// @cond
 #define INSTANTIATE(IMAGET)                                                              \
-    template void writeBasicFits(int, IMAGET const &, image::Wcs const *, char const *); \
-    template void writeBasicFits(std::string const &, IMAGET const &, image::Wcs const *, char const *)
+    template void writeBasicFits(int, IMAGET const &, geom::SkyWcs const *, char const *); \
+    template void writeBasicFits(std::string const &, IMAGET const &, geom::SkyWcs const *, char const *)
 
 #define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
 #define INSTANTIATE_MASK(T) INSTANTIATE(lsst::afw::image::Mask<T>)

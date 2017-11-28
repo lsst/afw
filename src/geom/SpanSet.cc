@@ -880,6 +880,59 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const& t) const {
     return std::make_shared<SpanSet>(std::move(tempVec));
 }
 
+std::shared_ptr<SpanSet> SpanSet::transformedBy(Transform<Point2Endpoint, Point2Endpoint> const& t) const {
+    // Transform points in SpanSet by Transform<Point2Endpoint, Point2Endpoint>
+    // Transform the original bounding box
+    Box2D newBBoxD;
+    std::vector<Point2D> fromCorners;
+    fromCorners.reserve(4);
+    for (auto const & fc: _bbox.getCorners()) {
+        fromCorners.emplace_back(Point2D(fc));
+    }
+    auto toPoints = t.applyForward(fromCorners);
+    for (auto const & tc: toPoints) {
+        newBBoxD.include(tc);
+    }
+
+    Box2I newBBoxI(newBBoxD);
+
+    std::vector<Point2D> newBoxPoints;
+    newBoxPoints.reserve(newBBoxI.getWidth());
+    std::vector<Span> tempVec;
+    for (int y = newBBoxI.getBeginY(); y < newBBoxI.getEndY(); ++y) {
+        bool inSpan = false;  // Are we in a span?
+        int start = -1;       // Start of span
+
+        // vectorize one row at a time (vectorizing the whole bbox would further improve performance
+        // but could lead to memory issues for very large bounding boxes)
+        newBoxPoints.clear();
+        for (int x = newBBoxI.getBeginX(); x < newBBoxI.getEndX(); ++x) {
+            newBoxPoints.emplace_back(Point2D(x, y));
+        }
+        auto oldBoxPoints = t.applyInverse(newBoxPoints);
+        auto oldBoxPointIter = oldBoxPoints.cbegin();
+        for (int x = newBBoxI.getBeginX(); x < newBBoxI.getEndX(); ++x, ++oldBoxPointIter) {
+            auto p = *oldBoxPointIter;
+            int const xSource = std::floor(0.5 + p.getX());
+            int const ySource = std::floor(0.5 + p.getY());
+
+            if (contains(Point2I(xSource, ySource))) {
+                if (!inSpan) {
+                    inSpan = true;
+                    start = x;
+                }
+            } else if (inSpan) {
+                inSpan = false;
+                tempVec.push_back(Span(y, start, x - 1));
+            }
+        }
+        if (inSpan) {
+            tempVec.push_back(Span(y, start, newBBoxI.getMaxX()));
+        }
+    }
+    return std::make_shared<SpanSet>(std::move(tempVec));
+}
+
 template <typename ImageT>
 void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, Box2I const& region, bool doClip) const {
     Box2I bbox;

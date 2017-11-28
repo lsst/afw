@@ -41,7 +41,6 @@ import lsst.afw.image.utils as imageUtils
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
-from lsst.afw.geom.skyWcs import SkyWcs, makeWcsPairTransform
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
@@ -73,8 +72,7 @@ else:
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
 
-def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN",
-            radDecCSys="ICRS", equinox=2000):
+def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN"):
     """Make a Wcs
 
     @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
@@ -103,13 +101,13 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
         ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
         ps.add("CRPIX%1d" % (ip1,), crPixFits[i])
         ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
-    ps.add("RADECSYS", radDecCSys)
-    ps.add("EQUINOX", equinox)
+    ps.add("RADECSYS", "ICRS")
+    ps.add("EQUINOX", 2000)
     ps.add("CD1_1", cdMat[0, 0])
     ps.add("CD2_1", cdMat[1, 0])
     ps.add("CD1_2", cdMat[0, 1])
     ps.add("CD2_2", cdMat[1, 1])
-    return afwImage.makeWcs(ps)
+    return afwGeom.makeSkyWcs(ps)
 
 
 class WarpExposureTestCase(lsst.utils.tests.TestCase):
@@ -385,55 +383,6 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
-    def testNonIcrs(self):
-        """Test that warping to a non-ICRS-like coordinate system produces different results
-
-        It would be better to also test that the results are as expected,
-        but I have not been able to get swarp to perform this operation,
-        so have not found an independent means of generating the expected results.
-        """
-        kernelName = "lanczos3"
-        rtol = 4e-5
-        atol = 1e-2
-        warpingControl = afwMath.WarpingControl(
-            kernelName,
-        )
-
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        originalImage = originalExposure.getMaskedImage().getImage()
-        originalWcs = originalExposure.getWcs()
-
-        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
-        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
-        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
-        swarpedImage = swarpedDecoratedImage.getImage()
-
-        for changeEquinox in (False, True):
-            swarpedMetadata = swarpedDecoratedImage.getMetadata()
-            if changeEquinox:
-                swarpedMetadata.set("RADECSYS", "FK5")
-                swarpedMetadata.set(
-                    "EQUINOX", swarpedMetadata.get("EQUINOX") + 1)
-            warpedWcs = afwImage.makeWcs(swarpedMetadata)
-
-            afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
-            originalImage = originalExposure.getMaskedImage().getImage()
-            originalWcs = originalExposure.getWcs()
-            numGoodPix = afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                                           originalWcs, warpingControl)
-            self.assertGreater(numGoodPix, 50)
-
-            afwWarpedImageArr = afwWarpedImage.getArray()
-            noDataMaskArr = np.isnan(afwWarpedImageArr)
-            if changeEquinox:
-                with self.assertRaises(AssertionError):
-                    self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
-                                                 skipMask=noDataMaskArr, rtol=rtol, atol=atol)
-            else:
-                self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
-                                             skipMask=noDataMaskArr, rtol=rtol, atol=atol)
-
-    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testTransformBasedWarp(self):
         """Test warping using TransformPoint2ToPoint2
         """
@@ -448,7 +397,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             originalExposure = afwImage.ExposureF(originalExposurePath)
             originalMetadata = afwImage.DecoratedImageF(originalExposurePath).getMetadata()
-            originalSkyWcs = SkyWcs(originalMetadata)
+            originalSkyWcs = afwGeom.makeSkyWcs(originalMetadata)
 
             swarpedImageName = "medswarp1%s.fits" % (kernelName,)
             swarpedImagePath = os.path.join(dataDir, swarpedImageName)
@@ -456,10 +405,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             swarpedImage = swarpedDecoratedImage.getImage()
 
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
-            warpedSkyWcs = SkyWcs(swarpedMetadata)
+            warpedSkyWcs = afwGeom.makeSkyWcs(swarpedMetadata)
 
             # warped image is destination, original image is source
-            destToSrc = makeWcsPairTransform(warpedSkyWcs, originalSkyWcs)
+            destToSrc = afwGeom.makeWcsPairTransform(warpedSkyWcs, originalSkyWcs)
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             originalMaskedImage = originalExposure.getMaskedImage()
@@ -678,7 +627,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.makeWcs(swarpedMetadata)
+        warpedWcs = afwGeom.makeSkyWcs(swarpedMetadata)
 
         if useWarpExposure:
             # path for saved afw-warped image
@@ -749,7 +698,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 raise
 
             afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
-            xyTransform = afwImage.XYTransformFromWcsPair(
+            xyTransform = afwGeom.makeWcsPairTransform(
                 warpedWcs, originalWcs)
             afwMath.warpImage(afwWarpedImage2, originalImage,
                               xyTransform, warpingControl)

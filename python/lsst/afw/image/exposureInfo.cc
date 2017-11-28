@@ -26,12 +26,12 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/image/VisitInfo.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/ExposureInfo.h"
 
 namespace py = pybind11;
@@ -48,7 +48,7 @@ PYBIND11_PLUGIN(exposureInfo) {
     py::module mod("exposureInfo");
 
     py::module::import("lsst.daf.base");
-    py::module::import("lsst.afw.image.wcs");
+    py::module::import("lsst.afw.geom.skyWcs");
     py::module::import("lsst.afw.image.calib");
     py::module::import("lsst.afw.image.apCorrMap");
     py::module::import("lsst.afw.image.coaddInputs");
@@ -61,13 +61,13 @@ PYBIND11_PLUGIN(exposureInfo) {
     /* Member types and enums */
 
     /* Constructors */
-    cls.def(py::init<std::shared_ptr<Wcs const> const &, std::shared_ptr<detection::Psf const> const &,
+    cls.def(py::init<std::shared_ptr<geom::SkyWcs const> const &, std::shared_ptr<detection::Psf const> const &,
                      std::shared_ptr<Calib const> const &,
                      std::shared_ptr<cameraGeom::Detector const> const &,
                      std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
                      std::shared_ptr<daf::base::PropertySet> const &, std::shared_ptr<CoaddInputs> const &,
                      std::shared_ptr<ApCorrMap> const &, std::shared_ptr<VisitInfo const>>(),
-            "wcs"_a = std::shared_ptr<Wcs const>(), "psf"_a = std::shared_ptr<detection::Psf const>(),
+            "wcs"_a = std::shared_ptr<geom::SkyWcs const>(), "psf"_a = std::shared_ptr<detection::Psf const>(),
             "calib"_a = std::shared_ptr<Calib const>(),
             "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
             "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(), "filter"_a = Filter(),
@@ -80,7 +80,7 @@ PYBIND11_PLUGIN(exposureInfo) {
 
     /* Members */
     cls.def("hasWcs", &ExposureInfo::hasWcs);
-    cls.def("getWcs", (std::shared_ptr<Wcs> (ExposureInfo::*)()) & ExposureInfo::getWcs);
+    cls.def("getWcs", (std::shared_ptr<geom::SkyWcs> (ExposureInfo::*)()) & ExposureInfo::getWcs);
     cls.def("setWcs", &ExposureInfo::setWcs, "wcs"_a);
 
     cls.def("hasDetector", &ExposureInfo::hasDetector);

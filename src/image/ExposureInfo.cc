@@ -25,8 +25,8 @@
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -61,11 +61,6 @@ std::shared_ptr<Calib> ExposureInfo::_cloneCalib(std::shared_ptr<Calib const> ca
     return std::shared_ptr<Calib>();
 }
 
-std::shared_ptr<Wcs> ExposureInfo::_cloneWcs(std::shared_ptr<Wcs const> wcs) {
-    if (wcs) return wcs->clone();
-    return std::shared_ptr<Wcs>();
-}
-
 std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrMap const> apCorrMap) {
     if (apCorrMap) {
         return std::make_shared<ApCorrMap>(*apCorrMap);
@@ -73,7 +68,7 @@ std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrM
     return std::shared_ptr<ApCorrMap>();
 }
 
-ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
+ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<detection::Psf const> const& psf,
                            std::shared_ptr<Calib const> const& calib,
                            std::shared_ptr<cameraGeom::Detector const> const& detector,
@@ -82,7 +77,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
                            std::shared_ptr<CoaddInputs> const& coaddInputs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo)
-        : _wcs(_cloneWcs(wcs)),
+        : _wcs(wcs),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
           _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
           _detector(detector),
@@ -95,7 +90,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
           _visitInfo(visitInfo) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other)
-        : _wcs(_cloneWcs(other._wcs)),
+        : _wcs(other._wcs),
           _psf(other._psf),
           _calib(_cloneCalib(other._calib)),
           _detector(other._detector),
@@ -107,7 +102,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other)
           _visitInfo(other._visitInfo) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
-        : _wcs(_cloneWcs(other._wcs)),
+        : _wcs(other._wcs),
           _psf(other._psf),
           _calib(_cloneCalib(other._calib)),
           _detector(other._detector),
@@ -122,7 +117,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
 
 ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     if (&other != this) {
-        _wcs = _cloneWcs(other._wcs);
+        _wcs = other._wcs;
         _psf = other._psf;
         _calib = _cloneCalib(other._calib);
         _detector = other._detector;
@@ -171,7 +166,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
     }
     if (hasWcs() && getWcs()->isPersistable()) {
         int wcsId = data.archive.put(getWcs());
-        data.metadata->set("WCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
+        data.metadata->set("SKYWCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
     }
     if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
         int polygonId = data.archive.put(getValidPolygon());
@@ -184,11 +179,11 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
     // In the case where this image is a parent image, the reference pixels are unchanged
     // by this transformation
     if (hasWcs()) {
-        std::shared_ptr<Wcs> newWcs = getWcs()->clone();  // Create a copy
-        newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY());
+        auto shift = geom::Extent2D(geom::Point2I(0, 0) - xy0);
+        auto newWcs = getWcs()->copyAtShiftedPixelOrigin(shift);
 
         // We want the WCS to appear in all HDUs
-        data.imageMetadata->combine(newWcs->getFitsMetadata());
+        data.imageMetadata->combine(newWcs->getFitsMetadata(false));
     }
 
     // Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
@@ -231,8 +226,20 @@ void ExposureInfo::_finishWriteFits(fits::Fits& fitsfile, FitsWriteData const& d
 
 void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
                              std::shared_ptr<daf::base::PropertySet> imageMetadata) {
-    // true: strip keywords that are related to the created WCS from the input metadata
-    _wcs = makeWcs(imageMetadata, true);
+    // Try to read WCS from image metadata, and if found, strip the keywords used
+    try {
+        _wcs = std::make_shared<geom::SkyWcs>(*imageMetadata, true);
+    } catch(lsst::pex::exceptions::TypeError) {
+        LOGLS_DEBUG(_log, "No WCS found in FITS metadata");
+    }
+
+    // Strip LTV1, LTV2 from imageMetadata to avoid type mismatch errors
+    if (imageMetadata->exists("LTV1")) {
+        imageMetadata->remove("LTV1");
+    }
+    if (imageMetadata->exists("LTV2")) {
+        imageMetadata->remove("LTV2");
+    }
 
     if (!imageMetadata->exists("INHERIT")) {
         // New-style exposures put everything but the Wcs in the primary HDU, use
@@ -270,9 +277,9 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
         } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read PSF; setting to null: " << err.what());
         }
-        int wcsId = popInt(*metadata, "WCS_ID");
+        int wcsId = popInt(*metadata, "SKYWCS_ID");
         try {
-            auto archiveWcs = archive.get<Wcs>(wcsId);
+            auto archiveWcs = archive.get<geom::SkyWcs>(wcsId);
             if (archiveWcs) {
                 _wcs = archiveWcs;
             } else {
