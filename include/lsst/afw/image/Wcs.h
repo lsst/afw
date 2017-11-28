@@ -453,14 +453,6 @@ protected:
     bool _skyAxesSwapped;  ///< if true then the sky axes are swapped
 };
 
-namespace detail {
-std::shared_ptr<lsst::daf::base::PropertyList> createTrivialWcsAsPropertySet(std::string const& wcsName,
-                                                                             int const x0 = 0,
-                                                                             int const y0 = 0);
-
-geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet* metadata);
-}
-
 /**
  * Create a Wcs object from a fits header.
  * It examines the header and determines the
