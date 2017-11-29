@@ -115,7 +115,7 @@ public:
         auto frameSetStr = formatters::bytesToString(record.get(keys.frameSet));
         auto transform =
                 geom::Transform<geom::Point2Endpoint, geom::GenericEndpoint>::readString(frameSetStr);
-        return std::make_shared<TransformBoundedField>(bbox, transform);
+        return std::make_shared<TransformBoundedField>(bbox, *transform);
     }
 };
 
