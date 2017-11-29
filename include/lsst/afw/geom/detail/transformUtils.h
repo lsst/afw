@@ -54,7 +54,7 @@ constexpr int serializationVersion = 1;
  * @param[in] is  input stream from which to deserialize this Transform
  */
 template<class Transform> 
-Transform readStream(std::istream & is);
+std::shared_ptr<Transform> readStream(std::istream & is);
 
 /**
  * Serialize a Transform to an output stream
@@ -77,7 +77,7 @@ void writeStream(Transform const & transform, std::ostream & os);
  */
 
 template<class Transform> 
-Transform readStream(std::istream & is) {
+std::shared_ptr<Transform> readStream(std::istream & is) {
     int version;
     is >> version;
     if (version != 1) {
@@ -101,7 +101,7 @@ Transform readStream(std::istream & is) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
     }
 
-    return Transform(*frameSet);
+    return std::make_shared<Transform>(*frameSet);
 }
 
 template<class Transform>

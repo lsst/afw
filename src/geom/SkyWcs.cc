@@ -61,7 +61,8 @@ Eigen::Matrix2d makeCdMatrix(Angle const& scale, Angle const& orientation, bool 
 }
 
 TransformPoint2ToPoint2 makeWcsPairTransform(SkyWcs const& src, SkyWcs const& dst) {
-    return src.then(dst.getInverse());
+    auto transform = src.getTransform()->then(dst.getTransform()->getInverse());
+    return TransformPoint2ToPoint2(*transform);
 }
 
 SkyWcs::SkyWcs(Point2D const& crpix, coord::IcrsCoord const& crval, Eigen::Matrix2d const& cdMatrix)

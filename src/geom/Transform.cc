@@ -156,12 +156,14 @@ std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
 }
 
 template <class FromEndpoint, class ToEndpoint>
-Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readStream(std::istream &is) {
+std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readStream(
+        std::istream &is) {
     return detail::readStream<Transform<FromEndpoint, ToEndpoint>>(is);
 }
 
 template <class FromEndpoint, class ToEndpoint>
-Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readString(std::string & str) {
+std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readString(
+        std::string &str) {
     std::istringstream is(str);
     return Transform<FromEndpoint, ToEndpoint>::readStream(is);
 }
@@ -180,15 +182,16 @@ std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
 
 template <class FromEndpoint, class ToEndpoint>
 template <class NextToEndpoint>
-Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::then(
+std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> Transform<FromEndpoint, ToEndpoint>::then(
         Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
     if (_toEndpoint.getNAxes() == next.getFromEndpoint().getNAxes()) {
         auto nextFrameSet = next.getFrameSet();
         if (simplify) {
             auto simplifiedMap = getFrameSet()->then(*nextFrameSet).simplify();
-            return Transform<FromEndpoint, NextToEndpoint>(*simplifiedMap);
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*simplifiedMap);
         } else {
-            return Transform<FromEndpoint, NextToEndpoint>(*ast::append(*getFrameSet(), *nextFrameSet));
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(
+                    *ast::append(*getFrameSet(), *nextFrameSet));
         }
     } else {
         auto message = "Cannot match " + std::to_string(_toEndpoint.getNAxes()) + "-D to-endpoint to " +
@@ -204,7 +207,7 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
 };
 
 #define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, NextToEndpoint) \
-    template Transform<FromEndpoint, NextToEndpoint>                    \
+    template std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>>   \
     Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
             Transform<ToEndpoint, NextToEndpoint> const &next, bool) const;
 

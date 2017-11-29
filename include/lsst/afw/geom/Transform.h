@@ -217,11 +217,11 @@ public:
      *
      * More than two Transforms can be combined in series. For example:
      *
-     *     auto pixelsToSky = pixelsToFp.then(fpToField).then(fieldToSky);
+     *     auto pixelsToSky = pixelsToFp.then(fpToField)->then(fieldToSky);
      */
     template <class NextToEndpoint>
-    Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next,
-                                                 bool simplify = true) const;
+    std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> then(
+            Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify = true) const;
 
     /**
      * Return a short version of the class name with no punctuation
@@ -238,10 +238,10 @@ public:
      *
      * @param[in] is  input stream from which to deserialize this Transform
      */
-    static Transform<FromEndpoint, ToEndpoint> readStream(std::istream &is);
+    static std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> readStream(std::istream &is);
 
     /// Deserialize a Transform of this type from a string, using the same format as readStream
-    static Transform<FromEndpoint, ToEndpoint> readString(std::string &str);
+    static std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> readString(std::string &str);
 
     /**
      * Serialize this Transform to an output stream

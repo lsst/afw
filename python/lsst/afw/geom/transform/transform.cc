@@ -56,8 +56,9 @@ void declareMethodTemplates(PyClass &cls) {
     using NextTransform = Transform<ToEndpoint, NextToEndpoint>;
     using SeriesTransform = Transform<FromEndpoint, NextToEndpoint>;
     // Need Python-specific logic to give sensible errors for mismatched Transform types
-    cls.def("_then", (SeriesTransform (ThisTransform::*)(NextTransform const &, bool) const) &
-                           ThisTransform::template then<NextToEndpoint>,
+    cls.def("_then",
+            (std::shared_ptr<SeriesTransform>(ThisTransform::*)(NextTransform const &, bool) const) &
+                    ThisTransform::template then<NextToEndpoint>,
             "next"_a, "simplify"_a = true);
 }
 
