@@ -35,6 +35,8 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/SkyWcs.h"
+#include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -48,6 +50,8 @@ PYBIND11_PLUGIN(skyWcs) {
     py::module mod("skyWcs");
 
     py::module::import("lsst.afw.geom.transform");
+    py::module::import("lsst.afw.geom.transform");
+    py::module::import("lsst.afw.table.io");
 
     // Need to import numpy for ndarray and eigen conversions
     if (_import_array() < 0) {
@@ -56,15 +60,38 @@ PYBIND11_PLUGIN(skyWcs) {
     }
 
     mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * degrees, "flipX"_a = false);
+    mod.def("makeFlippedWcs", makeFlippedWcs, "wcs"_a, "flipLR"_a, "flipTB"_a, "center"_a);
+    mod.def("makeModifiedWcs", makeModifiedWcs, "pixelTransform"_a, "wcs"_a);
+    mod.def("makeTanSipWcs",
+            (std::shared_ptr<SkyWcs>(*)(Point2D const &, coord::IcrsCoord const &, Eigen::Matrix2d const &,
+                                        Eigen::MatrixXd const &, Eigen::MatrixXd const &))makeTanSipWcs,
+            "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a);
+    mod.def("makeTanSipWcs",
+            (std::shared_ptr<SkyWcs>(*)(Point2D const &, coord::IcrsCoord const &, Eigen::Matrix2d const &,
+                                        Eigen::MatrixXd const &, Eigen::MatrixXd const &,
+                                        Eigen::MatrixXd const &, Eigen::MatrixXd const &))makeTanSipWcs,
+            "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a, "sipAp"_a, "sipBp"_a);
     mod.def("makeWcsPairTransform", makeWcsPairTransform, "src"_a, "dst"_a);
+    mod.def("getIntermediateWorldCoordsToSky", getIntermediateWorldCoordsToSky, "wcs"_a, "simplify"_a = true);
+    mod.def("getPixelToIntermediateWorldCoords", getPixelToIntermediateWorldCoords, "wcs"_a,
+            "simplify"_a = true);
 
-    py::class_<SkyWcs, std::shared_ptr<SkyWcs>, TransformPoint2ToIcrsCoord> cls(mod, "SkyWcs");
+    table::io::python::declarePersistableFacade<SkyWcs>(mod, "SkyWcs");
 
-    cls.def(py::init<Point2D const &, coord::IcrsCoord const &, Eigen::Matrix2d const &>(), "crpix"_a,
-            "crval"_a, "cdMatrix"_a);
-    cls.def(py::init<daf::base::PropertyList &>(), "metadata"_a);
-    cls.def(py::init<ast::FrameSet const &>(), "frameSet"_a);
+    py::class_<SkyWcs, std::shared_ptr<SkyWcs>, table::io::PersistableFacade<SkyWcs>, table::io::Persistable>
+            cls(mod, "SkyWcs");
 
+    cls.def(py::init<Point2D const &, coord::IcrsCoord const &, Eigen::Matrix2d const &,
+                     std::string const &>(),
+            "crpix"_a, "crval"_a, "cdMatrix"_a, "projection"_a = "TAN");
+    cls.def(py::init<daf::base::PropertySet &, bool>(), "metadata"_a, "strip"_a = false);
+    cls.def(py::init<ast::FrameDict const &>(), "frameDict"_a);
+
+    cls.def("__eq__", &SkyWcs::operator==, py::is_operator());
+    cls.def("__ne__", &SkyWcs::operator!=, py::is_operator());
+
+    cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
+    cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a);
     cls.def("getPixelScale", (Angle(SkyWcs::*)(Point2D const &) const) & SkyWcs::getPixelScale, "pixel"_a);
     cls.def("getPixelScale", (Angle(SkyWcs::*)() const) & SkyWcs::getPixelScale);
     cls.def("getPixelOrigin", &SkyWcs::getPixelOrigin);
@@ -72,18 +99,36 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def("getCdMatrix", (Eigen::Matrix2d(SkyWcs::*)(Point2D const &) const) & SkyWcs::getCdMatrix,
             "pixel"_a);
     cls.def("getCdMatrix", (Eigen::Matrix2d(SkyWcs::*)() const) & SkyWcs::getCdMatrix);
-    cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
-    cls.def("pixelToSky", (std::pair<Angle, Angle>(SkyWcs::*)(double, double) const) & SkyWcs::pixelToSky,
-            "x"_a, "y"_a);
+    cls.def("getTanWcs", &SkyWcs::getTanWcs, "pixel"_a);
+    cls.def("getFrameDict", [](SkyWcs const &self) { return self.getFrameDict()->copy(); });
+    cls.def("getTransform", &SkyWcs::getTransform);
+
+    cls.def_property_readonly("isFits", &SkyWcs::isFits);
+    cls.def_property_readonly("isFlipped", &SkyWcs::isFlipped);
+    cls.def("linearizePixelToSky",
+            (AffineTransform(SkyWcs::*)(coord::IcrsCoord const &, AngleUnit const &) const) &
+                    SkyWcs::linearizePixelToSky,
+            "coord"_a, "skyUnit"_a);
+    cls.def("linearizePixelToSky",
+            (AffineTransform(SkyWcs::*)(Point2D const &, AngleUnit const &) const) &
+                    SkyWcs::linearizePixelToSky,
+            "coord"_a, "skyUnit"_a);
+    cls.def("linearizeSkyToPixel",
+            (AffineTransform(SkyWcs::*)(coord::IcrsCoord const &, AngleUnit const &) const) &
+                    SkyWcs::linearizeSkyToPixel,
+            "coord"_a, "skyUnit"_a);
+    cls.def("linearizeSkyToPixel",
+            (AffineTransform(SkyWcs::*)(Point2D const &, AngleUnit const &) const) &
+                    SkyWcs::linearizeSkyToPixel,
+            "coord"_a, "skyUnit"_a);
     cls.def("pixelToSky", (coord::IcrsCoord(SkyWcs::*)(Point2D const &) const) & SkyWcs::pixelToSky,
             "pixel"_a);
+    cls.def("pixelToSky", (coord::IcrsCoord(SkyWcs::*)(double, double) const) & SkyWcs::pixelToSky, "x"_a,
+            "y"_a);
     cls.def("pixelToSky",
             (std::vector<coord::IcrsCoord>(SkyWcs::*)(std::vector<Point2D> const &) const) &
                     SkyWcs::pixelToSky,
             "pixel"_a);
-    cls.def("skyToPixel",
-            (std::pair<double, double>(SkyWcs::*)(Angle const &, Angle const &) const) & SkyWcs::skyToPixel,
-            "ra"_a, "dec"_a);
     cls.def("skyToPixel", (Point2D(SkyWcs::*)(coord::IcrsCoord const &) const) & SkyWcs::skyToPixel, "sky"_a);
     cls.def("skyToPixel",
             (std::vector<Point2D>(SkyWcs::*)(std::vector<coord::IcrsCoord> const &) const) &
