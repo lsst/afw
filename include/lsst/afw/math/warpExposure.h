@@ -451,8 +451,9 @@ int warpImage(DestImageT &destImage,                 ///< remapped %image
  *
  * @param[in,out] destImage  Destination image; all pixels are set
  * @param[in] srcImage  Source image
- * @param[in] destToSrc  Transformation from destination to source pixels in parent coordinates.
- *    This can be computed as makeWcsPairTransform(destWcs, srcWcs)
+ * @param[in] srcToDest  Transformation from source to destination pixels, in parent coordinates;
+ *    the inverse must be defined (and is the only direction used).
+ *    makeWcsPairTransform(srcWcs, destWcs) is one way to compute this transform.
  * @param[in] control  Warning control parameters
  * @param[in] padValue  Value used for pixels in the destination image that are outside
  *   the region of pixels that can be computed from the source image
@@ -461,7 +462,7 @@ int warpImage(DestImageT &destImage,                 ///< remapped %image
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage,
               SrcImageT const &srcImage,
-              geom::TransformPoint2ToPoint2 const & destToSrc,
+              geom::TransformPoint2ToPoint2 const & srcToDest,
               WarpingControl const &control,
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
