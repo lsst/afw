@@ -96,7 +96,7 @@ void declareImageWarpingFunctions(py::module &mod) {
             (int (*)(DestImageT &, SrcImageT const &, geom::TransformPoint2ToPoint2 const &,
                      WarpingControl const &, typename DestImageT::SinglePixel)) &
                     warpImage<DestImageT, SrcImageT>,
-            "destImage"_a, "srcImage"_a, "destToSrc"_a, "control"_a, "padValue"_a = EdgePixel);
+            "destImage"_a, "srcImage"_a, "srcToDest"_a, "control"_a, "padValue"_a = EdgePixel);
 
     mod.def("warpCenteredImage", &warpCenteredImage<DestImageT, SrcImageT>, "destImage"_a, "srcImage"_a,
             "linearTransform"_a, "centerPoint"_a, "control"_a, "padValue"_a = EdgePixel);
