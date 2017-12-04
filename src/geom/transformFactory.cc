@@ -150,17 +150,17 @@ AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Poin
     return AffineTransform(jacobian, offset);
 }
 
-TransformPoint2ToPoint2 makeTransform(AffineTransform const &affine) {
+std::shared_ptr<TransformPoint2ToPoint2> makeTransform(AffineTransform const &affine) {
     auto const offset = Point2D(affine.getTranslation());
     auto const jacobian = affine.getLinear().getMatrix();
 
     Point2Endpoint toEndpoint;
-    auto const map =
-            ast::MatrixMap(toNdArray(jacobian)).then(ast::ShiftMap(toEndpoint.dataFromPoint(offset)));
-    return TransformPoint2ToPoint2(map);
+    auto const map = ast::MatrixMap(toNdArray(jacobian))
+                             .then(ast::ShiftMap(toEndpoint.dataFromPoint(offset))).simplify();
+    return std::make_shared<TransformPoint2ToPoint2>(*map);
 }
 
-TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs) {
+std::shared_ptr<TransformPoint2ToPoint2> makeRadialTransform(std::vector<double> const &coeffs) {
     if (!areRadialCoefficients(coeffs)) {
         std::ostringstream buffer;
         buffer << "Invalid coefficient vector: " << coeffs;
@@ -168,18 +168,28 @@ TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs) {
     }
 
     if (coeffs.empty()) {
-        return TransformPoint2ToPoint2(ast::UnitMap(2));
+        return std::make_shared<TransformPoint2ToPoint2>(ast::UnitMap(2));
     } else {
         // distortion is a radial polynomial with center at focal plane center;
         // the polynomial has an iterative inverse
         std::vector<double> center = {0.0, 0.0};
         ast::PolyMap const distortion = makeOneDDistortion(coeffs);
-        return TransformPoint2ToPoint2(*ast::makeRadialMapping(center, distortion));
+        return std::make_shared<TransformPoint2ToPoint2>(*ast::makeRadialMapping(center, distortion));
     }
 }
 
-TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCoeffs,
-                                            std::vector<double> const &inverseCoeffs) {
+std::shared_ptr<TransformPoint2ToPoint2> makeRadialTransform(std::vector<double> const &forwardCoeffs,
+                                                             std::vector<double> const &inverseCoeffs) {
+    if (forwardCoeffs.empty() != inverseCoeffs.empty()) {
+        throw LSST_EXCEPT(
+                pex::exceptions::InvalidParameterError,
+                "makeRadialTransform must have either both empty or both non-empty coefficient vectors.");
+    }
+    if (forwardCoeffs.empty()) {
+        // no forward or inverse coefficients, so no distortion
+        return std::make_shared<TransformPoint2ToPoint2>(ast::UnitMap(2));
+    }
+
     if (!areRadialCoefficients(forwardCoeffs)) {
         std::ostringstream buffer;
         buffer << "Invalid forward coefficient vector: " << forwardCoeffs;
@@ -190,27 +200,19 @@ TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCo
         buffer << "Invalid inverse coefficient vector: " << inverseCoeffs;
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
     }
-    if (forwardCoeffs.empty() != inverseCoeffs.empty()) {
-        throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterError,
-                "makeRadialTransform must have either both empty or both non-empty coefficient vectors.");
-    }
-
-    if (forwardCoeffs.empty()) {
-        // no forward or inverse coefficients, so no distortion
-        return TransformPoint2ToPoint2(ast::UnitMap(2));
-    } else {
-        // distortion is a 1-d radial polynomial centered at focal plane center;
-        // the polynomial has coefficients specified for both the forward and inverse directions
-        std::vector<double> center = {0.0, 0.0};
-        ast::PolyMap const forward = makeOneDDistortion(forwardCoeffs);
-        auto inverse = makeOneDDistortion(inverseCoeffs).getInverse();
-        auto distortion = ast::TranMap(forward, *inverse);
-        return TransformPoint2ToPoint2(*ast::makeRadialMapping(center, distortion));
-    }
+    // distortion is a 1-d radial polynomial centered at focal plane center;
+    // the polynomial has coefficients specified for both the forward and inverse directions
+    std::vector<double> center = {0.0, 0.0};
+    ast::PolyMap const forward = makeOneDDistortion(forwardCoeffs);
+    auto inverse = makeOneDDistortion(inverseCoeffs).getInverse();
+    auto distortion = ast::TranMap(forward, *inverse);
+    return std::make_shared<TransformPoint2ToPoint2>(*ast::makeRadialMapping(center, distortion));
 }
 
-TransformPoint2ToPoint2 makeIdentityTransform() { return TransformPoint2ToPoint2(ast::UnitMap(2)); }
+std::shared_ptr<TransformPoint2ToPoint2> makeIdentityTransform() {
+    return std::make_shared<TransformPoint2ToPoint2>(ast::UnitMap(2));
+}
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
