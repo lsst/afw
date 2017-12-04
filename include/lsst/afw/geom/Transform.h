@@ -264,7 +264,7 @@ protected:
      *
      * @note The FrameSet may be modified by normalizing the base and current frame.
      */
-    explicit Transform(std::shared_ptr<ast::FrameSet> &&frameSet);
+    explicit Transform(std::shared_ptr<ast::FrameSet> frameSet);
 
 private:
     FromEndpoint _fromEndpoint;
