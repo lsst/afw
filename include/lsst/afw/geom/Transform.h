@@ -61,7 +61,7 @@ namespace geom {
  * so it didn't seem worth the bother.
  */
 template <class FromEndpoint, class ToEndpoint>
-class Transform {
+class Transform final {
 public:
     using FromArray = typename FromEndpoint::Array;
     using FromPoint = typename FromEndpoint::Point;
@@ -106,8 +106,6 @@ public:
      *                      does not remove any frames.
      */
     explicit Transform(ast::FrameSet const &frameSet, bool simplify = true);
-
-    virtual ~Transform(){};
 
     /**
      * Test if this method has a forward transform.
@@ -255,10 +253,10 @@ public:
      *
      * @param[out] os  outpu stream to which to serialize this Transform
      */
-    virtual void writeStream(std::ostream &os) const;
+    void writeStream(std::ostream &os) const;
 
     /// Serialize this Transform to a string, using the same format as writeStream
-    virtual std::string writeString() const;
+    std::string writeString() const;
 
 protected:
     /**
