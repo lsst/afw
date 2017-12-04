@@ -430,14 +430,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
             warpedSkyWcs = afwGeom.makeSkyWcs(swarpedMetadata)
 
-            # warped image is destination, original image is source
-            destToSrc = afwGeom.makeWcsPairTransform(warpedSkyWcs, originalSkyWcs)
+            # original image is source, warped image is destination
+            srcToDest = afwGeom.makeWcsPairTransform(originalSkyWcs, warpedSkyWcs)
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             originalMaskedImage = originalExposure.getMaskedImage()
 
             numGoodPix = afwMath.warpImage(afwWarpedMaskedImage, originalMaskedImage,
-                                           destToSrc, warpingControl)
+                                           srcToDest, warpingControl)
             self.assertGreater(numGoodPix, 50)
 
             afwWarpedImage = afwWarpedMaskedImage.getImage()
@@ -721,11 +721,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 raise
 
             afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
-            xyTransform = afwGeom.makeWcsPairTransform(
-                warpedWcs, originalWcs)
+            srcToDest = afwGeom.makeWcsPairTransform(originalWcs, warpedWcs)
             afwMath.warpImage(afwWarpedImage2, originalImage,
-                              xyTransform, warpingControl)
-            msg = "afw xyTransform-based and WCS-based %s-warped images do not match" % (
+                              srcToDest, warpingControl)
+            msg = "afw transform-based and WCS-based %s-warped images do not match" % (
                 kernelName,)
             try:
                 self.assertImagesAlmostEqual(afwWarpedImage2, afwWarpedImage,
