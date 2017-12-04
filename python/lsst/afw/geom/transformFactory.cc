@@ -52,12 +52,15 @@ PYBIND11_PLUGIN(transformFactory) {
     mod.def("linearizeTransform",
             (AffineTransform(*)(TransformPoint2ToPoint2 const &, Point2D const &)) & linearizeTransform,
             "original"_a, "point"_a);
-    mod.def("makeTransform", (TransformPoint2ToPoint2(*)(AffineTransform const &)) & makeTransform,
+    mod.def("makeTransform",
+            (std::shared_ptr<TransformPoint2ToPoint2>(*)(AffineTransform const &)) & makeTransform,
             "affine"_a);
     mod.def("makeRadialTransform",
-            (TransformPoint2ToPoint2(*)(std::vector<double> const &)) & makeRadialTransform, "coeffs"_a);
+            (std::shared_ptr<TransformPoint2ToPoint2>(*)(std::vector<double> const &)) & makeRadialTransform,
+            "coeffs"_a);
     mod.def("makeRadialTransform",
-            (TransformPoint2ToPoint2(*)(std::vector<double> const &, std::vector<double> const &)) &
+            (std::shared_ptr<TransformPoint2ToPoint2>(*)(std::vector<double> const &,
+                                                         std::vector<double> const &)) &
                     makeRadialTransform,
             "forwardCoeffs"_a, "inverseCoeffs"_a);
     mod.def("makeIdentityTransform", &makeIdentityTransform);

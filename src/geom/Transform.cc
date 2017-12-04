@@ -118,7 +118,7 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
 }
 
 template <class FromEndpoint, class ToEndpoint>
-Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
+std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
     auto inverse = std::dynamic_pointer_cast<ast::FrameSet>(_frameSet->getInverse());
     if (!inverse) {
         // don't throw std::bad_cast because it doesn't let you provide debugging info
@@ -126,7 +126,7 @@ Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInve
         buffer << "FrameSet.getInverse() does not return a FrameSet. Called from: " << _frameSet;
         throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
     }
-    return Transform<ToEndpoint, FromEndpoint>(*inverse);
+    return std::make_shared<Transform<ToEndpoint, FromEndpoint>>(*inverse);
 }
 
 template <class FromEndpoint, class ToEndpoint>

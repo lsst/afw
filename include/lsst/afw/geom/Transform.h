@@ -172,7 +172,7 @@ public:
      *
      * @exceptsafe Provides basic exception safety.
      */
-    Transform<ToEndpoint, FromEndpoint> getInverse() const;
+    std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> getInverse() const;
 
     /**
      * The Jacobian matrix of this Transform.

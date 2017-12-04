@@ -64,7 +64,7 @@ AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Poin
  *
  * @exceptsafe Provides basic exception safety.
  */
-TransformPoint2ToPoint2 makeTransform(AffineTransform const &affine);
+std::shared_ptr<TransformPoint2ToPoint2> makeTransform(AffineTransform const &affine);
 
 /**
  * A purely radial polynomial distortion.
@@ -83,7 +83,7 @@ TransformPoint2ToPoint2 makeTransform(AffineTransform const &affine);
  *         have the required format.
  * @exceptsafe Provides basic exception safety.
  */
-TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs);
+std::shared_ptr<TransformPoint2ToPoint2> makeRadialTransform(std::vector<double> const &coeffs);
 
 /**
  * A purely radial polynomial distortion.
@@ -106,8 +106,8 @@ TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &coeffs);
  *         `inverseCoeffs` does not have the required format.
  * @exceptsafe Provides basic exception safety.
  */
-TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCoeffs,
-                                            std::vector<double> const &inverseCoeffs);
+std::shared_ptr<TransformPoint2ToPoint2> makeRadialTransform(std::vector<double> const &forwardCoeffs,
+                                                             std::vector<double> const &inverseCoeffs);
 
 /**
  * Make an affine transform
@@ -120,8 +120,9 @@ TransformPoint2ToPoint2 makeRadialTransform(std::vector<double> const &forwardCo
  *      \end{array}\right] \times (in + shift)
  * @f$
  */
-TransformPoint2ToPoint2 makeAffineTransformPoint2(Extent2D const &offset = Extent2D(0, 0),
-                                                  Angle const &rotation = 0 * radians, double scale = 1.0);
+std::shared_ptr<TransformPoint2ToPoint2> makeAffineTransformPoint2(Extent2D const &offset = Extent2D(0, 0),
+                                                                   Angle const &rotation = 0 * radians,
+                                                                   double scale = 1.0);
 
 /**
  * Trivial Transform x &rarr; x.
@@ -131,7 +132,7 @@ TransformPoint2ToPoint2 makeAffineTransformPoint2(Extent2D const &offset = Exten
  *
  * @exceptsafe Provides basic exception safety.
  */
-TransformPoint2ToPoint2 makeIdentityTransform();
+std::shared_ptr<TransformPoint2ToPoint2> makeIdentityTransform();
 
 }  // namespace geom
 }  // namespace afw
