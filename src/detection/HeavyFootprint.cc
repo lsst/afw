@@ -44,7 +44,7 @@ namespace {
 
 template <typename T>
 struct FlattenWithSetter {
-    FlattenWithSetter(T val) : _val(val) {}
+    explicit FlattenWithSetter(T val) : _val(val) {}
 
     void operator()(geom::Point2I const& point, T& out, T& in) {
         out = in;
@@ -58,7 +58,7 @@ private:
 template <>
 struct FlattenWithSetter<lsst::afw::image::MaskPixel> {
     using T = lsst::afw::image::MaskPixel;
-    FlattenWithSetter(T val) : _mask(~val) {}
+    explicit FlattenWithSetter(T val) : _mask(~val) {}
 
     void operator()(geom::Point2I const& point, T& out, T& in) {
         out = in;
@@ -289,8 +289,8 @@ class HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::Factory
 public:
     explicit Factory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
-                                                              CatalogVector const& catalogs) const {
+    std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                              CatalogVector const& catalogs) const override {
         HeavyFootprintPersistenceHelper<ImagePixelT, MaskPixelT, VariancePixelT> const& keys =
                 HeavyFootprintPersistenceHelper<ImagePixelT, MaskPixelT, VariancePixelT>::get();
         HeavyFootprintPersistenceHelper<ImagePixelT, std::uint16_t, VariancePixelT> const& legacyKeys =

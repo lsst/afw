@@ -152,7 +152,7 @@ BaseTable::BaseTable(Schema const &schema) : daf::base::Citizen(typeid(this)), _
     _schema.getAliasMap()->_table = this;
 }
 
-BaseTable::~BaseTable() { _schema.getAliasMap()->_table = 0; }
+BaseTable::~BaseTable() { _schema.getAliasMap()->_table = nullptr; }
 
 namespace {
 

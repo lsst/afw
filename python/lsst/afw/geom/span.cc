@@ -41,7 +41,7 @@ using PySpan = py::class_<Span, std::shared_ptr<Span>>;
 // to the last element.
 class SpanIterator {
 public:
-    SpanIterator(const Span &s) : _it{s.begin()}, _end{s.end()} {};
+    explicit SpanIterator(const Span &s) : _it{s.begin()}, _end{s.end()} {};
     Point2I next() {
         if (_it == _end) {
             throw py::stop_iteration();

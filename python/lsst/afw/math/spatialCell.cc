@@ -165,8 +165,8 @@ void wrapTestClasses(py::module &mod) {
                 : SpatialCellCandidate(xCenter, yCenter), _flux(flux) {}
 
         /// @internal Return candidates rating
-        virtual double getCandidateRating() const { return _flux; }
-        virtual void setCandidateRating(double flux) { _flux = flux; }
+        double getCandidateRating() const override { return _flux; }
+        void setCandidateRating(double flux) override { _flux = flux; }
 
     private:
         double _flux;
@@ -178,10 +178,10 @@ void wrapTestClasses(py::module &mod) {
         TestCandidateVisitor() : CandidateVisitor(), _n(0) {}
 
         // Called by SpatialCellSet::visitCandidates before visiting any Candidates
-        void reset() { _n = 0; }
+        void reset() override { _n = 0; }
 
         // Called by SpatialCellSet::visitCandidates for each Candidate
-        void processCandidate(SpatialCellCandidate *candidate) { ++_n; }
+        void processCandidate(SpatialCellCandidate *candidate) override { ++_n; }
 
         int getN() const { return _n; }
 
@@ -200,7 +200,7 @@ void wrapTestClasses(py::module &mod) {
                 : SpatialCellImageCandidate(xCenter, yCenter), _flux(flux) {}
 
         /// @internal Return candidates rating
-        double getCandidateRating() const { return _flux; }
+        double getCandidateRating() const override { return _flux; }
 
         /// @internal Return the %image
         std::shared_ptr<MaskedImageT const> getMaskedImage() const {

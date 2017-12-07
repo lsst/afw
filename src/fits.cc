@@ -63,13 +63,13 @@ char getFormatCode(geom::Angle *) { return 'D'; }
 template <typename T>
 std::string makeColumnFormat(int size = 1) {
     if (size > 0) {
-        return (boost::format("%d%c") % size % getFormatCode((T *)0)).str();
+        return (boost::format("%d%c") % size % getFormatCode((T *)nullptr)).str();
     } else if (size < 0) {
         // variable length, max size given as -size
-        return (boost::format("1Q%c(%d)") % getFormatCode((T *)0) % (-size)).str();
+        return (boost::format("1Q%c(%d)") % getFormatCode((T *)nullptr) % (-size)).str();
     } else {
         // variable length, max size unknown
-        return (boost::format("1Q%c") % getFormatCode((T *)0)).str();
+        return (boost::format("1Q%c") % getFormatCode((T *)nullptr)).str();
     }
 }
 
@@ -243,7 +243,7 @@ std::string makeErrorMessage(std::string const &fileName, int status, std::strin
 std::string makeErrorMessage(void *fptr, int status, std::string const &msg) {
     std::string fileName = "";
     fitsfile *fd = reinterpret_cast<fitsfile *>(fptr);
-    if (fd != 0 && fd->Fptr != 0 && fd->Fptr->filename != 0) {
+    if (fd != nullptr && fd->Fptr != nullptr && fd->Fptr->filename != nullptr) {
         fileName = fd->Fptr->filename;
     }
     return makeErrorMessage(fileName, status, msg);
@@ -251,7 +251,7 @@ std::string makeErrorMessage(void *fptr, int status, std::string const &msg) {
 
 void MemFileManager::reset() {
     if (_managed) std::free(_ptr);
-    _ptr = 0;
+    _ptr = nullptr;
     _len = 0;
     _managed = true;
 }
@@ -275,7 +275,7 @@ int getBitPix() {
 std::string Fits::getFileName() const {
     std::string fileName = "<unknown>";
     fitsfile *fd = reinterpret_cast<fitsfile *>(fptr);
-    if (fd != 0 && fd->Fptr != 0 && fd->Fptr->filename != 0) {
+    if (fd != nullptr && fd->Fptr != nullptr && fd->Fptr->filename != nullptr) {
         fileName = fd->Fptr->filename;
     }
     return fileName;
@@ -289,18 +289,18 @@ int Fits::getHdu() {
 
 void Fits::setHdu(int hdu, bool relative) {
     if (relative) {
-        fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), hdu, 0, &status);
+        fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), hdu, nullptr, &status);
         if (behavior & AUTO_CHECK) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Incrementing HDU by %d") % hdu);
         }
     } else {
         if (hdu != INT_MIN) {
-            fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), hdu + 1, 0, &status);
+            fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), hdu + 1, nullptr, &status);
         }
         if (hdu == INT_MIN && getHdu() == 0 && getImageDim() == 0) {
             // want a silent failure here
             int tmpStatus = status;
-            fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), 1, 0, &tmpStatus);
+            fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), 1, nullptr, &tmpStatus);
         }
         if (behavior & AUTO_CHECK) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
@@ -444,7 +444,7 @@ void Fits::writeKey(std::string const &key, T const &value, std::string const &c
 
 template <typename T>
 void Fits::updateKey(std::string const &key, T const &value) {
-    updateKeyImpl(*this, key.c_str(), value, 0);
+    updateKeyImpl(*this, key.c_str(), value, nullptr);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
     }
@@ -452,7 +452,7 @@ void Fits::updateKey(std::string const &key, T const &value) {
 
 template <typename T>
 void Fits::writeKey(std::string const &key, T const &value) {
-    writeKeyImpl(*this, key.c_str(), value, 0);
+    writeKeyImpl(*this, key.c_str(), value, nullptr);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
     }
@@ -497,12 +497,12 @@ namespace {
 template <typename T>
 void readKeyImpl(Fits &fits, char const *key, T &value) {
     fits_read_key(reinterpret_cast<fitsfile *>(fits.fptr), FitsType<T>::CONSTANT, const_cast<char *>(key),
-                  &value, 0, &fits.status);
+                  &value, nullptr, &fits.status);
 }
 
 void readKeyImpl(Fits &fits, char const *key, std::string &value) {
-    char *buf = 0;
-    fits_read_key_longstr(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key), &buf, 0,
+    char *buf = nullptr;
+    fits_read_key_longstr(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key), &buf, nullptr,
                           &fits.status);
     if (buf) {
         value = strip(buf);
@@ -515,7 +515,7 @@ void readKeyImpl(Fits &fits, char const *key, double &value) {
     // If a quote mark (') is present then it's a string.
 
     char buf[FLEN_VALUE];
-    fits_read_keyword(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key), buf, 0, &fits.status);
+    fits_read_keyword(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key), buf, nullptr, &fits.status);
     if (fits.status != 0) {
         return;
     }
@@ -535,7 +535,7 @@ void readKeyImpl(Fits &fits, char const *key, double &value) {
         }
     } else {
         fits_read_key(reinterpret_cast<fitsfile *>(fits.fptr), FitsType<double>::CONSTANT,
-                      const_cast<char *>(key), &value, 0, &fits.status);
+                      const_cast<char *>(key), &value, nullptr, &fits.status);
     }
 }
 
@@ -554,7 +554,7 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
     char value[81];
     char comment[81];
     int nKeys = 0;
-    fits_get_hdrspace(reinterpret_cast<fitsfile *>(fptr), &nKeys, 0, &status);
+    fits_get_hdrspace(reinterpret_cast<fitsfile *>(fptr), &nKeys, nullptr, &status);
     std::string keyStr;
     std::string valueStr;
     std::string commentStr;
@@ -616,7 +616,7 @@ bool isKeyIgnored(std::string const &key) {
 
 class MetadataIterationFunctor : public HeaderIterationFunctor {
 public:
-    virtual void operator()(std::string const &key, std::string const &value, std::string const &comment);
+    void operator()(std::string const &key, std::string const &value, std::string const &comment) override;
 
     template <typename T>
     void add(std::string const &key, T value, std::string const &comment) {
@@ -682,7 +682,7 @@ void MetadataIterationFunctor::operator()(std::string const &key, std::string co
 }
 
 void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, std::string const &key,
-                          char const *comment = 0) {
+                          char const *comment = nullptr) {
     std::type_info const &valueType = metadata.typeOf(key);
     if (valueType == typeid(bool)) {
         if (metadata.isArray(key)) {
@@ -802,9 +802,9 @@ void Fits::writeMetadata(daf::base::PropertySet const &metadata) {
 // ---- Manipulating tables ---------------------------------------------------------------------------------
 
 void Fits::createTable() {
-    char *ttype = 0;
-    char *tform = 0;
-    fits_create_tbl(reinterpret_cast<fitsfile *>(fptr), BINARY_TBL, 0, 0, &ttype, &tform, 0, 0, &status);
+    char *ttype = nullptr;
+    char *tform = nullptr;
+    fits_create_tbl(reinterpret_cast<fitsfile *>(fptr), BINARY_TBL, 0, 0, &ttype, &tform, nullptr, nullptr, &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
     }
@@ -879,7 +879,7 @@ template <typename T>
 void Fits::readTableArray(std::size_t row, int col, int nElements, T *value) {
     int anynul = false;
     fits_read_col(reinterpret_cast<fitsfile *>(fptr), FitsTableType<T>::CONSTANT, col + 1, row + 1, 1,
-                  nElements, 0, value, &anynul, &status);
+                  nElements, nullptr, value, &anynul, &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
     }
@@ -893,7 +893,7 @@ void Fits::readTableScalar(std::size_t row, int col, std::string &value, bool is
     // cfitsio wants a char** because they imagine we might want an array of strings,
     // but we only want one element.
     char *tmp = &buf.front();
-    fits_read_col(reinterpret_cast<fitsfile *>(fptr), TSTRING, col + 1, row + 1, 1, 1, 0, &tmp, &anynul,
+    fits_read_col(reinterpret_cast<fitsfile *>(fptr), TSTRING, col + 1, row + 1, 1, 1, nullptr, &tmp, &anynul,
                   &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
@@ -1213,7 +1213,7 @@ bool getAllowImageCompression() {
 // ---- Manipulating files ----------------------------------------------------------------------------------
 
 Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
-        : fptr(0), status(0), behavior(behavior_) {
+        : fptr(nullptr), status(0), behavior(behavior_) {
     if (mode == "r" || mode == "rb") {
         fits_open_file(reinterpret_cast<fitsfile **>(&fptr), const_cast<char *>(filename.c_str()), READONLY,
                        &status);
@@ -1225,7 +1225,7 @@ Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
                        &status);
         int nHdu = 0;
         fits_get_num_hdus(reinterpret_cast<fitsfile *>(fptr), &nHdu, &status);
-        fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), nHdu, NULL, &status);
+        fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), nHdu, nullptr, &status);
         if ((behavior & AUTO_CHECK) && (behavior & AUTO_CLOSE) && (status) && (fptr)) {
             // We're about to throw an exception, and the destructor won't get called
             // because we're in the constructor, so cleanup here first.
@@ -1243,28 +1243,28 @@ Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
 }
 
 Fits::Fits(MemFileManager &manager, std::string const &mode, int behavior_)
-        : fptr(0), status(0), behavior(behavior_) {
+        : fptr(nullptr), status(0), behavior(behavior_) {
     typedef void *(*Reallocator)(void *, std::size_t);
     // It's a shame this logic is essentially a duplicate of above, but the innards are different enough
     // we can't really reuse it.
     if (mode == "r" || mode == "rb") {
         fits_open_memfile(reinterpret_cast<fitsfile **>(&fptr), "unused", READONLY, &manager._ptr,
-                          &manager._len, 0, 0,  // no reallocator or deltasize necessary for READONLY
+                          &manager._len, 0, nullptr,  // no reallocator or deltasize necessary for READONLY
                           &status);
     } else if (mode == "w" || mode == "wb") {
-        Reallocator reallocator = 0;
+        Reallocator reallocator = nullptr;
         if (manager._managed) reallocator = &std::realloc;
         fits_create_memfile(reinterpret_cast<fitsfile **>(&fptr), &manager._ptr, &manager._len, 0,
                             reallocator,  // use default deltasize
                             &status);
     } else if (mode == "a" || mode == "ab") {
-        Reallocator reallocator = 0;
+        Reallocator reallocator = nullptr;
         if (manager._managed) reallocator = &std::realloc;
         fits_open_memfile(reinterpret_cast<fitsfile **>(&fptr), "unused", READWRITE, &manager._ptr,
                           &manager._len, 0, reallocator, &status);
         int nHdu = 0;
         fits_get_num_hdus(reinterpret_cast<fitsfile *>(fptr), &nHdu, &status);
-        fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), nHdu, NULL, &status);
+        fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), nHdu, nullptr, &status);
         if ((behavior & AUTO_CHECK) && (behavior & AUTO_CLOSE) && (status) && (fptr)) {
             // We're about to throw an exception, and the destructor won't get called
             // because we're in the constructor, so cleanup here first.

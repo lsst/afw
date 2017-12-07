@@ -53,10 +53,10 @@ public:
                                     std::vector<double> const &measurementList,
                                     std::vector<double> const &varianceList,
                                     std::vector<double> const &xPositionList, double errorDef);
-    virtual ~MinimizerFunctionBase1(){};
+    ~MinimizerFunctionBase1()= default;verride{};
     // Required by ROOT::Minuit2::FCNBase
-    virtual double Up() const { return _errorDef; }
-    virtual double operator()(const std::vector<double> &) const;
+    double Up() const override { return _errorDef; }
+    double operator()(const std::vector<double> &) const override;
 
 #if 0  // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
@@ -83,10 +83,10 @@ public:
                                     std::vector<double> const &varianceList,
                                     std::vector<double> const &xPositionList,
                                     std::vector<double> const &yPositionList, double errorDef);
-    virtual ~MinimizerFunctionBase2(){};
+    ~MinimizerFunctionBase2()= default;verride{};
     // Required by ROOT::Minuit2::FCNBase
-    virtual double Up() const { return _errorDef; }
-    virtual double operator()(const std::vector<double> &par) const;
+    double Up() const override { return _errorDef; }
+    double operator()(const std::vector<double> &par) const override;
 
 #if 0  // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}

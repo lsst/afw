@@ -110,7 +110,7 @@ ImageFormatter<ImagePixelT>::ImageFormatter(std::shared_ptr<lsst::pex::policy::P
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename ImagePixelT>
-ImageFormatter<ImagePixelT>::~ImageFormatter(void) {}
+ImageFormatter<ImagePixelT>::~ImageFormatter() {}
 
 namespace {
 namespace dafBase = lsst::daf::base;
@@ -123,7 +123,7 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
                                         std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Image");
     }
     // TODO: Replace this with something better in DM-10776
@@ -238,7 +238,7 @@ template <class Archive>
 void ImageFormatter<ImagePixelT>::delegateSerialize(Archive& ar, int const, Persistable* persistable) {
     LOGL_DEBUG(_log, "ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Image");
     }
     int width, height;

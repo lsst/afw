@@ -146,7 +146,7 @@ void test7() {
 /**
  @internal Run one test as specified by ftn.
  */
-int test(void (*ftn)(void), string label) {
+int test(void (*ftn)(), string label) {
     cout << endl << "Running test " << label << "..." << endl;
 
     try {

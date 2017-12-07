@@ -110,8 +110,8 @@ struct Chebyshev1Function2PersistenceHelper : public PolynomialFunction2Persiste
 template <typename ReturnT>
 class GaussianFunction2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         GaussianFunction2PersistenceHelper const& keys = GaussianFunction2PersistenceHelper::get();
@@ -121,14 +121,14 @@ public:
                                                              record.get(keys.angle));
     }
 
-    GaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit GaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 template <typename ReturnT>
 class DoubleGaussianFunction2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         DoubleGaussianFunction2PersistenceHelper const& keys =
@@ -139,14 +139,14 @@ public:
                 record.get(keys.sigma1), record.get(keys.sigma2), record.get(keys.ampl2));
     }
 
-    DoubleGaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit DoubleGaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 template <typename ReturnT>
 class PolynomialFunction2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         PolynomialFunction2PersistenceHelper const keys(catalogs.front().getSchema());
@@ -154,14 +154,14 @@ public:
                 keys.coefficients.extractVector(catalogs.front().front()));
     }
 
-    PolynomialFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit PolynomialFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 template <typename ReturnT>
 class Chebyshev1Function2Factory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         Chebyshev1Function2PersistenceHelper keys(catalogs.front().getSchema());
@@ -170,7 +170,7 @@ public:
         return std::make_shared<Chebyshev1Function2<ReturnT> >(keys.coefficients.extractVector(record), bbox);
     }
 
-    Chebyshev1Function2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit Chebyshev1Function2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 GaussianFunction2Factory<float> registrationGaussian2F("GaussianFunction2F");

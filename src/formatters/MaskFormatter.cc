@@ -84,14 +84,14 @@ MaskFormatter<MaskPixelT>::MaskFormatter(std::shared_ptr<lsst::pex::policy::Poli
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename MaskPixelT>
-MaskFormatter<MaskPixelT>::~MaskFormatter(void) {}
+MaskFormatter<MaskPixelT>::~MaskFormatter() {}
 
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "MaskFormatter write start");
     Mask<MaskPixelT> const* ip = dynamic_cast<Mask<MaskPixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Mask");
     }
     // TODO: Replace this with something better in DM-10776

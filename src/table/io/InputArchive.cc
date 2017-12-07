@@ -161,14 +161,11 @@ InputArchive::InputArchive(std::shared_ptr<Impl> impl) : _impl(impl) {}
 InputArchive::InputArchive(BaseCatalog const& index, CatalogVector const& catalogs)
         : _impl(new Impl(index, catalogs)) {}
 
-InputArchive::InputArchive(InputArchive const& other) : _impl(other._impl) {}
+InputArchive::InputArchive(InputArchive const& other) = default;
 
-InputArchive& InputArchive::operator=(InputArchive const& other) {
-    _impl = other._impl;
-    return *this;
-}
+InputArchive& InputArchive::operator=(InputArchive const& other) = default;
 
-InputArchive::~InputArchive() {}
+InputArchive::~InputArchive() = default;
 
 std::shared_ptr<Persistable> InputArchive::get(int id) const { return _impl->get(id, *this); }
 

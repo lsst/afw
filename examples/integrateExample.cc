@@ -79,7 +79,7 @@ struct Cosmology {
 };
 
 struct W_Integrator : public std::unary_function<double, double> {
-    W_Integrator(Cosmology const &c) : _c(c) {}
+    explicit W_Integrator(Cosmology const &c) : _c(c) {}
     double operator()(double a) const {
         // First calculate H^2 according to:
         //

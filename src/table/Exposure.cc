@@ -146,7 +146,7 @@ struct PersistenceHelper {
     }
 
     // Construct a PersistenceHelper from a possibly old on-disk schema
-    PersistenceHelper(Schema const &oldSchema) {
+    explicit PersistenceHelper(Schema const &oldSchema) {
         addIfPresent(oldSchema, wcs, WCS_FIELD_NAME);
         addIfPresent(oldSchema, psf, PSF_FIELD_NAME);
         addIfPresent(oldSchema, calib, CALIB_FIELD_NAME);
@@ -180,11 +180,11 @@ public:
     }
 
 protected:
-    virtual void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows);
+    void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows) override;
 
-    virtual void _writeRecord(BaseRecord const &r);
+    void _writeRecord(BaseRecord const &r) override;
 
-    virtual void _finish() {
+    void _finish() override {
         if (_doWriteArchive) _archive->writeFits(*_fits);
     }
 
@@ -238,10 +238,10 @@ public:
         }
     }
 
-    PersistableObjectColumnReader(int column) : _column(column) {}
+    explicit PersistableObjectColumnReader(int column) : _column(column) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
-                          std::shared_ptr<io::InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
+                          std::shared_ptr<io::InputArchive> const &archive) const override {
         int id = 0;
         fits.readTableScalar<int>(row, _column, id);
         std::shared_ptr<T> value = archive->get<T>(id);
@@ -259,9 +259,9 @@ class ExposureFitsReader : public io::FitsReader {
 public:
     ExposureFitsReader() : afw::table::io::FitsReader("EXPOSURE") {}
 
-    virtual std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
+    std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
                                                  std::shared_ptr<daf::base::PropertyList> metadata,
-                                                 int ioFlags, bool stripMetadata) const {
+                                                 int ioFlags, bool stripMetadata) const override {
         // We rely on the table version stored in the metadata when loading an ExposureCatalog
         // persisted on its own.  This is not as flexible in terms of backwards compatibility
         // as the code that loads ExposureCatalogs persisted as part of something else, but
@@ -284,7 +284,7 @@ public:
         return table;
     }
 
-    virtual bool usesArchive(int ioFlags) const { return true; }
+    bool usesArchive(int ioFlags) const override { return true; }
 };
 
 static ExposureFitsReader const exposureFitsReader;
@@ -359,7 +359,7 @@ std::shared_ptr<ExposureTable> ExposureTable::make(Schema const &schema) {
 
 ExposureTable::ExposureTable(Schema const &schema) : BaseTable(schema) {}
 
-ExposureTable::ExposureTable(ExposureTable const &other) : BaseTable(other) {}
+ExposureTable::ExposureTable(ExposureTable const &other) = default;
 
 ExposureTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");

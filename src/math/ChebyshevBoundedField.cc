@@ -319,7 +319,7 @@ struct PersistenceHelper {
               coefficients(schema.addField<table::Array<double> >(
                       "coefficients", "Chebyshev function coefficients, ordered by y then x", nx * ny)) {}
 
-    PersistenceHelper(table::Schema const& s)
+    explicit PersistenceHelper(table::Schema const& s)
             : schema(s),
         orderX(s["order_x"]),
         bboxMin(s["bbox_min"]),
@@ -332,8 +332,8 @@ public:
     explicit ChebyshevBoundedFieldFactory(std::string const& name)
             : afw::table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();

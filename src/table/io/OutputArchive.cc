@@ -130,14 +130,11 @@ public:
 
 OutputArchive::OutputArchive() : _impl(new Impl()) {}
 
-OutputArchive::OutputArchive(OutputArchive const &other) : _impl(other._impl) {}
+OutputArchive::OutputArchive(OutputArchive const &other) = default;
 
-OutputArchive &OutputArchive::operator=(OutputArchive const &other) {
-    _impl = other._impl;
-    return *this;
-}
+OutputArchive &OutputArchive::operator=(OutputArchive const &other) = default;
 
-OutputArchive::~OutputArchive() {}
+OutputArchive::~OutputArchive() = default;
 
 int OutputArchive::put(Persistable const *obj, bool permissive) {
     if (!_impl.unique()) {  // copy on write
@@ -183,7 +180,7 @@ OutputArchiveHandle::OutputArchiveHandle(int id, std::string const &name, std::s
                                          std::shared_ptr<OutputArchive::Impl> impl)
         : _id(id), _catPersistable(0), _name(name), _module(module), _impl(impl) {}
 
-OutputArchiveHandle::~OutputArchiveHandle() {}
+OutputArchiveHandle::~OutputArchiveHandle() = default;
 }
 }
 }

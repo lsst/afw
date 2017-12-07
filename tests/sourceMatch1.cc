@@ -46,8 +46,8 @@ namespace afwTable = lsst::afw::table;
 namespace {
 
 math::Random &rng() {
-    static math::Random *generator = 0;
-    if (generator == 0) {
+    static math::Random *generator = nullptr;
+    if (generator == nullptr) {
         generator = new math::Random(math::Random::MT19937);
     }
     return *generator;

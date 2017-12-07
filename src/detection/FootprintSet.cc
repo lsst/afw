@@ -80,7 +80,7 @@ public:
               _idMask(idMask),
               _withSetReplace(false),
               _overwriteId(overwriteId),
-              _oldIds(NULL),
+              _oldIds(nullptr),
               _pos() {
         if (_id & _idMask) {
             throw LSST_EXCEPT(
@@ -667,7 +667,7 @@ static void findFootprints(
         bool good = (includeThresholdMultiplier == 1.0); /* Span exceeds the threshold? */
 
         x_iterator pixPtr = img.row_begin(y);
-        x_var_iterator varPtr = (var == NULL) ? NULL : var->row_begin(y);
+        x_var_iterator varPtr = (var == nullptr) ? nullptr : var->row_begin(y);
         for (int x = 0; x < width; ++x, ++pixPtr, varPtr = advancePtr(varPtr, ThresholdTraitT())) {
             ImagePixelT const pixVal = *pixPtr;
 
@@ -778,7 +778,7 @@ FootprintSet::FootprintSet(image::Image<ImagePixelT> const &img, Threshold const
     typedef float VariancePixelT;
 
     findFootprints<ImagePixelT, image::MaskPixel, VariancePixelT, ThresholdLevel_traits>(
-            _footprints.get(), _region, img, NULL, threshold.getValue(img), threshold.getIncludeMultiplier(),
+            _footprints.get(), _region, img, nullptr, threshold.getValue(img), threshold.getIncludeMultiplier(),
             threshold.getPolarity(), npixMin, setPeaks);
 }
 
@@ -790,13 +790,13 @@ FootprintSet::FootprintSet(image::Mask<MaskPixelT> const &msk, Threshold const &
     switch (threshold.getType()) {
         case Threshold::BITMASK:
             findFootprints<MaskPixelT, MaskPixelT, float, ThresholdBitmask_traits>(
-                    _footprints.get(), _region, msk, NULL, threshold.getValue(),
+                    _footprints.get(), _region, msk, nullptr, threshold.getValue(),
                     threshold.getIncludeMultiplier(), threshold.getPolarity(), npixMin, false);
             break;
 
         case Threshold::VALUE:
             findFootprints<MaskPixelT, MaskPixelT, float, ThresholdLevel_traits>(
-                    _footprints.get(), _region, msk, NULL, threshold.getValue(),
+                    _footprints.get(), _region, msk, nullptr, threshold.getValue(),
                     threshold.getIncludeMultiplier(), threshold.getPolarity(), npixMin, false);
             break;
 
@@ -911,9 +911,9 @@ Startspan<MaskPixelT>::Startspan(
 template <typename ImagePixelT, typename MaskPixelT>
 class StartspanSet {
 public:
-    StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT> &image)
+    explicit StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT> &image)
             : _image(image->getImage()), _mask(image->getMask()) {}
-    ~StartspanSet() {}
+    ~StartspanSet() = default;
 
     bool add(geom::Span *span, DIRECTION const dir, bool addToMask = true);
     bool process(Footprint *fp,               // the footprint that we're building

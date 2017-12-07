@@ -248,9 +248,9 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage co
                                                                   )
         : daf::base::Citizen(typeid(this)),
           _image(new Image(*rhs.getImage(), bbox, origin, deep)),
-          _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask*>(NULL)),
+          _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask*>(nullptr)),
           _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, origin, deep)
-                                  : static_cast<Variance*>(NULL)) {
+                                  : static_cast<Variance*>(nullptr)) {
     conformSizes();
 }
 
@@ -370,7 +370,7 @@ struct productVariance {
 template <typename ImagePixelT, typename VariancePixelT>
 struct scaledProductVariance {
     double _c;
-    scaledProductVariance(double const c) : _c(c) {}
+    explicit scaledProductVariance(double const c) : _c(c) {}
     double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
         return _c * _c * (lhs * lhs * varRhs + rhs * rhs * varLhs);
     }
@@ -430,7 +430,7 @@ struct quotientVariance {
 template <typename ImagePixelT, typename VariancePixelT>
 struct scaledQuotientVariance {
     double _c;
-    scaledQuotientVariance(double c) : _c(c) {}
+    explicit scaledQuotientVariance(double c) : _c(c) {}
     double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
         ImagePixelT const rhs2 = rhs * rhs;
         return (lhs * lhs * varRhs + rhs2 * varLhs) / (_c * _c * rhs2 * rhs2);

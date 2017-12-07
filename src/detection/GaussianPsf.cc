@@ -69,8 +69,8 @@ private:
 
 class GaussianPsfFactory : public afw::table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
-                                                              CatalogVector const& catalogs) const {
+    std::shared_ptr<afw::table::io::Persistable> read(InputArchive const& archive,
+                                                              CatalogVector const& catalogs) const override {
         static GaussianPsfPersistenceHelper const& keys = GaussianPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -80,7 +80,7 @@ public:
                                              record.get(keys.dimensions.getY()), record.get(keys.sigma));
     }
 
-    GaussianPsfFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
+    explicit GaussianPsfFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 GaussianPsfFactory registration("GaussianPsf");

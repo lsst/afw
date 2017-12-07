@@ -138,7 +138,7 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
 
 void ExposureInfo::initApCorrMap() { _apCorrMap = std::make_shared<ApCorrMap>(); }
 
-ExposureInfo::~ExposureInfo() {}
+ExposureInfo::~ExposureInfo() = default;
 
 ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I const& xy0) const {
     FitsWriteData data;

@@ -38,13 +38,13 @@ public:
 protected:
     // Implementing this is the whole reason we made these test classes; want to verify that this gets
     // called at the right times.
-    virtual void handleAliasChange(std::string const& alias) { lastAliasChanged = alias; }
+    void handleAliasChange(std::string const& alias) override { lastAliasChanged = alias; }
 
-    virtual std::shared_ptr<lsst::afw::table::BaseTable> _clone() const {
+    std::shared_ptr<lsst::afw::table::BaseTable> _clone() const override {
         return std::make_shared<TestTable>(*this);
     }
 
-    virtual std::shared_ptr<lsst::afw::table::BaseRecord> _makeRecord() {
+    std::shared_ptr<lsst::afw::table::BaseRecord> _makeRecord() override {
         return std::make_shared<TestRecord>(getSelf<TestTable>());
     }
 };

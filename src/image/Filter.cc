@@ -40,7 +40,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-FilterProperty::PropertyMap* FilterProperty::_propertyMap = NULL;
+FilterProperty::PropertyMap* FilterProperty::_propertyMap = nullptr;
 
 FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertySet const& prop, bool force)
         : _name(name), _lambdaEff(-1) {
@@ -182,9 +182,9 @@ void Filter::_initRegistry() {
 int Filter::_id0 = Filter::UNKNOWN;
 
 // dynamically allocated as that avoids an intel bug with static variables in dynamic libraries
-Filter::AliasMap* Filter::_aliasMap = NULL;
-Filter::NameMap* Filter::_nameMap = NULL;
-Filter::IdMap* Filter::_idMap = NULL;
+Filter::AliasMap* Filter::_aliasMap = nullptr;
+Filter::NameMap* Filter::_nameMap = nullptr;
+Filter::IdMap* Filter::_idMap = nullptr;
 
 int Filter::define(FilterProperty const& fp, int id, bool force) {
     if (!_nameMap) {

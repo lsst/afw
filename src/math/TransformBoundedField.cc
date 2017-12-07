@@ -95,7 +95,7 @@ struct PersistenceHelper {
               frameSet(schema.addField<table::Array<std::uint8_t>>(
                       "frameSet", "FrameSet contained in the Transform", "", 0)) {}
 
-    PersistenceHelper(table::Schema const& s)
+    explicit PersistenceHelper(table::Schema const& s)
             : schema(s), bboxMin(s["bbox_min"]), bboxMax(s["bbox_max"]), frameSet(s["frameSet"]) {}
 };
 

@@ -136,7 +136,7 @@ double const JD2000 = 2451544.50;
  */
 class Dms {
 public:
-    Dms(){};
+    Dms()= default;;
 
     // note that isSouth is needed to specify coords between dec = 0, and dec = -1
     // otherwise, d = -0 gets carried as d = 0 ... need a way to specify it explicitly
@@ -147,7 +147,7 @@ public:
         sec = s;
     };
     // unit could be "degrees" or "hours"
-    Dms(geom::Angle const deg00, geom::AngleUnit const unit = geom::degrees) {
+    explicit Dms(geom::Angle const deg00, geom::AngleUnit const unit = geom::degrees) {
         double deg0 = deg00.asAngularUnits(unit);
         double const absVal = std::fabs(deg0);
         sign = (deg0 >= 0) ? 1 : -1;

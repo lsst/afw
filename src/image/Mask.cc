@@ -93,9 +93,9 @@ struct MapWithHash {
     typedef detail::MaskPlaneDict::value_type value_type;
     typedef detail::MaskPlaneDict::const_iterator const_iterator;
 
-    MapWithHash(detail::MaskPlaneDict const& dict = detail::MaskPlaneDict())
+    explicit MapWithHash(detail::MaskPlaneDict const& dict = detail::MaskPlaneDict())
             : _dict(dict), _hash(_calcHash()) {}
-    ~MapWithHash() {}
+    ~MapWithHash() = default;
 
     bool operator==(MapWithHash const& rhs) const { return _hash == rhs._hash; }
 
@@ -156,7 +156,7 @@ class MaskDict : public MapWithHash {
                                                  // confused
 
     MaskDict() : MapWithHash() {}
-    MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
+    explicit MaskDict(MapWithHash const* dict) : MapWithHash(*dict) {}
 
 public:
     static std::shared_ptr<MaskDict> makeMaskDict();

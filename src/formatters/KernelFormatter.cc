@@ -129,14 +129,14 @@ dafPersist::FormatterRegistration KernelFormatter::separableKernelRegistration("
 KernelFormatter::KernelFormatter(std::shared_ptr<pexPolicy::Policy> policy)
         : dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-KernelFormatter::~KernelFormatter(void) {}
+KernelFormatter::~KernelFormatter() = default;
 
 void KernelFormatter::write(dafBase::Persistable const* persistable,
                             std::shared_ptr<dafPersist::FormatterStorage> storage,
                             std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "KernelFormatter write start");
     math::Kernel const* kp = dynamic_cast<math::Kernel const*>(persistable);
-    if (kp == 0) {
+    if (kp == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Persisting non-Kernel");
     }
     // TODO: Replace this with something better in DM-10776
@@ -188,7 +188,7 @@ template <class Archive>
 void KernelFormatter::delegateSerialize(Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "KernelFormatter delegateSerialize start");
     math::Kernel* kp = dynamic_cast<math::Kernel*>(persistable);
-    if (kp == 0) {
+    if (kp == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Serializing non-Kernel");
     }
     ar& make_nvp("base", boost::serialization::base_object<dafBase::Persistable>(*kp));

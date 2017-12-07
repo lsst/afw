@@ -289,7 +289,7 @@ struct GridTransformTest {
             return AffineTransform(ellipse.getGridTransform()).getParameterVector();
         }
 
-        Functor(Ellipse const& ellipse_) : ellipse(ellipse_) {}
+        explicit Functor(Ellipse const& ellipse_) : ellipse(ellipse_) {}
     };
 
     template <typename T>
@@ -341,7 +341,7 @@ struct ConvolutionTest {
 
         Quadrupole other;
 
-        Functor(Quadrupole const& other_) : other(other_) {}
+        explicit Functor(Quadrupole const& other_) : other(other_) {}
     };
 
     template <typename T>

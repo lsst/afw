@@ -39,46 +39,46 @@ namespace py = pybind11;
 // not really a Psf, just a Persistable we can stuff in an Exposure
 class DummyPsf : public lsst::afw::detection::Psf {
 public:
-    virtual std::shared_ptr<lsst::afw::detection::Psf> clone() const {
+    std::shared_ptr<lsst::afw::detection::Psf> clone() const override {
         return std::shared_ptr<lsst::afw::detection::Psf>(new DummyPsf(_x));
     }
 
-    virtual std::shared_ptr<lsst::afw::detection::Psf> resized(int width, int height) const {
+    std::shared_ptr<lsst::afw::detection::Psf> resized(int width, int height) const override {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "Not Implemented");
     }
 
-    virtual bool isPersistable() const { return true; }
+    bool isPersistable() const override { return true; }
 
     double getValue() const { return _x; }
 
-    virtual lsst::afw::geom::Box2I doComputeBBox(lsst::afw::geom::Point2D const& position,
-                                                 lsst::afw::image::Color const& color) const {
+    lsst::afw::geom::Box2I doComputeBBox(lsst::afw::geom::Point2D const& position,
+                                                 lsst::afw::image::Color const& color) const override {
         return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-1, -1), lsst::afw::geom::Point2I(1, 1));
     }
 
     explicit DummyPsf(double x) : _x(x) {}
 
 protected:
-    virtual std::shared_ptr<Image> doComputeKernelImage(lsst::afw::geom::Point2D const& ccdXY,
-                                                        lsst::afw::image::Color const& color) const {
+    std::shared_ptr<Image> doComputeKernelImage(lsst::afw::geom::Point2D const& ccdXY,
+                                                        lsst::afw::image::Color const& color) const override {
         return std::shared_ptr<Image>();
     }
 
-    virtual double doComputeApertureFlux(double radius, lsst::afw::geom::Point2D const& ccdXY,
-                                         lsst::afw::image::Color const& color) const {
+    double doComputeApertureFlux(double radius, lsst::afw::geom::Point2D const& ccdXY,
+                                         lsst::afw::image::Color const& color) const override {
         return 0.0;
     }
 
-    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(lsst::afw::geom::Point2D const& ccdXY,
-                                                                 lsst::afw::image::Color const& color) const {
+    lsst::afw::geom::ellipses::Quadrupole doComputeShape(lsst::afw::geom::Point2D const& ccdXY,
+                                                                 lsst::afw::image::Color const& color) const override {
         return lsst::afw::geom::ellipses::Quadrupole();
     }
 
-    virtual std::string getPersistenceName() const { return "DummyPsf"; }
+    std::string getPersistenceName() const override { return "DummyPsf"; }
 
-    virtual std::string getPythonModule() const { return "testTableArchivesLib"; }
+    std::string getPythonModule() const override { return "testTableArchivesLib"; }
 
-    virtual void write(OutputArchiveHandle& handle) const;
+    void write(OutputArchiveHandle& handle) const override;
 
     double _x;
 };
@@ -110,8 +110,8 @@ private:
 
 class DummyPsfFactory : public lsst::afw::table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<lsst::afw::table::io::Persistable> read(InputArchive const& archive,
-                                                                    CatalogVector const& catalogs) const {
+    std::shared_ptr<lsst::afw::table::io::Persistable> read(InputArchive const& archive,
+                                                                    CatalogVector const& catalogs) const override {
         static DummyPsfPersistenceHelper const& keys = DummyPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -120,7 +120,7 @@ public:
         return std::make_shared<DummyPsf>(record.get(keys.x));
     }
 
-    DummyPsfFactory(std::string const& name) : lsst::afw::table::io::PersistableFactory(name) {}
+    explicit DummyPsfFactory(std::string const& name) : lsst::afw::table::io::PersistableFactory(name) {}
 };
 
 DummyPsfFactory registration("DummyPsf");

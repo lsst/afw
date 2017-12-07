@@ -83,7 +83,7 @@ const int fitsToLsstPixels = -1;
 
 Wcs::Wcs()
         : daf::base::Citizen(typeid(this)),
-          _wcsInfo(NULL),
+          _wcsInfo(nullptr),
           _nWcsInfo(0),
           _relax(0),
           _wcsfixCtrl(0),
@@ -97,7 +97,7 @@ Wcs::Wcs()
 
 Wcs::Wcs(std::shared_ptr<daf::base::PropertySet const> const& fitsMetadata)
         : daf::base::Citizen(typeid(this)),
-          _wcsInfo(NULL),
+          _wcsInfo(nullptr),
           _nWcsInfo(0),
           _relax(0),
           _wcsfixCtrl(0),
@@ -144,7 +144,7 @@ Wcs::Wcs(GeomPoint const& crval, GeomPoint const& crpix, Eigen::Matrix2d const& 
          std::string const& ctype2, double equinox, std::string const& raDecSys, std::string const& cunits1,
          std::string const& cunits2)
         : daf::base::Citizen(typeid(this)),
-          _wcsInfo(NULL),
+          _wcsInfo(nullptr),
           _nWcsInfo(0),
           _relax(0),
           _wcsfixCtrl(0),
@@ -178,7 +178,7 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<daf::base::PropertySet const> const
         }
 
         // Ctor
-        HeaderAccess(std::shared_ptr<daf::base::PropertySet const> const& header)
+        explicit HeaderAccess(std::shared_ptr<daf::base::PropertySet const> const& header)
                 : _constHeader(header), _hackHeader() {}
 
     private:
@@ -278,7 +278,7 @@ void Wcs::initWcsLibFromFits(std::shared_ptr<daf::base::PropertySet const> const
     }
 
     // Run wcsfix on _wcsInfo to try and fix any problems it knows about.
-    const int* naxes = NULL;  // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
+    const int* naxes = nullptr;  // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
     int stats[NWCSFIX];       // status returns from wcsfix
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
     if (fixStatus != 0) {
@@ -370,7 +370,7 @@ void Wcs::initWcsLib(GeomPoint const& crval, GeomPoint const& crpix, Eigen::Matr
 
     // Initialise the wcs struct
     _wcsInfo = static_cast<struct wcsprm*>(malloc(sizeof(struct wcsprm)));
-    if (_wcsInfo == NULL) {
+    if (_wcsInfo == nullptr) {
         throw LSST_EXCEPT(except::MemoryError, "Cannot allocate WCS info");
     }
 
@@ -404,7 +404,7 @@ void Wcs::initWcsLib(GeomPoint const& crval, GeomPoint const& crpix, Eigen::Matr
     // This is a work around for what I think is a bug in wcslib. ->types is neither
     // initialised or set to NULL by default, so if I try to delete a Wcs object,
     // wcslib then attempts to free non-existent space, and the code can crash.
-    _wcsInfo->types = NULL;
+    _wcsInfo->types = nullptr;
 
     // Set the coordinate system
     strncpy(_wcsInfo->ctype[0], ctype1.c_str(), STRLEN);
@@ -430,7 +430,7 @@ void Wcs::initWcsLib(GeomPoint const& crval, GeomPoint const& crpix, Eigen::Matr
 
 Wcs::Wcs(Wcs const& rhs)
         : daf::base::Citizen(typeid(this)),
-          _wcsInfo(NULL),
+          _wcsInfo(nullptr),
           _nWcsInfo(rhs._nWcsInfo),
           _relax(rhs._relax),
           _wcsfixCtrl(rhs._wcsfixCtrl),
@@ -440,7 +440,7 @@ Wcs::Wcs(Wcs const& rhs)
 {
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm*>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
-        if (_wcsInfo == NULL) {
+        if (_wcsInfo == nullptr) {
             throw LSST_EXCEPT(pex::exceptions::MemoryError, "Cannot allocate WCS info");
         }
 
@@ -518,12 +518,12 @@ bool Wcs::_isSubset(Wcs const& rhs) const {
 }
 
 Wcs::~Wcs() {
-    if (_wcsInfo != NULL) {
+    if (_wcsInfo != nullptr) {
         wcsvfree(&_nWcsInfo, &_wcsInfo);
     }
 }
 
-std::shared_ptr<Wcs> Wcs::clone(void) const { return std::shared_ptr<Wcs>(new Wcs(*this)); }
+std::shared_ptr<Wcs> Wcs::clone() const { return std::shared_ptr<Wcs>(new Wcs(*this)); }
 
 //
 // Accessors
@@ -916,8 +916,8 @@ class WcsFactory : public table::io::PersistableFactory {
 public:
     explicit WcsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const;
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override;
 };
 
 namespace {
@@ -1013,7 +1013,7 @@ bool Wcs::isPersistable() const {
 
 Wcs::Wcs(afw::table::BaseRecord const& record)
         : daf::base::Citizen(typeid(this)),
-          _wcsInfo(NULL),
+          _wcsInfo(nullptr),
           _nWcsInfo(0),
           _relax(0),
           _wcsfixCtrl(0),

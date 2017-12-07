@@ -39,14 +39,14 @@ dafPersist::FormatterRegistration PsfFormatter::registration("Psf", typeid(Psf),
 PsfFormatter::PsfFormatter(std::shared_ptr<pexPolicy::Policy> policy)
         : dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-PsfFormatter::~PsfFormatter(void) {}
+PsfFormatter::~PsfFormatter() = default;
 
 void PsfFormatter::write(dafBase::Persistable const* persistable,
                          std::shared_ptr<dafPersist::FormatterStorage> storage,
                          std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "PsfFormatter write start");
     Psf const* ps = dynamic_cast<Psf const*>(persistable);
-    if (ps == 0) {
+    if (ps == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Psf");
     }
     // TODO: Replace this with something better in DM-10776
@@ -99,7 +99,7 @@ template <class Archive>
 void PsfFormatter::delegateSerialize(Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "PsfFormatter delegateSerialize start");
     Psf* ps = dynamic_cast<Psf*>(persistable);
-    if (ps == 0) {
+    if (ps == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Psf");
     }
 #if 0  // not present in baseclass

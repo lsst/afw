@@ -110,7 +110,7 @@ ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
         : daf::persistence::Formatter(typeid(this)), _policy(policy) {}
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter(void) {}
+ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter() {}
 
 /**
  * @internal Lookup a filter number in the database to find a filter name.
@@ -180,7 +180,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     LOGL_DEBUG(_log, "ExposureFormatter write start");
     image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
             dynamic_cast<image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Persisting non-Exposure");
     }
     // TODO: Replace this with something better in DM-10776
@@ -449,7 +449,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeriali
     LOGL_DEBUG(_log, "ExposureFormatter delegateSerialize start");
     image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             dynamic_cast<image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Serializing non-Exposure");
     }
     std::shared_ptr<image::Wcs> wcs = ip->getWcs();

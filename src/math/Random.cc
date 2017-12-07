@@ -66,7 +66,7 @@ void Random::initialize() {
         throw LSST_EXCEPT(ex::InvalidParameterError, (boost::format("Invalid RNG seed: %lu") % _seed).str());
     }
     ::gsl_rng *rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
-    if (rng == 0) {
+    if (rng == nullptr) {
         throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_alloc() failed");
     }
     ::gsl_rng_set(rng, _seed);

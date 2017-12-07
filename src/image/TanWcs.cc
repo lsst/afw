@@ -248,7 +248,7 @@ bool TanWcs::_isSubset(Wcs const& rhs) const {
     return true;
 }
 
-std::shared_ptr<Wcs> TanWcs::clone(void) const { return std::shared_ptr<Wcs>(new TanWcs(*this)); }
+std::shared_ptr<Wcs> TanWcs::clone() const { return std::shared_ptr<Wcs>(new TanWcs(*this)); }
 
 //
 // Accessors
@@ -256,7 +256,7 @@ std::shared_ptr<Wcs> TanWcs::clone(void) const { return std::shared_ptr<Wcs>(new
 geom::Point2D TanWcs::skyToPixelImpl(geom::Angle sky1,  // RA
                                      geom::Angle sky2   // Dec
                                      ) const {
-    if (_wcsInfo == NULL) {
+    if (_wcsInfo == nullptr) {
         throw(LSST_EXCEPT(pex::exceptions::RuntimeError, "Wcs structure not initialised"));
     }
 
@@ -393,7 +393,7 @@ geom::Point2D TanWcs::distortPixel(geom::Point2D const& pix) const {
  * Worker routine for pixelToSky
  */
 void TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const {
-    if (_wcsInfo == NULL) {
+    if (_wcsInfo == nullptr) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Wcs structure not initialised"));
     }
 
@@ -484,8 +484,8 @@ class TanWcsFactory : public table::io::PersistableFactory {
 public:
     explicit TanWcsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
         std::shared_ptr<table::BaseRecord const> sipRecord;
         if (catalogs.size() > 1u) {

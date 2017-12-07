@@ -29,14 +29,14 @@ namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
 template <typename T>
 struct erase : public afwImage::pixelOp0<T> {
-    T operator()() const { return 0; }
+    T operator()() const override { return 0; }
 };
 
 template <typename T>
 struct setVal
         : public afwImage::pixelOp0<T> {  // don't call it fill as people like to say using namespace std
-    setVal(T val) : _val(val) {}
-    T operator()() const { return _val; }
+    explicit setVal(T val) : _val(val) {}
+    T operator()() const override { return _val; }
 
 private:
     T _val;
@@ -44,18 +44,18 @@ private:
 
 template <typename T>
 struct addOne : public afwImage::pixelOp1<T> {
-    T operator()(T val) const { return val + 1; }
+    T operator()(T val) const override { return val + 1; }
 };
 
 template <typename T1, typename T2>
 struct divide : public afwImage::pixelOp2<T1, T2> {
-    T1 operator()(T1 lhs, T2 rhs) const { return lhs / rhs; }
+    T1 operator()(T1 lhs, T2 rhs) const override { return lhs / rhs; }
 };
 
 template <typename T>
 struct Gaussian : public afwImage::pixelOp1XY<T> {
     Gaussian(float a, float xc, float yc, float alpha) : _a(a), _xc(xc), _yc(yc), _alpha(alpha) {}
-    T operator()(int x, int y, T val) const {
+    T operator()(int x, int y, T val) const override {
         float const dx = x - _xc;
         float const dy = y - _yc;
         return val + _a * ::exp(-(dx * dx + dy * dy) / (2 * _alpha * _alpha));

@@ -626,22 +626,22 @@ namespace {
  */
 template <typename LhsPixelT, typename RhsPixelT>
 struct plusEq : public pixelOp2<LhsPixelT, RhsPixelT> {
-    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const { return static_cast<LhsPixelT>(lhs + rhs); }
+    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const override { return static_cast<LhsPixelT>(lhs + rhs); }
 };
 
 template <typename LhsPixelT, typename RhsPixelT>
 struct minusEq : public pixelOp2<LhsPixelT, RhsPixelT> {
-    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const { return static_cast<LhsPixelT>(lhs - rhs); }
+    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const override { return static_cast<LhsPixelT>(lhs - rhs); }
 };
 
 template <typename LhsPixelT, typename RhsPixelT>
 struct timesEq : public pixelOp2<LhsPixelT, RhsPixelT> {
-    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const { return static_cast<LhsPixelT>(lhs * rhs); }
+    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const override { return static_cast<LhsPixelT>(lhs * rhs); }
 };
 
 template <typename LhsPixelT, typename RhsPixelT>
 struct divideEq : public pixelOp2<LhsPixelT, RhsPixelT> {
-    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const { return static_cast<LhsPixelT>(lhs / rhs); }
+    LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const override { return static_cast<LhsPixelT>(lhs / rhs); }
 };
 }
 

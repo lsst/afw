@@ -66,7 +66,7 @@ public:
     Card(const std::string &name, const char *val, const char *commnt = "")
             : keyword(name), value(std::string(val)), comment(commnt) {}
 
-    ~Card() {}
+    ~Card() = default;
 
     int write(int fd, int ncard, char *record) const;
 
@@ -284,7 +284,7 @@ int write_fits_data(int fd, int bitpix, char *begin, char *end) {
     }
 #endif
 
-    char *buff = NULL;       // I/O buffer
+    char *buff = nullptr;       // I/O buffer
     bool allocated = false;  // do I need to free it?
     if (swap_bytes || bitpix == 16) {
         buff = new char[FITS_SIZE * bytes_per_pixel];
@@ -395,7 +395,7 @@ void writeBasicFits(int fd,                 // file descriptor to write to
     /*
      * Was there something else?
      */
-    if (Wcs == NULL) {
+    if (Wcs == nullptr) {
         addWcs("", cards);              // works around a ds9 bug that WCSA/B is ignored if no Wcs is present
     } else {
         typedef std::vector<std::string> NameList;

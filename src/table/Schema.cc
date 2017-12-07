@@ -184,9 +184,9 @@ struct ExtractItemByName : public boost::static_visitor<> {
                                           boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS> >::type
                 IsMatchPossible;
         // We use that type to dispatch one of the two overloads of findNamedSubfield.
-        int n = findNamedSubfield(item, name, delimiter, (IsMatchPossible *)0);
+        int n = findNamedSubfield(item, name, delimiter, (IsMatchPossible *)nullptr);
         // If we have a match, we call another overloaded template to make the subfield.
-        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible *)0);
+        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible *)nullptr);
     }
 
     char delimiter;
@@ -270,10 +270,10 @@ struct ExtractItemByKey : public boost::static_visitor<> {
                                           boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS> >::type
                 IsMatchPossible;
         // We use that type to dispatch one of the two overloads of findKeySubfield.
-        int n = findKeySubfield(item, key, (IsMatchPossible *)0);
+        int n = findKeySubfield(item, key, (IsMatchPossible *)nullptr);
         // If we have a match, we call another overloaded template to make the subfield.
         // (this is the same  makeSubfieldItem used in ExtractItemByName, so it's defined up there)
-        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible *)0);
+        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible *)nullptr);
     }
 
     char delimiter;
@@ -381,7 +381,7 @@ inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap con
 template <typename T>
 void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
     NameMap::iterator j = _names.find(field.getName());
-    SchemaItem<T> *item = 0;
+    SchemaItem<T> *item = nullptr;
     if (j != _names.end()) {
         // The field name is already present in the Schema; see if it's the one we're replacing.
         // If we can get the old item with this, we don't need to update the name map at all.
@@ -416,7 +416,7 @@ int SchemaImpl::contains(SchemaItem<T> const &item, int flags) const {
         throw LSST_EXCEPT(pex::exceptions::LogicError,
                           "Can only check whether item is in schema if flags & EQUAL_KEYS");
     }
-    SchemaItem<T> const *cmpItem = 0;
+    SchemaItem<T> const *cmpItem = nullptr;
     int index = findKey(_offsets, _flags, item.key, false);
     if (index >= 0) {
         cmpItem = boost::get<SchemaItem<T> >(&_items[index]);
@@ -606,7 +606,7 @@ int const Schema::VERSION;
 
 Schema::Schema() : _impl(std::make_shared<Impl>()), _aliases(std::make_shared<AliasMap>()) {}
 
-Schema::Schema(Schema const &other) : _impl(other._impl), _aliases(other._aliases) {}
+Schema::Schema(Schema const &other) = default;
 
 Schema Schema::readFits(std::string const &filename, int hdu) {
     fits::Fits fp{filename, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK};

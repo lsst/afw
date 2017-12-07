@@ -169,7 +169,7 @@ readImage() {
 int main() {
     std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>> data =
             readImage();
-    assert(data.first != NULL);  // stop compiler complaining about data being unused
+    assert(data.first != nullptr);  // stop compiler complaining about data being unused
 
     SpatialCellSetDemo();
 }

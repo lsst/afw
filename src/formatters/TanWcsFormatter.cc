@@ -70,14 +70,14 @@ dafPersist::FormatterRegistration TanWcsFormatter::registration("TanWcs", typeid
 
 TanWcsFormatter::TanWcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::Formatter(typeid(this)) {}
 
-TanWcsFormatter::~TanWcsFormatter(void) {}
+TanWcsFormatter::~TanWcsFormatter() = default;
 
 void TanWcsFormatter::write(dafBase::Persistable const* persistable,
                             std::shared_ptr<dafPersist::FormatterStorage> storage,
                             std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "TamWcsFormatter write start");
     image::TanWcs const* ip = dynamic_cast<image::TanWcs const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-TanWcs");
     }
     // TODO: Replace this with something better in DM-10776
@@ -161,7 +161,7 @@ std::shared_ptr<dafBase::PropertyList> TanWcsFormatter::generatePropertySet(imag
     // Only generates properties for the first wcsInfo.
     std::shared_ptr<dafBase::PropertyList> wcsProps(new dafBase::PropertyList());
 
-    if (wcs._wcsInfo == NULL) {  // nothing to add
+    if (wcs._wcsInfo == nullptr) {  // nothing to add
         return wcsProps;
     }
 
@@ -214,7 +214,7 @@ template <class Archive>
 void TanWcsFormatter::delegateSerialize(Archive& ar, int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "TanWcsFormatter delegateSerialize start");
     image::TanWcs* ip = dynamic_cast<image::TanWcs*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-TanWcs");
     }
 

@@ -84,7 +84,7 @@ public:
         if (_addSpans(footprint)) {
             _footprints.push_back(footprint);
             _source->set(keys.footprint, true);
-            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist, maxSamePeakDist, NULL);
+            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist, maxSamePeakDist, nullptr);
         }
     }
 
@@ -110,7 +110,7 @@ public:
                 afw::table::Key<afw::table::Flag> const &flagKey = i->second.footprint;
                 _source->set(flagKey, _source->get(flagKey) || other._source->get(flagKey));
             }
-            _addPeaks(other.getMergedFootprint()->getPeaks(), NULL, NULL, minNewPeakDist, maxSamePeakDist,
+            _addPeaks(other.getMergedFootprint()->getPeaks(), nullptr, nullptr, minNewPeakDist, maxSamePeakDist,
                       &keys);
         }
     }

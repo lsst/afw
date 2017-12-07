@@ -70,14 +70,14 @@ dafPersist::FormatterRegistration WcsFormatter::registration("Wcs", typeid(image
 
 WcsFormatter::WcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::Formatter(typeid(this)) {}
 
-WcsFormatter::~WcsFormatter(void) {}
+WcsFormatter::~WcsFormatter() = default;
 
 void WcsFormatter::write(dafBase::Persistable const* persistable,
                          std::shared_ptr<dafPersist::FormatterStorage> storage,
                          std::shared_ptr<dafBase::PropertySet>) {
     LOGL_DEBUG(_log, "WcsFormatter write start");
     image::Wcs const* ip = dynamic_cast<image::Wcs const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-Wcs");
     }
     // TODO: Replace this with something better in DM-10776
@@ -166,7 +166,7 @@ template <class Archive>
 void WcsFormatter::delegateSerialize(Archive& ar, int const, dafBase::Persistable* persistable) {
     LOGL_DEBUG(_log, "WcsFormatter delegateSerialize start");
     image::Wcs* ip = dynamic_cast<image::Wcs*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-Wcs");
     }
 

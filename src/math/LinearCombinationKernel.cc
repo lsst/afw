@@ -277,7 +277,7 @@ void LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end(); kIter != kEnd;
          ++kIter) {
         std::shared_ptr<Kernel> basisKernelPtr = (*kIter)->clone();
-        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
+        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == nullptr) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);
@@ -305,7 +305,7 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
         }
     }
 
-    LinearCombinationKernelPersistenceHelper(table::Schema const &schema_)
+    explicit LinearCombinationKernelPersistenceHelper(table::Schema const &schema_)
             : Kernel::PersistenceHelper(schema_), components(schema["components"]) {
         if (!spatialFunctions.isValid()) {
             amplitudes = schema["amplitudes"];
@@ -320,8 +320,8 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
 
 class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<afw::table::io::Persistable> read(InputArchive const &archive,
-                                                              CatalogVector const &catalogs) const {
+    std::shared_ptr<afw::table::io::Persistable> read(InputArchive const &archive,
+                                                              CatalogVector const &catalogs) const override {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
