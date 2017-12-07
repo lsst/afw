@@ -30,8 +30,7 @@
 #include "ndarray/pybind11.h"
 
 #include "lsst/daf/base/PropertySet.h"
-#include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/image/Calib.h"
 
 namespace py = pybind11;
@@ -42,8 +41,7 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyCalib = py::class_<Calib, std::shared_ptr<Calib>, table::io::PersistableFacade<Calib>,
-                           table::io::Persistable>;
+using PyCalib = py::class_<Calib, std::shared_ptr<Calib>>;
 
 template <typename T>
 void declareVectorOperations(py::module & mod)
@@ -76,8 +74,6 @@ PYBIND11_PLUGIN(calib) {
     declareVectorOperations<double>(mod);
     mod.def("stripCalibKeywords", &detail::stripCalibKeywords, "metadata"_a);
 
-    table::io::python::declarePersistableFacade<Calib>(mod, "Calib");
-
     PyCalib cls(mod, "Calib");
 
     /* Constructors */
@@ -85,6 +81,8 @@ PYBIND11_PLUGIN(calib) {
     cls.def(py::init<double>(), "fluxMag0"_a);
     cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
     cls.def(py::init<std::shared_ptr<const daf::base::PropertySet>>(), "metadata"_a);
+
+    table::io::python::addPersistableMethods<Calib>(cls);
 
     /* Operators */
     cls.def("__eq__", &Calib::operator==, py::is_operator());

@@ -31,7 +31,7 @@
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/image/PhotoCalib.h"
 
 namespace py = pybind11;
@@ -59,13 +59,9 @@ PYBIND11_PLUGIN(photoCalib) {
         return nullptr;
     };
 
-    table::io::python::declarePersistableFacade<PhotoCalib>(mod, "PhotoCalib");
-
     declareMeasurement(mod);
 
-    py::class_<PhotoCalib, std::shared_ptr<PhotoCalib>, table::io::PersistableFacade<PhotoCalib>,
-               table::io::Persistable>
-            cls(mod, "PhotoCalib");
+    py::class_<PhotoCalib, std::shared_ptr<PhotoCalib>> cls(mod, "PhotoCalib");
 
     /* Constructors */
     cls.def(py::init<>());
@@ -75,6 +71,8 @@ PYBIND11_PLUGIN(photoCalib) {
             "instFluxMag0Err"_a = 0.0);
     cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "instFluxMag0"_a,
             "instFluxMag0Err"_a, "calibration"_a, "isConstant"_a);
+
+    table::io::python::addPersistableMethods<PhotoCalib>(cls);
 
     /* Members - maggies */
     cls.def("instFluxToMaggies",

@@ -29,8 +29,7 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Color.h"
-#include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/detection/Psf.h"
 
 namespace py = pybind11;
@@ -48,10 +47,7 @@ PYBIND11_PLUGIN(_psf) {
     py::module mod("_psf", "Python wrapper for afw _psf library");
 
     /* Module level */
-    table::io::python::declarePersistableFacade<Psf>(mod, "Psf");
-    py::class_<Psf, std::shared_ptr<Psf>, daf::base::Persistable, afw::table::io::Persistable,
-               table::io::PersistableFacade<Psf>, daf::base::Citizen>
-            cls(mod, "Psf");
+    py::class_<Psf, std::shared_ptr<Psf>, daf::base::Persistable, daf::base::Citizen> cls(mod, "Psf");
 
     /* Member types and enums */
     py::enum_<Psf::ImageOwnerEnum>(cls, "ImageOwnerEnum")
@@ -59,9 +55,7 @@ PYBIND11_PLUGIN(_psf) {
             .value("INTERNAL", Psf::ImageOwnerEnum::INTERNAL)
             .export_values();
 
-    /* Constructors */
-
-    /* Operators */
+    table::io::python::addPersistableMethods<Psf>(cls);
 
     /* Members */
     cls.def("clone", &Psf::clone);

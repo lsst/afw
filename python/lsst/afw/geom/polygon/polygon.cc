@@ -32,8 +32,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
-#include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -50,11 +49,7 @@ PYBIND11_PLUGIN(_polygon) {
     // Add tests for it and enable it or remove it before the final pybind11 merge.
 
     /* Module level */
-    table::io::python::declarePersistableFacade<Polygon>(mod, "Polygon");
-
-    py::class_<Polygon, std::shared_ptr<Polygon>, table::io::PersistableFacade<Polygon>,
-               table::io::Persistable>
-            clsPolygon(mod, "Polygon");
+    py::class_<Polygon, std::shared_ptr<Polygon>> clsPolygon(mod, "Polygon");
 
     pex::exceptions::python::declareException<SinglePolygonException, pex::exceptions::RuntimeError>(
             mod, "SinglePolygonException", "RuntimeError");
@@ -66,6 +61,8 @@ PYBIND11_PLUGIN(_polygon) {
     clsPolygon.def(py::init<Polygon::Box const &, std::shared_ptr<XYTransform const> const &>());
     clsPolygon.def(py::init<Polygon::Box const &, AffineTransform const &>());
     clsPolygon.def(py::init<std::vector<Polygon::Point> const &>());
+
+    table::io::python::addPersistableMethods<Polygon>(clsPolygon);
 
     /* Operators */
     clsPolygon.def("__eq__", [](Polygon const &self, Polygon const &other) { return self == other; },

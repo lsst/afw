@@ -25,10 +25,8 @@
 #include <pybind11/stl.h>
 
 #include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/table/io/Persistable.h"
-
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h" // for addPersistableMethods
 
 namespace py = pybind11;
 
@@ -39,11 +37,9 @@ using namespace lsst::afw::math;
 PYBIND11_PLUGIN(_kernel) {
     py::module mod("_kernel", "Python wrapper for afw _kernel library");
 
-    lsst::afw::table::io::python::declarePersistableFacade<Kernel>(mod, "Kernel");
+    py::class_<Kernel, std::shared_ptr<Kernel>, lsst::daf::base::Persistable> clsKernel(mod, "Kernel");
 
-    py::class_<Kernel, std::shared_ptr<Kernel>, lsst::daf::base::Persistable,
-               lsst::afw::table::io::PersistableFacade<Kernel>, lsst::afw::table::io::Persistable>
-            clsKernel(mod, "Kernel");
+    lsst::afw::table::io::python::addPersistableMethods<Kernel>(clsKernel);
 
     clsKernel.def("clone", &Kernel::clone);
     clsKernel.def("resized", &Kernel::resized, "width"_a, "height"_a);

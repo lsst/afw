@@ -32,7 +32,7 @@
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/math/BoundedField.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
 namespace py = pybind11;
 
@@ -44,9 +44,7 @@ namespace afw {
 namespace math {
 namespace {
 
-using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>,
-                           afw::table::io::PersistableFacade<BoundedField>,
-                           afw::table::io::Persistable>;
+using PyClass = py::class_<BoundedField, std::shared_ptr<BoundedField>>;
 
 template <typename PixelT>
 void declareTemplates(PyClass &cls) {
@@ -68,8 +66,9 @@ PYBIND11_PLUGIN(_boundedField) {
         return nullptr;
     };
 
-    afw::table::io::python::declarePersistableFacade<BoundedField>(mod, "BoundedField");
     PyClass cls(mod, "BoundedField");
+
+    table::io::python::addPersistableMethods<BoundedField>(cls);
 
     cls.def("__rmul__", [](BoundedField &bf, double const scale) { return bf * scale; }, py::is_operator());
     cls.def("__mul__", &BoundedField::operator*, py::is_operator());

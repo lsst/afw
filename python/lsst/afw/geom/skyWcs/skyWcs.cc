@@ -35,6 +35,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/SkyWcs.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -65,6 +66,8 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def(py::init<daf::base::PropertyList &>(), "metadata"_a);
     cls.def(py::init<ast::FrameSet const &>(), "frameSet"_a);
 
+
+    table::io::python::addPersistableMethods<SkyWcs>(cls);
     cls.def("getPixelScale", (Angle(SkyWcs::*)(Point2D const &) const) & SkyWcs::getPixelScale, "pixel"_a);
     cls.def("getPixelScale", (Angle(SkyWcs::*)() const) & SkyWcs::getPixelScale);
     cls.def("getPixelOrigin", &SkyWcs::getPixelOrigin);
