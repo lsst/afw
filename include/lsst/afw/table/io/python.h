@@ -32,6 +32,9 @@
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/io/Persistable.h"
 
+namespace py = pybind11;
+using namespace py::literals;
+
 namespace lsst {
 namespace afw {
 namespace table {
@@ -40,6 +43,8 @@ namespace python {
 
 /**
  * Wraps an instantiation of @ref PersistableFacade.
+ *
+ * @deprecated Use addPersistableMethods for all new code.
  *
  * Pybind11 shall assume that `PersistableFacade` is managed using
  * `std::shared_ptr`, as this is required for compatibility with
@@ -66,6 +71,34 @@ void declarePersistableFacade(pybind11::module &module, std::string const &suffi
     cls.def_static("readFits",
                    (std::shared_ptr<T>(*)(fits::MemFileManager &, int)) & PersistableFacade<T>::readFits,
                    "manager"_a, "hdu"_a = INT_MIN);
+}
+
+/**
+ * Add table::io::Persistable and PersistableFacade methods to the pybind11 wrapper for a class
+ *
+ * Use this instead of declarePersistableFacade to avoid circular import issues in Python;
+ * it allows your class to be used without importing lsst.afw.table.
+ *
+ * Use as follows:
+ * - When declaring the pybind11 class that wraps your Class do *not* list
+ *   table::io::PersistableFacade<Class> and table::io::Persistable as subclasses.
+ * - Call this function to wrap the methods that make your object persistable.
+ */
+template <typename Class, typename PyClass>
+void addPersistableMethods(PyClass &cls) {
+    cls.def_static("readFits",
+                   (std::shared_ptr<Class>(*)(std::string const &, int)) & PersistableFacade<Class>::readFits,
+                   "fileName"_a, "hdu"_a = INT_MIN);
+    cls.def_static(
+            "readFits",
+            (std::shared_ptr<Class>(*)(fits::MemFileManager &, int)) & PersistableFacade<Class>::readFits,
+            "manager"_a, "hdu"_a = INT_MIN);
+    cls.def("writeFits", (void (Class::*)(std::string const &, std::string const &) const) & Class::writeFits,
+            "fileName"_a, "mode"_a = "w");
+    cls.def("writeFits",
+            (void (Class::*)(fits::MemFileManager &, std::string const &) const) & Class::writeFits,
+            "manager"_a, "mode"_a = "w");
+    cls.def("isPersistable", &Class::isPersistable);
 }
 }
 }
