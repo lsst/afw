@@ -284,7 +284,7 @@ std::unique_ptr<Footprint> Footprint::readSpanSet(afw::table::BaseCatalog const&
         }
         loadedSpanSet = std::make_shared<geom::SpanSet>(std::move(tempVec));
     }
-    auto loadedFootprint = std::unique_ptr<Footprint>(new Footprint(loadedSpanSet));
+    auto loadedFootprint = std::make_unique<Footprint>(loadedSpanSet);
     return loadedFootprint;
 }
 
