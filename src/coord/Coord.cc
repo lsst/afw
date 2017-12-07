@@ -975,7 +975,7 @@ namespace {
 std::shared_ptr<Coord> doAverageCoord(std::vector<std::shared_ptr<Coord const>> const coords,
                                       CoordSystem system) {
     assert(system != UNKNOWN);  // Handled by caller
-    assert(coords.size() > 0);  // Handled by caller
+    assert(!coords.empty());  // Handled by caller
     geom::Point3D sum(0, 0, 0);
     geom::Point3D corr(0, 0, 0);  // Kahan summation correction
     for (auto &&cc : coords) {
@@ -994,7 +994,7 @@ std::shared_ptr<Coord> doAverageCoord(std::vector<std::shared_ptr<Coord const>> 
 
 std::shared_ptr<Coord> averageCoord(std::vector<std::shared_ptr<Coord const>> const coords,
                                     CoordSystem system) {
-    if (coords.size() == 0) {
+    if (coords.empty()) {
         throw LSST_EXCEPT(ex::LengthError, "No coordinates provided to average");
     }
 

@@ -54,11 +54,7 @@ const int fitsToLsstPixels = -1;
 TanWcs::TanWcs() : Wcs(), _hasDistortion(false), _sipA(), _sipB(), _sipAp(), _sipBp() {}
 
 bool TanWcs::isPersistable() const {
-    if (!_mayBePersistable()) {
-        return false;
-    }
-
-    return true;
+    return _mayBePersistable();
 }
 
 geom::Angle TanWcs::pixelScale() const {

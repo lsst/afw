@@ -225,7 +225,7 @@ template <class PolyT>
 std::shared_ptr<Polygon> Polygon::Impl::intersectionSingle(PolyT const& other) const {
     std::vector<BoostPolygon> result;
     boost::geometry::intersection(poly, other, result);
-    if (result.size() == 0) {
+    if (result.empty()) {
         throw LSST_EXCEPT(SinglePolygonException, "Polygons have no intersection");
     }
     if (result.size() > 1) {

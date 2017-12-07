@@ -618,7 +618,7 @@ void StatisticsControl::setMaskPropagationThreshold(int bit, double threshold) {
 
 Property stringToStatisticsProperty(std::string const property) {
     static std::map<std::string, Property> statisticsProperty;
-    if (statisticsProperty.size() == 0) {
+    if (statisticsProperty.empty()) {
         statisticsProperty["NOTHING"] = NOTHING;
         statisticsProperty["ERRORS"] = ERRORS;
         statisticsProperty["NPOINT"] = NPOINT;

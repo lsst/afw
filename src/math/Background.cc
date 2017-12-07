@@ -118,7 +118,7 @@ void Background::_setCenOrigSize(int const width, int const height, int const nx
 
 UndersampleStyle stringToUndersampleStyle(std::string const& style) {
     static std::map<std::string, UndersampleStyle> undersampleStrings;
-    if (undersampleStrings.size() == 0) {
+    if (undersampleStrings.empty()) {
         undersampleStrings["THROW_EXCEPTION"] = THROW_EXCEPTION;
         undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
         undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;

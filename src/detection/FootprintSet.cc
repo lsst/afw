@@ -449,7 +449,7 @@ struct IdSpanCompar
         } else if (a->id > b->id) {
             return false;
         } else {
-            return (a->y < b->y) ? true : false;
+            return a->y < b->y;
         }
     }
 };
@@ -728,14 +728,14 @@ static void findFootprints(
     /*
      * Sort spans by ID, so we can sweep through them once
      */
-    if (spans.size() > 0) {
+    if (!spans.empty()) {
         std::sort(spans.begin(), spans.end(), IdSpanCompar());
     }
     /*
      * Build Footprints from spans
      */
     unsigned int i0;  // initial value of i
-    if (spans.size() > 0) {
+    if (!spans.empty()) {
         id = spans[0]->id;
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) {  // <= size to catch the last object
@@ -1115,7 +1115,7 @@ bool StartspanSet<ImagePixelT, MaskPixelT>::process(Footprint *fp,  // the footp
      */
 
     sspan->_direction = DONE;
-    return stop ? false : true;
+    return !stop;
 }
 /// @endcond
 }

@@ -76,10 +76,8 @@ bool spansOverlap(Span const& a, Span const& b, bool compareY = true) {
     if (compareY) {
         yTruth = a.getY() == b.getY();
     }
-    return (yTruth && ((a.getMaxX() >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
-                       (b.getMaxX() >= a.getMinX() && b.getMinX() <= a.getMinX())))
-                   ? true
-                   : false;
+    return yTruth && ((a.getMaxX() >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
+                       (b.getMaxX() >= a.getMinX() && b.getMinX() <= a.getMinX()));
 }
 
 /* Determine if two spans are contiguous, that is they can overlap or the end of one span is
@@ -94,10 +92,8 @@ bool spansContiguous(Span const& a, Span const& b, bool compareY = true) {
     if (compareY) {
         yTruth = a.getY() == b.getY();
     }
-    return (yTruth && ((a.getMaxX() + 1 >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
-                       (b.getMaxX() + 1 >= a.getMinX() && b.getMinX() <= a.getMinX())))
-                   ? true
-                   : false;
+    return yTruth && ((a.getMaxX() + 1 >= b.getMinX() && a.getMinX() <= b.getMinX()) ||
+                       (b.getMaxX() + 1 >= a.getMinX() && b.getMinX() <= a.getMinX()));
 }
 
 /* Determine the intersection with a mask or its logical inverse
@@ -200,7 +196,7 @@ SpanSet::SpanSet(std::vector<Span> const& vec, bool normalize) : _spanVector(vec
 // Construct a SpanSet from a std vector by moving
 SpanSet::SpanSet(std::vector<Span>&& vec, bool normalize) : _spanVector(std::move(vec)) {
     // If the incoming vector is zero, should create an empty SpanSet
-    if (_spanVector.size() == 0) {
+    if (_spanVector.empty()) {
         _bbox = Box2I();
         _area = 0;
     } else {

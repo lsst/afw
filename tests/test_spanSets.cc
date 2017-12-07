@@ -104,27 +104,27 @@ BOOST_AUTO_TEST_CASE(SpanSet_testContiguous) {
     std::vector<afwGeom::Span> SpanSetConVec = {afwGeom::Span(0, 2, 5), afwGeom::Span(1, 5, 8)};
     afwGeom::SpanSet SSCont(SpanSetConVec);
 
-    BOOST_CHECK(SSCont.isContiguous() == true);
+    BOOST_CHECK(SSCont.isContiguous());
 
     // Almost Contiguous SpanSet (tested to verify overlap function logic)
     std::vector<afwGeom::Span> SpanSetAlmostConVec = {afwGeom::Span(0, 2, 5), afwGeom::Span(1, 6, 9)};
     afwGeom::SpanSet SSAlmostCont(SpanSetAlmostConVec);
-    BOOST_CHECK(SSAlmostCont.isContiguous() == false);
+    BOOST_CHECK(!SSAlmostCont.isContiguous());
 
     // Not Contiguous SpanSet
     std::vector<afwGeom::Span> SpanSetNotConVec = {afwGeom::Span(0, 2, 5), afwGeom::Span(1, 20, 25)};
     afwGeom::SpanSet SSNotCont(SpanSetNotConVec);
-    BOOST_CHECK(SSNotCont.isContiguous() == false);
+    BOOST_CHECK(!SSNotCont.isContiguous());
 
     // Test has hole in one row
     std::vector<afwGeom::Span> SpanSetWithHoleVec = {afwGeom::Span(0, 1, 3), afwGeom::Span(0, 5, 7),
                                                      afwGeom::Span(1, 0, 6)};
     afwGeom::SpanSet SSWithHole(SpanSetWithHoleVec);
-    BOOST_CHECK(SSWithHole.isContiguous() == true);
+    BOOST_CHECK(SSWithHole.isContiguous());
 
     // Test a null SpanSet
     afwGeom::SpanSet nullSpanSet;
-    BOOST_CHECK(nullSpanSet.isContiguous() == true);
+    BOOST_CHECK(nullSpanSet.isContiguous());
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testSplit) {
@@ -222,13 +222,13 @@ BOOST_AUTO_TEST_CASE(SpanSet_testOverlaps) {
     auto SpanSetShift = SpanSetNoShift->shiftedBy(2, 2);
     auto SpanSetShiftFar = SpanSetNoShift->shiftedBy(10, 10);
 
-    BOOST_CHECK(SpanSetNoShift->overlaps(*SpanSetShift) == true);
-    BOOST_CHECK(SpanSetNoShift->overlaps(*SpanSetShiftFar) == false);
+    BOOST_CHECK(SpanSetNoShift->overlaps(*SpanSetShift));
+    BOOST_CHECK(!SpanSetNoShift->overlaps(*SpanSetShiftFar));
 
     // Try with a nullSpanSet, null spansets should not overlap anything
     afwGeom::SpanSet nullSpanSet;
-    BOOST_CHECK(SpanSetNoShift->overlaps(nullSpanSet) == false);
-    BOOST_CHECK(nullSpanSet.overlaps(*SpanSetNoShift) == false);
+    BOOST_CHECK(!SpanSetNoShift->overlaps(nullSpanSet));
+    BOOST_CHECK(!nullSpanSet.overlaps(*SpanSetNoShift));
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testContains) {
@@ -238,15 +238,15 @@ BOOST_AUTO_TEST_CASE(SpanSet_testContains) {
     afwGeom::Point2I pointIn(1, 1);
     afwGeom::Point2I pointOut(20, 20);
 
-    BOOST_CHECK(SpanSetLarge->contains(*SpanSetSmall) == true);
-    BOOST_CHECK(SpanSetLarge->contains(*SpanSetSmallFar) == false);
-    BOOST_CHECK(SpanSetLarge->contains(pointIn) == true);
-    BOOST_CHECK(SpanSetLarge->contains(pointOut) == false);
+    BOOST_CHECK(SpanSetLarge->contains(*SpanSetSmall));
+    BOOST_CHECK(!SpanSetLarge->contains(*SpanSetSmallFar));
+    BOOST_CHECK(SpanSetLarge->contains(pointIn));
+    BOOST_CHECK(!SpanSetLarge->contains(pointOut));
 
     // Test with a nullSpanSet
     afwGeom::SpanSet nullSpanSet;
-    BOOST_CHECK(SpanSetLarge->contains(nullSpanSet) == false);
-    BOOST_CHECK(nullSpanSet.contains(*SpanSetSmall) == false);
+    BOOST_CHECK(!SpanSetLarge->contains(nullSpanSet));
+    BOOST_CHECK(!nullSpanSet.contains(*SpanSetSmall));
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testComputeCentroid) {
@@ -654,10 +654,10 @@ BOOST_AUTO_TEST_CASE(SpanSet_testEquality) {
     auto secondSS = ret.second;
     auto secondSSShift = secondSS->shiftedBy(0, 2);
 
-    BOOST_CHECK((*firstSS == *secondSS) == false);
-    BOOST_CHECK((*firstSS != *secondSS) == true);
-    BOOST_CHECK((*firstSS == *secondSSShift) == true);
-    BOOST_CHECK((*firstSS != *secondSSShift) == false);
+    BOOST_CHECK(!(*firstSS == *secondSS));
+    BOOST_CHECK((*firstSS != *secondSS));
+    BOOST_CHECK((*firstSS == *secondSSShift));
+    BOOST_CHECK(!(*firstSS != *secondSSShift));
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
