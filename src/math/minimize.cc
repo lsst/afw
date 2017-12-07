@@ -53,7 +53,7 @@ public:
                                     std::vector<double> const &measurementList,
                                     std::vector<double> const &varianceList,
                                     std::vector<double> const &xPositionList, double errorDef);
-    ~MinimizerFunctionBase1()= default;verride{};
+    ~MinimizerFunctionBase1() override = default;
     // Required by ROOT::Minuit2::FCNBase
     double Up() const override { return _errorDef; }
     double operator()(const std::vector<double> &) const override;
@@ -83,7 +83,7 @@ public:
                                     std::vector<double> const &varianceList,
                                     std::vector<double> const &xPositionList,
                                     std::vector<double> const &yPositionList, double errorDef);
-    ~MinimizerFunctionBase2()= default;verride{};
+    ~MinimizerFunctionBase2() override = default;
     // Required by ROOT::Minuit2::FCNBase
     double Up() const override { return _errorDef; }
     double operator()(const std::vector<double> &par) const override;
