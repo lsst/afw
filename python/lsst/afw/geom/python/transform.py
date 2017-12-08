@@ -37,7 +37,7 @@ In Python the templated Transform classes have names such as
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["addTransformMethods", "transformRegistry"]
+__all__ = ["addTransformMethods", "reduceTransform", "transformRegistry"]
 
 import lsst.pex.exceptions
 

@@ -94,7 +94,7 @@ for two purposes:
 - Read the approximate FITS WCS that LSST writes to FITS images (for use by non-LSST code).
 
 The frames of the returned WCS will be as follows:
-- "PIXEL" (base frame): pixel frame with 0,0 the lower left corner of the image (LSST convention)
+- "PIXELS" (base frame): pixel frame with 0,0 the lower left corner of the image (LSST convention)
 - "IWC": FITS-WCS intermediate world coordinate systems
 - "SKY" (current frame): an ast::SkyFrame with domain "SKY": ICRS RA, Dec
 

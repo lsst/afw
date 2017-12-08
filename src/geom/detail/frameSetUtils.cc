@@ -254,7 +254,7 @@ std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata,
     auto const pixelToIwc = pixelToGrid.then(*gridToIwc).simplify();
     auto const iwcToStdSky = rawFrameSet->getMapping(iwcIndex, stdSkyIndex);
 
-    auto frameDict = std::make_shared<ast::FrameDict>(ast::Frame(2, "Domain=PIXEL"), *pixelToIwc, *iwcFrame);
+    auto frameDict = std::make_shared<ast::FrameDict>(ast::Frame(2, "Domain=PIXELS"), *pixelToIwc, *iwcFrame);
     frameDict->addFrame("IWC", *iwcToStdSky, *stdSkyFrame);
 
     // Record CRVAL as SkyRef in the SkyFrame so it can easily be obtained later;

@@ -285,7 +285,7 @@ class PermutedFrameSet(object):
 
 
 class TransformTestBaseClass(lsst.utils.tests.TestCase):
-    """Base class for unit tests of Transform<X>To<Y> and subclasses
+    """Base class for unit tests of Transform<X>To<Y>
 
     Subclasses must call `TransformTestBaseClass.setUp(self)`
     if they provide their own version.

@@ -23,7 +23,7 @@ from __future__ import absolute_import, division, print_function
 
 __all__ = []
 
-from ..python import addTransformMethods
+from ..python import reduceTransform
 from .skyWcs import SkyWcs
 
-addTransformMethods(SkyWcs)
+SkyWcs.__reduce__ = reduceTransform
