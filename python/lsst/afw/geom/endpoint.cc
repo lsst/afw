@@ -199,7 +199,8 @@ PYBIND11_PLUGIN(endpoint) {
     py::module mod("endpoint");
 
     py::module::import("lsst.afw.geom.coordinates");
-    // The following import causes a circular import. Uncomment or delete once DM-10999 is fixed.
+    // The following import causes a circular import.
+    // Delete it and this note when DM-11162 is implemented
     // Until then a user must manually `import lsst.afw.coord` before using `IcrsEndpoint`
     // py::module::import("lsst.afw.coord.coord");
 
