@@ -38,30 +38,30 @@ namespace afw {
 namespace geom {
 
 /**
-Virtual base class for endpoints, which are helper classes for Transform
-
-Endpoints transform points and lists of points from LSST-specific data types,
-such as Point2D and IcrsCoord, to a form accepted by ast::Mapping.tran.
-Each type of endpoint is used for a particular LSST data type, for example:
-- Point2Endpoint is used for Point2D data
-- IcrsCoordEndpoint for IcrsCoord data
-- GenericEndpoint is used when no other form will do; its LSST data type
-  is identical to the type used for ast::Mapping.applyForward.
-
-Endpoints use the following forms of data for raw data:
-- std::vector<double> for a single point
-- ndarray<double, 2, 2> with dimensions number of axes x number of points for an array of points
-
-Endpoints are designed as helper classes for Transform. Each transform has a two endpoints:
-one for input data and one for output data.
-
-Endpoint also provides two methods to work with ast::Frames:
-- normalizeFrame verifies that a frame is the correct type, and adjusts its settings if necessary
-- makeFrame creates a new frame with the correct type and settings
-
-@tparam PointT  LSST data type for one point
-@tparam ArrayT  LSST data type for an array of points
-*/
+ * Virtual base class for endpoints, which are helper classes for Transform
+ *
+ * Endpoints transform points and lists of points from LSST-specific data types,
+ * such as Point2D and IcrsCoord, to a form accepted by ast::Mapping.tran.
+ * Each type of endpoint is used for a particular LSST data type, for example:
+ * - Point2Endpoint is used for Point2D data
+ * - IcrsCoordEndpoint for IcrsCoord data
+ * - GenericEndpoint is used when no other form will do; its LSST data type
+ *   is identical to the type used for ast::Mapping.applyForward.
+ *
+ * Endpoints use the following forms of data for raw data:
+ * - std::vector<double> for a single point
+ * - ndarray<double, 2, 2> with dimensions number of axes x number of points for an array of points
+ *
+ * Endpoints are designed as helper classes for Transform. Each transform has a two endpoints:
+ * one for input data and one for output data.
+ *
+ * Endpoint also provides two methods to work with ast::Frames:
+ * - normalizeFrame verifies that a frame is the correct type, and adjusts its settings if necessary
+ * - makeFrame creates a new frame with the correct type and settings
+ *
+ * @tparam PointT  LSST data type for one point
+ * @tparam ArrayT  LSST data type for an array of points
+ */
 
 template <typename PointT, typename ArrayT>
 class BaseEndpoint {
@@ -79,72 +79,72 @@ public:
     int getNAxes() const { return _nAxes; }
 
     /**
-    Return the number of points in an array
-    */
+     * Return the number of points in an array
+     */
     virtual int getNPoints(Array const &arr) const = 0;
 
     /**
-    Get raw data from a single point
-
-    @param[in] point  data for a single point
-    @returns the values in the point as a vector of size NAxess
-
-    @throws lsst::pex::exceptions::InvalidParameterError if the point has the wrong number of axes
-    */
+     * Get raw data from a single point
+     *
+     * @param[in] point  data for a single point
+     * @returns the values in the point as a vector of size NAxess
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if the point has the wrong number of axes
+     */
     virtual std::vector<double> dataFromPoint(Point const &point) const = 0;
 
     /**
-    Get raw data from an array of points
-
-    @param[in] arr  Array of points
-    @returns the data as a 2-D ndarray array [nAxes, nPoints] in C order,
-        so the in-memory view is, for example, x0, x1, x2, ..., y0, y1, y2, ...
-
-    @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
-    */
+     * Get raw data from an array of points
+     *
+     * @param[in] arr  Array of points
+     * @returns the data as a 2-D ndarray array [nAxes, nPoints] in C order,
+     *     so the in-memory view is, for example, x0, x1, x2, ..., y0, y1, y2, ...
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
+     */
     virtual ndarray::Array<double, 2, 2> dataFromArray(Array const &arr) const = 0;
 
     /**
-    Get a single point from raw data
-
-    @param[in] data  Data as a vector of length NAxes
-    @returns the corresponding point
-    */
+     * Get a single point from raw data
+     *
+     * @param[in] data  Data as a vector of length NAxes
+     * @returns the corresponding point
+     */
     virtual Point pointFromData(std::vector<double> const &data) const = 0;
 
     /**
-    Get an array of points from raw data
-
-    @param[in] data  Raw data for an array of points, as a 2-D ndarray array [nPoints, nAxes] in C order,
-        so the in-memory view is, for example, x0, y0, x1, y1, x2, y2, ...
-    @returns an array of points
-
-    @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
-    */
+     * Get an array of points from raw data
+     *
+     * @param[in] data  Raw data for an array of points, as a 2-D ndarray array [nPoints, nAxes] in C order,
+     *     so the in-memory view is, for example, x0, y0, x1, y1, x2, y2, ...
+     * @returns an array of points
+     *
+     * @throws lsst::pex::exceptions::InvalidParameterError if the array has the wrong nAxes dimension
+     */
     virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const = 0;
 
     /**
-    Create a Frame that can be used with this end point in a Transform
-    */
+     * Create a Frame that can be used with this end point in a Transform
+     */
     virtual std::shared_ptr<ast::Frame> makeFrame() const;
 
     /**
-    Adjust and check the frame as needed.
-
-    Do not obother to check the number of axes because that is done elsewhere.
-
-    The base implementation does nothing.
-    */
+     * Adjust and check the frame as needed.
+     *
+     * Do not obother to check the number of axes because that is done elsewhere.
+     *
+     * The base implementation does nothing.
+     */
     virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {};
 
 protected:
     /**
-    Construct a BaseEndpoint
-
-    @param[in] nAxes  The number of axes in a point; must be > 0
-
-    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
-    */
+     * Construct a BaseEndpoint
+     *
+     * @param[in] nAxes  The number of axes in a point; must be > 0
+     *
+     * @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
+     */
     explicit BaseEndpoint(int nAxes);
 
     void _assertNAxes(int nAxes) const;
@@ -162,10 +162,10 @@ private:
 };
 
 /**
-Base class for endpoints with Array = std::vector<Point> where Point has 2 dimensions
-
-@note Subclasses must provide `dataFromPoint`, `dataFromArray`, `pointFromData` and `arrayFromData`
-*/
+ * Base class for endpoints with Array = std::vector<Point> where Point has 2 dimensions
+ *
+ * @note Subclasses must provide `dataFromPoint`, `dataFromArray`, `pointFromData` and `arrayFromData`
+ */
 template <typename PointT>
 class BaseVectorEndpoint : public BaseEndpoint<PointT, std::vector<PointT>> {
 public:
@@ -183,21 +183,21 @@ public:
 
 protected:
     /**
-    Construct a BaseVectorEndpoint
-
-    @param[in] nAxes  The number of axes in a point; must be > 0
-
-    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
-    */
+     * Construct a BaseVectorEndpoint
+     *
+     * @param[in] nAxes  The number of axes in a point; must be > 0
+     *
+     * @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
+     */
     explicit BaseVectorEndpoint(int nAxes) : BaseEndpoint<Point, Array>(nAxes){};
 };
 
 /**
-A generic endpoint for data in the format used by ast::Mapping
-
-Thus supports all ast frame classes and any number of axes, and thus can be used as an endpoint
-for any ast::Mapping.
-*/
+ * A generic endpoint for data in the format used by ast::Mapping
+ *
+ * Thus supports all ast frame classes and any number of axes, and thus can be used as an endpoint
+ * for any ast::Mapping.
+ */
 class GenericEndpoint : public BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>> {
 public:
     GenericEndpoint(GenericEndpoint const &) = default;
@@ -206,12 +206,12 @@ public:
     GenericEndpoint &operator=(GenericEndpoint &&) = delete;
 
     /**
-    Construct a GenericEndpoint with the specified number of axes
-
-    @param[in] nAxes  The number of axes in a point; must be > 0
-
-    @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
-    */
+     * Construct a GenericEndpoint with the specified number of axes
+     *
+     * @param[in] nAxes  The number of axes in a point; must be > 0
+     *
+     * @throws lsst.pex.exceptions.InvalidParameterError if nAxes <= 0
+     */
     explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes){};
 
     virtual ~GenericEndpoint(){};
@@ -231,8 +231,8 @@ public:
 };
 
 /**
-An endpoint for Point2D
-*/
+ * An endpoint for Point2D
+ */
 class Point2Endpoint : public BaseVectorEndpoint<Point2D> {
 public:
     Point2Endpoint(Point2Endpoint const &) = default;
@@ -241,20 +241,20 @@ public:
     Point2Endpoint &operator=(Point2Endpoint &&) = delete;
 
     /**
-    Construct a Point2Endpoint
-    */
+     * Construct a Point2Endpoint
+     */
     explicit Point2Endpoint() : BaseVectorEndpoint<Point2D>(2) {}
 
     /**
-    Construct a Point2Endpoint with nAxes specified; nAxes must equal template parameter N
-
-    This constructor is primarily used by Transform; other users are encouraged
-    to use the default constructor.
-
-    @param[in] nAxes  The number of axes in a point; must equal template parameter N
-
-    @throws lsst.pex.exceptions.InvalidParameterError if nAxes != N
-    */
+     * Construct a Point2Endpoint with nAxes specified; nAxes must equal template parameter N
+     *
+     * This constructor is primarily used by Transform; other users are encouraged
+     * to use the default constructor.
+     *
+     * @param[in] nAxes  The number of axes in a point; must equal template parameter N
+     *
+     * @throws lsst.pex.exceptions.InvalidParameterError if nAxes != N
+     */
     explicit Point2Endpoint(int nAxes);
 
     virtual ~Point2Endpoint(){};
@@ -268,14 +268,14 @@ public:
     virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 
     /**
-    Check that framePtr points to a Frame, not a subclass
-
-    Subclasses are forbidden because Point2D is assumed to be cartesian
-    and subclasses of Frame are not (e.g. SkyFrame, SpecFrame and TimeFrame).
-    Note that SpecFrame and TimeFrame are 1-dimensional so they cannot be used
-    in any case. A CmpFrame could be cartesian, but we play it safe and reject these
-    (however, a cartesian CmpFrame ought to simplify to a Frame).
-    */
+     * Check that framePtr points to a Frame, not a subclass
+     *
+     * Subclasses are forbidden because Point2D is assumed to be cartesian
+     * and subclasses of Frame are not (e.g. SkyFrame, SpecFrame and TimeFrame).
+     * Note that SpecFrame and TimeFrame are 1-dimensional so they cannot be used
+     * in any case. A CmpFrame could be cartesian, but we play it safe and reject these
+     * (however, a cartesian CmpFrame ought to simplify to a Frame).
+     */
     virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
 
     /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
@@ -283,10 +283,10 @@ public:
 };
 
 /**
-An endpoint for IcrsCoord
-
-A IcrsCoordEndpoint always has 2 axes: RA, Dec
-*/
+ * An endpoint for IcrsCoord
+ *
+ * A IcrsCoordEndpoint always has 2 axes: RA, Dec
+ */
 class IcrsCoordEndpoint : public BaseVectorEndpoint<coord::IcrsCoord> {
 public:
     IcrsCoordEndpoint(IcrsCoordEndpoint const &) = default;
@@ -295,20 +295,20 @@ public:
     IcrsCoordEndpoint &operator=(IcrsCoordEndpoint &&) = delete;
 
     /**
-    Construct a IcrsCoordEndpoint
-    */
+     * Construct a IcrsCoordEndpoint
+     */
     explicit IcrsCoordEndpoint() : BaseVectorEndpoint(2) {}
 
     /**
-    Construct a IcrsCoordEndpoint with nAxes specified; nAxes must equal 2
-
-    This constructor is primarily used by Transform; other users are encouraged
-    to use the default constructor.
-
-    @param[in] nAxes  The number of axes in a point; must equal 2
-
-    @throws lsst.pex.exceptions.InvalidParameterError if nAxes != 2
-    */
+     * Construct a IcrsCoordEndpoint with nAxes specified; nAxes must equal 2
+     *
+     * This constructor is primarily used by Transform; other users are encouraged
+     * to use the default constructor.
+     *
+     * @param[in] nAxes  The number of axes in a point; must equal 2
+     *
+     * @throws lsst.pex.exceptions.InvalidParameterError if nAxes != 2
+     */
     explicit IcrsCoordEndpoint(int nAxes);
 
     virtual ~IcrsCoordEndpoint(){};
@@ -321,23 +321,17 @@ public:
 
     virtual Array arrayFromData(ndarray::Array<double, 2, 2> const &data) const override;
 
-    /**
-    Create a Frame that can be used with this end point in a Transform
-    */
+    /// Create a Frame that can be used with this end point in a Transform
     virtual std::shared_ptr<ast::Frame> makeFrame() const override;
 
-    /**
-    Check that framePtr points to a SkyFrame and set longitude axis to 0, latitude to 1
-    */
+    /// Check that framePtr points to a SkyFrame and set longitude axis to 0, latitude to 1
     virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
 
     /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
     static std::string getClassPrefix() { return "IcrsCoord"; };
 };
 
-/**
-Print "GenericEndpoint(_n_)" to the ostream where `_n_` is the number of axes, e.g. "GenericAxes(4)"
-*/
+/// Print "GenericEndpoint(_n_)" to the ostream where `_n_` is the number of axes, e.g. "GenericAxes(4)"
 std::ostream &operator<<(std::ostream &os, GenericEndpoint const &endpoint);
 
 /// Print "Point2Endpoint()" to the ostream
