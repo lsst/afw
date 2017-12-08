@@ -25,7 +25,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
-#include "lsst/afw/geom/Endpoint.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/transformFactory.h"
 
 namespace py = pybind11;
