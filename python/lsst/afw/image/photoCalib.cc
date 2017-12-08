@@ -52,7 +52,6 @@ void declareMeasurement(py::module &mod) {
 
 PYBIND11_PLUGIN(photoCalib) {
     py::module mod("photoCalib");
-    py::module::import("lsst.afw.table.io");
 
     if (_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
