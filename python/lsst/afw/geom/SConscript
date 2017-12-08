@@ -3,6 +3,7 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(
     [
         'detail/frameSetUtils',
+        'wcsUtils/wcsUtils',
         'affineTransform',
         'angle/angle',
         'box',
