@@ -48,3 +48,4 @@ from .transformFactory import *
 from .transformConfig import *
 from .skyWcs import *
 from .transformFromString import *
+from .wcsUtils import *
