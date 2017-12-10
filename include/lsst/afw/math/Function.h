@@ -27,6 +27,7 @@
 /*
  * Define the basic Function classes.
  */
+#include <cmath>
 #include <stdexcept>
 #include <sstream>
 #include <vector>
