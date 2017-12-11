@@ -31,7 +31,6 @@ import numpy as np
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image  # required by Polygon.createImage
-from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
 
@@ -69,7 +68,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         if y0 is None:
             y0 = self.y0
         points = circle(radius, num, x0=x0, y0=y0)
-        return Polygon([afwGeom.Point2D(x, y) for x, y in reversed(points)])
+        return afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in reversed(points)])
 
     def square(self, size=1.0, x0=0, y0=0):
         """Generate a square
@@ -77,8 +76,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
         @param size: Half-length of the sides
         @param x0,y0: Offset of center
         """
-        return Polygon([afwGeom.Point2D(size*x + x0, size*y + y0) for
-                        x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))])
+        return afwGeom.Polygon([afwGeom.Point2D(size*x + x0, size*y + y0) for
+                               x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))])
 
     def testGetters(self):
         """Test Polygon getters"""
@@ -120,7 +119,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         poly1 = self.square(size=size)
         box = afwGeom.Box2D(afwGeom.Point2D(-1.0, -1.0),
                             afwGeom.Point2D(1.0, 1.0))
-        poly2 = Polygon(box)
+        poly2 = afwGeom.Polygon(box)
         self.assertEqual(poly1, poly2)
 
     def testBBox(self):
@@ -176,9 +175,9 @@ class PolygonTest(lsst.utils.tests.TestCase):
         # polygons)
         self.assertEqual(poly1.intersectionSingle(poly2), poly3)
         self.assertEqual(poly2.intersectionSingle(poly1), poly3)
-        self.assertRaises(SinglePolygonException,
+        self.assertRaises(afwGeom.SinglePolygonException,
                           poly1.intersectionSingle, poly4)
-        self.assertRaises(SinglePolygonException,
+        self.assertRaises(afwGeom.SinglePolygonException,
                           poly4.intersectionSingle, poly1)
 
         # intersection: no assumptions
@@ -196,16 +195,16 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.union"""
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
-                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
-                          (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
+        poly3 = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+                                 ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
+                                  (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
         poly4 = self.square(1.0, +5.0, +5.0)
 
         # unionSingle: assumes there's a single union (intersecting polygons)
         self.assertEqual(poly1.unionSingle(poly2), poly3)
         self.assertEqual(poly2.unionSingle(poly1), poly3)
-        self.assertRaises(SinglePolygonException, poly1.unionSingle, poly4)
-        self.assertRaises(SinglePolygonException, poly4.unionSingle, poly1)
+        self.assertRaises(afwGeom.SinglePolygonException, poly1.unionSingle, poly4)
+        self.assertRaises(afwGeom.SinglePolygonException, poly4.unionSingle, poly1)
 
         # union: no assumptions
         polyList1 = poly1.union(poly2)
@@ -227,10 +226,12 @@ class PolygonTest(lsst.utils.tests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
 
-        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
-                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
-        poly4 = Polygon([afwGeom.Point2D(x, y) for x, y in
-                         ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
+        poly3 = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+                                ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0),
+                                 (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
+        poly4 = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+                                ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0),
+                                 (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
 
         diff1 = poly1.symDifference(poly2)
         diff2 = poly2.symDifference(poly1)
@@ -247,9 +248,9 @@ class PolygonTest(lsst.utils.tests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
         poly = poly1.unionSingle(poly2)
-        expected = Polygon([afwGeom.Point2D(x, y) for x, y in
-                            ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
-                             (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
+        expected = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+                                   ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
+                                    (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
         self.assertEqual(poly.convexHull(), expected)
 
     def testImage(self):
@@ -271,7 +272,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test constructor for Polygon involving transforms"""
         box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0),
                             afwGeom.Point2D(123.4, 567.8))
-        poly1 = Polygon(box)
+        poly1 = afwGeom.Polygon(box)
         scale = 1.5
         shift = afwGeom.Extent2D(3.0, 4.0)
         affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
@@ -279,10 +280,10 @@ class PolygonTest(lsst.utils.tests.TestCase):
         xyTransform = afwGeom.AffineXYTransform(affineTransform)
         transform22 = afwGeom.makeTransform(affineTransform)
         transformedVertices = transform22.applyForward(box.getCorners())
-        expect = Polygon(transformedVertices)
-        poly1 = Polygon(box, affineTransform)
-        poly2 = Polygon(box, xyTransform)
-        poly3 = Polygon(box, transform22)
+        expect = afwGeom.Polygon(transformedVertices)
+        poly1 = afwGeom.Polygon(box, affineTransform)
+        poly2 = afwGeom.Polygon(box, xyTransform)
+        poly3 = afwGeom.Polygon(box, transform22)
         self.assertEqual(poly1, expect)
         self.assertEqual(poly2, expect)
         self.assertEqual(poly3, expect)
@@ -363,7 +364,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
             poly = self.polygon(num)
             with lsst.utils.tests.getTempFilePath(".fits") as filename:
                 poly.writeFits(filename)
-                poly2 = Polygon.readFits(filename)
+                poly2 = afwGeom.Polygon.readFits(filename)
             self.assertEqual(poly, poly2)
 
 

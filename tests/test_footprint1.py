@@ -136,44 +136,44 @@ class ThresholdTestCase(unittest.TestCase):
         """
         try:
             afwDetect.createThreshold(3.4)
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with proper parameters")
 
         try:
             afwDetect.createThreshold(3.4, "foo bar")
-        except:
+        except Exception:
             pass
         else:
             self.fail("Threhold parameters not properly validated")
 
         try:
             afwDetect.createThreshold(3.4, "variance")
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with proper parameters")
 
         try:
             afwDetect.createThreshold(3.4, "stdev")
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with proper parameters")
 
         try:
             afwDetect.createThreshold(3.4, "value")
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with proper parameters")
 
         try:
             afwDetect.createThreshold(3.4, "value", False)
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with VALUE, False parameters")
 
         try:
             afwDetect.createThreshold(0x4, "bitmask")
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with BITMASK parameters")
 
         try:
             afwDetect.createThreshold(5, "pixel_stdev")
-        except:
+        except Exception:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
 
 
@@ -224,8 +224,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
 
     def testTablePersistence(self):
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25),
-                                          afwGeom.Point2D(9, 15))
+        ellipse = afwGeom.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25),
+                                  afwGeom.Point2D(9, 15))
         fp1 = afwDetect.Footprint(afwGeom.SpanSet.fromShape(ellipse))
         fp1.addPeak(6, 7, 2)
         fp1.addPeak(8, 9, 3)
@@ -301,8 +301,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testFootprintFromCircle(self):
         """Create an elliptical Footprint"""
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0),
-                                          afwGeom.Point2D(9, 15))
+        ellipse = afwGeom.Ellipse(afwGeomEllipses.Axes(6, 6, 0),
+                                  afwGeom.Point2D(9, 15))
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
         foot = afwDetect.Footprint(spanSet,
                                    afwGeom.Box2I(afwGeom.Point2I(0, 0),
@@ -322,7 +322,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         """Create an elliptical Footprint"""
         cen = afwGeom.Point2D(23, 25)
         a, b, theta = 25, 15, 30
-        ellipse = afwGeomEllipses.Ellipse(
+        ellipse = afwGeom.Ellipse(
             afwGeomEllipses.Axes(a, b, math.radians(theta)),
             cen)
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
@@ -439,7 +439,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         x0, y0 = imwidth//2, imheight//2
         nshrink = 4
 
-        ellipse = afwGeomEllipses.Ellipse(
+        ellipse = afwGeom.Ellipse(
             afwGeomEllipses.Axes(1.5*radius, 2*radius, 0),
             afwGeom.Point2D(x0, y0))
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
@@ -471,14 +471,14 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         box = afwGeom.Box2I(afwGeom.Point2I(0, 0),
                             afwGeom.Extent2I(imwidth, imheight))
 
-        e1 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
-                                     afwGeom.Point2D(x1, y1))
+        e1 = afwGeom.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
+                             afwGeom.Point2D(x1, y1))
         spanSet1 = afwGeom.SpanSet.fromShape(e1)
         f1 = afwDetect.Footprint(spanSet1, box)
         self.assertEqual(f1.getArea(), circle_npix)
 
-        e2 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
-                                     afwGeom.Point2D(x2, y2))
+        e2 = afwGeom.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
+                             afwGeom.Point2D(x2, y2))
         spanSet2 = afwGeom.SpanSet.fromShape(e2)
         f2 = afwDetect.Footprint(spanSet2, box)
         self.assertEqual(f2.getArea(), circle_npix)

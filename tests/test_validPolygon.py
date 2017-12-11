@@ -40,8 +40,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 
-from lsst.afw.geom.polygon import Polygon
-
 
 class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
@@ -50,14 +48,14 @@ class ValidPolygonTestCase(lsst.utils.tests.TestCase):
             afwGeom.Point2I(0, 0), afwGeom.Point2I(20, 20))
         x = [0, 0, 10, 10]
         y = [0, 10, 10, 0]
-        self.polygon = Polygon([afwGeom.Point2D(xc, yc)
-                                for xc, yc in zip(x, y)])
+        self.polygon = afwGeom.Polygon([afwGeom.Point2D(xc, yc)
+                                       for xc, yc in zip(x, y)])
 
     def testPersistence(self):
         """Test that we can round-trip an ValidPolygon through FITS persistence."""
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             self.polygon.writeFits(filename)
-            polygon2 = Polygon.readFits(filename)
+            polygon2 = afwGeom.Polygon.readFits(filename)
             self.assertEqual(self.polygon, polygon2)
 
     def testExposurePersistence(self):

@@ -86,7 +86,7 @@ class QuadrupoleTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         ixx, iyy, ixy = 1.0, 1.0, 0.0
-        self.data = geomEllip.Quadrupole(ixx, iyy, ixy)
+        self.data = afwGeom.Quadrupole(ixx, iyy, ixy)
 
 
 class AxesTestCase(PickleBase, unittest.TestCase):

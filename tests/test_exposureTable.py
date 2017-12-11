@@ -40,7 +40,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet
 import lsst.afw.table
-from lsst.afw.geom import arcseconds, degrees, radians, Point2D
+from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Polygon
 import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
@@ -96,11 +96,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
 
     @staticmethod
     def makePolygon():
-        # We "hide" the import of Polygon here as it has side effects due to
-        # pybind11 "order of import" issues. See the brief discussion at
-        # DM-10289.
-        from lsst.afw.geom.polygon import Polygon
-        return Polygon([Point2D(1,2), Point2D(2,1)])
+        return Polygon([Point2D(1, 2), Point2D(2, 1)])
 
     def comparePsfs(self, psf1, psf2):
         self.assertIsNotNone(psf1)

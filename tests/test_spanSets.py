@@ -360,7 +360,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
     def testSpanSetFromEllipse(self):
         axes = afwGeomEllipses.Axes(6, 6, 0)
-        ellipse = afwGeomEllipses.Ellipse(axes, afwGeom.Point2D(5, 6))
+        ellipse = afwGeom.Ellipse(axes, afwGeom.Point2D(5, 6))
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
         for ss, es in zip(spanSet, afwGeomEllipses.PixelRegion(ellipse)):
             self.assertEqual(ss, es)
