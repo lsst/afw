@@ -648,7 +648,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
             ("BP_6_0", 3.2535788867488e-27),
         ):
             metadata.set(name, value)
-            self.metadata = metadata
+        self.metadata = metadata
 
     def testGetIntermediateWorldCoordsToSky(self):
         """Test getIntermediateWorldCoordsToSky and getPixelToIntermediateWorldCoords
