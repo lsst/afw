@@ -13,8 +13,8 @@ import lsst.utils.tests
 from lsst.daf.base import PropertyList
 from lsst.afw.coord import IcrsCoord
 from lsst.afw.fits import readMetadata
-from lsst.afw.geom import Extent2D, Point2D, Extent2I, \
-    Box2D, degrees, arcseconds, radians, \
+from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
+    Box2I, Box2D, degrees, arcseconds, radians, wcsAlmostEqualOverBBox, \
     TransformPoint2ToPoint2, TransformPoint2ToIcrsCoord, makeRadialTransform, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
