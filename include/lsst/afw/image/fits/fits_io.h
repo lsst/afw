@@ -30,6 +30,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/image/Wcs.h"
 #include "ndarray.h"
 
@@ -69,7 +70,7 @@ inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& 
     // Origin of part of image to read
     xy0 = geom::Point2I();
 
-    geom::Extent2I xyOffset(detail::getImageXY0FromMetadata(detail::wcsNameForXY0, &metadata));
+    geom::Extent2I xyOffset(geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0));
     geom::Extent2I dimensions = geom::Extent2I(shape[1], shape[0]);
 
     if (!bbox.isEmpty()) {
