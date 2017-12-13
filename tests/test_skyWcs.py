@@ -12,7 +12,6 @@ from numpy.testing import assert_allclose
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
 from lsst.afw.coord import IcrsCoord
-from lsst.afw.fits import readMetadata
 from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
     Box2I, Box2D, degrees, arcseconds, radians, wcsAlmostEqualOverBBox, \
     TransformPoint2ToPoint2, TransformPoint2ToIcrsCoord, makeRadialTransform, \
@@ -535,6 +534,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         metadata = PropertyList()
         # the following was fit using CreateWcsWithSip from meas_astrom
         # and is valid over this bbox: (minimum=(0, 0), maximum=(3030, 3030))
+        # This same metadata was used to create testdata/oldTanSipwWs.fits
         for name, value in (
             ("RADESYS", "ICRS"),
             ("CTYPE1", "RA---TAN-SIP"),
@@ -648,6 +648,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         ):
             metadata.set(name, value)
         self.metadata = metadata
+        self.bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
 
     def testGetIntermediateWorldCoordsToSky(self):
         """Test getIntermediateWorldCoordsToSky and getPixelToIntermediateWorldCoords
@@ -695,8 +696,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         skyWcs = makeSkyWcs(self.metadata, strip = False)
         header = makeFitsHeaderFromMetadata(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
-        bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
-        self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=bbox)
+        self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=self.bbox)
 
     def testMakeTanSipWcs(self):
         referenceWcs = makeSkyWcs(self.metadata, strip=False)
@@ -712,28 +712,68 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         skyWcs2 = makeTanSipWcs(crpix=crpix, crval=crval, cdMatrix=cdMatrix, sipA=sipA, sipB=sipB,
                                 sipAp=sipAp, sipBp=sipBp)
 
-        bbox = Box2D(Point2D(-1000, -1000), Extent2D(2000, 2000))
-        self.assertWcsAlmostEqualOverBBox(referenceWcs, skyWcs1, bbox)
-        self.assertWcsAlmostEqualOverBBox(referenceWcs, skyWcs2, bbox)
+        self.assertWcsAlmostEqualOverBBox(referenceWcs, skyWcs1, self.bbox)
+        self.assertWcsAlmostEqualOverBBox(referenceWcs, skyWcs2, self.bbox)
         self.checkMakeFlippedWcs(skyWcs1)
         self.checkMakeFlippedWcs(skyWcs2)
 
-    def testReadFits(self):
+    def testReadWriteFits(self):
+        wcsFromMetadata = makeSkyWcs(self.metadata)
+        with lsst.utils.tests.getTempFilePath(".fits") as filePath:
+            wcsFromMetadata.writeFits(filePath)
+            wcsFromFits = SkyWcs.readFits(filePath)
+
+        self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, self.bbox)
+
+    def testReadOldTanSipFits(self):
+        """Test reading a FITS file containing data for an lsst::afw::image::TanWcs
+
+        That file was made using the same metadata as this test
+        """
         dataDir = os.path.join(os.path.split(__file__)[0], "data")
-        filePath = os.path.join(dataDir, "wcs-0007358-102.fits")
-        hdu = 1
+        filePath = os.path.join(dataDir, "oldTanSipWcs.fits")
+        wcsFromFits = SkyWcs.readFits(filePath)
 
-        wcsMetadata = readMetadata(filePath, hdu)
-        skyWcs = makeSkyWcs(wcsMetadata)
+        wcsFromMetadata = makeSkyWcs(self.metadata)
 
-        with astropy.io.fits.open(filePath) as fitsObj:
-            header = fitsObj[1]
-            astropyWcs = astropy.wcs.WCS(header)
-
-        # do not check inverse because we don't know the valid region
         bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
-        self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=bbox,
-                                               checkRoundTrip=False)
+        self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, bbox)
+
+    def testReadOldTanFits(self):
+        """Test reading a FITS file containing data for an lsst::afw::image::TanWcs
+
+        That file was made using the same metadata follows
+        (like self.metadata without the distortion)
+        """
+        tanMetadata = PropertyList()
+        # the following was fit using CreateWcsWithSip from meas_astrom
+        # and is valid over this bbox: (minimum=(0, 0), maximum=(3030, 3030))
+        # This same metadata was used to create testdata/oldTanSipwWs.fits
+        for name, value in (
+            ("RADESYS", "ICRS"),
+            ("CTYPE1", "RA---TAN"),
+            ("CTYPE2", "DEC--TAN"),
+            ("CRPIX1", 1531.1824767147),
+            ("CRPIX2", 1531.1824767147),
+            ("CRVAL1", 43.035511801383),
+            ("CRVAL2", 44.305697682784),
+            ("CUNIT1", "deg"),
+            ("CUNIT2", "deg"),
+            ("CD1_1", 0.00027493991598151),
+            ("CD1_2", -3.2758487104158e-06),
+            ("CD2_1", 3.2301310675830e-06),
+            ("CD2_2", 0.00027493937506632),
+        ):
+            tanMetadata.set(name, value)
+
+        dataDir = os.path.join(os.path.split(__file__)[0], "data")
+        filePath = os.path.join(dataDir, "oldTanWcs.fits")
+        wcsFromFits = SkyWcs.readFits(filePath)
+
+        wcsFromMetadata = makeSkyWcs(tanMetadata)
+
+        bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
+        self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, bbox)
 
 
 class WcsPairTransformTestCase(SkyWcsBaseTestCase):
