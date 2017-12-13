@@ -23,16 +23,13 @@
 """Test warpExposure
 """
 from __future__ import absolute_import, division, print_function
-import math
 import os
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils
 import lsst.utils.tests
-import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -70,44 +67,6 @@ else:
     originalFullExposureName = os.path.join(
         "CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
-
-
-def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN"):
-    """Make a Wcs
-
-    @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
-    @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
-    @param[in] crValCoord: crVal for WCS (afwCoord.Coord)
-    @param[in] posAng: position angle (afwGeom.Angle)
-    @param[in] doFlipX: flip X axis?
-    @param[in] projection: WCS projection (e.g. "TAN" or "STG")
-    """
-    if len(projection) != 3:
-        raise RuntimeError("projection=%r; must have length 3" % (projection,))
-    ctypeList = [("%-5s%3s" % (("RA", "DEC")[i], projection)).replace(" ", "-")
-                 for i in range(2)]
-    ps = dafBase.PropertySet()
-    # convert pix position to FITS standard
-    crPixFits = [ind + 1.0 for ind in crPixPos]
-    crValDeg = crValCoord.getPosition(afwGeom.degrees)
-    posAngRad = posAng.asRadians()
-    pixelScaleDeg = pixelScale.asDegrees()
-    cdMat = np.array([[math.cos(posAngRad), math.sin(posAngRad)],
-                      [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
-    if doFlipX:
-        cdMat[:, 0] = -cdMat[:, 0]
-    for i in range(2):
-        ip1 = i + 1
-        ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
-        ps.add("CRPIX%1d" % (ip1,), crPixFits[i])
-        ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
-    ps.add("RADECSYS", "ICRS")
-    ps.add("EQUINOX", 2000)
-    ps.add("CD1_1", cdMat[0, 0])
-    ps.add("CD2_1", cdMat[1, 0])
-    ps.add("CD1_2", cdMat[0, 1])
-    ps.add("CD2_2", cdMat[1, 1])
-    return afwGeom.makeSkyWcs(ps)
 
 
 class WarpExposureTestCase(lsst.utils.tests.TestCase):
@@ -425,22 +384,18 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
     def testTicket2441(self):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
-        fromWcs = makeWcs(
-            pixelScale=afwGeom.Angle(1.0e-8, afwGeom.degrees),
-            projection="TAN",
-            crPixPos=(0, 0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(359, 0), afwGeom.degrees),
+        fromWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
 
-        toWcs = makeWcs(
-            pixelScale=afwGeom.Angle(0.00011, afwGeom.degrees),
+        toWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(410000, 11441),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(45, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.00011*afwGeom.degrees, flipX=True),
             projection="CEA",
-            crPixPos=(410000.0, 11441.0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(45, 0), afwGeom.degrees),
-            doFlipX=True,
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(0, 0), toWcs)
 
@@ -472,21 +427,17 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         This tests another bug that was fixed in ticket #2441
         """
-        fromWcs = makeWcs(
-            pixelScale=afwGeom.Angle(1.0e-8, afwGeom.degrees),
-            projection="TAN",
-            crPixPos=(0, 0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(359, 0), afwGeom.degrees),
+        fromWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
 
-        toWcs = makeWcs(
-            pixelScale=afwGeom.Angle(1.1e-8, afwGeom.degrees),
-            projection="TAN",
-            crPixPos=(0, 0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(358, 0), afwGeom.degrees),
+        toWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(358, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.1e-8*afwGeom.degrees),
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), toWcs)
 
@@ -516,18 +467,15 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         - rtol: relative tolerance as used by np.allclose
         - atol: absolute tolerance as used by np.allclose
         """
-        srcWcs = makeWcs(
-            pixelScale=afwGeom.Angle(0.2, afwGeom.degrees),
-            crPixPos=(10.0, 11.0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
+        srcWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(10, 11),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.2*afwGeom.degrees),
         )
-        destWcs = makeWcs(
-            pixelScale=afwGeom.Angle(0.17, afwGeom.degrees),
-            crPixPos=(9.0, 10.0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
-            posAng=afwGeom.Angle(31, afwGeom.degrees),
+        destWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(9, 10),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.17*afwGeom.degrees),
         )
 
         srcMaskedImage = afwImage.MaskedImageF(100, 101)
