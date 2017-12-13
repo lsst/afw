@@ -70,7 +70,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
             scale = self.pixelSizeMm,
         )
         cdMatrix = makeCdMatrix(scale = self.scale, orientation = self.orientation)
-        self.tanWcs = SkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
+        self.tanWcs = makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
         self.radPerMm = self.plateScale.asRadians() / self.pixelSizeMm  # at center of field
         bboxD = afwGeom.Box2D(self.bbox)
         self.pixelPoints = bboxD.getCorners()

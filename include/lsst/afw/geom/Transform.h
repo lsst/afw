@@ -37,6 +37,8 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
+class SkyWcs;
+
 /**
  * Transform LSST spatial data, such as Point2D and IcrsCoord, using an AST transform.
  *
@@ -62,6 +64,9 @@ namespace geom {
  */
 template <class FromEndpoint, class ToEndpoint>
 class Transform final {
+    // SkyWcs is a friend so it can call a protected Transform constructor
+    friend class SkyWcs;
+
 public:
     using FromArray = typename FromEndpoint::Array;
     using FromPoint = typename FromEndpoint::Point;
