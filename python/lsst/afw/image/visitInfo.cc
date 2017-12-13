@@ -31,8 +31,7 @@
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Weather.h"
 #include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/image/VisitInfo.h"
 
@@ -54,11 +53,7 @@ PYBIND11_PLUGIN(visitInfo) {
     py::module mod("visitInfo");
 
     /* Module level */
-    table::io::python::declarePersistableFacade<VisitInfo>(mod, "VisitInfo");
-
-    py::class_<VisitInfo, std::shared_ptr<VisitInfo>, table::io::PersistableFacade<VisitInfo>,
-               table::io::Persistable>
-            cls(mod, "VisitInfo");
+    py::class_<VisitInfo, std::shared_ptr<VisitInfo>> cls(mod, "VisitInfo");
 
     /* Member types and enums */
     py::enum_<RotType>(mod, "RotType")
@@ -81,6 +76,8 @@ PYBIND11_PLUGIN(visitInfo) {
             "weather"_a = coord::Weather(nan, nan, nan));
     cls.def(py::init<daf::base::PropertySet const &>(), "metadata"_a);
     cls.def(py::init<VisitInfo const &>(), "visitInfo"_a);
+
+    table::io::python::addPersistableMethods<VisitInfo>(cls);
 
     /* Operators */
     cls.def("__eq__", [](VisitInfo const &self, VisitInfo const &other) { return self == other; },

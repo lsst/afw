@@ -87,7 +87,7 @@ public:
      *
      * @returns lsst::afw::geom::Transform from pixel to focal plane coordinates
      */
-    geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> makePixelFpTransform(
+    std::shared_ptr<geom::TransformPoint2ToPoint2> makePixelFpTransform(
             geom::Extent2D const pixelSizeMm  ///< Size of the pixel in mm in X and Y
             ) const;
 
@@ -96,7 +96,7 @@ public:
      *
      * @returns lsst::afw::geom::Transform from focal plane to pixel coordinates
      */
-    geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> makeFpPixelTransform(
+    std::shared_ptr<geom::TransformPoint2ToPoint2> makeFpPixelTransform(
             geom::Extent2D const pixelSizeMm  ///< Size of the pixel in mm in X and Y
             ) const;
 

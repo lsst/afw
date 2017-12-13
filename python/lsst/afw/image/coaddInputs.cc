@@ -22,8 +22,7 @@
 
 #include "pybind11/pybind11.h"
 
-#include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/image/CoaddInputs.h"
@@ -36,15 +35,12 @@ namespace afw {
 namespace image {
 namespace {
 
-using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>,
-                                 table::io::PersistableFacade<CoaddInputs>, table::io::Persistable>;
+using PyCoaddInputs = py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>>;
 
 PYBIND11_PLUGIN(coaddInputs) {
     py::module mod("coaddInputs");
 
     /* Module level */
-
-    table::io::python::declarePersistableFacade<CoaddInputs>(mod, "CoaddInputs");
 
     PyCoaddInputs cls(mod, "CoaddInputs");
 
@@ -52,6 +48,8 @@ PYBIND11_PLUGIN(coaddInputs) {
     cls.def(py::init<>());
     cls.def(py::init<table::Schema const &, table::Schema const &>(), "visitSchema"_a, "ccdSchema"_a);
     cls.def(py::init<table::ExposureCatalog const &, table::ExposureCatalog const &>(), "visits"_a, "ccds"_a);
+
+    table::io::python::addPersistableMethods<CoaddInputs>(cls);
 
     /* Members */
     cls.def_readwrite("visits", &CoaddInputs::visits);

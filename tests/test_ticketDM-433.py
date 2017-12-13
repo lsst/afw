@@ -67,7 +67,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                    lsst.afw.geom.Point2D(*np.random.randn(2)))
         record.set(self.centroidErrKey, makeCov(2, np.float32))
         record.set(self.shapeKey,
-                   lsst.afw.geom.ellipses.Quadrupole(*np.random.randn(3)))
+                   lsst.afw.geom.Quadrupole(*np.random.randn(3)))
         record.set(self.shapeErrKey, makeCov(3, np.float32))
         record.set(self.fluxFlagKey, np.random.randn() > 0)
         record.set(self.centroidFlagKey, np.random.randn() > 0)

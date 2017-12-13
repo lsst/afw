@@ -41,6 +41,7 @@ import lsst.afw.image.utils as imageUtils
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
+from lsst.afw.geom.skyWcs import SkyWcs, makeWcsPairTransform
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
@@ -447,7 +448,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             originalExposure = afwImage.ExposureF(originalExposurePath)
             originalMetadata = afwImage.DecoratedImageF(originalExposurePath).getMetadata()
-            originalSkyWcs = afwGeom.SkyWcs(originalMetadata)
+            originalSkyWcs = SkyWcs(originalMetadata)
 
             swarpedImageName = "medswarp1%s.fits" % (kernelName,)
             swarpedImagePath = os.path.join(dataDir, swarpedImageName)
@@ -455,11 +456,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             swarpedImage = swarpedDecoratedImage.getImage()
 
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
-            warpedSkyWcs = afwGeom.SkyWcs(swarpedMetadata)
+            warpedSkyWcs = SkyWcs(swarpedMetadata)
 
             # warped image is destination, original image is source
-            # and WCS computes pixels to sky in the forward direction, so...
-            destToSrc = warpedSkyWcs.then(originalSkyWcs.getInverse())
+            destToSrc = makeWcsPairTransform(warpedSkyWcs, originalSkyWcs)
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             originalMaskedImage = originalExposure.getMaskedImage()

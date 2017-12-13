@@ -27,7 +27,9 @@ from __future__ import absolute_import
 from .angle import *
 from .coordinates import *
 from .box import *
+from .ellipses import Ellipse, Quadrupole
 from .functor import *
+from .polygon import *
 from .span import *
 from .spherePoint import *
 from .xyTransform import *
@@ -46,3 +48,4 @@ from .transformFactory import *
 from .transformConfig import *
 from .skyWcs import *
 from .transformFromString import *
+from . import wcsUtils

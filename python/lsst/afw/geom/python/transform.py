@@ -37,7 +37,7 @@ In Python the templated Transform classes have names such as
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["addTransformMethods", "transformRegistry"]
+__all__ = ["addTransformMethods", "reduceTransform", "transformRegistry"]
 
 import lsst.pex.exceptions
 
@@ -53,13 +53,13 @@ def getJacobian(self, x):
     return matrix
 
 
-def then(self, next):
+def then(self, next, simplify = True):
     """Concatenate two transforms
 
     The result of A.then(B) is is C(x) = B(A(x))
     """
     if self.toEndpoint == next.fromEndpoint:
-        return self._then(next)
+        return self._then(next, simplify = simplify)
     else:
         raise lsst.pex.exceptions.InvalidParameterError(
             "Cannot concatenate %r and %r: endpoints do not match."

@@ -23,7 +23,7 @@
 from __future__ import absolute_import, division, print_function
 import unittest
 
-import astropy.io
+import astropy.io.fits
 
 import lsst.afw.image
 import lsst.afw.geom
@@ -170,7 +170,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
             fits = astropy.io.fits.open(fileName)
             fits[1].header.remove("CTYPE1")
             fits[1].header.remove("CTYPE2")
-            fits.writeto(fileName, clobber=True)
+            fits.writeto(fileName, overwrite=True)
             fits.close()
             # now load it using afw
             expOut = lsst.afw.image.ExposureF(fileName)

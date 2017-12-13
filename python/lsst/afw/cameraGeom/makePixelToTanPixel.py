@@ -26,7 +26,7 @@ __all__ = ["makePixelToTanPixel"]
 
 
 def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
-    """!Make a Transform whose forward direction converts PIXEL to TAN_PIXEL for one detector
+    """!Make a Transform whose forward direction converts PIXELS to TAN_PIXELS for one detector
 
     PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in doc/cameraGeom.dox
 
@@ -35,7 +35,7 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
     @param[in] focalPlaneToField  an lsst.afw.geom.Transform that converts from focal plane (mm)
         to field angle coordinates (radians) in the forward direction
     @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.afw.geom.Extent2D)
-    @return a TransformPoint2ToPoint2 whose forward direction converts PIXEL to TAN_PIXEL
+    @return a TransformPoint2ToPoint2 whose forward direction converts PIXELS to TAN_PIXELS
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
     pixelToField = pixelToFocalPlane.then(focalPlaneToField)

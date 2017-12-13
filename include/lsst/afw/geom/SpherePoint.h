@@ -325,9 +325,6 @@ public:
     SpherePoint offset(Angle const& bearing, Angle const& amount) const;
 
 private:
-    // For compatibility with Starlink AST, the implementation must be a
-    // pair of floating-point numbers, with no other data. Do not change
-    // the implementation without an RFC.
     double _longitude;  // radians
     double _latitude;   // radians
 };

@@ -54,7 +54,7 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
                              : frameSet.copy()) {}
 
 template <typename FromEndpoint, typename ToEndpoint>
-Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> &&frameSet)
+Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> frameSet)
         : _fromEndpoint(frameSet->getNIn()), _frameSet(frameSet), _toEndpoint(frameSet->getNOut()) {
     // Normalize the base and current frame in a way that affects its behavior as a mapping.
     // To do this one must set the current frame to the frame to be normalized
@@ -118,7 +118,7 @@ typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
 }
 
 template <class FromEndpoint, class ToEndpoint>
-Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
+std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
     auto inverse = std::dynamic_pointer_cast<ast::FrameSet>(_frameSet->getInverse());
     if (!inverse) {
         // don't throw std::bad_cast because it doesn't let you provide debugging info
@@ -126,7 +126,7 @@ Transform<ToEndpoint, FromEndpoint> Transform<FromEndpoint, ToEndpoint>::getInve
         buffer << "FrameSet.getInverse() does not return a FrameSet. Called from: " << _frameSet;
         throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
     }
-    return Transform<ToEndpoint, FromEndpoint>(*inverse);
+    return std::make_shared<Transform<ToEndpoint, FromEndpoint>>(*inverse);
 }
 
 template <class FromEndpoint, class ToEndpoint>
@@ -156,12 +156,14 @@ std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
 }
 
 template <class FromEndpoint, class ToEndpoint>
-Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readStream(std::istream &is) {
+std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readStream(
+        std::istream &is) {
     return detail::readStream<Transform<FromEndpoint, ToEndpoint>>(is);
 }
 
 template <class FromEndpoint, class ToEndpoint>
-Transform<FromEndpoint, ToEndpoint> Transform<FromEndpoint, ToEndpoint>::readString(std::string & str) {
+std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readString(
+        std::string &str) {
     std::istringstream is(str);
     return Transform<FromEndpoint, ToEndpoint>::readStream(is);
 }
@@ -180,10 +182,17 @@ std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
 
 template <class FromEndpoint, class ToEndpoint>
 template <class NextToEndpoint>
-Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::then(
-        Transform<ToEndpoint, NextToEndpoint> const &next) const {
+std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> Transform<FromEndpoint, ToEndpoint>::then(
+        Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
     if (_toEndpoint.getNAxes() == next.getFromEndpoint().getNAxes()) {
-        return Transform<FromEndpoint, NextToEndpoint>(*ast::append(*_frameSet, *(next.getFrameSet())));
+        auto nextFrameSet = next.getFrameSet();
+        if (simplify) {
+            auto simplifiedMap = getFrameSet()->then(*nextFrameSet).simplify();
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*simplifiedMap);
+        } else {
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(
+                    *ast::append(*getFrameSet(), *nextFrameSet));
+        }
     } else {
         auto message = "Cannot match " + std::to_string(_toEndpoint.getNAxes()) + "-D to-endpoint to " +
                        std::to_string(next.getFromEndpoint().getNAxes()) + "-D from-endpoint.";
@@ -193,15 +202,14 @@ Transform<FromEndpoint, NextToEndpoint> Transform<FromEndpoint, ToEndpoint>::the
 
 template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform) {
-    auto const frameSet = transform.getFrameSet();
     os << "Transform<" << transform.getFromEndpoint() << ", " << transform.getToEndpoint() << ">";
     return os;
 };
 
 #define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, NextToEndpoint) \
-    template Transform<FromEndpoint, NextToEndpoint>                    \
+    template std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>>   \
     Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
-            Transform<ToEndpoint, NextToEndpoint> const &next) const;
+            Transform<ToEndpoint, NextToEndpoint> const &next, bool) const;
 
 #define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                \
     template class Transform<FromEndpoint, ToEndpoint>;                \

@@ -34,7 +34,7 @@
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/SpanSet.h"
-#include "lsst/afw/table/io/python.h"
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -45,24 +45,7 @@ namespace geom {
 
 namespace {
 
-using PySpanSet = py::class_<SpanSet, std::shared_ptr<SpanSet>, table::io::PersistableFacade<SpanSet>>;
-
-// SpanSet's inheritance from afw::table::io::Persistable is not exposed to
-// Python because doing so introduces a circular dependency between afw.table
-// and afw.geom.  Luckily, Python code doesn't really care about the
-// Persistable interface most of the time, and we can add Persistable's
-// methods directly to SpanSet using this function.  In the long term, this
-// should be fixed by moving afw.table.io out of afw.table, since it actually
-// has a much more lightweight set of dependencies than afw.table.
-void declarePersistable(PySpanSet &cls) {
-    cls.def("writeFits",
-            (void (SpanSet::*)(std::string const &, std::string const &) const) & SpanSet::writeFits,
-            "fileName"_a, "mode"_a = "w");
-    cls.def("writeFits",
-            (void (SpanSet::*)(fits::MemFileManager &, std::string const &) const) & SpanSet::writeFits,
-            "manager"_a, "mode"_a = "w");
-    cls.def("isPersistable", &SpanSet::isPersistable);
-}
+using PySpanSet = py::class_<SpanSet, std::shared_ptr<SpanSet>>;
 
 template <typename Pixel, typename PyClass>
 void declareFlattenMethod(PyClass &cls) {
@@ -217,8 +200,6 @@ PYBIND11_PLUGIN(spanSet) {
             .value("BOX", Stencil::BOX)
             .value("MANHATTAN", Stencil::MANHATTAN);
 
-    table::io::python::declarePersistableFacade<SpanSet>(mod, "SpanSet");
-
     PySpanSet cls(mod, "SpanSet");
 
     /* SpanSet Constructors */
@@ -226,8 +207,7 @@ PYBIND11_PLUGIN(spanSet) {
     cls.def(py::init<Box2I>(), "box"_a);
     cls.def(py::init<std::vector<Span>, bool>(), "spans"_a, "normalize"_a = true);
 
-    /* Mimic Persistable interface (see comment on declarePersitable above) */
-    declarePersistable(cls);
+    table::io::python::addPersistableMethods<SpanSet>(cls);
 
     /* SpanSet Methods */
     cls.def("getArea", &SpanSet::getArea);

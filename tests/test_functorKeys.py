@@ -200,12 +200,12 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         record.set(xyKey, 2)
         # test that the return type and value is correct
         self.assertIsInstance(record.get(fKey1),
-                              lsst.afw.geom.ellipses.Quadrupole)
+                              lsst.afw.geom.Quadrupole)
         self.assertEqual(record.get(fKey1).getIxx(), record.get(xxKey))
         self.assertEqual(record.get(fKey1).getIyy(), record.get(yyKey))
         self.assertEqual(record.get(fKey1).getIxy(), record.get(xyKey))
         # test that we can set using the functor key
-        p = lsst.afw.geom.ellipses.Quadrupole(8, 16, 4)
+        p = lsst.afw.geom.Quadrupole(8, 16, 4)
         record.set(fKey1, p)
         self.assertEqual(record.get(xxKey), p.getIxx())
         self.assertEqual(record.get(yyKey), p.getIyy())
@@ -242,11 +242,11 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # constituent keys
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
-        record.set(qKey, lsst.afw.geom.ellipses.Quadrupole(4, 3, 1))
+        record.set(qKey, lsst.afw.geom.Quadrupole(4, 3, 1))
         record.set(pKey, lsst.afw.geom.Point2D(5, 6))
         # test that the return type and value is correct
         self.assertIsInstance(record.get(fKey1),
-                              lsst.afw.geom.ellipses.Ellipse)
+                              lsst.afw.geom.Ellipse)
         self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxx(),
                                      record.get(qKey).getIxx(), rtol=1E-14)
         self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIyy(),
@@ -258,8 +258,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(fKey1).getCenter().getX(),
                          record.get(pKey).getX())
         # test that we can set using the functor key
-        e = lsst.afw.geom.ellipses.Ellipse(lsst.afw.geom.ellipses.Quadrupole(8, 16, 4),
-                                           lsst.afw.geom.Point2D(5, 6))
+        e = lsst.afw.geom.Ellipse(lsst.afw.geom.Quadrupole(8, 16, 4),
+                                  lsst.afw.geom.Point2D(5, 6))
         record.set(fKey1, e)
         self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxx(),
                                      e.getCore().getIxx(), rtol=1E-14)

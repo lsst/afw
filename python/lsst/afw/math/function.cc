@@ -25,8 +25,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/math/Function.h"
 
 namespace py = pybind11;
@@ -42,14 +41,12 @@ template <typename ReturnT>
 void declareFunction(py::module &mod, std::string const &suffix) {
     auto const name = "Function" + suffix;
 
-    table::io::python::declarePersistableFacade<Function<ReturnT>>(mod, name.c_str());
-
-    py::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>,
-               table::io::PersistableFacade<Function<ReturnT>>, table::io::Persistable>
-            cls(mod, name.c_str());
+    py::class_<Function<ReturnT>, std::shared_ptr<Function<ReturnT>>> cls(mod, name.c_str());
 
     cls.def(py::init<unsigned int>(), "nParams"_a);
     cls.def(py::init<std::vector<double> const &>(), "params"_a);
+
+    table::io::python::addPersistableMethods<Function<ReturnT>>(cls);
 
     cls.def("getNParameters", &Function<ReturnT>::getNParameters);
     cls.def("getParameters", &Function<ReturnT>::getParameters, py::return_value_policy::copy);
@@ -64,11 +61,10 @@ template <typename ReturnT>
 void declareFunction1(py::module &mod, const std::string &suffix) {
     auto const name = "Function1" + suffix;
 
-    table::io::python::declarePersistableFacade<Function1<ReturnT>>(mod, name.c_str());
+    py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>, Function<ReturnT>> cls(mod,
+                                                                                               name.c_str());
 
-    py::class_<Function1<ReturnT>, std::shared_ptr<Function1<ReturnT>>,
-               table::io::PersistableFacade<Function1<ReturnT>>, Function<ReturnT>>
-            cls(mod, name.c_str());
+    table::io::python::addPersistableMethods<Function1<ReturnT>>(cls);
 
     cls.def("clone", &Function1<ReturnT>::clone);
     cls.def("__call__", &Function1<ReturnT>::operator(), "x"_a);
@@ -80,11 +76,10 @@ template <typename ReturnT>
 void declareFunction2(py::module &mod, const std::string &suffix) {
     auto const name = "Function2" + suffix;
 
-    table::io::python::declarePersistableFacade<Function2<ReturnT>>(mod, name.c_str());
+    py::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>, Function<ReturnT>> cls(mod,
+                                                                                               name.c_str());
 
-    py::class_<Function2<ReturnT>, std::shared_ptr<Function2<ReturnT>>,
-               table::io::PersistableFacade<Function2<ReturnT>>, Function<ReturnT>>
-            cls(mod, name.c_str());
+    table::io::python::addPersistableMethods<Function2<ReturnT>>(cls);
 
     cls.def("clone", &Function2<ReturnT>::clone);
     cls.def("__call__", &Function2<ReturnT>::operator(), "x"_a, "y"_a);

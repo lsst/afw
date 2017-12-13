@@ -30,8 +30,7 @@
 #include "ndarray/pybind11.h"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/detection/Footprint.h"
 
 namespace py = pybind11;
@@ -70,7 +69,6 @@ void declareMaskFromFootprintList(py::module &mod) {
 
 PYBIND11_PLUGIN(_footprint) {
     py::module mod("_footprint", "Python wrapper for afw Footprint library");
-    table::io::python::declarePersistableFacade<Footprint>(mod, "Footprint");
 
     if (_import_array() < 0) {
         PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
@@ -78,9 +76,7 @@ PYBIND11_PLUGIN(_footprint) {
     }
 
     /* Footprint Constructors */
-    py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen, table::io::Persistable,
-               table::io::PersistableFacade<Footprint>>
-            clsFootprint(mod, "Footprint");
+    py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen> clsFootprint(mod, "Footprint");
     clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, geom::Box2I const &>(), "inputSpans"_a,
                      "region"_a = geom::Box2I());
 
@@ -89,6 +85,8 @@ PYBIND11_PLUGIN(_footprint) {
             "inputSpans"_a, "peakSchema"_a, "region"_a = geom::Box2I());
     clsFootprint.def(py::init<Footprint const &>());
     clsFootprint.def(py::init<>());
+
+    table::io::python::addPersistableMethods<Footprint>(clsFootprint);
 
     /* Footprint Methods */
     clsFootprint.def("getSpans", &Footprint::getSpans);

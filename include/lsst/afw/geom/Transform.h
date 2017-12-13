@@ -37,31 +37,36 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
+class SkyWcs;
+
 /**
-Transform LSST spatial data, such as Point2D and IcrsCoord, using an AST transform.
-
-This class contains two Endpoints, to specify the "from" and "to" LSST data type,
-and an ast::FrameSet or ast::Mapping to specify the transformation.
-In the case of a FrameSet the transformation is from the `BASE` frame to the `CURRENT` frame.
-The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
-
-Depending on the ast::FrameSet or ast::Mapping used to define it, a Transform may
-provide either a forward transform, an inverse transform, or both. In particular, the
-@ref getInverse "inverse" of a forward-only transform is an inverse-only transform. The
-@ref hasForward and @ref hasInverse methods can be used to check which transforms are available.
-
-Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
-internal errors within AST.
-
-@note You gain some safety by constructing a Transform from an ast::FrameSet,
-since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
-
-@note "In place" versions of `applyForward` and `applyInverse` are not available
-because data must be copied when converting from LSST data types to the type used by astshim,
-so it didn't seem worth the bother.
-*/
+ * Transform LSST spatial data, such as Point2D and IcrsCoord, using an AST transform.
+ *
+ * This class contains two Endpoints, to specify the "from" and "to" LSST data type,
+ * and an ast::FrameSet or ast::Mapping to specify the transformation.
+ * In the case of a FrameSet the transformation is from the `BASE` frame to the `CURRENT` frame.
+ * The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
+ *
+ * Depending on the ast::FrameSet or ast::Mapping used to define it, a Transform may
+ * provide either a forward transform, an inverse transform, or both. In particular, the
+ * @ref getInverse "inverse" of a forward-only transform is an inverse-only transform. The
+ * @ref hasForward and @ref hasInverse methods can be used to check which transforms are available.
+ *
+ * Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
+ * internal errors within AST.
+ *
+ * @note You gain some safety by constructing a Transform from an ast::FrameSet,
+ * since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
+ *
+ * @note "In place" versions of `applyForward` and `applyInverse` are not available
+ * because data must be copied when converting from LSST data types to the type used by astshim,
+ * so it didn't seem worth the bother.
+ */
 template <class FromEndpoint, class ToEndpoint>
-class Transform {
+class Transform final {
+    // SkyWcs is a friend so it can call a protected Transform constructor
+    friend class SkyWcs;
+
 public:
     using FromArray = typename FromEndpoint::Array;
     using FromPoint = typename FromEndpoint::Point;
@@ -74,40 +79,38 @@ public:
     Transform &operator=(Transform &&) = delete;
 
     /**
-    Construct a Transform from a deep copy of an ast::Mapping
-
-    The internal FrameSet consists of a frame constructed by each endpoint
-    connected by the mapping.
-
-    @param[in] mapping  ast::Mapping describing the desired transformation
-    @param[in] simplify  Simplify the mapping? This combines component mappings
-        and removes redundant components where possible.
-    */
+     * Construct a Transform from a deep copy of an ast::Mapping
+     *
+     * The internal FrameSet consists of a frame constructed by each endpoint
+     * connected by the mapping.
+     *
+     * @param[in] mapping  ast::Mapping describing the desired transformation
+     * @param[in] simplify  Simplify the mapping? This combines component mappings
+     *     and removes redundant components where possible.
+     */
     explicit Transform(ast::Mapping const &mapping, bool simplify = true);
 
     /**
-    Construct a Transform from a deep copy of a FrameSet.
-
-    The result transforms from the "base" frame to the "current" frame.
-    The "from" endpoint is used to normalize the "base" frame
-    and the "to" endpoint is used to normalize the "current" frame.
-
-    This is pickier than the constructor that takes an ast::Mapping in that:
-    - SphereEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
-      are swapped if necessary to the standard order: longitude, latitude.
-    - Point2Endpoint must be associated with an ast::Frame (not a subclass),
-      because Frame is the only kind of Frame that is sure to be Cartesian.
-
-    @param[in] frameSet  ast::FrameSet describing the desired transformation in the usual way:
-                         from "base" frame to "current" frame
-    @param[in] simplify  Simplify the frame set? This simplifies each mapping
-                         in the frame set by combining component mappings and removing
-                         redundant components where possible. However it
-                         does not remove any frames.
-    */
+     * Construct a Transform from a deep copy of a FrameSet.
+     *
+     * The result transforms from the "base" frame to the "current" frame.
+     * The "from" endpoint is used to normalize the "base" frame
+     * and the "to" endpoint is used to normalize the "current" frame.
+     *
+     * This is pickier than the constructor that takes an ast::Mapping in that:
+     * - IcrsCoordEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
+     *   are swapped if necessary to the standard order: longitude, latitude.
+     * - Point2Endpoint must be associated with an ast::Frame (not a subclass),
+     *   because Frame is the only kind of Frame that is sure to be Cartesian.
+     *
+     * @param[in] frameSet  ast::FrameSet describing the desired transformation in the usual way:
+     *                      from "base" frame to "current" frame
+     * @param[in] simplify  Simplify the frame set? This simplifies each mapping
+     *                      in the frame set by combining component mappings and removing
+     *                      redundant components where possible. However it
+     *                      does not remove any frames.
+     */
     explicit Transform(ast::FrameSet const &frameSet, bool simplify = true);
-
-    virtual ~Transform(){};
 
     /**
      * Test if this method has a forward transform.
@@ -124,46 +127,46 @@ public:
     bool hasInverse() const { return _frameSet->hasInverse(); }
 
     /**
-    Get the "from" endpoint
-    */
+     * Get the "from" endpoint
+     */
     FromEndpoint getFromEndpoint() const { return _fromEndpoint; }
 
     /**
-    Get the contained frameset
-    */
+     * Get the contained frameset
+     */
     std::shared_ptr<const ast::FrameSet> getFrameSet() const { return _frameSet; }
 
     /**
-    Get the "to" endpoint
-    */
+     * Get the "to" endpoint
+     */
     ToEndpoint getToEndpoint() const { return _toEndpoint; }
 
     /**
-    Transform one point in the forward direction ("from" to "to")
-    */
+     * Transform one point in the forward direction ("from" to "to")
+     */
     ToPoint applyForward(FromPoint const &point) const;
 
     /**
-    Transform an array of points in the forward direction ("from" to "to")
-
-    The first dimension of the array must match the number of input axes, and the data order is
-    values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
-        x0, x1, x2, ..., y0, y1, y2...
-    */
+     * Transform an array of points in the forward direction ("from" to "to")
+     *
+     * The first dimension of the array must match the number of input axes, and the data order is
+     * values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
+     *     x0, x1, x2, ..., y0, y1, y2...
+     */
     ToArray applyForward(FromArray const &array) const;
 
     /**
-    Transform one point in the inverse direction ("to" to "from")
-    */
+     * Transform one point in the inverse direction ("to" to "from")
+     */
     FromPoint applyInverse(ToPoint const &point) const;
 
     /**
-    Transform an array of points in the inverse direction ("to" to "from")
-
-    The first dimension of the array must match the number of output axes, and the data order is
-    values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
-        x0, x1, x2, ..., y0, y1, y2...
-    */
+     * Transform an array of points in the inverse direction ("to" to "from")
+     *
+     * The first dimension of the array must match the number of output axes, and the data order is
+     * values for the first axis, then values for the next axis, and so on, e.g. for 2 axes:
+     *     x0, x1, x2, ..., y0, y1, y2...
+     */
     FromArray applyInverse(ToArray const &array) const;
 
     /**
@@ -174,10 +177,12 @@ public:
      *
      * @exceptsafe Provides basic exception safety.
      */
-    Transform<ToEndpoint, FromEndpoint> getInverse() const;
+    std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> getInverse() const;
 
     /**
      * The Jacobian matrix of this Transform.
+     *
+     * Radians are used for each axis of an IcrsCoordEndpoint.
      *
      * The matrix is defined only if this object has a forward transform.
      *
@@ -202,6 +207,8 @@ public:
      *
      * @tparam NextToEndpoint the "to" Endpoint of `next`
      * @param next the Transform to apply after this one
+     * @param simplify if true then produce a transform containing a single simplified mapping
+     *          with no intermediate frames.
      * @returns a Transform that first applies this transform to its input, and then
      *          `next` to the result. Its inverse shall first apply the
      *          inverse of `next`, and then the inverse of this transform.
@@ -213,10 +220,11 @@ public:
      *
      * More than two Transforms can be combined in series. For example:
      *
-     *     auto pixelsToSky = pixelsToFp.then(fpToField).then(fieldToSky);
+     *     auto pixelsToSky = pixelsToFp.then(fpToField)->then(fieldToSky);
      */
     template <class NextToEndpoint>
-    Transform<FromEndpoint, NextToEndpoint> then(Transform<ToEndpoint, NextToEndpoint> const &next) const;
+    std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> then(
+            Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify = true) const;
 
     /**
      * Return a short version of the class name with no punctuation
@@ -233,10 +241,10 @@ public:
      *
      * @param[in] is  input stream from which to deserialize this Transform
      */
-    static Transform<FromEndpoint, ToEndpoint> readStream(std::istream & is);
+    static std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> readStream(std::istream &is);
 
     /// Deserialize a Transform of this type from a string, using the same format as readStream
-    static Transform<FromEndpoint, ToEndpoint> readString(std::string & str);
+    static std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> readString(std::string &str);
 
     /**
      * Serialize this Transform to an output stream
@@ -250,18 +258,18 @@ public:
      *
      * @param[out] os  outpu stream to which to serialize this Transform
      */
-    virtual void writeStream(std::ostream & os) const;
+    void writeStream(std::ostream &os) const;
 
     /// Serialize this Transform to a string, using the same format as writeStream
-    virtual std::string writeString() const;
+    std::string writeString() const;
 
 protected:
     /**
-    Construct a Transform from a shared pointer to a FrameSet
-
-    @note The FrameSet may be modified by normalizing the base and current frame.
-    */
-    explicit Transform(std::shared_ptr<ast::FrameSet> &&frameSet);
+     * Construct a Transform from a shared pointer to a FrameSet
+     *
+     * @note The FrameSet may be modified by normalizing the base and current frame.
+     */
+    explicit Transform(std::shared_ptr<ast::FrameSet> frameSet);
 
 private:
     FromEndpoint _fromEndpoint;
@@ -270,12 +278,12 @@ private:
 };
 
 /**
-Print a Transform to an ostream
-
-The format is "Transform<_fromEndpoint_, _toEndpoint_>"
-where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to the ostream;
-for example "Transform<GenericEndpoint(4), Point2Endpoint()>"
-*/
+ * Print a Transform to an ostream
+ *
+ * The format is "Transform<_fromEndpoint_, _toEndpoint_>"
+ * where _fromEndpoint_ and _toEndpoint_ are the appropriate endpoint printed to the ostream;
+ * for example "Transform<GenericEndpoint(4), Point2Endpoint()>"
+ */
 template <class FromEndpoint, class ToEndpoint>
 std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
 

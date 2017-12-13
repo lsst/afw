@@ -524,7 +524,7 @@ class Display(object):
             else:
                 if mat:
                     mxx, mxy, myy = [float(_) for _ in mat.groups()]
-                    symb = afwGeom.ellipses.Quadrupole(mxx, myy, mxy)
+                    symb = afwGeom.Quadrupole(mxx, myy, mxy)
 
             symb = afwGeom.ellipses.Axes(symb)
 

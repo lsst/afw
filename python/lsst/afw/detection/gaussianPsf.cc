@@ -24,7 +24,7 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-#include "lsst/afw/table/io/python.h"  // for declarePersistableFacade
+#include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/detection/GaussianPsf.h"
 
 namespace py = pybind11;
@@ -37,10 +37,9 @@ namespace detection {
 PYBIND11_PLUGIN(_gaussianPsf) {
     py::module mod("_gaussianPsf", "Python wrapper for afw _gaussianPsf library");
 
-    table::io::python::declarePersistableFacade<GaussianPsf>(mod, "GaussianPsf");
+    py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, Psf> clsGaussianPsf(mod, "GaussianPsf");
 
-    py::class_<GaussianPsf, std::shared_ptr<GaussianPsf>, afw::table::io::PersistableFacade<GaussianPsf>, Psf>
-            clsGaussianPsf(mod, "GaussianPsf");
+    table::io::python::addPersistableMethods<GaussianPsf>(clsGaussianPsf);    
 
     /* Constructors */
     clsGaussianPsf.def(py::init<int, int, double>(), "width"_a, "height"_a, "sigma"_a);
