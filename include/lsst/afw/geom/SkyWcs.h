@@ -558,6 +558,13 @@ std::shared_ptr<TransformPoint2ToIcrsCoord> getIntermediateWorldCoordsToSky(SkyW
 std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWcs const &wcs,
                                                                            bool simplify = true);
 
+/**
+ * Print a SkyWcs to an ostream
+ *
+ * For now it just prints "SkyWcs"; eventually it would be nice to have a summary
+ */
+std::ostream &operator<<(std::ostream &os, SkyWcs const &wcs);
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
