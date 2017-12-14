@@ -497,6 +497,11 @@ std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWc
     return std::make_shared<TransformPoint2ToPoint2>(*pixelToIwc, simplify);
 }
 
+std::ostream &operator<<(std::ostream &os, SkyWcs const &wcs) {
+    os << "SkyWcs";
+    return os;
+};
+
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
