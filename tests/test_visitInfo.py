@@ -24,10 +24,12 @@ import math
 import os
 import unittest
 import collections
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet, PropertyList
+from lsst.afw.geom import Angle
 from lsst.afw.geom import degrees
 from lsst.afw.coord import IcrsCoord, Coord, Observatory, Weather
 import lsst.afw.image as afwImage
@@ -48,7 +50,7 @@ def propertySetFromDict(keyValDict):
     return metadata
 
 
-class VisitInfoTestCase(unittest.TestCase):
+class VisitInfoTestCase(lsst.utils.tests.TestCase):
     """Test lsst.afw.image.VisitInfo, a simple struct-like class"""
 
     def setUp(self):
@@ -485,6 +487,38 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertIn("exposureTime=10.01", string)
         self.assertIn("darkTime=11.02", string)
         self.assertIn("rotType=1", string)
+
+    def testParallacticAngle(self):
+        """Check that we get the same precomputed values for parallactic angle."""
+        parallacticAngle = [141.39684140703142*degrees, 76.99982166973487*degrees]
+        for item, parAngle in zip((self.data1, self.data2), parallacticAngle):
+            visitInfo = afwImage.VisitInfo(era=item.era,
+                                           boresightRaDec=item.boresightRaDec,
+                                           observatory=item.observatory,
+                                           )
+            self.assertAnglesAlmostEqual(visitInfo.getBoresightParAngle(), parAngle)
+
+    def testParallacticAngleNorthMeridian(self):
+        """An observation on the Meridian that is North of zenith has a parallactic angle of pi radians."""
+        meridianBoresightRA = self.data1.era + self.data1.observatory.getLongitude()
+        northBoresightDec = self.data1.observatory.getLatitude() + 10.*degrees
+        visitInfo = afwImage.VisitInfo(era=self.data1.era,
+                                       boresightRaDec=IcrsCoord(meridianBoresightRA,
+                                                                northBoresightDec),
+                                       observatory=self.data1.observatory,
+                                       )
+        self.assertAnglesAlmostEqual(visitInfo.getBoresightParAngle(), Angle(np.pi))
+
+    def testParallacticAngleSouthMeridian(self):
+        """An observation on the Meridian that is South of zenith has a parallactic angle of zero."""
+        meridianBoresightRA = self.data1.era + self.data1.observatory.getLongitude()
+        southBoresightDec = self.data1.observatory.getLatitude() - 10.*degrees
+        visitInfo = afwImage.VisitInfo(era=self.data1.era,
+                                       boresightRaDec=IcrsCoord(meridianBoresightRA,
+                                                                southBoresightDec),
+                                       observatory=self.data1.observatory,
+                                       )
+        self.assertAnglesAlmostEqual(visitInfo.getBoresightParAngle(), Angle(0.))
 
 
 def setup_module(module):

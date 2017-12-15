@@ -414,6 +414,19 @@ geom::Angle VisitInfo::getLocalEra() const { return getEra() + getObservatory().
 
 geom::Angle VisitInfo::getBoresightHourAngle() const { return getLocalEra() - getBoresightRaDec()[0]; }
 
+geom::Angle VisitInfo::getBoresightParAngle() const {
+  /**
+   * Compute the parallactic angle.
+   * Defined as the angle between the North celestial pole and Zenith at the boresight.
+   */
+  double _parallactic_y, _parallactic_x, result;
+  _parallactic_y = sin(getBoresightHourAngle().asRadians());
+  _parallactic_x = cos((getBoresightRaDec()[1]).asRadians())*tan(getObservatory().getLatitude().asRadians()) -
+    sin((getBoresightRaDec()[1]).asRadians())*cos(getBoresightHourAngle().asRadians());
+  result = atan2(_parallactic_y, _parallactic_x);
+  return result * geom::radians;
+}
+
 std::ostream& operator<<(std::ostream& os, VisitInfo const& visitInfo) {
     os << "VisitInfo(";
     os << "exposureId=" << visitInfo.getExposureId() << ", ";

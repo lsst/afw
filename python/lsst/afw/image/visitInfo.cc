@@ -95,6 +95,7 @@ PYBIND11_PLUGIN(visitInfo) {
     cls.def("getBoresightRaDec", &VisitInfo::getBoresightRaDec);
     cls.def("getBoresightAzAlt", &VisitInfo::getBoresightAzAlt);
     cls.def("getBoresightAirmass", &VisitInfo::getBoresightAirmass);
+    cls.def("getBoresightParAngle", &VisitInfo::getBoresightParAngle);
     cls.def("getBoresightRotAngle", &VisitInfo::getBoresightRotAngle);
     cls.def("getRotType", &VisitInfo::getRotType);
     cls.def("getObservatory", &VisitInfo::getObservatory);

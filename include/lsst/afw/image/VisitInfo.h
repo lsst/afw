@@ -174,6 +174,17 @@ public:
     // get hour angle at the boresight
     geom::Angle getBoresightHourAngle() const;
 
+    /**
+     * Get parallactic angle at the boresight
+     *
+     * Equal to the angle between the North celestial pole and Zenith at the boresight.
+     * Or, the angular separation between two great circle arcs that meet at the object:
+     *   One passing through the North celestial pole, and the other through zenith.
+     * For an object on the meridian the angle is zero if it is South of zenith and pi if it is North of zenith
+     * The angle is positive for objects East of the meridian, and negative for objects to the West.
+     */
+    geom::Angle getBoresightParAngle() const;
+
 protected:
     virtual std::string getPersistenceName() const;
 
