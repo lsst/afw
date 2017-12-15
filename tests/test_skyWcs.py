@@ -7,6 +7,7 @@ import unittest
 import astropy.io.fits
 import astropy.coordinates
 import astropy.wcs
+import astshim as ast
 from numpy.testing import assert_allclose
 
 import lsst.utils.tests
@@ -20,6 +21,25 @@ from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeFitsHeaderFromMetadata, makeSipIwcToPixel, makeSipPixelToIwc
+
+
+def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
+    """Add an "ACTUAL_PIXELS" frame to a SkyWcs and return the result
+
+    Parameters
+    ----------
+    skyWcs : `lsst.afw.geom.SkyWcs`
+        The WCS to which you wish to add an ACTUAL_PIXELS frame
+    actualPixelsToPixels : `lsst.afw.geom.TransformPoint2ToPoint2`
+        The transform from ACTUAL_PIXELS to PIXELS
+    """
+    actualPixelsToPixelsMap = actualPixelsToPixels.getFrameSet()
+    actualPixelsFrame = ast.Frame(2, "Domain=ACTUAL_PIXELS")
+    frameDict = skyWcs.getFrameDict()
+    frameDict.addFrame("PIXELS", actualPixelsToPixelsMap.getInverse(), actualPixelsFrame)
+    frameDict.setBase("ACTUAL_PIXELS")
+    frameDict.setCurrent("SKY")
+    return SkyWcs(frameDict)
 
 
 class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
@@ -294,21 +314,105 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                              flipX = flipX,
                              )
 
-    def testMakeModifiedWcs(self):
+    def testMakeModifiedWcsNoActualPixels(self):
+        """Test makeModifiedWcs on a SkyWcs that has no ACTUAL_PIXELS frame
+        """
         cdMatrix = makeCdMatrix(scale=self.scale)
-        wcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
-        pixelTransform = makeRadialTransform([0.0, 1.0, 0.0, 0.0011])  # arbitrary but reasonable
-        modifiedWcs = makeModifiedWcs(pixelTransform=pixelTransform, wcs=wcs, modifyActualPixels=False)
-        equivalentTransform = pixelTransform.then(wcs.getTransform())
-        for pixPoint in (  # arbitrary but reasonable
+        originalWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        originalFrameDict = originalWcs.getFrameDict()
+
+        # make an arbitrary but reasonable transform to insert using makeModifiedWcs
+        pixelTransform = makeRadialTransform([0.0, 1.0, 0.0, 0.0011])
+        # the result of the insertion should be as follows
+        desiredPixelsToSky = pixelTransform.then(originalWcs.getTransform())
+
+        pixPointList = (  # arbitrary but reasonable
             Point2D(0.0, 0.0),
             Point2D(1000.0, 0.0),
             Point2D(0.0, 2000.0),
             Point2D(-1111.0, -2222.0),
-        ):
-            outSky = modifiedWcs.pixelToSky(pixPoint)
-            desiredOutSky = equivalentTransform.applyForward(pixPoint)
-            self.assertCoordsAlmostEqual(outSky, desiredOutSky)
+        )
+        for modifyActualPixels in (False, True):
+            modifiedWcs = makeModifiedWcs(pixelTransform=pixelTransform,
+                                          wcs=originalWcs,
+                                          modifyActualPixels=modifyActualPixels)
+            modifiedFrameDict = modifiedWcs.getFrameDict()
+            skyList = modifiedWcs.pixelToSky(pixPointList)
+
+            # compare pixels to sky
+            desiredSkyList = desiredPixelsToSky.applyForward(pixPointList)
+            self.assertCoordListsAlmostEqual(skyList, desiredSkyList)
+
+            # compare pixels to IWC
+            pixelsToIwc = TransformPoint2ToPoint2(modifiedFrameDict.getMapping("PIXELS", "IWC"))
+            desiredPixelsToIwc = TransformPoint2ToPoint2(
+                pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
+            self.assertPairListsAlmostEqual(pixelsToIwc.applyForward(pixPointList),
+                                            desiredPixelsToIwc.applyForward(pixPointList))
+
+    def testMakeModifiedWcsWithActualPixels(self):
+        """Test makeModifiedWcs on a SkyWcs that has an ACTUAL_PIXELS frame
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        baseWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        # model actual pixels to pixels as an arbitrary zoom factor;
+        # this is not realistic, but is fine for a unit test
+        actualPixelsToPixels = TransformPoint2ToPoint2(ast.ZoomMap(2, 0.72))
+        originalWcs = addActualPixelsFrame(baseWcs, actualPixelsToPixels)
+        originalFrameDict = originalWcs.getFrameDict()
+
+        # make an arbitrary but reasonable transform to insert using makeModifiedWcs
+        pixelTransform = makeRadialTransform([0.0, 1.0, 0.0, 0.0011])  # arbitrary but reasonable
+
+        pixPointList = (  # arbitrary but reasonable
+            Point2D(0.0, 0.0),
+            Point2D(1000.0, 0.0),
+            Point2D(0.0, 2000.0),
+            Point2D(-1111.0, -2222.0),
+        )
+        for modifyActualPixels in (True, False):
+            modifiedWcs = makeModifiedWcs(pixelTransform=pixelTransform,
+                                          wcs=originalWcs,
+                                          modifyActualPixels=modifyActualPixels)
+            modifiedFrameDict = modifiedWcs.getFrameDict()
+            self.assertEqual(modifiedFrameDict.getFrame(modifiedFrameDict.BASE).domain, "ACTUAL_PIXELS")
+            modifiedActualPixelsToPixels = \
+                TransformPoint2ToPoint2(modifiedFrameDict.getMapping("ACTUAL_PIXELS", "PIXELS"))
+            modifiedPixelsToIwc = TransformPoint2ToPoint2(modifiedFrameDict.getMapping("PIXELS", "IWC"))
+
+            # compare pixels to sky
+            skyList = modifiedWcs.pixelToSky(pixPointList)
+            if modifyActualPixels:
+                desiredPixelsToSky = pixelTransform.then(originalWcs.getTransform())
+            else:
+                originalPixelsToSky = \
+                    TransformPoint2ToIcrsCoord(originalFrameDict.getMapping("PIXELS", "SKY"))
+                desiredPixelsToSky = actualPixelsToPixels.then(pixelTransform).then(originalPixelsToSky)
+            desiredSkyList = desiredPixelsToSky.applyForward(pixPointList)
+            self.assertCoordListsAlmostEqual(skyList, desiredSkyList)
+
+            # compare ACTUAL_PIXELS to PIXELS and PIXELS to IWC
+            if modifyActualPixels:
+                # check that ACTUAL_PIXELS to PIXELS has been modified as expected
+                desiredActualPixelsToPixels = pixelTransform.then(actualPixelsToPixels)
+                self.assertPairListsAlmostEqual(modifiedActualPixelsToPixels.applyForward(pixPointList),
+                                                desiredActualPixelsToPixels.applyForward(pixPointList))
+
+                # check that PIXELS to IWC is unchanged
+                originalPixelsToIwc = TransformPoint2ToPoint2(originalFrameDict.getMapping("PIXELS", "IWC"))
+                self.assertPairListsAlmostEqual(modifiedPixelsToIwc.applyForward(pixPointList),
+                                                originalPixelsToIwc.applyForward(pixPointList))
+
+            else:
+                # check that ACTUAL_PIXELS to PIXELS is unchanged
+                self.assertPairListsAlmostEqual(actualPixelsToPixels.applyForward(pixPointList),
+                                                actualPixelsToPixels.applyForward(pixPointList))
+
+                # check that PIXELS to IWC has been modified as expected
+                desiredPixelsToIwc = TransformPoint2ToPoint2(
+                    pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
+                self.assertPairListsAlmostEqual(modifiedPixelsToIwc.applyForward(pixPointList),
+                                                desiredPixelsToIwc.applyForward(pixPointList))
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
