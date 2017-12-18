@@ -1120,3 +1120,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
         # Check pickling
         self.assertTransformsEqual(transform, pickle.loads(pickle.dumps(transform)))
+
+        # Check afw::table::io persistence round-trip
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            transform.writeFits(filename)
+            self.assertTransformsEqual(transform, type(transform).readFits(filename))

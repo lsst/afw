@@ -32,6 +32,7 @@
 #include "ndarray.h"
 
 #include "lsst/afw/geom/Endpoint.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
 namespace afw {
@@ -63,7 +64,10 @@ class SkyWcs;
  * so it didn't seem worth the bother.
  */
 template <class FromEndpoint, class ToEndpoint>
-class Transform final {
+class Transform final :
+    public table::io::PersistableFacade<Transform<FromEndpoint,ToEndpoint>>,
+    public table::io::Persistable
+{
     // SkyWcs is a friend so it can call a protected Transform constructor
     friend class SkyWcs;
 
@@ -263,6 +267,9 @@ public:
     /// Serialize this Transform to a string, using the same format as writeStream
     std::string writeString() const;
 
+    /// Whether the Transform is persistable via afw::table::io (always true).
+    bool isPersistable() const override { return true; }
+
 protected:
     /**
      * Construct a Transform from a shared pointer to a FrameSet
@@ -270,6 +277,15 @@ protected:
      * @note The FrameSet may be modified by normalizing the base and current frame.
      */
     explicit Transform(std::shared_ptr<ast::FrameSet> frameSet);
+
+    // implement afw::table::io::Persistable interface
+    std::string getPersistenceName() const override { return getShortClassName(); }
+
+    // implement afw::table::io::Persistable interface
+    std::string getPythonModule() const override { return "lsst.afw.geom"; }
+
+    // implement afw::table::io::Persistable interface
+    void write(OutputArchiveHandle &handle) const override;
 
 private:
     FromEndpoint _fromEndpoint;

@@ -28,6 +28,7 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/afw/table/io/python.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 
@@ -112,6 +113,8 @@ void declareTransform(py::module &mod) {
     // repr(self) = "lsst.afw.geom.<Python class name>[<nIn>-><nOut>]"
     cls.def("__repr__",
             [pyClassName](Class const &self) { return "lsst.afw.geom." + formatStr(self, pyClassName); });
+
+    table::io::python::addPersistableMethods<Class>(cls);
 }
 
 PYBIND11_PLUGIN(transform) {
