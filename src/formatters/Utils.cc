@@ -86,14 +86,18 @@ std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
         } else if (type == typeid(float)) {
             out += (boost::format("%20.15g") % prop.get<float>(name)).str();
         } else if (type == typeid(std::string)) {
-            out += (boost::format("'%-67s' ") % prop.get<std::string>(name)).str();
+            out += "'" + prop.get<std::string>(name) + "'";
         }
 
         int const len = out.size();
         if (len < 80) {
             out += std::string(80 - len, ' ');
         } else {
-            out = out.substr(0, 80);
+            if (type == typeid(std::string)) {
+                out = out.substr(0, 79) + "'";
+            } else {
+                out = out.substr(0, 80);
+            }
         }
 
         result << out;
