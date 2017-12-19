@@ -4,6 +4,7 @@ scripts.BasicSConscript.pybind11(
     [
         'detail/frameSetUtils',
         'wcsUtils/wcsUtils',
+        'sipApproximation',
         'span',
         'spanSet',
         'endpoint',
