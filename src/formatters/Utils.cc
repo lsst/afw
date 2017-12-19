@@ -55,8 +55,11 @@ namespace {
 /**
 Format a PropertySet into a FITS header string (exactly 80 characters per "card", no line terminator)
 
-This function is designed to format data for creating a WCS. It truncates long string
-values and skips properties whose type it cannot handle.
+This function is designed to format data for creating a WCS. As such, it is quite limited:
+- It skips entries that have array data, since none of those are relevant for a WCS
+- It skips entries whose name is longer than 8 characters, since none are used for FITS-WCS
+- It skips string entries if the fully formatted string is longer than 80 characters
+- It skips entries with types it cannot handle (e.g. long, long long)
 
 @param[in] paramNames  Names of properties to format
 @param[in] prop  Properties to format
@@ -64,21 +67,24 @@ values and skips properties whose type it cannot handle.
 std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
                                      daf::base::PropertySet const& prop) {
     std::ostringstream result;
-    for (auto const & fullName : paramNames) {
+    for (auto const& fullName : paramNames) {
         std::size_t lastPeriod = fullName.rfind(char('.'));
         auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
         std::type_info const& type = prop.typeOf(name);
 
         std::string out = "";
         out.reserve(80);
-        if (name.size() > 8) {  // Oh dear; too long for a FITS keyword
-            out += "HIERARCH = " + name;
-        } else {
-            out = (boost::format("%-8s= ") % name).str();
+        if (name.size() > 8) {
+            continue;  // The name is too long for a FITS keyword; skip this item
+        } else if (prop.isArray(name)) {
+            continue;  // Data is an array; skip this item
         }
+        out = (boost::format("%-8s= ") % name).str();
 
         if (type == typeid(bool)) {
-            out +=  prop.get<bool>(name) ? "1" : "0";
+            out += prop.get<bool>(name) ? "1" : "0";
+        } else if (type == typeid(std::uint8_t)) {
+            out += (boost::format("%20d") % static_cast<int>(prop.get<std::uint8_t>(name))).str();
         } else if (type == typeid(int)) {
             out += (boost::format("%20d") % prop.get<int>(name)).str();
         } else if (type == typeid(double)) {
@@ -86,14 +92,19 @@ std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
         } else if (type == typeid(float)) {
             out += (boost::format("%20.15g") % prop.get<float>(name)).str();
         } else if (type == typeid(std::string)) {
-            out += (boost::format("'%-67s' ") % prop.get<std::string>(name)).str();
+            out += "'" + prop.get<std::string>(name) + "'";
+            if (out.size() > 80) {
+                continue;  // Formatted data is too long; skip this item
+            }
         }
 
         int const len = out.size();
         if (len < 80) {
             out += std::string(80 - len, ' ');
-        } else {
-            out = out.substr(0, 80);
+        } else if (len > 80) {
+            // non-string item has a formatted value that is too long; this should never happen
+            throw LSST_EXCEPT(ex::LogicError,
+                              "Formatted data too long: " + std::to_string(len) + " > 80: \"" + out + "\"");
         }
 
         result << out;
@@ -266,7 +277,13 @@ void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
 
 std::string formatFitsProperties(daf::base::PropertySet const& prop,
                                  std::set<std::string> const& excludeNames) {
-    auto const allParamNames = prop.paramNames(false);
+    daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&prop);
+    std::vector<std::string> allParamNames;
+    if (pl) {
+        allParamNames = pl->getOrderedNames();
+    } else {
+        allParamNames = prop.paramNames(false);
+    }
     std::vector<std::string> desiredParamNames;
     for (auto const & name: allParamNames) {
         if (excludeNames.count(name) == 0) {
