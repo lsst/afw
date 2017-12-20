@@ -100,8 +100,7 @@ public:
     // -- Constructor --------
     /**
      * Creates a random number generator that uses the given algorithm to produce random numbers,
-     * and seeds it with the specified value. Passing a seed-value of zero will cause the
-     * generator to be seeded with an algorithm specific default value. The default value for
+     * and seeds it with the specified value. The default value for
      * `algorithm` is MT19937, corresponding to the "Mersenne Twister" algorithm by
      * Makoto Matsumoto and Takuji Nishimura.
      *
@@ -109,23 +108,20 @@ public:
      * @param[in] seed          the seed value to initialize the generator with
      *
      * @throws lsst::pex::exceptions::InvalidParameterError
-     *      Thrown if the requested algorithm is not supported or a seed value of zero
-     *      (corresponding to an algorithm specific seed) is chosen.
+     *      Thrown if the requested algorithm is not supported.
      * @throws lsst::pex::exceptions::MemoryError
      *      Thrown if memory allocation for internal generator state fails.
      */
     explicit Random(Algorithm algorithm = MT19937, unsigned long seed = 1);
     /**
      * Creates a random number generator that uses the algorithm with the given name to produce
-     * random numbers, and seeds it with the specified value. Passing a seed-value of zero will
-     * cause the generator to be seeded with an algorithm specific default value.
+     * random numbers, and seeds it with the specified value.
      *
      * @param[in] algorithm     the name of the algorithm to use for random number generation
      * @param[in] seed          the seed value to initialize the generator with
      *
      * @throws lsst::pex::exceptions::InvalidParameterError
-     *      Thrown if the requested algorithm is not supported or a seed value of zero
-     *      (corresponding to an algorithm specific seed) is chosen.
+     *      Thrown if the requested algorithm is not supported.
      * @throws lsst::pex::exceptions::MemoryError
      *      Thrown if memory allocation for internal generator state fails.
      */
@@ -145,8 +141,6 @@ public:
      *      Thrown if the requested algorithm is not supported.
      * @throws lsst::pex::exceptions::MemoryError
      *      Thrown if memory allocation for internal generator state fails.
-     * @throws lsst::pex::exceptions::RuntimeError
-     *      Thrown if the "rngSeed" policy value cannot be converted to an unsigned long int.
      */
     explicit Random(std::shared_ptr<pex::policy::Policy> const policy);
     // Use compiler generated destructor and shallow copy constructor/assignment operator
@@ -194,8 +188,7 @@ public:
     static std::vector<std::string> const &getAlgorithmNames();
     /**
      * @returns  The integer this random number generator was seeded with.
-     * @note    A seed value of 0 indicates that the random number generator
-     *          was seeded with an algorithm specific default value.
+     * @note    The seed is guaranteed not to be zero.
      */
     unsigned long getSeed() const;
 
@@ -290,9 +283,6 @@ private:
 
     /**
      * Initializes the underlying GSL random number generator.
-     *
-     * @throws lsst::pex::exceptions::InvalidParameterError
-     *      Thrown if a seed value of zero (corresponding to an algorithm specific seed) is chosen.
      */
     void initialize();
     /**
@@ -301,8 +291,7 @@ private:
      * @param[in] algorithm     the algorithm to use for random number generation
      *
      * @throws lsst::pex::exceptions::InvalidParameterError
-     *      Thrown if the requested algorithm is not supported or a seed value of zero
-     *      (corresponding to an algorithm specific seed) is chosen.
+     *      Thrown if the requested algorithm is not supported.
      */
     void initialize(std::string const &);
 };
