@@ -526,6 +526,9 @@ public:
         readImageImpl(N, array.getData(), begin.elems, end.elems, increment.elems);
     }
 
+    /// Get the header of the current HDU as a string
+    std::string getHeaderString();
+
     /// Create a new binary table extension.
     void createTable();
 

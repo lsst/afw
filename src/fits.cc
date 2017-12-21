@@ -1110,6 +1110,19 @@ void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *incre
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Reading image");
 }
 
+std::string Fits::getHeaderString() {
+    char *header = nullptr;
+    int nkeys = 0;
+    int ignoredStatus = 0;
+    fits_convert_hdr2str(reinterpret_cast<fitsfile *>(fptr), false, nullptr, 0, &header, &nkeys, &status);
+    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting header");
+    std::string ret(header && nkeys > 0 ? header : "");
+    if (header) {
+        fits_free_memory(header, &ignoredStatus);
+    }
+    return ret;
+}
+
 int Fits::getImageDim() {
     int nAxis = 0;
     fits_get_img_dim(reinterpret_cast<fitsfile *>(fptr), &nAxis, &status);

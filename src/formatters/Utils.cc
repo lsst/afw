@@ -40,6 +40,7 @@
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/daf/persistence/DbTsvStorage.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/fits.h"
 
 using std::int64_t;
 namespace ex = lsst::pex::exceptions;
@@ -50,63 +51,6 @@ using lsst::daf::persistence::LogicalLocation;
 namespace lsst {
 namespace afw {
 namespace formatters {
-namespace {
-
-/**
-Format a PropertySet into a FITS header string (exactly 80 characters per "card", no line terminator)
-
-This function is designed to format data for creating a WCS. It truncates long string
-values and skips properties whose type it cannot handle.
-
-@param[in] paramNames  Names of properties to format
-@param[in] prop  Properties to format
-*/
-std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
-                                     daf::base::PropertySet const& prop) {
-    std::ostringstream result;
-    for (auto const & fullName : paramNames) {
-        std::size_t lastPeriod = fullName.rfind(char('.'));
-        auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
-        std::type_info const& type = prop.typeOf(name);
-
-        std::string out = "";
-        out.reserve(80);
-        if (name.size() > 8) {  // Oh dear; too long for a FITS keyword
-            out += "HIERARCH = " + name;
-        } else {
-            out = (boost::format("%-8s= ") % name).str();
-        }
-
-        if (type == typeid(bool)) {
-            out +=  prop.get<bool>(name) ? "1" : "0";
-        } else if (type == typeid(int)) {
-            out += (boost::format("%20d") % prop.get<int>(name)).str();
-        } else if (type == typeid(double)) {
-            out += (boost::format("%20.15g") % prop.get<double>(name)).str();
-        } else if (type == typeid(float)) {
-            out += (boost::format("%20.15g") % prop.get<float>(name)).str();
-        } else if (type == typeid(std::string)) {
-            out += "'" + prop.get<std::string>(name) + "'";
-        }
-
-        int const len = out.size();
-        if (len < 80) {
-            out += std::string(80 - len, ' ');
-        } else {
-            if (type == typeid(std::string)) {
-                out = out.substr(0, 79) + "'";
-            } else {
-                out = out.substr(0, 80);
-            }
-        }
-
-        result << out;
-    }
-
-    return result.str();
-}
-
-} // namespace
 
 int extractSliceId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("sliceId")) {
@@ -270,14 +214,17 @@ void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
 
 std::string formatFitsProperties(daf::base::PropertySet const& prop,
                                  std::set<std::string> const& excludeNames) {
-    auto const allParamNames = prop.paramNames(false);
-    std::vector<std::string> desiredParamNames;
-    for (auto const & name: allParamNames) {
-        if (excludeNames.count(name) == 0) {
-            desiredParamNames.push_back(name);
-        }
+    auto propCopy = prop.deepCopy();
+    for (auto const & excl: excludeNames) {
+        propCopy->remove(excl);  // a no-op if the name is not present
     }
-    return formatFitsPropertiesImpl(desiredParamNames, prop);
+    fits::MemFileManager fileManager;
+    fits::Fits fitsWriter(fileManager, "w",  fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsWriter.createEmpty();
+    fitsWriter.writeMetadata(*propCopy);
+    fitsWriter.closeFile();
+    fits::Fits fitsReader(fileManager, "r",  fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    return fitsReader.getHeaderString();
 }
 
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {
