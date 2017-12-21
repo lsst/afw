@@ -91,6 +91,24 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(lsst.pex.exceptions.TypeError):
             readFitsWcs(metadata, strip=False)
 
+    def testReadFitsWcsFixRadecsys(self):
+        # compare a WCS made with RADESYS against one made with RADECSYS,
+        # using a system other than FK5, since that is the default;
+        # both should be the same because readFitsWcs replaces RADECSYS with RADESYS
+        metadata1 = self.makeMetadata()
+        metadata1.set("RADESYS", "ICRS")
+        frameSet1 = readFitsWcs(metadata1, strip=False)
+        self.assertEqual(metadata1.get("RADESYS"), "ICRS")
+
+        metadata2 = self.makeMetadata()
+        metadata2.remove("RADESYS")
+        metadata2.set("RADECSYS", "ICRS")
+        frameSet2 = readFitsWcs(metadata2, strip=False)
+        # metadata will have been corrected by readFitsWcs
+        self.assertFalse(metadata2.exists("RADECSYS"))
+        self.assertEqual(metadata2.get("RADESYS"), "ICRS")
+        self.assertEqual(frameSet1, frameSet2)
+
     def testReadLsstSkyWcsStripMetadata(self):
         metadata = self.makeMetadata()
         nKeys = len(metadata.toList())
