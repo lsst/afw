@@ -89,6 +89,13 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     // Exclude comments and history to reduce clutter
     std::set<std::string> moreNames{"NAXIS1", "NAXIS2", "LTV1", "LTV2", "COMMENT", "HISTORY"};
     excludeNames.insert(moreNames.begin(), moreNames.end());
+
+    // Replace RADECSYS with RADESYS if only the former is present
+    if (metadata.exists("RADECSYS") && !metadata.exists("RADESYS")) {
+        metadata.set("RADESYS", metadata.getAsString("RADECSYS"));
+        metadata.remove("RADECSYS");
+    }
+
     std::string hdr = formatters::formatFitsProperties(metadata, excludeNames);
     ast::StringStream stream(hdr);
     ast::FitsChan channel(stream, "Encoding=FITS-WCS, IWC=1, SipReplace=0");
