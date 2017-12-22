@@ -176,9 +176,9 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         fitsfile.setHdu(prevHdu);
     }
 
-    // setHdu(INT_MIN) jumps to the first extension iff the primary HDU is both
+    // setHdu(fits::DEFAULT_HDU) jumps to the first extension iff the primary HDU is both
     // empty and currently selected.
-    fitsfile.setHdu(INT_MIN);
+    fitsfile.setHdu(fits::DEFAULT_HDU);
     ensureMetadata(imageMetadata);
     _image.reset(new Image(fitsfile, imageMetadata, bbox, origin));
     checkExtType(fitsfile, imageMetadata, "IMAGE");

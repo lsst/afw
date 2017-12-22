@@ -178,7 +178,7 @@ void declareFits(py::module & mod) {
             "strip"_a=false);
     cls.def("createEmpty", &Fits::createEmpty);
 
-    cls.def("gotoFirstHdu", [](Fits & self) { self.setHdu(INT_MIN); });
+    cls.def("gotoFirstHdu", [](Fits & self) { self.setHdu(DEFAULT_HDU); });
 
     cls.def("setImageCompression", &Fits::setImageCompression);
     cls.def("getImageCompression", &Fits::getImageCompression);
@@ -218,9 +218,9 @@ PYBIND11_PLUGIN(_fits) {
         memcpy(m.getData(), PyBytes_AsString(d.ptr()), size);
     });
     clsMemFileManager.def("readMetadata",
-                          [](MemFileManager & self, int hdu=INT_MIN, bool strip=false) {
+                          [](MemFileManager & self, int hdu=DEFAULT_HDU, bool strip=false) {
                               return readMetadata(self, hdu, strip);
-                          }, "hdu"_a=INT_MIN, "strip"_a=false);
+                          }, "hdu"_a=DEFAULT_HDU, "strip"_a=false);
 
     declareImageCompression(mod);
     declareImageScalingOptions(mod);
@@ -228,10 +228,11 @@ PYBIND11_PLUGIN(_fits) {
     declareImageWriteOptions(mod);
     declareFits(mod);
 
+    mod.attr("DEFAULT_HDU") = DEFAULT_HDU;
     mod.def("readMetadata",
-            [](std::string const& filename, int hdu=INT_MIN, bool strip=false) {
+            [](std::string const& filename, int hdu=DEFAULT_HDU, bool strip=false) {
                 return readMetadata(filename, hdu, strip);
-            }, "fileName"_a, "hdu"_a=INT_MIN, "strip"_a=false);
+            }, "fileName"_a, "hdu"_a=DEFAULT_HDU, "strip"_a=false);
     mod.def("setAllowImageCompression", &setAllowImageCompression, "allow"_a);
     mod.def("getAllowImageCompression", &getAllowImageCompression);
 

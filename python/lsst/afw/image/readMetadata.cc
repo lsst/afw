@@ -35,7 +35,7 @@ PYBIND11_PLUGIN(readMetadata) {  // wraps code in Utils.h, but there's an unrela
     py::module mod("readMetadata");
 
     /* Module level */
-    mod.def("readMetadata", readMetadata, "fileName"_a, "hdu"_a = INT_MIN, "strip"_a = false);
+    mod.def("readMetadata", readMetadata, "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "strip"_a = false);
 
     return mod.ptr();
 }

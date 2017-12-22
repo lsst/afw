@@ -101,7 +101,7 @@ void test6() {
 
     // Read FITS file from disk into an Image
     std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
-    std::shared_ptr<ImageF> image(new ImageF(gFilename, INT_MIN, miMetadata));
+    std::shared_ptr<ImageF> image(new ImageF(gFilename, afwFits::DEFAULT_HDU, miMetadata));
 
     // Write the Image to a RAM FITS file
     image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
@@ -124,7 +124,8 @@ void test7() {
 
     // Read FITS file from disk into an Exposure
     std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
-    std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, INT_MIN, miMetadata));
+    std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, afwFits::DEFAULT_HDU,
+                                                                       miMetadata));
     MaskedImageF maskedImage(image);
     std::shared_ptr<afwImage::Wcs> wcsFromFITS = afwImage::makeWcs(miMetadata);
     ExposureF exposure(maskedImage, wcsFromFITS);

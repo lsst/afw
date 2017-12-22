@@ -23,6 +23,7 @@
 #ifndef AFW_TABLE_SortedCatalog_h_INCLUDED
 #define AFW_TABLE_SortedCatalog_h_INCLUDED
 
+#include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Catalog.h"
 
@@ -111,11 +112,12 @@ public:
      *
      *  @param[in] filename    Name of the file to read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
-     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
+     *                         The default value of afw::fits::DEFAULT_HDU is interpreted as
+     *                         "the first HDU with NAXIS != 0".
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(std::string const& filename, int hdu = INT_MIN, int flags = 0) {
+    static SortedCatalogT readFits(std::string const& filename, int hdu = fits::DEFAULT_HDU, int flags = 0) {
         return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags);
     }
 
@@ -124,11 +126,13 @@ public:
      *
      *  @param[in] manager     Object that manages the memory to be read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
-     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
+     *                         The default value of afw::fits::DEFAULT_HDU is interpreted as
+     *                         "the first HDU with NAXIS != 0".
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static SortedCatalogT readFits(fits::MemFileManager& manager, int hdu = INT_MIN, int flags = 0) {
+    static SortedCatalogT readFits(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
+                                   int flags = 0) {
         return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags);
     }
 

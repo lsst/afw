@@ -106,7 +106,7 @@ dafBase::Persistable* WcsFormatter::read(std::shared_ptr<dafPersist::FormatterSt
     auto fits = std::dynamic_pointer_cast<dafPersist::FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "WcsFormatter read FitsStorage");
-        int hdu = additionalData->get<int>("hdu", INT_MIN);
+        int hdu = additionalData->get<int>("hdu", fits::DEFAULT_HDU);
         std::shared_ptr<dafBase::PropertySet> md = afw::fits::readMetadata(fits->getPath(), hdu);
         image::Wcs* ip = new image::Wcs(md);
         LOGL_DEBUG(_log, "WcsFormatter read end");

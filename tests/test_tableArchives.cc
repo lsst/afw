@@ -30,6 +30,7 @@
 #include "lsst/afw/math/Kernel.h"
 
 #include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/fitsDefaults.h"
 
 namespace lsst {
 namespace afw {
@@ -295,7 +296,7 @@ std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare
     outArchive.writeFits(outFits2);
     outFits2.closeFile();
     fits::Fits inFits2(manager, "r", fits::Fits::AUTO_CHECK);
-    inFits2.setHdu(INT_MIN);
+    inFits2.setHdu(fits::DEFAULT_HDU);
     InputArchive inArchive2 = InputArchive::readFits(inFits2);
     inFits2.closeFile();
     for (int i = 0; i < M; ++i) {
@@ -449,7 +450,7 @@ std::shared_ptr<T> roundtrip(T const *input) {
     outArchive.writeFits(outFits);
     outFits.closeFile();
     Fits inFits(manager, "r", Fits::AUTO_CHECK);
-    inFits.setHdu(INT_MIN);
+    inFits.setHdu(DEFAULT_HDU);
     InputArchive inArchive = InputArchive::readFits(inFits);
     inFits.closeFile();
     return std::dynamic_pointer_cast<T>(inArchive.get(id));

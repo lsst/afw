@@ -25,7 +25,7 @@ import os
 import lsst.daf.base as dafBase
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits
+from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits, DEFAULT_HDU
 from . import mathLib as afwMath
 
 
@@ -139,8 +139,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
         self = BackgroundList()
 
-        INT_MIN = -(1 << 31)
-        if hdu == INT_MIN:
+        if hdu == DEFAULT_HDU:
             hdu = -1
         else:
             # we want to start at 0 (post RFC-304), but are about to increment

@@ -23,6 +23,7 @@
 #include "lsst/daf/base.h"
 #include "ndarray.h"
 #include "lsst/afw/fitsCompression.h"
+#include "lsst/afw/fitsDefaults.h"
 
 namespace lsst {
 namespace afw {
@@ -300,7 +301,7 @@ public:
      *  Set the current HDU.
      *
      *  @param[in] hdu                 The HDU to move to (0-indexed; 0 is the Primary HDU).
-     *                                 The special value of INT_MIN moves to the first extension
+     *                                 The special value of DEFAULT_HDU moves to the first extension
      *                                 if the Primary HDU is empty (has NAXIS==0) and the
      *                                 the Primary HDU is the current one.
      *  @param[in] relative            If true, move relative to the current HDU.
@@ -640,7 +641,7 @@ public:
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, int hdu = INT_MIN,
+std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, int hdu = DEFAULT_HDU,
                                                       bool strip = false);
 /** Read FITS header
  *
@@ -652,7 +653,7 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileNam
  * @param strip if `true`, common FITS keys that usually have non-metadata intepretations
  *              (e.g. NAXIS, BITPIX) will be ignored.
  */
-std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& manager, int hdu = INT_MIN,
+std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& manager, int hdu = DEFAULT_HDU,
                                                       bool strip = false);
 /** Read FITS header
  *

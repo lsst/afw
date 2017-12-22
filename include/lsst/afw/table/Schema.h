@@ -7,6 +7,7 @@
 
 #include "ndarray.h"
 #include "lsst/base.h"
+#include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
 #include "lsst/afw/table/detail/SchemaImpl.h"
@@ -283,10 +284,10 @@ public:
     /** Construct from reading a FITS file.
      *
      * Reads from the nominated 'hdu' (0=PHU which cannot be a catalog,
-     * INT_MIN is a special value meaning read from the first HDU with NAXIS != 0).
+     * afw::fits::DEFAULT_HDU is a special value meaning read from the first HDU with NAXIS != 0).
      */
-    static Schema readFits(std::string const& filename, int hdu = INT_MIN);
-    static Schema readFits(fits::MemFileManager& manager, int hdu = INT_MIN);
+    static Schema readFits(std::string const& filename, int hdu = fits::DEFAULT_HDU);
+    static Schema readFits(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU);
     static Schema readFits(fits::Fits& fitsfile);
 
     /** Construct from reading a FITS header

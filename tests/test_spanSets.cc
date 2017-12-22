@@ -764,7 +764,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testPersistence) {
     outFits.closeFile();
     // Read back in the fits file and un-persist the SpanSet
     lsst::afw::fits::Fits inFits(manager, "r", lsst::afw::fits::Fits::AUTO_CHECK);
-    inFits.setHdu(INT_MIN);
+    inFits.setHdu(lsst::afw::fits::DEFAULT_HDU);
     lsst::afw::table::io::InputArchive inArchive = tableIo::InputArchive::readFits(inFits);
     inFits.closeFile();
     std::shared_ptr<afwGeom::SpanSet> spanSetPostArchive =
