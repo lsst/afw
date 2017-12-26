@@ -198,17 +198,12 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
         data.imageMetadata->combine(newWcs->getFitsMetadata());
     }
 
-    // Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
-    // indicate the origin (the position of the bottom left corner) of the sub-image with
-    // respect to the origin of the parent image.
-    // This is stored in the fits header using the LTV convention used by STScI
-    //(see \S2.6.2 of HST Data Handbook for STIS, version 5.0
-    // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287).
-    // This is not a fits standard keyword, but is recognised by ds9
-    // LTV keywords use the opposite convention to the LSST, in that they represent
-    // the position of the origin of the parent image relative to the origin of the sub-image.
-    // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
-
+    // For the sake of ds9, store _x0 and _y0 as -LTV1, -LTV2.
+    // This is in addition to saving _x0 and _y0 as WCS A, which is done elsewhere
+    // and is what LSST uses to read _x0 and _y0.
+    // LTV is a convention used by STScI (see \S2.6.2 of HST Data Handbook for STIS, version 5.0
+    // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287)
+    // and recognized by ds9.
     data.imageMetadata->set("LTV1", static_cast<double>(-xy0.getX()));
     data.imageMetadata->set("LTV2", static_cast<double>(-xy0.getY()));
 
