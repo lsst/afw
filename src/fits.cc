@@ -212,6 +212,35 @@ int fitsTypeForBitpix(int bitpix) {
     }
 }
 
+/*
+ * Information about one item of metadata: is a comment? is valid?
+ *
+ * See isCommentIsValid for more information.
+ */
+struct ItemInfo {
+    ItemInfo(bool isComment, bool isValid) : isComment(isComment), isValid(isValid) {}
+    bool isComment;
+    bool isValid;
+};
+
+/*
+ * Is an item a commnt (or history) and is it usable in a FITS header?
+ *
+ * For an item to be valid:
+ * - If name is COMMENT or HISTORY then the item must be of type std::string
+ * - Otherwise the item must have scalar value
+ */
+ItemInfo isCommentIsValid(daf::base::PropertyList const &pl, std::string const &name) {
+    if (!pl.exists(name)) {
+        return ItemInfo(false, false);
+    }
+    std::type_info const &type = pl.typeOf(name);
+    if ((name == "COMMENT") || (name == "HISTORY")) {
+        return ItemInfo(true, type == typeid(std::string));
+    }
+    return ItemInfo(false, !pl.isArray(name));
+}
+
 }  // anonymous
 
 // ----------------------------------------------------------------------------------------------------------
@@ -1286,6 +1315,34 @@ Fits::Fits(MemFileManager &manager, std::string const &mode, int behavior_)
 void Fits::closeFile() {
     fits_close_file(reinterpret_cast<fitsfile *>(fptr), &status);
     fptr = nullptr;
+}
+
+std::shared_ptr<daf::base::PropertyList> combineMetadata(
+        std::shared_ptr<const daf::base::PropertyList> first,
+        std::shared_ptr<const daf::base::PropertyList> second) {
+    auto combined = std::make_shared<daf::base::PropertyList>();
+    for (auto const &name : first->getOrderedNames()) {
+        auto const iscv = isCommentIsValid(*first, name);
+        if (iscv.isValid) {
+            if (iscv.isComment) {
+                combined->add<std::string>(name, first->getArray<std::string>(name));
+            } else {
+                combined->copy(name, first, name);
+            }
+        }
+    }
+    for (auto const &name : second->getOrderedNames()) {
+        auto const iscv = isCommentIsValid(*second, name);
+        if (iscv.isValid) {
+            if (iscv.isComment) {
+                combined->add<std::string>(name, second->getArray<std::string>(name));
+            } else {
+                // `copy` will replace an item, even if has a different type, so no need to call `remove`
+                combined->copy(name, second, name);
+            }
+        }
+    }
+    return combined;
 }
 
 std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const &fileName, int hdu, bool strip) {
