@@ -245,13 +245,10 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
         LOGLS_DEBUG(_log, "No WCS found in FITS metadata");
     }
 
-    // Strip LTV1, LTV2 from imageMetadata to avoid type mismatch errors
-    if (imageMetadata->exists("LTV1")) {
-        imageMetadata->remove("LTV1");
-    }
-    if (imageMetadata->exists("LTV2")) {
-        imageMetadata->remove("LTV2");
-    }
+    // Strip LTV1, LTV2 from imageMetadata, because we don't use it internally
+    // and it can cause type mismatch errors in fits::readMetadata
+    imageMetadata->remove("LTV1");
+    imageMetadata->remove("LTV2");
 
     if (!imageMetadata->exists("INHERIT")) {
         // New-style exposures put everything but the Wcs in the primary HDU, use
