@@ -631,6 +631,34 @@ public:
     int behavior;  // bitwise OR of BehaviorFlags
 };
 
+/**
+ * Combine two sets of metadata in a FITS-safe fashion
+ *
+ * If name is "COMMENT" or "HISTORY" then:
+ * - The item is valid if it of type std::string (whether or not it is an array)
+ * - Valid metadata from `second` is appended to same-named valid metadata in `first`.
+ * Otherwise:
+ * - The item is valid if it is a scalar (regardless of type)
+ * - Valid metadata from `second` supersedes same-named metadata from `first`
+ *   (even if the types are different).
+ * Invalid metadata in `first` and `second` is silently ignored.
+ *
+ * @param[in] first  The first set of metadata to combine
+ * @param[in] second  The second set of metadata to combine
+ * @returns The combined metadata. Item names have the following order:
+ * - names in `first`, omitting all names except "COMMENT" and "HISTORY" that appear in `second`
+ * - names in `second`, omitting "COMMENT" and "HISTORY" if they appear in `first`
+ *
+ * Examples:
+ * - If LTV1 = "one" in `first` and 5.5 in `second`: LTV1 = 5.5 in the returned metadata
+ * - If LTV1 = [1, 2] in either input (not scalar), it is invalid and silently ignored
+ * - If COMMENT = "a" in `first` and ["b", "c"] in `second` it is ["a", "b", "c"] in the returned metadata
+ * - If COMMENT = 1 or [2, 3] in either input (not a string), it is invalid and silently ignored
+ */
+std::shared_ptr<daf::base::PropertyList> combineMetadata(
+        std::shared_ptr<const daf::base::PropertyList> first,
+        std::shared_ptr<const daf::base::PropertyList> second);
+
 /** Read FITS header
  *
  * Includes support for the INHERIT convention: if 'INHERIT = T' is in the header, the
