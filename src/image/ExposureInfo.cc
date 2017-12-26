@@ -240,7 +240,7 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
                              std::shared_ptr<daf::base::PropertySet> imageMetadata) {
     // Try to read WCS from image metadata, and if found, strip the keywords used
     try {
-        _wcs = std::make_shared<geom::SkyWcs>(*imageMetadata, true);
+        _wcs = geom::makeSkyWcs(*imageMetadata, true);
     } catch(lsst::pex::exceptions::TypeError) {
         LOGLS_DEBUG(_log, "No WCS found in FITS metadata");
     }
