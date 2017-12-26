@@ -241,7 +241,6 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
     }
 
     // Strip LTV1, LTV2 from imageMetadata, because we don't use it internally
-    // and it can cause type mismatch errors in fits::readMetadata
     imageMetadata->remove("LTV1");
     imageMetadata->remove("LTV2");
 
