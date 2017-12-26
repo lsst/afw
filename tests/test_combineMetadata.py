@@ -28,6 +28,16 @@ from lsst.daf.base import PropertyList
 from lsst.afw.fits import combineMetadata
 
 
+def getLast(listOrItem):
+    """A very primitive means of getting the last item in a collection
+
+    This only works for list, since that is all this test needs
+    """
+    if type(listOrItem) == list:
+        return listOrItem[-1]
+    return listOrItem
+
+
 class CombineMetadataTestCase(lsst.utils.tests.TestCase):
 
     def assertMetadataEqual(self, md1, md2):
@@ -45,7 +55,7 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         except COMMENT and HISTORY, which are combined
         """
         md1 = PropertyList()
-        md1.set("int1", 1)
+        md1.set("int1", [1, 2])
         md1.set("float1", 1.23)
         md1.set("string1", "md1 string1 value")
         md1.set("COMMENT", "md1 comment")
@@ -54,7 +64,7 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
 
         md2 = PropertyList()
         md2.set("int2", 2)
-        md2.set("float2", 2.34)
+        md2.set("float2", [2.34, -3.45])
         md2.set("string2", "md2 string2 value")
         md2.set("COMMENT", "md2 comment")
         md2.set("HISTORY", "md2 history")
@@ -69,26 +79,20 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         for name in md1.getOrderedNames():
             if name in ("COMMENT", "HISTORY"):
                 continue
-            self.assertEqual(result.get(name), md1.get(name))
+            self.assertEqual(result.get(name), getLast(md1.get(name)))
         for name in md2.getOrderedNames():
             if name in ("COMMENT", "HISTORY"):
                 continue
-            self.assertEqual(result.get(name), md2.get(name))
+            self.assertEqual(result.get(name), getLast(md2.get(name)))
 
         # input should be unchanged
         self.assertMetadataEqual(md1, md1Copy)
         self.assertMetadataEqual(md2, md2Copy)
 
     def testIgnoreInvalid(self):
-        """Test that invalid values in the either argument are ignored
+        """Test that invalid items in the either argument are ignored
         """
         md1 = PropertyList()
-        md1.set("int1", 5)
-        md1.set("float1", 3.1)
-        md1.set("string1", "md1 string1 value")
-        md1.set("badint1", [1, 5])
-        md1.set("badfloat1", [1.23, 3.3])
-        md1.set("badstring1", ["md1 badstring1 value", "another value"])
         # Set COMMENT and HISTORY to invalid values -- anything other than string
         # (regardless if it is a scalar or an array);
         # for md1 use arrays and md2 use scalars, just to try both
@@ -97,12 +101,6 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         md1Copy = md1.deepCopy()
 
         md2 = PropertyList()
-        md2.set("int2", 2)
-        md2.set("float2", 2.34)
-        md2.set("string2", "md2 string value")
-        md2.set("badint2", [0, -4])
-        md2.set("badfloat2", [-5.5, -4.7])
-        md2.set("badstring1", ["md1 badstring2 value", "another value"])
         # Set COMMENT and HISTORY to invalid values; see comment above md1.set("COMMENT", ...)
         md2.set("COMMENT", 7)
         md2.set("HISTORY", 1.06)
@@ -110,16 +108,7 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
 
         result = combineMetadata(md1, md2)
         resultNames = result.getOrderedNames()
-        self.assertEqual(resultNames, ["int1", "float1", "string1",
-                                       "int2", "float2", "string2"])
-        for name in md1.getOrderedNames():
-            if name not in resultNames:
-                continue
-            self.assertEqual(result.get(name), md1.get(name))
-        for name in md2.getOrderedNames():
-            if name not in resultNames:
-                continue
-            self.assertEqual(result.get(name), md2.get(name))
+        self.assertEqual(resultNames, [])
 
         # input should be unchanged
         self.assertMetadataEqual(md1, md1Copy)
@@ -131,7 +120,7 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         # names that start with "item" appear in both sets of metadata
         md1 = PropertyList()
         md1.set("int1", 5)
-        md1.set("itema", 1)
+        md1.set("itema", [1, 2])
         md1.set("float1", 3.1)
         md1.set("itemb", 1.23)
         md1.set("string1", "md1 string1 value")
@@ -141,7 +130,7 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         md2 = PropertyList()
         md2.set("itemc", 2)
         md2.set("int2", 2)
-        md2.set("itemb", "some data")
+        md2.set("itemb", ["some data", "more data"])
         md2.set("float2", 2.34)
         md2.set("itema", 5.27)
         md2.set("string2", "md2 string value")
@@ -149,15 +138,14 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         md2Copy = md2.deepCopy()
 
         result = combineMetadata(md1, md2)
-        # do not assume name order when names match
         expectedNames = ["int1", "float1", "string1"] + list(md2Names)
         self.assertEqual(result.getOrderedNames(), expectedNames)
         md2NameSet = set(md2Names)
         for name in result.getOrderedNames():
             if name in md2NameSet:
-                self.assertEqual(result.get(name), md2.get(name))
+                self.assertEqual(result.get(name), getLast(md2.get(name)))
             else:
-                self.assertEqual(result.get(name), md1.get(name))
+                self.assertEqual(result.get(name), getLast(md1.get(name)))
 
         # input should be unchanged
         self.assertMetadataEqual(md1, md1Copy)
