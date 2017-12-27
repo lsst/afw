@@ -65,12 +65,11 @@ def refraction(wavelength, elevation, weather, observatory):
         raise ValueError("Refraction calculation is valid for wavelengths between 230.2 and 2058.6 nm.")
     latitude = observatory.getLatitude()
     altitude = observatory.getElevation()
-    weatherNanSafe = defaultWeather(weather, altitude=altitude*units.meter)
-
-    reducedN = deltaN(wavelength, weatherNanSafe)/deltaRefractScale
-
-    temperature = extractTemperature(weatherNanSafe, useKelvin=True)
     atmosScaleheightRatio = float(4.5908E-6*temperature/units.Kelvin)
+    if weather is None:
+        weather = defaultWeather(altitude*units.meter)
+    reducedN = deltaN(wavelength, weather)/deltaRefractScale
+    temperature = extractTemperature(weather, useKelvin=True)
 
     # Account for oblate Earth
     # This replicates equation 10 of Stone 1996
@@ -263,7 +262,7 @@ def extractTemperature(weather, useKelvin=False):
     return temperature
 
 
-def defaultWeather(weather, altitude):
+def defaultWeather(altitude):
     """Set default local weather conditions if they are missing.
 
     Parameters
@@ -279,6 +278,10 @@ def defaultWeather(weather, altitude):
     `lsst.afw.coord.Weather`
         Updated Weather class with any `nan` values replaced by defaults.
     """
+    if isinstance(altitude, units.quantity.Quantity):
+        altitude2 = altitude
+    else:
+        altitude2 = altitude*units.meter
     p0 = 101325.*units.pascal  # sea level air pressure
     g = 9.80665*units.meter/units.second**2  # typical gravitational acceleration at sea level
     R0 = 8.31447*units.Joule/(units.mol*units.Kelvin)  # gas constant
@@ -286,19 +289,9 @@ def defaultWeather(weather, altitude):
     lapseRate = -6.5*units.Celsius/units.km  # Typical rate of change of temperature with altitude
     M = 0.0289644*units.kg/units.mol  # molar mass of dry air
 
-    temperature = weather.getAirTemperature()
-    if np.isnan(temperature):
-        temperature = T0 + lapseRate*altitude
-    else:
-        temperature = temperature*units.Celsius
-    pressure = weather.getAirPressure()
-    if np.isnan(pressure):
-        temperatureK = temperature.to(units.Kelvin, equivalencies=units.temperature())
-        pressure = p0*np.exp(-(g*M*altitude)/(R0*temperatureK))
-    else:
-        pressure = pressure*units.pascal
-    humidity = weather.getHumidity()
-    if np.isnan(humidity):
-        humidity = 40.  # Typical humidity at many observatory sites.
-    weatherNanSafe = Weather((temperature/units.Celsius).value, (pressure/units.pascal).value, humidity)
-    return weatherNanSafe
+    temperature = T0 + lapseRate*altitude2
+    temperatureK = temperature.to(units.Kelvin, equivalencies=units.temperature())
+    pressure = p0*np.exp(-(g*M*altitude2)/(R0*temperatureK))
+    humidity = 40.  # Typical humidity at many observatory sites.
+    weather = Weather((temperature/units.Celsius).value, (pressure/units.pascal).value, humidity)
+    return weather
