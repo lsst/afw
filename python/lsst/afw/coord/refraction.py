@@ -35,7 +35,7 @@ __all__ = ["refraction", "differentialRefraction"]
 deltaRefractScale = 1.0E8
 
 
-def refraction(wavelength, elevation, weather, observatory):
+def refraction(wavelength, elevation, observatory, weather=None):
     """Calculate overall refraction under atmospheric and observing conditions.
 
     The calculation is taken from Stone 1996
@@ -46,12 +46,13 @@ def refraction(wavelength, elevation, weather, observatory):
         wavelength is in nm (valid for 230.2 < wavelength < 2058.6)
     elevation : `lsst.afw.geom.Angle`
         Elevation of the observation, as an Angle.
-    weather : `lsst.afw.coord.Weather`
-        Class containing the measured temperature, pressure, and humidity
-        at the observatory during an observation
     observatory : `lsst.afw.coord.Observatory`
         Class containing the longitude, latitude,
         and altitude of the observatory.
+    weather : `lsst.afw.coord.Weather`, optional
+        Class containing the measured temperature, pressure, and humidity
+        at the observatory during an observation
+        If omitted, typical conditions for the observatory's elevation will be calculated.
 
     Returns
     -------
@@ -84,7 +85,7 @@ def refraction(wavelength, elevation, weather, observatory):
     return result
 
 
-def differentialRefraction(wavelength, wavelengthRef, elevation, weather, observatory):
+def differentialRefraction(wavelength, wavelengthRef, elevation, observatory, weather=None):
     """Calculate the differential refraction between two wavelengths.
 
     Parameters
@@ -95,20 +96,21 @@ def differentialRefraction(wavelength, wavelengthRef, elevation, weather, observ
         Reference wavelength, typically the effective wavelength of a filter.
     elevation : `lsst.afw.geom.Angle`
         Elevation of the observation, as an Angle.
-    weather : `lsst.afw.coord.Weather`
-        Class containing the measured temperature, pressure, and humidity
-        at the observatory during an observation
     observatory : `lsst.afw.coord.Observatory`
         Class containing the longitude, latitude,
         and altitude of the observatory.
+    weather : `lsst.afw.coord.Weather`, optional
+        Class containing the measured temperature, pressure, and humidity
+        at the observatory during an observation
+        If omitted, typical conditions for the observatory's elevation will be calculated.
 
     Returns
     -------
     `lsst.afw.geom.Angle`
         The refraction at `wavelength` - the refraction at `wavelengthRef`.
     """
-    refractionStart = refraction(wavelength, elevation, weather, observatory)
-    refractionEnd = refraction(wavelengthRef, elevation, weather, observatory)
+    refractionStart = refraction(wavelength, elevation, observatory, weather=weather)
+    refractionEnd = refraction(wavelengthRef, elevation, observatory, weather=weather)
     return refractionStart - refractionEnd
 
 

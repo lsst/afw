@@ -44,33 +44,32 @@ class RefractionTestSuite(lsst.utils.tests.TestCase):
         lsstTemperature = 20.*units.Celsius  # in degrees Celsius
         lsstHumidity = 10.  # in percent
         lsstPressure = 73892.*units.pascal  # 1 atmosphere.
-        self.randGen = np.random
-        self.randGen.seed = 5
+        np.random.seed(5)
 
         self.weather = Weather(lsstTemperature/units.Celsius, lsstPressure/units.pascal, lsstHumidity)
         self.observatory = Observatory(lsstLon, lsstLat, lsstAlt)
 
     def testWavelengthRangeError(self):
         """Refraction should raise an error if the wavelength is out of range."""
-        elevation = Angle(self.randGen.random()*np.pi/2.)
+        elevation = Angle(np.random.random()*np.pi/2.)
         wl_low = 230.
         wl_high = 2059.
-        self.assertRaises(ValueError, refraction, wl_low, elevation, self.weather, self.observatory)
-        self.assertRaises(ValueError, refraction, wl_high, elevation, self.weather, self.observatory)
+        self.assertRaises(ValueError, refraction, wl_low, elevation, self.observatory, weather=self.weather)
+        self.assertRaises(ValueError, refraction, wl_high, elevation, self.observatory, weather=self.weather)
 
     def testZenithZero(self):
         """There should be no refraction exactly at zenith."""
         elevation = Angle(np.pi/2.)
         wl = 505.  # in nm
-        refractZen = refraction(wl, elevation, self.weather, self.observatory)
+        refractZen = refraction(wl, elevation, self.observatory, weather=self.weather)
         self.assertAlmostEqual(refractZen.asDegrees(), 0.)
 
     def testNoDifferential(self):
         """There should be no differential refraction if the wavelength is the same as the reference."""
         wl = 470.  # in nm
         wl_ref = wl
-        elevation = Angle(self.randGen.random()*np.pi/2.)
-        diffRefraction = differentialRefraction(wl, wl_ref, elevation, self.weather, self.observatory)
+        elevation = Angle(np.random.random()*np.pi/2.)
+        diffRefraction = differentialRefraction(wl, wl_ref, elevation, self.observatory, weather=self.weather)
         self.assertFloatsAlmostEqual(diffRefraction.asDegrees(), 0.)
 
     def testRefractHighAirmass(self):
@@ -85,13 +84,12 @@ class RefractionTestSuite(lsst.utils.tests.TestCase):
                    70.35113687114644,
                    ]
         for wl, refVal in zip(wls, refVals):
-            refract = refraction(wl, elevation, self.weather, self.observatory)
+            refract = refraction(wl, elevation, self.observatory, weather=self.weather)
             self.assertFloatsAlmostEqual(refract.asArcseconds(), refVal, rtol=1e-3)
 
     def testRefractWeatherNan(self):
-        """Test the values of refraction when the supplied weather is nan."""
-        weather = Weather(np.nan, np.nan, np.nan)
-        elevation = Angle(self.randGen.random()*np.pi/2.)
+        """Test the values of refraction when no weather is supplied."""
+        elevation = Angle(np.random.random()*np.pi/2.)
         elevation = Angle(np.pi/6.)  # Airmass 2.0
         wls = [370., 480., 620., 860., 960., 1025.]  # in nm
         refVals = [76.7339313496466,
@@ -102,7 +100,7 @@ class RefractionTestSuite(lsst.utils.tests.TestCase):
                    73.9006681751504,
                    ]
         for wl, refVal in zip(wls, refVals):
-            refract = refraction(wl, elevation, weather, self.observatory)
+            refract = refraction(wl, elevation, self.observatory)
             self.assertFloatsAlmostEqual(refract.asArcseconds(), refVal, rtol=1e-3)
 
 
