@@ -129,7 +129,6 @@ tests/maskedImageIo2
 tests/peak
 tests/ramFitsIO
 tests/rowColumnStats
-tests/sipterms
 tests/sourceIo1
 tests/sourceIo2
 tests/sourceMatch1
@@ -141,7 +140,6 @@ tests/test_endpoint
 tests/test_spherePoint
 tests/test_transform
 tests/test_trapezoidalPacker
-tests/test_wcs
 tests/test_warpGpu
 tests/ticket1145
 tests/wcsCopy
