@@ -134,15 +134,36 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(-42.0, -inf, degrees)
 
-    def testInit1ArgErrors(self):
-        """Test if 1-argument form of __init__ handles invalid input.
-        """
+    def testPoint3DConstructor(self):
+        # test poles
+        for z in (-11.3, -1.1, 0.1, 2.5):  # arbitrary non-zero values
+            sp = SpherePoint(afwGeom.Point3D(0.0, 0.0, z))
+            self.assertTrue(sp.atPole())
+            self.assertEqual(sp.getLongitude().asRadians(), 0.0)
+            if z < 0:
+                self.assertAnglesAlmostEqual(sp.getLatitude(), -90 * degrees)
+            else:
+                self.assertAnglesAlmostEqual(sp.getLatitude(), 90 * degrees)
+
+        spx = SpherePoint(afwGeom.Point3D(11.1, 0.0, 0.0))
+        self.assertAnglesAlmostEqual(spx.getLongitude(), 0.0 * degrees)
+        self.assertAnglesAlmostEqual(spx.getLatitude(), 0.0 * degrees)
+
+        spy = SpherePoint(afwGeom.Point3D(0.0, 234234.5, 0.0))
+        self.assertAnglesAlmostEqual(spy.getLongitude(), 90.0 * degrees)
+        self.assertAnglesAlmostEqual(spy.getLatitude(), 0.0 * degrees)
+
+        spxy = SpherePoint(afwGeom.Point3D(7.5, -7.5, 0.0))
+        self.assertAnglesAlmostEqual(spxy.getLongitude(), -45.0 * degrees)
+        self.assertAnglesAlmostEqual(spxy.getLatitude(), 0.0 * degrees)
+
+        spxz = SpherePoint(afwGeom.Point3D(100.0, 0.0, -100.0))
+        self.assertAnglesAlmostEqual(spxz.getLongitude(), 0.0 * degrees)
+        self.assertAnglesAlmostEqual(spxz.getLatitude(), -45.0 * degrees)
+
         # Only one singularity, at zero
         with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(afwGeom.Point3D(0.0, 0.0, 0.0))
-        SpherePoint(afwGeom.Point3D(0.0, -0.2, 0.0))
-        SpherePoint(afwGeom.Point3D(0.0, 0.0, 1.0))
-        SpherePoint(afwGeom.Point3D(42.78, -46.29, 38.27))
 
     def testCopyConstructor(self):
         sp = SpherePoint(-42.0*degrees, 45.0*degrees)
@@ -411,13 +432,19 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                 self.assertTrue(point1 != point1)
 
             for lon2, lat2 in self._dataset:
-                if lon1 == lon2 and lat1 == lat2:
-                    continue
                 point2 = SpherePoint(lon2, lat2)
-                self.assertTrue(point2 != point1)
-                self.assertTrue(point1 != point2)
-                self.assertFalse(point2 == point1)
-                self.assertFalse(point1 == point2)
+                if lon1 == lon2 and lat1 == lat2 and point1.isFinite() and point2.isFinite():
+                    # note: the isFinite checks are needed because if longitude is infinite
+                    # then the resulting SpherePoint has nan as its longitude, due to wrapping
+                    self.assertFalse(point2 != point1)
+                    self.assertFalse(point1 != point2)
+                    self.assertTrue(point2 == point1)
+                    self.assertTrue(point1 == point2)
+                else:
+                    self.assertTrue(point2 != point1)
+                    self.assertTrue(point1 != point2)
+                    self.assertFalse(point2 == point1)
+                    self.assertFalse(point1 == point2)
 
         # Test for transitivity (may be assumed by algorithms).
         for delta in [10.0**(0.1*x) for x in range(-150, -49, 5)]:
@@ -449,52 +476,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             self.assertTrue(point2 == point3 or point3 !=
                             point1 or point2 == point1)
 
-    def testEqualityAlias(self):
-        """Test if == handles coordinate degeneracies correctly.
-        """
-        # Longitude wrapping
-        self.assertEqual(SpherePoint(360.0, -42.0, degrees),
-                         SpherePoint(0.0, -42.0, degrees))
-        self.assertEqual(SpherePoint(-90.0, -42.0, degrees),
-                         SpherePoint(270.0, -42.0, degrees))
-
-        # Polar degeneracy
-        self.assertEqual(SpherePoint(42.0, 90.0, degrees),
-                         SpherePoint(270.0, 90.0, degrees))
-        self.assertEqual(SpherePoint(-42.0, -90.0, degrees),
-                         SpherePoint(83.0, -90.0, degrees))
-
-        self.assertNotEqual(SpherePoint(83.0, 90.0, degrees),
-                            SpherePoint(83.0, -90.0, degrees))
-        # White-box test: how are pole/non-pole comparisons handled?
-        self.assertNotEqual(SpherePoint(42.0, 90.0, degrees),
-                            SpherePoint(42.0, 0.0, degrees))
-
-    def testInquality(self):
-        """Test if == and != give mutually consistent results.
-        """
-        for lon1, lat1 in self._dataset:
-            point1 = SpherePoint(lon1, lat1)
-            for lon2, lat2 in self._dataset:
-                point2 = SpherePoint(lon2, lat2)
-                self.assertEqual((point1 == point2), (point2 == point1))
-                self.assertEqual((point1 != point2), (point2 != point1))
-                self.assertNotEqual((point1 == point2), (point1 != point2))
-
-    def testBearingToError(self):
-        """Test if bearingTo() correctly handles invalid input.
-        """
-        northPole = SpherePoint(0.0, 90.0, degrees)
-        southPole = SpherePoint(0.0, -90.0, degrees)
-        safe = SpherePoint(0.0, 0.0, degrees)
-
-        with self.assertRaises(pexEx.DomainError):
-            northPole.bearingTo(safe)
-        with self.assertRaises(pexEx.DomainError):
-            southPole.bearingTo(safe)
-
-    def testBearingToValue(self):
-        """Test if bearingTo() returns the expected value.
+    def testBearingToValueOnEquator(self):
+        """Test if bearingTo() returns the expected value from a point on the equator
         """
         lon0 = 90.0
         lat0 = 0.0   # These tests only work from the equator.
@@ -543,6 +526,41 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                         trial['bearing'], bearing.asDegrees(), 12)
                 else:
                     self.assertTrue(math.isnan(bearing.asRadians()))
+
+    def testBearingToValueSameLongitude(self):
+        """Test that bearingTo() returns +/- 90 for two points on the same longitude
+        """
+        for longDeg in (0, 55, 270):
+            for lat0Deg in (-90, -5, 0, 44, 90):
+                sp0 = SpherePoint(longDeg, lat0Deg, degrees)
+                for lat1Deg in (-90, -41, 1, 41, 90):
+                    if lat0Deg == lat1Deg:
+                        continue
+                    sp1 = SpherePoint(longDeg, lat1Deg, degrees)
+                    if sp0.atPole() and sp1.atPole():
+                        # the points are at opposite poles; any bearing may be returned
+                        continue
+                    bearing = sp0.bearingTo(sp1)
+                    if lat1Deg > lat0Deg:
+                        self.assertAnglesAlmostEqual(bearing, 90 * degrees)
+                    else:
+                        self.assertAnglesAlmostEqual(bearing, -90 * degrees)
+
+    def testBearingToFromPole(self):
+        """Test if bearingTo() returns the expected value from a point at a pole
+        """
+        for long0Deg in (0, 55, 270):
+            for atSouthPole in (False, True):
+                lat0Deg = -90 if atSouthPole else 90
+                sp0 = SpherePoint(long0Deg, lat0Deg, degrees)
+                for long1Deg in (0, 55, 270):
+                    for lat1Deg in (-89, 0, 89):
+                        sp1 = SpherePoint(long1Deg, lat1Deg, degrees)
+                        desiredBearing = ((long1Deg - long0Deg) - 90) * degrees
+                        if atSouthPole:
+                            desiredBearing *= -1
+                        measuredBearing = sp0.bearingTo(sp1)
+                        self.assertAnglesAlmostEqual(desiredBearing, measuredBearing)
 
     def testBearingToValueSingular(self):
         """White-box test: bearingTo() may be unstable if points are near opposite poles.
@@ -762,28 +780,12 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             self.assertAlmostEqual(0.0, newPoint.getLongitude().asDegrees())
             self.assertAlmostEqual(80.0, newPoint.getLatitude().asDegrees())
 
-    def testOffsetError(self):
-        """Test if offset() correctly handles invalid input.
-        """
-        northPole = SpherePoint(0.0*degrees, 90.0*degrees)
-        southPole = SpherePoint(0.0*degrees, -90.0*degrees)
-        nonSingularity = SpherePoint(0.0*degrees, 45.0*degrees)
-
-        with self.assertRaises(pexEx.DomainError):
-            northPole.offset(-90.0*degrees, 10.0*degrees)
-        with self.assertRaises(pexEx.DomainError):
-            southPole.offset(90.0*degrees, 0.1*degrees)
-        with self.assertRaises(pexEx.InvalidParameterError):
-            nonSingularity.offset(90.0*degrees, -0.1*degrees)
-
     def testOffsetValue(self):
         """Test if offset() returns the expected value.
         """
         # This should cover arcs over the meridian, across the pole, etc.
         for lon1, lat1 in self._dataset:
             point1 = SpherePoint(lon1, lat1)
-            if point1.atPole():
-                continue
             for lon2, lat2 in self._dataset:
                 if lon1 == lon2 and lat1 == lat2:
                     continue
@@ -791,19 +793,48 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                 bearing = point1.bearingTo(point2)
                 distance = point1.separation(point2)
 
+                # offsetting point1 by bearing and distance should produce the same result as point2
                 newPoint = point1.offset(bearing, distance)
                 self.assertIsInstance(newPoint, SpherePoint)
+                self.assertSpherePointsAlmostEqual(point2, newPoint)
+                if newPoint.atPole():
+                    self.assertAnglesAlmostEqual(newPoint.getLongitude(), 0*degrees)
+
+                # measuring the separation and bearing from point1 to the new point
+                # should produce the requested separation and bearing
+                measuredDistance = point1.separation(newPoint)
+                self.assertAnglesAlmostEqual(measuredDistance, distance)
+                if abs(measuredDistance.asDegrees() - 180) > 1e-5:
+                    # The two points are not opposite each other on the sphere,
+                    # so the bearing has a well defined value
+                    measuredBearing = point1.bearingTo(newPoint)
+                    self.assertAnglesAlmostEqual(measuredBearing, bearing)
+
+                # offset by a negative amount in the opposite direction should produce the same result
+                newPoint2 = point1.offset(bearing + 180 * degrees, -distance)
+                self.assertIsInstance(newPoint2, SpherePoint)
+                # check angular separation (longitude is checked below)
+                self.assertSpherePointsAlmostEqual(newPoint, newPoint2)
+
                 if point1.isFinite() and point2.isFinite():
                     if not point2.atPole():
                         self.assertAnglesAlmostEqual(
                             point2.getLongitude(), newPoint.getLongitude())
+                        self.assertAnglesAlmostEqual(
+                            point2.getLongitude(), newPoint2.getLongitude())
                     self.assertAnglesAlmostEqual(
                         point2.getLatitude(), newPoint.getLatitude())
+                    self.assertAnglesAlmostEqual(
+                        point2.getLatitude(), newPoint2.getLatitude())
                 else:
                     self.assertTrue(math.isnan(
                         newPoint.getLongitude().asRadians()))
                     self.assertTrue(math.isnan(
+                        newPoint2.getLongitude().asRadians()))
+                    self.assertTrue(math.isnan(
                         newPoint.getLatitude().asRadians()))
+                    self.assertTrue(math.isnan(
+                        newPoint2.getLatitude().asRadians()))
 
         # Test precision near the poles
         lon = 123.0*degrees
