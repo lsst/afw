@@ -30,6 +30,7 @@
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/image/TransmissionCurve.h"
 #include "lsst/afw/fits.h"
 
 namespace {
@@ -81,7 +82,8 @@ ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
                            std::shared_ptr<daf::base::PropertySet> const& metadata,
                            std::shared_ptr<CoaddInputs> const& coaddInputs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
-                           std::shared_ptr<image::VisitInfo const> const& visitInfo)
+                           std::shared_ptr<image::VisitInfo const> const& visitInfo,
+                           std::shared_ptr<TransmissionCurve const> const & transmissionCurve)
         : _wcs(_cloneWcs(wcs)),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
           _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
@@ -92,7 +94,9 @@ ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
                              : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
           _coaddInputs(coaddInputs),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
-          _visitInfo(visitInfo) {}
+          _visitInfo(visitInfo),
+          _transmissionCurve(transmissionCurve)
+{}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other)
         : _wcs(_cloneWcs(other._wcs)),
@@ -104,7 +108,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other)
           _metadata(other._metadata),
           _coaddInputs(other._coaddInputs),
           _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
-          _visitInfo(other._visitInfo) {}
+          _visitInfo(other._visitInfo),
+          _transmissionCurve(other._transmissionCurve) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
         : _wcs(_cloneWcs(other._wcs)),
@@ -116,7 +121,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
           _metadata(other._metadata),
           _coaddInputs(other._coaddInputs),
           _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
-          _visitInfo(other._visitInfo) {
+          _visitInfo(other._visitInfo),
+          _transmissionCurve(other._transmissionCurve) {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
 
@@ -132,6 +138,7 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
         _coaddInputs = other._coaddInputs;
         _apCorrMap = _cloneApCorrMap(other._apCorrMap);
         _visitInfo = other._visitInfo;
+        _transmissionCurve = other._transmissionCurve;
     }
     return *this;
 }
@@ -176,6 +183,11 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
     if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
         int polygonId = data.archive.put(getValidPolygon());
         data.metadata->set("VALID_POLYGON_ID", polygonId, "archive ID for the Exposure's valid polygon");
+    }
+    if (hasTransmissionCurve() && getTransmissionCurve()->isPersistable()) {
+        int transmissionCurveId = data.archive.put(getTransmissionCurve());
+        data.metadata->set("TRANSMISSION_CURVE_ID", transmissionCurveId,
+                           "archive ID for the Exposure's transmission curve");
     }
 
     // LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
@@ -302,6 +314,12 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
             _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
         } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read ValidPolygon; setting to null: " << err.what());
+        }
+        int transmissionCurveId = popInt(*metadata, "TRANSMISSION_CURVE_ID");
+        try {
+            _transmissionCurve = archive.get<TransmissionCurve>(transmissionCurveId);
+        } catch (pex::exceptions::NotFoundError & err) {
+            LOGLS_WARN(_log, "Could not read TransmissionCurve; setting to null: " << err.what());
         }
     }
 
