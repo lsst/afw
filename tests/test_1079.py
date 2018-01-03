@@ -37,6 +37,7 @@ import numbers
 import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.display.ds9 as ds9
@@ -245,7 +246,7 @@ class SavingSubImagesTest(unittest.TestCase):
 
         with lsst.utils.tests.getTempFilePath(".fits") as outFile:
             subImg.writeFits(outFile)
-            hdr = afwImage.readMetadata(outFile)
+            hdr = readMetadata(outFile)
 
             def checkLtvHeader(hdr, name, value):
                 # Per DM-4133, LTVn headers are required to be floating point

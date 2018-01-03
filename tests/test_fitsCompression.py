@@ -145,7 +145,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             unpersisted = ImageClass(filename)
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
 
-            header = lsst.afw.image.readMetadata(filename)
+            header = lsst.afw.fits.readMetadata(filename)
             bscale = header.get("BSCALE")
             bzero = header.get("BZERO")
 
@@ -706,7 +706,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
                     options = lsst.afw.fits.ImageWriteOptions(compression)
                     original.writeFits(fits, options)
                 cfitsio = cls(filename)
-                header = lsst.afw.image.readMetadata(filename, 1)
+                header = lsst.afw.fits.readMetadata(filename, 1)
                 seed = header.get("ZDITHER0")
                 self.assertEqual(header.get("BSCALE"), bscaleSet)
 

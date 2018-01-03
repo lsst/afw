@@ -70,7 +70,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
-        maskedImageMD = afwImage.readMetadata(inFilePathSmall)
+        maskedImageMD = lsst.afw.fits.readMetadata(inFilePathSmall)
 
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width = maskedImage.getWidth()
@@ -678,7 +678,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             # goes back and reads it if it finds INHERIT=T.  That should let us read
             # frazzle and the Wcs from the PropertySet returned by
             # readMetadata.
-            md = afwImage.readMetadata(tmpFile)
+            md = lsst.afw.fits.readMetadata(tmpFile)
             wcs = afwGeom.makeSkyWcs(md, False)
             self.assertPairsAlmostEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
             self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())

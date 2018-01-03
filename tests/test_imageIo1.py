@@ -175,7 +175,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(expNew.getMetadata().get(keyWord), longString)
 
     def checkBBoxFromMetadata(self, filename, expected, hdu=0):
-        metadata = afwImage.readMetadata(filename, hdu)
+        metadata = afwFits.readMetadata(filename, hdu)
         bbox = afwImage.bboxFromMetadata(metadata)
         self.assertEqual(bbox, expected)
 

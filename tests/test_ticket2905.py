@@ -25,7 +25,7 @@ import os
 import os.path
 import unittest
 
-import lsst.afw.image as afwImage
+from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 
 testPath = os.path.abspath(os.path.dirname(__file__))
@@ -39,7 +39,7 @@ class Ticket2905Test(unittest.TestCase):
 
     def test(self):
         path = os.path.join(testPath, "data", "ticket2905.fits")
-        md = afwImage.readMetadata(path)
+        md = readMetadata(path)
         value = md.get("INR-STR")
         self.assertEqual(type(value), float)
         self.assertEqual(value, 2.0e-5)
