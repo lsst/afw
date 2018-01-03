@@ -4,6 +4,7 @@ import re
 import warnings
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
+from lsst.afw.fits import readMetadata
 import lsst.afw.cameraGeom as afwCameraGeom
 import lsst.afw.geom as afwGeom
 
@@ -117,14 +118,14 @@ class DetectorBuilder(object):
         self.inAmpCoords = inAmpCoords
         self.defaultAmpMap = self._makeDefaultAmpMap()
         self.defaultDetectorMap = self._makeDefaultDetectorMap()
-        self.detectorMetadata = afwImage.readMetadata(detectorFileName)
+        self.detectorMetadata = readMetadata(detectorFileName)
         self._sanitizeHeaderMetadata(
             self.detectorMetadata, clobber=clobberMetadata)
         self.ampMetadataList = []
         self.detector = None
         self.doRaise = doRaise
         for fileName in ampFileNameList:
-            self.ampMetadataList.append(afwImage.readMetadata(fileName))
+            self.ampMetadataList.append(readMetadata(fileName))
             self._sanitizeHeaderMetadata(
                 self.ampMetadataList[-1], clobber=clobberMetadata)
         self.plateScale = plateScale

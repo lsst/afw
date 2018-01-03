@@ -25,8 +25,8 @@ import os
 import unittest
 
 import lsst.utils
-import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 
 
@@ -40,7 +40,7 @@ class WCSTestRaWrap(unittest.TestCase):
 
     def test1(self):
         wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs2')
-        hdr = afwImage.readMetadata(wcsfn)
+        hdr = readMetadata(wcsfn)
         wcs1 = afwGeom.makeSkyWcs(hdr)
 
         crval = wcs1.getSkyOrigin()
