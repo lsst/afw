@@ -319,7 +319,7 @@ std::string SkyWcs::writeString() const {
 
 std::string SkyWcs::getPersistenceName() const { return getSkyWcsPersistenceName(); }
 
-std::string SkyWcs::getPythonModule() const { return "lsst.afw.geom.skyWcs"; }
+std::string SkyWcs::getPythonModule() const { return "lsst.afw.geom"; }
 
 void SkyWcs::write(OutputArchiveHandle& handle) const {
     SkyWcsPersistenceHelper const& keys = SkyWcsPersistenceHelper::get();
