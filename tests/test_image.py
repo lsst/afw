@@ -46,6 +46,7 @@ import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
+from lsst.afw.fits import readMetadata
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
@@ -752,7 +753,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     def testReadMetadata(self):
         im = afwImage.DecoratedImageF(self.fileForMetadata)
 
-        meta = afwImage.readMetadata(self.fileForMetadata)
+        meta = readMetadata(self.fileForMetadata)
         self.assertIn("NAXIS1", meta.names())
         self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
         self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
@@ -779,7 +780,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         testfile = os.path.join(tempdir, "test.fits")
         try:
             self.dimage1.writeFits(testfile)
-            meta = afwImage.readMetadata(testfile)
+            meta = readMetadata(testfile)
             self.assertEqual(meta.get("A.B.C.D"), 12345)
         finally:
             shutil.rmtree(tempdir)
