@@ -540,6 +540,38 @@ class TransmissionCurveTestCase(lsst.utils.tests.TestCase):
         # Test persistence for transformed TransmissionCurves
         self.checkPersistence(tc3, points)
 
+    def testExposure(self):
+        """Test that we can attach a TransmissionCurve to an Exposure and round-trip it through I/O."""
+        wavelengths = np.linspace(6200, 6400, 100)
+        curve = makeTestCurve(self.random, 6200, 6400, 0.0, 0.0)
+        tc1 = self.makeAndCheckConstant(curve, wavelengths, 0.0, 0.0)
+        exposure1 = lsst.afw.image.ExposureF(4, 5)
+        exposure1.getInfo().setTransmissionCurve(tc1)
+        self.assertTrue(exposure1.getInfo().hasTransmissionCurve())
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            exposure1.writeFits(filename)
+            exposure2 = lsst.afw.image.ExposureF(filename)
+        self.assertTrue(exposure2.getInfo().hasTransmissionCurve())
+        tc2 = exposure2.getInfo().getTransmissionCurve()
+        self.assertEqual(
+            tc1.getNaturalSampling().min,
+            tc2.getNaturalSampling().min
+        )
+        self.assertEqual(
+            tc1.getNaturalSampling().max,
+            tc2.getNaturalSampling().max
+        )
+        self.assertEqual(
+            tc1.getNaturalSampling().size,
+            tc2.getNaturalSampling().size
+        )
+        self.assertEqualOrNaN(tc1.getThroughputAtBounds()[0], tc2.getThroughputAtBounds()[0])
+        self.assertEqualOrNaN(tc1.getThroughputAtBounds()[1], tc2.getThroughputAtBounds()[1])
+        self.assertFloatsEqual(
+            tc1.sampleAt(self.point, tc1.getNaturalSampling()),
+            tc2.sampleAt(self.point, tc1.getNaturalSampling())
+        )
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
