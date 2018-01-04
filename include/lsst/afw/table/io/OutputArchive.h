@@ -66,9 +66,10 @@ public:
      *  so users aren't forced to clone objects before persisting them if they don't
      *  already have a `shared_ptr`.
      *
-     *  The implementation of 'put' does not provide any exception safety; if the object
-     *  being saved (or any nested object) throws an exception, the entire archive may
-     *  be in an inconsistent state and should not be saved.
+     *  @exceptsafe The implementation of 'put' provides only basic exception
+     *              safety; if the object being saved (or any nested object)
+     *              throws an exception, the entire archive may be in an
+     *              inconsistent state and should not be saved.
      */
     int put(Persistable const* obj, bool permissive = false);
     int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
@@ -137,7 +138,24 @@ public:
     /**
      *  Save a nested Persistable to the same archive.
      *
-     *  @copydoc OutputArchive::put.
+     *  If permissive is true and obj->isPersistable() is false, the object will not
+     *  be saved but 0 will be returned instead of throwing an exception.
+     *
+     *  If the given pointer has already been saved, it will not be written again
+     *  and the same ID will be returned as the first time it was saved.
+     *
+     *  If the given pointer is null, the returned ID is always 0, which may be used
+     *  to retrieve null pointers from an InputArchive.
+     *
+     *  It is expected that the `shared_ptr` form will usually be used, as Persistables
+     *  are typically held by `shared_ptr`.  But we expose the lower-level raw-pointer form
+     *  so users aren't forced to clone objects before persisting them if they don't
+     *  already have a `shared_ptr`.
+     *
+     *  @exceptsafe The implementation of 'put' provides only basic exception
+     *              safety; if the object being saved (or any nested object)
+     *              throws an exception, the entire archive may be in an
+     *              inconsistent state and should not be saved.
      */
     int put(Persistable const* obj, bool permissive = false);
     int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
