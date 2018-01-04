@@ -53,12 +53,27 @@ public:
         return BaseCatalog(iter->getTable());
     }
 
-    void saveCatalog(BaseCatalog const &catalog, int id, std::string const &name, std::string const &module,
-                     int catPersistable) {
-        std::shared_ptr<BaseRecord> indexRecord = _index.addNew();
+    std::shared_ptr<BaseRecord> addIndexRecord(
+        int id, std::string const & name, std::string const & module
+    ) {
+        auto indexRecord = _index.addNew();
         indexRecord->set(indexKeys.id, id);
         indexRecord->set(indexKeys.name, name);
         indexRecord->set(indexKeys.module, module);
+        return indexRecord;
+    }
+
+    void saveEmpty(int id, std::string const & name, std::string const & module) {
+        auto indexRecord = addIndexRecord(id, name, module);
+        indexRecord->set(indexKeys.nRows, 0);
+        indexRecord->set(indexKeys.catPersistable, ArchiveIndexSchema::NO_CATALOGS_SAVED);
+        indexRecord->set(indexKeys.row0, ArchiveIndexSchema::NO_CATALOGS_SAVED);
+        indexRecord->set(indexKeys.catArchive, ArchiveIndexSchema::NO_CATALOGS_SAVED);
+    }
+
+    void saveCatalog(BaseCatalog const &catalog, int id, std::string const &name, std::string const &module,
+                     int catPersistable) {
+        auto indexRecord = addIndexRecord(id, name, module);
         indexRecord->set(indexKeys.catPersistable, catPersistable);
         indexRecord->set(indexKeys.nRows, catalog.size());
         int catArchive = 1;
@@ -167,6 +182,10 @@ void OutputArchive::writeFits(fits::Fits &fitsfile) const { _impl->writeFits(fit
 // ----- OutputArchiveHandle ------------------------------------------------------------------------------
 
 BaseCatalog OutputArchiveHandle::makeCatalog(Schema const &schema) { return _impl->makeCatalog(schema); }
+
+void OutputArchiveHandle::saveEmpty() {
+    _impl->saveEmpty(_id, _name, _module);
+}
 
 void OutputArchiveHandle::saveCatalog(BaseCatalog const &catalog) {
     _impl->saveCatalog(catalog, _id, _name, _module, _catPersistable);

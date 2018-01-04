@@ -45,6 +45,12 @@ struct ArchiveIndexSchema {
     static int const MAX_NAME_LENGTH = 64;
     static int const MAX_MODULE_LENGTH = 64;
 
+    /**
+     *  Special value used for catArchive, catPersistable, and row0 when an
+     *  object with no state is saved.
+     */
+    static constexpr int const NO_CATALOGS_SAVED = -1;
+
     /// Return the singleton instance.
     static ArchiveIndexSchema const& get();
 
