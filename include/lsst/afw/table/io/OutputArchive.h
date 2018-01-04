@@ -120,6 +120,12 @@ public:
     BaseCatalog makeCatalog(Schema const& schema);
 
     /**
+     *  Indicate that the object being persisted has no state,
+     *  and hence will never call makeCatalog() or saveCatalog().
+     */
+    void saveEmpty();
+
+    /**
      *  Save a catalog in the archive.
      *
      *  The catalog must have been created using makeCatalog,

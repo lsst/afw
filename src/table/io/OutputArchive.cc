@@ -53,6 +53,17 @@ public:
         return BaseCatalog(iter->getTable());
     }
 
+    void saveEmpty(int id, std::string const & name, std::string const & module) {
+        auto indexRecord = _index.addNew();
+        indexRecord->set(indexKeys.id, id);
+        indexRecord->set(indexKeys.name, name);
+        indexRecord->set(indexKeys.module, module);
+        indexRecord->set(indexKeys.catPersistable, -1);
+        indexRecord->set(indexKeys.nRows, 0);
+        indexRecord->set(indexKeys.row0, -1);
+        indexRecord->set(indexKeys.catArchive, -1);
+    }
+
     void saveCatalog(BaseCatalog const &catalog, int id, std::string const &name, std::string const &module,
                      int catPersistable) {
         std::shared_ptr<BaseRecord> indexRecord = _index.addNew();
@@ -167,6 +178,10 @@ void OutputArchive::writeFits(fits::Fits &fitsfile) const { _impl->writeFits(fit
 // ----- OutputArchiveHandle ------------------------------------------------------------------------------
 
 BaseCatalog OutputArchiveHandle::makeCatalog(Schema const &schema) { return _impl->makeCatalog(schema); }
+
+void OutputArchiveHandle::saveEmpty() {
+    _impl->saveEmpty(_id, _name, _module);
+}
 
 void OutputArchiveHandle::saveCatalog(BaseCatalog const &catalog) {
     _impl->saveCatalog(catalog, _id, _name, _module, _catPersistable);
