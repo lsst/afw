@@ -91,7 +91,7 @@ PYBIND11_PLUGIN(skyWcs) {
     table::io::python::addPersistableMethods<SkyWcs>(cls);
 
     cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
-    cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a);
+    cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a = false);
     cls.def("getPixelScale", (Angle(SkyWcs::*)(Point2D const &) const) & SkyWcs::getPixelScale, "pixel"_a);
     cls.def("getPixelScale", (Angle(SkyWcs::*)() const) & SkyWcs::getPixelScale);
     cls.def("getPixelOrigin", &SkyWcs::getPixelOrigin);

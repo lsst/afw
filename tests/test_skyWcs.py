@@ -304,6 +304,19 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
         return wcs
 
+    def checkNonFitsWcs(self, wcs):
+        """Check SkyWcs.getFitsMetadata for a WCS that cannot be represented as a FITS-WCS
+        """
+        # the modified WCS should not be representable as pure FITS-WCS
+        self.assertFalse(wcs.isFits)
+        with self.assertRaises(RuntimeError):
+            wcs.getFitsMetadata(True)
+
+        # the approximation returned by getFitsMetadata is poor (pure TAN) until DM-13170
+        wcsFromMetadata = makeSkyWcs(wcs.getFitsMetadata(False))
+        bbox = Box2I(Point2I(0, 0), Extent2I(2000, 2000))  # arbitrary but reasonable
+        self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox))
+
     def testTanWcs(self):
         """Check a variety of TanWcs, with crval not at a pole.
         """
@@ -350,6 +363,8 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                 pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
             self.assertPairListsAlmostEqual(pixelsToIwc.applyForward(pixPointList),
                                             desiredPixelsToIwc.applyForward(pixPointList))
+
+            self.checkNonFitsWcs(modifiedWcs)
 
     def testMakeModifiedWcsWithActualPixels(self):
         """Test makeModifiedWcs on a SkyWcs that has an ACTUAL_PIXELS frame
@@ -414,6 +429,8 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                     pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
                 self.assertPairListsAlmostEqual(modifiedPixelsToIwc.applyForward(pixPointList),
                                                 desiredPixelsToIwc.applyForward(pixPointList))
+
+            self.checkNonFitsWcs(modifiedWcs)
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
@@ -754,6 +771,15 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
             metadata.set(name, value)
         self.metadata = metadata
         self.bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
+
+    def testFitsMetadata(self):
+        """Test that getFitsMetadata works for TAN-SIP
+        """
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
+        self.assertTrue(skyWcs.isFits)
+        fitsMetadata = skyWcs.getFitsMetadata(True)
+        skyWcsCopy = makeSkyWcs(fitsMetadata)
+        self.assertWcsAlmostEqualOverBBox(skyWcs, skyWcsCopy, self.bbox)
 
     def testGetIntermediateWorldCoordsToSky(self):
         """Test getIntermediateWorldCoordsToSky and getPixelToIntermediateWorldCoords
