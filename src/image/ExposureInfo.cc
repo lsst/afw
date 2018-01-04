@@ -195,7 +195,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
         auto newWcs = getWcs()->copyAtShiftedPixelOrigin(shift);
 
         // We want the WCS to appear in all HDUs
-        data.imageMetadata->combine(newWcs->getFitsMetadata(false));
+        data.imageMetadata->combine(newWcs->getFitsMetadata());
     }
 
     // Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
