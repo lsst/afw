@@ -76,6 +76,15 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         pixelPoints2 = skyWcs.skyToPixel(skyPoints)
         assert_allclose(pixelPoints, pixelPoints2, atol=1e-7)
 
+        # check that WCS is properly saved as part of an exposure FITS file
+        exposure = ExposureF(100, 100, skyWcs)
+        with lsst.utils.tests.getTempFilePath(".fits") as outFile:
+            exposure.writeFits(outFile)
+            exposureRoundTrip = ExposureF(outFile)
+        wcsFromExposure = exposureRoundTrip.getWcs()
+        bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
+        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromExposure, bbox)
+
     def checkMakeFlippedWcs(self, skyWcs, skyAtol=1e-7*arcseconds):
         """Check makeFlippedWcs on the provided WCS
         """
@@ -294,7 +303,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         self.assertCoordListsAlmostEqual(skyList, shiftedSkyList, maxDiff=self.tinyAngle)
 
         # Check that the shifted WCS can be round tripped as FITS metadata
-        shiftedMetadata = shiftedWcs.getFitsMetadata(True)
+        shiftedMetadata = shiftedWcs.getFitsMetadata(precise=True)
         shiftedWcsCopy = makeSkyWcs(shiftedMetadata)
         shiftedBBox = Box2D(predShiftedPixelOrigin, predShiftedPixelOrigin + Extent2I(2000, 2000))
         self.assertWcsAlmostEqualOverBBox(shiftedWcs, shiftedWcsCopy, shiftedBBox)
@@ -313,9 +322,15 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             wcs.getFitsMetadata(True)
 
         # the approximation returned by getFitsMetadata is poor (pure TAN) until DM-13170
-        wcsFromMetadata = makeSkyWcs(wcs.getFitsMetadata(False))
-        bbox = Box2I(Point2I(0, 0), Extent2I(2000, 2000))  # arbitrary but reasonable
+        wcsFromMetadata = makeSkyWcs(wcs.getFitsMetadata())
+        bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
         self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox))
+
+        # the approximation returned by getFitsMetadata is pure TAN until DM-13170,
+        # after DM-13170 change this test to check that wcsFromMetadata is a reasonable
+        # approximation to the original WCS
+        approxWcs = wcs.getTanWcs(wcs.getPixelOrigin())
+        self.assertWcsAlmostEqualOverBBox(approxWcs, wcsFromMetadata, bbox)
 
     def testTanWcs(self):
         """Check a variety of TanWcs, with crval not at a pole.
@@ -777,7 +792,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         """
         skyWcs = makeSkyWcs(self.metadata, strip=False)
         self.assertTrue(skyWcs.isFits)
-        fitsMetadata = skyWcs.getFitsMetadata(True)
+        fitsMetadata = skyWcs.getFitsMetadata(precise=True)
         skyWcsCopy = makeSkyWcs(fitsMetadata)
         self.assertWcsAlmostEqualOverBBox(skyWcs, skyWcsCopy, self.bbox)
 
@@ -969,24 +984,6 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
                 outPoint2 = transform.applyInverse(outPoint1)
                 self.assertPairsAlmostEqual(point, outPoint1)
                 self.assertPairsAlmostEqual(outPoint1, outPoint2)
-
-
-class GetApproximateFitsWcsTestCase(SkyWcsBaseTestCase):
-    def setUp(self):
-        self.dataPath = os.path.join(os.path.dirname(__file__), "data")
-
-    def testTanSip(self):
-        filePath = os.path.join(self.dataPath, "HSC-0908120-056-small.fits")
-        exposure = ExposureF(filePath)
-        wcs = exposure.getWcs()
-
-        localTanWcs = wcs.getTanWcs(wcs.getPixelOrigin())
-        bbox = Box2I(Point2I(0, 0), Extent2I(1000, 1000))  # arbitrary
-        self.assertFalse(wcsAlmostEqualOverBBox(wcs, localTanWcs, bbox))
-
-        approxMetadata = wcs.getFitsMetadata(False)
-        reconstitutedWcs = makeSkyWcs(approxMetadata)
-        self.assertWcsAlmostEqualOverBBox(localTanWcs, reconstitutedWcs, bbox)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
