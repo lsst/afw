@@ -69,7 +69,11 @@ public:
                              indexIter->get(indexKeys.id) % indexIter->get(indexKeys.module) %
                              module).str());
                 }
-                std::size_t catN = indexIter->get(indexKeys.catArchive) - 1;
+                int catArchive = indexIter->get(indexKeys.catArchive);
+                if (catArchive == ArchiveIndexSchema::NO_CATALOGS_SAVED) {
+                    break;  // object was written with saveEmpty, and hence no catalogs.
+                }
+                std::size_t catN = catArchive - 1;
                 if (catN >= _catalogs.size()) {
                     throw LSST_EXCEPT(
                             MalformedArchiveError,
