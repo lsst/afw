@@ -171,18 +171,14 @@ public:
     /**
      * Return the WCS as FITS WCS metadata
      *
-     * @param[in] precise  If True then a "fairly precise" representation is required
-     *   (one with no significant deviation from linear over 100x100 pixels).
-     *   If false then write a local TAN approximation if a precise representation is not possible.
-     *
-     * @warning AST cannot yet write out SIP terms as FITS WCS metadata (though we are trying to get
-     * that capability added). Thus if precise=true, this method this will fail for a TAN-SIP WCS
-     * that has significant distortion.
+     * @param[in] precise  Fail if the WCS WCS cannot be represented to sufficient precision as a FITS WCS?
+     *      If False then return an approximation. For now that approximation is pure TAN
+     *      but as of DM-13170 it will be a fit TAN-SIP.
      *
      * @throws lsst::pex::exceptions::RuntimeError if precise is true and AST cannot represent
      * this WCS as a FITS WCS to sufficient precision.
      */
-    std::shared_ptr<daf::base::PropertyList> getFitsMetadata(bool precise) const;
+    std::shared_ptr<daf::base::PropertyList> getFitsMetadata(bool precise = false) const;
 
     /**
      * Get the pixel scale at the specified pixel position
