@@ -34,6 +34,7 @@
 #include "lsst/afw/image/Calib.h"           // forward-declared by Exposure.h
 #include "lsst/afw/image/VisitInfo.h"       // forward-declared by Exposure.h
 #include "lsst/afw/image/Wcs.h"             // forward-declared by Exposure.h
+#include "lsst/afw/image/TransmissionCurve.h" // forward-declared by Exposure.h
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"
@@ -78,7 +79,7 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("getCalib", &ExposureRecord::getCalib);
     cls.def("setCalib", &ExposureRecord::setCalib, "calib"_a);
     cls.def("getApCorrMap", &ExposureRecord::getApCorrMap);
-    cls.def("setApCorrMap", &ExposureRecord::setApCorrMap, "appCorrMap"_a);
+    cls.def("setApCorrMap", &ExposureRecord::setApCorrMap, "apCorrMap"_a);
     cls.def("getValidPolygon", &ExposureRecord::getValidPolygon);
 
     // Workaround for DM-10289.
@@ -94,6 +95,8 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
 
     cls.def("getVisitInfo", &ExposureRecord::getVisitInfo);
     cls.def("setVisitInfo", &ExposureRecord::setVisitInfo, "visitInfo"_a);
+    cls.def("getTransmissionCurve", &ExposureRecord::getTransmissionCurve);
+    cls.def("setTransmissionCurve", &ExposureRecord::setTransmissionCurve, "transmissionCurve"_a);
     return cls;
 }
 
