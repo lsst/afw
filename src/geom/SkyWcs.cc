@@ -200,11 +200,10 @@ std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) 
 }
 
 std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) const {
-    // Make a FrameSet that maps from GRID to SKY; GRID = PIXELS + 1
-    // (ignore ACTUAL_PIXELS, if present, as it cannot be represented with FITS WCS)
+    // Make a FrameSet that maps from GRID to SKY; GRID = the base frame (PIXELS or ACTUAL_PIXELS) + 1
     auto const gridToPixel = ast::ShiftMap({-1.0, -1.0});
     auto thisDict = getFrameDict();
-    auto const pixelToIwc = thisDict->getMapping("PIXELS", "IWC");
+    auto const pixelToIwc = thisDict->getMapping(ast::FrameSet::BASE, "IWC");
     auto const iwcToSky = thisDict->getMapping("IWC", "SKY");
     auto const gridToSky = gridToPixel.then(*pixelToIwc).then(*iwcToSky);
     ast::FrameSet frameSet(ast::Frame(2, "Domain=GRID"), gridToSky, *thisDict->getFrame("SKY", false));
@@ -220,7 +219,9 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Could not represent this SkyWcs using FITS-WCS metadata");
         } else {
-            // A large FitsTol was not sufficient; write a local TAN WCS approximation
+            // A large FitsTol was not sufficient; get a local TAN WCS approximation
+            // to the PIXELS to TANwrite a local TAN WCS approximation
+            // set precise true to avoid an infinite loop, should something go wrong
             auto tanWcs = getTanWcs(getPixelOrigin());
             return tanWcs->getFitsMetadata(true);
         }
