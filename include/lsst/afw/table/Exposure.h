@@ -39,6 +39,7 @@ class Wcs;
 class Calib;
 class ApCorrMap;
 class VisitInfo;
+class TransmissionCurve;
 }  // namespace image
 
 namespace detection {
@@ -129,6 +130,14 @@ public:
 
     std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
     void setVisitInfo(std::shared_ptr<image::VisitInfo const> visitInfo) { _visitInfo = visitInfo; }
+
+    std::shared_ptr<image::TransmissionCurve> getTransmissionCurve() const { return _transmissionCurve; }
+    void setTransmissionCurve(std::shared_ptr<image::TransmissionCurve const> transmissionCurve) {
+        // TransmissionCurve is immutable, so it doesn't matter whether we store it as const or not,
+        // but shared_ptr implicit conversions don't realize that, so we're maximally compatible:
+        // we accept const pointers and return non-const pointers.
+        _transmissionCurve = std::const_pointer_cast<image::TransmissionCurve>(std::move(transmissionCurve));
+    }
     //@}
 
 protected:
@@ -145,6 +154,7 @@ private:
     std::shared_ptr<image::ApCorrMap const> _apCorrMap;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
+    std::shared_ptr<image::TransmissionCurve> _transmissionCurve;
 };
 
 /**

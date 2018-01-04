@@ -29,6 +29,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom
 import lsst.afw.image
+import lsst.afw.table
 
 try:
     type(display)
@@ -553,6 +554,38 @@ class TransmissionCurveTestCase(lsst.utils.tests.TestCase):
             exposure2 = lsst.afw.image.ExposureF(filename)
         self.assertTrue(exposure2.getInfo().hasTransmissionCurve())
         tc2 = exposure2.getInfo().getTransmissionCurve()
+        self.assertEqual(
+            tc1.getNaturalSampling().min,
+            tc2.getNaturalSampling().min
+        )
+        self.assertEqual(
+            tc1.getNaturalSampling().max,
+            tc2.getNaturalSampling().max
+        )
+        self.assertEqual(
+            tc1.getNaturalSampling().size,
+            tc2.getNaturalSampling().size
+        )
+        self.assertEqualOrNaN(tc1.getThroughputAtBounds()[0], tc2.getThroughputAtBounds()[0])
+        self.assertEqualOrNaN(tc1.getThroughputAtBounds()[1], tc2.getThroughputAtBounds()[1])
+        self.assertFloatsEqual(
+            tc1.sampleAt(self.point, tc1.getNaturalSampling()),
+            tc2.sampleAt(self.point, tc1.getNaturalSampling())
+        )
+
+    def testExposureRecord(self):
+        """Test that we can attach a TransmissionCurve to an ExposureRecord and round-trip it through I/O."""
+        wavelengths = np.linspace(6200, 6400, 100)
+        curve = makeTestCurve(self.random, 6200, 6400, 0.0, 0.0)
+        tc1 = self.makeAndCheckConstant(curve, wavelengths, 0.0, 0.0)
+        cat1 = lsst.afw.table.ExposureCatalog(lsst.afw.table.ExposureTable.makeMinimalSchema())
+        cat1.addNew().setTransmissionCurve(tc1)
+        self.assertTrue(cat1[0].getTransmissionCurve() is not None)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            cat1.writeFits(filename)
+            cat2 = lsst.afw.table.ExposureCatalog.readFits(filename)
+        self.assertTrue(cat2[0].getTransmissionCurve() is not None)
+        tc2 = cat2[0].getTransmissionCurve()
         self.assertEqual(
             tc1.getNaturalSampling().min,
             tc2.getNaturalSampling().min
