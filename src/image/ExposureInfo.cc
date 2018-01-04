@@ -21,6 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
@@ -74,28 +76,28 @@ std::shared_ptr<ApCorrMap> ExposureInfo::_cloneApCorrMap(std::shared_ptr<ApCorrM
     return std::shared_ptr<ApCorrMap>();
 }
 
-ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> const& wcs,
-                           std::shared_ptr<detection::Psf const> const& psf,
-                           std::shared_ptr<Calib const> const& calib,
-                           std::shared_ptr<cameraGeom::Detector const> const& detector,
-                           std::shared_ptr<geom::polygon::Polygon const> const& polygon, Filter const& filter,
-                           std::shared_ptr<daf::base::PropertySet> const& metadata,
-                           std::shared_ptr<CoaddInputs> const& coaddInputs,
-                           std::shared_ptr<ApCorrMap> const& apCorrMap,
-                           std::shared_ptr<image::VisitInfo const> const& visitInfo,
-                           std::shared_ptr<TransmissionCurve> const & transmissionCurve)
+ExposureInfo::ExposureInfo(std::shared_ptr<Wcs const> wcs,
+                           std::shared_ptr<detection::Psf const> psf,
+                           std::shared_ptr<Calib const> calib,
+                           std::shared_ptr<cameraGeom::Detector const> detector,
+                           std::shared_ptr<geom::polygon::Polygon const> polygon,
+                           Filter const& filter,
+                           std::shared_ptr<daf::base::PropertySet> metadata,
+                           std::shared_ptr<CoaddInputs> coaddInputs,
+                           std::shared_ptr<ApCorrMap> apCorrMap,
+                           std::shared_ptr<image::VisitInfo const> visitInfo,
+                           std::shared_ptr<TransmissionCurve> transmissionCurve)
         : _wcs(_cloneWcs(wcs)),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
-          _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
-          _detector(detector),
-          _validPolygon(polygon),
+          _calib(calib ? _cloneCalib(calib) : std::make_shared<Calib>()),
+          _detector(std::move(detector)), // n.b. move(shared_ptr) just avoids spurious refcount increment
+          _validPolygon(std::move(polygon)),
           _filter(filter),
-          _metadata(metadata ? metadata
-                             : std::shared_ptr<daf::base::PropertySet>(new daf::base::PropertyList())),
-          _coaddInputs(coaddInputs),
+          _metadata(metadata ? metadata : std::make_shared<daf::base::PropertySet>()),
+          _coaddInputs(std::move(coaddInputs)),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
-          _visitInfo(visitInfo),
-          _transmissionCurve(transmissionCurve)
+          _visitInfo(std::move(visitInfo)),
+          _transmissionCurve(std::move(transmissionCurve))
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other)

@@ -63,21 +63,32 @@ PYBIND11_PLUGIN(exposureInfo) {
     /* Member types and enums */
 
     /* Constructors */
-    cls.def(py::init<std::shared_ptr<Wcs const> const &, std::shared_ptr<detection::Psf const> const &,
-                     std::shared_ptr<Calib const> const &,
-                     std::shared_ptr<cameraGeom::Detector const> const &,
-                     std::shared_ptr<geom::polygon::Polygon const> const &, Filter const &,
-                     std::shared_ptr<daf::base::PropertySet> const &, std::shared_ptr<CoaddInputs> const &,
-                     std::shared_ptr<ApCorrMap> const &, std::shared_ptr<VisitInfo const>,
-                     std::shared_ptr<TransmissionCurve>>(),
-            "wcs"_a = std::shared_ptr<Wcs const>(), "psf"_a = std::shared_ptr<detection::Psf const>(),
-            "calib"_a = std::shared_ptr<Calib const>(),
-            "detector"_a = std::shared_ptr<cameraGeom::Detector const>(),
-            "polygon"_a = std::shared_ptr<geom::polygon::Polygon const>(), "filter"_a = Filter(),
-            "metadata"_a = std::shared_ptr<daf::base::PropertySet>(),
-            "coaddInputs"_a = std::shared_ptr<CoaddInputs>(), "apCorrMap"_a = std::shared_ptr<ApCorrMap>(),
-            "visitInfo"_a = std::shared_ptr<VisitInfo const>(),
-            "transmissionCurve"_a = nullptr);
+    cls.def(
+        py::init<
+            std::shared_ptr<Wcs const>,
+            std::shared_ptr<detection::Psf const>,
+            std::shared_ptr<Calib const>,
+            std::shared_ptr<cameraGeom::Detector const>,
+            std::shared_ptr<geom::polygon::Polygon const>,
+            Filter const &,
+            std::shared_ptr<daf::base::PropertySet>,
+            std::shared_ptr<CoaddInputs>,
+            std::shared_ptr<ApCorrMap>,
+            std::shared_ptr<VisitInfo const>,
+            std::shared_ptr<TransmissionCurve>
+        >(),
+        "wcs"_a = nullptr,
+        "psf"_a = nullptr,
+        "calib"_a = nullptr,
+        "detector"_a = nullptr,
+        "polygon"_a = nullptr,
+        "filter"_a = Filter(),
+        "metadata"_a = nullptr,
+        "coaddInputs"_a = nullptr,
+        "apCorrMap"_a = nullptr,
+        "visitInfo"_a = nullptr,
+        "transmissionCurve"_a = nullptr
+    );
     cls.def(py::init<>());
     cls.def(py::init<ExposureInfo>(), "other"_a);
     cls.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);

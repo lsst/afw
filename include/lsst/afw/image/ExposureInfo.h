@@ -209,21 +209,17 @@ public:
      *  to null, you must explicitly call setCalib or setMetadata after construction.
      */
     explicit ExposureInfo(
-            std::shared_ptr<Wcs const> const& wcs = std::shared_ptr<Wcs const>(),
-            std::shared_ptr<detection::Psf const> const& psf = std::shared_ptr<detection::Psf const>(),
-            std::shared_ptr<Calib const> const& calib = std::shared_ptr<Calib const>(),
-            std::shared_ptr<cameraGeom::Detector const> const& detector =
-                    std::shared_ptr<cameraGeom::Detector const>(),
-            std::shared_ptr<geom::polygon::Polygon const> const& polygon =
-                    std::shared_ptr<geom::polygon::Polygon const>(),
-            Filter const& filter = Filter(), std::shared_ptr<daf::base::PropertySet> const& metadata =
-                                                     std::shared_ptr<daf::base::PropertySet>(),
-            std::shared_ptr<CoaddInputs> const& coaddInputs = std::shared_ptr<CoaddInputs>(),
-            std::shared_ptr<ApCorrMap> const& apCorrMap = std::shared_ptr<ApCorrMap>(),
-            std::shared_ptr<image::VisitInfo const> const& visitInfo =
-                    std::shared_ptr<image::VisitInfo const>(),
-            std::shared_ptr<TransmissionCurve> const & transmissionCurve =
-                    std::shared_ptr<TransmissionCurve>()
+        std::shared_ptr<Wcs const> wcs = nullptr,
+        std::shared_ptr<detection::Psf const> psf = nullptr,
+        std::shared_ptr<Calib const> calib = nullptr,
+        std::shared_ptr<cameraGeom::Detector const> detector = nullptr,
+        std::shared_ptr<geom::polygon::Polygon const> polygon = nullptr,
+        Filter const& filter = Filter(),
+        std::shared_ptr<daf::base::PropertySet> metadata = nullptr,
+        std::shared_ptr<CoaddInputs> coaddInputs = nullptr,
+        std::shared_ptr<ApCorrMap> apCorrMap = nullptr,
+        std::shared_ptr<image::VisitInfo const> visitInfo = nullptr,
+        std::shared_ptr<TransmissionCurve> transmissionCurve = nullptr
     );
 
     /// Copy constructor; deep-copies all components except the metadata.
