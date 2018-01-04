@@ -213,7 +213,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         LOGL_DEBUG(_log, "ExposureFormatter write DbStorage");
 
         // Get the Wcs headers.
-        std::shared_ptr<daf::base::PropertySet> wcsProps = ip->getWcs()->getFitsMetadata(false);
+        std::shared_ptr<daf::base::PropertySet> wcsProps = ip->getWcs()->getFitsMetadata();
 
         // Get the image headers.
         std::shared_ptr<daf::base::PropertySet> dp = ip->getMetadata();
