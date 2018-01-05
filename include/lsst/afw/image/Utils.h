@@ -56,12 +56,13 @@ namespace image {
  *  @deprecated Use lsst::afw::fits::readMetadata instead.
  *
  *  @param[in]    fileName            File to read.
- *  @param[in]    hdu                 HDU to read, 0-indexed.  The special value of INT_MIN will read the
- *                                    first non-empty HDU.
+ *  @param[in]    hdu                 HDU to read, 0-indexed.  The special value of afw::fits::DEFAULT_HDU
+ *                                    will read the first non-empty HDU.
  *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
  *                                    (e.g. NAXIS).
  */
-inline std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName, int hdu = INT_MIN,
+inline std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& fileName,
+                                                             int hdu = fits::DEFAULT_HDU,
                                                              bool strip = false) {
     return afw::fits::readMetadata(fileName, hdu, strip);
 }

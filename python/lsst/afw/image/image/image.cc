@@ -119,11 +119,11 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
             "deep"_a = false, "xy0"_a = geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
                      ImageOrigin>(),
-            "fileName"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin>(),
-            "manager"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT);
     cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
                      ImageOrigin>(),
@@ -188,9 +188,9 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
             "mask"_a=std::shared_ptr<image::Mask<image::MaskPixel>>());
 
     cls.def_static("readFits", (Image<PixelT>(*)(std::string const &, int))Image<PixelT>::readFits,
-                   "filename"_a, "hdu"_a = INT_MIN);
+                   "filename"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("readFits", (Image<PixelT>(*)(fits::MemFileManager &, int))Image<PixelT>::readFits,
-                   "manager"_a, "hdu"_a = INT_MIN);
+                   "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def("sqrt", &Image<PixelT>::sqrt);
 
     /* Add-ons for Python interface only */
@@ -219,7 +219,8 @@ static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     cls.def(py::init<std::shared_ptr<Image<PixelT>>>(), "rhs"_a);
     cls.def(py::init<DecoratedImage<PixelT> const &, const bool>(), "rhs"_a, "deep"_a = false);
     cls.def(py::init<std::string const &, const int, lsst::afw::geom::Box2I const &, ImageOrigin const>(),
-            "fileName"_a, "hdu"_a = INT_MIN, "bbox"_a = lsst::afw::geom::Box2I(), "origin"_a = PARENT);
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "bbox"_a = lsst::afw::geom::Box2I(),
+            "origin"_a = PARENT);
 
     cls.def("getMetadata", &DecoratedImage<PixelT>::getMetadata);
     cls.def("setMetadata", &DecoratedImage<PixelT>::setMetadata);

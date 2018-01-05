@@ -294,10 +294,10 @@ void Fits::setHdu(int hdu, bool relative) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Incrementing HDU by %d") % hdu);
         }
     } else {
-        if (hdu != INT_MIN) {
+        if (hdu != DEFAULT_HDU) {
             fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), hdu + 1, 0, &status);
         }
-        if (hdu == INT_MIN && getHdu() == 0 && getImageDim() == 0) {
+        if (hdu == DEFAULT_HDU && getHdu() == 0 && getImageDim() == 0) {
             // want a silent failure here
             int tmpStatus = status;
             fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), 1, 0, &tmpStatus);

@@ -67,10 +67,10 @@ void declarePersistableFacade(pybind11::module &module, std::string const &suffi
             module, ("PersistableFacade" + suffix).c_str());
     cls.def_static("readFits",
                    (std::shared_ptr<T>(*)(std::string const &, int)) & PersistableFacade<T>::readFits,
-                   "fileName"_a, "hdu"_a = INT_MIN);
+                   "fileName"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("readFits",
                    (std::shared_ptr<T>(*)(fits::MemFileManager &, int)) & PersistableFacade<T>::readFits,
-                   "manager"_a, "hdu"_a = INT_MIN);
+                   "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
 }
 
 /**
@@ -88,11 +88,11 @@ template <typename Class, typename PyClass>
 void addPersistableMethods(PyClass &cls) {
     cls.def_static("readFits",
                    (std::shared_ptr<Class>(*)(std::string const &, int)) & PersistableFacade<Class>::readFits,
-                   "fileName"_a, "hdu"_a = INT_MIN);
+                   "fileName"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static(
             "readFits",
             (std::shared_ptr<Class>(*)(fits::MemFileManager &, int)) & PersistableFacade<Class>::readFits,
-            "manager"_a, "hdu"_a = INT_MIN);
+            "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def("writeFits", (void (Class::*)(std::string const &, std::string const &) const) & Class::writeFits,
             "fileName"_a, "mode"_a = "w");
     cls.def("writeFits",

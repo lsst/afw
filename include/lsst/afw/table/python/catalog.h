@@ -140,9 +140,9 @@ PyCatalog<Record> declareCatalog(pybind11::module &mod, std::string const &name,
 
     /* Static Methods */
     cls.def_static("readFits", (Catalog(*)(std::string const &, int, int)) & Catalog::readFits, "filename"_a,
-                   "hdu"_a = INT_MIN, "flags"_a = 0);
+                   "hdu"_a = fits::DEFAULT_HDU, "flags"_a = 0);
     cls.def_static("readFits", (Catalog(*)(fits::MemFileManager &, int, int)) & Catalog::readFits,
-                   "manager"_a, "hdu"_a = INT_MIN, "flags"_a = 0);
+                   "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "flags"_a = 0);
     // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
 
     /* Methods */

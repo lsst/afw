@@ -68,11 +68,11 @@ static void declareMask(py::module &mod, std::string const &suffix) {
             "deep"_a = false, "xy0"_a = geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin, bool>(),
-            "fileName"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
                      geom::Box2I const &, ImageOrigin, bool>(),
-            "manager"_a, "hdu"_a = INT_MIN, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, geom::Box2I const &,
                      ImageOrigin, bool>(),
@@ -124,9 +124,9 @@ static void declareMask(py::module &mod, std::string const &suffix) {
                 &Mask<MaskPixelT>::writeFits,
             "fits"_a, "options"_a, "header"_a=std::shared_ptr<daf::base::PropertyList>());
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(std::string const &, int))Mask<MaskPixelT>::readFits,
-                   "filename"_a, "hdu"_a = INT_MIN);
+                   "filename"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
-                   "manager"_a, "hdu"_a = INT_MIN);
+                   "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("interpret", Mask<MaskPixelT>::interpret);
     cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
     cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);

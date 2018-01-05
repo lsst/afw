@@ -24,6 +24,7 @@
 #define AFW_TABLE_Exposure_h_INCLUDED
 
 #include "lsst/afw/geom/Box.h"
+#include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/SortedCatalog.h"
@@ -326,11 +327,13 @@ public:
      *
      *  @param[in] filename    Name of the file to read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
-     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
+     *                         The default value of afw::fits::DEFAULT_HDU is interpreted as
+     *                         "the first HDU with NAXIS != 0".
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static ExposureCatalogT readFits(std::string const& filename, int hdu = INT_MIN, int flags = 0) {
+    static ExposureCatalogT readFits(std::string const& filename, int hdu = fits::DEFAULT_HDU,
+                                     int flags = 0) {
         return io::FitsReader::apply<ExposureCatalogT>(filename, hdu, flags);
     }
 
@@ -339,11 +342,13 @@ public:
      *
      *  @param[in] manager     Object that manages the memory to be read.
      *  @param[in] hdu         Number of the "header-data unit" to read (where 0 is the Primary HDU).
-     *                         The default value of INT_MIN is interpreted as "the first HDU with NAXIS != 0".
+     *                         The default value of afw::fits::DEFAULT_HDU is interpreted as
+     *                         "the first HDU with NAXIS != 0".
      *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
      *                         the catalog.  See e.g. SourceFitsFlags.
      */
-    static ExposureCatalogT readFits(fits::MemFileManager& manager, int hdu = INT_MIN, int flags = 0) {
+    static ExposureCatalogT readFits(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
+                                     int flags = 0) {
         return io::FitsReader::apply<ExposureCatalogT>(manager, hdu, flags);
     }
 

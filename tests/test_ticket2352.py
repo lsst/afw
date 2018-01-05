@@ -31,6 +31,8 @@ import unittest
 import lsst.afw.image as afwImage
 import lsst.utils.tests
 
+from lsst.afw.fits import DEFAULT_HDU
+
 testPath = os.path.abspath(os.path.dirname(__file__))
 DATA = os.path.join(testPath, "data", "ticket2352.fits")
 
@@ -55,7 +57,7 @@ class ReadMefTest(unittest.TestCase):
 
     def checkExtNum(self, hdu, extNum):
         if hdu is None:
-            hdu = -(1 << 31)            # == INT_MIN
+            hdu = DEFAULT_HDU
         header = afwImage.readMetadata(DATA, hdu)
         self.assertEqual(header.get("EXT_NUM"), extNum)
 
