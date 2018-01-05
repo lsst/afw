@@ -657,7 +657,7 @@ public:
                 // Compare the current y, x pixel with the comparitor functor generating a true
                 // or false value. Add this value to the run counter. If only true values will
                 // contribute to the length
-                auto compareValue = comparator((*arrIter)[x]);
+                bool compareValue = comparator((*arrIter)[x]);
                 runCounter += compareValue;
                 // if the compareValue is false, and we have a non-zero run length, it means there
                 // was a run of pixels to be turned into a Span that has now ended. Count backward
