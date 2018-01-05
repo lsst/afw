@@ -171,7 +171,7 @@ public:
     /**
      * Return the WCS as FITS WCS metadata
      *
-     * @param[in] precise  Fail if the WCS WCS cannot be represented to sufficient precision as a FITS WCS?
+     * @param[in] precise  Fail if the WCS cannot be represented to sufficient precision as a FITS WCS?
      *      If False then return an approximation. For now that approximation is pure TAN
      *      but as of DM-13170 it will be a fit TAN-SIP.
      *
