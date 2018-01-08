@@ -90,10 +90,14 @@ SpherePoint::SpherePoint(Point3D const& vector) {
     double const y = vector.getY() / norm;
     double const z = vector.getZ() / norm;
 
-    // Need to convert to Angle, Angle::wrap, and convert back to radians
-    //     to handle _longitude = -1e-16 without code duplication
-    _longitude = (atan2(y, x) * radians).wrap().asRadians();
     _latitude = asin(z);
+    if (!atPole()) {
+        // Need to convert to Angle, Angle::wrap, and convert back to radians
+        //     to handle _longitude = -1e-16 without code duplication
+        _longitude = (atan2(y, x) * radians).wrap().asRadians();
+    } else {
+        _longitude = 0;
+    }
 }
 
 SpherePoint::SpherePoint(SpherePoint const& other) noexcept = default;
@@ -124,22 +128,12 @@ bool SpherePoint::isFinite() const noexcept { return isfinite(_longitude) && isf
 bool SpherePoint::operator==(SpherePoint const& other) const noexcept {
     // Deliberate override of Style Guide 5-12
     // Approximate FP comparison would make object equality intransitive
-    if (atPole()) {
-        return _latitude == other._latitude;
-    } else {
-        return _longitude == other._longitude && _latitude == other._latitude;
-    }
+    return _longitude == other._longitude && _latitude == other._latitude;
 }
 
 bool SpherePoint::operator!=(SpherePoint const& other) const noexcept { return !(*this == other); }
 
 Angle SpherePoint::bearingTo(SpherePoint const& other) const {
-    if (atPole()) {
-        stringstream buffer;
-        buffer << "Cannot calculate offset from pole " << *this << ".";
-        throw pexExcept::DomainError(buffer.str());
-    }
-
     Angle const deltaLon = other.getLongitude() - this->getLongitude();
 
     double const sinDelta1 = sin(getLatitude().asRadians());
@@ -167,16 +161,6 @@ SpherePoint SpherePoint::rotated(SpherePoint const& axis, Angle const& amount) c
 
 SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const {
     double const phi = bearing.asRadians();
-    if (atPole()) {
-        stringstream buffer;
-        buffer << "Cannot define offset direction from pole " << *this << ".";
-        throw pexExcept::DomainError(buffer.str());
-    }
-    if (amount < 0.0) {
-        stringstream buffer;
-        buffer << "Negative offset of " << amount.asDegrees() << " degrees is not allowed.";
-        throw pexExcept::InvalidParameterError(buffer.str());
-    }
 
     // let v = vector in the direction bearing points (tangent to surface of sphere)
     // To do the rotation, use rotate() method.

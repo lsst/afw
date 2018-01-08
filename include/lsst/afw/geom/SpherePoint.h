@@ -62,7 +62,8 @@ public:
     /**
      * Construct a SpherePoint from a longitude and latitude.
      *
-     * @param longitude The longitude of the point.
+     * @param longitude The longitude of the point. `+/-inf` is treated as `nan`
+     *                  (because longitude is wrapped to a standard range and infinity cannot be wrapped)
      * @param latitude The latitude of the point. Must be in the
      *                 interval [-&pi;/2, &pi;/2] radians.
      *
@@ -76,7 +77,8 @@ public:
     /**
      * Construct a SpherePoint from double longitude and latitude.
      *
-     * @param longitude The longitude of the point.
+     * @param longitude The longitude of the point. `+/-inf` is treated as `nan`
+     *                  (because longitude is wrapped to a standard range and infinity cannot be wrapped)
      * @param latitude The latitude of the point. Must be in the
      *                 interval [-&pi;/2, &pi;/2] radians.
      * @param units The units of longitude and latitude
@@ -99,6 +101,9 @@ public:
      *         Thrown if `vector` is the zero vector.
      *
      * @exceptsafe Provides strong exception guarantee.
+     *
+     * @note If the SpherePoint is at a pole then longitude is set to 0.
+     * That provides predictable behavior for @ref bearingTo and @ref offset.
      */
     explicit SpherePoint(Point3D const& vector);
 
@@ -147,11 +152,6 @@ public:
 
     /**
      * The longitude of this point.
-     *
-     * If this point is at a coordinate pole, the longitude is undefined, and
-     * this method may return any value. If the SpherePoint implementation
-     * allows multiple values of longitude from a pole, they shall all be
-     * treated as valid representations of the same point.
      *
      * @returns the longitude, in the interval [0, 2&pi;) radians.
      *
@@ -202,10 +202,8 @@ public:
      * @exceptsafe Shall not throw exceptions.
      */
     bool atPole() const noexcept {
-        // Unit tests indicate we don't need to worry about epsilon-errors
-        // Objects constructed from lat=90*degrees, <0,0,1>, etc. all have
-        // atPole() = true. More complex operations like bearingTo have also
-        // been tested near the poles with no ill effects
+        // Unit tests indicate we don't need to worry about epsilon-errors, in that
+        // Objects constructed from lat=90*degrees, <0,0,1>, etc. all have atPole() = true.
         return fabs(_latitude) >= HALFPI;
     }
 
@@ -225,17 +223,18 @@ public:
      */
 
     /**
-     * `true` if two points represent the same position.
-     *
-     * Points are considered equal if and only if they represent the same
-     * location, regardless of how they were constructed. In particular,
-     * representations of the north or south pole with different longitudes
-     * are considered equal.
+     * `true` if two points have the same longitude and latitude.
      *
      * @param other the point to test for equality
-     * @returns true if this point matches `other` exactly, false otherwise
+     * @returns true if this point has exactly the same values of getLongitude() and getLatitude()
+     * as `other`, false otherwise
      *
      * @exceptsafe Shall not throw exceptions.
+     * 
+     * @note Two points at the same pole will compare unequal if they have different longitudes,
+     *      despite representing the same point on the unit sphere.
+     *      This is important because the behavior of @ref offset and @ref bearingTo
+     *      depend on longitude, even at the pole.
      *
      * @warning Points whose @ref getLongitude(), @ref getLatitude(), or
      *          @ref getVector() methods return `NaN` shall not compare
@@ -254,19 +253,18 @@ public:
     bool operator!=(SpherePoint const& other) const noexcept;
 
     /**
-     * Direction from one point to another.
+     * Orientation at this point of the great circle arc to another point.
      *
-     * This method finds the shortest (great-circle) arc between two
-     * points, and characterizes its direction by the angle between
-     * it and a line of latitude passing through this point. 0 represents
-     * due east, &pi;/2 represents due north. If the points are on
-     * opposite sides of the sphere, the bearing may be any value.
+     * The orientation is measured in a plane tangent to the sphere at this point, with 0 degrees along
+     * the direction of increasing longitude and 90 degrees along the direction of increasing latitude.
+     * Thus for any point except the pole, the arc is due east at 0 degrees and due north at 90 degrees.
+     * To understand the behavior at the poles it may help to imagine the point has been shifted slightly
+     * by decreasing the absolute value of its latitude.
+     *
+     * If the points are on opposite sides of the sphere then the returned bearing may be any value.
      *
      * @param other the point to which to measure the bearing
      * @returns the direction, as defined above, in the interval [0, 2&pi;).
-     *
-     * @throws pex::exceptions::DomainError
-     *         Thrown if `this.atPole()`.
      *
      * @exceptsafe Provides strong exception guarantee.
      *
@@ -296,7 +294,8 @@ public:
      * @param axis a point defining the north pole of the rotation axis.
      * @param amount the amount of rotation, where positive values
      *               represent right-handed rotations around `axis`.
-     * @returns a new point created by rotating this point
+     * @returns a new point created by rotating this point. If the new point is at the pole
+     * then its longitude will be 0.
      *
      * @exceptsafe Shall not throw exceptions.
      */
@@ -305,20 +304,16 @@ public:
     /**
      * Return a point offset from this one along a great circle.
      *
-     * For any point `A` not at a coordinate pole, and any two angles `b`
-     * and `delta`, `A.bearingTo(A.offset(b, delta))` = `b` and
-     * `A.separationTo(A.offset(b, delta))` = `delta`.
+     * For any point `A`, any angle `bearing` and any non-negative angle `amount`,
+     * if `B` = A.offset(bearing, amount)` then `A.bearingTo(B) = amount` and `A.separationTo(B) = amount`.
+     * Negative values of `amount` are supported in the obvious manner:
+     * `A.offset(bearing, delta) = A.offset(bearing + 180*degrees, -delta)`
      *
      * @param bearing the direction in which to move this point, following
      *                the conventions described in @ref bearingTo.
-     * @param amount the distance by which to move along the great
-     *               circle defined by `bearing`
-     * @returns a new point created by shifting this point
-     *
-     * @throws pex::exceptions::DomainError
-     *         Thrown if `this.atPole()`.
-     * @throws pex::exceptions::InvalidParameterError
-     *         Thrown if `amount` is negative.
+     * @param amount the distance by which to move along the great circle defined by `bearing`
+     * @returns a new point created by rotating this point. If the new point is at the pole
+     * then its longitude will be 0.
      *
      * @exceptsafe Provides strong exception guarantee.
      */
