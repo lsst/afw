@@ -27,10 +27,13 @@
 #include <vector>
 
 #include "astshim.h"
+#include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/pex/exceptions/Exception.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst {
 namespace afw {
@@ -206,6 +209,72 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
     return os;
 };
 
+namespace {
+
+class TransformPersistenceHelper {
+public:
+    table::Schema schema;
+    table::Key<table::Array<std::uint8_t>> bytes;
+
+    static TransformPersistenceHelper const & get() {
+        static TransformPersistenceHelper instance;
+        return instance;
+    }
+
+    // No copying
+    TransformPersistenceHelper(TransformPersistenceHelper const &) = delete;
+    TransformPersistenceHelper& operator=(TransformPersistenceHelper const &) = delete;
+
+    // No moving
+    TransformPersistenceHelper(TransformPersistenceHelper&&) = delete;
+    TransformPersistenceHelper& operator=(TransformPersistenceHelper&&) = delete;
+
+private:
+    TransformPersistenceHelper() :
+        schema(),
+        bytes(
+            schema.addField<table::Array<std::uint8_t>>(
+                "bytes",
+                "a bytestring containing the output of Transform.writeString", ""
+            )
+        )
+    {
+        schema.getCitizen().markPersistent();
+    }
+
+};
+
+template <typename FromEndpoint, typename ToEndpoint>
+class TransformFactory : public table::io::PersistableFactory {
+public:
+    explicit TransformFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const {
+        auto const & keys = TransformPersistenceHelper::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        auto const & record = catalogs.front().front();
+        std::string stringRep = formatters::bytesToString(record.get(keys.bytes));
+        return Transform<FromEndpoint, ToEndpoint>::readString(stringRep);
+    }
+};
+
+} // anonymous
+
+
+
+template <class FromEndpoint, class ToEndpoint>
+void Transform<FromEndpoint, ToEndpoint>::write(OutputArchiveHandle &handle) const {
+    auto const& keys = TransformPersistenceHelper::get();
+    table::BaseCatalog cat = handle.makeCatalog(keys.schema);
+    std::shared_ptr<table::BaseRecord> record = cat.addNew();
+    record->set(keys.bytes, formatters::stringToBytes(writeString()));
+    handle.saveCatalog(cat);
+}
+
+
 #define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, NextToEndpoint) \
     template std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>>   \
     Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
@@ -213,11 +282,16 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
 
 #define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                \
     template class Transform<FromEndpoint, ToEndpoint>;                \
+    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(       \
+            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform); \
+    namespace {                                                        \
+        TransformFactory<FromEndpoint, ToEndpoint> registration ## FromEndpoint ## ToEndpoint(       \
+            Transform<FromEndpoint, ToEndpoint>::getShortClassName()   \
+        );                                                             \
+    }                                                                  \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)   \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)    \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, IcrsCoordEndpoint) \
-    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(       \
-            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, IcrsCoordEndpoint)
 
 // explicit instantiations
 INSTANTIATE_TRANSFORM(GenericEndpoint, GenericEndpoint);
