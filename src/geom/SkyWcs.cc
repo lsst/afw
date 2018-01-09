@@ -219,8 +219,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Could not represent this SkyWcs using FITS-WCS metadata");
         } else {
-            // A large FitsTol was not sufficient; get a local TAN WCS approximation
-            // to the PIXELS to TANwrite a local TAN WCS approximation
+            // An exact representation could not be written, so try to write a local TAN approximation;
             // set precise true to avoid an infinite loop, should something go wrong
             auto tanWcs = getTanWcs(getPixelOrigin());
             return tanWcs->getFitsMetadata(true);
