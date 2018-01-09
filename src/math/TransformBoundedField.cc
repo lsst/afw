@@ -81,22 +81,18 @@ namespace {
 
 struct PersistenceHelper {
     table::Schema schema;
-    table::PointKey<int> bboxMin;
-    table::PointKey<int> bboxMax;
+    table::Box2IKey bbox;
     // store the FrameSet as string encoded as a variable-length vector of bytes
     table::Key<table::Array<std::uint8_t>> frameSet;
 
     PersistenceHelper()
             : schema(),
-              bboxMin(table::PointKey<int>::addFields(schema, "bbox_min", "lower-left corner of bounding box",
-                                                      "pixel")),
-              bboxMax(table::PointKey<int>::addFields(schema, "bbox_max",
-                                                      "upper-right corner of bounding box", "pixel")),
+              bbox(table::Box2IKey::addFields(schema, "bbox", "bounding box", "pixel")),
               frameSet(schema.addField<table::Array<std::uint8_t>>(
                       "frameSet", "FrameSet contained in the Transform", "", 0)) {}
 
     PersistenceHelper(table::Schema const& s)
-            : schema(s), bboxMin(s["bbox_min"]), bboxMax(s["bbox_max"]), frameSet(s["frameSet"]) {}
+            : schema(s), bbox(s["bbox"]), frameSet(s["frameSet"]) {}
 };
 
 class TransformBoundedFieldFactory : public table::io::PersistableFactory {
@@ -110,8 +106,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const& record = catalogs.front().front();
         PersistenceHelper const keys(record.getSchema());
-        // NOTE: needed invert=false in case min=-1, max=0 (empty bbox). See RFC-324 and DM-10200
-        geom::Box2I bbox(record.get(keys.bboxMin), record.get(keys.bboxMax), false);
+        auto bbox = record.get(keys.bbox);
         auto frameSetStr = formatters::bytesToString(record.get(keys.frameSet));
         auto transform =
                 geom::Transform<geom::Point2Endpoint, geom::GenericEndpoint>::readString(frameSetStr);
@@ -135,8 +130,7 @@ void TransformBoundedField::write(OutputArchiveHandle& handle) const {
     PersistenceHelper const keys;
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = catalog.addNew();
-    record->set(keys.bboxMin, getBBox().getMin());
-    record->set(keys.bboxMax, getBBox().getMax());
+    record->set(keys.bbox, getBBox());
     record->set(keys.frameSet, formatters::stringToBytes(getTransform().writeString()));
     handle.saveCatalog(catalog);
 }
