@@ -1378,6 +1378,10 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits &fitsfile, bool
             auto primaryHduMetadata = std::make_shared<daf::base::PropertyList>();
             fitsfile.readMetadata(*primaryHduMetadata, strip);
             metadata = combineMetadata(primaryHduMetadata, metadata);
+        } else {
+            // Purge invalid values
+            auto const emptyMetadata = std::make_shared<lsst::daf::base::PropertyList>();
+            metadata = combineMetadata(metadata, emptyMetadata);
         }
     }
     return metadata;
