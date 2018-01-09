@@ -22,6 +22,7 @@
  */
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/BaseRecord.h"
 
@@ -52,6 +53,30 @@ void PointKey<T>::set(BaseRecord &record, geom::Point<T, 2> const &value) const 
 
 template class PointKey<int>;
 template class PointKey<double>;
+
+//============ BoxKey =====================================================================================
+
+template <typename Box>
+BoxKey<Box> BoxKey<Box>::addFields(Schema & schema, std::string const & name, std::string const & doc,
+                                   std::string const & unit) {
+    auto minKey = PointKey<Element>::addFields(schema, schema.join(name, "min"), doc + " (minimum)", unit);
+    auto maxKey = PointKey<Element>::addFields(schema, schema.join(name, "max"), doc + " (maximum)", unit);
+    return BoxKey<Box>(minKey, maxKey);
+}
+
+template <typename Box>
+Box BoxKey<Box>::get(BaseRecord const & record) const {
+    return Box(record.get(_min), record.get(_max), /*invert=*/false);
+}
+
+template <typename Box>
+void BoxKey<Box>::set(BaseRecord & record, Box const & value) const {
+    _min.set(record, value.getMin());
+    _max.set(record, value.getMax());
+}
+
+template class BoxKey<geom::Box2I>;
+template class BoxKey<geom::Box2D>;
 
 //============ CoordKey =====================================================================================
 
