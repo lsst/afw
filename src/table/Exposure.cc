@@ -312,12 +312,11 @@ static ExposureFitsReader const exposureFitsReader;
 //-----------------------------------------------------------------------------------------------------------
 
 geom::Box2I ExposureRecord::getBBox() const {
-    return geom::Box2I(get(ExposureTable::getBBoxMinKey()), get(ExposureTable::getBBoxMaxKey()));
+    return geom::Box2I(get(ExposureTable::getBBoxKey()));
 }
 
 void ExposureRecord::setBBox(geom::Box2I const &bbox) {
-    set(ExposureTable::getBBoxMinKey(), bbox.getMin());
-    set(ExposureTable::getBBoxMaxKey(), bbox.getMax());
+    set(ExposureTable::getBBoxKey(), bbox);
 }
 
 bool ExposureRecord::contains(Coord const &coord, bool includeValidPolygon) const {
@@ -380,8 +379,7 @@ ExposureTable::ExposureTable(ExposureTable const &other) : BaseTable(other) {}
 
 ExposureTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");
-    bboxMin = PointKey<int>::addFields(schema, "bbox_min", "bbox minimum point", "pixel");
-    bboxMax = PointKey<int>::addFields(schema, "bbox_max", "bbox maximum point", "pixel");
+    bbox = Box2IKey::addFields(schema, "bbox", "bounding box", "pixel");
     schema.getCitizen().markPersistent();
 }
 
