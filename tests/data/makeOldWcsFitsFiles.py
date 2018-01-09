@@ -19,8 +19,6 @@ def makeAndWriteWcs():
 
 def getTanWcsMetata():
     metadata = PropertyList()
-    # the following was fit using CreateWcsWithSip from meas_astrom
-    # and is valid over this bbox: (minimum=(0, 0), maximum=(3030, 3030))
     for name, value in (
         ("RADESYS", "ICRS"),
         ("CTYPE1", "RA---TAN"),
@@ -44,6 +42,8 @@ def getTanSipWcsMetata():
     """Return metadata for a TAN-SIP WCS
 
     The WCS was fit over this range of pixel positions (0, 0) to (3030, 3030))
+
+    The fit was done using CreateWcsWithSip from meas_astrom
     """
     metadata = getTanWcsMetata()
     for name, value in (
