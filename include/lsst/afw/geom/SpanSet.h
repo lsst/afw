@@ -645,35 +645,32 @@ public:
         auto const dimMinusOne = dimensions[1] - 1;
         auto const yDim = dimensions[0];
         auto const xDim = dimensions[1];
-        // The runCounter variable will be used to keep track of how many pixels are encountered which
-        // satisfy the comparator functor in a row.
-        std::size_t runCounter = 0;
         auto arrIter = maskArray.begin();
         for (size_t y = 0; y < yDim; ++y) {
-            // Reset the run counter to zero before each new row
-            runCounter = 0;
             auto yWithOffset = y + minY;
+            bool inSpan = false;  // are we currently in a span of interest?
+            std::size_t start;  // starting x value of span we're currently in
             for (size_t x = 0; x < xDim; ++x) {
-                // Compare the current y, x pixel with the comparitor functor generating a true
-                // or false value. Add this value to the run counter. If only true values will
-                // contribute to the length
-                auto compareValue = comparator((*arrIter)[x]);
-                runCounter += compareValue;
-                // if the compareValue is false, and we have a non-zero run length, it means there
-                // was a run of pixels to be turned into a Span that has now ended. Count backward
-                // from the current x to get the start of the run, and end at one before the current
-                // x (both adjusted for the x0 of the masked image)
-                if (!compareValue && runCounter) {
-                    tempVec.push_back(Span(yWithOffset, x - runCounter + minX, x - 1 + minX));
-                    runCounter = 0;
+                bool compareValue = comparator((*arrIter)[x]);
+                if (inSpan) {
+                    // If we were in a span but now the condition isn't satisfied, it means the Span stops
+                    // at the previous pixel.
+                    if (!compareValue) {
+                        tempVec.push_back(Span(yWithOffset, start + minX, x - 1 + minX));
+                        inSpan = false;
+                    }
+                } else if (compareValue) {
+                    // If we weren't in a span but now the condition is satisfied, we start a new span.
+                    inSpan = true;
+                    start = x;
                 }
             }
-            // Since the x loop is over, if runCounter is not zero, this means the Span was not
+            // Since the x loop is over, if we're still in a span, this means the Span was not
             // closed out and added to the vector. The last pixel should be included in the Span
             // and the Span should be closed and added to the vector of spans.
-            if (runCounter) {
+            if (inSpan) {
                 tempVec.push_back(
-                        Span(yWithOffset, dimMinusOne - (runCounter - 1) + minX, dimMinusOne + minX));
+                        Span(yWithOffset, start + minX, dimMinusOne + minX));
             }
             ++arrIter;
         }

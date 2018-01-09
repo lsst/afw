@@ -349,6 +349,31 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         for yCoord, span in enumerate(spanSetFromMask):
             self.assertEqual(span, afwGeom.Span(yCoord, 1, 5))
 
+    def testFromMask(self):
+        xy0 = afwGeom.Point2I(12345, 67890)  # xy0 for image
+        dims = afwGeom.Extent2I(123, 45)  # Dimensions of image
+        box = afwGeom.Box2I(xy0, dims)  # Bounding box of image
+        value = 32
+        other = 16
+        assert value & other == 0  # Setting 'other' unsets 'value'
+        point = afwGeom.Point2I(3 + xy0.getX(), 3 + xy0.getY())  # Point in the image
+
+        mask = afwImage.Mask(box)
+        mask.set(value)
+
+        # We can create a SpanSet from bit planes
+        spans = afwGeom.SpanSet.fromMask(mask, value)
+        self.assertEqual(spans.getArea(), box.getArea())
+        self.assertEqual(spans.getBBox(), box)
+        self.assertTrue(point in spans)
+
+        # Pixels not matching the desired bit plane are ignored as they should be
+        mask.set(point.getX() - xy0.getX(), point.getY() - xy0.getY(), other)  # unset one pixel
+        spans = afwGeom.SpanSet.fromMask(mask, value)
+        self.assertEqual(spans.getArea(), box.getArea() - 1)
+        self.assertEqual(spans.getBBox(), box)
+        self.assertFalse(point in spans)
+
     def testEquality(self):
         firstSpanSet, secondSpanSet = self.makeOverlapSpanSets()
         secondSpanSetShift = secondSpanSet.shiftedBy(0, 2)
