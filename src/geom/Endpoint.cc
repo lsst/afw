@@ -24,6 +24,7 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <typeinfo>
 #include <vector>
 
 #include "astshim.h"
@@ -57,6 +58,11 @@ BaseEndpoint<Point, Array>::BaseEndpoint(int nAxes) : _nAxes(nAxes) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "nAxes = " + std::to_string(nAxes) + "; must be > 0");
     }
+}
+
+template <typename Point, typename Array>
+bool BaseEndpoint<Point, Array>::operator==(BaseEndpoint const & other) const noexcept {
+    return this->getNAxes() == other.getNAxes() && typeid(*this) == typeid(other);
 }
 
 template <typename Point, typename Array>

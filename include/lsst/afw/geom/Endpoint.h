@@ -84,6 +84,33 @@ public:
     virtual int getNPoints(Array const &arr) const = 0;
 
     /**
+     * Determine whether two endpoints represent the same conversion.
+     *
+     * @param other the endpoint to compare
+     * @returns `true` iff this object and `other` are of exactly the same class
+     *         and all visible properties are identical. This implementation
+     *         requires that the objects have the same number of axes.
+     *
+     * @warning Two endpoints with different implementation classes will never
+     *          compare equal, even if one class is conceptually equivalent to
+     *          the other (e.g., a decorator). This may cause unexpected
+     *          behavior when mixing related concrete endpoint classes.
+     */
+    // Note: while defining operator==(BaseEndpoint<OtherPoint, OtherArray> const &)
+    // would be more Pythonic, it's very hard to get such a method template to play well with pybind11
+    virtual bool operator==(BaseEndpoint const & other) const noexcept;
+
+    /**
+     * Determine whether two endpoints do not represent the same conversion.
+     *
+     * @returns the inverse of operator==. See that operator's documentation
+     *          for important caveats.
+     */
+    bool operator!=(BaseEndpoint const & other) const noexcept {
+        return !(*this == other);
+    }
+
+    /**
      * Get raw data from a single point
      *
      * @param[in] point  data for a single point
@@ -131,7 +158,7 @@ public:
     /**
      * Adjust and check the frame as needed.
      *
-     * Do not obother to check the number of axes because that is done elsewhere.
+     * Do not bother to check the number of axes because that is done elsewhere.
      *
      * The base implementation does nothing.
      */
@@ -160,6 +187,7 @@ protected:
 private:
     int _nAxes;  /// number of axes in a point
 };
+
 
 /**
  * Base class for endpoints with Array = std::vector<Point> where Point has 2 dimensions

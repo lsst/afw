@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <type_traits>
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -90,19 +91,17 @@ void addMakeFrame(PyClass& cls) {
     });
 }
 
-// Comparison of different Endpoints useful in Python but counterproductive
-//     in C++: point2Endpoint == spherePoint should not compile instead of
-//     returning `false`. Therefore, implemented only on the Python side.
-// Two Endpoints are defined to be equal if and only if they have the same
-//     implementation type and the same number of dimensions
+// Allow Python classes to be compared across different BaseEndpoints
 template <typename SelfClass, typename OtherClass, typename PyClass>
-void addEquals(PyClass& cls) {
-    auto pyEquals = [](SelfClass const& self, OtherClass const& other) {
-        return self.getNAxes() == other.getNAxes() && typeid(self) == typeid(other);
-    };
-    cls.def("__eq__", pyEquals);
-    cls.def("__ne__",
-            [pyEquals](SelfClass const& self, OtherClass const& other) { return !pyEquals(self, other); });
+std::enable_if_t<std::is_base_of<SelfClass, OtherClass>::value> addEquals(PyClass& cls) {
+    cls.def("__eq__", &SelfClass::operator==);
+    cls.def("__ne__", &SelfClass::operator!=);
+}
+
+template <typename SelfClass, typename OtherClass, typename PyClass>
+std::enable_if_t<!std::is_base_of<SelfClass, OtherClass>::value> addEquals(PyClass& cls) {
+    cls.def("__eq__", [](SelfClass const& self, OtherClass const& other) { return false; });
+    cls.def("__ne__", [](SelfClass const& self, OtherClass const& other) { return true; });
 }
 
 template <typename SelfClass, typename PyClass>

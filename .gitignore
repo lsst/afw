@@ -137,6 +137,7 @@ tests/stacker
 tests/statistics
 tests/statisticsSpeed
 tests/testLib.py
+tests/test_endpoint
 tests/test_spherePoint
 tests/test_transform
 tests/test_trapezoidalPacker
