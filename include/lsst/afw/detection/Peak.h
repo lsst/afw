@@ -46,6 +46,12 @@ public:
     typedef afw::table::CatalogT<PeakRecord> Catalog;
     typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
 
+    virtual ~PeakRecord() = default;
+    PeakRecord(PeakRecord const&) = delete;
+    PeakRecord(PeakRecord&&) = delete;
+    PeakRecord& operator=(PeakRecord const&) = delete;
+    PeakRecord& operator=(PeakRecord&&) = delete;
+
     std::shared_ptr<PeakTable const> getTable() const {
         return std::static_pointer_cast<PeakTable const>(afw::table::BaseRecord::getTable());
     }
@@ -89,6 +95,10 @@ public:
     typedef afw::table::ColumnViewT<PeakRecord> ColumnView;
     typedef afw::table::CatalogT<Record> Catalog;
     typedef afw::table::CatalogT<Record const> ConstCatalog;
+
+    virtual ~PeakTable();
+    PeakTable& operator=(PeakTable const&) = delete;
+    PeakTable& operator=(PeakTable&&) = delete;
 
     /**
      *  Obtain a table that can be used to create records with given schema
@@ -170,6 +180,7 @@ protected:
     PeakTable(afw::table::Schema const& schema, std::shared_ptr<afw::table::IdFactory> const& idFactory);
 
     PeakTable(PeakTable const& other);
+    PeakTable(PeakTable&& other);
 
     std::shared_ptr<afw::table::BaseTable> _clone() const override;
 

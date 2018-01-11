@@ -55,6 +55,11 @@ public:
               _right(right ? TRUE_ : FALSE_),
               _up(up ? TRUE_ : FALSE_),
               _down(down ? TRUE_ : FALSE_) {}
+    ~FootprintControl() = default;
+    FootprintControl(FootprintControl const &) = default;
+    FootprintControl(FootprintControl &&) = default;
+    FootprintControl &operator=(FootprintControl const &) = default;
+    FootprintControl &operator=(FootprintControl &&) = default;
 
 #define DEFINE_ACCESSORS(NAME, UNAME)                                \
     /** Set whether Footprint should be grown in a NAME sort of   */ \
@@ -100,6 +105,12 @@ public:
 
     explicit HeavyFootprintCtrl(ModifySource modifySource = NONE)
             : _modifySource(modifySource), _imageVal(0.0), _maskVal(0), _varianceVal(0.0) {}
+
+    ~HeavyFootprintCtrl() = default;
+    HeavyFootprintCtrl(HeavyFootprintCtrl const &) = default;
+    HeavyFootprintCtrl(HeavyFootprintCtrl &&) = default;
+    HeavyFootprintCtrl &operator=(HeavyFootprintCtrl const &) = default;
+    HeavyFootprintCtrl &operator=(HeavyFootprintCtrl &&) = default;
 
     ModifySource getModifySource() const { return _modifySource; }
     void setModifySource(ModifySource modifySource) { _modifySource = modifySource; }

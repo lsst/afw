@@ -55,6 +55,12 @@ public:
         _source->setFootprint(newFootprint);
     }
 
+    ~FootprintMerge() = default;
+    FootprintMerge(FootprintMerge const &) = default;
+    FootprintMerge(FootprintMerge &&) = default;
+    FootprintMerge &operator=(FootprintMerge const &) = default;
+    FootprintMerge &operator=(FootprintMerge &&) = default;
+
     /*
      *  Does this Footprint overlap the merged Footprint.
      *
@@ -209,6 +215,12 @@ FootprintMergeList::FootprintMergeList(afw::table::Schema &sourceSchema,
         : _peakSchemaMapper(PeakTable::makeMinimalSchema()) {
     _initialize(sourceSchema, filterList);
 }
+
+FootprintMergeList::~FootprintMergeList() = default;
+FootprintMergeList::FootprintMergeList(FootprintMergeList const &) = default;
+FootprintMergeList::FootprintMergeList(FootprintMergeList &&) = default;
+FootprintMergeList &FootprintMergeList::operator=(FootprintMergeList const &) = default;
+FootprintMergeList &FootprintMergeList::operator=(FootprintMergeList &&) = default;
 
 void FootprintMergeList::_initialize(afw::table::Schema &sourceSchema,
                                      std::vector<std::string> const &filterList) {

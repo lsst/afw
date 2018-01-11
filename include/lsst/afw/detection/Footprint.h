@@ -105,7 +105,7 @@ public:
     Footprint &operator=(Footprint const &other) = default;
     Footprint &operator=(Footprint &&) = default;
 
-    virtual ~Footprint() {}
+    virtual ~Footprint() = default;
 
     /** Indicates if this object is a HeavyFootprint
      */

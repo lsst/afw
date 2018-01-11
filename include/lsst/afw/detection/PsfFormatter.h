@@ -22,7 +22,12 @@ class PsfFormatter : public lsst::daf::persistence::Formatter {
 public:
     /** Minimal destructor.
      */
-    virtual ~PsfFormatter(void);
+    virtual ~PsfFormatter();
+
+    PsfFormatter(PsfFormatter const&);
+    PsfFormatter(PsfFormatter&&);
+    PsfFormatter& operator=(PsfFormatter const&);
+    PsfFormatter& operator=(PsfFormatter&&);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,

@@ -86,7 +86,12 @@ public:
                       */
     };
 
-    virtual ~Psf() {}
+    Psf(Psf const&) = default;
+    Psf(Psf&&) = default;
+    Psf& operator=(Psf const&) = delete;
+    Psf& operator=(Psf&&) = delete;
+
+    virtual ~Psf() = default;
 
     /**
      *  Polymorphic deep-copy.

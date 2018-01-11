@@ -83,6 +83,12 @@ public:
      */
     FootprintMergeList(afw::table::Schema &sourceSchema, std::vector<std::string> const &filterList);
 
+    ~FootprintMergeList();
+    FootprintMergeList(FootprintMergeList const &);
+    FootprintMergeList(FootprintMergeList &&);
+    FootprintMergeList &operator=(FootprintMergeList const &);
+    FootprintMergeList &operator=(FootprintMergeList &&);
+
     /// Return the schema for PeakRecords in the merged footprints.
     afw::table::Schema getPeakSchema() const { return _peakTable->getSchema(); }
 

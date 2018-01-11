@@ -59,6 +59,12 @@ public:
      */
     GaussianPsf(geom::Extent2I const& dimensions, double sigma);
 
+    ~GaussianPsf();
+    GaussianPsf(GaussianPsf const&);
+    GaussianPsf(GaussianPsf&&);
+    GaussianPsf& operator=(GaussianPsf const&) = delete;
+    GaussianPsf& operator=(GaussianPsf&&) = delete;
+
     /// Polymorphic deep copy; should usually be unnecessary because Psfs are immutable.
     virtual std::shared_ptr<afw::detection::Psf> clone() const;
 

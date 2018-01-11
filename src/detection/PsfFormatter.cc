@@ -39,7 +39,12 @@ dafPersist::FormatterRegistration PsfFormatter::registration("Psf", typeid(Psf),
 PsfFormatter::PsfFormatter(std::shared_ptr<pexPolicy::Policy> policy)
         : dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-PsfFormatter::~PsfFormatter(void) {}
+PsfFormatter::PsfFormatter(PsfFormatter const&) = default;
+PsfFormatter::PsfFormatter(PsfFormatter&&) = default;
+PsfFormatter& PsfFormatter::operator=(PsfFormatter const&) = default;
+PsfFormatter& PsfFormatter::operator=(PsfFormatter&&) = default;
+
+PsfFormatter::~PsfFormatter() = default;
 
 void PsfFormatter::write(dafBase::Persistable const* persistable,
                          std::shared_ptr<dafPersist::FormatterStorage> storage,
