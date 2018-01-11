@@ -47,6 +47,9 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
     _init();
 }
 
+Detector::Detector(Detector const &) = default;
+Detector::Detector(Detector &&) = default;
+
 std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
     std::vector<geom::Point2D> fromVec = geom::Box2D(_bbox).getCorners();
     return _transformMap.transform(fromVec, _nativeSys, cameraSys);

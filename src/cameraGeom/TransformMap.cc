@@ -124,6 +124,9 @@ TransformMap::TransformMap(TransformMap const &other) = default;
 // Cannot do any move optimizations without breaking immutability
 TransformMap::TransformMap(TransformMap const &&other) : TransformMap(other) {}
 
+// All resources owned by value or by smart pointer
+TransformMap::~TransformMap() = default;
+
 geom::Point2D TransformMap::transform(geom::Point2D const &point, CameraSys const &fromSys,
                                       CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);

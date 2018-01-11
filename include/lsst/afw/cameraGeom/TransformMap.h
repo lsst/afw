@@ -101,6 +101,8 @@ public:
     TransformMap &operator=(TransformMap &&) = delete;
     ///@}
 
+    ~TransformMap();
+
     /**
      * Convert a point from one camera coordinate system to another.
      *
