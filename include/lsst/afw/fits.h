@@ -631,6 +631,27 @@ public:
     int behavior;  // bitwise OR of BehaviorFlags
 };
 
+/**
+ * Combine two sets of metadata in a FITS-appropriate fashion
+ *
+ * "COMMENT" and "HISTORY" entries:
+ * - If of type std::string then the values in `second` are appended to values in `first`
+ * - If not of type std::string then they are silently ignored
+ *
+ * All other entries:
+ * - Values in `second` override values in `first` (regardless of type)
+ * - Only scalars are copied; if a vector is found, only the last value is copied
+ *
+ * @param[in] first  The first set of metadata to combine
+ * @param[in] second  The second set of metadata to combine
+ * @returns The combined metadata. Item names have the following order:
+ * - names in `first`, omitting all names except "COMMENT" and "HISTORY" that appear in `second`
+ * - names in `second`, omitting "COMMENT" and "HISTORY" if valid versions appear in `first`
+ */
+std::shared_ptr<daf::base::PropertyList> combineMetadata(
+        std::shared_ptr<const daf::base::PropertyList> first,
+        std::shared_ptr<const daf::base::PropertyList> second);
+
 /** Read FITS header
  *
  * Includes support for the INHERIT convention: if 'INHERIT = T' is in the header, the
