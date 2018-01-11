@@ -43,7 +43,12 @@ namespace formatters {
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class ExposureFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~ExposureFormatter(void);
+    virtual ~ExposureFormatter();
+
+    ExposureFormatter(ExposureFormatter const&) = default;
+    ExposureFormatter(ExposureFormatter&&) = default;
+    ExposureFormatter& operator=(ExposureFormatter const&) = default;
+    ExposureFormatter& operator=(ExposureFormatter&&) = default;
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,

@@ -44,7 +44,12 @@ namespace formatters {
  */
 class WcsFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~WcsFormatter(void);
+    virtual ~WcsFormatter();
+
+    WcsFormatter(WcsFormatter const&);
+    WcsFormatter(WcsFormatter&&);
+    WcsFormatter& operator=(WcsFormatter const&);
+    WcsFormatter& operator=(WcsFormatter&&);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,

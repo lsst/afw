@@ -110,7 +110,7 @@ MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImageFormat
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~MaskedImageFormatter(void) {}
+MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~MaskedImageFormatter() = default;
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(

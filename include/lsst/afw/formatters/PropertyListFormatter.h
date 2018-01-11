@@ -38,7 +38,12 @@ namespace formatters {
  */
 class PropertyListFormatter : public daf::persistence::Formatter {
 public:
-    virtual ~PropertyListFormatter() {}
+    virtual ~PropertyListFormatter() = default;
+
+    PropertyListFormatter(PropertyListFormatter const&);
+    PropertyListFormatter(PropertyListFormatter&&);
+    PropertyListFormatter& operator=(PropertyListFormatter const&);
+    PropertyListFormatter& operator=(PropertyListFormatter&&);
 
     virtual void write(daf::base::Persistable const* persistable,
                        std::shared_ptr<daf::persistence::FormatterStorage> storage,

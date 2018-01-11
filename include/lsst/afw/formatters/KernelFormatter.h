@@ -46,7 +46,12 @@ class KernelFormatter : public lsst::daf::persistence::Formatter {
 public:
     /** Minimal destructor.
      */
-    virtual ~KernelFormatter(void);
+    virtual ~KernelFormatter();
+
+    KernelFormatter(KernelFormatter const&);
+    KernelFormatter(KernelFormatter&&);
+    KernelFormatter& operator=(KernelFormatter const&);
+    KernelFormatter& operator=(KernelFormatter&&);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,

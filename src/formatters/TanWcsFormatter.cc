@@ -70,7 +70,12 @@ dafPersist::FormatterRegistration TanWcsFormatter::registration("TanWcs", typeid
 
 TanWcsFormatter::TanWcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::Formatter(typeid(this)) {}
 
-TanWcsFormatter::~TanWcsFormatter(void) {}
+TanWcsFormatter::TanWcsFormatter(TanWcsFormatter const&) = default;
+TanWcsFormatter::TanWcsFormatter(TanWcsFormatter&&) = default;
+TanWcsFormatter& TanWcsFormatter::operator=(TanWcsFormatter const&) = default;
+TanWcsFormatter& TanWcsFormatter::operator=(TanWcsFormatter&&) = default;
+
+TanWcsFormatter::~TanWcsFormatter() = default;
 
 void TanWcsFormatter::write(dafBase::Persistable const* persistable,
                             std::shared_ptr<dafPersist::FormatterStorage> storage,

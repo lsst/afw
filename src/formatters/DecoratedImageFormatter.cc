@@ -104,7 +104,7 @@ DecoratedImageFormatter<ImagePixelT>::DecoratedImageFormatter(std::shared_ptr<ls
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename ImagePixelT>
-DecoratedImageFormatter<ImagePixelT>::~DecoratedImageFormatter(void) {}
+DecoratedImageFormatter<ImagePixelT>::~DecoratedImageFormatter() = default;
 
 template <typename ImagePixelT>
 void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,

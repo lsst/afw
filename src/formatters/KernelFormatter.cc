@@ -129,7 +129,12 @@ dafPersist::FormatterRegistration KernelFormatter::separableKernelRegistration("
 KernelFormatter::KernelFormatter(std::shared_ptr<pexPolicy::Policy> policy)
         : dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
-KernelFormatter::~KernelFormatter(void) {}
+KernelFormatter::KernelFormatter(KernelFormatter const&) = default;
+KernelFormatter::KernelFormatter(KernelFormatter&&) = default;
+KernelFormatter& KernelFormatter::operator=(KernelFormatter const&) = default;
+KernelFormatter& KernelFormatter::operator=(KernelFormatter&&) = default;
+
+KernelFormatter::~KernelFormatter() = default;
 
 void KernelFormatter::write(dafBase::Persistable const* persistable,
                             std::shared_ptr<dafPersist::FormatterStorage> storage,

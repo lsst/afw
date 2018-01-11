@@ -70,7 +70,12 @@ dafPersist::FormatterRegistration WcsFormatter::registration("Wcs", typeid(image
 
 WcsFormatter::WcsFormatter(std::shared_ptr<pexPolicy::Policy>) : dafPersist::Formatter(typeid(this)) {}
 
-WcsFormatter::~WcsFormatter(void) {}
+WcsFormatter::WcsFormatter(WcsFormatter const&) = default;
+WcsFormatter::WcsFormatter(WcsFormatter&&) = default;
+WcsFormatter& WcsFormatter::operator=(WcsFormatter const&) = default;
+WcsFormatter& WcsFormatter::operator=(WcsFormatter&&) = default;
+
+WcsFormatter::~WcsFormatter() = default;
 
 void WcsFormatter::write(dafBase::Persistable const* persistable,
                          std::shared_ptr<dafPersist::FormatterStorage> storage,

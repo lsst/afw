@@ -110,7 +110,7 @@ ImageFormatter<ImagePixelT>::ImageFormatter(std::shared_ptr<lsst::pex::policy::P
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename ImagePixelT>
-ImageFormatter<ImagePixelT>::~ImageFormatter(void) {}
+ImageFormatter<ImagePixelT>::~ImageFormatter() = default;
 
 namespace {
 namespace dafBase = lsst::daf::base;

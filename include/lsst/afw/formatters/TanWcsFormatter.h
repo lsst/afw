@@ -47,7 +47,12 @@ namespace formatters {
 
 class TanWcsFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~TanWcsFormatter(void);
+    virtual ~TanWcsFormatter();
+
+    TanWcsFormatter(TanWcsFormatter const&);
+    TanWcsFormatter(TanWcsFormatter&&);
+    TanWcsFormatter& operator=(TanWcsFormatter const&);
+    TanWcsFormatter& operator=(TanWcsFormatter&&);
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
