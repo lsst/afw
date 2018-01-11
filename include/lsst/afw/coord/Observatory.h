@@ -60,6 +60,12 @@ public:
      */
     Observatory(std::string const& longitude, std::string const& latitude, double const elevation);
 
+    ~Observatory();
+    Observatory(Observatory const&);
+    Observatory(Observatory&&);
+    Observatory& operator=(Observatory const&);
+    Observatory& operator=(Observatory&&);
+
     /// set telescope longitude
     void setLongitude(lsst::afw::geom::Angle const longitude);
     /// set telescope latitude (positive values are E of Greenwich)

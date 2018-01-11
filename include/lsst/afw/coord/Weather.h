@@ -47,7 +47,7 @@ public:
      */
     explicit Weather(double airTemperature, double airPressure, double humidity);
 
-    ~Weather(){};
+    ~Weather() = default;
 
     Weather(Weather const &) = default;
     Weather(Weather &&) = default;

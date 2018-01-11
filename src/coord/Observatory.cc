@@ -44,6 +44,13 @@ Observatory::Observatory(std::string const& longitude, std::string const& latitu
           _longitude(dmsStringToAngle(longitude)),
           _elevation(elevation) {}
 
+Observatory::~Observatory() = default;
+
+Observatory::Observatory(Observatory const&) = default;
+Observatory::Observatory(Observatory&&) = default;
+Observatory& Observatory::operator=(Observatory const&) = default;
+Observatory& Observatory::operator=(Observatory&&) = default;
+
 afw::geom::Angle Observatory::getLongitude() const { return _longitude; }
 
 afw::geom::Angle Observatory::getLatitude() const { return _latitude; }

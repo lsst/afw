@@ -320,7 +320,13 @@ Coord::Coord(std::string const ra, std::string const dec, double const epoch)
     _verifyValues();
 }
 
+// Don't call _verifyValues() method ... it'll fail
 Coord::Coord() : _longitude(geom::Angle(NaN)), _latitude(geom::Angle(NaN)), _epoch(NaN) {}
+
+Coord::Coord(Coord const &) = default;
+Coord::Coord(Coord &&) = default;
+Coord &Coord::operator=(Coord const &) = default;
+Coord &Coord::operator=(Coord &&) = default;
 
 void Coord::_verifyValues() const {
     if (_latitude.asRadians() < -geom::HALFPI || _latitude.asRadians() > geom::HALFPI) {
