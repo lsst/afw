@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["BoxGrid", "makeFitsHeaderFromMetadata", "makeSipIwcToPixel", "makeSipPixelToIwc"]
+__all__ = ["BoxGrid", "makeSipIwcToPixel", "makeSipPixelToIwc"]
 
 from builtins import range
 from builtins import object
@@ -133,32 +133,6 @@ class FrameSetInfo(object):
         self.currInd = frameSet.current
         self.isBaseSkyFrame = frameSet.getFrame(self.baseInd).className == "SkyFrame"
         self.isCurrSkyFrame = frameSet.getFrame(self.currInd).className == "SkyFrame"
-
-
-def makeFitsHeaderFromMetadata(metadata):
-    """Make a FITS header string from metadata.
-
-    Skip COMMENT and HISTORY cards,
-    Keys with name length > 8 and overly long string values
-
-    This is intended for unit tests.
-    """
-    strList = []
-    for name in metadata.names(False):
-        if name in ("COMMENT", "HISTORY"):
-            continue
-        # if a value was seen twice we only want the last value
-        value = metadata.get(name, asArray=True)[-1]
-        if len(name) > 8:
-            continue
-        if isinstance(value, float):
-            nameValStr = "%-8s= %20.15g" % (name, value)
-        else:
-            nameValStr = "%-8s= %r" % (name, value)
-        if len(nameValStr) > 80:
-            continue
-        strList.append("%-80s" % (nameValStr,))
-    return "".join(strList)
 
 
 def makeSipPolyMapCoeffs(metadata, name):

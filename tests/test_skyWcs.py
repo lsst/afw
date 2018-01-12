@@ -20,7 +20,8 @@ from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
-from lsst.afw.geom.testUtils import makeFitsHeaderFromMetadata, makeSipIwcToPixel, makeSipPixelToIwc
+from lsst.afw.geom.testUtils import makeSipIwcToPixel, makeSipPixelToIwc
+from lsst.afw.fits import makeLimitedFitsHeader
 from lsst.afw.image import ExposureF
 
 
@@ -457,7 +458,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             cdMatrix = makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX)
             metadata = makeSimpleWcsMetadata(crpix=self.crpix, crval=crval, cdMatrix=cdMatrix,
                                              projection=projection)
-            header = makeFitsHeaderFromMetadata(metadata)
+            header = makeLimitedFitsHeader(metadata)
             astropyWcs = astropy.wcs.WCS(header)
             skyWcs = makeSkyWcs(crpix=self.crpix, crval=crval, cdMatrix=cdMatrix, projection=projection)
             # Most projections only seem to agree to within 1e-4 in the round trip test
@@ -512,7 +513,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
         skyWcs = makeSkyWcs(self.metadata, strip = False)
-        header = makeFitsHeaderFromMetadata(self.metadata)
+        header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
         bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
         self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=bbox)
@@ -840,7 +841,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
         skyWcs = makeSkyWcs(self.metadata, strip = False)
-        header = makeFitsHeaderFromMetadata(self.metadata)
+        header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
         self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=self.bbox)
 
