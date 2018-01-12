@@ -124,6 +124,8 @@ public:
      */
     SpherePoint(SpherePoint&& other) noexcept;
 
+    ~SpherePoint();
+
     /**
      * Overwrite this object with the value of another SpherePoint.
      *

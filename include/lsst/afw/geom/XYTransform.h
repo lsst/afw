@@ -52,7 +52,11 @@ public:
     typedef afw::geom::AffineTransform AffineTransform;
 
     explicit XYTransform();
-    virtual ~XYTransform() {}
+    XYTransform(XYTransform const &);
+    XYTransform(XYTransform &&);
+    XYTransform &operator=(XYTransform const &);
+    XYTransform &operator=(XYTransform &&);
+    virtual ~XYTransform() = default;
 
     /// returns a deep copy
     virtual std::shared_ptr<XYTransform> clone() const = 0;
@@ -100,6 +104,11 @@ public:
 class IdentityXYTransform : public XYTransform {
 public:
     IdentityXYTransform();
+    IdentityXYTransform(IdentityXYTransform const &);
+    IdentityXYTransform(IdentityXYTransform &&);
+    IdentityXYTransform &operator=(IdentityXYTransform const &);
+    IdentityXYTransform &operator=(IdentityXYTransform &&);
+    ~IdentityXYTransform();
 
     virtual std::shared_ptr<XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
@@ -117,6 +126,11 @@ public:
 class InvertedXYTransform : public XYTransform {
 public:
     InvertedXYTransform(std::shared_ptr<XYTransform const> base);
+    InvertedXYTransform(InvertedXYTransform const &);
+    InvertedXYTransform(InvertedXYTransform &&);
+    InvertedXYTransform &operator=(InvertedXYTransform const &);
+    InvertedXYTransform &operator=(InvertedXYTransform &&);
+    ~InvertedXYTransform();
 
     virtual std::shared_ptr<XYTransform> clone() const;
     /** Return the wrapped XYTransform */
@@ -145,6 +159,12 @@ class MultiXYTransform : public XYTransform {
 public:
     typedef std::vector<std::shared_ptr<XYTransform const>> TransformList;
     MultiXYTransform(TransformList const &transformList);
+    MultiXYTransform(MultiXYTransform const &);
+    MultiXYTransform(MultiXYTransform &&);
+    MultiXYTransform &operator=(MultiXYTransform const &);
+    MultiXYTransform &operator=(MultiXYTransform &&);
+    ~MultiXYTransform();
+
     virtual std::shared_ptr<XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
@@ -165,6 +185,11 @@ private:
 class AffineXYTransform : public XYTransform {
 public:
     AffineXYTransform(AffineTransform const &affineTransform);
+    AffineXYTransform(AffineXYTransform const &);
+    AffineXYTransform(AffineXYTransform &&);
+    AffineXYTransform &operator=(AffineXYTransform const &);
+    AffineXYTransform &operator=(AffineXYTransform &&);
+    ~AffineXYTransform();
 
     virtual std::shared_ptr<XYTransform> clone() const;
     virtual Point2D forwardTransform(Point2D const &position) const;
@@ -205,7 +230,12 @@ public:
      */
     RadialXYTransform(std::vector<double> const &coeffs
 
-                      );
+    );
+    RadialXYTransform(RadialXYTransform const &);
+    RadialXYTransform(RadialXYTransform &&);
+    RadialXYTransform &operator=(RadialXYTransform const &);
+    RadialXYTransform &operator=(RadialXYTransform &&);
+    ~RadialXYTransform();
 
     virtual std::shared_ptr<XYTransform> clone() const;
     virtual std::shared_ptr<XYTransform> invert() const;

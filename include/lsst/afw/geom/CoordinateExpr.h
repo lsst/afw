@@ -62,6 +62,12 @@ public:
     template <typename Vector>
     explicit CoordinateExpr(Eigen::MatrixBase<Vector> const& vector) : Super(vector) {}
 
+    CoordinateExpr(CoordinateExpr const&) = default;
+    CoordinateExpr(CoordinateExpr&&) = default;
+    CoordinateExpr& operator=(CoordinateExpr const&) = default;
+    CoordinateExpr& operator=(CoordinateExpr&&) = default;
+    ~CoordinateExpr() = default;
+
     /**
      *  @name Logical operators
      *

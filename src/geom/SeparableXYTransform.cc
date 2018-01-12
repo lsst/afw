@@ -34,6 +34,11 @@ namespace geom {
 SeparableXYTransform::SeparableXYTransform(Functor const& xfunctor, Functor const& yfunctor)
         : XYTransform(), _xfunctor(xfunctor.clone()), _yfunctor(yfunctor.clone()) {}
 
+SeparableXYTransform::SeparableXYTransform(SeparableXYTransform const&) = default;
+SeparableXYTransform::SeparableXYTransform(SeparableXYTransform&&) = default;
+SeparableXYTransform& SeparableXYTransform::operator=(SeparableXYTransform const&) = default;
+SeparableXYTransform& SeparableXYTransform::operator=(SeparableXYTransform&&) = default;
+
 std::shared_ptr<XYTransform> SeparableXYTransform::clone() const {
     return std::make_shared<SeparableXYTransform>(*_xfunctor, *_yfunctor);
 }

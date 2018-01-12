@@ -53,6 +53,12 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs) : XYTran
     _icoeffs = polyInvert(_coeffs);
 }
 
+RadialXYTransform::RadialXYTransform(RadialXYTransform const &) = default;
+RadialXYTransform::RadialXYTransform(RadialXYTransform &&) = default;
+RadialXYTransform &RadialXYTransform::operator=(RadialXYTransform const &) = default;
+RadialXYTransform &RadialXYTransform::operator=(RadialXYTransform &&) = default;
+RadialXYTransform::~RadialXYTransform() = default;
+
 std::shared_ptr<XYTransform> RadialXYTransform::clone() const {
     return std::make_shared<RadialXYTransform>(_coeffs);
 }

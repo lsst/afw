@@ -205,7 +205,7 @@ public:
     BaseVectorEndpoint &operator=(BaseVectorEndpoint const &) = delete;
     BaseVectorEndpoint &operator=(BaseVectorEndpoint &&) = delete;
 
-    virtual ~BaseVectorEndpoint(){};
+    virtual ~BaseVectorEndpoint() = default;
 
     virtual int getNPoints(Array const &arr) const override;
 
@@ -242,7 +242,7 @@ public:
      */
     explicit GenericEndpoint(int nAxes) : BaseEndpoint(nAxes){};
 
-    virtual ~GenericEndpoint(){};
+    virtual ~GenericEndpoint() = default;
 
     virtual int getNPoints(Array const &arr) const override { return arr.getSize<1>(); }
 
@@ -285,7 +285,7 @@ public:
      */
     explicit Point2Endpoint(int nAxes);
 
-    virtual ~Point2Endpoint(){};
+    virtual ~Point2Endpoint() = default;
 
     virtual std::vector<double> dataFromPoint(Point const &point) const override;
 
@@ -339,7 +339,7 @@ public:
      */
     explicit IcrsCoordEndpoint(int nAxes);
 
-    virtual ~IcrsCoordEndpoint(){};
+    virtual ~IcrsCoordEndpoint() = default;
 
     virtual std::vector<double> dataFromPoint(Point const &point) const override;
 

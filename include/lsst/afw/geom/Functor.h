@@ -55,7 +55,12 @@ public:
      */
     explicit Functor(std::string const& name);
 
-    virtual ~Functor() {}
+    Functor(Functor const &);
+    Functor(Functor &&);
+    Functor &operator=(Functor const &);
+    Functor &operator=(Functor &&);
+
+    virtual ~Functor() = default;
 
     virtual std::shared_ptr<Functor> clone() const = 0;
 
@@ -91,7 +96,12 @@ class LinearFunctor : public Functor {
 public:
     LinearFunctor(double slope, double intercept);
 
-    ~LinearFunctor() {}
+    LinearFunctor(LinearFunctor const &);
+    LinearFunctor(LinearFunctor &&);
+    LinearFunctor &operator=(LinearFunctor const &);
+    LinearFunctor &operator=(LinearFunctor &&);
+
+    ~LinearFunctor() = default;
 
     virtual std::shared_ptr<Functor> clone() const;
 

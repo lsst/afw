@@ -34,6 +34,11 @@ namespace geom {
 
 Functor::Functor(std::string const& name) : daf::base::Citizen(typeid(this)), _name(name) {}
 
+Functor::Functor(Functor const &) = default;
+Functor::Functor(Functor &&) = default;
+Functor &Functor::operator=(Functor const &) = default;
+Functor &Functor::operator=(Functor &&) = default;
+
 double Functor::inverse(double y, double tol, unsigned int maxiter) const {
     // Sanity checks for tol and maxiter.
     if (tol > 1 || tol <= 0) {

@@ -67,6 +67,12 @@ public:
     /// Construct an empty Span with zero width at the origin.
     Span() : _y(0), _x0(0), _x1(-1) {}
 
+    Span(Span const&) = default;
+    Span(Span&&) = default;
+    Span& operator=(Span const&) = default;
+    Span& operator=(Span&&) = default;
+    ~Span() = default;
+
     /// Return an iterator to the first pixel in the Span.
     Iterator begin() const { return Iterator(Point2I(_x0, _y)); }
 

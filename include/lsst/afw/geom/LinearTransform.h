@@ -84,6 +84,10 @@ public:
     /** Construct an LinearTransform from an Eigen::Matrix. */
     explicit LinearTransform(Matrix const& matrix) : _matrix(matrix) {}
 
+    LinearTransform(LinearTransform const&) = default;
+    LinearTransform(LinearTransform&&) = default;
+    ~LinearTransform() = default;
+
     LinearTransform operator*(LinearTransform const& other) const {
         return LinearTransform(getMatrix() * other.getMatrix());
     }
@@ -100,10 +104,8 @@ public:
         return LinearTransform(Matrix(Eigen::Rotation2D<double>(t.asRadians())));
     }
 
-    LinearTransform& operator=(LinearTransform const& other) {
-        _matrix = other._matrix;
-        return *this;
-    }
+    LinearTransform& operator=(LinearTransform const&) = default;
+    LinearTransform& operator=(LinearTransform&&) = default;
 
     LinearTransform& operator+=(LinearTransform const& other) {
         _matrix += other._matrix;

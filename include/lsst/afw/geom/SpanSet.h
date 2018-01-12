@@ -160,6 +160,11 @@ public:
     // Explicitly delete copy and move constructors
     SpanSet(SpanSet const &other) = delete;
     SpanSet(SpanSet &&other) = delete;
+    ~SpanSet() = default;
+
+    SpanSet &operator=(SpanSet const &) = default;
+    // Delegate to copy-assignment for backwards compatibility
+    SpanSet &operator=(SpanSet &&other) { return *this = other; }
 
     // Define class methods
     /** Return the number of pixels in the SpanSet

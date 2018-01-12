@@ -101,7 +101,9 @@ public:
     explicit Box2I(Box2D const& other, EdgeHandlingEnum edgeHandling = EXPAND);
 
     /// Standard copy constructor.
-    Box2I(Box2I const& other) : _minimum(other._minimum), _dimensions(other._dimensions) {}
+    Box2I(Box2I const&) = default;
+    Box2I(Box2I&&) = default;
+    ~Box2I() = default;
 
     void swap(Box2I& other) {
         _minimum.swap(other._minimum);
@@ -109,11 +111,8 @@ public:
     }
 
     /// Standard assignment operator.
-    Box2I& operator=(Box2I const& other) {
-        _minimum = other._minimum;
-        _dimensions = other._dimensions;
-        return *this;
-    }
+    Box2I& operator=(Box2I const&) = default;
+    Box2I& operator=(Box2I&&) = default;
 
     /**
      *  @name Min/Max Accessors
@@ -316,7 +315,10 @@ public:
     explicit Box2D(Box2I const& other);
 
     /// Standard copy constructor.
-    Box2D(Box2D const& other) : _minimum(other._minimum), _maximum(other._maximum) {}
+    Box2D(Box2D const&) = default;
+    Box2D(Box2D&&) = default;
+
+    ~Box2D() = default;
 
     void swap(Box2D& other) {
         _minimum.swap(other._minimum);
@@ -324,11 +326,8 @@ public:
     }
 
     /// Standard assignment operator.
-    Box2D& operator=(Box2D const& other) {
-        _minimum = other._minimum;
-        _maximum = other._maximum;
-        return *this;
-    }
+    Box2D& operator=(Box2D const&) = default;
+    Box2D& operator=(Box2D&&) = default;
 
     /**
      *  @name Min/Max Accessors
