@@ -136,18 +136,27 @@ class FrameSetInfo(object):
 
 
 def makeFitsHeaderFromMetadata(metadata):
-    """Make a FITS header string from metadata
+    """Make a FITS header string from metadata.
+
+    Skip COMMENT and HISTORY cards,
+    Keys with name length > 8 and overly long string values
+
+    This is intended for unit tests.
     """
     strList = []
     for name in metadata.names(False):
-        value = metadata.get(name)
+        if name in ("COMMENT", "HISTORY"):
+            continue
+        # if a value was seen twice we only want the last value
+        value = metadata.get(name, asArray=True)[-1]
         if len(name) > 8:
-            raise RuntimeError("Name %r too long" % (name,))
+            continue
         if isinstance(value, float):
-            # keep astropy.wcs from warning about invalid format for floats
-            nameValStr = "%-8s= %0.25f" % (name, value)
+            nameValStr = "%-8s= %20.15g" % (name, value)
         else:
             nameValStr = "%-8s= %r" % (name, value)
+        if len(nameValStr) > 80:
+            continue
         strList.append("%-80s" % (nameValStr,))
     return "".join(strList)
 
