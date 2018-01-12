@@ -32,6 +32,7 @@
 
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/wcsUtils.h"
@@ -96,7 +97,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
         metadata.remove("RADECSYS");
     }
 
-    std::string hdr = formatters::formatFitsProperties(metadata, excludeNames);
+    std::string hdr = fits::makeLimitedFitsHeader(metadata, excludeNames);
     ast::StringStream stream(hdr);
     ast::FitsChan channel(stream, "Encoding=FITS-WCS, IWC=1, SipReplace=0");
     auto const initialNames = strip ? setFromVector(channel.getAllCardNames()) : std::set<std::string>();

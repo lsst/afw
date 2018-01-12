@@ -145,24 +145,6 @@ int extractVisitId(std::shared_ptr<lsst::daf::base::PropertySet const> const& pr
 int extractCcdId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 int extractAmpId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
-/**
- * Format a PropertySet into a single FITS header string
- * 
- * This function is designed to format data for creating a WCS. As such, it is quite limited:
- * - It skips entries whose name is longer than 8 characters, since none are used for FITS-WCS
- * - It skips string entries if the fully formatted string is longer than 80 characters
- * - It skips entries with types it cannot handle (e.g. long, long long)
- * - For entries that have array data, it only writes the final value, since that is the value
- *     that should be used by code that reads FITS headers.
- * - It makes no attempt to insure that required entries (such as SIMPLE) are present.
- *
- * @param[in] prop  Properties to format
- * @param[in] excludeNames  Names of properties to exclude from the returned string
- * @return a FITS header string (exactly 80 characters per "card", no line terminators)
- */
-std::string formatFitsProperties(lsst::daf::base::PropertySet const& prop,
-                                 std::set<std::string> const& excludeNames = {});
-
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
 
 /**
