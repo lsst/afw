@@ -72,8 +72,6 @@ std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
         out.reserve(80);
         if (name.size() > 8) {
             continue;  // The name is too long for a FITS keyword; skip this item
-        } else if (prop.isArray(name)) {
-            continue;  // Data is an array; skip this item
         }
         out = (boost::format("%-8s= ") % name).str();
 
