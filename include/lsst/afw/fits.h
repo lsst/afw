@@ -80,6 +80,24 @@ inline std::string makeErrorMessage(void* fptr, int status, boost::format const&
 }
 
 /**
+ * Format a PropertySet into an FITS header string in a simplistic fashion.
+ * 
+ * This function is designed to format data for creating a WCS. As such, it is quite limited:
+ * - It skips entries whose name is longer than 8 characters, since none are used for FITS-WCS
+ * - It skips string entries if the fully formatted string is longer than 80 characters
+ * - It skips entries with types it cannot handle (e.g. long, long long)
+ * - For entries that have array data, it only writes the final value, since that is the value
+ *     that should be used by code that reads FITS headers.
+ * - It makes no attempt to insure that required entries, such as SIMPLE, are present.
+ *
+ * @param[in] metadata  Metadata to format; if this is a PropertyList then the order of items is preserved
+ * @param[in] excludeNames  Names of entries to exclude from the returned header string
+ * @return a FITS header string (exactly 80 characters per entry, no line terminators)
+ */
+std::string makeLimitedFitsHeader(lsst::daf::base::PropertySet const& metadata,
+                                  std::set<std::string> const& excludeNames = {});
+
+/**
  *  A FITS-related replacement for LSST_EXCEPT that takes an additional Fits object
  *  and uses makeErrorMessage(fitsObj.fptr, fitsObj.status, ...) to construct the message.
  */
