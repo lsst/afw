@@ -33,6 +33,63 @@ namespace fits {
 
 namespace {
 
+/*
+ * Format a PropertySet into a FITS header string using simplifying assumptions.
+ *
+ * See @ref makeLimitedFitsHeader for details.
+ *
+ * @param[in] paramNames  Names of properties to format
+ * @param[in] metadata  Metadata to format
+ * @return a FITS header string (exactly 80 characters per entry, no line terminators)
+ */
+std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const& paramNames,
+                                     daf::base::PropertySet const& metadata) {
+    std::ostringstream result;
+    for (auto const& fullName : paramNames) {
+        std::size_t lastPeriod = fullName.rfind(char('.'));
+        auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
+        std::type_info const& type = metadata.typeOf(name);
+
+        std::string out = "";
+        out.reserve(80);
+        if (name.size() > 8) {
+            continue;  // The name is too long for a FITS keyword; skip this item
+        }
+        out = (boost::format("%-8s= ") % name).str();
+
+        if (type == typeid(bool)) {
+            out += metadata.get<bool>(name) ? "1" : "0";
+        } else if (type == typeid(std::uint8_t)) {
+            out += (boost::format("%20d") % static_cast<int>(metadata.get<std::uint8_t>(name))).str();
+        } else if (type == typeid(int)) {
+            out += (boost::format("%20d") % metadata.get<int>(name)).str();
+        } else if (type == typeid(double)) {
+            // use G because FITS wants uppercase E for exponents
+            out += (boost::format("%20.15G") % metadata.get<double>(name)).str();
+        } else if (type == typeid(float)) {
+            out += (boost::format("%20.15G") % metadata.get<float>(name)).str();
+        } else if (type == typeid(std::string)) {
+            out += "'" + metadata.get<std::string>(name) + "'";
+            if (out.size() > 80) {
+                continue;  // Formatted data is too long; skip this item
+            }
+        }
+
+        int const len = out.size();
+        if (len < 80) {
+            out += std::string(80 - len, ' ');
+        } else if (len > 80) {
+            // non-string item has a formatted value that is too long; this should never happen
+            throw LSST_EXCEPT(pex::exceptions::LogicError,
+                              "Formatted data too long: " + std::to_string(len) + " > 80: \"" + out + "\"");
+        }
+
+        result << out;
+    }
+
+    return result.str();
+}
+
 // Strip leading and trailing single quotes and whitespace from a string.
 std::string strip(std::string const &s) {
     if (s.empty()) return s;
@@ -276,6 +333,24 @@ std::string makeErrorMessage(void *fptr, int status, std::string const &msg) {
         fileName = fd->Fptr->filename;
     }
     return makeErrorMessage(fileName, status, msg);
+}
+
+std::string makeLimitedFitsHeader(daf::base::PropertySet const& metadata,
+                                  std::set<std::string> const& excludeNames) {
+    daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&metadata);
+    std::vector<std::string> allParamNames;
+    if (pl) {
+        allParamNames = pl->getOrderedNames();
+    } else {
+        allParamNames = metadata.paramNames(false);
+    }
+    std::vector<std::string> desiredParamNames;
+    for (auto const & name: allParamNames) {
+        if (excludeNames.count(name) == 0) {
+            desiredParamNames.push_back(name);
+        }
+    }
+    return makeLimitedFitsHeaderImpl(desiredParamNames, metadata);
 }
 
 void MemFileManager::reset() {
