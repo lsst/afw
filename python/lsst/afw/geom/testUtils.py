@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["BoxGrid", "makeFitsHeaderFromMetadata", "makeSipIwcToPixel", "makeSipPixelToIwc"]
+__all__ = ["BoxGrid", "makeSipIwcToPixel", "makeSipPixelToIwc"]
 
 from builtins import range
 from builtins import object
@@ -133,23 +133,6 @@ class FrameSetInfo(object):
         self.currInd = frameSet.current
         self.isBaseSkyFrame = frameSet.getFrame(self.baseInd).className == "SkyFrame"
         self.isCurrSkyFrame = frameSet.getFrame(self.currInd).className == "SkyFrame"
-
-
-def makeFitsHeaderFromMetadata(metadata):
-    """Make a FITS header string from metadata
-    """
-    strList = []
-    for name in metadata.names(False):
-        value = metadata.get(name)
-        if len(name) > 8:
-            raise RuntimeError("Name %r too long" % (name,))
-        if isinstance(value, float):
-            # keep astropy.wcs from warning about invalid format for floats
-            nameValStr = "%-8s= %0.25f" % (name, value)
-        else:
-            nameValStr = "%-8s= %r" % (name, value)
-        strList.append("%-80s" % (nameValStr,))
-    return "".join(strList)
 
 
 def makeSipPolyMapCoeffs(metadata, name):
