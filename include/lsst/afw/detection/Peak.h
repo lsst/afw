@@ -149,18 +149,18 @@ public:
     static afw::table::Key<float> getPeakValueKey() { return getMinimalSchema().peakValue; }
     //@}
 
-    /// @copydoc BaseTable::clone
+    /// @copydoc table::BaseTable::clone
     std::shared_ptr<PeakTable> clone() const { return std::static_pointer_cast<PeakTable>(_clone()); }
 
-    /// @copydoc BaseTable::makeRecord
+    /// @copydoc table::BaseTable::makeRecord
     std::shared_ptr<PeakRecord> makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
 
-    /// @copydoc BaseTable::copyRecord
+    /// @copydoc table::BaseTable::copyRecord
     std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const& other) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other));
     }
 
-    /// @copydoc BaseTable::copyRecord
+    /// @copydoc table::BaseTable::copyRecord
     std::shared_ptr<PeakRecord> copyRecord(afw::table::BaseRecord const& other,
                                            afw::table::SchemaMapper const& mapper) {
         return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other, mapper));
