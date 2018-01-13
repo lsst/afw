@@ -242,9 +242,57 @@ public:
     };
 };
 
+
+class ExampleD : public PersistableFacade<ExampleD>, public Comparable {
+public:
+
+    static std::shared_ptr<ExampleD> get() {
+        static std::shared_ptr<ExampleD> instance(new ExampleD());
+        return instance;
+    }
+
+    ExampleD(ExampleD const &) = delete;
+    ExampleD(ExampleD &&) = delete;
+    ExampleD & operator=(ExampleD const &) = delete;
+    ExampleD & operator=(ExampleD &&) = delete;
+
+    virtual bool operator==(Comparable const &other) const {
+        return static_cast<Comparable const *>(this) == &other;
+    }
+
+    virtual void stream(std::ostream &os) const {
+        os << "ExampleD()";
+    }
+
+    virtual bool isPersistable() const { return true; }
+
+    virtual std::string getPersistenceName() const { return "ExampleD"; }
+
+    virtual void write(OutputArchiveHandle &handle) const {
+        handle.saveEmpty();
+    }
+
+    class Factory : public PersistableFactory {
+    public:
+        explicit Factory(std::string const &name) : PersistableFactory(name) {}
+
+        virtual std::shared_ptr<Persistable> read(InputArchive const &archive,
+                                                  CatalogVector const &catalogs) const {
+            LSST_ARCHIVE_ASSERT(catalogs.size() == 0u);
+            return ExampleD::get();
+        }
+    };
+
+private:
+    ExampleD() {}
+};
+
+
 static ExampleA::Factory const registrationA("ExampleA");
 static ExampleB::Factory const registrationB("ExampleB");
 static ExampleC::Factory const registrationC("ExampleC");
+static ExampleD::Factory const registrationD("ExampleD");
+
 
 template <int M, int N>
 std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare(
@@ -680,4 +728,12 @@ BOOST_AUTO_TEST_CASE(ArchiveMetadata) {
     BOOST_CHECK_EQUAL(names.size(), 2u);
     BOOST_CHECK_EQUAL(names[0], "Footprint");
     BOOST_CHECK_EQUAL(names[1], "HeavyFootprintF");
+}
+
+BOOST_AUTO_TEST_CASE(Singleton) {
+    using namespace lsst::afw::table::io;
+
+    auto d1 = ExampleD::get();
+    auto d2 = roundtrip(d1.get());
+    BOOST_CHECK_EQUAL(d1, d2);
 }

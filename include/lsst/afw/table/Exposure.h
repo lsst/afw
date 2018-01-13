@@ -40,6 +40,7 @@ class Wcs;
 class Calib;
 class ApCorrMap;
 class VisitInfo;
+class TransmissionCurve;
 }  // namespace image
 
 namespace detection {
@@ -130,6 +131,11 @@ public:
 
     std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
     void setVisitInfo(std::shared_ptr<image::VisitInfo const> visitInfo) { _visitInfo = visitInfo; }
+
+    std::shared_ptr<image::TransmissionCurve const> getTransmissionCurve() const { return _transmissionCurve; }
+    void setTransmissionCurve(std::shared_ptr<image::TransmissionCurve const> transmissionCurve) {
+        _transmissionCurve = std::move(transmissionCurve);
+    }
     //@}
 
 protected:
@@ -146,6 +152,7 @@ private:
     std::shared_ptr<image::ApCorrMap const> _apCorrMap;
     std::shared_ptr<geom::polygon::Polygon const> _validPolygon;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
+    std::shared_ptr<image::TransmissionCurve const> _transmissionCurve;
 };
 
 /**

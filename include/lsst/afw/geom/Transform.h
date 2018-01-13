@@ -56,6 +56,8 @@ class SkyWcs;
  * Unless otherwise stated, all constructors and methods may throw `std::runtime_error` to indicate
  * internal errors within AST.
  *
+ * Transforms are always immutable.
+ *
  * @note You gain some safety by constructing a Transform from an ast::FrameSet,
  * since the base and current frames in the FrameSet can be checked against by the appropriate endpoint.
  *
