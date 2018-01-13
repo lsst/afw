@@ -65,9 +65,6 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
             self.instFluxKeyName+"_flux", type="D", doc="post-ISR instFlux")
         self.instFluxErrKey = self.schema.addField(self.instFluxKeyName+"_fluxSigma", type="D",
                                                    doc="post-ISR instFlux stddev")
-        self.maggiesKey = self.schema.addField(self.instFluxKeyName+"_calFlux", type="D", doc="maggies")
-        self.maggiesErrKey = self.schema.addField(self.instFluxKeyName+"_calFluxErr", type="D",
-                                                  doc="maggies stddev")
         self.magnitudeKey = self.schema.addField(self.instFluxKeyName+"_mag", type="D", doc="magnitude")
         self.magnitudeErrKey = self.schema.addField(self.instFluxKeyName+"_magErr", type="D",
                                                     doc="magnitude stddev")
@@ -186,13 +183,21 @@ class PhotoCalibTestCase(lsst.utils.tests.TestCase):
         result = photoCalib.instFluxToMagnitude(catalog, self.instFluxKeyName)
         self.assertFloatsAlmostEqual(expectMag, result)
 
+        # modify the catalog in-place.
         photoCalib.instFluxToMagnitude(catalog, self.instFluxKeyName, self.instFluxKeyName)
         self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_mag'], expectMag[:, 0])
         self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_magErr'], expectMag[:, 1])
 
+        # TODO: have to save the values and restore them, until DM-10302 is implemented.
+        origFlux = catalog[self.instFluxKeyName+'_flux'].copy()
+        origFluxSigma = catalog[self.instFluxKeyName+'_fluxSigma'].copy()
         photoCalib.instFluxToMaggies(catalog, self.instFluxKeyName, self.instFluxKeyName)
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_calFlux'], expectMaggies[:, 0])
-        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_calFluxErr'], expectMaggies[:, 1])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_flux'], expectMaggies[:, 0])
+        self.assertFloatsAlmostEqual(catalog[self.instFluxKeyName+'_fluxSigma'], expectMaggies[:, 1])
+        # TODO: restore values, until DM-10302 is implemented.
+        for record, f, fSigma in zip(catalog, origFlux, origFluxSigma):
+            record.set(self.instFluxKeyName+'_flux', f)
+            record.set(self.instFluxKeyName+'_fluxSigma', fSigma)
 
     def testNonVarying(self):
         """Tests a non-spatially-varying Calibration."""
