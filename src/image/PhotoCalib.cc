@@ -102,8 +102,8 @@ void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std
                                    std::string const &outField) const {
     auto instFluxKey = sourceCatalog.getSchema().find<double>(instFluxField + "_flux").key;
     auto instFluxErrKey = sourceCatalog.getSchema().find<double>(instFluxField + "_fluxSigma").key;
-    auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_calFlux").key;
-    auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_calFluxErr").key;
+    auto maggiesKey = sourceCatalog.getSchema().find<double>(outField + "_flux").key;
+    auto maggiesErrKey = sourceCatalog.getSchema().find<double>(outField + "_fluxSigma").key;
     for (auto &record : sourceCatalog) {
         auto result =
                 instFluxToMaggies(record.get(instFluxKey), record.get(instFluxErrKey), record.getCentroid());
