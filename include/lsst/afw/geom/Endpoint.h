@@ -74,7 +74,7 @@ public:
     BaseEndpoint &operator=(BaseEndpoint const &) = delete;
     BaseEndpoint &operator=(BaseEndpoint &&) = delete;
 
-    virtual ~BaseEndpoint(){};
+    virtual ~BaseEndpoint() = default;
 
     int getNAxes() const { return _nAxes; }
 
