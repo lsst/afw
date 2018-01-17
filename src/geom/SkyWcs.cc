@@ -52,6 +52,12 @@ namespace {
 
 int const SERIALIZATION_VERSION = 1;
 
+// TIGHT_FITS_TOL is used by getFitsMetadata to determine if a WCS can accurately be represented as a FITS
+// WCS. It specifies the maximum departure from linearity (in pixels) allowed on either axis of the mapping
+// from pixel coordinates to Intermediate World Coordinates over a range of 100 x 100 pixels
+// (or the region specified by NAXIS[12], if provided, but we do not pass this to AST as of 2018-01-17).
+// For more information,
+// see FitsTol in the AST manual http://starlink.eao.hawaii.edu/devdocs/sun211.htx/sun211.html
 double const TIGHT_FITS_TOL = 0.0001;
 
 inline double square(double x) { return x * x; }
