@@ -163,6 +163,8 @@ BaseCore& BaseCore::operator=(BaseCore const& other) {
     }
     return *this;
 }
+// Delegate to copy-constructor for backward-compatibility
+BaseCore& BaseCore::operator=(BaseCore&& other) { return *this = other; }
 
 BaseCore::Jacobian BaseCore::dAssign(BaseCore const& other) {
     if (getName() == other.getName()) {

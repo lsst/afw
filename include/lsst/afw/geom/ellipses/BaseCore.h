@@ -172,6 +172,7 @@ public:
      *  This does not change the parametrization of the ellipse core.
      */
     BaseCore& operator=(BaseCore const& other);
+    BaseCore& operator=(BaseCore&& other);
 
     /// Assign other to this and return the derivative of the conversion, d(this)/d(other).
     Jacobian dAssign(BaseCore const& other);
@@ -182,10 +183,14 @@ public:
     template <typename Output>
     Converter<Output> as() const;
 
-    virtual ~BaseCore() {}
+    virtual ~BaseCore() = default;
 
 protected:
     friend class Parametric;
+
+    BaseCore() = default;
+    BaseCore(BaseCore const&) = default;
+    BaseCore(BaseCore&&) = default;
 
     static void registerSubclass(std::shared_ptr<BaseCore> const& example);
 

@@ -62,6 +62,9 @@ Ellipse& Ellipse::operator=(Ellipse const& other) {
     *_core = other.getCore();
     return *this;
 }
+// Delegate to copy-assignment for backwards compatibility
+Ellipse& Ellipse::operator=(Ellipse&& other) { return *this = other; }
+
 }
 }
 }

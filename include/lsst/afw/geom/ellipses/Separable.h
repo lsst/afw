@@ -87,6 +87,8 @@ public:
     /// Standard assignment.
     Separable& operator=(Separable const& other);
 
+    Separable& operator=(Separable&& other);
+
     /// Converting assignment.
     Separable& operator=(BaseCore const& other) {
         BaseCore::operator=(other);
@@ -107,6 +109,11 @@ public:
 
     /// Copy constructor.
     Separable(Separable const& other) : _ellipticity(other._ellipticity), _radius(other._radius) {}
+
+    // Delegate to copy-constructor for backwards compatibility
+    Separable(Separable&& other) : Separable(other) {}
+
+    ~Separable() = default;
 
     /// Converting copy constructor.
     Separable(BaseCore const& other) { *this = other; }

@@ -49,6 +49,9 @@ public:
     explicit ConformalShear(double e1 = 0.0, double e2 = 0.0) : detail::EllipticityBase(e1, e2) {}
 
     ConformalShear(ConformalShear const& other) : detail::EllipticityBase(other.getComplex()) {}
+    // Delegate to copy-constructor for backwards compatibility
+    ConformalShear(ConformalShear&& other) : ConformalShear(other) {}
+    ~ConformalShear() = default;
 
     explicit ConformalShear(Distortion const& other) { this->operator=(other); }
 
@@ -58,6 +61,8 @@ public:
         _complex = other._complex;
         return *this;
     }
+    // Delegate to copy-assignment for backwards compatibility
+    ConformalShear& operator=(ConformalShear&& other) { return *this = other; }
 
     ConformalShear& operator=(Distortion const& other);
 

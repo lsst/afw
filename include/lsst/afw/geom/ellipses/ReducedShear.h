@@ -49,6 +49,9 @@ public:
     explicit ReducedShear(double e1 = 0.0, double e2 = 0.0) : detail::EllipticityBase(e1, e2) {}
 
     ReducedShear(ReducedShear const& other) : detail::EllipticityBase(other.getComplex()) {}
+    // Delegate to copy-constructor for backwards compatibility
+    ReducedShear(ReducedShear&& other) : ReducedShear(other) {}
+    ~ReducedShear() = default;
 
     explicit ReducedShear(Distortion const& other) { this->operator=(other); }
 
@@ -58,6 +61,8 @@ public:
         _complex = other._complex;
         return *this;
     }
+    // Delegate to copy-assignment for backwards compatibility
+    ReducedShear& operator=(ReducedShear&& other) { return *this = other; }
 
     ReducedShear& operator=(Distortion const& other);
 
