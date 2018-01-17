@@ -269,6 +269,13 @@ std::vector<std::shared_ptr<Polygon>> Polygon::Impl::symDifference(PolyT const& 
     return convertBoostPolygons(boostResult);
 }
 
+Polygon::Polygon(Polygon const&) = default;
+Polygon::Polygon(Polygon&&) = default;
+Polygon& Polygon::operator=(Polygon const&) = default;
+Polygon& Polygon::operator=(Polygon&&) = default;
+
+Polygon::~Polygon() = default;
+
 Polygon::Polygon(Polygon::Box const& box) : _impl(new Polygon::Impl(box)) {}
 
 Polygon::Polygon(std::vector<LsstPoint> const& vertices) : _impl(new Polygon::Impl(vertices)) {}

@@ -67,6 +67,13 @@ public:
      */
     explicit Polygon(Box const& box);
 
+    Polygon(Polygon const&);
+    Polygon(Polygon&&);
+    Polygon& operator=(Polygon const&);
+    Polygon& operator=(Polygon&&);
+
+    virtual ~Polygon();
+
     /**
      * Construct a 4-sided Polygon from a transformed box
      *
