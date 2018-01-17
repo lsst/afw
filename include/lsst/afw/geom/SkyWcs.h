@@ -170,9 +170,15 @@ public:
     /**
      * Return the WCS as FITS WCS metadata
      *
-     * @param[in] precise  Fail if the WCS cannot be represented to sufficient precision as a FITS WCS?
+     * @param[in] precise  Fail if the WCS cannot be accurately represented as FITS metadata?
      *      If False then return an approximation. For now that approximation is pure TAN
      *      but as of DM-13170 it will be a fit TAN-SIP.
+     *      The required precision is set by constant TIGHT_FITS_TOL in SkyWcs.cc
+     *
+     * FITS representations of WCS are described in "Representations of World Coordinates in FITS"
+     * by Greisen and Calabretta and several related papers.
+     *
+     * The required precision is hard-coded as constant TIGHT_FITS_TOL in SkyWcs.cc
      *
      * @throws lsst::pex::exceptions::RuntimeError if precise is true and AST cannot represent
      * this WCS as a FITS WCS to sufficient precision.
