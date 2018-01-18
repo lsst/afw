@@ -36,6 +36,7 @@ from .mask import *
 from .maskedImage import *
 from .visitInfo import *
 from .wcs import *
+from .transmissionCurve import *
 from .exposureInfo import *
 from .exposure import *
 from .photoCalib import *

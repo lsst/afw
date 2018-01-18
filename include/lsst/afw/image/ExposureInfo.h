@@ -59,6 +59,7 @@ class Calib;
 class Wcs;
 class ApCorrMap;
 class VisitInfo;
+class TransmissionCurve;
 
 /**
  *  A collection of all the things that make an Exposure different from a MaskedImage
@@ -190,6 +191,16 @@ public:
     /// Set the exposure's visit info
     void setVisitInfo(std::shared_ptr<image::VisitInfo const> const visitInfo) { _visitInfo = visitInfo; }
 
+    /// Does this exposure have a transmission curve?
+    bool hasTransmissionCurve() const { return static_cast<bool>(_transmissionCurve); }
+
+    /// Return the exposure's transmission curve.
+    std::shared_ptr<TransmissionCurve const> getTransmissionCurve() const { return _transmissionCurve; }
+
+    /// Set the exposure's transmission curve.
+    void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
+
+
     /**
      *  Construct an ExposureInfo from its various components.
      *
@@ -210,7 +221,10 @@ public:
             std::shared_ptr<CoaddInputs> const& coaddInputs = std::shared_ptr<CoaddInputs>(),
             std::shared_ptr<ApCorrMap> const& apCorrMap = std::shared_ptr<ApCorrMap>(),
             std::shared_ptr<image::VisitInfo const> const& visitInfo =
-                    std::shared_ptr<image::VisitInfo const>());
+                    std::shared_ptr<image::VisitInfo const>(),
+            std::shared_ptr<TransmissionCurve const> const & transmissionCurve =
+                    std::shared_ptr<TransmissionCurve>()
+    );
 
     /// Copy constructor; deep-copies all components except the metadata.
     ExposureInfo(ExposureInfo const& other);
@@ -298,6 +312,7 @@ private:
     std::shared_ptr<CoaddInputs> _coaddInputs;
     std::shared_ptr<ApCorrMap> _apCorrMap;
     std::shared_ptr<image::VisitInfo const> _visitInfo;
+    std::shared_ptr<TransmissionCurve const> _transmissionCurve;
 };
 }
 }

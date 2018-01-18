@@ -66,9 +66,12 @@ public:
      *  so users aren't forced to clone objects before persisting them if they don't
      *  already have a `shared_ptr`.
      *
-     *  The implementation of 'put' does not provide any exception safety; if the object
-     *  being saved (or any nested object) throws an exception, the entire archive may
-     *  be in an inconsistent state and should not be saved.
+     *  @exceptsafe Provides no exception safety for the archive itself - if
+     *              the object being saved (or any nested object) throws an
+     *              exception, the archive may be in an inconsistent state and
+     *              should not be saved. The objects being saved are never
+     *              modified during persistence, even when exceptions are
+     *              thrown.
      */
     int put(Persistable const* obj, bool permissive = false);
     int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
@@ -120,6 +123,12 @@ public:
     BaseCatalog makeCatalog(Schema const& schema);
 
     /**
+     *  Indicate that the object being persisted has no state,
+     *  and hence will never call makeCatalog() or saveCatalog().
+     */
+    void saveEmpty();
+
+    /**
      *  Save a catalog in the archive.
      *
      *  The catalog must have been created using makeCatalog,
@@ -128,11 +137,7 @@ public:
     void saveCatalog(BaseCatalog const& catalog);
 
     //@{
-    /**
-     *  Save a nested Persistable to the same archive.
-     *
-     *  @copydoc OutputArchive::put.
-     */
+    /// @copydoc OutputArchive::put(Persistable const*, bool)
     int put(Persistable const* obj, bool permissive = false);
     int put(std::shared_ptr<Persistable const> obj, bool permissive = false) {
         return put(obj.get(), permissive);

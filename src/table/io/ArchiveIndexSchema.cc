@@ -9,6 +9,8 @@ namespace io {
 
 int const ArchiveIndexSchema::MAX_NAME_LENGTH;
 
+constexpr int const ArchiveIndexSchema::NO_CATALOGS_SAVED;
+
 ArchiveIndexSchema const& ArchiveIndexSchema::get() {
     static ArchiveIndexSchema instance;
     return instance;
