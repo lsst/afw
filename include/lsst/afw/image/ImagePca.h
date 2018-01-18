@@ -53,7 +53,12 @@ public:
      * @param constantWeight Should all stars be weighted equally?
      */
     explicit ImagePca(bool constantWeight = true);
-    virtual ~ImagePca() {}
+    virtual ~ImagePca() = default;
+
+    ImagePca(ImagePca const&);
+    ImagePca(ImagePca&&);
+    ImagePca& operator=(ImagePca const&);
+    ImagePca& operator=(ImagePca&&);
 
     /**
      * Add an image to the set to be analyzed

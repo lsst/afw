@@ -240,6 +240,11 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage co
     conformSizes();
 }
 
+// Delegate to copy-constructor for backwards compatibility
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage&& rhs)
+        : MaskedImage(rhs, false) {}
+
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs,
                                                                   const geom::Box2I& bbox,
@@ -254,11 +259,13 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage co
     conformSizes();
 }
 
-#if defined(DOXYGEN)
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
-operator=(MaskedImage const& rhs) {}
-#endif
+operator=(MaskedImage const& rhs) = default;
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
+operator=(MaskedImage&& rhs) = default;
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage& rhs) {
@@ -268,8 +275,6 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage& rhs
     _mask.swap(rhs._mask);
     _variance.swap(rhs._variance);
 }
-// Use compiler generated version of:
-//    MaskedImage<ImagePixelT, MaskPixelT> &operator=(const MaskedImage<ImagePixelT, MaskPixelT>& rhs);
 
 // Operators
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

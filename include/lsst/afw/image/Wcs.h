@@ -391,7 +391,9 @@ protected:
 
     /// Copy constructor
     Wcs(Wcs const& rhs);
+    Wcs(Wcs&& rhs);
     Wcs& operator=(const Wcs&);
+    Wcs& operator=(Wcs&&);
 
     /**
      * Worker routine for pixelToSky

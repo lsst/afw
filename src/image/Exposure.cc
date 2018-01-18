@@ -74,6 +74,9 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, bool const dee
         : daf::base::Citizen(typeid(this)),
           _maskedImage(src.getMaskedImage(), deep),
           _info(new ExposureInfo(*src.getInfo(), deep)) {}
+// Delegate to copy-constructor for backwards compatibility
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure &&src) : Exposure(src) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, geom::Box2I const &bbox,
@@ -115,7 +118,7 @@ void Exposure<ImageT, MaskT, VarianceT>::_readFits(fits::Fits &fitsfile, geom::B
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::~Exposure() {}
+Exposure<ImageT, MaskT, VarianceT>::~Exposure() = default;
 
 // SET METHODS
 
@@ -131,6 +134,11 @@ void Exposure<ImageT, MaskT, VarianceT>::setXY0(geom::Point2I const &origin) {
         _info->getWcs()->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
     _maskedImage.setXY0(origin);
 }
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT> &Exposure<ImageT, MaskT, VarianceT>::operator=(Exposure const &) = default;
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT> &Exposure<ImageT, MaskT, VarianceT>::operator=(Exposure &&) = default;
 
 // Write FITS
 

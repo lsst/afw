@@ -111,6 +111,9 @@ ExposureInfo::ExposureInfo(ExposureInfo const& other)
           _visitInfo(other._visitInfo),
           _transmissionCurve(other._transmissionCurve) {}
 
+// Delegate to copy-constructor for backwards compatibility
+ExposureInfo::ExposureInfo(ExposureInfo&& other) : ExposureInfo(other) {}
+
 ExposureInfo::ExposureInfo(ExposureInfo const& other, bool copyMetadata)
         : _wcs(_cloneWcs(other._wcs)),
           _psf(other._psf),
@@ -142,10 +145,12 @@ ExposureInfo& ExposureInfo::operator=(ExposureInfo const& other) {
     }
     return *this;
 }
+// Delegate to copy-assignment for backwards compatibility
+ExposureInfo& ExposureInfo::operator=(ExposureInfo&& other) { return *this = other; }
 
 void ExposureInfo::initApCorrMap() { _apCorrMap = std::make_shared<ApCorrMap>(); }
 
-ExposureInfo::~ExposureInfo() {}
+ExposureInfo::~ExposureInfo() = default;
 
 ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I const& xy0) const {
     FitsWriteData data;

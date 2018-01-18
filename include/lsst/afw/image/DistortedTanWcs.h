@@ -63,7 +63,12 @@ public:
      */
     DistortedTanWcs(TanWcs const &tanWcs, Transform const &pixelsToTanPixels);
 
-    virtual ~DistortedTanWcs(){};
+    DistortedTanWcs(DistortedTanWcs const &);
+    DistortedTanWcs(DistortedTanWcs &&);
+    DistortedTanWcs &operator=(DistortedTanWcs const &) = delete;
+    DistortedTanWcs &operator=(DistortedTanWcs &&) = delete;
+
+    virtual ~DistortedTanWcs() = default;
 
     /// Polymorphic deep-copy.
     virtual std::shared_ptr<Wcs> clone() const;

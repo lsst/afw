@@ -227,6 +227,8 @@ public:
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
     Mask(const Mask& src, const bool deep = false);
+    Mask(Mask&& src);
+    ~Mask();
     /**
      * Construct a Mask from a subregion of another Mask
      *
@@ -246,6 +248,7 @@ public:
 
     Mask& operator=(MaskPixelT const rhs);
     Mask& operator=(const Mask& rhs);
+    Mask& operator=(Mask&& rhs);
 
     /// OR a Mask into a Mask
     Mask& operator|=(Mask const& rhs);

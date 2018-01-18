@@ -194,6 +194,7 @@ public:
      * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
      */
     ImageBase(const ImageBase& src, const bool deep = false);
+    ImageBase(ImageBase&& src);
     /**
      * Copy constructor to make a copy of part of an %image.
      *
@@ -241,7 +242,7 @@ public:
      */
     explicit ImageBase(Array const& array, bool deep = false, geom::Point2I const& xy0 = geom::Point2I());
 
-    virtual ~ImageBase() {}
+    virtual ~ImageBase() = default;
     /** Shallow assignment operator.
      *
      * @note that this has the effect of making the lhs share pixels with the rhs which may
@@ -251,6 +252,7 @@ public:
      * declare this function private
      */
     ImageBase& operator=(const ImageBase& rhs);
+    ImageBase& operator=(ImageBase&& rhs);
     /// Set the %image's pixels to rhs
     ImageBase& operator=(const PixelT rhs);
     /**

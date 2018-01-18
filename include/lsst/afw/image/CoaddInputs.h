@@ -64,6 +64,12 @@ public:
     /// Construct from shallow copies of the given catalogs.
     CoaddInputs(table::ExposureCatalog const& visits_, table::ExposureCatalog const& ccds_);
 
+    CoaddInputs(CoaddInputs const&);
+    CoaddInputs(CoaddInputs&&);
+    CoaddInputs& operator=(CoaddInputs const&);
+    CoaddInputs& operator=(CoaddInputs&&);
+    virtual ~CoaddInputs();
+
     /**
      *  Whether the object is in fact persistable - in this case, always true.
      *

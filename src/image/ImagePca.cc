@@ -53,6 +53,15 @@ ImagePca<ImageT>::ImagePca(bool constantWeight)
           _eigenImages(ImageList()) {}
 
 template <typename ImageT>
+ImagePca<ImageT>::ImagePca(ImagePca const&) = default;
+template <typename ImageT>
+ImagePca<ImageT>::ImagePca(ImagePca&&) = default;
+template <typename ImageT>
+ImagePca<ImageT>& ImagePca<ImageT>::operator=(ImagePca const&) = default;
+template <typename ImageT>
+ImagePca<ImageT>& ImagePca<ImageT>::operator=(ImagePca&&) = default;
+
+template <typename ImageT>
 void ImagePca<ImageT>::addImage(std::shared_ptr<ImageT> img, double flux) {
     if (_imageList.empty()) {
         _dimensions = img->getDimensions();

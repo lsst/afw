@@ -75,6 +75,13 @@ public:
      */
     explicit FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol,
                             bool force = false);
+
+    FilterProperty(FilterProperty const&) = default;
+    FilterProperty(FilterProperty&&) = default;
+    FilterProperty& operator=(FilterProperty const&) = default;
+    FilterProperty& operator=(FilterProperty&&) = default;
+    ~FilterProperty() = default;
+
     /**
      * Return a filter's name
      */
@@ -156,6 +163,12 @@ public:
      * @param force Allow us to construct an unknown Filter
      */
     explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const>, bool const force = false);
+
+    Filter(Filter const&) = default;
+    Filter(Filter&&) = default;
+    Filter& operator=(Filter const&) = default;
+    Filter& operator=(Filter&&) = default;
+    ~Filter() = default;
 
     /**
      * Are two filters identical?
