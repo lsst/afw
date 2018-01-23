@@ -211,6 +211,12 @@ public:
     IntRegion(T const a, T const b, std::ostream *dbgout = 0)
             : _a(a), _b(b), _error(0.0), _area(0), _dbgout(dbgout) {}
 
+    IntRegion(IntRegion const &) = default;
+    IntRegion(IntRegion &&) = default;
+    IntRegion & operator=(IntRegion const &) = default;
+    IntRegion & operator=(IntRegion &&) = default;
+    ~IntRegion() = default;
+
     bool operator<(IntRegion<T> const &r2) const { return _error < r2._error; }
     bool operator>(IntRegion<T> const &r2) const { return _error > r2._error; }
 

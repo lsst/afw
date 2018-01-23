@@ -64,6 +64,12 @@ class GaussianProcessTimer {
 public:
     GaussianProcessTimer();
 
+    GaussianProcessTimer(GaussianProcessTimer const &) = default;
+    GaussianProcessTimer(GaussianProcessTimer &&) = default;
+    GaussianProcessTimer & operator=(GaussianProcessTimer const &) = default;
+    GaussianProcessTimer & operator=(GaussianProcessTimer &&) = default;
+    ~GaussianProcessTimer() = default;
+
     /**
      * Resets all of the data members of GaussianProcessTimer to zero.
      *

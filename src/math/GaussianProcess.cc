@@ -1983,7 +1983,7 @@ GaussianProcessTimer &GaussianProcess<T>::getTimes() const {
 }
 
 template <typename T>
-Covariogram<T>::~Covariogram(){};
+Covariogram<T>::~Covariogram() = default;
 
 template <typename T>
 T Covariogram<T>::operator()(ndarray::Array<const T, 1, 1> const &p1,
@@ -1994,7 +1994,7 @@ T Covariogram<T>::operator()(ndarray::Array<const T, 1, 1> const &p1,
 }
 
 template <typename T>
-SquaredExpCovariogram<T>::~SquaredExpCovariogram() {}
+SquaredExpCovariogram<T>::~SquaredExpCovariogram() = default;
 
 template <typename T>
 SquaredExpCovariogram<T>::SquaredExpCovariogram() {
@@ -2019,7 +2019,7 @@ T SquaredExpCovariogram<T>::operator()(ndarray::Array<const T, 1, 1> const &p1,
 }
 
 template <typename T>
-NeuralNetCovariogram<T>::~NeuralNetCovariogram() {}
+NeuralNetCovariogram<T>::~NeuralNetCovariogram() = default;
 
 template <typename T>
 NeuralNetCovariogram<T>::NeuralNetCovariogram() {

@@ -76,10 +76,15 @@ public:
                          )
             : _id(++_CandidateId), _status(UNKNOWN), _xCenter(xCenter), _yCenter(yCenter) {}
 
+    SpatialCellCandidate(SpatialCellCandidate const &) = default;
+    SpatialCellCandidate(SpatialCellCandidate &&) = default;
+    SpatialCellCandidate & operator=(SpatialCellCandidate const &) = default;
+    SpatialCellCandidate & operator=(SpatialCellCandidate &&) = default;
+
     /**
      * (virtual) destructor -- this is a base class you know
      */
-    virtual ~SpatialCellCandidate() {}
+    virtual ~SpatialCellCandidate() = default;
 
     /// Return the object's column-centre
     float getXCenter() const { return _xCenter; }
@@ -125,7 +130,11 @@ public:
                               float const yCenter   ///< The object's row-centre
                               )
             : SpatialCellCandidate(xCenter, yCenter), _chi2(std::numeric_limits<double>::max()) {}
-    virtual ~SpatialCellImageCandidate() {}
+    SpatialCellImageCandidate(SpatialCellImageCandidate const &) = default;
+    SpatialCellImageCandidate(SpatialCellImageCandidate &&) = default;
+    SpatialCellImageCandidate & operator=(SpatialCellImageCandidate const &) = default;
+    SpatialCellImageCandidate & operator=(SpatialCellImageCandidate &&) = default;
+    virtual ~SpatialCellImageCandidate() = default;
 
     /// Set the width of the image that getImage should return
     static void setWidth(int width) { _width = width; }
@@ -229,10 +238,15 @@ public:
     SpatialCell(std::string const& label, lsst::afw::geom::Box2I const& bbox = lsst::afw::geom::Box2I(),
                 CandidateList const& candidateList = CandidateList());
 
+    SpatialCell(SpatialCell const &) = default;
+    SpatialCell(SpatialCell &&) = default;
+    SpatialCell & operator=(SpatialCell const &) = default;
+    SpatialCell & operator=(SpatialCell &&) = default;
+
     /**
      * Destructor
      */
-    virtual ~SpatialCell() { ; };
+    virtual ~SpatialCell() = default;
 
     /**
      * Determine if cell has no usable candidates
@@ -385,10 +399,15 @@ public:
      */
     SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize = 0);
 
+    SpatialCellSet(SpatialCellSet const &) = default;
+    SpatialCellSet(SpatialCellSet &&) = default;
+    SpatialCellSet & operator=(SpatialCellSet const &) = default;
+    SpatialCellSet & operator=(SpatialCellSet &&) = default;
+
     /**
      * Destructor
      */
-    virtual ~SpatialCellSet() { ; };
+    virtual ~SpatialCellSet() = default;
 
     /**
      * Return our SpatialCells

@@ -116,8 +116,13 @@ public:
                                                                   image::MaskedImage<PixelT> const& im,
                                                                   geom::Box2I const& bbox,
                                                                   ApproximateControl const& ctrl);
+    Approximate(Approximate const&) = delete;
+    Approximate(Approximate &&) = delete;
+    Approximate& operator=(Approximate const&) = delete;
+    Approximate& operator=(Approximate &&) = delete;
+
     /// dtor
-    virtual ~Approximate() {}
+    virtual ~Approximate() = default;
     /// Return the approximate %image as a Image
     std::shared_ptr<image::Image<OutPixelT>> getImage(int orderX = -1, int orderY = -1) const {
         return doGetImage(orderX, orderY);
@@ -143,8 +148,6 @@ protected:
     geom::Box2I const _bbox;          ///< Domain for approximation
     ApproximateControl const _ctrl;   ///< desired approximation algorithm
 private:
-    Approximate(Approximate const&);
-    Approximate& operator=(Approximate const&);
     virtual std::shared_ptr<image::Image<OutPixelT>> doGetImage(int orderX, int orderY) const = 0;
     virtual std::shared_ptr<image::MaskedImage<OutPixelT>> doGetMaskedImage(int orderX, int orderY) const = 0;
 };

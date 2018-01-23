@@ -360,7 +360,12 @@ LeastSquares::LeastSquares(Factorization factorization, int dimension) {
     _impl->factorization = factorization;
 }
 
-LeastSquares::~LeastSquares() {}
+LeastSquares::LeastSquares(LeastSquares const &) = default;
+LeastSquares::LeastSquares(LeastSquares &&) = default;
+LeastSquares & LeastSquares::operator=(LeastSquares const &) = default;
+LeastSquares & LeastSquares::operator=(LeastSquares &&) = default;
+
+LeastSquares::~LeastSquares() = default;
 
 Eigen::MatrixXd& LeastSquares::_getDesignMatrix() { return _impl->design; }
 Eigen::VectorXd& LeastSquares::_getDataVector() { return _impl->data; }

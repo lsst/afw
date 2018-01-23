@@ -44,6 +44,12 @@ public:
             :  //, MaskPlaneDict const& planeDict=MaskPlaneDict()) :
               lsst::afw::image::MaskedImage<EntryT>(geom::Extent2I(width, 1)) {}  //, planeDict) {}
 
+    MaskedVector(MaskedVector const &) = default;
+    MaskedVector(MaskedVector &&) = default;
+    MaskedVector & operator=(MaskedVector const &) = default;
+    MaskedVector & operator=(MaskedVector &&) = default;
+    ~MaskedVector() = default;
+
     // Getters
     /// Return a (Ptr to) the MaskedImage's %image
     std::shared_ptr<std::vector<EntryT> > getVector(bool const noThrow = false) const {

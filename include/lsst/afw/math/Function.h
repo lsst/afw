@@ -100,7 +100,12 @@ public:
               _params(params),
               _isCacheValid(false) {}
 
-    virtual ~Function() {}
+    Function(Function const &) = default;
+    Function(Function &&) = default;
+    Function & operator=(Function const &) = default;
+    Function & operator=(Function &&) = default;
+
+    virtual ~Function() = default;
 
     /**
      * Return the number of function parameters
@@ -220,7 +225,12 @@ public:
     explicit Function1(std::vector<double> const& params)  ///< function parameters
             : Function<ReturnT>(params) {}
 
-    virtual ~Function1() {}
+    Function1(Function1 const &) = default;
+    Function1(Function1 &&) = default;
+    Function1 & operator=(Function1 const &) = default;
+    Function1 & operator=(Function1 &&) = default;
+
+    virtual ~Function1() = default;
 
     /**
      * Return a pointer to a deep copy of this function
@@ -281,7 +291,12 @@ public:
     explicit Function2(std::vector<double> const& params)  ///< function parameters
             : Function<ReturnT>(params) {}
 
-    virtual ~Function2() {}
+    Function2(Function2 const &) = default;
+    Function2(Function2 &&) = default;
+    Function2 & operator=(Function2 const &) = default;
+    Function2 & operator=(Function2 &&) = default;
+
+    virtual ~Function2() = default;
 
     /**
      * Return a pointer to a deep copy of this function
@@ -357,7 +372,12 @@ public:
             : Function2<ReturnT>(params),
               _order(BasePolynomialFunction2::orderFromNParameters(static_cast<int>(params.size()))) {}
 
-    virtual ~BasePolynomialFunction2() {}
+    BasePolynomialFunction2(BasePolynomialFunction2 const &) = default;
+    BasePolynomialFunction2(BasePolynomialFunction2 &&) = default;
+    BasePolynomialFunction2 & operator=(BasePolynomialFunction2 const &) = default;
+    BasePolynomialFunction2 & operator=(BasePolynomialFunction2 &&) = default;
+
+    virtual ~BasePolynomialFunction2() = default;
 
     /**
      * Get the polynomial order

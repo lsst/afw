@@ -115,6 +115,12 @@ public:
     ChebyshevBoundedField(afw::geom::Box2I const& bbox,
                           ndarray::Array<double const, 2, 2> const& coefficients);
 
+    ChebyshevBoundedField(ChebyshevBoundedField const &);
+    ChebyshevBoundedField(ChebyshevBoundedField &&);
+    ChebyshevBoundedField & operator=(ChebyshevBoundedField const &) = delete;
+    ChebyshevBoundedField & operator=(ChebyshevBoundedField &&) = delete;
+    ~ChebyshevBoundedField();
+
     /**
      *  Fit a Chebyshev approximation to non-gridded data with equal weights.
      *

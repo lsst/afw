@@ -51,7 +51,11 @@ public:
                                                         std::vector<double> const &y,
                                                         Interpolate::Style const style);
 
-    virtual ~Interpolate() {}
+    Interpolate(Interpolate const &) = delete;
+    Interpolate(Interpolate &&) = delete;
+    Interpolate &operator=(Interpolate const &) = delete;
+    Interpolate &operator=(Interpolate &&) = delete;
+    virtual ~Interpolate() = default;
     virtual double interpolate(double const x) const = 0;
     std::vector<double> interpolate(std::vector<double> const &x) const;
     ndarray::Array<double, 1> interpolate(ndarray::Array<double const, 1> const &x) const;
@@ -79,10 +83,6 @@ protected:
     std::vector<double> const _x;
     std::vector<double> const _y;
     Interpolate::Style const _style;
-
-private:
-    Interpolate(Interpolate const &);
-    Interpolate &operator=(Interpolate const &);
 };
 
 /**
