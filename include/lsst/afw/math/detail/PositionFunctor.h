@@ -52,8 +52,12 @@ namespace detail {
  */
 class PositionFunctor {
 public:
-    explicit PositionFunctor(){};
-    virtual ~PositionFunctor(){};
+    explicit PositionFunctor() = default;
+    virtual ~PositionFunctor() = default;
+    PositionFunctor(PositionFunctor const &) = default;
+    PositionFunctor(PositionFunctor &&) = default;
+    PositionFunctor & operator=(PositionFunctor const &) = default;
+    PositionFunctor & operator=(PositionFunctor &&) = default;
 
     virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
 };
@@ -70,7 +74,11 @@ public:
             )
             : PositionFunctor(), _destXY0(destXY0), _xyTransformPtr(XYTransform.clone()) {}
 
-    virtual ~XYTransformPositionFunctor(){};
+    virtual ~XYTransformPositionFunctor() = default;
+    XYTransformPositionFunctor(XYTransformPositionFunctor const &) = default;
+    XYTransformPositionFunctor(XYTransformPositionFunctor &&) = default;
+    XYTransformPositionFunctor & operator=(XYTransformPositionFunctor const &) = default;
+    XYTransformPositionFunctor & operator=(XYTransformPositionFunctor &&) = default;
 
     virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
         afw::geom::Point2D const destPos{lsst::afw::image::indexToPosition(destCol + _destXY0[0]),
