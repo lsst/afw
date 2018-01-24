@@ -95,6 +95,17 @@ ArrayKey<T>::ArrayKey(SubSchema const &s) : _begin(s["0"]), _size(1) {
 }
 
 template <typename T>
+ArrayKey<T>::ArrayKey(ArrayKey const &) = default;
+template <typename T>
+ArrayKey<T>::ArrayKey(ArrayKey &&) = default;
+template <typename T>
+ArrayKey<T> & ArrayKey<T>::operator=(ArrayKey const &) = default;
+template <typename T>
+ArrayKey<T> & ArrayKey<T>::operator=(ArrayKey &&) = default;
+template <typename T>
+ArrayKey<T>::~ArrayKey() = default;
+
+template <typename T>
 ndarray::Array<T const, 1, 1> ArrayKey<T>::get(BaseRecord const &record) const {
     return ndarray::external(record.getElement(_begin), ndarray::makeVector(_size), ndarray::ROW_MAJOR,
                              record.getManager());

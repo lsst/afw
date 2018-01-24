@@ -72,6 +72,8 @@ static SimpleFitsReader const simpleFitsReader;
 
 SimpleRecord::SimpleRecord(std::shared_ptr<SimpleTable> const& table) : BaseRecord(table) {}
 
+SimpleRecord::~SimpleRecord() = default;
+
 std::shared_ptr<SimpleTable> SimpleTable::make(Schema const& schema,
                                                std::shared_ptr<IdFactory> const& idFactory) {
     if (!checkSchema(schema)) {
@@ -86,6 +88,10 @@ SimpleTable::SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const&
 
 SimpleTable::SimpleTable(SimpleTable const& other)
         : BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
+// Delegate to copy constructor for backwards compatibility
+SimpleTable::SimpleTable(SimpleTable && other) : SimpleTable(other) {}
+
+SimpleTable::~SimpleTable() = default;
 
 SimpleTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");

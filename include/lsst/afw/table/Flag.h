@@ -41,11 +41,17 @@ struct FieldBase<Flag> {
     // Only the first of these constructors is valid for this specializations, but
     // it's convenient to be able to instantiate both, since the other is used
     // by other specializations.
-    FieldBase() {}
+    FieldBase() = default;
     FieldBase(int) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Constructor disabled (this Field type is not sized).");
     }
+
+    FieldBase(FieldBase const &) = default;
+    FieldBase(FieldBase &&) = default;
+    FieldBase & operator=(FieldBase const &) = default;
+    FieldBase & operator=(FieldBase &&) = default;
+    ~FieldBase() = default;
 
 protected:
     /// Defines how fields are printed.
@@ -62,6 +68,13 @@ public:
 
     /// Return a key corresponding to the integer element where this field's bit is packed.
     Key<FieldBase<Flag>::Element> getStorage() const;
+
+    KeyBase() = default;
+    KeyBase(KeyBase const &) = default;
+    KeyBase(KeyBase &&) = default;
+    KeyBase & operator=(KeyBase const &) = default;
+    KeyBase & operator=(KeyBase &&) = default;
+    ~KeyBase() = default;
 };
 
 /**
@@ -123,6 +136,12 @@ public:
      *  The new field will be invalid until a valid Key is assigned to it.
      */
     Key() : FieldBase<Flag>(), _offset(-1), _bit(0) {}
+
+    Key(Key const &) = default;
+    Key(Key &&) = default;
+    Key & operator=(Key const &) = default;
+    Key & operator=(Key &&) = default;
+    ~Key() = default;
 
     /// Stringification.
     inline friend std::ostream &operator<<(std::ostream &os, Key<Flag> const &key) {

@@ -72,7 +72,7 @@ public:
     static ArrayKey addFields(Schema& schema, std::string const& name, std::string const& doc,
                               std::string const& unit, int size);
 
-    /// Default constructor; instance will not be usuable unless subsequently assigned to.
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
     ArrayKey() : _begin() {}
 
     /// Construct from a vector of scalar Keys
@@ -95,6 +95,12 @@ public:
      *      ArrayKey<T> k(schema["a"]);
      */
     ArrayKey(SubSchema const& s);
+
+    ArrayKey(ArrayKey const &);
+    ArrayKey(ArrayKey &&);
+    ArrayKey & operator=(ArrayKey const &);
+    ArrayKey & operator=(ArrayKey &&);
+    ~ArrayKey();
 
     /// Return the number of elements in the array.
     int getSize() const { return _size; }

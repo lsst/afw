@@ -72,6 +72,12 @@ public:
     void setDec(Angle dec);
     //@}
 
+    SimpleRecord(const SimpleRecord&) = delete;
+    SimpleRecord& operator=(const SimpleRecord&) = delete;
+    SimpleRecord(SimpleRecord&&) = delete;
+    SimpleRecord& operator=(SimpleRecord&&) = delete;
+    ~SimpleRecord();
+
 protected:
     friend class SimpleTable;
 
@@ -174,10 +180,15 @@ public:
         return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other, mapper));
     }
 
+    SimpleTable& operator=(SimpleTable const&) = delete;
+    SimpleTable& operator=(SimpleTable&&) = delete;
+    ~SimpleTable();
+
 protected:
     SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory);
 
     explicit SimpleTable(SimpleTable const& other);
+    explicit SimpleTable(SimpleTable && other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 

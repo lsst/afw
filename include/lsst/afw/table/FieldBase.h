@@ -56,11 +56,16 @@ struct FieldBase {
     // Only the first of these constructors is valid for this specializations, but
     // it's convenient to be able to instantiate both, since the other is used
     // by other specializations.
-    FieldBase() {}
+    FieldBase() = default;
     FieldBase(int) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Constructor disabled (this Field type is not sized).");
     }
+    FieldBase(FieldBase const &) = default;
+    FieldBase(FieldBase &&) = default;
+    FieldBase & operator=(FieldBase const &) = default;
+    FieldBase & operator=(FieldBase &&) = default;
+    ~FieldBase() = default;
 
 protected:
     /// Needed to allow Keys to be default-constructed.
@@ -121,6 +126,12 @@ struct FieldBase<Array<U> > {
             throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                               "A non-negative size must be provided when constructing an array field.");
     }
+
+    FieldBase(FieldBase const &) = default;
+    FieldBase(FieldBase &&) = default;
+    FieldBase & operator=(FieldBase const &) = default;
+    FieldBase & operator=(FieldBase &&) = default;
+    ~FieldBase() = default;
 
     /// Return a string description of the field type.
     static std::string getTypeString();
@@ -236,6 +247,12 @@ struct FieldBase<std::string> {
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
     FieldBase(int size = -1);
+
+    FieldBase(FieldBase const &) = default;
+    FieldBase(FieldBase &&) = default;
+    FieldBase & operator=(FieldBase const &) = default;
+    FieldBase & operator=(FieldBase &&) = default;
+    ~FieldBase() = default;
 
     /// Return a string description of the field type.
     static std::string getTypeString();

@@ -147,8 +147,13 @@ BitsColumn BaseColumnView::getAllBits() const {
     return result;
 }
 
+BaseColumnView::BaseColumnView(BaseColumnView const &) = default;
+BaseColumnView::BaseColumnView(BaseColumnView &&) = default;
+BaseColumnView & BaseColumnView::operator=(BaseColumnView const &) = default;
+BaseColumnView & BaseColumnView::operator=(BaseColumnView &&) = default;
+
 // needs to be in source file so it can (implicitly) call Impl's (implicit) dtor
-BaseColumnView::~BaseColumnView() {}
+BaseColumnView::~BaseColumnView() = default;
 
 BaseColumnView::BaseColumnView(std::shared_ptr<BaseTable> const &table, int recordCount, void *buf,
                                ndarray::Manager::Ptr const &manager)

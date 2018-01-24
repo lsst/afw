@@ -146,6 +146,10 @@ public:
 
     /// Shallow copy constructor.
     CatalogT(CatalogT const& other) : _table(other._table), _internal(other._internal) {}
+    // Delegate to copy constructor for backward compatibility
+    CatalogT(CatalogT && other) : CatalogT(other) {}
+
+    ~CatalogT() = default;
 
     /**
      *  Shallow copy constructor from a container containing a related record type.
@@ -165,6 +169,8 @@ public:
         }
         return *this;
     }
+    // Delegate to copy assignment for backward compatibility
+    CatalogT& operator=(CatalogT && other) { return *this = other; }
 
     /**
      *  Return the subset of a catalog corresponding to the True values of the given mask array.

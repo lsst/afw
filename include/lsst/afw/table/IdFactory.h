@@ -48,11 +48,16 @@ public:
      */
     static std::shared_ptr<IdFactory> makeSource(RecordId expId, int reserved);
 
-    virtual ~IdFactory() {}
+    IdFactory() = default;
+    IdFactory(IdFactory const &) = default;
+    IdFactory(IdFactory &&) = default;
+
+    // Protected to prevent slicing.
+    IdFactory & operator=(IdFactory const& other) = delete;
+    IdFactory & operator=(IdFactory && other) = delete;
+    virtual ~IdFactory() = default;
 
 private:
-    // Protected to prevent slicing.
-    void operator=(IdFactory const& other) {}
 };
 }
 }

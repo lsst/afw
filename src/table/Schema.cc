@@ -607,6 +607,12 @@ int const Schema::VERSION;
 Schema::Schema() : _impl(std::make_shared<Impl>()), _aliases(std::make_shared<AliasMap>()) {}
 
 Schema::Schema(Schema const &other) : _impl(other._impl), _aliases(other._aliases) {}
+// Delegate to copy constructor  for backwards compatibility
+Schema::Schema(Schema &&other) : Schema(other) {}
+
+Schema &Schema::operator=(Schema const&) = default;
+Schema &Schema::operator=(Schema&&) = default;
+Schema::~Schema() = default;
 
 Schema Schema::readFits(std::string const &filename, int hdu) {
     fits::Fits fp{filename, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK};

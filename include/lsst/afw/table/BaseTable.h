@@ -154,6 +154,10 @@ public:
      */
     static std::shared_ptr<BaseTable> make(Schema const& schema);
 
+    // Tables are not assignable to prevent type slicing.
+    BaseTable & operator=(BaseTable const& other) = delete;
+    BaseTable & operator=(BaseTable && other) = delete;
+
     virtual ~BaseTable();
 
 protected:
@@ -185,6 +189,8 @@ protected:
             : daf::base::Citizen(other), _schema(other._schema), _metadata(other._metadata) {
         if (_metadata) _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
     }
+    // Delegate to copy-constructor for backwards compatibility
+    BaseTable(BaseTable && other) : BaseTable(other) {}
 
 private:
     friend class BaseRecord;
@@ -205,10 +211,6 @@ private:
      *  records contiguous as much as possible to allow ColumnView to be used.
      */
     void _destroy(BaseRecord& record);
-
-    // Tables are not assignable to prevent type slicing; this is intentionally not implemented,
-    // so we get linker errors if we do try to use the assignment operator.
-    void operator=(BaseTable const& other);
 
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits* fitsfile, int flags) const;

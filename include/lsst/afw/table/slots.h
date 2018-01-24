@@ -59,6 +59,12 @@ public:
      */
     std::string getAlias() const { return "slot_" + _name; }
 
+    SlotDefinition(SlotDefinition const &) = default;
+    SlotDefinition(SlotDefinition &&) = default;
+    SlotDefinition & operator=(SlotDefinition const &) = default;
+    SlotDefinition & operator=(SlotDefinition &&) = default;
+    ~SlotDefinition() = default;
+
 protected:
     std::string _name;
 };
@@ -97,6 +103,12 @@ public:
      *  @param[in] schema    Schema to search for Keys.
      */
     void setKeys(std::string const& alias, Schema const& schema);
+
+    FluxSlotDefinition(FluxSlotDefinition const &) = default;
+    FluxSlotDefinition(FluxSlotDefinition &&) = default;
+    FluxSlotDefinition & operator=(FluxSlotDefinition const &) = default;
+    FluxSlotDefinition & operator=(FluxSlotDefinition &&) = default;
+    ~FluxSlotDefinition() = default;
 
 private:
     MeasKey _measKey;
@@ -139,6 +151,12 @@ public:
      */
     void setKeys(std::string const& alias, Schema const& schema);
 
+    CentroidSlotDefinition(CentroidSlotDefinition const &) = default;
+    CentroidSlotDefinition(CentroidSlotDefinition &&) = default;
+    CentroidSlotDefinition & operator=(CentroidSlotDefinition const &) = default;
+    CentroidSlotDefinition & operator=(CentroidSlotDefinition &&) = default;
+    ~CentroidSlotDefinition() = default;
+
 private:
     MeasKey _measKey;
     ErrKey _errKey;
@@ -179,6 +197,12 @@ public:
      *  @param[in] schema    Schema to search for Keys.
      */
     void setKeys(std::string const& alias, Schema const& schema);
+
+    ShapeSlotDefinition(ShapeSlotDefinition const &) = default;
+    ShapeSlotDefinition(ShapeSlotDefinition &&) = default;
+    ShapeSlotDefinition & operator=(ShapeSlotDefinition const &) = default;
+    ShapeSlotDefinition & operator=(ShapeSlotDefinition &&) = default;
+    ~ShapeSlotDefinition() = default;
 
 private:
     MeasKey _measKey;

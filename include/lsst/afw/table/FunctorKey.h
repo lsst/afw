@@ -41,7 +41,7 @@ class OutputFunctorKey {
 public:
     virtual T get(BaseRecord const& record) const = 0;
 
-    virtual ~OutputFunctorKey() {}
+    virtual ~OutputFunctorKey() = default;
 };
 
 /**
@@ -55,7 +55,7 @@ class InputFunctorKey {
 public:
     virtual void set(BaseRecord& record, T const& value) const = 0;
 
-    virtual ~InputFunctorKey() {}
+    virtual ~InputFunctorKey() = default;
 };
 
 /**
@@ -82,7 +82,7 @@ class ReferenceFunctorKey {
 public:
     virtual T getReference(BaseRecord& record) const = 0;
 
-    virtual ~ReferenceFunctorKey() {}
+    virtual ~ReferenceFunctorKey() = default;
 };
 
 /**
@@ -100,7 +100,7 @@ class ConstReferenceFunctorKey {
 public:
     virtual T getConstReference(BaseRecord const& record) const = 0;
 
-    virtual ~ConstReferenceFunctorKey() {}
+    virtual ~ConstReferenceFunctorKey() = default;
 };
 }
 }

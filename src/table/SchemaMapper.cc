@@ -112,6 +112,8 @@ struct RemoveMinimalSchema {
 SchemaMapper::SchemaMapper() : _impl(new Impl(Schema(), Schema())) {}
 
 SchemaMapper::SchemaMapper(SchemaMapper const &other) : _impl(new Impl(*other._impl)) {}
+// Delegate to copy constructor for backwards compatibility
+SchemaMapper::SchemaMapper(SchemaMapper && other) : SchemaMapper(other) {}
 
 SchemaMapper::SchemaMapper(Schema const &input, Schema const &output) : _impl(new Impl(input, output)) {}
 
@@ -126,6 +128,10 @@ SchemaMapper &SchemaMapper::operator=(SchemaMapper const &other) {
     _impl.swap(tmp);
     return *this;
 }
+// Delegate to copy assignment for backwards compatibility
+SchemaMapper &SchemaMapper::operator=(SchemaMapper &&other) { return *this = other; }
+
+SchemaMapper::~SchemaMapper() = default;
 
 template <typename T>
 Key<T> SchemaMapper::addMapping(Key<T> const &inputKey, bool doReplace) {

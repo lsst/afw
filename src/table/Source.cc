@@ -365,6 +365,8 @@ static SourceFitsReader const sourceFitsReader;
 
 SourceRecord::SourceRecord(std::shared_ptr<SourceTable> const &table) : SimpleRecord(table) {}
 
+SourceRecord::~SourceRecord() = default;
+
 void SourceRecord::updateCoord(image::Wcs const &wcs) { setCoord(*wcs.pixelToSky(getCentroid())); }
 
 void SourceRecord::updateCoord(image::Wcs const &wcs, PointKey<double> const &key) {
@@ -392,6 +394,8 @@ SourceTable::SourceTable(Schema const &schema, std::shared_ptr<IdFactory> const 
         : SimpleTable(schema, idFactory), _slots(schema) {}
 
 SourceTable::SourceTable(SourceTable const &other) : SimpleTable(other), _slots(other._slots) {}
+// Delegate to copy constructor for backward compatibility
+SourceTable::SourceTable(SourceTable &&other) : SourceTable(other) {}
 
 void SourceTable::handleAliasChange(std::string const &alias) {
     if (alias.compare(0, 4, "slot") != 0) {

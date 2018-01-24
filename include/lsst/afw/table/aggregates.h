@@ -70,6 +70,12 @@ public:
     /// Construct from a pair of Keys
     PointKey(Key<T> const& x, Key<T> const& y) : _x(x), _y(y) {}
 
+    PointKey(PointKey const &) = default;
+    PointKey(PointKey &&) = default;
+    PointKey & operator=(PointKey const &) = default;
+    PointKey & operator=(PointKey &&) = default;
+    virtual ~PointKey() = default;
+
     /**
      *  Construct from a subschema, assuming x and y subfields
      *
@@ -224,6 +230,12 @@ public:
      */
     CoordKey(SubSchema const& s) : _ra(s["ra"]), _dec(s["dec"]) {}
 
+    CoordKey(CoordKey const &) = default;
+    CoordKey(CoordKey &&) = default;
+    CoordKey & operator=(CoordKey const &) = default;
+    CoordKey & operator=(CoordKey &&) = default;
+    virtual ~CoordKey() = default;
+
     /// Get an IcrsCoord from the given record
     virtual coord::IcrsCoord get(BaseRecord const& record) const;
 
@@ -297,6 +309,12 @@ public:
      */
     QuadrupoleKey(SubSchema const& s) : _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
 
+    QuadrupoleKey(QuadrupoleKey const &) = default;
+    QuadrupoleKey(QuadrupoleKey &&) = default;
+    QuadrupoleKey & operator=(QuadrupoleKey const &) = default;
+    QuadrupoleKey & operator=(QuadrupoleKey &&) = default;
+    virtual ~QuadrupoleKey() = default;
+
     /// Get a Quadrupole from the given record
     virtual geom::ellipses::Quadrupole get(BaseRecord const& record) const;
 
@@ -360,6 +378,12 @@ public:
      *      EllipseKey k(schema["a"]);
      */
     EllipseKey(SubSchema const& s) : _qKey(s), _pKey(s) {}
+
+    EllipseKey(EllipseKey const &) = default;
+    EllipseKey(EllipseKey &&) = default;
+    EllipseKey & operator=(EllipseKey const &) = default;
+    EllipseKey & operator=(EllipseKey &&) = default;
+    virtual ~EllipseKey() = default;
 
     /// Get an Ellipse from the given record
     virtual geom::ellipses::Ellipse get(BaseRecord const& record) const;
@@ -463,6 +487,12 @@ public:
      *  "x_y_Cov".
      */
     CovarianceMatrixKey(SubSchema const& s, NameArray const& names);
+
+    CovarianceMatrixKey(CovarianceMatrixKey const &);
+    CovarianceMatrixKey(CovarianceMatrixKey &&);
+    CovarianceMatrixKey & operator=(CovarianceMatrixKey const &);
+    CovarianceMatrixKey & operator=(CovarianceMatrixKey &&);
+    virtual ~CovarianceMatrixKey();
 
     /// Get a covariance matrix from the given record
     virtual Eigen::Matrix<T, N, N> get(BaseRecord const& record) const;
