@@ -50,17 +50,17 @@ class Wcs;
 namespace math {
 
 /**
-* Lanczos warping: accurate but slow and can introduce ringing artifacts.
-*
-* This kernel is the product of two 1-dimensional Lanczos functions.
-* The number of minima and maxima in the 1-dimensional Lanczos function is 2*order + 1.
-* The kernel has one pixel per function minimum or maximum; but as applied to warping,
-* the first or last pixel is always zero and can be omitted. Thus the kernel size is 2*order x 2*order.
-*
-* For more information about warping kernels see makeWarpingKernel
-*
-* @todo: make a new class WarpingKernel and make this a subclass.
-*/
+ * Lanczos warping: accurate but slow and can introduce ringing artifacts.
+ *
+ * This kernel is the product of two 1-dimensional Lanczos functions.
+ * The number of minima and maxima in the 1-dimensional Lanczos function is 2*order + 1.
+ * The kernel has one pixel per function minimum or maximum; but as applied to warping,
+ * the first or last pixel is always zero and can be omitted. Thus the kernel size is 2*order x 2*order.
+ *
+ * For more information about warping kernels see makeWarpingKernel
+ *
+ * @todo: make a new class WarpingKernel and make this a subclass.
+ */
 class LanczosWarpingKernel : public SeparableKernel {
 public:
     explicit LanczosWarpingKernel(int order  ///< order of Lanczos function
@@ -73,8 +73,8 @@ public:
     virtual std::shared_ptr<Kernel> clone() const;
 
     /**
-    * get the order of the kernel
-    */
+     * get the order of the kernel
+     */
     int getOrder() const;
 
 protected:
@@ -82,14 +82,14 @@ protected:
 };
 
 /**
-* Bilinear warping: fast; good for undersampled data.
-*
-* The kernel size is 2 x 2.
-*
-* For more information about warping kernels see makeWarpingKernel
-*
-* @todo: make a new class WarpingKernel and make this a subclass.
-*/
+ * Bilinear warping: fast; good for undersampled data.
+ *
+ * The kernel size is 2 x 2.
+ *
+ * For more information about warping kernels see makeWarpingKernel
+ *
+ * @todo: make a new class WarpingKernel and make this a subclass.
+ */
 class BilinearWarpingKernel : public SeparableKernel {
 public:
     explicit BilinearWarpingKernel()
@@ -141,14 +141,14 @@ protected:
 };
 
 /**
-* Nearest neighbor warping: fast; good for undersampled data.
-*
-* The kernel size is 2 x 2.
-*
-* For more information about warping kernels see makeWarpingKernel
-*
-* @todo: make a new class WarpingKernel and make this a subclass.
-*/
+ * Nearest neighbor warping: fast; good for undersampled data.
+ *
+ * The kernel size is 2 x 2.
+ *
+ * For more information about warping kernels see makeWarpingKernel
+ *
+ * @todo: make a new class WarpingKernel and make this a subclass.
+ */
 class NearestWarpingKernel : public SeparableKernel {
 public:
     explicit NearestWarpingKernel() : SeparableKernel(2, 2, NearestFunction1(0.0), NearestFunction1(0.0)) {}
@@ -277,7 +277,7 @@ public:
      * Note the new cache is not computed until getWarpingKernel or getMaskWarpingKernel is called.
      */
     void setCacheSize(int cacheSize  ///< cache size
-                      ) {
+    ) {
         _cacheSize = cacheSize;
     };
 
@@ -295,7 +295,7 @@ public:
      *   (and so is only intended for unit tests)
      */
     void setInterpLength(int interpLength  ///< interpolation length (pixels)
-                         ) {
+    ) {
         _interpLength = interpLength;
     };
 
@@ -308,7 +308,7 @@ public:
      * set the warping kernel by name
      */
     void setWarpingKernelName(std::string const &warpingKernelName  ///< name of warping kernel
-                              );
+    );
 
     /**
      * set the warping kernel
@@ -316,7 +316,7 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if new kernel pointer is empty.
      */
     void setWarpingKernel(SeparableKernel const &warpingKernel  ///< warping kernel
-                          );
+    );
 
     /**
      * get the mask warping kernel
@@ -333,7 +333,7 @@ public:
      */
     void setMaskWarpingKernelName(std::string const &maskWarpingKernelName
                                   ///< name of mask warping kernel; use "" to clear the kernel
-                                  );
+    );
 
     /**
      * set the mask warping kernel
@@ -341,7 +341,7 @@ public:
      * @note To clear the mask warping kernel use setMaskWarpingKernelName("").
      */
     void setMaskWarpingKernel(SeparableKernel const &maskWarpingKernel  ///< mask warping kernel
-                              );
+    );
 
     /**
      * get mask bits to grow to full width of image/variance kernel
@@ -353,7 +353,7 @@ public:
      */
     void setGrowFullMask(lsst::afw::image::MaskPixel growFullMask  ///< mask bits to grow to full width
                                                                    ///< of image/variance kernel
-                         ) {
+    ) {
         _growFullMask = growFullMask;
     }
 
@@ -392,7 +392,7 @@ int warpExposure(
                         typename lsst::afw::image::detail::image_traits<
                                 typename DestExposureT::MaskedImageT>::image_category())
         ///< use this value for undefined (edge) pixels
-        );
+);
 
 /**
  * @brief Warp an Image or MaskedImage to a new Wcs. See also convenience function
@@ -443,7 +443,7 @@ int warpImage(DestImageT &destImage,                 ///< remapped %image
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
               ///< use this value for undefined (edge) pixels
-              );
+);
 
 /**
  * @brief A variant of warpImage that uses an XYTransform instead of a pair of WCS
@@ -458,7 +458,7 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
               ///< use this value for undefined (edge) pixels
-              );
+);
 
 /**
  * @brief A variant of warpImage that uses a TransformPoint2ToPoint2
@@ -474,14 +474,11 @@ int warpImage(DestImageT &destImage,                            ///< remapped %i
  * @return the number of good pixels
  */
 template <typename DestImageT, typename SrcImageT>
-int warpImage(DestImageT &destImage,
-              SrcImageT const &srcImage,
-              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const & destToSrc,
+int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
+              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,
               WarpingControl const &control,
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-                      typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
-              );
-
+                      typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()));
 
 /**
  * Warp an image with a LinearTranform about a specified point.
@@ -498,7 +495,7 @@ int warpCenteredImage(
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                 typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
         ///< use this value for undefined (edge) pixels
-        );
+);
 
 namespace details {
 template <typename A, typename B>
@@ -510,9 +507,9 @@ template <typename A>
 bool isSameObject(A const &a, A const &b) {
     return &a == &b;
 }
-}
-}
-}
-}  // lsst::afw::math
+}  // namespace details
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !defined(LSST_AFW_MATH_WARPEXPOSURE_H)
