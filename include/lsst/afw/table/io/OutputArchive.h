@@ -40,9 +40,11 @@ public:
 
     /// Copy-construct an OutputArchive.  Saved objects are not deep-copied.
     OutputArchive(OutputArchive const& other);
+    OutputArchive(OutputArchive && other);
 
     /// Assign from another OutputArchive.  Saved objects are not deep-copied.
     OutputArchive& operator=(OutputArchive const& other);
+    OutputArchive& operator=(OutputArchive && other);
 
     // (trivial) destructor must be defined in the source for pimpl idiom.
     ~OutputArchive();

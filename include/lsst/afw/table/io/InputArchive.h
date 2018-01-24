@@ -40,9 +40,11 @@ public:
 
     /// Copy-constructor.  Does not deep-copy loaded Persistables.
     InputArchive(InputArchive const& other);
+    InputArchive(InputArchive && other);
 
     /// Assignment.  Does not deep-copy loaded Persistables.
     InputArchive& operator=(InputArchive const& other);
+    InputArchive& operator=(InputArchive && other);
 
     ~InputArchive();
 

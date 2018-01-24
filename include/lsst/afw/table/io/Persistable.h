@@ -101,7 +101,7 @@ public:
     /// Return true if this particular object can be persisted using afw::table::io.
     virtual bool isPersistable() const { return false; }
 
-    virtual ~Persistable() {}
+    virtual ~Persistable() = default;
 
 protected:
     // convenient for derived classes not in afw::table::io
@@ -133,11 +133,13 @@ protected:
      */
     virtual void write(OutputArchiveHandle& handle) const;
 
-    Persistable() {}
+    Persistable() = default;
 
-    Persistable(Persistable const& other) {}
+    Persistable(Persistable const& other) = default;
+    Persistable(Persistable && other) = default;
 
-    void operator=(Persistable const& other) {}
+    Persistable & operator=(Persistable const& other) = default;
+    Persistable & operator=(Persistable && other) = default;
 
 private:
     friend class io::OutputArchive;
@@ -244,7 +246,7 @@ public:
      */
     static PersistableFactory const& lookup(std::string const& name, std::string const& module = "");
 
-    virtual ~PersistableFactory() {}
+    virtual ~PersistableFactory() = default;
 
     // No copying
     PersistableFactory(const PersistableFactory&) = delete;

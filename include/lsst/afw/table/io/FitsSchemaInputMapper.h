@@ -14,7 +14,7 @@ namespace io {
 
 class FitsColumnReader {
 public:
-    FitsColumnReader() {}
+    FitsColumnReader() = default;
 
     // Neither copyable nor moveable.
     FitsColumnReader(FitsColumnReader const &) = delete;
@@ -25,7 +25,7 @@ public:
     virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
                           std::shared_ptr<InputArchive> const &archive) const = 0;
 
-    virtual ~FitsColumnReader() {}
+    virtual ~FitsColumnReader() = default;
 };
 
 /**
@@ -66,6 +66,12 @@ public:
 
     /// Construct a mapper from a PropertyList of FITS header values, stripping recognized keys if desired.
     FitsSchemaInputMapper(daf::base::PropertyList &metadata, bool stripMetadata);
+
+    FitsSchemaInputMapper(FitsSchemaInputMapper const &);
+    FitsSchemaInputMapper(FitsSchemaInputMapper &&);
+    FitsSchemaInputMapper & operator=(FitsSchemaInputMapper const &);
+    FitsSchemaInputMapper & operator=(FitsSchemaInputMapper &&);
+    ~FitsSchemaInputMapper();
 
     /**
      *  Set the Archive to an externally-provided one, overriding any that may have been read.

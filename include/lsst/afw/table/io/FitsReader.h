@@ -42,6 +42,11 @@ public:
      */
     explicit FitsReader(std::string const& persistedClassName);
 
+    FitsReader(FitsReader const &) = default;
+    FitsReader(FitsReader &&) = default;
+    FitsReader & operator=(FitsReader const &) = default;
+    FitsReader & operator=(FitsReader &&) = default;
+
     /**
      *  Create a new Catalog by reading a FITS binary table.
      *
@@ -132,7 +137,7 @@ public:
      */
     virtual bool usesArchive(int ioFlags) const { return false; }
 
-    virtual ~FitsReader() {}
+    virtual ~FitsReader() = default;
 
 private:
     static FitsReader const* _lookupFitsReader(daf::base::PropertyList const& metadata);
