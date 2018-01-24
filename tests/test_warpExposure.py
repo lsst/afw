@@ -23,6 +23,8 @@
 """Test warpExposure
 """
 from __future__ import absolute_import, division, print_function
+
+import collections
 import math
 import os
 import unittest
@@ -112,6 +114,53 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
     return afwImage.makeWcs(ps)
 
 
+def makeVisitInfo():
+    """Return a non-NaN visitInfo."""
+    fields = ['exposureId',
+              'exposureTime',
+              'darkTime',
+              'date',
+              'ut1',
+              'era',
+              'boresightRaDec',
+              'boresightAzAlt',
+              'boresightAirmass',
+              'boresightRotAngle',
+              'rotType',
+              'observatory',
+              'weather'
+              ]
+    VisitInfoData = collections.namedtuple("VisitInfoData", fields)
+    data = VisitInfoData(exposureId=10313423,
+                         exposureTime=10.01,
+                         darkTime=11.02,
+                         date=dafBase.DateTime(65321.1, dafBase.DateTime.MJD, dafBase.DateTime.TAI),
+                         ut1=12345.1,
+                         era=45.1*afwGeom.degrees,
+                         boresightRaDec=afwCoord.IcrsCoord(23.1*afwGeom.degrees, 73.2*afwGeom.degrees),
+                         boresightAzAlt=afwCoord.Coord(134.5*afwGeom.degrees, 33.3*afwGeom.degrees),
+                         boresightAirmass=1.73,
+                         boresightRotAngle=73.2*afwGeom.degrees,
+                         rotType=afwImage.RotType.SKY,
+                         observatory=afwCoord.Observatory(11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
+                         weather=afwCoord.Weather(1.1, 2.2, 34.5),
+                         )
+    return afwImage.VisitInfo(data.exposureId,
+                              data.exposureTime,
+                              data.darkTime,
+                              data.date,
+                              data.ut1,
+                              data.era,
+                              data.boresightRaDec,
+                              data.boresightAzAlt,
+                              data.boresightAirmass,
+                              data.boresightRotAngle,
+                              data.rotType,
+                              data.observatory,
+                              data.weather,
+                              )
+
+
 class WarpExposureTestCase(lsst.utils.tests.TestCase):
     """Test case for warpExposure
     """
@@ -135,6 +184,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
 
         originalExposure = afwImage.ExposureF(originalExposurePath)
+        originalExposure.getInfo().setVisitInfo(makeVisitInfo())
         originalFilter = afwImage.Filter("i")
         originalCalib = afwImage.Calib()
         originalCalib.setFluxMag0(1.0e5, 1.0e3)
@@ -154,6 +204,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                          originalFilter.getName())
         self.assertEqual(afwWarpedExposure.getCalib().getFluxMag0(),
                          originalCalib.getFluxMag0())
+        self.assertEqual(afwWarpedExposure.getInfo().getVisitInfo(),
+                         originalExposure.getInfo().getVisitInfo())
 
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
