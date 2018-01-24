@@ -229,6 +229,7 @@ PYBIND11_PLUGIN(_fits) {
     declareFits(mod);
 
     mod.attr("DEFAULT_HDU") = DEFAULT_HDU;
+    mod.def("combineMetadata", combineMetadata, "first"_a, "second"_a);
     mod.def("readMetadata",
             [](std::string const& filename, int hdu=DEFAULT_HDU, bool strip=false) {
                 return readMetadata(filename, hdu, strip);
