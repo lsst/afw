@@ -27,6 +27,7 @@
  */
 
 #include <cstdlib>
+#include <limits>
 
 #include "boost/format.hpp"
 
@@ -62,14 +63,14 @@ char const *const Random::_seedEnvVarName = "LSST_RNG_SEED";
 // -- Private helper functions --------
 
 void Random::initialize() {
-    if (_seed == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterError, (boost::format("Invalid RNG seed: %lu") % _seed).str());
-    }
     ::gsl_rng *rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
     if (rng == 0) {
         throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_alloc() failed");
     }
-    ::gsl_rng_set(rng, _seed);
+    // This seed is guaranteed to be non-zero.
+    // We want to give a non-zero seed to GSL to avoid it choosing its own.
+    unsigned long int useSeed = _seed == 0 ? std::numeric_limits<unsigned long int>::max() : _seed;
+    ::gsl_rng_set(rng, useSeed);
     _rng.reset(rng, ::gsl_rng_free);
 }
 
