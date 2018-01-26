@@ -36,5 +36,5 @@ from .ampInfo import *
 from .exposure import *
 from .match import *
 from .catalogMatches import *
-from .utils import *
+from .wcsUtils import *
 from .multiMatch import *
