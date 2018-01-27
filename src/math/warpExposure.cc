@@ -247,6 +247,7 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
     std::shared_ptr<image::Calib> calibCopy(new image::Calib(*srcExposure.getCalib()));
     destExposure.setCalib(calibCopy);
     destExposure.setFilter(srcExposure.getFilter());
+    destExposure.getInfo()->setVisitInfo(srcExposure.getInfo()->getVisitInfo());
     return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(), control,
                      padValue);
 }
