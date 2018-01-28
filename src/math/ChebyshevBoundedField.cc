@@ -305,25 +305,20 @@ namespace {
 struct PersistenceHelper {
     table::Schema schema;
     table::Key<int> orderX;
-    table::PointKey<int> bboxMin;
-    table::PointKey<int> bboxMax;
+    table::Box2IKey bbox;
     table::Key< table::Array<double> > coefficients;
 
     PersistenceHelper(int nx, int ny)
             : schema(),
         orderX(schema.addField<int>("order_x", "maximum Chebyshev function order in x")),
-              bboxMin(table::PointKey<int>::addFields(schema, "bbox_min", "lower-left corner of bounding box",
-                                                      "pixel")),
-              bboxMax(table::PointKey<int>::addFields(schema, "bbox_max",
-                                                      "upper-right corner of bounding box", "pixel")),
+              bbox(table::Box2IKey::addFields(schema, "bbox", "bounding box", "pixel")),
               coefficients(schema.addField<table::Array<double> >(
                       "coefficients", "Chebyshev function coefficients, ordered by y then x", nx * ny)) {}
 
     PersistenceHelper(table::Schema const& s)
             : schema(s),
         orderX(s["order_x"]),
-        bboxMin(s["bbox_min"]),
-        bboxMax(s["bbox_max"]),
+        bbox(s["bbox"]),
               coefficients(s["coefficients"]) {}
 };
 
@@ -338,8 +333,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();
         PersistenceHelper const keys(record.getSchema());
-        // NOTE: needed invert=false in case min=-1, max=0 (empty bbox). See RFC-324 and DM-10200
-        geom::Box2I bbox(record.get(keys.bboxMin), record.get(keys.bboxMax), false);
+        geom::Box2I bbox(record.get(keys.bbox));
         int nx = record.get(keys.orderX) + 1;
         int ny = keys.coefficients.getSize() / nx;
         LSST_ARCHIVE_ASSERT(nx * ny == keys.coefficients.getSize());
@@ -366,8 +360,7 @@ void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     record->set(keys.orderX, _coefficients.getSize<1>() - 1);
-    record->set(keys.bboxMin, getBBox().getMin());
-    record->set(keys.bboxMax, getBBox().getMax());
+    record->set(keys.bbox, getBBox());
     (*record)[keys.coefficients].deep() = ndarray::flatten<1>(_coefficients);
     handle.saveCatalog(catalog);
 }

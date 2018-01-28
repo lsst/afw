@@ -30,6 +30,7 @@
 
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -49,6 +50,9 @@ namespace {
 
 template <typename T>
 using PyPointKey = py::class_<PointKey<T>, std::shared_ptr<PointKey<T>>>;
+
+template <typename Box>
+using PyBoxKey = py::class_<BoxKey<Box>, std::shared_ptr<BoxKey<Box>>>;
 
 using PyCoordKey = py::class_<CoordKey, std::shared_ptr<CoordKey>>;
 
@@ -76,6 +80,23 @@ static void declarePointKey(py::module &mod, std::string const &suffix) {
         return self.set(record, value);
     });
     cls.def("get", &PointKey<T>::get);
+};
+
+template <typename Box>
+static void declareBoxKey(py::module &mod, std::string const &suffix) {
+    using Element = typename Box::Element;
+    PyBoxKey<Box> cls(mod, ("Box" + suffix + "Key").c_str());
+    cls.def(py::init<>());
+    cls.def(py::init<PointKey<Element> const &, PointKey<Element> const &>(), "min"_a, "max"_a);
+    cls.def(py::init<SubSchema const &>());
+    cls.def("__eq__", &BoxKey<Box>::operator==, py::is_operator());
+    cls.def("__ne__", &BoxKey<Box>::operator!=, py::is_operator());
+    cls.def("getMin", &BoxKey<Box>::getMin);
+    cls.def("getMax", &BoxKey<Box>::getMax);
+    cls.def("isValid", &BoxKey<Box>::isValid);
+    cls.def_static("addFields", &BoxKey<Box>::addFields, "schema"_a, "name"_a, "doc"_a, "unit"_a);
+    cls.def("set", &BoxKey<Box>::set);
+    cls.def("get", &BoxKey<Box>::get);
 };
 
 static void declareCoordKey(py::module &mod) {
@@ -179,6 +200,9 @@ PYBIND11_PLUGIN(aggregates) {
 
     declarePointKey<double>(mod, "2D");
     declarePointKey<int>(mod, "2I");
+
+    declareBoxKey<geom::Box2D>(mod, "2D");
+    declareBoxKey<geom::Box2I>(mod, "2I");
 
     declareCoordKey(mod);
     declareQuadrupoleKey(mod);

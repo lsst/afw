@@ -112,6 +112,61 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.doTestPointKey("D", lsst.afw.table.Point2DKey,
                             lsst.afw.geom.Point2D)
 
+    def doTestBoxKey(self, pointFieldType, functorKeyType, valueType):
+        """Run type-parameterized tests on a Box FunctorKey.
+
+        Parameters
+        ----------
+        pointFieldType : `type`
+            A FunctorKey class for the Point type of this box; one of
+            Point2IKey or Point2DKey.
+        functorKeyType : `type`
+            The Box FunctorKey class to test; one of Box2IKey or Box2DKey.
+        valueType : `type`
+            The Box type to test; one of Box2I or Box2D.
+        """
+        schema = lsst.afw.table.Schema()
+        fKey0 = functorKeyType.addFields(schema, "a", "box", "pixel")
+        minKey = pointFieldType(schema["a_min"])
+        maxKey = pointFieldType(schema["a_max"])
+        # we create two equivalent functor keys, using the two different constructors
+        fKey1 = functorKeyType(minKey, maxKey)
+        fKey2 = functorKeyType(schema["a"])
+        # test that they're equivalent, and that their constituent keys are what we expect
+        self.assertEqual(fKey0.getMin(), minKey)
+        self.assertEqual(fKey0.getMax(), maxKey)
+        self.assertEqual(fKey1.getMin(), minKey)
+        self.assertEqual(fKey2.getMin(), minKey)
+        self.assertEqual(fKey1.getMax(), maxKey)
+        self.assertEqual(fKey2.getMax(), maxKey)
+        self.assertEqual(fKey0, fKey1)
+        self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
+        self.assertTrue(fKey1.isValid())
+        self.assertTrue(fKey2.isValid())
+        # check that a default-constructed functor key is invalid
+        fKey3 = functorKeyType()
+        self.assertNotEqual(fKey3, fKey1)
+        self.assertFalse(fKey3.isValid())
+        # create a record from the test schema, and fill it using the constituent keys
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        record.set(minKey, valueType.Point(2, 4))
+        record.set(maxKey, valueType.Point(5, 8))
+        # test that the return type and value is correct
+        self.assertIsInstance(record.get(fKey1), valueType)
+        self.assertEqual(record.get(fKey1).getMin(), record.get(minKey))
+        self.assertEqual(record.get(fKey1).getMax(), record.get(maxKey))
+        # test that we can set using the functor key
+        b = valueType(valueType.Point(8, 16), valueType.Point(11, 20))
+        record.set(fKey1, b)
+        self.assertEqual(record.get(minKey), b.getMin())
+        self.assertEqual(record.get(maxKey), b.getMax())
+
+    def testBoxKey(self):
+        self.doTestBoxKey(lsst.afw.table.Point2IKey, lsst.afw.table.Box2IKey, lsst.afw.geom.Box2I)
+        self.doTestBoxKey(lsst.afw.table.Point2DKey, lsst.afw.table.Box2DKey, lsst.afw.geom.Box2D)
+
     def testCoordKey(self):
         schema = lsst.afw.table.Schema()
         fKey0 = lsst.afw.table.CoordKey.addFields(schema, "a", "position")

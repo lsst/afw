@@ -34,6 +34,9 @@ namespace geom {
 template <typename T, int N>
 class Point;
 
+class Box2I;
+class Box2D;
+
 namespace ellipses {
 
 class Quadrupole;
@@ -105,6 +108,87 @@ private:
 
 typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
+
+
+/**
+ *  A FunctorKey used to get or set a geom::Box2I or Box2D from a (min, max) pair of PointKeys.
+ *
+ *  The Box2IKey and Box2DKey typedefs should be preferred to using the template name directly.
+ */
+template <typename Box>
+class BoxKey : public FunctorKey<Box> {
+public:
+
+    /// Type of coordinate elements (i.e. int or double).
+    using Element = typename Box::Element;
+
+    /**
+     *  Add _min_x, _min_y, _max_x, _max_y fields to a Schema, and return a BoxKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; suffixes above will
+     *                         be appended to this to form the full field
+     *                         names.  For example, if `name == "b"`, the
+     *                         fields added will be "b_min_x", "b_min_y",
+     *                         "b_max_x", and "b_max_y".
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     *
+     */
+    static BoxKey addFields(Schema& schema, std::string const& name, std::string const& doc,
+                            std::string const& unit);
+
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
+    BoxKey() = default;
+
+    /// Construct from a pair of PointKeys
+    BoxKey(PointKey<Element> const& min, PointKey<Element> const& max) : _min(min), _max(max) {}
+
+    /**
+     *  Construct from a subschema, assuming _min_x, _max_x, _min_y, _max_y subfields
+     *
+     *  If a schema has "a_min_x" and "a_min_x" (etc) fields, this constructor allows you to construct
+     *  a BoxKey via:
+     *
+     *      BoxKey<Box> k(schema["a"]);
+     */
+    BoxKey(SubSchema const& s) : _min(s["min"]), _max(s["max"]) {}
+
+    BoxKey(BoxKey const &) = default;
+    BoxKey(BoxKey &&) = default;
+    BoxKey & operator=(BoxKey const &) = default;
+    BoxKey & operator=(BoxKey &&) = default;
+    virtual ~BoxKey() = default;
+
+    /// Get a Point from the given record
+    virtual Box get(BaseRecord const& record) const;
+
+    /// Set a Point in the given record
+    virtual void set(BaseRecord& record, Box const& value) const;
+
+    //@{
+    /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
+    bool operator==(BoxKey const& other) const { return _min == other._min && _max == other._max; }
+    bool operator!=(BoxKey const& other) const { return !(*this == other); }
+    //@}
+
+    /// Return True if both the min and max PointKeys are valid.
+    bool isValid() const { return _min.isValid() && _max.isValid(); }
+
+    /// Return the underlying min PointKey
+    PointKey<Element> getMin() const { return _min; }
+
+    /// Return the underlying max PointKey
+    PointKey<Element> getMax() const { return _max; }
+
+private:
+    PointKey<Element> _min;
+    PointKey<Element> _max;
+};
+
+using Box2IKey = BoxKey<geom::Box2I>;
+using Box2DKey = BoxKey<geom::Box2D>;
+
 
 /**
  *  A FunctorKey used to get or set celestial coordinates from a pair of Angle keys.

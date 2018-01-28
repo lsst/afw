@@ -40,6 +40,11 @@ PointKey.register((np.int32, 2), aggregates.Point2IKey)
 PointKey.register((np.float64, 2), aggregates.Point2DKey)
 
 
+# Because Boxes aren't templates themselves, we don't expose the fact that
+# BoxKey is a template to the Python user; it's considered an implementation
+# detail.
+
+
 class CovarianceMatrixKey(with_metaclass(TemplateMeta, object)):
     TEMPLATE_PARAMS = ("dtype", "dim")
 

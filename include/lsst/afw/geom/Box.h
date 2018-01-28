@@ -56,6 +56,7 @@ class Box2I {
 public:
     typedef Point2I Point;
     typedef Extent2I Extent;
+    typedef int Element;
 
     enum EdgeHandlingEnum { EXPAND, SHRINK };
 
@@ -267,6 +268,7 @@ class Box2D {
 public:
     typedef Point2D Point;
     typedef Extent2D Extent;
+    typedef double Element;
 
     /**
      *  Value the maximum coordinate is multiplied by to increase it by the smallest

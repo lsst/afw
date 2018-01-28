@@ -204,9 +204,11 @@ public:
     /// Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
     /// Key for the minimum point of the bbox.
-    static PointKey<int> getBBoxMinKey() { return getMinimalSchema().bboxMin; }
+    static PointKey<int> getBBoxMinKey() { return getMinimalSchema().bbox.getMin(); }
     /// Key for the maximum point of the bbox.
-    static PointKey<int> getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
+    static PointKey<int> getBBoxMaxKey() { return getMinimalSchema().bbox.getMax(); }
+    /// Key for the full bbox.
+    static Box2IKey getBBoxKey() { return getMinimalSchema().bbox; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -241,8 +243,7 @@ private:
     struct MinimalSchema {
         Schema schema;
         Key<RecordId> id;
-        PointKey<int> bboxMin;
-        PointKey<int> bboxMax;
+        Box2IKey bbox;
 
         MinimalSchema();
     };
