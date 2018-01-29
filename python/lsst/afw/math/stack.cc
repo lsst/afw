@@ -59,6 +59,15 @@ void declareStatisticsStack(py::module &mod) {
             "wvector"_a = std::vector<lsst::afw::image::VariancePixel>(0),
             "clipped"_a=0, "excuse"_a=0);
     mod.def("statisticsStack",
+            (void (*)(lsst::afw::image::MaskedImage<PixelT> &,
+                      std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>> &, Property,
+                      StatisticsControl const &,
+                      std::vector<lsst::afw::image::VariancePixel> const &,
+                      lsst::afw::image::MaskPixel,
+                      std::vector<std::pair<lsst::afw::image::MaskPixel, lsst::afw::image::MaskPixel>> const &
+                ))statisticsStack<PixelT>,
+            "out"_a, "images"_a, "flags"_a, "sctrl"_a, "wvector"_a, "clipped"_a, "maskMap"_a);
+    mod.def("statisticsStack",
             (std::shared_ptr<lsst::afw::image::Image<PixelT>>(*)(
                     std::vector<std::shared_ptr<lsst::afw::image::Image<PixelT>>> &, Property,
                     StatisticsControl const &,
@@ -74,6 +83,15 @@ void declareStatisticsStack(py::module &mod) {
             "images"_a, "flags"_a, "sctrl"_a = StatisticsControl(),
             "wvector"_a = std::vector<lsst::afw::image::VariancePixel>(0),
             "clipped"_a=0, "excuse"_a=0);
+    mod.def("statisticsStack",
+            (std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>(*)(
+                    std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>> &, Property,
+                    StatisticsControl const &,
+                    std::vector<lsst::afw::image::VariancePixel> const &,
+                    lsst::afw::image::MaskPixel,
+                    std::vector<std::pair<lsst::afw::image::MaskPixel, lsst::afw::image::MaskPixel>> const &
+                ))statisticsStack<PixelT>,
+            "images"_a, "flags"_a, "sctrl"_a, "wvector"_a, "clipped"_a, "maskMap"_a);
     mod.def("statisticsStack",
             (std::shared_ptr<std::vector<PixelT>>(*)(
                     std::vector<std::shared_ptr<std::vector<PixelT>>> &, Property, StatisticsControl const &,
