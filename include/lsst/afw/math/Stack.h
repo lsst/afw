@@ -67,13 +67,43 @@ void statisticsStack(
                 std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
         );
 
+
+/**
+ * A function to compute some statistics of a stack of Masked Images
+ *
+ * @param[in] images    MaskedImages to process.
+ * @param[in] flags     Statistics requested.
+ * @param[in] sctrl     Control structure.
+ * @param[in] wvector   Vector of weights.
+ * @param[in] clipped   Mask to set for pixels that were clipped (NOT rejected
+ *                      due to masks).
+ * @param[in] maskMap   Vector of pairs of mask pixel values; any pixel
+ *                      on an input with any of the bits in .first will result
+ *                      in all of the bits in .second being set on the
+ *                      corresponding pixel on the output.
+ *
+ * If none of the input images are valid for some pixel,
+ * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ *
+ * All the work is done in the function computeMaskedImageStack.
+ */
+template <typename PixelT>
+std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
+        std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>>& images,
+        Property flags,
+        StatisticsControl const& sctrl,
+        std::vector<lsst::afw::image::VariancePixel> const& wvector,
+        image::MaskPixel clipped,
+        std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap
+);
+
 /**
  * A function to compute some statistics of a stack of Masked Images
  *
  * If none of the input images are valid for some pixel,
  * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
  *
- * All the work is done in the function computeMaskedImageStack.
+ * Delegates to the more general version of statisticsStack taking a maskMap.
  */
 template <typename PixelT>
 std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
@@ -83,9 +113,40 @@ std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
         StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
                 std::vector<lsst::afw::image::VariancePixel>(0),  ///< vector containing weights
-        image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped
+        image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped or masked
         image::MaskPixel excuse=0 ///< bitmask to excuse from marking as clipped
-        );
+);
+
+
+/**
+ * A function to compute some statistics of a stack of Masked Images
+ *
+ * @param[out] out      Output MaskedImage.
+ * @param[in] images    MaskedImages to process.
+ * @param[in] flags     Statistics requested.
+ * @param[in] sctrl     Control structure.
+ * @param[in] wvector   Vector of weights.
+ * @param[in] clipped   Mask to set for pixels that were clipped (NOT rejected
+ *                      due to masks).
+ * @param[in] maskMap   Vector of pairs of mask pixel values; any pixel
+ *                      on an input with any of the bits in .first will result
+ *                      in all of the bits in .second being set on the
+ *                      corresponding pixel on the output.
+ *
+ * If none of the input images are valid for some pixel,
+ * the afwMath::StatisticsControl::getNoGoodPixelsMask() bit(s) are set.
+ *
+ * All the work is done in the function computeMaskedImageStack.
+ */
+template <typename PixelT>
+void statisticsStack(lsst::afw::image::MaskedImage<PixelT>& out,
+                     std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>>& images,
+                     Property flags,
+                     StatisticsControl const& sctrl,
+                     std::vector<lsst::afw::image::VariancePixel> const& wvector,
+                     image::MaskPixel clipped,
+                     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap
+                     );
 
 /**
  * @ brief compute statistical stack of MaskedImage.  Write to output image in-situ
@@ -98,7 +159,7 @@ void statisticsStack(lsst::afw::image::MaskedImage<PixelT>& out,  ///< Output im
                      StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
                      std::vector<lsst::afw::image::VariancePixel> const& wvector =
                              std::vector<lsst::afw::image::VariancePixel>(0),  ///< vector containing weights
-                     image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped
+                     image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped or masked
                      image::MaskPixel excuse=0 ///< bitmask to excuse from marking as clipped
                      );
 
