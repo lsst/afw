@@ -92,7 +92,7 @@ protected:
     // multiplying an IdentityTransmissionCurve always yields the other operand
     std::shared_ptr<TransmissionCurve const> _multipliedByImpl(
         std::shared_ptr<TransmissionCurve const> other
-    ) const {
+    ) const override {
         return other;
     }
 
@@ -584,7 +584,7 @@ protected:
         Factory() : table::io::PersistableFactory(NAME) {}
     };
 
-    void write(OutputArchiveHandle & handle) const {
+    void write(OutputArchiveHandle & handle) const override {
         auto const & keys = PersistenceHelper::get();
         auto catalog = handle.makeCatalog(keys.schema);
         auto record = catalog.addNew();
@@ -673,7 +673,7 @@ protected:
 
     };
 
-    void write(OutputArchiveHandle & handle) const {
+    void write(OutputArchiveHandle & handle) const override {
         auto const & keys = PersistenceHelper::get();
         auto catalog = handle.makeCatalog(keys.schema);
         auto record = catalog.addNew();
