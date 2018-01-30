@@ -398,6 +398,17 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
         self.assertEqual(stack.getMask().get(1, 1), 0)
 
+        # Map that mask value to a different one.
+        rejected = 1 << afwImage.Mask().addMaskPlane("REJECTED")
+        maskMap = [(maskVal, rejected)]
+        images[0].getMask().set(1, 1, 0)        # only want to clip, not mask, this one
+        images[1].getMask().set(1, 2, maskVal)  # only want to mask, not clip, this one
+        stack = afwMath.statisticsStack(images, afwMath.MEANCLIP, statsCtrl, wvector=[], clipped=clipped,
+                                        maskMap=maskMap)
+        self.assertFloatsAlmostEqual(stack.getImage().getArray(), 0.0, atol=0.0)
+        self.assertEqual(stack.getMask().get(1, 1), clipped)
+        self.assertEqual(stack.getMask().get(1, 2), rejected)
+
 #################################################################
 # Test suite boiler plate
 #################################################################
