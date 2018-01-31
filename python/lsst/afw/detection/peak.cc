@@ -27,6 +27,8 @@
 
 //#include <pybind11/stl.h>
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/detection/Peak.h"
@@ -67,13 +69,8 @@ void declarePeakRecord(PyPeakRecord &cls) {
     cls.def("getF", &PeakRecord::getF);
     cls.def("getPeakValue", &PeakRecord::getPeakValue);
     cls.def("setPeakValue", &PeakRecord::setPeakValue);
-    auto streamStr = [](PeakRecord const &self) {
-        std::stringstream buffer;
-        buffer << self;
-        return buffer.str();
-    };
-    cls.def("__str__", streamStr);
-    cls.def("__repr__", streamStr);
+    utils::python::addOutputOp(cls, "__str__");
+    utils::python::addOutputOp(cls, "__repr__");
 }
 
 /**

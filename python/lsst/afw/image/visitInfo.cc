@@ -26,6 +26,8 @@
 #include <limits>
 #include <sstream>
 
+#include "lsst/utils/python.h"
+
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Observatory.h"
@@ -104,11 +106,7 @@ PYBIND11_PLUGIN(visitInfo) {
     cls.def("getLocalEra", &VisitInfo::getLocalEra);
     cls.def("getBoresightHourAngle", &VisitInfo::getBoresightHourAngle);
 
-    cls.def("__str__", [](VisitInfo const &self) {
-        std::stringstream os;
-        os << self;
-        return os.str();
-    });
+    utils::python::addOutputOp(cls, "__str__");
 
     /* Free Functions */
     mod.def("setVisitInfoMetadata", &detail::setVisitInfoMetadata, "metadata"_a, "visitInfo"_a);

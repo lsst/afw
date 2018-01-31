@@ -28,6 +28,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/utils/python.h"
+
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -154,11 +156,7 @@ PYBIND11_PLUGIN(photoCalib) {
     cls.def("__eq__", &PhotoCalib::operator==, py::is_operator());
     cls.def("__ne__", &PhotoCalib::operator!=, py::is_operator());
 
-    cls.def("__str__", [](PhotoCalib const &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
+    utils::python::addOutputOp(cls, "__str__");
     cls.def("__repr__", [](PhotoCalib const &self) {
         std::ostringstream os;
         os << "PhotoCalib(" << self << ")";

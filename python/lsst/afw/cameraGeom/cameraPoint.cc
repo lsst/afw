@@ -23,6 +23,8 @@
 #include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/cameraGeom/CameraPoint.h"
 
 namespace py = pybind11;
@@ -48,16 +50,8 @@ PYBIND11_PLUGIN(_cameraPoint) {
             py::is_operator());
     cls.def("__ne__", [](CameraPoint const &self, CameraPoint const &other) { return self != other; },
             py::is_operator());
-    cls.def("__str__", [](CameraPoint const &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
-    cls.def("__repr__", [](CameraPoint &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
+    utils::python::addOutputOp(cls, "__str__");
+    utils::python::addOutputOp(cls, "__repr__");
 
     /* Members */
     cls.def("getPoint", &CameraPoint::getPoint);

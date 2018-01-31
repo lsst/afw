@@ -22,6 +22,8 @@
 
 #include "pybind11/pybind11.h"
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/geom/Angle.h"
 
 namespace py = pybind11;
@@ -107,13 +109,8 @@ PYBIND11_PLUGIN(angle) {
         return py::make_tuple(clsAngle, py::make_tuple(py::cast(self.asRadians())));
     });
 
-    auto streamStr = [](Angle const& self) {
-        std::stringstream buffer;
-        buffer << self;
-        return buffer.str();
-    };
-    clsAngle.def("__str__", streamStr);
-    clsAngle.def("__repr__", streamStr);
+    utils::python::addOutputOp(clsAngle, "__str__");
+    utils::python::addOutputOp(clsAngle, "__repr__");
 
     clsAngle.def("asAngularUnits", &Angle::asAngularUnits);
     clsAngle.def("asRadians", &Angle::asRadians);

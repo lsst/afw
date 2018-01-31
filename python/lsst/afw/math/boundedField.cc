@@ -29,6 +29,8 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/math/BoundedField.h"
@@ -91,11 +93,7 @@ PYBIND11_PLUGIN(_boundedField) {
     declareTemplates<double>(cls);
     declareTemplates<float>(cls);
 
-    cls.def("__str__", [](BoundedField const &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
+    utils::python::addOutputOp(cls, "__str__");
     cls.def("__repr__", [](BoundedField const &self) {
         std::ostringstream os;
         os << "BoundedField(" << self << ")";

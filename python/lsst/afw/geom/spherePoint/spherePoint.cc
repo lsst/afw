@@ -26,6 +26,8 @@
 #include <memory>
 
 #include "lsst/utils/python.h"
+
+#include "lsst/utils/python.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/SpherePoint.h"
@@ -70,11 +72,7 @@ PYBIND11_PLUGIN(spherePoint) {
     cls.def("separation", &SpherePoint::separation, "other"_a);
     cls.def("rotated", &SpherePoint::rotated, "axis"_a, "amount"_a);
     cls.def("offset", &SpherePoint::offset, "bearing"_a, "amount"_a);
-    cls.def("__str__", [](SpherePoint const &self) {
-        std::ostringstream os;
-        os << std::fixed << self;
-        return os.str();
-    });
+    utils::python::addOutputOp(cls, "__str__");
     cls.def("__len__", [](SpherePoint const &) { return 2; });
     cls.def("__reduce__", [cls](SpherePoint const &self) {
         return py::make_tuple(cls,
