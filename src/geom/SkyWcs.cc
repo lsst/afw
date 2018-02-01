@@ -60,8 +60,6 @@ int const SERIALIZATION_VERSION = 1;
 // see FitsTol in the AST manual http://starlink.eao.hawaii.edu/devdocs/sun211.htx/sun211.html
 double const TIGHT_FITS_TOL = 0.0001;
 
-inline double square(double x) { return x * x; }
-
 class SkyWcsPersistenceHelper {
 public:
     table::Schema schema;
@@ -107,23 +105,6 @@ public:
 std::string getSkyWcsPersistenceName() { return "SkyWcs"; }
 
 SkyWcsFactory registration(getSkyWcsPersistenceName());
-
-// from https://stackoverflow.com/a/2072890
-inline bool endsWith(std::string const& value, std::string const& ending) {
-    if (ending.size() > value.size()) {
-        return false;
-    }
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
-// Get a double precision value from metadata, or 0 if absent
-// Useful for arrays, since omitted coefficients are 0
-double getDoubleOrZero(daf::base::PropertySet& metadata, std::string const& name) {
-    if (metadata.exists(name)) {
-        return metadata.getAsDouble(name);
-    }
-    return 0.0;
-}
 
 }  // namespace
 
