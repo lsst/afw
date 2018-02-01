@@ -163,10 +163,11 @@ class Mapping(object):
         fac = self.mapIntensityToUint8(self.intensity(imageR, imageG, imageB))
 
         imageRGB = [imageR, imageG, imageB]
-        for c in imageRGB:
-            c *= fac
-            # individual bands can still be < 0, even if fac isn't
-            c[c < 0] = 0
+        with np.errstate(invalid="ignore"):  # suppress NAN warnings
+            for c in imageRGB:
+                c *= fac
+                # individual bands can still be < 0, even if fac isn't
+                c[c < 0] = 0
 
         pixmax = self._uint8Max
         # copies -- could work row by row to minimise memory usage
