@@ -138,6 +138,10 @@ PeakTable::PeakTable(afw::table::Schema const& schema,
 PeakTable::PeakTable(PeakTable const& other)
         : afw::table::BaseTable(other),
           _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
+// Delegate to copy-constructor for backwards-compatibility
+PeakTable::PeakTable(PeakTable&& other) : PeakTable(other) {}
+
+PeakTable::~PeakTable() = default;
 
 PeakTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<afw::table::RecordId>("id", "unique ID");

@@ -53,7 +53,11 @@ public:
                                     std::vector<double> const &measurementList,
                                     std::vector<double> const &varianceList,
                                     std::vector<double> const &xPositionList, double errorDef);
-    virtual ~MinimizerFunctionBase1(){};
+    MinimizerFunctionBase1(MinimizerFunctionBase1 const &) = default;
+    MinimizerFunctionBase1(MinimizerFunctionBase1 &&) = default;
+    MinimizerFunctionBase1 & operator=(MinimizerFunctionBase1 const &) = default;
+    MinimizerFunctionBase1 & operator=(MinimizerFunctionBase1 &&) = default;
+    virtual ~MinimizerFunctionBase1() = default;
     // Required by ROOT::Minuit2::FCNBase
     virtual double Up() const { return _errorDef; }
     virtual double operator()(const std::vector<double> &) const;
@@ -83,7 +87,11 @@ public:
                                     std::vector<double> const &varianceList,
                                     std::vector<double> const &xPositionList,
                                     std::vector<double> const &yPositionList, double errorDef);
-    virtual ~MinimizerFunctionBase2(){};
+    MinimizerFunctionBase2(MinimizerFunctionBase2 const &) = default;
+    MinimizerFunctionBase2(MinimizerFunctionBase2 &&) = default;
+    MinimizerFunctionBase2 & operator=(MinimizerFunctionBase2 const &) = default;
+    MinimizerFunctionBase2 & operator=(MinimizerFunctionBase2 &&) = default;
+    virtual ~MinimizerFunctionBase2() = default;
     // Required by ROOT::Minuit2::FCNBase
     virtual double Up() const { return _errorDef; }
     virtual double operator()(const std::vector<double> &par) const;

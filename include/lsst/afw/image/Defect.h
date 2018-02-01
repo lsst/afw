@@ -43,7 +43,11 @@ public:
     explicit DefectBase(const geom::Box2I& bbox  ///< Bad pixels' bounding box
                         )
             : _bbox(bbox) {}
-    virtual ~DefectBase() {}
+    DefectBase(DefectBase const&) = default;
+    DefectBase(DefectBase&&) = default;
+    DefectBase& operator=(DefectBase const&) = default;
+    DefectBase& operator=(DefectBase&&) = default;
+    virtual ~DefectBase() = default;
 
     geom::Box2I const& getBBox() const { return _bbox; }  ///< Return the Defect's bounding box
     int getX0() const { return _bbox.getMinX(); }         ///< Return the Defect's left column

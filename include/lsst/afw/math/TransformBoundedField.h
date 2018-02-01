@@ -50,7 +50,7 @@ public:
      */
     TransformBoundedField(geom::Box2I const &bbox, Transform const &transform);
 
-    ~TransformBoundedField() {}
+    ~TransformBoundedField() = default;
 
     TransformBoundedField(TransformBoundedField const &) = default;
     TransformBoundedField(TransformBoundedField &&) = default;

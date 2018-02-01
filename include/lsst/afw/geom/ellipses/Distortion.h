@@ -48,6 +48,9 @@ public:
     explicit Distortion(double e1 = 0.0, double e2 = 0.0) : detail::EllipticityBase(e1, e2) {}
 
     Distortion(Distortion const& other) : detail::EllipticityBase(other.getComplex()) {}
+    // Delegate to copy-constructor for backwards compatibility
+    Distortion(Distortion&& other) : Distortion(other) {}
+    ~Distortion() = default;
 
     explicit Distortion(ConformalShear const& other) { this->operator=(other); }
 
@@ -57,6 +60,8 @@ public:
         _complex = other._complex;
         return *this;
     }
+    // Delegate to copy-assignment for backwards compatibility
+    Distortion& operator=(Distortion&& other) { return *this = other; }
 
     Distortion& operator=(ConformalShear const& other);
 

@@ -136,6 +136,7 @@ public:
      * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
      */
     Image(const Image& rhs, const bool deep = false);
+    Image(Image&& rhs);
 
     /**
      *  Construct an Image by reading a regular FITS file.
@@ -192,7 +193,7 @@ public:
                    geom::Point2I const& xy0 = geom::Point2I())
             : image::ImageBase<PixelT>(array, deep, xy0) {}
 
-    virtual ~Image() {}
+    virtual ~Image() = default;
     //
     // Assignment operators are not inherited
     //
@@ -208,6 +209,7 @@ public:
      * private
      */
     Image& operator=(const Image& rhs);
+    Image& operator=(Image&& rhs);
 
     /**
      *  Write an image to a regular FITS file.

@@ -27,6 +27,12 @@ class Color {
 public:
     explicit Color(double g_r = std::numeric_limits<double>::quiet_NaN()) : _g_r(g_r) {}
 
+    Color(Color const &) = default;
+    Color(Color &&) = default;
+    Color &operator=(Color const &) = default;
+    Color &operator=(Color &&) = default;
+    ~Color() = default;
+
     /// Whether the color is the special value that indicates that it is unspecified.
     bool isIndeterminate() const { return std::isnan(_g_r); }
 

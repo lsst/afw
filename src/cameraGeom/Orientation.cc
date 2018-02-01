@@ -45,6 +45,12 @@ Orientation::Orientation(geom::Point2D const fpPosition, geom::Point2D const ref
             cosYaw * cosRoll + sinYaw * sinPitch * sinRoll;
 }
 
+Orientation::~Orientation() = default;
+Orientation::Orientation(Orientation const &) = default;
+Orientation::Orientation(Orientation &&) = default;
+Orientation &Orientation::operator=(Orientation const &) = default;
+Orientation &Orientation::operator=(Orientation &&) = default;
+
 int Orientation::getNQuarter() const {
     float yawDeg = _yaw.asDegrees();
     while (yawDeg < 0.) {

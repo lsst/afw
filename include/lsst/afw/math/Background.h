@@ -169,7 +169,12 @@ public:
         }
     }
 
-    virtual ~BackgroundControl() {}
+    BackgroundControl(BackgroundControl const &) = default;
+    BackgroundControl(BackgroundControl &&) = default;
+    BackgroundControl & operator=(BackgroundControl const &) = default;
+    BackgroundControl & operator=(BackgroundControl &&) = default;
+
+    virtual ~BackgroundControl() = default;
     void setNxSample(int nxSample) {
         if (nxSample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
@@ -261,10 +266,15 @@ protected:
      */
     explicit Background(geom::Box2I const imageBBox, int const nx, int const ny);
     /// dtor
-    virtual ~Background() {}
+    virtual ~Background() = default;
 
 public:
     typedef float InternalPixelT;  ///< type used for any internal images, and returned by getApproximate
+
+    Background(Background const&) = delete;
+    Background(Background &&) = delete;
+    Background& operator=(Background const&) = delete;
+    Background& operator=(Background &&) = delete;
 
     /// Add a constant level to a background
     virtual Background& operator+=(float const delta) = 0;
@@ -402,8 +412,6 @@ protected:
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, = 0, LSST_makeBackground_getImage_types)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, = 0, LSST_makeBackground_getApproximate_types)
 private:
-    Background(Background const&);
-    Background& operator=(Background const&);
     /**
      * Compute the centers, origins, and sizes of the patches used to compute image statistics
      * when estimating the Background
@@ -471,6 +479,12 @@ public:
      */
     explicit BackgroundMI(geom::Box2I const imageDimensions,
                           image::MaskedImage<InternalPixelT> const& statsImage);
+
+    BackgroundMI(BackgroundMI const &) = delete;
+    BackgroundMI(BackgroundMI &&) = delete;
+    BackgroundMI & operator=(BackgroundMI const &) = delete;
+    BackgroundMI & operator=(BackgroundMI &&) = delete;
+    ~BackgroundMI() = default;
 
     /**
      * Add a scalar to the Background (equivalent to adding a constant to the original image)

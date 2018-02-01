@@ -280,6 +280,11 @@ public:
 
     /// Copy constructor.
     Schema(Schema const& other);
+    Schema(Schema && other);
+
+    Schema &operator=(Schema const& other);
+    Schema &operator=(Schema && other);
+    ~Schema();
 
     /** Construct from reading a FITS file.
      *

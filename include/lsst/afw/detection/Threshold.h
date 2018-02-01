@@ -61,6 +61,12 @@ public:
               )
             : _value(value), _type(type), _polarity(polarity), _includeMultiplier(includeMultiplier) {}
 
+    ~Threshold() = default;
+    Threshold(Threshold const &) = default;
+    Threshold(Threshold &&) = default;
+    Threshold &operator=(Threshold const &) = default;
+    Threshold &operator=(Threshold &&) = default;
+
     /// return type of threshold
     ThresholdType getType() const { return _type; }
 

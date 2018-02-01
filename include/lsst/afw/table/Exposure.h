@@ -138,6 +138,12 @@ public:
     }
     //@}
 
+    ExposureRecord(ExposureRecord const &) = delete;
+    ExposureRecord(ExposureRecord &&) = delete;
+    ExposureRecord & operator=(ExposureRecord const &) = delete;
+    ExposureRecord & operator=(ExposureRecord &&) = delete;
+    ~ExposureRecord();
+
 protected:
     explicit ExposureRecord(std::shared_ptr<ExposureTable> const& table);
 
@@ -229,10 +235,15 @@ public:
         return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other, mapper));
     }
 
+    ExposureTable & operator=(ExposureTable const &) = delete;
+    ExposureTable & operator=(ExposureTable &&) = delete;
+    ~ExposureTable();
+
 protected:
     explicit ExposureTable(Schema const& schema);
 
     ExposureTable(ExposureTable const& other);
+    ExposureTable(ExposureTable && other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 
@@ -315,6 +326,12 @@ public:
      */
     template <typename OtherRecordT>
     ExposureCatalogT(ExposureCatalogT<OtherRecordT> const& other) : Base(other) {}
+
+    ExposureCatalogT(ExposureCatalogT const &) = default;
+    ExposureCatalogT(ExposureCatalogT &&) = default;
+    ExposureCatalogT & operator=(ExposureCatalogT const &) = default;
+    ExposureCatalogT & operator=(ExposureCatalogT &&) = default;
+    ~ExposureCatalogT() = default;
 
     using Base::writeFits;
 

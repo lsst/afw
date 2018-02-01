@@ -402,6 +402,12 @@ Mask<MaskPixelT>::Mask(Mask const& rhs, afwGeom::Box2I const& bbox, ImageOrigin 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(Mask const& rhs, bool deep)
         : ImageBase<MaskPixelT>(rhs, deep), _maskDict(rhs._maskDict) {}
+// Delegate to copy-constructor for backwards compatibility
+template <typename MaskPixelT>
+Mask<MaskPixelT>::Mask(Mask&& rhs) : Mask(rhs, false) {}
+
+template <typename MaskPixelT>
+Mask<MaskPixelT>::~Mask() = default;
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep, geom::Point2I const& xy0)
@@ -426,6 +432,11 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(const Mask<MaskPixelT>& rhs) {
     swap(tmp);  // See Meyers, Effective C++, Item 11
 
     return *this;
+}
+// Delegate to copy-assignment for backwards compatibility
+template <typename MaskPixelT>
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(Mask<MaskPixelT>&& rhs) {
+    return *this = rhs;
 }
 
 template <typename MaskPixelT>

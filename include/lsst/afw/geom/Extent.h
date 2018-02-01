@@ -61,6 +61,12 @@ class ExtentBase : public CoordinateBase<Extent<T, N>, T, N> {
     typedef CoordinateBase<Extent<T, N>, T, N> Super;
 
 public:
+    ExtentBase(ExtentBase const &) = default;
+    ExtentBase(ExtentBase &&) = default;
+    ExtentBase &operator=(ExtentBase const &) = default;
+    ExtentBase &operator=(ExtentBase &&) = default;
+    ~ExtentBase() = default;
+
     /// Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
@@ -205,6 +211,13 @@ public:
     template <typename U>
     explicit Extent(Point<U, N> const &other);
 
+    Extent(Extent const &other);
+    Extent(Extent &&other);
+    ~Extent() = default;
+
+    Extent &operator=(Extent const &other) = default;
+    Extent &operator=(Extent &&other) = default;
+
     /// Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
     T computeSquaredNorm() const { return this->asEigen().squaredNorm(); }
 
@@ -253,6 +266,13 @@ public:
     /// Construct from std::tuple.
     explicit Extent(std::tuple<T, T> const &xy) : Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
+    Extent(Extent const &other);
+    Extent(Extent &&other);
+    ~Extent() = default;
+
+    Extent &operator=(Extent const &other) = default;
+    Extent &operator=(Extent &&other) = default;
+
     void swap(Extent &other) { this->_swap(other); }
 };
 
@@ -293,6 +313,13 @@ public:
     explicit Extent(std::tuple<T, T, T> const &xyz)
             : Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 
+    Extent(Extent const &other);
+    Extent(Extent &&other);
+    ~Extent() = default;
+
+    Extent &operator=(Extent const &other) = default;
+    Extent &operator=(Extent &&other) = default;
+
     void swap(Extent &other) { this->_swap(other); }
 };
 
@@ -305,6 +332,12 @@ Extent<T, 2>::Extent(Extent<U, 2> const &other) {
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
 };
+
+// Should be consistent with converting constructor
+template <typename T>
+Extent<T, 2>::Extent(Extent<T, 2> const &) = default;
+template <typename T>
+Extent<T, 2>::Extent(Extent<T, 2> &&) = default;
 
 template <typename T>
 template <typename U>
@@ -325,6 +358,12 @@ Extent<T, 3>::Extent(Extent<U, 3> const &other) {
     this->setY(static_cast<T>(other.getY()));
     this->setZ(static_cast<T>(other.getZ()));
 };
+
+// Should be consistent with converting constructor
+template <typename T>
+Extent<T, 3>::Extent(Extent<T, 3> const &) = default;
+template <typename T>
+Extent<T, 3>::Extent(Extent<T, 3> &&) = default;
 
 // Constructor for any 3D type from 3I type
 template <typename T>

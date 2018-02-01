@@ -103,6 +103,10 @@ GaussianPsf::GaussianPsf(geom::Extent2I const& dimensions, double sigma)
     checkDimensions(_dimensions);
 }
 
+GaussianPsf::GaussianPsf(GaussianPsf const&) = default;
+GaussianPsf::GaussianPsf(GaussianPsf&&) = default;
+GaussianPsf::~GaussianPsf() = default;
+
 std::shared_ptr<afw::detection::Psf> GaussianPsf::clone() const {
     return std::make_shared<GaussianPsf>(_dimensions, _sigma);
 }

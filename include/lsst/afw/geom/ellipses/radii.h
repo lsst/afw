@@ -68,6 +68,10 @@ public:
 
     explicit DeterminantRadius(LogDeterminantRadius const &other);
 
+    DeterminantRadius(DeterminantRadius const &) = default;
+    DeterminantRadius(DeterminantRadius &&) = default;
+    ~DeterminantRadius() = default;
+
     operator double const &() const { return _value; }
 
     operator double &() { return _value; }
@@ -78,15 +82,17 @@ public:
     }
 
     DeterminantRadius &operator=(LogDeterminantRadius const &other);
+    DeterminantRadius &operator=(DeterminantRadius const &) = default;
+    DeterminantRadius &operator=(DeterminantRadius &&) = default;
+
+    /// Conversion between trace and determinant radii requires ellipticity.
+    DeterminantRadius &operator=(TraceRadius const &) = delete;
+    /// Conversion between trace and determinant radii requires ellipticity.
+    DeterminantRadius &operator=(LogTraceRadius const &) = delete;
 
 private:
     template <typename T1, typename T2>
     friend class Separable;
-
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(TraceRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogTraceRadius const &);
 
     void assignFromQuadrupole(double ixx, double iyy, double ixy, Distortion &distortion);
 
@@ -119,6 +125,10 @@ public:
 
     explicit TraceRadius(LogTraceRadius const &other);
 
+    TraceRadius(TraceRadius const &) = default;
+    TraceRadius(TraceRadius &&) = default;
+    ~TraceRadius() = default;
+
     operator double const &() const { return _value; }
 
     operator double &() { return _value; }
@@ -129,15 +139,17 @@ public:
     }
 
     TraceRadius &operator=(LogTraceRadius const &other);
+    TraceRadius &operator=(TraceRadius const &) = default;
+    TraceRadius &operator=(TraceRadius &&) = default;
+
+    /// Conversion between trace and determinant radii requires ellipticity.
+    TraceRadius &operator=(DeterminantRadius const &) = delete;
+    /// Conversion between trace and determinant radii requires ellipticity.
+    TraceRadius &operator=(LogDeterminantRadius const &) = delete;
 
 private:
     template <typename T1, typename T2>
     friend class Separable;
-
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(DeterminantRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogDeterminantRadius const &);
 
     void assignFromQuadrupole(double ixx, double iyy, double ixy, Distortion &distortion);
 
@@ -164,6 +176,10 @@ public:
 
     explicit LogDeterminantRadius(DeterminantRadius const &other);
 
+    LogDeterminantRadius(LogDeterminantRadius const &) = default;
+    LogDeterminantRadius(LogDeterminantRadius &&) = default;
+    ~LogDeterminantRadius() = default;
+
     operator double const &() const { return _value; }
 
     operator double &() { return _value; }
@@ -174,15 +190,17 @@ public:
     }
 
     LogDeterminantRadius &operator=(DeterminantRadius const &other);
+    LogDeterminantRadius &operator=(LogDeterminantRadius const &) = default;
+    LogDeterminantRadius &operator=(LogDeterminantRadius &&) = default;
+
+    /// Conversion between trace and determinant radii requires ellipticity.
+    LogDeterminantRadius &operator=(TraceRadius const &) = delete;
+    /// Conversion between trace and determinant radii requires ellipticity.
+    LogDeterminantRadius &operator=(LogTraceRadius const &) = delete;
 
 private:
     template <typename T1, typename T2>
     friend class Separable;
-
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(TraceRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogTraceRadius const &);
 
     void assignFromQuadrupole(double ixx, double iyy, double ixy, Distortion &distortion);
 
@@ -209,6 +227,10 @@ public:
 
     explicit LogTraceRadius(TraceRadius const &other);
 
+    LogTraceRadius(LogTraceRadius const &) = default;
+    LogTraceRadius(LogTraceRadius &&) = default;
+    ~LogTraceRadius() = default;
+
     operator double const &() const { return _value; }
 
     operator double &() { return _value; }
@@ -219,15 +241,17 @@ public:
     }
 
     LogTraceRadius &operator=(TraceRadius const &value);
+    LogTraceRadius &operator=(LogTraceRadius const &) = default;
+    LogTraceRadius &operator=(LogTraceRadius &&) = default;
+
+    /// Conversion between trace and determinant radii requires ellipticity.
+    LogTraceRadius &operator=(DeterminantRadius const &) = delete;
+    /// Conversion between trace and determinant radii requires ellipticity.
+    LogTraceRadius &operator=(LogDeterminantRadius const &) = delete;
 
 private:
     template <typename T1, typename T2>
     friend class Separable;
-
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(DeterminantRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogDeterminantRadius const &);
 
     void assignFromQuadrupole(double ixx, double iyy, double ixy, Distortion &distortion);
 

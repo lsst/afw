@@ -64,6 +64,12 @@ public:
                     geom::Angle(0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
             );
 
+    ~Orientation();
+    Orientation(Orientation const &);
+    Orientation(Orientation &&);
+    Orientation &operator=(Orientation const &);
+    Orientation &operator=(Orientation &&);
+
     /// Return focal plane position of detector reference point (mm)
     geom::Point2D getFpPosition() const { return _fpPosition; }
 

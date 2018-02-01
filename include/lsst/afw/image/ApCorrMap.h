@@ -52,6 +52,13 @@ public:
     /// pair<string,std::shared_ptr<BoundedField>>.
     typedef Internal::const_iterator Iterator;
 
+    ApCorrMap() = default;
+    ApCorrMap(ApCorrMap const&) = default;
+    ApCorrMap(ApCorrMap&&) = default;
+    ApCorrMap& operator=(ApCorrMap const&) = default;
+    ApCorrMap& operator=(ApCorrMap&&) = default;
+    virtual ~ApCorrMap() = default;
+
     Iterator begin() const { return _internal.begin(); }
     Iterator end() const { return _internal.end(); }
 

@@ -143,7 +143,13 @@ public:
      *      Thrown if memory allocation for internal generator state fails.
      */
     explicit Random(std::shared_ptr<pex::policy::Policy> const policy);
+
     // Use compiler generated destructor and shallow copy constructor/assignment operator
+    Random(Random const &) = default;
+    Random(Random &&) = default;
+    Random & operator=(Random const &) = default;
+    Random & operator=(Random &&) = default;
+    ~Random() = default;
 
     /**
      * Creates a deep copy of this random number generator. Both this random number

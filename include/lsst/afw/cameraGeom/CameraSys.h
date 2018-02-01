@@ -47,6 +47,12 @@ public:
                              )
             : _sysName(sysName) {}
 
+    ~CameraSysPrefix() = default;
+    CameraSysPrefix(CameraSysPrefix const &) = default;
+    CameraSysPrefix(CameraSysPrefix &&) = default;
+    CameraSysPrefix &operator=(CameraSysPrefix const &) = default;
+    CameraSysPrefix &operator=(CameraSysPrefix &&) = default;
+
     /**
      * Get coordinate system name
      */
@@ -94,6 +100,12 @@ public:
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
     CameraSys() : _sysName("?"), _detectorName(){};
+
+    ~CameraSys() = default;
+    CameraSys(CameraSys const &) = default;
+    CameraSys(CameraSys &&) = default;
+    CameraSys &operator=(CameraSys const &) = default;
+    CameraSys &operator=(CameraSys &&) = default;
 
     /**
      * Get coordinate system name

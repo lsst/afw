@@ -232,6 +232,8 @@ TanWcs::TanWcs(TanWcs const& rhs)
           _sipB(rhs._sipB),
           _sipAp(rhs._sipAp),
           _sipBp(rhs._sipBp) {}
+// Delegate to copy-constructor for backwards compatibility
+TanWcs::TanWcs(TanWcs&& rhs) : TanWcs(rhs) {}
 
 bool TanWcs::_isSubset(Wcs const& rhs) const {
     if (!Wcs::_isSubset(rhs)) {

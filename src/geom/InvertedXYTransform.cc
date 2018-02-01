@@ -32,6 +32,12 @@ namespace geom {
 InvertedXYTransform::InvertedXYTransform(std::shared_ptr<XYTransform const> base)
         : XYTransform(), _base(base) {}
 
+InvertedXYTransform::InvertedXYTransform(InvertedXYTransform const &) = default;
+InvertedXYTransform::InvertedXYTransform(InvertedXYTransform &&) = default;
+InvertedXYTransform &InvertedXYTransform::operator=(InvertedXYTransform const &) = default;
+InvertedXYTransform &InvertedXYTransform::operator=(InvertedXYTransform &&) = default;
+InvertedXYTransform::~InvertedXYTransform() = default;
+
 std::shared_ptr<XYTransform> InvertedXYTransform::clone() const {
     // deep copy
     return std::make_shared<InvertedXYTransform>(_base->clone());

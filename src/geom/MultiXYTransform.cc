@@ -42,6 +42,12 @@ MultiXYTransform::MultiXYTransform(std::vector<std::shared_ptr<XYTransform const
     }
 }
 
+MultiXYTransform::MultiXYTransform(MultiXYTransform const &) = default;
+MultiXYTransform::MultiXYTransform(MultiXYTransform &&) = default;
+MultiXYTransform &MultiXYTransform::operator=(MultiXYTransform const &) = default;
+MultiXYTransform &MultiXYTransform::operator=(MultiXYTransform &&) = default;
+MultiXYTransform::~MultiXYTransform() = default;
+
 std::shared_ptr<XYTransform> MultiXYTransform::clone() const {
     return std::make_shared<MultiXYTransform>(_transformList);
 }

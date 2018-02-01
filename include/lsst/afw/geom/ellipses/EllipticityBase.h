@@ -77,6 +77,12 @@ public:
 
     double getTheta() const { return 0.5 * std::arg(_complex); }
 
+    EllipticityBase(EllipticityBase const&) = default;
+    EllipticityBase(EllipticityBase&&) = default;
+    EllipticityBase& operator=(EllipticityBase const&) = default;
+    EllipticityBase& operator=(EllipticityBase&&) = default;
+    ~EllipticityBase() = default;
+
 protected:
     explicit EllipticityBase(std::complex<double> const& complex) : _complex(complex) {}
 

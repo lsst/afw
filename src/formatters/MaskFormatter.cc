@@ -84,7 +84,7 @@ MaskFormatter<MaskPixelT>::MaskFormatter(std::shared_ptr<lsst::pex::policy::Poli
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 
 template <typename MaskPixelT>
-MaskFormatter<MaskPixelT>::~MaskFormatter(void) {}
+MaskFormatter<MaskPixelT>::~MaskFormatter() = default;
 
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,

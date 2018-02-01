@@ -43,7 +43,12 @@ namespace formatters {
 template <typename ImagePixelT>
 class ImageFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~ImageFormatter(void);
+    virtual ~ImageFormatter();
+
+    ImageFormatter(ImageFormatter const&) = default;
+    ImageFormatter(ImageFormatter&&) = default;
+    ImageFormatter& operator=(ImageFormatter const&) = default;
+    ImageFormatter& operator=(ImageFormatter&&) = default;
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,

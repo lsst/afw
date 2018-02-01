@@ -350,6 +350,8 @@ bool ExposureRecord::contains(geom::Point2D const &point, image::Wcs const &wcs,
 
 ExposureRecord::ExposureRecord(std::shared_ptr<ExposureTable> const &table) : BaseRecord(table) {}
 
+ExposureRecord::~ExposureRecord() = default;
+
 void ExposureRecord::_assign(BaseRecord const &other) {
     try {
         ExposureRecord const &s = dynamic_cast<ExposureRecord const &>(other);
@@ -376,6 +378,10 @@ std::shared_ptr<ExposureTable> ExposureTable::make(Schema const &schema) {
 ExposureTable::ExposureTable(Schema const &schema) : BaseTable(schema) {}
 
 ExposureTable::ExposureTable(ExposureTable const &other) : BaseTable(other) {}
+// Delegate to copy-constructor for backward compatibility
+ExposureTable::ExposureTable(ExposureTable &&other) : ExposureTable(other) {}
+
+ExposureTable::~ExposureTable() = default;
 
 ExposureTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");

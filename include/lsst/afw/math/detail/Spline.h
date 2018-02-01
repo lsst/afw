@@ -13,7 +13,12 @@ namespace detail {
  */
 class Spline {
 public:
-    virtual ~Spline() {}
+    virtual ~Spline() = default;
+
+    Spline(Spline const &) = default;
+    Spline(Spline &&) = default;
+    Spline & operator=(Spline const &) = default;
+    Spline & operator=(Spline &&) = default;
 
     /**
      * Interpolate a Spline.
@@ -41,7 +46,7 @@ public:
     std::vector<double> roots(double const value, double const x0, double const x1) const;
 
 protected:
-    Spline() {}
+    Spline() = default;
     /**
      * Allocate the storage a Spline needs
      */

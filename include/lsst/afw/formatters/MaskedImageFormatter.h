@@ -43,7 +43,12 @@ namespace formatters {
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImageFormatter : public lsst::daf::persistence::Formatter {
 public:
-    virtual ~MaskedImageFormatter(void);
+    virtual ~MaskedImageFormatter();
+
+    MaskedImageFormatter(MaskedImageFormatter const&) = default;
+    MaskedImageFormatter(MaskedImageFormatter&&) = default;
+    MaskedImageFormatter& operator=(MaskedImageFormatter const&) = default;
+    MaskedImageFormatter& operator=(MaskedImageFormatter&&) = default;
 
     virtual void write(lsst::daf::base::Persistable const* persistable,
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,

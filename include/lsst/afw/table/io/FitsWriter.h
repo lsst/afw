@@ -78,6 +78,12 @@ public:
     /// Construct from a wrapped cfitsio pointer.
     explicit FitsWriter(Fits* fits, int flags) : _fits(fits), _flags(flags) {}
 
+    FitsWriter(FitsWriter const &) = default;
+    FitsWriter(FitsWriter &&) = default;
+    FitsWriter & operator=(FitsWriter const &) = default;
+    FitsWriter & operator=(FitsWriter &&) = default;
+    ~FitsWriter() = default;
+
 protected:
     /// Write a table and its schema.
     virtual void _writeTable(std::shared_ptr<BaseTable const> const& table, std::size_t nRows);

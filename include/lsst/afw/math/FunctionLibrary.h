@@ -58,7 +58,11 @@ public:
      */
     explicit IntegerDeltaFunction1(double xo) : Function1<ReturnT>(0), _xo(xo) {}
 
-    virtual ~IntegerDeltaFunction1(){};
+    IntegerDeltaFunction1(IntegerDeltaFunction1 const &) = default;
+    IntegerDeltaFunction1(IntegerDeltaFunction1 &&) = default;
+    IntegerDeltaFunction1 & operator=(IntegerDeltaFunction1 const &) = default;
+    IntegerDeltaFunction1 & operator=(IntegerDeltaFunction1 &&) = default;
+    virtual ~IntegerDeltaFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new IntegerDeltaFunction1(_xo));
@@ -107,7 +111,11 @@ public:
      */
     explicit IntegerDeltaFunction2(double xo, double yo) : Function2<ReturnT>(0), _xo(xo), _yo(yo) {}
 
-    virtual ~IntegerDeltaFunction2() {}
+    IntegerDeltaFunction2(IntegerDeltaFunction2 const &) = default;
+    IntegerDeltaFunction2(IntegerDeltaFunction2 &&) = default;
+    IntegerDeltaFunction2 & operator=(IntegerDeltaFunction2 const &) = default;
+    IntegerDeltaFunction2 & operator=(IntegerDeltaFunction2 &&) = default;
+    virtual ~IntegerDeltaFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(new IntegerDeltaFunction2(_xo, _yo));
@@ -163,7 +171,11 @@ public:
               _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {
         this->_params[0] = sigma;
     }
-    virtual ~GaussianFunction1() {}
+    GaussianFunction1(GaussianFunction1 const &) = default;
+    GaussianFunction1(GaussianFunction1 &&) = default;
+    GaussianFunction1 & operator=(GaussianFunction1 const &) = default;
+    GaussianFunction1 & operator=(GaussianFunction1 &&) = default;
+    virtual ~GaussianFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new GaussianFunction1(this->_params[0]));
@@ -227,7 +239,11 @@ public:
         _updateCache();
     }
 
-    virtual ~GaussianFunction2() {}
+    GaussianFunction2(GaussianFunction2 const &) = default;
+    GaussianFunction2(GaussianFunction2 &&) = default;
+    GaussianFunction2 & operator=(GaussianFunction2 const &) = default;
+    GaussianFunction2 & operator=(GaussianFunction2 &&) = default;
+    virtual ~GaussianFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
@@ -338,7 +354,11 @@ public:
         this->_params[2] = ampl2;
     }
 
-    virtual ~DoubleGaussianFunction2() {}
+    DoubleGaussianFunction2(DoubleGaussianFunction2 const &) = default;
+    DoubleGaussianFunction2(DoubleGaussianFunction2 &&) = default;
+    DoubleGaussianFunction2 & operator=(DoubleGaussianFunction2 const &) = default;
+    DoubleGaussianFunction2 & operator=(DoubleGaussianFunction2 &&) = default;
+    virtual ~DoubleGaussianFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
@@ -417,7 +437,11 @@ public:
         }
     }
 
-    virtual ~PolynomialFunction1() {}
+    PolynomialFunction1(PolynomialFunction1 const &) = default;
+    PolynomialFunction1(PolynomialFunction1 &&) = default;
+    PolynomialFunction1 & operator=(PolynomialFunction1 const &) = default;
+    PolynomialFunction1 & operator=(PolynomialFunction1 &&) = default;
+    virtual ~PolynomialFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new PolynomialFunction1(this->_params));
@@ -504,7 +528,11 @@ public:
               _oldY(0),
               _xCoeffs(this->_order + 1) {}
 
-    virtual ~PolynomialFunction2() {}
+    PolynomialFunction2(PolynomialFunction2 const &) = default;
+    PolynomialFunction2(PolynomialFunction2 &&) = default;
+    PolynomialFunction2 & operator=(PolynomialFunction2 const &) = default;
+    PolynomialFunction2 & operator=(PolynomialFunction2 &&) = default;
+    virtual ~PolynomialFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(new PolynomialFunction2(this->_params));
@@ -646,7 +674,11 @@ public:
         _initialize(minX, maxX);
     }
 
-    virtual ~Chebyshev1Function1() {}
+    Chebyshev1Function1(Chebyshev1Function1 const &) = default;
+    Chebyshev1Function1(Chebyshev1Function1 &&) = default;
+    Chebyshev1Function1 & operator=(Chebyshev1Function1 const &) = default;
+    Chebyshev1Function1 & operator=(Chebyshev1Function1 &&) = default;
+    virtual ~Chebyshev1Function1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new Chebyshev1Function1(this->_params, _minX, _maxX));
@@ -797,7 +829,11 @@ public:
         _initialize(xyRange);
     }
 
-    virtual ~Chebyshev1Function2() {}
+    Chebyshev1Function2(Chebyshev1Function2 const &) = default;
+    Chebyshev1Function2(Chebyshev1Function2 &&) = default;
+    Chebyshev1Function2 & operator=(Chebyshev1Function2 const &) = default;
+    Chebyshev1Function2 & operator=(Chebyshev1Function2 &&) = default;
+    virtual ~Chebyshev1Function2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
@@ -994,7 +1030,11 @@ public:
         this->_params[0] = xOffset;
     }
 
-    virtual ~LanczosFunction1() {}
+    LanczosFunction1(LanczosFunction1 const &) = default;
+    LanczosFunction1(LanczosFunction1 &&) = default;
+    LanczosFunction1 & operator=(LanczosFunction1 const &) = default;
+    LanczosFunction1 & operator=(LanczosFunction1 &&) = default;
+    virtual ~LanczosFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new LanczosFunction1(this->getOrder(), this->_params[0]));
@@ -1066,7 +1106,11 @@ public:
         this->_params[1] = yOffset;
     }
 
-    virtual ~LanczosFunction2() {}
+    LanczosFunction2(LanczosFunction2 const &) = default;
+    LanczosFunction2(LanczosFunction2 &&) = default;
+    LanczosFunction2 & operator=(LanczosFunction2 const &) = default;
+    LanczosFunction2 & operator=(LanczosFunction2 &&) = default;
+    virtual ~LanczosFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(

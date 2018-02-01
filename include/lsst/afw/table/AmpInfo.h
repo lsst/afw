@@ -83,6 +83,12 @@ public:
     typedef CatalogT<AmpInfoRecord> Catalog;
     typedef CatalogT<AmpInfoRecord const> ConstCatalog;
 
+    AmpInfoRecord(AmpInfoRecord const &) = delete;
+    AmpInfoRecord(AmpInfoRecord &&) = delete;
+    AmpInfoRecord & operator=(AmpInfoRecord const &) = delete;
+    AmpInfoRecord & operator=(AmpInfoRecord &&) = delete;
+    ~AmpInfoRecord();
+
     std::shared_ptr<AmpInfoTable const> getTable() const {
         return std::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
     }
@@ -175,6 +181,10 @@ public:
     static int const MAX_LINEARITY_COEFFS = 4;        // max number of linearity coefficients
     static int const MAX_LINEARITY_TYPE_LENGTH = 64;  // max length for linearity type
 
+    AmpInfoTable & operator=(AmpInfoTable const &) = delete;
+    AmpInfoTable & operator=(AmpInfoTable &&) = delete;
+    ~AmpInfoTable();
+
     /**
      *  Construct a new table.
      *
@@ -265,6 +275,7 @@ protected:
     explicit AmpInfoTable(Schema const &schema);
 
     explicit AmpInfoTable(AmpInfoTable const &other);
+    explicit AmpInfoTable(AmpInfoTable &&other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 

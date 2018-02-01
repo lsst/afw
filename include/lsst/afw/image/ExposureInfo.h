@@ -228,12 +228,14 @@ public:
 
     /// Copy constructor; deep-copies all components except the metadata.
     ExposureInfo(ExposureInfo const& other);
+    ExposureInfo(ExposureInfo&& other);
 
     /// Copy constructor; deep-copies everything, possibly including the metadata.
     ExposureInfo(ExposureInfo const& other, bool copyMetadata);
 
     /// Assignment; deep-copies all components except the metadata.
     ExposureInfo& operator=(ExposureInfo const& other);
+    ExposureInfo& operator=(ExposureInfo&& other);
 
     // Destructor defined in source file because we need access to destructors of forward-declared components
     ~ExposureInfo();

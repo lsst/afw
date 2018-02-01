@@ -68,6 +68,12 @@ Separable<Ellipticity_, Radius_>& Separable<Ellipticity_, Radius_>::operator=(
     return *this;
 }
 
+// Delegate to copy-constructor for backwards compatibility
+template <typename Ellipticity_, typename Radius_>
+Separable<Ellipticity_, Radius_>& Separable<Ellipticity_, Radius_>::operator=(
+        Separable<Ellipticity_, Radius_> && other) {
+    return *this = other;
+}
 template <typename Ellipticity_, typename Radius_>
 Separable<Ellipticity_, Radius_>::Separable(double e1, double e2, double radius, bool normalize)
         : _ellipticity(e1, e2), _radius(radius) {

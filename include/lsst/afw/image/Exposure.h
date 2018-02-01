@@ -165,6 +165,7 @@ public:
      * @param deep Should we copy the pixels?
      */
     Exposure(Exposure const& src, bool const deep = false);
+    Exposure(Exposure&& src);
 
     /** Construct a subExposure given an Exposure and a bounding box
      *
@@ -195,6 +196,9 @@ public:
                               "Exposure's converting copy constructor must make a deep copy");
         }
     }
+
+    Exposure& operator=(Exposure const&);
+    Exposure& operator=(Exposure&&);
 
     /** Destructor
      */

@@ -100,12 +100,15 @@ public:
     /**
      * Default constructor for the Coord base class
      *
-     * Set all values to NaN
-     * Don't call _veriftyValues() method ... it'll fail.
-     *
+     * Sets all values to NaN
      */
     Coord();
-    virtual ~Coord() {}
+    virtual ~Coord() = default;
+
+    Coord(Coord const &);
+    Coord(Coord &&);
+    Coord &operator=(Coord const &);
+    Coord &operator=(Coord &&);
 
     virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<Coord>(new Coord(*this)); }
 
@@ -294,7 +297,13 @@ public:
             : Coord(p3d, 2000.0, normalize, defaultLongitude) {}
     IcrsCoord(lsst::afw::geom::Angle const ra, lsst::afw::geom::Angle const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
-    IcrsCoord() : Coord() {}
+    IcrsCoord() = default;
+    virtual ~IcrsCoord() = default;
+
+    IcrsCoord(IcrsCoord const &) = default;
+    IcrsCoord(IcrsCoord &&) = default;
+    IcrsCoord &operator=(IcrsCoord const &) = default;
+    IcrsCoord &operator=(IcrsCoord &&) = default;
 
     virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<IcrsCoord>(new IcrsCoord(*this)); }
 
@@ -348,7 +357,13 @@ public:
             : Coord(ra, dec, epoch) {}
     Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0)
             : Coord(ra, dec, epoch) {}
-    Fk5Coord() : Coord() {}
+    Fk5Coord() = default;
+    virtual ~Fk5Coord() = default;
+
+    Fk5Coord(Fk5Coord const &) = default;
+    Fk5Coord(Fk5Coord &&) = default;
+    Fk5Coord &operator=(Fk5Coord const &) = default;
+    Fk5Coord &operator=(Fk5Coord &&) = default;
 
     virtual std::shared_ptr<Coord> clone() const { return std::shared_ptr<Fk5Coord>(new Fk5Coord(*this)); }
 
@@ -418,7 +433,13 @@ public:
             : Coord(p3d, normalize, defaultLongitude) {}
     GalacticCoord(lsst::afw::geom::Angle const l, lsst::afw::geom::Angle const b) : Coord(l, b) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
-    GalacticCoord() : Coord() {}
+    GalacticCoord() = default;
+    virtual ~GalacticCoord() = default;
+
+    GalacticCoord(GalacticCoord const &) = default;
+    GalacticCoord(GalacticCoord &&) = default;
+    GalacticCoord &operator=(GalacticCoord const &) = default;
+    GalacticCoord &operator=(GalacticCoord &&) = default;
 
     virtual std::shared_ptr<Coord> clone() const {
         return std::shared_ptr<GalacticCoord>(new GalacticCoord(*this));
@@ -482,7 +503,13 @@ public:
     EclipticCoord(std::string const lamb, std::string const beta, double const epoch = 2000.0)
             : Coord(lamb, beta, epoch) {}
 
-    EclipticCoord() : Coord() {}
+    EclipticCoord() = default;
+    virtual ~EclipticCoord() = default;
+
+    EclipticCoord(EclipticCoord const &) = default;
+    EclipticCoord(EclipticCoord &&) = default;
+    EclipticCoord &operator=(EclipticCoord const &) = default;
+    EclipticCoord &operator=(EclipticCoord &&) = default;
 
     virtual std::shared_ptr<Coord> clone() const {
         return std::shared_ptr<EclipticCoord>(new EclipticCoord(*this));
@@ -546,6 +573,13 @@ public:
             : Coord(az, alt, epoch), _obs(obs) {}
     TopocentricCoord(std::string const az, std::string const alt, double const epoch, Observatory const &obs)
             : Coord(az, alt, epoch), _obs(obs) {}
+
+    virtual ~TopocentricCoord() = default;
+
+    TopocentricCoord(TopocentricCoord const &) = default;
+    TopocentricCoord(TopocentricCoord &&) = default;
+    TopocentricCoord &operator=(TopocentricCoord const &) = default;
+    TopocentricCoord &operator=(TopocentricCoord &&) = default;
 
     virtual std::shared_ptr<Coord> clone() const {
         return std::shared_ptr<TopocentricCoord>(new TopocentricCoord(*this));

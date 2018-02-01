@@ -245,6 +245,12 @@ public:
     explicit Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var, WeightT const &weights,
                         int const flags, StatisticsControl const &sctrl = StatisticsControl());
 
+    Statistics(Statistics const &) = default;
+    Statistics(Statistics &&) = default;
+    Statistics & operator=(Statistics const &) = default;
+    Statistics & operator=(Statistics &&) = default;
+    ~Statistics() = default;
+
     /** Return the value and error in the specified statistic (e.g. MEAN)
      *
      * @param prop the afw::math::Property to retrieve. If NOTHING (default) and you only asked for

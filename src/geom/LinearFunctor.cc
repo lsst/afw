@@ -32,6 +32,11 @@ namespace geom {
 LinearFunctor::LinearFunctor(double slope, double intercept)
         : Functor("LinearFunctor"), _slope(slope), _intercept(intercept) {}
 
+LinearFunctor::LinearFunctor(LinearFunctor const &) = default;
+LinearFunctor::LinearFunctor(LinearFunctor &&) = default;
+LinearFunctor &LinearFunctor::operator=(LinearFunctor const &) = default;
+LinearFunctor &LinearFunctor::operator=(LinearFunctor &&) = default;
+
 std::shared_ptr<Functor> LinearFunctor::clone() const {
     return std::make_shared<LinearFunctor>(_slope, _intercept);
 }

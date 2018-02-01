@@ -146,13 +146,17 @@ public:
 OutputArchive::OutputArchive() : _impl(new Impl()) {}
 
 OutputArchive::OutputArchive(OutputArchive const &other) : _impl(other._impl) {}
+// Delegate to copy constructor for backward compatibility
+OutputArchive::OutputArchive(OutputArchive &&other) : OutputArchive(other) {}
 
 OutputArchive &OutputArchive::operator=(OutputArchive const &other) {
     _impl = other._impl;
     return *this;
 }
+// Delegate to copy assignment for backward compatibility
+OutputArchive &OutputArchive::operator=(OutputArchive &&other) { return *this = other; }
 
-OutputArchive::~OutputArchive() {}
+OutputArchive::~OutputArchive() = default;
 
 int OutputArchive::put(Persistable const *obj, bool permissive) {
     if (!_impl.unique()) {  // copy on write

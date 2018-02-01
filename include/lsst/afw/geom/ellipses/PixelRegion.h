@@ -48,6 +48,12 @@ public:
 
     explicit PixelRegion(Ellipse const& ellipse);
 
+    PixelRegion(PixelRegion const&) = default;
+    PixelRegion(PixelRegion&&) = default;
+    PixelRegion& operator=(PixelRegion const&) = default;
+    PixelRegion& operator=(PixelRegion&&) = default;
+    ~PixelRegion() = default;
+
 private:
     Point2D _center;
     double _detQ;
@@ -61,6 +67,12 @@ class PixelRegion::Iterator : public boost::iterator_facade<PixelRegion::Iterato
 public:
     explicit Iterator(Span const& s = Span(0, 0, 0), PixelRegion const* region = NULL)
             : _s(s), _region(region) {}
+
+    Iterator(Iterator const&) = default;
+    Iterator(Iterator&&) = default;
+    Iterator& operator=(Iterator const&) = default;
+    Iterator& operator=(Iterator&&) = default;
+    ~Iterator() = default;
 
 private:
     friend class boost::iterator_core_access;

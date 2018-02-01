@@ -109,7 +109,7 @@ public:
 
     explicit VisitInfo(daf::base::PropertySet const &metadata);
 
-    ~VisitInfo(){};
+    virtual ~VisitInfo() = default;
 
     VisitInfo(VisitInfo const &) = default;
     VisitInfo(VisitInfo &&) = default;

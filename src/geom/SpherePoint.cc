@@ -108,6 +108,8 @@ SpherePoint& SpherePoint::operator=(SpherePoint const& other) noexcept = default
 
 SpherePoint& SpherePoint::operator=(SpherePoint&& other) noexcept = default;
 
+SpherePoint::~SpherePoint() = default;
+
 Point3D SpherePoint::getVector() const noexcept {
     return Point3D(cos(_longitude) * cos(_latitude), sin(_longitude) * cos(_latitude), sin(_latitude));
 }

@@ -31,6 +31,12 @@ namespace geom {
 
 IdentityXYTransform::IdentityXYTransform() : XYTransform() {}
 
+IdentityXYTransform::IdentityXYTransform(IdentityXYTransform const &) = default;
+IdentityXYTransform::IdentityXYTransform(IdentityXYTransform &&) = default;
+IdentityXYTransform &IdentityXYTransform::operator=(IdentityXYTransform const &) = default;
+IdentityXYTransform &IdentityXYTransform::operator=(IdentityXYTransform &&) = default;
+IdentityXYTransform::~IdentityXYTransform() = default;
+
 std::shared_ptr<XYTransform> IdentityXYTransform::clone() const {
     return std::make_shared<IdentityXYTransform>();
 }

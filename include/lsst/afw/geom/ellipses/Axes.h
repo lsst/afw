@@ -78,6 +78,8 @@ public:
         _vector = other._vector;
         return *this;
     }
+    // Delegate to copy-assignment for backwards compatibility
+    Axes& operator=(Axes&& other) { return *this = other; }
 
     /// Converting assignment.
     Axes& operator=(BaseCore const& other) {
@@ -98,6 +100,9 @@ public:
 
     /// Copy constructor.
     Axes(Axes const& other) : _vector(other._vector) {}
+    // Delegate to copy-constructor for backwards compatibility
+    Axes(Axes&& other) : Axes(other) {}
+    ~Axes() = default;
 
     /// Converting copy constructor.
     Axes(BaseCore const& other) { *this = other; }

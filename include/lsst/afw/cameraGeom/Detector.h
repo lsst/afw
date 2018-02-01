@@ -93,9 +93,14 @@ public:
                       geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
                       Orientation const &orientation, geom::Extent2D const &pixelSize,
                       TransformMap::Transforms const &transforms,
-                      CrosstalkMatrix const &crosstalk=CrosstalkMatrix());
+                      CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
 
-    ~Detector() {}
+    ~Detector() = default;
+
+    Detector(Detector const &);
+    Detector(Detector &&);
+    Detector &operator=(Detector const &) = delete;
+    Detector &operator=(Detector &&) = delete;
 
     /** Get the detector name */
     std::string getName() const { return _name; }

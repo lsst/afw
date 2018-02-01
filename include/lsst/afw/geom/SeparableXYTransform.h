@@ -58,7 +58,12 @@ public:
      */
     SeparableXYTransform(Functor const& xfunctor, Functor const& yfunctor);
 
-    virtual ~SeparableXYTransform() {}
+    SeparableXYTransform(SeparableXYTransform const&);
+    SeparableXYTransform(SeparableXYTransform&&);
+    SeparableXYTransform& operator=(SeparableXYTransform const&);
+    SeparableXYTransform& operator=(SeparableXYTransform&&);
+
+    virtual ~SeparableXYTransform() = default;
 
     virtual std::shared_ptr<XYTransform> clone() const;
 

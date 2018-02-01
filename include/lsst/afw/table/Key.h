@@ -95,6 +95,12 @@ public:
      */
     Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
 
+    Key(Key const &) = default;
+    Key(Key &&) = default;
+    Key & operator=(Key const &) = default;
+    Key & operator=(Key &&) = default;
+    ~Key() = default;
+
     /// Stringification.
     inline friend std::ostream& operator<<(std::ostream& os, Key<T> const& key) {
         return os << "Key<" << Key<T>::getTypeString() << ">(offset=" << key.getOffset()

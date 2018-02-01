@@ -166,6 +166,10 @@ public:
     Pixel(SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>& rhs)
             : _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {}
 
+    Pixel(Pixel const& rhs) = default;
+    Pixel(Pixel&& rhs) = default;
+    ~Pixel() = default;
+
     Pixel operator=(Pixel const& rhs) {  // the following template won't stop the compiler trying to generate
                                          // operator=
         _variance = rhs.variance();      // evaluate before we update image()
@@ -187,6 +191,8 @@ public:
 
         return *this;
     }
+    // Delegate to copy-assignment for backwards compatibility
+    Pixel operator=(Pixel&& rhs) { return *this = rhs; }
 
     /// set the image part of a Pixel to rhs_image (the mask and variance are set to 0)
     Pixel operator=(double const& rhs_image) {

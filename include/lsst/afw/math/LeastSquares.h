@@ -307,6 +307,11 @@ public:
      */
     LeastSquares(Factorization factorization, int dimension);
 
+    LeastSquares(LeastSquares const &);
+    LeastSquares(LeastSquares &&);
+    LeastSquares & operator=(LeastSquares const &);
+    LeastSquares & operator=(LeastSquares &&);
+
     // Need to define dtor in source file so it can see Impl declaration.
     ~LeastSquares();
 

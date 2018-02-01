@@ -110,7 +110,7 @@ ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
         : daf::persistence::Formatter(typeid(this)), _policy(policy) {}
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter(void) {}
+ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter() = default;
 
 /**
  * @internal Lookup a filter number in the database to find a filter name.

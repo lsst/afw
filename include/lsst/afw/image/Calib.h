@@ -116,6 +116,12 @@ public:
      */
     explicit Calib(std::shared_ptr<lsst::daf::base::PropertySet const>);
 
+    Calib(Calib const&);
+    Calib(Calib&&);
+    Calib& operator=(Calib const&);
+    Calib& operator=(Calib&&);
+    virtual ~Calib();
+
     /**
      * Set the flux of a zero-magnitude object
      *

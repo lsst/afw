@@ -41,7 +41,7 @@ namespace geom {
 namespace details {
 
 /* These variadic functions exist because of a current limitation in c++ where
- * calls of the form foo(x)... are not possibe unless it is used as a parameter
+ * calls of the form foo(x)... are not possible unless it is used as a parameter
  * for a second function. The following functions take in a variadic parameter
  * pack, and make recursive calls until the corresponding class method has been
  * called on all the variadic parameters
@@ -104,6 +104,12 @@ public:
     using type = typename std::iterator_traits<T>::value_type;
     explicit IterGetter(T iter) : _iter(iter) {}
 
+    IterGetter(IterGetter const&) = default;
+    IterGetter(IterGetter&&) = default;
+    IterGetter& operator=(IterGetter const&) = default;
+    IterGetter& operator=(IterGetter&&) = default;
+    ~IterGetter() = default;
+
     // There is no good way to check the extents of a generic iterator, so make
     // a no-op function to satisfy api
     void checkExtents(Box2I const& bbox, int area) const {}
@@ -124,6 +130,12 @@ class ConstantGetter {
     // for each iteration
 public:
     explicit ConstantGetter(T constant) : _const(constant) {}
+
+    ConstantGetter(ConstantGetter const&) = default;
+    ConstantGetter(ConstantGetter&&) = default;
+    ConstantGetter& operator=(ConstantGetter const&) = default;
+    ConstantGetter& operator=(ConstantGetter&&) = default;
+    ~ConstantGetter() = default;
 
     // Constants are simply repeated, so no need to check extents, make no-op
     // function
@@ -148,6 +160,12 @@ public:
 
     ImageNdGetter(ndarray::Array<T, N, C> const& array, geom::Point2I const& xy0)
             : _array(array), _xy0(xy0) {}
+
+    ImageNdGetter(ImageNdGetter const&) = default;
+    ImageNdGetter(ImageNdGetter&&) = default;
+    ImageNdGetter& operator=(ImageNdGetter const&) = default;
+    ImageNdGetter& operator=(ImageNdGetter&&) = default;
+    ~ImageNdGetter() = default;
 
     void checkExtents(Box2I const& bbox, int area) const {
         // If the bounding box lays outside the are of the image, throw an error
@@ -181,6 +199,12 @@ public:
     using Reference = typename ndarray::Array<T, inA, inC>::Reference;
 
     explicit FlatNdGetter(ndarray::Array<T, inA, inC> const& array) : _array(array), _iter(_array.begin()) {}
+
+    FlatNdGetter(FlatNdGetter const&) = default;
+    FlatNdGetter(FlatNdGetter&&) = default;
+    FlatNdGetter& operator=(FlatNdGetter const&) = default;
+    FlatNdGetter& operator=(FlatNdGetter&&) = default;
+    ~FlatNdGetter() = default;
 
     void checkExtents(Box2I const& bbox, int area) const {
         // If the area of the array is greater than the size of the array, throw an error

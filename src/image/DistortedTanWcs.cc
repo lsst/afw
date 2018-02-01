@@ -35,6 +35,9 @@ DistortedTanWcs::DistortedTanWcs(TanWcs const &tanWcs, Transform const &pixelsTo
     }
 }
 
+DistortedTanWcs::DistortedTanWcs(DistortedTanWcs const &) = default;
+DistortedTanWcs::DistortedTanWcs(DistortedTanWcs &&) = default;
+
 std::shared_ptr<Wcs> DistortedTanWcs::clone() const {
     return std::shared_ptr<Wcs>(new DistortedTanWcs(*this));
 }

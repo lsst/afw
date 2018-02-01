@@ -88,6 +88,9 @@ public:
         return *this;
     }
 
+    // Delegate to copy-assignment for backwards compatibility
+    Quadrupole& operator=(Quadrupole&& other) { return *this = other; }
+
     /// Converting assignment.
     Quadrupole& operator=(BaseCore const& other) {
         BaseCore::operator=(other);
@@ -105,6 +108,11 @@ public:
 
     /// Copy constructor.
     Quadrupole(Quadrupole const& other) : _matrix(other._matrix) {}
+
+    // Delegate to copy-constructor for backwards compatibility
+    Quadrupole(Quadrupole&& other) : Quadrupole(other) {}
+
+    ~Quadrupole() = default;
 
     /// Converting copy constructor.
     Quadrupole(BaseCore const& other) { *this = other; }

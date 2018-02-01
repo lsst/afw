@@ -43,6 +43,12 @@ class PointBase : public CoordinateBase<Point<T, N>, T, N> {
     typedef CoordinateBase<Point<T, N>, T, N> Super;
 
 public:
+    PointBase(PointBase const &) = default;
+    PointBase(PointBase &&) = default;
+    PointBase &operator=(PointBase const &) = default;
+    PointBase &operator=(PointBase &&) = default;
+    ~PointBase() = default;
+
     /**
      *  Standard equality comparison.
      *
@@ -157,6 +163,13 @@ public:
     /// Construct a Point with all elements set to the same scalar value.
     explicit Point(T val = static_cast<T>(0)) : Super(val) {}
 
+    Point(Point const &) = default;
+    Point(Point &&) = default;
+    ~Point() = default;
+
+    Point &operator=(Point const &) = default;
+    Point &operator=(Point &&) = default;
+
     /**
      *  Explicit converting constructor.
      *
@@ -190,6 +203,13 @@ public:
 
     /// Construct a Point with all elements set to the same scalar value.
     explicit Point(T val = static_cast<T>(0)) : Super(val) {}
+
+    Point(Point const &) = default;
+    Point(Point &&) = default;
+    ~Point() = default;
+
+    Point &operator=(Point const &) = default;
+    Point &operator=(Point &&) = default;
 
     /**
      *  Explicit converting constructor.
@@ -236,6 +256,13 @@ public:
 
     /// Construct a Point with all elements set to the same scalar value.
     explicit Point(T val = static_cast<T>(0)) : Super(val) {}
+
+    Point(Point const &) = default;
+    Point(Point &&) = default;
+    ~Point() = default;
+
+    Point &operator=(Point const &) = default;
+    Point &operator=(Point &&) = default;
 
     /**
      *  Explicit converting constructor.

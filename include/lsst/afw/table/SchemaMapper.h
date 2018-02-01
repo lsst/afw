@@ -184,9 +184,13 @@ public:
 
     /// Copy construct (copy-on-write).
     SchemaMapper(SchemaMapper const& other);
+    SchemaMapper(SchemaMapper && other);
 
-    /// Assignement (copy-on-write).
+    /// Assignment (copy-on-write).
     SchemaMapper& operator=(SchemaMapper const& other);
+    SchemaMapper& operator=(SchemaMapper && other);
+
+    ~SchemaMapper();
 
     /**
      *  Combine a sequence of schemas into one, creating a SchemaMapper for each.

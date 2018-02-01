@@ -125,6 +125,8 @@ public:
     /// Move assignment.
     Angle& operator=(Angle&& other) noexcept = default;
 
+    ~Angle() = default;
+
     /// Convert an Angle to a double in radians.
     constexpr operator double() const noexcept { return _val; }
 

@@ -78,7 +78,8 @@ public:
      * Default constructor for HeavyFootprint. Most common use for this will be in combination
      * with the assignment operator
      */
-    HeavyFootprint() {}
+    HeavyFootprint() = default;
+    ~HeavyFootprint() = default;
 
     HeavyFootprint(HeavyFootprint const& other) = default;
     HeavyFootprint(HeavyFootprint&& other) = default;

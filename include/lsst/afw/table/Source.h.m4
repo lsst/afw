@@ -228,6 +228,12 @@ public:
     /// Update the coord field using the given Wcs and the image center from the given key.
     void updateCoord(image::Wcs const & wcs, PointKey<double> const & key);
 
+    SourceRecord(const SourceRecord&) = delete;
+    SourceRecord& operator=(const SourceRecord&) = delete;
+    SourceRecord(SourceRecord&&) = delete;
+    SourceRecord& operator=(SourceRecord&&) = delete;
+    ~SourceRecord();
+
 protected:
 
     explicit SourceRecord(std::shared_ptr<SourceTable> const & table);
@@ -328,11 +334,15 @@ public:
     DECLARE_SLOT_DEFINERS(`', `Centroid')
     DECLARE_SLOT_DEFINERS(`', `Shape')
 
+    SourceTable & operator=(SourceTable const &) = delete;
+    SourceTable & operator=(SourceTable &&) = delete;
+
 protected:
 
     SourceTable(Schema const & schema, std::shared_ptr<IdFactory> const & idFactory);
 
     SourceTable(SourceTable const & other);
+    SourceTable(SourceTable && other);
 
     void handleAliasChange(std::string const & alias) override;
 
@@ -400,6 +410,12 @@ public:
     static SourceColumnViewT make(std::shared_ptr<Table> const & table, InputIterator first, InputIterator last) {
         return SourceColumnViewT(BaseColumnView::make(table, first, last));
     }
+
+    SourceColumnViewT(SourceColumnViewT const &) = default;
+    SourceColumnViewT(SourceColumnViewT &&) = default;
+    SourceColumnViewT & operator=(SourceColumnViewT const &) = default;
+    SourceColumnViewT & operator=(SourceColumnViewT &&) = default;
+    ~SourceColumnViewT() = default;
 
 protected:
     explicit SourceColumnViewT(BaseColumnView const & base) : ColumnViewT<RecordT>(base) {}

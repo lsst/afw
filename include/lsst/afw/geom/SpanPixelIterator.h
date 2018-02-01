@@ -44,6 +44,12 @@ class SpanPixelIterator : public boost::iterator_facade<SpanPixelIterator, Point
 public:
     explicit SpanPixelIterator(Point2I const& p = Point2I()) : _p(p) {}
 
+    SpanPixelIterator(SpanPixelIterator const&) = default;
+    SpanPixelIterator(SpanPixelIterator&&) = default;
+    SpanPixelIterator& operator=(SpanPixelIterator const&) = default;
+    SpanPixelIterator& operator=(SpanPixelIterator&&) = default;
+    ~SpanPixelIterator() = default;
+
 private:
     friend class boost::iterator_core_access;
 

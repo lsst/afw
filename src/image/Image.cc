@@ -111,6 +111,9 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, bool const deep
         swap(tmp);
     }
 }
+// Delegate to copy-constructor for backwards compatibility
+template <typename PixelT>
+ImageBase<PixelT>::ImageBase(ImageBase&& rhs) : ImageBase(rhs, false) {}
 
 template <typename PixelT>
 ImageBase<PixelT>::ImageBase(ImageBase const& rhs, geom::Box2I const& bbox, ImageOrigin const origin,
@@ -148,6 +151,11 @@ ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase const& rhs) {
     swap(tmp);  // See Meyers, Effective C++, Item 11
 
     return *this;
+}
+// Delegate to copy-assignment for backwards compatibility
+template <typename PixelT>
+ImageBase<PixelT>& ImageBase<PixelT>::operator=(ImageBase&& rhs) {
+    return *this = rhs;
 }
 
 template <typename PixelT>
@@ -308,6 +316,9 @@ Image<PixelT>::Image(geom::Box2I const& bbox, PixelT initialValue) : ImageBase<P
 
 template <typename PixelT>
 Image<PixelT>::Image(Image const& rhs, bool const deep) : ImageBase<PixelT>(rhs, deep) {}
+// Delegate to copy-constructor for backwards compatibility
+template <typename PixelT>
+Image<PixelT>::Image(Image&& rhs) : Image(rhs, false) {}
 
 template <typename PixelT>
 Image<PixelT>::Image(Image const& rhs, geom::Box2I const& bbox, ImageOrigin const origin, bool const deep
@@ -327,6 +338,11 @@ Image<PixelT>& Image<PixelT>::operator=(Image const& rhs) {
     this->ImageBase<PixelT>::operator=(rhs);
 
     return *this;
+}
+// Delegate to copy-assignment for backwards compatibility
+template <typename PixelT>
+Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
+    return *this = rhs;
 }
 
 #ifndef DOXYGEN  // doc for this section has been moved to header

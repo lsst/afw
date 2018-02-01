@@ -109,6 +109,10 @@ public:
     explicit AffineTransform(LinearTransform const &linear, Extent2D const &translation)
             : _linear(linear), _translation(translation) {}
 
+    AffineTransform(AffineTransform const &) = default;
+    AffineTransform(AffineTransform &&) = default;
+    ~AffineTransform() = default;
+
     /**
      * Return the inverse transform
      *
@@ -168,11 +172,8 @@ public:
                                getLinear()(other.getTranslation()) + getTranslation());
     }
 
-    AffineTransform &operator=(AffineTransform const &other) {
-        _linear = other._linear;
-        _translation = other._translation;
-        return *this;
-    }
+    AffineTransform &operator=(AffineTransform const &) = default;
+    AffineTransform &operator=(AffineTransform &&) = default;
 
     AffineTransform &operator+=(AffineTransform const &other) {
         _linear += other._linear;

@@ -166,13 +166,17 @@ InputArchive::InputArchive(BaseCatalog const& index, CatalogVector const& catalo
         : _impl(new Impl(index, catalogs)) {}
 
 InputArchive::InputArchive(InputArchive const& other) : _impl(other._impl) {}
+// Delegate to copy constructor for backwards compatibility
+InputArchive::InputArchive(InputArchive && other) : InputArchive(other) {}
 
 InputArchive& InputArchive::operator=(InputArchive const& other) {
     _impl = other._impl;
     return *this;
 }
+// Delegate to copy assignment for backwards compatibility
+InputArchive& InputArchive::operator=(InputArchive && other) { return *this = other; }
 
-InputArchive::~InputArchive() {}
+InputArchive::~InputArchive() = default;
 
 std::shared_ptr<Persistable> InputArchive::get(int id) const { return _impl->get(id, *this); }
 

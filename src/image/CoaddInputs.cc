@@ -57,6 +57,12 @@ CoaddInputs::CoaddInputs(table::Schema const& visitSchema, table::Schema const& 
 CoaddInputs::CoaddInputs(table::ExposureCatalog const& visits_, table::ExposureCatalog const& ccds_)
         : visits(visits_), ccds(ccds_) {}
 
+CoaddInputs::CoaddInputs(CoaddInputs const&) = default;
+CoaddInputs::CoaddInputs(CoaddInputs&&) = default;
+CoaddInputs& CoaddInputs::operator=(CoaddInputs const&) = default;
+CoaddInputs& CoaddInputs::operator=(CoaddInputs&&) = default;
+CoaddInputs::~CoaddInputs() = default;
+
 bool CoaddInputs::isPersistable() const { return true; }
 
 std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }

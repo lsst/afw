@@ -228,6 +228,18 @@ CovarianceMatrixKey<T, N>::CovarianceMatrixKey(SubSchema const &s, NameArray con
     if (!haveCov) _cov.resize(0);
 }
 
+template <typename T, int N>
+CovarianceMatrixKey<T, N>::CovarianceMatrixKey(CovarianceMatrixKey const &) = default;
+template <typename T, int N>
+CovarianceMatrixKey<T, N>::CovarianceMatrixKey(CovarianceMatrixKey &&) = default;
+template <typename T, int N>
+CovarianceMatrixKey<T, N> & CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey const &) = default;
+template <typename T, int N>
+CovarianceMatrixKey<T, N> & CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey &&) = default;
+template <typename T, int N>
+CovarianceMatrixKey<T, N>::~CovarianceMatrixKey() = default;
+
+
 // these are workarounds for the fact that Eigen has different constructors for
 // dynamic-sized matrices and fixed-size matrices, but we don't want to have to
 // partial-specialize the entire template just to change one line

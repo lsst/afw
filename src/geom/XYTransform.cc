@@ -31,6 +31,11 @@ namespace geom {
 
 XYTransform::XYTransform() : daf::base::Citizen(typeid(this)) {}
 
+XYTransform::XYTransform(XYTransform const &) = default;
+XYTransform::XYTransform(XYTransform &&) = default;
+XYTransform &XYTransform::operator=(XYTransform const &) = default;
+XYTransform &XYTransform::operator=(XYTransform &&) = default;
+
 AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const {
     Point2D px = p + Extent2D(1, 0);
     Point2D py = p + Extent2D(0, 1);

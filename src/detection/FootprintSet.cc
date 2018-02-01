@@ -1251,11 +1251,19 @@ FootprintSet::FootprintSet(FootprintSet const &rhs)
     }
 }
 
+// Delegate to copy-constructor for backward-compatibility
+FootprintSet::FootprintSet(FootprintSet &&rhs) : FootprintSet(rhs) {}
+
 FootprintSet &FootprintSet::operator=(FootprintSet const &rhs) {
     FootprintSet tmp(rhs);
     swap(tmp);  // See Meyers, Effective C++, Item 11
     return *this;
 }
+
+// Delegate to copy-assignment for backward-compatibility
+FootprintSet &FootprintSet::operator=(FootprintSet &&rhs) { return *this = rhs; }
+
+FootprintSet::~FootprintSet() = default;
 
 void FootprintSet::merge(FootprintSet const &rhs, int tGrow, int rGrow, bool isotropic) {
     FootprintControl const ctrl(true, isotropic);

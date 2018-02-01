@@ -169,7 +169,13 @@ public:
      */
     explicit Kernel(int width, int height, const std::vector<SpatialFunctionPtr> spatialFunctionList);
 
-    virtual ~Kernel() {}
+    // prevent copying and assignment (to avoid problems from type slicing)
+    Kernel(const Kernel &) = delete;
+    Kernel(Kernel &&) = delete;
+    Kernel &operator=(const Kernel &) = delete;
+    Kernel &operator=(Kernel &&) = delete;
+
+    virtual ~Kernel() = default;
 
     /**
      * Return a pointer to a deep copy of this kernel
@@ -502,9 +508,6 @@ private:
     int _ctrY;
     unsigned int _nKernelParams;
 
-    // prevent copying and assignment (to avoid problems from type slicing)
-    Kernel(const Kernel &);
-    Kernel &operator=(const Kernel &);
     // Set the Kernel's ideas about the x- and y- coordinates
     virtual void _setKernelXY() {}
 };
@@ -538,7 +541,12 @@ public:
                          lsst::afw::geom::Point2D const &pos     ///< desired position
                          );
 
-    virtual ~FixedKernel() {}
+    FixedKernel(const FixedKernel &) = delete;
+    FixedKernel(FixedKernel &&) = delete;
+    FixedKernel &operator=(const FixedKernel &) = delete;
+    FixedKernel &operator=(FixedKernel &&) = delete;
+
+    virtual ~FixedKernel() = default;
 
     virtual std::shared_ptr<Kernel> clone() const;
 
@@ -626,7 +634,12 @@ public:
     explicit AnalyticKernel(int width, int height, KernelFunction const &kernelFunction,
                             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList);
 
-    virtual ~AnalyticKernel() {}
+    AnalyticKernel(const AnalyticKernel &) = delete;
+    AnalyticKernel(AnalyticKernel &&) = delete;
+    AnalyticKernel &operator=(const AnalyticKernel &) = delete;
+    AnalyticKernel &operator=(AnalyticKernel &&) = delete;
+
+    virtual ~AnalyticKernel() = default;
 
     virtual std::shared_ptr<Kernel> clone() const;
 
@@ -711,7 +724,12 @@ public:
      */
     explicit DeltaFunctionKernel(int width, int height, lsst::afw::geom::Point2I const &point);
 
-    virtual ~DeltaFunctionKernel() {}
+    DeltaFunctionKernel(const DeltaFunctionKernel &) = delete;
+    DeltaFunctionKernel(DeltaFunctionKernel &&) = delete;
+    DeltaFunctionKernel &operator=(const DeltaFunctionKernel &) = delete;
+    DeltaFunctionKernel &operator=(DeltaFunctionKernel &&) = delete;
+
+    virtual ~DeltaFunctionKernel() = default;
 
     virtual std::shared_ptr<Kernel> clone() const;
 
@@ -796,7 +814,12 @@ public:
     explicit LinearCombinationKernel(KernelList const &kernelList,
                                      std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList);
 
-    virtual ~LinearCombinationKernel() {}
+    LinearCombinationKernel(const LinearCombinationKernel &) = delete;
+    LinearCombinationKernel(LinearCombinationKernel &&) = delete;
+    LinearCombinationKernel &operator=(const LinearCombinationKernel &) = delete;
+    LinearCombinationKernel &operator=(LinearCombinationKernel &&) = delete;
+
+    virtual ~LinearCombinationKernel() = default;
 
     virtual std::shared_ptr<Kernel> clone() const;
 
@@ -966,7 +989,13 @@ public:
     explicit SeparableKernel(int width, int height, KernelFunction const &kernelColFunction,
                              KernelFunction const &kernelRowFunction,
                              std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList);
-    virtual ~SeparableKernel() {}
+
+    SeparableKernel(const SeparableKernel &) = delete;
+    SeparableKernel(SeparableKernel &&) = delete;
+    SeparableKernel &operator=(const SeparableKernel &) = delete;
+    SeparableKernel &operator=(SeparableKernel &&) = delete;
+
+    virtual ~SeparableKernel() = default;
 
     virtual std::shared_ptr<Kernel> clone() const;
 

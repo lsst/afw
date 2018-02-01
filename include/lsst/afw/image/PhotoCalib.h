@@ -86,6 +86,8 @@ public:
     PhotoCalib &operator=(PhotoCalib const &) = delete;
     PhotoCalib &operator=(PhotoCalib &&) = delete;
 
+    virtual ~PhotoCalib() = default;
+
     /**
      * Create a empty, zeroed calibration.
      */

@@ -46,6 +46,12 @@ public:
      *  The new AliasMap will not be linked to any tables, even if other is.
      */
     AliasMap(AliasMap const& other) : _internal(other._internal), _table(0) {}
+    // Delegate to copy-constructor for backwards compatibility
+    AliasMap(AliasMap && other) : AliasMap(other) {}
+
+    AliasMap & operator=(AliasMap const &) = default;
+    AliasMap & operator=(AliasMap &&) = default;
+    ~AliasMap() = default;
 
     /// An iterator over alias->target pairs.
     typedef std::map<std::string, std::string>::const_iterator Iterator;

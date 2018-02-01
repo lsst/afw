@@ -112,6 +112,8 @@ public:
      */
     FootprintSet(FootprintSet const& rhs);
     FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
+    FootprintSet(FootprintSet && rhs);
+    ~FootprintSet();
     /**
      * Grow all the Footprints in the input FootprintSet, returning a new FootprintSet
      *
@@ -133,6 +135,7 @@ public:
 
     /// Assignment operator.
     FootprintSet& operator=(FootprintSet const& rhs);
+    FootprintSet& operator=(FootprintSet && rhs);
 
     void swap(FootprintSet& rhs) {
         using std::swap;  // See Meyers, Effective C++, Item 25

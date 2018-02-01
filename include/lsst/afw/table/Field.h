@@ -67,6 +67,12 @@ struct Field : public FieldBase<T> {
     Field(std::string const& name, std::string const& doc, FieldBase<T> const& size)
             : FieldBase<T>(size), _name(name), _doc(doc), _units() {}
 
+    Field(Field const &) = default;
+    Field(Field &&) = default;
+    Field & operator=(Field const &) = default;
+    Field & operator=(Field &&) = default;
+    ~Field() = default;
+
     /// Return the name of the field.
     std::string const& getName() const { return _name; }
 

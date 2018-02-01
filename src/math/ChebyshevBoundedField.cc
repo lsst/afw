@@ -61,6 +61,10 @@ ChebyshevBoundedField::ChebyshevBoundedField(afw::geom::Box2I const& bbox,
 ChebyshevBoundedField::ChebyshevBoundedField(afw::geom::Box2I const& bbox)
         : BoundedField(bbox), _toChebyshevRange(makeChebyshevRangeTransform(geom::Box2D(bbox))) {}
 
+ChebyshevBoundedField::ChebyshevBoundedField(ChebyshevBoundedField const &) = default;
+ChebyshevBoundedField::ChebyshevBoundedField(ChebyshevBoundedField &&) = default;
+ChebyshevBoundedField::~ChebyshevBoundedField() = default;
+
 // ------------------ fit() and helpers ---------------------------------------------------------------------
 
 namespace {

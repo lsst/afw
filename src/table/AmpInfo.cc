@@ -70,6 +70,8 @@ static AmpInfoFitsReader const ampInfoFitsReader;
 
 AmpInfoRecord::AmpInfoRecord(std::shared_ptr<AmpInfoTable> const &table) : BaseRecord(table) {}
 
+AmpInfoRecord::~AmpInfoRecord() = default;
+
 std::shared_ptr<AmpInfoTable> AmpInfoTable::make(Schema const &schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
@@ -82,6 +84,10 @@ std::shared_ptr<AmpInfoTable> AmpInfoTable::make(Schema const &schema) {
 AmpInfoTable::AmpInfoTable(Schema const &schema) : BaseTable(schema) {}
 
 AmpInfoTable::AmpInfoTable(AmpInfoTable const &other) : BaseTable(other) {}
+// Delegate to copy-constructor for backwards compatibility
+AmpInfoTable::AmpInfoTable(AmpInfoTable &&other) : AmpInfoTable(other) {}
+
+AmpInfoTable::~AmpInfoTable() = default;
 
 AmpInfoTable::MinimalSchema::MinimalSchema() {
     name = schema.addField<std::string>("name", "name of amplifier location in camera",

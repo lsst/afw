@@ -49,6 +49,11 @@ namespace formatters {
 lsst::daf::persistence::FormatterRegistration PropertyListFormatter::registration(
         "PropertyList", typeid(lsst::daf::base::PropertyList), createInstance);
 
+PropertyListFormatter::PropertyListFormatter(PropertyListFormatter const&) = default;
+PropertyListFormatter::PropertyListFormatter(PropertyListFormatter&&) = default;
+PropertyListFormatter& PropertyListFormatter::operator=(PropertyListFormatter const&) = default;
+PropertyListFormatter& PropertyListFormatter::operator=(PropertyListFormatter&&) = default;
+
 PropertyListFormatter::PropertyListFormatter(std::shared_ptr<lsst::pex::policy::Policy>)
         : lsst::daf::persistence::Formatter(typeid(this)) {}
 

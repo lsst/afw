@@ -717,6 +717,8 @@ public:
      * @param deep Make deep copy?
      */
     MaskedImage(MaskedImage const& rhs, bool const deep = false);
+    MaskedImage(MaskedImage&& rhs);
+
     /**
      * Copy constructor of the pixels specified by bbox;  shallow, unless deep is true.
      *
@@ -749,7 +751,6 @@ public:
         _variance = VariancePtr(new Variance(*rhs.getVariance(), deep));
     }
 
-#if defined(DOXYGEN)
     /**
      * Make the lhs use the rhs's pixels
      *
@@ -760,9 +761,9 @@ public:
      * @param rhs Right hand side
      */
     MaskedImage& operator=(MaskedImage const& rhs);
-#endif
+    MaskedImage& operator=(MaskedImage&& rhs);
 
-    virtual ~MaskedImage() {}
+    virtual ~MaskedImage() = default;
 
     void swap(MaskedImage& rhs);
 

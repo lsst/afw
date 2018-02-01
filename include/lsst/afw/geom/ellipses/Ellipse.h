@@ -141,6 +141,7 @@ public:
      *  This does not change the parametrization of the ellipse.
      */
     Ellipse& operator=(Ellipse const& other);
+    Ellipse& operator=(Ellipse&& other);
 
     /**
      *  Compare two ellipses for equality.
@@ -158,7 +159,7 @@ public:
      */
     bool operator!=(Ellipse const& other) const { return !operator==(other); }
 
-    virtual ~Ellipse() {}
+    virtual ~Ellipse() = default;
 
     explicit Ellipse(BaseCore const& core, Point2D const& center = Point2D())
             : _core(core.clone()), _center(center) {}
@@ -170,6 +171,8 @@ public:
     Ellipse(Convolution const& other);
 
     Ellipse(Ellipse const& other) : _core(other.getCore().clone()), _center(other.getCenter()) {}
+    // Delegate to copy-constructor for backwards compatibility
+    Ellipse(Ellipse&& other) : Ellipse(other) {}
 
 private:
     std::shared_ptr<BaseCore> _core;

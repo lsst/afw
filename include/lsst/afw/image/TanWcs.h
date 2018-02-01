@@ -106,7 +106,7 @@ public:
            Eigen::MatrixXd const &sipBp, double equinox = 2000, std::string const &raDecSys = "FK5",
            std::string const &cunits1 = "deg", std::string const &cunits2 = "deg");
 
-    virtual ~TanWcs(){};
+    virtual ~TanWcs() = default;
 
     /// Polymorphic deep-copy.
     std::shared_ptr<Wcs> clone() const override;
@@ -160,8 +160,12 @@ public:
     /// Whether the object is persistable using afw::table::io archives.
     bool isPersistable() const override;
 
+    TanWcs &operator=(const TanWcs &) = delete;
+    TanWcs &operator=(TanWcs &&) = delete;
+
 protected:
     TanWcs(TanWcs const &rhs);
+    TanWcs(TanWcs &&rhs);
 
     void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const override;
     geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const override;
@@ -189,8 +193,6 @@ private:
     TanWcs(std::shared_ptr<daf::base::PropertySet const> const &fitsMetadata);
 
     TanWcs(afw::table::BaseRecord const &mainRecord, std::shared_ptr<afw::table::BaseRecord const> sipRecord);
-
-    TanWcs &operator=(const TanWcs &);
 
     // Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)

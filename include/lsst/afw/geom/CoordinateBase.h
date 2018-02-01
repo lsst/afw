@@ -55,6 +55,12 @@ public:
     static int const dimensions = N;
     typedef Eigen::Matrix<T, N, 1, Eigen::DontAlign> EigenVector;
 
+    CoordinateBase(CoordinateBase const&) = default;
+    CoordinateBase(CoordinateBase&&) = default;
+    CoordinateBase& operator=(CoordinateBase const&) = default;
+    CoordinateBase& operator=(CoordinateBase&&) = default;
+    ~CoordinateBase() = default;
+
     T& operator[](int n) { return _vector[n]; }
     T const& operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T& coeffRef(int n) { return _vector.coeffRef(n); }
@@ -109,6 +115,12 @@ public:
     static int const dimensions = 2;
     typedef Eigen::Matrix<T, 2, 1, Eigen::DontAlign> EigenVector;
 
+    CoordinateBase(CoordinateBase const&) = default;
+    CoordinateBase(CoordinateBase&&) = default;
+    CoordinateBase& operator=(CoordinateBase const&) = default;
+    CoordinateBase& operator=(CoordinateBase&&) = default;
+    ~CoordinateBase() = default;
+
     T& operator[](int n) { return _vector[n]; }
     T const& operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
     T& coeffRef(int n) { return _vector.coeffRef(n); }
@@ -153,6 +165,12 @@ public:
     typedef T Element;
     static int const dimensions = 3;
     typedef Eigen::Matrix<T, 3, 1, Eigen::DontAlign> EigenVector;
+
+    CoordinateBase(CoordinateBase const&) = default;
+    CoordinateBase(CoordinateBase&&) = default;
+    CoordinateBase& operator=(CoordinateBase const&) = default;
+    CoordinateBase& operator=(CoordinateBase&&) = default;
+    ~CoordinateBase() = default;
 
     T& operator[](int n) { return _vector[n]; }
     T const& operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }

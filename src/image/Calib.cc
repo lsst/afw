@@ -146,6 +146,12 @@ void Calib::setThrowOnNegativeFlux(bool raiseException) { _throwOnNegativeFlux =
 
 bool Calib::getThrowOnNegativeFlux() { return _throwOnNegativeFlux; }
 
+Calib::Calib(Calib const&) = default;
+Calib::Calib(Calib&&) = default;
+Calib& Calib::operator=(Calib const&) = default;
+Calib& Calib::operator=(Calib&&) = default;
+Calib::~Calib() = default;
+
 namespace detail {
 int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
     int nstripped = 0;

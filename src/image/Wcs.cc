@@ -459,6 +459,11 @@ Wcs::Wcs(Wcs const& rhs)
     }
     _initWcs();
 }
+// Delegate to copy-constructor for backwards compatibility
+Wcs::Wcs(Wcs&& rhs) : Wcs(rhs) {}
+
+Wcs& Wcs::operator=(const Wcs&) = default;
+Wcs& Wcs::operator=(Wcs&&) = default;
 
 bool Wcs::operator==(Wcs const& other) const {
     if (&other == this) return true;

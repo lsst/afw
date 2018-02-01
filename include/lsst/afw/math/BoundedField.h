@@ -197,7 +197,11 @@ public:
     /// @copydoc operator==
     bool operator!=(BoundedField const& rhs) const { return !(*this == rhs); };
 
-    virtual ~BoundedField() {}
+    virtual ~BoundedField() = default;
+    BoundedField(BoundedField const &) = default;
+    BoundedField(BoundedField &&) = default;
+    BoundedField & operator=(BoundedField const &) = delete;
+    BoundedField & operator=(BoundedField &&) = delete;
 
     friend std::ostream & operator<<(std::ostream & os, BoundedField const & bf)
     { return os << bf.toString() << " on " << bf.getBBox(); }
