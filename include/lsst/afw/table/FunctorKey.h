@@ -39,6 +39,9 @@ namespace table {
 template <typename T>
 class OutputFunctorKey {
 public:
+    /// The data type for get
+    using Value = T;
+
     virtual T get(BaseRecord const& record) const = 0;
 
     virtual ~OutputFunctorKey() = default;
@@ -53,6 +56,9 @@ public:
 template <typename T>
 class InputFunctorKey {
 public:
+    /// The data type for set
+    using Value = T;
+
     virtual void set(BaseRecord& record, T const& value) const = 0;
 
     virtual ~InputFunctorKey() = default;
@@ -65,7 +71,11 @@ public:
  *  so we provide this class to aggregate those interfaces.
  */
 template <typename T>
-class FunctorKey : public OutputFunctorKey<T>, public InputFunctorKey<T> {};
+class FunctorKey : public OutputFunctorKey<T>, public InputFunctorKey<T> {
+public:
+    /// The data type for get and set
+    using Value = T;
+};
 
 /**
  *  Base class for objects that can return a non-const reference to part of a record, but are not a true Key
