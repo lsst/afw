@@ -37,63 +37,34 @@ namespace afw {
 namespace table {
 namespace {
 
-/*
- * Get the schema from a collection of records
- *
- * This function and getValues and setValues below appear in two forms:
- * a catalog of records and a vector of shared pointers to records; the crucial difference
- * is whether elements are records or shared pointers to records
- */
-template <typename Record>
-Schema getSchema(CatalogT<Record> const &catalog) {
-    return catalog[0].getSchema();
+// Get the schema from a record
+Schema getSchema(BaseRecord const &record) { return record.getSchema(); }
+
+// Get the schema from a shared pointer to a record
+Schema getSchema(std::shared_ptr<const BaseRecord> const record) { return record->getSchema(); }
+
+// Get a value from a record
+template <typename Key>
+inline typename Key::Value getValue(BaseRecord const &record, Key const &key) {
+    return record.get(key);
 }
 
-template <typename Record>
-Schema getSchema(std::vector<std::shared_ptr<Record>> const &recordList) {
-    return recordList[0]->getSchema();
+// Get a value from a shared pointer to a record
+template <typename Key>
+inline typename Key::Value getValue(std::shared_ptr<const BaseRecord> const record, Key const &key) {
+    return record->get(key);
 }
 
-// Get values for a field in a collection of catalog records
-template <typename Record, typename Key>
-std::vector<typename Key::Value> getValues(std::vector<std::shared_ptr<Record>> const &recordList,
-                                           Key const &key) {
-    std::vector<typename Key::Value> valueList;
-    valueList.reserve(recordList.size());
-    for (auto const &recordPtr : recordList) {
-        valueList.emplace_back(recordPtr->get(key));
-    }
-    return valueList;
+// Set a value in a record
+template <typename Key>
+inline void setValue(SimpleRecord &record, Key const &key, typename Key::Value const &value) {
+    record.set(key, value);
 }
 
-template <typename Record, typename Key>
-std::vector<typename Key::Value> getValues(CatalogT<Record> const &catalog, Key const &key) {
-    std::vector<typename Key::Value> valueList;
-    valueList.reserve(catalog.size());
-    for (auto const &record : catalog) {
-        valueList.emplace_back(record.get(key));
-    }
-    return valueList;
-}
-
-/// Set values for a field in a collection of catalog records
-template <typename Record, typename Key>
-void setValues(std::vector<std::shared_ptr<Record>> &recordList, Key const &key,
-               std::vector<typename Key::Value> const &valueList) {
-    auto valuePtr = valueList.cbegin();
-    for (auto &recordPtr : recordList) {
-        recordPtr->set(key, *valuePtr);
-        ++valuePtr;
-    }
-}
-
-template <typename Record, typename Key>
-void setValues(CatalogT<Record> &catalog, Key const &key, std::vector<typename Key::Value> const &valueList) {
-    auto valuePtr = valueList.cbegin();
-    for (auto &record : catalog) {
-        record.set(key, *valuePtr);
-        ++valuePtr;
-    }
+// Set a value in a shared pointer to a record
+template <typename Key>
+inline void setValue(std::shared_ptr<SimpleRecord> record, Key const &key, typename Key::Value const &value) {
+    record->set(key, value);
 }
 
 }  // namespace
@@ -103,12 +74,20 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
     if (refList.empty()) {
         return;
     }
-    auto const schema = getSchema(refList);
+    auto const schema = getSchema(refList[0]);
     CoordKey const coordKey(schema["coord"]);
     Point2DKey const centroidKey(schema["centroid"]);
-    std::vector<coord::IcrsCoord> const skyList = getValues(refList, coordKey);
+    std::vector<coord::IcrsCoord> skyList;
+    skyList.reserve(refList.size());
+    for (auto const &record : refList) {
+        skyList.emplace_back(getValue(record, coordKey));
+    }
     std::vector<geom::Point2D> const pixelList = wcs.skyToPixel(skyList);
-    setValues(refList, centroidKey, pixelList);
+    auto pixelPos = pixelList.cbegin();
+    for (auto &refObj : refList) {
+        setValue(refObj, centroidKey, *pixelPos);
+        ++pixelPos;
+    }
 }
 
 template <typename SourceCollection>
@@ -116,19 +95,27 @@ void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList) {
     if (sourceList.empty()) {
         return;
     }
-    auto const schema = getSchema(sourceList);
+    auto const schema = getSchema(sourceList[0]);
     Point2DKey const centroidKey(schema["slot_Centroid"]);
     CoordKey const coordKey(schema["coord"]);
-    std::vector<geom::Point2D> pixelList = getValues(sourceList, centroidKey);
+    std::vector<geom::Point2D> pixelList;
+    pixelList.reserve(sourceList.size());
+    for (auto const &source : sourceList) {
+        pixelList.emplace_back(getValue(source, centroidKey));
+    }
     std::vector<coord::IcrsCoord> const skyList = wcs.pixelToSky(pixelList);
-    setValues(sourceList, coordKey, skyList);
+    auto skyCoord = skyList.cbegin();
+    for (auto &source : sourceList) {
+        setValue(source, coordKey, *skyCoord);
+        ++skyCoord;
+    }
 }
 
 /// @cond
 template void updateRefCentroids(geom::SkyWcs const &, std::vector<std::shared_ptr<SimpleRecord>> &);
 template void updateRefCentroids(geom::SkyWcs const &, SimpleCatalog &);
 
-template void updateSourceCoords(geom::SkyWcs const &, std::vector<std::shared_ptr<SourceRecord>> &); 
+template void updateSourceCoords(geom::SkyWcs const &, std::vector<std::shared_ptr<SourceRecord>> &);
 template void updateSourceCoords(geom::SkyWcs const &, SourceCatalog &);
 /// @endcond
 
