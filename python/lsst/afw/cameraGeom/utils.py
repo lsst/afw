@@ -730,7 +730,11 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
     for det, bbox in zip(ccdList, boxList):
-        im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
+        try:
+            im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
+        except Exception as e:
+            print("Unable to get image for detector %s: %s" % (det.getName(), e))
+            continue
 
         nQuarter = det.getOrientation().getNQuarter()
         im = afwMath.rotateImageBy90(im, nQuarter)
