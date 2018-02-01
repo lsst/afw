@@ -58,6 +58,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         self.refCentroidKey = afwTable.Point2DKey.addFields(
             refSchema, "centroid", "centroid", "pixels")
         self.refCoordKey = afwTable.CoordKey(refSchema["coord"])
+        self.refHasCentroidKey = refSchema.addField("hasCentroid", type="Flag")
         self.refCat = afwTable.SimpleCatalog(refSchema)
 
         # an alias is required to make src.getCentroid() work;
@@ -85,15 +86,17 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         refObj = self.refCat.addNew()
         refObj.set(self.refCoordKey, self.crval)
 
-        # initial centroid should be nan
+        # initial centroid should be nan and hasCentroid False
         nanRefCentroid = self.refCat[0].get(self.refCentroidKey)
         for val in nanRefCentroid:
             self.assertTrue(math.isnan(val))
+        self.assertFalse(self.refCat[0].get(self.refHasCentroidKey))
 
-        # computed centroid should be crpix
+        # computed centroid should be crpix and hasCentroid True
         afwTable.updateRefCentroids(self.wcs, self.refCat)
         refCentroid = self.refCat[0].get(self.refCentroidKey)
         self.assertPairsAlmostEqual(refCentroid, self.crpix)
+        self.assertTrue(self.refCat[0].get(self.refHasCentroidKey))
 
         # coord should not be changed
         self.assertEqual(self.refCat[0].get(self.refCoordKey), self.crval)
@@ -150,6 +153,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(self.sourceCat), len(self.refCat))
 
         for src, refObj in zip(self.sourceCat, self.refCat):
+            self.assertTrue(refObj.get(self.refHasCentroidKey))
             srcCentroid = src.get(self.srcCentroidKey)
             refCentroid = refObj.get(self.refCentroidKey)
             self.assertPairsAlmostEqual(

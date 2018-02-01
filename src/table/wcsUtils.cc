@@ -77,6 +77,7 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
     auto const schema = getSchema(refList[0]);
     CoordKey const coordKey(schema["coord"]);
     Point2DKey const centroidKey(schema["centroid"]);
+    Key<Flag> const hasCentroidKey(schema["hasCentroid"]);
     std::vector<coord::IcrsCoord> skyList;
     skyList.reserve(refList.size());
     for (auto const &record : refList) {
@@ -86,6 +87,7 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
     auto pixelPos = pixelList.cbegin();
     for (auto &refObj : refList) {
         setValue(refObj, centroidKey, *pixelPos);
+        setValue(refObj, hasCentroidKey, true);
         ++pixelPos;
     }
 }

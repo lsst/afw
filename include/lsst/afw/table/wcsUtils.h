@@ -37,9 +37,10 @@ namespace table {
  * @tparam RefCollection  Type of sequence of reference objects, e.g. lsst::afw::table::SimpleCatalog or
  *          std::vector<std::shared_ptr<lsst::afw::table::SimpleRecord>>
  * @param[in] wcs  WCS to map from sky to pixels
- * @param[in,out] refList  Collection of reference objects. The schema must have two fields:
+ * @param[in,out] refList  Collection of reference objects. The schema must have three fields:
  *                  - "coord": a field containing lsst::afw::coord::IcrsCoord; this field is read
  *                  - "centroid": a field containing lsst::afw::geom::Point2D; this field is written
+ *                  - "hasCentroid": a flag; this field is written
  *
  * @throws lsst::pex::exceptions::NotFoundError if refList's schema does not have the required fields.
  */
