@@ -31,6 +31,7 @@ from builtins import range
 from builtins import object
 import math
 import numpy
+import warnings
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -743,7 +744,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
         Source to get ccd images.  Must have a ``getCcdImage()`` method.
     display : `lsst.afw.display.Display`
         image display to use.
-    frame : UNKNOWN or None
+    frame : None
         frame ID on which to display. **Deprecated** in v12.
     overlay : `bool`
         Show amp bounding boxes on the displayed image?
@@ -754,6 +755,10 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
     inCameraCoords : `bool`
         Show the Detector in camera coordinates?
     """
+    if frame is not None:
+        warnings.warn("The frame kwarg is deprecated; use the `lsst.afw.display` system instead.",
+                      DeprecationWarning)
+
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
     ccdOrigin = afwGeom.Point2I(0, 0)
@@ -957,7 +962,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     bufferSize : `int`
         Size of border in binned pixels to make around the camera image.
     frame : None
-        specify image display (@deprecated; new code should use display)
+        specify image display. **Deprecated** in v12.
     overlay : `bool`
         Overlay Detector IDs and boundaries?
     title : `str`
@@ -981,6 +986,10 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     image : `lsst.afw.image.Image`
         The mosaic image.
     """
+    if frame is not None:
+        warnings.warn("The frame kwarg is deprecated; use the `lsst.afw.display` system instead.",
+                      DeprecationWarning)
+
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
     if binSize < 1:
