@@ -966,6 +966,9 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
         for wcs1 in self.wcsList:
             for wcs2 in self.wcsList:
                 transform = makeWcsPairTransform(wcs1, wcs2)
+                # check that the transform has been simplified
+                frameSet = transform.getFrameSet()
+                self.assertEqual(frameSet.nFrame, 2)
                 for point1 in self.points():
                     point2 = transform.applyForward(point1)
                     self.assertPairsAlmostEqual(
@@ -980,6 +983,9 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
         """
         for wcs in self.wcsList:
             transform = makeWcsPairTransform(wcs, wcs)
+            # check that the transform has been simplified
+            frameSet = transform.getFrameSet()
+            self.assertEqual(frameSet.nFrame, 2)
             for point in self.points():
                 outPoint1 = transform.applyForward(point)
                 outPoint2 = transform.applyInverse(outPoint1)
