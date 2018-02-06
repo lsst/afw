@@ -30,6 +30,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Endpoint.h"
@@ -52,11 +54,7 @@ repr(self) = "lsst.afw.geom." + str(self), e.g. "lsst.afw.geom.GenericEndpoint(4
 template <typename PyClass>
 void addStrAndRepr(PyClass& cls) {
     using Class = typename PyClass::type;  // C++ class associated with pybind11 wrapper class
-    cls.def("__str__", [](Class const& self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
+    utils::python::addOutputOp(cls, "__str__");
     cls.def("__repr__", [](Class const& self) {
         std::ostringstream os;
         os << "lsst.afw.geom." << self;

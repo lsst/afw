@@ -28,6 +28,8 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -60,13 +62,6 @@ using PyKey = py::class_<Key<T>, KeyBase<T>, FieldBase<T>>;
 
 template <typename T>
 using PySchemaItem = py::class_<SchemaItem<T>>;
-
-template <typename T>
-std::string streamStr(T const &self) {
-    std::ostringstream os;
-    os << self;
-    return os.str();
-}
 
 // Specializations for FieldBase
 
@@ -226,8 +221,8 @@ void declareSchemaType(py::module &mod) {
     clsField.def("getDoc", &Field<T>::getDoc);
     clsField.def("getUnits", &Field<T>::getUnits);
     clsField.def("copyRenamed", &Field<T>::copyRenamed);
-    clsField.def("__str__", &streamStr<Field<T>>);
-    clsField.def("__repr__", &streamStr<Field<T>>);
+    utils::python::addOutputOp(clsField, "__str__");
+    utils::python::addOutputOp(clsField, "__repr__");
 
     // Key
     PyKey<T> clsKey(mod, ("Key" + suffix).c_str());
@@ -239,8 +234,8 @@ void declareSchemaType(py::module &mod) {
                py::is_operator());
     clsKey.def("isValid", &Key<T>::isValid);
     clsKey.def("getOffset", &Key<T>::getOffset);
-    clsKey.def("__str__", &streamStr<Key<T>>);
-    clsKey.def("__repr__", &streamStr<Key<T>>);
+    utils::python::addOutputOp(clsKey, "__str__");
+    utils::python::addOutputOp(clsKey, "__repr__");
     // The Key methods below actually wrap templated methods on Schema and
     // SchemaMapper.  Rather than doing many-type overload resolution by
     // wrapping those methods directly, we use the visitor pattern by having
@@ -366,8 +361,8 @@ void declareSchema(py::module &mod) {
                                              std::string const &) const) &
                             Schema::join,
             "a"_a, "b"_a, "c"_a, "d"_a);
-    cls.def("__str__", &streamStr<Schema>);
-    cls.def("__repr__", &streamStr<Schema>);
+    utils::python::addOutputOp(cls, "__str__");
+    utils::python::addOutputOp(cls, "__repr__");
 }
 
 void declareSubSchema(py::module &mod) {

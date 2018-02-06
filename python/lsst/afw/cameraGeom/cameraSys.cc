@@ -25,6 +25,8 @@
 #include <pybind11/pybind11.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/utils/python.h"
+
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
 namespace py = pybind11;
@@ -48,20 +50,9 @@ void declareCommonSysMethods(PyClass &cls) {
             py::is_operator());
     cls.def("__ne__", [](CppClass const &self, CppClass const &other) { return self != other; },
             py::is_operator());
-    cls.def("__str__", [](CppClass const &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
-    cls.def("__repr__", [](CppClass const &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
-    cls.def("__hash__", [](CppClass const &self) {
-        using std::hash;
-        return hash<CppClass>()(self);
-    });
+    utils::python::addOutputOp(cls, "__str__");
+    utils::python::addOutputOp(cls, "__repr__");
+    utils::python::addHash(cls);
 
     /* Methods */
     cls.def("getSysName", &CppClass::getSysName);
