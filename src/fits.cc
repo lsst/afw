@@ -5,6 +5,8 @@
 #include <complex>
 #include <cmath>
 #include <sstream>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "fitsio.h"
 extern "C" {
@@ -32,6 +34,87 @@ namespace fits {
 // ----------------------------------------------------------------------------------------------------------
 
 namespace {
+
+/// Container that allows checking whether a string starts with one of a provided set of strings
+///
+/// To make this efficient, we shorten all the provided strings (to the length of the shortest provided
+/// string) and first test input strings against that; only if that matches, we proceed to test against
+/// the full provided string. This allows us to short-circuit a lot of string comparisons.
+///
+/// The current implementation assumes (and checks with an assertion) that the shortened versions of the
+/// provided set of strings are unique.
+class StringStartSet {
+  public:
+    /// Construct from initializer_list of strings
+    StringStartSet(std::initializer_list<std::string> const& input) : _minSize(-1) {
+        for (auto const& word : input) {
+            std::size_t const size = word.size();
+            if (size < _minSize) {
+                _minSize = size;
+            }
+        }
+        for (auto const& word : input) {
+            std::string const start = startString(word);
+            assert(_words.count(start) == 0);  // This should be the only word that starts this way
+            _words[start] = word;
+        }
+    }
+
+    /// Return whether a string starts with any of the originally provided strings
+    bool matches(std::string const& key) const {
+        auto const iter = _words.find(startString(key));
+        if (iter == _words.end()) {
+            return false;
+        }
+        // Check that the full word matches too
+        std::string const& word = iter->second;
+        return key.compare(0, word.size(), word) == 0;
+    }
+
+  private:
+    typedef std::unordered_map<std::string, std::string> Map;
+
+    /// Return the start of the word
+    std::string startString(std::string const& word) const { return word.substr(0, _minSize); }
+
+    std::size_t _minSize;  // Minimum length of provided words
+    Map _words;  // Start of words --> full word
+};
+
+/// Keys we leave entirely to cfitsio
+///
+/// If we write any of these keys ourselves, it may corrupt the FITS file.
+/// Also, the user has no business reading them, since the use of FITS is
+/// an implementation detail that should be opaque to the user.
+static std::unordered_set<std::string> const ignoreKeys = {
+    // FITS core keywords
+    "SIMPLE", "BITPIX", "NAXIS", "EXTEND", "GCOUNT", "PCOUNT", "XTENSION", "TFIELDS", "BSCALE", "BZERO",
+    // FITS compression keywords
+    "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM",
+    // Not essential, but will prevent fitsverify warnings
+    "DATASUM", "CHECKSUM"
+    };
+
+/// Starting part of keys we leave entirely to cfitsio
+///
+/// If we write any of these keys ourselves, it may corrupt the FITS file.
+/// Also, the user has no business reading them, since the use of FITS is
+/// an implementation detail that should be opaque to the user.
+StringStartSet const ignoreKeyStarts {
+    // FITS core keywords
+    "NAXIS", "TZERO", "TSCAL",
+    // FITS compression keywords
+    "ZNAXIS", "ZTILE", "ZNAME", "ZVAL"
+    };
+
+/// Starting part of keys we refuse to write when given bulk keywords
+///
+/// If we write any of these keys ourselves, it may corrupt the FITS file.
+/// We would prefer not to read them either but our Catalog reading code
+/// cares about them.
+StringStartSet const ignoreKeyStartsWrite {
+    "TFORM", "TTYPE"
+    };
 
 // Strip leading and trailing single quotes and whitespace from a string.
 std::string strip(std::string const &s) {
@@ -637,10 +720,10 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
 
 namespace {
 
-bool isKeyIgnored(std::string const &key) {
-    return key == "SIMPLE" || key == "BITPIX" || key == "EXTEND" || key == "GCOUNT" || key == "PCOUNT" ||
-           key == "XTENSION" || key == "TFIELDS" || key == "BSCALE" || key == "BZERO" ||
-           key.compare(0, 5, "NAXIS") == 0;
+bool isKeyIgnored(std::string const &key, bool write=false) {
+    return ((ignoreKeys.find(key) != ignoreKeys.end()) ||
+            ignoreKeyStarts.matches(key) ||
+            (write && ignoreKeyStartsWrite.matches(key)));
 }
 
 class MetadataIterationFunctor : public HeaderIterationFunctor {
@@ -818,7 +901,7 @@ void Fits::writeMetadata(daf::base::PropertySet const &metadata) {
         paramNames = metadata.paramNames(false);
     }
     for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
-        if (!isKeyIgnored(*i)) {
+        if (!isKeyIgnored(*i, true)) {
             if (pl) {
                 writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
             } else {
