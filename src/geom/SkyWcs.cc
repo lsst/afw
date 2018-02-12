@@ -197,7 +197,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
 
     // Write frameSet to a FitsChan and extract the metadata
     std::ostringstream os;
-    os << "Encoding=FITS-WCS, CDMatrix=1, FitsTol=" << TIGHT_FITS_TOL;
+    os << "Encoding=FITS-WCS, CDMatrix=1, FitsAxisOrder=<copy>, FitsTol=" << TIGHT_FITS_TOL;
     ast::StringStream strStream;
     ast::FitsChan fitsChan(strStream, os.str());
     int const nObjectsWritten = fitsChan.write(frameSet);

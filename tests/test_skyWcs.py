@@ -289,6 +289,12 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         pixelScale = wcs.getPixelScale(self.crpix)
         self.assertAnglesAlmostEqual(self.scale, pixelScale, maxDiff=self.tinyAngle)
 
+        # check that getFitsMetadata can operate at high precision
+        # and has axis order RA, Dec
+        fitsMetadata = wcs.getFitsMetadata(True)
+        self.assertEqual(fitsMetadata.get("CTYPE1")[0:4], "RA--")
+        self.assertEqual(fitsMetadata.get("CTYPE2")[0:4], "DEC-")
+
         # Compute a WCS with the pixel origin shifted by an arbitrary amount
         # The resulting sky origin should not change
         offset = Extent2D(500, -322)  # arbitrary
