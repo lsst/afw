@@ -52,6 +52,22 @@ ndarray::Array<typename Field<T>::Value const, 1, 0> _getArrayFromCatalog(
     return out;
 }
 
+// Specialization of the above for Angle: have to return a double array (in
+// radians), since NumPy arrays can't hold Angles.
+template <typename Record>
+ndarray::Array<double const, 1, 0> _getArrayFromCatalog(
+    CatalogT<Record> const& catalog,  ///< Catalog
+    Key<Angle> const& key  ///< Key to column to extract
+) {
+    ndarray::Array<double, 1, 0> out = ndarray::allocate(catalog.size());
+    auto outIter = out.begin();
+    auto inIter = catalog.begin();
+    for (; inIter != catalog.end(); ++inIter, ++outIter) {
+        *outIter = inIter->get(key).asRadians();
+    }
+    return out;
+}
+
 
 /**
 Declare field-type-specific overloaded catalog member functions for one field type
@@ -95,12 +111,9 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
         return py::slice(a, b, 1);
     });
 
-    // Not extracting afw::geom::Angle columns because the units would be ambiguous
-    if (!std::is_same<T, geom::Angle>::value) {
-        cls.def("_getitem_", [](Catalog const& self, Key<T> const& key) -> ndarray::Array<T const, 1, 0> {
-            return _getArrayFromCatalog(self, key);
-        });
-    }
+    cls.def("_getitem_", [](Catalog const& self, Key<T> const& key) {
+        return _getArrayFromCatalog(self, key);
+    });
 }
 
 /**
