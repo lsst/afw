@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/table/Key.h"
@@ -122,11 +121,6 @@ PYBIND11_PLUGIN(baseColumnView) {
     py::module mod("baseColumnView");
 
     py::module::import("lsst.afw.table.schema");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     declareBaseColumnView(mod);
     declareBitsColumn(mod);
