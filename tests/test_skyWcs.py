@@ -13,15 +13,14 @@ import lsst.utils.tests
 from lsst.daf.base import PropertyList
 from lsst.afw.coord import IcrsCoord
 from lsst.afw.fits import readMetadata
-from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
-    Box2I, Box2D, degrees, arcseconds, radians, \
+from lsst.afw.geom import Extent2D, Point2D, Extent2I, \
+    Box2D, degrees, arcseconds, radians, \
     TransformPoint2ToPoint2, TransformPoint2ToIcrsCoord, makeRadialTransform, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeFitsHeaderFromMetadata, makeSipIwcToPixel, makeSipPixelToIwc
-from lsst.afw.image import wcsAlmostEqualOverBBox
 
 
 class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
@@ -799,27 +798,6 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
                 outPoint2 = transform.applyInverse(outPoint1)
                 self.assertPairsAlmostEqual(point, outPoint1)
                 self.assertPairsAlmostEqual(outPoint1, outPoint2)
-
-
-class GetApproximateFitsWcsTestCase(SkyWcsBaseTestCase):
-    def setUp(self):
-        self.dataPath = os.path.join(os.path.dirname(__file__), "data")
-
-    def testTanSip(self):
-        filePath = os.path.join(self.dataPath, "HSC-0908120-056-small.fits")
-        # TODO: DM-10765 replace with the following when Exposure contains a SkyWcs:
-        # exposure = ExposureF(filePath)
-        # wcs = exposure.getWcs()
-        metadata = readMetadata(filePath)
-        wcs = SkyWcs(metadata)
-
-        localTanWcs = wcs.getTanWcs(wcs.getPixelOrigin())
-        bbox = Box2I(Point2I(0, 0), Extent2I(1000, 1000))  # arbitrary
-        self.assertFalse(wcsAlmostEqualOverBBox(wcs, localTanWcs, bbox))
-
-        approxMetadata = wcs.getFitsMetadata(False)
-        reconstitutedWcs = makeSkyWcs(approxMetadata)
-        self.assertWcsAlmostEqualOverBBox(localTanWcs, reconstitutedWcs, bbox)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
