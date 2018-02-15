@@ -196,11 +196,19 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
     // In the case where this image is a parent image, the reference pixels are unchanged
     // by this transformation
     if (hasWcs()) {
+        // Try to save the WCS as FITS-WCS metadata; if an exact representation
+        // is not possible then skip it
         auto shift = geom::Extent2D(geom::Point2I(0, 0) - xy0);
         auto newWcs = getWcs()->copyAtShiftedPixelOrigin(shift);
-
-        // We want the WCS to appear in all HDUs
-        data.imageMetadata->combine(newWcs->getFitsMetadata());
+        std::shared_ptr<daf::base::PropertyList> wcsMetadata;
+        try {
+            wcsMetadata = newWcs->getFitsMetadata(true);
+        } catch (pex::exceptions::RuntimeError) {
+            // cannot represent this WCS as FITS-WCS; don't write its metadata
+        }
+        if (wcsMetadata) {
+            data.imageMetadata->combine(newWcs->getFitsMetadata(true));
+        }
     }
 
     // For the sake of ds9, store _x0 and _y0 as -LTV1, -LTV2.
