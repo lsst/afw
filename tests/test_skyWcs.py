@@ -21,6 +21,7 @@ from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata, getSipMatrixFromMetadata, makeSimpleWcsMetadata
 from lsst.afw.geom.testUtils import makeFitsHeaderFromMetadata, makeSipIwcToPixel, makeSipPixelToIwc
+from lsst.afw.image import ExposureF
 
 
 def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
