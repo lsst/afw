@@ -48,6 +48,9 @@ The resulting FrameSet may be any kind of WCS supported by FITS;
 if it is a celestial WCS then 1,1 will be the lower left corner of the image
 (the FITS convention, not the LSST convention).
 
+This routine replaces RADECSYS with RADESYS if the former is present and the latter is not,
+since that is a common misspelling in FITS headers.
+
 The returned FrameSet will have an IWC (intermediate world coordinate system) frame.
 
 @param[in,out] metadata  FITS header cards

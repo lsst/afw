@@ -15,6 +15,7 @@ scripts.BasicSConscript.pybind11(
      'ampInfo/ampInfo',
      'exposure/exposure',
      'idFactory',
+     'wcsUtils',
     ],
     addUnderscore=False,
 )

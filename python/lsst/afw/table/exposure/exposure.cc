@@ -33,7 +33,6 @@
 #include "lsst/afw/image/ApCorrMap.h"       // forward-declared by Exposure.h
 #include "lsst/afw/image/Calib.h"           // forward-declared by Exposure.h
 #include "lsst/afw/image/VisitInfo.h"       // forward-declared by Exposure.h
-#include "lsst/afw/image/Wcs.h"             // forward-declared by Exposure.h
 #include "lsst/afw/image/TransmissionCurve.h" // forward-declared by Exposure.h
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -69,7 +68,7 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("contains",
             (bool (ExposureRecord::*)(coord::Coord const &, bool) const) & ExposureRecord::contains,
             "coord"_a, "includeValidPolygon"_a = false);
-    cls.def("contains", (bool (ExposureRecord::*)(geom::Point2D const &, image::Wcs const &, bool) const) &
+    cls.def("contains", (bool (ExposureRecord::*)(geom::Point2D const &, geom::SkyWcs const &, bool) const) &
                                 ExposureRecord::contains,
             "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
     cls.def("getWcs", &ExposureRecord::getWcs);
@@ -146,7 +145,7 @@ PyExposureCatalog declareExposureCatalog(py::module &mod) {
             (Catalog (Catalog::*)(coord::Coord const &, bool) const) & Catalog::subsetContaining, "coord"_a,
             "includeValidPolygon"_a = false);
     cls.def("subsetContaining",
-            (Catalog (Catalog::*)(geom::Point2D const &, image::Wcs const &, bool) const) &
+            (Catalog (Catalog::*)(geom::Point2D const &, geom::SkyWcs const &, bool) const) &
                     Catalog::subsetContaining,
             "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
     return cls;

@@ -39,7 +39,6 @@ import numpy as np
 import lsst.utils.tests
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
-import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 
 
@@ -52,18 +51,14 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         self.crpix = afwGeom.Point2D(15000, 4000)
 
         arcsecPerPixel = 1/3600.0
-        CD11 = arcsecPerPixel
-        CD12 = 0
-        CD21 = 0
-        CD22 = arcsecPerPixel
-
-        self.wcs = afwImage.makeWcs(
-            self.crval, self.crpix, CD11, CD12, CD21, CD22)
+        cdMatrix = afwGeom.makeCdMatrix(arcsecPerPixel * afwGeom.arcseconds)
+        self.wcs = afwGeom.makeSkyWcs(crval=self.crval, crpix=self.crpix, cdMatrix=cdMatrix)
 
         refSchema = afwTable.SimpleTable.makeMinimalSchema()
         self.refCentroidKey = afwTable.Point2DKey.addFields(
             refSchema, "centroid", "centroid", "pixels")
         self.refCoordKey = afwTable.CoordKey(refSchema["coord"])
+        self.refHasCentroidKey = refSchema.addField("hasCentroid", type="Flag")
         self.refCat = afwTable.SimpleCatalog(refSchema)
 
         # an alias is required to make src.getCentroid() work;
@@ -91,15 +86,17 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         refObj = self.refCat.addNew()
         refObj.set(self.refCoordKey, self.crval)
 
-        # initial centroid should be nan
+        # initial centroid should be nan and hasCentroid False
         nanRefCentroid = self.refCat[0].get(self.refCentroidKey)
         for val in nanRefCentroid:
             self.assertTrue(math.isnan(val))
+        self.assertFalse(self.refCat[0].get(self.refHasCentroidKey))
 
-        # computed centroid should be crpix
+        # computed centroid should be crpix and hasCentroid True
         afwTable.updateRefCentroids(self.wcs, self.refCat)
         refCentroid = self.refCat[0].get(self.refCentroidKey)
         self.assertPairsAlmostEqual(refCentroid, self.crpix)
+        self.assertTrue(self.refCat[0].get(self.refHasCentroidKey))
 
         # coord should not be changed
         self.assertEqual(self.refCat[0].get(self.refCoordKey), self.crval)
@@ -151,11 +148,12 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         # check that centroids and coords match
         self.checkCatalogs()
 
-    def checkCatalogs(self, maxPixDiff=1e-7, maxSkyDiff=0.001*afwGeom.arcseconds):
+    def checkCatalogs(self, maxPixDiff=1e-5, maxSkyDiff=0.001*afwGeom.arcseconds):
         """Check that the source and reference object catalogs have equal centroids and coords"""
         self.assertEqual(len(self.sourceCat), len(self.refCat))
 
         for src, refObj in zip(self.sourceCat, self.refCat):
+            self.assertTrue(refObj.get(self.refHasCentroidKey))
             srcCentroid = src.get(self.srcCentroidKey)
             refCentroid = refObj.get(self.refCentroidKey)
             self.assertPairsAlmostEqual(

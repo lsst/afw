@@ -15,7 +15,7 @@ of known bad pixels in each detector. The cameraGeom package supports operations
  \ref assembleImage "assembleImage" that do much of the work.
 - Transform 2-d points between various \ref afwCameraGeomCoordSys "camera coordinate systems",
   using \ref camera.Camera.transform "Camera.transform". This can be used as part of generating a
-  \ref image::Wcs "WCS" or to examine the effects of optical distortion.
+  \ref geom::SkyWcs "WCS" or to examine the effects of optical distortion.
 - Create a graphic showing the layout of detectors on the focal plane, using utils.plotFocalPlane.
 - Display a mosaic image that combines all detector images, using utils.showMosaic.
 

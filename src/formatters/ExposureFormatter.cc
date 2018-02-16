@@ -47,11 +47,8 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/log/Log.h"
 #include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
-#include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Exposure.h"
-#include "lsst/afw/image/Wcs.h"
 
 // #include "lsst/afw/image/LSSTFitsResource.h"
 
@@ -452,8 +449,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeriali
     if (ip == 0) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Serializing non-Exposure");
     }
-    std::shared_ptr<image::Wcs> wcs = ip->getWcs();
-    ar& * ip->getMetadata() & ip->_maskedImage& wcs;
+    std::shared_ptr<geom::SkyWcs const> wcs = ip->getWcs();
+    ar& * ip->getMetadata() & ip->_maskedImage;  // & wcs; // TODO: replace this with what?
     LOGL_DEBUG(_log, "ExposureFormatter delegateSerialize end");
 }
 

@@ -37,6 +37,7 @@ import numbers
 import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.display.ds9 as ds9
@@ -99,8 +100,6 @@ class SavingSubImagesTest(unittest.TestCase):
         if False:
             print(self.parent.getMaskedImage().getXY0())
             print(subImg.getMaskedImage().getXY0())
-            print(self.parent.getWcs().getFitsMetadata().toString())
-            print(subImg.getWcs().getFitsMetadata().toString())
             print(self.oParent, oSubImage)
 
         for i in range(2):
@@ -124,8 +123,6 @@ class SavingSubImagesTest(unittest.TestCase):
         if False:
             print(self.parent.getMaskedImage().getXY0())
             print(subImg.getMaskedImage().getXY0())
-            print(self.parent.getWcs().getFitsMetadata().toString())
-            print(subImg.getWcs().getFitsMetadata().toString())
             print(self.oParent, oSubImage)
 
         for i in range(2):
@@ -227,11 +224,6 @@ class SavingSubImagesTest(unittest.TestCase):
                 subCrpix = subImg.getWcs().getPixelOrigin()
                 newCrpix = newImg.getWcs().getPixelOrigin()
 
-                if False:
-                    print(self.parent.getWcs().getFitsMetadata().toString())
-                    print(subImg.getWcs().getFitsMetadata().toString())
-                    print(newImg.getWcs().getFitsMetadata().toString())
-
                 for i in range(2):
                     self.assertEqual(
                         subXY0[i], newXY0[i], "Origin has changed; deep = %s" % deep)
@@ -254,7 +246,7 @@ class SavingSubImagesTest(unittest.TestCase):
 
         with lsst.utils.tests.getTempFilePath(".fits") as outFile:
             subImg.writeFits(outFile)
-            hdr = afwImage.readMetadata(outFile)
+            hdr = readMetadata(outFile)
 
             def checkLtvHeader(hdr, name, value):
                 # Per DM-4133, LTVn headers are required to be floating point

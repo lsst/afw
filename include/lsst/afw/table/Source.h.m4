@@ -140,8 +140,8 @@ m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 
 namespace lsst { namespace afw {
 
-namespace image {
-class Wcs;
+namespace geom {
+class SkyWcs;
 } // namespace image
 
 namespace table {
@@ -223,10 +223,10 @@ public:
     double getIxy() const;
 
     /// Update the coord field using the given Wcs and the field in the centroid slot.
-    void updateCoord(image::Wcs const & wcs);
+    void updateCoord(geom::SkyWcs const & wcs);
 
     /// Update the coord field using the given Wcs and the image center from the given key.
-    void updateCoord(image::Wcs const & wcs, PointKey<double> const & key);
+    void updateCoord(geom::SkyWcs const & wcs, PointKey<double> const & key);
 
     SourceRecord(const SourceRecord&) = delete;
     SourceRecord& operator=(const SourceRecord&) = delete;

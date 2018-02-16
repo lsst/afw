@@ -29,7 +29,7 @@ which are ultimately derived from ImageBase:
       - Mask : An %image representing a set of bitplanes
       - DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
       - MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
-      - Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
+      - Exposure : A MaskedImage with additional \ref geom::SkyWcs "WCS" information
 
 You can use \ref afwSecDisplay "displaying images" to display Image%s and their Mask%s.
 

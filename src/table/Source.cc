@@ -6,7 +6,7 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/detail/Access.h"
-#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -367,10 +367,10 @@ SourceRecord::SourceRecord(std::shared_ptr<SourceTable> const &table) : SimpleRe
 
 SourceRecord::~SourceRecord() = default;
 
-void SourceRecord::updateCoord(image::Wcs const &wcs) { setCoord(*wcs.pixelToSky(getCentroid())); }
+void SourceRecord::updateCoord(geom::SkyWcs const &wcs) { setCoord(wcs.pixelToSky(getCentroid())); }
 
-void SourceRecord::updateCoord(image::Wcs const &wcs, PointKey<double> const &key) {
-    setCoord(*wcs.pixelToSky(get(key)));
+void SourceRecord::updateCoord(geom::SkyWcs const &wcs, PointKey<double> const &key) {
+    setCoord(wcs.pixelToSky(get(key)));
 }
 
 void SourceRecord::_assign(BaseRecord const &other) {

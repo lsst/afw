@@ -171,18 +171,20 @@ public:
     /**
      * Return the WCS as FITS WCS metadata
      *
-     * @param[in] precise  If True then a "fairly precise" representation is required
-     *   (one with no significant deviation from linear over 100x100 pixels).
-     *   If false then write a local TAN approximation if a precise representation is not possible.
+     * @param[in] precise  Fail if the WCS cannot be accurately represented as FITS metadata?
+     *      If False then return an approximation. For now that approximation is pure TAN
+     *      but as of DM-13170 it will be a fit TAN-SIP.
+     *      The required precision is set by constant TIGHT_FITS_TOL in SkyWcs.cc
      *
-     * @warning AST cannot yet write out SIP terms as FITS WCS metadata (though we are trying to get
-     * that capability added). Thus if precise=true, this method this will fail for a TAN-SIP WCS
-     * that has significant distortion.
+     * FITS representations of WCS are described in "Representations of World Coordinates in FITS"
+     * by Greisen and Calabretta and several related papers.
+     *
+     * The required precision is hard-coded as constant TIGHT_FITS_TOL in SkyWcs.cc
      *
      * @throws lsst::pex::exceptions::RuntimeError if precise is true and AST cannot represent
      * this WCS as a FITS WCS to sufficient precision.
      */
-    std::shared_ptr<daf::base::PropertyList> getFitsMetadata(bool precise) const;
+    std::shared_ptr<daf::base::PropertyList> getFitsMetadata(bool precise = false) const;
 
     /**
      * Get the pixel scale at the specified pixel position
@@ -557,6 +559,13 @@ std::shared_ptr<TransformPoint2ToIcrsCoord> getIntermediateWorldCoordsToSky(SkyW
  */
 std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWcs const &wcs,
                                                                            bool simplify = true);
+
+/**
+ * Print a SkyWcs to an ostream
+ *
+ * For now it just prints "SkyWcs"; eventually it would be nice to have a summary
+ */
+std::ostream &operator<<(std::ostream &os, SkyWcs const &wcs);
 
 }  // namespace geom
 }  // namespace afw

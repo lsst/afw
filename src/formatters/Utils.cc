@@ -50,59 +50,6 @@ using lsst::daf::persistence::LogicalLocation;
 namespace lsst {
 namespace afw {
 namespace formatters {
-namespace {
-
-/**
-Format a PropertySet into a FITS header string (exactly 80 characters per "card", no line terminator)
-
-This function is designed to format data for creating a WCS. It truncates long string
-values and skips properties whose type it cannot handle.
-
-@param[in] paramNames  Names of properties to format
-@param[in] prop  Properties to format
-*/
-std::string formatFitsPropertiesImpl(std::vector<std::string> const& paramNames,
-                                     daf::base::PropertySet const& prop) {
-    std::ostringstream result;
-    for (auto const & fullName : paramNames) {
-        std::size_t lastPeriod = fullName.rfind(char('.'));
-        auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
-        std::type_info const& type = prop.typeOf(name);
-
-        std::string out = "";
-        out.reserve(80);
-        if (name.size() > 8) {  // Oh dear; too long for a FITS keyword
-            out += "HIERARCH = " + name;
-        } else {
-            out = (boost::format("%-8s= ") % name).str();
-        }
-
-        if (type == typeid(bool)) {
-            out +=  prop.get<bool>(name) ? "1" : "0";
-        } else if (type == typeid(int)) {
-            out += (boost::format("%20d") % prop.get<int>(name)).str();
-        } else if (type == typeid(double)) {
-            out += (boost::format("%20.15g") % prop.get<double>(name)).str();
-        } else if (type == typeid(float)) {
-            out += (boost::format("%20.15g") % prop.get<float>(name)).str();
-        } else if (type == typeid(std::string)) {
-            out += (boost::format("'%-67s' ") % prop.get<std::string>(name)).str();
-        }
-
-        int const len = out.size();
-        if (len < 80) {
-            out += std::string(80 - len, ' ');
-        } else {
-            out = out.substr(0, 80);
-        }
-
-        result << out;
-    }
-
-    return result.str();
-}
-
-} // namespace
 
 int extractSliceId(std::shared_ptr<PropertySet const> const& properties) {
     if (properties->isArray("sliceId")) {
@@ -262,18 +209,6 @@ void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
     for (std::vector<std::string>::const_iterator i(names.begin()), end(names.end()); i != end; ++i) {
         db.dropTable(*i);
     }
-}
-
-std::string formatFitsProperties(daf::base::PropertySet const& prop,
-                                 std::set<std::string> const& excludeNames) {
-    auto const allParamNames = prop.paramNames(false);
-    std::vector<std::string> desiredParamNames;
-    for (auto const & name: allParamNames) {
-        if (excludeNames.count(name) == 0) {
-            desiredParamNames.push_back(name);
-        }
-    }
-    return formatFitsPropertiesImpl(desiredParamNames, prop);
 }
 
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {

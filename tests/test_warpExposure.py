@@ -23,12 +23,9 @@
 """Test warpExposure
 """
 from __future__ import absolute_import, division, print_function
-
-import math
 import os
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils
@@ -42,7 +39,6 @@ import lsst.afw.image.utils as imageUtils
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
-from lsst.afw.geom.skyWcs import SkyWcs, makeWcsPairTransform
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
@@ -72,45 +68,6 @@ else:
     originalFullExposureName = os.path.join(
         "CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
-
-
-def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN",
-            radDecCSys="ICRS", equinox=2000):
-    """Make a Wcs
-
-    @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
-    @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
-    @param[in] crValCoord: crVal for WCS (afwCoord.Coord)
-    @param[in] posAng: position angle (afwGeom.Angle)
-    @param[in] doFlipX: flip X axis?
-    @param[in] projection: WCS projection (e.g. "TAN" or "STG")
-    """
-    if len(projection) != 3:
-        raise RuntimeError("projection=%r; must have length 3" % (projection,))
-    ctypeList = [("%-5s%3s" % (("RA", "DEC")[i], projection)).replace(" ", "-")
-                 for i in range(2)]
-    ps = dafBase.PropertySet()
-    # convert pix position to FITS standard
-    crPixFits = [ind + 1.0 for ind in crPixPos]
-    crValDeg = crValCoord.getPosition(afwGeom.degrees)
-    posAngRad = posAng.asRadians()
-    pixelScaleDeg = pixelScale.asDegrees()
-    cdMat = np.array([[math.cos(posAngRad), math.sin(posAngRad)],
-                      [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
-    if doFlipX:
-        cdMat[:, 0] = -cdMat[:, 0]
-    for i in range(2):
-        ip1 = i + 1
-        ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
-        ps.add("CRPIX%1d" % (ip1,), crPixFits[i])
-        ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
-    ps.add("RADECSYS", radDecCSys)
-    ps.add("EQUINOX", equinox)
-    ps.add("CD1_1", cdMat[0, 0])
-    ps.add("CD2_1", cdMat[1, 0])
-    ps.add("CD1_2", cdMat[0, 1])
-    ps.add("CD2_2", cdMat[1, 1])
-    return afwImage.makeWcs(ps)
 
 
 def makeVisitInfo():
@@ -408,55 +365,6 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
-    def testNonIcrs(self):
-        """Test that warping to a non-ICRS-like coordinate system produces different results
-
-        It would be better to also test that the results are as expected,
-        but I have not been able to get swarp to perform this operation,
-        so have not found an independent means of generating the expected results.
-        """
-        kernelName = "lanczos3"
-        rtol = 4e-5
-        atol = 1e-2
-        warpingControl = afwMath.WarpingControl(
-            kernelName,
-        )
-
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        originalImage = originalExposure.getMaskedImage().getImage()
-        originalWcs = originalExposure.getWcs()
-
-        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
-        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
-        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
-        swarpedImage = swarpedDecoratedImage.getImage()
-
-        for changeEquinox in (False, True):
-            swarpedMetadata = swarpedDecoratedImage.getMetadata()
-            if changeEquinox:
-                swarpedMetadata.set("RADECSYS", "FK5")
-                swarpedMetadata.set(
-                    "EQUINOX", swarpedMetadata.get("EQUINOX") + 1)
-            warpedWcs = afwImage.makeWcs(swarpedMetadata)
-
-            afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
-            originalImage = originalExposure.getMaskedImage().getImage()
-            originalWcs = originalExposure.getWcs()
-            numGoodPix = afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                                           originalWcs, warpingControl)
-            self.assertGreater(numGoodPix, 50)
-
-            afwWarpedImageArr = afwWarpedImage.getArray()
-            noDataMaskArr = np.isnan(afwWarpedImageArr)
-            if changeEquinox:
-                with self.assertRaises(AssertionError):
-                    self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
-                                                 skipMask=noDataMaskArr, rtol=rtol, atol=atol)
-            else:
-                self.assertImagesAlmostEqual(afwWarpedImage, swarpedImage,
-                                             skipMask=noDataMaskArr, rtol=rtol, atol=atol)
-
-    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testTransformBasedWarp(self):
         """Test warping using TransformPoint2ToPoint2
         """
@@ -471,7 +379,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             originalExposure = afwImage.ExposureF(originalExposurePath)
             originalMetadata = afwImage.DecoratedImageF(originalExposurePath).getMetadata()
-            originalSkyWcs = SkyWcs(originalMetadata)
+            originalSkyWcs = afwGeom.makeSkyWcs(originalMetadata)
 
             swarpedImageName = "medswarp1%s.fits" % (kernelName,)
             swarpedImagePath = os.path.join(dataDir, swarpedImageName)
@@ -479,16 +387,16 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             swarpedImage = swarpedDecoratedImage.getImage()
 
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
-            warpedSkyWcs = SkyWcs(swarpedMetadata)
+            warpedSkyWcs = afwGeom.makeSkyWcs(swarpedMetadata)
 
-            # warped image is destination, original image is source
-            destToSrc = makeWcsPairTransform(warpedSkyWcs, originalSkyWcs)
+            # original image is source, warped image is destination
+            srcToDest = afwGeom.makeWcsPairTransform(originalSkyWcs, warpedSkyWcs)
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             originalMaskedImage = originalExposure.getMaskedImage()
 
             numGoodPix = afwMath.warpImage(afwWarpedMaskedImage, originalMaskedImage,
-                                           destToSrc, warpingControl)
+                                           srcToDest, warpingControl)
             self.assertGreater(numGoodPix, 50)
 
             afwWarpedImage = afwWarpedMaskedImage.getImage()
@@ -499,22 +407,18 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
     def testTicket2441(self):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
-        fromWcs = makeWcs(
-            pixelScale=afwGeom.Angle(1.0e-8, afwGeom.degrees),
-            projection="TAN",
-            crPixPos=(0, 0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(359, 0), afwGeom.degrees),
+        fromWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
 
-        toWcs = makeWcs(
-            pixelScale=afwGeom.Angle(0.00011, afwGeom.degrees),
+        toWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(410000, 11441),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(45, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.00011*afwGeom.degrees, flipX=True),
             projection="CEA",
-            crPixPos=(410000.0, 11441.0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(45, 0), afwGeom.degrees),
-            doFlipX=True,
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(0, 0), toWcs)
 
@@ -546,21 +450,17 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         This tests another bug that was fixed in ticket #2441
         """
-        fromWcs = makeWcs(
-            pixelScale=afwGeom.Angle(1.0e-8, afwGeom.degrees),
-            projection="TAN",
-            crPixPos=(0, 0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(359, 0), afwGeom.degrees),
+        fromWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
 
-        toWcs = makeWcs(
-            pixelScale=afwGeom.Angle(1.1e-8, afwGeom.degrees),
-            projection="TAN",
-            crPixPos=(0, 0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(358, 0), afwGeom.degrees),
+        toWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(358, 0), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.1e-8*afwGeom.degrees),
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), toWcs)
 
@@ -590,18 +490,15 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         - rtol: relative tolerance as used by np.allclose
         - atol: absolute tolerance as used by np.allclose
         """
-        srcWcs = makeWcs(
-            pixelScale=afwGeom.Angle(0.2, afwGeom.degrees),
-            crPixPos=(10.0, 11.0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
+        srcWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(10, 11),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.2*afwGeom.degrees),
         )
-        destWcs = makeWcs(
-            pixelScale=afwGeom.Angle(0.17, afwGeom.degrees),
-            crPixPos=(9.0, 10.0),
-            crValCoord=afwCoord.IcrsCoord(
-                afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
-            posAng=afwGeom.Angle(31, afwGeom.degrees),
+        destWcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(9, 10),
+            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.17*afwGeom.degrees),
         )
 
         srcMaskedImage = afwImage.MaskedImageF(100, 101)
@@ -701,7 +598,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.makeWcs(swarpedMetadata)
+        warpedWcs = afwGeom.makeSkyWcs(swarpedMetadata)
 
         if useWarpExposure:
             # path for saved afw-warped image
@@ -772,11 +669,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 raise
 
             afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
-            xyTransform = afwImage.XYTransformFromWcsPair(
-                warpedWcs, originalWcs)
+            srcToDest = afwGeom.makeWcsPairTransform(originalWcs, warpedWcs)
             afwMath.warpImage(afwWarpedImage2, originalImage,
-                              xyTransform, warpingControl)
-            msg = "afw xyTransform-based and WCS-based %s-warped images do not match" % (
+                              srcToDest, warpingControl)
+            msg = "afw transform-based and WCS-based %s-warped images do not match" % (
                 kernelName,)
             try:
                 self.assertImagesAlmostEqual(afwWarpedImage2, afwWarpedImage,

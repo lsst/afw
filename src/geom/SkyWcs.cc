@@ -52,9 +52,13 @@ namespace {
 
 int const SERIALIZATION_VERSION = 1;
 
+// TIGHT_FITS_TOL is used by getFitsMetadata to determine if a WCS can accurately be represented as a FITS
+// WCS. It specifies the maximum departure from linearity (in pixels) allowed on either axis of the mapping
+// from pixel coordinates to Intermediate World Coordinates over a range of 100 x 100 pixels
+// (or the region specified by NAXIS[12], if provided, but we do not pass this to AST as of 2018-01-17).
+// For more information,
+// see FitsTol in the AST manual http://starlink.eao.hawaii.edu/devdocs/sun211.htx/sun211.html
 double const TIGHT_FITS_TOL = 0.0001;
-
-inline double square(double x) { return x * x; }
 
 class SkyWcsPersistenceHelper {
 public:
@@ -101,23 +105,6 @@ public:
 std::string getSkyWcsPersistenceName() { return "SkyWcs"; }
 
 SkyWcsFactory registration(getSkyWcsPersistenceName());
-
-// from https://stackoverflow.com/a/2072890
-inline bool endsWith(std::string const& value, std::string const& ending) {
-    if (ending.size() > value.size()) {
-        return false;
-    }
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
-// Get a double precision value from metadata, or 0 if absent
-// Useful for arrays, since omitted coefficients are 0
-double getDoubleOrZero(daf::base::PropertySet& metadata, std::string const& name) {
-    if (metadata.exists(name)) {
-        return metadata.getAsDouble(name);
-    }
-    return 0.0;
-}
 
 }  // namespace
 
@@ -200,18 +187,17 @@ std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) 
 }
 
 std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) const {
-    // Make a FrameSet that maps from GRID to SKY; GRID = PIXELS + 1
-    // (ignore ACTUAL_PIXELS, if present, as it cannot be represented with FITS WCS)
+    // Make a FrameSet that maps from GRID to SKY; GRID = the base frame (PIXELS or ACTUAL_PIXELS) + 1
     auto const gridToPixel = ast::ShiftMap({-1.0, -1.0});
     auto thisDict = getFrameDict();
-    auto const pixelToIwc = thisDict->getMapping("PIXELS", "IWC");
+    auto const pixelToIwc = thisDict->getMapping(ast::FrameSet::BASE, "IWC");
     auto const iwcToSky = thisDict->getMapping("IWC", "SKY");
     auto const gridToSky = gridToPixel.then(*pixelToIwc).then(*iwcToSky);
     ast::FrameSet frameSet(ast::Frame(2, "Domain=GRID"), gridToSky, *thisDict->getFrame("SKY", false));
 
     // Write frameSet to a FitsChan and extract the metadata
     std::ostringstream os;
-    os << "Encoding=FITS-WCS, CDMatrix=1, FitsTol=" << TIGHT_FITS_TOL;
+    os << "Encoding=FITS-WCS, CDMatrix=1, FitsAxisOrder=<copy>, FitsTol=" << TIGHT_FITS_TOL;
     ast::StringStream strStream;
     ast::FitsChan fitsChan(strStream, os.str());
     int const nObjectsWritten = fitsChan.write(frameSet);
@@ -220,7 +206,8 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Could not represent this SkyWcs using FITS-WCS metadata");
         } else {
-            // A large FitsTol was not sufficient; write a local TAN WCS approximation
+            // An exact representation could not be written, so try to write a local TAN approximation;
+            // set precise true to avoid an infinite loop, should something go wrong
             auto tanWcs = getTanWcs(getPixelOrigin());
             return tanWcs->getFitsMetadata(true);
         }
@@ -319,7 +306,7 @@ std::string SkyWcs::writeString() const {
 
 std::string SkyWcs::getPersistenceName() const { return getSkyWcsPersistenceName(); }
 
-std::string SkyWcs::getPythonModule() const { return "lsst.afw.geom.skyWcs"; }
+std::string SkyWcs::getPythonModule() const { return "lsst.afw.geom"; }
 
 void SkyWcs::write(OutputArchiveHandle& handle) const {
     SkyWcsPersistenceHelper const& keys = SkyWcsPersistenceHelper::get();
@@ -496,6 +483,11 @@ std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWc
     auto pixelToIwc = wcs.getFrameDict()->getMapping(ast::FrameSet::BASE, "IWC");
     return std::make_shared<TransformPoint2ToPoint2>(*pixelToIwc, simplify);
 }
+
+std::ostream &operator<<(std::ostream &os, SkyWcs const &wcs) {
+    os << "SkyWcs";
+    return os;
+};
 
 }  // namespace geom
 }  // namespace afw

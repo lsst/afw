@@ -34,7 +34,7 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.image.testUtils import imagesDiffer
-from lsst.afw.image.basicUtils import _compareWcsOverBBox
+from lsst.afw.geom.utils import _compareWcsOverBBox
 
 
 class TestTestUtils(lsst.utils.tests.TestCase):
@@ -277,7 +277,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     self.assertPairsAlmostEqual(
                         pair0, pair1, maxDiff=radialDiff-1e-7)
 
-    def testAssertWcssAlmostEqualOverBBox(self):
+    def testAssertWcsAlmostEqualOverBBox(self):
         """Test assertWcsAlmostEqualOverBBox and wcsAlmostEqualOverBBox"""
         bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
                              afwGeom.Extent2I(3001, 3001))
@@ -297,9 +297,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         metadata.set("CD1_2", 0.0)
         metadata.set("CD2_2", -5.1e-05)
         metadata.set("CD2_1", 0.0)
-        wcs0 = afwImage.makeWcs(metadata)
+        wcs0 = lsst.afw.geom.makeSkyWcs(metadata, strip=False)
         metadata.set("CRVAL2", 53.000001)  # tweak CRVAL2 for wcs1
-        wcs1 = afwImage.makeWcs(metadata)
+        wcs1 = lsst.afw.geom.makeSkyWcs(metadata)
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
                                           maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
@@ -307,27 +307,27 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         with self.assertWarns(DeprecationWarning):
             self.assertWcsNearlyEqualOverBBox(wcs0, wcs0, bbox,
                                               maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
-        self.assertTrue(afwImage.wcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
-                                                        maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7))
+        self.assertTrue(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
+                                                       maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7))
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
                                           maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02)
-        self.assertTrue(afwImage.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                                        maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02))
+        self.assertTrue(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
+                                                       maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02))
 
         with self.assertRaises(AssertionError):
             self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
                                               maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
-        self.assertFalse(afwImage.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                                         maxDiffSky=0.001*afwGeom.arcseconds,
-                                                         maxDiffPix=0.02))
+        self.assertFalse(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
+                                                        maxDiffSky=0.001*afwGeom.arcseconds,
+                                                        maxDiffPix=0.02))
 
         with self.assertRaises(AssertionError):
             self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
                                               maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
-        self.assertFalse(afwImage.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                                         maxDiffSky=0.04*afwGeom.arcseconds,
-                                                         maxDiffPix=0.001))
+        self.assertFalse(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
+                                                        maxDiffSky=0.04*afwGeom.arcseconds,
+                                                        maxDiffPix=0.001))
 
         # check that doShortCircuit works in the private implementation
         errStr1 = _compareWcsOverBBox(wcs0, wcs1, bbox,

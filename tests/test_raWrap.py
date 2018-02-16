@@ -23,11 +23,10 @@
 from __future__ import absolute_import, division, print_function
 import os
 import unittest
-from math import sqrt
 
 import lsst.utils
-import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 
 
@@ -41,31 +40,30 @@ class WCSTestRaWrap(unittest.TestCase):
 
     def test1(self):
         wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs2')
-        hdr = afwImage.readMetadata(wcsfn)
-        wcs1 = afwImage.makeWcs(hdr)
+        hdr = readMetadata(wcsfn)
+        wcs1 = afwGeom.makeSkyWcs(hdr)
 
         crval = wcs1.getSkyOrigin()
-        cd = wcs1.getCDMatrix()
+        cd = wcs1.getCdMatrix()
         print(cd)
         crval_p = afwGeom.Point2D(crval.getLongitude().asDegrees(),
                                   crval.getLatitude().asDegrees())
         origin = wcs1.getPixelOrigin()
         print(crval_p)
         print(origin)
-        wcs2 = afwImage.Wcs(crval_p, origin, cd)
+        wcs2 = afwGeom.makeSkyWcs(crpix=origin, crval=crval, cdMatrix=cd)
 
         for wcs in [wcs1, wcs2]:
             print(wcs)
             print('x, y, RA, Dec, pixscale("/pix), pixscale2')
             for x, y in [(0, 0), (300, 0), (350, 0), (360, 0), (370, 0), (380, 0), (400, 0)]:
-                radec = wcs.pixelToSky(x, y)
+                pixPos = afwGeom.PointD(x, y)
+                radec = wcs.pixelToSky(pixPos)
                 ra = radec.getLongitude().asDegrees()
                 dec = radec.getLatitude().asDegrees()
-                pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.Point2D(x, y)))
-                ps2 = wcs.pixelScale().asArcseconds()
-                print(x, y, ra, dec, pixscale, ps2)
+                pixscale = wcs.getPixelScale(pixPos).asArcseconds()
+                print(x, y, ra, dec, pixscale)
                 self.assertLess(abs(pixscale - 0.2), 1e-3)
-                self.assertLess(abs(ps2 - 0.2), 1e-3)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

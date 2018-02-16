@@ -36,7 +36,6 @@ import lsst.afw.geom
 import lsst.afw.image
 import lsst.afw.fits
 import lsst.utils.tests
-
 from lsst.afw.fits import ImageScalingOptions, ImageCompressionOptions
 
 
@@ -146,7 +145,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             unpersisted = ImageClass(filename)
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
 
-            header = lsst.afw.image.readMetadata(filename)
+            header = lsst.afw.fits.readMetadata(filename)
             bscale = header.get("BSCALE")
             bzero = header.get("BZERO")
 
@@ -707,7 +706,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
                     options = lsst.afw.fits.ImageWriteOptions(compression)
                     original.writeFits(fits, options)
                 cfitsio = cls(filename)
-                header = lsst.afw.image.readMetadata(filename, 1)
+                header = lsst.afw.fits.readMetadata(filename, 1)
                 seed = header.get("ZDITHER0")
                 self.assertEqual(header.get("BSCALE"), bscaleSet)
 
@@ -853,9 +852,10 @@ class EmptyExposureTestCase(lsst.utils.tests.TestCase):
         """
         exp = lsst.afw.image.ExposureF(0, 0)
         degrees = lsst.afw.geom.degrees
-        exp.setWcs(lsst.afw.image.makeWcs(lsst.afw.coord.Coord(0*degrees, 0*degrees),
-                                          lsst.afw.geom.Point2D(0.0, 0.0),
-                                          1.0e-4, 0.0, 0.0, 1.0e-4))
+        cdMatrix = np.array([[1.0e-4, 0.0], [0.0, 1.0e-4]], dtype=float)
+        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval = lsst.afw.coord.IcrsCoord(0*degrees, 0*degrees),
+                                            crpix = lsst.afw.geom.Point2D(0.0, 0.0),
+                                            cdMatrix = cdMatrix))
         imageOptions = lsst.afw.fits.ImageWriteOptions(ImageCompressionOptions(algorithm))
         maskOptions = lsst.afw.fits.ImageWriteOptions(exp.getMaskedImage().getMask())
         varianceOptions = lsst.afw.fits.ImageWriteOptions(ImageCompressionOptions(algorithm))

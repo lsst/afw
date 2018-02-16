@@ -44,8 +44,8 @@
 
 namespace lsst {
 namespace afw {
-namespace image {
-class Wcs;
+namespace geom {
+class SkyWcs;
 }
 namespace math {
 
@@ -398,7 +398,7 @@ private:
 template <typename DestExposureT, typename SrcExposureT>
 int warpExposure(
         DestExposureT &destExposure,  ///< Remapped exposure. Wcs and xy0 are read, MaskedImage is set,
-                                      ///< and Calib, Filter, and visitInfo, are copied from srcExposure.
+                                      ///< and Calib, Filter and VisitInfo are copied from srcExposure.
                                       ///< All other attributes are left alone (including Detector and Psf)
         SrcExposureT const &srcExposure,  ///< Source exposure
         WarpingControl const &control,    ///< control parameters
@@ -451,9 +451,9 @@ int warpExposure(
  */
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage,                 ///< remapped %image
-              lsst::afw::image::Wcs const &destWcs,  ///< WCS of remapped %image
+              geom::SkyWcs const &destWcs,           ///< WCS of remapped %image
               SrcImageT const &srcImage,             ///< source %image
-              lsst::afw::image::Wcs const &srcWcs,   ///< WCS of source %image
+              geom::SkyWcs const &srcWcs,            ///< WCS of source %image
               WarpingControl const &control,         ///< control parameters
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
@@ -461,36 +461,23 @@ int warpImage(DestImageT &destImage,                 ///< remapped %image
 );
 
 /**
- * @brief A variant of warpImage that uses an XYTransform instead of a pair of WCS
- * to describe the transformation.
- */
-template <typename DestImageT, typename SrcImageT>
-int warpImage(DestImageT &destImage,                            ///< remapped %image
-              SrcImageT const &srcImage,                        ///< source %image
-              lsst::afw::geom::XYTransform const &xyTransform,  ///<  xy transform mapping source position
-              ///< to destination position in the forward direction (but only the reverse direction is used)
-              WarpingControl const &control,  ///< control parameters
-              typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-                      typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
-              ///< use this value for undefined (edge) pixels
-);
-
-/**
- * @brief A variant of warpImage that uses a TransformPoint2ToPoint2
+ * @brief A variant of warpImage that uses a Transform<Point2Endpoint, Point2Endpoint>
  * instead of a pair of WCS to describe the transformation.
  *
  * @param[in,out] destImage  Destination image; all pixels are set
  * @param[in] srcImage  Source image
- * @param[in] destToSrc  Transformation from destination to source pixels in parent coordinates.
- *    This can be computed as makeWcsPairTransform(destWcs, srcWcs)
+ * @param[in] srcToDest  Transformation from source to destination pixels, in parent coordinates;
+ *    the inverse must be defined (and is the only direction used).
+ *    makeWcsPairTransform(srcWcs, destWcs) is one way to compute this transform.
  * @param[in] control  Warning control parameters
  * @param[in] padValue  Value used for pixels in the destination image that are outside
  *   the region of pixels that can be computed from the source image
  * @return the number of good pixels
  */
 template <typename DestImageT, typename SrcImageT>
-int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
-              geom::Transform<geom::Point2Endpoint, geom::Point2Endpoint> const &destToSrc,
+int warpImage(DestImageT &destImage,
+              SrcImageT const &srcImage,
+              geom::TransformPoint2ToPoint2 const & srcToDest,
               WarpingControl const &control,
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()));

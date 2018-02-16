@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division, print_function
 
-__all__ = ["BoxGrid", "makeFitsHeaderFromMetadata", "makeSipIwcToPixel", "makeSipPixelToIwc"]
+__all__ = ["BoxGrid", "makeSipIwcToPixel", "makeSipPixelToIwc"]
 
 from builtins import range
 from builtins import object
@@ -135,29 +135,34 @@ class FrameSetInfo(object):
         self.isCurrSkyFrame = frameSet.getFrame(self.currInd).className == "SkyFrame"
 
 
-def makeFitsHeaderFromMetadata(metadata):
-    """Make a FITS header string from metadata
-    """
-    strList = []
-    for name in metadata.names(False):
-        value = metadata.get(name)
-        if len(name) > 8:
-            raise RuntimeError("Name %r too long" % (name,))
-        if isinstance(value, float):
-            # keep astropy.wcs from warning about invalid format for floats
-            nameValStr = "%-8s= %0.25f" % (name, value)
-        else:
-            nameValStr = "%-8s= %r" % (name, value)
-        strList.append("%-80s" % (nameValStr,))
-    return "".join(strList)
-
-
 def makeSipPolyMapCoeffs(metadata, name):
     """Return a list of ast.PolyMap coefficients for the specified SIP matrix
 
-    Include a term for out = in
+    The returned list of coefficients for an ast.PolyMap
+    that computes the following function:
 
-    This is an internal function for use by makeSipIwcToPixel and makeSipPixelToIwc
+        f(dxy) = dxy + sipPolynomial(dxy))
+        where dxy = pixelPosition - pixelOrigin
+        and sipPolynomial is a polynomial with terms `<name>n_m for x^n y^m`
+            (e.g. A2_0 is the coefficient for x^2 y^0)
+
+    Parameters
+    ----------
+    metadata : lsst.daf.base.PropertySet
+        FITS metadata describing a WCS with the specified SIP coefficients
+    name : str
+        The desired SIP terms: one of A, B, AP, BP
+
+    Returns
+    -------
+    list
+        A list of coefficients for an ast.PolyMap that computes
+        the specified SIP polynomial, including a term for out = in
+
+    Note
+    ----
+    This is an internal function for use by makeSipIwcToPixel
+    and makeSipPixelToIwc
     """
     outAxisDict = dict(A=1, B=2, AP=1, BP=2)
     outAxis = outAxisDict.get(name)
@@ -186,12 +191,31 @@ def makeSipPolyMapCoeffs(metadata, name):
 
 
 def makeSipIwcToPixel(metadata):
-    """Make an iwcToPixel transform witH SIP distortion from FITS-WCS metadata
+    """Make an IWC to pixel transform with SIP distortion from FITS-WCS metadata
 
-    pixelPos = crpix + uv + sipMatrix(uv)
-    where uv = inverseCdMatrix(iwcPos)
+    This function is primarily intended for unit tests.
+    IWC is intermediate world coordinates, as described in the FITS papers.
 
-    The transform has no inverse
+    Parameters
+    ----------
+    metadata : lsst.daf.base.PropertySet
+        FITS metadata describing a WCS with inverse SIP coefficients
+
+    Returns
+    -------
+    lsst.afw.geom.TransformPoint2ToPoint2
+        Transform from IWC position to pixel position (zero-based)
+        in the forward direction. The inverse direction is not defined.
+
+    Notes
+    -----
+
+    The inverse SIP terms APn_m, BPn_m are polynomial coefficients x^n y^m
+    for computing transformed x, y respectively. If we call the resulting
+    polynomial inverseSipPolynomial, the returned transformation is:
+
+        pixelPosition = pixel origin + uv + inverseSipPolynomial(uv)
+        where uv = inverseCdMatrix * iwcPosition
     """
     crpix = (metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
     pixelRelativeToAbsoluteMap = ast.ShiftMap(crpix)
@@ -206,12 +230,31 @@ def makeSipIwcToPixel(metadata):
 
 
 def makeSipPixelToIwc(metadata):
-    """Make a pixelToIwc transform with SIP distortion from FITS-WCS metadata
+    """Make a pixel to IWC transform with SIP distortion from FITS-WCS metadata
 
-    iwcPos = cdMatrix[dxy + sipMatrix(dxy)]
-    where dxy = pixelPos - crpix
+    This function is primarily intended for unit tests.
+    IWC is intermediate world coordinates, as described in the FITS papers.
 
-    The transform has no inverse
+    Parameters
+    ----------
+    metadata : lsst.daf.base.PropertySet
+        FITS metadata describing a WCS with forward SIP coefficients
+
+    Returns
+    -------
+    lsst.afw.geom.TransformPoint2ToPoint2
+        Transform from pixel position (zero-based) to IWC position
+        in the forward direction. The inverse direction is not defined.
+
+    Notes
+    -----
+
+    The forward SIP terms An_m, Bn_m are polynomial coefficients x^n y^m
+    for computing transformed x, y respectively. If we call the resulting
+    polynomial sipPolynomial, the returned transformation is:
+
+        iwcPosition = cdMatrix * (dxy + sipPolynomial(dxy))
+        where dxy = pixelPosition - pixelOrigin
     """
     crpix = (metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
     pixelAbsoluteToRelativeMap = ast.ShiftMap(crpix).getInverse()

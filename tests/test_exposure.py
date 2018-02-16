@@ -28,8 +28,8 @@ from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
-from builtins import range
 import numpy as np
+from numpy.testing import assert_allclose
 
 import lsst.utils
 import lsst.utils.tests
@@ -39,7 +39,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
-import lsst.afw.fits
+from lsst.afw.fits import readMetadata, FitsError
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from lsst.log import Log
 from testTableArchivesLib import DummyPsf
@@ -70,12 +70,13 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
-        maskedImageMD = afwImage.readMetadata(inFilePathSmall)
+        maskedImageMD = readMetadata(inFilePathSmall)
 
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width = maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.makeWcs(maskedImageMD)
+        self.wcs = afwGeom.makeSkyWcs(maskedImageMD, False)
+        self.md = maskedImageMD
         self.psf = DummyPsf(2.0)
         self.detector = DetectorWrapper().detector
 
@@ -425,15 +426,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
                                 afwGeom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(
             self.exposureCrWcs, subBBox, afwImage.LOCAL)
-        parentPos = self.exposureCrWcs.getWcs().pixelToSky(0, 0)
+        parentSkyPos = self.exposureCrWcs.getWcs().pixelToSky(0, 0)
 
-        parentPos = parentPos.getPosition()
+        subExpSkyPos = subExposure.getWcs().pixelToSky(0, 0)
 
-        subExpPos = subExposure.getWcs().pixelToSky(0, 0).getPosition()
-
-        for i in range(2):
-            self.assertAlmostEqual(
-                parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
+        self.assertCoordsAlmostEqual(parentSkyPos, subExpSkyPos, msg="Wcs in sub image has changed")
 
     def testReadWriteFits(self):
         """Test readFits and writeFits.
@@ -459,7 +456,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         def getExposure():
             afwImage.ExposureF(inFilePathSmallImage)
 
-        self.assertRaises(lsst.afw.fits.FitsError, getExposure)
+        self.assertRaises(FitsError, getExposure)
 
         mainExposure.setPsf(self.psf)
 
@@ -517,14 +514,15 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         for xSubInd in (0, subDim.getX()-1):
             for ySubInd in (0, subDim.getY()-1):
-                mainWcs.pixelToSky(
-                    afwImage.indexToPosition(xSubInd),
-                    afwImage.indexToPosition(ySubInd),
-                )
-                subWcs.pixelToSky(
-                    afwImage.indexToPosition(xSubInd),
-                    afwImage.indexToPosition(ySubInd),
-                )
+                self.assertCoordsAlmostEqual(
+                    mainWcs.pixelToSky(
+                        afwImage.indexToPosition(xSubInd),
+                        afwImage.indexToPosition(ySubInd),
+                    ),
+                    subWcs.pixelToSky(
+                        afwImage.indexToPosition(xSubInd),
+                        afwImage.indexToPosition(ySubInd),
+                    ))
 
     def cmpExposure(self, e1, e2):
         self.assertEqual(e1.getDetector().getName(),
@@ -679,13 +677,12 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             # This should read the first non-empty HDU (i.e. it skips the primary), but
             # goes back and reads it if it finds INHERIT=T.  That should let us read
             # frazzle and the Wcs from the PropertySet returned by
-            # readMetadata.
-            md = afwImage.readMetadata(tmpFile)
-            wcs = afwImage.makeWcs(md, True)
-            self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
-            self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
-            self.assertTrue(
-                np.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
+            # testReadMetadata.
+            md = readMetadata(tmpFile)
+            wcs = afwGeom.makeSkyWcs(md, False)
+            self.assertPairsAlmostEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
+            self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
+            assert_allclose(wcs.getCdMatrix(), self.wcs.getCdMatrix(), atol=1e-10)
             frazzle = md.get("FRAZZLE")
             self.assertTrue(frazzle)
 

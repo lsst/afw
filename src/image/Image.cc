@@ -36,9 +36,9 @@
 #include "boost/gil/gil_all.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
@@ -693,7 +693,7 @@ geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
     } else {
         dims = geom::Extent2I(metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2"));
     }
-    geom::Point2I xy0 = detail::getImageXY0FromMetadata(detail::wcsNameForXY0, &metadata);
+    geom::Point2I xy0 = geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0);
     return geom::Box2I(xy0, dims);
 }
 

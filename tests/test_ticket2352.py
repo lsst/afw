@@ -29,6 +29,7 @@ import os.path
 import unittest
 
 import lsst.afw.image as afwImage
+from lsst.afw.fits import readMetadata
 import lsst.utils.tests
 
 from lsst.afw.fits import DEFAULT_HDU
@@ -43,7 +44,7 @@ class ReadMefTest(unittest.TestCase):
     def checkExtName(self, name, value, extNum):
         filename = DATA + "[%s]" % name
 
-        header = afwImage.readMetadata(filename)
+        header = readMetadata(filename)
         self.assertEqual(header.get("EXT_NUM"), extNum)
         self.assertEqual(header.get("EXTNAME").strip(), name)
 
@@ -58,7 +59,7 @@ class ReadMefTest(unittest.TestCase):
     def checkExtNum(self, hdu, extNum):
         if hdu is None:
             hdu = DEFAULT_HDU
-        header = afwImage.readMetadata(DATA, hdu)
+        header = readMetadata(DATA, hdu)
         self.assertEqual(header.get("EXT_NUM"), extNum)
 
     def testExtNum(self):
