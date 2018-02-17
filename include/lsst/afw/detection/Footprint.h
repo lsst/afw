@@ -249,7 +249,7 @@ public:
                                          std::shared_ptr<geom::SkyWcs> target, geom::Box2I const &region,
                                          bool doClip = true) const;
 
-    /** Return a new Footprint who's pixels are the product of applying the specified transformation
+    /** Return a new Footprint whose pixels are the product of applying the specified transformation
      *
      * @param t A linear transform object which will be used to map the pixels
      * @param region Used to set the "region" box of the returned footprint; note that this is
@@ -259,7 +259,7 @@ public:
     std::shared_ptr<Footprint> transform(geom::LinearTransform const &t, geom::Box2I const &region,
                                          bool doClip = true) const;
 
-    /** Return a new Footprint who's pixels are the product of applying the specified transformation
+    /** Return a new Footprint whose pixels are the product of applying the specified transformation
      *
      * @param t An affine transform object which will be used to map the pixels
      * @param region Used to set the "region" box of the returned footprint; note that this is
@@ -269,7 +269,7 @@ public:
     std::shared_ptr<Footprint> transform(geom::AffineTransform const &t, geom::Box2I const &region,
                                          bool doClip = true) const;
 
-    /** Return a new Footprint who's pixels are the product of applying the specified transformation
+    /** Return a new Footprint whose pixels are the product of applying the specified transformation
      *
      * @param t A 2-D transform which will be used to map the pixels
      * @param region Used to set the "region" box of the returned footprint; note that this is
