@@ -1253,7 +1253,7 @@ std::vector<double> Spline::roots(double const value, double a, double const b) 
         //
         // Could use
         //    std::transform(newRoots.begin(), newRoots.end(), newRoots.begin(),
-        //                   std::tr1::bind(std::plus<double>(), _1, _knots[i0]));
+        //                   std::bind(std::plus<double>(), _1, _knots[i0]));
         // but let's not
         //
         for (unsigned int j = 0; j != newRoots.size(); ++j) {
