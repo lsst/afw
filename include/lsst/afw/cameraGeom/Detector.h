@@ -29,7 +29,6 @@
 #include "lsst/base.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
-#include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
 
@@ -50,7 +49,7 @@ enum DetectorType {
 /**
  * Information about a CCD or other imaging detector
  *
- * Supports conversion of CameraPoint between FOCAL_PLANE and pixel-based coordinate systems.
+ * Supports transformation of points between FOCAL_PLANE and pixel-based coordinate systems.
  * Also an iterator over amplifiers (in C++ use begin(), end(), in Python use "for amplifier in detector").
  *
  * @todo: this would probably be a bit more robust if it used a ConstAmpInfoCatalog
@@ -123,10 +122,10 @@ public:
     std::vector<geom::Point2D> getCorners(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the center of the detector in the specified camera coordinate system */
-    CameraPoint getCenter(CameraSys const &cameraSys) const;
+    geom::Point2D getCenter(CameraSys const &cameraSys) const;
 
     /** Get the center of the detector in the specified camera coordinate system prefix */
-    CameraPoint getCenter(CameraSysPrefix const &cameraSysPrefix) const;
+    geom::Point2D getCenter(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the amplifier information catalog */
     lsst::afw::table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
@@ -222,30 +221,6 @@ public:
                                                                 ToSysT const &toSys) const;
 
     /**
-     * Make a CameraPoint from a point and a camera system
-     *
-     * @param[in] point  2D point
-     * @param[in] cameraSys  Camera coordinate system
-     *
-     * @note the CameraSysPrefix version needs the detector name, which is why this is not static.
-     */
-    CameraPoint makeCameraPoint(geom::Point2D const &point,  ///< 2-d point
-                                CameraSys const &cameraSys   ///< coordinate system
-                                ) const {
-        return CameraPoint(point, cameraSys);
-    }
-
-    /**
-     * Make a CameraPoint from a point and a camera system prefix
-     *
-     * @param[in] point  2D point
-     * @param[in] cameraSysPrefix  Camera coordinate system prefix
-     */
-    CameraPoint makeCameraPoint(geom::Point2D const &point, CameraSysPrefix const &cameraSysPrefix) const {
-        return CameraPoint(point, makeCameraSys(cameraSysPrefix));
-    }
-
-    /**
      * Get a coordinate system from a coordinate system (return input unchanged and untested)
      *
      * @param[in] cameraSys  Camera coordinate system
@@ -266,32 +241,35 @@ public:
     }
 
     /**
-     * Convert a CameraPoint from one coordinate system to another
+     * Transform a point from one camera system to another
      *
-     * @param[in] fromCameraPoint  Camera point to transform
-     * @param[in] toSys  To camera coordinate system
-     * @return The transformed camera point
+     * @tparam FromSysT  Class of fromSys: one of CameraSys or CameraSysPrefix
+     * @tparam ToSysT  Class of toSys: one of CameraSys or CameraSysPrefix
+     * @param[in] point  Camera point to transform
+     * @param[in] fromSys  Camera coordinate system of `point`
+     * @param[in] toSys  Camera coordinate system of returned point
+     * @return The transformed point
      *
-     * @throws pex::exceptions::InvalidParameterError if from or to coordinate system is unknown
+     * @throws pex::exceptions::InvalidParameterError if fromSys or toSys is unknown
      */
-    CameraPoint transform(CameraPoint const &fromCameraPoint, CameraSys const &toSys) const {
-        return CameraPoint(
-                _transformMap.transform(fromCameraPoint.getPoint(), fromCameraPoint.getCameraSys(), toSys),
-                toSys);
-    }
+    template <typename FromSysT, typename ToSysT>
+    geom::Point2D transform(geom::Point2D const &point, FromSysT const &fromSys, ToSysT const &toSys) const;
 
     /**
-     * Convert a CameraPoint from one coordinate system to a coordinate system prefix
+     * Transform a vector of points from one camera system to another
      *
-     * @param[in] fromCameraPoint  Camera point to transform
-     * @param[in] toSys  To camera coordinate system prefix (this detector is used)
-     * @return The transformed camera point; the detector will be this detector
+     * @tparam FromSysT  Class of fromSys: one of CameraSys or CameraSysPrefix
+     * @tparam ToSysT  Class of toSys: one of CameraSys or CameraSysPrefix
+     * @param[in] points  Camera points to transform
+     * @param[in] fromSys  Camera coordinate system of `points`
+     * @param[in] toSys  Camera coordinate system of returned points
+     * @return The transformed points
      *
-     * @throws pex::exceptions::InvalidParameterError if from or to coordinate system is unknown
+     * @throws pex::exceptions::InvalidParameterError if fromSys or toSys is unknown
      */
-    CameraPoint transform(CameraPoint const &fromCameraPoint, CameraSysPrefix const &toSys) const {
-        return transform(fromCameraPoint, makeCameraSys(toSys));
-    }
+    template <typename FromSysT, typename ToSysT>
+    std::vector<geom::Point2D> transform(std::vector<geom::Point2D> const &points, FromSysT const &fromSys,
+                                         ToSysT const &toSys) const;
 
     /// The "native" coordinate system of this detector.
     CameraSys getNativeCoordSys() const { return _nativeSys; }

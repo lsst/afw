@@ -29,7 +29,6 @@
 #include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
-#include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 #include "lsst/afw/geom/Box.h"
@@ -45,6 +44,38 @@ using namespace py::literals;
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
+
+// Declare Detector methods overloaded on one coordinate system class
+template <typename SysT, typename PyClass>
+void declare1SysMethods(PyClass &cls) {
+    cls.def("getCorners",
+            (std::vector<geom::Point2D>(Detector::*)(SysT const &) const) & Detector::getCorners,
+            "cameraSys"_a);
+    cls.def("getCenter", (geom::Point2D(Detector::*)(SysT const &) const) & Detector::getCenter,
+            "cameraSys"_a);
+    cls.def("hasTransform", (bool (Detector::*)(SysT const &) const) & Detector::hasTransform, "cameraSys"_a);
+    cls.def("makeCameraSys", (CameraSys const (Detector::*)(SysT const &) const) & Detector::makeCameraSys,
+            "cameraSys"_a);
+}
+
+// Declare Detector methods templated on two coordinate system classes
+template <typename FromSysT, typename ToSysT, typename PyClass>
+void declare2SysMethods(PyClass &cls) {
+    cls.def("getTransform",
+            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(FromSysT const &, ToSysT const &)
+                     const) &
+                    Detector::getTransform,
+            "fromSys"_a, "toSys"_a);
+    cls.def("transform",
+            (geom::Point2D(Detector::*)(geom::Point2D const &, FromSysT const &, ToSysT const &) const) &
+                    Detector::transform,
+            "point"_a, "fromSys"_a, "toSys"_a);
+    cls.def("transform",
+            (std::vector<geom::Point2D>(Detector::*)(std::vector<geom::Point2D> const &, FromSysT const &,
+                                                     ToSysT const &) const) &
+                    Detector::transform,
+            "points"_a, "fromSys"_a, "toSys"_a);
+}
 
 PYBIND11_PLUGIN(_detector) {
     py::module mod("_detector", "Python wrapper for afw _detector library");
@@ -88,68 +119,19 @@ PYBIND11_PLUGIN(_detector) {
     cls.def("getType", &Detector::getType);
     cls.def("getSerial", &Detector::getSerial);
     cls.def("getBBox", &Detector::getBBox);
-    cls.def("getCorners",
-            (std::vector<geom::Point2D>(Detector::*)(CameraSys const &) const) & Detector::getCorners,
-            "cameraSys"_a);
-    cls.def("getCorners",
-            (std::vector<geom::Point2D>(Detector::*)(CameraSysPrefix const &) const) & Detector::getCorners,
-            "cameraSysPrefix"_a);
-    cls.def("getCenter", (CameraPoint(Detector::*)(CameraSys const &) const) & Detector::getCenter,
-            "getCenter"_a);
-    cls.def("getCenter", (CameraPoint(Detector::*)(CameraSysPrefix const &) const) & Detector::getCenter,
-            "getCenterPrefix"_a);
     cls.def("getAmpInfoCatalog", &Detector::getAmpInfoCatalog);
     cls.def("getOrientation", &Detector::getOrientation);
     cls.def("getPixelSize", &Detector::getPixelSize);
     cls.def("hasCrosstalk", &Detector::hasCrosstalk);
     cls.def("getCrosstalk", &Detector::getCrosstalk);
     cls.def("getTransformMap", &Detector::getTransformMap);
-    cls.def("hasTransform", (bool (Detector::*)(CameraSys const &) const) & Detector::hasTransform,
-            "cameraSys"_a);
-    cls.def("hasTransform", (bool (Detector::*)(CameraSysPrefix const &) const) & Detector::hasTransform,
-            "cameraSysPrefix"_a);
-    cls.def("getTransform",
-            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSys const &, CameraSys const &)
-                     const) &
-                    Detector::getTransform,
-            "fromSys"_a, "toSys"_a);
-    cls.def("getTransform",
-            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSys const &,
-                                                                         CameraSysPrefix const &) const) &
-                    Detector::getTransform,
-            "fromSys"_a, "toSys"_a);
-    cls.def("getTransform",
-            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSysPrefix const &,
-                                                                         CameraSys const &) const) &
-                    Detector::getTransform,
-            "fromSys"_a, "toSys"_a);
-    cls.def("getTransform",
-            (std::shared_ptr<geom::TransformPoint2ToPoint2>(Detector::*)(CameraSysPrefix const &,
-                                                                         CameraSysPrefix const &) const) &
-                    Detector::getTransform,
-            "fromSys"_a, "toSys"_a);
     cls.def("getNativeCoordSys", &Detector::getNativeCoordSys);
-    cls.def("makeCameraPoint",
-            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSys const &) const) &
-                    Detector::makeCameraPoint,
-            "point"_a, "cameraSys"_a);
-    cls.def("makeCameraPoint",
-            (CameraPoint(Detector::*)(geom::Point2D const &, CameraSysPrefix const &) const) &
-                    Detector::makeCameraPoint,
-            "point"_a, "cameraSysPrefix"_a);
-    cls.def("makeCameraSys",
-            (CameraSys const (Detector::*)(CameraSys const &) const) & Detector::makeCameraSys,
-            "cameraSys"_a);
-    cls.def("makeCameraSys",
-            (CameraSys const (Detector::*)(CameraSysPrefix const &) const) & Detector::makeCameraSys,
-            "cameraSysPrefix"_a);
-    cls.def("transform",
-            (CameraPoint(Detector::*)(CameraPoint const &, CameraSys const &) const) & Detector::transform,
-            "fromCameraPoint"_a, "toSys"_a);
-    cls.def("transform",
-            (CameraPoint(Detector::*)(CameraPoint const &, CameraSysPrefix const &) const) &
-                    Detector::transform,
-            "fromCameraPoint"_a, "toSys"_a);
+    declare1SysMethods<CameraSys>(cls);
+    declare1SysMethods<CameraSysPrefix>(cls);
+    declare2SysMethods<CameraSys, CameraSys>(cls);
+    declare2SysMethods<CameraSys, CameraSysPrefix>(cls);
+    declare2SysMethods<CameraSysPrefix, CameraSys>(cls);
+    declare2SysMethods<CameraSysPrefix, CameraSysPrefix>(cls);
 
     return mod.ptr();
 }

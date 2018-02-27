@@ -15,32 +15,14 @@ camera = testUtils.CameraWrapper(isLsstLike=True).camera
 det = camera["R:1,0 S:1,1"]
 
 # Convert a 2-d point from PIXELS to both FOCAL_PLANE and FIELD_ANGLE coordinates.
-detPoint = det.makeCameraPoint(afwGeom.Point2D(
-    25, 43.2), cameraGeom.PIXELS)  # position on detector in pixels
+pixelPos = afwGeom.Point2D(25, 43.2)
 # position in focal plane in mm
-fpPoint = det.transform(detPoint, cameraGeom.FOCAL_PLANE)
-# position in field of view, in radians
-fieldPoint = camera.transform(detPoint, cameraGeom.FIELD_ANGLE)
+focalPlanePos = det.transform(pixelPos, cameraGeom.PIXELS, cameraGeom.FOCAL_PLANE)
+# position in as a field angle, in radians
+fieldAnglePos = det.transform(pixelPos, cameraGeom.PIXELS, cameraGeom.FIELD_ANGLE)
 
 # Find all detectors that overlap a specific point (in this case find the
 # detector we already have)
-detList = camera.findDetectors(fpPoint)
+detList = camera.findDetectors(focalPlanePos, cameraGeom.FOCAL_PLANE)
 assert len(detList) == 1
 assert detList[0].getName() == det.getName()
-
-# Convert a point from FIELD_ANGLE to PIXELS coordinates.
-# For a detector-based coordinate system, such as PIXELS, may specify a particular detector
-# or let the Camera find a detector:
-# * To specify a particular detector, specify the target coordinate system as a CameraSys
-#   with the specified detectorName filled in (e.g. use detector.makeCameraSys).
-#   This is faster than finding a detector, and the resulting point is allowed to be off the detector.
-# * To have the Camera find a detector, specify the target coordinate system as a CameraSysPrefix
-#   (e.g. cameraGeom.PIXELS). Camera will search for a detector that overlaps the point.
-#   If it finds exactly one detector then it will use that detector, and you can figure
-#   out which detector it used from the detector name in the returned CameraPoint.
-# If it finds no detectors, or more than one detector, then it will raise
-# an exception.
-detPixelsSys = det.makeCameraSys(cameraGeom.PIXELS)
-detPointOnSpecifiedDetector = camera.transform(fieldPoint, detPixelsSys)
-detPointOnFoundDetector = camera.transform(fieldPoint, cameraGeom.PIXELS)
-assert detPointOnFoundDetector.getCameraSys() == detPixelsSys  # same detector
