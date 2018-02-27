@@ -122,8 +122,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
                             std::inserter(namesChannelStripped, namesChannelStripped.begin()));
 
         // FITS keywords that FitsChan may strip that we want to keep in `metadata`
-        // TODO DM-10411: remove TIMESYS from this list after starlink_ast is updated (no rush)
-        std::set<std::string> const namesToKeep = {"DATE-OBS", "MJD-OBS", "TIMESYS"};
+        std::set<std::string> const namesToKeep = {"DATE-OBS", "MJD-OBS"};
 
         std::set<std::string> namesToStrip;  // names to strip from metadata
         std::set_difference(namesChannelStripped.begin(), namesChannelStripped.end(), namesToKeep.begin(),
