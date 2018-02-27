@@ -71,7 +71,7 @@ PYBIND11_PLUGIN(_detector) {
                      table::AmpInfoCatalog const &, Orientation const &, geom::Extent2D const &,
                      TransformMap::Transforms const &, Detector::CrosstalkMatrix const &>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
-            "pixelSize"_a, "transforms"_a, "crosstalk"_a=Detector::CrosstalkMatrix());
+            "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix());
 
     /* Operators */
     cls.def("__getitem__",
