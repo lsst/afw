@@ -24,7 +24,6 @@
 #define LSST_AFW_CAMERAGEOM_H
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
-#include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 

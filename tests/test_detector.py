@@ -112,32 +112,24 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         pixOffset = dw.orientation.getReferencePoint()
         for xyMM in ((25.6, -31.07), (0, 0), (-1.234e5, 3.123e4)):
             fpPoint = afwGeom.Point2D(*xyMM)
-            fpCamPoint = cameraGeom.CameraPoint(
-                fpPoint, cameraGeom.FOCAL_PLANE)
-            pixCamPoint = dw.detector.transform(fpCamPoint, cameraGeom.PIXELS)
-            pixPoint = pixCamPoint.getPoint()
+            pixPoint = dw.detector.transform(fpPoint, cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS)
             for i in range(2):
                 self.assertAlmostEqual(
                     fpPoint[i]/dw.pixelSize[i] + pixOffset[i], pixPoint[i])
-            fpCamPoint2 = dw.detector.transform(
-                pixCamPoint, cameraGeom.FOCAL_PLANE)
-            fpPoint2 = fpCamPoint2.getPoint()
-            for i in range(2):
-                self.assertAlmostEqual(fpPoint[i], fpPoint2[i])
+            fpPoint2 = dw.detector.transform(pixPoint, cameraGeom.PIXELS, cameraGeom.FOCAL_PLANE)
+            self.assertPairsAlmostEqual(fpPoint, fpPoint2)
 
             # test pix to pix
-            pixCamPoint2 = dw.detector.transform(
-                pixCamPoint, cameraGeom.PIXELS)
-            for i in range(2):
-                self.assertAlmostEqual(pixCamPoint.getPoint()[
-                                       i], pixCamPoint2.getPoint()[i])
+            pixPoint2 = dw.detector.transform(pixPoint, cameraGeom.PIXELS, cameraGeom.PIXELS)
+            self.assertPairsAlmostEqual(pixPoint, pixPoint2)
 
-        # make sure you cannot transform to a different detector
-        pixCamPoint = dw.detector.makeCameraPoint(
-            afwGeom.Point2D(1, 1), cameraGeom.PIXELS)
+        # make sure you cannot transform to or from a different detector
         otherCamSys = cameraGeom.CameraSys(cameraGeom.PIXELS, "other detector")
-        with self.assertRaises(lsst.pex.exceptions.Exception):
-            dw.detector.transform(pixCamPoint, otherCamSys)
+        for goodSys in (cameraGeom.PIXELS, cameraGeom.FOCAL_PLANE):
+            with self.assertRaises(lsst.pex.exceptions.Exception):
+                dw.detector.transform(pixPoint, goodSys, otherCamSys)
+            with self.assertRaises(lsst.pex.exceptions.Exception):
+                dw.detector.transform(pixPoint, otherCamSys, goodSys)
 
     def testIteration(self):
         """Test iteration over amplifiers and __getitem__
@@ -177,28 +169,6 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
             with self.assertRaises(lsst.pex.exceptions.Exception):
                 detector.getTransform(cameraGeom.PIXELS, badCamSys)
 
-    def testMakeCameraPoint(self):
-        """Test the makeCameraPoint method
-        """
-        dw = DetectorWrapper()
-        for xyMM in ((25.6, -31.07), (0, 0)):
-            point = afwGeom.Point2D(*xyMM)
-            for sysName in ("csys1", "csys2"):
-                for detectorName in ("", dw.name, "a different detector"):
-                    cameraSys1 = cameraGeom.CameraSys(sysName, detectorName)
-                    cameraPoint1 = dw.detector.makeCameraPoint(
-                        point, cameraSys1)
-
-                    self.assertEqual(cameraPoint1.getPoint(), point)
-                    self.assertEqual(cameraPoint1.getCameraSys(), cameraSys1)
-
-                cameraSysPrefix = cameraGeom.CameraSysPrefix(sysName)
-                cameraPoint2 = dw.detector.makeCameraPoint(
-                    point, cameraSysPrefix)
-                predCameraSys2 = cameraGeom.CameraSys(sysName, dw.name)
-                self.assertEqual(cameraPoint2.getPoint(), point)
-                self.assertEqual(cameraPoint2.getCameraSys(), predCameraSys2)
-
     def testMakeCameraSys(self):
         """Test the makeCameraSys method
         """
@@ -219,41 +189,25 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """
         dw = DetectorWrapper()
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
+            # positions of corners in specified camera system
             cornerList = dw.detector.getCorners(cameraSys)
-            for fromPoint, toPoint in zip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
-                predToCameraPoint = dw.detector.transform(
-                    dw.detector.makeCameraPoint(fromPoint, cameraGeom.PIXELS),
-                    cameraSys,
-                )
-                predToPoint = predToCameraPoint.getPoint()
-                self.assertEqual(
-                    predToCameraPoint.getCameraSys().getSysName(),
-                    cameraSys.getSysName())
-                for i in range(2):
-                    self.assertAlmostEqual(predToPoint[i], toPoint[i])
-                    if cameraSys == cameraGeom.PIXELS:
-                        self.assertAlmostEqual(fromPoint[i], toPoint[i])
+            for posPixels, posCameraSys in zip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
+                pixelsToCameraSys = dw.detector.getTransform(cameraGeom.PIXELS, cameraSys)
+                predPosCameraSys = pixelsToCameraSys.applyForward(posPixels)
+                self.assertPairsAlmostEqual(predPosCameraSys, posCameraSys)
+                if cameraSys == cameraGeom.PIXELS:
+                    self.assertPairsAlmostEqual(posPixels, predPosCameraSys)
 
     def testGetCenter(self):
         """Test the getCenter method
         """
         dw = DetectorWrapper()
         ctrPixPoint = afwGeom.Box2D(dw.detector.getBBox()).getCenter()
-        ctrPixCameraPoint = dw.detector.makeCameraPoint(
-            ctrPixPoint, cameraGeom.PIXELS)
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
-            ctrCameraPoint = dw.detector.getCenter(cameraSys)
-            self.assertEqual(
-                ctrCameraPoint.getCameraSys().getSysName(),
-                cameraSys.getSysName())
-            ctrPoint = ctrCameraPoint.getPoint()
-            predCtrCameraPoint = dw.detector.transform(
-                ctrPixCameraPoint, cameraSys)
-            predCtrPoint = predCtrCameraPoint.getPoint()
-            for i in range(2):
-                self.assertAlmostEqual(ctrPoint[i], predCtrPoint[i])
-                if cameraSys == cameraGeom.PIXELS:
-                    self.assertAlmostEqual(ctrPixPoint[i], ctrPoint[i])
+            ctrPoint = dw.detector.getCenter(cameraSys)
+            transform = dw.detector.getTransform(cameraGeom.PIXELS, cameraSys)
+            predCtrPoint = transform.applyForward(ctrPixPoint)
+            self.assertPairsAlmostEqual(predCtrPoint, ctrPoint)
 
     def testCopyDetector(self):
         """Test copyDetector() method

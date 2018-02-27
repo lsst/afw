@@ -51,20 +51,22 @@ Detector::Detector(Detector const &) = default;
 Detector::Detector(Detector &&) = default;
 
 std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
-    std::vector<geom::Point2D> fromVec = geom::Box2D(_bbox).getCorners();
-    return _transformMap.transform(fromVec, _nativeSys, cameraSys);
+    std::vector<geom::Point2D> nativeCorners = geom::Box2D(_bbox).getCorners();
+    auto nativeToCameraSys = _transformMap.getTransform(_nativeSys, cameraSys);
+    return nativeToCameraSys->applyForward(nativeCorners);
 }
 
 std::vector<geom::Point2D> Detector::getCorners(CameraSysPrefix const &cameraSysPrefix) const {
     return getCorners(makeCameraSys(cameraSysPrefix));
 }
 
-CameraPoint Detector::getCenter(CameraSys const &cameraSys) const {
-    CameraPoint ctrPix = makeCameraPoint(geom::Box2D(_bbox).getCenter(), _nativeSys);
-    return transform(ctrPix, cameraSys);
+geom::Point2D Detector::getCenter(CameraSys const &cameraSys) const {
+    auto ctrPix = geom::Box2D(_bbox).getCenter();
+    auto transform = getTransform(PIXELS, cameraSys);
+    return transform->applyForward(ctrPix);
 }
 
-CameraPoint Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
+geom::Point2D Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
     return getCenter(makeCameraSys(cameraSysPrefix));
 }
 
@@ -97,6 +99,18 @@ template <typename FromSysT, typename ToSysT>
 std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FromSysT const &fromSys,
                                                                       ToSysT const &toSys) const {
     return _transformMap.getTransform(makeCameraSys(fromSys), makeCameraSys(toSys));
+}
+
+template <typename FromSysT, typename ToSysT>
+geom::Point2D Detector::transform(geom::Point2D const &point, FromSysT const &fromSys,
+                                  ToSysT const &toSys) const {
+    return _transformMap.transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
+}
+
+template <typename FromSysT, typename ToSysT>
+std::vector<geom::Point2D> Detector::transform(std::vector<geom::Point2D> const &points,
+                                               FromSysT const &fromSys, ToSysT const &toSys) const {
+    return _transformMap.transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 void Detector::_init() {
@@ -139,9 +153,12 @@ void Detector::_init() {
 //
 // Explicit instantiations
 //
-#define INSTANTIATE(FROMSYS, TOSYS)                                                                 \
-    template std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FROMSYS const &, \
-                                                                                   TOSYS const &) const;
+#define INSTANTIATE(FROMSYS, TOSYS)                                                                          \
+    template std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FROMSYS const &,          \
+                                                                                   TOSYS const &) const;     \
+    template geom::Point2D Detector::transform(geom::Point2D const &, FROMSYS const &, TOSYS const &) const; \
+    template std::vector<geom::Point2D> Detector::transform(std::vector<geom::Point2D> const &,              \
+                                                            FROMSYS const &, TOSYS const &) const;
 
 INSTANTIATE(CameraSys, CameraSys);
 INSTANTIATE(CameraSys, CameraSysPrefix);

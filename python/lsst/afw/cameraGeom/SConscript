@@ -1,7 +1,6 @@
 ## -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(['cameraPoint',
-                                  'cameraSys',
+scripts.BasicSConscript.pybind11(['cameraSys',
                                   'detector',
                                   'orientation',
                                   'transformMap'])

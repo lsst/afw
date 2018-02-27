@@ -106,13 +106,15 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
     xs = []
     ys = []
     pcolors = []
-    for pos in zip(field_gridx, field_gridy):
-        posRad = afwGeom.Point2D(math.radians(pos[0]), math.radians(pos[1]))
-        cp = camera.makeCameraPoint(posRad, FIELD_ANGLE)
-        ncp = camera.transform(cp, FOCAL_PLANE)
-        xs.append(ncp.getPoint().getX())
-        ys.append(ncp.getPoint().getY())
-        dets = camera.findDetectors(cp)
+
+    # compute focal plane positions corresponding to field angles field_gridx, field_gridy
+    posFieldAngleList = [afwGeom.Point2D(x.asRadians(), y.asRadians())
+                         for x, y in zip(field_gridx, field_gridy)]
+    posFocalPlaneList = camera.transform(posFieldAngleList, FIELD_ANGLE, FOCAL_PLANE)
+    for posFocalPlane in posFocalPlaneList:
+        xs.append(posFocalPlane.getX())
+        ys.append(posFocalPlane.getY())
+        dets = camera.findDetectors(posFocalPlane, FOCAL_PLANE)
         if len(dets) > 0:
             pcolors.append('w')
         else:

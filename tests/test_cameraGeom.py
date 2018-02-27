@@ -25,17 +25,17 @@ from __future__ import absolute_import, division, print_function
 import unittest
 import os
 
-from builtins import next
 from builtins import zip
 from builtins import range
 import numpy as np
 
 import lsst.utils.tests
+import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
-    CameraPoint, Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
+    Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -48,7 +48,7 @@ except NameError:
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 
-class CameraGeomTestCase(unittest.TestCase):
+class CameraGeomTestCase(lsst.utils.tests.TestCase):
     """A test case for camera geometry"""
 
     def setUp(self):
@@ -82,38 +82,6 @@ class CameraGeomTestCase(unittest.TestCase):
                 self.assertEqual(
                     cw.ampInfoDict[det.getName()]['namps'], len(det))
 
-    def testMakeCameraPoint(self):
-        point = afwGeom.Point2D(0, 0)
-        for cw in self.cameraList:
-            camera = cw.camera
-            for coordSys in (FIELD_ANGLE, FOCAL_PLANE):
-                pt1 = afwGeom.Point2D(0.1, 0.3)
-                pt2 = afwGeom.Point2D(0., 0.)
-                pt3 = afwGeom.Point2D(-0.2, 0.2)
-                pt4 = afwGeom.Point2D(0.02, -0.2)
-                pt5 = afwGeom.Point2D(-0.2, -0.03)
-                for pt in (pt1, pt2, pt3, pt4, pt5):
-                    cp = camera.makeCameraPoint(pt, coordSys)
-                    self.assertEqual(cp.getPoint(), pt)
-                    self.assertEqual(
-                        cp.getCameraSys().getSysName(), coordSys.getSysName())
-
-                    # test == and !=
-                    cp2 = camera.makeCameraPoint(pt, coordSys)
-                    self.assertTrue(cp == cp2)
-                    self.assertFalse(cp != cp2)
-
-            det = camera[next(camera.getNameIter())]
-            cp = camera.makeCameraPoint(point, FOCAL_PLANE)
-            self.checkCamPoint(cp, point, FOCAL_PLANE)
-            cp = camera.makeCameraPoint(point, det.makeCameraSys(PIXELS))
-            self.checkCamPoint(cp, point, det.makeCameraSys(PIXELS))
-            # non-existant camera sys in makeCameraPoint
-            self.assertRaises(
-                RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
-            # CameraSysPrefix camera sys in makeCameraPoint
-            self.assertRaises(TypeError, camera.makeCameraPoint, point, PIXELS)
-
     def testCameraSysRepr(self):
         """Test CameraSys.__repr__ and CameraSysPrefix.__repr__
         """
@@ -129,15 +97,6 @@ class CameraGeomTestCase(unittest.TestCase):
                 cameraSys2 = CameraSys(sysName, detectorName)
                 predRepr2 = "CameraSys(%s, %s)" % (sysName, detectorName)
                 self.assertEqual(repr(cameraSys2), predRepr2)
-
-    def testCameraPointRepr(self):
-        """Test CameraPoint.__repr__
-        """
-        point = afwGeom.Point2D(1.5, -23.4)
-        cameraSys = FOCAL_PLANE
-        cameraPoint = CameraPoint(point, cameraSys)
-        predRepr = "CameraPoint(%s, %s)" % (point, cameraSys)
-        self.assertEqual(repr(cameraPoint), predRepr)
 
     def testAccessor(self):
         for cw in self.cameraList:
@@ -178,19 +137,19 @@ class CameraGeomTestCase(unittest.TestCase):
             camera = cw.camera
             for point in testData:
                 fpGivenPos = afwGeom.Point2D(point[2], point[3])
-                fpGivenCP = camera.makeCameraPoint(fpGivenPos, FOCAL_PLANE)
                 fieldGivenPos = afwGeom.Point2D(
                     afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
-                fieldGivenCP = camera.makeCameraPoint(fieldGivenPos, FIELD_ANGLE)
 
-                fpComputedCP = camera.transform(fieldGivenCP, FOCAL_PLANE)
-                self.assertCamPointAlmostEquals(fpComputedCP, fpGivenCP)
+                fieldAngleToFocalPlane = camera.getTransform(FIELD_ANGLE, FOCAL_PLANE)
+                fpComputedPos = fieldAngleToFocalPlane.applyForward(fieldGivenPos)
+                self.assertPairsAlmostEqual(fpComputedPos, fpGivenPos)
 
-                fieldComputedCP = camera.transform(fpGivenCP, FIELD_ANGLE)
-                self.assertCamPointAlmostEquals(fieldComputedCP, fieldGivenCP)
+                focalPlaneToFieldAngle = camera.getTransform(FOCAL_PLANE, FIELD_ANGLE)
+                fieldComputedPos = focalPlaneToFieldAngle.applyForward(fpGivenPos)
+                self.assertPairsAlmostEqual(fieldComputedPos, fieldGivenPos)
 
     def testTransformDet(self):
-        """Test Camera.transform with detector-based coordinate systems (PIXELS)
+        """Test Camera.getTransform with detector-based coordinate systems (PIXELS)
         """
         for cw in self.cameraList:
             numOffUsable = 0  # number of points off one detector but on another
@@ -199,62 +158,72 @@ class CameraGeomTestCase(unittest.TestCase):
             for detName in detNameList:
                 det = camera[detName]
 
-                # test transforms using a point on the detector
-                pixCP = det.makeCameraPoint(afwGeom.Point2D(10, 10), PIXELS)
-                fpCP = camera.transform(pixCP, FOCAL_PLANE)
-                fieldCP = camera.transform(pixCP, FIELD_ANGLE)
+                # test transforms using an arbitrary point on the detector
+                posPixels = afwGeom.Point2D(10, 10)
+                pixSys = det.makeCameraSys(PIXELS)
+                pixelsToFocalPlane = camera.getTransform(pixSys, FOCAL_PLANE)
+                pixelsToFieldAngle = camera.getTransform(pixSys, FIELD_ANGLE)
+                focalPlaneToFieldAngle = camera.getTransform(FOCAL_PLANE, FIELD_ANGLE)
+                posFocalPlane = pixelsToFocalPlane.applyForward(posPixels)
+                posFieldAngle = pixelsToFieldAngle.applyForward(posPixels)
+                posFieldAngle2 = focalPlaneToFieldAngle.applyForward(posFocalPlane)
+                self.assertPairsAlmostEqual(posFieldAngle, posFieldAngle2)
 
-                fieldCP2 = camera.transform(fpCP, FIELD_ANGLE)
-                self.assertCamPointAlmostEquals(fieldCP, fieldCP2)
+                posFieldAngle3 = camera.transform(posPixels, pixSys, FIELD_ANGLE)
+                self.assertPairsAlmostEqual(posFieldAngle, posFieldAngle3)
 
-                for intermedCP in (pixCP, fpCP, fieldCP):
-                    pixRoundTripCP = camera.transform(
-                        intermedCP, det.makeCameraSys(PIXELS))
-                    self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP)
+                for intermedPos, intermedSys in (
+                    (posPixels, pixSys),
+                    (posFocalPlane, FOCAL_PLANE),
+                    (posFieldAngle, FIELD_ANGLE),
+                ):
+                    pixelSys = det.makeCameraSys(PIXELS)
+                    intermedSysToPixels = camera.getTransform(intermedSys, pixelSys)
+                    posPixelsRoundTrip = intermedSysToPixels.applyForward(intermedPos)
+                    self.assertPairsAlmostEqual(posPixels, posPixelsRoundTrip)
 
-                    pixFindRoundTripCP = camera.transform(intermedCP, PIXELS)
-                    self.assertCamPointAlmostEquals(pixCP, pixFindRoundTripCP)
+                    posPixelsRoundTrip2 = camera.transform(intermedPos, intermedSys, pixelSys)
+                    self.assertPairsAlmostEqual(posPixels, posPixelsRoundTrip2)
 
-                # test transforms using a point off the detector
-                pixOffDetCP = det.makeCameraPoint(
-                    afwGeom.Point2D(0, -10), PIXELS)
-                pixOffDetRoundTripCP = camera.transform(
-                    pixOffDetCP, det.makeCameraSys(PIXELS))
-                self.assertCamPointAlmostEquals(
-                    pixOffDetCP, pixOffDetRoundTripCP)
-
-                # the point off the detector MAY be on another detector
-                # (depending if the detector has neighbor on the correct edge)
-                detList = camera.findDetectors(pixOffDetCP)
+                # Test finding detectors for a point off this detector.
+                # The point off the detector may be on one other detector,
+                # depending if the detector has neighbor on the correct edge.
+                pixOffDet = afwGeom.Point2D(0, -10)
+                pixCoordSys = det.makeCameraSys(PIXELS)
+                detList = camera.findDetectors(pixOffDet, pixCoordSys)
+                self.assertIn(len(detList), (0, 1))
                 if len(detList) == 1:
                     numOffUsable += 1
-                    pixFindOffCP = camera.transform(pixOffDetCP, PIXELS)
-                    self.assertNotEqual(
-                        pixCP.getCameraSys(), pixFindOffCP.getCameraSys())
 
-                    # convert point on other detector to pixels on the main detector
-                    # the result should not be on the main detector
-                    pixToPixCP = camera.transform(
-                        pixFindOffCP, det.makeCameraSys(PIXELS))
-                    self.assertFalse(afwGeom.Box2D(
-                        det.getBBox()).contains(pixToPixCP.getPoint()))
-            self.assertGreater(numOffUsable, 0)
-            print("numOffUsable=", numOffUsable)
+                    otherDet = detList[0]
+                    self.assertNotEqual(otherDet, det)
+                    otherCoordPixSys = otherDet.makeCameraSys(PIXELS)
+
+                    pixelsToOtherPixels = camera.getTransform(pixCoordSys, otherCoordPixSys)
+                    otherPixels = pixelsToOtherPixels.applyForward(pixOffDet)
+                    with self.assertRaises(AssertionError):
+                        self.assertPairsAlmostEqual(otherPixels, pixOffDet)
+
+                    # convert back
+                    otherPixelsToPixels = camera.getTransform(otherCoordPixSys, pixCoordSys)
+                    pixOffDetRoundTrip = otherPixelsToPixels.applyForward(otherPixels)
+                    self.assertPairsAlmostEqual(pixOffDet, pixOffDetRoundTrip)
+            self.assertEqual(numOffUsable, 5)
 
     def testFindDetectors(self):
         for cw in self.cameraList:
-            detPointsList = []
+            detCtrFocalPlaneList = []
             for det in cw.camera:
                 # This currently assumes there is only one detector at the center
                 # position of any detector.  That is not enforced and multiple detectors
                 # at a given FIELD_ANGLE position is supported.  Change this if the default
                 # camera changes.
-                cp = det.getCenter(FOCAL_PLANE)
-                detPointsList.append(cp.getPoint())
-                detList = cw.camera.findDetectors(cp)
+                detCtrFocalPlane = det.getCenter(FOCAL_PLANE)
+                detCtrFocalPlaneList.append(detCtrFocalPlane)
+                detList = cw.camera.findDetectors(detCtrFocalPlane, FOCAL_PLANE)
                 self.assertEqual(len(detList), 1)
                 self.assertEqual(det.getName(), detList[0].getName())
-            detList = cw.camera.findDetectorsList(detPointsList, FOCAL_PLANE)
+            detList = cw.camera.findDetectorsList(detCtrFocalPlaneList, FOCAL_PLANE)
             self.assertEqual(len(cw.camera), len(detList))
             for dets in detList:
                 self.assertEqual(len(dets), 1)
@@ -339,25 +308,27 @@ class CameraGeomTestCase(unittest.TestCase):
     def testCameraRaises(self):
         for cw in self.cameraList:
             camera = cw.camera
-            cp = camera.makeCameraPoint(afwGeom.Point2D(1e6, 1e6), FOCAL_PLANE)
-            # Way off the focal plane
-            self.assertRaises(RuntimeError, camera.transform, cp, PIXELS)
+            point = afwGeom.Point2D(0, 0)
+            # non-existant source camera system
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                camera.getTransform(CameraSys("badSystem"), FOCAL_PLANE)
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                camera.transform(point, CameraSys("badSystem"), FOCAL_PLANE)
             # non-existant destination camera system
-            cp = camera.makeCameraPoint(afwGeom.Point2D(0, 0), FOCAL_PLANE)
-            self.assertRaises(RuntimeError, camera.transform,
-                              cp, CameraSys('abcd'))
-
-    def checkCamPoint(self, cp, testPt, testSys):
-        """Assert that a CameraPoint contains the specified Point2D and CameraSys"""
-        self.assertEqual(cp.getCameraSys(), testSys)
-        self.assertEqual(cp.getPoint(), testPt)
-
-    def assertCamPointAlmostEquals(self, cp1, cp2, ndig=6):
-        """Assert that two CameraPoints are nearly equal
-        """
-        self.assertEqual(cp1.getCameraSys(), cp2.getCameraSys())
-        for i in range(2):
-            self.assertAlmostEqual(cp1.getPoint()[i], cp2.getPoint()[i], 6)
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                camera.getTransform(FOCAL_PLANE, CameraSys("badSystem"))
+            with self.assertRaises(pexExcept.InvalidParameterError):
+                camera.transform(point, FOCAL_PLANE, CameraSys("badSystem"))
+            # non-existent source detector
+            with self.assertRaises(KeyError):
+                camera.getTransform(CameraSys("pixels", "invalid"), FOCAL_PLANE)
+            with self.assertRaises(KeyError):
+                camera.transform(point, CameraSys("pixels", "invalid"), FOCAL_PLANE)
+            # non-existent destination detector
+            with self.assertRaises(KeyError):
+                camera.getTransform(FOCAL_PLANE, CameraSys("pixels", "invalid"))
+            with self.assertRaises(KeyError):
+                camera.transform(point, FOCAL_PLANE, CameraSys("pixels", "invalid"))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
