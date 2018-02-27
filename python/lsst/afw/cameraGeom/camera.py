@@ -61,6 +61,7 @@ class Camera(DetectorCollection):
                               diameter of the illuminated pupil to
                               accommodate zero-padding.
         @param[in] npix       Constructed Pupils will be npix x npix.
+        @param[in] kwargs     Other keyword arguments for the pupil factory
         """
         return self._pupilFactoryClass(visitInfo, pupilSize, npix, **kwargs)
 
