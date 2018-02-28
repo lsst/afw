@@ -45,7 +45,7 @@ def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
 
 
 class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
-    def checkPersistence(self, skyWcs):
+    def checkPersistence(self, skyWcs, bbox):
         """Check persistence of a SkyWcs
         """
         className = "SkyWcs"
@@ -83,7 +83,6 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
             exposure.writeFits(outFile)
             exposureRoundTrip = ExposureF(outFile)
         wcsFromExposure = exposureRoundTrip.getWcs()
-        bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
         self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromExposure, bbox)
 
     def checkMakeFlippedWcs(self, skyWcs, skyAtol=1e-7*arcseconds):
@@ -209,6 +208,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         self.scale = 1.0 * arcseconds
         self.tinyPixels = 1.0e-10
         self.tinyAngle = 1.0e-10 * radians
+        self.bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
 
     def checkTanWcs(self, crval, orientation, flipX):
         """Construct a pure TAN SkyWcs and check that it operates as specified
@@ -232,7 +232,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         """
         cdMatrix = makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX)
         wcs = makeSkyWcs(crpix=self.crpix, crval=crval, cdMatrix=cdMatrix)
-        self.checkPersistence(wcs)
+        self.checkPersistence(wcs, bbox=self.bbox)
         self.checkMakeFlippedWcs(wcs)
 
         self.assertTrue(wcs.isFits)
@@ -330,14 +330,13 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
         # the approximation returned by getFitsMetadata is poor (pure TAN) until DM-13170
         wcsFromMetadata = makeSkyWcs(wcs.getFitsMetadata())
-        bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
-        self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox))
+        self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox=self.bbox))
 
         # the approximation returned by getFitsMetadata is pure TAN until DM-13170,
         # after DM-13170 change this test to check that wcsFromMetadata is a reasonable
         # approximation to the original WCS
         approxWcs = wcs.getTanWcs(wcs.getPixelOrigin())
-        self.assertWcsAlmostEqualOverBBox(approxWcs, wcsFromMetadata, bbox)
+        self.assertWcsAlmostEqualOverBBox(approxWcs, wcsFromMetadata, bbox=self.bbox)
 
     def testTanWcs(self):
         """Check a variety of TanWcs, with crval not at a pole.
