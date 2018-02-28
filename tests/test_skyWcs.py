@@ -85,6 +85,22 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         wcsFromExposure = exposureRoundTrip.getWcs()
         self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromExposure, bbox)
 
+    def checkFrameDictConstructor(self, skyWcs, bbox):
+        """Check that the FrameDict constructor works
+        """
+        frameDict = skyWcs.getFrameDict()
+        wcsFromFrameDict = SkyWcs(frameDict)
+        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromFrameDict, bbox)
+
+        self.checkPersistence(wcsFromFrameDict, bbox)
+
+        # check that it is impossible to build a SkyWcs if a required frame is missing
+        for domain in ("PIXELS", "IWC", "SKY"):
+            badFrameDict = skyWcs.getFrameDict()
+            badFrameDict.removeFrame(domain)
+            with self.assertRaises(lsst.pex.exceptions.TypeError):
+                SkyWcs(badFrameDict)
+
     def checkMakeFlippedWcs(self, skyWcs, skyAtol=1e-7*arcseconds):
         """Check makeFlippedWcs on the provided WCS
         """
@@ -348,6 +364,24 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                              orientation = orientation,
                              flipX = flipX,
                              )
+
+    def testTanWcsFromFrameDict(self):
+        """Test making a TAN WCS from a FrameDict
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        skyWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        self.checkFrameDictConstructor(skyWcs, bbox=self.bbox)
+
+    def testGetFrameDict(self):
+        """Test that getFrameDict returns a deep copy
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        skyWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        for domain in ("PIXELS", "IWC", "SKY"):
+            frameDict = skyWcs.getFrameDict()
+            frameDict.removeFrame(domain)
+            self.assertFalse(frameDict.hasDomain(domain))
+            self.assertTrue(skyWcs.getFrameDict().hasDomain(domain))
 
     def testMakeModifiedWcsNoActualPixels(self):
         """Test makeModifiedWcs on a SkyWcs that has no ACTUAL_PIXELS frame
@@ -792,6 +826,12 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
             metadata.set(name, value)
         self.metadata = metadata
         self.bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
+
+    def testTanSipFromFrameDict(self):
+        """Test making a TAN-SIP WCS from a FrameDict
+        """
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
+        self.checkFrameDictConstructor(skyWcs, bbox=self.bbox)
 
     def testFitsMetadata(self):
         """Test that getFitsMetadata works for TAN-SIP
