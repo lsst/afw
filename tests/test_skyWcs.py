@@ -801,6 +801,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         fitsMetadata = skyWcs.getFitsMetadata(precise=True)
         skyWcsCopy = makeSkyWcs(fitsMetadata)
         self.assertWcsAlmostEqualOverBBox(skyWcs, skyWcsCopy, self.bbox)
+        self.checkPersistence(skyWcs, bbox=self.bbox)
 
     def testGetIntermediateWorldCoordsToSky(self):
         """Test getIntermediateWorldCoordsToSky and getPixelToIntermediateWorldCoords
