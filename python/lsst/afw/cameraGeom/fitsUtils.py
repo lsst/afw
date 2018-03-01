@@ -68,7 +68,8 @@ class HeaderMap(dict):
                     # Only apply transform if the metadata has a value for this key
                     # otherwise assume the default value is transformed.
                     value = attrDict['default']
-                    self._applyVal(obj, value, key, lambda x: x)
+                    if value is not None:
+                        self._applyVal(obj, value, key, lambda x: x)
             except Exception as e:
                 if doRaise:
                     raise
