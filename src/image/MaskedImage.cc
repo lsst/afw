@@ -233,9 +233,9 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs, bool deep)
         : daf::base::Citizen(typeid(this)), _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
-        _image = std::shared_ptr<Image>(new Image(*rhs.getImage(), deep));
-        _mask = std::shared_ptr<Mask>(new Mask(*rhs.getMask(), deep));
-        _variance = std::shared_ptr<Variance>(new Variance(*rhs.getVariance(), deep));
+        _image = std::make_shared<Image>(*rhs.getImage(), deep);
+        _mask = std::make_shared<Mask>(*rhs.getMask(), deep);
+        _variance = std::make_shared<Variance>(*rhs.getVariance(), deep);
     }
     conformSizes();
 }
@@ -606,7 +606,7 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
     if (!_mask || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
-        _mask = MaskPtr(new Mask(_image->getBBox()));
+        _mask = std::make_shared<Mask>(_image->getBBox());
         *_mask = 0;
     } else {
         if (_mask->getDimensions() != _image->getDimensions()) {
@@ -619,7 +619,7 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
     }
 
     if (!_variance || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
-        _variance = VariancePtr(new Variance(_image->getBBox()));
+        _variance = std::make_shared<Variance>(_image->getBBox());
         *_variance = 0;
     } else {
         if (_variance->getDimensions() != _image->getDimensions()) {

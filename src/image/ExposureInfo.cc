@@ -21,6 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
@@ -58,7 +60,7 @@ int popInt(daf::base::PropertySet& metadata, std::string const& name) {
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
 std::shared_ptr<Calib> ExposureInfo::_cloneCalib(std::shared_ptr<Calib const> calib) {
-    if (calib) return std::shared_ptr<Calib>(new Calib(*calib));
+    if (calib) return std::make_shared<Calib>(*calib);
     return std::shared_ptr<Calib>();
 }
 
@@ -81,7 +83,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<TransmissionCurve const> const & transmissionCurve)
         : _wcs(wcs),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
-          _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
+          _calib(calib ? _cloneCalib(calib) : std::make_shared<Calib>()),
           _detector(detector),
           _validPolygon(polygon),
           _filter(filter),

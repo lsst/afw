@@ -27,6 +27,7 @@
  */
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <vector>
 #include <cmath>
 #include "lsst/afw/image/MaskedImage.h"
@@ -290,7 +291,7 @@ std::shared_ptr<image::Image<PixelT>> BackgroundMI::doGetImage(
     // create a shared_ptr to put the background image in and return to caller
     // start with xy0 = 0 and set final xy0 later
     std::shared_ptr<image::Image<PixelT>> bg =
-            std::shared_ptr<image::Image<PixelT>>(new image::Image<PixelT>(bbox.getDimensions()));
+            std::make_shared<image::Image<PixelT>>(bbox.getDimensions());
 
     // go through row by row
     // - interpolate on the gridcolumns that were pre-computed by the constructor

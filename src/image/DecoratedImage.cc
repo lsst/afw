@@ -25,6 +25,7 @@
  */
 #include <cstdint>
 #include <iostream>
+#include <memory>
 
 #include "boost/format.hpp"
 #include "boost/mpl/vector.hpp"
@@ -96,7 +97,7 @@ DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hd
                                        ImageOrigin const origin)
         : daf::base::Citizen(typeid(this)) {
     init();
-    _image = std::shared_ptr<Image<PixelT>>(new Image<PixelT>(fileName, hdu, getMetadata(), bbox, origin));
+    _image = std::make_shared<Image<PixelT>>(fileName, hdu, getMetadata(), bbox, origin);
 }
 
 template <typename PixelT>

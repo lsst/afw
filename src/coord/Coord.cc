@@ -32,6 +32,7 @@
 #include <limits>
 #include <cstdio>
 #include <iomanip>
+#include <memory>
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -472,21 +473,21 @@ std::shared_ptr<Coord> Coord::convert(CoordSystem system, double epoch) const {
     switch (system) {
         case FK5: {
             Fk5Coord c1 = this->toFk5(epoch);
-            return std::shared_ptr<Fk5Coord>(
-                    new Fk5Coord(c1.getLongitude(), c1.getLatitude(), c1.getEpoch()));
+            return std::make_shared<Fk5Coord>(
+                    c1.getLongitude(), c1.getLatitude(), c1.getEpoch());
         } break;
         case ICRS: {
             IcrsCoord c2 = this->toIcrs();
-            return std::shared_ptr<IcrsCoord>(new IcrsCoord(c2.getLongitude(), c2.getLatitude()));
+            return std::make_shared<IcrsCoord>(c2.getLongitude(), c2.getLatitude());
         } break;
         case GALACTIC: {
             GalacticCoord c4 = this->toGalactic();
-            return std::shared_ptr<GalacticCoord>(new GalacticCoord(c4.getLongitude(), c4.getLatitude()));
+            return std::make_shared<GalacticCoord>(c4.getLongitude(), c4.getLatitude());
         } break;
         case ECLIPTIC: {
             EclipticCoord c5 = this->toEcliptic(epoch);
-            return std::shared_ptr<EclipticCoord>(
-                    new EclipticCoord(c5.getLongitude(), c5.getLatitude(), c5.getEpoch()));
+            return std::make_shared<EclipticCoord>(
+                    c5.getLongitude(), c5.getLatitude(), c5.getEpoch());
         } break;
         case TOPOCENTRIC:
             throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -847,7 +848,7 @@ std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Angle const ra,
                                  double const epoch) {
     switch (system) {
         case FK5:
-            return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
+            return std::make_shared<Fk5Coord>(ra, dec, epoch);
             break;
         case ICRS:
             throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -858,7 +859,7 @@ std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Angle const ra,
                               "Galactic has no epoch, use overloaded makeCoord with (system, ra, dec).");
             break;
         case ECLIPTIC:
-            return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
+            return std::make_shared<EclipticCoord>(ra, dec, epoch);
             break;
         case TOPOCENTRIC:
             throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -876,16 +877,16 @@ std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Angle const ra,
 std::shared_ptr<Coord> makeCoord(CoordSystem const system, geom::Angle const ra, geom::Angle const dec) {
     switch (system) {
         case FK5:
-            return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, 2000.0));
+            return std::make_shared<Fk5Coord>(ra, dec, 2000.0);
             break;
         case ICRS:
-            return std::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
+            return std::make_shared<IcrsCoord>(ra, dec);
             break;
         case GALACTIC:
-            return std::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
+            return std::make_shared<GalacticCoord>(ra, dec);
             break;
         case ECLIPTIC:
-            return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, 2000.0));
+            return std::make_shared<EclipticCoord>(ra, dec, 2000.0);
             break;
         case TOPOCENTRIC:
             throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -941,16 +942,16 @@ std::shared_ptr<Coord> makeCoord(CoordSystem const system, std::string const ra,
 std::shared_ptr<Coord> makeCoord(CoordSystem const system) {
     switch (system) {
         case FK5:
-            return std::shared_ptr<Fk5Coord>(new Fk5Coord());
+            return std::make_shared<Fk5Coord>();
             break;
         case ICRS:
-            return std::shared_ptr<IcrsCoord>(new IcrsCoord());
+            return std::make_shared<IcrsCoord>();
             break;
         case GALACTIC:
-            return std::shared_ptr<GalacticCoord>(new GalacticCoord());
+            return std::make_shared<GalacticCoord>();
             break;
         case ECLIPTIC:
-            return std::shared_ptr<EclipticCoord>(new EclipticCoord());
+            return std::make_shared<EclipticCoord>();
             break;
         case TOPOCENTRIC:
             throw LSST_EXCEPT(ex::InvalidParameterError,

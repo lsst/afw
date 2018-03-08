@@ -132,7 +132,7 @@ void ImagePca<ImageT>::analyze() {
      */
     if (nImage == 1) {
         _eigenImages.clear();
-        _eigenImages.push_back(std::shared_ptr<ImageT>(new ImageT(*_imageList[0], true)));
+        _eigenImages.push_back(std::make_shared<ImageT>(*_imageList[0], true));
 
         _eigenValues.clear();
         _eigenValues.push_back(1.0);

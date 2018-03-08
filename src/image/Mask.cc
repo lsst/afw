@@ -42,6 +42,7 @@
 
 #include <functional>
 #include <list>
+#include <memory>
 #include <string>
 
 #pragma clang diagnostic push
@@ -237,7 +238,7 @@ private:
     void eraseDict(MapWithHash* dict) { _dicts.erase(dict); }
 
     std::shared_ptr<detail::MaskDict> incrDefaultVersion() {
-        _defaultMaskDict = std::shared_ptr<detail::MaskDict>(new detail::MaskDict(*_defaultMaskDict.get()));
+        _defaultMaskDict = std::make_shared<detail::MaskDict>(*_defaultMaskDict.get());
         addDict(_defaultMaskDict.get());
 
         return _defaultMaskDict;

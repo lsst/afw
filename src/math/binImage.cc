@@ -24,6 +24,7 @@
  * Bin an Image or MaskedImage by an integral factor (the same in x and y)
  */
 #include <cstdint>
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/offsetImage.h"
@@ -54,7 +55,7 @@ std::shared_ptr<ImageT> binImage(ImageT const& in, int const binX, int const bin
     int const outWidth = in.getWidth() / binX;
     int const outHeight = in.getHeight() / binY;
 
-    std::shared_ptr<ImageT> out = std::shared_ptr<ImageT>(new ImageT(geom::Extent2I(outWidth, outHeight)));
+    std::shared_ptr<ImageT> out = std::make_shared<ImageT>(geom::Extent2I(outWidth, outHeight));
     out->setXY0(in.getXY0());
     *out = typename ImageT::SinglePixel(0);
 

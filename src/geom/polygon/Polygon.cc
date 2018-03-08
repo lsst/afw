@@ -215,7 +215,7 @@ std::vector<std::shared_ptr<Polygon>> Polygon::Impl::convertBoostPolygons(
     std::vector<std::shared_ptr<Polygon>> lsstPolygons;
     lsstPolygons.reserve(boostPolygons.size());
     for (std::vector<BoostPolygon>::const_iterator i = boostPolygons.begin(); i != boostPolygons.end(); ++i) {
-        std::shared_ptr<Polygon> tmp(new Polygon(std::shared_ptr<Polygon::Impl>(new Polygon::Impl(*i))));
+        std::shared_ptr<Polygon> tmp(new Polygon(std::make_shared<Polygon::Impl>(*i)));
         lsstPolygons.push_back(tmp);
     }
     return lsstPolygons;
@@ -233,7 +233,7 @@ std::shared_ptr<Polygon> Polygon::Impl::intersectionSingle(PolyT const& other) c
                 SinglePolygonException,
                 (boost::format("Multiple polygons (%d) created by intersection()") % result.size()).str());
     }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(result[0]))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(result[0])));
 }
 
 template <class PolyT>
@@ -252,7 +252,7 @@ std::shared_ptr<Polygon> Polygon::Impl::unionSingle(PolyT const& other) const {
                 SinglePolygonException,
                 (boost::format("Multiple polygons (%d) created by union_()") % result.size()).str());
     }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(result[0]))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(result[0])));
 }
 
 template <class PolyT>
@@ -392,18 +392,18 @@ std::vector<std::shared_ptr<Polygon>> Polygon::symDifference(Box const& box) con
 std::shared_ptr<Polygon> Polygon::simplify(double const distance) const {
     BoostPolygon result;
     boost::geometry::simplify(_impl->poly, result, distance);
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(result))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(result)));
 }
 
 std::shared_ptr<Polygon> Polygon::convexHull() const {
     BoostPolygon hull;
     boost::geometry::convex_hull(_impl->poly, hull);
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(hull))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(hull)));
 }
 
 std::shared_ptr<Polygon> Polygon::transform(TransformPoint2ToPoint2 const& transform) const {
     auto newVertices = transform.applyForward(getVertices());
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(newVertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(newVertices)));
 }
 
 
@@ -414,7 +414,7 @@ std::shared_ptr<Polygon> Polygon::transform(std::shared_ptr<XYTransform const> c
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform->forwardTransform(*i));
     }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(vertices)));
 }
 
 std::shared_ptr<Polygon> Polygon::transform(AffineTransform const& transform) const {
@@ -424,7 +424,7 @@ std::shared_ptr<Polygon> Polygon::transform(AffineTransform const& transform) co
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform(*i));
     }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(vertices)));
 }
 
 std::shared_ptr<Polygon> Polygon::subSample(size_t num) const {
@@ -434,7 +434,7 @@ std::shared_ptr<Polygon> Polygon::subSample(size_t num) const {
     for (std::vector<std::pair<Point, Point>>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         addSubSampledEdge(vertices, i->first, i->second, num);
     }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(vertices)));
 }
 
 std::shared_ptr<Polygon> Polygon::subSample(double maxLength) const {
@@ -446,7 +446,7 @@ std::shared_ptr<Polygon> Polygon::subSample(double maxLength) const {
         double const dist = ::sqrt(p1.distanceSquared(p2));
         addSubSampledEdge(vertices, p1, p2, static_cast<size_t>(::ceil(dist / maxLength)));
     }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
+    return std::shared_ptr<Polygon>(new Polygon(std::make_shared<Impl>(vertices)));
 }
 
 std::shared_ptr<afw::image::Image<float>> Polygon::createImage(afw::geom::Box2I const& bbox) const {

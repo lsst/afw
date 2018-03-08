@@ -26,6 +26,7 @@
  * Provide functions to stack images
  *
  */
+#include <memory>
 #include <vector>
 #include <cassert>
 #include <memory>
@@ -448,7 +449,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::make_shared<MImage>(geom::Extent2I(1, image.getHeight()));
         int y = y0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
@@ -460,7 +461,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
         }
 
     } else if (dimension == 'y') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::make_shared<MImage>(geom::Extent2I(image.getWidth(), 1));
         int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
@@ -490,7 +491,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::make_shared<MImage>(geom::Extent2I(1, image.getHeight()));
         int y = 0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
@@ -502,7 +503,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
         }
 
     } else if (dimension == 'y') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::make_shared<MImage>(geom::Extent2I(image.getWidth(), 1));
         int x = 0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {

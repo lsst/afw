@@ -26,6 +26,7 @@
  * Implementation of SpatialCell class
  */
 #include <algorithm>
+#include <memory>
 
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Utils.h"
@@ -335,7 +336,7 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const &region, int xSize, int ySize)
             geom::Box2I bbox(geom::Point2I(x0, y0), geom::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
-            _cellList.push_back(std::shared_ptr<SpatialCell>(new SpatialCell(label, bbox)));
+            _cellList.push_back(std::make_shared<SpatialCell>(label, bbox));
 
             x0 = x1 + 1;
         }
