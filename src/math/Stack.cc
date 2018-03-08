@@ -212,7 +212,7 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                              image::MaskPixel const excuse,
                              WeightVector const &wvector = WeightVector()) {
     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> maskMap;
-    maskMap.push_back(std::make_pair(sctrl.getAndMask() & ~excuse, clipped));
+    maskMap.emplace_back(sctrl.getAndMask() & ~excuse, clipped);
     computeMaskedImageStack<PixelT, isWeighted, useVariance>(
         imgStack, images, flags, sctrl, clipped, maskMap, wvector
     );

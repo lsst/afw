@@ -361,16 +361,16 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2, 
                     closestIndex = j;
                     found = true;
                 } else {
-                    matches.push_back(SourceMatch(pos1[i], pos2[j], std::sqrt(d2)));
+                    matches.emplace_back(pos1[i], pos2[j], std::sqrt(d2));
                 }
                 ++nMatches;
             }
         }
         if (mc.includeMismatches && nMatches == 0) {
-            matches.push_back(SourceMatch(pos1[i], nullRecord, NAN));
+            matches.emplace_back(pos1[i], nullRecord, NAN);
         }
         if (mc.findOnlyClosest && found) {
-            matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
+            matches.emplace_back(pos1[i], pos2[closestIndex], std::sqrt(r2Include));
         }
     }
     return matches;
@@ -414,9 +414,9 @@ SourceMatchVector matchXy(SourceCatalog const &cat, double radius, MatchControl 
             double d2 = dx * dx + dy * dy;
             if (d2 < r2) {
                 double d = std::sqrt(d2);
-                matches.push_back(SourceMatch(pos[i], pos[j], d));
+                matches.emplace_back(pos[i], pos[j], d);
                 if (mc.symmetricMatch) {
-                    matches.push_back(SourceMatch(pos[j], pos[i], d));
+                    matches.emplace_back(pos[j], pos[i], d);
                 }
             }
         }

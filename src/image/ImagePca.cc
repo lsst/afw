@@ -173,7 +173,7 @@ void ImagePca<ImageT>::analyze() {
     lambdaAndIndex.reserve(nImage);
 
     for (int i = 0; i != nImage; ++i) {
-        lambdaAndIndex.push_back(std::make_pair(lambda(i), i));
+        lambdaAndIndex.emplace_back(lambda(i), i);
     }
     std::sort(lambdaAndIndex.begin(), lambdaAndIndex.end(), SortEvalueDecreasing<double>());
     //

@@ -54,8 +54,8 @@ namespace {
 
 CentroidSlotDefinition::ErrKey::NameArray makeCentroidNameArray() {
     CentroidSlotDefinition::ErrKey::NameArray v;
-    v.push_back("x");
-    v.push_back("y");
+    v.emplace_back("x");
+    v.emplace_back("y");
     return v;
 }
 
@@ -85,9 +85,9 @@ namespace {
 
 ShapeSlotDefinition::ErrKey::NameArray makeShapeNameArray() {
     ShapeSlotDefinition::ErrKey::NameArray v;
-    v.push_back("xx");
-    v.push_back("yy");
-    v.push_back("xy");
+    v.emplace_back("xx");
+    v.emplace_back("yy");
+    v.emplace_back("xy");
     return v;
 }
 

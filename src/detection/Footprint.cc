@@ -287,7 +287,7 @@ std::unique_ptr<Footprint> Footprint::readSpanSet(afw::table::BaseCatalog const&
         std::vector<geom::Span> tempVec;
         tempVec.reserve(catalog.size());
         for (auto const& val : catalog) {
-            tempVec.push_back(geom::Span(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1)));
+            tempVec.emplace_back(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1));
         }
         loadedSpanSet = std::make_shared<geom::SpanSet>(std::move(tempVec));
     }

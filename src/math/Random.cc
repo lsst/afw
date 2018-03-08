@@ -150,7 +150,7 @@ std::vector<std::string> const &Random::getAlgorithmNames() {
     static std::vector<std::string> names;
     if (names.size() == 0) {
         for (int i = 0; i < NUM_ALGORITHMS; ++i) {
-            names.push_back(_algorithmNames[i]);
+            names.emplace_back(_algorithmNames[i]);
         }
     }
     return names;

@@ -231,7 +231,7 @@ std::vector<SchemaMapper> SchemaMapper::join(std::vector<Schema> const &inputs,
     }
     std::vector<SchemaMapper> result;
     for (std::size_t i = 0; i < size; ++i) {
-        result.push_back(SchemaMapper(inputs[i]));
+        result.emplace_back(inputs[i]);
     }
     for (std::size_t i = 0; i < size; ++i) {
         for (std::size_t j = 0; j < size; ++j) {

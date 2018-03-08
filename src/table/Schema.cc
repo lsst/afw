@@ -546,7 +546,7 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const &field, bool doReplace) {
         ++_lastFlagBit;
         _flags.insert(std::pair<std::pair<int, int>, int>(
                 std::make_pair(item.key.getOffset(), item.key.getBit()), _items.size()));
-        _items.push_back(item);
+        _items.emplace_back(item);
         return item.key;
     }
 }

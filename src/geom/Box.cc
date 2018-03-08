@@ -211,9 +211,9 @@ bool Box2I::operator!=(Box2I const& other) const {
 std::vector<Point2I> Box2I::getCorners() const {
     std::vector<Point2I> retVec;
     retVec.push_back(getMin());
-    retVec.push_back(Point2I(getMaxX(), getMinY()));
+    retVec.emplace_back(getMaxX(), getMinY());
     retVec.push_back(getMax());
-    retVec.push_back(Point2I(getMinX(), getMaxY()));
+    retVec.emplace_back(getMinX(), getMaxY());
     return retVec;
 }
 
@@ -385,9 +385,9 @@ bool Box2D::operator!=(Box2D const& other) const {
 std::vector<Point2D> Box2D::getCorners() const {
     std::vector<Point2D> retVec;
     retVec.push_back(getMin());
-    retVec.push_back(Point2D(getMaxX(), getMinY()));
+    retVec.emplace_back(getMaxX(), getMinY());
     retVec.push_back(getMax());
-    retVec.push_back(Point2D(getMinX(), getMaxY()));
+    retVec.emplace_back(getMinX(), getMaxY());
     return retVec;
 }
 

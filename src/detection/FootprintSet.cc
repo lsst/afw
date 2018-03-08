@@ -277,12 +277,12 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
             spanList.reserve(yRange);
 
             for (auto dy = 1; dy <= top; ++dy) {
-                spanList.push_back(geom::Span(dy, 0, 0));
+                spanList.emplace_back(dy, 0, 0);
             }
             for (auto dy = -1; dy >= -bottom; --dy) {
-                spanList.push_back(geom::Span(dy, 0, 0));
+                spanList.emplace_back(dy, 0, 0);
             }
-            spanList.push_back(geom::Span(0, -lLimit, rLimit));
+            spanList.emplace_back(0, -lLimit, rLimit);
             geom::SpanSet structure(std::move(spanList));
             auto tmpFoot =
                     std::make_shared<Footprint>(foot->getSpans()->dilated(structure), foot->getRegion());
@@ -744,8 +744,7 @@ static void findFootprints(
                 std::vector<geom::Span> tempSpanList;
                 for (; i0 < i; i0++) {
                     good |= spans[i0]->good;
-                    tempSpanList.push_back(
-                            geom::Span(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0));
+                    tempSpanList.emplace_back(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
                 }
                 auto tempSpanSet = std::make_shared<geom::SpanSet>(std::move(tempSpanList));
                 auto fp = std::make_shared<Footprint>(tempSpanSet, _region);

@@ -94,9 +94,9 @@ std::vector<LsstPoint> boxToCorners(LsstBox const& box) {
     std::vector<LsstPoint> corners;
     corners.reserve(4);
     corners.push_back(box.getMin());
-    corners.push_back(LsstPoint(box.getMaxX(), box.getMinY()));
+    corners.emplace_back(box.getMaxX(), box.getMinY());
     corners.push_back(box.getMax());
-    corners.push_back(LsstPoint(box.getMinX(), box.getMaxY()));
+    corners.emplace_back(box.getMinX(), box.getMaxY());
     return corners;
 }
 
@@ -330,7 +330,7 @@ std::vector<std::pair<LsstPoint, LsstPoint>> Polygon::getEdges() const {
     edges.reserve(getNumEdges());
     for (std::vector<LsstPoint>::const_iterator i = vertices.begin(), j = vertices.begin() + 1;
          j != vertices.end(); ++i, ++j) {
-        edges.push_back(std::make_pair(*i, *j));
+        edges.emplace_back(*i, *j);
     }
     return edges;
 }

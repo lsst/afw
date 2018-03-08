@@ -227,7 +227,7 @@ public:
                 int y = *j++;
                 int x0 = *j++;
                 int x1 = *j++;
-                spansVector.push_back(geom::Span(y, x0, x1));
+                spansVector.emplace_back(y, x0, x1);
             }
         }
         std::shared_ptr<Footprint> fp = std::make_shared<detection::Footprint>(
