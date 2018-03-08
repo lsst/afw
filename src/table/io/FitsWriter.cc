@@ -164,7 +164,7 @@ struct FitsWriter::ProcessRecords {
 
     ProcessRecords(Fits* fits_, Schema const& schema_, int nFlags_, std::size_t const& row_)
             : row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_) {
-        if (nFlags) flags.reset(new bool[nFlags]);
+        if (nFlags) flags = std::make_unique<bool[]>(nFlags);
     }
 
     void apply(BaseRecord const* r) {

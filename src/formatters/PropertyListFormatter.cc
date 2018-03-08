@@ -77,7 +77,7 @@ void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistabl
 namespace {
 std::unique_ptr<daf::base::PropertyList> readMetadataAsUniquePtr(std::string const& fileName, int hdu,
                                                                  bool strip) {
-    auto metadata = std::unique_ptr<daf::base::PropertyList>(new lsst::daf::base::PropertyList);
+    auto metadata = std::make_unique<daf::base::PropertyList>();
 
     auto inheritedMetadata = fits::readMetadata(fileName, hdu, strip);
     metadata->combine(inheritedMetadata);

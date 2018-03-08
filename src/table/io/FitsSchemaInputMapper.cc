@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <string>
 
 #include "boost/regex.hpp"
@@ -281,7 +282,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
             nFlags = std::stoi(m[1].str());
         }
         _impl->flagKeys.resize(nFlags);
-        _impl->flagWorkspace.reset(new bool[nFlags]);
+        _impl->flagWorkspace = std::make_unique<bool[]>(nFlags);
         // Delete the flag column from the input list so we don't interpret it as a
         // regular field.
         _impl->byColumn().erase(iter);

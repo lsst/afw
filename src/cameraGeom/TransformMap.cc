@@ -53,7 +53,7 @@ namespace {
 template <class Map>
 std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &reference, Map const &transforms) {
     ast::Frame rootFrame(2, "Ident=" + reference.getSysName());
-    auto result = std::unique_ptr<ast::FrameSet>(new ast::FrameSet(rootFrame));
+    auto result = std::make_unique<ast::FrameSet>(rootFrame);
 
     for (auto const & keyValue : transforms) {
         CameraSys const key = keyValue.first;
