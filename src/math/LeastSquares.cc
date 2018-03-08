@@ -301,7 +301,7 @@ private:
     Eigen::VectorXd _tmp;
 };
 
-}  // anonymous
+}  // namespace
 
 void LeastSquares::setThreshold(double threshold) {
     _impl->threshold = threshold;
@@ -422,6 +422,6 @@ void LeastSquares::_factor(bool haveNormalEquations) {
     }
     _impl->factor();
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

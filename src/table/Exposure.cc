@@ -168,7 +168,7 @@ struct PersistenceHelper {
     }
 };
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureFitsWriter ---------------------------------------------------------------------------------
@@ -226,7 +226,7 @@ void ExposureFitsWriter::_writeRecord(BaseRecord const &r) {
     io::FitsWriter::_writeRecord(*_record);
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureFitsReader ---------------------------------------------------------------------------------
@@ -305,7 +305,7 @@ public:
 
 static ExposureFitsReader const exposureFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureTable/Record member function implementations -----------------------------------------------
@@ -481,6 +481,6 @@ template class SortedCatalogT<ExposureRecord const>;
 
 template class ExposureCatalogT<ExposureRecord>;
 template class ExposureCatalogT<ExposureRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

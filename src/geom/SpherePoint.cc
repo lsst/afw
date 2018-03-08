@@ -203,6 +203,7 @@ ostream& operator<<(ostream& os, SpherePoint const& point) {
     os.precision(oldPrecision);
     return os;
 }
-}
-}
-} /* namespace lsst::afw::geom */
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
+ /* namespace lsst::afw::geom */

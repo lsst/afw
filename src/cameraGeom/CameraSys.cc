@@ -65,6 +65,6 @@ std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys) {
     os << ")";
     return os;
 }
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst

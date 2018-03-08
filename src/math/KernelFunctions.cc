@@ -54,6 +54,6 @@ void printKernel(Kernel const &kernel, bool doNormalize, double xPos, double yPo
     }
     std::cout << std::endl;
 }
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

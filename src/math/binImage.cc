@@ -100,6 +100,6 @@ INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

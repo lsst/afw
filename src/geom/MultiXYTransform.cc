@@ -93,6 +93,6 @@ AffineTransform MultiXYTransform::linearizeReverseTransform(Point2D const &point
     }
     return retTransform;
 }
-}
-}
-}
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

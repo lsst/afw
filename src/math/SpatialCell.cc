@@ -355,7 +355,7 @@ struct CellContains : public std::unary_function<std::shared_ptr<SpatialCell>, b
 private:
     std::shared_ptr<SpatialCellCandidate> _candidate;
 };
-}
+}  // namespace
 
 void SpatialCellSet::insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate) {
     CellList::iterator pos = std::find_if(_cellList.begin(), _cellList.end(), CellContains(candidate));
@@ -434,6 +434,6 @@ void SpatialCellSet::setIgnoreBad(bool ignoreBad) {
         (*cell)->setIgnoreBad(ignoreBad);
     }
 }
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

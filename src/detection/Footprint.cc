@@ -422,6 +422,6 @@ void Footprint::setPeakCatalog(PeakCatalog const& otherPeaks) {
     // this syntax doesn't work in Python, which is why this method has to exist
     getPeaks() = otherPeaks;
 }
-}
-}
-}  // End lsst::afw::detection namespace
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

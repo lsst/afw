@@ -53,6 +53,6 @@ std::ostream& operator<<(std::ostream& os, Weather const& weath) {
     return os << "Weather(" << weath.getAirTemperature() << ", " << weath.getAirPressure() << ", "
               << weath.getHumidity() << ")";
 }
-}
-}
-}  // lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

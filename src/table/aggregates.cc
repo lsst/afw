@@ -256,7 +256,7 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> makeZeroMatrix(
     return Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(n, n);
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T, int N>
 Eigen::Matrix<T, N, N> CovarianceMatrixKey<T, N>::get(BaseRecord const &record) const {
@@ -373,6 +373,6 @@ template class CovarianceMatrixKey<double, 3>;
 template class CovarianceMatrixKey<double, 4>;
 template class CovarianceMatrixKey<double, 5>;
 template class CovarianceMatrixKey<double, Eigen::Dynamic>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

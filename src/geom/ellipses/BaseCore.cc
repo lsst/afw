@@ -51,7 +51,7 @@ std::shared_ptr<BaseCore> getRegistryCopy(std::string const& name) {
     return i->second->clone();
 }
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<BaseCore> BaseCore::make(std::string const& name) {
     std::shared_ptr<BaseCore> result = getRegistryCopy(name);
@@ -256,7 +256,7 @@ BaseCore::Jacobian BaseCore::_dAssignAxesToQuadrupole(double a, double b, double
     m(2, 2) *= (c - s);
     return m;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

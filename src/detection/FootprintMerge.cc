@@ -301,6 +301,6 @@ void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat) {
         outputCat.push_back((**iter).getSource());
     }
 }
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

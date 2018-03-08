@@ -1026,6 +1026,6 @@ std::shared_ptr<Coord> averageCoord(std::vector<std::shared_ptr<Coord const>> co
     }
     return doAverageCoord(converted, system);
 }
-}
-}
-}  // end lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

@@ -27,7 +27,7 @@ public:
     bool defined;        // whether the slot is defined at all
 };
 
-}  // anonymous
+}  // namespace
 
 void FluxSlotDefinition::setKeys(std::string const &alias, Schema const &schema) {
     SubSchema s = schema["slot"][_name];
@@ -91,7 +91,7 @@ ShapeSlotDefinition::ErrKey::NameArray makeShapeNameArray() {
     return v;
 }
 
-}  // anonymous
+}  // namespace
 
 void ShapeSlotDefinition::setKeys(std::string const &alias, Schema const &schema) {
     SubSchema s = schema["slot"][_name];
@@ -139,6 +139,6 @@ SlotSuite::SlotSuite(Schema const &schema)
     defCentroid.setKeys("", schema);
     defShape.setKeys("", schema);
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

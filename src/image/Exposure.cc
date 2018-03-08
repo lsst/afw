@@ -209,6 +209,6 @@ template class Exposure<float>;
 template class Exposure<double>;
 template class Exposure<std::uint64_t>;
 /// @endcond
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

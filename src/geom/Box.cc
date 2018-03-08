@@ -400,6 +400,6 @@ std::ostream& operator<<(std::ostream& os, Box2D const& box) {
     if (box.isEmpty()) return os << "Box2D()";
     return os << "Box2D(Point2D" << box.getMin() << ", Extent2D" << box.getDimensions() << ")";
 }
-}
-}
-}  // end lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

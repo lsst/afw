@@ -18,7 +18,7 @@ Registry& getRegistry() {
 
 static FitsReader const baseFitsReader("BASE");
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<BaseTable> FitsReader::makeTable(FitsSchemaInputMapper& mapper,
                                                  std::shared_ptr<daf::base::PropertyList> metadata,
@@ -52,7 +52,7 @@ void FitsReader::_setupArchive(afw::fits::Fits& fits, FitsSchemaInputMapper& map
         }
     }
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

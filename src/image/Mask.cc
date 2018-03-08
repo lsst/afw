@@ -143,7 +143,7 @@ private:
 bool operator!=(MapWithHash const& lhs, MapWithHash const& rhs) { return !(lhs == rhs); }
 
 class DictState;  // forward declaration
-}
+}  // namespace
 
 namespace detail {
 /*
@@ -178,7 +178,7 @@ public:
     static std::shared_ptr<MaskDict> incrDefaultVersion();
     static void listMaskDicts();
 };
-}
+}  // namespace detail
 
 namespace {
 /*
@@ -249,7 +249,7 @@ private:
 };
 
 static DictState _state;
-}
+}  // namespace
 
 namespace detail {
 /*
@@ -320,7 +320,7 @@ int detail::MaskDict::getMaskPlane(const std::string& name) const {
 
     return (i == end()) ? -1 : i->second;
 }
-}
+}  // namespace detail
 
 namespace {
 /*
@@ -341,7 +341,7 @@ void setInitMaskBits(std::shared_ptr<detail::MaskDict> dict) {
     dict->add("SUSPECT", ++i);
     dict->add("NO_DATA", ++i);
 }
-}
+}  // namespace
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
@@ -576,7 +576,7 @@ struct addPlaneFunctor {
     std::string const& _name;
     int _id;
 };
-}
+}  // namespace
 
 template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
@@ -991,6 +991,6 @@ std::shared_ptr<detail::MaskDict> Mask<MaskPixelT>::_maskPlaneDict() {
 // Explicit instantiations
 //
 template class Mask<MaskPixel>;
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

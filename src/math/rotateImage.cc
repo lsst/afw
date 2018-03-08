@@ -150,6 +150,6 @@ template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
 template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
     flipImage(afwImage::Mask<afwImage::MaskPixel> const&, bool flipLR, bool flipTB);
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

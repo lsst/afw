@@ -104,7 +104,7 @@ private:
     char *_end;
 };
 
-}  // anonymous
+}  // namespace
 
 // =============== BaseTable implementation (see header for docs) ===========================================
 
@@ -229,7 +229,7 @@ struct RecordDestroyer {
     char *data;
 };
 
-}  // anonymous
+}  // namespace
 
 void BaseTable::_initialize(BaseRecord &record) {
     record._data = Block::get(_schema.getRecordSize(), _manager);
@@ -257,6 +257,6 @@ int BaseTable::nRecordsPerBlock = 100;
 
 template class CatalogT<BaseRecord>;
 template class CatalogT<BaseRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

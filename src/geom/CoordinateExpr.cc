@@ -57,6 +57,6 @@ CoordinateExpr<N> CoordinateExpr<N>::not_() const {
 
 template class CoordinateExpr<2>;
 template class CoordinateExpr<3>;
-}
-}
-}  // end lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

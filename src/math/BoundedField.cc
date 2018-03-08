@@ -222,7 +222,7 @@ private:
     double _z00, _z01, _z10, _z11;
 };
 
-} // anonymous
+}  // namespace
 
 
 template <typename T, typename F>
@@ -249,7 +249,7 @@ void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bo
     }
 }
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf) {
     return *bf * scale;
@@ -285,6 +285,6 @@ void BoundedField::divideImage(image::Image<T> &img, bool overlapOnly, int xStep
 INSTANTIATE(float);
 INSTANTIATE(double);
 
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

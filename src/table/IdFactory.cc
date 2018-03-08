@@ -65,13 +65,13 @@ private:
     RecordId _lower;
 };
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<IdFactory> IdFactory::makeSimple() { return std::make_shared<SimpleIdFactory>(); }
 
 std::shared_ptr<IdFactory> IdFactory::makeSource(RecordId expId, int reserved) {
     return std::make_shared<SourceIdFactory>(expId, reserved);
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

@@ -141,7 +141,7 @@ Angle fromUnitSphereDistanceSquared(double d2) noexcept {
     // == 2.0 * asin(0.5 * sqrt(d2))
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
@@ -486,6 +486,6 @@ template SimpleMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog cons
 template ReferenceMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog const &,
                                             SourceCatalog const &);
 template SourceMatchVector unpackMatches(BaseCatalog const &, SourceCatalog const &, SourceCatalog const &);
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

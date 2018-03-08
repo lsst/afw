@@ -53,7 +53,7 @@ int popInt(daf::base::PropertySet& metadata, std::string const& name) {
     return r;
 }
 
-}  // anonymous
+}  // namespace
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
@@ -336,6 +336,6 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
 
     _metadata = metadata;
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

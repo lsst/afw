@@ -232,6 +232,6 @@ std::string bytesToString(ndarray::Array<std::uint8_t const, 1, 1> const& bytes)
     return std::string(charCArr, nchars);
 }
 
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

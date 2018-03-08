@@ -135,6 +135,6 @@ INSTANTIATE(double)
 INSTANTIATE(float)
 INSTANTIATE(int)
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

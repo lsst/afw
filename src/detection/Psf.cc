@@ -22,7 +22,7 @@ bool comparePsfEvalPoints(geom::Point2D const &a, geom::Point2D const &b) {
 
 bool isPointNull(geom::Point2D const &p) { return std::isnan(p.getX()) && std::isnan(p.getY()); }
 
-}  // anonymous
+}  // namespace
 
 Psf::Psf(bool isFixed) : daf::base::Citizen(typeid(this)), _isFixed(isFixed) {}
 
@@ -121,6 +121,6 @@ std::shared_ptr<Psf::Image> Psf::doComputeImage(geom::Point2D const &position,
 }
 
 geom::Point2D Psf::getAveragePosition() const { return geom::Point2D(); }
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

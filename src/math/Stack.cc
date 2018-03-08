@@ -561,6 +561,6 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
 INSTANTIATE_STACKS(double)
 INSTANTIATE_STACKS(float)
 /// @endcond
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

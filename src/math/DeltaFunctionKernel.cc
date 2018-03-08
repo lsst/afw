@@ -116,7 +116,7 @@ private:
     }
 };
 
-}  // anonymous
+}  // namespace
 
 class DeltaFunctionKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -154,6 +154,6 @@ void DeltaFunctionKernel::write(OutputArchiveHandle& handle) const {
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.pixel, _pixel);
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

@@ -47,7 +47,7 @@ struct PointSpecialized<double> {
         return static_cast<double>(scalar);
     }
 };
-}
+}  // namespace detail
 
 template <typename T, int N>
 template <typename U>
@@ -129,6 +129,6 @@ template Point<int, 3>::Point(Point<double, 3> const &);
 template Point<double, 2>::Point(Point<int, 2> const &);
 template Point<double, 3>::Point(Point<int, 3> const &);
 #endif
-}
-}
-}  // end lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

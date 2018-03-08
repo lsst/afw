@@ -37,7 +37,7 @@ void SimpleFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const& t, st
     _fits->writeKey("AFW_TYPE", "SIMPLE", "Tells lsst::afw to load this as a Simple table.");
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SimpleFitsReader ---------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ public:
 // registers the reader so FitsReader::make can use it.
 static SimpleFitsReader const simpleFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SimpleTable/Record member function implementations -----------------------------------------------
@@ -123,6 +123,6 @@ template class CatalogT<SimpleRecord const>;
 
 template class SortedCatalogT<SimpleRecord>;
 template class SortedCatalogT<SimpleRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

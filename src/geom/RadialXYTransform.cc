@@ -244,6 +244,6 @@ AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, doubl
     ret[5] = -t * y;                                         // v1
     return ret;
 }
-}
-}
-}
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

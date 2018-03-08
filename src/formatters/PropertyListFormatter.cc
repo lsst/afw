@@ -84,7 +84,7 @@ std::unique_ptr<daf::base::PropertyList> readMetadataAsUniquePtr(std::string con
 
     return metadata;
 }
-}
+}  // namespace
 
 lsst::daf::base::Persistable* PropertyListFormatter::read(
         std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
@@ -124,6 +124,6 @@ std::shared_ptr<lsst::daf::persistence::Formatter> PropertyListFormatter::create
         std::shared_ptr<lsst::pex::policy::Policy> policy) {
     return std::shared_ptr<lsst::daf::persistence::Formatter>(new PropertyListFormatter(policy));
 }
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

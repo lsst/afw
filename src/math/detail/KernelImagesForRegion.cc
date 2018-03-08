@@ -242,7 +242,7 @@ RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(int nx, int ny)
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     };
 }
-}
-}
-}
-}  // end lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

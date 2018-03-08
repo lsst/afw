@@ -516,4 +516,6 @@ INSTANTIATE(std::int64_t);
 INSTANTIATE(boost::float32_t);
 INSTANTIATE(boost::float64_t);
 
-}}} // namespace lsst::afw::fits
+}  // namespace fits
+}  // namespace afw
+}  // namespace lsst

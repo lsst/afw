@@ -133,7 +133,7 @@ void ensureMetadata(std::shared_ptr<daf::base::PropertySet>& metadata) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
@@ -380,7 +380,7 @@ struct scaledProductVariance {
         return _c * _c * (lhs * lhs * varRhs + rhs * rhs * varLhs);
     }
 };
-}
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
@@ -441,7 +441,7 @@ struct scaledQuotientVariance {
         return (lhs * lhs * varRhs + rhs2 * varLhs) / (_c * _c * rhs2 * rhs2);
     }
 };
-}
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
@@ -515,7 +515,7 @@ void processPlaneMetadata(std::shared_ptr<daf::base::PropertySet const> metadata
     hdr->set("EXTTYPE", exttype);
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
@@ -757,6 +757,6 @@ template class MaskedImage<int>;
 template class MaskedImage<float>;
 template class MaskedImage<double>;
 template class MaskedImage<std::uint64_t>;
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

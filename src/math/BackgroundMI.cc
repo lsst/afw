@@ -75,7 +75,7 @@ void cullNan(std::vector<double> const& values, std::vector<double> const& refs,
         }
     }
 }
-}
+}  // namespace
 
 template <typename ImageT>
 BackgroundMI::BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl)
@@ -395,6 +395,6 @@ BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
 BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
 /// @endcond
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

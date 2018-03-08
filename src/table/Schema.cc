@@ -97,7 +97,7 @@ public:
     }
 };
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SchemaImpl implementation ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ struct ExtractItemByName : public boost::static_visitor<> {
     mutable std::unique_ptr<SchemaItem<U> > result;  // where we put the result to signal that we're done
 };
 
-}  // anonymous
+}  // namespace
 
 // Here's the driver for the find-by-name algorithm.
 template <typename T>
@@ -281,7 +281,7 @@ struct ExtractItemByKey : public boost::static_visitor<> {
     mutable std::unique_ptr<SchemaItem<U> > result;
 };
 
-}  // anonymous.
+}  // namespace
 
 // Here's the driver for the find-by-key algorithm.  It's pretty similar to the find-by-name algorithm.
 template <typename T>
@@ -376,7 +376,7 @@ inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap con
     return i->second;
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T>
 void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
@@ -736,7 +736,7 @@ struct Stream {
     std::ostream *os;
 };
 
-}  // anonymous
+}  // namespace
 
 std::ostream &operator<<(std::ostream &os, Schema const &schema) {
     os << "Schema(\n";
@@ -789,6 +789,6 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const { return _impl->ge
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_LAYOUT, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

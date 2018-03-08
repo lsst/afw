@@ -1223,7 +1223,7 @@ void do_cubic(double a, double b, double c, double d, std::vector<double> &roots
         return;
     }
 }
-}
+}  // namespace
 
 std::vector<double> Spline::roots(double const value, double a, double const b) const {
     /*
@@ -1289,7 +1289,7 @@ std::vector<double> Spline::roots(double const value, double a, double const b) 
 
     return roots;
 }
-}
-}
-}
-}
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

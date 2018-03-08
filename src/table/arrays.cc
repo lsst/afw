@@ -150,6 +150,6 @@ ArrayKey<T> ArrayKey<T>::slice(int begin, int end) const {
 
 template class ArrayKey<float>;
 template class ArrayKey<double>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

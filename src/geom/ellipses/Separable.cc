@@ -177,7 +177,7 @@ template class Separable<ReducedShear, DeterminantRadius>;
 template class Separable<ReducedShear, TraceRadius>;
 template class Separable<ReducedShear, LogDeterminantRadius>;
 template class Separable<ReducedShear, LogTraceRadius>;
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

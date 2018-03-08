@@ -36,7 +36,7 @@ Parametric::Parametric(Ellipse const& ellipse) : _center(ellipse.getCenter()) {
     _u = Extent2D(a * c, a * s);
     _v = Extent2D(-b * s, b * c);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

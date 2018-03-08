@@ -74,6 +74,6 @@ Key<Array<U>> KeyBase<Array<U>>::slice(int begin, int end) const {
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

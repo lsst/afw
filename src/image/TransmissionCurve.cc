@@ -711,7 +711,7 @@ private:
 
 TransformedTransmissionCurve::Factory TransformedTransmissionCurve::registration;
 
-} // anonymous
+}  // namespace
 
 
 
@@ -815,4 +815,6 @@ std::string TransmissionCurve::getPythonModule() const {
     return "lsst.afw.image";
 }
 
-}}} // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

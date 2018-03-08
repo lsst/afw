@@ -63,6 +63,6 @@ AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &) co
 AffineTransform AffineXYTransform::getForwardTransform() const { return _forwardAffineTransform; }
 
 AffineTransform AffineXYTransform::getReverseTransform() const { return _reverseAffineTransform; }
-}
-}
-}
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

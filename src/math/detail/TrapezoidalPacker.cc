@@ -101,7 +101,7 @@ ndarray::Array<double, 2, 2> TrapezoidalPacker::unpack(
     unpack(out, packed);
     return out;
 }
-}
-}
-}
-}  // namespace lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

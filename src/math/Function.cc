@@ -67,6 +67,6 @@ std::vector<double> PolynomialFunction2<ReturnT>::getDFuncDParameters(double x, 
 INSTANTIATE(double);
 INSTANTIATE(float);
 /// @endcond
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

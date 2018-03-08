@@ -118,7 +118,7 @@ Ellipse::Transformer::TransformDerivativeMatrix Ellipse::Transformer::dTransform
     r.block<3, 4>(0, 0) = input.getCore().transform(transform.getLinear()).dTransform();
     return r;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

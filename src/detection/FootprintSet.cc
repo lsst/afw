@@ -467,7 +467,7 @@ int resolve_alias(std::vector<int> const &aliases, /* list of aliases */
     return (resolved);
 }
 /// @endcond
-}
+}  // namespace
 
 namespace {
 template <typename ImageT>
@@ -565,7 +565,7 @@ template <typename ImageT>
 void findPeaks(std::shared_ptr<Footprint>, ImageT const &, bool, ThresholdBitmask_traits) {
     ;
 }
-}
+}  // namespace
 
 /*
  * Functions to determine if a pixel's in a Footprint
@@ -1118,7 +1118,7 @@ bool StartspanSet<ImagePixelT, MaskPixelT>::process(Footprint *fp,  // the footp
     return stop ? false : true;
 }
 /// @endcond
-}
+}  // namespace
 #if 0
 
 
@@ -1379,8 +1379,8 @@ INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
-}
-}
-}  // end lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !DOXYGEN

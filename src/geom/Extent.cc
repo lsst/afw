@@ -143,6 +143,6 @@ template Extent<int, 2> ceil(Extent<double, 2> const &);
 template Extent<int, 3> ceil(Extent<double, 3> const &);
 
 #endif  // !DOXYGEN
-}
-}
-}  // end lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

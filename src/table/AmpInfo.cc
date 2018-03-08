@@ -36,7 +36,7 @@ void AmpInfoFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, s
     _fits->writeKey("AFW_TYPE", "AMPINFO", "Tells lsst::afw to load this as a AmpInfo table.");
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- AmpInfoFitsReader ---------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ public:
 
 static AmpInfoFitsReader const ampInfoFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- AmpInfoTable/Record member function implementations -----------------------------------------------
@@ -285,6 +285,6 @@ void AmpInfoRecord::setRawPrescanBBox(geom::Box2I const &bbox) {
 
 template class CatalogT<AmpInfoRecord>;
 template class CatalogT<AmpInfoRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

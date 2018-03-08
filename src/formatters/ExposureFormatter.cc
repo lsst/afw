@@ -480,6 +480,6 @@ INSTANTIATE(float, image::MaskPixel, image::VariancePixel)
 INSTANTIATE(double, image::MaskPixel, image::VariancePixel)
 INSTANTIATE(uint64_t, image::MaskPixel, image::VariancePixel)
 /// @endcond
-}
-}
-}  // end afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

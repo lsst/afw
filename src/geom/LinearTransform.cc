@@ -79,6 +79,6 @@ std::ostream& operator<<(std::ostream& os, LinearTransform const& t) {
     os.flags(flags);
     return os;
 }
-}
-}
-}  // end lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

@@ -221,6 +221,6 @@ INSTANTIATE(float, MaskPixel, VariancePixel)
 INSTANTIATE(double, MaskPixel, VariancePixel)
 INSTANTIATE(uint64_t, MaskPixel, VariancePixel)
 /// @endcond
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

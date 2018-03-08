@@ -659,7 +659,7 @@ template <typename LhsPixelT, typename RhsPixelT>
 struct divideEq : public pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const { return static_cast<LhsPixelT>(lhs / rhs); }
 };
-}
+}  // namespace
 
 template <typename LhsPixelT, typename RhsPixelT>
 Image<LhsPixelT>& operator+=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs) {
@@ -722,6 +722,6 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
 /// @endcond
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

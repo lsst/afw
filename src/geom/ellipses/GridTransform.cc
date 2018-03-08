@@ -129,7 +129,7 @@ Ellipse::GridTransform::operator AffineTransform() const {
 AffineTransform Ellipse::GridTransform::invert() const {
     return AffineTransform(_coreGt.invert(), afw::geom::Extent2D(_input.getCenter()));
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

@@ -111,7 +111,7 @@ private:
     std::vector<double> _yPositionList;
     double _errorDef;
 };
-}
+}  // namespace
 
 /// @cond
 template <typename ReturnT>
@@ -298,6 +298,6 @@ FitResults minimize(Function2<ReturnT> const &function, std::vector<double> cons
 
 minimizeFuncs(float) minimizeFuncs(double)
 /// @endcond
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

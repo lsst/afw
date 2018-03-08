@@ -55,6 +55,6 @@ AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const {
 std::shared_ptr<XYTransform> XYTransform::invert() const {
     return std::make_shared<InvertedXYTransform>(this->clone());
 }
-}
-}
-}
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

@@ -98,6 +98,6 @@ AffineTransform makeAffineTransformFromTriple(Point2D const &p1, Point2D const &
     Eigen::Matrix3d m = mq * mp.inverse();
     return AffineTransform(m);
 }
-}
-}
-}  // end lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

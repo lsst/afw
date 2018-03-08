@@ -160,6 +160,6 @@ void operator/=(Image<PixelT> &img, ImageSlice<PixelT> const &slc) {
 INSTANTIATE_SLICES(double);
 INSTANTIATE_SLICES(float);
 /// @endcond
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

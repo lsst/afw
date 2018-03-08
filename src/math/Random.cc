@@ -180,6 +180,6 @@ double Random::gaussian() { return ::gsl_ran_gaussian_ziggurat(_rng.get(), 1.0);
 double Random::chisq(double nu) { return ::gsl_ran_chisq(_rng.get(), nu); }
 
 double Random::poisson(double mu) { return ::gsl_ran_poisson(_rng.get(), mu); }
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

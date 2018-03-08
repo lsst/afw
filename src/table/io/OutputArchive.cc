@@ -207,7 +207,7 @@ OutputArchiveHandle::OutputArchiveHandle(int id, std::string const &name, std::s
         : _id(id), _catPersistable(0), _name(name), _module(module), _impl(impl) {}
 
 OutputArchiveHandle::~OutputArchiveHandle() {}
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

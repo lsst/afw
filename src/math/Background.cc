@@ -143,6 +143,6 @@ UndersampleStyle stringToUndersampleStyle(std::string const& style) {
 INSTANTIATE_BACKGROUND(float)
 
 /// @endcond
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

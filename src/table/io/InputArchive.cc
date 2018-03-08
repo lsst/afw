@@ -31,7 +31,7 @@ struct IndexSortCompare {
     }
 };
 
-}  // anonymous
+}  // namespace
 
 // ----- InputArchive::Impl ---------------------------------------------------------------------------------
 
@@ -213,7 +213,7 @@ InputArchive InputArchive::readFits(fits::Fits& fitsfile) {
     std::shared_ptr<Impl> impl(new Impl(index, catalogs));
     return InputArchive(impl);
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

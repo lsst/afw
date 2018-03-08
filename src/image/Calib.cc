@@ -170,7 +170,7 @@ int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
 
     return nstripped;
 }
-}
+}  // namespace detail
 
 bool Calib::operator==(Calib const& rhs) const {
     return _fluxMag0 == rhs._fluxMag0 && _fluxMag0Sigma == rhs._fluxMag0Sigma;
@@ -419,7 +419,7 @@ std::string getCalibPersistenceName() { return "Calib"; }
 
 CalibFactory registration(getCalibPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string Calib::getPersistenceName() const { return getCalibPersistenceName(); }
 
@@ -452,6 +452,6 @@ template ndarray::Array<TYPE, 1> fluxErrFromABMagErr(ndarray::Array<TYPE const, 
 INSTANTIATE(float);
 INSTANTIATE(double);
 
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

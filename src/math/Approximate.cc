@@ -273,7 +273,7 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const {
 
     return mi;
 }
-}
+}  // namespace
 
 template <typename PixelT>
 std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& x,
@@ -304,6 +304,6 @@ INSTANTIATE(float);
 // INSTANTIATE(int);
 
 /// @endcond
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

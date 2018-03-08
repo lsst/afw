@@ -196,7 +196,7 @@ struct Suffix<double> {
     static std::string get() { return "D"; }
 };
 
-}  // anonymous
+}  // namespace
 
 template <typename ReturnT>
 std::string GaussianFunction2<ReturnT>::getPersistenceName() const {
@@ -276,6 +276,6 @@ void Chebyshev1Function2<ReturnT>::write(table::io::OutputArchiveHandle& handle)
 
 INSTANTIATE(float);
 INSTANTIATE(double);
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

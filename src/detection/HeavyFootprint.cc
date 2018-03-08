@@ -68,7 +68,7 @@ struct FlattenWithSetter<lsst::afw::image::MaskPixel> {
 private:
     T _mask;
 };
-}
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
@@ -258,7 +258,7 @@ struct ComputeSuffix<int> {
     static std::string apply() { return "I"; }
 };
 
-}  // anonymous
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::string HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::getPersistenceName() const {
@@ -341,6 +341,6 @@ INSTANTIATE(std::uint16_t);
 INSTANTIATE(double);
 INSTANTIATE(float);
 INSTANTIATE(int);
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

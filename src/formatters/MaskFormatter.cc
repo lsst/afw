@@ -195,6 +195,6 @@ template class MaskFormatter<MaskPixel>;
 //    boost::archive::binary_oarchive&, int const, Persistable*);
 // template void MaskFormatter<MaskPixel>::delegateSerialize(
 //    boost::archive::binary_iarchive&, int const, Persistable*);
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

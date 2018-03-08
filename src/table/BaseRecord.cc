@@ -68,7 +68,7 @@ private:
     BaseRecord* _outputRecord;
 };
 
-}  // anonymous
+}  // namespace
 
 void BaseRecord::assign(BaseRecord const& other) {
     if (this->getSchema() != other.getSchema()) {
@@ -90,6 +90,6 @@ void BaseRecord::assign(BaseRecord const& other, SchemaMapper const& mapper) {
     mapper.forEach(CopyValue(&other, this));  // use the functor we defined above
     this->_assign(other);                     // let derived classes assign their own stuff
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

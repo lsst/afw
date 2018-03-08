@@ -75,6 +75,6 @@ std::ostream& operator<<(std::ostream& os, Observatory const& obs) {
     os << obs.toString();
     return os;
 }
-}
-}
-}  // namespace lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

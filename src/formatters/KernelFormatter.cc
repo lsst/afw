@@ -227,6 +227,6 @@ std::shared_ptr<dafPersist::Formatter> KernelFormatter::createInstance(
         std::shared_ptr<pexPolicy::Policy> policy) {
     return std::shared_ptr<dafPersist::Formatter>(new KernelFormatter(policy));
 }
-}
-}
-}
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

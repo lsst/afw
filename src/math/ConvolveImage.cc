@@ -264,6 +264,6 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-}
-}
-}  // end math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

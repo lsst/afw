@@ -381,7 +381,7 @@ ItemInfo isCommentIsValid(daf::base::PropertyList const &pl, std::string const &
     return ItemInfo(false, true);
 }
 
-}  // anonymous
+}  // namespace
 
 // ----------------------------------------------------------------------------------------------------------
 // ---- Implementations for stuff in fits.h -----------------------------------------------------------------
@@ -611,7 +611,7 @@ void writeKeyImpl(Fits &fits, char const *key, double const &value, char const *
     }
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T>
 void Fits::updateKey(std::string const &key, T const &value, std::string const &comment) {
@@ -726,7 +726,7 @@ void readKeyImpl(Fits &fits, char const *key, double &value) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T>
 void Fits::readKey(std::string const &key, T &value) {
@@ -956,7 +956,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
     }
 }
 
-}  // anonymous
+}  // namespace
 
 void Fits::readMetadata(daf::base::PropertySet &metadata, bool strip) {
     MetadataIterationFunctor f;
@@ -1286,7 +1286,7 @@ struct NullValue<T, typename std::enable_if<std::numeric_limits<T>::has_quiet_Na
     static T constexpr value = std::numeric_limits<T>::quiet_NaN();
 };
 
-}
+}  // namespace
 
 template <typename T>
 void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *increment) {
@@ -1735,6 +1735,6 @@ BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_OPS, _, COLUMN_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_ARRAY_OPS, _, COLUMN_ARRAY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_IMAGE_OPS, _, IMAGE_TYPES)
-}
-}
-}  // namespace lsst::afw::fits
+}  // namespace fits
+}  // namespace afw
+}  // namespace lsst

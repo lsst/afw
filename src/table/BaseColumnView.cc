@@ -127,7 +127,7 @@ struct ExtractFlagItems {
     std::vector<SchemaItem<Flag> > *items;
 };
 
-}  // anonymous
+}  // namespace
 
 BitsColumn BaseColumnView::getAllBits() const {
     BitsColumn result(_impl->recordCount);
@@ -172,6 +172,6 @@ BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_COLUMNVIEW_SCALAR, _,
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_COLUMNVIEW_ARRAY, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_ARRAY_FIELD_TYPE_N, AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

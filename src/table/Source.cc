@@ -123,7 +123,7 @@ void SourceFitsWriter::_writeRecord(BaseRecord const &r) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SourceFitsReader ------------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ public:
 // registers the reader so FitsReader::make can use it.
 static SourceFitsReader const sourceFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SourceTable/Record member function implementations --------------------------------------------------
@@ -434,6 +434,6 @@ template class CatalogT<SourceRecord const>;
 
 template class SortedCatalogT<SourceRecord>;
 template class SortedCatalogT<SourceRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

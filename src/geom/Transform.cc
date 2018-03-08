@@ -261,7 +261,7 @@ public:
     }
 };
 
-} // anonymous
+}  // namespace
 
 
 

@@ -1052,7 +1052,7 @@ public:
 // that does the work is in the base class ctor)
 SpanSetFactory registration(getSpanSetPersistenceName());
 
-}  // end anonymous
+}  // namespace
 
 std::string SpanSet::getPersistenceName() const { return getSpanSetPersistenceName(); }
 
@@ -1091,6 +1091,6 @@ INSTANTIATE_IMAGE_TYPE(float);
 INSTANTIATE_IMAGE_TYPE(double);
 
 INSTANTIATE_MASK_TYPE(image::MaskPixel)
-}
-}
-}  // Close lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

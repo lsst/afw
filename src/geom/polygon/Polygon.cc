@@ -80,9 +80,9 @@ struct tag<LsstRing> {
     typedef ring_tag type;
 };
 // template<> struct range_value<LsstRing> { typedef LsstPoint type; };
-}
-}
-}  // namespace boost::geometry::traits
+}  // namespace traits
+}  // namespace geometry
+}  // namespace boost
 
 namespace {
 
@@ -598,7 +598,7 @@ void Polygon::write(OutputArchiveHandle& handle) const {
 
     handle.saveCatalog(catalog);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::polygon
+}  // namespace polygon
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

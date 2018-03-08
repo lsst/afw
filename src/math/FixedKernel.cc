@@ -144,7 +144,7 @@ struct FixedKernelPersistenceHelper : public Kernel::PersistenceHelper {
             : Kernel::PersistenceHelper(schema_), image(schema["image"]) {}
 };
 
-}  // anonymous
+}  // namespace
 
 class FixedKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -179,6 +179,6 @@ void FixedKernel::write(OutputArchiveHandle& handle) const {
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     (*record)[keys.image] = ndarray::flatten<1>(ndarray::copy(_image.getArray()));
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

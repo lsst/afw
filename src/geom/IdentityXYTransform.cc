@@ -54,6 +54,6 @@ AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &po
     // note: AffineTransform constructor called with no arguments gives the identity transform
     return AffineTransform();
 }
-}
-}
-}
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

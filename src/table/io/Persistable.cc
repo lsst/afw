@@ -110,7 +110,7 @@ PersistableFactory const &PersistableFactory::lookup(std::string const &name, st
     }
     return *i->second;
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

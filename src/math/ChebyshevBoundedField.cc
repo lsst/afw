@@ -50,7 +50,7 @@ geom::AffineTransform makeChebyshevRangeTransform(afw::geom::Box2D const bbox) {
                            -(2.0 * bbox.getCenterY()) / bbox.getHeight()));
 }
 
-} // anonyomous
+}  // namespace
 
 ChebyshevBoundedField::ChebyshevBoundedField(afw::geom::Box2I const& bbox,
                                              ndarray::Array<double const, 2, 2> const& coefficients)
@@ -139,7 +139,7 @@ ndarray::Array<double, 2, 2> makeMatrix(geom::Box2I const& bbox,
     return out;
 }
 
-} // anonymous
+}  // namespace
 
 std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(afw::geom::Box2I const& bbox,
     ndarray::Array<double const,1> const & x,
@@ -272,7 +272,7 @@ struct RecursionArrayImitator {
     double x;
 };
 
-} // anonymous
+}  // namespace
 
 double ChebyshevBoundedField::evaluate(geom::Point2D const & position) const {
     geom::Point2D p = _toChebyshevRange(position);
@@ -351,7 +351,7 @@ std::string getChebyshevBoundedFieldPersistenceName() { return "ChebyshevBounded
 
 ChebyshevBoundedFieldFactory registration(getChebyshevBoundedFieldPersistenceName());
 
-} // anonymous
+}  // namespace
 
 std::string ChebyshevBoundedField::getPersistenceName() const {
     return getChebyshevBoundedFieldPersistenceName();
@@ -402,6 +402,6 @@ INSTANTIATE(float);
 INSTANTIATE(double);
 
 #endif
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

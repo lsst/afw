@@ -316,7 +316,7 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
     }
 };
 
-}  // anonymous
+}  // namespace
 
 class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -378,6 +378,6 @@ void LinearCombinationKernel::write(OutputArchiveHandle &handle) const {
         }
     }
 }
-}
-}
 }  // namespace math
+}  // namespace afw
+}  // namespace lsst

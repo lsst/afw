@@ -48,7 +48,7 @@ struct TypeTraits<lsst::afw::geom::Angle> {
     static char const *getName() { return "Angle"; }
 };
 
-}  // anonyomous
+}  // namespace
 
 //----- POD scalars -----------------------------------------------------------------------------------------
 
@@ -110,6 +110,6 @@ void FieldBase<std::string>::setValue(Element *p, ndarray::Manager::Ptr const &,
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FIELD_BASE, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
