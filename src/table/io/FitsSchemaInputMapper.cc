@@ -270,7 +270,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
         // Regex to unpack a FITS TFORM value for a bit array column (TFORM code 'X').  The number
         // that precedes the code is the size of the array; the number that follows it (if present)
         // is ignored.
-        static boost::regex const regex("(\\d+)?X\\(?(\\d)*\\)?", boost::regex::perl);
+        static boost::regex const regex(R"((\d+)?X\(?(\d)*\)?)", boost::regex::perl);
         boost::smatch m;
         if (!boost::regex_match(iter->tform, m, regex)) {
             throw LSST_EXCEPT(
@@ -580,7 +580,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(Schema &schema, FitsSchemaIte
     // Regex to unpack a FITS TFORM value.  The first number is the size of the array (1 if not present),
     // followed by an alpha code indicating the type (preceded by P or Q for variable size array).
     // The last number is ignored.
-    static boost::regex const regex("(\\d+)?([PQ])?(\\u)\\(?(\\d)*\\)?", boost::regex::perl);
+    static boost::regex const regex(R"((\d+)?([PQ])?(\u)\(?(\d)*\)?)", boost::regex::perl);
     // start by parsing the format; this tells the element type of the field and the number of elements
     boost::smatch m;
     if (!boost::regex_match(item.tform, m, regex)) {

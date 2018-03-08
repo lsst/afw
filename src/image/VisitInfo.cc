@@ -348,7 +348,7 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
                 // VisitInfo should be used on FITS headers that have been sanitized!
                 std::ostringstream os;
                 os << "TIMESYS = \"" << timesysName
-                   << "\"; VisitInfo requires TIMESYS to exist and to equal \"TAI\"";
+                   << R"("; VisitInfo requires TIMESYS to exist and to equal "TAI")";
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, os.str());
             }
         } else {
