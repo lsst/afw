@@ -460,7 +460,7 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(afw::geom::Box2I 
     int yMin = std::max(static_cast<int>(bounds.getMinY()), bbox.getMinY());
     int yMax = std::min(static_cast<int>(::ceil(bounds.getMaxY())), bbox.getMaxY());
     for (int y = yMin; y <= yMax; ++y) {
-        double const yPixelMin = (double)y - 0.5, yPixelMax = (double)y + 0.5;
+        double const yPixelMin = static_cast<double>(y) - 0.5, yPixelMax = static_cast<double>(y) + 0.5;
         BoostPolygon row;  // A polygon of row y
         boost::geometry::assign(
                 row, LsstBox(afw::geom::Point2D(xMin, yPixelMin), afw::geom::Point2D(xMax, yPixelMax)));
