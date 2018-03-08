@@ -23,23 +23,10 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/BaseColumnView.h"
-
-namespace ndarray {
-namespace detail {
-
-// Tell ndarray to wrap ndarray::Array<Angle,T,N> the same way it would wrap
-// ndarray::Array<double,T,N>.  That throws away unit information (just returns
-// radians, since that's how Angle is implemented), but in some places (e.g.
-// Catalog.asAstropy) we add it back in via astropy Quantities.
-template <>
-struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
-}
-}  // namespace ndarray::detail
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -94,12 +81,26 @@ static void declareBaseColumnView(py::module &mod) {
     declareBaseColumnViewFlagOverloads(cls);
     // std::string columns are not supported, because numpy string arrays
     // do not have the same memory model as ours.
-    declareBaseColumnViewOverloads<lsst::afw::geom::Angle>(cls);
     declareBaseColumnViewArrayOverloads<std::uint8_t>(cls);
     declareBaseColumnViewArrayOverloads<std::uint16_t>(cls);
     declareBaseColumnViewArrayOverloads<int>(cls);
     declareBaseColumnViewArrayOverloads<float>(cls);
     declareBaseColumnViewArrayOverloads<double>(cls);
+    // Angle requires custom wrappers, because ndarray doesn't
+    // recognize it natively; we just return a double view
+    // (e.g. radians).
+    using AngleArray = ndarray::Array<Angle, 1>;
+    using DoubleArray = ndarray::Array<double, 1>;
+    cls.def(
+        "_basicget",
+        [](BaseColumnView & self, Key<Angle> const &key) -> DoubleArray {
+            ndarray::Array<Angle,1,0> a = self[key];
+            return ndarray::detail::ArrayAccess<DoubleArray>::construct(
+                reinterpret_cast<double*>(a.getData()),
+                ndarray::detail::ArrayAccess<AngleArray>::getCore(a)
+            );
+        }
+    );
 }
 
 static void declareBitsColumn(py::module &mod) {
@@ -120,11 +121,6 @@ PYBIND11_PLUGIN(baseColumnView) {
     py::module mod("baseColumnView");
 
     py::module::import("lsst.afw.table.schema");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     declareBaseColumnView(mod);
     declareBitsColumn(mod);
