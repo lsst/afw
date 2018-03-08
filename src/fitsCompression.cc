@@ -334,7 +334,7 @@ namespace {
 class CfitsioRandom {
   public:
     /// Ctor
-    CfitsioRandom(int seed) : _seed(seed) {
+    explicit CfitsioRandom(int seed) : _seed(seed) {
         assert(seed != 0 && seed < N_RANDOM);
         fits_init_randoms();
         resetForTile(0);

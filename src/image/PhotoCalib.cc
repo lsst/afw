@@ -252,7 +252,7 @@ public:
                                             record.get(keys.isConstant));
     }
 
-    PhotoCalibFactory(std::string const &name) : afw::table::io::PersistableFactory(name) {}
+    explicit PhotoCalibFactory(std::string const &name) : afw::table::io::PersistableFactory(name) {}
 };
 
 std::string getPhotoCalibPersistenceName() { return "PhotoCalib"; }

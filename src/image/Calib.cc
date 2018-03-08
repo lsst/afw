@@ -376,7 +376,7 @@ public:
     CalibKeys(CalibKeys&&) = delete;
     CalibKeys& operator=(CalibKeys&&) = delete;
 
-    CalibKeys(int tableVersion = CALIB_TABLE_CURRENT_VERSION)
+    explicit CalibKeys(int tableVersion = CALIB_TABLE_CURRENT_VERSION)
             : schema(), midTime(), expTime(), fluxMag0(), fluxMag0Sigma() {
         if (tableVersion == 1) {
             // obsolete fields

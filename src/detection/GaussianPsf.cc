@@ -80,7 +80,7 @@ public:
                                              record.get(keys.dimensions.getY()), record.get(keys.sigma));
     }
 
-    GaussianPsfFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
+    explicit GaussianPsfFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 GaussianPsfFactory registration("GaussianPsf");

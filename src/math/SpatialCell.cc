@@ -345,7 +345,7 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const &region, int xSize, int ySize)
 
 namespace {
 struct CellContains : public std::unary_function<std::shared_ptr<SpatialCell>, bool> {
-    CellContains(std::shared_ptr<SpatialCellCandidate> candidate) : _candidate(candidate) {}
+    explicit CellContains(std::shared_ptr<SpatialCellCandidate> candidate) : _candidate(candidate) {}
 
     bool operator()(std::shared_ptr<SpatialCell> cell) {
         return cell->getBBox().contains(geom::Point2I(image::positionToIndex(_candidate->getXCenter()),

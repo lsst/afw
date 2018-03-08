@@ -375,7 +375,7 @@ struct productVariance {
 template <typename ImagePixelT, typename VariancePixelT>
 struct scaledProductVariance {
     double _c;
-    scaledProductVariance(double const c) : _c(c) {}
+    explicit scaledProductVariance(double const c) : _c(c) {}
     double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
         return _c * _c * (lhs * lhs * varRhs + rhs * rhs * varLhs);
     }
@@ -435,7 +435,7 @@ struct quotientVariance {
 template <typename ImagePixelT, typename VariancePixelT>
 struct scaledQuotientVariance {
     double _c;
-    scaledQuotientVariance(double c) : _c(c) {}
+    explicit scaledQuotientVariance(double c) : _c(c) {}
     double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
         ImagePixelT const rhs2 = rhs * rhs;
         return (lhs * lhs * varRhs + rhs2 * varLhs) / (_c * _c * rhs2 * rhs2);

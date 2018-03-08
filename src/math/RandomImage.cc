@@ -37,7 +37,7 @@ namespace {
 
 template <typename T>
 struct do_random : public lsst::afw::image::pixelOp0<T> {
-    do_random(Random &rand) : _rand(rand) {}
+    explicit do_random(Random &rand) : _rand(rand) {}
 
 protected:
     Random &_rand;
@@ -45,14 +45,14 @@ protected:
 
 template <typename T>
 struct do_uniform : public do_random<T> {
-    do_uniform(Random &rand) : do_random<T>(rand) {}
+    explicit do_uniform(Random &rand) : do_random<T>(rand) {}
 
     virtual T operator()() const { return do_random<T>::_rand.uniform(); }
 };
 
 template <typename T>
 struct do_uniformPos : public do_random<T> {
-    do_uniformPos(Random &rand) : do_random<T>(rand) {}
+    explicit do_uniformPos(Random &rand) : do_random<T>(rand) {}
 
     virtual T operator()() const { return do_random<T>::_rand.uniformPos(); }
 };
@@ -80,7 +80,7 @@ private:
 
 template <typename T>
 struct do_gaussian : public do_random<T> {
-    do_gaussian(Random &rand) : do_random<T>(rand) {}
+    explicit do_gaussian(Random &rand) : do_random<T>(rand) {}
 
     virtual T operator()() const { return do_random<T>::_rand.gaussian(); }
 };

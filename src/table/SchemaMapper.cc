@@ -33,7 +33,7 @@ struct KeyPairCompareEqual : public boost::static_visitor<bool> {
         return boost::apply_visitor(*this, v);
     }
 
-    KeyPairCompareEqual(Key<T> const &target) : _target(target) {}
+    explicit KeyPairCompareEqual(Key<T> const &target) : _target(target) {}
 
 private:
     Key<T> const &_target;

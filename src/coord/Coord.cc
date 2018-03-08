@@ -147,7 +147,7 @@ public:
         sec = s;
     };
     // unit could be "degrees" or "hours"
-    Dms(geom::Angle const deg00, geom::AngleUnit const unit = geom::degrees) {
+    explicit Dms(geom::Angle const deg00, geom::AngleUnit const unit = geom::degrees) {
         double deg0 = deg00.asAngularUnits(unit);
         double const absVal = std::fabs(deg0);
         sign = (deg0 >= 0) ? 1 : -1;

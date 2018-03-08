@@ -121,7 +121,7 @@ public:
                                                              record.get(keys.angle));
     }
 
-    GaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit GaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 template <typename ReturnT>
@@ -139,7 +139,7 @@ public:
                 record.get(keys.sigma1), record.get(keys.sigma2), record.get(keys.ampl2));
     }
 
-    DoubleGaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit DoubleGaussianFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 template <typename ReturnT>
@@ -154,7 +154,7 @@ public:
                 keys.coefficients.extractVector(catalogs.front().front()));
     }
 
-    PolynomialFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit PolynomialFunction2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 template <typename ReturnT>
@@ -170,7 +170,7 @@ public:
         return std::make_shared<Chebyshev1Function2<ReturnT> >(keys.coefficients.extractVector(record), bbox);
     }
 
-    Chebyshev1Function2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit Chebyshev1Function2Factory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 GaussianFunction2Factory<float> registrationGaussian2F("GaussianFunction2F");

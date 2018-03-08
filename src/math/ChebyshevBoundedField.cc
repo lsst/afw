@@ -319,7 +319,7 @@ struct PersistenceHelper {
               coefficients(schema.addField<table::Array<double> >(
                       "coefficients", "Chebyshev function coefficients, ordered by y then x", nx * ny)) {}
 
-    PersistenceHelper(table::Schema const& s)
+    explicit PersistenceHelper(table::Schema const& s)
             : schema(s),
         orderX(s["order_x"]),
         bbox(s["bbox"]),

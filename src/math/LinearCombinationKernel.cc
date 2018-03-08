@@ -305,7 +305,7 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
         }
     }
 
-    LinearCombinationKernelPersistenceHelper(table::Schema const &schema_)
+    explicit LinearCombinationKernelPersistenceHelper(table::Schema const &schema_)
             : Kernel::PersistenceHelper(schema_), components(schema["components"]) {
         if (!spatialFunctions.isValid()) {
             amplitudes = schema["amplitudes"];

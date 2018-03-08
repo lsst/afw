@@ -119,7 +119,7 @@ public:
 
     virtual void updateDiagnostic() = 0;
 
-    Impl(int dimension_, double threshold_ = std::numeric_limits<double>::epsilon())
+    explicit Impl(int dimension_, double threshold_ = std::numeric_limits<double>::epsilon())
             : state(0), dimension(dimension_), rank(dimension_), threshold(threshold_) {}
 
     virtual ~Impl() {}

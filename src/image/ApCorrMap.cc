@@ -101,7 +101,7 @@ public:
         return result;
     }
 
-    ApCorrMapFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
+    explicit ApCorrMapFactory(std::string const& name) : afw::table::io::PersistableFactory(name) {}
 };
 
 std::string getApCorrMapPersistenceName() { return "ApCorrMap"; }

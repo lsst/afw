@@ -156,7 +156,7 @@ struct PersistenceHelper {
     }
 
     // Construct a PersistenceHelper from a possibly old on-disk schema
-    PersistenceHelper(Schema const &oldSchema) {
+    explicit PersistenceHelper(Schema const &oldSchema) {
         addIfPresent(oldSchema, wcs, WCS_FIELD_NAME);
         addIfPresent(oldSchema, psf, PSF_FIELD_NAME);
         addIfPresent(oldSchema, calib, CALIB_FIELD_NAME);
@@ -249,7 +249,7 @@ public:
         }
     }
 
-    PersistableObjectColumnReader(int column) : _column(column) {}
+    explicit PersistableObjectColumnReader(int column) : _column(column) {}
 
     virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
                           std::shared_ptr<io::InputArchive> const &archive) const {

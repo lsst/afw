@@ -911,7 +911,7 @@ Startspan<MaskPixelT>::Startspan(
 template <typename ImagePixelT, typename MaskPixelT>
 class StartspanSet {
 public:
-    StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT> &image)
+    explicit StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT> &image)
             : _image(image->getImage()), _mask(image->getMask()) {}
     ~StartspanSet() {}
 

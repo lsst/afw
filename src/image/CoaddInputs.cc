@@ -42,7 +42,7 @@ public:
         return result;
     }
 
-    CoaddInputsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
+    explicit CoaddInputsFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 };
 
 CoaddInputsFactory registration("CoaddInputs");
