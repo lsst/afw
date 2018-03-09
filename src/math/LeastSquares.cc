@@ -131,7 +131,7 @@ class EigensystemSolver : public LeastSquares::Impl {
 public:
     explicit EigensystemSolver(int dimension) : Impl(dimension), _eig(dimension), _svd(), _tmp(dimension) {}
 
-    virtual void factor() {
+    void factor() override {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
         _eig.compute(fisher);
         if (_eig.info() == Eigen::Success) {
@@ -150,7 +150,7 @@ public:
         }
     }
 
-    virtual void updateRank() {
+    void updateRank() override {
         if (_eig.info() == Eigen::Success) {
             setRank(_eig.eigenvalues().reverse());
         } else {
@@ -158,7 +158,7 @@ public:
         }
     }
 
-    virtual void updateDiagnostic() {
+    void updateDiagnostic() override {
         if (whichDiagnostic == LeastSquares::NORMAL_CHOLESKY) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
@@ -174,7 +174,7 @@ public:
         }
     }
 
-    virtual void updateSolution() {
+    void updateSolution() override {
         if (rank == 0) {
             solution.asEigen().setZero();
             return;
@@ -190,7 +190,7 @@ public:
         }
     }
 
-    virtual void updateCovariance() {
+    void updateCovariance() override {
         if (rank == 0) {
             covariance.asEigen().setZero();
             return;
@@ -216,14 +216,14 @@ class CholeskySolver : public LeastSquares::Impl {
 public:
     explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
 
-    virtual void factor() {
+    void factor() override {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
         _ldlt.compute(fisher);
     }
 
-    virtual void updateRank() {}
+    void updateRank() override {}
 
-    virtual void updateDiagnostic() {
+    void updateDiagnostic() override {
         if (whichDiagnostic != LeastSquares::NORMAL_CHOLESKY) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
@@ -232,9 +232,9 @@ public:
         diagnostic.asEigen() = _ldlt.vectorD();
     }
 
-    virtual void updateSolution() { solution.asEigen() = _ldlt.solve(rhs); }
+    void updateSolution() override { solution.asEigen() = _ldlt.solve(rhs); }
 
-    virtual void updateCovariance() {
+    void updateCovariance() override {
         ndarray::EigenView<double, 2, 2> cov(covariance);
         cov.setIdentity();
         cov = _ldlt.solve(cov);
@@ -248,7 +248,7 @@ class SvdSolver : public LeastSquares::Impl {
 public:
     explicit SvdSolver(int dimension) : Impl(dimension), _svd(), _tmp(dimension) {}
 
-    virtual void factor() {
+    void factor() override {
         if (!(state & DESIGN_AND_DATA)) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               "Cannot initialize DIRECT_SVD solver with normal equations.");
@@ -258,9 +258,9 @@ public:
         LOGL_DEBUG(_log, "Using direct SVD method; dimension=%d, rank=%d", dimension, rank);
     }
 
-    virtual void updateRank() { setRank(_svd.singularValues()); }
+    void updateRank() override { setRank(_svd.singularValues()); }
 
-    virtual void updateDiagnostic() {
+    void updateDiagnostic() override {
         switch (whichDiagnostic) {
             case LeastSquares::NORMAL_EIGENSYSTEM:
                 diagnostic.asEigen<Eigen::ArrayXpr>() = _svd.singularValues().array().square();
@@ -275,7 +275,7 @@ public:
         }
     }
 
-    virtual void updateSolution() {
+    void updateSolution() override {
         if (rank == 0) {
             solution.asEigen().setZero();
             return;
@@ -285,7 +285,7 @@ public:
         solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
     }
 
-    virtual void updateCovariance() {
+    void updateCovariance() override {
         if (rank == 0) {
             covariance.asEigen().setZero();
             return;

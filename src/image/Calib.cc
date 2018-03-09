@@ -391,8 +391,8 @@ public:
 
 class CalibFactory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         // table version is not persisted, so we don't have a clean way to determine the version;
         // the hack is version = 1 if exptime found, else current
         int tableVersion = 1;

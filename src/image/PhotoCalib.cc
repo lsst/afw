@@ -243,8 +243,8 @@ private:
 
 class PhotoCalibFactory : public table::io::PersistableFactory {
 public:
-    virtual PTR(table::io::Persistable)
-            read(InputArchive const &archive, CatalogVector const &catalogs) const {
+    PTR(table::io::Persistable)
+            read(InputArchive const &archive, CatalogVector const &catalogs) const override {
         table::BaseRecord const &record = catalogs.front().front();
         PhotoCalibSchema const &keys = PhotoCalibSchema::get();
         return std::make_shared<PhotoCalib>(record.get(keys.calibrationMean), record.get(keys.calibrationErr),

@@ -57,10 +57,10 @@ public:
     MinimizerFunctionBase1(MinimizerFunctionBase1 &&) = default;
     MinimizerFunctionBase1 & operator=(MinimizerFunctionBase1 const &) = default;
     MinimizerFunctionBase1 & operator=(MinimizerFunctionBase1 &&) = default;
-    virtual ~MinimizerFunctionBase1() = default;
+    ~MinimizerFunctionBase1() override = default;
     // Required by ROOT::Minuit2::FCNBase
-    virtual double Up() const { return _errorDef; }
-    virtual double operator()(const std::vector<double> &) const;
+    double Up() const override { return _errorDef; }
+    double operator()(const std::vector<double> &) const override;
 
 #if 0  // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
@@ -91,10 +91,10 @@ public:
     MinimizerFunctionBase2(MinimizerFunctionBase2 &&) = default;
     MinimizerFunctionBase2 & operator=(MinimizerFunctionBase2 const &) = default;
     MinimizerFunctionBase2 & operator=(MinimizerFunctionBase2 &&) = default;
-    virtual ~MinimizerFunctionBase2() = default;
+    ~MinimizerFunctionBase2() override = default;
     // Required by ROOT::Minuit2::FCNBase
-    virtual double Up() const { return _errorDef; }
-    virtual double operator()(const std::vector<double> &par) const;
+    double Up() const override { return _errorDef; }
+    double operator()(const std::vector<double> &par) const override;
 
 #if 0  // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}

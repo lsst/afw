@@ -370,8 +370,8 @@ public:
     StandardReader(Schema &schema, FitsSchemaItem const &item, FieldBase<T> const &base)
             : _column(item.column), _key(schema.addField<T>(item.ttype, item.doc, item.tunit, base)) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         fits.readTableArray(row, _column, _key.getElementCount(), record.getElement(_key));
     }
 
@@ -400,8 +400,8 @@ public:
         }
     }
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         double tmp = 0;
         fits.readTableScalar(row, _column, tmp);
         record.set(_key, tmp * afw::geom::radians);
@@ -423,8 +423,8 @@ public:
               _key(schema.addField<std::string>(item.ttype, item.doc, item.tunit, size)),
               _isVariableLength(size == 0) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         std::string s;
         fits.readTableScalar(row, _column, s, _isVariableLength);
         record.set(_key, s);
@@ -446,8 +446,8 @@ public:
     VariableLengthArrayReader(Schema &schema, FitsSchemaItem const &item)
             : _column(item.column), _key(schema.addField<Array<T>>(item.ttype, item.doc, item.tunit, 0)) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         int size = fits.getTableArraySize(row, _column);
         ndarray::Array<T, 1, 1> array = ndarray::allocate(size);
         fits.readTableArray(row, _column, size, array.getData());
@@ -471,8 +471,8 @@ public:
     PointConversionReader(Schema &schema, FitsSchemaItem const &item)
             : _column(item.column), _key(PointKey<T>::addFields(schema, item.ttype, item.doc, item.tunit)) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         std::array<T, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
         record.set(_key, geom::Point<T, 2>(buffer[0], buffer[1]));
@@ -494,8 +494,8 @@ public:
     CoordConversionReader(Schema &schema, FitsSchemaItem const &item)
             : _column(item.column), _key(CoordKey::addFields(schema, item.ttype, item.doc)) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         std::array<geom::Angle, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
         record.set(_key, coord::IcrsCoord(buffer[0], buffer[1]));
@@ -518,8 +518,8 @@ public:
             : _column(item.column),
               _key(QuadrupoleKey::addFields(schema, item.ttype, item.doc, CoordinateType::PIXEL)) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         std::array<double, 3> buffer;
         fits.readTableArray(row, _column, 3, buffer.data());
         record.set(_key, geom::ellipses::Quadrupole(buffer[0], buffer[1], buffer[2], false));
@@ -559,8 +559,8 @@ public:
               _key(CovarianceMatrixKey<T, N>::addFields(schema, item.ttype, names, guessUnits(item.tunit))),
               _buffer(new T[detail::computeCovariancePackedSize(names.size())]) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
-                          std::shared_ptr<InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
+                          std::shared_ptr<InputArchive> const &archive) const override {
         fits.readTableArray(row, _column, detail::computeCovariancePackedSize(_size), _buffer.get());
         for (int i = 0; i < _size; ++i) {
             for (int j = i; j < _size; ++j) {

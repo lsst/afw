@@ -47,21 +47,21 @@ template <typename T>
 struct do_uniform : public do_random<T> {
     explicit do_uniform(Random &rand) : do_random<T>(rand) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.uniform(); }
+    T operator()() const override { return do_random<T>::_rand.uniform(); }
 };
 
 template <typename T>
 struct do_uniformPos : public do_random<T> {
     explicit do_uniformPos(Random &rand) : do_random<T>(rand) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.uniformPos(); }
+    T operator()() const override { return do_random<T>::_rand.uniformPos(); }
 };
 
 template <typename T>
 struct do_uniformInt : public do_random<T> {
     do_uniformInt(Random &rand, unsigned long n) : do_random<T>(rand), _n(n) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.uniformInt(_n); }
+    T operator()() const override { return do_random<T>::_rand.uniformInt(_n); }
 
 private:
     unsigned long _n;
@@ -71,7 +71,7 @@ template <typename T>
 struct do_flat : public do_random<T> {
     do_flat(Random &rand, double const a, double const b) : do_random<T>(rand), _a(a), _b(b) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.flat(_a, _b); }
+    T operator()() const override { return do_random<T>::_rand.flat(_a, _b); }
 
 private:
     double const _a;
@@ -82,14 +82,14 @@ template <typename T>
 struct do_gaussian : public do_random<T> {
     explicit do_gaussian(Random &rand) : do_random<T>(rand) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.gaussian(); }
+    T operator()() const override { return do_random<T>::_rand.gaussian(); }
 };
 
 template <typename T>
 struct do_chisq : public do_random<T> {
     do_chisq(Random &rand, double nu) : do_random<T>(rand), _nu(nu) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.chisq(_nu); }
+    T operator()() const override { return do_random<T>::_rand.chisq(_nu); }
 
 private:
     double const _nu;
@@ -99,7 +99,7 @@ template <typename T>
 struct do_poisson : public do_random<T> {
     do_poisson(Random &rand, double mu) : do_random<T>(rand), _mu(mu) {}
 
-    virtual T operator()() const { return do_random<T>::_rand.poisson(_mu); }
+    T operator()() const override { return do_random<T>::_rand.poisson(_mu); }
 
 private:
     double const _mu;

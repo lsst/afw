@@ -1029,8 +1029,8 @@ std::string getSpanSetPersistenceName() { return "SpanSet"; }
 
 class SpanSetFactory : public table::io::PersistableFactory {
 public:
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         // There should only be one catalog saved
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         // Get the catalog with the spans

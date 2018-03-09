@@ -562,8 +562,8 @@ class PolygonFactory : public table::io::PersistableFactory {
 public:
     explicit PolygonFactory(std::string const& name) : table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+    std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
+                                                         CatalogVector const& catalogs) const override {
         static PolygonSchema const& keys = PolygonSchema::get();
 
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);

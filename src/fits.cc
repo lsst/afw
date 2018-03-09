@@ -803,7 +803,7 @@ bool isKeyIgnored(std::string const &key, bool write=false) {
 
 class MetadataIterationFunctor : public HeaderIterationFunctor {
 public:
-    virtual void operator()(std::string const &key, std::string const &value, std::string const &comment);
+    void operator()(std::string const &key, std::string const &value, std::string const &comment) override;
 
     template <typename T>
     void add(std::string const &key, T value, std::string const &comment) {

@@ -12,11 +12,11 @@ namespace {
 
 class SimpleIdFactory : public IdFactory {
 public:
-    virtual RecordId operator()() { return ++_current; }
+    RecordId operator()() override { return ++_current; }
 
-    virtual void notify(RecordId id) { _current = id; }
+    void notify(RecordId id) override { _current = id; }
 
-    virtual std::shared_ptr<IdFactory> clone() const { return std::make_shared<SimpleIdFactory>(*this); }
+    std::shared_ptr<IdFactory> clone() const override { return std::make_shared<SimpleIdFactory>(*this); }
 
     SimpleIdFactory() : _current(0) {}
 
@@ -26,7 +26,7 @@ private:
 
 class SourceIdFactory : public IdFactory {
 public:
-    virtual RecordId operator()() {
+    RecordId operator()() override {
         if (++_lower & _upperMask) {
             --_lower;
             throw LSST_EXCEPT(pex::exceptions::LengthError,
@@ -37,7 +37,7 @@ public:
         return _upper | _lower;
     }
 
-    virtual void notify(RecordId id) {
+    void notify(RecordId id) override {
         RecordId newLower = id & (~_upper);  // chop off the exact exposure ID
         if (newLower & _upperMask) {
             throw LSST_EXCEPT(
@@ -47,7 +47,7 @@ public:
         _lower = newLower;
     }
 
-    virtual std::shared_ptr<IdFactory> clone() const { return std::make_shared<SourceIdFactory>(*this); }
+    std::shared_ptr<IdFactory> clone() const override { return std::make_shared<SourceIdFactory>(*this); }
 
     SourceIdFactory(RecordId expId, int reserved)
             : _upper(expId << reserved),

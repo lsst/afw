@@ -53,11 +53,11 @@ public:
     explicit SourceFitsWriter(Fits *fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
-    virtual void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows);
+    void _writeTable(std::shared_ptr<BaseTable const> const &table, std::size_t nRows) override;
 
-    virtual void _writeRecord(BaseRecord const &record);
+    void _writeRecord(BaseRecord const &record) override;
 
-    virtual void _finish() {
+    void _finish() override {
         if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
             _archive.writeFits(*_fits);
         }
@@ -203,8 +203,8 @@ public:
         mapper.customize(std::move(reader));
     }
 
-    virtual void readCell(BaseRecord &baseRecord, std::size_t row, fits::Fits &fits,
-                          std::shared_ptr<io::InputArchive> const &archive) const {
+    void readCell(BaseRecord &baseRecord, std::size_t row, fits::Fits &fits,
+                          std::shared_ptr<io::InputArchive> const &archive) const override {
         SourceRecord &record = static_cast<SourceRecord &>(baseRecord);
         std::vector<geom::Span> spansVector;
 
@@ -307,8 +307,8 @@ public:
 
     SourceFootprintReader(bool noHeavy, int column) : _noHeavy(noHeavy), _column(column) {}
 
-    virtual void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
-                          std::shared_ptr<io::InputArchive> const &archive) const {
+    void readCell(BaseRecord &record, std::size_t row, fits::Fits &fits,
+                          std::shared_ptr<io::InputArchive> const &archive) const override {
         int id = 0;
         fits.readTableScalar<int>(row, _column, id);
         std::shared_ptr<Footprint> footprint = archive->get<Footprint>(id);
@@ -336,9 +336,9 @@ class SourceFitsReader : public io::FitsReader {
 public:
     SourceFitsReader() : afw::table::io::FitsReader("SOURCE") {}
 
-    virtual std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
+    std::shared_ptr<BaseTable> makeTable(io::FitsSchemaInputMapper &mapper,
                                                  std::shared_ptr<daf::base::PropertyList> metadata,
-                                                 int ioFlags, bool stripMetadata) const {
+                                                 int ioFlags, bool stripMetadata) const override {
         // Look for old-style persistence of Footprints.  If we have both that and an archive, we
         // load the footprints from the archive, but still need to remove the old-style header keys
         // from the metadata and the corresponding fields from the FitsSchemaInputMapper.
@@ -351,7 +351,7 @@ public:
         return table;
     }
 
-    virtual bool usesArchive(int ioFlags) const { return !(ioFlags & SOURCE_IO_NO_FOOTPRINTS); }
+    bool usesArchive(int ioFlags) const override { return !(ioFlags & SOURCE_IO_NO_FOOTPRINTS); }
 };
 
 // registers the reader so FitsReader::make can use it.
