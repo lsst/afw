@@ -72,7 +72,7 @@ void checkOnlyOneFlag(unsigned int flags) {
  */
 template <typename ObjectVectorT, typename WeightVectorT>
 void checkObjectsAndWeights(ObjectVectorT const &objects, WeightVectorT const &wvector) {
-    if (objects.size() == 0) {
+    if (objects.empty()) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one object to stack");
     }
 
@@ -226,7 +226,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(
         std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> &images, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel clipped,
         image::MaskPixel excuse) {
-    if (images.size() == 0) {
+    if (images.empty()) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
     std::shared_ptr<image::MaskedImage<PixelT>> out(
@@ -240,7 +240,7 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(
         std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> &images, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel clipped,
         std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap) {
-    if (images.size() == 0) {
+    if (images.empty()) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
     std::shared_ptr<image::MaskedImage<PixelT>> out(
@@ -345,7 +345,7 @@ template <typename PixelT>
 std::shared_ptr<image::Image<PixelT>> statisticsStack(
         std::vector<std::shared_ptr<image::Image<PixelT>>> &images, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector) {
-    if (images.size() == 0) {
+    if (images.empty()) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
     std::shared_ptr<image::Image<PixelT>> out(new image::Image<PixelT>(images[0]->getDimensions()));

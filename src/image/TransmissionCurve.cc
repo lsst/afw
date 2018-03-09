@@ -109,7 +109,7 @@ protected:
             InputArchive const& archive,
             CatalogVector const& catalogs
         ) const override {
-            LSST_ARCHIVE_ASSERT(catalogs.size() == 0u);
+            LSST_ARCHIVE_ASSERT(catalogs.empty());
             return get();
         }
 

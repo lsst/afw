@@ -248,7 +248,7 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
     }
 
     // If list is empty don't check for any matches, just add all the objects
-    bool checkForMatches = (_mergeList.size() > 0);
+    bool checkForMatches = (!_mergeList.empty());
 
     for (afw::table::SourceCatalog::const_iterator srcIter = inputCat.begin(); srcIter != inputCat.end();
          ++srcIter) {

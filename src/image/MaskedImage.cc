@@ -115,7 +115,7 @@ void checkExtType(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> 
                   std::string const& expected) {
     try {
         std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
-        if (exttype != "" && exttype != expected) {
+        if (!exttype.empty() && exttype != expected) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"%s\", saw \"%s\"") %
                                expected % fitsfile.getFileName() % fitsfile.getHdu() % exttype)

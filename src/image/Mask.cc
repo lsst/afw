@@ -585,7 +585,7 @@ std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
     for (MaskPlaneDict::const_iterator iter = mpd.begin(); iter != mpd.end(); ++iter) {
         if (value & getBitMask(iter->second)) {
-            if (result.size() > 0) {
+            if (!result.empty()) {
                 result += ",";
             }
             result += iter->first;
@@ -925,7 +925,7 @@ void Mask<MaskPixelT>::addMaskPlanesToMetadata(std::shared_ptr<dafBase::Property
         std::string const& planeName = i->first;
         int const planeNumber = i->second;
 
-        if (planeName != "") {
+        if (!planeName.empty()) {
             metadata->add(maskPlanePrefix + planeName, planeNumber);
         }
     }

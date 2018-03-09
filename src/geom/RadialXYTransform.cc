@@ -35,7 +35,7 @@ namespace afw {
 namespace geom {
 
 RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs) : XYTransform() {
-    if (coeffs.size() == 0) {
+    if (coeffs.empty()) {
         // constructor called with no arguments = identity transformation
         _coeffs.resize(2);
         _coeffs[0] = 0.0;
@@ -150,7 +150,7 @@ Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D c
         return Point2D(rnew * p.getX() / r, rnew * p.getY() / r);
     }
 
-    if (coeffs.size() == 0 || coeffs[0] != 0.0) {
+    if (coeffs.empty() || coeffs[0] != 0.0) {
         throw LSST_EXCEPT(pexEx::InvalidParameterError, "invalid parameters for radial distortion");
     }
 
@@ -201,7 +201,7 @@ Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
         return Point2D(rnew * p.getX() / r, rnew * p.getY() / r);
     }
 
-    if (coeffs.size() == 0 || coeffs[0] != 0.0) {
+    if (coeffs.empty() || coeffs[0] != 0.0) {
         throw LSST_EXCEPT(pexEx::InvalidParameterError, "invalid parameters for radial distortion");
     }
 

@@ -165,7 +165,7 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
     if (radius < 0.0 || (radius > (45. * geom::degrees))) {
         throw LSST_EXCEPT(pex::exceptions::RangeError, "match radius out of range (0 to 45 degrees)");
     }
-    if (cat1.size() == 0 || cat2.size() == 0) {
+    if (cat1.empty() || cat2.empty()) {
         return matches;
     }
     // setup match parameters
@@ -251,7 +251,7 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat c
     if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
         throw LSST_EXCEPT(pex::exceptions::RangeError, "match radius out of range (0 to 45 degrees)");
     }
-    if (cat.size() == 0) {
+    if (cat.empty()) {
         return matches;
     }
     // setup match parameters

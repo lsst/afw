@@ -474,7 +474,7 @@ template <typename ImageT>
 void findPeaksInFootprint(ImageT const &image, bool polarity, PeakCatalog &peaks, Footprint &foot,
                           std::size_t const margin = 0) {
     auto spanSet = foot.getSpans();
-    if (spanSet->size() == 0) {
+    if (spanSet->empty()) {
         return;
     }
     auto bbox = image.getBBox();
@@ -728,14 +728,14 @@ static void findFootprints(
     /*
      * Sort spans by ID, so we can sweep through them once
      */
-    if (spans.size() > 0) {
+    if (!spans.empty()) {
         std::sort(spans.begin(), spans.end(), IdSpanCompar());
     }
     /*
      * Build Footprints from spans
      */
     unsigned int i0;  // initial value of i
-    if (spans.size() > 0) {
+    if (!spans.empty()) {
         id = spans[0]->id;
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) {  // <= size to catch the last object
@@ -830,7 +830,7 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
             break;
     }
     // Set Mask if requested
-    if (planeName == "") {
+    if (planeName.empty()) {
         return;
     }
     //

@@ -390,7 +390,7 @@ ItemInfo isCommentIsValid(daf::base::PropertyList const &pl, std::string const &
 std::string makeErrorMessage(std::string const &fileName, int status, std::string const &msg) {
     std::ostringstream os;
     os << "cfitsio error";
-    if (fileName != "") {
+    if (!fileName.empty()) {
         os << " (" << fileName << ")";
     }
     if (status != 0) {
@@ -398,7 +398,7 @@ std::string makeErrorMessage(std::string const &fileName, int status, std::strin
         fits_get_errstatus(status, fitsErrMsg);
         os << ": " << fitsErrMsg << " (" << status << ")";
     }
-    if (msg != "") {
+    if (!msg.empty()) {
         os << " : " << msg;
     }
     os << "\ncfitsio error stack:\n";

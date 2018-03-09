@@ -200,7 +200,7 @@ SpanSet::SpanSet(std::vector<Span> const& vec, bool normalize) : _spanVector(vec
 // Construct a SpanSet from a std vector by moving
 SpanSet::SpanSet(std::vector<Span>&& vec, bool normalize) : _spanVector(std::move(vec)) {
     // If the incoming vector is zero, should create an empty SpanSet
-    if (_spanVector.size() == 0) {
+    if (_spanVector.empty()) {
         _bbox = Box2I();
         _area = 0;
     } else {

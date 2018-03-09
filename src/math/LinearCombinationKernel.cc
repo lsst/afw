@@ -125,7 +125,7 @@ std::shared_ptr<Kernel> LinearCombinationKernel::resized(int width, int height) 
 }
 
 void LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
-    if (kernelList.size() < 1) {
+    if (kernelList.empty()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelList has no elements");
     }
 

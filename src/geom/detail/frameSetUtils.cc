@@ -170,7 +170,7 @@ std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata,
                               "The base frame has " + std::to_string(baseFrame->getNAxes()) +
                                       " axes instead of 2; cannot read metadata as a SkyWcs");
         }
-        if (baseFrame->getDomain() != "") {
+        if (!baseFrame->getDomain().empty()) {
             throw LSST_EXCEPT(pex::exceptions::TypeError,
                               "The base frame has domain \"" + baseFrame->getDomain() +
                                       "\" instead of blank or GRID; cannot read metadata as a SkyWcs");

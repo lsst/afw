@@ -77,7 +77,7 @@ public:
 
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                          CatalogVector const& catalogs) const override {
-        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+        LSST_ARCHIVE_ASSERT(!catalogs.empty());
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         auto const& record = catalogs.front().front();
         auto const metadata = getOldWcsMetadata(record);
@@ -94,7 +94,7 @@ public:
 
     std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
                                                          CatalogVector const& catalogs) const override {
-        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+        LSST_ARCHIVE_ASSERT(!catalogs.empty());
         auto const& record = catalogs.front().front();
         auto const metadata = getOldWcsMetadata(record);
 

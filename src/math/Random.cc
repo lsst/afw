@@ -148,7 +148,7 @@ std::string Random::getAlgorithmName() const { return std::string(_algorithmName
 
 std::vector<std::string> const &Random::getAlgorithmNames() {
     static std::vector<std::string> names;
-    if (names.size() == 0) {
+    if (names.empty()) {
         for (int i = 0; i < NUM_ALGORITHMS; ++i) {
             names.emplace_back(_algorithmNames[i]);
         }
