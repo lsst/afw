@@ -106,7 +106,7 @@ void SourceFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, st
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const &r) {
-    SourceRecord const &record = static_cast<SourceRecord const &>(r);
+    SourceRecord const &record = dynamic_cast<SourceRecord const &>(r);
     if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
         _outRecord->assign(record, _mapper);
         std::shared_ptr<afw::detection::Footprint> footprint = record.getFootprint();
@@ -205,7 +205,7 @@ public:
 
     void readCell(BaseRecord &baseRecord, std::size_t row, fits::Fits &fits,
                           std::shared_ptr<io::InputArchive> const &archive) const override {
-        SourceRecord &record = static_cast<SourceRecord &>(baseRecord);
+        SourceRecord &record = dynamic_cast<SourceRecord &>(baseRecord);
         std::vector<geom::Span> spansVector;
 
         // Load a regular Footprint from the span and peak columns.
@@ -324,7 +324,7 @@ public:
             // sources, and that still works just fine.
             footprint.reset(new Footprint(*footprint));
         }
-        static_cast<SourceRecord &>(record).setFootprint(footprint);
+        dynamic_cast<SourceRecord &>(record).setFootprint(footprint);
     }
 
 private:

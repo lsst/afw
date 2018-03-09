@@ -221,7 +221,7 @@ void ExposureFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, 
 }
 
 void ExposureFitsWriter::_writeRecord(BaseRecord const &r) {
-    ExposureRecord const &record = static_cast<ExposureRecord const &>(r);
+    ExposureRecord const &record = dynamic_cast<ExposureRecord const &>(r);
     _helper.writeRecord(record, *_record, _mapper, *_archive, false);
     io::FitsWriter::_writeRecord(*_record);
 }
@@ -256,7 +256,7 @@ public:
         int id = 0;
         fits.readTableScalar<int>(row, _column, id);
         std::shared_ptr<T> value = archive->get<T>(id);
-        (static_cast<ExposureRecord &>(record).*(Setter))(value);
+        (dynamic_cast<ExposureRecord &>(record).*(Setter))(value);
     }
 
 private:
