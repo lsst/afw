@@ -200,7 +200,7 @@ FitResults minimize(Function1<ReturnT> const &function, std::vector<double> cons
     std::vector<std::string> paramNames;
     for (unsigned int i = 0; i < nParameters; ++i) {
         paramNames.push_back((boost::format("p%d") % i).str());
-        fitPar.Add(paramNames[i].c_str(), initialParameterList[i], stepSizeList[i]);
+        fitPar.Add(paramNames[i], initialParameterList[i], stepSizeList[i]);
     }
 
     ROOT::Minuit2::MnMigrad migrad(minimizerFunc, fitPar);
@@ -215,11 +215,11 @@ FitResults minimize(Function1<ReturnT> const &function, std::vector<double> cons
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {
-        fitResults.parameterList.push_back(min.UserState().Value(paramNames[i].c_str()));
+        fitResults.parameterList.push_back(min.UserState().Value(paramNames[i]));
         if (fitResults.isValid) {
             fitResults.parameterErrorList.push_back(minos(i));
         } else {
-            double e = min.UserState().Error(paramNames[i].c_str());
+            double e = min.UserState().Error(paramNames[i]);
             std::pair<double, double> ep(-1 * e, e);
             fitResults.parameterErrorList.push_back(ep);
         }
@@ -257,7 +257,7 @@ FitResults minimize(Function2<ReturnT> const &function, std::vector<double> cons
     std::vector<std::string> paramNames;
     for (unsigned int i = 0; i < nParameters; ++i) {
         paramNames.push_back((boost::format("p%d") % i).str());
-        fitPar.Add(paramNames[i].c_str(), initialParameterList[i], stepSizeList[i]);
+        fitPar.Add(paramNames[i], initialParameterList[i], stepSizeList[i]);
     }
 
     ROOT::Minuit2::MnMigrad migrad(minimizerFunc, fitPar);
@@ -272,11 +272,11 @@ FitResults minimize(Function2<ReturnT> const &function, std::vector<double> cons
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {
-        fitResults.parameterList.push_back(min.UserState().Value(paramNames[i].c_str()));
+        fitResults.parameterList.push_back(min.UserState().Value(paramNames[i]));
         if (fitResults.isValid) {
             fitResults.parameterErrorList.push_back(minos(i));
         } else {
-            double e = min.UserState().Error(paramNames[i].c_str());
+            double e = min.UserState().Error(paramNames[i]);
             std::pair<double, double> ep(-1 * e, e);
             fitResults.parameterErrorList.push_back(ep);
         }
