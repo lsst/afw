@@ -52,7 +52,7 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
         auto name = (lastPeriod == std::string::npos) ? fullName : fullName.substr(lastPeriod + 1);
         std::type_info const &type = metadata.typeOf(name);
 
-        std::string out = "";
+        std::string out;
         out.reserve(80);
         if (name.size() > 8) {
             continue;  // The name is too long for a FITS keyword; skip this item
@@ -410,7 +410,7 @@ std::string makeErrorMessage(std::string const &fileName, int status, std::strin
 }
 
 std::string makeErrorMessage(void *fptr, int status, std::string const &msg) {
-    std::string fileName = "";
+    std::string fileName;
     fitsfile *fd = reinterpret_cast<fitsfile *>(fptr);
     if (fd != nullptr && fd->Fptr != nullptr && fd->Fptr->filename != nullptr) {
         fileName = fd->Fptr->filename;

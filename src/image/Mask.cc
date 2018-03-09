@@ -581,7 +581,7 @@ struct addPlaneFunctor {
 
 template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
-    std::string result = "";
+    std::string result;
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
     for (MaskPlaneDict::const_iterator iter = mpd.begin(); iter != mpd.end(); ++iter) {
         if (value & getBitMask(iter->second)) {
