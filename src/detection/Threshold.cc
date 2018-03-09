@@ -35,15 +35,15 @@ namespace afw {
 namespace detection {
 
 Threshold::ThresholdType Threshold::parseTypeString(std::string const& typeStr) {
-    if (typeStr.compare("bitmask") == 0) {
+    if (typeStr == "bitmask") {
         return Threshold::BITMASK;
-    } else if (typeStr.compare("value") == 0) {
+    } else if (typeStr == "value") {
         return Threshold::VALUE;
-    } else if (typeStr.compare("stdev") == 0) {
+    } else if (typeStr == "stdev") {
         return Threshold::STDEV;
-    } else if (typeStr.compare("variance") == 0) {
+    } else if (typeStr == "variance") {
         return Threshold::VARIANCE;
-    } else if (typeStr.compare("pixel_stdev") == 0) {
+    } else if (typeStr == "pixel_stdev") {
         return Threshold::PIXEL_STDEV;
     } else {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
