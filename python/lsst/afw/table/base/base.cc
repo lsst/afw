@@ -132,6 +132,8 @@ PyBaseRecord declareBaseRecord(py::module &mod) {
         key.attr("set")(self, value);
     };
 
+    utils::python::addOutputOp(cls, "__str__");  // __repr__ is defined in baseContinued.py
+
     // The distinction between get/set and operator[] is meaningful in C++, because "record[k] = v"
     // operates by returning an object that can be assigned to.
     // But there's no meaningful difference between get/set and __getitem__/__setitem__.

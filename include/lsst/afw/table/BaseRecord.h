@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_BaseRecord_h_INCLUDED
 #define AFW_TABLE_BaseRecord_h_INCLUDED
 
+#include <iosfwd>
+
 #include "lsst/base.h"
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
@@ -173,9 +175,16 @@ public:
 
     virtual ~BaseRecord() { _table->_destroy(*this); }
 
+    /// Write the record's content out, one field on each line.
+    friend std::ostream & operator<<(std::ostream & os, BaseRecord const & record);
+
 protected:
     /// Called by assign() after transferring fields to allow subclass data members to be copied.
     virtual void _assign(BaseRecord const& other) {}
+
+    /// Called by operator<<.  Overrides should call the base class implementation and append
+    /// additional fields on new lines, with the syntax "%(name)s: %(value)s".
+    virtual void _stream(std::ostream & os) const;
 
     /// Construct a record with uninitialized data.
     BaseRecord(std::shared_ptr<BaseTable> const& table) : daf::base::Citizen(typeid(this)), _table(table) {

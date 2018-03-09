@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 
 #include <cstring>
+#include <iostream>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -90,6 +91,22 @@ void BaseRecord::assign(BaseRecord const& other, SchemaMapper const& mapper) {
     mapper.forEach(CopyValue(&other, this));  // use the functor we defined above
     this->_assign(other);                     // let derived classes assign their own stuff
 }
+
+
+void BaseRecord::_stream(std::ostream & os) const {
+    getSchema().forEach(
+        [&os, this](auto const & item) {
+            os << item.field.getName() << ": " << this->get(item.key) << std::endl;
+        }
+    );
+}
+
+std::ostream & operator<<(std::ostream & os, BaseRecord const & record) {
+    record._stream(os);
+    return os;
+}
+
+
 }
 }
 }  // namespace lsst::afw::table
