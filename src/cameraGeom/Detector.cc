@@ -125,7 +125,7 @@ void Detector::_init() {
     }
 
     // check detector name in CoordSys in transform registry
-    for (CameraSys sys : _transformMap) {
+    for (const CameraSys& sys : _transformMap) {
         if (sys.hasDetectorName() && sys.getDetectorName() != _name) {
             std::ostringstream os;
             os << "Invalid transformMap: " << sys << " detector name != \"" << _name << "\"";
