@@ -82,9 +82,9 @@ void FilterProperty::_insert(bool force) {
 bool FilterProperty::operator==(FilterProperty const& rhs) const { return (_lambdaEff == rhs._lambdaEff); }
 
 void FilterProperty::_initRegistry() {
-    if (_propertyMap) {
+    
         delete _propertyMap;
-    }
+    
 
     _propertyMap = new PropertyMap;
 }
