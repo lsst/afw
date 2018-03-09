@@ -449,7 +449,7 @@ struct IdSpanCompar
         } else if (a->id > b->id) {
             return false;
         } else {
-            return (a->y < b->y) ? true : false;
+            return a->y < b->y;
         }
     }
 };
@@ -1114,7 +1114,7 @@ bool StartspanSet<ImagePixelT, MaskPixelT>::process(Footprint *fp,  // the footp
      */
 
     sspan->_direction = DONE;
-    return stop ? false : true;
+    return !stop;
 }
 /// @endcond
 }  // namespace
