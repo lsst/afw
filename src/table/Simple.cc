@@ -62,7 +62,7 @@ public:
 };
 
 // registers the reader so FitsReader::make can use it.
-static SimpleFitsReader const simpleFitsReader;
+SimpleFitsReader const simpleFitsReader;
 
 }  // namespace
 

@@ -249,7 +249,7 @@ private:
     int _dictCounter;
 };
 
-static DictState _state;
+DictState _state;
 }  // namespace
 
 namespace detail {

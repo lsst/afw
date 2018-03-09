@@ -82,7 +82,7 @@ public:
 };
 
 // registers the reader so FitsReader::make can use it.
-static PeakFitsReader const peakFitsReader;
+PeakFitsReader const peakFitsReader;
 
 }  // namespace
 

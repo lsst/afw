@@ -60,7 +60,7 @@ public:
     }
 };
 
-static AmpInfoFitsReader const ampInfoFitsReader;
+AmpInfoFitsReader const ampInfoFitsReader;
 
 }  // namespace
 

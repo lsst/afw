@@ -16,7 +16,7 @@ Registry& getRegistry() {
     return it;
 }
 
-static FitsReader const baseFitsReader("BASE");
+FitsReader const baseFitsReader("BASE");
 
 }  // namespace
 

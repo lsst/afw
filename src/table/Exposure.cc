@@ -303,7 +303,7 @@ public:
     bool usesArchive(int ioFlags) const override { return true; }
 };
 
-static ExposureFitsReader const exposureFitsReader;
+ExposureFitsReader const exposureFitsReader;
 
 }  // namespace
 

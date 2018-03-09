@@ -355,7 +355,7 @@ public:
 };
 
 // registers the reader so FitsReader::make can use it.
-static SourceFitsReader const sourceFitsReader;
+SourceFitsReader const sourceFitsReader;
 
 }  // namespace
 

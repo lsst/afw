@@ -143,7 +143,7 @@ class StringStartSet {
 /// If we write any of these keys ourselves, it may corrupt the FITS file.
 /// Also, the user has no business reading them, since the use of FITS is
 /// an implementation detail that should be opaque to the user.
-static std::unordered_set<std::string> const ignoreKeys = {
+std::unordered_set<std::string> const ignoreKeys = {
     // FITS core keywords
     "SIMPLE", "BITPIX", "NAXIS", "EXTEND", "GCOUNT", "PCOUNT", "XTENSION", "TFIELDS", "BSCALE", "BZERO",
     // FITS compression keywords
@@ -335,7 +335,7 @@ struct FitsBitPix<double> {
     static int const CONSTANT = DOUBLE_IMG;
 };
 
-static bool allowImageCompression = true;
+bool allowImageCompression = true;
 
 int fitsTypeForBitpix(int bitpix) {
     switch (bitpix) {
