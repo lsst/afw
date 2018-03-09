@@ -45,7 +45,7 @@ def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
 
 
 class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
-    def checkPersistence(self, skyWcs):
+    def checkPersistence(self, skyWcs, bbox):
         """Check persistence of a SkyWcs
         """
         className = "SkyWcs"
@@ -83,8 +83,23 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
             exposure.writeFits(outFile)
             exposureRoundTrip = ExposureF(outFile)
         wcsFromExposure = exposureRoundTrip.getWcs()
-        bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
         self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromExposure, bbox)
+
+    def checkFrameDictConstructor(self, skyWcs, bbox):
+        """Check that the FrameDict constructor works
+        """
+        frameDict = skyWcs.getFrameDict()
+        wcsFromFrameDict = SkyWcs(frameDict)
+        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromFrameDict, bbox)
+
+        self.checkPersistence(wcsFromFrameDict, bbox)
+
+        # check that it is impossible to build a SkyWcs if a required frame is missing
+        for domain in ("PIXELS", "IWC", "SKY"):
+            badFrameDict = skyWcs.getFrameDict()
+            badFrameDict.removeFrame(domain)
+            with self.assertRaises(lsst.pex.exceptions.TypeError):
+                SkyWcs(badFrameDict)
 
     def checkMakeFlippedWcs(self, skyWcs, skyAtol=1e-7*arcseconds):
         """Check makeFlippedWcs on the provided WCS
@@ -209,6 +224,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         self.scale = 1.0 * arcseconds
         self.tinyPixels = 1.0e-10
         self.tinyAngle = 1.0e-10 * radians
+        self.bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
 
     def checkTanWcs(self, crval, orientation, flipX):
         """Construct a pure TAN SkyWcs and check that it operates as specified
@@ -232,7 +248,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         """
         cdMatrix = makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX)
         wcs = makeSkyWcs(crpix=self.crpix, crval=crval, cdMatrix=cdMatrix)
-        self.checkPersistence(wcs)
+        self.checkPersistence(wcs, bbox=self.bbox)
         self.checkMakeFlippedWcs(wcs)
 
         self.assertTrue(wcs.isFits)
@@ -330,14 +346,13 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
         # the approximation returned by getFitsMetadata is poor (pure TAN) until DM-13170
         wcsFromMetadata = makeSkyWcs(wcs.getFitsMetadata())
-        bbox = Box2I(Point2I(-1000, -1000), Extent2I(2000, 2000))  # arbitrary but reasonable
-        self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox))
+        self.assertFalse(wcsAlmostEqualOverBBox(wcs, wcsFromMetadata, bbox=self.bbox))
 
         # the approximation returned by getFitsMetadata is pure TAN until DM-13170,
         # after DM-13170 change this test to check that wcsFromMetadata is a reasonable
         # approximation to the original WCS
         approxWcs = wcs.getTanWcs(wcs.getPixelOrigin())
-        self.assertWcsAlmostEqualOverBBox(approxWcs, wcsFromMetadata, bbox)
+        self.assertWcsAlmostEqualOverBBox(approxWcs, wcsFromMetadata, bbox=self.bbox)
 
     def testTanWcs(self):
         """Check a variety of TanWcs, with crval not at a pole.
@@ -349,6 +364,24 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                              orientation = orientation,
                              flipX = flipX,
                              )
+
+    def testTanWcsFromFrameDict(self):
+        """Test making a TAN WCS from a FrameDict
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        skyWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        self.checkFrameDictConstructor(skyWcs, bbox=self.bbox)
+
+    def testGetFrameDict(self):
+        """Test that getFrameDict returns a deep copy
+        """
+        cdMatrix = makeCdMatrix(scale=self.scale)
+        skyWcs = makeSkyWcs(crpix=self.crpix, crval=self.crvalList[0], cdMatrix=cdMatrix)
+        for domain in ("PIXELS", "IWC", "SKY"):
+            frameDict = skyWcs.getFrameDict()
+            frameDict.removeFrame(domain)
+            self.assertFalse(frameDict.hasDomain(domain))
+            self.assertTrue(skyWcs.getFrameDict().hasDomain(domain))
 
     def testMakeModifiedWcsNoActualPixels(self):
         """Test makeModifiedWcs on a SkyWcs that has no ACTUAL_PIXELS frame
@@ -794,6 +827,12 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         self.metadata = metadata
         self.bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
 
+    def testTanSipFromFrameDict(self):
+        """Test making a TAN-SIP WCS from a FrameDict
+        """
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
+        self.checkFrameDictConstructor(skyWcs, bbox=self.bbox)
+
     def testFitsMetadata(self):
         """Test that getFitsMetadata works for TAN-SIP
         """
@@ -802,6 +841,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         fitsMetadata = skyWcs.getFitsMetadata(precise=True)
         skyWcsCopy = makeSkyWcs(fitsMetadata)
         self.assertWcsAlmostEqualOverBBox(skyWcs, skyWcsCopy, self.bbox)
+        self.checkPersistence(skyWcs, bbox=self.bbox)
 
     def testGetIntermediateWorldCoordsToSky(self):
         """Test getIntermediateWorldCoordsToSky and getPixelToIntermediateWorldCoords
