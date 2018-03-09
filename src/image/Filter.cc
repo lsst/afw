@@ -59,7 +59,7 @@ FilterProperty::FilterProperty(std::string const& name, lsst::pex::policy::Polic
 }
 
 void FilterProperty::_insert(bool force) {
-    if (!_propertyMap) {
+    if (_propertyMap == nullptr) {
         _initRegistry();
     }
 
@@ -90,7 +90,7 @@ void FilterProperty::_initRegistry() {
 }
 
 FilterProperty const& FilterProperty::lookup(std::string const& name) {
-    if (!_propertyMap) {
+    if (_propertyMap == nullptr) {
         _initRegistry();
     }
 
@@ -148,7 +148,7 @@ std::vector<std::string> Filter::getAliases() const {
 }
 
 std::vector<std::string> Filter::getNames() {
-    if (!_nameMap) {
+    if (_nameMap == nullptr) {
         _initRegistry();
     }
 
@@ -187,7 +187,7 @@ Filter::NameMap* Filter::_nameMap = nullptr;
 Filter::IdMap* Filter::_idMap = nullptr;
 
 int Filter::define(FilterProperty const& fp, int id, bool force) {
-    if (!_nameMap) {
+    if (_nameMap == nullptr) {
         _initRegistry();
     }
 
@@ -220,7 +220,7 @@ int Filter::define(FilterProperty const& fp, int id, bool force) {
 }
 
 int Filter::defineAlias(std::string const& oldName, std::string const& newName, bool force) {
-    if (!_nameMap) {
+    if (_nameMap == nullptr) {
         _initRegistry();
     }
 
@@ -250,7 +250,7 @@ int Filter::defineAlias(std::string const& oldName, std::string const& newName, 
 }
 
 int Filter::_lookup(std::string const& name, bool const force) {
-    if (!_nameMap) {
+    if (_nameMap == nullptr) {
         _initRegistry();
     }
 
@@ -273,7 +273,7 @@ int Filter::_lookup(std::string const& name, bool const force) {
 }
 
 std::string const& Filter::_lookup(int id) {
-    if (!_idMap) {
+    if (_idMap == nullptr) {
         _initRegistry();
     }
 

@@ -80,7 +80,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
           _variance(ndarray::allocate(ndarray::makeVector(foot.getArea()))) {
     HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
 
-    if (!ctrl) {
+    if (ctrl == nullptr) {
         ctrl = &ctrl_s;
     }
 

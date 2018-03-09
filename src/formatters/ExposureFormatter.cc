@@ -209,7 +209,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         return;
     }
     auto db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
-    if (db) {
+    if (db != nullptr) {
         LOGL_DEBUG(_log, "ExposureFormatter write DbStorage");
 
         // Get the Wcs headers.
@@ -346,7 +346,7 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
         return ip;
     }
     auto db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
-    if (db) {
+    if (db != nullptr) {
         LOGL_DEBUG(_log, "ExposureFormatter read DbStorage");
 
         // Select a table to retrieve from based on the itemName.

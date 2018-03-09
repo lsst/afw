@@ -510,7 +510,7 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const &field, bool doReplace) {
     if (!result.second) {
         if (doReplace) {
             SchemaItem<Flag> *item = boost::get<SchemaItem<Flag> >(&_items[result.first->second]);
-            if (!item) {
+            if (item == nullptr) {
                 throw LSST_EXCEPT(
                         lsst::pex::exceptions::TypeError,
                         (boost::format("Cannot replace field with name '%s' because types differ.") %
@@ -678,18 +678,18 @@ int Schema::contains(Schema const &other, int flags) const {
     if (_impl == other._impl) return flags;
     if (_impl->getItems().size() < other._impl->getItems().size()) return 0;
     int result = flags;
-    if (result & EQUAL_FIELDS) {
+    if ((result & EQUAL_FIELDS) != 0) {
         for (Impl::ItemContainer::const_iterator i1 = _impl->getItems().begin(),
                                                  i2 = other._impl->getItems().begin();
              i2 != other._impl->getItems().end(); ++i1, ++i2) {
-            if ((result & EQUAL_KEYS) && !ItemFunctors::compareKeys(*i1, *i2)) result &= ~EQUAL_KEYS;
-            if ((result & EQUAL_NAMES) && !ItemFunctors::compareNames(*i1, *i2)) result &= ~EQUAL_NAMES;
-            if ((result & EQUAL_DOCS) && !ItemFunctors::compareDocs(*i1, *i2)) result &= ~EQUAL_DOCS;
-            if ((result & EQUAL_UNITS) && !ItemFunctors::compareUnits(*i1, *i2)) result &= ~EQUAL_UNITS;
-            if (!result) break;
+            if (((result & EQUAL_KEYS) != 0) && !ItemFunctors::compareKeys(*i1, *i2)) result &= ~EQUAL_KEYS;
+            if (((result & EQUAL_NAMES) != 0) && !ItemFunctors::compareNames(*i1, *i2)) result &= ~EQUAL_NAMES;
+            if (((result & EQUAL_DOCS) != 0) && !ItemFunctors::compareDocs(*i1, *i2)) result &= ~EQUAL_DOCS;
+            if (((result & EQUAL_UNITS) != 0) && !ItemFunctors::compareUnits(*i1, *i2)) result &= ~EQUAL_UNITS;
+            if (result == 0) break;
         }
     }
-    if ((result & EQUAL_ALIASES) && !getAliasMap()->contains(*other.getAliasMap())) result &= ~EQUAL_ALIASES;
+    if (((result & EQUAL_ALIASES) != 0) && !getAliasMap()->contains(*other.getAliasMap())) result &= ~EQUAL_ALIASES;
     return result;
 }
 

@@ -27,7 +27,7 @@ private:
 class SourceIdFactory : public IdFactory {
 public:
     RecordId operator()() override {
-        if (++_lower & _upperMask) {
+        if ((++_lower & _upperMask) != 0) {
             --_lower;
             throw LSST_EXCEPT(pex::exceptions::LengthError,
                               (boost::format("Next ID '%s' is too large for the number of reserved bits") %
@@ -39,7 +39,7 @@ public:
 
     void notify(RecordId id) override {
         RecordId newLower = id & (~_upper);  // chop off the exact exposure ID
-        if (newLower & _upperMask) {
+        if ((newLower & _upperMask) != 0) {
             throw LSST_EXCEPT(
                     pex::exceptions::InvalidParameterError,
                     (boost::format("Explicit ID '%s' does not have the correct form.") % newLower).str());

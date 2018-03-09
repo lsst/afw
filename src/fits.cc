@@ -422,7 +422,7 @@ std::string makeLimitedFitsHeader(daf::base::PropertySet const &metadata,
                                   std::set<std::string> const &excludeNames) {
     daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&metadata);
     std::vector<std::string> allParamNames;
-    if (pl) {
+    if (pl != nullptr) {
         allParamNames = pl->getOrderedNames();
     } else {
         allParamNames = metadata.paramNames(false);
@@ -477,7 +477,7 @@ int Fits::getHdu() {
 void Fits::setHdu(int hdu, bool relative) {
     if (relative) {
         fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), hdu, nullptr, &status);
-        if (behavior & AUTO_CHECK) {
+        if ((behavior & AUTO_CHECK) != 0) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Incrementing HDU by %d") % hdu);
         }
     } else {
@@ -489,7 +489,7 @@ void Fits::setHdu(int hdu, bool relative) {
             int tmpStatus = status;
             fits_movrel_hdu(reinterpret_cast<fitsfile *>(fptr), 1, nullptr, &tmpStatus);
         }
-        if (behavior & AUTO_CHECK) {
+        if ((behavior & AUTO_CHECK) != 0) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
         }
     }
@@ -498,7 +498,7 @@ void Fits::setHdu(int hdu, bool relative) {
 int Fits::countHdus() {
     int n = 0;
     fits_get_num_hdus(reinterpret_cast<fitsfile *>(fptr), &n, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Getting number of HDUs in file.");
     }
     return n;
@@ -559,7 +559,7 @@ void updateKeyImpl(Fits &fits, char const *key, std::string const &value, char c
 }
 
 void updateKeyImpl(Fits &fits, char const *key, bool const &value, char const *comment) {
-    int v = value;
+    int v = static_cast<int>(value);
     fits_update_key(reinterpret_cast<fitsfile *>(fits.fptr), TLOGICAL, const_cast<char *>(key), &v,
                     const_cast<char *>(comment), &fits.status);
 }
@@ -595,7 +595,7 @@ void writeKeyImpl(Fits &fits, char const *key, std::string const &value, char co
 }
 
 void writeKeyImpl(Fits &fits, char const *key, bool const &value, char const *comment) {
-    int v = value;
+    int v = static_cast<int>(value);
     fits_write_key(reinterpret_cast<fitsfile *>(fits.fptr), TLOGICAL, const_cast<char *>(key), &v,
                    const_cast<char *>(comment), &fits.status);
 }
@@ -691,7 +691,7 @@ void readKeyImpl(Fits &fits, char const *key, std::string &value) {
     char *buf = nullptr;
     fits_read_key_longstr(reinterpret_cast<fitsfile *>(fits.fptr), const_cast<char *>(key), &buf, nullptr,
                           &fits.status);
-    if (buf) {
+    if (buf != nullptr) {
         value = strip(buf);
         free(buf);
     }
@@ -784,7 +784,7 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
             }
             ++i;
         }
-        if (behavior & AUTO_CHECK) {
+        if ((behavior & AUTO_CHECK) != 0) {
             LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
         }
         functor(keyStr, valueStr, commentStr);
@@ -951,7 +951,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
                                     boost::format("In %s, unknown type '%s' for key '%s'.") %
                                             BOOST_CURRENT_FUNCTION % valueType.name() % key));
     }
-    if (fits.behavior & Fits::AUTO_CHECK) {
+    if ((fits.behavior & Fits::AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(fits, boost::format("Writing key '%s'") % key);
     }
 }
@@ -970,14 +970,14 @@ void Fits::writeMetadata(daf::base::PropertySet const &metadata) {
     typedef std::vector<std::string> NameList;
     daf::base::PropertyList const *pl = dynamic_cast<daf::base::PropertyList const *>(&metadata);
     NameList paramNames;
-    if (pl) {
+    if (pl != nullptr) {
         paramNames = pl->getOrderedNames();
     } else {
         paramNames = metadata.paramNames(false);
     }
     for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
         if (!isKeyIgnored(*i, true)) {
-            if (pl) {
+            if (pl != nullptr) {
                 writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
             } else {
                 writeKeyFromProperty(*this, metadata, *i);
@@ -992,7 +992,7 @@ void Fits::createTable() {
     char *ttype = nullptr;
     char *tform = nullptr;
     fits_create_tbl(reinterpret_cast<fitsfile *>(fptr), BINARY_TBL, 0, 0, &ttype, &tform, nullptr, nullptr, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
     }
 }
@@ -1024,7 +1024,7 @@ std::size_t Fits::addRows(std::size_t nRows) {
     long first = 0;
     fits_get_num_rows(reinterpret_cast<fitsfile *>(fptr), &first, &status);
     fits_insert_rows(reinterpret_cast<fitsfile *>(fptr), first, nRows, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding %d rows to binary table") % nRows);
     }
     return first;
@@ -1033,7 +1033,7 @@ std::size_t Fits::addRows(std::size_t nRows) {
 std::size_t Fits::countRows() {
     long r = 0;
     fits_get_num_rows(reinterpret_cast<fitsfile *>(fptr), &r, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Checking how many rows are in table");
     }
     return r;
@@ -1057,7 +1057,7 @@ void Fits::writeTableScalar(std::size_t row, int col, std::string const &value) 
     char const *tmp = value.c_str();
     fits_write_col(reinterpret_cast<fitsfile *>(fptr), TSTRING, col + 1, row + 1, 1, 1,
                    const_cast<char const **>(&tmp), &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
     }
 }
@@ -1073,7 +1073,7 @@ void Fits::readTableArray(std::size_t row, int col, int nElements, T *value) {
 }
 
 void Fits::readTableScalar(std::size_t row, int col, std::string &value, bool isVariableLength) {
-    int anynul = false;
+    int anynul = 0;
     long size = isVariableLength ? getTableArraySize(row, col) : getTableArraySize(col);
     // We can't directly write into a std::string until C++17.
     std::vector<char> buf(size + 1, 0);
@@ -1082,7 +1082,7 @@ void Fits::readTableScalar(std::size_t row, int col, std::string &value, bool is
     char *tmp = &buf.front();
     fits_read_col(reinterpret_cast<fitsfile *>(fptr), TSTRING, col + 1, row + 1, 1, 1, nullptr, &tmp, &anynul,
                   &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
     }
     value = std::string(tmp);
@@ -1093,7 +1093,7 @@ long Fits::getTableArraySize(int col) {
     long result = 0;
     long width = 0;
     fits_get_coltype(reinterpret_cast<fitsfile *>(fptr), col + 1, &typecode, &result, &width, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Looking up array size for column %d") % col);
     }
     return result;
@@ -1103,7 +1103,7 @@ long Fits::getTableArraySize(std::size_t row, int col) {
     long result = 0;
     long offset = 0;
     fits_read_descript(reinterpret_cast<fitsfile *>(fptr), col + 1, row + 1, &result, &offset, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Looking up array size for cell (%d, %d)") % row % col);
     }
     return result;
@@ -1114,7 +1114,7 @@ long Fits::getTableArraySize(std::size_t row, int col) {
 void Fits::createEmpty() {
     long naxes = 0;
     fits_create_img(reinterpret_cast<fitsfile *>(fptr), 8, 0, &naxes, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Creating empty image HDU");
     }
 }
@@ -1122,7 +1122,7 @@ void Fits::createEmpty() {
 void Fits::createImageImpl(int bitpix, int naxis, long const *naxes) {
     fits_create_img(reinterpret_cast<fitsfile *>(fptr), bitpix, naxis,
                     const_cast<long*>(naxes), &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Creating new image HDU");
     }
 }
@@ -1300,13 +1300,13 @@ void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *incre
 int Fits::getImageDim() {
     int nAxis = 0;
     fits_get_img_dim(reinterpret_cast<fitsfile *>(fptr), &nAxis, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting NAXIS");
+    if ((behavior & AUTO_CHECK) != 0) LSST_FITS_CHECK_STATUS(*this, "Getting NAXIS");
     return nAxis;
 }
 
 void Fits::getImageShapeImpl(int maxDim, long *nAxes) {
     fits_get_img_size(reinterpret_cast<fitsfile *>(fptr), maxDim, nAxes, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting NAXES");
+    if ((behavior & AUTO_CHECK) != 0) LSST_FITS_CHECK_STATUS(*this, "Getting NAXES");
 }
 
 template <typename T>
@@ -1340,19 +1340,19 @@ ImageCompressionOptions Fits::getImageCompression()
     auto fits = reinterpret_cast<fitsfile *>(fptr);
     int compType = 0;  // cfitsio compression type
     fits_get_compression_type(fits, &compType, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Getting compression type");
     }
 
     ImageCompressionOptions::Tiles tiles = ndarray::allocate(MAX_COMPRESS_DIM);
     fits_get_tile_dim(fits, tiles.getNumElements(), tiles.getData(), &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Getting tile dimensions");
     }
 
     float quantizeLevel;
     fits_get_quantize_level(fits, &quantizeLevel, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Getting quantizeLevel");
     }
 
@@ -1366,7 +1366,7 @@ void Fits::setImageCompression(ImageCompressionOptions const& comp)
     ImageCompressionOptions::CompressionAlgorithm const algorithm = allowImageCompression ? comp.algorithm :
         ImageCompressionOptions::NONE;
     fits_set_compression_type(fits, compressionAlgorithmToCfitsio(algorithm), &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Setting compression type");
     }
 
@@ -1376,13 +1376,13 @@ void Fits::setImageCompression(ImageCompressionOptions const& comp)
     }
 
     fits_set_tile_dim(fits, comp.tiles.getNumElements(), comp.tiles.getData(), &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Setting tile dimensions");
     }
 
     if (comp.algorithm != ImageCompressionOptions::PLIO && std::isfinite(comp.quantizeLevel)) {
         fits_set_quantize_level(fits, comp.quantizeLevel, &status);
-        if (behavior & AUTO_CHECK) {
+        if ((behavior & AUTO_CHECK) != 0) {
             LSST_FITS_CHECK_STATUS(*this, "Setting quantization level");
         }
     }
@@ -1412,7 +1412,7 @@ Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
         int nHdu = 0;
         fits_get_num_hdus(reinterpret_cast<fitsfile *>(fptr), &nHdu, &status);
         fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), nHdu, nullptr, &status);
-        if ((behavior & AUTO_CHECK) && (behavior & AUTO_CLOSE) && (status) && (fptr)) {
+        if (((behavior & AUTO_CHECK) != 0) && ((behavior & AUTO_CLOSE) != 0) && ((status) != 0) && ((fptr) != nullptr)) {
             // We're about to throw an exception, and the destructor won't get called
             // because we're in the constructor, so cleanup here first.
             int tmpStatus = 0;
@@ -1423,7 +1423,7 @@ Fits::Fits(std::string const &filename, std::string const &mode, int behavior_)
                 FitsError,
                 (boost::format("Invalid mode '%s' given when opening file '%s'") % mode % filename).str());
     }
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Opening file '%s' with mode '%s'") % filename % mode);
     }
 }
@@ -1451,7 +1451,7 @@ Fits::Fits(MemFileManager &manager, std::string const &mode, int behavior_)
         int nHdu = 0;
         fits_get_num_hdus(reinterpret_cast<fitsfile *>(fptr), &nHdu, &status);
         fits_movabs_hdu(reinterpret_cast<fitsfile *>(fptr), nHdu, nullptr, &status);
-        if ((behavior & AUTO_CHECK) && (behavior & AUTO_CLOSE) && (status) && (fptr)) {
+        if (((behavior & AUTO_CHECK) != 0) && ((behavior & AUTO_CLOSE) != 0) && ((status) != 0) && ((fptr) != nullptr)) {
             // We're about to throw an exception, and the destructor won't get called
             // because we're in the constructor, so cleanup here first.
             int tmpStatus = 0;
@@ -1463,7 +1463,7 @@ Fits::Fits(MemFileManager &manager, std::string const &mode, int behavior_)
                            manager._ptr)
                                   .str());
     }
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(
                 *this, boost::format("Opening memory file at '%s' with mode '%s'") % manager._ptr % mode);
     }
@@ -1586,7 +1586,7 @@ bool Fits::checkCompressedImagePhu() {
     // Check NAXIS = 0
     int naxis;
     fits_get_img_dim(fits, &naxis, &status);
-    if (behavior & AUTO_CHECK) {
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Checking NAXIS of PHU");
     }
     if (naxis != 0) {
@@ -1594,8 +1594,8 @@ bool Fits::checkCompressedImagePhu() {
     }
     // Check first extension (and move back there when we're done if we're not compressed)
     HduMove move{*this, 1};
-    bool isCompressed = fits_is_compressed_image(fits, &status);
-    if (behavior & AUTO_CHECK) {
+    bool isCompressed = fits_is_compressed_image(fits, &status) != 0;
+    if ((behavior & AUTO_CHECK) != 0) {
         LSST_FITS_CHECK_STATUS(*this, "Checking compression");
     }
     if (isCompressed) {

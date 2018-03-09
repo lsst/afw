@@ -79,11 +79,11 @@ void BaseRecord::assign(BaseRecord const& other) {
 }
 
 void BaseRecord::assign(BaseRecord const& other, SchemaMapper const& mapper) {
-    if (!other.getSchema().contains(mapper.getInputSchema())) {
+    if (other.getSchema().contains(mapper.getInputSchema()) == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Unequal schemas between input record and mapper.");
     }
-    if (!this->getSchema().contains(mapper.getOutputSchema())) {
+    if (this->getSchema().contains(mapper.getOutputSchema()) == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Unequal schemas between output record and mapper.");
     }

@@ -58,7 +58,7 @@ protected:
     void _writeRecord(BaseRecord const &record) override;
 
     void _finish() override {
-        if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
+        if ((_flags & SOURCE_IO_NO_FOOTPRINTS) == 0) {
             _archive.writeFits(*_fits);
         }
     }
@@ -77,7 +77,7 @@ void SourceFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, st
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Cannot use a SourceFitsWriter on a non-Source table.");
     }
-    if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
+    if ((_flags & SOURCE_IO_NO_FOOTPRINTS) == 0) {
         _mapper = SchemaMapper(t->getSchema(), true);
         _mapper.addMinimalSchema(t->getSchema(), true);
         _footprintKey = _mapper.editOutputSchema().addField<int>("footprint", "archive ID for Footprint");
@@ -107,11 +107,11 @@ void SourceFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, st
 
 void SourceFitsWriter::_writeRecord(BaseRecord const &r) {
     SourceRecord const &record = dynamic_cast<SourceRecord const &>(r);
-    if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
+    if ((_flags & SOURCE_IO_NO_FOOTPRINTS) == 0) {
         _outRecord->assign(record, _mapper);
         std::shared_ptr<afw::detection::Footprint> footprint = record.getFootprint();
         if (footprint) {
-            if ((_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) && footprint->isHeavy()) {
+            if (((_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) != 0) && footprint->isHeavy()) {
                 footprint.reset(new afw::detection::Footprint(*footprint));
             }
             int footprintArchiveId = _archive.put(footprint);
@@ -171,10 +171,10 @@ public:
         reader->_heavyPixCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYPIXCO");
         reader->_heavyMaskCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYMSKCO");
         reader->_heavyVarCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYVARCO");
-        if ((ioFlags & SOURCE_IO_NO_FOOTPRINTS) || mapper.hasArchive()) {
+        if (((ioFlags & SOURCE_IO_NO_FOOTPRINTS) != 0) || mapper.hasArchive()) {
             return;  // don't want to load anything, so we're done after just removing the special columns
         }
-        if (ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) {
+        if ((ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) != 0) {
             reader->_heavyPixCol = -1;
             reader->_heavyMaskCol = -1;
             reader->_heavyVarCol = -1;
@@ -211,8 +211,8 @@ public:
         // Load a regular Footprint from the span and peak columns.
         int spanElementCount = fits.getTableArraySize(row, _spanCol);
         int peakElementCount = fits.getTableArraySize(row, _peakCol);
-        if (spanElementCount) {
-            if (spanElementCount % 3) {
+        if (spanElementCount != 0) {
+            if ((spanElementCount % 3) != 0) {
                 throw LSST_EXCEPT(
                         afw::fits::FitsError,
                         afw::fits::makeErrorMessage(
@@ -232,8 +232,8 @@ public:
         }
         std::shared_ptr<Footprint> fp = std::make_shared<detection::Footprint>(
                 std::make_shared<geom::SpanSet>(std::move(spansVector)));
-        if (peakElementCount) {
-            if (peakElementCount % 3) {
+        if (peakElementCount != 0) {
+            if ((peakElementCount % 3) != 0) {
                 throw LSST_EXCEPT(
                         afw::fits::FitsError,
                         afw::fits::makeErrorMessage(
@@ -295,10 +295,10 @@ class SourceFootprintReader : public io::FitsColumnReader {
 public:
     static void setup(io::FitsSchemaInputMapper &mapper, int ioFlags) {
         auto item = mapper.find("footprint");
-        if (item) {
+        if (item != nullptr) {
             if (mapper.hasArchive()) {
                 std::unique_ptr<io::FitsColumnReader> reader(
-                        new SourceFootprintReader(ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS, item->column));
+                        new SourceFootprintReader((ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) != 0, item->column));
                 mapper.customize(std::move(reader));
             }
             mapper.erase(item);
@@ -351,7 +351,7 @@ public:
         return table;
     }
 
-    bool usesArchive(int ioFlags) const override { return !(ioFlags & SOURCE_IO_NO_FOOTPRINTS); }
+    bool usesArchive(int ioFlags) const override { return (ioFlags & SOURCE_IO_NO_FOOTPRINTS) == 0; }
 };
 
 // registers the reader so FitsReader::make can use it.

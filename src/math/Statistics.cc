@@ -804,7 +804,7 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
     Property const prop = static_cast<Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
 
-    if (!(prop & _flags)) {  // we didn't calculate it
+    if ((prop & _flags) == 0) {  // we didn't calculate it
         throw LSST_EXCEPT(pexExceptions::InvalidParameterError,
                           (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
@@ -813,28 +813,28 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
     switch (prop) {
         case NPOINT:
             ret.first = static_cast<double>(_n);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0;
             }
             break;
 
         case NCLIPPED:
             ret.first = static_cast<double>(_nClipped);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0;
             }
             break;
 
         case NMASKED:
             ret.first = static_cast<double>(_nMasked);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0;
             }
             break;
 
         case SUM:
             ret.first = static_cast<double>(_sum);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0;
             }
             break;
@@ -842,13 +842,13 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
         // == means ==
         case MEAN:
             ret.first = _mean.first;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = ::sqrt(_mean.second);
             }
             break;
         case MEANCLIP:
             ret.first = _meanclip.first;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = ::sqrt(_meanclip.second);
             }
             break;
@@ -856,32 +856,32 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
         // == stdevs & variances ==
         case VARIANCE:
             ret.first = _variance.first;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = ::sqrt(_variance.second);
             }
             break;
         case STDEV:
             ret.first = sqrt(_variance.first);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0.5 * ::sqrt(_variance.second) / ret.first;
             }
             break;
         case VARIANCECLIP:
             ret.first = _varianceclip.first;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = ret.second;
             }
             break;
         case STDEVCLIP:
             ret.first = sqrt(_varianceclip.first);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0.5 * ::sqrt(_varianceclip.second) / ret.first;
             }
             break;
 
         case MEANSQUARE:
             ret.first = (_n - 1) / static_cast<double>(_n) * _variance.first + ::pow(_mean.first, 2);
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = ::sqrt(2 * ::pow(ret.first / _n, 2));  // assumes Gaussian
             }
             break;
@@ -889,25 +889,25 @@ std::pair<double, double> Statistics::getResult(Property const iProp) const {
         // == other stats ==
         case MIN:
             ret.first = _min;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0;
             }
             break;
         case MAX:
             ret.first = _max;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = 0;
             }
             break;
         case MEDIAN:
             ret.first = _median.first;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = sqrt(geom::HALFPI * _variance.first / _n);  // assumes Gaussian
             }
             break;
         case IQRANGE:
             ret.first = _iqrange;
-            if (_flags & ERRORS) {
+            if ((_flags & ERRORS) != 0) {
                 ret.second = NaN;  // we're not estimating this properly
             }
             break;

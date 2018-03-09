@@ -240,7 +240,7 @@ class PersistableObjectColumnReader : public io::FitsColumnReader {
 public:
     static void setup(std::string const &name, io::FitsSchemaInputMapper &mapper) {
         auto item = mapper.find(name);
-        if (item) {
+        if (item != nullptr) {
             if (mapper.hasArchive()) {
                 std::unique_ptr<io::FitsColumnReader> reader(new PersistableObjectColumnReader(item->column));
                 mapper.customize(std::move(reader));

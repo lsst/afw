@@ -65,7 +65,7 @@ std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
         os << "Cannot create FixedKernel with dimensions (" << width << ", " << height << "). ";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
-    if ((width - getWidth()) % 2 || (height - getHeight()) % 2) {
+    if ((((width - getWidth()) % 2) != 0) || (((height - getHeight()) % 2) != 0)) {
         std::ostringstream os;
         os << "Cannot resize FixedKernel from (" << getWidth() << ", " << getHeight() << ") to ("
            << width << ", " << height << "), because at least one dimension would change by an odd value.";

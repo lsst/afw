@@ -219,11 +219,11 @@ private:
 
 std::pair<afw::table::Schema&, table::Key<int>&> spanSetPersistenceHelper() {
     static afw::table::Schema spanSetIdSchema;
-    static int initialize = true;
+    static int initialize = 1;
     static table::Key<int> idKey;
-    if (initialize) {
+    if (initialize != 0) {
         idKey = spanSetIdSchema.addField<int>("id", "id of the SpanSet catalog");
-        initialize = false;
+        initialize = 0;
         spanSetIdSchema.getCitizen().markPersistent();
     }
     std::pair<afw::table::Schema&, table::Key<int>&> returnPair(spanSetIdSchema, idKey);
@@ -296,16 +296,16 @@ std::unique_ptr<Footprint> Footprint::readSpanSet(afw::table::BaseCatalog const&
 }
 
 void Footprint::readPeaks(afw::table::BaseCatalog const& peakCat, Footprint& loadedFootprint) {
-    if (!peakCat.getSchema().contains(PeakTable::makeMinimalSchema())) {
+    if (peakCat.getSchema().contains(PeakTable::makeMinimalSchema()) == 0) {
         // need to handle an older form of Peak persistence for backwards compatibility
         afw::table::SchemaMapper mapper(peakCat.getSchema());
         mapper.addMinimalSchema(PeakTable::makeMinimalSchema());
         afw::table::Key<float> oldX = peakCat.getSchema()["x"];
         afw::table::Key<float> oldY = peakCat.getSchema()["y"];
         afw::table::Key<float> oldPeakValue = peakCat.getSchema()["value"];
-        mapper.addMapping(oldX, "f.x");
-        mapper.addMapping(oldY, "f.y");
-        mapper.addMapping(oldPeakValue, "peakValue");
+        mapper.addMapping(oldX, true);
+        mapper.addMapping(oldY, true);
+        mapper.addMapping(oldPeakValue, true);
         loadedFootprint.setPeakSchema(mapper.getOutputSchema());
         auto peaks = loadedFootprint.getPeaks();
         peaks.reserve(peakCat.size());

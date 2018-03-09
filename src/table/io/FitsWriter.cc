@@ -164,16 +164,16 @@ struct FitsWriter::ProcessRecords {
 
     ProcessRecords(Fits* fits_, Schema const& schema_, int nFlags_, std::size_t const& row_)
             : row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_) {
-        if (nFlags) flags = std::make_unique<bool[]>(nFlags);
+        if (nFlags != 0) flags = std::make_unique<bool[]>(nFlags);
     }
 
     void apply(BaseRecord const* r) {
         record = r;
         col = 0;
         bit = 0;
-        if (nFlags) ++col;
+        if (nFlags != 0) ++col;
         schema.forEach(*this);
-        if (nFlags) fits->writeTableArray(row, 0, nFlags, flags.get());
+        if (nFlags != 0) fits->writeTableArray(row, 0, nFlags, flags.get());
     }
 
     std::size_t const& row;

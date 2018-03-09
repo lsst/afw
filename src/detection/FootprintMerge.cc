@@ -174,7 +174,7 @@ private:
             }
 
             if (minDist2 < maxSamePeakDist2 && nearestPeak && maxSamePeakDist > 0) {
-                if (peakSchemaMapper) {
+                if (peakSchemaMapper != nullptr) {
                     nearestPeak->set(keys->peak, true);
                 } else {
                     for (FilterMap::const_iterator i = filterMap->begin(); i != filterMap->end(); ++i) {
@@ -183,7 +183,7 @@ private:
                     }
                 }
             } else if (minDist2 > minNewPeakDist2 && !(minNewPeakDist < 0)) {
-                if (peakSchemaMapper) {
+                if (peakSchemaMapper != nullptr) {
                     std::shared_ptr<PeakRecord> newPeak = newPeaks.addNew();
                     newPeak->assign(*otherIter, *peakSchemaMapper);
                     newPeak->set(keys->peak, true);

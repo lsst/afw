@@ -315,7 +315,7 @@ void SpanSet::_label(
     if (currentIndex > 0) {
         // loop over the prevous row
         for (auto const& tup : sortMap[currentIndex - 1]) {
-            if (!labelVector[tup.first] && spansOverlap(spn, *(tup.second), false)) {
+            if ((labelVector[tup.first] == 0u) && spansOverlap(spn, *(tup.second), false)) {
                 labelVector[tup.first] = currentLabel;
                 _label(*(tup.second), labelVector, currentLabel, sortMap);
             }
@@ -324,7 +324,7 @@ void SpanSet::_label(
     if (currentIndex <= _spanVector.back().getY() - 1) {
         // loop over the next row
         for (auto& tup : sortMap[currentIndex + 1]) {
-            if (!labelVector[tup.first] && spansOverlap(spn, *(tup.second), false)) {
+            if ((labelVector[tup.first] == 0u) && spansOverlap(spn, *(tup.second), false)) {
                 labelVector[tup.first] = currentLabel;
                 _label(*(tup.second), labelVector, currentLabel, sortMap);
             }
@@ -344,7 +344,7 @@ std::pair<std::vector<std::size_t>, std::size_t> SpanSet::_makeLabels() const {
         tempIndex++;
     }
     for (auto const& currentSpan : _spanVector) {
-        if (!labelVector[index]) {
+        if (labelVector[index] == 0u) {
             labelVector[index] = currentLabel;
             _label(currentSpan, labelVector, currentLabel, sortMap);
             /* At this point we have recursed enough to reach all of the connected

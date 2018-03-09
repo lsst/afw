@@ -54,7 +54,7 @@ std::shared_ptr<Kernel> DeltaFunctionKernel::clone() const {
 std::shared_ptr<Kernel> DeltaFunctionKernel::resized(int width, int height) const {
     int padX = width - getWidth();
     int padY = height - getHeight();
-    if ((padX % 2) || (padY % 2)) {
+    if (((padX % 2) != 0) || ((padY % 2) != 0)) {
         std::ostringstream os;
         os << "Cannot resize DeltaFunctionKernel from (" << getWidth() << ", " << getHeight() << ") to ("
            << width << ", " << height << "), because at least one dimension would change by an odd value.";

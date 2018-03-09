@@ -377,7 +377,7 @@ std::shared_ptr<BoundedField> ChebyshevBoundedField::operator*(double const scal
 
 bool ChebyshevBoundedField::operator==(BoundedField const& rhs) const {
     auto rhsCasted = dynamic_cast<ChebyshevBoundedField const *>(&rhs);
-    if (!rhsCasted) return false;
+    if (rhsCasted == nullptr) return false;
 
     return (getBBox() == rhsCasted->getBBox()) &&
             (_coefficients.getShape() == rhsCasted->_coefficients.getShape()) &&

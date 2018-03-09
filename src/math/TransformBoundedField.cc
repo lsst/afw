@@ -144,7 +144,7 @@ std::shared_ptr<BoundedField> TransformBoundedField::operator*(double const scal
 
 bool TransformBoundedField::operator==(BoundedField const& rhs) const {
     auto rhsCasted = dynamic_cast<TransformBoundedField const*>(&rhs);
-    if (!rhsCasted) return false;
+    if (rhsCasted == nullptr) return false;
 
     return getBBox() == rhsCasted->getBBox() &&
            *(getTransform().getFrameSet()) == *(rhsCasted->getTransform().getFrameSet());

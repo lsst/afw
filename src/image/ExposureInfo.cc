@@ -280,7 +280,7 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
 
     int archiveHdu = popInt(*metadata, "AR_HDU");
 
-    if (archiveHdu) {
+    if (archiveHdu != 0) {
         --archiveHdu;  // see note above in _startWriteFits;  AR_HDU is *one* indexed
 
         fitsfile.setHdu(archiveHdu);

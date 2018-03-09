@@ -80,30 +80,30 @@ public:
     }
 
     void ensure(int desired) {
-        if (state & FULL_FISHER_MATRIX) state |= LOWER_FISHER_MATRIX;
-        if (desired & FULL_FISHER_MATRIX) desired |= LOWER_FISHER_MATRIX;
+        if ((state & FULL_FISHER_MATRIX) != 0) state |= LOWER_FISHER_MATRIX;
+        if ((desired & FULL_FISHER_MATRIX) != 0) desired |= LOWER_FISHER_MATRIX;
         int toAdd = ~state & desired;
-        if (toAdd & LOWER_FISHER_MATRIX) {
+        if ((toAdd & LOWER_FISHER_MATRIX) != 0) {
             assert(state & DESIGN_AND_DATA);
             fisher = Eigen::MatrixXd::Zero(design.cols(), design.cols());
             fisher.selfadjointView<Eigen::Lower>().rankUpdate(design.adjoint());
         }
-        if (toAdd & FULL_FISHER_MATRIX) {
+        if ((toAdd & FULL_FISHER_MATRIX) != 0) {
             fisher.triangularView<Eigen::StrictlyUpper>() = fisher.adjoint();
         }
-        if (toAdd & RHS_VECTOR) {
+        if ((toAdd & RHS_VECTOR) != 0) {
             assert(state & DESIGN_AND_DATA);
             rhs = design.adjoint() * data;
         }
-        if (toAdd & SOLUTION_ARRAY) {
+        if ((toAdd & SOLUTION_ARRAY) != 0) {
             if (solution.isEmpty()) solution = ndarray::allocate(dimension);
             updateSolution();
         }
-        if (toAdd & COVARIANCE_ARRAY) {
+        if ((toAdd & COVARIANCE_ARRAY) != 0) {
             if (covariance.isEmpty()) covariance = ndarray::allocate(dimension, dimension);
             updateCovariance();
         }
-        if (toAdd & DIAGNOSTIC_ARRAY) {
+        if ((toAdd & DIAGNOSTIC_ARRAY) != 0) {
             if (diagnostic.isEmpty()) diagnostic = ndarray::allocate(dimension);
             updateDiagnostic();
         }
@@ -249,7 +249,7 @@ public:
     explicit SvdSolver(int dimension) : Impl(dimension), _svd(), _tmp(dimension) {}
 
     void factor() override {
-        if (!(state & DESIGN_AND_DATA)) {
+        if ((state & DESIGN_AND_DATA) == 0) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               "Cannot initialize DIRECT_SVD solver with normal equations.");
         }

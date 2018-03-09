@@ -432,7 +432,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
  */
 class IdSpan {
 public:
-    explicit IdSpan(int id, int y, int x0, int x1, double good) : id(id), y(y), x0(x0), x1(x1), good(good) {}
+    explicit IdSpan(int id, int y, int x0, int x1, double good) : id(id), y(y), x0(x0), x1(x1), good(good != 0.0) {}
     int id;     /* ID for object */
     int y;      /* Row wherein IdSpan dwells */
     int x0, x1; /* inclusive range of columns */

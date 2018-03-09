@@ -81,7 +81,7 @@ public:
     static void padSchema(Schema &schema) {
         static int const MIN_RECORD_ALIGN = sizeof(AllocType);
         int remainder = schema.getRecordSize() % MIN_RECORD_ALIGN;
-        if (remainder) {
+        if (remainder != 0) {
             detail::Access::padSchema(schema, MIN_RECORD_ALIGN - remainder);
         }
     }

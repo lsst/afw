@@ -103,7 +103,7 @@ public:
     }
 
     int put(Persistable const *obj, std::shared_ptr<Impl> const &self, bool permissive) {
-        if (!obj) return 0;
+        if (obj == nullptr) return 0;
         if (permissive && !obj->isPersistable()) return 0;
         MapItem item(obj, _nextId);
         std::pair<Map::iterator, bool> r = _map.insert(item);

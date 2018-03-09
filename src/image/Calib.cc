@@ -311,7 +311,7 @@ ndarray::Array<double, 1> Calib::getMagnitude(ndarray::Array<double const, 1> co
         }
         *magIter = convertToMag(_fluxMag0, *fluxIter);
     }
-    if (nonPositive && Calib::getThrowOnNegativeFlux()) {
+    if ((nonPositive != 0) && Calib::getThrowOnNegativeFlux()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
                           (boost::format("Flux must be >= 0: %d non-positive seen") % nonPositive).str());
     }
@@ -348,7 +348,7 @@ std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> Calib::getMagnit
         *magIter = f;
         *magErrIter = df;
     }
-    if (nonPositive && Calib::getThrowOnNegativeFlux()) {
+    if ((nonPositive != 0) && Calib::getThrowOnNegativeFlux()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
                           (boost::format("Flux must be >= 0: %d non-positive seen") % nonPositive).str());
     }

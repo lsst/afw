@@ -194,12 +194,12 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x,   ///< the x-values
     ::gsl_set_error_handler_off();
 
     _acc = ::gsl_interp_accel_alloc();
-    if (!_acc) {
+    if (_acc == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::MemoryError, "gsl_interp_accel_alloc failed");
     }
 
     _interp = ::gsl_interp_alloc(_interpType, _y.size());
-    if (!_interp) {
+    if (_interp == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::OutOfRangeError,
                           str(boost::format("Failed to initialise spline for type %s, length %d") %
                               _interpType->name % _y.size()));
