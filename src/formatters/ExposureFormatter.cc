@@ -177,7 +177,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     LOGL_DEBUG(_log, "ExposureFormatter write start");
     image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
             dynamic_cast<image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Persisting non-Exposure");
     }
     // TODO: Replace this with something better in DM-10776
@@ -446,7 +446,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeriali
     LOGL_DEBUG(_log, "ExposureFormatter delegateSerialize start");
     image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             dynamic_cast<image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(pex::exceptions::RuntimeError, "Serializing non-Exposure");
     }
     std::shared_ptr<geom::SkyWcs const> wcs = ip->getWcs();

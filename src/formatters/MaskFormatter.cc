@@ -91,7 +91,7 @@ void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::share
                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "MaskFormatter write start");
     Mask<MaskPixelT> const* ip = dynamic_cast<Mask<MaskPixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Mask");
     }
     // TODO: Replace this with something better in DM-10776

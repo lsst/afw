@@ -119,7 +119,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     LOGL_DEBUG(_log, "MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
             dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-MaskedImage");
     }
     // TODO: Replace this with something better in DM-10776
@@ -188,7 +188,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeri
     LOGL_DEBUG(_log, "MaskedImageFormatter delegateSerialize start");
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-MaskedImage");
     }
     ar & ip->_image & ip->_variance & ip->_mask;

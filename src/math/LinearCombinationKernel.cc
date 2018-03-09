@@ -277,7 +277,7 @@ void LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end(); kIter != kEnd;
          ++kIter) {
         std::shared_ptr<Kernel> basisKernelPtr = (*kIter)->clone();
-        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
+        if (dynamic_cast<DeltaFunctionKernel const *>(&(*basisKernelPtr)) == nullptr) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);

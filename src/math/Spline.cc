@@ -671,13 +671,13 @@ SmoothedSpline::SmoothedSpline(std::vector<double> const &x, std::vector<double>
     /*
      * Optionally calculate standard error estimates
      */
-    if (errs != NULL) {
+    if (errs != nullptr) {
         sperr1(&x[0], avh, &sdf[0], n, r, p, avar, errs);
     }
     /*
      * clean up
      */
-    if (chisq != NULL) {
+    if (chisq != nullptr) {
         *chisq = n * stat[4];
     }
 }

@@ -64,7 +64,7 @@ char const *const Random::_seedEnvVarName = "LSST_RNG_SEED";
 
 void Random::initialize() {
     ::gsl_rng *rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
-    if (rng == 0) {
+    if (rng == nullptr) {
         throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_alloc() failed");
     }
     // This seed is guaranteed to be non-zero.

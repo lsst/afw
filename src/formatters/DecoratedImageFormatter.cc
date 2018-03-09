@@ -112,7 +112,7 @@ void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,
                                                  std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter write start");
     DecoratedImage<ImagePixelT> const* ip = dynamic_cast<DecoratedImage<ImagePixelT> const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-DecoratedImage");
     }
 
@@ -194,7 +194,7 @@ template <class Archive>
 void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(Archive&, int const, Persistable* persistable) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter delegateSerialize start");
     DecoratedImage<ImagePixelT>* ip = dynamic_cast<DecoratedImage<ImagePixelT>*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-DecoratedImage");
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,

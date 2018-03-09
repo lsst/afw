@@ -253,9 +253,9 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage co
                                                                   )
         : daf::base::Citizen(typeid(this)),
           _image(new Image(*rhs.getImage(), bbox, origin, deep)),
-          _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask*>(NULL)),
+          _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, origin, deep) : static_cast<Mask*>(nullptr)),
           _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, origin, deep)
-                                  : static_cast<Variance*>(NULL)) {
+                                  : static_cast<Variance*>(nullptr)) {
     conformSizes();
 }
 

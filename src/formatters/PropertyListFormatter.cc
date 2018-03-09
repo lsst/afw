@@ -62,7 +62,7 @@ void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistabl
                                   std::shared_ptr<lsst::daf::base::PropertySet>) {
     LOGL_DEBUG(_log, "PropertyListFormatter write start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList const*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-PropertyList");
     }
     // TODO: Replace this with something better in DM-10776
@@ -114,7 +114,7 @@ void PropertyListFormatter::delegateSerialize(Archive&, int const,
                                               lsst::daf::base::Persistable* persistable) {
     LOGL_DEBUG(_log, "PropertyListFormatter delegateSerialize start");
     auto ip = dynamic_cast<lsst::daf::base::PropertyList*>(persistable);
-    if (ip == 0) {
+    if (ip == nullptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-PropertyList");
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "PropertyList serialization not yet implemented");

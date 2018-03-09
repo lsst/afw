@@ -318,7 +318,7 @@ bool FitsSchemaInputMapper::hasArchive() const { return static_cast<bool>(_impl-
 FitsSchemaItem const *FitsSchemaInputMapper::find(std::string const &ttype) const {
     auto iter = _impl->byName().find(ttype);
     if (iter == _impl->byName().end()) {
-        return 0;
+        return nullptr;
     }
     return &(*iter);
 }
@@ -326,7 +326,7 @@ FitsSchemaItem const *FitsSchemaInputMapper::find(std::string const &ttype) cons
 FitsSchemaItem const *FitsSchemaInputMapper::find(int column) const {
     auto iter = _impl->byColumn().lower_bound(column);
     if (iter == _impl->byColumn().end() || iter->column != column) {
-        return 0;
+        return nullptr;
     }
     return &(*iter);
 }
