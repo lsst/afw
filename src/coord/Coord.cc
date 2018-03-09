@@ -259,7 +259,7 @@ std::string angleToHmsString(geom::Angle const a) { return angleToXmsString(a, g
  *             parts shall be defined to be 1/60 and 1/3600 of `unit`, respectively.
  */
 static geom::Angle xmsStringToAngle(std::string const dms, geom::AngleUnit unit) {
-    if (dms.find(":") == std::string::npos) {
+    if (dms.find(':') == std::string::npos) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("String is not in xx:mm:ss format: %s") % dms).str());
     }
