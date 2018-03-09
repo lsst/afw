@@ -127,8 +127,8 @@ struct PersistenceHelper {
     }
 
     // No copying
-    PersistenceHelper(const PersistenceHelper &) = delete;
-    PersistenceHelper &operator=(const PersistenceHelper &) = delete;
+    PersistenceHelper(PersistenceHelper const &) = delete;
+    PersistenceHelper &operator=(PersistenceHelper const &) = delete;
 
     // No moving
     PersistenceHelper(PersistenceHelper &&) = delete;

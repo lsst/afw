@@ -40,7 +40,7 @@ void writeBasicFits(int fd, ImageT const& data, lsst::afw::geom::SkyWcs const* W
 
 template <typename ImageT>
 void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::geom::SkyWcs const* Wcs = NULL,
-                    const char* title = NULL);
+                    char const * title = NULL);
 }
 }
 }  // namespace lsst::afw::display

@@ -143,8 +143,8 @@ struct OldWcsPersistenceHelper {
     };
 
     // No copying
-    OldWcsPersistenceHelper(const OldWcsPersistenceHelper&) = delete;
-    OldWcsPersistenceHelper& operator=(const OldWcsPersistenceHelper&) = delete;
+    OldWcsPersistenceHelper(OldWcsPersistenceHelper const &) = delete;
+    OldWcsPersistenceHelper& operator=(OldWcsPersistenceHelper const &) = delete;
 
     // No moving
     OldWcsPersistenceHelper(OldWcsPersistenceHelper&&) = delete;

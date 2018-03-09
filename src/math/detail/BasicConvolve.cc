@@ -104,7 +104,7 @@ src/math/ConvolveImage.cc:265:   instantiated from ‘void lsst::afw::math::basi
 InImageT&, const lsst::afw::math::Kernel&, bool) [with OutImageT = lsst::afw::image::MaskedImage<int, short
 unsigned int, float>, InImageT = lsst::afw::image::MaskedImage<int, short unsigned int, float>]’
 src/math/ConvolveImage.cc:451:   instantiated from ‘void lsst::afw::math::convolve(OutImageT&, const
-InImageT&, const KernelT&, bool, int) [with OutImageT = lsst::afw::image::MaskedImage<int, short unsigned int,
+InImageT&, KernelT const &, bool, int) [with OutImageT = lsst::afw::image::MaskedImage<int, short unsigned int,
 float>, InImageT = lsst::afw::image::MaskedImage<int, short unsigned int, float>, KernelT =
 lsst::afw::math::AnalyticKernel]’
 src/math/ConvolveImage.cc:587:   instantiated from here

@@ -41,7 +41,7 @@ using PySpan = py::class_<Span, std::shared_ptr<Span>>;
 // to the last element.
 class SpanIterator {
 public:
-    SpanIterator(const Span &s) : _it{s.begin()}, _end{s.end()} {};
+    SpanIterator(Span const &s) : _it{s.begin()}, _end{s.end()} {};
     Point2I next() {
         if (_it == _end) {
             throw py::stop_iteration();
@@ -78,7 +78,7 @@ PYBIND11_PLUGIN(span) {
     // unlike most iterators, SpanPixelIterator doesn't actually refer
     // back to its container (the Span), and there's no need to keep the
     // Span alive for the lifetime of the iterator.
-    cls.def("__iter__", [](const Span &s) { return SpanIterator(s); });
+    cls.def("__iter__", [](Span const &s) { return SpanIterator(s); });
     cls.def("getX0", (int (Span::*)() const) & Span::getX0);
     cls.def("getX1", (int (Span::*)() const) & Span::getX1);
     cls.def("getY", (int (Span::*)() const) & Span::getY);

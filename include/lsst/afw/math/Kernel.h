@@ -170,9 +170,9 @@ public:
     explicit Kernel(int width, int height, const std::vector<SpatialFunctionPtr> spatialFunctionList);
 
     // prevent copying and assignment (to avoid problems from type slicing)
-    Kernel(const Kernel &) = delete;
+    Kernel(Kernel const &) = delete;
     Kernel(Kernel &&) = delete;
-    Kernel &operator=(const Kernel &) = delete;
+    Kernel &operator=(Kernel const &) = delete;
     Kernel &operator=(Kernel &&) = delete;
 
     virtual ~Kernel() = default;
@@ -541,9 +541,9 @@ public:
                          lsst::afw::geom::Point2D const &pos     ///< desired position
                          );
 
-    FixedKernel(const FixedKernel &) = delete;
+    FixedKernel(FixedKernel const &) = delete;
     FixedKernel(FixedKernel &&) = delete;
-    FixedKernel &operator=(const FixedKernel &) = delete;
+    FixedKernel &operator=(FixedKernel const &) = delete;
     FixedKernel &operator=(FixedKernel &&) = delete;
 
     virtual ~FixedKernel() = default;
@@ -634,9 +634,9 @@ public:
     explicit AnalyticKernel(int width, int height, KernelFunction const &kernelFunction,
                             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList);
 
-    AnalyticKernel(const AnalyticKernel &) = delete;
+    AnalyticKernel(AnalyticKernel const &) = delete;
     AnalyticKernel(AnalyticKernel &&) = delete;
-    AnalyticKernel &operator=(const AnalyticKernel &) = delete;
+    AnalyticKernel &operator=(AnalyticKernel const &) = delete;
     AnalyticKernel &operator=(AnalyticKernel &&) = delete;
 
     virtual ~AnalyticKernel() = default;
@@ -724,9 +724,9 @@ public:
      */
     explicit DeltaFunctionKernel(int width, int height, lsst::afw::geom::Point2I const &point);
 
-    DeltaFunctionKernel(const DeltaFunctionKernel &) = delete;
+    DeltaFunctionKernel(DeltaFunctionKernel const &) = delete;
     DeltaFunctionKernel(DeltaFunctionKernel &&) = delete;
-    DeltaFunctionKernel &operator=(const DeltaFunctionKernel &) = delete;
+    DeltaFunctionKernel &operator=(DeltaFunctionKernel const &) = delete;
     DeltaFunctionKernel &operator=(DeltaFunctionKernel &&) = delete;
 
     virtual ~DeltaFunctionKernel() = default;
@@ -814,9 +814,9 @@ public:
     explicit LinearCombinationKernel(KernelList const &kernelList,
                                      std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList);
 
-    LinearCombinationKernel(const LinearCombinationKernel &) = delete;
+    LinearCombinationKernel(LinearCombinationKernel const &) = delete;
     LinearCombinationKernel(LinearCombinationKernel &&) = delete;
-    LinearCombinationKernel &operator=(const LinearCombinationKernel &) = delete;
+    LinearCombinationKernel &operator=(LinearCombinationKernel const &) = delete;
     LinearCombinationKernel &operator=(LinearCombinationKernel &&) = delete;
 
     virtual ~LinearCombinationKernel() = default;
@@ -847,7 +847,7 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if the check fails
      */
-    void checkKernelList(const KernelList &kernelList) const;
+    void checkKernelList(KernelList const &kernelList) const;
 
     /**
      * Return true if all basis kernels are instances of DeltaFunctionKernel
@@ -990,9 +990,9 @@ public:
                              KernelFunction const &kernelRowFunction,
                              std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList);
 
-    SeparableKernel(const SeparableKernel &) = delete;
+    SeparableKernel(SeparableKernel const &) = delete;
     SeparableKernel(SeparableKernel &&) = delete;
-    SeparableKernel &operator=(const SeparableKernel &) = delete;
+    SeparableKernel &operator=(SeparableKernel const &) = delete;
     SeparableKernel &operator=(SeparableKernel &&) = delete;
 
     virtual ~SeparableKernel() = default;

@@ -149,8 +149,8 @@ public:
     ~OutputArchiveHandle();
 
     // No copying
-    OutputArchiveHandle(const OutputArchiveHandle&) = delete;
-    OutputArchiveHandle& operator=(const OutputArchiveHandle&) = delete;
+    OutputArchiveHandle(OutputArchiveHandle const &) = delete;
+    OutputArchiveHandle& operator=(OutputArchiveHandle const &) = delete;
 
     // No moving
     OutputArchiveHandle(OutputArchiveHandle&&) = delete;

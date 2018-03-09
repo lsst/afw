@@ -55,8 +55,8 @@ struct ArchiveIndexSchema {
     static ArchiveIndexSchema const& get();
 
     // No copying
-    ArchiveIndexSchema(const ArchiveIndexSchema&) = delete;
-    ArchiveIndexSchema& operator=(const ArchiveIndexSchema&) = delete;
+    ArchiveIndexSchema(ArchiveIndexSchema const &) = delete;
+    ArchiveIndexSchema& operator=(ArchiveIndexSchema const &) = delete;
 
     // No moving
     ArchiveIndexSchema(ArchiveIndexSchema&&) = delete;

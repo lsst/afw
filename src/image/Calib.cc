@@ -369,8 +369,8 @@ public:
     table::Key<double> fluxMag0Sigma;
 
     // No copying
-    CalibKeys(const CalibKeys&) = delete;
-    CalibKeys& operator=(const CalibKeys&) = delete;
+    CalibKeys(CalibKeys const &) = delete;
+    CalibKeys& operator=(CalibKeys const &) = delete;
 
     // No moving
     CalibKeys(CalibKeys&&) = delete;

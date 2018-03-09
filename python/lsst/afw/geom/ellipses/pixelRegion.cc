@@ -42,7 +42,7 @@ PYBIND11_PLUGIN(_pixelRegion) {
     clsPixelRegion.def("getBBox", &PixelRegion::getBBox);
     clsPixelRegion.def("getSpanAt", &PixelRegion::getSpanAt);
     clsPixelRegion.def("__iter__",
-                       [](const PixelRegion &self) { return py::make_iterator(self.begin(), self.end()); },
+                       [](PixelRegion const &self) { return py::make_iterator(self.begin(), self.end()); },
                        py::keep_alive<0, 1>() /* Essential: keep object alive while iterator exists */);
 
     return mod.ptr();

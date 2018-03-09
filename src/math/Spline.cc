@@ -113,8 +113,8 @@ TautSpline::TautSpline(std::vector<double> const &x, std::vector<double> const &
 
 void TautSpline::calculateTautSpline(std::vector<double> const &x, std::vector<double> const &y,
                                      double const gamma0) {
-    const double *tau = &x[0];
-    const double *gtau = &y[0];
+    double const *tau = &x[0];
+    double const *gtau = &y[0];
     int const ntau = x.size();  // size of tau and gtau, must be >= 2
 
     if (ntau < 4) {  // use a single quadratic
@@ -964,8 +964,8 @@ void TautSpline::calculateTautSplineEvenOdd(std::vector<double> const &_tau, std
                                             double const gamma,
                                             bool const even  // ensure Even symmetry
                                             ) {
-    const double *tau = &_tau[0];
-    const double *gtau = &_gtau[0];
+    double const *tau = &_tau[0];
+    double const *gtau = &_gtau[0];
     int const ntau = _tau.size();  // size of tau and gtau, must be >= 2
     std::vector<double> x, y;      // tau and gtau, extended to -ve tau
 

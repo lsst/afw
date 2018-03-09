@@ -144,8 +144,8 @@ public:
     }
 
     // No copying
-    Impl(const Impl&) = delete;
-    Impl& operator=(const Impl&) = delete;
+    Impl(Impl const &) = delete;
+    Impl& operator=(Impl const &) = delete;
 
     // No moving
     Impl(Impl&&) = delete;

@@ -95,8 +95,8 @@ struct DummyPsfPersistenceHelper {
     }
 
     // No copying
-    DummyPsfPersistenceHelper(const DummyPsfPersistenceHelper&) = delete;
-    DummyPsfPersistenceHelper& operator=(const DummyPsfPersistenceHelper&) = delete;
+    DummyPsfPersistenceHelper(DummyPsfPersistenceHelper const &) = delete;
+    DummyPsfPersistenceHelper& operator=(DummyPsfPersistenceHelper const &) = delete;
 
     // No moving
     DummyPsfPersistenceHelper(DummyPsfPersistenceHelper&&) = delete;

@@ -53,17 +53,17 @@ using lsst::daf::base::PropertySet;
 /// @cond
 class Card {
 public:
-    Card(const std::string &name, bool val, const char *commnt = "")
+    Card(const std::string &name, bool val, char const *commnt = "")
             : keyword(name), value(val), comment(commnt) {}
-    Card(const std::string &name, int val, const char *commnt = "")
+    Card(const std::string &name, int val, char const *commnt = "")
             : keyword(name), value(val), comment(commnt) {}
-    Card(const std::string &name, double val, const char *commnt = "")
+    Card(const std::string &name, double val, char const *commnt = "")
             : keyword(name), value(val), comment(commnt) {}
-    Card(const std::string &name, float val, const char *commnt = "")
+    Card(const std::string &name, float val, char const *commnt = "")
             : keyword(name), value(val), comment(commnt) {}
-    Card(const std::string &name, const std::string &val, const char *commnt = "")
+    Card(const std::string &name, const std::string &val, char const *commnt = "")
             : keyword(name), value(val), comment(commnt) {}
-    Card(const std::string &name, const char *val, const char *commnt = "")
+    Card(const std::string &name, char const *val, char const *commnt = "")
             : keyword(name), value(std::string(val)), comment(commnt) {}
 
     ~Card() {}
@@ -82,7 +82,7 @@ int Card::write(int fd, int ncard, char *record) const {
     char *card = &record[80 * ncard];
 
     if (value.type() == typeid(std::string)) {
-        const char *str = boost::any_cast<std::string>(value).c_str();
+        char const *str = boost::any_cast<std::string>(value).c_str();
         if (keyword == "" || keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
             sprintf(card, "%-8.8s%-72s", keyword.c_str(), str);
         } else {
@@ -453,7 +453,7 @@ void writeBasicFits(std::string const &filename,  // file to write, or "| cmd"
                     ) {
     int fd;
     if ((filename.c_str())[0] == '|') {  // a command
-        const char *cmd = filename.c_str() + 1;
+        char const *cmd = filename.c_str() + 1;
         while (isspace(*cmd)) {
             cmd++;
         }

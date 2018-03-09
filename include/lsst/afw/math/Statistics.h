@@ -321,11 +321,11 @@ private:
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
  */
 template <typename ValueT>
-class infinite_iterator : public boost::iterator_adaptor<infinite_iterator<ValueT>, const ValueT *,
+class infinite_iterator : public boost::iterator_adaptor<infinite_iterator<ValueT>, ValueT const *,
                                                          const ValueT, boost::forward_traversal_tag> {
 public:
     infinite_iterator() : infinite_iterator::iterator_adaptor_(0) {}
-    explicit infinite_iterator(const ValueT *p) : infinite_iterator::iterator_adaptor_(p) {}
+    explicit infinite_iterator(ValueT const *p) : infinite_iterator::iterator_adaptor_(p) {}
 
 private:
     friend class boost::iterator_core_access;

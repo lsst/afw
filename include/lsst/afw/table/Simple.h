@@ -72,8 +72,8 @@ public:
     void setDec(Angle dec);
     //@}
 
-    SimpleRecord(const SimpleRecord&) = delete;
-    SimpleRecord& operator=(const SimpleRecord&) = delete;
+    SimpleRecord(SimpleRecord const &) = delete;
+    SimpleRecord& operator=(SimpleRecord const &) = delete;
     SimpleRecord(SimpleRecord&&) = delete;
     SimpleRecord& operator=(SimpleRecord&&) = delete;
     ~SimpleRecord();

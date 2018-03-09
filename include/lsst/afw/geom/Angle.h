@@ -229,7 +229,7 @@ public:
 #undef ANGLE_OPUP_TYPE
 
 #define ANGLE_COMP(OP) \
-    constexpr bool operator OP(const Angle& rhs) const noexcept { return _val OP rhs._val; }
+    constexpr bool operator OP(Angle const & rhs) const noexcept { return _val OP rhs._val; }
 
     //@{
     /// Test if two Angles represent the same angle (without wrapping).

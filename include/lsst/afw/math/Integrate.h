@@ -191,12 +191,12 @@ double const MOCK_INF = 1.e10;
 
 namespace details {
 template <class T>
-inline T norm(const T &x) {
+inline T norm(T const &x) {
     return x * x;
 }
 using std::norm;
 template <class T>
-inline T real(const T &x) {
+inline T real(T const &x) {
     return x;
 }
 using std::real;
@@ -256,7 +256,7 @@ public:
     T const &Right() const { return _b; }
     T const &Err() const { return _error; }
     T const &Area() const { return _area; }
-    void SetArea(const T &a, const T &e) {
+    void SetArea(T const &a, T const &e) {
         _area = a;
         _error = e;
     }
@@ -609,7 +609,7 @@ template <class UF>
 struct AuxFunc1 :  // f(1/x-1) for int(a..infinity)
                    public std::unary_function<typename UF::argument_type, typename UF::result_type> {
 public:
-    AuxFunc1(const UF &f) : _f(f) {}
+    AuxFunc1(UF const &f) : _f(f) {}
     typename UF::result_type operator()(typename UF::argument_type x) const {
         return _f(1.0 / x - 1.0) / (x * x);
     }
@@ -673,7 +673,7 @@ struct ConstantReg2 : public std::binary_function<T, T, IntRegion<T> > {
 template <class BF>
 class binder2_1 : public std::unary_function<typename BF::second_argument_type, typename BF::result_type> {
 public:
-    binder2_1(const BF &oper, typename BF::first_argument_type val) : _oper(oper), _value(val) {}
+    binder2_1(BF const &oper, typename BF::first_argument_type val) : _oper(oper), _value(val) {}
     typename BF::result_type operator()(const typename BF::second_argument_type &x) const {
         return _oper(_value, x);
     }
@@ -684,7 +684,7 @@ protected:
 };
 
 template <class BF, class Tp>
-inline binder2_1<BF> bind21(const BF &oper, const Tp &x) {
+inline binder2_1<BF> bind21(BF const &oper, Tp const &x) {
     typedef typename BF::first_argument_type Arg;
     return binder2_1<BF>(oper, static_cast<Arg>(x));
 }
@@ -715,7 +715,7 @@ template <class TF>
 class binder3_1 : public std::binary_function<typename TF::secondof3_argument_type,
                                               typename TF::thirdof3_argument_type, typename TF::result_type> {
 public:
-    binder3_1(const TF &oper, typename TF::firstof3_argument_type val) : _oper(oper), _value(val) {}
+    binder3_1(TF const &oper, typename TF::firstof3_argument_type val) : _oper(oper), _value(val) {}
     typename TF::result_type operator()(typename TF::secondof3_argument_type const &x1,
                                         typename TF::thirdof3_argument_type const &x2) const {
         return _oper(_value, x1, x2);
@@ -727,7 +727,7 @@ protected:
 };
 
 template <class TF, class Tp>
-inline binder3_1<TF> bind31(const TF &oper, const Tp &x) {
+inline binder3_1<TF> bind31(TF const &oper, Tp const &x) {
     typedef typename TF::firstof3_argument_type Arg;
     return binder3_1<TF>(oper, static_cast<Arg>(x));
 }
@@ -736,7 +736,7 @@ template <class TF, class YREG, class ZREG>
 class Int3DAuxType
         : public std::unary_function<typename TF::firstof3_argument_type, typename TF::result_type> {
 public:
-    Int3DAuxType(const TF &func, const YREG &yreg, const ZREG &zreg, const typename TF::result_type &abserr,
+    Int3DAuxType(TF const &func, YREG const &yreg, ZREG const &zreg, const typename TF::result_type &abserr,
                  const typename TF::result_type &relerr)
             : _func(func), _yreg(yreg), _zreg(zreg), _abserr(abserr), _relerr(relerr) {}
 
@@ -750,9 +750,9 @@ public:
     }
 
 private:
-    const TF &_func;
-    const YREG &_yreg;
-    const ZREG &_zreg;
+    TF const &_func;
+    YREG const &_yreg;
+    ZREG const &_zreg;
     typename TF::result_type _abserr, _relerr;
 };
 

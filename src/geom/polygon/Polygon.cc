@@ -542,8 +542,8 @@ struct PolygonSchema {
     }
 
     // No copying
-    PolygonSchema(const PolygonSchema&) = delete;
-    PolygonSchema& operator=(const PolygonSchema&) = delete;
+    PolygonSchema(PolygonSchema const &) = delete;
+    PolygonSchema& operator=(PolygonSchema const &) = delete;
 
     // No moving
     PolygonSchema(PolygonSchema&&) = delete;

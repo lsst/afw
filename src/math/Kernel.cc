@@ -72,7 +72,7 @@ Kernel::Kernel(int width, int height, unsigned int nKernelParams, SpatialFunctio
         os << "kernel height = " << height << " and/or width = " << width << " < 1";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
-    if (dynamic_cast<const NullSpatialFunction *>(&spatialFunction)) {
+    if (dynamic_cast<NullSpatialFunction const *>(&spatialFunction)) {
         // spatialFunction is not really present
     } else {
         if (nKernelParams == 0) {

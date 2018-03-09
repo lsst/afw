@@ -29,8 +29,8 @@ namespace table {
 class BaseRecord : public daf::base::Citizen {
 public:
     // No copying
-    BaseRecord(const BaseRecord&) = delete;
-    BaseRecord& operator=(const BaseRecord&) = delete;
+    BaseRecord(BaseRecord const &) = delete;
+    BaseRecord& operator=(BaseRecord const &) = delete;
 
     // No moving
     BaseRecord(BaseRecord&&) = delete;

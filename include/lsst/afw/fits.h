@@ -179,8 +179,8 @@ public:
     ~MemFileManager() { reset(); }
 
     // No copying
-    MemFileManager(const MemFileManager&) = delete;
-    MemFileManager& operator=(const MemFileManager&) = delete;
+    MemFileManager(MemFileManager const &) = delete;
+    MemFileManager& operator=(MemFileManager const &) = delete;
 
     // No moving
     MemFileManager(MemFileManager&&) = delete;
@@ -637,8 +637,8 @@ public:
     }
 
     // No copying
-    Fits(const Fits&) = delete;
-    Fits& operator=(const Fits&) = delete;
+    Fits(Fits const &) = delete;
+    Fits& operator=(Fits const &) = delete;
 
     // No moving
     Fits(Fits&&) = delete;

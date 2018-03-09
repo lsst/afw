@@ -193,7 +193,7 @@ public:
      * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
      * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
      */
-    ImageBase(const ImageBase& src, const bool deep = false);
+    ImageBase(ImageBase const & src, const bool deep = false);
     ImageBase(ImageBase&& src);
     /**
      * Copy constructor to make a copy of part of an %image.
@@ -209,7 +209,7 @@ public:
      * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
      * this is probably what you want
      */
-    explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox, const ImageOrigin origin = PARENT,
+    explicit ImageBase(ImageBase const & src, const geom::Box2I& bbox, const ImageOrigin origin = PARENT,
                        const bool deep = false);
     /**
      * generalised copy constructor
@@ -251,7 +251,7 @@ public:
      * @note this behaviour is required to make the swig interface work, otherwise I'd
      * declare this function private
      */
-    ImageBase& operator=(const ImageBase& rhs);
+    ImageBase& operator=(ImageBase const & rhs);
     ImageBase& operator=(ImageBase&& rhs);
     /// Set the %image's pixels to rhs
     ImageBase& operator=(const PixelT rhs);
@@ -260,7 +260,7 @@ public:
      *
      * @deprecated use assign(rhs) instead
      */
-    ImageBase& operator<<=(const ImageBase& rhs);
+    ImageBase& operator<<=(ImageBase const & rhs);
 
     /**
      * Copy pixels from another image to a specified subregion of this image.

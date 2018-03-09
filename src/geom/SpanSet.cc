@@ -256,7 +256,7 @@ void SpanSet::_initialize() {
     int maxX = _spanVector[0].getMaxX();
     _area = 0;
 
-    for (const auto& span : _spanVector) {
+    for (auto const & span : _spanVector) {
         if (span.getMinX() < minX) {
             minX = span.getMinX();
         }
@@ -310,7 +310,7 @@ Box2I SpanSet::getBBox() const { return _bbox; }
 
 void SpanSet::_label(
         Span const& spn, std::vector<std::size_t>& labelVector, std::size_t currentLabel,
-        std::unordered_map<int, std::vector<std::pair<std::size_t, const Span*>>>& sortMap) const {
+        std::unordered_map<int, std::vector<std::pair<std::size_t, Span const *>>>& sortMap) const {
     auto currentIndex = spn.getY();
     if (currentIndex > 0) {
         // loop over the prevous row
@@ -337,7 +337,7 @@ std::pair<std::vector<std::size_t>, std::size_t> SpanSet::_makeLabels() const {
     std::size_t currentLabel = 1;
     std::size_t index = 0;
     // Create a sorted array of arrays
-    std::unordered_map<int, std::vector<std::pair<std::size_t, const Span*>>> sortMap;
+    std::unordered_map<int, std::vector<std::pair<std::size_t, Span const *>>> sortMap;
     std::size_t tempIndex = 0;
     for (auto const& spn : _spanVector) {
         sortMap[spn.getY()].emplace_back(tempIndex, &spn);
@@ -1004,8 +1004,8 @@ public:
     }
 
     // No copying
-    SpanSetPersistenceHelper(const SpanSetPersistenceHelper&) = delete;
-    SpanSetPersistenceHelper& operator=(const SpanSetPersistenceHelper&) = delete;
+    SpanSetPersistenceHelper(SpanSetPersistenceHelper const &) = delete;
+    SpanSetPersistenceHelper& operator=(SpanSetPersistenceHelper const &) = delete;
 
     // No Moving
     SpanSetPersistenceHelper(SpanSetPersistenceHelper&&) = delete;

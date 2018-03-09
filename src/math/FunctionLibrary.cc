@@ -27,8 +27,8 @@ struct GaussianFunction2PersistenceHelper {
     }
 
     // No copying
-    GaussianFunction2PersistenceHelper(const GaussianFunction2PersistenceHelper&) = delete;
-    GaussianFunction2PersistenceHelper& operator=(const GaussianFunction2PersistenceHelper&) = delete;
+    GaussianFunction2PersistenceHelper(GaussianFunction2PersistenceHelper const &) = delete;
+    GaussianFunction2PersistenceHelper& operator=(GaussianFunction2PersistenceHelper const &) = delete;
 
     // No moving
     GaussianFunction2PersistenceHelper(GaussianFunction2PersistenceHelper&&) = delete;
@@ -57,8 +57,8 @@ struct DoubleGaussianFunction2PersistenceHelper {
     }
 
     // No copying
-    DoubleGaussianFunction2PersistenceHelper(const DoubleGaussianFunction2PersistenceHelper&) = delete;
-    DoubleGaussianFunction2PersistenceHelper& operator=(const DoubleGaussianFunction2PersistenceHelper&) =
+    DoubleGaussianFunction2PersistenceHelper(DoubleGaussianFunction2PersistenceHelper const &) = delete;
+    DoubleGaussianFunction2PersistenceHelper& operator=(DoubleGaussianFunction2PersistenceHelper const &) =
             delete;
 
     // No moving

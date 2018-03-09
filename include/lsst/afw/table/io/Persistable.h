@@ -249,8 +249,8 @@ public:
     virtual ~PersistableFactory() = default;
 
     // No copying
-    PersistableFactory(const PersistableFactory&) = delete;
-    PersistableFactory& operator=(const PersistableFactory&) = delete;
+    PersistableFactory(PersistableFactory const &) = delete;
+    PersistableFactory& operator=(PersistableFactory const &) = delete;
 
     // No moving
     PersistableFactory(PersistableFactory&&) = delete;

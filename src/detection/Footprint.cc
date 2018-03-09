@@ -200,8 +200,8 @@ public:
     }
 
     // No copying
-    LegacyFootprintPersistenceHelper(const LegacyFootprintPersistenceHelper&) = delete;
-    LegacyFootprintPersistenceHelper& operator=(const LegacyFootprintPersistenceHelper&) = delete;
+    LegacyFootprintPersistenceHelper(LegacyFootprintPersistenceHelper const &) = delete;
+    LegacyFootprintPersistenceHelper& operator=(LegacyFootprintPersistenceHelper const &) = delete;
 
     // No moving
     LegacyFootprintPersistenceHelper(LegacyFootprintPersistenceHelper&&) = delete;

@@ -71,8 +71,8 @@ public:
     }
 
     // No copying
-    SkyWcsPersistenceHelper(const SkyWcsPersistenceHelper&) = delete;
-    SkyWcsPersistenceHelper& operator=(const SkyWcsPersistenceHelper&) = delete;
+    SkyWcsPersistenceHelper(SkyWcsPersistenceHelper const &) = delete;
+    SkyWcsPersistenceHelper& operator=(SkyWcsPersistenceHelper const &) = delete;
 
     // No moving
     SkyWcsPersistenceHelper(SkyWcsPersistenceHelper&&) = delete;

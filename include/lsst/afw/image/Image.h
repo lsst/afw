@@ -135,7 +135,7 @@ public:
      * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
      * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
      */
-    Image(const Image& rhs, const bool deep = false);
+    Image(Image const & rhs, const bool deep = false);
     Image(Image&& rhs);
 
     /**
@@ -208,7 +208,7 @@ public:
      * @note this behaviour is required to make the swig interface work, otherwise I'd declare this function
      * private
      */
-    Image& operator=(const Image& rhs);
+    Image& operator=(Image const & rhs);
     Image& operator=(Image&& rhs);
 
     /**
@@ -441,7 +441,7 @@ public:
      *
      * N.b. this is a shallow assignment; use set(src) if you want to copy the pixels
      */
-    DecoratedImage& operator=(const DecoratedImage& image);
+    DecoratedImage& operator=(DecoratedImage const & image);
 
     std::shared_ptr<lsst::daf::base::PropertySet> getMetadata() const { return _metadata; }
     void setMetadata(std::shared_ptr<lsst::daf::base::PropertySet> metadata) { _metadata = metadata; }

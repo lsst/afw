@@ -121,7 +121,7 @@ public:
      * in sorting, binary search, etc.
      * http://www.sgi.com/tech/stl/LessThanComparable.html
      */
-    bool operator<(const Span& b) const;
+    bool operator<(Span const & b) const;
 
     friend class detection::Footprint;
 

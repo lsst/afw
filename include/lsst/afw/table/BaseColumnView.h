@@ -78,7 +78,7 @@ private:
  *  be obtained from a catalog-of-const (trying this results in an exception, not a compilation
  *  error).  As a result, all its accessors return arrays of non-const elements, even though
  *  they are themselves const member functions.  This is no different from a shared_ptr<T>'s
- *  get() member function returning a non-const T*, even though get() is a const member function.
+ *  get() member function returning a non-T const *, even though get() is a const member function.
  */
 class BaseColumnView {
 public:

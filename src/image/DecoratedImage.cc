@@ -64,12 +64,12 @@ DecoratedImage<PixelT>::DecoratedImage(std::shared_ptr<Image<PixelT>> rhs)
     init();
 }
 template <typename PixelT>
-DecoratedImage<PixelT>::DecoratedImage(const DecoratedImage& src, const bool deep)
+DecoratedImage<PixelT>::DecoratedImage(DecoratedImage const & src, const bool deep)
         : daf::base::Citizen(typeid(this)), _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) {
     setMetadata(src.getMetadata());
 }
 template <typename PixelT>
-DecoratedImage<PixelT>& DecoratedImage<PixelT>::operator=(const DecoratedImage& src) {
+DecoratedImage<PixelT>& DecoratedImage<PixelT>::operator=(DecoratedImage const & src) {
     DecoratedImage tmp(src);
     swap(tmp);  // See Meyers, Effective C++, Item 11
 

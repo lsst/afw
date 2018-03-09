@@ -64,12 +64,12 @@ PYBIND11_PLUGIN(_coord) {
     /* Operators */
     clsCoord.def("__str__", &Coord::toString);
     clsCoord.def("__repr__", &Coord::toString);
-    clsCoord.def("__getitem__", [](const Coord &c, size_t i) {
+    clsCoord.def("__getitem__", [](Coord const &c, size_t i) {
         if (i >= 2) throw py::index_error();
         return c[i];
     });
-    clsCoord.def("__eq__", [](Coord &a, const Coord &b) { return a == b; });
-    clsCoord.def("__ne__", [](Coord &a, const Coord &b) { return a != b; });
+    clsCoord.def("__eq__", [](Coord &a, Coord const &b) { return a == b; });
+    clsCoord.def("__ne__", [](Coord &a, Coord const &b) { return a != b; });
 
     /* Members */
     clsCoord.def("reset", (void (Coord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const)) &

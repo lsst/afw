@@ -131,8 +131,8 @@ public:
     virtual ~Covariogram();
 
     // No copying
-    Covariogram(const Covariogram &) = delete;
-    Covariogram &operator=(const Covariogram &) = delete;
+    Covariogram(Covariogram const &) = delete;
+    Covariogram &operator=(Covariogram const &) = delete;
 
     // No moving
     Covariogram(Covariogram &&) = delete;
@@ -227,8 +227,8 @@ template <typename T>
 class KdTree {
 public:
     // No copying
-    KdTree(const KdTree &) = delete;
-    KdTree &operator=(const KdTree &) = delete;
+    KdTree(KdTree const &) = delete;
+    KdTree &operator=(KdTree const &) = delete;
 
     // No moving
     KdTree(KdTree &&) = delete;
@@ -474,8 +474,8 @@ template <typename T>
 class GaussianProcess {
 public:
     // No copying
-    GaussianProcess(const GaussianProcess &) = delete;
-    GaussianProcess &operator=(const GaussianProcess &) = delete;
+    GaussianProcess(GaussianProcess const &) = delete;
+    GaussianProcess &operator=(GaussianProcess const &) = delete;
 
     // No moving
     GaussianProcess(GaussianProcess &&) = delete;

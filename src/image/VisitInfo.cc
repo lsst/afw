@@ -176,8 +176,8 @@ public:
     }
 
     // No copying
-    VisitInfoSchema(const VisitInfoSchema&) = delete;
-    VisitInfoSchema& operator=(const VisitInfoSchema&) = delete;
+    VisitInfoSchema(VisitInfoSchema const &) = delete;
+    VisitInfoSchema& operator=(VisitInfoSchema const &) = delete;
 
     // No moving
     VisitInfoSchema(VisitInfoSchema&&) = delete;

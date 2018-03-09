@@ -52,7 +52,7 @@ PYBIND11_PLUGIN(_transformMap) {
     /* Operators */
     cls.def("__len__", &TransformMap::size);
     cls.def("__contains__", &TransformMap::contains);
-    cls.def("__iter__", [](const TransformMap &self) { return py::make_iterator(self.begin(), self.end()); },
+    cls.def("__iter__", [](TransformMap const &self) { return py::make_iterator(self.begin(), self.end()); },
             py::keep_alive<0, 1>()); /* Essential: keep object alive while iterator exists */
 
     /* Members */

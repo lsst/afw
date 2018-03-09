@@ -129,7 +129,7 @@ public:
      * peak appears last).  Users that add new Peaks manually are responsible for maintaining this sorting.
      */
     PeakCatalog &getPeaks() { return _peaks; }
-    const PeakCatalog &getPeaks() const { return _peaks; }
+    PeakCatalog const &getPeaks() const { return _peaks; }
 
     /** Convenience function to add a peak
      *

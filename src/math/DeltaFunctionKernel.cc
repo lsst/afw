@@ -101,8 +101,8 @@ struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper {
     }
 
     // No copying
-    DeltaFunctionKernelPersistenceHelper(const DeltaFunctionKernelPersistenceHelper&) = delete;
-    DeltaFunctionKernelPersistenceHelper& operator=(const DeltaFunctionKernelPersistenceHelper&) = delete;
+    DeltaFunctionKernelPersistenceHelper(DeltaFunctionKernelPersistenceHelper const &) = delete;
+    DeltaFunctionKernelPersistenceHelper& operator=(DeltaFunctionKernelPersistenceHelper const &) = delete;
 
     // No moving
     DeltaFunctionKernelPersistenceHelper(DeltaFunctionKernelPersistenceHelper&&) = delete;

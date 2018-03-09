@@ -226,7 +226,7 @@ public:
      * @param src mask to copy
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
-    Mask(const Mask& src, const bool deep = false);
+    Mask(Mask const & src, const bool deep = false);
     Mask(Mask&& src);
     ~Mask();
     /**
@@ -237,7 +237,7 @@ public:
      * @param origin coordinate system of the bbox
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
-    Mask(const Mask& src, const geom::Box2I& bbox, ImageOrigin const origin = PARENT,
+    Mask(Mask const & src, const geom::Box2I& bbox, ImageOrigin const origin = PARENT,
          const bool deep = false);
 
     explicit Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep = false,
@@ -247,7 +247,7 @@ public:
     // Operators
 
     Mask& operator=(MaskPixelT const rhs);
-    Mask& operator=(const Mask& rhs);
+    Mask& operator=(Mask const & rhs);
     Mask& operator=(Mask&& rhs);
 
     /// OR a Mask into a Mask
@@ -501,7 +501,7 @@ public:
      *
      * @param masterPlaneDict mask plane dictionary currently in use for this mask
      */
-    void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
+    void conformMaskPlanes(MaskPlaneDict const & masterPlaneDict);
 
 private:
     // LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)

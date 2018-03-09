@@ -68,9 +68,9 @@ public:
             : SeparableKernel(2 * order, 2 * order, LanczosFunction1<Kernel::Pixel>(order),
                               LanczosFunction1<Kernel::Pixel>(order)) {}
 
-    LanczosWarpingKernel(const LanczosWarpingKernel &) = delete;
+    LanczosWarpingKernel(LanczosWarpingKernel const &) = delete;
     LanczosWarpingKernel(LanczosWarpingKernel &&) = delete;
-    LanczosWarpingKernel &operator=(const LanczosWarpingKernel &) = delete;
+    LanczosWarpingKernel &operator=(LanczosWarpingKernel const &) = delete;
     LanczosWarpingKernel &operator=(LanczosWarpingKernel &&) = delete;
 
     virtual ~LanczosWarpingKernel() = default;
@@ -100,9 +100,9 @@ public:
     explicit BilinearWarpingKernel()
             : SeparableKernel(2, 2, BilinearFunction1(0.0), BilinearFunction1(0.0)) {}
 
-    BilinearWarpingKernel(const BilinearWarpingKernel &) = delete;
+    BilinearWarpingKernel(BilinearWarpingKernel const &) = delete;
     BilinearWarpingKernel(BilinearWarpingKernel &&) = delete;
-    BilinearWarpingKernel &operator=(const BilinearWarpingKernel &) = delete;
+    BilinearWarpingKernel &operator=(BilinearWarpingKernel const &) = delete;
     BilinearWarpingKernel &operator=(BilinearWarpingKernel &&) = delete;
 
     virtual ~BilinearWarpingKernel() = default;
@@ -163,9 +163,9 @@ class NearestWarpingKernel : public SeparableKernel {
 public:
     explicit NearestWarpingKernel() : SeparableKernel(2, 2, NearestFunction1(0.0), NearestFunction1(0.0)) {}
 
-    NearestWarpingKernel(const NearestWarpingKernel &) = delete;
+    NearestWarpingKernel(NearestWarpingKernel const &) = delete;
     NearestWarpingKernel(NearestWarpingKernel &&) = delete;
-    NearestWarpingKernel &operator=(const NearestWarpingKernel &) = delete;
+    NearestWarpingKernel &operator=(NearestWarpingKernel const &) = delete;
     NearestWarpingKernel &operator=(NearestWarpingKernel &&) = delete;
 
     virtual ~NearestWarpingKernel() = default;

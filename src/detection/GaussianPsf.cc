@@ -50,8 +50,8 @@ struct GaussianPsfPersistenceHelper {
     }
 
     // No copying
-    GaussianPsfPersistenceHelper(const GaussianPsfPersistenceHelper&) = delete;
-    GaussianPsfPersistenceHelper& operator=(const GaussianPsfPersistenceHelper&) = delete;
+    GaussianPsfPersistenceHelper(GaussianPsfPersistenceHelper const &) = delete;
+    GaussianPsfPersistenceHelper& operator=(GaussianPsfPersistenceHelper const &) = delete;
 
     // No moving
     GaussianPsfPersistenceHelper(GaussianPsfPersistenceHelper&&) = delete;

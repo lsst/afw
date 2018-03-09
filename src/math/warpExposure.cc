@@ -70,7 +70,7 @@ namespace math {
 // FIXME eventually the 3 warping kernels will inherit from a common base class WarpingKernel
 // and this routine can be eliminated by putting the code in WarpingKernel::setKernelParameter()
 //
-static inline void checkWarpingKernelParameter(const SeparableKernel *p, unsigned int ind, double value) {
+static inline void checkWarpingKernelParameter(SeparableKernel const *p, unsigned int ind, double value) {
     if (ind > 1) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           "bad ind argument in WarpingKernel::setKernelParameter()");
