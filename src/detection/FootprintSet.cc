@@ -872,7 +872,7 @@ enum DIRECTION {
 template <typename MaskPixelT>
 class Startspan {
 public:
-    Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
+    Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION dir);
     ~Startspan() { delete _span; }
 
     bool getSpan() { return _span; }
@@ -914,10 +914,10 @@ public:
             : _image(image->getImage()), _mask(image->getMask()) {}
     ~StartspanSet() {}
 
-    bool add(geom::Span *span, DIRECTION const dir, bool addToMask = true);
+    bool add(geom::Span *span, DIRECTION dir, bool addToMask = true);
     bool process(Footprint *fp,               // the footprint that we're building
                  Threshold const &threshold,  // Threshold
-                 double const param = -1);    // parameter that Threshold may need
+                 double param = -1);    // parameter that Threshold may need
 private:
     image::Image<ImagePixelT> const *_image;                     // the Image we're searching
     image::Mask<MaskPixelT> *_mask;                              // the mask that tells us where we've got to
