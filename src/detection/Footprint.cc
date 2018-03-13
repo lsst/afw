@@ -294,6 +294,7 @@ std::unique_ptr<Footprint> Footprint::readSpanSet(afw::table::BaseCatalog const&
 }
 
 void Footprint::readPeaks(afw::table::BaseCatalog const& peakCat, Footprint& loadedFootprint) {
+    using namespace std::string_literals;
     if (!peakCat.getSchema().contains(PeakTable::makeMinimalSchema())) {
         // need to handle an older form of Peak persistence for backwards compatibility
         afw::table::SchemaMapper mapper(peakCat.getSchema());
@@ -301,9 +302,9 @@ void Footprint::readPeaks(afw::table::BaseCatalog const& peakCat, Footprint& loa
         afw::table::Key<float> oldX = peakCat.getSchema()["x"];
         afw::table::Key<float> oldY = peakCat.getSchema()["y"];
         afw::table::Key<float> oldPeakValue = peakCat.getSchema()["value"];
-        mapper.addMapping(oldX, "f.x");
-        mapper.addMapping(oldY, "f.y");
-        mapper.addMapping(oldPeakValue, "peakValue");
+        mapper.addMapping(oldX, "f.x"s);
+        mapper.addMapping(oldY, "f.y"s);
+        mapper.addMapping(oldPeakValue, "peakValue"s);
         loadedFootprint.setPeakSchema(mapper.getOutputSchema());
         auto peaks = loadedFootprint.getPeaks();
         peaks.reserve(peakCat.size());

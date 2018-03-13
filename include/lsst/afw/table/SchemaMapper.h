@@ -75,6 +75,14 @@ public:
     Key<T> addMapping(Key<T> const& inputKey, std::string const& outputName, bool doReplace = true);
 
     /**
+     * This deliberately deleted overload ensures we don't accidentally cast string literals to bool.
+     *
+     * See DM-13787 for more information.
+     */
+    template <typename T>
+    Key<T> addMapping(Key<T> const& inputKey, char const* outputName, bool doReplace = true) = delete;
+
+    /**
      *  Add mappings for all fields that match criteria defined by a predicate.
      *
      *  A mapping in the output Schema will be created for each SchemaItem 'i' in the input Schema
