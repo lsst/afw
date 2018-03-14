@@ -38,13 +38,11 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/coord.h"
 
 /*
  * This test code incorporates some very simple tests of the Wcs class and related classes.
  */
 
-namespace afwCoord = lsst::afw::coord;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
@@ -119,8 +117,8 @@ int main(int argc, char **argv) {
               << "col: " << pix2[0] << " row: " << pix2[1] << std::endl
               << std::endl;
 
-    auto raDecl1 = lsst::afw::coord::IcrsCoord(miRa1, miDecl1);
-    auto raDecl2 = lsst::afw::coord::IcrsCoord(miRa2, miDecl2);
+    auto raDecl1 = lsst::afw::geom::SpherePoint(miRa1, miDecl1);
+    auto raDecl2 = lsst::afw::geom::SpherePoint(miRa2, miDecl2);
 
     auto pix3 = wcs->skyToPixel(raDecl1);
     auto pix4 = wcs->skyToPixel(raDecl2);

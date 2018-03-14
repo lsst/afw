@@ -287,18 +287,18 @@ void Transform<FromEndpoint, ToEndpoint>::write(OutputArchiveHandle &handle) con
     }                                                                  \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)   \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)    \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, IcrsCoordEndpoint)
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, SpherePointEndpoint)
 
 // explicit instantiations
 INSTANTIATE_TRANSFORM(GenericEndpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(GenericEndpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(GenericEndpoint, IcrsCoordEndpoint);
+INSTANTIATE_TRANSFORM(GenericEndpoint, SpherePointEndpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(Point2Endpoint, IcrsCoordEndpoint);
-INSTANTIATE_TRANSFORM(IcrsCoordEndpoint, GenericEndpoint);
-INSTANTIATE_TRANSFORM(IcrsCoordEndpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(IcrsCoordEndpoint, IcrsCoordEndpoint);
+INSTANTIATE_TRANSFORM(Point2Endpoint, SpherePointEndpoint);
+INSTANTIATE_TRANSFORM(SpherePointEndpoint, GenericEndpoint);
+INSTANTIATE_TRANSFORM(SpherePointEndpoint, Point2Endpoint);
+INSTANTIATE_TRANSFORM(SpherePointEndpoint, SpherePointEndpoint);
 
 }  // namespace geom
 }  // namespace afw

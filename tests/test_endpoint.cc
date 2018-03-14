@@ -49,27 +49,27 @@ namespace geom {
 
 namespace {
 /**
- * An IcrsCoordEndpoint whose sole purpose is to be a nontrivial subclass
- * of IcrsCoordEndpoint.
+ * A SpherePointEndpoint whose sole purpose is to be a nontrivial subclass
+ * of SpherePointEndpoint.
  */
-class GratuitousIcrsCoordEndpoint : public IcrsCoordEndpoint {
+class GratuitousSpherePointEndpoint : public SpherePointEndpoint {
     // Default constructor is adequate
 };
 
 /**
- * An IcrsCoordEndpoint that adds equality-relevant fields to IcrsCoordEndpoint.
+ * An SpherePointEndpoint that adds equality-relevant fields to SpherePointEndpoint.
  */
-class CoolIcrsCoordEndpoint : public IcrsCoordEndpoint {
+class CoolSpherePointEndpoint : public SpherePointEndpoint {
 public:
-    CoolIcrsCoordEndpoint(string const & coolness) : IcrsCoordEndpoint(), _coolness(coolness) {}
+    CoolSpherePointEndpoint(string const & coolness) : SpherePointEndpoint(), _coolness(coolness) {}
     string getCoolness() const noexcept { return _coolness; }
 
     bool operator==(BaseEndpoint const & other) const noexcept override {
-        if (!IcrsCoordEndpoint::operator==(other)) {
+        if (!SpherePointEndpoint::operator==(other)) {
             return false;
         } else {
             // Guaranteed not to throw by BaseEndpoint::operator==
-            auto coolOther = dynamic_cast<CoolIcrsCoordEndpoint const &>(other);
+            auto coolOther = dynamic_cast<CoolSpherePointEndpoint const &>(other);
             return _coolness == coolOther._coolness;
         }
     }
@@ -81,10 +81,10 @@ private:
 
 /// Test whether Endpoint equality treats subclasses as non-substitutable.
 BOOST_AUTO_TEST_CASE(EndpointEqualsNotPolymorphic) {
-    IcrsCoordEndpoint superclass;
-    GratuitousIcrsCoordEndpoint subclass;
+    SpherePointEndpoint superclass;
+    GratuitousSpherePointEndpoint subclass;
 
-    // Test both IcrsCoordEndpoint::operator== and GratuitousIcrsCoordEndpoint::operator==
+    // Test both SpherePointEndpoint::operator== and GratuitousSpherePointEndpoint::operator==
     BOOST_TEST(superclass != subclass);
     BOOST_TEST(subclass != superclass);
     BOOST_TEST(!(superclass == subclass));
@@ -102,11 +102,11 @@ string printEquals(bool equal, string const & name1, string const & name2) {
 BOOST_AUTO_TEST_CASE(EndpointEqualsAlgebraic) {
     using namespace std::string_literals;
 
-    vector<std::shared_ptr<IcrsCoordEndpoint const>> endpoints = {
-        make_shared<CoolIcrsCoordEndpoint>("Very cool"s),
-        make_shared<CoolIcrsCoordEndpoint>("Slightly nifty"s),
-        make_shared<CoolIcrsCoordEndpoint>("Very cool"s),
-        make_shared<IcrsCoordEndpoint>()
+    vector<std::shared_ptr<SpherePointEndpoint const>> endpoints = {
+        make_shared<CoolSpherePointEndpoint>("Very cool"s),
+        make_shared<CoolSpherePointEndpoint>("Slightly nifty"s),
+        make_shared<CoolSpherePointEndpoint>("Very cool"s),
+        make_shared<SpherePointEndpoint>()
     };
 
     BOOST_TEST(*(endpoints[0]) != *(endpoints[1]));

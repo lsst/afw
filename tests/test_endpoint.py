@@ -26,7 +26,6 @@ from numpy.testing import assert_allclose, assert_equal
 import astshim
 
 import lsst.utils.tests
-from lsst.afw.coord import IcrsCoord
 import lsst.afw.geom as afwGeom
 from lsst.pex.exceptions import InvalidParameterError
 from lsst.afw.geom.testUtils import TransformTestBaseClass
@@ -37,13 +36,13 @@ class EndpointTestCase(TransformTestBaseClass):
     def setUp(self):
         self.longMessage = True
 
-    def testIcrsCoordEndpoint(self):
-        self.assertEqual("IcrsCoord", afwGeom.IcrsCoordEndpoint.getClassPrefix())
-        endpoint = afwGeom.IcrsCoordEndpoint()
+    def testSpherePointEndpoint(self):
+        self.assertEqual("SpherePoint", afwGeom.SpherePointEndpoint.getClassPrefix())
+        endpoint = afwGeom.SpherePointEndpoint()
         self.checkEndpointBasics(
-            endpoint=endpoint, pointType=IcrsCoord, nAxes=2)
-        self.assertEqual(repr(endpoint), "lsst.afw.geom.IcrsCoordEndpoint()")
-        self.assertEqual("{}".format(endpoint), "IcrsCoordEndpoint()")
+            endpoint=endpoint, pointType=afwGeom.SpherePoint, nAxes=2)
+        self.assertEqual(repr(endpoint), "lsst.afw.geom.SpherePointEndpoint()")
+        self.assertEqual("{}".format(endpoint), "SpherePointEndpoint()")
 
         for doPermute in (False, True):
             frame = astshim.SkyFrame()
@@ -108,7 +107,7 @@ class EndpointTestCase(TransformTestBaseClass):
                 afwGeom.GenericEndpoint(nAxes)
 
     def checkEndpointBasics(self, endpoint, pointType, nAxes):
-        isAngle = pointType == IcrsCoord  # point components are Angles
+        isAngle = pointType == afwGeom.SpherePoint  # point components are Angles
 
         baseMsg = "endpoint={}, pointType={}, nAxes={}".format(
             endpoint, pointType, nAxes)

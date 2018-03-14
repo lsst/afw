@@ -41,7 +41,7 @@ namespace geom {
 class SkyWcs;
 
 /**
- * Transform LSST spatial data, such as Point2D and IcrsCoord, using an AST transform.
+ * Transform LSST spatial data, such as Point2D and SpherePoint, using an AST transform.
  *
  * This class contains two Endpoints, to specify the "from" and "to" LSST data type,
  * and an ast::FrameSet or ast::Mapping to specify the transformation.
@@ -105,7 +105,7 @@ public:
      * and the "to" endpoint is used to normalize the "current" frame.
      *
      * This is pickier than the constructor that takes an ast::Mapping in that:
-     * - IcrsCoordEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
+     * - SpherePointEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
      *   are swapped if necessary to the standard order: longitude, latitude.
      * - Point2Endpoint must be associated with an ast::Frame (not a subclass),
      *   because Frame is the only kind of Frame that is sure to be Cartesian.
@@ -189,7 +189,7 @@ public:
     /**
      * The Jacobian matrix of this Transform.
      *
-     * Radians are used for each axis of an IcrsCoordEndpoint.
+     * Radians are used for each axis of an SpherePointEndpoint.
      *
      * The matrix is defined only if this object has a forward transform.
      *
@@ -239,7 +239,7 @@ public:
      * Used as the Python class name and for persistence as a string
      *
      * Returns "Transform" + fromEndpoint.getClassPrefix() + "To" + toEndpoint.getClassPrefix(),
-     * for example "TransformPoint2ToIcrsCoord" or "TransformPoint2ToGeneric".
+     * for example "TransformPoint2ToSpherePoint" or "TransformPoint2ToGeneric".
      */
     static std::string getShortClassName();
 
@@ -310,7 +310,7 @@ std::ostream &operator<<(std::ostream &os, Transform<FromEndpoint, ToEndpoint> c
 
 using TransformPoint2ToPoint2 = Transform<Point2Endpoint, Point2Endpoint>;
 using TransformPoint2ToGeneric = Transform<Point2Endpoint, GenericEndpoint>;
-using TransformPoint2ToIcrsCoord = Transform<Point2Endpoint, IcrsCoordEndpoint>;
+using TransformPoint2ToSpherePoint = Transform<Point2Endpoint, SpherePointEndpoint>;
 
 }  // namespace geom
 }  // namespace afw

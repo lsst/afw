@@ -33,7 +33,6 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
-import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
@@ -53,7 +52,7 @@ def makeCov(size, dtype):
 
 
 def makeWcs():
-    crval = lsst.afw.coord.IcrsCoord(lsst.afw.geom.Point2D(1.606631, 5.090329))
+    crval = lsst.afw.geom.SpherePoint(1.606631, 5.090329, lsst.afw.geom.degrees)
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
     cdMatrix = np.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]])
     return lsst.afw.geom.makeSkyWcs(crval=crval, crpix=crpix, cdMatrix=cdMatrix)

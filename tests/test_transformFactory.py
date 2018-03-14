@@ -43,7 +43,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
     def setUp(self):
         TransformTestBaseClass.setUp(self)
         self.endpointPrefixes = tuple(
-            x for x in self.endpointPrefixes if x != "IcrsCoord")
+            x for x in self.endpointPrefixes if x != "SpherePoint")
 
     def point2DList(self):
         for x in (-1.1, 0, 2.2):

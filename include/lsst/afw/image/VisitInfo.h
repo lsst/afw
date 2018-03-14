@@ -30,9 +30,9 @@
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/coord/Observatory.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Weather.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/table/misc.h"  // for RecordId
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -77,10 +77,7 @@ public:
      * @param[in] ut1  UT1 (universal time) MJD date at middle of exposure
      * @param[in] era  earth rotation angle at middle of exposure
      * @param[in] boresightRaDec  ICRS RA/Dec of boresight at middle of exposure
-     * @param[in] boresightAzAlt  refracted apparent topocentric Az/Alt of boresight at middle of exposure;
-                    for now this is represented as a plain coord::Coord,
-                    but in the long run it will be a SphPoint or a specialized Coord if one is added
-                    (we have TopocentricCoord, but not with refraction)
+     * @param[in] boresightAzAlt  refracted apparent topocentric Az/Alt of boresight at middle of exposure
      * @param[in] boresightAirmass  airmass at the boresight, relative to zenith at sea level
      * @param[in] boresightRotAngle  rotation angle at boresight at middle of exposure;
                         see getBoresightRotAngle for details
@@ -90,7 +87,7 @@ public:
      */
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
                        daf::base::DateTime const &date, double ut1, geom::Angle const &era,
-                       coord::IcrsCoord const &boresightRaDec, coord::Coord const &boresightAzAlt,
+                       geom::SpherePoint const &boresightRaDec, geom::SpherePoint const &boresightAzAlt,
                        double boresightAirmass, geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather)
             : _exposureId(exposureId),
@@ -139,11 +136,11 @@ public:
 
     /// get ICRS RA/Dec position at the boresight
     /// (and at the middle of the exposure, if it varies with time)
-    coord::IcrsCoord getBoresightRaDec() const { return _boresightRaDec; }
+    geom::SpherePoint getBoresightRaDec() const { return _boresightRaDec; }
 
     /// get refracted apparent topocentric Az/Alt position at the boresight
     /// (and at the middle of the exposure, if it varies with time)
-    coord::Coord getBoresightAzAlt() const { return _boresightAzAlt; }
+    geom::SpherePoint getBoresightAzAlt() const { return _boresightAzAlt; }
 
     /// get airmass at the boresight, relative to zenith at sea level
     /// (and at the middle of the exposure, if it varies with time)
@@ -197,8 +194,8 @@ private:
     daf::base::DateTime _date;
     double _ut1;
     geom::Angle _era;
-    coord::IcrsCoord _boresightRaDec;
-    coord::Coord _boresightAzAlt;
+    geom::SpherePoint _boresightRaDec;
+    geom::SpherePoint _boresightAzAlt;
     double _boresightAirmass;
     geom::Angle _boresightRotAngle;
     RotType _rotType;

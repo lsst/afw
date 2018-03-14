@@ -31,7 +31,6 @@
 #include "astshim.h"
 
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"

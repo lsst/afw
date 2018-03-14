@@ -26,7 +26,7 @@ from . import transform
 
 __all__ = []
 
-endpoints = ("Generic", "Point2", "IcrsCoord")
+endpoints = ("Generic", "Point2", "SpherePoint")
 
 for fromPoint in endpoints:
     for toPoint in endpoints:

@@ -28,8 +28,8 @@
 #include <vector>
 
 #include "astshim.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 
 namespace lsst {
@@ -166,7 +166,7 @@ void Point2Endpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const 
     }
 }
 
-IcrsCoordEndpoint::IcrsCoordEndpoint(int nAxes) : BaseVectorEndpoint(2) {
+SpherePointEndpoint::SpherePointEndpoint(int nAxes) : BaseVectorEndpoint(2) {
     if (nAxes != 2) {
         std::ostringstream os;
         os << "nAxes = " << nAxes << " != 2";
@@ -174,7 +174,7 @@ IcrsCoordEndpoint::IcrsCoordEndpoint(int nAxes) : BaseVectorEndpoint(2) {
     }
 }
 
-std::vector<double> IcrsCoordEndpoint::dataFromPoint(Point const& point) const {
+std::vector<double> SpherePointEndpoint::dataFromPoint(Point const& point) const {
     const int nAxes = this->getNAxes();
     std::vector<double> result(nAxes);
     for (int axInd = 0; axInd < nAxes; ++axInd) {
@@ -183,7 +183,7 @@ std::vector<double> IcrsCoordEndpoint::dataFromPoint(Point const& point) const {
     return result;
 }
 
-ndarray::Array<double, 2, 2> IcrsCoordEndpoint::dataFromArray(Array const& arr) const {
+ndarray::Array<double, 2, 2> SpherePointEndpoint::dataFromArray(Array const& arr) const {
     const int nAxes = this->getNAxes();
     const int nPoints = this->getNPoints(arr);
     ndarray::Array<double, 2, 2> data = ndarray::allocate(ndarray::makeVector(nAxes, nPoints));
@@ -197,26 +197,26 @@ ndarray::Array<double, 2, 2> IcrsCoordEndpoint::dataFromArray(Array const& arr) 
     return data;
 }
 
-coord::IcrsCoord IcrsCoordEndpoint::pointFromData(std::vector<double> const& data) const {
+SpherePoint SpherePointEndpoint::pointFromData(std::vector<double> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
-    return coord::IcrsCoord(data[0] * radians, data[1] * radians);
+    return SpherePoint(data[0], data[1], radians);
 }
 
-std::vector<coord::IcrsCoord> IcrsCoordEndpoint::arrayFromData(
+std::vector<SpherePoint> SpherePointEndpoint::arrayFromData(
         ndarray::Array<double, 2, 2> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
     int const nPoints = this->_getNPoints(data);
     Array array;
     array.reserve(nPoints);
     for (auto const& dataCol : data.transpose()) {
-        array.emplace_back(coord::IcrsCoord(dataCol[0] * radians, dataCol[1] * radians));
+        array.emplace_back(SpherePoint(dataCol[0], dataCol[1], radians));
     }
     return array;
 }
 
-std::shared_ptr<ast::Frame> IcrsCoordEndpoint::makeFrame() const { return std::make_shared<ast::SkyFrame>(); }
+std::shared_ptr<ast::Frame> SpherePointEndpoint::makeFrame() const { return std::make_shared<ast::SkyFrame>(); }
 
-void IcrsCoordEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
+void SpherePointEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
     // use getCurrentFrame because if framePtr points to a FrameSet we want its current frame
     auto currentFramePtr = getCurrentFrame(framePtr);
     auto skyFramePtr = std::dynamic_pointer_cast<ast::SkyFrame>(currentFramePtr);
@@ -244,18 +244,18 @@ std::ostream& operator<<(std::ostream& os, Point2Endpoint const& endpoint) {
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, IcrsCoordEndpoint const& endpoint) {
-    os << "IcrsCoordEndpoint()";
+std::ostream& operator<<(std::ostream& os, SpherePointEndpoint const& endpoint) {
+    os << "SpherePointEndpoint()";
     return os;
 }
 
 // explicit instantiations
 template class BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>>;
 template class BaseEndpoint<Point2D, std::vector<Point2D>>;
-template class BaseEndpoint<coord::IcrsCoord, std::vector<coord::IcrsCoord>>;
+template class BaseEndpoint<SpherePoint, std::vector<SpherePoint>>;
 
 template class BaseVectorEndpoint<Point2D>;
-template class BaseVectorEndpoint<coord::IcrsCoord>;
+template class BaseVectorEndpoint<SpherePoint>;
 
 }  // namespace geom
 }  // namespace afw

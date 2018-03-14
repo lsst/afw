@@ -197,7 +197,7 @@ namespace lsst { namespace afw { namespace table {
  *  are used to set field types.  The Key and Field classes for each type can be accessed through
  *  dictionaries (e.g. Key["F"]), but usually these type strings are only explicitly written
  *  when passed as the 'type' argument of Schema.addField.  Some Python types can also be used
- *  in place of type strings for fields (e.g. int, afw.coord.Coord).  Note that Python type strings
+ *  in place of type strings for fields (e.g. int, afw.geom.SpherePoint).  Note that Python type strings
  *  with angle brackets do not have the extra spaces that are necessary when writing templates in C++98.
  *
  *  Some field types require a size argument to be passed to the Field constructor or Schema::addField;
