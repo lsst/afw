@@ -217,6 +217,24 @@ std::pair<geom::Angle, geom::Angle> SpherePoint::getTangentPlaneOffset(SpherePoi
     return std::make_pair(xi * geom::radians, eta * geom::radians);
 }
 
+SpherePoint averageSpherePoint(std::vector<SpherePoint> const& coords) {
+    if (coords.size() == 0) {
+        throw LSST_EXCEPT(pex::exceptions::LengthError, "No coordinates provided to average");
+    }
+    geom::Point3D sum(0, 0, 0);
+    geom::Point3D corr(0, 0, 0);  // Kahan summation correction
+    for (auto const & sp : coords) {
+        geom::Point3D const point = sp.getVector();
+        // Kahan summation
+        geom::Extent3D const add = point - corr;
+        geom::Point3D const temp = sum + add;
+        corr = (temp - geom::Extent3D(sum)) - add;
+        sum = temp;
+    }
+    sum.scale(1.0 / coords.size());
+    return SpherePoint(sum);
+}
+
 ostream& operator<<(ostream& os, SpherePoint const& point) {
     // Can't provide atomic guarantee anyway for I/O, so ok to be sloppy.
     auto oldFlags = os.setf(ostream::fixed);

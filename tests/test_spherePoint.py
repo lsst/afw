@@ -942,6 +942,31 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             self.assertAnglesAlmostEqual(
                 point.getLatitude(), spcopy.getLatitude())
 
+    def testAverageSpherePoint(self):
+        """Test the averageSpherePoint function"""
+
+        def checkCircle(center, start, numPts, maxSep=1.0e-9*afwGeom.arcseconds):
+            """Generate points in a circle; test that average is in the center
+            """
+            coords = []
+            deltaAngle = 360*degrees / numPts
+            for ii in range(numPts):
+                new = start.rotated(center, ii*deltaAngle)
+                coords.append(new)
+            result = afwGeom.averageSpherePoint(coords)
+            self.assertSpherePointsAlmostEqual(center, result, maxSep=maxSep)
+
+        for numPts in (2, 3, 120):
+            for center, start in (
+                    # RA=0=360 border
+                    (SpherePoint(0, 0, afwGeom.degrees), SpherePoint(5, 0, afwGeom.degrees)),
+                    # North pole
+                    (SpherePoint(0, 90, afwGeom.degrees), SpherePoint(0, 85, afwGeom.degrees)),
+                    # South pole
+                    (SpherePoint(0, -90, afwGeom.degrees), SpherePoint(0, -85, afwGeom.degrees)),
+            ):
+                checkCircle(center=center, start=start, numPts=numPts)
+
     def nextUp(self, angle):
         """Returns the smallest angle that is larger than the argument.
         """

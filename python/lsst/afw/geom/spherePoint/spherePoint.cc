@@ -48,6 +48,7 @@ PYBIND11_PLUGIN(spherePoint) {
     py::module::import("lsst.afw.geom.coordinates");
 
     /* Module level */
+    mod.def("averageSpherePoint", averageSpherePoint);
     PySpherePoint cls(mod, "SpherePoint");
 
     /* Constructors */

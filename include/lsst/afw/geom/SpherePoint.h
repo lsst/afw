@@ -351,6 +351,15 @@ private:
     double _latitude;   // radians
 };
 
+/**
+ * Return the average of a list of coordinates
+ *
+ * @param[in] coords  list of coords to average
+ *
+ * @throws  lsst::pex::exceptions::LengthError if coords is empty
+ */
+SpherePoint averageSpherePoint(std::vector<SpherePoint> const& coords);
+
 /*
  * Object-level display
  */
