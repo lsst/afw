@@ -190,6 +190,25 @@ class LinearTransformTestCase(PickleBase, unittest.TestCase):
                              self.data.getMatrix().flatten().tolist())
 
 
+class SpherePointTestCase(PickleBase, unittest.TestCase):
+
+    def setUp(self):
+        self.data = [
+            afwGeom.SpherePoint(41.2, -35.123, afwGeom.degrees),
+            afwGeom.SpherePoint(-54.321, -90.0, afwGeom.degrees),
+            afwGeom.SpherePoint(float("nan"), float("nan"), afwGeom.radians),
+            afwGeom.SpherePoint(float("inf"), 75.123, afwGeom.degrees),
+        ]
+
+    def assertPickled(self, new):
+        for i, orig in enumerate(self.data):
+            roundTripped = new[i]
+            if orig.isFinite():
+                self.assertEqual(orig, roundTripped)
+            else:
+                self.assertEqual(str(orig), str(roundTripped))
+
+
 class WcsPickleBase(PickleBase, unittest.TestCase):
 
     def setUp(self):
