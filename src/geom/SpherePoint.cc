@@ -114,6 +114,10 @@ Point3D SpherePoint::getVector() const noexcept {
     return Point3D(cos(_longitude) * cos(_latitude), sin(_longitude) * cos(_latitude), sin(_latitude));
 }
 
+Point2D SpherePoint::getPosition(AngleUnit unit) const {
+    return Point2D(getLongitude().asAngularUnits(unit), getLatitude().asAngularUnits(unit));
+}
+
 Angle SpherePoint::operator[](size_t index) const {
     switch (index) {
         case 0:
@@ -165,7 +169,7 @@ SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const
     double const phi = bearing.asRadians();
 
     // let v = vector in the direction bearing points (tangent to surface of sphere)
-    // To do the rotation, use rotate() method.
+    // To do the rotation, use rotated() method.
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
     Eigen::Vector3d r = getVector().asEigen();
@@ -188,6 +192,27 @@ SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const
     SpherePoint axis = SpherePoint(Point3D(r.cross(v)));
 
     return rotated(axis, amount);
+}
+
+std::pair<geom::Angle, geom::Angle> SpherePoint::getTangentPlaneOffset(SpherePoint const& other) const {
+    geom::Angle const alpha1 = this->getLongitude();
+    geom::Angle const delta1 = this->getLatitude();
+    geom::Angle const alpha2 = other.getLongitude();
+    geom::Angle const delta2 = other.getLatitude();
+
+    // Compute the projection of "other" on a tangent plane centered at this point
+    double const sinDelta1 = std::sin(delta1);
+    double const cosDelta1 = std::cos(delta1);
+    double const sinDelta2 = std::sin(delta2);
+    double const cosDelta2 = std::cos(delta2);
+    double const cosAlphaDiff = std::cos(alpha2 - alpha1);
+    double const sinAlphaDiff = std::sin(alpha2 - alpha1);
+
+    double const div = cosDelta1 * cosAlphaDiff * cosDelta2 + sinDelta1 * sinDelta2;
+    double const xi = cosDelta1 * sinAlphaDiff / div;
+    double const eta = (cosDelta1 * cosAlphaDiff * sinDelta2 - sinDelta1 * cosDelta2) / div;
+
+    return std::make_pair(xi * geom::radians, eta * geom::radians);
 }
 
 ostream& operator<<(ostream& os, SpherePoint const& point) {

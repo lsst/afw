@@ -65,13 +65,17 @@ PYBIND11_PLUGIN(spherePoint) {
     /* Members */
     cls.def("getLongitude", &SpherePoint::getLongitude);
     cls.def("getLatitude", &SpherePoint::getLatitude);
+    cls.def("getRa", &SpherePoint::getRa);
+    cls.def("getDec", &SpherePoint::getDec);
     cls.def("getVector", &SpherePoint::getVector);
+    cls.def("getPosition", &SpherePoint::getPosition, "units"_a);
     cls.def("atPole", &SpherePoint::atPole);
     cls.def("isFinite", &SpherePoint::isFinite);
     cls.def("bearingTo", &SpherePoint::bearingTo, "other"_a);
     cls.def("separation", &SpherePoint::separation, "other"_a);
     cls.def("rotated", &SpherePoint::rotated, "axis"_a, "amount"_a);
     cls.def("offset", &SpherePoint::offset, "bearing"_a, "amount"_a);
+    cls.def("getTangentPlaneOffset", &SpherePoint::getTangentPlaneOffset, "other"_a);
     utils::python::addOutputOp(cls, "__str__");
     cls.def("__len__", [](SpherePoint const &) { return 2; });
     cls.def("__reduce__", [cls](SpherePoint const &self) {

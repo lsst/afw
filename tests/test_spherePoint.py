@@ -40,6 +40,7 @@ import re
 import unittest
 
 import numpy as np
+from numpy.testing import assert_allclose
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -185,7 +186,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             SpherePoint(34.0, -56.0)  # missing units
 
     def testGetLongitudeValue(self):
-        """Test if getLongitude() returns the expected value.
+        """Test if getLongitude() and getRa() return the expected value.
         """
         for lon, lat in self._dataset:
             for point in (
@@ -204,11 +205,19 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                     if not point.atPole():
                         # assertAnglesAlmostEqual handles angle wrapping internally
                         self.assertAnglesAlmostEqual(lon, point.getLongitude())
+                        self.assertAnglesAlmostEqual(lon, point.getRa())
 
         # Vector construction should return valid longitude even in edge cases.
         point = SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0))
         self.assertGreaterEqual(point.getLongitude().asDegrees(), 0.0)
         self.assertLess(point.getLongitude().asDegrees(), 360.0)
+
+    def testGetPosition(self):
+        for sp in self.pointSet:
+            for units in (degrees, afwGeom.hours, radians):
+                point = sp.getPosition(units)
+                expectedPoint = [val.asAngularUnits(units) for val in sp]
+                assert_allclose(point, expectedPoint, atol=1e-15)
 
     def testTicket1394(self):
         """Regression test for Ticket 1761.
@@ -225,7 +234,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         self.assertEqual(point[0].asDegrees(), 0.0)
 
     def testGetLatitudeValue(self):
-        """Test if getLatitude() returns the expected value.
+        """Test if getLatitude() and getDec() return the expected value.
         """
         for lon, lat in self._dataset:
             for point in (
@@ -240,6 +249,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                     self.assertGreaterEqual(point.getLatitude().asDegrees(), -90.0)
                     self.assertLessEqual(point.getLatitude().asDegrees(), 90.0)
                     self.assertAnglesAlmostEqual(lat, point.getLatitude())
+                    self.assertAnglesAlmostEqual(lat, point.getDec())
 
     def testGetVectorValue(self):
         """Test if getVector() returns the expected value.
@@ -845,6 +855,28 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         goEast = almostPole.offset(0.0*degrees, 90.0*degrees)
         self.assertAnglesAlmostEqual(lon + 90.0*degrees, goEast.getLongitude())
         self.assertAnglesAlmostEqual(0.0*degrees, goEast.getLatitude())
+
+    def testOffsetTangentPlane(self):
+        """Test offsets on a tangent plane (good for small angles)"""
+
+        c0 = SpherePoint(0.0, 0.0, afwGeom.degrees)
+
+        for dRaDeg in (0.0123, 0.0, -0.0321):
+            dRa = dRaDeg*afwGeom.degrees
+            for dDecDeg in (0.0543, 0.0, -0.0987):
+                dDec = dDecDeg*afwGeom.degrees
+                c1 = SpherePoint(dRa, dDec)
+
+                offset = c0.getTangentPlaneOffset(c1)
+
+                # This more-or-less works for small angles because c0 is 0,0
+                expectedOffset = [
+                    math.tan(dRa.asRadians())*afwGeom.radians,
+                    math.tan(dDec.asRadians())*afwGeom.radians,
+                ]
+
+                for i in range(2):
+                    self.assertAnglesAlmostEqual(offset[i], expectedOffset[i])
 
     def testIterResult(self):
         """Test if iteration returns the expected values.
