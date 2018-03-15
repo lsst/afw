@@ -100,6 +100,8 @@ SpherePoint::SpherePoint(Point3D const& vector) {
     }
 }
 
+SpherePoint::SpherePoint() : _latitude(nan("")), _longitude(nan("")) {}
+
 SpherePoint::SpherePoint(SpherePoint const& other) noexcept = default;
 
 SpherePoint::SpherePoint(SpherePoint&& other) noexcept = default;

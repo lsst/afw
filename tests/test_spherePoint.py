@@ -166,16 +166,20 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(afwGeom.Point3D(0.0, 0.0, 0.0))
 
+    def testDefaultConstructor(self):
+        sp = SpherePoint()
+        self.assertTrue(math.isnan(sp.getLongitude()))
+        self.assertTrue(math.isnan(sp.getLatitude()))
+        self.assertFalse(sp.isFinite())
+
     def testCopyConstructor(self):
         sp = SpherePoint(-42.0*degrees, 45.0*degrees)
         spcopy = SpherePoint(sp)
         self.assertEqual(sp, spcopy)
 
     def testInitNArgFail(self):
-        """Tests if only 1- or 2-argument initializers are allowed.
+        """Test incorrect calls to the SpherePoint constructor
         """
-        with self.assertRaises(TypeError):
-            SpherePoint()
         with self.assertRaises(TypeError):
             SpherePoint("Rotund", "Bovine")
         with self.assertRaises(TypeError):

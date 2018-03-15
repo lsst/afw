@@ -51,6 +51,7 @@ PYBIND11_PLUGIN(spherePoint) {
     PySpherePoint cls(mod, "SpherePoint");
 
     /* Constructors */
+    cls.def(py::init<>());
     cls.def(py::init<Angle const &, Angle const &>(), "longitude"_a, "latitude"_a);
     cls.def(py::init<double, double, AngleUnit>(), "longitude"_a, "latitude"_a, "units"_a);
     cls.def(py::init<Point3D const &>(), "vector"_a);

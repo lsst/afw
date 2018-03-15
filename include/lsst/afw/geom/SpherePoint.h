@@ -25,6 +25,7 @@
 #ifndef LSST_AFW_GEOM_SPHEREPOINT_H_
 #define LSST_AFW_GEOM_SPHEREPOINT_H_
 
+#include <cmath>
 #include <ostream>
 #include <utility>
 
@@ -104,6 +105,9 @@ public:
      * That provides predictable behavior for @ref bearingTo and @ref offset.
      */
     explicit SpherePoint(Point3D const& vector);
+
+    /// Construct a SpherePoint with "nan" for longitude and latitude
+    SpherePoint();
 
     /**
      * Create a copy of a SpherePoint.
