@@ -442,7 +442,7 @@ int warpExposure(
  * by linear interpolation between those grid points. Everything else remains the same.
  *
  * @throws lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
- * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throws std::bad_alloc when allocation of CPU memory fails
  *
  * @todo Should support an additional color-based position correction in the remapping
  *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.

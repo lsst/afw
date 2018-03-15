@@ -152,10 +152,7 @@ using GslPtr = std::unique_ptr<T, void (*)(T*)>;
 template <typename T>
 GslPtr<T> makeGslPtr(T* p, void (*free)(T*)) {
     if (p == nullptr) {
-        throw LSST_EXCEPT(
-            pex::exceptions::MemoryError,
-            "Could not allocate GSL object."
-        );
+        throw std::bad_alloc();
     }
     return GslPtr<T>(p, free);
 }

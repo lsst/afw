@@ -109,7 +109,7 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError
      *      Thrown if the requested algorithm is not supported.
-     * @throws lsst::pex::exceptions::MemoryError
+     * @throws std::bad_alloc
      *      Thrown if memory allocation for internal generator state fails.
      */
     explicit Random(Algorithm algorithm = MT19937, unsigned long seed = 1);
@@ -122,7 +122,7 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError
      *      Thrown if the requested algorithm is not supported.
-     * @throws lsst::pex::exceptions::MemoryError
+     * @throws std::bad_alloc
      *      Thrown if memory allocation for internal generator state fails.
      */
     explicit Random(std::string const &algorithm, unsigned long seed = 1);
@@ -139,7 +139,7 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError
      *      Thrown if the requested algorithm is not supported.
-     * @throws lsst::pex::exceptions::MemoryError
+     * @throws std::bad_alloc
      *      Thrown if memory allocation for internal generator state fails.
      */
     explicit Random(std::shared_ptr<pex::policy::Policy> const policy);
@@ -157,7 +157,7 @@ public:
      *
      * @returns  a deep copy of this random number generator
      *
-     * @throws lsst::pex::exceptions::MemoryError
+     * @throws std::bad_alloc
      *      Thrown if memory allocation for internal generator state fails.
      */
     Random deepCopy() const;
