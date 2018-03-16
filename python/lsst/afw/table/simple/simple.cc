@@ -85,7 +85,7 @@ PySimpleTable declareSimpleTable(py::module &mod) {
 }  // namespace lsst::afw::table::<anonymous>
 
 PYBIND11_PLUGIN(simple) {
-    py::module::import("lsst.afw.coord");
+    py::module::import("lsst.afw.coord");  // needed, but why? Perhaps can be removed after RFC-460
     py::module::import("lsst.afw.table.base");
     py::module::import("lsst.afw.table.idFactory");
 
