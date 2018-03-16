@@ -32,7 +32,6 @@ import lsst.daf.base as dafBase
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as geomEllip
-import lsst.afw.coord as afwCoord
 
 
 class PickleBase:
@@ -64,21 +63,6 @@ class AngleTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         self.data = 1.0*afwGeom.degrees
-
-
-class CoordTestCase(PickleBase, unittest.TestCase):
-
-    def setUp(self):
-        ra = 10.0*afwGeom.degrees
-        dec = 1.0*afwGeom.degrees
-        epoch = 2000.0
-        self.data = [afwCoord.Coord(ra, dec, epoch),
-                     afwCoord.Fk5Coord(ra, dec, epoch),
-                     afwCoord.IcrsCoord(ra, dec),
-                     afwCoord.GalacticCoord(ra, dec),
-                     afwCoord.EclipticCoord(ra, dec),
-                     # TopocentricCoord is not currently picklable
-                     ]
 
 
 class QuadrupoleTestCase(PickleBase, unittest.TestCase):
