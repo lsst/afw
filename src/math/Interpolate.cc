@@ -195,7 +195,7 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x,   ///< the x-values
 
     _acc = ::gsl_interp_accel_alloc();
     if (!_acc) {
-        throw LSST_EXCEPT(pex::exceptions::MemoryError, "gsl_interp_accel_alloc failed");
+        throw std::bad_alloc();
     }
 
     _interp = ::gsl_interp_alloc(_interpType, _y.size());

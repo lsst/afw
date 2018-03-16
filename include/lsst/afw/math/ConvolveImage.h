@@ -186,7 +186,7 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(
  * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage is not the same size as inImage
  * @throws lsst::pex::exceptions::InvalidParameterError if inImage is smaller than kernel
  *  in columns and/or rows.
- * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throws std::bad_alloc when allocation of memory fails
  */
 template <typename OutImageT, typename InImageT, typename KernelT>
 void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const& kernel,

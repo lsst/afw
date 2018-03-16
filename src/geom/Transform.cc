@@ -134,21 +134,17 @@ std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToE
 
 template <class FromEndpoint, class ToEndpoint>
 Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const &x) const {
-    try {
-        int const nIn = _fromEndpoint.getNAxes();
-        int const nOut = _toEndpoint.getNAxes();
-        std::vector<double> const point = _fromEndpoint.dataFromPoint(x);
+    int const nIn = _fromEndpoint.getNAxes();
+    int const nOut = _toEndpoint.getNAxes();
+    std::vector<double> const point = _fromEndpoint.dataFromPoint(x);
 
-        Eigen::MatrixXd jacobian(nOut, nIn);
-        for (int i = 0; i < nOut; ++i) {
-            for (int j = 0; j < nIn; ++j) {
-                jacobian(i, j) = _frameSet->rate(point, i + 1, j + 1);
-            }
+    Eigen::MatrixXd jacobian(nOut, nIn);
+    for (int i = 0; i < nOut; ++i) {
+        for (int j = 0; j < nIn; ++j) {
+            jacobian(i, j) = _frameSet->rate(point, i + 1, j + 1);
         }
-        return jacobian;
-    } catch (std::bad_alloc const &e) {
-        std::throw_with_nested(LSST_EXCEPT(pex::exceptions::MemoryError, "Could not allocate Jacobian."));
     }
+    return jacobian;
 }
 
 template <class FromEndpoint, class ToEndpoint>
