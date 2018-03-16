@@ -31,7 +31,7 @@ import numpy as np
 import lsst.utils
 import lsst.utils.tests
 import lsst.daf.base as dafBase
-import lsst.afw.coord as afwCoord
+from lsst.afw.coord import Observatory, Weather
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -83,9 +83,8 @@ def makeVisitInfo():
                               boresightAirmass=1.73,
                               boresightRotAngle=73.2*afwGeom.degrees,
                               rotType=afwImage.RotType.SKY,
-                              observatory=afwCoord.Observatory(
-                                  11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
-                              weather=afwCoord.Weather(1.1, 2.2, 34.5),
+                              observatory=Observatory(11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
+                              weather=Weather(1.1, 2.2, 34.5),
                               )
 
 
