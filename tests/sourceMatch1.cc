@@ -39,7 +39,6 @@
 #include "lsst/afw/geom/Angle.h"
 
 namespace math = lsst::afw::math;
-namespace coord = lsst::afw::coord;
 namespace afwGeom = lsst::afw::geom;
 namespace afwTable = lsst::afw::table;
 
