@@ -41,12 +41,10 @@ namespace geom {
 class SkyWcs;
 
 /**
- * Transform LSST spatial data, such as Point2D and SpherePoint, using an AST transform.
+ * Transform LSST spatial data, such as Point2D and SpherePoint, using an AST mapping.
  *
  * This class contains two Endpoints, to specify the "from" and "to" LSST data type,
- * and an ast::FrameSet or ast::Mapping to specify the transformation.
- * In the case of a FrameSet the transformation is from the `BASE` frame to the `CURRENT` frame.
- * The endpoints convert the data between the LSST Form (e.g. Point2D) and the form used by astshim.
+ * and an ast::Mapping to specify the transformation.
  *
  * Depending on the ast::FrameSet or ast::Mapping used to define it, a Transform may
  * provide either a forward transform, an inverse transform, or both. In particular, the
@@ -88,34 +86,29 @@ public:
     /**
      * Construct a Transform from a deep copy of an ast::Mapping
      *
-     * The internal FrameSet consists of a frame constructed by each endpoint
-     * connected by the mapping.
-     *
      * @param[in] mapping  ast::Mapping describing the desired transformation
      * @param[in] simplify  Simplify the mapping? This combines component mappings
-     *     and removes redundant components where possible.
+     *                      where it is possible to do so without affecting accuracy.
      */
     explicit Transform(ast::Mapping const &mapping, bool simplify = true);
 
     /**
-     * Construct a Transform from a deep copy of a FrameSet.
+     * Construct a Transform from a deep copy of a ast::FrameSet
      *
-     * The result transforms from the "base" frame to the "current" frame.
+     * The result transforms from the "base" frame to the "current" frame of the provided FrameSet.
      * The "from" endpoint is used to normalize the "base" frame
      * and the "to" endpoint is used to normalize the "current" frame.
      *
      * This is pickier than the constructor that takes an ast::Mapping in that:
      * - SpherePointEndpoint must be associated with an ast::SkyFrame and the SkyFrame axes
-     *   are swapped if necessary to the standard order: longitude, latitude.
+     *   are transposed, if necessary, to give the standard order: longitude, latitude.
      * - Point2Endpoint must be associated with an ast::Frame (not a subclass),
      *   because Frame is the only kind of Frame that is sure to be Cartesian.
      *
      * @param[in] frameSet  ast::FrameSet describing the desired transformation in the usual way:
      *                      from "base" frame to "current" frame
-     * @param[in] simplify  Simplify the frame set? This simplifies each mapping
-     *                      in the frame set by combining component mappings and removing
-     *                      redundant components where possible. However it
-     *                      does not remove any frames.
+     * @param[in] simplify  Simplify the mapping? This combines component mappings
+     *                      where it is possible to do so without affecting accuracy.
      */
     explicit Transform(ast::FrameSet const &frameSet, bool simplify = true);
 
@@ -139,9 +132,9 @@ public:
     FromEndpoint getFromEndpoint() const { return _fromEndpoint; }
 
     /**
-     * Get the contained frameset
+     * Get the contained mapping
      */
-    std::shared_ptr<const ast::FrameSet> getFrameSet() const { return _frameSet; }
+    std::shared_ptr<const ast::Mapping> getMapping() const { return _mapping; }
 
     /**
      * Get the "to" endpoint
@@ -275,11 +268,9 @@ public:
 
 protected:
     /**
-     * Construct a Transform from a shared pointer to a FrameSet
-     *
-     * @note The FrameSet may be modified by normalizing the base and current frame.
+     * Construct a Transform from a shared pointer to an ast::Mapping
      */
-    explicit Transform(std::shared_ptr<ast::FrameSet> frameSet);
+    explicit Transform(std::shared_ptr<ast::Mapping> mapping);
 
     // implement afw::table::io::Persistable interface
     std::string getPersistenceName() const override { return getShortClassName(); }
@@ -292,9 +283,8 @@ protected:
 
 private:
     FromEndpoint _fromEndpoint;
-    std::shared_ptr<const ast::FrameSet> _frameSet;
+    std::shared_ptr<const ast::Mapping> _mapping;
     ToEndpoint _toEndpoint;
-    std::shared_ptr<const ast::Mapping> _mapping;  // mapping derived from frameSet
 };
 
 /**

@@ -46,8 +46,7 @@ template <class Class>
 std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
     os << pyClassName;
-    auto const frameSet = self.getFrameSet();
-    os << "[" << frameSet->getNIn() << "->" << frameSet->getNOut() << "]";
+    os << "[" << self.getFromEndpoint().getNAxes() << "->" << self.getToEndpoint().getNAxes() << "]";
     return os.str();
 }
 
@@ -86,9 +85,9 @@ void declareTransform(py::module &mod) {
     cls.def_property_readonly("fromEndpoint", &Class::getFromEndpoint);
     cls.def_property_readonly("toEndpoint", &Class::getToEndpoint);
 
-    // Return a copy of the contained FrameSet in order to assure changing the returned FrameSet
-    // will not affect the contained FrameSet (since Python ignores constness)
-    cls.def("getFrameSet", [](Class const &self) { return self.getFrameSet()->copy(); });
+    // Return a copy of the contained Mapping in order to assure changing the returned Mapping
+    // will not affect the contained Mapping (since Python ignores constness)
+    cls.def("getMapping", [](Class const &self) { return self.getMapping()->copy(); });
 
     cls.def("applyForward", (ToArray(Class::*)(FromArray const &) const) & Class::applyForward, "array"_a);
     cls.def("applyForward", (ToPoint(Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
