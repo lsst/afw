@@ -49,6 +49,10 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool
     } else {
         _frameSet = std::make_shared<ast::FrameSet>(*fromFrame, mapping, *toFrame);
     }
+    _mapping = _frameSet->getMapping();
+    if (simplify) {
+        _mapping = _mapping->simplify();
+    }
 }
 
 template <class FromEndpoint, class ToEndpoint>
@@ -86,13 +90,14 @@ Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> fr
     } else {
         frameSet->clear("Current");
     }
+    _mapping = _frameSet->getMapping();
 }
 
 template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyForward(
         typename FromEndpoint::Point const &point) const {
     auto const rawFromData = _fromEndpoint.dataFromPoint(point);
-    auto rawToData = _frameSet->applyForward(rawFromData);
+    auto rawToData = _mapping->applyForward(rawFromData);
     return _toEndpoint.pointFromData(rawToData);
 }
 
@@ -100,7 +105,7 @@ template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyForward(
         typename FromEndpoint::Array const &array) const {
     auto const rawFromData = _fromEndpoint.dataFromArray(array);
-    auto rawToData = _frameSet->applyForward(rawFromData);
+    auto rawToData = _mapping->applyForward(rawFromData);
     return _toEndpoint.arrayFromData(rawToData);
 }
 
@@ -108,7 +113,7 @@ template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyInverse(
         typename ToEndpoint::Point const &point) const {
     auto const rawFromData = _toEndpoint.dataFromPoint(point);
-    auto rawToData = _frameSet->applyInverse(rawFromData);
+    auto rawToData = _mapping->applyInverse(rawFromData);
     return _fromEndpoint.pointFromData(rawToData);
 }
 
@@ -116,7 +121,7 @@ template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
         typename ToEndpoint::Array const &array) const {
     auto const rawFromData = _toEndpoint.dataFromArray(array);
-    auto rawToData = _frameSet->applyInverse(rawFromData);
+    auto rawToData = _mapping->applyInverse(rawFromData);
     return _fromEndpoint.arrayFromData(rawToData);
 }
 
@@ -141,7 +146,7 @@ Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const
     Eigen::MatrixXd jacobian(nOut, nIn);
     for (int i = 0; i < nOut; ++i) {
         for (int j = 0; j < nIn; ++j) {
-            jacobian(i, j) = _frameSet->rate(point, i + 1, j + 1);
+            jacobian(i, j) = _mapping->rate(point, i + 1, j + 1);
         }
     }
     return jacobian;

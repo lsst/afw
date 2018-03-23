@@ -124,14 +124,14 @@ public:
      *
      * @exceptsafe Provides basic exception safety.
      */
-    bool hasForward() const { return _frameSet->hasForward(); }
+    bool hasForward() const { return _mapping->hasForward(); }
 
     /**
      * Test if this method has an inverse transform.
      *
      * @exceptsafe Provides basic exception safety.
      */
-    bool hasInverse() const { return _frameSet->hasInverse(); }
+    bool hasInverse() const { return _mapping->hasInverse(); }
 
     /**
      * Get the "from" endpoint
@@ -294,6 +294,7 @@ private:
     FromEndpoint _fromEndpoint;
     std::shared_ptr<const ast::FrameSet> _frameSet;
     ToEndpoint _toEndpoint;
+    std::shared_ptr<const ast::Mapping> _mapping;  // mapping derived from frameSet
 };
 
 /**
