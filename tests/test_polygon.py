@@ -29,9 +29,8 @@ from builtins import range
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.coord  # required by afwGeom; TODO: remove in DM-11162
 import lsst.afw.geom as afwGeom
-import lsst.afw.image  # required by Polygon.createImage
+import lsst.afw.image  # noqa required by Polygon.createImage
 
 DEBUG = False
 

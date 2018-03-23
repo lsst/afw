@@ -20,6 +20,7 @@ from __future__ import absolute_import
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import lsst.afw.geom
 
-from .coordLib import *
-from .utils import *
+from ._observatory import *
+from ._weather import *

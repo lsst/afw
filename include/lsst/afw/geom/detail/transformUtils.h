@@ -30,7 +30,6 @@
 #include "astshim.h"
 #include "ndarray.h"
 
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/daf/base/PropertyList.h"

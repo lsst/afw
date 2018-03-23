@@ -40,7 +40,6 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
-import lsst.afw.coord
 import lsst.afw.fits
 import lsst.afw.detection
 

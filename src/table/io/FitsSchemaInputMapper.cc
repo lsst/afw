@@ -497,7 +497,7 @@ public:
                           std::shared_ptr<InputArchive> const &archive) const {
         std::array<geom::Angle, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
-        record.set(_key, coord::IcrsCoord(buffer[0], buffer[1]));
+        record.set(_key, geom::SpherePoint(buffer[0], buffer[1]));
     }
 
 private:

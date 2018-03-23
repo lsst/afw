@@ -106,7 +106,7 @@ void declareTransform(py::module &mod) {
 
     declareMethodTemplates<FromEndpoint, ToEndpoint, GenericEndpoint>(cls);
     declareMethodTemplates<FromEndpoint, ToEndpoint, Point2Endpoint>(cls);
-    declareMethodTemplates<FromEndpoint, ToEndpoint, IcrsCoordEndpoint>(cls);
+    declareMethodTemplates<FromEndpoint, ToEndpoint, SpherePointEndpoint>(cls);
 
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
     cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
@@ -131,13 +131,13 @@ PYBIND11_PLUGIN(transform) {
 
     declareTransform<GenericEndpoint, GenericEndpoint>(mod);
     declareTransform<GenericEndpoint, Point2Endpoint>(mod);
-    declareTransform<GenericEndpoint, IcrsCoordEndpoint>(mod);
+    declareTransform<GenericEndpoint, SpherePointEndpoint>(mod);
     declareTransform<Point2Endpoint, GenericEndpoint>(mod);
     declareTransform<Point2Endpoint, Point2Endpoint>(mod);
-    declareTransform<Point2Endpoint, IcrsCoordEndpoint>(mod);
-    declareTransform<IcrsCoordEndpoint, GenericEndpoint>(mod);
-    declareTransform<IcrsCoordEndpoint, Point2Endpoint>(mod);
-    declareTransform<IcrsCoordEndpoint, IcrsCoordEndpoint>(mod);
+    declareTransform<Point2Endpoint, SpherePointEndpoint>(mod);
+    declareTransform<SpherePointEndpoint, GenericEndpoint>(mod);
+    declareTransform<SpherePointEndpoint, Point2Endpoint>(mod);
+    declareTransform<SpherePointEndpoint, SpherePointEndpoint>(mod);
 
     return mod.ptr();
 }

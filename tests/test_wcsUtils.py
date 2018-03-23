@@ -30,7 +30,6 @@ from lsst.pex.exceptions import TypeError
 from lsst.daf.base import PropertyList
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
-from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import arcseconds, degrees, makeSkyWcs, makeCdMatrix
 from lsst.afw.geom.wcsUtils import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
     getCdMatrixFromMetadata, getSipMatrixFromMetadata, getImageXY0FromMetadata, \
@@ -59,7 +58,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         self.plateScale = 0.15 * arcseconds  # angle/pixel
         self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2000, 4000))
         self.crpix = afwGeom.Point2D(1000, 2000)
-        self.crval = IcrsCoord(10 * degrees, 40 * degrees)
+        self.crval = afwGeom.SpherePoint(10 * degrees, 40 * degrees)
         self.orientation = -45 * degrees
         self.scale = 1.0 * arcseconds
         # position of 0,0 pixel position in focal plane
@@ -157,7 +156,7 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
             self.focalPlaneToPixel.applyForward(
                 fieldAngleToFocalPlane.applyForward(fieldAnglePoints)))
 
-        self.assertCoordListsAlmostEqual(tanSkyPoints2, skyPoints2)
+        self.assertSpherePointListsAlmostEqual(tanSkyPoints2, skyPoints2)
 
 
 class ComputePixelToDistortedPixelTestCase(BaseTestCase):
@@ -194,8 +193,8 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
             focalPlaneToFieldAngle = focalPlaneToFieldAngle,
         )
         # Do not try to make pixelToDistortedPixel -> self.tanWcs into a WCS
-        # because the frame names will be wrong; use a TransformPoint2ToIcrsCoord instead
-        tanWcsTransform = afwGeom.TransformPoint2ToIcrsCoord(self.tanWcs.getFrameDict())
+        # because the frame names will be wrong; use a TransformPoint2ToafwGeom.SpherePoint instead
+        tanWcsTransform = afwGeom.TransformPoint2ToSpherePoint(self.tanWcs.getFrameDict())
         pixelToDistortedSky = pixelToDistortedPixel.then(tanWcsTransform)
 
         wcs = makeDistortedTanWcs(
@@ -210,7 +209,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
 
         skyPoints1 = pixelToDistortedSky.applyForward(pixelPoints)
         skyPoints2 = wcs.pixelToSky(pixelPoints)
-        self.assertCoordListsAlmostEqual(skyPoints1, skyPoints2)
+        self.assertSpherePointListsAlmostEqual(skyPoints1, skyPoints2)
 
         pixelPoints1 = pixelToDistortedSky.applyInverse(skyPoints1)
         pixelPoints2 = wcs.skyToPixel(skyPoints1)
@@ -491,8 +490,8 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         """
         crpix = afwGeom.Point2D(self.metadata.get("CRPIX1") - 1,
                                 self.metadata.get("CRPIX2") - 1)
-        crval = IcrsCoord(self.metadata.get("CRVAL1") * degrees,
-                          self.metadata.get("CRVAL2") * degrees)
+        crval = afwGeom.SpherePoint(self.metadata.get("CRVAL1") * degrees,
+                                    self.metadata.get("CRVAL2") * degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")

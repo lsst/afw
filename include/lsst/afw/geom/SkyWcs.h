@@ -33,7 +33,6 @@
 #include "ndarray.h"
 
 #include "lsst/daf/base/PropertyList.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
@@ -216,7 +215,7 @@ public:
      *
      * This is CRVAL1, CRVAL2 in FITS terminology
      */
-    coord::IcrsCoord getSkyOrigin() const;
+    SpherePoint getSkyOrigin() const;
 
     /**
      * Get the 2x2 CD matrix at the specified pixel position
@@ -246,9 +245,9 @@ public:
     std::shared_ptr<const ast::FrameDict> getFrameDict() const;
 
     /**
-     * Get the contained TransformPoint2ToIcrsCoord
+     * Get the contained TransformPoint2ToSpherePoint
      */
-    std::shared_ptr<const TransformPoint2ToIcrsCoord> getTransform() const { return _transform; };
+    std::shared_ptr<const TransformPoint2ToSpherePoint> getTransform() const { return _transform; };
 
     /**
      * Does the WCS follow the convention of North=Up, East=Left?
@@ -273,7 +272,7 @@ public:
      * @param[in] coord   Position in sky coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
      */
-    AffineTransform linearizePixelToSky(coord::IcrsCoord const &coord, AngleUnit const &skyUnit) const;
+    AffineTransform linearizePixelToSky(SpherePoint const &coord, AngleUnit const &skyUnit) const;
 
     /**
      * Return the local linear approximation to pixelToSky at a point given in pixel coordinates.
@@ -301,7 +300,7 @@ public:
      * @param[in] coord   Position in sky coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
      */
-    AffineTransform linearizeSkyToPixel(coord::IcrsCoord const &coord, AngleUnit const &skyUnit) const;
+    AffineTransform linearizeSkyToPixel(SpherePoint const &coord, AngleUnit const &skyUnit) const;
 
     /**
      * Return the local linear approximation to skyToPixel at a point given in pixel coordinates.
@@ -321,9 +320,9 @@ public:
      * Compute sky position(s) from pixel position(s)
      */
     //@{
-    coord::IcrsCoord pixelToSky(Point2D const &pixel) const { return _transform->applyForward(pixel); }
-    coord::IcrsCoord pixelToSky(double x, double y) const { return pixelToSky(Point2D(x, y)); }
-    std::vector<coord::IcrsCoord> pixelToSky(std::vector<Point2D> const &pixels) const {
+    SpherePoint pixelToSky(Point2D const &pixel) const { return _transform->applyForward(pixel); }
+    SpherePoint pixelToSky(double x, double y) const { return pixelToSky(Point2D(x, y)); }
+    std::vector<SpherePoint> pixelToSky(std::vector<Point2D> const &pixels) const {
         return _transform->applyForward(pixels);
     }
     //@}
@@ -332,8 +331,8 @@ public:
      * Compute pixel position(s) from sky position(s)
      */
     //@{
-    Point2D skyToPixel(coord::IcrsCoord const &sky) const { return _transform->applyInverse(sky); }
-    std::vector<Point2D> skyToPixel(std::vector<coord::IcrsCoord> const &sky) const {
+    Point2D skyToPixel(SpherePoint const &sky) const { return _transform->applyInverse(sky); }
+    std::vector<Point2D> skyToPixel(std::vector<SpherePoint> const &sky) const {
         return _transform->applyInverse(sky);
     }
     //@}
@@ -406,7 +405,7 @@ private:
      */
     std::shared_ptr<ast::FrameDict> _checkFrameDict(ast::FrameDict const &frameDict) const;
 
-    std::shared_ptr<const TransformPoint2ToIcrsCoord> _transform;
+    std::shared_ptr<const TransformPoint2ToSpherePoint> _transform;
     Point2D _pixelOrigin;       // cached pixel origin
     Angle _pixelScaleAtOrigin;  // cached pixel scale at pixel origin
 
@@ -414,14 +413,14 @@ private:
      * Implementation for the overloaded public linearizePixelToSky methods, requiring both a pixel coordinate
      * and the corresponding sky coordinate.
      */
-    AffineTransform _linearizePixelToSky(Point2D const &pix, coord::IcrsCoord const &coord,
+    AffineTransform _linearizePixelToSky(Point2D const &pix, SpherePoint const &coord,
                                          AngleUnit const &skyUnit) const;
 
     /*
      * Implementation for the overloaded public linearizeSkyToPixel methods, requiring both a pixel coordinate
      * and the corresponding sky coordinate.
      */
-    AffineTransform _linearizeSkyToPixel(Point2D const &pix, coord::IcrsCoord const &coord,
+    AffineTransform _linearizeSkyToPixel(Point2D const &pix, SpherePoint const &coord,
                                          AngleUnit const &skyUnit) const;
 
     /// Compute _pixelOrigin and _pixelScaleAtOrigin
@@ -498,7 +497,7 @@ std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertySet &metadata, bool strip 
  *                     and i, j have range [1, 2]. May be computed by calling makeCdMatrix.
  * @param[in] projection  The name of the FITS WCS projection, e.g. "TAN" or "STG"
  */
-std::shared_ptr<SkyWcs> makeSkyWcs(Point2D const &crpix, coord::IcrsCoord const &crval,
+std::shared_ptr<SkyWcs> makeSkyWcs(Point2D const &crpix, SpherePoint const &crval,
                                    Eigen::Matrix2d const &cdMatrix, std::string const &projection = "TAN");
 
 /**
@@ -512,7 +511,7 @@ std::shared_ptr<SkyWcs> makeSkyWcs(Point2D const &crpix, coord::IcrsCoord const 
  * @param[in] sipA     Forward distortion matrix for axis 1
  * @param[in] sipB     Forward distortion matrix for axis 2
  */
-std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const &crpix, coord::IcrsCoord const &crval,
+std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const &crpix, SpherePoint const &crval,
                                       Eigen::Matrix2d const &cdMatrix, Eigen::MatrixXd const &sipA,
                                       Eigen::MatrixXd const &sipB);
 
@@ -529,7 +528,7 @@ std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const &crpix, coord::IcrsCoord con
  * @param[in] sipAp    Reverse distortion matrix for axis 1
  * @param[in] sipBp    Reverse distortion matrix for axis 2
  */
-std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const &crpix, coord::IcrsCoord const &crval,
+std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const &crpix, SpherePoint const &crval,
                                       Eigen::Matrix2d const &cdMatrix, Eigen::MatrixXd const &sipA,
                                       Eigen::MatrixXd const &sipB, Eigen::MatrixXd const &sipAp,
                                       Eigen::MatrixXd const &sipBp);
@@ -549,7 +548,7 @@ std::shared_ptr<TransformPoint2ToPoint2> makeWcsPairTransform(SkyWcs const &src,
 /**
  * Return a transform from intermediate world coordinates to sky
  */
-std::shared_ptr<TransformPoint2ToIcrsCoord> getIntermediateWorldCoordsToSky(SkyWcs const &wcs,
+std::shared_ptr<TransformPoint2ToSpherePoint> getIntermediateWorldCoordsToSky(SkyWcs const &wcs,
                                                                             bool simplify = true);
 
 /**

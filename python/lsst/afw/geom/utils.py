@@ -37,7 +37,7 @@ import lsst.utils.tests
 from .angle import arcseconds
 from .box import Box2D
 from .coordinates import Point2D
-from .endpoint import GenericEndpoint, Point2Endpoint, IcrsCoordEndpoint
+from .endpoint import GenericEndpoint, Point2Endpoint, SpherePointEndpoint
 
 
 def extraMsg(msg):
@@ -235,7 +235,7 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
         fromPixPos = Point2D(x, y)
         sky0 = wcs0.pixelToSky(fromPixPos)
         sky1 = wcs1.pixelToSky(fromPixPos)
-        diffSky = sky0.angularSeparation(sky1)
+        diffSky = sky0.separation(sky1)
         if diffSky > measDiffSky[0]:
             measDiffSky = (diffSky, fromPixPos)
             if doShortCircuit:
@@ -339,7 +339,7 @@ def makeEndpoints(testCase):
         code. Each invocation of this method shall return independent objects.
     """
     return [GenericEndpoint(n) for n in range(1, 6)] + \
-           [Point2Endpoint(), IcrsCoordEndpoint()]
+           [Point2Endpoint(), SpherePointEndpoint()]
 
 
 @lsst.utils.tests.inTestCase

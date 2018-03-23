@@ -39,7 +39,6 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
-import lsst.afw.coord
 
 try:
     type(display)
@@ -195,11 +194,11 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         record = table.makeRecord()
         record.set(longKey, lsst.afw.geom.Angle(0))
         record.set(latKey, lsst.afw.geom.Angle(1))
-        self.assertIsInstance(record.get(fKey1), lsst.afw.coord.IcrsCoord)
+        self.assertIsInstance(record.get(fKey1), lsst.afw.geom.SpherePoint)
         self.assertEqual(record.get(fKey1).getRa(), record.get(longKey))
         self.assertEqual(record.get(fKey1).getDec(), record.get(latKey))
         # Test that we can set using the functor key
-        coord = lsst.afw.coord.IcrsCoord(
+        coord = lsst.afw.geom.SpherePoint(
             lsst.afw.geom.Angle(0), lsst.afw.geom.Angle(1))
         record.set(fKey1, coord)
         self.assertEqual(record.get(longKey), coord.getRa())
@@ -207,13 +206,6 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # Check for inequality with a different key
         fKey3 = lsst.afw.table.CoordKey.addFields(schema, "b", "position")
         self.assertNotEqual(fKey0, fKey3)
-        # test that we can assign a non-ICRS coordinate
-        coord = lsst.afw.coord.Coord("11:11:11", "22:22:22", 1950)
-        record.set(fKey0, coord)
-        self.assertNotEqual(coord.getLongitude(), record.get(fKey0).getRa())
-        self.assertEqual(coord.toIcrs().getRa(), record.get(fKey0).getRa())
-        self.assertNotEqual(coord.getLatitude(), record.get(fKey0).getDec())
-        self.assertEqual(coord.toIcrs().getDec(), record.get(fKey0).getDec())
 
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema()

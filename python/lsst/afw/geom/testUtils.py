@@ -35,7 +35,6 @@ import astshim as ast
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 from astshim.test import makeForwardPolyMap, makeTwoWayPolyMap
-import lsst.afw.coord  # required to use IcrsCoordEndpoint
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata
 
 from .box import Box2I, Box2D
@@ -359,14 +358,14 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.longMessage = True
 
         # list of endpoint class name prefixes; the full name is prefix + "Endpoint"
-        self.endpointPrefixes = ("Generic", "Point2", "IcrsCoord")
+        self.endpointPrefixes = ("Generic", "Point2", "SpherePoint")
 
         # GoodNAxes is dict of endpoint class name prefix:
         #    tuple containing 0 or more valid numbers of axes
         self.goodNAxes = {
             "Generic": (1, 2, 3, 4),  # all numbers of axes are valid for GenericEndpoint
             "Point2": (2,),
-            "IcrsCoord": (2,),
+            "SpherePoint": (2,),
         }
 
         # BadAxes is dict of endpoint class name prefix:
@@ -374,7 +373,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.badNAxes = {
             "Generic": (),  # all numbers of axes are valid for GenericEndpoint
             "Point2": (1, 3, 4),
-            "IcrsCoord": (1, 3, 4),
+            "SpherePoint": (1, 3, 4),
         }
 
         # Dict of frame index: identity name for frames created by makeFrameSet
@@ -414,7 +413,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         rawData = np.array([j * delta + oneAxis for j in range(nAxes)], dtype=float)
         if nAxes == 2:
             # scale rawData so that max value of 2nd axis is a bit less than pi/2,
-            # thus making the data safe for IcrsCoord
+            # thus making the data safe for SpherePoint
             maxLatitude = np.max(rawData[1])
             rawData *= math.pi * 0.4999 / maxLatitude
         return rawData
@@ -512,7 +511,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 ast.Frame(1),
                 ast.Frame(3),
             ],
-            "IcrsCoord": [
+            "SpherePoint": [
                 ast.Frame(1),
                 ast.Frame(2),
                 ast.Frame(3),
@@ -877,7 +876,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             # If the base and/or current frame of frameSet is a SkyFrame,
             # try permuting that frame (in place, so the connected mappings are
             # correctly updated). The Transform constructor should undo the permutation,
-            # (via IcrsCoordEndpoint.normalizeFrame) in its internal copy of frameSet,
+            # (via SpherePointEndpoint.normalizeFrame) in its internal copy of frameSet,
             # forcing the axes of the SkyFrame into standard (longitude, latitude) order
             for permutedFS in self.permuteFrameSetIter(frameSet):
                 if permutedFS.isBaseSkyFrame:
@@ -935,12 +934,13 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                                       self.makeGoodFrame(toName, nOut))
 
     def checkInverseMapping(self, TransformClass, mapping, msg):
-        """Test Transform<fromName>To<toName>.getInverse for a specific mapping.
+        """Test Transform<fromName>To<toName>.getInverse for a specific
+        mapping.
 
         Parameters
         ----------
         TransformClass : `type`
-            The class of transform to test, such as TransformPoint2ToIcrsCoord
+            The class of transform to test, such as TransformPoint2ToPoint2
         mapping : `ast.Mapping`
             The mapping to use for the transform
         msg : `str`

@@ -86,16 +86,14 @@ CoordKey CoordKey::addFields(Schema &schema, std::string const &name, std::strin
     return CoordKey(ra, dec);
 }
 
-coord::IcrsCoord CoordKey::get(BaseRecord const &record) const {
-    return coord::IcrsCoord(record.get(_ra), record.get(_dec));
+geom::SpherePoint CoordKey::get(BaseRecord const &record) const {
+    return geom::SpherePoint(record.get(_ra), record.get(_dec));
 }
 
-void CoordKey::set(BaseRecord &record, coord::IcrsCoord const &value) const {
+void CoordKey::set(BaseRecord &record, geom::SpherePoint const &value) const {
     record.set(_ra, value.getLongitude());
     record.set(_dec, value.getLatitude());
 }
-
-void CoordKey::set(BaseRecord &record, coord::Coord const &value) const { set(record, value.toIcrs()); }
 
 //============ QuadrupoleKey ================================================================================
 

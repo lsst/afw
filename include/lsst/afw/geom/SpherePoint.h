@@ -25,6 +25,7 @@
 #ifndef LSST_AFW_GEOM_SPHEREPOINT_H_
 #define LSST_AFW_GEOM_SPHEREPOINT_H_
 
+#include <cmath>
 #include <ostream>
 #include <utility>
 
@@ -54,8 +55,6 @@ namespace geom {
  * of SpherePoints; no STL container has an atomic element-replacement method,
  * so complicated constructions would need to be used if you couldn't
  * overwrite an existing element.
- *
- * @see @ref coord::Coord
  */
 class SpherePoint final {
 public:
@@ -106,6 +105,9 @@ public:
      * That provides predictable behavior for @ref bearingTo and @ref offset.
      */
     explicit SpherePoint(Point3D const& vector);
+
+    /// Construct a SpherePoint with "nan" for longitude and latitude
+    SpherePoint();
 
     /**
      * Create a copy of a SpherePoint.
@@ -161,6 +163,9 @@ public:
      */
     Angle getLongitude() const noexcept { return _longitude * radians; };
 
+    /// Synonym for getLongitude
+    Angle getRa() const noexcept { return _longitude * radians; };
+
     /**
      * The latitude of this point.
      *
@@ -169,6 +174,16 @@ public:
      * @exceptsafe Shall not throw exceptions.
      */
     Angle getLatitude() const noexcept { return _latitude * radians; };
+
+    /// Synonym for getLatitude
+    Angle getDec() const noexcept { return _latitude * radians; };
+
+    /**
+     * Return longitude, latitude as a Point2D object
+     *
+     * @param[in] unit  Units of returned data.
+     */
+    Point2D getPosition(AngleUnit unit) const;
 
     /**
      * A unit vector representation of this point.
@@ -321,10 +336,29 @@ public:
      */
     SpherePoint offset(Angle const& bearing, Angle const& amount) const;
 
+    /**
+     * Get the offset from a tangent plane centered at this point to another point
+     *
+     * This is suitable only for small angles.
+     *
+     * @param[in] other Coordinate to which to compute offset
+     * @returns pair of Angles: Longitude and Latitude offsets
+     */
+    std::pair<Angle, Angle> getTangentPlaneOffset(SpherePoint const& other) const;
+
 private:
     double _longitude;  // radians
     double _latitude;   // radians
 };
+
+/**
+ * Return the average of a list of coordinates
+ *
+ * @param[in] coords  list of coords to average
+ *
+ * @throws  lsst::pex::exceptions::LengthError if coords is empty
+ */
+SpherePoint averageSpherePoint(std::vector<SpherePoint> const& coords);
 
 /*
  * Object-level display

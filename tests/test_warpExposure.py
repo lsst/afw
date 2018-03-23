@@ -31,7 +31,7 @@ import numpy as np
 import lsst.utils
 import lsst.utils.tests
 import lsst.daf.base as dafBase
-import lsst.afw.coord as afwCoord
+from lsst.afw.coord import Observatory, Weather
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -78,14 +78,13 @@ def makeVisitInfo():
                               date=dafBase.DateTime(65321.1, dafBase.DateTime.MJD, dafBase.DateTime.TAI),
                               ut1=12345.1,
                               era=45.1*afwGeom.degrees,
-                              boresightRaDec=afwCoord.IcrsCoord(23.1*afwGeom.degrees, 73.2*afwGeom.degrees),
-                              boresightAzAlt=afwCoord.Coord(134.5*afwGeom.degrees, 33.3*afwGeom.degrees),
+                              boresightRaDec=afwGeom.SpherePoint(23.1, 73.2, afwGeom.degrees),
+                              boresightAzAlt=afwGeom.SpherePoint(134.5, 33.3, afwGeom.degrees),
                               boresightAirmass=1.73,
                               boresightRotAngle=73.2*afwGeom.degrees,
                               rotType=afwImage.RotType.SKY,
-                              observatory=afwCoord.Observatory(
-                                  11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
-                              weather=afwCoord.Weather(1.1, 2.2, 34.5),
+                              observatory=Observatory(11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
+                              weather=Weather(1.1, 2.2, 34.5),
                               )
 
 
@@ -409,14 +408,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
         fromWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(0, 0),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
 
         toWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(410000, 11441),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(45, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(45, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=0.00011*afwGeom.degrees, flipX=True),
             projection="CEA",
         )
@@ -452,14 +451,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """
         fromWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(0, 0),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
 
         toWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(0, 0),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(358, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(358, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=1.1e-8*afwGeom.degrees),
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), toWcs)
@@ -492,12 +491,12 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """
         srcWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(10, 11),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(41.7, 32.9, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=0.2*afwGeom.degrees),
         )
         destWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(9, 10),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(41.65, 32.95, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=0.17*afwGeom.degrees),
         )
 

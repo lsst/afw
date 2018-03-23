@@ -46,7 +46,6 @@
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 

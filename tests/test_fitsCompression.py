@@ -853,7 +853,7 @@ class EmptyExposureTestCase(lsst.utils.tests.TestCase):
         exp = lsst.afw.image.ExposureF(0, 0)
         degrees = lsst.afw.geom.degrees
         cdMatrix = np.array([[1.0e-4, 0.0], [0.0, 1.0e-4]], dtype=float)
-        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval = lsst.afw.coord.IcrsCoord(0*degrees, 0*degrees),
+        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval = lsst.afw.geom.SpherePoint(0*degrees, 0*degrees),
                                             crpix = lsst.afw.geom.Point2D(0.0, 0.0),
                                             cdMatrix = cdMatrix))
         imageOptions = lsst.afw.fits.ImageWriteOptions(ImageCompressionOptions(algorithm))

@@ -40,7 +40,6 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
-import lsst.afw.coord
 
 try:
     type(display)

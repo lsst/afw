@@ -95,7 +95,7 @@ public:
     /**
      *  Return a reference (or reference-like type) to the field's value.
      *
-     *  Some field types (Point, Moments, Flag, Covariance, and Coord) do not support reference access.
+     *  Some field types (Point, Moments, Flag, Covariance, and SpherePoint) do not support reference access.
      *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
@@ -107,7 +107,7 @@ public:
     /**
      *  Return a const reference (or const-reference-like type) to the field's value.
      *
-     *  Some field types (Point, Moments, Flag, Covariance, and Coord) do not support reference access.
+     *  Some field types (Point, Moments, Flag, Covariance, and SpherePoint) do not support reference access.
      *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
