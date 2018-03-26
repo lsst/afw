@@ -293,6 +293,10 @@ public:
     void swap(Point &other) { this->_swap(other); }
 };
 
+// Hash functions
+template <typename T, int N>
+std::size_t hash_value(Point<T, N> const& point);
+
 typedef Point<int, 2> PointI;
 typedef Point<int, 2> Point2I;
 typedef Point<int, 3> Point3I;
