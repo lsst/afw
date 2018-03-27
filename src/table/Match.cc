@@ -137,8 +137,8 @@ double toUnitSphereDistanceSquared(afw::geom::Angle theta) noexcept {
  * @returns the angle between the two vectors
  */
 Angle fromUnitSphereDistanceSquared(double d2) noexcept {
-    return (std::acos(1. - d2 / 2.)) * afw::geom::radians;
-    // == 2.0 * asin(0.5 * sqrt(d2))
+    // acos(1 - 0.5*d2) doesn't require sqrt but isn't as precise for small d2
+    return 2.0*std::asin(0.5*std::sqrt(d2))*afw::geom::radians;
 }
 
 }  // anonymous
