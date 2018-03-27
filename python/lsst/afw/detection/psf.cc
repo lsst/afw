@@ -74,6 +74,8 @@ PYBIND11_PLUGIN(_psf) {
     cls.def("getAveragePosition", &Psf::getAveragePosition);
     cls.def_static("recenterKernelImage", &Psf::recenterKernelImage, "im"_a, "position"_a,
                    "warpAlgorithm"_a = "lanczos5", "warpBuffer"_a = 5);
+    cls.def("getCacheCapacity", &Psf::getCacheCapacity);
+    cls.def("setCacheCapacity", &Psf::setCacheCapacity);
 
     return mod.ptr();
 }

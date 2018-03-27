@@ -22,6 +22,7 @@
 
 #include <cmath>
 
+#include "lsst/utils/hashCombine.h"
 #include "lsst/afw/geom/Point.h"
 
 namespace lsst {
@@ -115,19 +116,27 @@ CoordinateExpr<N> PointBase<T, N>::ge(Point<T, N> const &other) const {
     return r;
 }
 
+template <typename T, int N>
+std::size_t hash_value(Point<T, N> const& point) {
+    std::size_t result = 0;
+    for (int n = 0; n < N; ++n) result = utils::hashCombine(result, point[n]);
+    return result;
+}
+
+
 #ifndef DOXYGEN
-template class PointBase<int, 2>;
-template class PointBase<int, 3>;
-template class PointBase<double, 2>;
-template class PointBase<double, 3>;
-template class Point<int, 2>;
-template class Point<int, 3>;
-template class Point<double, 2>;
-template class Point<double, 3>;
-template Point<int, 2>::Point(Point<double, 2> const &);
-template Point<int, 3>::Point(Point<double, 3> const &);
-template Point<double, 2>::Point(Point<int, 2> const &);
-template Point<double, 3>::Point(Point<int, 3> const &);
+#define INSTANTIATE_TYPE_DIM(TYPE, DIM) \
+    template class PointBase<TYPE, DIM>; \
+    template class Point<TYPE, DIM>; \
+    template std::size_t hash_value(Point<TYPE, DIM> const&);
+#define INSTANTIATE_DIM(DIM) \
+    INSTANTIATE_TYPE_DIM(int, DIM); \
+    INSTANTIATE_TYPE_DIM(double, DIM); \
+    template Point<int, DIM>::Point(Point<double, DIM> const &); \
+    template Point<double, DIM>::Point(Point<int, DIM> const &);
+
+INSTANTIATE_DIM(2);
+INSTANTIATE_DIM(3);
 #endif
 }
 }
