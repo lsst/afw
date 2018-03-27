@@ -2,9 +2,53 @@
 #include <limits>
 #include <typeinfo>
 #include <cmath>
+#include <memory>
 
+#include "lsst/utils/Cache.h"
+#include "lsst/utils/hashCombine.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
+
+namespace lsst::afw::detection::detail {
+
+// Key for caching PSFs with lsst::utils::Cache
+//
+// We cache PSFs by their x,y position. Although there are placeholders
+// in the `Psf` class and here for `image::Color`, these are not used
+// in the cache because `image::Color` is not currently well-defined
+// or used.
+struct PsfCacheKey {
+    geom::Point2D const position;
+    image::Color const color;
+
+    PsfCacheKey(geom::Point2D const& position_, image::Color color_=image::Color())
+      : position(position_), color(color_) {}
+
+    bool operator==(PsfCacheKey const& other) const {
+        return position == other.position;  // Currently don't care about color
+    }
+
+    friend std::ostream & operator<<(std::ostream &os, PsfCacheKey const &key) {
+        return os << key.position;
+    }
+};
+
+} // namespace lsst::afw::detection::detail
+
+namespace std {
+
+// Template specialisation for hashing PsfCacheKey
+//
+// We currently ignore the color.
+template <>
+struct hash<lsst::afw::detection::detail::PsfCacheKey> {
+    std::size_t operator()(lsst::afw::detection::detail::PsfCacheKey const& key) const {
+        std::size_t seed = 0;
+        return lsst::utils::hashCombine(seed, key.position.getX(), key.position.getY());
+    }
+};
+
+} // namespace std
 
 namespace lsst {
 namespace afw {
@@ -12,19 +56,28 @@ namespace detection {
 
 namespace {
 
-// Comparison function that determines when we used the cached image instead of recomputing it.
-// We'll probably want a tolerance for colors someday too, but they're just a placeholder right now
-// so it's not worth the effort.
-bool comparePsfEvalPoints(geom::Point2D const &a, geom::Point2D const &b) {
-    // n.b. desired tolerance is actually sqrt(eps), so tolerance squared is eps.
-    return (a - b).computeSquaredNorm() < std::numeric_limits<double>::epsilon();
-}
-
 bool isPointNull(geom::Point2D const &p) { return std::isnan(p.getX()) && std::isnan(p.getY()); }
 
 }  // anonymous
 
-Psf::Psf(bool isFixed) : daf::base::Citizen(typeid(this)), _isFixed(isFixed) {}
+Psf::Psf(bool isFixed, std::size_t capacity)
+  : daf::base::Citizen(typeid(this)),
+  _isFixed(isFixed)
+{
+  _imageCache = std::make_unique<PsfCache>(capacity);
+  _kernelImageCache = std::make_unique<PsfCache>(capacity);
+}
+
+Psf::~Psf() = default;
+
+Psf::Psf(Psf const& other) : Psf(other._isFixed, other.getCacheCapacity()) {}
+
+Psf::Psf(Psf && other)
+  : daf::base::Citizen(std::move(other)),
+    _isFixed(other._isFixed),
+    _imageCache(std::move(other._imageCache)),
+    _kernelImageCache(std::move(other._kernelImageCache))
+{}
 
 std::shared_ptr<image::Image<double>> Psf::recenterKernelImage(std::shared_ptr<Image> im,
                                                                geom::Point2D const &position,
@@ -46,15 +99,10 @@ std::shared_ptr<Psf::Image> Psf::computeImage(geom::Point2D position, image::Col
                                               ImageOwnerEnum owner) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
-    std::shared_ptr<Psf::Image> result;
-    if (_cachedImage && color == _cachedImageColor && comparePsfEvalPoints(position, _cachedImagePosition)) {
-        result = _cachedImage;
-    } else {
-        result = doComputeImage(position, color);
-        _cachedImage = result;
-        _cachedImageColor = color;
-        _cachedImagePosition = position;
-    }
+    std::shared_ptr<Psf::Image> result = (*_imageCache)(
+        detail::PsfCacheKey(position, color),
+        [this](detail::PsfCacheKey const& key) { return doComputeImage(key.position, key.color); }
+    );
     if (owner == COPY) {
         result = std::make_shared<Image>(*result, true);
     }
@@ -63,18 +111,12 @@ std::shared_ptr<Psf::Image> Psf::computeImage(geom::Point2D position, image::Col
 
 std::shared_ptr<Psf::Image> Psf::computeKernelImage(geom::Point2D position, image::Color color,
                                                     ImageOwnerEnum owner) const {
-    if (isPointNull(position)) position = getAveragePosition();
-    if (color.isIndeterminate()) color = getAverageColor();
-    std::shared_ptr<Psf::Image> result;
-    if (_cachedKernelImage && (_isFixed || (color == _cachedKernelImageColor &&
-                                            comparePsfEvalPoints(position, _cachedKernelImagePosition)))) {
-        result = _cachedKernelImage;
-    } else {
-        result = doComputeKernelImage(position, color);
-        _cachedKernelImage = result;
-        _cachedKernelImageColor = color;
-        _cachedKernelImagePosition = position;
-    }
+    if (_isFixed || isPointNull(position)) position = getAveragePosition();
+    if (_isFixed || color.isIndeterminate()) color = getAverageColor();
+    std::shared_ptr<Psf::Image> result = (*_kernelImageCache)(
+        detail::PsfCacheKey(position, color),
+        [this](detail::PsfCacheKey const& key) { return doComputeKernelImage(key.position, key.color); }
+    );
     if (owner == COPY) {
         result = std::make_shared<Image>(*result, true);
     }
@@ -121,6 +163,14 @@ std::shared_ptr<Psf::Image> Psf::doComputeImage(geom::Point2D const &position,
 }
 
 geom::Point2D Psf::getAveragePosition() const { return geom::Point2D(); }
+
+std::size_t Psf::getCacheCapacity() const { return _kernelImageCache->capacity(); }
+
+void Psf::setCacheCapacity(std::size_t capacity) {
+    _imageCache->reserve(capacity);
+    _kernelImageCache->reserve(capacity);
+}
+
 }
 }
 }  // namespace lsst::afw::detection
