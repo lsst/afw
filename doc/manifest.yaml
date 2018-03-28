@@ -1,0 +1,24 @@
+# Documentation manifest.
+
+# Name of this package
+# Also the name of the package documentation subdirectory.
+package: "afw"
+
+# List of names of Python modules in this package.
+# For each module there is a corresponding module doc subdirectory.
+modules:
+  - "lsst.afw.cameraGeom"
+  - "lsst.afw.coord"
+  - "lsst.afw.detection"
+  - "lsst.afw.display"
+  - "lsst.afw.fits"
+  - "lsst.afw.formatters"
+  - "lsst.afw.geom"
+  - "lsst.afw.image"
+  - "lsst.afw.math"
+  - "lsst.afw.table"
+
+# Name of the static content directories (subdirectories of `_static`).
+# Static content directories are usually named after the package.
+statics:
+  - "_static/afw"
