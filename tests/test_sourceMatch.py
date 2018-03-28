@@ -51,7 +51,7 @@ except pexExcept.NotFoundError:
     afwdataDir = None
 
 
-class SourceMatchTestCase(unittest.TestCase):
+class SourceMatchTestCase(lsst.utils.tests.TestCase):
     """A test case for matching SourceSets
     """
 
@@ -349,6 +349,41 @@ class SourceMatchTestCase(unittest.TestCase):
         """
         self.assertTrue(value1 == value2 or
                         (np.isnan(value1) and np.isnan(value2)))
+
+    def testDistancePrecision(self):
+        """Test for precision of the calculated distance
+
+        Check that the distance produced by matchRaDec is the same
+        as the distance produced from calculating the separation
+        between the matched coordinates.
+
+        Based on DM-13891.
+        """
+        num = 1000  # Number of points
+        radius = 0.5*afwGeom.arcseconds  # Matching radius
+        tol = 1.0e-10  # Absolute tolerance
+        rng = np.random.RandomState(12345)  # I have the same combination on my luggage
+        coordKey = afwTable.SourceTable.getCoordKey()
+        raKey = coordKey.getRa()
+        decKey = coordKey.getDec()
+        for ii in range(num):
+            src1 = self.ss1.addNew()
+            src1.setId(ii)
+            src1.set(raKey, (10 + 0.001*ii) * afwGeom.degrees)
+            src1.set(decKey, (10 + 0.001*ii) * afwGeom.degrees)
+
+            src2 = self.ss2.addNew()
+            src2.setId(2*num + ii)
+            src2.set(coordKey,
+                     src1.getCoord().offset(rng.uniform(high=360)*afwGeom.degrees,
+                                            rng.uniform(high=radius.asArcseconds())*afwGeom.arcseconds))
+
+        matches = afwTable.matchRaDec(self.ss1, self.ss2, radius)
+        dist1 = np.array([(mm.distance*afwGeom.radians).asArcseconds() for mm in matches])
+        dist2 = np.array([mm.first.getCoord().separation(mm.second.getCoord()).asArcseconds() for mm in matches])
+        diff = dist1 - dist2
+        self.assertLess(diff.std(), tol)  # I get 4e-12
+        self.assertFloatsAlmostEqual(dist1, dist2, atol=tol)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
