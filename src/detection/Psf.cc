@@ -21,19 +21,17 @@ struct PsfCacheKey {
     geom::Point2D const position;
     image::Color const color;
 
-    PsfCacheKey(geom::Point2D const& position_, image::Color color_=image::Color())
-      : position(position_), color(color_) {}
+    PsfCacheKey(geom::Point2D const &position_, image::Color color_ = image::Color())
+            : position(position_), color(color_) {}
 
-    bool operator==(PsfCacheKey const& other) const {
+    bool operator==(PsfCacheKey const &other) const {
         return position == other.position;  // Currently don't care about color
     }
 
-    friend std::ostream & operator<<(std::ostream &os, PsfCacheKey const &key) {
-        return os << key.position;
-    }
+    friend std::ostream &operator<<(std::ostream &os, PsfCacheKey const &key) { return os << key.position; }
 };
 
-} // namespace lsst::afw::detection::detail
+}  // namespace lsst::afw::detection::detail
 
 namespace std {
 
@@ -42,13 +40,13 @@ namespace std {
 // We currently ignore the color.
 template <>
 struct hash<lsst::afw::detection::detail::PsfCacheKey> {
-    std::size_t operator()(lsst::afw::detection::detail::PsfCacheKey const& key) const {
+    std::size_t operator()(lsst::afw::detection::detail::PsfCacheKey const &key) const {
         std::size_t seed = 0;
         return lsst::utils::hashCombine(seed, key.position.getX(), key.position.getY());
     }
 };
 
-} // namespace std
+}  // namespace std
 
 namespace lsst {
 namespace afw {
@@ -58,26 +56,22 @@ namespace {
 
 bool isPointNull(geom::Point2D const &p) { return std::isnan(p.getX()) && std::isnan(p.getY()); }
 
-}  // anonymous
+}  // namespace
 
-Psf::Psf(bool isFixed, std::size_t capacity)
-  : daf::base::Citizen(typeid(this)),
-  _isFixed(isFixed)
-{
-  _imageCache = std::make_unique<PsfCache>(capacity);
-  _kernelImageCache = std::make_unique<PsfCache>(capacity);
+Psf::Psf(bool isFixed, std::size_t capacity) : daf::base::Citizen(typeid(this)), _isFixed(isFixed) {
+    _imageCache = std::make_unique<PsfCache>(capacity);
+    _kernelImageCache = std::make_unique<PsfCache>(capacity);
 }
 
 Psf::~Psf() = default;
 
-Psf::Psf(Psf const& other) : Psf(other._isFixed, other.getCacheCapacity()) {}
+Psf::Psf(Psf const &other) : Psf(other._isFixed, other.getCacheCapacity()) {}
 
-Psf::Psf(Psf && other)
-  : daf::base::Citizen(std::move(other)),
-    _isFixed(other._isFixed),
-    _imageCache(std::move(other._imageCache)),
-    _kernelImageCache(std::move(other._kernelImageCache))
-{}
+Psf::Psf(Psf &&other)
+        : daf::base::Citizen(std::move(other)),
+          _isFixed(other._isFixed),
+          _imageCache(std::move(other._imageCache)),
+          _kernelImageCache(std::move(other._kernelImageCache)) {}
 
 std::shared_ptr<image::Image<double>> Psf::recenterKernelImage(std::shared_ptr<Image> im,
                                                                geom::Point2D const &position,
@@ -100,9 +94,8 @@ std::shared_ptr<Psf::Image> Psf::computeImage(geom::Point2D position, image::Col
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     std::shared_ptr<Psf::Image> result = (*_imageCache)(
-        detail::PsfCacheKey(position, color),
-        [this](detail::PsfCacheKey const& key) { return doComputeImage(key.position, key.color); }
-    );
+            detail::PsfCacheKey(position, color),
+            [this](detail::PsfCacheKey const &key) { return doComputeImage(key.position, key.color); });
     if (owner == COPY) {
         result = std::make_shared<Image>(*result, true);
     }
@@ -114,9 +107,8 @@ std::shared_ptr<Psf::Image> Psf::computeKernelImage(geom::Point2D position, imag
     if (_isFixed || isPointNull(position)) position = getAveragePosition();
     if (_isFixed || color.isIndeterminate()) color = getAverageColor();
     std::shared_ptr<Psf::Image> result = (*_kernelImageCache)(
-        detail::PsfCacheKey(position, color),
-        [this](detail::PsfCacheKey const& key) { return doComputeKernelImage(key.position, key.color); }
-    );
+            detail::PsfCacheKey(position, color),
+            [this](detail::PsfCacheKey const &key) { return doComputeKernelImage(key.position, key.color); });
     if (owner == COPY) {
         result = std::make_shared<Image>(*result, true);
     }
@@ -171,6 +163,6 @@ void Psf::setCacheCapacity(std::size_t capacity) {
     _kernelImageCache->reserve(capacity);
 }
 
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
