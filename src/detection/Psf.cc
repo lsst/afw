@@ -9,7 +9,10 @@
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
 
-namespace lsst::afw::detection::detail {
+namespace lsst {
+namespace afw {
+namespace detection {
+namespace detail {
 
 // Key for caching PSFs with lsst::utils::Cache
 //
@@ -31,7 +34,10 @@ struct PsfCacheKey {
     friend std::ostream &operator<<(std::ostream &os, PsfCacheKey const &key) { return os << key.position; }
 };
 
-}  // namespace lsst::afw::detection::detail
+}  // namespace detail
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 namespace std {
 
