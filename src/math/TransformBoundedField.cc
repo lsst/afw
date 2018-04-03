@@ -67,7 +67,7 @@ ndarray::Array<double, 1, 1> TransformBoundedField::evaluate(ndarray::Array<doub
         xy[1][col] = y[col];
     }
 
-    auto res2D = _transform.getFrameSet()->applyForward(xy);
+    auto res2D = _transform.getMapping()->applyForward(xy);
 
     // res2D has shape 1 x N; return a 1-D view with the extra dimension stripped
     auto resShape = ndarray::makeVector(nPoints);
@@ -137,7 +137,7 @@ void TransformBoundedField::write(OutputArchiveHandle& handle) const {
 
 std::shared_ptr<BoundedField> TransformBoundedField::operator*(double const scale) const {
     auto zoomMap = ast::ZoomMap(1, scale);
-    auto newMapping = getTransform().getFrameSet()->then(zoomMap);
+    auto newMapping = getTransform().getMapping()->then(zoomMap);
     auto newTransform = Transform(newMapping);
     return std::make_shared<TransformBoundedField>(getBBox(), newTransform);
 }
@@ -147,13 +147,11 @@ bool TransformBoundedField::operator==(BoundedField const& rhs) const {
     if (!rhsCasted) return false;
 
     return getBBox() == rhsCasted->getBBox() &&
-           *(getTransform().getFrameSet()) == *(rhsCasted->getTransform().getFrameSet());
+           *(getTransform().getMapping()) == *(rhsCasted->getTransform().getMapping());
 }
 
 std::string TransformBoundedField::toString() const {
-    std::ostringstream os;
-    os << "TransformBoundedField (containing " << _transform.getFrameSet()->getNFrame() << " frames)";
-    return os.str();
+    return "TransformBoundedField";
 }
 
 }  // namespace math

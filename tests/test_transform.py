@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 import unittest
 
 from numpy.testing import assert_allclose
+import astshim as ast
 from astshim.test import makeForwardPolyMap
 
 import lsst.utils.tests
@@ -42,18 +43,16 @@ class TransformTestCase(TransformTestBaseClass):
                 for midName in self.endpointPrefixes:
                     self.checkThen(fromName, midName, toName)
 
-    def testFrameSetIndependence(self):
-        """Test that the FrameSet returned by getFrameSet is independent of the contained FrameSet
+    def testMappingIndependence(self):
+        """Test that the mapping returned by getMapping is independent of the contained mapping
         """
-        baseFrame = self.makeGoodFrame("Generic", 2)
-        currFrame = self.makeGoodFrame("Generic", 2)
-        initialFrameSet = self.makeFrameSet(baseFrame, currFrame)
+        initialMapping = ast.ZoomMap(2, 1.5)
         initialIdent = "Initial Ident"
-        initialFrameSet.ident = initialIdent
-        transform = afwGeom.TransformGenericToGeneric(initialFrameSet)
-        extractedFrameSet = transform.getFrameSet()
-        extractedFrameSet.ident = "Extracted Ident"
-        self.assertEqual(initialIdent, transform.getFrameSet().ident)
+        initialMapping.ident = initialIdent
+        transform = afwGeom.TransformGenericToGeneric(initialMapping)
+        extractedMapping = transform.getMapping()
+        extractedMapping.ident = "Extracted Ident"
+        self.assertEqual(initialIdent, transform.getMapping().ident)
 
     def testThen(self):
         """Test that Transform.then behaves as expected
@@ -70,17 +69,13 @@ class TransformTestCase(TransformTestBaseClass):
             assert_allclose(merged.applyForward(inPoint),
                             transform2.applyForward(transform1.applyForward(inPoint)))
 
-            expectedNumFrames = 2 if simplify else 4
-            self.assertEqual(merged.getFrameSet().nFrame, expectedNumFrames)
-
     def testThenChaining(self):
         """Test that the order of chaining Transform.then does not matter
 
         Test that A.then(B.then(C)) gives the same transformation as
         (A.then(B)).then(C)
-        Internal details may differ (e.g. frame indices if the frames in the
-        contained FrameSet), but the mathematical result of the two transforms
-        should be the same.
+        Internal details may differ, but the mathematical result of the two
+        transforms should be the same.
         """
         transform1 = afwGeom.TransformGenericToGeneric(
             makeForwardPolyMap(2, 3))

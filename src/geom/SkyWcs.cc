@@ -216,11 +216,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
 }
 
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const {
-    auto frameDict = std::static_pointer_cast<const ast::FrameDict>(_transform->getFrameSet());
-    if (!frameDict) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "Could not cast FrameSet to FrameDict");
-    }
-    return frameDict;
+    return _frameDict;
 }
 
 bool SkyWcs::isFits() const {
@@ -317,7 +313,7 @@ void SkyWcs::write(OutputArchiveHandle& handle) const {
 }
 
 SkyWcs::SkyWcs(std::shared_ptr<ast::FrameDict> frameDict)
-        : _transform(new TransformPoint2ToSpherePoint(std::move(frameDict))),
+        : _frameDict(frameDict), _transform(),
           _pixelOrigin(),
           _pixelScaleAtOrigin(0 * radians) {
     _computeCache();
@@ -415,7 +411,7 @@ std::shared_ptr<SkyWcs> makeFlippedWcs(SkyWcs const& wcs, bool flipLR, bool flip
 
 std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const& pixelTransform, SkyWcs const& wcs,
                                         bool modifyActualPixels) {
-    auto const pixelMapping = pixelTransform.getFrameSet()->getMapping();
+    auto const pixelMapping = pixelTransform.getMapping();
     auto oldFrameDict = wcs.getFrameDict();
     bool const hasActualPixels = oldFrameDict->hasDomain("ACTUAL_PIXELS");
     auto const pixelFrame = oldFrameDict->getFrame("PIXELS", false);

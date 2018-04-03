@@ -239,13 +239,16 @@ public:
     /**
      * Get the contained FrameDict
      *
-     * The forward transform goes from pixels (using the LSST zero convention)
-     * to sky ICRS RA, Dec (in radians)
+     * The base frame will be PIXELS or ACTUAL_PIXELS and the current frame will be SKY,
+     * so the forward transform goes from pixels (using the LSST zero convention)
+     * to sky ICRS RA, Dec (in radians). For more details see
+     *  @ref skywcs_frameDict "the contained ast::FrameDict"
      */
     std::shared_ptr<const ast::FrameDict> getFrameDict() const;
 
     /**
-     * Get the contained TransformPoint2ToSpherePoint
+     * Get a TransformPoint2ToSpherePoint that transforms pixels to sky in the forward direction
+     * and sky to pixels in the inverse direction.
      */
     std::shared_ptr<const TransformPoint2ToSpherePoint> getTransform() const { return _transform; };
 
@@ -405,6 +408,9 @@ private:
      */
     std::shared_ptr<ast::FrameDict> _checkFrameDict(ast::FrameDict const &frameDict) const;
 
+    // the full FrameDict, for operations that need intermediate frames
+    std::shared_ptr<const ast::FrameDict> _frameDict;  
+    // cached transform from _frameDict, for fast computation of pixels<->sky
     std::shared_ptr<const TransformPoint2ToSpherePoint> _transform;
     Point2D _pixelOrigin;       // cached pixel origin
     Angle _pixelScaleAtOrigin;  // cached pixel scale at pixel origin
@@ -425,6 +431,7 @@ private:
 
     /// Compute _pixelOrigin and _pixelScaleAtOrigin
     void _computeCache() {
+        _transform = std::make_shared<TransformPoint2ToSpherePoint>(*_frameDict->getMapping(), true);
         _pixelOrigin = skyToPixel(getSkyOrigin());
         _pixelScaleAtOrigin = getPixelScale(_pixelOrigin);
     }

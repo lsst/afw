@@ -638,7 +638,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         """
         fromEndpoint = transform.fromEndpoint
         toEndpoint = transform.toEndpoint
-        frameSet = transform.getFrameSet()
+        mappingFromTransform = transform.getMapping()
 
         nIn = mapping.nIn
         nOut = mapping.nOut
@@ -659,12 +659,12 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             outPoint = transform.applyForward(inPoint)
             rawOutPoint = toEndpoint.dataFromPoint(outPoint)
             assert_allclose(rawOutPoint, mapping.applyForward(rawInPoint), err_msg=msg)
-            assert_allclose(rawOutPoint, frameSet.applyForward(rawInPoint), err_msg=msg)
+            assert_allclose(rawOutPoint, mappingFromTransform.applyForward(rawInPoint), err_msg=msg)
 
             outArray = transform.applyForward(inArray)
             rawOutArray = toEndpoint.dataFromArray(outArray)
             self.assertFloatsAlmostEqual(rawOutArray, mapping.applyForward(rawInArray), msg=msg)
-            self.assertFloatsAlmostEqual(rawOutArray, frameSet.applyForward(rawInArray), msg=msg)
+            self.assertFloatsAlmostEqual(rawOutArray, mappingFromTransform.applyForward(rawInArray), msg=msg)
         else:
             # Need outPoint, but don't need it to be consistent with inPoint
             rawOutPoint = self.makeRawPointData(nOut)
@@ -682,7 +682,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             inversePoint = transform.applyInverse(outPoint)
             rawInversePoint = fromEndpoint.dataFromPoint(inversePoint)
             assert_allclose(rawInversePoint, mapping.applyInverse(rawOutPoint), err_msg=msg)
-            assert_allclose(rawInversePoint, frameSet.applyInverse(rawOutPoint), err_msg=msg)
+            assert_allclose(rawInversePoint, mappingFromTransform.applyInverse(rawOutPoint), err_msg=msg)
 
             # inverse transformation of an array of points;
             # remember that the inverse will not give the original values
@@ -690,7 +690,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             inverseArray = transform.applyInverse(outArray)
             rawInverseArray = fromEndpoint.dataFromArray(inverseArray)
             self.assertFloatsAlmostEqual(rawInverseArray, mapping.applyInverse(rawOutArray), msg=msg)
-            self.assertFloatsAlmostEqual(rawInverseArray, frameSet.applyInverse(rawOutArray), msg=msg)
+            self.assertFloatsAlmostEqual(rawInverseArray, mappingFromTransform.applyInverse(rawOutArray),
+                                         msg=msg)
         else:
             self.assertFalse(transform.hasInverse)
 
@@ -708,8 +709,8 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         """
         fromEndpoint = forward.fromEndpoint
         toEndpoint = forward.toEndpoint
-        frameSet = forward.getFrameSet()
-        invFrameSet = inverse.getFrameSet()
+        forwardMapping = forward.getMapping()
+        inverseMapping = inverse.getMapping()
 
         # properties
         self.assertEqual(forward.fromEndpoint,
@@ -737,26 +738,26 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         if forward.hasForward:
             self.assertEqual(forward.applyForward(inPoint),
                              inverse.applyInverse(inPoint), msg=msg)
-            self.assertEqual(frameSet.applyForward(rawInPoint),
-                             invFrameSet.applyInverse(rawInPoint), msg=msg)
+            self.assertEqual(forwardMapping.applyForward(rawInPoint),
+                             inverseMapping.applyInverse(rawInPoint), msg=msg)
             # Assertions must work with both lists and numpy arrays
             assert_array_equal(forward.applyForward(inArray),
                                inverse.applyInverse(inArray),
                                err_msg=msg)
-            assert_array_equal(frameSet.applyForward(rawInArray),
-                               invFrameSet.applyInverse(rawInArray),
+            assert_array_equal(forwardMapping.applyForward(rawInArray),
+                               inverseMapping.applyInverse(rawInArray),
                                err_msg=msg)
 
         if forward.hasInverse:
             self.assertEqual(forward.applyInverse(outPoint),
                              inverse.applyForward(outPoint), msg=msg)
-            self.assertEqual(frameSet.applyInverse(rawOutPoint),
-                             invFrameSet.applyForward(rawOutPoint), msg=msg)
+            self.assertEqual(forwardMapping.applyInverse(rawOutPoint),
+                             inverseMapping.applyForward(rawOutPoint), msg=msg)
             assert_array_equal(forward.applyInverse(outArray),
                                inverse.applyForward(outArray),
                                err_msg=msg)
-            assert_array_equal(frameSet.applyInverse(rawOutArray),
-                               invFrameSet.applyForward(rawOutArray),
+            assert_array_equal(forwardMapping.applyInverse(rawOutArray),
+                               inverseMapping.applyForward(rawOutArray),
                                err_msg=msg)
 
     def checkTransformFromMapping(self, fromName, toName):
@@ -857,17 +858,10 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
             self.checkPersistence(transform)
 
-            frameSetCopy = transform.getFrameSet()
-            transformCopy = TransformClass(frameSetCopy)
+            mappingFromTransform = transform.getMapping()
+            transformCopy = TransformClass(mappingFromTransform)
             self.assertEqual(type(transform), type(transformCopy))
-            self.assertEqual(transform.getFrameSet(), transformCopy.getFrameSet())
-
-            desNFrame = 4  # desired number of frames
-            self.assertEqual(frameSet.nFrame, desNFrame)
-            self.assertEqual(frameSetCopy.nFrame, desNFrame)
-            for frameInd in range(1, 1 + desNFrame):
-                self.assertEqual(frameSet.getFrame(frameInd).ident,
-                                 self.frameIdentDict[frameInd])
+            self.assertEqual(transform.getMapping(), mappingFromTransform)
 
             polyMap = makeTwoWayPolyMap(nIn, nOut)
 
@@ -891,14 +885,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                     self.assertEqual(currFrame.lonAxis, desCurrLonAxis)
 
                 permTransform = TransformClass(permutedFS.frameSet)
-                # If the base and/or current frame is a SkyFrame then make sure the frame
-                # in the *Transform* has axes in standard (longitude, latitude) order
-                unpermFrameSet = permTransform.getFrameSet()
-                if permutedFS.isBaseSkyFrame:
-                    self.assertEqual(unpermFrameSet.getFrame(ast.FrameSet.BASE).lonAxis, 1)
-                if permutedFS.isCurrSkyFrame:
-                    self.assertEqual(unpermFrameSet.getFrame(ast.FrameSet.CURRENT).lonAxis, 1)
-
                 self.checkTransformation(permTransform, mapping=polyMap, msg=msg)
 
     def checkGetInverse(self, fromName, toName):
@@ -929,10 +915,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
                 makeForwardPolyMap(nOut, nIn).getInverse(),
                 "{}, Map={}".format(msg, "Inverse"))
 
-            self.checkInverseFrameSet(TransformClass,
-                                      self.makeGoodFrame(fromName, nIn),
-                                      self.makeGoodFrame(toName, nOut))
-
     def checkInverseMapping(self, TransformClass, mapping, msg):
         """Test Transform<fromName>To<toName>.getInverse for a specific
         mapping.
@@ -953,44 +935,6 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.checkInverseTransformation(transform, inverse, msg=msg)
         self.checkInverseTransformation(inverse, inverseInverse, msg=msg)
         self.checkTransformation(inverseInverse, mapping, msg=msg)
-
-    def checkInverseFrameSet(self, TransformClass, frameIn, frameOut):
-        """Test whether inverting a Transform preserves all information
-           in its FrameSet.
-
-        Parameters
-        ----------
-        TransformClass : `type`
-            the transform to test
-        frameIn, frameOut : `ast.Frame`
-            the frames to between which `TransformClass` shall convert. Must be
-            compatible with `TransformClass`.
-        """
-        desNFrame = 4  # desired number of frames
-        frameSet = self.makeFrameSet(frameIn, frameOut)
-        self.assertEqual(frameSet.nFrame, desNFrame)
-
-        baseMsg = "TransformClass={}, nIn={}, nOut={}".format(
-            TransformClass.__name__, frameIn.nAxes, frameOut.nAxes)
-        transform = TransformClass(frameSet)
-        forwardFrames = transform.getFrameSet()
-        self.assertFalse(forwardFrames.isInverted)
-        self.assertEqual(forwardFrames.base, 1)
-        self.assertEqual(forwardFrames.current, desNFrame)
-
-        self.assertEqual(forwardFrames.nFrame, desNFrame, msg=baseMsg)
-        for frameInd in range(1, 1 + desNFrame):
-            self.assertEqual(forwardFrames.getFrame(frameInd).ident,
-                             self.frameIdentDict[frameInd], msg=baseMsg)
-
-        reverseFrames = transform.getInverse().getFrameSet()
-        self.assertTrue(reverseFrames.isInverted)
-        self.assertEqual(reverseFrames.base, desNFrame)
-        self.assertEqual(reverseFrames.current, 1)
-        self.assertEqual(reverseFrames.nFrame, desNFrame, msg=baseMsg)
-        for frameInd in range(1, 1 + desNFrame):
-            self.assertEqual(reverseFrames.getFrame(frameInd).ident,
-                             self.frameIdentDict[frameInd], msg=baseMsg)
 
     def checkGetJacobian(self, fromName, toName):
         """Test Transform<fromName>To<toName>.getJacobian
@@ -1109,15 +1053,15 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         self.assertEqual(type(transform1), type(transform2))
         self.assertEqual(transform1.fromEndpoint, transform2.fromEndpoint)
         self.assertEqual(transform1.toEndpoint, transform2.toEndpoint)
-        self.assertEqual(transform1.getFrameSet(), transform2.getFrameSet())
+        self.assertEqual(transform1.getMapping(), transform2.getMapping())
 
         fromEndpoint = transform1.fromEndpoint
         toEndpoint = transform1.toEndpoint
-        frameSet = transform1.getFrameSet()
-        nIn = frameSet.nIn
-        nOut = frameSet.nOut
+        mapping = transform1.getMapping()
+        nIn = mapping.nIn
+        nOut = mapping.nOut
 
-        if frameSet.hasForward:
+        if mapping.hasForward:
             nPoints = 7  # arbitrary
             rawInArray = self.makeRawArrayData(nPoints, nIn)
             inArray = fromEndpoint.arrayFromData(rawInArray)
@@ -1127,7 +1071,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
             outDataRoundTrip = toEndpoint.dataFromArray(outArrayRoundTrip)
             assert_allclose(outData, outDataRoundTrip)
 
-        if frameSet.hasInverse:
+        if mapping.hasInverse:
             nPoints = 7  # arbitrary
             rawOutArray = self.makeRawArrayData(nPoints, nOut)
             outArray = toEndpoint.arrayFromData(rawOutArray)

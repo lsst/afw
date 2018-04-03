@@ -34,7 +34,7 @@ def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
     actualPixelsToPixels : `lsst.afw.geom.TransformPoint2ToPoint2`
         The transform from ACTUAL_PIXELS to PIXELS
     """
-    actualPixelsToPixelsMap = actualPixelsToPixels.getFrameSet()
+    actualPixelsToPixelsMap = actualPixelsToPixels.getMapping()
     actualPixelsFrame = ast.Frame(2, "Domain=ACTUAL_PIXELS")
     frameDict = skyWcs.getFrameDict()
     frameDict.addFrame("PIXELS", actualPixelsToPixelsMap.getInverse(), actualPixelsFrame)
@@ -406,7 +406,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             # compare pixels to IWC
             pixelsToIwc = TransformPoint2ToPoint2(modifiedFrameDict.getMapping("PIXELS", "IWC"))
             desiredPixelsToIwc = TransformPoint2ToPoint2(
-                pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
+                pixelTransform.getMapping().then(originalFrameDict.getMapping("PIXELS", "IWC")))
             self.assertPairListsAlmostEqual(pixelsToIwc.applyForward(pixPointList),
                                             desiredPixelsToIwc.applyForward(pixPointList))
 
@@ -472,7 +472,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
                 # check that PIXELS to IWC has been modified as expected
                 desiredPixelsToIwc = TransformPoint2ToPoint2(
-                    pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
+                    pixelTransform.getMapping().then(originalFrameDict.getMapping("PIXELS", "IWC")))
                 self.assertPairListsAlmostEqual(modifiedPixelsToIwc.applyForward(pixPointList),
                                                 desiredPixelsToIwc.applyForward(pixPointList))
 
@@ -844,8 +844,8 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
             self.assertTrue(isinstance(pixelToIwc, TransformPoint2ToPoint2))
             self.assertTrue(isinstance(iwcToSky, TransformPoint2ToSpherePoint))
             if simplify:
-                self.assertTrue(pixelToIwc.getFrameSet().getMapping().isSimple)
-                self.assertTrue(iwcToSky.getFrameSet().getMapping().isSimple)
+                self.assertTrue(pixelToIwc.getMapping().isSimple)
+                self.assertTrue(iwcToSky.getMapping().isSimple)
             # else the mapping may have already been simplified inside the WCS,
             # so don't assert isSimple is false
 
@@ -988,31 +988,24 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
                     crpix=crpix,
                     crval=crval,
                     cdMatrix=cd))
-
-    def points(self):
-        for x in (0.0, -2.0, 42.5, 1042.3):
-            for y in (27.6, -0.1, 0.0, 196.0):
-                yield Point2D(x, y)
+        self.pixelPoints = [Point2D(x, y) for x, y in
+                            itertools.product((0.0, -2.0, 42.5, 1042.3),
+                                              (27.6, -0.1, 0.0, 196.0))]
 
     def testGenericWcs(self):
         """Test that input and output points represent the same sky position.
 
         Would prefer a black-box test, but don't have the numbers for it.
         """
+        inPoints = self.pixelPoints
         for wcs1 in self.wcsList:
             for wcs2 in self.wcsList:
                 transform = makeWcsPairTransform(wcs1, wcs2)
-                # check that the transform has been simplified
-                frameSet = transform.getFrameSet()
-                self.assertEqual(frameSet.nFrame, 2)
-                for point1 in self.points():
-                    point2 = transform.applyForward(point1)
-                    self.assertPairsAlmostEqual(
-                        transform.applyInverse(point2),
-                        point1)
-                    self.assertSpherePointsAlmostEqual(
-                        wcs1.pixelToSky(point1),
-                        wcs2.pixelToSky(point2))
+                outPoints = transform.applyForward(inPoints)
+                inPointsRoundTrip = transform.applyInverse(outPoints)
+                self.assertPairListsAlmostEqual(inPoints, inPointsRoundTrip)
+                self.assertSpherePointListsAlmostEqual(wcs1.pixelToSky(inPoints),
+                                                       wcs2.pixelToSky(outPoints))
 
     def testSameWcs(self):
         """Confirm that pairing two identical Wcs gives an identity transform.
@@ -1020,13 +1013,12 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
         for wcs in self.wcsList:
             transform = makeWcsPairTransform(wcs, wcs)
             # check that the transform has been simplified
-            frameSet = transform.getFrameSet()
-            self.assertEqual(frameSet.nFrame, 2)
-            for point in self.points():
-                outPoint1 = transform.applyForward(point)
-                outPoint2 = transform.applyInverse(outPoint1)
-                self.assertPairsAlmostEqual(point, outPoint1)
-                self.assertPairsAlmostEqual(outPoint1, outPoint2)
+            self.assertTrue(transform.getMapping().isSimple)
+            # check the transform
+            outPoints1 = transform.applyForward(self.pixelPoints)
+            outPoints2 = transform.applyInverse(outPoints1)
+            self.assertPairListsAlmostEqual(self.pixelPoints, outPoints1)
+            self.assertPairListsAlmostEqual(outPoints1, outPoints2)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
