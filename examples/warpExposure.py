@@ -47,7 +47,7 @@ where exposure arguments are paths to Exposure fits files"""
                       help="kernel type: bilinear or lancszosN where N = order; default=%s" % (DefKernel,))
     parser.add_option("-v", "--verbosity",
                       type=int, default=DefVerbosity,
-                      help="verbosity of diagnostic trace messages; 1 for just TRACE1, more for more" +
+                      help="verbosity of diagnostic trace messages; 1 for just TRACE1, more for more"
                       " information; default=%s" % (DefVerbosity,))
 
     (opt, args) = parser.parse_args()

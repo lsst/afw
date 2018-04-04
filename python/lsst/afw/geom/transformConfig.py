@@ -75,9 +75,9 @@ transformRegistry.register("inverted", invertingFactory)
 
 class AffineTransformConfig(Config):
     linear = ListField(
-        doc="""2x2 linear matrix in the usual numpy order;
-            to rotate a vector by theta use: cos(theta), sin(theta),
-            -sin(theta), cos(theta)""",
+        doc="2x2 linear matrix in the usual numpy order; "
+            "to rotate a vector by theta use: cos(theta), sin(theta), "
+            "-sin(theta), cos(theta)",
         dtype=float,
         length=4,
         default=(1, 0, 0, 1),
@@ -117,7 +117,7 @@ class RadialTransformConfig(Config):
         if len(self.coeffs) == 1 or self.coeffs[0] != 0 or self.coeffs[1] == 0:
             raise RuntimeError(
                 "invalid radial transform coeffs %s: " % (self.coeffs,) +
-                " need len(coeffs)=0 or len(coeffs)>1, coeffs[0]==0, " +
+                "need len(coeffs)=0 or len(coeffs)>1, coeffs[0]==0, "
                 "and coeffs[1]!=0")
 
 
@@ -133,7 +133,7 @@ transformRegistry.register("radial", radialFactory)
 
 class MultiTransformConfig(Config):
     transformDict = ConfigDictField(
-        doc="Dict of index: OneTransformConfig (a transform wrapper); " +
+        doc="Dict of index: OneTransformConfig (a transform wrapper); "
             "key order is transform order",
         keytype=int,
         itemtype=OneTransformConfig,
