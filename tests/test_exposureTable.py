@@ -200,9 +200,9 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         crval2 = lsst.afw.geom.SpherePoint(crval2.getLongitude() + 5*arcseconds,
                                            crval2.getLatitude() - 5*arcseconds)
         wcs2 = makeSkyWcs(
-            crval = crval2,
-            crpix = self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
-            cdMatrix = self.wcs.getCdMatrix() * 1.1,
+            crval=crval2,
+            crpix=self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
+            cdMatrix=self.wcs.getCdMatrix() * 1.1,
         )
         for x1, y1 in points:
             p1 = lsst.afw.geom.Point2D(x1, y1)

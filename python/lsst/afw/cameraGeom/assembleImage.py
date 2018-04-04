@@ -68,7 +68,7 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     """
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
-    if type(destImage.Factory) != type(rawImage.Factory):
+    if type(destImage.Factory) != type(rawImage.Factory):  # noqa E721
         raise RuntimeError("destImage type = %s != %s = rawImage type" %
                            type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
     inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox())
@@ -95,7 +95,7 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     """
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")
-    if type(destImage.Factory) != type(rawImage.Factory):
+    if type(destImage.Factory) != type(rawImage.Factory):  # noqa E721
         raise RuntimeError("destImage type = %s != %s = rawImage type" %
                            type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
     inBBox = amplifier.getRawBBox()

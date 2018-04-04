@@ -14,7 +14,7 @@ def reduceToFits(obj):
     options = ImageWriteOptions(ImageCompressionOptions(ImageCompressionOptions.NONE))
     try:
         obj.writeFits(manager, options)
-    except:
+    except Exception:
         obj.writeFits(manager)
     size = manager.getLength()
     data = manager.getData()

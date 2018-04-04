@@ -31,7 +31,6 @@ or
 """
 from __future__ import absolute_import, division, print_function
 
-import os
 import unittest
 
 import astshim
@@ -117,10 +116,10 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
             predResult = self.transform.applyForward(self.pointList)[0] * multFactor
 
             scaledField1 = self.boundedField * multFactor
-            assert_allclose(scaledField1.evaluate(self.xList, self.yList), predResult, atol = atol)
+            assert_allclose(scaledField1.evaluate(self.xList, self.yList), predResult, atol=atol)
 
             scaledField2 = multFactor * self.boundedField
-            assert_allclose(scaledField2.evaluate(self.xList, self.yList), predResult, atol = atol)
+            assert_allclose(scaledField2.evaluate(self.xList, self.yList), predResult, atol=atol)
 
     def testBBox(self):
         """The BBox should have no effect on the kind of transform being tested

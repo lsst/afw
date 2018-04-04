@@ -34,7 +34,7 @@ import lsst.pex.exceptions as pex
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 
-class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
+class KdTreeGaussianProcessTestCase(lsst.utils.tests.TestCase):
 
     def testKdTreeGetData(self):
         """

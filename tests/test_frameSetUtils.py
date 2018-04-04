@@ -33,9 +33,9 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         orientation = 0 * degrees
         flipX = False
         metadata = makeSimpleWcsMetadata(
-            crpix = self.crpix,
-            crval = self.crval,
-            cdMatrix = makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX),
+            crpix=self.crpix,
+            crval=self.crval,
+            cdMatrix=makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX),
         )
         self.assertEqual(metadata.nameCount(), 12)  # 2 CD terms are zero and so are omitted
         metadata.add("SIMPLE", True)

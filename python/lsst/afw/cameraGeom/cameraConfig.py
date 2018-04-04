@@ -59,8 +59,8 @@ class DetectorConfig(pexConfig.Config):
             return None
         try:
             return np.array(self.crosstalk, dtype=np.float32).reshape((numAmps, numAmps))
-        except:
-            raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix")
+        except Exception as e:
+            raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix: %s" % (e,))
 
 
 class CameraConfig(pexConfig.Config):

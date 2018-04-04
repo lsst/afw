@@ -171,11 +171,11 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         """
         xarr = [p[0] for p in pixPosList]
         yarr = [p[1] for p in pixPosList]
-        skyCoordList = astropy.wcs.utils.pixel_to_skycoord(xp = xarr,
-                                                           yp = yarr,
-                                                           wcs = astropyWcs,
-                                                           origin = 0,
-                                                           mode = "all")
+        skyCoordList = astropy.wcs.utils.pixel_to_skycoord(xp=xarr,
+                                                           yp=yarr,
+                                                           wcs=astropyWcs,
+                                                           origin=0,
+                                                           mode="all")
         icrsList = [sc.transform_to("icrs") for sc in skyCoordList]
         return [SpherePoint(sc.ra.deg * degrees, sc.dec.deg * degrees) for sc in icrsList]
 
@@ -191,11 +191,11 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         skyCoordList = [astropy.coordinates.SkyCoord(c[0].asDegrees(),
                                                      c[1].asDegrees(),
                                                      frame="icrs",
-                                                     unit = "deg") for c in skyPosList]
-        xyArr = [astropy.wcs.utils.skycoord_to_pixel(coords = sc,
-                                                     wcs = astropyWcs,
-                                                     origin = 0,
-                                                     mode = "all") for sc in skyCoordList]
+                                                     unit="deg") for c in skyPosList]
+        xyArr = [astropy.wcs.utils.skycoord_to_pixel(coords=sc,
+                                                     wcs=astropyWcs,
+                                                     origin=0,
+                                                     mode="all") for sc in skyCoordList]
         # float is needed to avoid truncation to int
         return [Point2D(float(x), float(y)) for x, y in xyArr]
 
@@ -351,9 +351,9 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         for crval, orientation, flipX in itertools.product(self.crvalList,
                                                            self.orientationList,
                                                            (False, True)):
-            self.checkTanWcs(crval = crval,
-                             orientation = orientation,
-                             flipX = flipX,
+            self.checkTanWcs(crval=crval,
+                             orientation=orientation,
+                             flipX=flipX,
                              )
 
     def testTanWcsFromFrameDict(self):
@@ -542,7 +542,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
         bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
@@ -576,10 +576,10 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
             self.assertAlmostEqual(pixelArea, predictedPixelArea)
 
     def testBasics(self):
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         self.assertEqual(len(self.metadata.names(False)), 14)
         self.checkWcs(skyWcs)
-        makeSkyWcs(self.metadata, strip = True)
+        makeSkyWcs(self.metadata, strip=True)
         self.assertEqual(len(self.metadata.names(False)), 0)
 
     def testNormalizationFk5(self):
@@ -640,7 +640,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         self.metadata.set("CTYPE1", "RA---TPV")
         self.metadata.set("CTYPE2", "DEC--TPV")
 
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         self.checkWcs(skyWcs)
 
     def testCD_PC(self):
@@ -666,7 +666,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         ):
             md.set(k, v)
 
-        wcs = makeSkyWcs(md, strip = False)
+        wcs = makeSkyWcs(md, strip=False)
 
         pixPos = Point2D(1000, 2000)
         pred_skyPos = SpherePoint(4.459815023498577 * degrees, 16.544199850984768 * degrees)
@@ -690,7 +690,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
                         self.assertEqual(md.get("CD%d_%d" % (i, j)),
                                          md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
 
-            wcs2 = makeSkyWcs(md, strip = False)
+            wcs2 = makeSkyWcs(md, strip=False)
             skyPos2 = wcs2.pixelToSky(pixPos)
             self.assertSpherePointsAlmostEqual(skyPos2, pred_skyPos)
 
@@ -876,7 +876,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
         self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=self.bbox)

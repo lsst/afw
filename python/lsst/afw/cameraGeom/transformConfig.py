@@ -6,12 +6,12 @@ from lsst.afw.geom import TransformConfig
 
 class TransformMapConfig(pexConfig.Config):
     transforms = pexConfig.ConfigDictField(
-        doc = "Dict of coordinate system name: TransformConfig",
-        keytype = str,
-        itemtype = TransformConfig,
+        doc="Dict of coordinate system name: TransformConfig",
+        keytype=str,
+        itemtype=TransformConfig,
     )
     nativeSys = pexConfig.Field(
-        doc = "Name of reference coordinate system",
-        dtype = str,
-        optional = False,
+        doc="Name of reference coordinate system",
+        dtype=str,
+        optional=False,
     )

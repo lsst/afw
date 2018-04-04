@@ -63,7 +63,7 @@ class TransformTestCase(TransformTestBaseClass):
             makeForwardPolyMap(3, 4))
 
         for simplify in (False, True):
-            merged = transform1.then(transform2, simplify = simplify)
+            merged = transform1.then(transform2, simplify=simplify)
 
             inPoint = self.makeRawPointData(2)
             assert_allclose(merged.applyForward(inPoint),

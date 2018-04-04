@@ -988,6 +988,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         else:
             return [(0, 0)]
 
+
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 

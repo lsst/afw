@@ -27,7 +27,7 @@ from lsst.utils import continueClass
 from .angle import Angle, AngleUnit
 
 
-@continueClass
+@continueClass  # noqa F811
 class AngleUnit:
 
     def __mul__(self, other):

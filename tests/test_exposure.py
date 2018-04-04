@@ -283,10 +283,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         boresightRotAngle = 45.6 * afwGeom.degrees
         weather = Weather(1.1, 2.2, 0.3)
         visitInfo = afwImage.VisitInfo(
-            exposureId = exposureId,
-            exposureTime = exposureTime,
-            boresightRotAngle = boresightRotAngle,
-            weather = weather,
+            exposureId=exposureId,
+            exposureTime=exposureTime,
+            boresightRotAngle=boresightRotAngle,
+            weather=weather,
         )
         # Calib used to have exposure time and exposure date, so check for lack
         # of interference

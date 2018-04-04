@@ -809,14 +809,11 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         source.set(1.0)
 
         foot = afwDetect.Footprint()
-        spanList = [afwGeom.Span(*s) for s in ((50, 50, 60),  # Oversized on the source image, right; only some pixels overlap
-                                               # Oversized on the source, left and right; and on sub-target
-                                               # image, top
-                                               (60, 0, 100),
-                                               # Oversized on the source image, top, left and right; aiming
-                                               # for segfault
-                                               (99, 0, 1000)
-                                               )]
+        spanList = [afwGeom.Span(*s) for s in (
+            (50, 50, 60),  # Oversized on the source image, right; only some pixels overlap
+            (60, 0, 100),  # Oversized on the source, left and right; and on sub-target image, top
+            (99, 0, 1000),  # Oversized on the source image, top, left and right; aiming for segfault
+        )]
         foot.spans = afwGeom.SpanSet(spanList)
 
         foot.spans.clippedTo(subTarget.getBBox()).clippedTo(source.getBBox()).\

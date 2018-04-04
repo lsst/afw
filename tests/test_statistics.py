@@ -542,6 +542,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         mask.set(1, 1, maskVal)
         self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 1)
 
+
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 

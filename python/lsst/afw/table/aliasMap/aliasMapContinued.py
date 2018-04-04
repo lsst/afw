@@ -28,7 +28,7 @@ from lsst.utils import continueClass
 from .aliasMap import AliasMap
 
 
-@continueClass
+@continueClass  # noqa F811
 class AliasMap:
 
     def keys(self):

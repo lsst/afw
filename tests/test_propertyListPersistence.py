@@ -28,7 +28,7 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
-import lsst.afw.image as afwImage       # import the formatter for PropertyList
+import lsst.afw.image as afwImage  # noqa F401 import the formatter for PropertyList
 
 
 class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):

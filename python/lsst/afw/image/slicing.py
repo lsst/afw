@@ -36,7 +36,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
     as before, but if you specify PARENT the bounding box is interpreted in PARENT coordinates
     (this includes slices; e.g.
      im[-3:, -2:, afwImage.PARENT]
-    still means the last few rows and columns, and 
+    still means the last few rows and columns, and
      im[1001:1004, 2006:2010, afwImage.PARENT]
     with xy0 = (1000, 2000) refers to the same pixels as
      im[1:4, 6:10, afwImage.LOCAL]
@@ -52,7 +52,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
     if isinstance(_origin, ImageOrigin):
         origin = _origin
         imageSlice = imageSlice[0] if len(imageSlice) <= 2 else imageSlice[:-1]
-        
+
     if isinstance(imageSlice, afwGeom.Box2I):
         return imageSlice, origin
 
@@ -76,7 +76,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
         if isinstance(s, slice):
             if z0 != 0:
                 start = s.start if s.start is None or s.start < 0 else s.start - z0
-                stop  = s.stop  if s.stop  is None or s.stop  < 0 else s.stop -  z0
+                stop = s.stop if s.stop is None or s.stop < 0 else s.stop - z0
                 s = slice(start, stop, s.step)
         elif isinstance(s, int):
             if s < 0:
@@ -89,6 +89,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
 
     x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
     return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1)), LOCAL
+
 
 def supportSlicing(cls):
     """Support image slicing

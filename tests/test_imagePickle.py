@@ -92,9 +92,9 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
 
     def testMaskedImage(self):
         scale = 1.0*afwGeom.arcseconds
-        wcs = afwGeom.makeSkyWcs(crval = afwGeom.SpherePoint(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
-                                 crpix = afwGeom.Point2D(0.0, 0.0),
-                                 cdMatrix = afwGeom.makeCdMatrix(scale=scale))
+        wcs = afwGeom.makeSkyWcs(crval=afwGeom.SpherePoint(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
+                                 crpix=afwGeom.Point2D(0.0, 0.0),
+                                 cdMatrix=afwGeom.makeCdMatrix(scale=scale))
         for MaskedImage in (afwImage.MaskedImageF,
                             afwImage.MaskedImageD,
                             ):

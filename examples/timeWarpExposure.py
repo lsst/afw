@@ -174,13 +174,13 @@ def run():
                         interpLength,
                     )
                     destWcs = makeWcs(
-                        projName = "TAN",
-                        destCtrInd = destCtrInd,
-                        skyOffset = skyOffset,
-                        rotAng = rotAng,
-                        scaleFac = scaleFac,
-                        srcWcs = srcWcs,
-                        srcCtrInd = srcCtrInd,
+                        projName="TAN",
+                        destCtrInd=destCtrInd,
+                        skyOffset=skyOffset,
+                        rotAng=rotAng,
+                        scaleFac=scaleFac,
+                        srcWcs=srcWcs,
+                        srcCtrInd=srcCtrInd,
                     )
                     destExposure.setWcs(destWcs)
                     dTime, nIter, goodPix = timeWarp(

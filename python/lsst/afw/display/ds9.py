@@ -30,6 +30,8 @@ from __future__ import absolute_import, division, print_function
 import lsst.afw.display
 import lsst.afw.image as afwImage
 from .interface import getDisplay as _getDisplay, setDefaultBackend
+# Backwards compatibility.  Downstream code should be converted to use display.RED etc.
+from .interface import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE  # noqa F401
 try:
     loaded
 except NameError:
@@ -50,7 +52,7 @@ except NameError:
                 # don't want to capture in a closure for all time: see DM-9504 for a
                 # full discussion. We therefore define a new exception of the same
                 # type, which just encodes the error text.
-                self.exception = type(e)("%s (is display_ds9 setup?)" % e)
+                self.exception = type(exception)("%s (is display_ds9 setup?)" % exception)
 
             def __call__(self, *args, **kwargs):
                 raise self.exception
@@ -64,10 +66,6 @@ except NameError:
     else:
         loaded = True
 
-#
-# Backwards compatibility.  Downstream code should be converted to use display.RED etc.
-#
-from lsst.afw.display import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE
 
 def Buffering():
     # always use the real one

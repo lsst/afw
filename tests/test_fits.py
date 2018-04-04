@@ -22,9 +22,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-import os
 import unittest
-import itertools
 
 from lsst.daf.base import PropertyList
 
@@ -46,7 +44,7 @@ class FitsTestCase(lsst.utils.tests.TestCase):
             "ZNAXIS", "ZTILE", "ZNAME", "ZVAL",
             # Not essential these be excluded, but will prevent fitsverify warnings
             "DATASUM", "CHECKSUM",
-            ]
+        ]
         # Additional keywords to check; these should go straight through
         # Some of these are longer/shorter versions of strings above,
         # to test that the checks for just the start of strings is working.
@@ -67,6 +65,7 @@ class FitsTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(metadata.valueCount(key), 0, key)
             for key in others:
                 self.assertEqual(metadata.valueCount(key), 1, key)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
