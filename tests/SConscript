@@ -10,7 +10,8 @@ afwdataDir = env.ProductDir("afwdata")
 if afwdataDir:
     env["ENV"]["AFWDATA_DIR"] = afwdataDir
 
-scripts.BasicSConscript.tests(noBuildList=[name + '.cc' for name in pybind11_test_modules],
+scripts.BasicSConscript.tests(pyList=[],
+                              noBuildList=[name + '.cc' for name in pybind11_test_modules],
                               ignoreList=[name + '.py' for name in pybind11_test_modules])
 
 env.Clean(targets["tests"], "#testTable.fits")
