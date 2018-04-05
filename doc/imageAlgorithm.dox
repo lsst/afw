@@ -1,7 +1,6 @@
 namespace lsst { namespace afw { namespace image {
 /**
 \page afwSecImageAlgorithm  How to use algorithms to manipulate Images
-\section afwSecImageAlgorithm  How to use algorithms to manipulate Images
 
 All of these algorithms require the inclusion of <TT>lsst/afw/image/ImageAlgorithm.h</TT>, and are in namespace @c lsst::afw::image.
 
