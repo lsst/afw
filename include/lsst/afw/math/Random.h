@@ -299,7 +299,7 @@ private:
      * @throws lsst::pex::exceptions::InvalidParameterError
      *      Thrown if the requested algorithm is not supported.
      */
-    void initialize(std::string const &);
+    void initialize(std::string const & algorithm);
 };
 
 /*
