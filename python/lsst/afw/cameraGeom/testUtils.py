@@ -144,7 +144,8 @@ class CameraWrapper(object):
             or with one raw image per detector (False)
         """
         afwDir = lsst.utils.getPackageDir("afw")
-        self._afwTestDir = os.path.join(afwDir, "tests")
+        self._afwTestDataDir = os.path.join(afwDir, "python", "lsst", "afw",
+                                            "cameraGeom", "testData")
 
         # Info to store for unit tests
         self.plateScale = float(plateScale)
@@ -344,9 +345,9 @@ class CameraWrapper(object):
         @param[in] isLsstLike  if True then there is one raw image per amplifier;
             if False then there is one raw image per detector
         """
-        detFile = os.path.join(self._afwTestDir, "testCameraDetectors.dat")
+        detFile = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)
-        ampFile = os.path.join(self._afwTestDir, "testCameraAmps.dat")
+        ampFile = os.path.join(self._afwTestDataDir, "testCameraAmps.dat")
         ampCatalogDict = self.makeAmpCatalogs(ampFile, isLsstLike=isLsstLike)
         camConfig = CameraConfig()
         camConfig.name = "testCamera%s"%('LSST' if isLsstLike else 'SC')
