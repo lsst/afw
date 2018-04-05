@@ -51,8 +51,6 @@ def simpleBackground(image):
 
     bkgd = afwMath.makeBackground(image, bctrl)
 
-    statsImage = bkgd.getStatsImage()
-
     image -= bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE)
 
     return bkgd
@@ -81,9 +79,6 @@ def complexBackground(image):
 
     statsImage = bkgd.getStatsImage()
     ds9.mtv(statsImage.getVariance())
-
-    bkdgImages = dict(SPLINE = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE),
-                      LINEAR = bkgd.getImageF(afwMath.Interpolate.LINEAR))
 
     return bkgd
 

@@ -29,7 +29,7 @@ import lsst.afw.geom as afwGeom
 
 class Camera(DetectorCollection):
     """!A collection of Detectors plus additional coordinate system support
-    
+
     Camera.transform transforms points from one camera coordinate system to another.
 
     Camera.getTransform returns a transform between camera coordinate systems.

@@ -181,7 +181,6 @@ class DisplayTestCase(unittest.TestCase):
         afwDisplay.delAllDisplays()
 
 
-
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
 

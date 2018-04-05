@@ -26,7 +26,7 @@ from lsst.utils import continueClass
 from .apCorrMap import ApCorrMap
 
 
-@continueClass
+@continueClass  # noqa F811
 class ApCorrMap:
 
     def keys(self):

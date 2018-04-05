@@ -97,7 +97,7 @@ if futurestr is not str:
     SchemaItem.alias(futurestr, _SchemaItem["String"])
 
 
-@continueClass
+@continueClass  # noqa F811
 class Schema:
 
     def getOrderedNames(self):

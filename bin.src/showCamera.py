@@ -32,8 +32,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Show the layout of CCDs in a camera.',
-                                     epilog=
-                                     'The corresponding obs-package must be setup (e.g. obs_decam ' +
+                                     epilog='The corresponding obs-package must be setup (e.g. obs_decam ' +
                                      'if you want to see DECam)'
                                      )
     parser.add_argument(
@@ -52,7 +51,7 @@ if __name__ == '__main__':
 
     try:
         __import__(obsPackageName)
-    except:
+    except Exception:
         print("Unable to import %s -- is it setup?" %
               (obsPackageName,), file=sys.stderr)
         sys.exit(1)

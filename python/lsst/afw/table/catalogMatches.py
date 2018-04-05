@@ -30,6 +30,7 @@ from builtins import zip
 from builtins import range
 import numpy as np
 
+import lsst.pex.exceptions as pexExcept
 from .schema import Schema
 from .schemaMapper import SchemaMapper
 from .base import BaseCatalog
@@ -135,7 +136,7 @@ def matchesToCatalog(matches, matchMeta):
     # obtain reference catalog name if one is setup
     try:
         catalogName = os.path.basename(getPackageDir("astrometry_net_data"))
-    except:
+    except pexExcept.NotFoundError:
         catalogName = "NOT_SET"
     matchMeta.add("REFCAT", catalogName)
     mergedCatalog.getTable().setMetadata(matchMeta)

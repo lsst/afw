@@ -9,8 +9,8 @@ import re
 import sys
 
 try:
-    debug
-except:
+    debug  # noqa F821
+except Exception:
     debug = False
 
 import optparse
@@ -131,7 +131,7 @@ try:
 
             try:
                 val = m_data[x + y*NX]
-            except:
+            except Exception:
                 val = m_data["array"][x + y*NX]
         else:                       # Vector
             if False:
@@ -151,7 +151,7 @@ try:
 
             try:
                 val = m_data[x]
-            except:
+            except Exception:
                 val = m_data["array"][x]
 
         if val.type.code == gdb.TYPE_CODE_INT:
@@ -912,4 +912,4 @@ try:
     printers.append(build_daf_base_dictionary())
 except ImportError as e:
     print("RHL", e)
-    from .printers_oldgdb import *
+    from .printers_oldgdb import *  # noqa F403

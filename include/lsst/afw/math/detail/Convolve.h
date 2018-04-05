@@ -79,7 +79,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, lsst::afw
 template <typename OutImageT, typename InImageT>
 void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
                    lsst::afw::math::DeltaFunctionKernel const& kernel,
-                   lsst::afw::math::ConvolutionControl const&);
+                   lsst::afw::math::ConvolutionControl const& convolutionControl);
 
 /**
  * A version of basicConvolve that should be used when convolving a LinearCombinationKernel

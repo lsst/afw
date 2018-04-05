@@ -541,7 +541,7 @@ class Display(object):
         if symbs:
             try:
                 symbs[1]
-            except:
+            except TypeError:
                 symbs = len(points)*list(symbs)
 
             for i, xy in enumerate(points):

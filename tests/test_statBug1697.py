@@ -31,7 +31,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
 
 
-class weightedStatsBugTestCase(unittest.TestCase):
+class WeightedStatsBugTestCase(unittest.TestCase):
 
     def reportBadPixels(self, maskedImage, badPixelMask):
         """Report the number of bad pixels in each plane of a masked image

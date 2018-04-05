@@ -155,7 +155,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
 
 
 def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0,
-                     scaleGain = lambda gain: (gain*1000)//10):
+                     scaleGain=lambda gain: (gain*1000)//10):
     """!Make an image from an amp object
 
     Since images are integer images by default, the gain needs to be scaled to give enough dynamic range

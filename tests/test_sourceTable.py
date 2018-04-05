@@ -683,7 +683,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         # Extracting a flag column
         column = "a_flag"
         array = nonContiguous[column]
-        self.assertFloatsEqual(np.flip(array, 0), self.catalog[column])
+        np.testing.assert_equal(np.flip(array, 0), self.catalog[column])
         with self.assertRaises(ValueError):
             array[1] = True  # Should be immutable
 

@@ -186,7 +186,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                 subregion = regionRow.getRegion(xInd)
                 try:
                     self.assertRegionCorrect(subregion)
-                except:
+                except Exception:
                     print("failed on xInd=%s, yInd=%s" % (xInd, yInd))
                     raise
                 bbox = subregion.getBBox()

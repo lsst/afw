@@ -36,10 +36,10 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
 
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
     transforms[tanPixSys] = makePixelToTanPixel(
-        bbox = bbox,
-        orientation = orientation,
-        focalPlaneToField = focalPlaneToField,
-        pixelSizeMm = pixelSizeMm,
+        bbox=bbox,
+        orientation=orientation,
+        focalPlaneToField=focalPlaneToField,
+        pixelSizeMm=pixelSizeMm,
     )
 
     args = [
@@ -154,9 +154,9 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict,
         ampInfoCatalog = ampInfoCatDict[detectorConfig.name]
 
         detectorList.append(makeDetector(
-            detectorConfig = detectorConfig,
-            ampInfoCatalog = ampInfoCatalog,
-            focalPlaneToField = focalPlaneToField,
+            detectorConfig=detectorConfig,
+            ampInfoCatalog=ampInfoCatalog,
+            focalPlaneToField=focalPlaneToField,
         ))
 
     return Camera(cameraConfig.name, detectorList, transformMap, pupilFactoryClass)

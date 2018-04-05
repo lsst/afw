@@ -34,7 +34,7 @@ from ..schema import Key
 __all__ = ["Catalog"]
 
 
-@continueClass
+@continueClass  # noqa F811
 class BaseRecord:
 
     def extract(self, *patterns, **kwds):
@@ -346,5 +346,6 @@ class Catalog(with_metaclass(TemplateMeta, object)):
 
     def __repr__(self):
         return "%s\n%s" % (type(self), self)
+
 
 Catalog.register("Base", BaseCatalog)

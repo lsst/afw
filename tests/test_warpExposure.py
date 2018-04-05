@@ -372,8 +372,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             rtol = 4e-5
             atol = 1e-2
             warpingControl = afwMath.WarpingControl(
-                warpingKernelName = kernelName,
-                interpLength = interpLength,
+                warpingKernelName=kernelName,
+                interpLength=interpLength,
             )
 
             originalExposure = afwImage.ExposureF(originalExposurePath)

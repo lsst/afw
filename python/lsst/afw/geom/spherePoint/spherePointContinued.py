@@ -28,7 +28,7 @@ from lsst.utils import continueClass
 from .spherePoint import SpherePoint
 
 
-@continueClass
+@continueClass  # noqa F811
 class SpherePoint:
 
     def __iter__(self):

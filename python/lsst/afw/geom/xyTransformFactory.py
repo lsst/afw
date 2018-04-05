@@ -62,8 +62,8 @@ class OneXYTransformConfig(Config):
            afw.geom.OneTransformConfig.
     '''
     transform = ConfigurableField(
-        doc = "XYTransform factory",
-        target = makeIdentityTransform,
+        doc="XYTransform factory",
+        target=makeIdentityTransform,
     )
 
 
@@ -79,17 +79,17 @@ xyTransformRegistry.register("inverted", makeInvertedTransform)
 
 class AffineTransformConfig(Config):
     linear = ListField(
-        doc = """2x2 linear matrix in the usual numpy order;
+        doc="""2x2 linear matrix in the usual numpy order;
             to rotate a vector by theta use: cos(theta), sin(theta), -sin(theta), cos(theta)""",
-        dtype = float,
-        length = 4,
-        default = (1, 0, 0, 1),
+        dtype=float,
+        length=4,
+        default=(1, 0, 0, 1),
     )
     translation = ListField(
-        doc = "x, y translation vector",
-        dtype = float,
-        length = 2,
-        default = (0, 0),
+        doc="x, y translation vector",
+        dtype=float,
+        length=2,
+        default=(0, 0),
     )
 
 
@@ -108,10 +108,10 @@ xyTransformRegistry.register("affine", affineFactory)
 
 class RadialTransformConfig(Config):
     coeffs = ListField(
-        doc = "Coefficients for the radial polynomial; coeff[0] must be 0",
-        dtype = float,
-        minLength = 1,
-        optional = False,
+        doc="Coefficients for the radial polynomial; coeff[0] must be 0",
+        dtype=float,
+        minLength=1,
+        optional=False,
     )
 
     def validate(self):
@@ -135,9 +135,9 @@ xyTransformRegistry.register("radial", radialFactory)
 
 class MultiTransformConfig(Config):
     transformDict = ConfigDictField(
-        doc = "Dict of index: OneXYTransformConfig (a transform wrapper); key order is transform order",
-        keytype = int,
-        itemtype = OneXYTransformConfig,
+        doc="Dict of index: OneXYTransformConfig (a transform wrapper); key order is transform order",
+        keytype=int,
+        itemtype=OneXYTransformConfig,
     )
 
 

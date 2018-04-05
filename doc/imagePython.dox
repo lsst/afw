@@ -1,6 +1,6 @@
 namespace lsst { namespace afw { namespace image {
 /**
-\page afwSecPyImage How to manipulate images from python
+\page afwSecPyImagePage How to manipulate images from python
 \section afwSecPyImage How to manipulate images from python
 
 You can use the C++ APIs to manipulate images and bits of images from python, e.g.

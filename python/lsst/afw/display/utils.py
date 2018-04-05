@@ -290,7 +290,7 @@ class Mosaic(object):
                     label, ctype = labels[i], None
                     try:
                         label, ctype = label
-                    except:
+                    except Exception:
                         pass
 
                     if not label:

@@ -162,7 +162,7 @@ public:
      * @param metadata Metadata to process (e.g. a IFITS header)
      * @param force Allow us to construct an unknown Filter
      */
-    explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const>, bool const force = false);
+    explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, bool const force = false);
 
     Filter(Filter const&) = default;
     Filter(Filter&&) = default;

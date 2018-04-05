@@ -1,4 +1,5 @@
-import os, os.path, sys
+import os
+import sys
 import lsst.utils
 import gdb
 #

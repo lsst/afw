@@ -96,10 +96,10 @@ class DetectorWrapper(object):
                                0.0, self.radialDistortion/pScaleRad]
         focalPlaneToField = afwGeom.makeRadialTransform(radialDistortCoeffs)
         pixelToTanPixel = makePixelToTanPixel(
-            bbox = self.bbox,
-            orientation = self.orientation,
-            focalPlaneToField = focalPlaneToField,
-            pixelSizeMm = self.pixelSize,
+            bbox=self.bbox,
+            orientation=self.orientation,
+            focalPlaneToField=focalPlaneToField,
+            pixelSizeMm=self.pixelSize,
         )
 
         self.transMap = {

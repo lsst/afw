@@ -380,7 +380,8 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
 
         matches = afwTable.matchRaDec(self.ss1, self.ss2, radius)
         dist1 = np.array([(mm.distance*afwGeom.radians).asArcseconds() for mm in matches])
-        dist2 = np.array([mm.first.getCoord().separation(mm.second.getCoord()).asArcseconds() for mm in matches])
+        dist2 = np.array([mm.first.getCoord().separation(mm.second.getCoord()).asArcseconds()
+                         for mm in matches])
         diff = dist1 - dist2
         self.assertLess(diff.std(), tol)  # I get 4e-12
         self.assertFloatsAlmostEqual(dist1, dist2, atol=tol)

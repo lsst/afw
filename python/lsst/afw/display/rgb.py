@@ -78,7 +78,7 @@ class Mapping(object):
 
         try:
             len(minimum)
-        except:
+        except TypeError:
             minimum = 3*[minimum]
         assert len(minimum) == 3, "Please provide 1 or 3 values for minimum"
 
@@ -149,10 +149,11 @@ class Mapping(object):
         """
         return computeIntensity(imageR, imageG, imageB)
 
-    def mapIntensityToUint8(self, I):
+    def mapIntensityToUint8(self, intensity):
         """Map an intensity into the range of a uint8, [0, 255] (but not converted to uint8)"""
         with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
-            return np.where(I <= 0, 0, np.where(I < self._uint8Max, I, self._uint8Max))
+            return np.where(intensity <= 0, 0,
+                            np.where(intensity < self._uint8Max, intensity, self._uint8Max))
 
     def _convertImagesToUint8(self, imageR, imageG, imageB):
         """Use the mapping to convert images imageR, imageG, and imageB to a triplet of uint8 images"""
@@ -219,15 +220,16 @@ class LinearMapping(Mapping):
             assert maximum - minimum != 0, "minimum and maximum values must not be equal"
             self._range = float(maximum - minimum)
 
-    def mapIntensityToUint8(self, I):
+    def mapIntensityToUint8(self, intensity):
         """Return an array which, when multiplied by an image, returns that image mapped to the range of a
         uint8, [0, 255] (but not converted to uint8)
 
         The intensity is assumed to have had minimum subtracted (as that can be done per-band)
         """
         with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
-            return np.where(I <= 0, 0,
-                            np.where(I >= self._range, self._uint8Max/I, self._uint8Max/self._range))
+            return np.where(intensity <= 0, 0,
+                            np.where(intensity >= self._range,
+                                     self._uint8Max/intensity, self._uint8Max/self._range))
 
 
 class ZScaleMapping(LinearMapping):
@@ -281,14 +283,14 @@ class AsinhMapping(Mapping):
 
         self._soften = Q/float(dataRange)
 
-    def mapIntensityToUint8(self, I):
+    def mapIntensityToUint8(self, intensity):
         """Return an array which, when multiplied by an image, returns that image mapped to the range of a
         uint8, [0, 255] (but not converted to uint8)
 
         The intensity is assumed to have had minimum subtracted (as that can be done per-band)
         """
         with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
-            return np.where(I <= 0, 0, np.arcsinh(I*self._soften)*self._slope/I)
+            return np.where(intensity <= 0, 0, np.arcsinh(intensity*self._soften)*self._slope/intensity)
 
 
 class AsinhZScaleMapping(AsinhMapping):
@@ -408,7 +410,7 @@ def writeRGB(fileName, rgbImage):
 #
 
 
-class asinhMappingF(object):
+class asinhMappingF(object):  # noqa N801
     """!\deprecated Object used to support legacy API"""
 
     def __init__(self, minimum, dataRange, Q):

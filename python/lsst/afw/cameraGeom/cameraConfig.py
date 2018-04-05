@@ -26,13 +26,13 @@ class DetectorConfig(pexConfig.Config):
         "x offset from the origin of the camera in mm in the transposed system.", float)
     offset_y = pexConfig.Field(
         "y offset from the origin of the camera in mm in the transposed system.", float)
-    refpos_x = pexConfig.Field("x position of the reference point in the detector in pixels " +
+    refpos_x = pexConfig.Field("x position of the reference point in the detector in pixels "
                                "in transposed coordinates.", float)
-    refpos_y = pexConfig.Field("y position of the reference point in the detector in pixels " +
+    refpos_y = pexConfig.Field("y position of the reference point in the detector in pixels "
                                "in transposed coordinates.", float)
-    yawDeg = pexConfig.Field("yaw (rotation about z) of the detector in degrees. " +
-                             "This includes any necessary rotation to go from " +
-                             "detector coordinates to camera coordinates " +
+    yawDeg = pexConfig.Field("yaw (rotation about z) of the detector in degrees. "
+                             "This includes any necessary rotation to go from "
+                             "detector coordinates to camera coordinates "
                              "after optional transposition.", float)
     pitchDeg = pexConfig.Field(
         "pitch (rotation about y) of the detector in degrees", float)
@@ -59,8 +59,8 @@ class DetectorConfig(pexConfig.Config):
             return None
         try:
             return np.array(self.crosstalk, dtype=np.float32).reshape((numAmps, numAmps))
-        except:
-            raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix")
+        except Exception as e:
+            raise RuntimeError("Cannot reshape 'crosstalk' coefficients to square matrix: %s" % (e,))
 
 
 class CameraConfig(pexConfig.Config):

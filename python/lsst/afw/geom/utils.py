@@ -274,14 +274,14 @@ def wcsAlmostEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
     @param[in] ny  number of points in y for the grid of pixel positions
     """
     return not bool(_compareWcsOverBBox(
-        wcs0 = wcs0,
-        wcs1 = wcs1,
-        bbox = bbox,
-        maxDiffSky = maxDiffSky,
-        maxDiffPix = maxDiffPix,
-        nx = nx,
-        ny = ny,
-        doShortCircuit = True,
+        wcs0=wcs0,
+        wcs1=wcs1,
+        bbox=bbox,
+        maxDiffSky=maxDiffSky,
+        maxDiffPix=maxDiffPix,
+        nx=nx,
+        ny=ny,
+        doShortCircuit=True,
     ))
 
 
@@ -308,14 +308,14 @@ def assertWcsAlmostEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*arc
     @param[in] msg  exception message prefix; details of the error are appended after ": "
     """
     errMsg = _compareWcsOverBBox(
-        wcs0 = wcs0,
-        wcs1 = wcs1,
-        bbox = bbox,
-        maxDiffSky = maxDiffSky,
-        maxDiffPix = maxDiffPix,
-        nx = nx,
-        ny = ny,
-        doShortCircuit = False,
+        wcs0=wcs0,
+        wcs1=wcs1,
+        bbox=bbox,
+        maxDiffSky=maxDiffSky,
+        maxDiffPix=maxDiffPix,
+        nx=nx,
+        ny=ny,
+        doShortCircuit=False,
     )
     if errMsg:
         testCase.fail("%s: %s" % (msg, errMsg))

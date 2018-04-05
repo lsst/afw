@@ -40,7 +40,7 @@ namespace afw {
 namespace geom {
 namespace {
 
-/**
+/*
  * Does one string end with another?
  *
  * From https://stackoverflow.com/a/2072890

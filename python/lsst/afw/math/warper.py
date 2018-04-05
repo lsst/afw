@@ -56,10 +56,10 @@ _DefaultCacheSize = 1000000
 
 class WarperConfig(pexConfig.Config):
     warpingKernelName = pexConfig.ChoiceField(
-        dtype = str,
-        doc = "Warping kernel",
-        default = "lanczos3",
-        allowed = {
+        dtype=str,
+        doc="Warping kernel",
+        default="lanczos3",
+        allowed={
             "bilinear": "bilinear interpolation",
             "lanczos3": "Lanczos kernel of order 3",
             "lanczos4": "Lanczos kernel of order 4",
@@ -67,10 +67,10 @@ class WarperConfig(pexConfig.Config):
         }
     )
     maskWarpingKernelName = pexConfig.ChoiceField(
-        dtype = str,
-        doc = "Warping kernel for mask (use warpingKernelName if '')",
-        default = "bilinear",
-        allowed = {
+        dtype=str,
+        doc="Warping kernel for mask (use warpingKernelName if '')",
+        default="bilinear",
+        allowed={
             "": "use the regular warping kernel for the mask plane, as well as the image and variance planes",
             "bilinear": "bilinear interpolation",
             "lanczos3": "Lanczos kernel of order 3",
@@ -79,19 +79,19 @@ class WarperConfig(pexConfig.Config):
         }
     )
     interpLength = pexConfig.Field(
-        dtype = int,
-        doc = "interpLength argument to lsst.afw.math.warpExposure",
-        default = _DefaultInterpLength,
+        dtype=int,
+        doc="interpLength argument to lsst.afw.math.warpExposure",
+        default=_DefaultInterpLength,
     )
     cacheSize = pexConfig.Field(
-        dtype = int,
-        doc = "cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
-        default = _DefaultCacheSize,
+        dtype=int,
+        doc="cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
+        default=_DefaultCacheSize,
     )
     growFullMask = pexConfig.Field(
-        dtype = int,
-        doc = "mask bits to grow to full width of image/variance kernel,",
-        default = afwImage.Mask.getPlaneBitMask("EDGE"),
+        dtype=int,
+        doc="mask bits to grow to full width of image/variance kernel,",
+        default=afwImage.Mask.getPlaneBitMask("EDGE"),
     )
 
 
@@ -102,10 +102,10 @@ class Warper(object):
 
     def __init__(self,
                  warpingKernelName,
-                 interpLength = _DefaultInterpLength,
-                 cacheSize = _DefaultCacheSize,
-                 maskWarpingKernelName = "",
-                 growFullMask = afwImage.Mask.getPlaneBitMask("EDGE"),):
+                 interpLength=_DefaultInterpLength,
+                 cacheSize=_DefaultCacheSize,
+                 maskWarpingKernelName="",
+                 growFullMask=afwImage.Mask.getPlaneBitMask("EDGE"),):
         """Create a Warper
 
         Inputs:
@@ -125,11 +125,11 @@ class Warper(object):
         @param config: an instance of Warper.ConfigClass
         """
         return cls(
-            warpingKernelName = config.warpingKernelName,
-            maskWarpingKernelName = config.maskWarpingKernelName,
-            interpLength = config.interpLength,
-            cacheSize = config.cacheSize,
-            growFullMask = config.growFullMask,
+            warpingKernelName=config.warpingKernelName,
+            maskWarpingKernelName=config.maskWarpingKernelName,
+            interpLength=config.interpLength,
+            cacheSize=config.cacheSize,
+            growFullMask=config.growFullMask,
         )
 
     def getWarpingKernel(self):
@@ -163,12 +163,12 @@ class Warper(object):
         copies attributes such as Calib, and that should be done in one place
         """
         destBBox = self._computeDestBBox(
-            destWcs = destWcs,
-            srcImage = srcExposure.getMaskedImage(),
-            srcWcs = srcExposure.getWcs(),
-            border = border,
-            maxBBox = maxBBox,
-            destBBox = destBBox,
+            destWcs=destWcs,
+            srcImage=srcExposure.getMaskedImage(),
+            srcWcs=srcExposure.getWcs(),
+            border=border,
+            maxBBox=maxBBox,
+            destBBox=destBBox,
         )
         destExposure = srcExposure.Factory(destBBox, destWcs)
         mathLib.warpExposure(destExposure, srcExposure, self._warpingControl)
@@ -195,12 +195,12 @@ class Warper(object):
         @return destImage: warped image or masked image (of same type as srcImage)
         """
         destBBox = self._computeDestBBox(
-            destWcs = destWcs,
-            srcImage = srcImage,
-            srcWcs = srcWcs,
-            border = border,
-            maxBBox = maxBBox,
-            destBBox = destBBox,
+            destWcs=destWcs,
+            srcImage=srcImage,
+            srcWcs=srcWcs,
+            border=border,
+            maxBBox=maxBBox,
+            destBBox=destBBox,
         )
         destImage = srcImage.Factory(destBBox)
         mathLib.warpImage(destImage, destWcs, srcImage,

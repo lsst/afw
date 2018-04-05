@@ -58,7 +58,10 @@ def checkAstropy(image, filename, hduNum=0):
     """
     print("Astropy currently doesn't read our compressed images perfectly.")
     return
-    parseVersion = lambda version: tuple(int(vv) for vv in np.array(version.split(".")))
+
+    def parseVersion(version):
+        return tuple(int(vv) for vv in np.array(version.split(".")))
+
     if parseVersion(astropy.__version__) <= parseVersion("2.0.1"):
         # astropy 2.0.1 and earlier have problems:
         # * Doesn't support GZIP_2: https://github.com/astropy/astropy/pull/6486
@@ -247,7 +250,6 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             numValues -= 10
         bscaleExpect = (self.highValue - self.lowValue)/numValues
         self.assertFloatsAlmostEqual(bscale, bscaleExpect, atol=1.0e-6)  # F32 resolution
-
 
         rtol = 1.0/2**(bitpix - 1)
         self.checkSpecialPixels(original, unpersisted, maxValue, minValue, atol=bscale)
@@ -580,7 +582,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
         bitpixList = (16, 32)
         quantizeList = (4.0, 10.0)
         for cls, algorithm, bitpix, quantize in itertools.product(classList, algorithmList, bitpixList,
-                                                               quantizeList):
+                                                                  quantizeList):
             compression = ImageCompressionOptions(lsst.afw.fits.compressionAlgorithmFromString(algorithm),
                                                   quantizeLevel=0.0)
             scaling = ImageScalingOptions(ImageScalingOptions.STDEV_BOTH, bitpix, quantizeLevel=quantize,
@@ -780,7 +782,7 @@ def persistUnpersist(ImageClass, image, filename, additionalData):
         lsst.afw.image.ImageD: "ImageD",
         lsst.afw.image.Mask: "Mask",
         lsst.afw.image.MaskedImageF: "MaskedImageF",
-        }
+    }
     return persistence.unsafeRetrieve(classMenu[ImageClass], storageList, lsst.daf.base.PropertySet())
 
 
@@ -853,9 +855,9 @@ class EmptyExposureTestCase(lsst.utils.tests.TestCase):
         exp = lsst.afw.image.ExposureF(0, 0)
         degrees = lsst.afw.geom.degrees
         cdMatrix = np.array([[1.0e-4, 0.0], [0.0, 1.0e-4]], dtype=float)
-        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval = lsst.afw.geom.SpherePoint(0*degrees, 0*degrees),
-                                            crpix = lsst.afw.geom.Point2D(0.0, 0.0),
-                                            cdMatrix = cdMatrix))
+        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval=lsst.afw.geom.SpherePoint(0*degrees, 0*degrees),
+                                            crpix=lsst.afw.geom.Point2D(0.0, 0.0),
+                                            cdMatrix=cdMatrix))
         imageOptions = lsst.afw.fits.ImageWriteOptions(ImageCompressionOptions(algorithm))
         maskOptions = lsst.afw.fits.ImageWriteOptions(exp.getMaskedImage().getMask())
         varianceOptions = lsst.afw.fits.ImageWriteOptions(ImageCompressionOptions(algorithm))

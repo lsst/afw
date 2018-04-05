@@ -19,7 +19,7 @@ by an image processing system.  In particular:
 
 namespace lsst { namespace afw { namespace image {
 /**
-\page afwSecImage Images
+\page afwSecImagePage Images
 
 \section afwSecImage Images
 
@@ -213,7 +213,7 @@ previous APIs)
 
 namespace lsst { namespace afw { namespace image {
 /**
-\page afwSecImageIO Image I/O
+\page afwSecImageIOPage Image/Mask/MaskedImage I/O
 \section afwSecImageIO Image/Mask/MaskedImage I/O
 
 Reading Image%s, Mask%s, and MaskedImage%s from FITS files is achieved via their
@@ -288,7 +288,6 @@ but \b not possible to read it back from a non-default HDU.
 namespace lsst { namespace afw { namespace math {
 /**
 \page afwSecMath Mathematical Operations
-\section afwSecMath Mathematical Operations
 
  - Statistics.
 Annotated examples are available for \link StatisticsExample Statistics\endlink.
@@ -308,7 +307,6 @@ Annotated examples are available for \link BackgroundExample Background Estimati
 namespace lsst { namespace afw { namespace detection {
 /**
 \page afwSecDetection Detection
-\section afwSecDetection Detection
 
 Detected pixels are manipulated using the following classes:
  - Footprint : A set of pixels above (or below) a Threshold
