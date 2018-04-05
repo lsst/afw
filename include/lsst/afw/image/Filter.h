@@ -93,11 +93,11 @@ public:
      */
     double getLambdaEff() const { return _lambdaEff; }
     /**
-     * Return the filter's minimum wavelength (nm)
+     * Return the filter's minimum wavelength (nm) where the transmission is above 1% of the maximum.
      */
     double getLambdaMin() const { return _lambdaMin; }
     /**
-     * Return the filter's maximum wavelength (nm)
+     * Return the filter's maximum wavelength (nm) where the transmission is above 1% of the maximum.
      */
     double getLambdaMax() const { return _lambdaMax; }
     /**
