@@ -246,7 +246,7 @@ class FilterTestCase(lsst.utils.tests.TestCase):
                             lambdaEff in wavelengths.items() if name == "g"][0]  # for tests
 
     def defineFilterProperty(self, name, lambdaEff, force=False):
-        return afwImage.FilterProperty(name, lambdaEff, force)
+        return afwImage.FilterProperty(name, lambdaEff, force=force)
 
     def testListFilters(self):
         self.assertEqual(afwImage.Filter.getNames(), list(self.filters))
@@ -294,7 +294,7 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(f.getFilterProperty().getLambdaEff(),
                          self.g_lambdaEff)
         self.assertEqual(f.getFilterProperty(),
-                         self.defineFilterProperty("gX", self.g_lambdaEff, True))
+                         self.defineFilterProperty("gX", self.g_lambdaEff, force=True))
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
 
     def testFilterAliases(self):

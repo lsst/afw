@@ -26,6 +26,7 @@ __all__ = ["clipImage", "resetFilters", "defineFilter",
 
 from past.builtins import basestring
 from builtins import object
+import numpy as np
 
 import lsst.pex.policy as pexPolicy
 import lsst.afw.detection as afwDetect
@@ -60,9 +61,9 @@ def resetFilters():
     FilterProperty.reset()
 
 
-def defineFilter(name, lambdaEff, alias=[], force=False):
+def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], force=False):
     """Define a filter and its properties in the filter registry"""
-    prop = FilterProperty(name, lambdaEff, force)
+    prop = FilterProperty(name, lambdaEff, lambdaMin, lambdaMax, force)
     Filter.define(prop)
     if isinstance(alias, basestring):
         Filter.defineAlias(name, alias)
