@@ -29,6 +29,7 @@
 #include "Eigen/Geometry"
 
 #include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/afw/geom/sphgeomUtils.h"
 #include "lsst/pex/exceptions.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -74,8 +75,10 @@ SpherePoint::SpherePoint(Angle const& longitude, Angle const& latitude)
     }
 }
 
-SpherePoint::SpherePoint(Point3D const& vector) {
-    double norm = vector.asEigen().norm();
+SpherePoint::SpherePoint(sphgeom::Vector3d const& vector) {
+    // sphgeom Vector3d has its own normalization,
+    // but its behavior is not documented for non-finite values
+    double norm = vector.getNorm();
     if (norm <= 0.0) {
         stringstream buffer;
         buffer << "Vector " << vector << " has zero norm and cannot be normalized.";
@@ -85,16 +88,20 @@ SpherePoint::SpherePoint(Point3D const& vector) {
     if (!isfinite(norm)) {
         norm = NAN;
     }
+    auto unitVector =
+            sphgeom::UnitVector3d::fromNormalized(vector.x() / norm, vector.y() / norm, vector.z() / norm);
+    _set(unitVector);
+}
 
-    double const x = vector.getX() / norm;
-    double const y = vector.getY() / norm;
-    double const z = vector.getZ() / norm;
+SpherePoint::SpherePoint(sphgeom::LonLat const& lonLat)
+        : SpherePoint(lonLat.getLon().asRadians(), lonLat.getLat().asRadians(), radians) {}
 
-    _latitude = asin(z);
+void SpherePoint::_set(sphgeom::UnitVector3d const& unitVector) {
+    _latitude = asin(unitVector.z());
     if (!atPole()) {
         // Need to convert to Angle, Angle::wrap, and convert back to radians
         //     to handle _longitude = -1e-16 without code duplication
-        _longitude = (atan2(y, x) * radians).wrap().asRadians();
+        _longitude = (atan2(unitVector.y(), unitVector.x()) * radians).wrap().asRadians();
     } else {
         _longitude = 0;
     }
@@ -110,10 +117,15 @@ SpherePoint& SpherePoint::operator=(SpherePoint const& other) noexcept = default
 
 SpherePoint& SpherePoint::operator=(SpherePoint&& other) noexcept = default;
 
+SpherePoint::operator sphgeom::LonLat() const {
+    return sphgeom::LonLat::fromRadians(getLongitude().asRadians(), getLatitude().asRadians());
+}
+
 SpherePoint::~SpherePoint() = default;
 
-Point3D SpherePoint::getVector() const noexcept {
-    return Point3D(cos(_longitude) * cos(_latitude), sin(_longitude) * cos(_latitude), sin(_latitude));
+sphgeom::UnitVector3d SpherePoint::getVector() const noexcept {
+    return sphgeom::UnitVector3d::fromNormalized(cos(_longitude) * cos(_latitude),
+                                                 sin(_longitude) * cos(_latitude), sin(_latitude));
 }
 
 Point2D SpherePoint::getPosition(AngleUnit unit) const {
@@ -161,10 +173,10 @@ Angle SpherePoint::separation(SpherePoint const& other) const noexcept {
 }
 
 SpherePoint SpherePoint::rotated(SpherePoint const& axis, Angle const& amount) const noexcept {
-    auto const rotation = Eigen::AngleAxisd(amount.asRadians(), axis.getVector().asEigen()).matrix();
-    auto const x = getVector().asEigen();
+    auto const rotation = Eigen::AngleAxisd(amount.asRadians(), asEigen(axis.getVector())).matrix();
+    auto const x = asEigen(getVector());
     auto const xprime = rotation * x;
-    return SpherePoint(Point3D(xprime));
+    return SpherePoint(sphgeom::Vector3d(xprime[0], xprime[1], xprime[2]));
 }
 
 SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const {
@@ -174,7 +186,7 @@ SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const
     // To do the rotation, use rotated() method.
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
-    Eigen::Vector3d r = getVector().asEigen();
+    auto r = getVector();
 
     // Get the vector v:
     //  let u = unit vector lying on a parallel of declination
@@ -186,12 +198,12 @@ SpherePoint SpherePoint::offset(Angle const& bearing, Angle const& amount) const
 
     // v is a linear combination of u and w
     // v = cos(phi)*u + sin(phi)*w
-    auto u = Eigen::Vector3d(-sin(_longitude), cos(_longitude), 0.0);
+    sphgeom::Vector3d const u(-sin(_longitude), cos(_longitude), 0.0);
     auto w = r.cross(u);
-    Eigen::Vector3d v = cos(phi) * u + sin(phi) * w;
+    auto v = cos(phi) * u + sin(phi) * w;
 
     // take r x v to get the axis
-    SpherePoint axis = SpherePoint(Point3D(r.cross(v)));
+    SpherePoint axis = SpherePoint(r.cross(v));
 
     return rotated(axis, amount);
 }
@@ -221,17 +233,17 @@ SpherePoint averageSpherePoint(std::vector<SpherePoint> const& coords) {
     if (coords.size() == 0) {
         throw LSST_EXCEPT(pex::exceptions::LengthError, "No coordinates provided to average");
     }
-    geom::Point3D sum(0, 0, 0);
-    geom::Point3D corr(0, 0, 0);  // Kahan summation correction
-    for (auto const & sp : coords) {
-        geom::Point3D const point = sp.getVector();
+    sphgeom::Vector3d sum(0, 0, 0);
+    sphgeom::Vector3d corr(0, 0, 0);  // Kahan summation correction
+    for (auto const& sp : coords) {
+        auto const point = sp.getVector();
         // Kahan summation
-        geom::Extent3D const add = point - corr;
-        geom::Point3D const temp = sum + add;
-        corr = (temp - geom::Extent3D(sum)) - add;
+        auto const add = point - corr;
+        auto const temp = sum + add;
+        corr = (temp - sum) - add;
         sum = temp;
     }
-    sum.scale(1.0 / coords.size());
+    sum /= static_cast<double>(coords.size());
     return SpherePoint(sum);
 }
 
@@ -248,6 +260,6 @@ ostream& operator<<(ostream& os, SpherePoint const& point) {
     os.precision(oldPrecision);
     return os;
 }
-}
-}
-} /* namespace lsst::afw::geom */
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
