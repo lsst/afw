@@ -32,6 +32,7 @@
 #ifndef LSST_AFW_IMAGE_FILTER_H
 #define LSST_AFW_IMAGE_FILTER_H
 
+#include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -54,8 +55,9 @@ namespace image {
  */
 class FilterProperty {
 public:
-    explicit FilterProperty(std::string const& name, double lambdaEff, bool force = false)
-            : _name(name), _lambdaEff(lambdaEff) {
+    explicit FilterProperty(std::string const& name, double lambdaEff, 
+                            double lambdaMin=NAN, double lambdaMax=NAN, bool force = false)
+            : _name(name), _lambdaEff(lambdaEff), _lambdaMin(lambdaMin), _lambdaMax(lambdaMax) {
         _insert(force);
     }
     /**
@@ -90,6 +92,14 @@ public:
      * Return the filter's effective wavelength (nm)
      */
     double getLambdaEff() const { return _lambdaEff; }
+    /**
+     * Return the filter's minimum wavelength (nm) where the transmission is above 1% of the maximum.
+     */
+    double getLambdaMin() const { return _lambdaMin; }
+    /**
+     * Return the filter's maximum wavelength (nm) where the transmission is above 1% of the maximum.
+     */
+    double getLambdaMax() const { return _lambdaMax; }
     /**
      * Return true iff two FilterProperties are identical
      *
@@ -131,6 +141,8 @@ private:
 
     std::string _name;  // name of filter
     double _lambdaEff;  // effective wavelength (nm)
+    double _lambdaMin;  // minimum wavelength (nm)
+    double _lambdaMax;  // maximum wavelength (nm)
 
     static PropertyMap* _propertyMap;  // mapping from name -> FilterProperty
 };

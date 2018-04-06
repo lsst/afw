@@ -23,6 +23,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+#include <cmath>
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/Filter.h"
@@ -48,7 +49,8 @@ PYBIND11_PLUGIN(filter) {
     mod.def("stripFilterKeywords", &detail::stripFilterKeywords, "metadata"_a);
 
     PyFilterProperty clsFilterProperty(mod, "FilterProperty");
-    clsFilterProperty.def(py::init<std::string const &, double, bool>(), "name"_a, "lambdaEff"_a,
+    clsFilterProperty.def(py::init<std::string const &, double, double, double, bool>(),
+                          "name"_a, "lambdaEff"_a, "lambdaMin"_a = NAN, "lambdaMax"_a = NAN,
                           "force"_a = false);
     // note: metadata should be defaulted with "metadata"_a=daf::base::PropertySet()
     // but that causes an error about copying when the Python extension is imported
@@ -64,6 +66,8 @@ PYBIND11_PLUGIN(filter) {
             py::is_operator());
     clsFilterProperty.def("getName", &FilterProperty::getName);
     clsFilterProperty.def("getLambdaEff", &FilterProperty::getLambdaEff);
+    clsFilterProperty.def("getLambdaMin", &FilterProperty::getLambdaMin);
+    clsFilterProperty.def("getLambdaMax", &FilterProperty::getLambdaMax);
     clsFilterProperty.def_static("reset", &FilterProperty::reset);
     clsFilterProperty.def_static("lookup", &FilterProperty::lookup, "name"_a);
 
