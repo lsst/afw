@@ -2,5 +2,5 @@ EXAMPLE_PATH = examples
 INPUT += examples/imageDisplay.ipynb
 EXCLUDE += include/lsst/afw/detection/FootprintArray.cc
 EXCLUDE += include/lsst/afw/detection/detail/dgPsf.cc
-EXCLUDE_PATTERNS += */src/*/*.cc
+EXCLUDE_PATTERNS += */afw/src/*/*.cc
 EXCLUDE_SYMBOLS += _swig_property
