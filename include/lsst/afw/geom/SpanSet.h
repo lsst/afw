@@ -36,6 +36,7 @@
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/SpanSetFunctorGetters.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/image/Image.h"
@@ -218,15 +219,9 @@ public:
 
     /** Return a new SpanSet who's pixels are the product of applying the specified transformation
      *
-     * @param t A XY transform object which will be used to map the pixels
-     */
-    std::shared_ptr<SpanSet> transformedBy(XYTransform const &t) const;
-
-    /** Return a new SpanSet who's pixels are the product of applying the specified transformation
-     *
      * @param t A 2-D transform which will be used to map the pixels
      */
-    std::shared_ptr<SpanSet> transformedBy(Transform<Point2Endpoint, Point2Endpoint> const &t) const;
+    std::shared_ptr<SpanSet> transformedBy(TransformPoint2ToPoint2 const &t) const;
 
     /** Specifies if this SpanSet overlaps with another SpanSet
      *

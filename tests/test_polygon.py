@@ -277,16 +277,13 @@ class PolygonTest(lsst.utils.tests.TestCase):
         shift = afwGeom.Extent2D(3.0, 4.0)
         affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
             afwGeom.AffineTransform.makeScaling(scale)
-        xyTransform = afwGeom.AffineXYTransform(affineTransform)
         transform22 = afwGeom.makeTransform(affineTransform)
         transformedVertices = transform22.applyForward(box.getCorners())
         expect = afwGeom.Polygon(transformedVertices)
         poly1 = afwGeom.Polygon(box, affineTransform)
-        poly2 = afwGeom.Polygon(box, xyTransform)
-        poly3 = afwGeom.Polygon(box, transform22)
+        poly2 = afwGeom.Polygon(box, transform22)
         self.assertEqual(poly1, expect)
         self.assertEqual(poly2, expect)
-        self.assertEqual(poly3, expect)
 
     def testIteration(self):
         """Test iteration over polygon"""
@@ -340,17 +337,14 @@ class PolygonTest(lsst.utils.tests.TestCase):
         shift = afwGeom.Extent2D(3.0, 4.0)
         affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
             afwGeom.AffineTransform.makeScaling(scale)
-        xyTransform = afwGeom.AffineXYTransform(affineTransform)
         transform22 = afwGeom.makeTransform(affineTransform)
         for num in range(3, 30):
             small = self.polygon(num, 1.0, 0.0, 0.0)
             large1 = small.transform(affineTransform)
-            large2 = small.transform(xyTransform)
-            large3 = small.transform(transform22)
+            large2 = small.transform(transform22)
             expect = self.polygon(num, scale, shift[0], shift[1])
             self.assertEqual(large1, expect)
             self.assertEqual(large2, expect)
-            self.assertEqual(large3, expect)
 
             if DEBUG:
                 import matplotlib.pyplot as plt

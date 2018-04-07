@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testTransformed) {
     scaleMatrix.row(1) << 0, 2;
     afwGeom::LinearTransform transform(scaleMatrix);
     auto SpanSetPreScale = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::CIRCLE);
-    // transformedBy chains from LinearTransform->AffineTransform->XYTransform
+    // transformedBy chains from LinearTransform->AffineTransform->TransformPoint2ToPoint2
     // so testing LinearTransform tests all function overloads
     auto SpanSetPostScale = SpanSetPreScale->transformedBy(transform);
 
