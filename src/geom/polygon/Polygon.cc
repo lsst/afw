@@ -287,16 +287,6 @@ Polygon::Polygon(Polygon::Box const& box, afw::geom::TransformPoint2ToPoint2 con
     _impl->check();
 }
 
-Polygon::Polygon(Polygon::Box const& box, std::shared_ptr<afw::geom::XYTransform const> const& transform)
-        : _impl(new Polygon::Impl()) {
-    std::vector<LsstPoint> corners = boxToCorners(box);
-    for (std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
-        *p = transform->forwardTransform(*p);
-    }
-    boost::geometry::assign(_impl->poly, corners);
-    _impl->check();
-}
-
 Polygon::Polygon(Polygon::Box const& box, afw::geom::AffineTransform const& transform)
         : _impl(new Polygon::Impl()) {
     std::vector<LsstPoint> corners = boxToCorners(box);
@@ -404,17 +394,6 @@ std::shared_ptr<Polygon> Polygon::convexHull() const {
 std::shared_ptr<Polygon> Polygon::transform(TransformPoint2ToPoint2 const& transform) const {
     auto newVertices = transform.applyForward(getVertices());
     return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(newVertices))));
-}
-
-
-std::shared_ptr<Polygon> Polygon::transform(std::shared_ptr<XYTransform const> const& transform) const {
-    std::vector<LsstPoint> vertices;  // New vertices
-    vertices.reserve(getNumEdges());
-    for (std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
-         i != _impl->poly.outer().end(); ++i) {
-        vertices.push_back(transform->forwardTransform(*i));
-    }
-    return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
 }
 
 std::shared_ptr<Polygon> Polygon::transform(AffineTransform const& transform) const {

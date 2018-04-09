@@ -562,7 +562,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
         - useWarpExposure: if True, call warpExposure to warp an ExposureF,
-            else call warpImage to warp an ImageF and also call the XYTransform version
+            else call warpImage to warp an ImageF and also call the Transform version
         - useSubregion: if True then the original source exposure (from which the usual
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,

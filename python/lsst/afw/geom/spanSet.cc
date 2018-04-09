@@ -221,8 +221,8 @@ PYBIND11_PLUGIN(spanSet) {
             (std::shared_ptr<SpanSet> (SpanSet::*)(LinearTransform const &) const) & SpanSet::transformedBy);
     cls.def("transformedBy",
             (std::shared_ptr<SpanSet> (SpanSet::*)(AffineTransform const &) const) & SpanSet::transformedBy);
-    cls.def("transformedBy",
-            (std::shared_ptr<SpanSet> (SpanSet::*)(XYTransform const &) const) & SpanSet::transformedBy);
+    cls.def("transformedBy", (std::shared_ptr<SpanSet>(SpanSet::*)(TransformPoint2ToPoint2 const &) const) &
+                                     SpanSet::transformedBy);
     cls.def("overlaps", &SpanSet::overlaps);
     cls.def("contains", (bool (SpanSet::*)(SpanSet const &) const) & SpanSet::contains);
     cls.def("contains", (bool (SpanSet::*)(Point2I const &) const) & SpanSet::contains);
