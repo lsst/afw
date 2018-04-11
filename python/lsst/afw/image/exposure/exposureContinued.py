@@ -83,6 +83,31 @@ class Exposure(with_metaclass(TemplateMeta, object)):
         self.maskedImage.variance = variance
 
     variance = property(getVariance, setVariance)
+    
+    def getCutout(self, coord, height, width=None):
+        """Return a new Exposure that is a small cutout of the original.
+    
+        Parameters
+        ----------
+        coord : `lsst.afw.geom.SpherePoint`
+            desired center of cutout (e.g., in RA and Dec)
+        height : `int`
+            height of cutout in pixels
+        width : `int`, in pixels
+            width of cutout in pixels, default = height
+    
+        Returns
+        -------
+        `lsst.afw.image.Exposure`
+            The cutout exposure is centered on coord, or centered near coord
+            (if coord is within height/2 or width/2 of the exposure edge)
+        """
+        width = height if width is None else width  # default to square cutout
+        wcsPixel = self.getWcs().skyToPixel(coord)
+        wcsPixel.shift(afwGeom.Extent2D(-width/2, -height/2))  # adjust origin so coord is centered
+        bbox = afwGeom.Box2I(afwGeom.Point2I(wcsPixel), afwGeom.Extent2I(width, height))
+        bbox.clip(self.getBBox())  # ensure new bbox is within original image (may un-center coord somewhat)
+        return self.Factory(self, bbox)
 
 
 Exposure.register(np.int32, ExposureI)
