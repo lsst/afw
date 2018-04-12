@@ -708,14 +708,15 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             exposure2.writeFits(tmpFile)
             exposure3 = afwImage.ExposureF(tmpFile)
             self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
-    
+
     def testGetCutout(self):
-        height = self.height/4
-        width = self.width/2
-        coord = self.wcs.getSkyOrigin()
-        coord.shift(afwGeom.Extent2D(self.height/8, self.width/8))  # some location within the exposure
-        cutout1 = self.getCutout(self, coord, height)  # square cutout
-        cutout2 = self.getCutout(self, coord, height, width)  # rectangular cutout
+        cutoutHeight = 50
+        cutoutWidth = 100
+        coord = self.smallExposure.getWcs().getSkyOrigin()
+        coord.offset(bearing=45*afwGeom.degrees, amount=0.02*afwGeom.degrees)
+        # some location within the exposure
+        cutout1 = self.smallExposure.getCutout(coord, cutoutHeight)
+        cutout2 = self.smallExposure.getCutout(coord, cutoutHeight, cutoutWidth)
         self.assertIsNotNone(cutout1)
         self.assertIsNotNone(cutout2)
 

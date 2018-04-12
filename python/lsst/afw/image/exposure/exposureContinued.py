@@ -28,6 +28,7 @@ from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
+import lsst.afw.geom as afwGeom
 
 from .exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
 
