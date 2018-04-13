@@ -138,6 +138,8 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def_static("readFits", (ExposureT(*)(std::string const &))ExposureT::readFits);
     cls.def_static("readFits", (ExposureT(*)(fits::MemFileManager &))ExposureT::readFits);
 
+    cls.def("getCutout", &ExposureT::getCutout, "center"_a, "size"_a);
+
     return cls;
 }
 

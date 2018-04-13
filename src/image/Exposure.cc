@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <sstream>
 #include <cstdint>
 
 #include "boost/format.hpp"
@@ -194,6 +195,77 @@ void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile,
     _maskedImage.writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, data.metadata,
                            data.imageMetadata, data.maskMetadata, data.varianceMetadata);
     _info->_finishWriteFits(fitsfile, data);
+}
+
+namespace {
+/**
+ * Create a box centered as closely as possible on a particular point.
+ *
+ * @param center The desired center of the box.
+ * @param size The desired width and height (in that order) of the box.
+ *
+ * @returns a box with size ``size`` and center within half a pixel of ``center`` in either dimension.
+ *
+ * @throws lsst::pex::exceptions::InvalidParameterError Thrown if ``size`` has invalid dimensions.
+ */
+lsst::geom::Box2I _makeCenteredBox(lsst::geom::Point2D const &center, lsst::geom::Extent2I const &size) {
+    if (size[0] <= 0 || size[1] <= 0) {
+        std::stringstream buffer;
+        buffer << "Cannot create bounding box with dimensions " << size;
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+    }
+
+    lsst::geom::Point2D corner(center);
+    corner.shift(-0.5 * lsst::geom::Extent2D(size));
+    // compensate for Box2I's coordinate conventions (where max = min + size - 1)
+    corner.shift(lsst::geom::Extent2D(0.5, 0.5));
+    return lsst::geom::Box2I(lsst::geom::Point2I(corner), size, false);
+}
+
+/**
+ * Copy all overlapping pixels from one Exposure to another.
+ *
+ * If no pixels overlap, ``destination`` shall not be modified.
+ *
+ * @param destination The Exposure to copy pixels to.
+ * @param source The Exposure whose pixels will be copied.
+ */
+template <class ExposureT>
+void _copyCommonPixels(ExposureT &destination, ExposureT const &source) {
+    lsst::geom::Box2I overlapBox = destination.getBBox();
+    overlapBox.clip(source.getBBox());
+
+    // MaskedImage::assign interprets empty bounding box as "whole image"
+    if (!overlapBox.isEmpty()) {
+        typename ExposureT::MaskedImageT overlapPixels(source.getMaskedImage(), overlapBox);
+        destination.getMaskedImage().assign(overlapPixels, overlapBox);
+    }
+}
+}  // namespace
+
+template <typename ImageT, typename MaskT, typename VarianceT>
+Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout(
+        lsst::geom::SpherePoint const &center, lsst::geom::Extent2I const &size) const {
+    if (!hasWcs()) {
+        throw LSST_EXCEPT(pex::exceptions::LogicError, "Cannot look up source position without WCS.");
+    }
+
+    lsst::geom::Point2D pixelCenter = getWcs()->skyToPixel(center);
+    if (!lsst::geom::Box2D(getBBox()).contains(pixelCenter)) {
+        std::stringstream buffer;
+        buffer << "Point " << center << " lies at pixel " << pixelCenter << ", which lies outside Exposure "
+               << getBBox();
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+    }
+    lsst::geom::Box2I bbox = _makeCenteredBox(pixelCenter, size);
+
+    // cutout must have independent ExposureInfo
+    auto copyInfo = std::make_shared<ExposureInfo>(*getInfo());
+    MaskedImageT blank(bbox);  // Can't initialize Exposure with a temporary
+    Exposure cutout(blank, copyInfo);
+
+    _copyCommonPixels(cutout, *this);
+    return cutout;
 }
 
 // Explicit instantiations
