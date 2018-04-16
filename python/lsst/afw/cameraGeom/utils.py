@@ -37,6 +37,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.daf.base as dafBase
+import lsst.log
 
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
@@ -408,7 +409,7 @@ class ButlerImage(FakeImageDataSource):
     isTrimmed : `bool`
         If true, the showCamera command expects to be given trimmed images.
     verbose : `bool`
-        Be chatty (in particular, print any error messages from the butler).
+        Be chatty (in particular, log any error messages from the butler)?
     background : `float`
         The value of any pixels that lie outside the CCDs.
     gravity : `str` or None
@@ -459,6 +460,8 @@ class ButlerImage(FakeImageDataSource):
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1):
         """Return an image of the specified ccd, and also the (possibly updated) ccd"""
 
+        log = lsst.log.Log.getLogger("afw.cameraGeom.utils.ButlerImage")
+
         if self.isTrimmed:
             bbox = ccd.getBBox()
         else:
@@ -492,7 +495,7 @@ class ButlerImage(FakeImageDataSource):
 
             if e:
                 if self.verbose:
-                    print("Reading %s: %s" % (ccd.getId(), e))
+                    log.info("Reading %s: %s" % (ccd.getId(), e))
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
@@ -509,7 +512,7 @@ class ButlerImage(FakeImageDataSource):
                 im = self.callback(im, ccd, imageSource=self)
             except Exception as e:
                 if self.verbose:
-                    print("callback failed: %s" % e)
+                    log.error("callback failed: %s" % e)
                 im = imageFactory(*bbox.getDimensions())
 
         return self._prepareImage(ccd, im, binSize, allowRotate=allowRotate), ccd
@@ -890,6 +893,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     image : `lsst.afw.image.Image`
         Image of the entire camera.
     """
+    log = lsst.log.Log.getLogger("afw.cameraGeom.utils.makeImageFromCamera")
+
     if detectorNameList is None:
         ccdList = camera
     else:
@@ -915,10 +920,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
     for det, bbox in zip(ccdList, boxList):
-        try:
-            im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
-        except Exception as e:
-            print("Unable to get image for detector %s: %s" % (det.getName(), e))
+        im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
+        if im is None:
             continue
 
         nQuarter = det.getOrientation().getNQuarter()
@@ -928,9 +931,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         import lsst.pex.exceptions as pexExceptions
         try:
             imView[:] = im
-        except pexExceptions.LengthError:
-            print("Unable to fit image for detector \"%s\" into image of camera" % (
-                det.getName()))
+        except pexExceptions.LengthError as e:
+            log.error("Unable to fit image for detector \"%s\" into image of camera: %s" % (det.getName(), e))
 
     return camIm
 
