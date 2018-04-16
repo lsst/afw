@@ -412,10 +412,6 @@ class ButlerImage(FakeImageDataSource):
         Be chatty (in particular, log any error messages from the butler)?
     background : `float`
         The value of any pixels that lie outside the CCDs.
-    gravity : `str` or None
-        If the image returned by the butler is trimmed (e.g. some of the
-        SuprimeCam CCDs), specify how to fit the image into the available
-        space; N => align top, W => align left.
     callback : callable
         A function called with (image, ccd, butler) for every image, which
         returns the image to be displayed (e.g. rawCallback). The image must
@@ -434,7 +430,7 @@ class ButlerImage(FakeImageDataSource):
     """
 
     def __init__(self, butler=None, type="raw",
-                 isTrimmed=True, verbose=False, background=numpy.nan, gravity=None,
+                 isTrimmed=True, verbose=False, background=numpy.nan,
                  callback=None, *args, **kwargs):
         super(ButlerImage, self).__init__(*args)
         self.isTrimmed = isTrimmed
@@ -442,7 +438,6 @@ class ButlerImage(FakeImageDataSource):
         self.butler = butler
         self.kwargs = kwargs
         self.isRaw = False
-        self.gravity = gravity
         self.background = background
         self.verbose = verbose
         self.callback = callback
