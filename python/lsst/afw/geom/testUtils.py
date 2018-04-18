@@ -45,20 +45,21 @@ import lsst.utils.tests
 
 
 class BoxGrid(object):
-    """!Divide a box into nx by ny sub-boxes that tile the region
+    """Divide a box into nx by ny sub-boxes that tile the region
+
+    The sub-boxes will be of the same type as `box` and will exactly tile `box`;
+    they will also all be the same size, to the extent possible (some variation
+    is inevitable for integer boxes that cannot be evenly divided.
+
+    Parameters
+    ----------
+    box : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
+        the box to subdivide; the boxes in the grid will be of the same type
+    numColRow : pair of `int`
+        number of columns and rows
     """
 
     def __init__(self, box, numColRow):
-        """!Construct a BoxGrid
-
-        The sub-boxes will be of the same type as `box` and will exactly tile `box`;
-        they will also all be the same size, to the extent possible (some variation
-        is inevitable for integer boxes that cannot be evenly divided.
-
-        @param[in] box  box (an lsst.afw.geom.Box2I or Box2D);
-                        the boxes in the grid will be of the same type
-        @param[in] numColRow  number of columns and rows (a pair of ints)
-        """
         if len(numColRow) != 2:
             raise RuntimeError(
                 "numColRow=%r; must be a sequence of two integers" % (numColRow,))
@@ -88,7 +89,16 @@ class BoxGrid(object):
         return self._numColRow
 
     def __getitem__(self, indXY):
-        """!Return the box at the specified x,y index (a pair of ints)
+        """Return the box at the specified x,y index
+
+        Parameters
+        ----------
+        indXY : pair of `ints`
+            the x,y index to return
+
+        Returns
+        -------
+        subBox : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
         """
         beg = self.pointClass(*[self._divList[i][indXY[i]] for i in range(2)])
         end = self.pointClass(
@@ -99,7 +109,7 @@ class BoxGrid(object):
         return self.shape[0]*self.shape[1]
 
     def __iter__(self):
-        """!Return an iterator over all boxes, where column varies most quickly
+        """Return an iterator over all boxes, where column varies most quickly
         """
         for row in range(self.numColRow[1]):
             for col in range(self.numColRow[0]):
@@ -109,8 +119,15 @@ class BoxGrid(object):
 class FrameSetInfo(object):
     """Information about a FrameSet
 
-    Attributes
+    Parameters
     ----------
+    frameSet : `ast.FrameSet`
+        The FrameSet about which you want information
+
+    Notes
+    -----
+    **Fields**
+
     baseInd : `int`
         Index of base frame
     currInd : `int`
@@ -121,13 +138,6 @@ class FrameSetInfo(object):
         Is the current frame an `ast.SkyFrame`?
     """
     def __init__(self, frameSet):
-        """Construct a FrameSetInfo
-
-        Parameters
-        ----------
-        frameSet : `ast.FrameSet`
-            The FrameSet about which you want information
-        """
         self.baseInd = frameSet.base
         self.currInd = frameSet.current
         self.isBaseSkyFrame = frameSet.getFrame(self.baseInd).className == "SkyFrame"
@@ -272,8 +282,24 @@ class PermutedFrameSet(object):
 
     Only two-axis frames will be permuted.
 
-    Attributes
+    Parameters
     ----------
+    frameSet : `ast.FrameSet`
+        The FrameSet you wish to permute. A deep copy is made.
+    permuteBase : `bool`
+        Permute the base frame's axes?
+    permuteCurr : `bool`
+        Permute the current frame's axes?
+
+    Raises
+    ------
+    RuntimeError
+        If you try to permute a frame that does not have 2 axes
+
+    Notes
+    -----
+    **Fields**
+
     frameSet : `ast.FrameSet`
         The FrameSet that may be permuted. A local copy is made.
     isBaseSkyFrame : `bool`
@@ -286,25 +312,6 @@ class PermutedFrameSet(object):
         Are the current frame axes permuted?
     """
     def __init__(self, frameSet, permuteBase, permuteCurr):
-        """Construct a PermutedFrameSet
-
-        Make a copy of a FrameSet and permute the base and/or current frames if
-        requested
-
-        Parameters
-        ----------
-        frameSet : `ast.FrameSet`
-            The FrameSet you wish to permute. A deep copy is made.
-        permuteBase : `bool`
-            Permute the base frame's axes?
-        permuteCurr : `bool`
-            Permute the current frame's axes?
-
-        Raises
-        ------
-        `RuntimeError`
-            If you try to permute a frame that does not have 2 axes
-        """
         self.frameSet = frameSet.copy()
         fsInfo = FrameSetInfo(self.frameSet)
         self.isBaseSkyFrame = fsInfo.isBaseSkyFrame
@@ -454,7 +461,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
         Raises
         ------
-        `TypeError`
+        TypeError
             If `name` == "Generic" and `nAxes` is None or <= 0
         """
         EndpointClassName = name + "Endpoint"
@@ -484,7 +491,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
 
         Raises
         ------
-        `TypeError`
+        TypeError
             If `name` == "Generic" and `nAxes` is `None` or <= 0
         """
         return cls.makeEndpoint(name, nAxes).makeFrame()
@@ -535,7 +542,7 @@ class TransformTestBaseClass(lsst.utils.tests.TestCase):
         - `nOut` = `currFrame.nAxes`
         - `polyMap` = `makeTwoWayPolyMap(nIn, nOut)`
 
-        Return
+        Returns
         ------
         `ast.FrameSet`
             The FrameSet as described above

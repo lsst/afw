@@ -51,19 +51,29 @@ def extraMsg(msg):
 @lsst.utils.tests.inTestCase
 def assertAnglesAlmostEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
                             ignoreWrap=True, msg="Angles differ"):
-    """!Assert that two angles are almost equal, ignoring wrap differences by default
+    r"""Assert that two `~lsst.afw.geom.Angle`\ s are almost equal, ignoring wrap differences by default
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] ang0  angle 0 (an lsst.afw.geom.Angle)
-    @param[in] ang1  angle 1 (an lsst.afw.geom.Angle)
-    @param[in] maxDiff  maximum difference between the two angles (an lsst.afw.geom.Angle)
-    @param[in] ignoreWrap  ignore wrap when comparing the angles?
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    ang0 : `lsst.afw.geom.Angle`
+        angle 0
+    ang1 : `an lsst.afw.geom.Angle`
+        angle 1
+    maxDiff : `an lsst.afw.geom.Angle`
+        maximum difference between the two angles
+    ignoreWrap : `bool`
+        ignore wrap when comparing the angles?
         - if True then wrap is ignored, e.g. 0 and 360 degrees are considered equal
         - if False then wrap matters, e.g. 0 and 360 degrees are considered different
-    @param[in] msg  exception message prefix; details of the error are appended after ": "
+    msg : `str`
+        exception message prefix; details of the error are appended after ": "
 
-    @throw AssertionError if the difference is greater than maxDiff
+    Raises
+    ------
+    AssertionError
+        Raised if the difference is greater than ``maxDiff``
     """
     measDiff = ang1 - ang0
     if ignoreWrap:
@@ -75,21 +85,34 @@ def assertAnglesAlmostEqual(testCase, ang0, ang1, maxDiff=0.001*arcseconds,
 
 @lsst.utils.tests.inTestCase
 def assertPairsAlmostEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs differ"):
-    """!Assert that two Cartesian points are almost equal.
+    """Assert that two Cartesian points are almost equal.
 
     Each point can be any indexable pair of two floats, including
     Point2D or Extent2D, a list or a tuple.
 
-    @warning Does not compare types, just compares values.
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    pair0 : pair of `float`
+        pair 0
+    pair1 : pair of `floats`
+        pair 1
+    maxDiff : `float`
+        maximum radial separation between the two points
+    msg : `str`
+        exception message prefix; details of the error are appended after ": "
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] pair0  pair 0 (a pair of floats)
-    @param[in] pair1  pair 1 (a pair of floats)
-    @param[in] maxDiff  maximum radial separation between the two points
-    @param[in] msg  exception message prefix; details of the error are appended after ": "
+    Raises
+    ------
+    AssertionError
+        Raised if the radial difference is greater than ``maxDiff``
 
-    @throw AssertionError if the radial difference is greater than maxDiff
+    Notes
+    -----
+    .. warning::
+
+       Does not compare types, just compares values.
     """
     if len(pair0) != 2:
         raise RuntimeError("len(pair0)=%s != 2" % (len(pair0),))
@@ -105,21 +128,34 @@ def assertPairsAlmostEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs diff
 
 @lsst.utils.tests.inTestCase
 def assertPairListsAlmostEqual(testCase, list0, list1, maxDiff=1e-7, msg=None):
-    """!Assert that two lists of Cartesian points are almost equal
+    """Assert that two lists of Cartesian points are almost equal
 
     Each point can be any indexable pair of two floats, including
     Point2D or Extent2D, a list or a tuple.
 
-    @warning Does not compare types, just values.
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    list0 : `list` of pairs of `float`
+        list of pairs 0
+    list1 : `list` of pairs of `float`
+        list of pairs 1
+    maxDiff : `float`
+        maximum radial separation between the two points
+    msg : `str`
+        additional information for the error message; appended after ": "
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] list0  list of pairs 0 (each element a pair of floats)
-    @param[in] list1  list of pairs 1
-    @param[in] maxDiff  maximum radial separation between the two points
-    @param[in] msg  additional information for the error message; appended after ": "
+    Raises
+    ------
+    AssertionError
+        Raised if the radial difference is greater than ``maxDiff``
 
-    @throw AssertionError if the radial difference is greater than maxDiff
+    Notes
+    -----
+    .. warning::
+
+       Does not compare types, just values.
     """
     testCase.assertEqual(len(list0), len(list1))
     lenList1 = np.array([len(val) for val in list0])
@@ -139,14 +175,20 @@ def assertPairListsAlmostEqual(testCase, list0, list1, maxDiff=1e-7, msg=None):
 
 @lsst.utils.tests.inTestCase
 def assertSpherePointsAlmostEqual(testCase, sp0, sp1, maxSep=0.001*arcseconds, msg=""):
-    """!Assert that two SpherePoints are almost equal
+    r"""Assert that two `~lsst.afw.geom.SpherePoint`\ s are almost equal
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] sp0  SpherePoint 0
-    @param[in] sp1  SpherePoint 1
-    @param[in] maxSep  maximum separation, an lsst.afw.geom.Angle
-    @param[in] msg  extra information to be printed with any error message
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    sp0 : `lsst.afw.geom.SpherePoint`
+        SpherePoint 0
+    sp1 : `lsst.afw.geom.SpherePoint`
+        SpherePoint 1
+    maxSep : `lsst.afw.geom.Angle`
+        maximum separation
+    msg : `str`
+        extra information to be printed with any error message
     """
     if sp0.separation(sp1) > maxSep:
         testCase.fail("Angular separation between %s and %s = %s\" > maxSep = %s\"%s" %
@@ -155,14 +197,20 @@ def assertSpherePointsAlmostEqual(testCase, sp0, sp1, maxSep=0.001*arcseconds, m
 
 @lsst.utils.tests.inTestCase
 def assertSpherePointListsAlmostEqual(testCase, splist0, splist1, maxSep=0.001*arcseconds, msg=None):
-    """!Assert that two lists of SpherePoints are almost equal
+    r"""Assert that two lists of `~lsst.afw.geom.SpherePoint`\ s are almost equal
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] splist0  list of SpherePoints 0
-    @param[in] splist1  list of SpherePoints 1
-    @param[in] maxSep  maximum separation, an lsst.afw.geom.Angle
-    @param[in] msg  exception message prefix; details of the error are appended after ": "
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    splist0 : `list` of `lsst.afw.geom.SpherePoint`
+        list of SpherePoints 0
+    splist1 : `list` of `lsst.afw.geom.SpherePoint`
+        list of SpherePoints 1
+    maxSep : `lsst.afw.geom.Angle`
+        maximum separation
+    msg : `str`
+        exception message prefix; details of the error are appended after ": "
     """
     testCase.assertEqual(len(splist0), len(splist1), msg=msg)
     sepArr = np.array([sp0.separation(sp1)
@@ -177,18 +225,31 @@ def assertSpherePointListsAlmostEqual(testCase, splist0, splist1, maxSep=0.001*a
 
 @lsst.utils.tests.inTestCase
 def assertBoxesAlmostEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ"):
-    """!Assert that two boxes (Box2D or Box2I) are almost equal
+    """Assert that two boxes (`~lsst.afw.geom.Box2D` or `~lsst.afw.geom.Box2I`) are almost equal
 
-    @warning Does not compare types, just compares values.
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    box0 : `lsst.afw.geom.Box2D` or `lsst.afw.geom.Box2I`
+        box 0
+    box1 : `lsst.afw.geom.Box2D` or `lsst.afw.geom.Box2I`
+        box 1
+    maxDiff : `float`
+        maximum radial separation between the min points and max points
+    msg : `str`
+        exception message prefix; details of the error are appended after ": "
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] box0  box 0
-    @param[in] box1  box 1
-    @param[in] maxDiff  maximum radial separation between the min points and max points
-    @param[in] msg  exception message prefix; details of the error are appended after ": "
+    Raises
+    ------
+    AssertionError
+        Raised if the radial difference of the min points or max points is greater than maxDiff
 
-    @throw AssertionError if the radial difference of the min points or max points is greater than maxDiff
+    Notes
+    -----
+    .. warning::
+
+       Does not compare types, just compares values.
     """
     assertPairsAlmostEqual(testCase, box0.getMin(),
                            box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
@@ -198,23 +259,36 @@ def assertBoxesAlmostEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ
 
 def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
                         maxDiffPix=0.01, nx=5, ny=5, doShortCircuit=True):
-    """!Compare two WCS over a rectangular grid of pixel positions
+    """Compare two :py:class:`WCS <lsst.afw.geom.SkyWcs>` over a rectangular grid of pixel positions
 
-    @param[in] wcs0  WCS 0 (an lsst.afw.geom.SkyWcs)
-    @param[in] wcs1  WCS 1 (an lsst.afw.geom.SkyWcs)
-    @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)
-    @param[in] maxDiffSky  maximum separation between sky positions computed using Wcs.pixelToSky
-        (an lsst.afw.geom.Angle)
-    @param[in] maxDiffPix  maximum separation between pixel positions computed using Wcs.skyToPixel
-    @param[in] nx  number of points in x for the grid of pixel positions
-    @param[in] ny  number of points in y for the grid of pixel positions
-    @param[in] doShortCircuit  if True then stop at the first error, else test all values in the grid
+    Parameters
+    ----------
+    wcs0 : `lsst.afw.geom.SkyWcs`
+        WCS 0
+    wcs1 : `lsst.afw.geom.SkyWcs`
+        WCS 1
+    bbox : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
+        boundaries of pixel grid over which to compare the WCSs
+    maxDiffSky : `lsst.afw.geom.Angle`
+        maximum separation between sky positions computed using Wcs.pixelToSky
+    maxDiffPix : `float`
+        maximum separation between pixel positions computed using Wcs.skyToPixel
+    nx : `int`
+        number of points in x for the grid of pixel positions
+    ny : `int`
+        number of points in y for the grid of pixel positions
+    doShortCircuit : `bool`
+        if True then stop at the first error, else test all values in the grid
         and return information about the worst violations found
 
-    @return return an empty string if the WCS are sufficiently close; else return a string describing
-    the largest error measured in pixel coordinates (if sky to pixel error was excessive) and sky coordinates
-    (if pixel to sky error was excessive). If doShortCircuit is true then the reported error is likely to be
-    much less than the maximum error across the whole pixel grid.
+    Returns
+    -------
+    msg : `str`
+        an empty string if the WCS are sufficiently close; else return a string describing
+        the largest error measured in pixel coordinates (if sky to pixel error was excessive)
+        and sky coordinates (if pixel to sky error was excessive). If doShortCircuit is true
+        then the reported error is likely to be much less than the maximum error across the
+        whole pixel grid.
     """
     if nx < 1 or ny < 1:
         raise RuntimeError(
@@ -262,16 +336,29 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
 
 def wcsAlmostEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
                            maxDiffPix=0.01, nx=5, ny=5):
-    """!Return True if two WCS are almost equal over a grid of pixel positions, else False
+    """Test if two :py:class:`WCS <lsst.afw.geom.SkyWcs>` are almost equal over a grid of pixel positions.
 
-    @param[in] wcs0  WCS 0 (an lsst.afw.geom.SkyWcs)
-    @param[in] wcs1  WCS 1 (an lsst.afw.geom.SkyWcs)
-    @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)
-    @param[in] maxDiffSky  maximum separation between sky positions computed using Wcs.pixelToSky
-        (an lsst.afw.geom.Angle)
-    @param[in] maxDiffPix  maximum separation between pixel positions computed using Wcs.skyToPixel
-    @param[in] nx  number of points in x for the grid of pixel positions
-    @param[in] ny  number of points in y for the grid of pixel positions
+    Parameters
+    ----------
+    wcs0 : `lsst.afw.geom.SkyWcs`
+        WCS 0
+    wcs1 : `lsst.afw.geom.SkyWcs`
+        WCS 1
+    bbox : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
+        boundaries of pixel grid over which to compare the WCSs
+    maxDiffSky : `lsst.afw.geom.Angle`
+        maximum separation between sky positions computed using Wcs.pixelToSky
+    maxDiffPix : `float`
+        maximum separation between pixel positions computed using Wcs.skyToPixel
+    nx : `int`
+        number of points in x for the grid of pixel positions
+    ny : `int`
+        number of points in y for the grid of pixel positions
+
+    Returns
+    -------
+    almostEqual: `bool`
+        `True` if two WCS are almost equal over a grid of pixel positions, else `False`
     """
     return not bool(_compareWcsOverBBox(
         wcs0=wcs0,
@@ -288,24 +375,33 @@ def wcsAlmostEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
 @lsst.utils.tests.inTestCase
 def assertWcsAlmostEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*arcseconds,
                                  maxDiffPix=0.01, nx=5, ny=5, msg="WCSs differ"):
-    """!Assert that two WCS are almost equal over a grid of pixel positions
+    """Assert that two :py:class:`WCS <lsst.afw.geom.SkyWcs>` are almost equal over a grid of pixel positions
 
     Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions.
     If the WCS are too divergent at any point, call testCase.fail; the message describes
     the largest error measured in pixel coordinates (if sky to pixel error was excessive)
     and sky coordinates (if pixel to sky error was excessive) across the entire pixel grid.
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
-    @param[in] wcs0  WCS 0 (an lsst.afw.geom.SkyWcs)
-    @param[in] wcs1  WCS 1 (an lsst.afw.geom.SkyWcs)
-    @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)
-    @param[in] maxDiffSky  maximum separation between sky positions computed using Wcs.pixelToSky
-        (an lsst.afw.geom.Angle)
-    @param[in] maxDiffPix  maximum separation between pixel positions computed using Wcs.skyToPixel
-    @param[in] nx  number of points in x for the grid of pixel positions
-    @param[in] ny  number of points in y for the grid of pixel positions
-    @param[in] msg  exception message prefix; details of the error are appended after ": "
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
+    wcs0 : `lsst.afw.geom.SkyWcs`
+        WCS 0
+    wcs1 : `lsst.afw.geom.SkyWcs`
+        WCS 1
+    bbox : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
+        boundaries of pixel grid over which to compare the WCSs
+    maxDiffSky : `lsst.afw.geom.Angle`
+        maximum separation between sky positions computed using Wcs.pixelToSky
+    maxDiffPix : `float`
+        maximum separation between pixel positions computed using Wcs.skyToPixel
+    nx : `int`
+        number of points in x for the grid of pixel positions
+    ny : `int`
+        number of points in y for the grid of pixel positions
+    msg : `str`
+        exception message prefix; details of the error are appended after ": "
     """
     errMsg = _compareWcsOverBBox(
         wcs0=wcs0,
@@ -330,12 +426,17 @@ def assertWcsNearlyEqualOverBBox(*args, **kwargs):
 
 @lsst.utils.tests.inTestCase
 def makeEndpoints(testCase):
-    """Generate a representative sample of Endpoints.
+    """Generate a representative sample of ``Endpoints``.
+
+    Parameters
+    ----------
+    testCase : `unittest.TestCase`
+        test case the test is part of; an object supporting one method: fail(self, msgStr)
 
     Returns
     -------
-    x : `list`
-        List of endpoints with enough diversity to exercise Endpoint-related
+    endpoints : `list`
+        List of endpoints with enough diversity to exercise ``Endpoint``-related
         code. Each invocation of this method shall return independent objects.
     """
     return [GenericEndpoint(n) for n in range(1, 6)] + \

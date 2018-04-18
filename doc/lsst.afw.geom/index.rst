@@ -11,4 +11,6 @@ lsst.afw.geom
 Python API reference
 ====================
 
-.. .. automodapi:: lsst.afw.geom
+.. automodapi:: lsst.afw.geom
+   :skip: SinglePolygonException
+.. automodapi:: lsst.afw.geom.testUtils
