@@ -99,8 +99,8 @@ def assertPairsAlmostEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs diff
     pairDiff = [float(pair1[i] - pair0[i]) for i in range(2)]
     measDiff = math.hypot(*pairDiff)
     if measDiff > maxDiff:
-        testCase.fail("%s: measured radial distance = %s > maxDiff = %s" % (
-            msg, measDiff, maxDiff))
+        testCase.fail("%s: measured radial distance = %s > maxDiff = %s, pair0=(%r, %r), pair1=(%r, %r)" %
+                      (msg, measDiff, maxDiff, pair0[0], pair0[1], pair1[0], pair1[1]))
 
 
 @lsst.utils.tests.inTestCase
