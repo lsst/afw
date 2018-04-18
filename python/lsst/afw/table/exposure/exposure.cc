@@ -21,6 +21,7 @@
  */
 
 #include "pybind11/pybind11.h"
+#include "ndarray/pybind11.h"
 
 #include <memory>
 

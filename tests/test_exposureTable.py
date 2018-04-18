@@ -262,6 +262,12 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(catV1[0].getVisitInfo())
         self.assertIsNone(catV1[1].getVisitInfo())
 
+    def testBoolArraySubset(self):
+        i = np.array([True, False], dtype=bool)
+        subset = self.cat[i]
+        self.assertEqual(len(subset), 1)
+        self.assertEqual(subset[0], self.cat[0])
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
