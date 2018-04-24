@@ -26,7 +26,6 @@
 
 #include <cstdint>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/pex/exceptions.h"
@@ -69,11 +68,6 @@ void declareMaskFromFootprintList(py::module &mod) {
 
 PYBIND11_PLUGIN(_footprint) {
     py::module mod("_footprint", "Python wrapper for afw Footprint library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     /* Footprint Constructors */
     py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen> clsFootprint(mod, "Footprint");

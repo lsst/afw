@@ -29,7 +29,6 @@
 #include <string>
 #include <iostream>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
@@ -189,11 +188,6 @@ PYBIND11_PLUGIN(spanSet) {
     using MaskPixel = image::MaskPixel;
 
     py::module::import("lsst.afw.geom.span");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     py::enum_<Stencil>(mod, "Stencil")
             .value("CIRCLE", Stencil::CIRCLE)

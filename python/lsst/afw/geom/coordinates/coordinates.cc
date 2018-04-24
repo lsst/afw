@@ -21,7 +21,6 @@
  */
 
 #include "pybind11/pybind11.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/Point.h"
@@ -448,11 +447,6 @@ void declarePointOperators(py::module &mod, PyPoint<int, N> &clsI, PyPoint<doubl
 
 PYBIND11_PLUGIN(coordinates) {
     py::module mod("coordinates");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     // Only the interface-level classes are defined here, and these functions
     // call others to define their base classes, since those are never shared.

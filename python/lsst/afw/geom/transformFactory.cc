@@ -22,7 +22,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/Point.h"
@@ -41,12 +40,6 @@ PYBIND11_PLUGIN(transformFactory) {
     py::module mod("transformFactory");
 
     py::module::import("lsst.afw.geom.transform");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     mod.def("linearizeTransform",
             (AffineTransform(*)(TransformPoint2ToPoint2 const &, Point2D const &)) & linearizeTransform,

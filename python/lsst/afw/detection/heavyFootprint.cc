@@ -23,9 +23,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
@@ -85,11 +83,6 @@ void declareHeavyFootprint(py::module &mod, std::string const &suffix) {
 
 PYBIND11_PLUGIN(_heavyFootprint) {
     py::module mod("_heavyFootprint", "Python wrapper for afw _heavyFootprint library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     declareHeavyFootprint<int>(mod, "I");
     declareHeavyFootprint<std::uint16_t>(mod, "U");

@@ -25,7 +25,6 @@
 
 #include "astshim.h"
 #include "pybind11/stl.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/table/io/python.h"
@@ -121,12 +120,6 @@ PYBIND11_PLUGIN(transform) {
 
     py::module::import("astshim");
     py::module::import("lsst.afw.geom.endpoint");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     declareTransform<GenericEndpoint, GenericEndpoint>(mod);
     declareTransform<GenericEndpoint, Point2Endpoint>(mod);

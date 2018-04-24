@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
@@ -184,11 +183,6 @@ PYBIND11_PLUGIN(aggregates) {
     py::module::import("lsst.afw.geom.ellipses");
     py::module::import("lsst.afw.table.base");
     py::module mod("aggregates");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     py::enum_<CoordinateType>(mod, "CoordinateType")
             .value("PIXEL", CoordinateType::PIXEL)

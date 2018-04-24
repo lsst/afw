@@ -26,7 +26,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
@@ -79,12 +78,6 @@ void declare2SysMethods(PyClass &cls) {
 
 PYBIND11_PLUGIN(_detector) {
     py::module mod("_detector", "Python wrapper for afw _detector library");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     /* Module level */
     py::class_<Detector, std::shared_ptr<Detector>> cls(mod, "Detector");

@@ -27,7 +27,6 @@
 #include "astshim.h"
 #include "Eigen/Core"
 #include "pybind11/stl.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/fits.h"
@@ -49,12 +48,6 @@ PYBIND11_PLUGIN(skyWcs) {
     py::module mod("skyWcs");
 
     py::module::import("lsst.afw.geom.transform");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * degrees, "flipX"_a = false);
     mod.def("makeFlippedWcs", makeFlippedWcs, "wcs"_a, "flipLR"_a, "flipTB"_a, "center"_a);

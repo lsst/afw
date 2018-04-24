@@ -23,9 +23,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
@@ -37,11 +35,6 @@ using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_baseCore) {
     py::module mod("_baseCore", "Python wrapper for afw _baseCore library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     /* Module level */
     py::class_<BaseCore, std::shared_ptr<BaseCore>> clsBaseCore(mod, "BaseCore");

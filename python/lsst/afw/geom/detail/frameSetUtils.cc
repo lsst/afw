@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "astshim.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/daf/base.h"
@@ -48,12 +47,6 @@ PYBIND11_PLUGIN(frameSetUtils) {
     py::module::import("lsst.afw.geom.angle");
     py::module::import("lsst.afw.geom.coordinates");
     py::module::import("lsst.afw.geom.spherePoint");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     mod.def("readFitsWcs", readFitsWcs, "metadata"_a, "strip"_a = true);
     mod.def("readLsstSkyWcs", readLsstSkyWcs, "metadata"_a, "strip"_a = true);

@@ -24,9 +24,7 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/math/GaussianProcess.h"
 
@@ -139,11 +137,6 @@ void declareGaussianProcess(py::module &mod, const std::string &suffix) {
 
 PYBIND11_PLUGIN(_gaussianProcess) {
     py::module mod("_gaussianProcess", "Python wrapper for afw _gaussianProcess library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     declareCovariograms<double>(mod, "D");
     declareGaussianProcess<double>(mod, "D");

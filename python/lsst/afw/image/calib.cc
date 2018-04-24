@@ -26,7 +26,6 @@
 #include <memory>
 #include <vector>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/daf/base/PropertySet.h"
@@ -59,11 +58,6 @@ void declareVectorOperations(py::module & mod)
 
 PYBIND11_PLUGIN(calib) {
     py::module mod("calib");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     /* Module level */
     mod.def("abMagFromFlux", (double(*)(double))&abMagFromFlux, "flux"_a);

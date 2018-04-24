@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
@@ -46,11 +45,6 @@ PYBIND11_PLUGIN(linearTransform) {
     py::module mod("linearTransform");
 
     py::module::import("lsst.afw.geom.coordinates");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     PyLinearTransform cls(mod, "LinearTransform");
 

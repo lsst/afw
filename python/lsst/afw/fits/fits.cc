@@ -23,7 +23,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/pex/exceptions/Exception.h"
@@ -190,12 +189,6 @@ void declareFits(py::module & mod) {
 
 PYBIND11_PLUGIN(_fits) {
     py::module mod("_fits", "Python wrapper for afw _fits library");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 
