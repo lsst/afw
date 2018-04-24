@@ -20,8 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-# \file
-# \brief Utilities to use with displaying images
+# @file
+# @brief Utilities to use with displaying images
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom

@@ -21,15 +21,15 @@
 #
 
 ##
-# \file
-# \brief A dummy image display
+# @file
+# @brief A dummy image display
 
 
 class DisplayImpl(object):
     def __init__(self, display, verbose=False):
         """! Initialise the display
-        \param display The display object that we're providing the implementation for
-        \param verbose be chatty?
+        @param display The display object that we're providing the implementation for
+        @param verbose be chatty?
         """
         self.display = display
         self.verbose = verbose
@@ -44,20 +44,20 @@ class DisplayImpl(object):
 
     def _buffer(self, enable=True):
         """!Enable or disable buffering of writes to the display
-        \param enable  True or False, as appropriate
+        @param enable  True or False, as appropriate
         """
         if self.verbose:
             print("virtual[%s]._buffer(%s)" % (self.frame, enable))
 
     def _dot(self, symb, c, r, size, ctype, *args, **kwargs):
         """!Draw symbol a symbol at (c, r)
-        \param symb The desired symbol.  See dot() for details
-        \param c (x) column position
-        \param r (y) row position
-        \param size  Size of symbol, in pixels
-        \param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
-        \param args  Extra arguments
-        \param kwargs Extra keyword arguments
+        @param symb The desired symbol.  See dot() for details
+        @param c (x) column position
+        @param r (y) row position
+        @param size  Size of symbol, in pixels
+        @param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
+        @param args  Extra arguments
+        @param kwargs Extra keyword arguments
         """
         if self.verbose:
             print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" %
@@ -65,8 +65,8 @@ class DisplayImpl(object):
 
     def _drawLines(self, points, ctype):
         """!Draw line defined by the list points
-        \param points A list of 0-indexed positions [(x, y), (x, y), ...]
-        \param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
+        @param points A list of 0-indexed positions [(x, y), (x, y), ...]
+        @param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
         """
         if self.verbose:
             print("virtual[%s]._drawLines(%s, ctype=%s)" %
@@ -107,10 +107,10 @@ class DisplayImpl(object):
 
     def _mtv(self, image, wcs=None, mask=None, title=""):
         """Display an image and maybe a mask overlay on a display
-        \param image afwImage.Image to display
-        \param mask afwImage.Mask to display
-        \param wcs A Wcs to associate with data
-        \param title Name to display with the data
+        @param image afwImage.Image to display
+        @param mask afwImage.Mask to display
+        @param wcs A Wcs to associate with data
+        @param title Name to display with the data
         """
         if self.verbose:
             print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" %
@@ -119,8 +119,8 @@ class DisplayImpl(object):
 
     def _setMaskTransparency(self, transparency, maskplane):
         """Set the transparency of a maskplane
-        \param transparency The desired transparency, in the range [0, 100]
-        \param maskplane The maskplane to set (None: all)
+        @param transparency The desired transparency, in the range [0, 100]
+        @param maskplane The maskplane to set (None: all)
         """
         if self.verbose:
             print("virtual[%s]._setMaskTransparency(%g, maskplane=\"%s\")" %
@@ -128,12 +128,12 @@ class DisplayImpl(object):
 
     def _scale(self, algorithm, min, max, unit=None, *args, **kwargs):
         """Set the scaling from DN to displayed pixels
-        \param algorithm Scaling algorithm (e.g. linear)
-        \param min  The minimum value of the stretch (or "zscale" or "minmax")
-        \param max  The maximum value of the stretch
-        \param unit Units for min and max (e.g. Percent, Absolute, Sigma)
-        \param *args Optional arguments
-        \param **kwargs Optional keyword arguments
+        @param algorithm Scaling algorithm (e.g. linear)
+        @param min  The minimum value of the stretch (or "zscale" or "minmax")
+        @param max  The maximum value of the stretch
+        @param unit Units for min and max (e.g. Percent, Absolute, Sigma)
+        @param *args Optional arguments
+        @param **kwargs Optional keyword arguments
         """
         if self.verbose:
             print("virtual[%s]._scale(%s, %s, %s, %s, %s, %s)" % (self.frame, algorithm,
@@ -147,15 +147,15 @@ class DisplayImpl(object):
 
     def _pan(self, r, c):
         """Pan to (colc, rowc)
-        \param c Desired column (x) position
-        \param r Desired row (y) position
+        @param c Desired column (x) position
+        @param r Desired row (y) position
         """
         if self.verbose:
             print("virtual[%s]._pan(%.2f, %.2f)" % (self.frame, r, c))
 
     def _zoom(self, zoomfac):
         """Set the zoom
-        \param zoomfac  Zoom factor to use
+        @param zoomfac  Zoom factor to use
         """
         if self.verbose:
             print("virtual[%s]._zoom(%g)" % (self.frame, zoomfac))

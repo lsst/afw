@@ -22,9 +22,9 @@
 
 
 # test1079
-# \brief Test that the wcs of sub-images are written and read from disk correctly
+# @brief Test that the wcs of sub-images are written and read from disk correctly
 # $Id$
-# \author Fergal Mullally
+# @author Fergal Mullally
 
 import os.path
 import unittest

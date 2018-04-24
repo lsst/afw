@@ -21,8 +21,8 @@
 #
 
 ##
-# \file
-# \brief Support for talking to image displays from python
+# @file
+# @brief Support for talking to image displays from python
 
 import re
 import sys
@@ -60,10 +60,10 @@ IGNORE = "ignore"
 def _makeDisplayImpl(display, backend, *args, **kwargs):
     """!Return the DisplayImpl for the named backend
 
-    \param display Name of device.  Should be importable, either absolutely or relative to lsst.display
-    \param backend The desired backend
-    \param args   Arguments passed to DisplayImpl.__init__
-    \param kwargs Keywords arguments passed to DisplayImpl.__init__
+    @param display Name of device.  Should be importable, either absolutely or relative to lsst.display
+    @param backend The desired backend
+    @param args   Arguments passed to DisplayImpl.__init__
+    @param kwargs Keywords arguments passed to DisplayImpl.__init__
 
     E.g.
          import lsst.afw.display as afwDisplay
@@ -130,10 +130,10 @@ class Display(object):
     def __init__(self, frame=None, backend=None, *args, **kwargs):
         """!Create an object able to display images and overplot glyphs
 
-        \param frame An identifier for the display
-        \param backend The backend to use (defaults to value set by setDefaultBackend())
-        \param args Arguments to pass to the backend
-        \param kwargs Arguments to pass to the backend
+        @param frame An identifier for the display
+        @param backend The backend to use (defaults to value set by setDefaultBackend())
+        @param args Arguments to pass to the backend
+        @param kwargs Arguments to pass to the backend
         """
         if frame is None:
             frame = getDefaultFrame()
@@ -280,8 +280,8 @@ class Display(object):
     @staticmethod
     def setDefaultMaskPlaneColor(name=None, color=None):
         """!Set the default mapping from mask plane names to colours
-        \param name name of mask plane, or a dict mapping names to colours
-        \param color Desired color, or None if name is a dict
+        @param name name of mask plane, or a dict mapping names to colours
+        @param color Desired color, or None if name is a dict
 
         If name is None, use the hard-coded default dictionary
         """
@@ -303,13 +303,13 @@ class Display(object):
     def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kwargs):
         """!Return the Display indexed by frame, creating it if needs be
 
-        \param frame The desired frame (None => use defaultFrame (see setDefaultFrame))
-        \param backend  create the specified frame using this backend (or the default if None) \
+        @param frame The desired frame (None => use defaultFrame (see setDefaultFrame))
+        @param backend  create the specified frame using this backend (or the default if None) \
         if it doesn't already exist.  If backend == "", it's an error to specify a non-existent frame
-        \param create create the display if it doesn't already exist.
-        \param verbose Allow backend to be chatty
-        \param args arguments passed to Display constructor
-        \param kwargs keyword arguments passed to Display constructor
+        @param create create the display if it doesn't already exist.
+        @param verbose Allow backend to be chatty
+        @param args arguments passed to Display constructor
+        @param kwargs keyword arguments passed to Display constructor
         """
 
         if frame is None:
@@ -336,7 +336,7 @@ class Display(object):
     def maskColorGenerator(self, omitBW=True):
         """!A generator for "standard" colours
 
-        \param omitBW  Don't include Black and White
+        @param omitBW  Don't include Black and White
 
         e.g.
         colorGenerator = interface.maskColorGenerator(omitBW=True)
@@ -358,14 +358,14 @@ class Display(object):
     def setMaskPlaneColor(self, name, color=None):
         """!Request that mask plane name be displayed as color
 
-        \param name Name of mask plane or a dictionary of name -> colourName
-        \param color The name of the colour to use (must be None if name is a dict)
+        @param name Name of mask plane or a dictionary of name -> colourName
+        @param color The name of the colour to use (must be None if name is a dict)
 
         Colours may be specified as any X11-compliant string (e.g. <tt>"orchid"</tt>), or by one
-        of the following constants defined in \c afwDisplay: \c BLACK, \c WHITE, \c RED, \c BLUE,
-        \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
+        of the following constants defined in @c afwDisplay: @c BLACK, @c WHITE, @c RED, @c BLUE,
+        @c GREEN, @c CYAN, @c MAGENTA, @c YELLOW.
 
-        If the colour is "ignore" (or \c IGNORE) then that mask plane is not displayed
+        If the colour is "ignore" (or @c IGNORE) then that mask plane is not displayed
 
         The advantage of using the symbolic names is that the python interpreter can detect typos.
 
@@ -559,12 +559,12 @@ class Display(object):
 
     def scale(self, algorithm, min, max=None, unit=None, *args, **kwargs):
         """!Set the range of the scaling from DN in the image to the image display
-        \param algorithm Desired scaling (e.g. "linear" or "asinh")
-        \param min Minimum value, or "minmax" or "zscale"
-        \param max Maximum value (must be None for minmax|zscale)
-        \param unit Units for min and max (e.g. Percent, Absolute, Sigma; None if min==minmax|zscale)
-        \param *args Optional arguments
-        \param **kwargs Optional keyword arguments
+        @param algorithm Desired scaling (e.g. "linear" or "asinh")
+        @param min Minimum value, or "minmax" or "zscale"
+        @param max Maximum value (must be None for minmax|zscale)
+        @param unit Units for min and max (e.g. Percent, Absolute, Sigma; None if min==minmax|zscale)
+        @param *args Optional arguments
+        @param **kwargs Optional keyword arguments
         """
         if min in ("minmax", "zscale"):
             assert max is None, "You may not specify \"%s\" and max" % min
@@ -605,7 +605,7 @@ class Display(object):
 
     def interact(self):
         """!Enter an interactive loop, listening for key presses in display and firing callbacks.
-            Exit with q, \c CR, \c ESC, or any other callback function that returns a ``True`` value.
+            Exit with q, @c CR, @c ESC, or any other callback function that returns a ``True`` value.
         """
         interactFinished = False
 
@@ -643,7 +643,7 @@ class Display(object):
 
     def getActiveCallbackKeys(self, onlyActive=True):
         """!Return all callback keys
-    \param onlyActive  If true only return keys that do something
+    @param onlyActive  If true only return keys that do something
         """
 
         return sorted([k for k, func in self._callbacks.items() if
@@ -713,8 +713,8 @@ def setDefaultMaskTransparency(maskPlaneTransparency={}):
 
 def setDefaultMaskPlaneColor(name=None, color=None):
     """!Set the default mapping from mask plane names to colours
-    \param name name of mask plane, or a dict mapping names to colours
-    \param color Desired color, or None if name is a dict
+    @param name name of mask plane, or a dict mapping names to colours
+    @param color Desired color, or None if name is a dict
 
     If name is None, use the hard-coded default dictionary
     """
@@ -727,13 +727,13 @@ def getDisplay(frame=None, backend=None, create=True, verbose=False, *args, **kw
 
     See Display.getDisplay
 
-    \param frame The desired frame (None => use defaultFrame (see setDefaultFrame))
-    \param backend  create the specified frame using this backend (or the default if None) \
+    @param frame The desired frame (None => use defaultFrame (see setDefaultFrame))
+    @param backend  create the specified frame using this backend (or the default if None) \
     if it doesn't already exist.  If backend == "", it's an error to specify a non-existent frame
-    \param create create the display if it doesn't already exist.
-    \param verbose Allow backend to be chatty
-    \param args arguments passed to Display constructor
-    \param kwargs keyword arguments passed to Display constructor
+    @param create create the display if it doesn't already exist.
+    @param verbose Allow backend to be chatty
+    @param args arguments passed to Display constructor
+    @param kwargs keyword arguments passed to Display constructor
     """
 
     return Display.getDisplay(frame, backend, create, verbose, *args, **kwargs)
