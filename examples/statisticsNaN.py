@@ -23,8 +23,6 @@
 #
 
 #
-from __future__ import absolute_import, division, print_function
-from builtins import str
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom

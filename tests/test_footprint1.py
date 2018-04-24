@@ -1,5 +1,3 @@
-
-
 #
 # LSST Data Management System
 # Copyright 2008-2017 LSST Corporation.
@@ -32,16 +30,11 @@ or
    >>> import footprint1; footprint1.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import math
 import sys
 import unittest
 import os
 
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
 import numpy as np
 
 import lsst.utils.tests

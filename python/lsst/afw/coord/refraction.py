@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
 # Copyright 2008-2018 LSST/AURA.

@@ -20,18 +20,15 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["PointKey", "CovarianceMatrixKey"]
 
-from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
 from . import aggregates
 
 
-class PointKey(with_metaclass(TemplateMeta, object)):
+class PointKey(metaclass=TemplateMeta):
     TEMPLATE_PARAMS = ("dtype", "dim")
     TEMPLATE_DEFAULTS = (None, 2)
 
@@ -45,7 +42,7 @@ PointKey.register((np.float64, 2), aggregates.Point2DKey)
 # detail.
 
 
-class CovarianceMatrixKey(with_metaclass(TemplateMeta, object)):
+class CovarianceMatrixKey(metaclass=TemplateMeta):
     TEMPLATE_PARAMS = ("dtype", "dim")
 
 

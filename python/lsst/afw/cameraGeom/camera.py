@@ -19,8 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
-from builtins import range
 from .cameraGeomLib import FOCAL_PLANE, PIXELS
 from .detectorCollection import DetectorCollection
 from .pupil import PupilFactory

@@ -19,13 +19,10 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = ["clipImage", "resetFilters", "defineFilter",
            "defineFiltersFromPolicy", "CalibNoThrow"]
 
-from past.builtins import basestring
-from builtins import object
 import numpy as np
 
 import lsst.pex.policy as pexPolicy
@@ -65,7 +62,7 @@ def defineFilter(name, lambdaEff, lambdaMin=np.nan, lambdaMax=np.nan, alias=[], 
     """Define a filter and its properties in the filter registry"""
     prop = FilterProperty(name, lambdaEff, lambdaMin, lambdaMax, force)
     Filter.define(prop)
-    if isinstance(alias, basestring):
+    if isinstance(alias, str):
         Filter.defineAlias(name, alias)
     else:
         for a in alias:

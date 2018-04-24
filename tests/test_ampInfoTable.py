@@ -22,10 +22,7 @@
 """
 Tests for lsst.afw.table.AmpInfoTable, etc.
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import zip
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom

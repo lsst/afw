@@ -1,4 +1,3 @@
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -21,12 +20,9 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import os
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

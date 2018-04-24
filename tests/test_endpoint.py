@@ -19,7 +19,6 @@ You should have received a copy of the LSST License Statement and
 the GNU General Public License along with this program. If not,
 see <http://www.lsstcorp.org/LegalNotices/>.
 """
-from __future__ import absolute_import, division, print_function
 import unittest
 
 from numpy.testing import assert_allclose, assert_equal

@@ -20,18 +20,15 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["ArrayKey"]
 
-from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
 from . import arrays
 
 
-class ArrayKey(with_metaclass(TemplateMeta, object)):
+class ArrayKey(metaclass=TemplateMeta):
     pass
 
 

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from ._quadrupole import Quadrupole
 
 __all__ = []  # import this module only for its side effects

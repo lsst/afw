@@ -1,4 +1,3 @@
-
 #
 # LSST Data Management System
 # Copyright 2008-2016 AURA/LSST.
@@ -30,13 +29,10 @@ or
    python
    >>> import SourceMatch; SourceMatch.run()
 """
-from __future__ import absolute_import, division, print_function
 import os
 import re
 import unittest
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.afw.geom as afwGeom

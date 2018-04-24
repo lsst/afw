@@ -22,6 +22,5 @@
 
 """Application Framework code to display images on ds9
 """
-from __future__ import absolute_import
 from .interface import *
 from .utils import Mosaic

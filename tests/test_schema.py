@@ -30,10 +30,8 @@ or
    >>> import testSchema; testSchema.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
 
-from builtins import zip
 import numpy as np
 
 import lsst.utils.tests

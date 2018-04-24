@@ -23,11 +23,6 @@
 # \file
 # \brief Utilities to use with displaying images
 
-from __future__ import absolute_import, division, print_function
-from builtins import str
-from builtins import range
-from builtins import object
-
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 

@@ -24,7 +24,6 @@
 Tests for pickles of some afw types
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import pickle
 

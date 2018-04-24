@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import lsst.afw.table.io
 import lsst.afw.image

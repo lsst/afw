@@ -20,11 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["Exposure"]
 
-from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
@@ -32,7 +29,7 @@ from lsst.utils import TemplateMeta
 from .exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
 
 
-class Exposure(with_metaclass(TemplateMeta, object)):
+class Exposure(metaclass=TemplateMeta):
 
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits

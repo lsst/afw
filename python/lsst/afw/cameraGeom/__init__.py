@@ -20,7 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import
 
 """Application Framework classes to handle a mosaic camera's geometry
 """

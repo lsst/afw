@@ -25,8 +25,6 @@
 # \brief Support for talking to ds9 from python
 # \deprecated  New code should use lsst.afw.display and set the backend to ds9
 
-from __future__ import absolute_import, division, print_function
-
 import lsst.afw.display
 import lsst.afw.image as afwImage
 from .interface import getDisplay as _getDisplay, setDefaultBackend

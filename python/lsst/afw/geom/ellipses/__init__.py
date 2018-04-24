@@ -22,7 +22,6 @@
 
 """lsst.afw.geom.ellipses
 """
-from __future__ import absolute_import
 from .ellipsesLib import *
 
 Separable = {

@@ -22,12 +22,7 @@
 """
 Tests for lsst.afw.cameraGeom.TransformMap
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import range
-from builtins import object
-from builtins import zip
 
 import lsst.utils.tests
 import lsst.pex.exceptions

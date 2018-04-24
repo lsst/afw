@@ -1,8 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from builtins import str
-from builtins import range
-from builtins import object
-from past.builtins import long
 import gdb
 import math
 import re
@@ -336,7 +331,7 @@ try:
             self.val = val
 
         def to_string(self):
-            sentinel = long(self.val["_sentinel"].cast(
+            sentinel = int(self.val["_sentinel"].cast(
                 gdb.lookup_type("unsigned int")))
             return "{%s %d 0x%x}" % (self.val.address, self.val["_CitizenId"], sentinel)
 

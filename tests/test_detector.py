@@ -22,11 +22,7 @@
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import range
-from builtins import zip
 
 import numpy as np
 
