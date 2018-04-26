@@ -22,7 +22,6 @@
 
 #include "pybind11/pybind11.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/image/Image.h"
@@ -292,11 +291,6 @@ static void addGeneralizedCopyConstructors(PyClass &cls) {
 
 PYBIND11_PLUGIN(image) {
     py::module mod("image");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     py::enum_<ImageOrigin>(mod, "ImageOrigin")
             .value("PARENT", ImageOrigin::PARENT)

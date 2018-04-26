@@ -24,9 +24,7 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 //#include "ndarray/eigen.h"
 
 #include "lsst/afw/math/LeastSquares.h"
@@ -73,11 +71,6 @@ void declareLeastSquares(py::module &mod) {
 
 PYBIND11_PLUGIN(_leastSquares) {
     py::module mod("_leastSquares", "Python wrapper for afw _leastSquares library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     declareLeastSquares<double, double, 0, 0>(mod);
 

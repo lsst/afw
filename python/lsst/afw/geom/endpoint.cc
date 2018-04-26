@@ -27,7 +27,6 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
@@ -196,12 +195,6 @@ PYBIND11_PLUGIN(endpoint) {
     py::module mod("endpoint");
 
     py::module::import("lsst.afw.geom.coordinates");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     declareGenericEndpoint(mod);
     declarePoint2Endpoint(mod);

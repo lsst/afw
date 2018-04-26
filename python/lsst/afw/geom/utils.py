@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -26,7 +25,6 @@ In the case of the assert functions, importing them makes them available in lsst
 """
 __all__ = ["wcsAlmostEqualOverBBox"]
 
-from builtins import range
 import itertools
 import warnings
 import math

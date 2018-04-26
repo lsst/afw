@@ -19,14 +19,13 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = ['PupilFactory', 'Pupil']
 
 import numpy as np
 
 
-class Pupil(object):
+class Pupil:
     """!Pupil obscuration function.
     """
 
@@ -47,7 +46,7 @@ class Pupil(object):
         self.scale = scale
 
 
-class PupilFactory(object):
+class PupilFactory:
     """!Pupil obscuration function factory for use with Fourier optics.
     """
 

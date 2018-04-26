@@ -25,7 +25,6 @@
 
 #include <memory>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/image/TransmissionCurve.h"
@@ -82,11 +81,6 @@ void define(PyTransmissionCurve & cls) {
 
 PYBIND11_PLUGIN(transmissionCurve) {
     py::module mod("transmissionCurve");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     // then declare classes
     auto cls = declare(mod);

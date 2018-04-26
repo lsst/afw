@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/AffineTransform.h"
@@ -43,12 +42,6 @@ PYBIND11_PLUGIN(affineTransform) {
 
     py::module::import("lsst.afw.geom.linearTransform");
     py::module::import("lsst.afw.geom.coordinates");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     PyAffineTransform cls(mod, "AffineTransform");
 

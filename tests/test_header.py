@@ -20,10 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import unittest
 
-from past.builtins import long
 import numpy
 
 import lsst.afw.image as afwImage
@@ -40,7 +38,7 @@ class HeaderTestCase(lsst.utils.tests.TestCase):
                   "NAN": numpy.nan,
                   "PLUSINF": numpy.inf,
                   "MINUSINF": -numpy.inf,
-                  "LONG": long(987654321),
+                  "LONG": 987654321,
                   }
 
         exp = afwImage.ExposureI(0, 0)

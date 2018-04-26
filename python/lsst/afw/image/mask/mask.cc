@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/image/LsstImageTypes.h"
@@ -174,11 +173,6 @@ PYBIND11_PLUGIN(mask) {
     py::module mod("mask");
 
     py::module::import("lsst.afw.image.image");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     declareMask<MaskPixel>(mod, "X");
 

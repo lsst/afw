@@ -25,7 +25,6 @@
 
 #include <memory>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
@@ -54,11 +53,6 @@ void declareMeasurement(py::module &mod) {
 
 PYBIND11_PLUGIN(photoCalib) {
     py::module mod("photoCalib");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     declareMeasurement(mod);
 

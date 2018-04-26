@@ -20,7 +20,5 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import
-
 from .apCorrMap import *
 from .apCorrMapContinued import *

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from builtins import object
 import re
 import warnings
 import lsst.afw.image as afwImage
@@ -99,7 +97,7 @@ class HeaderDetectorMap(HeaderMap):
         obj.__setattr__(attrName, transform(value))
 
 
-class DetectorBuilder(object):
+class DetectorBuilder:
     def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1.,
                  radialCoeffs=(0., 1.), clobberMetadata=False, doRaise=True):
         ''' @param[in] detectorFileName  FITS file containing the detector description.

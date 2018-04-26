@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010, 2015 LSST Corporation.
@@ -22,8 +21,8 @@ from __future__ import absolute_import, division, print_function
 #
 
 ##
-# \file
-# \brief Convert the display primitives into lists of ds9 region commands
+# @file
+# @brief Convert the display primitives into lists of ds9 region commands
 ##
 # See e.g. http://ds9.si.edu/doc/ref/region.html
 
@@ -109,8 +108,8 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
 
 def drawLines(points, ctype=None):
     """!Draw a line by connecting the points
-    \param points a list of (col,row)
-    \param ctype the name of the desired colour (e.g. 'red', 'orchid')
+    @param points a list of (col,row)
+    @param ctype the name of the desired colour (e.g. 'red', 'orchid')
     """
 
     if ctype is None:  # default

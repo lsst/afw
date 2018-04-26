@@ -24,7 +24,6 @@
 
 Tests convolution of various kernels with Images and MaskedImages.
 """
-from __future__ import absolute_import, division, print_function
 import math
 import os
 import os.path
@@ -32,7 +31,6 @@ import unittest
 import string
 import re
 
-from builtins import range
 import numpy
 
 import lsst.utils

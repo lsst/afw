@@ -20,12 +20,9 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["CoordinateExpr", "Extent", "ExtentI", "ExtentD",
            "Point", "PointI", "PointD"]
 
-from future.utils import with_metaclass
 from lsst.utils import TemplateMeta
 
 from . import coordinates
@@ -44,7 +41,7 @@ def _coordinateReduce(self):
     return (type(self), tuple(self))
 
 
-class CoordinateExpr(with_metaclass(TemplateMeta, object)):
+class CoordinateExpr(metaclass=TemplateMeta):
     """Abstract base class and factory for CoordinateExpr objects.
     """
     TEMPLATE_PARAMS = ("dimensions", )
@@ -58,7 +55,7 @@ CoordinateExpr.register(2, coordinates.CoordinateExpr2)
 CoordinateExpr.register(3, coordinates.CoordinateExpr3)
 
 
-class Extent(with_metaclass(TemplateMeta, object)):
+class Extent(metaclass=TemplateMeta):
     """Abstract base class and factory for Extent objects.
     """
     TEMPLATE_PARAMS = ("dtype", "dimensions")
@@ -77,7 +74,7 @@ ExtentI = coordinates.Extent2I
 ExtentD = coordinates.Extent2D
 
 
-class Point(with_metaclass(TemplateMeta, object)):
+class Point(metaclass=TemplateMeta):
     """Abstract base class and factory for Point objects.
     """
     TEMPLATE_PARAMS = ("dtype", "dimensions")

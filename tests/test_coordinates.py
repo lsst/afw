@@ -30,20 +30,17 @@ or
    >>> import coordinates; coordinates.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import math
 import operator
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as geom
 
 
-class CoordinateTestCase(object):
+class CoordinateTestCase:
     """Mixin for some of the tests below.
     """
 

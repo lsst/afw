@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 # the asserts are automatically imported so unit tests can find them without special imports;
 # the other functions are hidden unless explicitly asked for

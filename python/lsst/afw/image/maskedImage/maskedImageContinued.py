@@ -20,11 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["MaskedImage"]
 
-from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
@@ -33,7 +30,7 @@ from ..slicing import supportSlicing
 from .maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
 
 
-class MaskedImage(with_metaclass(TemplateMeta, object)):
+class MaskedImage(metaclass=TemplateMeta):
 
     def set(self, x, y=None, values=None):
         """Set the point (x, y) to a triple (value, mask, variance)"""

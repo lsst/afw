@@ -23,12 +23,6 @@
 """
 Support for displaying cameraGeom objects.
 """
-from __future__ import absolute_import, division, print_function
-from builtins import zip
-from builtins import next
-from builtins import str
-from builtins import range
-from builtins import object
 import math
 import numpy
 import warnings
@@ -319,7 +313,7 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     return ccdImage
 
 
-class FakeImageDataSource(object):
+class FakeImageDataSource:
     """A class to retrieve synthetic images for display by the show* methods
 
     Parameters

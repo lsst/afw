@@ -30,13 +30,9 @@ or
    >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
 
-from __future__ import absolute_import, division, print_function
 import sys
 import time
 import unittest
-
-from builtins import str
-from builtins import range
 
 import lsst.pex.exceptions
 import lsst.pex.policy as pexPolicy

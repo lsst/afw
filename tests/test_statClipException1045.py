@@ -25,7 +25,6 @@
 Tests for ticket 1043 - Photometry fails when no PSF is provided
 """
 
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 

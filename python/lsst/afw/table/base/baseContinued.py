@@ -19,11 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
-
-from future.utils import with_metaclass
-from past.types import basestring
-from builtins import zip
 
 import numpy as np
 
@@ -96,7 +91,7 @@ class BaseRecord:
         return "%s\n%s" % (type(self), str(self))
 
 
-class Catalog(with_metaclass(TemplateMeta, object)):
+class Catalog(metaclass=TemplateMeta):
 
     def getColumnView(self):
         self._columns = self._getColumnView()
@@ -128,9 +123,9 @@ class Catalog(with_metaclass(TemplateMeta, object)):
                 return self.subset(key)
             raise RuntimeError("Unsupported array type for indexing non-contiguous Catalog: %s" %
                                (key.dtype,))
-        elif isinstance(key, Key) or isinstance(key, basestring):
+        elif isinstance(key, Key) or isinstance(key, str):
             if not self.isContiguous():
-                if isinstance(key, basestring):
+                if isinstance(key, str):
                     key = self.schema[key].asKey()
                 array = self._getitem_(key)
                 # This array doesn't share memory with the Catalog, so don't let it be modified by
@@ -150,7 +145,7 @@ class Catalog(with_metaclass(TemplateMeta, object)):
         and set it to ``value``.
         """
         self._columns = None
-        if isinstance(key, Key) or isinstance(key, basestring):
+        if isinstance(key, Key) or isinstance(key, str):
             self.columns[key] = value
         else:
             return self.set(key, value)

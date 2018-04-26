@@ -30,12 +30,9 @@ or
    python
    >>> import Stacker; Stacker.run()
 """
-from __future__ import absolute_import, division, print_function
 import unittest
 from functools import reduce
 
-from builtins import str
-from builtins import range
 import numpy as np
 
 import lsst.afw.image as afwImage

@@ -1,7 +1,3 @@
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -26,9 +22,9 @@ from builtins import range
 
 
 # test1079
-# \brief Test that the wcs of sub-images are written and read from disk correctly
+# @brief Test that the wcs of sub-images are written and read from disk correctly
 # $Id$
-# \author Fergal Mullally
+# @author Fergal Mullally
 
 import os.path
 import unittest

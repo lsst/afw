@@ -20,13 +20,10 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import itertools
 import math
 import unittest
 
-from builtins import next
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

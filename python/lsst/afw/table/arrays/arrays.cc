@@ -23,7 +23,6 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
@@ -92,11 +91,6 @@ void declareArrayKey(py::module &mod, std::string const &suffix) {
 PYBIND11_PLUGIN(arrays) {
     py::module mod("arrays");
     py::module::import("lsst.afw.table.base");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     declareArrayKey<float>(mod, "F");
     declareArrayKey<double>(mod, "D");

@@ -32,8 +32,6 @@ or
    >>> testSpherePoint.run()
 """
 
-from __future__ import absolute_import, division, print_function
-
 import copy
 import math
 import re
@@ -917,7 +915,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                 self.assertAlmostEqual(
                     point.getLongitude().asDegrees(), float(numbers[0]), delta=1e-6)
             else:
-                self.assertRegexpMatches(numbers[0], r'-?nan')
+                self.assertRegex(numbers[0], r'-?nan')
             if not math.isnan(point.getLatitude().asRadians()):
                 self.assertAlmostEqual(
                     point.getLatitude().asDegrees(), float(numbers[1]), delta=1e-6)
@@ -926,7 +924,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                                 numbers[1].startswith("-"))
             else:
                 # Some C++ compilers will output NaN with a sign, others won't
-                self.assertRegexpMatches(numbers[1], r'(?:\+|-)?nan')
+                self.assertRegex(numbers[1], r'(?:\+|-)?nan')
 
     def testReprValue(self):
         """Test if __repr__ is a machine-readable representation.

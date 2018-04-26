@@ -29,12 +29,9 @@ or
    python
    >>> import testSimpleTable; testSimpleTable.run()
 """
-from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

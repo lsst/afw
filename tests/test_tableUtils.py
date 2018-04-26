@@ -29,11 +29,9 @@
 # both the testing class and the implementation class allowing test
 # discovery to only run tests found in the subclasses.
 
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
-from builtins import zip
 import numpy as np
 
 import lsst.utils.tests

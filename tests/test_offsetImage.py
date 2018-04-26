@@ -29,11 +29,9 @@ or
    python
    >>> import offsetImage; offsetImage.run()
 """
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

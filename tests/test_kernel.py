@@ -19,12 +19,10 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 import math
 import re
 import unittest
 
-from builtins import range
 import numpy as np
 from numpy.testing import assert_allclose
 

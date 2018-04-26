@@ -30,7 +30,6 @@ or
    >>> import ds9
    >>> ds9.run()
 """
-from __future__ import absolute_import, division, print_function
 import unittest
 
 import lsst.utils.tests

@@ -19,13 +19,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = ["Key", "Field", "SchemaItem"]
-
-from past.builtins import basestring
-from builtins import str as futurestr
-from future.utils import with_metaclass
 
 import numpy as np
 import fnmatch
@@ -52,15 +47,15 @@ _dtypes = {
 }
 
 
-class Key(with_metaclass(TemplateMeta, object)):
+class Key(metaclass=TemplateMeta):
     pass
 
 
-class Field(with_metaclass(TemplateMeta, object)):
+class Field(metaclass=TemplateMeta):
     pass
 
 
-class SchemaItem(with_metaclass(TemplateMeta, object)):
+class SchemaItem(metaclass=TemplateMeta):
     pass
 
 
@@ -86,15 +81,11 @@ _registerInstantiations(Key, _Key)
 _registerInstantiations(Field, _Field)
 _registerInstantiations(SchemaItem, _SchemaItem)
 
-# Also register `float->D` and 'futurestr->String' as aliases; can't include
-# in _dtypes because we have (and prefer) np.float64/str there.
+# Also register `float->D` as an alias; can't include
+# in _dtypes because we have (and prefer) np.float64 there.
 Key.alias(float, _Key["D"])
 Field.alias(float, _Field["D"])
 SchemaItem.alias(float, _SchemaItem["D"])
-if futurestr is not str:
-    Key.alias(futurestr, _Key["String"])
-    Field.alias(futurestr, _Field["String"])
-    SchemaItem.alias(futurestr, _SchemaItem["String"])
 
 
 @continueClass  # noqa F811
@@ -150,7 +141,7 @@ class Schema:
             One of 'raise' (default), 'warn', or 'strict', indicating how to
             handle unrecognized unit strings.  See also astropy.units.Unit.
         """
-        if isinstance(field, basestring):
+        if isinstance(field, str):
             field = Field[type](field, doc=doc, units=units,
                                 size=size, parse_strict=parse_strict)
         return field._addTo(self, doReplace)

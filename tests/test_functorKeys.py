@@ -29,10 +29,8 @@ or
    python
    >>> import testFunctorKeys; testFunctorKeys.run()
 """
-from __future__ import absolute_import, division, print_function
 import unittest
 
-from builtins import range
 import numpy
 
 import lsst.utils.tests

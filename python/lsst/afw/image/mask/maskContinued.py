@@ -20,11 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["Mask", "MaskPixel"]
 
-from future.utils import with_metaclass
 import numpy as np
 
 from lsst.utils import TemplateMeta
@@ -36,7 +33,7 @@ supportSlicing(MaskX)
 MaskPixel = np.int32
 
 
-class Mask(with_metaclass(TemplateMeta, object)):
+class Mask(metaclass=TemplateMeta):
     TEMPLATE_PARAMS = ("dtype",)
     TEMPLATE_DEFAULTS = (MaskPixel,)
 

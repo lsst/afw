@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import lsst.afw.geom as afwGeom
 from .image import LOCAL, PARENT, ImageOrigin
 

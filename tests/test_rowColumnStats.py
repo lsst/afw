@@ -30,10 +30,7 @@ or
    python
    >>> import rowColumnStats; rowColumnStats.run()
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import range
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath

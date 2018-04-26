@@ -30,12 +30,7 @@ or
    >>> import footprint2; footprint2.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import zip
-from builtins import range
-from builtins import object
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
@@ -64,7 +59,7 @@ def peakFromImage(im, pos):
     return -1.0 * val
 
 
-class Object(object):
+class Object:
 
     def __init__(self, val, spans):
         self.val = val

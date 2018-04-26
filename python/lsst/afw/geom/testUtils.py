@@ -19,12 +19,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = ["BoxGrid", "makeSipIwcToPixel", "makeSipPixelToIwc"]
-
-from builtins import range
-from builtins import object
 
 import itertools
 import math
@@ -44,7 +40,7 @@ import lsst.utils
 import lsst.utils.tests
 
 
-class BoxGrid(object):
+class BoxGrid:
     """Divide a box into nx by ny sub-boxes that tile the region
 
     The sub-boxes will be of the same type as `box` and will exactly tile `box`;
@@ -116,7 +112,7 @@ class BoxGrid(object):
                 yield self[col, row]
 
 
-class FrameSetInfo(object):
+class FrameSetInfo:
     """Information about a FrameSet
 
     Parameters
@@ -276,7 +272,7 @@ def makeSipPixelToIwc(metadata):
     return afwGeom.TransformPoint2ToPoint2(pixelToIwcMap)
 
 
-class PermutedFrameSet(object):
+class PermutedFrameSet:
     """A FrameSet with base or current frame possibly permuted, with associated
     information
 

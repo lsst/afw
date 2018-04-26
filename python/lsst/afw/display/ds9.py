@@ -21,11 +21,9 @@
 #
 
 ##
-# \file
-# \brief Support for talking to ds9 from python
-# \deprecated  New code should use lsst.afw.display and set the backend to ds9
-
-from __future__ import absolute_import, division, print_function
+# @file
+# @brief Support for talking to ds9 from python
+# @deprecated  New code should use lsst.afw.display and set the backend to ds9
 
 import lsst.afw.display
 import lsst.afw.image as afwImage
@@ -46,7 +44,7 @@ except NameError:
         # exception being thrown for future reference. Following changes to
         # exception scope rules in Python 3 (see PEP 3110), it's now regarded
         # as clearer to make the capture explicit using the following class.
-        class _RaiseException(object):
+        class _RaiseException:
             def __init__(self, exception):
                 # The exception being caught above may have a bulky context which we
                 # don't want to capture in a closure for all time: see DM-9504 for a
@@ -59,7 +57,7 @@ except NameError:
 
         getDisplay = _RaiseException(e)
 
-        class DisplayImpl(object):
+        class DisplayImpl:
             __init__ = getDisplay
 
         loaded = False

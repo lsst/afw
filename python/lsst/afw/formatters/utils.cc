@@ -23,7 +23,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/formatters/Utils.h"
@@ -39,12 +38,6 @@ namespace {
 
 PYBIND11_PLUGIN(utils) {
     py::module mod("utils");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     mod.def("stringToBytes", stringToBytes);
     mod.def("bytesToString", bytesToString);

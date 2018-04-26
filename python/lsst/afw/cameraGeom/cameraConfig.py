@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 import lsst.pex.config as pexConfig
 from .transformConfig import TransformMapConfig

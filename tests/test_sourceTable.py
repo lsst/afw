@@ -29,15 +29,12 @@ or
    python
    >>> import testSourceTable; testSourceTable.run()
 """
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
 import tempfile
 import pickle
 import math
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

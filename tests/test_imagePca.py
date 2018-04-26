@@ -30,13 +30,11 @@ or
    >>> import imagePca; imagePca.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import random
 import math
 import itertools
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

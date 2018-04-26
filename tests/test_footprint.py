@@ -1,4 +1,3 @@
-
 #
 # Copyright 2008-2017  AURA/LSST.
 #
@@ -20,7 +19,6 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import tempfile
 

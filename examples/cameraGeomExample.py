@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.geom as afwGeom

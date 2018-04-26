@@ -29,12 +29,8 @@ or
    python
    >>> import spline; spline.run()
 """
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
-
-from builtins import zip
-from builtins import range
 
 import lsst.utils.tests
 import lsst.afw.math as afwMath

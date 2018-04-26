@@ -29,12 +29,10 @@ or
    python
    >>> import rgb; rgb.run()
 """
-from __future__ import absolute_import, division, print_function
 import os
 import math
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests

@@ -20,11 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = []  # import only for the side effects
-
-from past.builtins import basestring
 
 from lsst.utils import continueClass
 
@@ -60,7 +56,7 @@ class SchemaMapper:
             One of 'raise' (default), 'warn', or 'strict', indicating how to
             handle unrecognized unit strings.  See also astropy.units.Unit.
         """
-        if isinstance(field, basestring):
+        if isinstance(field, str):
             field = Field[type](field, doc=doc, units=units,
                                 size=size, parse_strict=parse_strict)
         return field._addTo(self.editOutputSchema(), doReplace)

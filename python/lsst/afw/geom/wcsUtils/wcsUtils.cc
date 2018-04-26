@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "astshim.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 #include "ndarray/eigen.h"
 
@@ -44,12 +43,6 @@ namespace {
 
 PYBIND11_PLUGIN(wcsUtils) {
     py::module mod("wcsUtils");
-
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     mod.def("createTrivialWcsMetadata", createTrivialWcsMetadata, "wcsName"_a, "xy0"_a);
     mod.def("deleteBasicWcsMetadata", deleteBasicWcsMetadata, "metadata"_a, "wcsName"_a);

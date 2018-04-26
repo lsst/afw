@@ -22,7 +22,6 @@
 
 """Application Framework geometry code including Point, Extent, and ellipses
 """
-from __future__ import absolute_import
 
 from .angle import *
 from .coordinates import *
