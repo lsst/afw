@@ -107,7 +107,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
         return True
 
 
-class Display(object):
+class Display:
     _displays = {}
     _defaultBackend = None
     _defaultFrame = 0
@@ -458,7 +458,7 @@ class Display(object):
     # Graphics commands
     #
 
-    class _Buffering(object):
+    class _Buffering:
         """A class intended to be used with python's with statement"""
 
         def __init__(self, _impl):
@@ -654,7 +654,7 @@ class Display(object):
 #
 
 
-class Event(object):
+class Event:
     """!A class to handle events such as key presses in image display windows"""
 
     def __init__(self, k, x=float('nan'), y=float('nan')):

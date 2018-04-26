@@ -6,7 +6,7 @@ import gdb
 import re
 
 
-class CitizenPrinter(object):
+class CitizenPrinter:
     "Print a Citizen"
 
     def __init__(self, typename, val):
@@ -18,7 +18,7 @@ class CitizenPrinter(object):
 
 
 # afw
-class BaseSourceAttributesPrinter(object):
+class BaseSourceAttributesPrinter:
     "Print a BaseSourceAttributes"
 
     def __init__(self, typename, val):
@@ -30,7 +30,7 @@ class BaseSourceAttributesPrinter(object):
                                                       self.val["_yAstrom"])
 
 
-class SourcePrinter(object):
+class SourcePrinter:
     "Print a Source"
 
     def __init__(self, typename, val):
@@ -40,7 +40,7 @@ class SourcePrinter(object):
         return "{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"], self.val["_xAstrom"], self.val["_yAstrom"])
 
 
-class FootprintPrinter(object):
+class FootprintPrinter:
     "Print a Footprint"
 
     def __init__(self, typename, val):
@@ -50,7 +50,7 @@ class FootprintPrinter(object):
         return "RHL Footprint (fixme when gdb 7.3 arrives)"
 
 
-class CoordinateBasePrinter(object):
+class CoordinateBasePrinter:
     "Print a CoordinateBase"
 
     def __init__(self, typename, val):
@@ -68,7 +68,7 @@ class CoordinateBasePrinter(object):
         return "array"
 
 
-class ImagePrinter(object):
+class ImagePrinter:
     "Print an ImageBase or derived class"
 
     def dimenStr(self, val=None):
@@ -225,7 +225,7 @@ PrintImageCommand()
 #
 # A "regular expression" printer which conforms to the
 # "SubPrettyPrinter" protocol from gdb.printing.
-class RxPrinter(object):
+class RxPrinter:
     def __init__(self, name, function):
         super(RxPrinter, self).__init__()
         self.name = name
@@ -241,7 +241,7 @@ class RxPrinter(object):
 # A pretty-printer that conforms to the "PrettyPrinter" protocol from
 # gdb.printing.  It can also be used directly as an old-style printer.
 #
-class Printer(object):
+class Printer:
     def __init__(self, name):
         super(Printer, self).__init__()
         self.name = name

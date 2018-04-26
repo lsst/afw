@@ -93,7 +93,7 @@ class WarperConfig(pexConfig.Config):
     )
 
 
-class Warper(object):
+class Warper:
     """Warp images
     """
     ConfigClass = WarperConfig

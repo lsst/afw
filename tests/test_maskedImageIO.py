@@ -214,7 +214,7 @@ def tmpFits(*hdus):
         shutil.rmtree(tempdir)
 
 
-class MultiExtensionTestCase(object):
+class MultiExtensionTestCase:
     """Base class for testing that we correctly read multi-extension FITS files.
 
     MEF files may be read to either MaskedImage or Exposure objects. We apply

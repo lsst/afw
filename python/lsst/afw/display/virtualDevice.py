@@ -25,7 +25,7 @@
 # @brief A dummy image display
 
 
-class DisplayImpl(object):
+class DisplayImpl:
     def __init__(self, display, verbose=False):
         """! Initialise the display
         @param display The display object that we're providing the implementation for

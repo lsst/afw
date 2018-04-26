@@ -65,7 +65,7 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
     return display
 
 
-class Mosaic(object):
+class Mosaic:
     """A class to handle mosaics of one or more identically-sized images (or Masks or MaskedImages)
     E.g.
     m = Mosaic()

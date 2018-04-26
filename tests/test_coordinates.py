@@ -40,7 +40,7 @@ import lsst.utils.tests
 import lsst.afw.geom as geom
 
 
-class CoordinateTestCase(object):
+class CoordinateTestCase:
     """Mixin for some of the tests below.
     """
 

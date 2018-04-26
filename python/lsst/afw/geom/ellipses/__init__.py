@@ -36,7 +36,7 @@ Separable = {
 }
 
 
-class EllipseMatplotlibInterface(object):
+class EllipseMatplotlibInterface:
     """An interface for drawing the ellipse using matplotlib.
 
     This is typically initiated by calling Ellipse.plot(), which

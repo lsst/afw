@@ -313,7 +313,7 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     return ccdImage
 
 
-class FakeImageDataSource(object):
+class FakeImageDataSource:
     """A class to retrieve synthetic images for display by the show* methods
 
     Parameters

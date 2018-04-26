@@ -25,7 +25,7 @@ __all__ = ['PupilFactory', 'Pupil']
 import numpy as np
 
 
-class Pupil(object):
+class Pupil:
     """!Pupil obscuration function.
     """
 
@@ -46,7 +46,7 @@ class Pupil(object):
         self.scale = scale
 
 
-class PupilFactory(object):
+class PupilFactory:
     """!Pupil obscuration function factory for use with Fourier optics.
     """
 

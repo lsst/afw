@@ -44,7 +44,7 @@ except NameError:
         # exception being thrown for future reference. Following changes to
         # exception scope rules in Python 3 (see PEP 3110), it's now regarded
         # as clearer to make the capture explicit using the following class.
-        class _RaiseException(object):
+        class _RaiseException:
             def __init__(self, exception):
                 # The exception being caught above may have a bulky context which we
                 # don't want to capture in a closure for all time: see DM-9504 for a
@@ -57,7 +57,7 @@ except NameError:
 
         getDisplay = _RaiseException(e)
 
-        class DisplayImpl(object):
+        class DisplayImpl:
             __init__ = getDisplay
 
         loaded = False

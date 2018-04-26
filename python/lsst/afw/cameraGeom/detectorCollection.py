@@ -23,7 +23,7 @@ from lsst.afw.geom import Box2D
 from .cameraGeomLib import FOCAL_PLANE
 
 
-class DetectorCollection(object):
+class DetectorCollection:
     """!An immutable collection of Detectors that can be accessed by name or ID
     """
 

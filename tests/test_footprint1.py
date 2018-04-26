@@ -64,7 +64,7 @@ def toString(*args):
     return "%d: %d..%d" % (y, x0, x1)
 
 
-class Object(object):
+class Object:
 
     def __init__(self, val, spans):
         self.val = val

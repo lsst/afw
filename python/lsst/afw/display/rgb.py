@@ -62,7 +62,7 @@ def computeIntensity(imageR, imageG=None, imageB=None):
     return intensity
 
 
-class Mapping(object):
+class Mapping:
     """!Baseclass to map red, blue, green intensities into uint8 values"""
 
     def __init__(self, minimum=None, image=None):
@@ -408,7 +408,7 @@ def writeRGB(fileName, rgbImage):
 #
 
 
-class asinhMappingF(object):  # noqa N801
+class asinhMappingF:  # noqa N801
     """!@deprecated Object used to support legacy API"""
 
     def __init__(self, minimum, dataRange, Q):
@@ -417,7 +417,7 @@ class asinhMappingF(object):  # noqa N801
         self.Q = Q
 
 
-class _RgbImageF(object):
+class _RgbImageF:
     """!@deprecated Object used to support legacy API"""
 
     def __init__(self, imageR, imageG, imageB, mapping):

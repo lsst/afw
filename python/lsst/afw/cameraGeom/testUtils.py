@@ -15,7 +15,7 @@ from .transformConfig import TransformMapConfig
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
 
-class DetectorWrapper(object):
+class DetectorWrapper:
     """!A Detector and the data used to construct it
 
     Intended for use with unit tests, thus saves a copy of all input parameters.
@@ -121,7 +121,7 @@ class DetectorWrapper(object):
         )
 
 
-class CameraWrapper(object):
+class CameraWrapper:
     """A simple Camera and the data used to construct it
 
     Intended for use with unit tests, thus saves some interesting information.

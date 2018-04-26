@@ -31,7 +31,7 @@ import lsst.afw.geom as afwGeom
 from lsst.afw.cameraGeom import Orientation
 
 
-class OrientationWrapper(object):
+class OrientationWrapper:
 
     def __init__(self,
                  fpPosition=afwGeom.Point2D(0, 0),

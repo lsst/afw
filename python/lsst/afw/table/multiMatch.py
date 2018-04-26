@@ -8,7 +8,7 @@ from .aggregates import CoordKey
 from .source import SourceRecord
 
 
-class MultiMatch(object):
+class MultiMatch:
 
     def __init__(self, schema, dataIdFormat, coordField="coord", idField="id", radius=None,
                  RecordClass=SourceRecord):

@@ -59,7 +59,7 @@ def peakFromImage(im, pos):
     return -1.0 * val
 
 
-class Object(object):
+class Object:
 
     def __init__(self, val, spans):
         self.val = val

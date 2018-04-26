@@ -65,7 +65,7 @@ Like optparse.OptionParser's API, but with an initial command name argument
 try:
     import gdb.printing
 
-    class SharedPtrPrinter(object):
+    class SharedPtrPrinter:
         "Print a shared_ptr"
 
         def __init__(self, val):
@@ -77,7 +77,7 @@ try:
             else:
                 return "NULL"
 
-    class GilPixelPrinter(object):
+    class GilPixelPrinter:
         "Print a boost::gil pixel"
 
         def __init__(self, val):
@@ -156,7 +156,7 @@ try:
 
         return val
 
-    class EigenMatrixPrinter(object):
+    class EigenMatrixPrinter:
         "Print an Eigen Matrix"
 
         def __init__(self, val):
@@ -167,7 +167,7 @@ try:
 
             return "%s{%dx%d}" % (self.val.type, nx, ny)
 
-    class EigenVectorPrinter(object):
+    class EigenVectorPrinter:
         "Print an Eigen Vector"
 
         def __init__(self, val):
@@ -324,7 +324,7 @@ try:
 
     PrintEigenCommand()
 
-    class CitizenPrinter(object):
+    class CitizenPrinter:
         "Print a Citizen"
 
         def __init__(self, val):
@@ -390,7 +390,7 @@ try:
 
     # afw
 
-    class BaseSourceAttributesPrinter(object):
+    class BaseSourceAttributesPrinter:
         "Print a BaseSourceAttributes"
 
         def __init__(self, val):
@@ -401,7 +401,7 @@ try:
                                                           self.val["_xAstrom"],
                                                           self.val["_yAstrom"])
 
-    class SourcePrinter(object):
+    class SourcePrinter:
         "Print a Source"
 
         def __init__(self, val):
@@ -412,7 +412,7 @@ try:
                                                           self.val["_xAstrom"],
                                                           self.val["_yAstrom"])
 
-    class DetectorPrinter(object):
+    class DetectorPrinter:
         "Print a cameraGeom::Detector"
 
         def __init__(self, val):
@@ -422,7 +422,7 @@ try:
             return "Detector{name: %s id: %s type: %s bbox: %s}" % (self.val["_name"], self.val["_id"],
                                                                     self.val["_type"], self.val["_bbox"])
 
-    class FootprintPrinter(object):
+    class FootprintPrinter:
         "Print a Footprint"
 
         def __init__(self, val):
@@ -439,7 +439,7 @@ try:
             return "Footprint{id=%d, nspan=%d, area=%d; BBox %s}" % (self.val["_fid"], nspan,
                                                                      self.val["_area"], self.val["_bbox"])
 
-    class FootprintSetPrinter(object):
+    class FootprintSetPrinter:
         "Print a FootprintSet"
 
         def __init__(self, val):
@@ -448,7 +448,7 @@ try:
         def to_string(self):
             return "FootprintSet{%s; %s}" % (self.val["_region"], self.val["_footprints"])
 
-    class PeakPrinter(object):
+    class PeakPrinter:
         "Print a Peak"
 
         def __init__(self, val):
@@ -457,13 +457,13 @@ try:
         def to_string(self):
             return "Peak{%d, (%.2f, %.2f)}" % (self.val["_id"], self.val["_fx"], self.val["_fy"])
 
-    class PsfPrinter(object):
+    class PsfPrinter:
         "Print a Psf"
 
         def to_string(self):
             return "%s" % (self.typeName())
 
-    class Box2Printer(object):
+    class Box2Printer:
         "Print a Box2"
 
         def __init__(self, val):
@@ -486,7 +486,7 @@ try:
         def display_hint(self):
             return "array"
 
-    class CoordinateBasePrinter(object):
+    class CoordinateBasePrinter:
         "Print a CoordinateBase"
 
         def __init__(self, val):
@@ -498,7 +498,7 @@ try:
         def display_hint(self):
             return "array"
 
-    class AxesPrinter(object):
+    class AxesPrinter:
         "Print an ellipse::Axes"
 
         def __init__(self, val):
@@ -508,7 +508,7 @@ try:
             vec = self.val["_vector"]
             return "[%g, %g, %g]" % (getEigenValue(vec, 0), getEigenValue(vec, 1), getEigenValue(vec, 2))
 
-    class QuadrupolePrinter(object):
+    class QuadrupolePrinter:
         "Print an ellipse::Quadrupole"
 
         def __init__(self, val):
@@ -523,7 +523,7 @@ try:
                 return "[[%g, %g], [%g, %g]]" % (getEigenValue(mat, 0, 0), getEigenValue(mat, 0, 1),
                                                  getEigenValue(mat, 1, 0), getEigenValue(mat, 1, 1))
 
-    class ImagePrinter(object):
+    class ImagePrinter:
         "Print an ImageBase or derived class"
 
         def dimenStr(self, val=None):
@@ -724,7 +724,7 @@ try:
 
     PrintImageCommand()
 
-    class BackgroundPrinter(object):
+    class BackgroundPrinter:
         "Print a Background"
 
         def __init__(self, val):
@@ -736,7 +736,7 @@ try:
                 self.val["_imgWidth"], self.val["_imgHeight"],
                 self.val["_bctrl"])
 
-    class BackgroundControlPrinter(object):
+    class BackgroundControlPrinter:
         "Print a BackgroundControl"
 
         def __init__(self, val):
@@ -751,7 +751,7 @@ try:
                                           self.val["_undersampleStyle"])),
                                       self.val["_sctrl"]["px"].dereference())
 
-    class KernelPrinter(object):
+    class KernelPrinter:
         "Print a Kernel"
 
         def __init__(self, val):
@@ -762,7 +762,7 @@ try:
             return "%s(%dx%d)" % (self.typename,
                                   self.val["_width"], self.val["_height"])
 
-    class StatisticsControlPrinter(object):
+    class StatisticsControlPrinter:
         "Print a StatisticsControl"
 
         def __init__(self, val):
@@ -774,7 +774,7 @@ try:
                                                          self.val["_numIter"],
                                                          self.val["_andMask"])
 
-    class TablePrinter(object):
+    class TablePrinter:
         "Print a table::Table"
 
         def __init__(self, val):
@@ -784,7 +784,7 @@ try:
         def to_string(self):
             return "{schema = %s, md=%s}" % (self.val["_schema"], self.val["_metadata"])
 
-    class TableSchemaPrinter(object):
+    class TableSchemaPrinter:
         "Print a table::Schema"
 
         def __init__(self, val):

@@ -92,7 +92,7 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
                 Filter.defineAlias(p.get("name"), a)
 
 
-class CalibNoThrow(object):
+class CalibNoThrow:
     """A class intended to be used with python's with statement, to return NaNs for negative fluxes
     instead of raising exceptions (exceptions may be raised for other purposes).
 
