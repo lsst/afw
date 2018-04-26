@@ -29,6 +29,8 @@
 #include <ostream>
 #include <utility>
 
+#include "lsst/sphgeom/UnitVector3d.h"
+#include "lsst/sphgeom/Vector3d.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 
@@ -104,7 +106,16 @@ public:
      * @note If the SpherePoint is at a pole then longitude is set to 0.
      * That provides predictable behavior for @ref bearingTo and @ref offset.
      */
-    explicit SpherePoint(Point3D const& vector);
+    explicit SpherePoint(sphgeom::Vector3d const& vector);
+
+    /**
+     * Construct a SpherePoint from a sphgeom::LonLat.
+     *
+     * @param lonLat The lonLat
+     *
+     * @exceptsafe Provides strong exception guarantee.
+     */
+    SpherePoint(sphgeom::LonLat const &lonLat);
 
     /// Construct a SpherePoint with "nan" for longitude and latitude
     SpherePoint();
@@ -150,6 +161,11 @@ public:
      */
     SpherePoint& operator=(SpherePoint&& other) noexcept;
 
+    /**
+     * Make SpherePoint implicitly convertible to LonLat
+     */
+    operator sphgeom::LonLat() const;
+
     /*
      * Accessors
      */
@@ -192,7 +208,7 @@ public:
      *
      * @exceptsafe Shall not throw exceptions.
      */
-    Point3D getVector() const noexcept;
+    sphgeom::UnitVector3d getVector() const noexcept;
 
     /**
      * Longitude and latitude by index.
@@ -349,6 +365,9 @@ public:
 private:
     double _longitude;  // radians
     double _latitude;   // radians
+
+    /// Set internals from a unit vector
+    void _set(sphgeom::UnitVector3d const& unitVector);
 };
 
 /**

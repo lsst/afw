@@ -143,7 +143,6 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     auto skyVec = pixelToSky(pixVec);
 
     // Work in 3-space to avoid RA wrapping and pole issues
-    // (warning: getVector().asEigen() here produces incorrect results; I'm not sure why)
     auto skyLL = skyVec[0].getVector();
     auto skyDx = skyVec[1].getVector() - skyLL;
     auto skyDy = skyVec[2].getVector() - skyLL;
@@ -151,7 +150,7 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     // Compute pixel scale in radians = sqrt(pixel area in radians^2)
     // pixel area in radians^2 = area of parallelogram with sides skyDx, skyDy = |skyDx cross skyDy|
     // Use squared norm to avoid two square roots
-    double skyAreaSq = skyDx.asEigen().cross(skyDy.asEigen()).squaredNorm();
+    double skyAreaSq = skyDx.cross(skyDy).getSquaredNorm();
     return (std::pow(skyAreaSq, 0.25) / side) * radians;
 }
 

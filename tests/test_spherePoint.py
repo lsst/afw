@@ -41,6 +41,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 import lsst.utils.tests
+import lsst.sphgeom
 import lsst.afw.geom as afwGeom
 import lsst.pex.exceptions as pexEx
 
@@ -133,10 +134,10 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         with self.assertRaises(pexEx.InvalidParameterError):
             SpherePoint(-42.0, -inf, degrees)
 
-    def testPoint3DConstructor(self):
+    def testVector3dConstructor(self):
         # test poles
         for z in (-11.3, -1.1, 0.1, 2.5):  # arbitrary non-zero values
-            sp = SpherePoint(afwGeom.Point3D(0.0, 0.0, z))
+            sp = SpherePoint(lsst.sphgeom.Vector3d(0.0, 0.0, z))
             self.assertTrue(sp.atPole())
             self.assertEqual(sp.getLongitude().asRadians(), 0.0)
             if z < 0:
@@ -144,25 +145,25 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             else:
                 self.assertAnglesAlmostEqual(sp.getLatitude(), 90 * degrees)
 
-        spx = SpherePoint(afwGeom.Point3D(11.1, 0.0, 0.0))
+        spx = SpherePoint(lsst.sphgeom.Vector3d(11.1, 0.0, 0.0))
         self.assertAnglesAlmostEqual(spx.getLongitude(), 0.0 * degrees)
         self.assertAnglesAlmostEqual(spx.getLatitude(), 0.0 * degrees)
 
-        spy = SpherePoint(afwGeom.Point3D(0.0, 234234.5, 0.0))
+        spy = SpherePoint(lsst.sphgeom.Vector3d(0.0, 234234.5, 0.0))
         self.assertAnglesAlmostEqual(spy.getLongitude(), 90.0 * degrees)
         self.assertAnglesAlmostEqual(spy.getLatitude(), 0.0 * degrees)
 
-        spxy = SpherePoint(afwGeom.Point3D(7.5, -7.5, 0.0))
+        spxy = SpherePoint(lsst.sphgeom.Vector3d(7.5, -7.5, 0.0))
         self.assertAnglesAlmostEqual(spxy.getLongitude(), -45.0 * degrees)
         self.assertAnglesAlmostEqual(spxy.getLatitude(), 0.0 * degrees)
 
-        spxz = SpherePoint(afwGeom.Point3D(100.0, 0.0, -100.0))
+        spxz = SpherePoint(lsst.sphgeom.Vector3d(100.0, 0.0, -100.0))
         self.assertAnglesAlmostEqual(spxz.getLongitude(), 0.0 * degrees)
         self.assertAnglesAlmostEqual(spxz.getLatitude(), -45.0 * degrees)
 
-        # Only one singularity, at zero
+        # Only one singularity: a vector of all zeros
         with self.assertRaises(pexEx.InvalidParameterError):
-            SpherePoint(afwGeom.Point3D(0.0, 0.0, 0.0))
+            SpherePoint(lsst.sphgeom.Vector3d(0.0, 0.0, 0.0))
 
     def testDefaultConstructor(self):
         sp = SpherePoint()
@@ -210,7 +211,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                         self.assertAnglesAlmostEqual(lon, point.getRa())
 
         # Vector construction should return valid longitude even in edge cases.
-        point = SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0))
+        point = SpherePoint(lsst.sphgeom.Vector3d(0.0, 0.0, -1.0))
         self.assertGreaterEqual(point.getLongitude().asDegrees(), 0.0)
         self.assertLess(point.getLongitude().asDegrees(), 360.0)
 
@@ -230,7 +231,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         # The problem was that the coordinate is less than epsilon
         # close to RA == 0 and bounds checking was getting a
         # negative RA.
-        point = SpherePoint(afwGeom.Point3D(
+        point = SpherePoint(lsst.sphgeom.Vector3d(
             0.6070619982, -1.264309928e-16, 0.7946544723))
 
         self.assertEqual(point[0].asDegrees(), 0.0)
@@ -259,9 +260,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         The test includes conformance to vector-angle conventions.
         """
         for lon, lat, vector in [
-            (0.0*degrees, 0.0*degrees, afwGeom.Point3D(1.0, 0.0, 0.0)),
-            (90.0*degrees, 0.0*degrees, afwGeom.Point3D(0.0, 1.0, 0.0)),
-            (0.0*degrees, 90.0*degrees, afwGeom.Point3D(0.0, 0.0, 1.0)),
+            (0.0*degrees, 0.0*degrees, lsst.sphgeom.Vector3d(1.0, 0.0, 0.0)),
+            (90.0*degrees, 0.0*degrees, lsst.sphgeom.Vector3d(0.0, 1.0, 0.0)),
+            (0.0*degrees, 90.0*degrees, lsst.sphgeom.Vector3d(0.0, 0.0, 1.0)),
         ]:
             for point in (
                 SpherePoint(lon, lat),
@@ -269,7 +270,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                 SpherePoint(lon.asRadians(), lat.asRadians(), radians),
             ):
                 newVector = point.getVector()
-                self.assertIsInstance(newVector, afwGeom.Point3D)
+                self.assertIsInstance(newVector, lsst.sphgeom.UnitVector3d)
                 for oldElement, newElement in zip(vector, newVector):
                     self.assertAlmostEqual(oldElement, newElement)
 
@@ -280,12 +281,12 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
 
         # Try some un-normalized ones, too.
         pointList = [
-            ((0.0, 0.0), afwGeom.Point3D(1.3, 0.0, 0.0)),
-            ((90.0, 0.0), afwGeom.Point3D(0.0, 1.2, 0.0)),
-            ((0.0, 90.0), afwGeom.Point3D(0.0, 0.0, 2.3)),
-            ((0.0, 0.0), afwGeom.Point3D(0.5, 0.0, 0.0)),
-            ((90.0, 0.0), afwGeom.Point3D(0.0, 0.7, 0.0)),
-            ((0.0, 90.0), afwGeom.Point3D(0.0, 0.0, 0.9)),
+            ((0.0, 0.0), lsst.sphgeom.Vector3d(1.3, 0.0, 0.0)),
+            ((90.0, 0.0), lsst.sphgeom.Vector3d(0.0, 1.2, 0.0)),
+            ((0.0, 90.0), lsst.sphgeom.Vector3d(0.0, 0.0, 2.3)),
+            ((0.0, 0.0), lsst.sphgeom.Vector3d(0.5, 0.0, 0.0)),
+            ((90.0, 0.0), lsst.sphgeom.Vector3d(0.0, 0.7, 0.0)),
+            ((0.0, 90.0), lsst.sphgeom.Vector3d(0.0, 0.0, 0.9)),
         ]
 
         for lonLat, vector in pointList:
@@ -294,19 +295,18 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             newLon, newLat = point
             self.assertAlmostEqual(lonLat[0], newLon.asDegrees())
             self.assertAlmostEqual(lonLat[1], newLat.asDegrees())
-            self.assertAlmostEqual(1.0,
-                                   point.getVector().distanceSquared(
-                                       afwGeom.Point3D(0.0, 0.0, 0.0)))
+            vector = lsst.sphgeom.Vector3d(point.getVector())
+            self.assertAlmostEqual(1.0, vector.getSquaredNorm())
 
         # Ill-defined points should be all NaN after normalization
-        cleanVector = afwGeom.Point3D(0.5, -0.3, 0.2)
+        cleanValues = [0.5, -0.3, 0.2]
         badValues = [nan, inf, -inf]
         for i in range(3):
             for badValue in badValues:
-                # Ensure each subtest is independent
-                dirtyVector = copy.deepcopy(cleanVector)
-                dirtyVector[i] = badValue
-                for element in SpherePoint(dirtyVector).getVector():
+                values = cleanValues[:]
+                values[i] = badValue
+                nonFiniteVector = lsst.sphgeom.Vector3d(*values)
+                for element in SpherePoint(nonFiniteVector).getVector():
                     self.assertTrue(math.isnan(element))
 
     def testTicket1761(self):
@@ -314,10 +314,10 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
 
         Checks for math errors caused by unnormalized vectors.
         """
-        refPoint = SpherePoint(afwGeom.Point3D(0, 1, 0))
+        refPoint = SpherePoint(lsst.sphgeom.Vector3d(0, 1, 0))
 
-        point1 = SpherePoint(afwGeom.Point3D(0.1, 0.1, 0.1))
-        point2 = SpherePoint(afwGeom.Point3D(0.6, 0.6, 0.6))
+        point1 = SpherePoint(lsst.sphgeom.Vector3d(0.1, 0.1, 0.1))
+        point2 = SpherePoint(lsst.sphgeom.Vector3d(0.6, 0.6, 0.6))
         sep1 = refPoint.separation(point1)
         sep2 = refPoint.separation(point2)
         sepTrue = 54.735610317245339*degrees
@@ -334,8 +334,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             [SpherePoint(42.0*degrees, -lat) for lat in self._poleLatitudes] + \
             [SpherePoint(42.0, -lat.asDegrees(), degrees) for lat in self._poleLatitudes] + \
             [
-                SpherePoint(afwGeom.Point3D(0.0, 0.0, 1.0)),
-                SpherePoint(afwGeom.Point3D(0.0, 0.0, -1.0)),
+                SpherePoint(lsst.sphgeom.Vector3d(0.0, 0.0, 1.0)),
+                SpherePoint(lsst.sphgeom.Vector3d(0.0, 0.0, -1.0)),
             ]
         nonPoleList = \
             [SpherePoint(42.0*degrees, self.nextDown(lat)) for lat in self._poleLatitudes] + \
@@ -344,8 +344,8 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             [SpherePoint(42.0, self.nextUp(-lat).asDegrees(), degrees)
              for lat in self._poleLatitudes] + \
             [
-                SpherePoint(afwGeom.Point3D(9.9e-7, 0.0, 1.0)),
-                SpherePoint(afwGeom.Point3D(9.9e-7, 0.0, -1.0)),
+                SpherePoint(lsst.sphgeom.Vector3d(9.9e-7, 0.0, 1.0)),
+                SpherePoint(lsst.sphgeom.Vector3d(9.9e-7, 0.0, -1.0)),
                 SpherePoint(0.0*degrees, nan*degrees),
             ]
 
@@ -363,7 +363,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
         finiteList = [
             SpherePoint(0.0*degrees, -90.0*degrees),
             SpherePoint(0.0, -90.0, degrees),
-            SpherePoint(afwGeom.Point3D(0.1, 0.2, 0.3)),
+            SpherePoint(lsst.sphgeom.Vector3d(0.1, 0.2, 0.3)),
         ]
         nonFiniteList = [
             SpherePoint(0.0*degrees, nan*degrees),
@@ -374,9 +374,9 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
             SpherePoint(inf, 0.0, degrees),
             SpherePoint(-inf*degrees, 0.0*degrees),
             SpherePoint(-inf, 0.0, degrees),
-            SpherePoint(afwGeom.Point3D(nan, 0.2, 0.3)),
-            SpherePoint(afwGeom.Point3D(0.1, inf, 0.3)),
-            SpherePoint(afwGeom.Point3D(0.1, 0.2, -inf)),
+            SpherePoint(lsst.sphgeom.Vector3d(nan, 0.2, 0.3)),
+            SpherePoint(lsst.sphgeom.Vector3d(0.1, inf, 0.3)),
+            SpherePoint(lsst.sphgeom.Vector3d(0.1, 0.2, -inf)),
         ]
 
         for finite in finiteList:
@@ -390,7 +390,7 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
     def testGetItemError(self):
         """Test if indexing correctly handles invalid input.
         """
-        point = SpherePoint(afwGeom.Point3D(1.0, 1.0, 1.0))
+        point = SpherePoint(lsst.sphgeom.Vector3d(1.0, 1.0, 1.0))
 
         with self.assertRaises(IndexError):
             point[2]
