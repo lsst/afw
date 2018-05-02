@@ -62,7 +62,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         self.scale = 1.0 * arcseconds
         # position of 0,0 pixel position in focal plane
         self.ccdPositionMm = afwGeom.Point2D(25.0, 10.0)
-        self.focalPlaneToPixel = self.makeAffineTransform(
+        self.pixelToFocalPlane = self.makeAffineTransform(
             offset=afwGeom.Extent2D(self.ccdPositionMm),
             rotation=self.ccdOrientation,
             scale=self.pixelSizeMm,
@@ -99,7 +99,7 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         focalPlaneToFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         wcs = makeDistortedTanWcs(
             tanWcs=self.tanWcs,
-            pixelToFocalPlane=self.focalPlaneToPixel.getInverse(),
+            pixelToFocalPlane=self.pixelToFocalPlane,
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
         self.assertWcsAlmostEqualOverBBox(wcs, self.tanWcs, bbox=self.bbox)
@@ -107,17 +107,19 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
     def testDistortion(self):
         """Test makeDistortedTanWcs using a non-affine transform for pixelToFocalPlane
         """
-        # Compute a distorted wcs that matches self.tanWcs at the center
-        # of the field
-        focalPlaneToFieldAngle = afwGeom.makeRadialTransform([0.0, self.radPerMm, 0.0, self.radPerMm])
+        # Compute a distorted wcs that matches self.tanWcs at the center of the field;
+        # the amount of distortion is 10s of pixels over the detector
+        fieldAngleToFocalPlane = afwGeom.makeRadialTransform([0.0, 1/self.radPerMm, 0.0, 1000/self.radPerMm])
+        focalPlaneToFieldAngle = fieldAngleToFocalPlane.getInverse()
+        focalPlaneToTanFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         wcs = makeDistortedTanWcs(
             tanWcs=self.tanWcs,
-            pixelToFocalPlane=self.focalPlaneToPixel.getInverse(),
+            pixelToFocalPlane=self.pixelToFocalPlane,
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
 
         # At the center of the focal plane both WCS should give the same sky position
-        pixelAtCtr = self.focalPlaneToPixel.applyForward(afwGeom.Point2D(0, 0))
+        pixelAtCtr = self.pixelToFocalPlane.applyInverse(afwGeom.Point2D(0, 0))
         tanSkyAtCtr = self.tanWcs.pixelToSky(pixelAtCtr)
         skyAtCtr = wcs.pixelToSky(pixelAtCtr)
         self.assertPairsAlmostEqual(tanSkyAtCtr, skyAtCtr)
@@ -130,29 +132,24 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         # since for a given pointing, field angle gives position on the sky
         skyPoints = self.tanWcs.pixelToSky(self.pixelPoints)
 
-        pixelToFocalPlane = self.focalPlaneToPixel.getInverse()
-
-        focalPlaneToTanFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         tanFieldAnglePoints = focalPlaneToTanFieldAngle.applyForward(
-            pixelToFocalPlane.applyForward(self.tanWcs.skyToPixel(skyPoints)))
-
+            self.pixelToFocalPlane.applyForward(self.tanWcs.skyToPixel(skyPoints)))
         fieldAnglePoints = focalPlaneToFieldAngle.applyForward(
-            pixelToFocalPlane.applyForward(wcs.skyToPixel(skyPoints)))
-
+            self.pixelToFocalPlane.applyForward(wcs.skyToPixel(skyPoints)))
         assert_allclose(tanFieldAnglePoints, fieldAnglePoints)
 
         # The inverse should also be true: for a set of field angle points
         # the following sky positions should be almost equal:
         # fieldAngle -> fieldAngleToTanFocalPlane -> focalPlaneToPixel -> tanWcs.pixelToSky
         # fieldAngle -> fieldAngleToFocalPlane -> focalPlaneToPixel -> wcs.pixelToSky
+        focalPlaneToPixel = self.pixelToFocalPlane.getInverse()
         fieldAngleToTanFocalPlane = focalPlaneToTanFieldAngle.getInverse()
         tanSkyPoints2 = self.tanWcs.pixelToSky(
-            self.focalPlaneToPixel.applyForward(
+            focalPlaneToPixel.applyForward(
                 fieldAngleToTanFocalPlane.applyForward(fieldAnglePoints)))
 
-        fieldAngleToFocalPlane = focalPlaneToFieldAngle.getInverse()
         skyPoints2 = wcs.pixelToSky(
-            self.focalPlaneToPixel.applyForward(
+            focalPlaneToPixel.applyForward(
                 fieldAngleToFocalPlane.applyForward(fieldAnglePoints)))
 
         self.assertSpherePointListsAlmostEqual(tanSkyPoints2, skyPoints2)
@@ -170,7 +167,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
         """
         focalPlaneToFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         pixelToDistortedPixel = computePixelToDistortedPixel(
-            pixelToFocalPlane=self.focalPlaneToPixel.getInverse(),
+            pixelToFocalPlane=self.pixelToFocalPlane,
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
         bboxD = afwGeom.Box2D(self.bbox)
@@ -188,7 +185,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
         """
         focalPlaneToFieldAngle = afwGeom.makeRadialTransform([0.0, self.radPerMm, 0.0, self.radPerMm])
         pixelToDistortedPixel = computePixelToDistortedPixel(
-            pixelToFocalPlane=self.focalPlaneToPixel.getInverse(),
+            pixelToFocalPlane=self.pixelToFocalPlane,
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
         # Do not try to make pixelToDistortedPixel -> self.tanWcs into a WCS
@@ -198,7 +195,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
 
         wcs = makeDistortedTanWcs(
             tanWcs=self.tanWcs,
-            pixelToFocalPlane=self.focalPlaneToPixel.getInverse(),
+            pixelToFocalPlane=self.pixelToFocalPlane,
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
 
