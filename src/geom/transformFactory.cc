@@ -124,7 +124,7 @@ ast::PolyMap makeOneDDistortion(std::vector<double> const &coeffs) {
         polyCoeffs[i - 1][2] = i;
     }
 
-    return ast::PolyMap(polyCoeffs, 1, "IterInverse=1, TolInverse=1e-8, NIterInverse=20");
+    return ast::PolyMap(polyCoeffs, 1, "IterInverse=1, TolInverse=1e-8, NIterInverse=30");
 }
 
 }  // namespace
