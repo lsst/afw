@@ -442,13 +442,13 @@ public:
  * comparison functor; sort by ID then row
  */
 struct IdSpanCompare {
-    bool operator()(std::shared_ptr<IdSpan> const a, std::shared_ptr<IdSpan> const b) {
-        if (a->id < b->id) {
+    bool operator()(IdSpan const & a, IdSpan const & b) const {
+        if (a.id < b.id) {
             return true;
-        } else if (a->id > b->id) {
+        } else if (a.id > b.id) {
             return false;
         } else {
-            return (a->y < b->y) ? true : false;
+            return (a.y < b.y) ? true : false;
         }
     }
 };
@@ -641,7 +641,7 @@ static void findFootprints(
     std::vector<int> aliases;          // aliases for initially disjoint parts of Footprints
     aliases.reserve(1 + height / 20);  // initial size of aliases
 
-    std::vector<std::shared_ptr<IdSpan>> spans;  // y:x0,x1 for objects
+    std::vector<IdSpan> spans;  // y:x0,x1 for objects
     spans.reserve(aliases.capacity());           // initial size of spans
 
     aliases.push_back(0);  // 0 --> 0
@@ -673,7 +673,7 @@ static void findFootprints(
             if (isBadPixel(pixVal) ||
                 !inFootprint(pixVal, varPtr, polarity, footprintThreshold, ThresholdTraitT())) {
                 if (in_span) {
-                    auto sp = std::make_shared<IdSpan>(in_span, y, x0, x - 1, good);
+                    IdSpan sp(in_span, y, x0, x - 1, good);
                     spans.push_back(sp);
 
                     in_span = 0;
@@ -714,7 +714,7 @@ static void findFootprints(
         }
 
         if (in_span) {
-            auto sp = std::make_shared<IdSpan>(in_span, y, x0, width - 1, good);
+            IdSpan sp(in_span, y, x0, width - 1, good);
             spans.push_back(sp);
         }
     }
@@ -722,7 +722,7 @@ static void findFootprints(
      * Resolve aliases; first alias chains, then the IDs in the spans
      */
     for (unsigned int i = 0; i < spans.size(); i++) {
-        spans[i]->id = resolve_alias(aliases, spans[i]->id);
+        spans[i].id = resolve_alias(aliases, spans[i].id);
     }
     /*
      * Sort spans by ID, so we can sweep through them once
@@ -735,16 +735,16 @@ static void findFootprints(
      */
     unsigned int i0;  // initial value of i
     if (spans.size() > 0) {
-        id = spans[0]->id;
+        id = spans[0].id;
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) {  // <= size to catch the last object
-            if (i == spans.size() || spans[i]->id != id) {
+            if (i == spans.size() || spans[i].id != id) {
                 bool good = false;  // Span includes pixel sufficient to include footprint in set?
                 std::vector<geom::Span> tempSpanList;
                 for (; i0 < i; i0++) {
-                    good |= spans[i0]->good;
+                    good |= spans[i0].good;
                     tempSpanList.push_back(
-                            geom::Span(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0));
+                            geom::Span(spans[i0].y + row0, spans[i0].x0 + col0, spans[i0].x1 + col0));
                 }
                 auto tempSpanSet = std::make_shared<geom::SpanSet>(std::move(tempSpanList));
                 auto fp = std::make_shared<Footprint>(tempSpanSet, _region);
@@ -755,7 +755,7 @@ static void findFootprints(
             }
 
             if (i < spans.size()) {
-                id = spans[i]->id;
+                id = spans[i].id;
             }
         }
     }
