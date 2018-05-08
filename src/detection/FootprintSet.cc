@@ -876,7 +876,7 @@ public:
     Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
     ~Startspan() { delete _span; }
 
-    bool getSpan() { return _span; }
+    std::shared_ptr<geom::Span const> getSpan() const { return _span; }
     bool Stop() { return _stop; }
     DIRECTION getDirection() { return _direction; }
 
