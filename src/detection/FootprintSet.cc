@@ -441,8 +441,7 @@ public:
 /*
  * comparison functor; sort by ID then row
  */
-struct IdSpanCompar
-        : public std::binary_function<const std::shared_ptr<IdSpan>, const std::shared_ptr<IdSpan>, bool> {
+struct IdSpanCompare {
     bool operator()(std::shared_ptr<IdSpan> const a, std::shared_ptr<IdSpan> const b) {
         if (a->id < b->id) {
             return true;
@@ -729,7 +728,7 @@ static void findFootprints(
      * Sort spans by ID, so we can sweep through them once
      */
     if (spans.size() > 0) {
-        std::sort(spans.begin(), spans.end(), IdSpanCompar());
+        std::sort(spans.begin(), spans.end(), IdSpanCompare());
     }
     /*
      * Build Footprints from spans
