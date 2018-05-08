@@ -89,7 +89,7 @@ public:
         }
     }
 
-    setIdImage(std::uint64_t const id, typename std::set<std::uint64_t> *oldIds, bool overwriteId = false,
+    setIdImage(std::uint64_t const id, std::set<std::uint64_t> *oldIds, bool overwriteId = false,
                long const idMask = 0x0)
             : _id(id),
               _idMask(idMask),
@@ -123,8 +123,8 @@ private:
     long const _idMask;
     bool _withSetReplace;
     bool _overwriteId;
-    typename std::set<std::uint64_t> *_oldIds;
-    typename std::set<std::uint64_t>::const_iterator _pos;
+    std::set<std::uint64_t> *_oldIds;
+    std::set<std::uint64_t>::const_iterator _pos;
 };
 
 //
