@@ -505,17 +505,6 @@ int warpCenteredImage(
         ///< use this value for undefined (edge) pixels
 );
 
-namespace details {
-template <typename A, typename B>
-bool isSameObject(A const &, B const &) {
-    return false;
-}
-
-template <typename A>
-bool isSameObject(A const &a, A const &b) {
-    return &a == &b;
-}
-}  // namespace details
 }  // namespace math
 }  // namespace afw
 }  // namespace lsst
