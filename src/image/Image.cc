@@ -27,6 +27,8 @@
  */
 #include <cstdint>
 #include <iostream>
+#include <functional>
+#include <type_traits>
 #include "boost/mpl/vector.hpp"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
@@ -697,6 +699,22 @@ geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
     return geom::Box2I(xy0, dims);
 }
 
+template <typename T1, typename T2>
+bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2) {
+    auto arr1 = image1.getArray();
+    // get the address of the first and one-past-the-last element of arr1 using ndarray iterators;
+    // this works because the iterators for contiguous 1-d ndarray Arrays are just pointers
+    auto beg1Addr = arr1.front().begin();
+    auto end1Addr = arr1.back().end();
+
+    auto arr2 = image2.getArray();
+    auto beg2Addr = arr2.front().begin();
+    auto end2Addr = arr2.back().end();
+
+    auto ptrLess = std::less<void const* const>();
+    return ptrLess(beg1Addr, end2Addr) && ptrLess(beg2Addr, end1Addr);
+}
+
 //
 // Explicit instantiations
 //
@@ -716,11 +734,44 @@ geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
     INSTANTIATE_OPERATOR(*=, T); \
     INSTANTIATE_OPERATOR(/=, T)
 
+#define INSTANTIATE2(T1, T2) template bool imagesOverlap<T1, T2>(ImageBase<T1> const&, ImageBase<T2> const&);
+
 INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
 INSTANTIATE(std::uint64_t);
+
+INSTANTIATE2(std::uint16_t, std::uint16_t);
+INSTANTIATE2(std::uint16_t, int);
+INSTANTIATE2(std::uint16_t, float);
+INSTANTIATE2(std::uint16_t, double);
+INSTANTIATE2(std::uint16_t, std::uint64_t);
+
+INSTANTIATE2(int, std::uint16_t);
+INSTANTIATE2(int, int);
+INSTANTIATE2(int, float);
+INSTANTIATE2(int, double);
+INSTANTIATE2(int, std::uint64_t);
+
+INSTANTIATE2(float, std::uint16_t);
+INSTANTIATE2(float, int);
+INSTANTIATE2(float, float);
+INSTANTIATE2(float, double);
+INSTANTIATE2(float, std::uint64_t);
+
+INSTANTIATE2(double, std::uint16_t);
+INSTANTIATE2(double, int);
+INSTANTIATE2(double, float);
+INSTANTIATE2(double, double);
+INSTANTIATE2(double, std::uint64_t);
+
+INSTANTIATE2(std::uint64_t, std::uint16_t);
+INSTANTIATE2(std::uint64_t, int);
+INSTANTIATE2(std::uint64_t, float);
+INSTANTIATE2(std::uint64_t, double);
+INSTANTIATE2(std::uint64_t, std::uint64_t);
+
 /// @endcond
 }
 }

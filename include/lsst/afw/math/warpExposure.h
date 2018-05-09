@@ -448,6 +448,12 @@ int warpExposure(
  *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.
  *
  * @todo Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
+ *
+ * @warning The code that tests for image overlap is not guranteed to work correctly, based on the C++
+ * standard. It is, in theory, possible for the code to report a "false positive", meaning that it may claim
+ * that images overlap when they do not. We don't believe that any of our current compilers have this problem.
+ * If, in the future, this becomes a problem then we will probably have to remove the test and rely on users
+ * being careful.
  */
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage,                 ///< remapped %image

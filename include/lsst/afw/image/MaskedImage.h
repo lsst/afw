@@ -1273,6 +1273,13 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
     return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
 }
 
+/**
+ * Return true if the pixels for two masked images (image, variance or mask plane) overlap in memory.
+ */
+template <typename ImagePixelT1, typename ImagePixelT2>
+bool imagesOverlap(MaskedImage<ImagePixelT1, MaskPixel, VariancePixel> const& image1,
+                   MaskedImage<ImagePixelT2, MaskPixel, VariancePixel> const& image2);
+
 /*
  * Some metafunctions to extract an Image pointer from a MaskedImage pointer (or return the original Image
  * pointer)
