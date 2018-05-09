@@ -441,7 +441,7 @@ int warpExposure(
  * separated by interpLen pixels along rows and columns. All other source pixel positions are determined
  * by linear interpolation between those grid points. Everything else remains the same.
  *
- * @throws lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
+ * @throws lsst::pex::exceptions::InvalidParameterError if destImage overlaps srcImage
  * @throws std::bad_alloc when allocation of CPU memory fails
  *
  * @todo Should support an additional color-based position correction in the remapping

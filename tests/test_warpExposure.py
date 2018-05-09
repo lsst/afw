@@ -201,27 +201,25 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
     def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
         """
-        originalExposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
+        wcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(1.0e-8*afwGeom.degrees),
+        )
+        exposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100), wcs)
+        maskedImage = exposure.getMaskedImage()
         warpingControl = afwMath.WarpingControl(
             "bilinear", "", 0, interpLength)
-        try:
-            afwMath.warpExposure(
-                originalExposure, originalExposure, warpingControl)
-            self.fail("warpExposure in place (dest is src) should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
-                              originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingControl)
-            self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
-                              originalExposure.getImage(), originalExposure.getWcs(), warpingControl)
-            self.fail("warpImage<Image> in place (dest is src) should fail")
-        except Exception:
-            pass
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpExposure(exposure, exposure, warpingControl)
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpImage(maskedImage, wcs, maskedImage, wcs, warpingControl)
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpImage(maskedImage.getImage(), wcs,
+                              maskedImage.getImage(), wcs, warpingControl)
 
     def testWarpingControl(self):
         """Test the basic mechanics of WarpingControl
