@@ -673,8 +673,7 @@ static void findFootprints(
             if (isBadPixel(pixVal) ||
                 !inFootprint(pixVal, varPtr, polarity, footprintThreshold, ThresholdTraitT())) {
                 if (in_span) {
-                    IdSpan sp(in_span, y, x0, x - 1, good);
-                    spans.push_back(sp);
+                    spans.emplace_back(in_span, y, x0, x - 1, good);
 
                     in_span = 0;
                     good = false;
@@ -714,8 +713,7 @@ static void findFootprints(
         }
 
         if (in_span) {
-            IdSpan sp(in_span, y, x0, width - 1, good);
-            spans.push_back(sp);
+            spans.emplace_back(in_span, y, x0, width - 1, good);
         }
     }
     /*
