@@ -89,7 +89,7 @@ public:
         }
     }
 
-    setIdImage(std::uint64_t const id, typename std::set<std::uint64_t> *oldIds, bool overwriteId = false,
+    setIdImage(std::uint64_t const id, std::set<std::uint64_t> *oldIds, bool overwriteId = false,
                long const idMask = 0x0)
             : _id(id),
               _idMask(idMask),
@@ -123,8 +123,8 @@ private:
     long const _idMask;
     bool _withSetReplace;
     bool _overwriteId;
-    typename std::set<std::uint64_t> *_oldIds;
-    typename std::set<std::uint64_t>::const_iterator _pos;
+    std::set<std::uint64_t> *_oldIds;
+    std::set<std::uint64_t>::const_iterator _pos;
 };
 
 //
@@ -441,15 +441,14 @@ public:
 /*
  * comparison functor; sort by ID then row
  */
-struct IdSpanCompar
-        : public std::binary_function<const std::shared_ptr<IdSpan>, const std::shared_ptr<IdSpan>, bool> {
-    bool operator()(std::shared_ptr<IdSpan> const a, std::shared_ptr<IdSpan> const b) {
-        if (a->id < b->id) {
+struct IdSpanCompare {
+    bool operator()(IdSpan const & a, IdSpan const & b) const {
+        if (a.id < b.id) {
             return true;
-        } else if (a->id > b->id) {
+        } else if (a.id > b.id) {
             return false;
         } else {
-            return (a->y < b->y) ? true : false;
+            return (a.y < b.y) ? true : false;
         }
     }
 };
@@ -642,7 +641,7 @@ static void findFootprints(
     std::vector<int> aliases;          // aliases for initially disjoint parts of Footprints
     aliases.reserve(1 + height / 20);  // initial size of aliases
 
-    std::vector<std::shared_ptr<IdSpan>> spans;  // y:x0,x1 for objects
+    std::vector<IdSpan> spans;  // y:x0,x1 for objects
     spans.reserve(aliases.capacity());           // initial size of spans
 
     aliases.push_back(0);  // 0 --> 0
@@ -674,8 +673,7 @@ static void findFootprints(
             if (isBadPixel(pixVal) ||
                 !inFootprint(pixVal, varPtr, polarity, footprintThreshold, ThresholdTraitT())) {
                 if (in_span) {
-                    auto sp = std::make_shared<IdSpan>(in_span, y, x0, x - 1, good);
-                    spans.push_back(sp);
+                    spans.emplace_back(in_span, y, x0, x - 1, good);
 
                     in_span = 0;
                     good = false;
@@ -715,37 +713,36 @@ static void findFootprints(
         }
 
         if (in_span) {
-            auto sp = std::make_shared<IdSpan>(in_span, y, x0, width - 1, good);
-            spans.push_back(sp);
+            spans.emplace_back(in_span, y, x0, width - 1, good);
         }
     }
     /*
      * Resolve aliases; first alias chains, then the IDs in the spans
      */
     for (unsigned int i = 0; i < spans.size(); i++) {
-        spans[i]->id = resolve_alias(aliases, spans[i]->id);
+        spans[i].id = resolve_alias(aliases, spans[i].id);
     }
     /*
      * Sort spans by ID, so we can sweep through them once
      */
     if (spans.size() > 0) {
-        std::sort(spans.begin(), spans.end(), IdSpanCompar());
+        std::sort(spans.begin(), spans.end(), IdSpanCompare());
     }
     /*
      * Build Footprints from spans
      */
     unsigned int i0;  // initial value of i
     if (spans.size() > 0) {
-        id = spans[0]->id;
+        id = spans[0].id;
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) {  // <= size to catch the last object
-            if (i == spans.size() || spans[i]->id != id) {
+            if (i == spans.size() || spans[i].id != id) {
                 bool good = false;  // Span includes pixel sufficient to include footprint in set?
                 std::vector<geom::Span> tempSpanList;
                 for (; i0 < i; i0++) {
-                    good |= spans[i0]->good;
+                    good |= spans[i0].good;
                     tempSpanList.push_back(
-                            geom::Span(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0));
+                            geom::Span(spans[i0].y + row0, spans[i0].x0 + col0, spans[i0].x1 + col0));
                 }
                 auto tempSpanSet = std::make_shared<geom::SpanSet>(std::move(tempSpanList));
                 auto fp = std::make_shared<Footprint>(tempSpanSet, _region);
@@ -756,7 +753,7 @@ static void findFootprints(
             }
 
             if (i < spans.size()) {
-                id = spans[i]->id;
+                id = spans[i].id;
             }
         }
     }
@@ -848,395 +845,6 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
         fIter->getSpans()->setMask(*(maskedImg.getMask()), bitPlane);
     }
 }
-
-namespace {
-/// Don't let doxygen see this block  @cond
-/*
- * A data structure to hold the starting point for a search for pixels above threshold,
- * used by pmFindFootprintAtPoint
- *
- * We don't want to find this span again --- it's already part of the footprint ---
- * so we set appropriate mask bits
- */
-//
-// An enum for what we should do with a Startspan
-//
-enum DIRECTION {
-    DOWN = 0,  // scan down from this span
-    UP,        // scan up from this span
-    RESTART,   // restart scanning from this span
-    DONE       // this span is processed
-};
-//
-// A Class that remembers how to [re-]start scanning the image for pixels
-//
-template <typename MaskPixelT>
-class Startspan {
-public:
-    Startspan(geom::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
-    ~Startspan() { delete _span; }
-
-    bool getSpan() { return _span; }
-    bool Stop() { return _stop; }
-    DIRECTION getDirection() { return _direction; }
-
-    static int detectedPlane;  // The MaskPlane to use for detected pixels
-    static int stopPlane;      // The MaskPlane to use for pixels that signal us to stop searching
-private:
-    std::shared_ptr<geom::Span const> _span;  // The initial Span
-    DIRECTION _direction;                     // How to continue searching for further pixels
-    bool _stop;                               // should we stop searching?
-};
-
-template <typename MaskPixelT>
-Startspan<MaskPixelT>::Startspan(
-        geom::Span const *span,         // The span in question
-        image::Mask<MaskPixelT> *mask,  // Pixels that we've already detected
-        DIRECTION const dir             // Should we continue searching towards the top of the image?
-        )
-        : _span(span), _direction(dir), _stop(false) {
-    if (mask != NULL) {  // remember that we've detected these pixels
-        mask->setMaskPlaneValues(detectedPlane, span->getX0(), span->getX1(), span->getY());
-
-        int const y = span->getY() - mask->getY0();
-        for (int x = span->getX0() - mask->getX0(); x <= span->getX1() - mask->getX0(); x++) {
-            if (mask(x, y, stopPlane)) {
-                _stop = true;
-                break;
-            }
-        }
-    }
-}
-
-template <typename ImagePixelT, typename MaskPixelT>
-class StartspanSet {
-public:
-    StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT> &image)
-            : _image(image->getImage()), _mask(image->getMask()) {}
-    ~StartspanSet() {}
-
-    bool add(geom::Span *span, DIRECTION const dir, bool addToMask = true);
-    bool process(Footprint *fp,               // the footprint that we're building
-                 Threshold const &threshold,  // Threshold
-                 double const param = -1);    // parameter that Threshold may need
-private:
-    image::Image<ImagePixelT> const *_image;                     // the Image we're searching
-    image::Mask<MaskPixelT> *_mask;                              // the mask that tells us where we've got to
-    std::vector<std::shared_ptr<Startspan<MaskPixelT>>> _spans;  // list of Startspans
-};
-
-//
-// Add a new Startspan to a StartspansSet.  Iff we see a stop bit, return true
-//
-template <typename ImagePixelT, typename MaskPixelT>
-bool StartspanSet<ImagePixelT, MaskPixelT>::add(geom::Span *span,     // the span in question
-                                                DIRECTION const dir,  // the desired direction to search
-                                                bool addToMask) {     // should I add the Span to the mask?
-    if (dir == RESTART) {
-        if (add(span, UP) || add(span, DOWN, false)) {
-            return true;
-        }
-    } else {
-        auto sspan = std::make_shared<MaskPixelT>(span, dir);
-        if (sspan->stop()) {  // we detected a stop bit
-            return true;
-        } else {
-            _spans.push_back(sspan);
-        }
-    }
-
-    return false;
-}
-
-/*
- * Search the image for pixels above threshold, starting at a single Startspan.
- * We search the array looking for one to process; it'd be better to move the
- * ones that we're done with to the end, but it probably isn't worth it for
- * the anticipated uses of this routine.
- *
- * This is the guts of pmFindFootprintAtPoint
- */
-template <typename ImagePixelT, typename MaskPixelT>
-bool StartspanSet<ImagePixelT, MaskPixelT>::process(Footprint *fp,  // the footprint that we're building
-                                                    Threshold const &threshold,  // Threshold
-                                                    double const param  // parameter that Threshold may need
-                                                    ) {
-    int const row0 = _image->getY0();
-    int const col0 = _image->getOffsetCols();
-    int const height = _image->getHeight();
-
-    Startspan<MaskPixelT> *sspan = NULL;
-    for (auto iter = _spans.begin(); iter != _spans.end(); iter++) {
-        *sspan = *iter;
-        if (sspan->getDirection() != DONE) {
-            break;
-        }
-        if (sspan->Stop()) {
-            break;
-        }
-    }
-    if (sspan == NULL || sspan->getDirection() == DONE) {  // no more Startspans to process
-        return false;
-    }
-    if (sspan->Stop()) {  // they don't want any more spans processed
-        return false;
-    }
-    /*
-     * Work
-     */
-    DIRECTION const dir = sspan->getDirection();
-    /*
-     * Set initial span to the startspan
-     */
-    int x0 = sspan->getSpan()->getX0() - col0;
-    /*
-     * Go through image identifying objects
-     */
-    int nx0 = -1;                         // new value of x0
-    int const di = (dir == UP) ? 1 : -1;  // how much i changes to get to the next row
-    bool stop = false;                    // should I stop searching for spans?
-
-    typedef typename image::Image<ImagePixelT>::pixel_accessor pixAccessT;
-    double const thresholdVal = threshold.getValue(param);
-    bool const polarity = threshold.getPolarity();
-
-    for (int i = sspan->span->y - row0 + di; i < height && i >= 0; i += di) {
-        pixAccessT imgRow = _image->origin().advance(0, i);  // row pointer
-        // maskPixAccessT maskRow = _mask->origin.advance(0, i);  //  masks's row pointer
-        //
-        // Search left from the pixel diagonally to the left of (i - di, x0). If there's
-        // a connected span there it may need to grow up and/or down, so push it onto
-        // the stack for later consideration
-        //
-        nx0 = -1;
-        for (int j = x0 - 1; j >= -1; j--) {
-            ImagePixelT pixVal = (j < 0) ? thresholdVal - 100 : (polarity ? imgRow[j] : -imgRow[j]);
-            if (_mask(j, i, Startspan<MaskPixelT>::detectedPlane) || pixVal < threshold) {
-                if (j < x0 - 1) {  // we found some pixels above threshold
-                    nx0 = j + 1;
-                }
-                break;
-            }
-        }
-#if 0
-            if (nx0 < 0) {                      // no span to the left
-                nx1 = x0 - 1;           // we're going to resume searching at nx1 + 1
-            } else {
-                //
-                // Search right in leftmost span
-                //
-                //nx1 = 0;                      // make gcc happy
-                for (int j = nx0 + 1; j <= width; j++) {
-                    ImagePixelT pixVal = (j >= width) ? threshold - 100 :
-                        (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) :
-                         (F32 ? -imgRowF32[j] : -imgRowS32[j]));
-                    if ((maskRow[j] & DETECTED) || pixVal < threshold) {
-                        nx1 = j - 1;
-                        break;
-                    }
-                }
-
-                pmSpan const *sp = pmFootprintAddSpan(fp, i + row0, nx0 + col0, nx1 + col0);
-
-                if (add_startspan(startspans, sp, mask, RESTART)) {
-                    stop = true;
-                    break;
-                }
-            }
-            //
-            // Now look for spans connected to the old span.  The first of these we'll
-            // simply process, but others will have to be deferred for later consideration.
-            //
-            // In fact, if the span overhangs to the right we'll have to defer the overhang
-            // until later too, as it too can grow in both directions
-            //
-            // Note that column width exists virtually, and always ends the last span; this
-            // is why we claim below that sx1 is always set
-            //
-            bool first = false;         // is this the first new span detected?
-            for (int j = nx1 + 1; j <= x1 + 1; j++) {
-                ImagePixelT pixVal = (j >= width) ? threshold - 100 :
-                    (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
-                if (!(maskRow[j] & DETECTED) && pixVal >= threshold) {
-                    int sx0 = j++;              // span that we're working on is sx0:sx1
-                    int sx1 = -1;               // We know that if we got here, we'll also set sx1
-                    for (; j <= width; j++) {
-                        ImagePixelT pixVal = (j >= width) ? threshold - 100 :
-                            (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) :
-                             (F32 ? -imgRowF32[j] : -imgRowS32[j]));
-                        if ((maskRow[j] & DETECTED) || pixVal < threshold) { // end of span
-                            sx1 = j;
-                            break;
-                        }
-                    }
-                    assert (sx1 >= 0);
-
-                    pmSpan const *sp;
-                    if (first) {
-                        if (sx1 <= x1) {
-                            sp = pmFootprintAddSpan(fp, i + row0, sx0 + col0, sx1 + col0 - 1);
-                            if (add_startspan(startspans, sp, mask, DONE)) {
-                                stop = true;
-                                break;
-                            }
-                        } else {                // overhangs to right
-                            sp = pmFootprintAddSpan(fp, i + row0, sx0 + col0, x1 + col0);
-                            if (add_startspan(startspans, sp, mask, DONE)) {
-                                stop = true;
-                                break;
-                            }
-                            sp = pmFootprintAddSpan(fp, i + row0, x1 + 1 + col0, sx1 + col0 - 1);
-                            if (add_startspan(startspans, sp, mask, RESTART)) {
-                                stop = true;
-                                break;
-                            }
-                        }
-                        first = false;
-                    } else {
-                        sp = pmFootprintAddSpan(fp, i + row0, sx0 + col0, sx1 + col0 - 1);
-                        if (add_startspan(startspans, sp, mask, RESTART)) {
-                            stop = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (stop || first == false) {       // we're done
-                break;
-            }
-
-            x0 = nx0;
-            x1 = nx1;
-#endif
-    }
-    /*
-     * Cleanup
-     */
-
-    sspan->_direction = DONE;
-    return stop ? false : true;
-}
-/// @endcond
-}
-#if 0
-
-
-/*
- * Go through an image, starting at (row, col) and assembling all the pixels
- * that are connected to that point (in a chess kings-move sort of way) into
- * a pmFootprint.
- *
- * This is much slower than pmFindFootprints if you want to find lots of
- * footprints, but if you only want a small region about a given point it
- * can be much faster
- *
- * N.b. The returned pmFootprint is not in "normal form"; that is the pmSpans
- * are not sorted by increasing y, x0, x1.  If this matters to you, call
- * pmFootprintNormalize()
- */
-pmFootprint *
-pmFindFootprintAtPoint(psImage const *img,      // image to search
-                       Threshold const &threshold, // Threshold
-                       psArray const *peaks, // array of peaks; finding one terminates search for footprint
-                       int row, int col) { // starting position (in img's parent's coordinate system)
-    assert(img != NULL);
-
-    bool F32 = false;                    // is this an F32 image?
-    if (img->type.type == PS_TYPE_F32) {
-        F32 = true;
-    } else if (img->type.type == PS_TYPE_S32) {
-        F32 = false;
-    } else {                             // N.b. You can't trivially add more cases here; F32 is just a bool
-        psError(PS_ERR_UNKNOWN, true, "Unsupported psImage type: %d", img->type.type);
-        return NULL;
-    }
-    psF32 *imgRowF32 = NULL;             // row pointer if F32
-    psS32 *imgRowS32 = NULL;             //  "   "   "  "  !F32
-
-    int const row0 = img->row0;
-    int const col0 = img->col0;
-    int const height = img->getHeight();
-    int const width = img->getWidth();
-/*
- * Is point in image, and above threshold?
- */
-    row -= row0;
-    col -= col0;
-    if (row < 0 || row >= height ||
-        col < 0 || col >= width) {
-        psError(PS_ERR_BAD_PARAMETER_VALUE, true,
-                "row/col == (%d, %d) are out of bounds [%d--%d, %d--%d]",
-                row + row0, col + col0, row0, row0 + height - 1, col0, col0 + width - 1);
-        return NULL;
-    }
-
-    ImagePixelT pixVal = F32 ? img->data.F32[row][col] : img->data.S32[row][col];
-    if (pixVal < threshold) {
-        return pmFootprintAlloc(0, img);
-    }
-
-    pmFootprint *fp = pmFootprintAlloc(1 + img->getHeight()/10, img);
-/*
- * We need a mask for two purposes; to indicate which pixels are already detected,
- * and to store the "stop" pixels --- those that, once reached, should stop us
- * looking for the rest of the pmFootprint.  These are generally set from peaks.
- */
-    psImage *mask = psImageAlloc(width, height, PS_TYPE_MASK);
-    P_PSIMAGE_SET_ROW0(mask, row0);
-    P_PSIMAGE_SET_COL0(mask, col0);
-    psImageInit(mask, INITIAL);
-    //
-    // Set stop bits from peaks list
-    //
-    assert (peaks == NULL || peaks->n == 0 || pmIsPeak(peaks->data[0]));
-    if (peaks != NULL) {
-        for (int i = 0; i < peaks->n; i++) {
-            pmPeak *peak = peaks->data[i];
-            mask->data.PS_TYPE_MASK_DATA[peak->y - mask->row0][peak->x - mask->col0] |= STOP;
-        }
-    }
-/*
- * Find starting span passing through (row, col)
- */
-    psArray *startspans = psArrayAllocEmpty(1); // spans where we have to restart the search
-
-    imgRowF32 = img->data.F32[row];      // only one of
-    imgRowS32 = img->data.S32[row];      //      these is valid!
-    psMaskType *maskRow = mask->data.PS_TYPE_MASK_DATA[row];
-    {
-        int i;
-        for (i = col; i >= 0; i--) {
-            pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
-            if ((maskRow[i] & DETECTED) || pixVal < threshold) {
-                break;
-            }
-        }
-        int i0 = i;
-        for (i = col; i < width; i++) {
-            pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
-            if ((maskRow[i] & DETECTED) || pixVal < threshold) {
-                break;
-            }
-        }
-        int i1 = i;
-        pmSpan const *sp = pmFootprintAddSpan(fp, row + row0, i0 + col0 + 1, i1 + col0 - 1);
-
-        (void)add_startspan(startspans, sp, mask, RESTART);
-    }
-    /*
-     * Now workout from those Startspans, searching for pixels above threshold
-     */
-    while (do_startspan(fp, img, mask, threshold, startspans)) continue;
-    /*
-     * Cleanup
-     */
-    psFree(mask);
-    psFree(startspans);                  // restores the image pixel
-
-    return fp;                           // pmFootprint really
-}
-#endif
 
 FootprintSet::FootprintSet(geom::Box2I region)
         : daf::base::Citizen(typeid(this)), _footprints(std::make_shared<FootprintList>()), _region(region) {}
