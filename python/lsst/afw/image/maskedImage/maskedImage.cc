@@ -200,6 +200,22 @@ void declareMakeMaskedImage(py::module &mod) {
             "mask"_a = nullptr, "variance"_a = nullptr);
 }
 
+template <typename ImagePixelT1, typename ImagePixelT2>
+void declareImagesOverlap(py::module &mod) {
+
+    // wrap both the Image and MaskedImage versions of imagesOverlap here, as wrapping
+    // the Image version in the Image wrapper results in it being invisible in lsst.afw.image
+    mod.def("imagesOverlap",
+            py::overload_cast<ImageBase<ImagePixelT1> const &, ImageBase<ImagePixelT2> const &>(
+                    &imagesOverlap<ImagePixelT1, ImagePixelT2>),
+            "image1"_a, "image2"_a);
+
+    mod.def("imagesOverlap",
+            py::overload_cast<MaskedImage<ImagePixelT1> const &, MaskedImage<ImagePixelT2> const &>(
+                    &imagesOverlap<ImagePixelT1, ImagePixelT2>),
+            "image1"_a, "image2"_a);
+}
+
 }  // anonymous
 
 PYBIND11_PLUGIN(maskedImage) {
@@ -231,6 +247,36 @@ PYBIND11_PLUGIN(maskedImage) {
     declareMakeMaskedImage<double>(mod);
     declareMakeMaskedImage<std::uint16_t>(mod);
     declareMakeMaskedImage<std::uint64_t>(mod);
+
+    declareImagesOverlap<int, int>(mod);
+    declareImagesOverlap<int, float>(mod);
+    declareImagesOverlap<int, double>(mod);
+    declareImagesOverlap<int, std::uint16_t>(mod);
+    declareImagesOverlap<int, std::uint64_t>(mod);
+
+    declareImagesOverlap<float, int>(mod);
+    declareImagesOverlap<float, float>(mod);
+    declareImagesOverlap<float, double>(mod);
+    declareImagesOverlap<float, std::uint16_t>(mod);
+    declareImagesOverlap<float, std::uint64_t>(mod);
+
+    declareImagesOverlap<double, int>(mod);
+    declareImagesOverlap<double, float>(mod);
+    declareImagesOverlap<double, double>(mod);
+    declareImagesOverlap<double, std::uint16_t>(mod);
+    declareImagesOverlap<double, std::uint64_t>(mod);
+
+    declareImagesOverlap<std::uint16_t, int>(mod);
+    declareImagesOverlap<std::uint16_t, float>(mod);
+    declareImagesOverlap<std::uint16_t, double>(mod);
+    declareImagesOverlap<std::uint16_t, std::uint16_t>(mod);
+    declareImagesOverlap<std::uint16_t, std::uint64_t>(mod);
+
+    declareImagesOverlap<std::uint64_t, int>(mod);
+    declareImagesOverlap<std::uint64_t, float>(mod);
+    declareImagesOverlap<std::uint64_t, double>(mod);
+    declareImagesOverlap<std::uint64_t, std::uint16_t>(mod);
+    declareImagesOverlap<std::uint64_t, std::uint64_t>(mod);
 
     return mod.ptr();
 }

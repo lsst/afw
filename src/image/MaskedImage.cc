@@ -749,14 +749,57 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end(bool contiguous) const
     return fast_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
+template <typename ImagePixelT1, typename ImagePixelT2>
+bool imagesOverlap(MaskedImage<ImagePixelT1, MaskPixel, VariancePixel> const& image1,
+                   MaskedImage<ImagePixelT2, MaskPixel, VariancePixel> const& image2) {
+    return imagesOverlap(*image1.getImage(), *image2.getImage()) ||
+           imagesOverlap(*image1.getVariance(), *image2.getVariance()) ||
+           imagesOverlap(*image1.getMask(), *image2.getMask());
+}
+
 //
 // Explicit instantiations
 //
+#define INSTANTIATE2(ImagePixelT1, ImagePixelT2)                                              \
+    template bool imagesOverlap<ImagePixelT1, ImagePixelT2>(MaskedImage<ImagePixelT1> const&, \
+                                                            MaskedImage<ImagePixelT2> const&);
+
 template class MaskedImage<std::uint16_t>;
 template class MaskedImage<int>;
 template class MaskedImage<float>;
 template class MaskedImage<double>;
 template class MaskedImage<std::uint64_t>;
+
+INSTANTIATE2(std::uint16_t, std::uint16_t);
+INSTANTIATE2(std::uint16_t, int);
+INSTANTIATE2(std::uint16_t, float);
+INSTANTIATE2(std::uint16_t, double);
+INSTANTIATE2(std::uint16_t, std::uint64_t);
+
+INSTANTIATE2(int, std::uint16_t);
+INSTANTIATE2(int, int);
+INSTANTIATE2(int, float);
+INSTANTIATE2(int, double);
+INSTANTIATE2(int, std::uint64_t);
+
+INSTANTIATE2(float, std::uint16_t);
+INSTANTIATE2(float, int);
+INSTANTIATE2(float, float);
+INSTANTIATE2(float, double);
+INSTANTIATE2(float, std::uint64_t);
+
+INSTANTIATE2(double, std::uint16_t);
+INSTANTIATE2(double, int);
+INSTANTIATE2(double, float);
+INSTANTIATE2(double, double);
+INSTANTIATE2(double, std::uint64_t);
+
+INSTANTIATE2(std::uint64_t, std::uint16_t);
+INSTANTIATE2(std::uint64_t, int);
+INSTANTIATE2(std::uint64_t, float);
+INSTANTIATE2(std::uint64_t, double);
+INSTANTIATE2(std::uint64_t, std::uint64_t);
+
 }
 }
 }  // end lsst::afw::image

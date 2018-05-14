@@ -505,6 +505,12 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
 /// provide the xy0.
 geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata);
 
+/**
+ * Return true if the pixels for two images or masks overlap in memory.
+ */
+template<typename T1, typename T2>
+bool imagesOverlap(ImageBase<T1> const &image1, ImageBase<T2> const &image2);
+
 }
 }
 }  // lsst::afw::image

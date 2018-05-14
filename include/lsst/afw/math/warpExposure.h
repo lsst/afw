@@ -441,13 +441,19 @@ int warpExposure(
  * separated by interpLen pixels along rows and columns. All other source pixel positions are determined
  * by linear interpolation between those grid points. Everything else remains the same.
  *
- * @throws lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
+ * @throws lsst::pex::exceptions::InvalidParameterError if destImage overlaps srcImage
  * @throws std::bad_alloc when allocation of CPU memory fails
  *
  * @todo Should support an additional color-based position correction in the remapping
  *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.
  *
  * @todo Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
+ *
+ * @warning The code that tests for image overlap is not guranteed to work correctly, based on the C++
+ * standard. It is, in theory, possible for the code to report a "false positive", meaning that it may claim
+ * that images overlap when they do not. We don't believe that any of our current compilers have this problem.
+ * If, in the future, this becomes a problem then we will probably have to remove the test and rely on users
+ * being careful.
  */
 template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage,                 ///< remapped %image
@@ -499,17 +505,6 @@ int warpCenteredImage(
         ///< use this value for undefined (edge) pixels
 );
 
-namespace details {
-template <typename A, typename B>
-bool isSameObject(A const &, B const &) {
-    return false;
-}
-
-template <typename A>
-bool isSameObject(A const &a, A const &b) {
-    return &a == &b;
-}
-}  // namespace details
 }  // namespace math
 }  // namespace afw
 }  // namespace lsst

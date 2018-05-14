@@ -30,6 +30,7 @@ or
    >>> import MaskedImage; MaskedImage.run()
 """
 
+import itertools
 import os
 import unittest
 
@@ -148,6 +149,48 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(self.mimage.getMask().get(1, 1), self.EDGE)
         self.assertEqual(self.mimage.getMask().get(2, 2), 0x0)
+
+    def testImagesOverlap(self):
+        # make pairs of image, variance and mask planes
+        # using the same dimensions for each so we can mix and match
+        # while making masked images
+        dim = afwGeom.Extent2I(10, 8)
+        # a set of bounding boxes, some of which overlap each other
+        # and some of which do not, and include the full image bounding box
+        bboxes = (
+            afwGeom.Box2I(afwGeom.Point2I(0, 0), dim),
+            afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(3, 3)),
+            afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Extent2I(6, 4)),
+            afwGeom.Box2I(afwGeom.Point2I(4, 4), afwGeom.Extent2I(6, 4)),
+        )
+        masks = [afwImage.Mask(dim), afwImage.Mask(dim)]
+        variances = [afwImage.ImageF(dim), afwImage.ImageF(dim)]
+        imageClasses = (afwImage.ImageF, afwImage.ImageD, afwImage.ImageI, afwImage.ImageU)
+        for ImageClass1, ImageClass2 in itertools.product(imageClasses, imageClasses):
+            images = [ImageClass1(dim), ImageClass2(dim)]
+            for image1, mask1, variance1, image2, mask2, variance2 in itertools.product(
+                    images, masks, variances, images, masks, variances):
+                with self.subTest(ImageClass1=ImageClass1, ImageClass2=ImageClass2,
+                                  image1=image1, mask1=mask1, variance1=variance1,
+                                  image2=image2, mask2=mask2, variance2=variance2):
+                    shouldOverlap = (image1 is image2) or (mask1 is mask2) or (variance1 is variance2)
+
+                    mi1 = afwImage.makeMaskedImage(image=image1, mask=mask1, variance=variance1)
+                    mi2 = afwImage.makeMaskedImage(image=image2, mask=mask2, variance=variance2)
+                    self.assertEqual(afwImage.imagesOverlap(mi1, mi2), shouldOverlap)
+                    self.assertEqual(afwImage.imagesOverlap(mi2, mi1), shouldOverlap)
+
+                    for bbox1, bbox2 in itertools.product(bboxes, bboxes):
+                        with self.subTest(bbox1=bbox1, bbox2=bbox2):
+                            subMi1 = afwImage.makeMaskedImage(image=type(image1)(image1, bbox1),
+                                                              mask=afwImage.Mask(mask1, bbox1),
+                                                              variance=afwImage.ImageF(variance1, bbox1))
+                            subMi2 = afwImage.makeMaskedImage(image=type(image2)(image2, bbox2),
+                                                              mask=afwImage.Mask(mask2, bbox2),
+                                                              variance=afwImage.ImageF(variance2, bbox2))
+                            subregionsShouldOverlap = shouldOverlap and bbox1.overlaps(bbox2)
+                            self.assertEqual(afwImage.imagesOverlap(subMi1, subMi2), subregionsShouldOverlap)
+                            self.assertEqual(afwImage.imagesOverlap(subMi2, subMi1), subregionsShouldOverlap)
 
     def testMaskedImageFromImage(self):
         w, h = 10, 20

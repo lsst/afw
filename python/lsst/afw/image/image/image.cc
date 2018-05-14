@@ -341,6 +341,9 @@ PYBIND11_PLUGIN(image) {
     declareCastConstructor<std::uint64_t, float>(clsImageF);
     declareCastConstructor<std::uint64_t, double>(clsImageD);
 
+    // Note: wrap both the Image and MaskedImage versions of imagesOverlap in the MaskedImage wrapper,
+    // as wrapping the Image version here results in it being invisible in lsst.afw.image
+
     mod.def("bboxFromMetadata", &bboxFromMetadata);
 
     return mod.ptr();
