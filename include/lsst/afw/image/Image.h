@@ -212,6 +212,28 @@ public:
     Image& operator=(Image&& rhs);
 
     /**
+     * Return a subimage corresponding to the given box.
+     *
+     * @param  bbox   Bounding box of the subimage returned.
+     * @param  origin Origin bbox is rleative to; PARENT accounts for xy0, LOCAL does not.
+     * @return        A subimage view into this.
+     *
+     * This method is wrapped as __getitem__ in Python.
+     *
+     * @note This method permits mutable views to be obtained from const
+     *       references to images (just as the copy constructor does).
+     *       This is an intrinsic flaw in Image's design.
+     */
+    Image subset(geom::Box2I const & bbox, ImageOrigin origin=PARENT) const {
+        return Image(*this, bbox, origin, false);
+    }
+
+    /// Return a subimage corresponding to the given box (interpreted as PARENT coordinates).
+    Image operator[](geom::Box2I const & bbox) const {
+        return subset(bbox);
+    }
+
+    /**
      *  Write an image to a regular FITS file.
      *
      *  @param[in] fileName      Name of the file to write.
