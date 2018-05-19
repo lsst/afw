@@ -39,7 +39,7 @@ def insertPsf(pos, im, psf, kernelSize, flux):
                                afwGeom.Extent2I(kernelSize, kernelSize))
         tmp = psf.computeImage(afwGeom.Point2D(x0, y0))
         tmp *= flux
-        im.getImage()[tmpbox] += tmp
+        im.image[tmpbox, afwImage.LOCAL] += tmp
 
 
 def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[], samePeakDist=-1.):

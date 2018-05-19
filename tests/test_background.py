@@ -528,7 +528,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # Set the right corner to NaN.  This will mean that we have too few
         # points for a spline interpolator
         binSize = 3
-        image[-binSize:, -binSize:] = np.nan
+        image[-binSize:, -binSize:, afwImage.PARENT] = np.nan
 
         nx = image.getWidth()//binSize
         ny = image.getHeight()//binSize
@@ -561,14 +561,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         initialValue = 20
         mi = afwImage.MaskedImageF(500, 200)
         mi.set((initialValue, 0x0, 1.0))
-        im = mi.getImage()
-        im[0:200, :] = np.nan
-        del im
-        msk = mi.getMask()
-        badBits = msk.getPlaneBitMask(
+        mi.image[0:200, :, afwImage.PARENT] = np.nan
+        badBits = mi.mask.getPlaneBitMask(
             ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
-        msk[0:400, :] |= badBits
-        del msk
+        mi.mask[0:400, :, afwImage.PARENT] |= badBits
 
         if debugMode:
             ds9.mtv(mi, frame=0)
@@ -587,7 +583,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bkgdImage = bkgd.getImageF(
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
         self.assertEqual(
-            np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+            np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array), initialValue)
         if debugMode:
             ds9.mtv(bkgdImage, frame=2)
         # Check that we can fix the NaNs in the statsImage
@@ -597,7 +593,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
         self.assertAlmostEqual(
-            np.mean(bkgdImage[0:100, 0:100].getArray(), dtype=np.float64),
+            np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array, dtype=np.float64),
             initialValue)
 
     def testBadRows(self):
@@ -605,14 +601,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         initialValue = 20
         mi = afwImage.MaskedImageF(500, 200)
         mi.set((initialValue, 0x0, 1.0))
-        im = mi.getImage()
-        im[:, 0:100] = np.nan
-        del im
-        msk = mi.getMask()
-        badBits = msk.getPlaneBitMask(
+        mi.image[:, 0:100, afwImage.PARENT] = np.nan
+        badBits = mi.mask.getPlaneBitMask(
             ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
-        msk[0:400, :] |= badBits
-        del msk
+        mi.mask[0:400, :, afwImage.PARENT] |= badBits
 
         if debugMode:
             ds9.mtv(mi, frame=0)
@@ -634,7 +626,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             bkgdImage = bkgd.getImageF(
                 interpStyle, afwMath.REDUCE_INTERP_ORDER)
             self.assertEqual(
-                np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+                np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array), initialValue)
             if debugMode:
                 ds9.mtv(bkgdImage, frame=frame)
 
@@ -645,8 +637,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # Check that no good values don't crash (they return NaN), and that a single good value
         # is enough to redeem the entire image
         for pix00 in [np.nan, initialValue]:
-            mi.getImage()[:] = np.nan
-            mi.getImage()[0, 0] = pix00
+            mi.image[:] = np.nan
+            mi.image[0, 0, afwImage.PARENT] = pix00
 
             sctrl = afwMath.StatisticsControl()
             nx, ny = 17, 17
@@ -660,7 +652,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 # fixed
                 bkgdImage = bkgd.getImageF(
                     interpStyle, afwMath.REDUCE_INTERP_ORDER)
-                val = np.mean(bkgdImage[0:100, 0:100].getArray())
+                val = np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array)
 
                 if np.isfinite(pix00):
                     self.assertEqual(val, pix00)

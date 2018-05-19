@@ -326,11 +326,11 @@ class MaskTestCase(utilsTests.TestCase):
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.Mask(10, 20)
-        im[-3:, -2:] = 0x4
-        im[4, 10] = 0x2
-        sim = im[1:4, 6:10]
+        im[-3:, -2:, afwImage.PARENT] = 0x4
+        im[4, 10, afwImage.PARENT] = 0x2
+        sim = im[1:4, 6:10, afwImage.PARENT]
         sim[:] = 0x8
-        im[0:4, 0:4] = im[2:6, 8:12]
+        im[0:4, 0:4, afwImage.PARENT] = im[2:6, 8:12, afwImage.PARENT]
 
         if display:
             ds9.mtv(im)

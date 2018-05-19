@@ -74,12 +74,12 @@ def _getBBoxFromSliceTuple(img, inputSlice):
             z0 = 0                      # ignore image's xy0
 
         if isinstance(s, slice):
-            if origin is NotImplemented and (slice.start is not None or slice.end is not None):
+            if origin is NotImplemented and (s.start is not None or s.stop is not None):
                     raise NotImplementedError("Origin defaults have been temporarily disabled.")
             if z0 != 0:
-                if s.start < 0 or s.end < 0:
+                if ((s.start is not None and s.start) < 0 or (s.stop is not None and s.stop < 0)) and z0 < 0:
                     raise IndexError("Negative slice indices are not supported on images "
-                                     "when using origin=PARENT.")
+                                     "with negative xy0 when using origin=PARENT.")
                 start = s.start if s.start is None or s.start < 0 else s.start - z0
                 stop = s.stop if s.stop is None or s.stop < 0 else s.stop - z0
                 s = slice(start, stop, s.step)
@@ -87,9 +87,9 @@ def _getBBoxFromSliceTuple(img, inputSlice):
             if origin is NotImplemented:
                 raise NotImplementedError("Origin defaults have been temporarily disabled.")
             if s < 0:
-                if z0 != 0:
+                if z0 < 0:
                     raise IndexError("Negative indices are not supported on images "
-                                     "when using origin=PARENT.")
+                                     "with negative xy0 when using origin=PARENT.")
                 s += z0 + wh
             s = slice(s - z0, s - z0 + 1)
         else:

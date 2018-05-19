@@ -529,14 +529,14 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.ImageF(10, 20)
-        im[-1, :] = -5
-        im[..., 18] = -5              # equivalent to im[:, 18]
-        im[4, 10] = 10
-        im[-3:, -2:] = 100
-        im[-2, -2] = -10
-        sim = im[1:4, 6:10]
+        im[-1, :, afwImage.PARENT] = -5
+        im[..., 18, afwImage.PARENT] = -5              # equivalent to im[:, 18]
+        im[4, 10, afwImage.PARENT] = 10
+        im[-3:, -2:, afwImage.PARENT] = 100
+        im[-2, -2, afwImage.PARENT] = -10
+        sim = im[1:4, 6:10, afwImage.PARENT]
         sim[:] = -1
-        im[0:4, 0:4] = im[2:6, 8:12]
+        im[0:4, 0:4, afwImage.PARENT] = im[2:6, 8:12, afwImage.PARENT]
 
         if display:
             ds9.mtv(im)
@@ -589,7 +589,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         bbox = afwGeom.BoxI(afwGeom.PointI(1, 3), afwGeom.PointI(6, 9))
-        im[bbox] = -1
+        im[bbox, afwImage.PARENT] = -1
 
         if display:
             ds9.mtv(im)
@@ -620,8 +620,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         im = afwImage.ImageF(10, 20)
         im.set(666)
 
-        self.assertEqual(float(im[0, 0]), 666)
-        self.assertEqual(int(im[0, 0]), 666)
+        self.assertEqual(float(im[0, 0, afwImage.PARENT]), 666)
+        self.assertEqual(int(im[0, 0, afwImage.PARENT]), 666)
 
         # only single pixel images may be converted
         self.assertRaises(TypeError, int, im)
@@ -631,20 +631,20 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testClone(self):
         """Test that clone works properly"""
         im = afwImage.ImageF(10, 20)
-        im[0, 0] = 100
+        im[0, 0, afwImage.PARENT] = 100
 
         im2 = im.clone()                # check that clone with no arguments makes a deep copy
         self.assertEqual(im.getDimensions(), im2.getDimensions())
         self.assertEqual(im.get(0, 0), im2.get(0, 0))
-        im2[0, 0] += 100
+        im2[0, 0, afwImage.PARENT] += 100
         self.assertNotEqual(im.get(0, 0), im2.get(0, 0))  # so it's a deep copy
 
-        im2 = im[0:3, 0:5].clone()  # check that we can slice-then-clone
+        im2 = im[0:3, 0:5, afwImage.PARENT].clone()  # check that we can slice-then-clone
         self.assertEqual(im2.getDimensions(), afwGeom.ExtentI(3, 5))
         self.assertEqual(im.get(0, 0), im2.get(0, 0))
-        im2[0, 0] += 10
+        im2[0, 0, afwImage.PARENT] += 10
         # equivalent to im.get(0, 0) etc.
-        self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))
+        self.assertNotEqual(float(im[0, 0, afwImage.PARENT]), float(im2[0, 0, afwImage.PARENT]))
 
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):

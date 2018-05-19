@@ -783,12 +783,12 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.MaskedImageF(10, 20)
-        im[4, 10] = (10, 0x2, 100)
-        im[-3:, -2:] = 100
-        sim = im[1:4, 6:10]
+        im[4, 10, afwImage.PARENT] = (10, 0x2, 100)
+        im[-3:, -2:, afwImage.PARENT] = 100
+        sim = im[1:4, 6:10, afwImage.PARENT]
         nan = -666  # a real NaN != NaN so tests fail
         sim[:] = (-1, 0x8, nan)
-        im[0:4, 0:4] = im[2:6, 8:12]
+        im[0:4, 0:4, afwImage.PARENT] = im[2:6, 8:12, afwImage.PARENT]
 
         if display:
             ds9.mtv(im)
@@ -811,7 +811,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         # only single pixel images may be converted
         self.assertRaises(TypeError, float, im)
         # actually, can't convert (img, msk, var) to scalar
-        self.assertRaises(TypeError, float, im[0, 0])
+        self.assertRaises(TypeError, float, im[0, 0, afwImage.PARENT])
 
 
 def printImg(img):
