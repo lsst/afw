@@ -260,6 +260,29 @@ public:
     Mask& operator&=(Mask const& rhs);
     /// AND a bitmask into a Mask
     Mask& operator&=(MaskPixelT const rhs);
+
+    /**
+     * Return a subimage corresponding to the given box.
+     *
+     * @param  bbox   Bounding box of the subimage returned.
+     * @param  origin Origin bbox is rleative to; PARENT accounts for xy0, LOCAL does not.
+     * @return        A subimage view into this.
+     *
+     * This method is wrapped as __getitem__ in Python.
+     *
+     * @note This method permits mutable views to be obtained from const
+     *       references to images (just as the copy constructor does).
+     *       This is an intrinsic flaw in Image's design.
+     */
+    Mask subset(lsst::geom::Box2I const & bbox, ImageOrigin origin=PARENT) const {
+        return Mask(*this, bbox, origin, false);
+    }
+
+    /// Return a subimage corresponding to the given box (interpreted as PARENT coordinates).
+    Mask operator[](lsst::geom::Box2I const & bbox) const {
+        return subset(bbox);
+    }
+
     /**
      * Return the bitmask corresponding to a vector of plane names OR'd together
      *
