@@ -4,7 +4,7 @@ from .image import LOCAL, PARENT, ImageOrigin
 __all__ = ["supportSlicing"]
 
 
-def _getBBoxFromSliceTuple(img, imageSlice):
+def _getBBoxFromSliceTuple(img, inputSlice):
     """Given a slice specification return the proper Box2I and origin
     This is the worker routine behind __getitem__ and __setitem__
 
@@ -30,62 +30,74 @@ def _getBBoxFromSliceTuple(img, imageSlice):
      im[1:4, 6:10]
      im[:]
 
-    You may also add an extra argument, afwImage.PARENT or afwImage.LOCAL.  The default is LOCAL
-    as before, but if you specify PARENT the bounding box is interpreted in PARENT coordinates
+    You may also add an extra argument, afwImage.PARENT or afwImage.LOCAL.  The default is PARENT
+    as before, but if you specify LOCAL the bounding box is interpreted in LOCAL coordinates
     (this includes slices; e.g.
-     im[-3:, -2:, afwImage.PARENT]
+     im[3:, 2:, afwImage.LOCAL]
     still means the last few rows and columns, and
      im[1001:1004, 2006:2010, afwImage.PARENT]
     with xy0 = (1000, 2000) refers to the same pixels as
      im[1:4, 6:10, afwImage.LOCAL]
     )
     """
-    origin = LOCAL                      # this sets the default value
+    origin = NotImplemented                      # this sets the default value
 
     try:
-        _origin = imageSlice[-1]
+        if isinstance(inputSlice[-1], ImageOrigin):
+            origin = inputSlice[-1]
+            # imageSlice should only be a tuple if it has more than one element,
+            # both before we pull out the origin and after.
+            assert len(inputSlice) > 1, "This function should only be called from __getitem__/__setitem__"
+            inputSlice = inputSlice[0] if len(inputSlice) == 2 else inputSlice[:-1]
     except TypeError:
-        _origin = None
+        pass
 
-    if isinstance(_origin, ImageOrigin):
-        origin = _origin
-        imageSlice = imageSlice[0] if len(imageSlice) <= 2 else imageSlice[:-1]
+    if isinstance(inputSlice, afwGeom.Box2I):
+        return inputSlice, origin
 
-    if isinstance(imageSlice, afwGeom.Box2I):
-        return imageSlice, origin
+    if isinstance(inputSlice, slice) and inputSlice.start is None and inputSlice.stop is None:
+        inputSlice = (Ellipsis, Ellipsis,)
 
-    if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
-        imageSlice = (Ellipsis, Ellipsis,)
-
-    if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and
-            sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
+    if not (isinstance(inputSlice, tuple) and len(inputSlice) == 2 and
+            sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in inputSlice]) == 2):
         raise IndexError(
-            "Images may only be indexed as a 2-D slice not %s" % imageSlice)
+            "Images may only be indexed as a 2-D slice not %s" % inputSlice)
 
     # Because we're going to use slice.indices(...) to construct our ranges, and
     # python doesn't understand PARENT coordinate systems,  we need
     # to convert slices specified in PARENT coords to LOCAL
 
-    imageSlice, _imageSlice = [], imageSlice
-    for s, wh, z0 in zip(_imageSlice, img.getDimensions(), img.getXY0()):
-        if origin == LOCAL:
+    outputSlice = []
+    for s, wh, z0 in zip(inputSlice, img.getDimensions(), img.getXY0()):
+
+        if origin is not NotImplemented and origin == LOCAL:
             z0 = 0                      # ignore image's xy0
 
         if isinstance(s, slice):
+            if origin is NotImplemented and (slice.start is not None or slice.end is not None):
+                    raise NotImplementedError("Origin defaults have been temporarily disabled.")
             if z0 != 0:
+                if s.start < 0 or s.end < 0:
+                    raise IndexError("Negative slice indices are not supported on images "
+                                     "when using origin=PARENT.")
                 start = s.start if s.start is None or s.start < 0 else s.start - z0
                 stop = s.stop if s.stop is None or s.stop < 0 else s.stop - z0
                 s = slice(start, stop, s.step)
         elif isinstance(s, int):
+            if origin is NotImplemented:
+                raise NotImplementedError("Origin defaults have been temporarily disabled.")
             if s < 0:
+                if z0 != 0:
+                    raise IndexError("Negative indices are not supported on images "
+                                     "when using origin=PARENT.")
                 s += z0 + wh
             s = slice(s - z0, s - z0 + 1)
         else:
             s = slice(0, wh)
 
-        imageSlice.append(s)
+        outputSlice.append(s)
 
-    x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
+    x, y = [_.indices(wh) for _, wh in zip(outputSlice, img.getDimensions())]
     return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1)), LOCAL
 
 
