@@ -69,7 +69,7 @@ def refraction(wavelength, elevation, observatory, weather=None):
         weather = defaultWeather(altitude*units.meter)
     reducedN = deltaN(wavelength, weather)/deltaRefractScale
     temperature = extractTemperature(weather, useKelvin=True)
-    atmosScaleheightRatio = 4.5908E-6*temperature/units.Kelvin
+    atmosScaleheightRatio = float(4.5908E-6*temperature/units.Kelvin)
 
     # Account for oblate Earth
     # This replicates equation 10 of Stone 1996
@@ -164,9 +164,9 @@ def densityFactorDry(weather):
     waterVaporPressure = humidityToPressure(weather)
     airPressure = weather.getAirPressure()*units.pascal
     dryPressure = airPressure - waterVaporPressure
-    eqn = (dryPressure/cds.mbar)*(57.90E-8 - 9.3250E-4*units.Kelvin/temperature +
-                                  0.25844*units.Kelvin**2/temperature**2.)
-    densityFactor = (1. + eqn)*(dryPressure/cds.mbar)/(temperature/units.Kelvin)
+    eqn = float((dryPressure/cds.mbar)*(57.90E-8 - 9.3250E-4*units.Kelvin/temperature +
+                                        0.25844*units.Kelvin**2/temperature**2.))
+    densityFactor = (1. + eqn)*float(dryPressure/cds.mbar)/float(temperature/units.Kelvin)
     return densityFactor
 
 
@@ -192,8 +192,8 @@ def densityFactorWater(weather):
     densityEqn1 = (-2.37321E-3 + 2.23366*units.Kelvin/temperature -
                    710.792*units.Kelvin**2/temperature**2. +
                    7.75141E-4*units.Kelvin**3/temperature**3.)
-    densityEqn2 = (waterVaporPressure/cds.mbar)*(1. + 3.7E-4*waterVaporPressure/cds.mbar)
-    relativeDensity = waterVaporPressure*units.Kelvin/(temperature*cds.mbar)
+    densityEqn2 = float((waterVaporPressure/cds.mbar)*(1. + 3.7E-4*waterVaporPressure/cds.mbar))
+    relativeDensity = float(waterVaporPressure*units.Kelvin/(temperature*cds.mbar))
     densityFactor = (1 + densityEqn2*densityEqn1)*relativeDensity
 
     return densityFactor
@@ -212,8 +212,8 @@ def humidityToPressure(weather):
 
     Returns
     -------
-    `float`
-        The water vapor pressure in millibar
+    `astropy.units.quantity.Quantity`
+        The water vapor pressure in Pascals
         calculated from the given humidity and temperature.
     """
     humidity = weather.getHumidity()
