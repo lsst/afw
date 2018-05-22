@@ -42,9 +42,9 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.daf.base
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 from lsst.afw.fits import readMetadata
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
@@ -80,7 +80,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.val1, self.val2 = 10, 100
-        self.image1 = afwImage.ImageF(afwGeom.ExtentI(100, 200))
+        self.image1 = afwImage.ImageF(lsst.geom.ExtentI(100, 200))
         self.image1.set(self.val1)
         self.image2 = afwImage.ImageF(self.image1.getDimensions())
         self.image2.set(self.val2)
@@ -95,7 +95,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
     def testArrays(self):
         for cls in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
-            image1 = cls(afwGeom.Extent2I(5, 6))
+            image1 = cls(lsst.geom.Extent2I(5, 6))
             array1 = image1.getArray()
             self.assertEqual(array1.shape[0], image1.getHeight())
             self.assertEqual(array1.shape[1], image1.getWidth())
@@ -125,14 +125,14 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             np.testing.assert_array_equal(image1.array, array4)
 
     def testImagesOverlap(self):
-        dim = afwGeom.Extent2I(10, 8)
+        dim = lsst.geom.Extent2I(10, 8)
         # a set of bounding boxes, some of which overlap each other
         # and some of which do not, and include the full image bounding box
         bboxes = (
-            afwGeom.Box2I(afwGeom.Point2I(0, 0), dim),
-            afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(3, 3)),
-            afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Extent2I(6, 4)),
-            afwGeom.Box2I(afwGeom.Point2I(4, 4), afwGeom.Extent2I(6, 4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dim),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 3)),
+            lsst.geom.Box2I(lsst.geom.Point2I(2, 2), lsst.geom.Extent2I(6, 4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(4, 4), lsst.geom.Extent2I(6, 4)),
         )
 
         imageClasses = (afwImage.ImageF, afwImage.ImageD, afwImage.ImageI, afwImage.Mask)
@@ -164,8 +164,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             im = ctor(10, 10, val)
             self.assertEqual(im.get(0, 0), val)
 
-            im2 = ctor(afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                                     afwGeom.Extent2I(10, 10)), val)
+            im2 = ctor(lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                                       lsst.geom.Extent2I(10, 10)), val)
             self.assertEqual(im2.get(0, 0), val)
 
     def testSetGetImages(self):
@@ -187,8 +187,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
     def testAllocateLargeImages(self):
         """Try to allocate a Very large image"""
-        bbox = afwGeom.BoxI(afwGeom.PointI(-1 << 30, -1 << 30),
-                            afwGeom.PointI(1 << 30, 1 << 30))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(-1 << 30, -1 << 30),
+                              lsst.geom.PointI(1 << 30, 1 << 30))
 
         def tst():
             afwImage.ImageF(bbox)
@@ -213,19 +213,19 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testAssignWithBBox(self):
         """Test assign(rhs, bbox) with non-empty bbox
         """
-        for xy0 in (afwGeom.Point2I(*val) for val in (
+        for xy0 in (lsst.geom.Point2I(*val) for val in (
             (0, 0),
             (-100, 120),  # an arbitrary value that is off the image
         )):
-            destImDim = afwGeom.Extent2I(5, 4)
-            srcImDim = afwGeom.Extent2I(3, 2)
+            destImDim = lsst.geom.Extent2I(5, 4)
+            srcImDim = lsst.geom.Extent2I(3, 2)
             destIm = afwImage.ImageF(destImDim)
             destIm.setXY0(xy0)
             srcIm = makeRampImage(*srcImDim)
             srcIm.setXY0(55, -33)  # an arbitrary value that should be ignored
             self.assertRaises(Exception, destIm.set, srcIm)  # size mismatch
 
-            for validMin in (afwGeom.Point2I(*val) for val in (
+            for validMin in (lsst.geom.Point2I(*val) for val in (
                 (0, 0),
                 (2, 0),
                 (0, 1),
@@ -234,9 +234,9 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
                     destIm[:] = -1.0
-                    bbox = afwGeom.Box2I(validMin, srcIm.getDimensions())
+                    bbox = lsst.geom.Box2I(validMin, srcIm.getDimensions())
                     if origin != afwImage.LOCAL:
-                        bbox.shift(afwGeom.Extent2I(xy0))
+                        bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         destIm.assign(srcIm, bbox)
                         destImView = afwImage.ImageF(destIm, bbox)
@@ -250,7 +250,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(
                         np.sum(destIm.getArray() < -0.5), numPixNotAssigned)
 
-            for badMin in (afwGeom.Point2I(*val) + afwGeom.Extent2I(xy0) for val in (
+            for badMin in (lsst.geom.Point2I(*val) + lsst.geom.Extent2I(xy0) for val in (
                 (-1, 0),
                 (3, 0),
                 (0, -1),
@@ -258,9 +258,9 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             )):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
-                    bbox = afwGeom.Box2I(badMin, srcIm.getDimensions())
+                    bbox = lsst.geom.Box2I(badMin, srcIm.getDimensions())
                     if origin != afwImage.LOCAL:
-                        bbox.shift(afwGeom.Extent2I(xy0))
+                        bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         self.assertRaises(Exception, destIm.set, srcIm, bbox)
                     else:
@@ -270,11 +270,11 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testAssignWithoutBBox(self):
         """Test assign(rhs, [bbox]) with an empty bbox and with no bbox specified; both set all pixels
         """
-        for xy0 in (afwGeom.Point2I(*val) for val in (
+        for xy0 in (lsst.geom.Point2I(*val) for val in (
             (0, 0),
             (-100, 120),  # an arbitrary value that is off the image
         )):
-            destImDim = afwGeom.Extent2I(5, 4)
+            destImDim = lsst.geom.Extent2I(5, 4)
             destIm = afwImage.ImageF(destImDim)
             destIm.setXY0(xy0)
             srcIm = makeRampImage(*destImDim)
@@ -285,7 +285,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
             destIm[:] = -1.0
-            destIm.assign(srcIm, afwGeom.Box2I())
+            destIm.assign(srcIm, lsst.geom.Box2I())
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
     def testBoundsChecking(self):
@@ -439,29 +439,29 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
+        self.assertEqual(im.getXY0(), lsst.geom.Point2I(x0, y0))
 
         x0, y0 = 3, 5
         im.setXY0(x0, y0)
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
+        self.assertEqual(im.getXY0(), lsst.geom.Point2I(x0, y0))
 
         x0, y0 = 30, 50
-        im.setXY0(afwGeom.Point2I(x0, y0))
+        im.setXY0(lsst.geom.Point2I(x0, y0))
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
+        self.assertEqual(im.getXY0(), lsst.geom.Point2I(x0, y0))
 
     def testSubimages(self):
         simage1 = afwImage.ImageF(
             self.image1,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
             afwImage.LOCAL)
 
         simage = afwImage.ImageF(
             simage1,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2)),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
@@ -483,15 +483,15 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         simage1 = afwImage.ImageF(
             self.image1,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
         # reset origin; doesn't affect pixel coordinate systems
-        simage1.setXY0(afwGeom.Point2I(0, 0))
+        simage1.setXY0(lsst.geom.Point2I(0, 0))
 
         simage = afwImage.ImageF(
             simage1,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2)),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
@@ -510,7 +510,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         def tst():
             afwImage.ImageF(
                 self.image1,
-                afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
+                lsst.geom.Box2I(lsst.geom.Point2I(1, -1), lsst.geom.Extent2I(10, 5)),
                 afwImage.LOCAL
             )
 
@@ -588,7 +588,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testImageSliceFromBox(self):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
-        bbox = afwGeom.BoxI(afwGeom.PointI(1, 3), afwGeom.PointI(6, 9))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(1, 3), lsst.geom.PointI(6, 9))
         im[bbox] = -1
 
         if display:
@@ -602,7 +602,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         im.setXY0(50, 100)
-        bbox = afwGeom.BoxI(afwGeom.PointI(51, 103), afwGeom.ExtentI(6, 7))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(51, 103), lsst.geom.ExtentI(6, 7))
         im[bbox, afwImage.PARENT] = -1
 
         if display:
@@ -640,7 +640,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(im.get(0, 0), im2.get(0, 0))  # so it's a deep copy
 
         im2 = im[0:3, 0:5].clone()  # check that we can slice-then-clone
-        self.assertEqual(im2.getDimensions(), afwGeom.ExtentI(3, 5))
+        self.assertEqual(im2.getDimensions(), lsst.geom.ExtentI(3, 5))
         self.assertEqual(im.get(0, 0), im2.get(0, 0))
         im2[0, 0] += 10
         # equivalent to im.get(0, 0) etc.
@@ -655,7 +655,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         self.val1, self.val2 = 10, 100
         self.width, self.height = 200, 100
         self.dimage1 = afwImage.DecoratedImageF(
-            afwGeom.Extent2I(self.width, self.height)
+            lsst.geom.Extent2I(self.width, self.height)
         )
         self.dimage1.getImage().set(self.val1)
 
@@ -673,7 +673,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.dimage1.getImage().get(0, 0), self.val1)
 
     def testCreateDecoratedImageFromImage(self):
-        image = afwImage.ImageF(afwGeom.Extent2I(self.width, self.height))
+        image = afwImage.ImageF(lsst.geom.Extent2I(self.width, self.height))
         image[:] = self.dimage1.getImage()
 
         dimage = afwImage.DecoratedImageF(image)
@@ -770,7 +770,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        im = afwImage.ImageF(afwGeom.Extent2I(10, 20))
+        im = afwImage.ImageF(lsst.geom.Extent2I(10, 20))
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
@@ -793,10 +793,10 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
 
     def testTicket1040(self):
         """ How to repeat from #1040"""
-        image = afwImage.ImageD(afwGeom.Extent2I(6, 6))
+        image = afwImage.ImageD(lsst.geom.Extent2I(6, 6))
         image.set(2, 2, 100)
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(5, 5))
         subImage = image.Factory(image, bbox)
         subImageF = subImage.convertFloat()
 

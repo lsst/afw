@@ -35,7 +35,7 @@ import unittest
 
 import numpy as np
 
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.table as afwTable
 import lsst.daf.base as dafBase
 import lsst.utils.tests
@@ -74,9 +74,9 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
             s = self.ss1.addNew()
             s.setId(i)
             s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                  (10 + 0.001*i) * afwGeom.degrees)
+                  (10 + 0.001*i) * lsst.geom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                  (10 + 0.001*i) * afwGeom.degrees)
+                  (10 + 0.001*i) * lsst.geom.degrees)
 
             s = self.ss2.addNew()
             s.setId(2*nobj + i)
@@ -84,14 +84,14 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
             # Chosen such that the maximum offset (nobj*1E-7 deg = 0.36 arcsec) is within the maximum
             # distance (1 arcsec) in afwTable.matchRaDec.
             s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                  (10 + 0.0010001*i) * afwGeom.degrees)
+                  (10 + 0.0010001*i) * lsst.geom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                  (10 + 0.0010001*i) * afwGeom.degrees)
+                  (10 + 0.0010001*i) * lsst.geom.degrees)
 
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
         mat = afwTable.matchRaDec(
-            self.ss1, self.ss2, 1.0*afwGeom.arcseconds, mc)
+            self.ss1, self.ss2, 1.0*lsst.geom.arcseconds, mc)
         self.assertEqual(len(mat), nobj)
 
         cat = afwTable.packMatches(mat)
@@ -118,26 +118,26 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
         ss2 = afwTable.SourceCatalog(self.table)
         for ss in (ss1, ss2):
             ss.addNew().set(afwTable.SourceTable.getCoordKey().getRa(),
-                            float('nan') * afwGeom.radians)
+                            float('nan') * lsst.geom.radians)
 
             ss.addNew().set(afwTable.SourceTable.getCoordKey().getDec(),
-                            float('nan') * afwGeom.radians)
+                            float('nan') * lsst.geom.radians)
 
             s = ss.addNew()
             s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                  0.0 * afwGeom.radians)
+                  0.0 * lsst.geom.radians)
             s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                  0.0 * afwGeom.radians)
+                  0.0 * lsst.geom.radians)
 
             s = ss.addNew()
             s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                  float('nan') * afwGeom.radians)
+                  float('nan') * lsst.geom.radians)
             s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                  float('nan') * afwGeom.radians)
+                  float('nan') * lsst.geom.radians)
 
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
-        mat = afwTable.matchRaDec(ss1, ss2, 1.0*afwGeom.arcseconds, mc)
+        mat = afwTable.matchRaDec(ss1, ss2, 1.0*lsst.geom.arcseconds, mc)
         self.assertEqual(len(mat), 1)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
@@ -173,8 +173,8 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                     s = sdssSecondary.addNew()
 
                 s.setId(objId)
-                s.setRa(ra * afwGeom.degrees)
-                s.setDec(dec * afwGeom.degrees)
+                s.setRa(ra * lsst.geom.degrees)
+                s.setDec(dec * lsst.geom.degrees)
                 s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         del ifd
@@ -202,9 +202,9 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                 s.setId(id)
                 id += 1
                 s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                      ra * afwGeom.degrees)
+                      ra * lsst.geom.degrees)
                 s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                      dec * afwGeom.degrees)
+                      dec * lsst.geom.degrees)
                 s.set(self.table.getPsfFluxKey(), flux[0])
 
         del ifd
@@ -214,7 +214,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
         mc.findOnlyClosest = False
 
         matches = afwTable.matchRaDec(
-            sdss, template, 1.0*afwGeom.arcseconds, mc)
+            sdss, template, 1.0*lsst.geom.arcseconds, mc)
 
         self.assertEqual(len(matches), 901)
 
@@ -232,7 +232,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
 
         mc = afwTable.MatchControl()
         mc.symmetricMatch = False
-        matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds, mc)
+        matches = afwTable.matchRaDec(sdss, 1.0*lsst.geom.arcseconds, mc)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
 
@@ -247,7 +247,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
                 if s.getId() not in matchIds:
                     print("RHL", s.getId())
 
-        matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds)
+        matches = afwTable.matchRaDec(sdss, 1.0*lsst.geom.arcseconds)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
 
         if False:
@@ -271,23 +271,23 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
             s1.setId(i)
             s2.setId(i)
             s1.set(afwTable.SourceTable.getCoordKey().getRa(),
-                   (10 + 0.0001*i) * afwGeom.degrees)
+                   (10 + 0.0001*i) * lsst.geom.degrees)
             s2.set(afwTable.SourceTable.getCoordKey().getRa(),
-                   (10.005 + 0.0001*i) * afwGeom.degrees)
+                   (10.005 + 0.0001*i) * lsst.geom.degrees)
             s1.set(afwTable.SourceTable.getCoordKey().getDec(),
-                   (10 + 0.0001*i) * afwGeom.degrees)
+                   (10 + 0.0001*i) * lsst.geom.degrees)
             s2.set(afwTable.SourceTable.getCoordKey().getDec(),
-                   (10.005 + 0.0001*i) * afwGeom.degrees)
+                   (10.005 + 0.0001*i) * lsst.geom.degrees)
 
         for closest in (True, False):
             mc = afwTable.MatchControl()
             mc.findOnlyClosest = closest
             mc.includeMismatches = False
             matches = afwTable.matchRaDec(
-                cat1, cat2, 1.0*afwGeom.arcseconds, mc)
+                cat1, cat2, 1.0*lsst.geom.arcseconds, mc)
             mc.includeMismatches = True
             matchesMismatches = afwTable.matchRaDec(
-                cat1, cat2, 1.0*afwGeom.arcseconds, mc)
+                cat1, cat2, 1.0*lsst.geom.arcseconds, mc)
 
             catMatches = afwTable.SourceCatalog(self.table)
             catMismatches = afwTable.SourceCatalog(self.table)
@@ -300,11 +300,11 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
             if closest:
                 self.assertEqual(len(catMatches), len(matches))
             matches2 = afwTable.matchRaDec(
-                catMatches, cat2, 1.0*afwGeom.arcseconds, mc)
+                catMatches, cat2, 1.0*lsst.geom.arcseconds, mc)
             self.assertEqual(len(matches), len(matches2))
             mc.includeMismatches = False
             noMatches = afwTable.matchRaDec(
-                catMismatches, cat2, 1.0*afwGeom.arcseconds, mc)
+                catMismatches, cat2, 1.0*lsst.geom.arcseconds, mc)
             self.assertEqual(len(noMatches), 0)
 
     def checkMatchToFromCatalog(self, matches, catalog):
@@ -356,7 +356,7 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
         Based on DM-13891.
         """
         num = 1000  # Number of points
-        radius = 0.5*afwGeom.arcseconds  # Matching radius
+        radius = 0.5*lsst.geom.arcseconds  # Matching radius
         tol = 1.0e-10  # Absolute tolerance
         rng = np.random.RandomState(12345)  # I have the same combination on my luggage
         coordKey = afwTable.SourceTable.getCoordKey()
@@ -365,17 +365,17 @@ class SourceMatchTestCase(lsst.utils.tests.TestCase):
         for ii in range(num):
             src1 = self.ss1.addNew()
             src1.setId(ii)
-            src1.set(raKey, (10 + 0.001*ii) * afwGeom.degrees)
-            src1.set(decKey, (10 + 0.001*ii) * afwGeom.degrees)
+            src1.set(raKey, (10 + 0.001*ii) * lsst.geom.degrees)
+            src1.set(decKey, (10 + 0.001*ii) * lsst.geom.degrees)
 
             src2 = self.ss2.addNew()
             src2.setId(2*num + ii)
             src2.set(coordKey,
-                     src1.getCoord().offset(rng.uniform(high=360)*afwGeom.degrees,
-                                            rng.uniform(high=radius.asArcseconds())*afwGeom.arcseconds))
+                     src1.getCoord().offset(rng.uniform(high=360)*lsst.geom.degrees,
+                                            rng.uniform(high=radius.asArcseconds())*lsst.geom.arcseconds))
 
         matches = afwTable.matchRaDec(self.ss1, self.ss2, radius)
-        dist1 = np.array([(mm.distance*afwGeom.radians).asArcseconds() for mm in matches])
+        dist1 = np.array([(mm.distance*lsst.geom.radians).asArcseconds() for mm in matches])
         dist2 = np.array([mm.first.getCoord().separation(mm.second.getCoord()).asArcseconds()
                          for mm in matches])
         diff = dist1 - dist2

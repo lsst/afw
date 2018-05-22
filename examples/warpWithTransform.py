@@ -2,8 +2,8 @@
 
 import math
 
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 
 
@@ -13,11 +13,11 @@ def main():
     nx, ny = 31, 31
     # move xy0 to simulate it being a shallow bbox'd sub-image
     xorig, yorig = 100, 300
-    xy0 = afwGeom.Point2I(xorig, yorig)
+    xy0 = lsst.geom.Point2I(xorig, yorig)
 
     psfSigma = 3.0
     x0, y0 = xorig + nx/2, yorig + ny/2
-    p0 = afwGeom.Point2D(x0, y0)
+    p0 = lsst.geom.Point2D(x0, y0)
 
     img = afwImage.ImageF(nx, ny, 0)
     img.setXY0(xy0)
@@ -30,7 +30,7 @@ def main():
 
     # now warp it about the centroid using a linear transform
 
-    linTran = afwGeom.LinearTransform().makeScaling(
+    linTran = lsst.geom.LinearTransform().makeScaling(
         1.2)  # a simple scale-by-20%
     # extent a bit along x-dir
     linTran[0] *= 1.2

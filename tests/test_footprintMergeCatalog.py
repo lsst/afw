@@ -25,8 +25,8 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
 import lsst.afw.table as afwTable
 
@@ -35,9 +35,9 @@ def insertPsf(pos, im, psf, kernelSize, flux):
     for x, y in pos:
         x0 = x-kernelSize//2
         y0 = y-kernelSize//2
-        tmpbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0),
-                               afwGeom.Extent2I(kernelSize, kernelSize))
-        tmp = psf.computeImage(afwGeom.Point2D(x0, y0))
+        tmpbox = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0),
+                                 lsst.geom.Extent2I(kernelSize, kernelSize))
+        tmp = psf.computeImage(lsst.geom.Point2D(x0, y0))
         tmp *= flux
         im.getImage()[tmpbox] += tmp
 
@@ -81,7 +81,7 @@ class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
                 ]
         pos3 = [(70, 170), (219, 41), (253, 173), (253, 192)]
 
-        box = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(300, 300))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Point2I(300, 300))
         psfsig = 1.
         kernelSize = 41
         flux = 1000

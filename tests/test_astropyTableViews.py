@@ -37,6 +37,7 @@ import astropy.table
 import astropy.units
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.table
 
 
@@ -67,12 +68,12 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         self.data = [
             {
                 "a1": 5.0, "a2": 3, "a3": np.array([0.5, 0.0, -0.5], dtype=np.float32),
-                "a4": True, "a5_ra": 45.0*lsst.afw.geom.degrees, "a5_dec": 30.0*lsst.afw.geom.degrees,
+                "a4": True, "a5_ra": 45.0*lsst.geom.degrees, "a5_dec": 30.0*lsst.geom.degrees,
                 "a6": "bubbles"
             },
             {
                 "a1": 2.5, "a2": 7, "a3": np.array([1.0, 0.5, -1.5], dtype=np.float32),
-                "a4": False, "a5_ra": 25.0*lsst.afw.geom.degrees, "a5_dec": -60.0*lsst.afw.geom.degrees,
+                "a4": False, "a5_ra": 25.0*lsst.geom.degrees, "a5_dec": -60.0*lsst.geom.degrees,
                 "a6": "pingpong"
             },
         ]

@@ -38,6 +38,7 @@ from numpy.testing import assert_allclose
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.geom
 import lsst.afw.image
 from lsst.afw.math import TransformBoundedField
@@ -63,12 +64,12 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
         self.longMessage = True
 
         # an arbitrary bounding box (not that this kind of field cares)
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-3, 4),
-                                        lsst.afw.geom.Extent2I(5, 30))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(-3, 4),
+                                    lsst.geom.Extent2I(5, 30))
 
         # a list of points contained in the bbox
-        self.pointList = lsst.afw.geom.Box2D(self.bbox).getCorners()
-        self.pointList.append(lsst.afw.geom.Box2D(self.bbox).getCenter())
+        self.pointList = lsst.geom.Box2D(self.bbox).getCorners()
+        self.pointList.append(lsst.geom.Box2D(self.bbox).getCenter())
         self.xList = np.array([p[0] for p in self.pointList])
         self.yList = np.array([p[1] for p in self.pointList])
 
@@ -127,7 +128,7 @@ class TransformBoundedFieldTestCase(lsst.utils.tests.TestCase):
         """
         self.assertEqual(self.boundedField.getBBox(), self.bbox)
 
-        emptyBBox = lsst.afw.geom.Box2I()
+        emptyBBox = lsst.geom.Box2I()
         noBBoxField = TransformBoundedField(emptyBBox, self.transform)
         self.assertEqual(noBBoxField.getBBox(), emptyBBox)
 

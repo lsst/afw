@@ -41,8 +41,8 @@ import astropy.io.fits
 
 import lsst.utils
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexEx
@@ -131,7 +131,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
-        metadata, bbox, conformMasks = None, afwGeom.Box2I(), True
+        metadata, bbox, conformMasks = None, lsst.geom.Box2I(), True
         self.mi = afwImage.MaskedImageF(
             self.fileName, metadata, bbox, afwImage.LOCAL, conformMasks)
 
@@ -158,7 +158,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testFitsReadConform2(self):
         """Check that conforming a mask invalidates the plane dictionary"""
 
-        hdu, metadata, bbox, conformMasks = 2, None, afwGeom.Box2I(), True
+        hdu, metadata, bbox, conformMasks = 2, None, lsst.geom.Box2I(), True
         testMask = afwImage.Mask(self.fileName,
                                  hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
@@ -171,13 +171,13 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testTicket617(self):
         """Test reading an F64 image and converting it to a MaskedImage"""
-        im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
+        im = afwImage.ImageD(lsst.geom.Extent2I(100, 100))
         im.set(666)
         afwImage.MaskedImageD(im)
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
+        im = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 20))
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
@@ -302,7 +302,7 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Test
         # not exercising in this test.
         if hdu:
             filename = "%s[%d]" % (filename, hdu)
-        return afwImage.MaskedImageF(filename, None, afwGeom.Box2I(), afwImage.PARENT, False, needAllHdus)
+        return afwImage.MaskedImageF(filename, None, lsst.geom.Box2I(), afwImage.PARENT, False, needAllHdus)
 
     def _checkImage(self, *args, **kwargs):
         self._checkMaskedImage(*args, **kwargs)

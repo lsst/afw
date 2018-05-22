@@ -26,6 +26,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.geom
 import lsst.afw.image
 import lsst.afw.table
@@ -81,7 +82,7 @@ class TransmissionCurveTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.random = np.random.RandomState(1)
-        self.points = [lsst.afw.geom.Point2D(self.random.rand(), self.random.rand()) for i in range(5)]
+        self.points = [lsst.geom.Point2D(self.random.rand(), self.random.rand()) for i in range(5)]
         self.minWavelength = 5000 + self.random.rand()
         self.maxWavelength = 5500 + self.random.rand()
 
@@ -292,10 +293,10 @@ class TransmissionCurveTestCase(lsst.utils.tests.TestCase):
 
         # Test at exactly the radii and wavelengths we initialized with.
         for n, radius in enumerate(radii):
-            rot = lsst.afw.geom.LinearTransform.makeRotation(
-                2.0*np.pi*self.random.rand()*lsst.afw.geom.radians
+            rot = lsst.geom.LinearTransform.makeRotation(
+                2.0*np.pi*self.random.rand()*lsst.geom.radians
             )
-            p0 = lsst.afw.geom.Point2D(0.0, radius)
+            p0 = lsst.geom.Point2D(0.0, radius)
             p1 = rot(p0)
             self.assertFloatsAlmostEqual(
                 curve2d(wavelengths, radius),
@@ -326,9 +327,9 @@ class TransmissionCurveTestCase(lsst.utils.tests.TestCase):
         tc, wavelengths, radii, curve2d = self.makeRadial()
 
         # If we transform by a pure rotation, what we get back should be equivalent.
-        affine1 = lsst.afw.geom.AffineTransform(
-            lsst.afw.geom.LinearTransform.makeRotation(
-                2.0*np.pi*self.random.rand()*lsst.afw.geom.radians
+        affine1 = lsst.geom.AffineTransform(
+            lsst.geom.LinearTransform.makeRotation(
+                2.0*np.pi*self.random.rand()*lsst.geom.radians
             )
         )
         transform1 = lsst.afw.geom.makeTransform(affine1)
@@ -337,9 +338,9 @@ class TransmissionCurveTestCase(lsst.utils.tests.TestCase):
         self.assertTransmissionCurvesEqual(tc, tc1, rtol=1E-13)
 
         # Test transforming by a random affine transform.
-        affine2 = lsst.afw.geom.AffineTransform(
-            lsst.afw.geom.LinearTransform.makeScaling(1.0 + self.random.rand()),
-            lsst.afw.geom.Extent2D(self.random.randn(), self.random.randn())
+        affine2 = lsst.geom.AffineTransform(
+            lsst.geom.LinearTransform.makeScaling(1.0 + self.random.rand()),
+            lsst.geom.Extent2D(self.random.randn(), self.random.randn())
         )
         transform2 = lsst.afw.geom.makeTransform(affine2)
         tc2 = tc.transformedBy(transform2)

@@ -38,8 +38,8 @@ import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -117,7 +117,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testArrays(self):
         # could use Mask(5, 6) but check extent(5, 6) form too
-        image1 = afwImage.Mask(afwGeom.ExtentI(5, 6))
+        image1 = afwImage.Mask(lsst.geom.ExtentI(5, 6))
         array1 = image1.getArray()
         self.assertEqual(array1.shape[0], image1.getHeight())
         self.assertEqual(array1.shape[1], image1.getWidth())
@@ -139,7 +139,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testInitializeMasks(self):
         val = 0x1234
-        msk = afwImage.Mask(afwGeom.ExtentI(10, 10), val)
+        msk = afwImage.Mask(lsst.geom.ExtentI(10, 10), val)
         self.assertEqual(msk.get(0, 0), val)
 
     def testSetGetMasks(self):
@@ -174,9 +174,9 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
-        i1 = afwImage.Mask(afwGeom.ExtentI(100, 100))
+        i1 = afwImage.Mask(lsst.geom.ExtentI(100, 100))
         i1.set(100)
-        i2 = afwImage.Mask(afwGeom.ExtentI(10, 10))
+        i2 = afwImage.Mask(lsst.geom.ExtentI(10, 10))
         i2.set(10)
 
         with self.assertRaises(lsst.pex.exceptions.LengthError):
@@ -207,8 +207,8 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testSubmasks(self):
         smask = afwImage.Mask(self.mask1,
-                              afwGeom.Box2I(afwGeom.Point2I(1, 1),
-                                            afwGeom.ExtentI(3, 2)),
+                              lsst.geom.Box2I(lsst.geom.Point2I(1, 1),
+                                              lsst.geom.ExtentI(3, 2)),
                               afwImage.LOCAL)
         mask2 = afwImage.Mask(smask.getDimensions())
 
@@ -237,7 +237,7 @@ class MaskTestCase(utilsTests.TestCase):
     def testReadFitsConform(self):
         hdu = 2
         mask = afwImage.Mask(self.maskFile, hdu, None,
-                             afwGeom.Box2I(), afwImage.LOCAL, True)
+                             lsst.geom.Box2I(), afwImage.LOCAL, True)
 
         self.assertMasksEqual(mask, self.expect)
 
@@ -266,7 +266,7 @@ class MaskTestCase(utilsTests.TestCase):
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
-        mask = afwImage.Mask(afwGeom.ExtentI(10, 20))
+        mask = afwImage.Mask(lsst.geom.ExtentI(10, 20))
 
         x0, y0 = 1, 2
         mask.setXY0(x0, y0)
@@ -289,7 +289,7 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(self.mask1.get(10, 10), 0)
 
         del self.mask1
-        self.mask1 = factory(afwGeom.ExtentI(20, 20))
+        self.mask1 = factory(lsst.geom.ExtentI(20, 20))
         self.assertEqual(self.mask1.get(10, 10), 0)
 
     def testBoundsChecking(self):
@@ -369,7 +369,7 @@ class OldMaskTestCase(unittest.TestCase):
     def setUp(self):
         self.Mask = afwImage.Mask[afwImage.MaskPixel]           # the class
 
-        self.testMask = self.Mask(afwGeom.Extent2I(300, 400), 0)
+        self.testMask = self.Mask(lsst.geom.Extent2I(300, 400), 0)
 
         # Store the default mask planes for later use
         maskPlaneDict = self.Mask().getMaskPlaneDict()
@@ -381,8 +381,8 @@ class OldMaskTestCase(unittest.TestCase):
         for p in ("CR", "BP"):
             self.Mask.addMaskPlane(p)
 
-        self.region = afwGeom.Box2I(afwGeom.Point2I(100, 300),
-                                    afwGeom.Extent2I(10, 40))
+        self.region = lsst.geom.Box2I(lsst.geom.Point2I(100, 300),
+                                      lsst.geom.Extent2I(10, 40))
         self.subTestMask = self.Mask(
             self.testMask, self.region, afwImage.LOCAL)
 

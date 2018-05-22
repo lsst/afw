@@ -26,6 +26,7 @@ import unittest
 import math
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom import makePixelToTanPixel
@@ -40,23 +41,23 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         pupil center = focal plane center
         CCD x is along focal plane x
         """
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                             afwGeom.Extent2I(1000, 1000))
-        pixelSizeMm = afwGeom.Extent2D(0.02, 0.02)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                               lsst.geom.Extent2I(1000, 1000))
+        pixelSizeMm = lsst.geom.Extent2D(0.02, 0.02)
         plateScale = 25.0   # arcsec/mm
-        yaw = 0 * afwGeom.degrees
+        yaw = 0 * lsst.geom.degrees
         # focal-plane position of ref position on detector (mm)
-        fpPosition = afwGeom.Point2D(0, 0)
+        fpPosition = lsst.geom.Point2D(0, 0)
         # ref position on detector (pos of lower left corner)
-        refPoint = afwGeom.Point2D(0, 0)
+        refPoint = lsst.geom.Point2D(0, 0)
         orientation = cameraGeom.Orientation(
             fpPosition,
             refPoint,
             yaw,
         )
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-        plateScaleRad = afwGeom.Angle(  # rad/mm
-            plateScale, afwGeom.arcseconds).asRadians()
+        plateScaleRad = lsst.geom.Angle(  # rad/mm
+            plateScale, lsst.geom.arcseconds).asRadians()
         focalPlaneToField = afwGeom.makeRadialTransform(
             (0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
         pixelToField = pixelToFocalPlane.then(focalPlaneToField)
@@ -70,7 +71,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
         # field center should be pixel position 0, 0 and tan pixel position 0,
         # 0
-        pixAtFieldCtr = pixelToField.applyInverse(afwGeom.Point2D(0, 0))
+        pixAtFieldCtr = pixelToField.applyInverse(lsst.geom.Point2D(0, 0))
         self.assertPairsAlmostEqual(pixAtFieldCtr, [0, 0])
         tanPixAtFieldCr = pixelToTanPixel.applyForward(pixAtFieldCtr)
         self.assertPairsAlmostEqual(tanPixAtFieldCr, [0, 0])
@@ -82,7 +83,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
         for x in (100, 200, 1000):
             for y in (100, 500, 800):
-                pixPos = afwGeom.Point2D(x, y)
+                pixPos = lsst.geom.Point2D(x, y)
                 tanPixPos = pixelToTanPixel.applyForward(pixPos)
                 # pix to tan pix should be radial
                 self.assertAlmostEqual(
@@ -101,23 +102,23 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
     def testCurvedFocalPlane(self):
         """Test a curved focal plane (with rectangular pixels)
         """
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                             afwGeom.Extent2I(1000, 1000))
-        pixelSizeMm = afwGeom.Extent2D(0.02, 0.03)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                               lsst.geom.Extent2I(1000, 1000))
+        pixelSizeMm = lsst.geom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
-        yaw = afwGeom.Angle(20, afwGeom.degrees)
+        yaw = lsst.geom.Angle(20, lsst.geom.degrees)
         # focal-plane position of ref position on detector (mm)
-        fpPosition = afwGeom.Point2D(50, 25)
+        fpPosition = lsst.geom.Point2D(50, 25)
         # ref position on detector (pos of lower left corner)
-        refPoint = afwGeom.Point2D(-0.5, -0.5)
+        refPoint = lsst.geom.Point2D(-0.5, -0.5)
         orientation = cameraGeom.Orientation(
             fpPosition,
             refPoint,
             yaw,
         )
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-        plateScaleRad = afwGeom.Angle(
-            plateScale, afwGeom.arcseconds).asRadians()
+        plateScaleRad = lsst.geom.Angle(
+            plateScale, lsst.geom.arcseconds).asRadians()
         focalPlaneToField = afwGeom.makeRadialTransform(
             (0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
         pixelToField = pixelToFocalPlane.then(focalPlaneToField)
@@ -130,7 +131,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         )
 
         # the center point of the field angle frame should not move
-        pixAtFieldCtr = pixelToField.applyInverse(afwGeom.Point2D(0, 0))
+        pixAtFieldCtr = pixelToField.applyInverse(lsst.geom.Point2D(0, 0))
         tanPixAtFieldCr = pixelToTanPixel.applyForward(pixAtFieldCtr)
         self.assertPairsAlmostEqual(pixAtFieldCtr, tanPixAtFieldCr)
 
@@ -141,7 +142,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
         for x in (100, 200, 1000):
             for y in (100, 500, 800):
-                pixPos = afwGeom.Point2D(x, y)
+                pixPos = lsst.geom.Point2D(x, y)
                 tanPixPos = pixelToTanPixel.applyForward(pixPos)
 
                 # for a given field angle (which, together with a pointing, gives a position on the sky):
@@ -156,22 +157,22 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
     def testFlatFocalPlane(self):
         """Test an undistorted focal plane (with rectangular pixels)
         """
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                             afwGeom.Extent2I(1000, 1000))
-        pixelSizeMm = afwGeom.Extent2D(0.02, 0.03)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                               lsst.geom.Extent2I(1000, 1000))
+        pixelSizeMm = lsst.geom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
-        yaw = afwGeom.Angle(20, afwGeom.degrees)
+        yaw = lsst.geom.Angle(20, lsst.geom.degrees)
         # focal-plane position of ref position on detector (mm)
-        fpPosition = afwGeom.Point2D(50, 25)
+        fpPosition = lsst.geom.Point2D(50, 25)
         # ref position on detector (pos of lower left corner)
-        refPoint = afwGeom.Point2D(-0.5, -0.5)
+        refPoint = lsst.geom.Point2D(-0.5, -0.5)
         orientation = cameraGeom.Orientation(
             fpPosition,
             refPoint,
             yaw,
         )
-        plateScaleRad = afwGeom.Angle(
-            plateScale, afwGeom.arcseconds).asRadians()
+        plateScaleRad = lsst.geom.Angle(
+            plateScale, lsst.geom.arcseconds).asRadians()
         focalPlaneToField = afwGeom.makeRadialTransform((0.0, plateScaleRad))
 
         pixelToTanPixel = makePixelToTanPixel(
@@ -183,9 +184,9 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
         # with no distortion, this should be a unity transform
         for pointPix in (
-            afwGeom.Point2D(0, 0),
-            afwGeom.Point2D(1000, 2000),
-            afwGeom.Point2D(-100.5, 27.23),
+            lsst.geom.Point2D(0, 0),
+            lsst.geom.Point2D(1000, 2000),
+            lsst.geom.Point2D(-100.5, 27.23),
         ):
             pointTanPix = pixelToTanPixel.applyForward(pointPix)
             self.assertPairsAlmostEqual(pointTanPix, pointPix)

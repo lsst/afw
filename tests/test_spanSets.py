@@ -25,6 +25,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
 import lsst.afw.image as afwImage
@@ -46,8 +47,8 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(nullSS.getBBox().getDimensions().getY(), 0)
 
     def testBBoxSpanSet(self):
-        boxSS = afwGeom.SpanSet(afwGeom.Box2I(afwGeom.Point2I(2, 2),
-                                              afwGeom.Point2I(6, 6)))
+        boxSS = afwGeom.SpanSet(lsst.geom.Box2I(lsst.geom.Point2I(2, 2),
+                                                lsst.geom.Point2I(6, 6)))
         self.assertEqual(boxSS.getArea(), 25)
         bBox = boxSS.getBBox()
         self.assertEqual(bBox.getMinX(), 2)
@@ -97,7 +98,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(a, b)
 
     def testTransform(self):
-        transform = afwGeom.LinearTransform(np.array([[2.0, 0.0], [0.0, 2.0]]))
+        transform = lsst.geom.LinearTransform(np.array([[2.0, 0.0], [0.0, 2.0]]))
         spanSetPreScale = afwGeom.SpanSet.fromShape(2, afwGeom.Stencil.CIRCLE)
         spanSetPostScale = spanSetPreScale.transformedBy(transform)
 
@@ -115,7 +116,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         spanSetSmall = afwGeom.SpanSet.fromShape(1, afwGeom.Stencil.CIRCLE)
 
         self.assertTrue(spanSetLarge.contains(spanSetSmall))
-        self.assertFalse(spanSetSmall.contains(afwGeom.Point2I(100, 100)))
+        self.assertFalse(spanSetSmall.contains(lsst.geom.Point2I(100, 100)))
 
     def testComputeCentroid(self):
         spanSetShape = afwGeom.SpanSet.fromShape(4, afwGeom.Stencil.CIRCLE).shiftedBy(2, 2)
@@ -158,7 +159,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
         inputSpanSet = afwGeom.SpanSet([afwGeom.Span(0, 0, 1),
                                         afwGeom.Span(1, 0, 1)])
-        flatArr = inputSpanSet.flatten(inputArray, afwGeom.Point2I(-1, -1))
+        flatArr = inputSpanSet.flatten(inputArray, lsst.geom.Point2I(-1, -1))
 
         self.assertEqual(flatArr.size, inputSpanSet.getArea())
 
@@ -205,7 +206,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         mskArray = mask.getArray()
         for i in range(mskArray.shape[0]):
             for j in range(mskArray.shape[1]):
-                if afwGeom.Point2I(i, j) in spanSetMask:
+                if lsst.geom.Point2I(i, j) in spanSetMask:
                     self.assertEqual(mskArray[i, j], 3)
                 else:
                     self.assertEqual(mskArray[i, j], 1)
@@ -316,7 +317,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
                     self.assertFalse(targetSpanSet.contains(point))
 
             for x in range(51):
-                point = afwGeom.Point2I(x, spanRow)
+                point = lsst.geom.Point2I(x, spanRow)
                 if sourceSpanSet.contains(point) and not\
                         targetSpanSet.contains(point):
                     self.assertTrue(resultSpanSet.contains(point))
@@ -346,13 +347,13 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(span, afwGeom.Span(yCoord, 1, 5))
 
     def testFromMask(self):
-        xy0 = afwGeom.Point2I(12345, 67890)  # xy0 for image
-        dims = afwGeom.Extent2I(123, 45)  # Dimensions of image
-        box = afwGeom.Box2I(xy0, dims)  # Bounding box of image
+        xy0 = lsst.geom.Point2I(12345, 67890)  # xy0 for image
+        dims = lsst.geom.Extent2I(123, 45)  # Dimensions of image
+        box = lsst.geom.Box2I(xy0, dims)  # Bounding box of image
         value = 32
         other = 16
         assert value & other == 0  # Setting 'other' unsets 'value'
-        point = afwGeom.Point2I(3 + xy0.getX(), 3 + xy0.getY())  # Point in the image
+        point = lsst.geom.Point2I(3 + xy0.getX(), 3 + xy0.getY())  # Point in the image
 
         mask = afwImage.Mask(box)
         mask.set(value)
@@ -381,13 +382,13 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
 
     def testSpanSetFromEllipse(self):
         axes = afwGeomEllipses.Axes(6, 6, 0)
-        ellipse = afwGeom.Ellipse(axes, afwGeom.Point2D(5, 6))
+        ellipse = afwGeom.Ellipse(axes, lsst.geom.Point2D(5, 6))
         spanSet = afwGeom.SpanSet.fromShape(ellipse)
         for ss, es in zip(spanSet, afwGeomEllipses.PixelRegion(ellipse)):
             self.assertEqual(ss, es)
 
     def testfromShapeOffset(self):
-        shift = afwGeom.Point2I(2, 2)
+        shift = lsst.geom.Point2I(2, 2)
         spanSetShifted = afwGeom.SpanSet.fromShape(2, offset=shift)
         bbox = spanSetShifted.getBBox()
         self.assertEqual(bbox.getMinX(), 0)
@@ -432,6 +433,12 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         yind, xind = spanSet.indices()
         dataArray[yind, xind] = 9
         self.assertTrue((dataArray == 9).all())
+
+    def testSpanIteration(self):
+        span = afwGeom.Span(4, 3, 8)
+        points = list(span)
+        self.assertEqual(len(span), len(points))
+        self.assertEqual(points, [lsst.geom.Point2I(x, 4) for x in range(3, 9)])
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

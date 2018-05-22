@@ -33,6 +33,7 @@ import os
 import unittest
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
@@ -41,11 +42,11 @@ import lsst.afw.table as afwTable
 class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        self.bbox = afwGeom.Box2I(
-            afwGeom.Point2I(0, 0), afwGeom.Point2I(20, 20))
+        self.bbox = lsst.geom.Box2I(
+            lsst.geom.Point2I(0, 0), lsst.geom.Point2I(20, 20))
         x = [0, 0, 10, 10]
         y = [0, 10, 10, 0]
-        self.polygon = afwGeom.Polygon([afwGeom.Point2D(xc, yc)
+        self.polygon = afwGeom.Polygon([lsst.geom.Point2D(xc, yc)
                                        for xc, yc in zip(x, y)])
 
     def testPersistence(self):

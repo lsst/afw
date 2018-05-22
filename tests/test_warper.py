@@ -26,6 +26,7 @@ import unittest
 
 import lsst.utils
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
@@ -128,7 +129,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(100, 25), afwGeom.Extent2I(3, 7))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(100, 25), lsst.geom.Extent2I(3, 7))
         warpedExposure = warper.warpExposure(
             destWcs=swarpedWcs,
             srcExposure=originalExposure,
@@ -136,8 +137,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             # should be ignored
             border=-2,
             # should be ignored
-            maxBBox=afwGeom.Box2I(afwGeom.Point2I(1, 2),
-                                  afwGeom.Extent2I(8, 9)),
+            maxBBox=lsst.geom.Box2I(lsst.geom.Point2I(1, 2),
+                                    lsst.geom.Extent2I(8, 9)),
         )
         self.assertEqual(bbox, warpedExposure.getBBox(afwImage.PARENT))
 
@@ -159,8 +160,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
-            bbox = afwGeom.Box2I(afwGeom.Point2I(40, 150),
-                                 afwGeom.Extent2I(145, 200))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(40, 150),
+                                   lsst.geom.Extent2I(145, 200))
             originalExposure = afwImage.ExposureF(
                 originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
@@ -202,9 +203,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=useSubregion, useDeepCopy=useDeepCopy)
-        maxBBox = afwGeom.Box2I(
-            afwGeom.Point2I(swarpedImage.getX0(), swarpedImage.getY0()),
-            afwGeom.Extent2I(swarpedImage.getWidth(), swarpedImage.getHeight()))
+        maxBBox = lsst.geom.Box2I(
+            lsst.geom.Point2I(swarpedImage.getX0(), swarpedImage.getY0()),
+            lsst.geom.Extent2I(swarpedImage.getWidth(), swarpedImage.getHeight()))
 
         # warning: this test assumes that the swarped image is smaller than it needs to be
         # to hold all of the warped pixels

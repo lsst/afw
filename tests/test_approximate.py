@@ -25,7 +25,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.display.ds9 as ds9
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExcept
@@ -70,9 +70,9 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(ramp, title="Input", frame=0)
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
-        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0),
-                            afwGeom.PointI(binsize*ramp.getWidth() - 1,
-                                           binsize*ramp.getHeight() - 1))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0),
+                              lsst.geom.PointI(binsize*ramp.getWidth() - 1,
+                                               binsize*ramp.getHeight() - 1))
 
         order = 3                       # 1 would be enough to fit the ramp
         actrl = afwMath.ApproximateControl(
@@ -107,8 +107,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         for badValue in [(3, 0x1, 0), (np.nan, 0x1, 1)]:
             ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
             ramp.set(badValue)
-            bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth() - 1,
-                                                                     binsize*ramp.getHeight() - 1))
+            bbox = lsst.geom.BoxI(lsst.geom.PointI(0, 0), lsst.geom.PointI(binsize*ramp.getWidth() - 1,
+                                                                           binsize*ramp.getHeight() - 1))
             order = 2
             actrl = afwMath.ApproximateControl(
                 afwMath.ApproximateControl.CHEBYSHEV, order)

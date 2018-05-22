@@ -35,7 +35,7 @@ import numpy
 
 import lsst.utils
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
@@ -63,11 +63,11 @@ else:
     FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 # input image contains a saturated star, a bad column, and a faint star
-InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
+InputBBox = lsst.geom.Box2I(lsst.geom.Point2I(52, 574), lsst.geom.Extent2I(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve
 # fully overwrites it
-ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
+ShiftedBBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 460), lsst.geom.Extent2I(76, 80))
 
 EdgeMaskPixel = 1 << afwImage.Mask.getMaskPlane("EDGE")
 NoDataMaskPixel = afwImage.Mask.getPlaneBitMask("NO_DATA")
@@ -126,7 +126,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
             "image must be larger than kernel in both dimensions")
     colRange = list(range(numCols))
 
-    kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
+    kImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
         kernel.computeImage(kImage, doNormalize)
@@ -307,7 +307,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                 if (inWidth == self.width) and (inHeight == self.height):
                     continue
                 inMaskedImage = afwImage.MaskedImageF(
-                    afwGeom.Extent2I(inWidth, inHeight))
+                    lsst.geom.Extent2I(inWidth, inHeight))
                 with self.assertRaises(Exception):
                     afwMath.convolve(self.cnvMaskedImage,
                                      inMaskedImage, kernel)
@@ -325,8 +325,8 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
     def runBasicConvolveEdgeTest(self, kernel, kernelDescr):
         """Verify that basicConvolve does not write to edge pixels for this kind of kernel
         """
-        fullBox = afwGeom.Box2I(
-            afwGeom.Point2I(0, 0),
+        fullBox = lsst.geom.Box2I(
+            lsst.geom.Point2I(0, 0),
             ShiftedBBox.getDimensions(),
         )
         goodBox = kernel.shrinkBBox(fullBox)
@@ -418,7 +418,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
 
         kFunc = afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
         analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc)
-        kernelImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
+        kernelImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
         analyticKernel.computeImage(kernelImage, False)
         fixedKernel = afwMath.FixedKernel(kernelImage)
 
@@ -533,7 +533,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(
                             kWidth, kHeight,
-                            afwGeom.Point2I(activeCol, activeRow))
+                            lsst.geom.Point2I(activeCol, activeRow))
                         if display and False:
                             kim = afwImage.ImageD(kWidth, kHeight)
                             kernel.computeImage(kim, False)

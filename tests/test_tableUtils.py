@@ -35,6 +35,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 
@@ -44,11 +45,11 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
     """
 
     def setUp(self):
-        self.crval = afwGeom.SpherePoint(44.0, 45.0, afwGeom.degrees)
-        self.crpix = afwGeom.Point2D(15000, 4000)
+        self.crval = lsst.geom.SpherePoint(44.0, 45.0, lsst.geom.degrees)
+        self.crpix = lsst.geom.Point2D(15000, 4000)
 
         arcsecPerPixel = 1/3600.0
-        cdMatrix = afwGeom.makeCdMatrix(arcsecPerPixel * afwGeom.arcseconds)
+        cdMatrix = afwGeom.makeCdMatrix(arcsecPerPixel * lsst.geom.arcseconds)
         self.wcs = afwGeom.makeSkyWcs(crval=self.crval, crpix=self.crpix, cdMatrix=cdMatrix)
 
         refSchema = afwTable.SimpleTable.makeMinimalSchema()
@@ -145,7 +146,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         # check that centroids and coords match
         self.checkCatalogs()
 
-    def checkCatalogs(self, maxPixDiff=1e-5, maxSkyDiff=0.001*afwGeom.arcseconds):
+    def checkCatalogs(self, maxPixDiff=1e-5, maxSkyDiff=0.001*lsst.geom.arcseconds):
         """Check that the source and reference object catalogs have equal centroids and coords"""
         self.assertEqual(len(self.sourceCat), len(self.refCat))
 
@@ -180,7 +181,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
 
         for i in np.linspace(-maxPix, maxPix, numPoints):
             for j in np.linspace(-maxPix, maxPix, numPoints):
-                centroid = afwGeom.Point2D(i, j)
+                centroid = lsst.geom.Point2D(i, j)
                 src = self.sourceCat.addNew()
                 src.set(self.srcCentroidKey, centroid)
 

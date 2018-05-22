@@ -30,9 +30,9 @@ import lsst.utils.tests
 import lsst.pex.policy as pexPolicy
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPersist
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
@@ -67,7 +67,7 @@ class KernelIOTestCase(unittest.TestCase):
         inArr = np.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
-        inImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
+        inImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
@@ -172,7 +172,7 @@ class KernelIOTestCase(unittest.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                                                             afwGeom.Point2I(activeCol, activeRow))
+                                                             lsst.geom.Point2I(activeCol, activeRow))
 
                         storageList = dafPersist.StorageList()
                         storage = persistence.getPersistStorage(
@@ -268,7 +268,7 @@ class KernelIOTestCase(unittest.TestCase):
         for row in range(kHeight):
             for col in range(kWidth):
                 kernel = afwMath.DeltaFunctionKernel(
-                    kWidth, kHeight, afwGeom.Point2I(col, row))
+                    kWidth, kHeight, lsst.geom.Point2I(col, row))
                 basisImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(basisImage, True)
                 basisImArrList.append(basisImage.getArray().transpose().copy())
@@ -358,7 +358,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         self.kernelCheck(k, k2)
 
-        kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
+        kImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
             (1.0, 0.0, 1.0, 0.0),

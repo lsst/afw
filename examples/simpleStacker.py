@@ -27,9 +27,9 @@
 # simpleStacker.py
 # An example executible which calls the example 'stack' code
 #
+import lsst.geom
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 
 ######################################
 # main body of code
@@ -43,7 +43,7 @@ def main():
 
     imgList = []
     for iImg in range(nImg):
-        imgList.push_back(afwImage.ImageF(afwGeom.Extent2I(nX, nY), iImg))
+        imgList.push_back(afwImage.ImageF(lsst.geom.Extent2I(nX, nY), iImg))
 
     imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
 

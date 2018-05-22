@@ -36,9 +36,9 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.detection as afwDetect
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.rgb as rgb
@@ -92,9 +92,9 @@ class RgbTestCase(unittest.TestCase):
 
         width, height = 85, 75
         self.images = []
-        self.images.append(afwImage.ImageF(afwGeom.ExtentI(width, height)))
-        self.images.append(afwImage.ImageF(afwGeom.ExtentI(width, height)))
-        self.images.append(afwImage.ImageF(afwGeom.ExtentI(width, height)))
+        self.images.append(afwImage.ImageF(lsst.geom.ExtentI(width, height)))
+        self.images.append(afwImage.ImageF(lsst.geom.ExtentI(width, height)))
+        self.images.append(afwImage.ImageF(lsst.geom.ExtentI(width, height)))
 
         for (x, y, A, g_r, r_i) in [(15, 15, 1000, 1.0, 2.0),
                                     (50, 45, 5500, -1.0, -0.5),

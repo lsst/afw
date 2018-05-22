@@ -38,6 +38,7 @@ import numpy as np
 import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet
+import lsst.geom
 import lsst.afw.table
 from lsst.afw.coord import Observatory, Weather
 from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D, \
@@ -111,16 +112,16 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.cat = lsst.afw.table.ExposureCatalog(schema)
         self.wcs = self.createWcs()
         self.psf = DummyPsf(2.0)
-        self.bbox0 = lsst.afw.geom.Box2I(
-            lsst.afw.geom.Box2D(
-                self.wcs.getPixelOrigin() - lsst.afw.geom.Extent2D(5.0, 4.0),
-                self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(20.0, 30.0)
+        self.bbox0 = lsst.geom.Box2I(
+            lsst.geom.Box2D(
+                self.wcs.getPixelOrigin() - lsst.geom.Extent2D(5.0, 4.0),
+                self.wcs.getPixelOrigin() + lsst.geom.Extent2D(20.0, 30.0)
             )
         )
-        self.bbox1 = lsst.afw.geom.Box2I(
-            lsst.afw.geom.Box2D(
-                self.wcs.getPixelOrigin() - lsst.afw.geom.Extent2D(15.0, 40.0),
-                self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(3.0, 6.0)
+        self.bbox1 = lsst.geom.Box2I(
+            lsst.geom.Box2D(
+                self.wcs.getPixelOrigin() - lsst.geom.Extent2D(15.0, 40.0),
+                self.wcs.getPixelOrigin() + lsst.geom.Extent2D(3.0, 6.0)
             )
         )
         self.calib = lsst.afw.image.Calib()
@@ -188,37 +189,37 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertIsNone(cat1[1].getVisitInfo())
 
     def testGeometry(self):
-        bigBox = lsst.afw.geom.Box2D(lsst.afw.geom.Box2I(self.bbox0))
-        bigBox.include(lsst.afw.geom.Box2D(self.bbox1))
+        bigBox = lsst.geom.Box2D(lsst.geom.Box2I(self.bbox0))
+        bigBox.include(lsst.geom.Box2D(self.bbox1))
         points = (np.random.rand(100, 2) * np.array([bigBox.getWidth(), bigBox.getHeight()]) +
                   np.array([bigBox.getMinX(), bigBox.getMinY()]))
 
         # make a very slightly perturbed wcs so the celestial transform isn't a
         # no-op
         crval2 = self.wcs.getSkyOrigin()
-        crval2 = lsst.afw.geom.SpherePoint(crval2.getLongitude() + 5*arcseconds,
-                                           crval2.getLatitude() - 5*arcseconds)
+        crval2 = lsst.geom.SpherePoint(crval2.getLongitude() + 5*arcseconds,
+                                       crval2.getLatitude() - 5*arcseconds)
         wcs2 = makeSkyWcs(
             crval=crval2,
-            crpix=self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
+            crpix=self.wcs.getPixelOrigin() + lsst.geom.Extent2D(30.0, -50.0),
             cdMatrix=self.wcs.getCdMatrix() * 1.1,
         )
         for x1, y1 in points:
-            p1 = lsst.afw.geom.Point2D(x1, y1)
+            p1 = lsst.geom.Point2D(x1, y1)
             c = self.wcs.pixelToSky(p1)
             p2 = wcs2.skyToPixel(c)
             subset1 = self.cat.subsetContaining(c)
             subset2 = self.cat.subsetContaining(p2, wcs2)
             for record in self.cat:
-                inside = lsst.afw.geom.Box2D(record.getBBox()).contains(p1)
+                inside = lsst.geom.Box2D(record.getBBox()).contains(p1)
                 self.assertEqual(inside, record.contains(c))
                 self.assertEqual(inside, record.contains(p2, wcs2))
                 self.assertEqual(inside, record.contains(p1, self.wcs))
                 self.assertEqual(inside, record in subset1)
                 self.assertEqual(inside, record in subset2)
 
-        crazyPoint = lsst.afw.geom.SpherePoint(crval2.getLongitude() + np.pi*radians,
-                                               crval2.getLatitude())
+        crazyPoint = lsst.geom.SpherePoint(crval2.getLongitude() + np.pi*radians,
+                                           crval2.getLatitude())
         subset3 = self.cat.subsetContaining(crazyPoint)
         self.assertEqual(len(subset3), 0)
 

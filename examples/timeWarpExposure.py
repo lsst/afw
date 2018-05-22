@@ -29,7 +29,8 @@ import time
 
 import lsst.utils
 import lsst.daf.base as dafBase
-import lsst.afw.geom as afwGeom
+import lsst.geom
+import lsst.afw.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
@@ -40,7 +41,7 @@ SaveImages = False
 DegPerRad = 180.0 / math.pi
 
 
-DegreesFlag = afwGeom.degrees
+DegreesFlag = lsst.geom.degrees
 
 
 def setDegreesFlag(newValue):
@@ -97,11 +98,11 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
         typically the center of the source exposure
     """
     ps = dafBase.PropertySet()
-    srcCtrPix = afwGeom.Point2D(*[float(val) for val in srcCtrInd])
-    destCtrFitsPix = afwGeom.Point2D(*[ind + 1.0 for ind in destCtrInd])
-    srcCtrFitsPix = afwGeom.Point2D(*[ind + 1.0 for ind in srcCtrInd])
+    srcCtrPix = lsst.geom.Point2D(*[float(val) for val in srcCtrInd])
+    destCtrFitsPix = lsst.geom.Point2D(*[ind + 1.0 for ind in destCtrInd])
+    srcCtrFitsPix = lsst.geom.Point2D(*[ind + 1.0 for ind in srcCtrInd])
     # offset 1 pixel in x to compute orientation
-    srcOffFitsPix = srcCtrFitsPix + afwGeom.Extent2D(1.0, 0.0)
+    srcOffFitsPix = srcCtrFitsPix + lsst.geom.Extent2D(1.0, 0.0)
     srcCtrSkyPos = srcWcs.pixelToSky(srcCtrFitsPix)
     srcOffSkyPos = srcWcs.pixelToSky(srcOffFitsPix)
     srcAngleRad = srcCtrSkyPos.bearingTo(srcOffSkyPos).asRadians()
@@ -113,22 +114,22 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
         ctypeStr = ("%-5s%3s" % (("RA", "DEC")[i], projName)).replace(" ", "-")
         ps.add("CTYPE%1d" % (ip1,), ctypeStr)
         ps.add("CRPIX%1d" % (ip1,), destCtrFitsPix[i])
-        ps.add("CRVAL%1d" % (ip1,), srcCtrSkyPos[i] + skyOffset[i])
+        ps.add("CRVAL%1d" % (ip1,), srcCtrSkyPos[i].asDegrees() + skyOffset[i])
     ps.add("RADESYS", "ICRS")
     ps.add("EQUINOX", 2000)
     ps.add("CD1_1", -destScale * math.cos(destAngleRad))
     ps.add("CD2_1", destScale * math.sin(destAngleRad))
     ps.add("CD1_2", destScale * math.sin(destAngleRad))
     ps.add("CD2_2", destScale * math.cos(destAngleRad))
-    return afwGeom.makeSkyWcs(ps)
+    return lsst.afw.geom.makeSkyWcs(ps)
 
 
 def run():
     if len(sys.argv) < 2:
         srcExposure = afwImage.ExposureF(InputExposurePath)
         if WarpSubregion:
-            bbox = afwGeom.Box2I(afwGeom.Point2I(
-                0, 0), afwGeom.Extent2I(2000, 2000))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                                   lsst.geom.Extent2I(2000, 2000))
             srcExposure = afwImage.ExposureF(
                 srcExposure, bbox, afwImage.LOCAL, False)
     else:
@@ -139,7 +140,7 @@ def run():
 
     # make the destination exposure small enough that even after rotation and offset
     # (by reasonable amounts) there are no edge pixels
-    destDim = afwGeom.Extent2I(*[int(sd * 0.5) for sd in srcDim])
+    destDim = lsst.geom.Extent2I(*[int(sd * 0.5) for sd in srcDim])
     destExposure = afwImage.ExposureF(destDim)
     destCtrInd = [int(d / 2) for d in destDim]
 

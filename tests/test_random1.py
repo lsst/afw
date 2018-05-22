@@ -37,9 +37,9 @@ import unittest
 import lsst.pex.exceptions
 import lsst.pex.policy as pexPolicy
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 
 
 def checkRngEquivalence(rng1, rng2):
@@ -100,7 +100,7 @@ class RandomImageTestCase(unittest.TestCase):
 
     def setUp(self):
         self.rand = afwMath.Random()
-        self.image = afwImage.ImageF(afwGeom.Extent2I(1000, 1000))
+        self.image = afwImage.ImageF(lsst.geom.Extent2I(1000, 1000))
 
     def tearDown(self):
         del self.image

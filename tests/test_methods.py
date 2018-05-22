@@ -20,7 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import contextlib
-import math
 import unittest
 import re
 
@@ -28,6 +27,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.daf.base as dafBase
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.image.testUtils import imagesDiffer
@@ -52,203 +52,11 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         if self._addedAssertWarns:
             del self.assertWarns
 
-    def testAssertAnglesAlmostEqual(self):
-        """Test assertAnglesAlmostEqual"""
-        for angDeg in (0, 45, -75):
-            ang0 = angDeg*afwGeom.degrees
-            self.assertAnglesAlmostEqual(
-                ang0,
-                ang0 + 0.01*afwGeom.arcseconds,
-                maxDiff=0.010001*afwGeom.arcseconds,
-            )
-            # sanity-check deprecated version
-            with self.assertWarns(DeprecationWarning):
-                self.assertAnglesNearlyEqual(
-                    ang0,
-                    ang0 + 0.01*afwGeom.arcseconds,
-                    maxDiff=0.010001*afwGeom.arcseconds,
-                )
-            with self.assertRaises(AssertionError):
-                self.assertAnglesAlmostEqual(
-                    ang0,
-                    ang0 + 0.01*afwGeom.arcseconds,
-                    maxDiff=0.009999*afwGeom.arcseconds,
-                )
-
-            self.assertAnglesAlmostEqual(
-                ang0,
-                ang0 - 0.01*afwGeom.arcseconds,
-                maxDiff=0.010001*afwGeom.arcseconds,
-            )
-            with self.assertRaises(AssertionError):
-                self.assertAnglesAlmostEqual(
-                    ang0,
-                    ang0 - 0.01*afwGeom.arcseconds,
-                    maxDiff=0.009999*afwGeom.arcseconds,
-                )
-
-            self.assertAnglesAlmostEqual(
-                ang0 - 720*afwGeom.degrees,
-                ang0 + 0.01*afwGeom.arcseconds,
-                maxDiff=0.010001*afwGeom.arcseconds,
-            )
-            with self.assertRaises(AssertionError):
-                self.assertAnglesAlmostEqual(
-                    ang0 - 720*afwGeom.degrees,
-                    ang0 + 0.01*afwGeom.arcseconds,
-                    ignoreWrap=False,
-                    maxDiff=0.010001*afwGeom.arcseconds,
-                )
-            with self.assertRaises(AssertionError):
-                self.assertAnglesAlmostEqual(
-                    ang0 - 720*afwGeom.degrees,
-                    ang0 + 0.01*afwGeom.arcseconds,
-                    maxDiff=0.009999*afwGeom.arcseconds,
-                )
-
-            self.assertAnglesAlmostEqual(
-                ang0,
-                ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
-                maxDiff=0.010001*afwGeom.arcseconds,
-            )
-            with self.assertRaises(AssertionError):
-                self.assertAnglesAlmostEqual(
-                    ang0,
-                    ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
-                    ignoreWrap=False,
-                    maxDiff=0.010001*afwGeom.arcseconds,
-                )
-            with self.assertRaises(AssertionError):
-                self.assertAnglesAlmostEqual(
-                    ang0,
-                    ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
-                    maxDiff=0.009999*afwGeom.arcseconds,
-                )
-
-    def testAssertBoxesAlmostEqual(self):
-        """Test assertBoxesAlmostEqual"""
-        for min0 in ((0, 0), (-1000.5, 5000.1)):
-            min0 = afwGeom.Point2D(*min0)
-            for extent0 in ((2.01, 3.01), (5432, 2342)):
-                extent0 = afwGeom.Extent2D(*extent0)
-                box0 = afwGeom.Box2D(min0, extent0)
-                self.assertBoxesAlmostEqual(box0, box0, maxDiff=1e-7)
-                for deltaExtent in ((0.001, -0.001), (2, -3)):
-                    deltaExtent = afwGeom.Extent2D(*deltaExtent)
-                    box1 = afwGeom.Box2D(
-                        box0.getMin() + deltaExtent, box0.getMax())
-                    radDiff = math.hypot(*deltaExtent)
-                    self.assertBoxesAlmostEqual(
-                        box0, box1, maxDiff=radDiff*1.00001)
-                    # sanity-check deprecated version
-                    with self.assertWarns(DeprecationWarning):
-                        self.assertBoxesNearlyEqual(
-                            box0, box1, maxDiff=radDiff*1.00001)
-                    with self.assertRaises(AssertionError):
-                        self.assertBoxesAlmostEqual(
-                            box0, box1, maxDiff=radDiff*0.99999)
-
-                    box2 = afwGeom.Box2D(
-                        box0.getMin() - deltaExtent, box0.getMax())
-                    self.assertBoxesAlmostEqual(
-                        box0, box2, maxDiff=radDiff*1.00001)
-                    with self.assertRaises(AssertionError):
-                        self.assertBoxesAlmostEqual(
-                            box0, box2, maxDiff=radDiff*0.999999)
-
-                    box3 = afwGeom.Box2D(
-                        box0.getMin(), box0.getMax() + deltaExtent)
-                    self.assertBoxesAlmostEqual(
-                        box0, box3, maxDiff=radDiff*1.00001)
-                    with self.assertRaises(AssertionError):
-                        self.assertBoxesAlmostEqual(
-                            box0, box3, maxDiff=radDiff*0.999999)
-
-    def testAssertSpherePointsAlmostEqual(self):
-        """Test assertSpherePointsAlmostEqual"""
-        for raDecDeg in ((45, 45), (-70, 89), (130, -89.5)):
-            raDecDeg = [val*afwGeom.degrees for val in raDecDeg]
-            sp0 = afwGeom.SpherePoint(*raDecDeg)
-            self.assertSpherePointsAlmostEqual(
-                sp0, sp0, maxSep=1e-7*afwGeom.arcseconds)
-            # make sure specifying msg is acceptable
-            self.assertSpherePointsAlmostEqual(
-                sp0, sp0, maxSep=1e-7*afwGeom.arcseconds, msg="any")
-
-            for offAng in (0, 45, 90):
-                offAng = offAng*afwGeom.degrees
-                for offDist in (0.001, 0.1):
-                    offDist = offDist*afwGeom.arcseconds
-                    sp1 = sp0.offset(bearing=offAng, amount=offDist)
-                    self.assertSpherePointsAlmostEqual(
-                        sp0, sp1, maxSep=offDist*1.00001)
-                    with self.assertRaises(AssertionError):
-                        self.assertSpherePointsAlmostEqual(
-                            sp0, sp1, maxSep=offDist*0.99999)
-
-                    # make sure msg is appended
-                    try:
-                        self.assertSpherePointsAlmostEqual(
-                            sp0, sp1, maxSep=offDist*0.99999, msg="boo")
-                        self.fail("Sphere point lists should be unequal")
-                    except AssertionError as e:
-                        errMsg = e.args[0]
-                    self.assertTrue(errMsg.endswith("boo"))
-
-            # test wraparound in RA
-            sp2 = afwGeom.SpherePoint(
-                raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
-            self.assertSpherePointsAlmostEqual(
-                sp0, sp2, maxSep=1e-7*afwGeom.arcseconds)
-
-    def testAssertSpherePointListsAlmostEqual(self):
-        """Test assertSpherePointListsAlmostEqual
-        """
-        splist0 = [afwGeom.SpherePoint(val[0]*afwGeom.degrees, val[1]*afwGeom.degrees)
-                   for val in ((45, 45), (-70, 89), (130, -89.5))]
-        self.assertSpherePointListsAlmostEqual(splist0, splist0)
-
-        offDist = 1.1 * afwGeom.arcseconds
-        splist1 = [sp0.offset(bearing=bearDeg*afwGeom.degrees, amount=offDist)
-                   for sp0, bearDeg in zip(splist0, (-10, 78, 123))]
-        self.assertSpherePointListsAlmostEqual(
-            splist0, splist1, maxSep=offDist*1.00001)
-        with self.assertRaises(AssertionError):
-            self.assertSpherePointListsAlmostEqual(
-                splist0, splist1, maxSep=offDist*0.99999)
-
-        # make sure msg is appended
-        try:
-            self.assertSpherePointListsAlmostEqual(
-                splist0, splist1, maxSep=offDist*0.99999, msg="boo")
-            self.fail("Sphere point lists should be unequal")
-        except AssertionError as e:
-            errMsg = e.args[0]
-        self.assertTrue(errMsg.endswith("boo"))
-
-    def testAssertPairsAlmostEqual(self):
-        """Test assertPairsAlmostEqual"""
-        for pair0 in ((-5, 4), (-5, 0.001), (0, 0), (49, 0.1)):
-            self.assertPairsAlmostEqual(pair0, pair0, maxDiff=1e-7)
-            # sanity-check deprecated version
-            with self.assertWarns(DeprecationWarning):
-                self.assertPairsNearlyEqual(pair0, pair0, maxDiff=1e-7)
-            self.assertPairsAlmostEqual(afwGeom.Point2D(*pair0),
-                                        afwGeom.Extent2D(*pair0), maxDiff=1e-7)
-            for diff in ((0.001, 0), (-0.01, 0.03)):
-                pair1 = [pair0[i] + diff[i] for i in range(2)]
-                radialDiff = math.hypot(*diff)
-                self.assertPairsAlmostEqual(
-                    pair0, pair1, maxDiff=radialDiff+1e-7)
-                with self.assertRaises(AssertionError):
-                    self.assertPairsAlmostEqual(
-                        pair0, pair1, maxDiff=radialDiff-1e-7)
-
     def testAssertWcsAlmostEqualOverBBox(self):
         """Test assertWcsAlmostEqualOverBBox and wcsAlmostEqualOverBBox"""
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                             afwGeom.Extent2I(3001, 3001))
-        ctrPix = afwGeom.Point2I(1500, 1500)
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                               lsst.geom.Extent2I(3001, 3001))
+        ctrPix = lsst.geom.Point2I(1500, 1500)
         metadata = dafBase.PropertySet()
         metadata.set("RADESYS", "FK5")
         metadata.set("EQUINOX", 2000.0)
@@ -269,39 +77,35 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         wcs1 = lsst.afw.geom.makeSkyWcs(metadata)
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
-                                          maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
-        # sanity-check deprecated version
-        with self.assertWarns(DeprecationWarning):
-            self.assertWcsNearlyEqualOverBBox(wcs0, wcs0, bbox,
-                                              maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
+                                          maxDiffSky=1e-7*lsst.geom.arcseconds, maxDiffPix=1e-7)
         self.assertTrue(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
-                                                       maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7))
+                                                       maxDiffSky=1e-7*lsst.geom.arcseconds, maxDiffPix=1e-7))
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                          maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02)
+                                          maxDiffSky=0.04*lsst.geom.arcseconds, maxDiffPix=0.02)
         self.assertTrue(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                                       maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02))
+                                                       maxDiffSky=0.04*lsst.geom.arcseconds, maxDiffPix=0.02))
 
         with self.assertRaises(AssertionError):
             self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                              maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
+                                              maxDiffSky=0.001*lsst.geom.arcseconds, maxDiffPix=0.02)
         self.assertFalse(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                                        maxDiffSky=0.001*afwGeom.arcseconds,
+                                                        maxDiffSky=0.001*lsst.geom.arcseconds,
                                                         maxDiffPix=0.02))
 
         with self.assertRaises(AssertionError):
             self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                              maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
+                                              maxDiffSky=0.04*lsst.geom.arcseconds, maxDiffPix=0.001)
         self.assertFalse(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
-                                                        maxDiffSky=0.04*afwGeom.arcseconds,
+                                                        maxDiffSky=0.04*lsst.geom.arcseconds,
                                                         maxDiffPix=0.001))
 
         # check that doShortCircuit works in the private implementation
         errStr1 = _compareWcsOverBBox(wcs0, wcs1, bbox,
-                                      maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001,
+                                      maxDiffSky=0.001*lsst.geom.arcseconds, maxDiffPix=0.001,
                                       doShortCircuit=False)
         errStr2 = _compareWcsOverBBox(wcs0, wcs1, bbox,
-                                      maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001,
+                                      maxDiffSky=0.001*lsst.geom.arcseconds, maxDiffPix=0.001,
                                       doShortCircuit=True)
         self.assertNotEqual(errStr1, errStr2)
 

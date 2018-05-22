@@ -26,6 +26,7 @@ import pickle
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 
@@ -41,13 +42,13 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
 
     def createImage(self, factory=afwImage.ImageF):
         image = factory(self.xSize, self.ySize)
-        image.setXY0(afwGeom.Point2I(self.x0, self.y0))
+        image.setXY0(lsst.geom.Point2I(self.x0, self.y0))
         image.getArray()[:] = self.createPattern()
         return image
 
     def createMaskedImage(self, factory=afwImage.MaskedImageF):
         image = factory(self.xSize, self.ySize)
-        image.setXY0(afwGeom.Point2I(self.x0, self.y0))
+        image.setXY0(lsst.geom.Point2I(self.x0, self.y0))
         image.getImage().getArray()[:] = self.createPattern()
         image.getMask().getArray()[:] = self.createPattern()
         image.getVariance().getArray()[:] = self.createPattern()
@@ -89,9 +90,9 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
             self.checkImages(image)
 
     def testMaskedImage(self):
-        scale = 1.0*afwGeom.arcseconds
-        wcs = afwGeom.makeSkyWcs(crval=afwGeom.SpherePoint(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
-                                 crpix=afwGeom.Point2D(0.0, 0.0),
+        scale = 1.0*lsst.geom.arcseconds
+        wcs = afwGeom.makeSkyWcs(crval=lsst.geom.SpherePoint(0.0*lsst.geom.degrees, 0.0*lsst.geom.degrees),
+                                 crpix=lsst.geom.Point2D(0.0, 0.0),
                                  cdMatrix=afwGeom.makeCdMatrix(scale=scale))
         for MaskedImage in (afwImage.MaskedImageF,
                             afwImage.MaskedImageD,

@@ -32,9 +32,9 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import PropertySet
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
@@ -52,8 +52,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         np.random.seed(1)
         self.val = 10
-        self.image = afwImage.ImageF(afwGeom.Box2I(
-            afwGeom.Point2I(1000, 500), afwGeom.Extent2I(100, 200)))
+        self.image = afwImage.ImageF(lsst.geom.Box2I(
+            lsst.geom.Point2I(1000, 500), lsst.geom.Extent2I(100, 200)))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -70,7 +70,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         just puts a limit on the errors.
         """
         W, H = 2, 99
-        image = afwImage.ImageF(afwGeom.Extent2I(W, H))
+        image = afwImage.ImageF(lsst.geom.Extent2I(W, H))
         bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.LINEAR)
         bgCtrl.setNxSample(2)
         NY = 10
@@ -153,7 +153,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         nx = 512
         ny = 512
         x0, y0 = 9876, 54321
-        box = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(nx, ny))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(x0, y0), lsst.geom.Extent2I(nx, ny))
         rampimg = afwImage.ImageF(box)
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         for x in range(nx):
@@ -203,9 +203,9 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         self.assertBackgroundEqual(backobj, new)
 
         # Check creation of sub-image
-        box = afwGeom.Box2I(afwGeom.Point2I(123, 45),
-                            afwGeom.Extent2I(45, 123))
-        box.shift(afwGeom.Extent2I(x0, y0))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(123, 45),
+                              lsst.geom.Extent2I(45, 123))
+        box.shift(lsst.geom.Extent2I(x0, y0))
         bgImage = backobj.getImageF("AKIMA_SPLINE")
         bgSubImage = afwImage.ImageF(bgImage, box)
         testImage = backobj.getImageF(box, "AKIMA_SPLINE")
@@ -216,7 +216,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
     def getParabolaImage(self, nx, ny, pars=(1.0e-4, 1.0e-4, 0.1, 0.2, 10.0)):
         """Make sure a quadratic map is *well* reproduced by the spline model
         """
-        parabimg = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
+        parabimg = afwImage.ImageF(lsst.geom.Extent2I(nx, ny))
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = pars  # no cross-terms
         for x in range(nx):
             for y in range(ny):
@@ -292,8 +292,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         mi = afwImage.MaskedImageF(os.path.join(
             AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi,
-                        afwGeom.Box2I(afwGeom.Point2I(32, 2),
-                                      afwGeom.Point2I(2079, 4609)),
+                        lsst.geom.Box2I(lsst.geom.Point2I(32, 2),
+                                        lsst.geom.Point2I(2079, 4609)),
                         afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
@@ -314,8 +314,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
     def getCfhtImage(self):
         """Get a portion of a CFHT image as a MaskedImageF"""
-        bbox = afwGeom.Box2I(afwGeom.Point2I(500, 2000),
-                             afwGeom.Point2I(2079, 4609))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(500, 2000),
+                               lsst.geom.Point2I(2079, 4609))
         imagePath = os.path.join(
             AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
         return afwImage.MaskedImageF(imagePath, PropertySet(), bbox)
@@ -328,9 +328,9 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """
         bgImageList = []  # list of background images, one per xy0
         statsImageList = []  # list of stats images, one per xy0
-        for xy0 in (afwGeom.Point2I(0, 0),
-                    afwGeom.Point2I(-100, -999),
-                    afwGeom.Point2I(1000, 500)):
+        for xy0 in (lsst.geom.Point2I(0, 0),
+                    lsst.geom.Point2I(-100, -999),
+                    lsst.geom.Point2I(1000, 500)):
             mi = self.getCfhtImage()
             mi.setXY0(xy0)
 
@@ -362,8 +362,8 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl = afwMath.BackgroundControl(
             mi.getWidth()//128, mi.getHeight()//128)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
-        subBBox = afwGeom.Box2I(afwGeom.Point2I(1000, 3000),
-                                afwGeom.Extent2I(100, 100))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(1000, 3000),
+                                  lsst.geom.Extent2I(100, 100))
 
         bgFullImage = backobj.getImageF()
         self.assertEqual(bgFullImage.getBBox(), mi.getBBox())
@@ -407,7 +407,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """Test how the program handles nx,ny being too small for requested interp style."""
         nx = 64
         ny = 64
-        img = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
+        img = afwImage.ImageF(lsst.geom.Extent2I(nx, ny))
 
         # make a background control object
         bctrl = afwMath.BackgroundControl(10, 10)
@@ -441,7 +441,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # try a ramping image ... has an easy analytic solution
         nx = 64
         ny = 64
-        img = afwImage.ImageF(afwGeom.Extent2I(nx, ny), 10)
+        img = afwImage.ImageF(lsst.geom.Extent2I(nx, ny), 10)
 
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution
@@ -490,7 +490,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         """Check that an extensively masked image doesn't lead to NaNs in the background estimation"""
         image = afwImage.MaskedImageF(800, 800)
         msk = image.getMask()
-        bbox = afwGeom.BoxI(afwGeom.PointI(560, 0), afwGeom.PointI(799, 335))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(560, 0), lsst.geom.PointI(799, 335))
         smsk = msk.Factory(msk, bbox)
         smsk.set(msk.getPlaneBitMask("DETECTED"))
 

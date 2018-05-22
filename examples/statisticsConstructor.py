@@ -23,9 +23,9 @@
 #
 
 #
+import lsst.geom
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 
 # This code was written as a result of ticket #1090 to
 # demonstrate how to call the Statistics Constructor directly.
@@ -33,7 +33,7 @@ import lsst.afw.geom as afwGeom
 
 def main():
 
-    mimg = afwImage.MaskedImageF(afwGeom.Extent2I(100, 100))
+    mimg = afwImage.MaskedImageF(lsst.geom.Extent2I(100, 100))
     mimValue = (2, 0x0, 1)
     mimg.set(mimValue)
 

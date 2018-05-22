@@ -40,8 +40,8 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.daf.base
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 
@@ -90,8 +90,8 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         self.mimage.getMask().set(self.EDGE)
         centre = afwImage.Mask(
             self.mimage.getMask(),
-            afwGeom.Box2I(afwGeom.Point2I(2, 2),
-                          self.mimage.getDimensions() - afwGeom.Extent2I(4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(2, 2),
+                            self.mimage.getDimensions() - lsst.geom.Extent2I(4)),
             afwImage.LOCAL)
         centre.set(0x0)
         #
@@ -154,14 +154,14 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         # make pairs of image, variance and mask planes
         # using the same dimensions for each so we can mix and match
         # while making masked images
-        dim = afwGeom.Extent2I(10, 8)
+        dim = lsst.geom.Extent2I(10, 8)
         # a set of bounding boxes, some of which overlap each other
         # and some of which do not, and include the full image bounding box
         bboxes = (
-            afwGeom.Box2I(afwGeom.Point2I(0, 0), dim),
-            afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(3, 3)),
-            afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Extent2I(6, 4)),
-            afwGeom.Box2I(afwGeom.Point2I(4, 4), afwGeom.Extent2I(6, 4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), dim),
+            lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(3, 3)),
+            lsst.geom.Box2I(lsst.geom.Point2I(2, 2), lsst.geom.Extent2I(6, 4)),
+            lsst.geom.Box2I(lsst.geom.Point2I(4, 4), lsst.geom.Extent2I(6, 4)),
         )
         masks = [afwImage.Mask(dim), afwImage.Mask(dim)]
         variances = [afwImage.ImageF(dim), afwImage.ImageF(dim)]
@@ -194,7 +194,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
 
     def testMaskedImageFromImage(self):
         w, h = 10, 20
-        dims = afwGeom.Extent2I(w, h)
+        dims = lsst.geom.Extent2I(w, h)
         im, mask, var = afwImage.ImageF(dims), \
             afwImage.Mask(dims), \
             afwImage.ImageF(dims)
@@ -217,7 +217,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testMakeMaskedImageXY0(self):
         """Test that makeMaskedImage sets XY0 correctly"""
         im = afwImage.ImageF(200, 300)
-        xy0 = afwGeom.PointI(10, 20)
+        xy0 = lsst.geom.PointI(10, 20)
         im.setXY0(*xy0)
         mi = afwImage.makeMaskedImage(im)
 
@@ -265,7 +265,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         #
         # Convert from U to F
         #
-        mi = afwImage.MaskedImageU(afwGeom.Extent2I(10, 20))
+        mi = afwImage.MaskedImageU(lsst.geom.Extent2I(10, 20))
         val00 = (10, 0x10, 1)
         mi.set(val00)
         self.assertEqual(mi.get(0, 0), val00)
@@ -325,12 +325,12 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testAssignWithBBox(self):
         """Test assign(rhs, bbox) with non-empty bbox
         """
-        for xy0 in (afwGeom.Point2I(*val) for val in (
+        for xy0 in (lsst.geom.Point2I(*val) for val in (
             (0, 0),
             (-100, 120),  # an arbitrary value that is off the image
         )):
-            destMIDim = afwGeom.Extent2I(5, 4)
-            srcMIDim = afwGeom.Extent2I(3, 2)
+            destMIDim = lsst.geom.Extent2I(5, 4)
+            srcMIDim = lsst.geom.Extent2I(3, 2)
             destMI = afwImage.MaskedImageF(destMIDim)
             destImage = destMI.getImage()
             destVariance = destMI.getVariance()
@@ -340,7 +340,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             srcMI.setXY0(55, -33)  # an arbitrary value that should be ignored
             self.assertRaises(Exception, destMI.set, srcMI)  # size mismatch
 
-            for validMin in (afwGeom.Point2I(*val) for val in (
+            for validMin in (lsst.geom.Point2I(*val) for val in (
                 (0, 0),
                 (2, 0),
                 (0, 1),
@@ -351,9 +351,9 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                     destImage[:] = -1.0
                     destVariance[:] = -1.0
                     destMask[:] = 0xFFFF
-                    bbox = afwGeom.Box2I(validMin, srcMI.getDimensions())
+                    bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions())
                     if origin != afwImage.LOCAL:
-                        bbox.shift(afwGeom.Extent2I(xy0))
+                        bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         destMI.assign(srcMI, bbox)
                         destMIView = afwImage.MaskedImageF(destMI, bbox)
@@ -373,7 +373,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
                     self.assertEqual(
                         np.sum(destMask.getArray() == 0xFFFF), numPixNotAssigned)
 
-            for badMin in (afwGeom.Point2I(*val) + afwGeom.Extent2I(xy0) for val in (
+            for badMin in (lsst.geom.Point2I(*val) + lsst.geom.Extent2I(xy0) for val in (
                 (-1, 0),
                 (3, 0),
                 (0, -1),
@@ -381,9 +381,9 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             )):
                 # None to omit the argument
                 for origin in (None, afwImage.PARENT, afwImage.LOCAL):
-                    bbox = afwGeom.Box2I(validMin, srcMI.getDimensions())
+                    bbox = lsst.geom.Box2I(validMin, srcMI.getDimensions())
                     if origin != afwImage.LOCAL:
-                        bbox.shift(afwGeom.Extent2I(xy0))
+                        bbox.shift(lsst.geom.Extent2I(xy0))
                     if origin is None:
                         self.assertRaises(Exception, destMI.set, srcMI, bbox)
                     else:
@@ -393,11 +393,11 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testAssignWithoutBBox(self):
         """Test assign(rhs, [bbox]) with an empty bbox and with no bbox specified; both set all pixels
         """
-        for xy0 in (afwGeom.Point2I(*val) for val in (
+        for xy0 in (lsst.geom.Point2I(*val) for val in (
             (0, 0),
             (-100, 120),  # an arbitrary value that is off the image
         )):
-            destMIDim = afwGeom.Extent2I(5, 4)
+            destMIDim = lsst.geom.Extent2I(5, 4)
             destMI = afwImage.MaskedImageF(destMIDim)
             destMI.setXY0(xy0)
             destImage = destMI.getImage()
@@ -417,7 +417,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             destImage[:] = -1.0
             destVariance[:] = -1.0
             destMask[:] = 0xFFFF
-            destMI.assign(srcMI, afwGeom.Box2I())
+            destMI.assign(srcMI, lsst.geom.Box2I())
             for i in range(3):
                 self.assertListEqual(destMI.getArrays()[i].flatten().tolist(),
                                      srcMI.getArrays()[i].flatten().tolist())
@@ -459,9 +459,9 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
 
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on MaskedImages of different sizes"
-        i1 = afwImage.MaskedImageF(afwGeom.Extent2I(100, 100))
+        i1 = afwImage.MaskedImageF(lsst.geom.Extent2I(100, 100))
         i1.set(100)
-        i2 = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        i2 = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         i2.set(10)
 
         def tst1(i1, i2):
@@ -631,35 +631,35 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testOrigin(self):
         """Check that we can set and read the origin"""
 
-        im = afwImage.MaskedImageF(afwGeom.ExtentI(10, 20))
+        im = afwImage.MaskedImageF(lsst.geom.ExtentI(10, 20))
         x0 = y0 = 0
 
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), lsst.geom.PointI(x0, y0))
 
         x0, y0 = 3, 5
         im.setXY0(x0, y0)
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
+        self.assertEqual(im.getXY0(), lsst.geom.PointI(x0, y0))
 
         x0, y0 = 30, 50
-        im.setXY0(afwGeom.Point2I(x0, y0))
+        im.setXY0(lsst.geom.Point2I(x0, y0))
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
-        self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
+        self.assertEqual(im.getXY0(), lsst.geom.Point2I(x0, y0))
 
     def testSubimages1(self):
         smimage = afwImage.MaskedImageF(
             self.mimage,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
 
         simage = afwImage.MaskedImageF(
             smimage,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(3, 2)),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
@@ -683,15 +683,15 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
 
         smimage = afwImage.MaskedImageF(
             self.mimage,
-            afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
         # reset origin; doesn't affect pixel coordinate systems
-        smimage.setXY0(afwGeom.Point2I(0, 0))
+        smimage.setXY0(lsst.geom.Point2I(0, 0))
 
         simage = afwImage.MaskedImageF(
-            smimage, afwGeom.Box2I(afwGeom.Point2I(1, 1),
-                                   afwGeom.Extent2I(3, 2)),
+            smimage, lsst.geom.Box2I(lsst.geom.Point2I(1, 1),
+                                     lsst.geom.Extent2I(3, 2)),
             afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
@@ -725,11 +725,11 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         for deep in (True, False):
             mimage = self.mimage.Factory(
                 self.mimage,
-                afwGeom.Box2I(afwGeom.Point2I(10, 10),
-                              afwGeom.Extent2I(64, 64)),
+                lsst.geom.Box2I(lsst.geom.Point2I(10, 10),
+                                lsst.geom.Extent2I(64, 64)),
                 afwImage.LOCAL,
                 deep)
-            mimage.setXY0(afwGeom.Point2I(0, 0))
+            mimage.setXY0(lsst.geom.Point2I(0, 0))
             mimage2 = mimage.Factory(mimage)
 
             if display:
@@ -762,7 +762,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
             im = afwImage.ImageF(os.path.join(
                 lsst.utils.getPackageDir("afwdata"), "med_img.fits"))
         else:
-            im = afwImage.ImageF(afwGeom.Extent2I(10, 10))
+            im = afwImage.ImageF(lsst.geom.Extent2I(10, 10))
         mi = afwImage.MaskedImageF(im)
         afwImage.ExposureF(mi)
 
@@ -777,7 +777,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.mimage.get(10, 10), (0, 0x0, 0))
 
         del self.mimage
-        self.mimage = factory(afwGeom.Extent2I(20, 20))
+        self.mimage = factory(lsst.geom.Extent2I(20, 20))
         self.assertEqual(self.mimage.get(10, 10), (0, 0x0, 0))
 
     def testImageSlices(self):

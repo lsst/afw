@@ -35,9 +35,9 @@ from functools import reduce
 
 import numpy as np
 
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.utils.tests
 import lsst.pex.exceptions as pexEx
 import lsst.afw.display.ds9 as ds9
@@ -64,7 +64,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         imgList = []
         for iImg in range(self.nImg):
             imgList.append(afwImage.ImageF(
-                afwGeom.Extent2I(self.nX, self.nY), iImg))
+                lsst.geom.Extent2I(self.nX, self.nY), iImg))
             knownMean += iImg
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
@@ -81,7 +81,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         imgList = []
         for val in self.values:
             imgList.append(afwImage.ImageF(
-                afwGeom.Extent2I(self.nX, self.nY), val))
+                lsst.geom.Extent2I(self.nX, self.nY), val))
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
@@ -98,7 +98,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         sctrl.setWeighted(True)
         mimgList = []
         for val in self.values:
-            mimg = afwImage.MaskedImageF(afwGeom.Extent2I(self.nX, self.nY))
+            mimg = afwImage.MaskedImageF(lsst.geom.Extent2I(self.nX, self.nY))
             mimg.set(val, 0x0, val)
             mimgList.append(mimg)
         mimgStack = afwMath.statisticsStack(mimgList, afwMath.MEAN, sctrl)
@@ -122,7 +122,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         imgList = []
         weights = []
         for val in self.values:
-            img = afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val)
+            img = afwImage.ImageF(lsst.geom.Extent2I(self.nX, self.nY), val)
             imgList.append(img)
             weights.append(val)
         imgStack = afwMath.statisticsStack(
@@ -139,7 +139,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         sctrl = afwMath.StatisticsControl()
         imgList = []
         for val in self.values:
-            img = afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val)
+            img = afwImage.ImageF(lsst.geom.Extent2I(self.nX, self.nY), val)
             imgList.append(img)
 
         def tst():
@@ -155,12 +155,12 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         imgList = []
 
-        img = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
+        img = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 20))
         for y in range(img.getHeight()):
             simg = img.Factory(
                 img,
-                afwGeom.Box2I(afwGeom.Point2I(0, y),
-                              afwGeom.Extent2I(img.getWidth(), 1)),
+                lsst.geom.Box2I(lsst.geom.Point2I(0, y),
+                                lsst.geom.Extent2I(img.getWidth(), 1)),
                 afwImage.LOCAL)
             simg.set(y)
 
@@ -190,10 +190,10 @@ class StackTestCase(lsst.utils.tests.TestCase):
         sctrl.setNoGoodPixelsMask(EDGE)
 
         # set these pixels to EDGE
-        edgeBBox = afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                                 afwGeom.Extent2I(20, 20))
+        edgeBBox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                                   lsst.geom.Extent2I(20, 20))
         width, height = 512, 512
-        dim = afwGeom.Extent2I(width, height)
+        dim = lsst.geom.Extent2I(width, height)
         val, maskVal = 10, DETECTED
         for i in range(4):
             mimg = afwImage.MaskedImageF(dim)
@@ -201,8 +201,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
             #
             # Set part of the image to NaN (with the INTRP bit set)
             #
-            llc = afwGeom.Point2I(width//2*(i//2), height//2*(i % 2))
-            bbox = afwGeom.Box2I(llc, dim//2)
+            llc = lsst.geom.Point2I(width//2*(i//2), height//2*(i % 2))
+            bbox = lsst.geom.Box2I(llc, dim//2)
 
             smimg = mimg.Factory(mimg, bbox, afwImage.LOCAL)
             del smimg
@@ -252,9 +252,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
     def testTicket1412(self):
         """Ticket 1412: ignored mask bits are propegated to output stack."""
 
-        mimg1 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
+        mimg1 = afwImage.MaskedImageF(lsst.geom.Extent2I(1, 1))
         mimg1.set(0, 0, (1, 0x4, 1))  # set 0100
-        mimg2 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
+        mimg2 = afwImage.MaskedImageF(lsst.geom.Extent2I(1, 1))
         mimg2.set(0, 0, (2, 0x3, 1))  # set 0010 and 0001
 
         imgList = []
@@ -360,7 +360,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
     def testClipped(self):
         """Test that we set mask bits when pixels are clipped"""
-        box = afwGeom.Box2I(afwGeom.Point2I(12345, 67890), afwGeom.Extent2I(3, 3))
+        box = lsst.geom.Box2I(lsst.geom.Point2I(12345, 67890), lsst.geom.Extent2I(3, 3))
         num = 10
         maskVal = 0xAD
         value = 0.0

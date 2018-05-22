@@ -26,7 +26,7 @@ import numpy as np
 import astropy.io.fits
 
 import lsst.utils.tests
-import lsst.afw.geom
+import lsst.geom
 import lsst.afw.table
 import lsst.afw.image
 
@@ -40,7 +40,7 @@ class TableIoTestCase(lsst.utils.tests.TestCase):
         schema = lsst.afw.table.Schema()
         key = schema.addField("a", type="Angle", doc="angle field")
         outCat = lsst.afw.table.BaseCatalog(schema)
-        outCat.addNew().set(key, 1.0*lsst.afw.geom.degrees)
+        outCat.addNew().set(key, 1.0*lsst.geom.degrees)
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             outCat.writeFits(tmpFile)
             inFits = astropy.io.fits.open(tmpFile)

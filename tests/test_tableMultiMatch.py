@@ -37,7 +37,7 @@ import unittest
 import numpy as np
 
 import lsst.afw.table as afwTable
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.pex.exceptions as pexExcept
 import lsst.utils
 import lsst.utils.tests
@@ -83,8 +83,8 @@ class TestGroupView(lsst.utils.tests.TestCase):
                     s = sdss.addNew()
 
                 s.setId(objId)
-                s.setRa(ra * afwGeom.degrees)
-                s.setDec(dec * afwGeom.degrees)
+                s.setRa(ra * lsst.geom.degrees)
+                s.setDec(dec * lsst.geom.degrees)
                 s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         # Read catalalogue built from the template image
@@ -107,9 +107,9 @@ class TestGroupView(lsst.utils.tests.TestCase):
                 s = template.addNew()
                 s.setId(id_)
                 s.set(afwTable.SourceTable.getCoordKey().getRa(),
-                      ra * afwGeom.degrees)
+                      ra * lsst.geom.degrees)
                 s.set(afwTable.SourceTable.getCoordKey().getDec(),
-                      dec * afwGeom.degrees)
+                      dec * lsst.geom.degrees)
                 s.set(self.table.getPsfFluxKey(), flux[0])
 
         m = afwTable.MultiMatch(self.schema,

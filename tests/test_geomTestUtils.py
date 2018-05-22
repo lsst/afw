@@ -1,7 +1,7 @@
 import unittest
 
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 from lsst.afw.geom.testUtils import BoxGrid
 
 
@@ -11,7 +11,7 @@ class BoxGridTestCase(lsst.utils.tests.TestCase):
     def test3By4(self):
         """!Test a 3x4 box divided into a 3x2 grid, such that each sub-box is 1x2
         """
-        for boxClass in (afwGeom.Box2I, afwGeom.Box2D):
+        for boxClass in (lsst.geom.Box2I, lsst.geom.Box2D):
             pointClass = type(boxClass().getMin())
             extentClass = type(boxClass().getDimensions())
 
@@ -33,10 +33,10 @@ class BoxGridTestCase(lsst.utils.tests.TestCase):
 
         Divide a 5x4 box into 2x3 regions
         """
-        minPt = afwGeom.Point2I(0, 0)
-        extent = afwGeom.Extent2I(5, 7)
+        minPt = lsst.geom.Point2I(0, 0)
+        extent = lsst.geom.Extent2I(5, 7)
         numColRow = (2, 3)
-        outerBox = afwGeom.Box2I(minPt, extent)
+        outerBox = lsst.geom.Box2I(minPt, extent)
         boxGrid = BoxGrid(box=outerBox, numColRow=numColRow)
         desColStarts = (0, 2)
         desWidths = (2, 3)

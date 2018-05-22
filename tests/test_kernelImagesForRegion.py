@@ -25,7 +25,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
@@ -47,10 +47,10 @@ NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.items())
 class KernelImagesForRegion(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        boxCorner = afwGeom.Point2I(11, 50)
-        boxExtent = afwGeom.Extent2I(100, 99)
-        self.bbox = afwGeom.Box2I(boxCorner, boxExtent)
-        self.xy0 = afwGeom.Point2I(100, 251)
+        boxCorner = lsst.geom.Point2I(11, 50)
+        boxExtent = lsst.geom.Extent2I(100, 99)
+        self.bbox = lsst.geom.Box2I(boxCorner, boxExtent)
+        self.xy0 = lsst.geom.Point2I(100, 251)
         self.kernel = self.makeKernel()
 
     def tearDown(self):
@@ -135,7 +135,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             (region.TOP_LEFT, (leftInd, topInd)),
             (region.TOP_RIGHT, (rightInd, topInd)),
         ):
-            desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
+            desPixIndex = lsst.geom.Point2I(desIndex[0], desIndex[1])
             self.assertEqual(region.getPixelIndex(location), desPixIndex, "getPixelIndex(%s) = %s != %s" %
                              (LocNameDict[location], region.getPixelIndex(location), desPixIndex))
 
@@ -205,7 +205,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
         """
-        desImage = afwImage.ImageD(afwGeom.Extent2I(
+        desImage = afwImage.ImageD(lsst.geom.Extent2I(
             self.kernel.getWidth(), self.kernel.getHeight()))
 
         for doNormalize in (False, True):

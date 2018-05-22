@@ -35,6 +35,7 @@ import numpy
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.table
 import lsst.afw.geom
 
@@ -105,9 +106,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testPointKey(self):
         self.doTestPointKey("I", lsst.afw.table.Point2IKey,
-                            lsst.afw.geom.Point2I)
+                            lsst.geom.Point2I)
         self.doTestPointKey("D", lsst.afw.table.Point2DKey,
-                            lsst.afw.geom.Point2D)
+                            lsst.geom.Point2D)
 
     def doTestBoxKey(self, pointFieldType, functorKeyType, valueType):
         """Run type-parameterized tests on a Box FunctorKey.
@@ -161,8 +162,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(maxKey), b.getMax())
 
     def testBoxKey(self):
-        self.doTestBoxKey(lsst.afw.table.Point2IKey, lsst.afw.table.Box2IKey, lsst.afw.geom.Box2I)
-        self.doTestBoxKey(lsst.afw.table.Point2DKey, lsst.afw.table.Box2DKey, lsst.afw.geom.Box2D)
+        self.doTestBoxKey(lsst.afw.table.Point2IKey, lsst.afw.table.Box2IKey, lsst.geom.Box2I)
+        self.doTestBoxKey(lsst.afw.table.Point2DKey, lsst.afw.table.Box2DKey, lsst.geom.Box2D)
 
     def testCoordKey(self):
         schema = lsst.afw.table.Schema()
@@ -190,14 +191,14 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # constituent keys
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
-        record.set(longKey, lsst.afw.geom.Angle(0))
-        record.set(latKey, lsst.afw.geom.Angle(1))
-        self.assertIsInstance(record.get(fKey1), lsst.afw.geom.SpherePoint)
+        record.set(longKey, lsst.geom.Angle(0))
+        record.set(latKey, lsst.geom.Angle(1))
+        self.assertIsInstance(record.get(fKey1), lsst.geom.SpherePoint)
         self.assertEqual(record.get(fKey1).getRa(), record.get(longKey))
         self.assertEqual(record.get(fKey1).getDec(), record.get(latKey))
         # Test that we can set using the functor key
-        coord = lsst.afw.geom.SpherePoint(
-            lsst.afw.geom.Angle(0), lsst.afw.geom.Angle(1))
+        coord = lsst.geom.SpherePoint(
+            lsst.geom.Angle(0), lsst.geom.Angle(1))
         record.set(fKey1, coord)
         self.assertEqual(record.get(longKey), coord.getRa())
         self.assertEqual(record.get(latKey), coord.getDec())
@@ -288,7 +289,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
         record.set(qKey, lsst.afw.geom.Quadrupole(4, 3, 1))
-        record.set(pKey, lsst.afw.geom.Point2D(5, 6))
+        record.set(pKey, lsst.geom.Point2D(5, 6))
         # test that the return type and value is correct
         self.assertIsInstance(record.get(fKey1),
                               lsst.afw.geom.Ellipse)
@@ -304,7 +305,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                          record.get(pKey).getX())
         # test that we can set using the functor key
         e = lsst.afw.geom.Ellipse(lsst.afw.geom.Quadrupole(8, 16, 4),
-                                  lsst.afw.geom.Point2D(5, 6))
+                                  lsst.geom.Point2D(5, 6))
         record.set(fKey1, e)
         self.assertFloatsAlmostEqual(record.get(fKey1).getCore().getIxx(),
                                      e.getCore().getIxx(), rtol=1E-14)

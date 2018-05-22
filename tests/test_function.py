@@ -27,7 +27,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExceptions
 
@@ -184,8 +184,8 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
 
-            xyRange = afwGeom.Box2D(afwGeom.Point2D(xMin, yMin),
-                                    afwGeom.Point2D(xMax, yMax))
+            xyRange = lsst.geom.Box2D(lsst.geom.Point2D(xMin, yMin),
+                                      lsst.geom.Point2D(xMax, yMax))
 
             f = afwMath.Chebyshev1Function2D(order, xyRange)
             numParams = f.getNParameters()
@@ -274,8 +274,8 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
         order = 3
         numParams = numParamsFromOrder(order)
         f = afwMath.Chebyshev1Function2D(order)
-        xyRange = afwGeom.Box2D(
-            afwGeom.Point2D(-1.0, -1.0), afwGeom.Point2D(1.0, 1.0))
+        xyRange = lsst.geom.Box2D(
+            lsst.geom.Point2D(-1.0, -1.0), lsst.geom.Point2D(1.0, 1.0))
         x = 0.5
         y = -0.24
         for addValue in (0.0, 0.2):
@@ -308,8 +308,8 @@ class FunctionTestCase(lsst.utils.tests.TestCase):
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
 
-            xyRange = afwGeom.Box2D(afwGeom.Point2D(xMin, yMin),
-                                    afwGeom.Point2D(xMax, yMax))
+            xyRange = lsst.geom.Box2D(lsst.geom.Point2D(xMin, yMin),
+                                      lsst.geom.Point2D(xMax, yMax))
 
             fullNParams = afwMath.Chebyshev1Function2D.nParametersFromOrder(
                 order)

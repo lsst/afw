@@ -23,6 +23,7 @@ import unittest
 import tempfile
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDet
 import lsst.afw.table as afwTable
@@ -33,9 +34,9 @@ class FootprintTestCase(unittest.TestCase):
         self.spanRad = 4
         self.regionRad = 10
         self.spans = afwGeom.SpanSet.fromShape(self.spanRad, afwGeom.Stencil.BOX)
-        minPoint = afwGeom.Point2I(-self.regionRad, -self.regionRad)
-        maxPoint = afwGeom.Point2I(self.regionRad, self.regionRad)
-        self.region = afwGeom.Box2I(minPoint, maxPoint)
+        minPoint = lsst.geom.Point2I(-self.regionRad, -self.regionRad)
+        maxPoint = lsst.geom.Point2I(self.regionRad, self.regionRad)
+        self.region = lsst.geom.Box2I(minPoint, maxPoint)
         self.schema = afwDet.PeakTable.makeMinimalSchema()
         # Run the the constructors test to ensure the Footprints are setUp
         self.testConstructors()
@@ -129,7 +130,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(self.footprint.getShape().getIxy(), covShape)
 
         # Shift the footprint back
-        self.footprint.shift(afwGeom.ExtentI(-offsetX, -offsetY))
+        self.footprint.shift(lsst.geom.ExtentI(-offsetX, -offsetY))
 
         bBox = self.footprint.getBBox()
         self.assertEqual(bBox.getMinX(), -self.spanRad)
@@ -138,26 +139,26 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bBox.getMaxY(), self.spanRad)
 
         # Test the point membership in a Footprint
-        memberPoint = afwGeom.Point2I(1, 1)
+        memberPoint = lsst.geom.Point2I(1, 1)
         self.assertTrue(self.footprint.contains(memberPoint))
         self.assertIn(memberPoint, self.footprint)
 
-        nonMemberPoint = afwGeom.Point2I(100, 100)
+        nonMemberPoint = lsst.geom.Point2I(100, 100)
         self.assertFalse(self.footprint.contains(nonMemberPoint))
         self.assertNotIn(nonMemberPoint, self.footprint)
 
     def testRegion(self):
         self.assertEqual(self.footprintWithRegion.getRegion(), self.region)
         largeRad = 20
-        testRegion = afwGeom.Box2I(afwGeom.Point2I(-largeRad, -largeRad),
-                                   afwGeom.Point2I(largeRad, largeRad))
+        testRegion = lsst.geom.Box2I(lsst.geom.Point2I(-largeRad, -largeRad),
+                                     lsst.geom.Point2I(largeRad, largeRad))
         self.footprintWithRegion.setRegion(testRegion)
         self.assertEqual(testRegion, self.footprintWithRegion.getRegion())
 
     def testMutationFunctionality(self):
         clipRad = 2
-        clipBox = afwGeom.Box2I(afwGeom.Point2I(-clipRad, -clipRad),
-                                afwGeom.Point2I(clipRad, clipRad))
+        clipBox = lsst.geom.Box2I(lsst.geom.Point2I(-clipRad, -clipRad),
+                                  lsst.geom.Point2I(clipRad, clipRad))
         self.footprint.clipTo(clipBox)
         # Fetch the bounding box using the property notation
         bBox = self.footprint.getBBox()
@@ -209,7 +210,7 @@ class FootprintTestCase(unittest.TestCase):
                     afwGeom.Span(12, 4, 7)]
 
         spans = afwGeom.SpanSet(spanList)
-        region = afwGeom.Box2I(afwGeom.PointI(-6, -6), afwGeom.PointI(20, 20))
+        region = lsst.geom.Box2I(lsst.geom.PointI(-6, -6), lsst.geom.PointI(20, 20))
         multiFoot = afwDet.Footprint(spans, region)
 
         records = [multiFoot.addPeak(3, 1, 100),
@@ -254,8 +255,8 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(len(legacyFootprint.spans), 303)
         self.assertEqual(len(legacyFootprint.peaks), 48)
         self.assertEqual(legacyFootprint.spans.getBBox(),
-                         afwGeom.Box2I(afwGeom.Point2I(32676, 27387),
-                                       afwGeom.Extent2I(175, 153)))
+                         lsst.geom.Box2I(lsst.geom.Point2I(32676, 27387),
+                                         lsst.geom.Extent2I(175, 153)))
         legacyCenter = legacyFootprint.spans.computeCentroid()
         self.assertAlmostEqual(legacyCenter.getY(), 27456.70733, 5)
         self.assertAlmostEqual(legacyCenter.getX(), 32775.47611, 5)

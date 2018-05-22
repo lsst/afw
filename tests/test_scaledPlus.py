@@ -23,7 +23,7 @@
 import unittest
 
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 from lsst.log import Log
@@ -38,13 +38,13 @@ class ScaledPlus(lsst.utils.tests.TestCase):
         self.imWidth = 200
         self.imHeight = 200
         self.maskedImage0 = afwImage.MaskedImageF(
-            afwGeom.Extent2I(self.imWidth, self.imHeight))
+            lsst.geom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(self.maskedImage0.getImage(), self.random)
         afwMath.randomUniformImage(
             self.maskedImage0.getVariance(), self.random)
 #        afwMath.randomUniformImage(self.maskedImage0.getMask(), self.random)
         self.maskedImage1 = afwImage.MaskedImageF(
-            afwGeom.Extent2I(self.imWidth, self.imHeight))
+            lsst.geom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(self.maskedImage1.getImage(), self.random)
         afwMath.randomUniformImage(
             self.maskedImage1.getVariance(), self.random)
@@ -69,7 +69,7 @@ class ScaledPlus(lsst.utils.tests.TestCase):
         desMaskedImage.scaledPlus(coeff1, self.maskedImage1)
 
         actMaskedImage = afwImage.MaskedImageF(
-            afwGeom.Extent2I(self.imWidth, self.imHeight))
+            lsst.geom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actMaskedImage.getImage(), self.random)
         afwMath.randomUniformImage(actMaskedImage.getVariance(), self.random)
 
@@ -77,7 +77,7 @@ class ScaledPlus(lsst.utils.tests.TestCase):
                            self.maskedImage0, coeff1, self.maskedImage1)
 
         actImage = afwImage.ImageF(
-            afwGeom.Extent2I(self.imWidth, self.imHeight))
+            lsst.geom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actImage, self.random)
         afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(),
                            coeff1, self.maskedImage1.getImage())

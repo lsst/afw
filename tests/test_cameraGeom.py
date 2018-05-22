@@ -27,7 +27,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 from lsst.afw.cameraGeom import PIXELS, FIELD_ANGLE, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
@@ -132,9 +132,9 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
         for cw in self.cameraList:
             camera = cw.camera
             for point in testData:
-                fpGivenPos = afwGeom.Point2D(point[2], point[3])
-                fieldGivenPos = afwGeom.Point2D(
-                    afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
+                fpGivenPos = lsst.geom.Point2D(point[2], point[3])
+                fieldGivenPos = lsst.geom.Point2D(
+                    lsst.geom.degToRad(point[0]), lsst.geom.degToRad(point[1]))
 
                 fieldAngleToFocalPlane = camera.getTransform(FIELD_ANGLE, FOCAL_PLANE)
                 fpComputedPos = fieldAngleToFocalPlane.applyForward(fieldGivenPos)
@@ -155,7 +155,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 det = camera[detName]
 
                 # test transforms using an arbitrary point on the detector
-                posPixels = afwGeom.Point2D(10, 10)
+                posPixels = lsst.geom.Point2D(10, 10)
                 pixSys = det.makeCameraSys(PIXELS)
                 pixelsToFocalPlane = camera.getTransform(pixSys, FOCAL_PLANE)
                 pixelsToFieldAngle = camera.getTransform(pixSys, FIELD_ANGLE)
@@ -184,7 +184,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
                 # Test finding detectors for a point off this detector.
                 # The point off the detector may be on one other detector,
                 # depending if the detector has neighbor on the correct edge.
-                pixOffDet = afwGeom.Point2D(0, -10)
+                pixOffDet = lsst.geom.Point2D(0, -10)
                 pixCoordSys = det.makeCameraSys(PIXELS)
                 detList = camera.findDetectors(pixOffDet, pixCoordSys)
                 self.assertIn(len(detList), (0, 1))
@@ -227,7 +227,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
     def testFpBbox(self):
         for cw in self.cameraList:
             camera = cw.camera
-            bbox = afwGeom.Box2D()
+            bbox = lsst.geom.Box2D()
             for name in cw.detectorNameList:
                 for corner in camera[name].getCorners(FOCAL_PLANE):
                     bbox.include(corner)
@@ -304,7 +304,7 @@ class CameraGeomTestCase(lsst.utils.tests.TestCase):
     def testCameraRaises(self):
         for cw in self.cameraList:
             camera = cw.camera
-            point = afwGeom.Point2D(0, 0)
+            point = lsst.geom.Point2D(0, 0)
             # non-existant source camera system
             with self.assertRaises(pexExcept.InvalidParameterError):
                 camera.getTransform(CameraSys("badSystem"), FOCAL_PLANE)

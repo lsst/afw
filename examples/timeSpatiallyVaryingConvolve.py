@@ -28,9 +28,9 @@ import os
 import time
 
 import lsst.utils
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 from lsst.log import Log
 
 Log.getDefaultLogger().setLevel(Log.INFO)
@@ -117,7 +117,7 @@ def getDeltaLinearCombinationKernel(kSize, imSize, spOrder):
     for ctrX in range(kSize):
         for ctrY in range(kSize):
             kernelList.append(afwMath.DeltaFunctionKernel(
-                kSize, kSize, afwGeom.Point2I(ctrX, ctrY)))
+                kSize, kSize, lsst.geom.Point2I(ctrX, ctrY)))
 
     polyFunc = afwMath.PolynomialFunction2D(spOrder)
     kernel = afwMath.LinearCombinationKernel(kernelList, polyFunc)
@@ -222,8 +222,8 @@ def run():
             inImage = imageClass(InputMaskedImagePath)
             # to get original behavior change True to False:
             if (False):
-                bbox = afwGeom.Box2I(afwGeom.Point2I(
-                    0, 0), afwGeom.Extent2I(256, 256))
+                bbox = lsst.geom.Box2I(lsst.geom.Point2I(
+                    0, 0), lsst.geom.Extent2I(256, 256))
                 inImage = imageClass(inImage, bbox, afwImage.LOCAL, False)
         else:
             inImage = imageClass(sys.argv[1])

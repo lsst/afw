@@ -26,6 +26,7 @@ import unittest
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
@@ -88,7 +89,7 @@ class CameraTransformMapTestCase(lsst.utils.tests.TestCase):
             x = minVal + (xInd * dVal)
             for yInd in range(nVal):
                 y = minVal + (yInd * dVal)
-                fromPoint = afwGeom.Point2D(x, y)
+                fromPoint = lsst.geom.Point2D(x, y)
                 res1 = func1(fromPoint)
                 res2 = func2(fromPoint)
                 self.assertPairsAlmostEqual(res1, res2)
@@ -168,7 +169,7 @@ class CameraTransformMapTestCase(lsst.utils.tests.TestCase):
         fromList = []
         for x in (-1.2, 0.0, 25.3):
             for y in (-23.4, 0.0, 2.3):
-                fromList.append(afwGeom.Point2D(x, y))
+                fromList.append(lsst.geom.Point2D(x, y))
 
         for fromSys in self.transformMap:
             for toSys in self.transformMap:

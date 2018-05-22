@@ -31,6 +31,7 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.daf.base as dafBase
 from lsst.afw.coord import Observatory, Weather
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -76,13 +77,13 @@ def makeVisitInfo():
                               darkTime=11.02,
                               date=dafBase.DateTime(65321.1, dafBase.DateTime.MJD, dafBase.DateTime.TAI),
                               ut1=12345.1,
-                              era=45.1*afwGeom.degrees,
-                              boresightRaDec=afwGeom.SpherePoint(23.1, 73.2, afwGeom.degrees),
-                              boresightAzAlt=afwGeom.SpherePoint(134.5, 33.3, afwGeom.degrees),
+                              era=45.1*lsst.geom.degrees,
+                              boresightRaDec=lsst.geom.SpherePoint(23.1, 73.2, lsst.geom.degrees),
+                              boresightAzAlt=lsst.geom.SpherePoint(134.5, 33.3, lsst.geom.degrees),
                               boresightAirmass=1.73,
-                              boresightRotAngle=73.2*afwGeom.degrees,
+                              boresightRotAngle=73.2*lsst.geom.degrees,
                               rotType=afwImage.RotType.SKY,
-                              observatory=Observatory(11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
+                              observatory=Observatory(11.1*lsst.geom.degrees, 22.2*lsst.geom.degrees, 0.333),
                               weather=Weather(1.1, 2.2, 34.5),
                               )
 
@@ -195,11 +196,11 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """Cannot warp in-place
         """
         wcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(0, 0),
-            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(1.0e-8*afwGeom.degrees),
+            crpix=lsst.geom.Point2D(0, 0),
+            crval=lsst.geom.SpherePoint(359, 0, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(1.0e-8*lsst.geom.degrees),
         )
-        exposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100), wcs)
+        exposure = afwImage.ExposureF(lsst.geom.Extent2I(100, 100), wcs)
         maskedImage = exposure.getMaskedImage()
         warpingControl = afwMath.WarpingControl(
             "bilinear", "", 0, interpLength)
@@ -396,16 +397,16 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
     def testTicket2441(self):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
         fromWcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(0, 0),
-            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
+            crpix=lsst.geom.Point2D(0, 0),
+            crval=lsst.geom.SpherePoint(359, 0, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*lsst.geom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
 
         toWcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(410000, 11441),
-            crval=afwGeom.SpherePoint(45, 0, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(scale=0.00011*afwGeom.degrees, flipX=True),
+            crpix=lsst.geom.Point2D(410000, 11441),
+            crval=lsst.geom.SpherePoint(45, 0, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.00011*lsst.geom.degrees, flipX=True),
             projection="CEA",
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(0, 0), toWcs)
@@ -439,16 +440,16 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         This tests another bug that was fixed in ticket #2441
         """
         fromWcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(0, 0),
-            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
+            crpix=lsst.geom.Point2D(0, 0),
+            crval=lsst.geom.SpherePoint(359, 0, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*lsst.geom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
 
         toWcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(0, 0),
-            crval=afwGeom.SpherePoint(358, 0, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(scale=1.1e-8*afwGeom.degrees),
+            crpix=lsst.geom.Point2D(0, 0),
+            crval=lsst.geom.SpherePoint(358, 0, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=1.1e-8*lsst.geom.degrees),
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), toWcs)
 
@@ -479,14 +480,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         - atol: absolute tolerance as used by np.allclose
         """
         srcWcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(10, 11),
-            crval=afwGeom.SpherePoint(41.7, 32.9, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(scale=0.2*afwGeom.degrees),
+            crpix=lsst.geom.Point2D(10, 11),
+            crval=lsst.geom.SpherePoint(41.7, 32.9, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.2*lsst.geom.degrees),
         )
         destWcs = afwGeom.makeSkyWcs(
-            crpix=afwGeom.Point2D(9, 10),
-            crval=afwGeom.SpherePoint(41.65, 32.95, afwGeom.degrees),
-            cdMatrix=afwGeom.makeCdMatrix(scale=0.17*afwGeom.degrees),
+            crpix=lsst.geom.Point2D(9, 10),
+            crval=lsst.geom.SpherePoint(41.65, 32.95, lsst.geom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(scale=0.17*lsst.geom.degrees),
         )
 
         srcMaskedImage = afwImage.MaskedImageF(100, 101)
@@ -573,8 +574,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         if useSubregion:
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
-            bbox = afwGeom.Box2I(afwGeom.Point2I(40, 150),
-                                 afwGeom.Extent2I(145, 200))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(40, 150),
+                                   lsst.geom.Extent2I(145, 200))
             originalExposure = afwImage.ExposureF(
                 originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)

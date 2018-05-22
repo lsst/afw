@@ -39,7 +39,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.display.utils as displayUtils
 import lsst.afw.display.ds9 as ds9
@@ -64,7 +64,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
         """Test inner products"""
 
         width, height = 10, 20
-        im1 = afwImage.ImageF(afwGeom.Extent2I(width, height))
+        im1 = afwImage.ImageF(lsst.geom.Extent2I(width, height))
         val1 = 10
         im1.set(val1)
 
@@ -91,7 +91,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
 
         nImage = 3
         for i in range(nImage):
-            im = afwImage.ImageF(afwGeom.Extent2I(21, 21))
+            im = afwImage.ImageF(lsst.geom.Extent2I(21, 21))
             val = 1
             im.set(val)
 
@@ -115,7 +115,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
         values = (100, 200, 300)
         meanVal = 0
         for val in values:
-            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
+            im = afwImage.ImageF(lsst.geom.Extent2I(width, height))
             im.set(val)
 
             self.ImageSet.addImage(im, 1.0)
@@ -153,7 +153,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
 
         inputs = []
         for i in range(numInputs):
-            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
+            im = afwImage.ImageF(lsst.geom.Extent2I(width, height))
             im.set(0)
             for b in bases:
                 im.scaledPlus(random.random(), b)
@@ -192,7 +192,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
 
         values = (100, 200, 300)
         for i, val in enumerate(values):
-            im = afwImage.ImageF(afwGeom.Extent2I(width, height))
+            im = afwImage.ImageF(lsst.geom.Extent2I(width, height))
             im.set(val)
 
             if i == 1:

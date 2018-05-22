@@ -26,6 +26,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image  # noqa required by Polygon.createImage
 
@@ -65,7 +66,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         if y0 is None:
             y0 = self.y0
         points = circle(radius, num, x0=x0, y0=y0)
-        return afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in reversed(points)])
+        return afwGeom.Polygon([lsst.geom.Point2D(x, y) for x, y in reversed(points)])
 
     def square(self, size=1.0, x0=0, y0=0):
         """Generate a square
@@ -73,7 +74,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         @param size: Half-length of the sides
         @param x0,y0: Offset of center
         """
-        return afwGeom.Polygon([afwGeom.Point2D(size*x + x0, size*y + y0) for
+        return afwGeom.Polygon([lsst.geom.Point2D(size*x + x0, size*y + y0) for
                                x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))])
 
     def testGetters(self):
@@ -114,8 +115,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
     def testFromBox(self):
         size = 1.0
         poly1 = self.square(size=size)
-        box = afwGeom.Box2D(afwGeom.Point2D(-1.0, -1.0),
-                            afwGeom.Point2D(1.0, 1.0))
+        box = lsst.geom.Box2D(lsst.geom.Point2D(-1.0, -1.0),
+                              lsst.geom.Point2D(1.0, 1.0))
         poly2 = afwGeom.Polygon(box)
         self.assertEqual(poly1, poly2)
 
@@ -142,9 +143,9 @@ class PolygonTest(lsst.utils.tests.TestCase):
         radius = 1.0
         for num in range(3, 30):
             poly = self.polygon(num, radius=radius)
-            self.assertTrue(poly.contains(afwGeom.Point2D(self.x0, self.y0)))
+            self.assertTrue(poly.contains(lsst.geom.Point2D(self.x0, self.y0)))
             self.assertFalse(poly.contains(
-                afwGeom.Point2D(self.x0 + radius, self.y0 + radius)))
+                lsst.geom.Point2D(self.x0 + radius, self.y0 + radius)))
 
     def testOverlaps(self):
         """Test Polygon.overlaps"""
@@ -192,7 +193,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.union"""
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+        poly3 = afwGeom.Polygon([lsst.geom.Point2D(x, y) for x, y in
                                  ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
                                   (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
         poly4 = self.square(1.0, +5.0, +5.0)
@@ -223,10 +224,10 @@ class PolygonTest(lsst.utils.tests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
 
-        poly3 = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+        poly3 = afwGeom.Polygon([lsst.geom.Point2D(x, y) for x, y in
                                 ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0),
                                  (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
-        poly4 = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+        poly4 = afwGeom.Polygon([lsst.geom.Point2D(x, y) for x, y in
                                 ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0),
                                  (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
 
@@ -245,7 +246,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
         poly = poly1.unionSingle(poly2)
-        expected = afwGeom.Polygon([afwGeom.Point2D(x, y) for x, y in
+        expected = afwGeom.Polygon([lsst.geom.Point2D(x, y) for x, y in
                                    ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
                                     (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
         self.assertEqual(poly.convexHull(), expected)
@@ -254,8 +255,8 @@ class PolygonTest(lsst.utils.tests.TestCase):
         """Test Polygon.createImage"""
         for i, num in enumerate(range(3, 30)):
             poly = self.polygon(num, 25, 75, 75)
-            box = afwGeom.Box2I(afwGeom.Point2I(15, 15),
-                                afwGeom.Extent2I(115, 115))
+            box = lsst.geom.Box2I(lsst.geom.Point2I(15, 15),
+                                  lsst.geom.Extent2I(115, 115))
             image = poly.createImage(box)
             if DEBUG:
                 import lsst.afw.display.ds9 as ds9
@@ -267,13 +268,13 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
     def testTransform(self):
         """Test constructor for Polygon involving transforms"""
-        box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0),
-                            afwGeom.Point2D(123.4, 567.8))
+        box = lsst.geom.Box2D(lsst.geom.Point2D(0.0, 0.0),
+                              lsst.geom.Point2D(123.4, 567.8))
         poly1 = afwGeom.Polygon(box)
         scale = 1.5
-        shift = afwGeom.Extent2D(3.0, 4.0)
-        affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
-            afwGeom.AffineTransform.makeScaling(scale)
+        shift = lsst.geom.Extent2D(3.0, 4.0)
+        affineTransform = lsst.geom.AffineTransform.makeTranslation(shift) * \
+            lsst.geom.AffineTransform.makeScaling(scale)
         transform22 = afwGeom.makeTransform(affineTransform)
         transformedVertices = transform22.applyForward(box.getCorners())
         expect = afwGeom.Polygon(transformedVertices)
@@ -331,9 +332,9 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
     def testTransform2(self):
         scale = 2.0
-        shift = afwGeom.Extent2D(3.0, 4.0)
-        affineTransform = afwGeom.AffineTransform.makeTranslation(shift) * \
-            afwGeom.AffineTransform.makeScaling(scale)
+        shift = lsst.geom.Extent2D(3.0, 4.0)
+        affineTransform = lsst.geom.AffineTransform.makeTranslation(shift) * \
+            lsst.geom.AffineTransform.makeScaling(scale)
         transform22 = afwGeom.makeTransform(affineTransform)
         for num in range(3, 30):
             small = self.polygon(num, 1.0, 0.0, 0.0)

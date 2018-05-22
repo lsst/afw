@@ -28,7 +28,8 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-import lsst.afw.geom as afwGeom
+import lsst.geom
+import lsst.afw.geom
 import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
@@ -85,7 +86,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         def addBadCameraSys(dw):
             """Add an invalid camera system"""
             dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = \
-                afwGeom.makeIdentityTransform()
+                lsst.afw.geom.makeIdentityTransform()
         with self.assertRaises(lsst.pex.exceptions.Exception):
             DetectorWrapper(modFunc=addBadCameraSys)
 
@@ -107,7 +108,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         dw = DetectorWrapper()
         pixOffset = dw.orientation.getReferencePoint()
         for xyMM in ((25.6, -31.07), (0, 0), (-1.234e5, 3.123e4)):
-            fpPoint = afwGeom.Point2D(*xyMM)
+            fpPoint = lsst.geom.Point2D(*xyMM)
             pixPoint = dw.detector.transform(fpPoint, cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS)
             for i in range(2):
                 self.assertAlmostEqual(
@@ -187,7 +188,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
             # positions of corners in specified camera system
             cornerList = dw.detector.getCorners(cameraSys)
-            for posPixels, posCameraSys in zip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
+            for posPixels, posCameraSys in zip(lsst.geom.Box2D(dw.bbox).getCorners(), cornerList):
                 pixelsToCameraSys = dw.detector.getTransform(cameraGeom.PIXELS, cameraSys)
                 predPosCameraSys = pixelsToCameraSys.applyForward(posPixels)
                 self.assertPairsAlmostEqual(predPosCameraSys, posCameraSys)
@@ -198,7 +199,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         """Test the getCenter method
         """
         dw = DetectorWrapper()
-        ctrPixPoint = afwGeom.Box2D(dw.detector.getBBox()).getCenter()
+        ctrPixPoint = lsst.geom.Box2D(dw.detector.getBBox()).getCenter()
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
             ctrPoint = dw.detector.getCenter(cameraSys)
             transform = dw.detector.getTransform(cameraGeom.PIXELS, cameraSys)
@@ -224,7 +225,7 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
         #
         ampInfoCatalog = detector.getAmpInfoCatalog().copy(deep=True)
         for i, amp in enumerate(ampInfoCatalog, 1):
-            amp.setRawXYOffset(i*afwGeom.ExtentI(1, 1))
+            amp.setRawXYOffset(i*lsst.geom.ExtentI(1, 1))
 
         ndetector = cameraGeom.copyDetector(
             detector, ampInfoCatalog=ampInfoCatalog)
