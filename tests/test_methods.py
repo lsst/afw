@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import contextlib
 import unittest
 import re
 
@@ -37,21 +36,6 @@ from lsst.afw.geom.utils import _compareWcsOverBBox
 class TestTestUtils(lsst.utils.tests.TestCase):
     """Test test methods added to lsst.utils.tests.TestCase
     """
-    def setUp(self):
-        # unittest did not get `assertWarns` until Python 3.2
-        self._addedAssertWarns = False
-        if not hasattr(self, "assertWarns"):
-            self._addedAssertWarns = True
-
-            @contextlib.contextmanager
-            def nullContextManger(dummy):
-                yield
-            self.assertWarns = nullContextManger
-
-    def tearDown(self):
-        if self._addedAssertWarns:
-            del self.assertWarns
-
     def testAssertWcsAlmostEqualOverBBox(self):
         """Test assertWcsAlmostEqualOverBBox and wcsAlmostEqualOverBBox"""
         bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
@@ -125,9 +109,6 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         self.assertMaskedImagesEqual(mi1, mi0)
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(mi0, mi1, atol=0, rtol=0)
-        # sanity-check deprecated version
-        with self.assertWarns(DeprecationWarning):
-            self.assertMaskedImagesNearlyEqual(mi1, mi0, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
             mi0.getArrays(), mi1, atol=0, rtol=0)
         self.assertMaskedImagesAlmostEqual(
@@ -140,9 +121,6 @@ class TestTestUtils(lsst.utils.tests.TestCase):
             self.assertImagesEqual(plane0, plane1)
             self.assertImagesEqual(plane1, plane0)
             self.assertImagesAlmostEqual(plane0, plane1, atol=0, rtol=0)
-            # sanity-check deprecated version
-            with self.assertWarns(DeprecationWarning):
-                self.assertImagesNearlyEqual(plane0, plane1, atol=0, rtol=0)
             self.assertImagesAlmostEqual(plane1, plane0, atol=0, rtol=0)
             self.assertImagesAlmostEqual(
                 plane0.getArray(), plane1, atol=0, rtol=0)

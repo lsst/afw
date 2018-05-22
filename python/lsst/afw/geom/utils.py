@@ -26,7 +26,6 @@ In the case of the assert functions, importing them makes them available in lsst
 __all__ = ["wcsAlmostEqualOverBBox"]
 
 import itertools
-import warnings
 import math
 
 import numpy as np
@@ -194,13 +193,6 @@ def assertWcsAlmostEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*lss
     )
     if errMsg:
         testCase.fail("%s: %s" % (msg, errMsg))
-
-
-@lsst.utils.tests.inTestCase
-def assertWcsNearlyEqualOverBBox(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertWcsAlmostEqualOverBBox",
-                  DeprecationWarning, 2)
-    assertWcsAlmostEqualOverBBox(*args, **kwargs)
 
 
 @lsst.utils.tests.inTestCase
