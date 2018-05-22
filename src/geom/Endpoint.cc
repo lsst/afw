@@ -28,8 +28,8 @@
 #include <vector>
 
 #include "astshim.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 
 namespace lsst {
@@ -61,7 +61,7 @@ BaseEndpoint<Point, Array>::BaseEndpoint(int nAxes) : _nAxes(nAxes) {
 }
 
 template <typename Point, typename Array>
-bool BaseEndpoint<Point, Array>::operator==(BaseEndpoint const & other) const noexcept {
+bool BaseEndpoint<Point, Array>::operator==(BaseEndpoint const& other) const noexcept {
     return this->getNAxes() == other.getNAxes() && typeid(*this) == typeid(other);
 }
 
@@ -104,7 +104,7 @@ ndarray::Array<double, 2, 2> GenericEndpoint::arrayFromData(ndarray::Array<doubl
     return ndarray::copy(data);
 }
 
-Point2Endpoint::Point2Endpoint(int nAxes) : BaseVectorEndpoint<Point2D>(2) {
+Point2Endpoint::Point2Endpoint(int nAxes) : BaseVectorEndpoint<lsst::geom::Point2D>(2) {
     if (nAxes != 2) {
         std::ostringstream os;
         os << "nAxes = " << nAxes << " != 2";
@@ -135,7 +135,7 @@ ndarray::Array<double, 2, 2> Point2Endpoint::dataFromArray(Array const& arr) con
     return data;
 }
 
-Point2D Point2Endpoint::pointFromData(std::vector<double> const& data) const {
+lsst::geom::Point2D Point2Endpoint::pointFromData(std::vector<double> const& data) const {
     const int nAxes = this->getNAxes();
     this->_assertNAxes(this->_getNAxes(data));
     Point result;
@@ -145,7 +145,8 @@ Point2D Point2Endpoint::pointFromData(std::vector<double> const& data) const {
     return result;
 }
 
-std::vector<Point2D> Point2Endpoint::arrayFromData(ndarray::Array<double, 2, 2> const& data) const {
+std::vector<lsst::geom::Point2D> Point2Endpoint::arrayFromData(
+        ndarray::Array<double, 2, 2> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
     int const nPoints = this->_getNPoints(data);
     Array array;
@@ -197,24 +198,26 @@ ndarray::Array<double, 2, 2> SpherePointEndpoint::dataFromArray(Array const& arr
     return data;
 }
 
-SpherePoint SpherePointEndpoint::pointFromData(std::vector<double> const& data) const {
+lsst::geom::SpherePoint SpherePointEndpoint::pointFromData(std::vector<double> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
-    return SpherePoint(data[0], data[1], radians);
+    return lsst::geom::SpherePoint(data[0], data[1], lsst::geom::radians);
 }
 
-std::vector<SpherePoint> SpherePointEndpoint::arrayFromData(
+std::vector<lsst::geom::SpherePoint> SpherePointEndpoint::arrayFromData(
         ndarray::Array<double, 2, 2> const& data) const {
     this->_assertNAxes(this->_getNAxes(data));
     int const nPoints = this->_getNPoints(data);
     Array array;
     array.reserve(nPoints);
     for (auto const& dataCol : data.transpose()) {
-        array.emplace_back(SpherePoint(dataCol[0], dataCol[1], radians));
+        array.emplace_back(lsst::geom::SpherePoint(dataCol[0], dataCol[1], lsst::geom::radians));
     }
     return array;
 }
 
-std::shared_ptr<ast::Frame> SpherePointEndpoint::makeFrame() const { return std::make_shared<ast::SkyFrame>(); }
+std::shared_ptr<ast::Frame> SpherePointEndpoint::makeFrame() const {
+    return std::make_shared<ast::SkyFrame>();
+}
 
 void SpherePointEndpoint::normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const {
     // use getCurrentFrame because if framePtr points to a FrameSet we want its current frame
@@ -251,11 +254,11 @@ std::ostream& operator<<(std::ostream& os, SpherePointEndpoint const& endpoint) 
 
 // explicit instantiations
 template class BaseEndpoint<std::vector<double>, ndarray::Array<double, 2, 2>>;
-template class BaseEndpoint<Point2D, std::vector<Point2D>>;
-template class BaseEndpoint<SpherePoint, std::vector<SpherePoint>>;
+template class BaseEndpoint<lsst::geom::Point2D, std::vector<lsst::geom::Point2D>>;
+template class BaseEndpoint<lsst::geom::SpherePoint, std::vector<lsst::geom::SpherePoint>>;
 
-template class BaseVectorEndpoint<Point2D>;
-template class BaseVectorEndpoint<SpherePoint>;
+template class BaseVectorEndpoint<lsst::geom::Point2D>;
+template class BaseVectorEndpoint<lsst::geom::SpherePoint>;
 
 }  // namespace geom
 }  // namespace afw

@@ -119,7 +119,7 @@ private:
 /// SlotDefinition specialization for centroids
 class CentroidSlotDefinition : public SlotDefinition {
 public:
-    typedef geom::Point2D MeasValue;               ///< Type returned by accessing the slot measurement
+    typedef lsst::geom::Point2D MeasValue;         ///< Type returned by accessing the slot measurement
     typedef Eigen::Matrix<float, 2, 2> ErrValue;   ///< Type returned by accessing the slot uncertainty
     typedef Point2DKey MeasKey;                    ///< Key type used to access the slot measurement
     typedef CovarianceMatrixKey<float, 2> ErrKey;  ///< Key type used to access the slot uncertainty

@@ -77,7 +77,7 @@ int test(int argc, char **argv) {
     testMaskedImage1->getMask()->addMaskPlane("CR");
 
     // verify that copy constructor and operator= build and do not leak
-    MaskedImage::Image testImage(geom::Extent2I(100, 100));
+    MaskedImage::Image testImage(lsst::geom::Extent2I(100, 100));
     MaskedImage::Image imageCopy(testImage);
     imageCopy = testImage;
 
@@ -103,13 +103,13 @@ int test(int argc, char **argv) {
 
     // test of subImage
 
-    geom::Box2I region(geom::Point2I(100, 600), geom::Extent2I(200, 300));
+    lsst::geom::Box2I region(lsst::geom::Point2I(100, 600), lsst::geom::Extent2I(200, 300));
     MaskedImage subMaskedImage1 = MaskedImage(*testMaskedImage1, region, image::LOCAL);
     subMaskedImage1 *= 0.5;
     subMaskedImage1.writeFits(outImagePath2);
 
     // Check whether offsets have been correctly saved
-    geom::Box2I region2(geom::Point2I(80, 110), geom::Extent2I(20, 30));
+    lsst::geom::Box2I region2(lsst::geom::Point2I(80, 110), lsst::geom::Extent2I(20, 30));
     MaskedImage subMaskedImage2 = MaskedImage(subMaskedImage1, region2, image::LOCAL);
 
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;

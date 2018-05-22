@@ -33,10 +33,10 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -257,8 +257,8 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::Sep
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
 
-    geom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
-    geom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
+    lsst::geom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
+    lsst::geom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
 
     KernelVector kernelXVec(kernel.getWidth());
     KernelVector kernelYVec(kernel.getHeight());
@@ -304,7 +304,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, math::Sep
         KernelIterator const kernelYVecBegin = kernelYVec.begin();
 
         // buffer for x-convolved data
-        OutImageT buffer(geom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
+        OutImageT buffer(lsst::geom::Extent2I(goodBBox.getWidth(), kernel.getHeight()));
 
         // pre-fill x-convolved data buffer with all but one row of data
         int yInd = 0;  // during initial fill bufY = inImageY

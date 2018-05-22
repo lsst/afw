@@ -22,7 +22,7 @@
  */
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/BaseRecord.h"
 
@@ -41,12 +41,12 @@ PointKey<T> PointKey<T>::addFields(Schema &schema, std::string const &name, std:
 }
 
 template <typename T>
-geom::Point<T, 2> PointKey<T>::get(BaseRecord const &record) const {
-    return geom::Point<T, 2>(record.get(_x), record.get(_y));
+lsst::geom::Point<T, 2> PointKey<T>::get(BaseRecord const &record) const {
+    return lsst::geom::Point<T, 2>(record.get(_x), record.get(_y));
 }
 
 template <typename T>
-void PointKey<T>::set(BaseRecord &record, geom::Point<T, 2> const &value) const {
+void PointKey<T>::set(BaseRecord &record, lsst::geom::Point<T, 2> const &value) const {
     record.set(_x, value.getX());
     record.set(_y, value.getY());
 }
@@ -75,22 +75,22 @@ void BoxKey<Box>::set(BaseRecord & record, Box const & value) const {
     _max.set(record, value.getMax());
 }
 
-template class BoxKey<geom::Box2I>;
-template class BoxKey<geom::Box2D>;
+template class BoxKey<lsst::geom::Box2I>;
+template class BoxKey<lsst::geom::Box2D>;
 
 //============ CoordKey =====================================================================================
 
 CoordKey CoordKey::addFields(Schema &schema, std::string const &name, std::string const &doc) {
-    Key<geom::Angle> ra = schema.addField<geom::Angle>(schema.join(name, "ra"), doc);
-    Key<geom::Angle> dec = schema.addField<geom::Angle>(schema.join(name, "dec"), doc);
+    Key<lsst::geom::Angle> ra = schema.addField<lsst::geom::Angle>(schema.join(name, "ra"), doc);
+    Key<lsst::geom::Angle> dec = schema.addField<lsst::geom::Angle>(schema.join(name, "dec"), doc);
     return CoordKey(ra, dec);
 }
 
-geom::SpherePoint CoordKey::get(BaseRecord const &record) const {
-    return geom::SpherePoint(record.get(_ra), record.get(_dec));
+lsst::geom::SpherePoint CoordKey::get(BaseRecord const &record) const {
+    return lsst::geom::SpherePoint(record.get(_ra), record.get(_dec));
 }
 
-void CoordKey::set(BaseRecord &record, geom::SpherePoint const &value) const {
+void CoordKey::set(BaseRecord &record, lsst::geom::SpherePoint const &value) const {
     record.set(_ra, value.getLongitude());
     record.set(_dec, value.getLatitude());
 }

@@ -69,9 +69,9 @@ struct ProcessSchema {
         fits->writeColumnKey("TCCLS", n, "Scalar", "Field template used by lsst.afw.table");
     }
 
-    void specialize(SchemaItem<Angle> const& item, int n) const {
-        // Always write units for Angles as radians (in-memory Angles field don't use the unit attribute,
-        // single Angle abstracts that away).
+    void specialize(SchemaItem<lsst::geom::Angle> const& item, int n) const {
+        // Always write units for lsst::geom::Angles as radians (in-memory lsst::geom::Angles field don't use the unit attribute,
+        // single lsst::geom::Angle abstracts that away).
         fits->writeColumnKey("TUNIT", n, "rad");
         fits->writeColumnKey("TCCLS", n, "Angle", "Field template used by lsst.afw.table");
     }

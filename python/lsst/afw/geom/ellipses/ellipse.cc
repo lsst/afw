@@ -26,9 +26,9 @@
 
 #include "ndarray/pybind11.h"
 
+#include "lsst/geom.h"
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
-#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
@@ -58,7 +58,7 @@ PYBIND11_PLUGIN(_ellipse) {
     //    clsEllipseGridTransform.def("invert", &Ellipse::GridTransform::invert);
 
     /* Constructors */
-    clsEllipse.def(py::init<BaseCore const &, Point2D const &>(), "core"_a, "center"_a = Point2D());
+    clsEllipse.def(py::init<BaseCore const &, lsst::geom::Point2D const &>(), "core"_a, "center"_a = lsst::geom::Point2D());
     clsEllipse.def(py::init<Ellipse const &>());
     clsEllipse.def(py::init<Ellipse::Convolution const &>());
 
@@ -68,7 +68,7 @@ PYBIND11_PLUGIN(_ellipse) {
 
     /* Members */
     clsEllipse.def("getCore", [](Ellipse &ellipse) { return ellipse.getCorePtr(); });
-    clsEllipse.def("getCenter", (Point2D & (Ellipse::*)()) & Ellipse::getCenter);
+    clsEllipse.def("getCenter", (lsst::geom::Point2D & (Ellipse::*)()) & Ellipse::getCenter);
     clsEllipse.def("setCenter", &Ellipse::setCenter);
     clsEllipse.def("setCore", &Ellipse::setCore);
     clsEllipse.def("normalize", &Ellipse::normalize);
@@ -78,12 +78,12 @@ PYBIND11_PLUGIN(_ellipse) {
     clsEllipse.def("getParameterVector", &Ellipse::getParameterVector);
     clsEllipse.def("setParameterVector", &Ellipse::setParameterVector);
     clsEllipse.def("transform",
-                   [](Ellipse const &self, AffineTransform const &t) -> Ellipse { return self.transform(t); },
+                   [](Ellipse const &self, lsst::geom::AffineTransform const &t) -> Ellipse { return self.transform(t); },
                    "transform"_a);
     //    clsEllipse.def("convolve", (Convolution const (Ellipse::*)(Ellipse const &) const)
     //    &Ellipse::convolve);
-    clsEllipse.def("getGridTransform", [](Ellipse &self) -> AffineTransform {
-        return self.getGridTransform();  // delibarate conversion to AffineTransform
+    clsEllipse.def("getGridTransform", [](Ellipse &self) -> lsst::geom::AffineTransform {
+        return self.getGridTransform();  // delibarate conversion to lsst::geom::AffineTransform
     });
     clsEllipse.def("computeBBox", &Ellipse::computeBBox);
 

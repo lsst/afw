@@ -36,7 +36,7 @@
 #include "lsst/base.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {

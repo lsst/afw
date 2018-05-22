@@ -400,7 +400,7 @@ void writeBasicFits(int fd,                 // file descriptor to write to
     } else {
         typedef std::vector<std::string> NameList;
 
-        auto shift = geom::Extent2D(-data.getX0(), -data.getY0());
+        auto shift = lsst::geom::Extent2D(-data.getX0(), -data.getY0());
         auto newWcs = Wcs->copyAtShiftedPixelOrigin(shift);
 
         std::shared_ptr<lsst::daf::base::PropertySet> metadata = newWcs->getFitsMetadata();

@@ -52,12 +52,12 @@ ndarray::Array<typename Field<T>::Value const, 1, 1> _getArrayFromCatalog(
     return out;
 }
 
-// Specialization of the above for Angle: have to return a double array (in
-// radians), since NumPy arrays can't hold Angles.
+// Specialization of the above for lsst::geom::Angle: have to return a double array (in
+// radians), since NumPy arrays can't hold lsst::geom::Angles.
 template <typename Record>
 ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
     CatalogT<Record> const& catalog,  ///< Catalog
-    Key<Angle> const& key  ///< Key to column to extract
+    Key<lsst::geom::Angle> const& key  ///< Key to column to extract
 ) {
     ndarray::Array<double, 1, 1> out = ndarray::allocate(catalog.size());
     auto outIter = out.begin();
@@ -217,7 +217,7 @@ PyCatalog<Record> declareCatalog(pybind11::module &mod, std::string const &name,
     declareCatalogOverloads<std::int64_t>(cls);
     declareCatalogOverloads<float>(cls);
     declareCatalogOverloads<double>(cls);
-    declareCatalogOverloads<lsst::afw::geom::Angle>(cls);
+    declareCatalogOverloads<lsst::geom::Angle>(cls);
 
     cls.def("_getitem_", [](Catalog const& self, Key<Flag> const& key) -> ndarray::Array<bool const, 1, 0> {
         return _getArrayFromCatalog(self, key);

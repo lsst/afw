@@ -30,9 +30,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/math/Function.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -168,7 +168,7 @@ public:
      */
     explicit GaussianFunction1(double sigma)  ///< sigma
             : Function1<ReturnT>(1),
-              _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {
+              _multFac(1.0 / std::sqrt(lsst::geom::TWOPI)) {
         this->_params[0] = sigma;
     }
     GaussianFunction1(GaussianFunction1 const &) = default;
@@ -198,7 +198,7 @@ private:
 
 protected:
     /* Default constructor: intended only for serialization */
-    explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {}
+    explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::geom::TWOPI)) {}
 
 private:
     friend class boost::serialization::access;
@@ -232,7 +232,7 @@ public:
                                double sigma2,       ///< sigma along the pos2 axis
                                double angle = 0.0)  ///< angle of pos1 axis, in rad (along x=0, y=pi/2)
             : Function2<ReturnT>(3),
-              _multFac(1.0 / (lsst::afw::geom::TWOPI)) {
+              _multFac(1.0 / (lsst::geom::TWOPI)) {
         this->_params[0] = sigma1;
         this->_params[1] = sigma2;
         this->_params[2] = angle;
@@ -307,7 +307,7 @@ protected:
     /* Default constructor: intended only for serialization */
     explicit GaussianFunction2()
             : Function2<ReturnT>(3),
-              _multFac(1.0 / (lsst::afw::geom::TWOPI)),
+              _multFac(1.0 / (lsst::geom::TWOPI)),
               _angle(0.0),
               _sinAngle(0.0),
               _cosAngle(1.0) {}
@@ -348,7 +348,7 @@ public:
             double sigma2 = 0,  ///< sigma of second Gaussian
             double ampl2 = 0)   ///< amplitude of second Gaussian as a fraction of main Gaussian at peak
             : Function2<ReturnT>(3),
-              _multFac(1.0 / (lsst::afw::geom::TWOPI)) {
+              _multFac(1.0 / (lsst::geom::TWOPI)) {
         this->_params[0] = sigma1;
         this->_params[1] = sigma2;
         this->_params[2] = ampl2;
@@ -394,7 +394,7 @@ private:
 
 protected:
     /* Default constructor: intended only for serialization */
-    explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::afw::geom::TWOPI)) {}
+    explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::geom::TWOPI)) {}
 
 private:
     friend class boost::serialization::access;
@@ -800,9 +800,9 @@ public:
      * The parameters are initialized to zero.
      */
     explicit Chebyshev1Function2(unsigned int order,  ///< order of polynomial (0 for constant)
-                                 lsst::afw::geom::Box2D const& xyRange = lsst::afw::geom::Box2D(
-                                         lsst::afw::geom::Point2D(-1.0, -1.0),
-                                         lsst::afw::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
+                                 lsst::geom::Box2D const& xyRange = lsst::geom::Box2D(
+                                         lsst::geom::Point2D(-1.0, -1.0),
+                                         lsst::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
             : BasePolynomialFunction2<ReturnT>(order),
               _oldYPrime(0),
               _yCheby(this->_order + 1),
@@ -819,9 +819,9 @@ public:
      */
     explicit Chebyshev1Function2(std::vector<double> params,  ///< polynomial coefficients
                                                               ///< length must be one of 1, 3, 6, 10, 15...
-                                 lsst::afw::geom::Box2D const& xyRange = lsst::afw::geom::Box2D(
-                                         lsst::afw::geom::Point2D(-1.0, -1.0),
-                                         lsst::afw::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
+                                 lsst::geom::Box2D const& xyRange = lsst::geom::Box2D(
+                                         lsst::geom::Point2D(-1.0, -1.0),
+                                         lsst::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
             : BasePolynomialFunction2<ReturnT>(params),
               _oldYPrime(0),
               _yCheby(this->_order + 1),
@@ -843,9 +843,9 @@ public:
     /**
      * Get x,y range
      */
-    lsst::afw::geom::Box2D getXYRange() const {
-        return lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(_minX, _minY),
-                                      lsst::afw::geom::Point2D(_maxX, _maxY));
+    lsst::geom::Box2D getXYRange() const {
+        return lsst::geom::Box2D(lsst::geom::Point2D(_minX, _minY),
+                                      lsst::geom::Point2D(_maxX, _maxY));
     };
 
     /**
@@ -960,7 +960,7 @@ private:
     /**
      * initialize private constants
      */
-    void _initialize(lsst::afw::geom::Box2D const& xyRange) {
+    void _initialize(lsst::geom::Box2D const& xyRange) {
         _minX = xyRange.getMinX();
         _minY = xyRange.getMinY();
         _maxX = xyRange.getMaxX();
@@ -1041,7 +1041,7 @@ public:
     }
 
     virtual ReturnT operator()(double x) const {
-        double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
+        double xArg1 = (x - this->_params[0]) * lsst::geom::PI;
         double xArg2 = xArg1 * _invN;
         if (std::fabs(xArg1) > 1.0e-5) {
             return static_cast<ReturnT>(std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2));
@@ -1118,13 +1118,13 @@ public:
     }
 
     virtual ReturnT operator()(double x, double y) const {
-        double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
+        double xArg1 = (x - this->_params[0]) * lsst::geom::PI;
         double xArg2 = xArg1 * _invN;
         double xFunc = 1;
         if (std::fabs(xArg1) > 1.0e-5) {
             xFunc = std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2);
         }
-        double yArg1 = (y - this->_params[1]) * lsst::afw::geom::PI;
+        double yArg1 = (y - this->_params[1]) * lsst::geom::PI;
         double yArg2 = yArg1 * _invN;
         double yFunc = 1;
         if (std::fabs(yArg1) > 1.0e-5) {

@@ -26,14 +26,12 @@
  * Offset an Image (or Mask or MaskedImage) by a constant vector (dx, dy)
  */
 #include <iterator>
+#include "lsst/geom.h"
 #include "lsst/afw/math/offsetImage.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/warpExposure.h"
 
 namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -49,10 +47,10 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
     std::shared_ptr<ImageT> buffImage;
     if (buffer > 0) {
         // Paste input image into buffered image
-        afwGeom::Extent2I const& dims = inImage.getDimensions();
+        lsst::geom::Extent2I const& dims = inImage.getDimensions();
         std::shared_ptr<ImageT> buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
         buffImage = buffered;
-        afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
+        lsst::geom::Box2I box(lsst::geom::Point2I(buffer, buffer), dims);
         buffImage->assign(inImage, box);
     } else {
         buffImage = std::make_shared<ImageT>(inImage);
@@ -108,7 +106,7 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
 
     std::shared_ptr<ImageT> outImage;
     if (buffer > 0) {
-        afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), inImage.getDimensions());
+        lsst::geom::Box2I box(lsst::geom::Point2I(buffer, buffer), inImage.getDimensions());
         std::shared_ptr<ImageT> out(new ImageT(*convImage, box, afwImage::LOCAL, true));
         outImage = out;
     } else {
@@ -116,7 +114,7 @@ std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
     }
 
     // adjust the origin; do this after convolution since convolution also sets XY0
-    outImage->setXY0(geom::Point2I(inImage.getX0() + dOrigX, inImage.getY0() + dOrigY));
+    outImage->setXY0(lsst::geom::Point2I(inImage.getX0() + dOrigX, inImage.getY0() + dOrigY));
 
     return outImage;
 }

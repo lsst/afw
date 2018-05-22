@@ -9,9 +9,7 @@
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/afw/math/detail/Spline.h"
-#include "lsst/afw/geom/Angle.h"
-
-namespace afwGeom = lsst::afw::geom;
+#include "lsst/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -1177,8 +1175,8 @@ void do_cubic(double a, double b, double c, double d, std::vector<double> &roots
         double const theta = ::acos(r / sq3);  // sq3 cannot be zero
 
         roots.push_back(-2 * sq * cos(theta / 3) - b / 3);
-        roots.push_back(-2 * sq * cos((theta + afwGeom::TWOPI) / 3) - b / 3);
-        roots.push_back(-2 * sq * cos((theta - afwGeom::TWOPI) / 3) - b / 3);
+        roots.push_back(-2 * sq * cos((theta + lsst::geom::TWOPI) / 3) - b / 3);
+        roots.push_back(-2 * sq * cos((theta - lsst::geom::TWOPI) / 3) - b / 3);
         /*
          * sort roots
          */

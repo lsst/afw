@@ -26,8 +26,9 @@
 #include <cmath>
 
 #include "lsst/utils/Utils.h"
+#include "lsst/geom.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
-#include "lsst/afw/geom.h"
 
 const unsigned DefNIter = 100000;
 
@@ -35,8 +36,8 @@ const unsigned DefNIter = 100000;
 @internal Transform pix to sky and back again nIter times using points distributed evenly
 from bbox.getMin() to bbox.getMax() and return the max round trip pixel error
 */
-void timeWcs(lsst::afw::geom::SkyWcs const &wcs, lsst::afw::geom::Box2D &bbox, unsigned int nIter) {
-    lsst::afw::geom::Extent2D maxErr;
+void timeWcs(lsst::afw::geom::SkyWcs const &wcs, lsst::geom::Box2D &bbox, unsigned int nIter) {
+    lsst::geom::Extent2D maxErr;
     auto const dxy = bbox.getDimensions() / static_cast<float>(nIter);
     auto const xy0 = bbox.getMin();
     auto startClock = std::clock();
@@ -77,7 +78,7 @@ int main(int argc, char **argv) {
     }
 
     auto exposure = lsst::afw::image::Exposure<float>(inImagePath);
-    auto bbox = lsst::afw::geom::Box2D(exposure.getBBox());
+    auto bbox = lsst::geom::Box2D(exposure.getBBox());
     if (!exposure.hasWcs()) {
         std::cerr << "Exposure " << inImagePath << " has no WCS\n" << std::endl;
         exit(EXIT_FAILURE);

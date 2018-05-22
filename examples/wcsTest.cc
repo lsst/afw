@@ -33,17 +33,17 @@
 #include "boost/format.hpp"
 #include <memory>
 
+#include "lsst/geom.h"
 #include "lsst/utils/Utils.h"
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
-#include "lsst/afw/geom.h"
 
 /*
  * This test code incorporates some very simple tests of the Wcs class and related classes.
  */
 
-namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
 using lsst::daf::base::PropertySet;
@@ -77,8 +77,8 @@ int main(int argc, char **argv) {
 
     // Testing input col, row values
 
-    auto minCoord = afwGeom::Point2D(1.0, 1.0);
-    auto xy = afwGeom::Point2D(exposure.getWidth(), exposure.getHeight());
+    auto minCoord = lsst::geom::Point2D(1.0, 1.0);
+    auto xy = lsst::geom::Point2D(exposure.getWidth(), exposure.getHeight());
 
     auto sky1 = wcs->pixelToSky(minCoord);
     auto sky2 = wcs->pixelToSky(xy);
@@ -117,8 +117,8 @@ int main(int argc, char **argv) {
               << "col: " << pix2[0] << " row: " << pix2[1] << std::endl
               << std::endl;
 
-    auto raDecl1 = lsst::afw::geom::SpherePoint(miRa1, miDecl1);
-    auto raDecl2 = lsst::afw::geom::SpherePoint(miRa2, miDecl2);
+    auto raDecl1 = lsst::geom::SpherePoint(miRa1, miDecl1);
+    auto raDecl2 = lsst::geom::SpherePoint(miRa2, miDecl2);
 
     auto pix3 = wcs->skyToPixel(raDecl1);
     auto pix4 = wcs->skyToPixel(raDecl2);

@@ -611,7 +611,7 @@ public:
      * @param dimensions Number of columns, rows in image
      * @param planeDict Make Mask conform to this mask layout (ignore if empty)
      */
-    explicit MaskedImage(geom::Extent2I const& dimensions = geom::Extent2I(),
+    explicit MaskedImage(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                          MaskPlaneDict const& planeDict = MaskPlaneDict());
     /**
      * Construct from a supplied Image and optional Mask and Variance.
@@ -633,7 +633,7 @@ public:
      * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
      * which may be conveniently used to make objects of an appropriate size
      */
-    explicit MaskedImage(geom::Box2I const& bbox, MaskPlaneDict const& planeDict = MaskPlaneDict());
+    explicit MaskedImage(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDict = MaskPlaneDict());
 
     /**
      *  Construct a MaskedImage by reading a regular FITS file.
@@ -653,7 +653,7 @@ public:
     explicit MaskedImage(
             std::string const& fileName,
             std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
-            geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
+            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
             bool needAllHdus = false,
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
@@ -678,7 +678,7 @@ public:
     explicit MaskedImage(
             fits::MemFileManager& manager,
             std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
-            geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
+            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
             bool needAllHdus = false,
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
@@ -703,7 +703,7 @@ public:
     explicit MaskedImage(
             fits::Fits& fitsfile,
             std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
-            geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
+            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
             bool needAllHdus = false,
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
@@ -728,7 +728,7 @@ public:
      * @param deep If false, new ImageBase shares storage with rhs; if true make a new, standalone,
      * MaskedImage
      */
-    MaskedImage(MaskedImage const& rhs, geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
+    MaskedImage(MaskedImage const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
                 bool const deep = false);
     /** generalised copy constructor; defined here in the header so that the compiler can instantiate
      * N(N-1)/2 conversions between N ImageBase types.
@@ -793,7 +793,7 @@ public:
      * @throws lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
      * this image do not match.
      */
-    void assign(MaskedImage const& rhs, geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT);
+    void assign(MaskedImage const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     /// Add a scalar rhs to a MaskedImage
     MaskedImage& operator+=(ImagePixelT const rhs);
@@ -1078,8 +1078,8 @@ public:
     int getWidth() const { return _image->getWidth(); }
     /// Return the number of rows in the %image
     int getHeight() const { return _image->getHeight(); }
-    geom::Extent2I getDimensions() const { return _image->getDimensions(); }
-    geom::Box2I getBBox(ImageOrigin const origin = PARENT) const { return _image->getBBox(origin); }
+    lsst::geom::Extent2I getDimensions() const { return _image->getDimensions(); }
+    lsst::geom::Box2I getBBox(ImageOrigin const origin = PARENT) const { return _image->getBBox(origin); }
     /**
      * Return the %image's column-origin
      *
@@ -1103,7 +1103,7 @@ public:
      * `MaskedImage(fileName, hdu, BBox, mode)` ctor or `MaskedImage(ImageBase, BBox)` cctor
      * The origin can be reset with `setXY0`
      */
-    geom::Point2I getXY0() const { return _image->getXY0(); }
+    lsst::geom::Point2I getXY0() const { return _image->getXY0(); }
 
     /**
      * Set the MaskedImage's origin
@@ -1113,7 +1113,7 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(int const x0, int const y0) { setXY0(geom::Point2I(x0, y0)); }
+    void setXY0(int const x0, int const y0) { setXY0(lsst::geom::Point2I(x0, y0)); }
 
     /**
      * Set the MaskedImage's origin
@@ -1123,7 +1123,7 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::Point2I const origin) {
+    void setXY0(lsst::geom::Point2I const origin) {
         if (_image) {
             _image->setXY0(origin);
         }

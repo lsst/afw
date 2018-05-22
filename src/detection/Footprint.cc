@@ -30,14 +30,14 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans, geom::Box2I const& region)
+Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans, lsst::geom::Box2I const& region)
         : daf::base::Citizen(typeid(this)),
           _spans(inputSpans),
           _peaks(PeakTable::makeMinimalSchema()),
           _region(region) {}
 
 Footprint::Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const& peakSchema,
-                     geom::Box2I const& region)
+                     lsst::geom::Box2I const& region)
         : daf::base::Citizen(typeid(this)), _spans(inputSpans), _peaks(peakSchema), _region(region) {}
 
 void Footprint::setSpans(std::shared_ptr<geom::SpanSet> otherSpanSet) { _spans = otherSpanSet; }
@@ -69,38 +69,38 @@ void Footprint::shift(int dx, int dy) {
     }
 }
 
-void Footprint::clipTo(geom::Box2I const& box) {
+void Footprint::clipTo(lsst::geom::Box2I const& box) {
     setSpans(getSpans()->clippedTo(box));
     removeOrphanPeaks();
 }
 
-bool Footprint::contains(geom::Point2I const& pix) const { return getSpans()->contains(pix); }
+bool Footprint::contains(lsst::geom::Point2I const& pix) const { return getSpans()->contains(pix); }
 
 std::shared_ptr<Footprint> Footprint::transform(std::shared_ptr<geom::SkyWcs> source,
-                                                std::shared_ptr<geom::SkyWcs> target, geom::Box2I const& region,
+                                                std::shared_ptr<geom::SkyWcs> target, lsst::geom::Box2I const& region,
                                                 bool doClip) const {
     auto srcToTarget = geom::makeWcsPairTransform(*source, *target);
     return transform(*srcToTarget, region, doClip);
 }
 
-std::shared_ptr<Footprint> Footprint::transform(geom::LinearTransform const& t, geom::Box2I const& region,
+std::shared_ptr<Footprint> Footprint::transform(lsst::geom::LinearTransform const& t, lsst::geom::Box2I const& region,
                                                 bool doClip) const {
-    return transform(geom::AffineTransform(t), region, doClip);
+    return transform(lsst::geom::AffineTransform(t), region, doClip);
 }
 
-std::shared_ptr<Footprint> Footprint::transform(geom::AffineTransform const& t, geom::Box2I const& region,
+std::shared_ptr<Footprint> Footprint::transform(lsst::geom::AffineTransform const& t, lsst::geom::Box2I const& region,
                                                 bool doClip) const {
     return transform(*geom::makeTransform(t), region, doClip);
 }
 
 std::shared_ptr<Footprint> Footprint::transform(geom::TransformPoint2ToPoint2 const& t,
-                                                geom::Box2I const& region, bool doClip) const {
+                                                lsst::geom::Box2I const& region, bool doClip) const {
     // Transfrom the SpanSet first
     auto transformedSpan = getSpans()->transformedBy(t);
     // Use this new SpanSet and the peakSchema to create a new Footprint
     auto newFootprint = std::make_shared<Footprint>(transformedSpan, getPeaks().getSchema(), region);
     // now populate the new Footprint with transformed Peaks
-    std::vector<geom::Point2D> peakPosList;
+    std::vector<lsst::geom::Point2D> peakPosList;
     peakPosList.reserve(_peaks.size());
     for (auto const& peak : getPeaks()) {
         peakPosList.emplace_back(peak.getF());
@@ -132,7 +132,7 @@ void Footprint::erode(geom::SpanSet const& other) {
 
 void Footprint::removeOrphanPeaks() {
     for (auto iter = getPeaks().begin(); iter != getPeaks().end(); ++iter) {
-        if (!getSpans()->contains(geom::Point2I(iter->getIx(), iter->getIy()))) {
+        if (!getSpans()->contains(lsst::geom::Point2I(iter->getIx(), iter->getIy()))) {
             iter = getPeaks().erase(iter);
             --iter;
         }
@@ -349,16 +349,16 @@ std::shared_ptr<Footprint> mergeFootprints(Footprint const& footprint1, Footprin
     return mergedFootprint;
 }
 
-std::vector<geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
+std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
     typedef std::uint16_t PixelT;
-    geom::Box2I fpBBox = footprint.getBBox();
+    lsst::geom::Box2I fpBBox = footprint.getBBox();
     std::shared_ptr<image::Image<PixelT>> idImage(new image::Image<PixelT>(fpBBox));
     *idImage = 0;
     int const height = fpBBox.getHeight();
-    geom::Extent2I shift(fpBBox.getMinX(), fpBBox.getMinY());
+    lsst::geom::Extent2I shift(fpBBox.getMinX(), fpBBox.getMinY());
     footprint.getSpans()->setImage(*idImage, static_cast<PixelT>(1), fpBBox, true);
 
-    std::vector<geom::Box2I> bboxes;
+    std::vector<lsst::geom::Box2I> bboxes;
     /*
      * Our strategy is to find a row of pixels in the Footprint and interpret it as the first
      * row of a rectangular set of pixels.  We then extend this rectangle upwards as far as it
@@ -374,7 +374,7 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
 
     int y0 = 0;  // the first row with non-zero pixels in it
     while (y0 < height) {
-        geom::Box2I bbox;  // our next BBox
+        lsst::geom::Box2I bbox;  // our next BBox
         for (int y = y0; y != height; ++y) {
             // Look for a set pixel in this row
             image::Image<PixelT>::x_iterator begin = idImage->row_begin(y), end = idImage->row_end(y);
@@ -387,8 +387,8 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
 
                 std::fill(first, last + 1, 0);  // clear pixels; we don't want to see them again
 
-                bbox.include(geom::Point2I(x0, y));  // the LLC
-                bbox.include(geom::Point2I(x1, y));  // the LRC; initial guess for URC
+                bbox.include(lsst::geom::Point2I(x0, y));  // the LLC
+                bbox.include(lsst::geom::Point2I(x1, y));  // the LRC; initial guess for URC
 
                 // we found at least one pixel so extend the BBox upwards
                 for (++y; y != height; ++y) {
@@ -397,7 +397,7 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& footprint) {
                     }
                     std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
 
-                    bbox.include(geom::Point2I(x1, y));  // the new URC
+                    bbox.include(lsst::geom::Point2I(x1, y));  // the new URC
                 }
 
                 bbox.shift(shift);

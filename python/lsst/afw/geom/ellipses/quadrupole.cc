@@ -67,10 +67,10 @@ PYBIND11_PLUGIN(_quadrupole) {
     clsQuadrupole.def("setIxy", &Quadrupole::setIxy);
     clsQuadrupole.def("assign", [](Quadrupole &self, Quadrupole &other) { self = other; });
     clsQuadrupole.def("assign", [](Quadrupole &self, BaseCore &other) { self = other; });
-    clsQuadrupole.def("transform", [](Quadrupole &self, lsst::afw::geom::LinearTransform const &t) {
+    clsQuadrupole.def("transform", [](Quadrupole &self, lsst::geom::LinearTransform const &t) {
         return std::static_pointer_cast<Quadrupole>(self.transform(t).copy());
     });
-    clsQuadrupole.def("transformInPlace", [](Quadrupole &self, lsst::afw::geom::LinearTransform const &t) {
+    clsQuadrupole.def("transformInPlace", [](Quadrupole &self, lsst::geom::LinearTransform const &t) {
         self.transform(t).inPlace();
     });
     // TODO: pybind11 based on swig wrapper for now. Hopefully can be removed once pybind11 gets smarter

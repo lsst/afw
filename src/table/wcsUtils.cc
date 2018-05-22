@@ -78,12 +78,12 @@ void updateRefCentroids(geom::SkyWcs const &wcs, ReferenceCollection &refList) {
     CoordKey const coordKey(schema["coord"]);
     Point2DKey const centroidKey(schema["centroid"]);
     Key<Flag> const hasCentroidKey(schema["hasCentroid"]);
-    std::vector<SpherePoint> skyList;
+    std::vector<lsst::geom::SpherePoint> skyList;
     skyList.reserve(refList.size());
     for (auto const &record : refList) {
         skyList.emplace_back(getValue(record, coordKey));
     }
-    std::vector<geom::Point2D> const pixelList = wcs.skyToPixel(skyList);
+    std::vector<lsst::geom::Point2D> const pixelList = wcs.skyToPixel(skyList);
     auto pixelPos = pixelList.cbegin();
     for (auto &refObj : refList) {
         setValue(refObj, centroidKey, *pixelPos);
@@ -100,12 +100,12 @@ void updateSourceCoords(geom::SkyWcs const &wcs, SourceCollection &sourceList) {
     auto const schema = getSchema(sourceList[0]);
     Point2DKey const centroidKey(schema["slot_Centroid"]);
     CoordKey const coordKey(schema["coord"]);
-    std::vector<geom::Point2D> pixelList;
+    std::vector<lsst::geom::Point2D> pixelList;
     pixelList.reserve(sourceList.size());
     for (auto const &source : sourceList) {
         pixelList.emplace_back(getValue(source, centroidKey));
     }
-    std::vector<SpherePoint> const skyList = wcs.pixelToSky(pixelList);
+    std::vector<lsst::geom::SpherePoint> const skyList = wcs.pixelToSky(pixelList);
     auto skyCoord = skyList.cbegin();
     for (auto &source : sourceList) {
         setValue(source, coordKey, *skyCoord);

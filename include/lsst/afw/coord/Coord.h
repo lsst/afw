@@ -33,8 +33,8 @@
 #include <memory>
 
 #include "lsst/base.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/Angle.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/daf/base.h"
 
@@ -43,22 +43,22 @@ namespace afw {
 namespace coord {
 
 /**
- * Convert a dd:mm:ss string to Angle
+ * Convert a dd:mm:ss string to lsst::geom::Angle
  *
  * @param[in] dms Coord as a string in dd:mm:ss format
  */
-lsst::afw::geom::Angle dmsStringToAngle(std::string const dms);
-/// Convert a hh:mm:ss string to Angle
-lsst::afw::geom::Angle hmsStringToAngle(std::string const hms);
+lsst::geom::Angle dmsStringToAngle(std::string const dms);
+/// Convert a hh:mm:ss string to lsst::geom::Angle
+lsst::geom::Angle hmsStringToAngle(std::string const hms);
 
 /**
  * Convert an angle to a string with form dd:mm:ss
  *
  * @param[in] deg  angle to convert
  */
-std::string angleToDmsString(lsst::afw::geom::Angle const deg);
+std::string angleToDmsString(lsst::geom::Angle const deg);
 /// a function to convert decimal degrees to a string with form hh:mm:ss.s
-std::string angleToHmsString(lsst::afw::geom::Angle const deg);
+std::string angleToHmsString(lsst::geom::Angle const deg);
 
 }
 }

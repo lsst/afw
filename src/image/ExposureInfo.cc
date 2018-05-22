@@ -147,7 +147,7 @@ void ExposureInfo::initApCorrMap() { _apCorrMap = std::make_shared<ApCorrMap>();
 
 ExposureInfo::~ExposureInfo() = default;
 
-ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I const& xy0) const {
+ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(lsst::geom::Point2I const& xy0) const {
     FitsWriteData data;
 
     data.metadata.reset(new daf::base::PropertyList());
@@ -198,7 +198,7 @@ ExposureInfo::FitsWriteData ExposureInfo::_startWriteFits(afw::geom::Point2I con
     if (hasWcs()) {
         // Try to save the WCS as FITS-WCS metadata; if an exact representation
         // is not possible then skip it
-        auto shift = geom::Extent2D(geom::Point2I(0, 0) - xy0);
+        auto shift = lsst::geom::Extent2D(lsst::geom::Point2I(0, 0) - xy0);
         auto newWcs = getWcs()->copyAtShiftedPixelOrigin(shift);
         std::shared_ptr<daf::base::PropertyList> wcsMetadata;
         try {

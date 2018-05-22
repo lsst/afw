@@ -63,7 +63,7 @@ void define(PyTransmissionCurve & cls) {
     cls.def(
         "sampleAt",
         (void (TransmissionCurve::*)(
-            geom::Point2D const &,
+            lsst::geom::Point2D const &,
             ndarray::Array<double const,1,1> const &,
             ndarray::Array<double,1,1> const &
         ) const) &TransmissionCurve::sampleAt,
@@ -72,7 +72,7 @@ void define(PyTransmissionCurve & cls) {
     cls.def(
         "sampleAt",
         (ndarray::Array<double,1,1> (TransmissionCurve::*)(
-            geom::Point2D const &,
+            lsst::geom::Point2D const &,
             ndarray::Array<double const,1,1> const &
         ) const) &TransmissionCurve::sampleAt,
         "position"_a, "wavelengths"_a

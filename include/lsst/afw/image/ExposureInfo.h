@@ -26,7 +26,7 @@
 
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
@@ -270,7 +270,7 @@ private:
      *
      *  @see FitsWriteData
      */
-    FitsWriteData _startWriteFits(geom::Point2I const& xy0 = geom::Point2I()) const;
+    FitsWriteData _startWriteFits(lsst::geom::Point2I const& xy0 = lsst::geom::Point2I()) const;
 
     /**
      *  Write any additional non-image HDUs to a FITS file.

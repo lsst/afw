@@ -32,8 +32,8 @@
  */
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/AffineTransform.h"
 
 namespace lsst {
 namespace afw {
@@ -59,13 +59,13 @@ public:
     enum ParameterEnum { X = 3, Y = 4 };  ///< Definitions for elements of an ellipse vector.
 
     /// Return the center point.
-    Point2D const& getCenter() const { return _center; }
+    lsst::geom::Point2D const& getCenter() const { return _center; }
 
     /// Return the center point.
-    Point2D& getCenter() { return _center; }
+    lsst::geom::Point2D& getCenter() { return _center; }
 
     /// Set the center point.
-    void setCenter(Point2D const& center) { _center = center; }
+    void setCenter(lsst::geom::Point2D const& center) { _center = center; }
 
     /// Return the ellipse core.
     BaseCore const& getCore() const { return *_core; }
@@ -92,7 +92,7 @@ public:
     void scale(double factor) { _core->scale(factor); }
 
     /// Move the ellipse center by the given offset.
-    void shift(Extent2D const& offset) { _center += offset; }
+    void shift(lsst::geom::Extent2D const& offset) { _center += offset; }
 
     /// Return the ellipse parameters as a vector.
     ParameterVector const getParameterVector() const;
@@ -107,13 +107,13 @@ public:
     /**
      *  @name Coordinate transforms
      *
-     *  These member functions transform the ellipse by the given AffineTransform.
+     *  These member functions transform the ellipse by the given lsst::geom::AffineTransform.
      *  The transform can be done in-place by calling inPlace() on the returned
      *  expression object, or returned as a new shared_ptr by calling copy().
      */
     //@{
-    Transformer transform(AffineTransform const& transform);
-    Transformer const transform(AffineTransform const& transform) const;
+    Transformer transform(lsst::geom::AffineTransform const& transform);
+    Transformer const transform(lsst::geom::AffineTransform const& transform) const;
     //@}
 
     /**
@@ -127,13 +127,13 @@ public:
     /**
      *  Return the transform that maps the ellipse to the unit circle.
      *
-     *  The returned proxy object is implicitly convertible to AffineTransform
+     *  The returned proxy object is implicitly convertible to lsst::geom::AffineTransform
      *  and also supports differentiation.
      */
     GridTransform const getGridTransform() const;
 
     /// Return the bounding box of the ellipse.
-    Box2D computeBBox() const;
+    lsst::geom::Box2D computeBBox() const;
 
     /**
      *  Set the parameters of this ellipse from another.
@@ -161,10 +161,11 @@ public:
 
     virtual ~Ellipse() = default;
 
-    explicit Ellipse(BaseCore const& core, Point2D const& center = Point2D())
+    explicit Ellipse(BaseCore const& core, lsst::geom::Point2D const& center = lsst::geom::Point2D())
             : _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(std::shared_ptr<BaseCore const> const& core, Point2D const& center = Point2D())
+    explicit Ellipse(std::shared_ptr<BaseCore const> const& core,
+                     lsst::geom::Point2D const& center = lsst::geom::Point2D())
             : _core(core->clone()), _center(center) {}
 
     Ellipse(Transformer const& other);
@@ -176,7 +177,7 @@ public:
 
 private:
     std::shared_ptr<BaseCore> _core;
-    Point2D _center;
+    lsst::geom::Point2D _center;
 };
 }
 }

@@ -30,10 +30,10 @@
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace afwImage = lsst::afw::image;
-namespace geom = lsst::afw::geom;
 
 void setImage(afwImage::MaskedImage<float> &image, float im, float var) {
     *image.getImage() = im;
@@ -44,7 +44,7 @@ void setImage(afwImage::MaskedImage<float> &image, float im, float var) {
 BOOST_AUTO_TEST_CASE(
         Ticket1145) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     typedef afwImage::MaskedImage<float>::x_iterator XIterator;
-    afwImage::MaskedImage<float> image(geom::Extent2I(1, 1));
+    afwImage::MaskedImage<float> image(lsst::geom::Extent2I(1, 1));
 
     XIterator xIter = image.row_begin(0);
     float const imVal = 1.0e10;

@@ -32,7 +32,7 @@
 #include <utility>
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Span.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
@@ -104,7 +104,7 @@ public:
      *
      * @param box A integer box that defines the shape for which a span set should be created
      */
-    explicit SpanSet(Box2I const &box);
+    explicit SpanSet(lsst::geom::Box2I const &box);
 
     /** Construct a SpanSet from an iterator
      *
@@ -123,7 +123,7 @@ public:
     SpanSet(iter begin, iter end, bool normalize = true) : _spanVector(begin, end) {
         // Return a null SpanSet if spanVector is 0
         if (_spanVector.size() == 0) {
-            _bbox = geom::Box2I();
+            _bbox = lsst::geom::Box2I();
             _area = 0;
         } else {
             if (normalize) {
@@ -175,7 +175,7 @@ public:
 
     /** Return a new integer box which is the minimum size to contain the pixels
      */
-    Box2I getBBox() const;
+    lsst::geom::Box2I getBBox() const;
 
     /** Defines if the SpanSet is simply contiguous
      *
@@ -197,25 +197,25 @@ public:
      *
      * @param offset integer extent which specifies amount to offset in x and y
      */
-    std::shared_ptr<SpanSet> shiftedBy(Extent2I const &offset) const;
+    std::shared_ptr<SpanSet> shiftedBy(lsst::geom::Extent2I const &offset) const;
 
     /** Return a new SpanSet which has all pixel values inside specified box
      *
      * @param box Integer box specifying the bounds for which all pixels must be within
      */
-    std::shared_ptr<SpanSet> clippedTo(Box2I const &box) const;
+    std::shared_ptr<SpanSet> clippedTo(lsst::geom::Box2I const &box) const;
 
     /** Return a new SpanSet who's pixels are the product of applying the specified transformation
      *
      * @param t A linear transform object which will be used to map the pixels
      */
-    std::shared_ptr<SpanSet> transformedBy(LinearTransform const &t) const;
+    std::shared_ptr<SpanSet> transformedBy(lsst::geom::LinearTransform const &t) const;
 
     /** Return a new SpanSet who's pixels are the product of applying the specified transformation
      *
      * @param t An affine transform object which will be used to map the pixels
      */
-    std::shared_ptr<SpanSet> transformedBy(AffineTransform const &t) const;
+    std::shared_ptr<SpanSet> transformedBy(lsst::geom::AffineTransform const &t) const;
 
     /** Return a new SpanSet who's pixels are the product of applying the specified transformation
      *
@@ -239,11 +239,11 @@ public:
      *
      * @param point An integer point object for which membership is to be tested
      */
-    bool contains(Point2I const &point) const;
+    bool contains(lsst::geom::Point2I const &point) const;
 
     /** Compute the point about which the SpanSet's first moment is zero
      */
-    Point2D computeCentroid() const;
+    lsst::geom::Point2D computeCentroid() const;
 
     /** Compute the shape parameters for the distribution of points in the SpanSet
      */
@@ -301,7 +301,8 @@ public:
      */
     template <typename Pixel, int inN, int inC>
     ndarray::Array<typename std::remove_const<Pixel>::type, inN - 1, inN - 1> flatten(
-            ndarray::Array<Pixel, inN, inC> const &input, Point2I const &xy0 = Point2I()) const {
+            ndarray::Array<Pixel, inN, inC> const &input,
+            lsst::geom::Point2I const &xy0 = lsst::geom::Point2I()) const {
         // Populate a lower dimensional array with the values from input taken at the points of SpanSet
         auto outputShape = ndarray::concatenate(ndarray::makeVector(getArea()),
                                                 input.getShape().template last<inN - 2>());
@@ -333,8 +334,9 @@ public:
      */
     template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void flatten(ndarray::Array<PixelOut, inA - 1, outC> const &output,
-                 ndarray::Array<PixelIn, inA, inC> const &input, Point2I const &xy0 = Point2I()) const {
-        auto ndAssigner = [](Point2I const &point,
+                 ndarray::Array<PixelIn, inA, inC> const &input,
+                 lsst::geom::Point2I const &xy0 = lsst::geom::Point2I()) const {
+        auto ndAssigner = [](lsst::geom::Point2I const &point,
                              typename details::FlatNdGetter<PixelOut, inA - 1, outC>::Reference out,
                              typename details::ImageNdGetter<PixelIn, inA, inC>::Reference in) { out = in; };
         // Populate array output with values from input at positions given by SpanSet
@@ -368,7 +370,7 @@ public:
         ndarray::Array<typename std::remove_const<Pixel>::type, inA + 1, inA + 1> outputArray =
                 ndarray::allocate(outputShape);
         outputArray.deep() = 0;
-        unflatten(outputArray, input, Point2I(_bbox.getMinX(), _bbox.getMinY()));
+        unflatten(outputArray, input, lsst::geom::Point2I(_bbox.getMinX(), _bbox.getMinY()));
         return outputArray;
     }
 
@@ -393,10 +395,11 @@ public:
     */
     template <typename PixelIn, typename PixelOut, int inA, int outC, int inC>
     void unflatten(ndarray::Array<PixelOut, inA + 1, outC> const &output,
-                   ndarray::Array<PixelIn, inA, inC> const &input, Point2I const &xy0 = Point2I()) const {
+                   ndarray::Array<PixelIn, inA, inC> const &input,
+                   lsst::geom::Point2I const &xy0 = lsst::geom::Point2I()) const {
         // Populate 2D ndarray output with values from input, at locations defined by SpanSet, optionally
         // offset by xy0
-        auto ndAssigner = [](Point2I const &point,
+        auto ndAssigner = [](lsst::geom::Point2I const &point,
                              typename details::ImageNdGetter<PixelOut, inA + 1, outC>::Reference out,
                              typename details::FlatNdGetter<PixelIn, inA, inC>::Reference in) { out = in; };
         applyFunctor(ndAssigner, ndarray::ndImage(output, xy0), ndarray::ndFlat(input));
@@ -411,7 +414,7 @@ public:
      */
     template <typename ImageT>
     void copyImage(image::Image<ImageT> const &src, image::Image<ImageT> &dest) {
-        auto copyFunc = [](lsst::afw::geom::Point2I const &point, ImageT const &srcPix, ImageT &destPix) {
+        auto copyFunc = [](lsst::geom::Point2I const &point, ImageT const &srcPix, ImageT &destPix) {
             destPix = srcPix;
         };
         applyFunctor(copyFunc, src, dest);
@@ -429,7 +432,7 @@ public:
     template <typename ImageT, typename MaskT, typename VarT>
     void copyMaskedImage(image::MaskedImage<ImageT, MaskT, VarT> const &src,
                          image::MaskedImage<ImageT, MaskT, VarT> &dest) {
-        auto copyFunc = [](lsst::afw::geom::Point2I const &point, ImageT const &srcPix, MaskT const &srcMask,
+        auto copyFunc = [](lsst::geom::Point2I const &point, ImageT const &srcPix, MaskT const &srcMask,
                            VarT const &srcVar, ImageT &destPix, MaskT &destMask, VarT &destVar) {
             destPix = srcPix;
             destMask = srcMask;
@@ -453,7 +456,8 @@ public:
                      the region parameter defaults to false
      */
     template <typename ImageT>
-    void setImage(image::Image<ImageT> &image, ImageT val, geom::Box2I const &region = geom::Box2I(),
+    void setImage(image::Image<ImageT> &image, ImageT val,
+                  lsst::geom::Box2I const &region = lsst::geom::Box2I(),
                   bool doClip = false) const;
 
     /** Apply functor on individual elements from the supplied parameters
@@ -473,7 +477,7 @@ public:
      * The functor object must operate in-place on any data, no return values are captured. No exceptions
      * are handled, if a functor throws one it will propagate back out of the applyFunctor call, possibly
      * leaving the output array in an incomplete state. The first argument of the functor must be
-     * a Point2I which will be the point in the SpanSet where the operation is occurring. All the
+     * a lsst::geom::Point2I which will be the point in the SpanSet where the operation is occurring. All the
      * remaining arguments to the functor will be individual values generated from the input arguments. For
      two
      * dimensional types (Image, MaskedImage, ndarray) arguments will be the value taken from the input type
@@ -613,7 +617,7 @@ public:
                      to apply when creating the SpanSet.
     */
     static std::shared_ptr<geom::SpanSet> fromShape(int r, Stencil s = Stencil::CIRCLE,
-                                                    Point2I offset = Point2I());
+                                                    lsst::geom::Point2I offset = lsst::geom::Point2I());
 
     /** Factory function for creating SpanSets from an ellipse object
      *
@@ -758,7 +762,7 @@ private:
             // Set the current span in the getter, useful for optimizing value lookups
             details::variadicSpanSetter(spn, args...);
             for (int x = spn.getX0(); x <= spn.getX1(); ++x) {
-                Point2I point(x, spn.getY());
+                lsst::geom::Point2I point(x, spn.getY());
                 f(point, args.get()...);
                 details::variadicIncrementPosition(args...);
             }
@@ -769,7 +773,7 @@ private:
     std::vector<Span> _spanVector;
 
     // Box that is large enough to bound all pixels in the SpanSet
-    Box2I _bbox;
+    lsst::geom::Box2I _bbox;
 
     // Number of pixels in the SpanSet
     std::size_t _area;

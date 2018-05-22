@@ -42,7 +42,7 @@ PYBIND11_PLUGIN(defect) {
     PyDefectBase cls(mod, "DefectBase");
 
     /* Constructors */
-    cls.def(py::init<const geom::Box2I &>(), "bbox"_a);
+    cls.def(py::init<const lsst::geom::Box2I &>(), "bbox"_a);
 
     /* Members */
     cls.def("getBBox", &DefectBase::getBBox);
@@ -52,7 +52,7 @@ PYBIND11_PLUGIN(defect) {
     cls.def("getY1", &DefectBase::getY1);
     cls.def("clip", &DefectBase::clip);
     cls.def("shift", (void (DefectBase::*)(int, int)) & DefectBase::shift, "dx"_a, "dy"_a);
-    cls.def("shift", (void (DefectBase::*)(geom::Extent2I const &)) & DefectBase::shift, "d"_a);
+    cls.def("shift", (void (DefectBase::*)(lsst::geom::Extent2I const &)) & DefectBase::shift, "d"_a);
 
     return mod.ptr();
 }

@@ -44,7 +44,7 @@ struct TypeTraits<double> {
     static char const *getName() { return "D"; }
 };
 template <>
-struct TypeTraits<lsst::afw::geom::Angle> {
+struct TypeTraits<lsst::geom::Angle> {
     static char const *getName() { return "Angle"; }
 };
 

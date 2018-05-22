@@ -27,9 +27,9 @@
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/SpherePoint.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/SpherePoint.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -75,7 +75,7 @@ static void declarePointKey(py::module &mod, std::string const &suffix) {
     cls.def("getY", &PointKey<T>::getY);
     cls.def("isValid", &PointKey<T>::isValid);
     cls.def_static("addFields", &PointKey<T>::addFields, "schema"_a, "name"_a, "doc"_a, "unit"_a);
-    cls.def("set", [](PointKey<T> &self, BaseRecord &record, geom::Point<T, 2> const &value) {
+    cls.def("set", [](PointKey<T> &self, BaseRecord &record, lsst::geom::Point<T, 2> const &value) {
         return self.set(record, value);
     });
     cls.def("get", &PointKey<T>::get);
@@ -101,7 +101,7 @@ static void declareBoxKey(py::module &mod, std::string const &suffix) {
 static void declareCoordKey(py::module &mod) {
     PyCoordKey cls(mod, "CoordKey");
     cls.def(py::init<>());
-    cls.def(py::init<Key<lsst::afw::geom::Angle>, Key<lsst::afw::geom::Angle>>(), "ra"_a, "dec"_a);
+    cls.def(py::init<Key<lsst::geom::Angle>, Key<lsst::geom::Angle>>(), "ra"_a, "dec"_a);
     cls.def(py::init<SubSchema const &>());
     cls.def("__eq__", &CoordKey::operator==, py::is_operator());
     cls.def("__ne__", &CoordKey::operator!=, py::is_operator());
@@ -192,8 +192,8 @@ PYBIND11_PLUGIN(aggregates) {
     declarePointKey<double>(mod, "2D");
     declarePointKey<int>(mod, "2I");
 
-    declareBoxKey<geom::Box2D>(mod, "2D");
-    declareBoxKey<geom::Box2I>(mod, "2I");
+    declareBoxKey<lsst::geom::Box2D>(mod, "2D");
+    declareBoxKey<lsst::geom::Box2I>(mod, "2I");
 
     declareCoordKey(mod);
     declareQuadrupoleKey(mod);

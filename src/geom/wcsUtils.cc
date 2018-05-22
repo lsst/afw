@@ -49,7 +49,7 @@ std::string getSipCoeffCardName(std::string const& name, int i, int j) {
 }  // namespace
 
 std::shared_ptr<daf::base::PropertyList> createTrivialWcsMetadata(std::string const& wcsName,
-                                                                  geom::Point2I const& xy0) {
+                                                                  lsst::geom::Point2I const& xy0) {
     std::shared_ptr<daf::base::PropertyList> wcsMetaData(new daf::base::PropertyList);
 
     wcsMetaData->set("CTYPE1" + wcsName, "LINEAR", "Type of projection");
@@ -95,7 +95,7 @@ Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata) {
     return matrix;
 }
 
-geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
+lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
                                       bool strip) {
     int x0 = 0;  // Our value of X0
     int y0 = 0;  // Our value of Y0
@@ -110,7 +110,7 @@ geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::str
             deleteBasicWcsMetadata(metadata, wcsName);
         }
     }
-    return geom::Point2I(x0, y0);
+    return lsst::geom::Point2I(x0, y0);
 }
 
 Eigen::MatrixXd getSipMatrixFromMetadata(daf::base::PropertySet const& metadata, std::string const& name) {
@@ -169,8 +169,8 @@ std::shared_ptr<daf::base::PropertyList> makeSipMatrixMetadata(Eigen::MatrixXd c
     return metadata;
 }
 
-std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(Point2D const& crpix,
-                                                               SpherePoint const& crval,
+std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(lsst::geom::Point2D const& crpix,
+                                                               lsst::geom::SpherePoint const& crval,
                                                                Eigen::Matrix2d const& cdMatrix,
                                                                std::string const& projection) {
     auto pl = std::make_shared<daf::base::PropertyList>();
@@ -195,8 +195,8 @@ std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(Point2D const& cr
     return pl;
 }
 
-std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(Point2D const& crpix,
-                                                            SpherePoint const& crval,
+std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(lsst::geom::Point2D const& crpix,
+                                                            lsst::geom::SpherePoint const& crval,
                                                             Eigen::Matrix2d const& cdMatrix,
                                                             Eigen::MatrixXd const& sipA,
                                                             Eigen::MatrixXd const& sipB) {
@@ -207,7 +207,7 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(Point2D const& crpix
 }
 
 std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
-        Point2D const& crpix, SpherePoint const& crval, Eigen::Matrix2d const& cdMatrix,
+        lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval, Eigen::Matrix2d const& cdMatrix,
         Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
         Eigen::MatrixXd const& sipBp) {
     auto metadata = makeTanSipMetadata(crpix, crval, cdMatrix, sipA, sipB);

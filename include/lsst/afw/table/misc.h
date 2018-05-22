@@ -6,8 +6,8 @@
 
 #include "boost/mpl/if.hpp"
 
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/SpherePoint.h"
 
 namespace lsst {
 namespace afw {
@@ -31,8 +31,8 @@ typedef std::int64_t RecordId;
 template <typename T>
 class Array;
 class Flag;
-typedef lsst::afw::geom::Angle Angle;
-typedef lsst::afw::geom::SpherePoint SpherePoint;
+typedef lsst::geom::Angle Angle;
+typedef lsst::geom::SpherePoint SpherePoint;
 //@}
 }
 }

@@ -26,10 +26,10 @@
 #include <sstream>
 #include <ctime>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image.h"
 
 namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
 
 int main(int argc, char **argv) {
     typedef float imageType;
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         std::istringstream(argv[3]) >> nRows;
     }
 
-    image::Image<imageType> image1(geom::Extent2I(nCols, nRows));
+    image::Image<imageType> image1(lsst::geom::Extent2I(nCols, nRows));
     image::Image<imageType> image2(image1.getDimensions());
 
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;

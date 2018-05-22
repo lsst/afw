@@ -39,7 +39,7 @@ namespace table {
  * @param[in] wcs  WCS to map from sky to pixels
  * @param[in,out] refList  Collection of reference objects. The schema must have three fields:
  *                  - "coord": a field containing an ICRS lsst::afw::SpherePoint; this field is read
- *                  - "centroid": a field containing lsst::afw::geom::Point2D; this field is written
+ *                  - "centroid": a field containing lsst::geom::Point2D; this field is written
  *                  - "hasCentroid": a flag; this field is written
  *
  * @throws lsst::pex::exceptions::NotFoundError if refList's schema does not have the required fields.
@@ -54,7 +54,7 @@ void updateRefCentroids(geom::SkyWcs const& wcs, ReferenceCollection& refList);
  *          std::vector<std::shared_ptr<lsst::afw::table::SourceRecord>>
  * @param[in] wcs  WCS to map from pixels to sky
  * @param[in,out] sourceList  Collection of sources. The schema must have two fields:
- *                  - "slot_Centroid": a field containing lsst::afw::geom::Point2D; this field is read
+ *                  - "slot_Centroid": a field containing lsst::geom::Point2D; this field is read
  *                  - "coord": a field containing an ICRS lsst::afw::SpherePoint; this field is written
  *
  * @throws lsst::pex::exceptions::NotFoundError if refList's schema does not have the required fields.

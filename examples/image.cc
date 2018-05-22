@@ -24,10 +24,10 @@
 #include <string>
 #include <algorithm>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 
 namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
 template <typename PixelT>
 void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
@@ -113,7 +113,7 @@ void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT
 }
 
 int main() {
-    afwImage::Image<float> img(afwGeom::Extent2I(10, 6));
+    afwImage::Image<float> img(lsst::geom::Extent2I(10, 6));
     // This is equivalent to img = 100:
     for (afwImage::Image<float>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
@@ -162,13 +162,13 @@ int main() {
     printf("sub images\n");
 
     // img will be modified
-    afwImage::Image<float> simg1(img, afwGeom::Box2I(afwGeom::Point2I(1, 1), afwGeom::Extent2I(7, 3)),
-                                 afwImage::LOCAL);
-    afwImage::Image<float> simg(simg1, afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(5, 2)),
-                                afwImage::LOCAL);
+    afwImage::Image<float> simg1(
+            img, lsst::geom::Box2I(lsst::geom::Point2I(1, 1), lsst::geom::Extent2I(7, 3)), afwImage::LOCAL);
+    afwImage::Image<float> simg(
+            simg1, lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(5, 2)), afwImage::LOCAL);
 
     {
-        afwImage::Image<float> nimg(afwGeom::Extent2I(5, 2));
+        afwImage::Image<float> nimg(lsst::geom::Extent2I(5, 2));
         nimg = 1;
         simg.assign(nimg);
     }

@@ -27,7 +27,7 @@
 
 #include "boost/format.hpp"
 
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Observatory.h"
 
@@ -35,7 +35,7 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-Observatory::Observatory(afw::geom::Angle const longitude, afw::geom::Angle const latitude,
+Observatory::Observatory(lsst::geom::Angle const longitude, lsst::geom::Angle const latitude,
                          double const elevation)
         : _latitude(latitude), _longitude(longitude), _elevation(elevation) {}
 
@@ -51,13 +51,13 @@ Observatory::Observatory(Observatory&&) = default;
 Observatory& Observatory::operator=(Observatory const&) = default;
 Observatory& Observatory::operator=(Observatory&&) = default;
 
-afw::geom::Angle Observatory::getLongitude() const { return _longitude; }
+lsst::geom::Angle Observatory::getLongitude() const { return _longitude; }
 
-afw::geom::Angle Observatory::getLatitude() const { return _latitude; }
+lsst::geom::Angle Observatory::getLatitude() const { return _latitude; }
 
-void Observatory::setLatitude(afw::geom::Angle const latitude) { _latitude = latitude; }
+void Observatory::setLatitude(lsst::geom::Angle const latitude) { _latitude = latitude; }
 
-void Observatory::setLongitude(afw::geom::Angle const longitude) { _longitude = longitude; }
+void Observatory::setLongitude(lsst::geom::Angle const longitude) { _longitude = longitude; }
 
 void Observatory::setElevation(double const elevation) { _elevation = elevation; }
 

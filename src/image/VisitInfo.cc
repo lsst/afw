@@ -28,6 +28,8 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/aggregates.h"  // for CoordKey
 #include "lsst/afw/table/Schema.h"
@@ -35,8 +37,6 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"  // needed, but why?
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/image/VisitInfo.h"
 
 using lsst::daf::base::DateTime;
@@ -68,11 +68,11 @@ double getDouble(daf::base::PropertySet const& metadata, std::string const& key)
  *
  * @param[in] metadata  metadata to get
  * @param[in] key  key name; the associated value is treated as an angle in degrees, if it exists
- * @returns value of metadata for the specified key, as an lsst::afw::geom::Angle,
+ * @returns value of metadata for the specified key, as an lsst::geom::Angle,
  *   with a value of nan if the key is not present
  */
-geom::Angle getAngle(daf::base::PropertySet const& metadata, std::string const& key) {
-    return getDouble(metadata, key) * geom::degrees;
+lsst::geom::Angle getAngle(daf::base::PropertySet const& metadata, std::string const& key) {
+    return getDouble(metadata, key) * lsst::geom::degrees;
 }
 
 /**
@@ -100,7 +100,7 @@ bool setDouble(daf::base::PropertySet& metadata, std::string const& key, double 
  * @param[in] angle  value of key
  * @returns true if item set, false otherwise
  */
-bool setAngle(daf::base::PropertySet& metadata, std::string const& key, geom::Angle const& angle,
+bool setAngle(daf::base::PropertySet& metadata, std::string const& key, lsst::geom::Angle const& angle,
               std::string const& comment) {
     return setDouble(metadata, key, angle.asDegrees(), comment);
 }
@@ -154,16 +154,16 @@ public:
     table::Key<double> darkTime;
     table::Key<std::int64_t> tai;
     table::Key<double> ut1;
-    table::Key<geom::Angle> era;
+    table::Key<lsst::geom::Angle> era;
     table::CoordKey boresightRaDec;
-    table::Key<geom::Angle> boresightAzAlt_az;
-    table::Key<geom::Angle> boresightAzAlt_alt;
+    table::Key<lsst::geom::Angle> boresightAzAlt_az;
+    table::Key<lsst::geom::Angle> boresightAzAlt_alt;
     table::Key<double> boresightAirmass;
-    table::Key<geom::Angle> boresightRotAngle;
+    table::Key<lsst::geom::Angle> boresightRotAngle;
     table::Key<int> rotType;
     // observatory data
-    table::Key<geom::Angle> latitude;
-    table::Key<geom::Angle> longitude;
+    table::Key<lsst::geom::Angle> latitude;
+    table::Key<lsst::geom::Angle> longitude;
     table::Key<double> elevation;
     // weather data
     table::Key<double> airTemperature;
@@ -192,27 +192,28 @@ private:
               tai(schema.addField<std::int64_t>(
                       "tai", "TAI date and time at middle of exposure as nsec from unix epoch", "nsec")),
               ut1(schema.addField<double>("ut1", "UT1 date and time at middle of exposure", "MJD")),
-              era(schema.addField<geom::Angle>("era", "earth rotation angle at middle of exposure", "")),
+              era(schema.addField<lsst::geom::Angle>("era", "earth rotation angle at middle of exposure",
+                                                     "")),
               boresightRaDec(table::CoordKey::addFields(schema, "boresightradec",
                                                         "sky position of boresight at middle of exposure")),
-              // CoordKey is intended for ICRS coordinates, so use a pair of Angle fields
+              // CoordKey is intended for ICRS coordinates, so use a pair of lsst::geom::Angle fields
               // to save boresightAzAlt
-              boresightAzAlt_az(schema.addField<geom::Angle>(
+              boresightAzAlt_az(schema.addField<lsst::geom::Angle>(
                       "boresightazalt_az",
                       "refracted apparent topocentric position of boresight at middle of exposure", "")),
-              boresightAzAlt_alt(schema.addField<geom::Angle>(
+              boresightAzAlt_alt(schema.addField<lsst::geom::Angle>(
                       "boresightazalt_alt",
                       "refracted apparent topocentric position of boresight at middle of exposure", "")),
               boresightAirmass(schema.addField<double>(
                       "boresightairmass", "airmass at boresight, relative to zenith at sea level", "")),
-              boresightRotAngle(schema.addField<geom::Angle>(
+              boresightRotAngle(schema.addField<lsst::geom::Angle>(
                       "boresightrotangle", "rotation angle at boresight at middle of exposure", "")),
               rotType(schema.addField<int>("rottype", "rotation type; see VisitInfo.getRotType for details",
                                            "MJD")),
               // observatory data
-              latitude(schema.addField<geom::Angle>("latitude",
-                                                    "latitude of telescope (+ is east of Greenwich)", "")),
-              longitude(schema.addField<geom::Angle>("longitude", "longitude of telescope", "")),
+              latitude(schema.addField<lsst::geom::Angle>(
+                      "latitude", "latitude of telescope (+ is east of Greenwich)", "")),
+              longitude(schema.addField<lsst::geom::Angle>("longitude", "longitude of telescope", "")),
               elevation(schema.addField<double>("elevation", "elevation of telescope", "")),
               // weather data
               airTemperature(schema.addField<double>("airtemperature", "air temperature", "C")),
@@ -231,17 +232,18 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const& record = catalogs.front().front();
-        std::shared_ptr<VisitInfo> result(new VisitInfo(
-                record.get(keys.exposureId), record.get(keys.exposureTime), record.get(keys.darkTime),
-                ::DateTime(record.get(keys.tai), ::DateTime::TAI), record.get(keys.ut1), record.get(keys.era),
-                record.get(keys.boresightRaDec),
-                geom::SpherePoint(record.get(keys.boresightAzAlt_az), record.get(keys.boresightAzAlt_alt)),
-                record.get(keys.boresightAirmass), record.get(keys.boresightRotAngle),
-                static_cast<RotType>(record.get(keys.rotType)),
-                coord::Observatory(record.get(keys.longitude), record.get(keys.latitude),
-                                   record.get(keys.elevation)),
-                coord::Weather(record.get(keys.airTemperature), record.get(keys.airPressure),
-                               record.get(keys.humidity))));
+        std::shared_ptr<VisitInfo> result(
+                new VisitInfo(record.get(keys.exposureId), record.get(keys.exposureTime),
+                              record.get(keys.darkTime), ::DateTime(record.get(keys.tai), ::DateTime::TAI),
+                              record.get(keys.ut1), record.get(keys.era), record.get(keys.boresightRaDec),
+                              lsst::geom::SpherePoint(record.get(keys.boresightAzAlt_az),
+                                                      record.get(keys.boresightAzAlt_alt)),
+                              record.get(keys.boresightAirmass), record.get(keys.boresightRotAngle),
+                              static_cast<RotType>(record.get(keys.rotType)),
+                              coord::Observatory(record.get(keys.longitude), record.get(keys.latitude),
+                                                 record.get(keys.elevation)),
+                              coord::Weather(record.get(keys.airTemperature), record.get(keys.airPressure),
+                                             record.get(keys.humidity))));
         return result;
     }
 
@@ -313,8 +315,10 @@ VisitInfo::VisitInfo(daf::base::PropertySet const& metadata)
           _date(),
           _ut1(getDouble(metadata, "MJD-AVG-UT1")),
           _era(getAngle(metadata, "AVG-ERA")),
-          _boresightRaDec(geom::SpherePoint(getAngle(metadata, "BORE-RA"), getAngle(metadata, "BORE-DEC"))),
-          _boresightAzAlt(geom::SpherePoint(getAngle(metadata, "BORE-AZ"), getAngle(metadata, "BORE-ALT"))),
+          _boresightRaDec(
+                  lsst::geom::SpherePoint(getAngle(metadata, "BORE-RA"), getAngle(metadata, "BORE-DEC"))),
+          _boresightAzAlt(
+                  lsst::geom::SpherePoint(getAngle(metadata, "BORE-AZ"), getAngle(metadata, "BORE-ALT"))),
           _boresightAirmass(getDouble(metadata, "BORE-AIRMASS")),
           _boresightRotAngle(getAngle(metadata, "BORE-ROTANG")),
           _rotType(RotType::UNKNOWN),
@@ -410,21 +414,22 @@ void VisitInfo::write(OutputArchiveHandle& handle) const {
     handle.saveCatalog(cat);
 }
 
-geom::Angle VisitInfo::getLocalEra() const { return getEra() + getObservatory().getLongitude(); }
+lsst::geom::Angle VisitInfo::getLocalEra() const { return getEra() + getObservatory().getLongitude(); }
 
-geom::Angle VisitInfo::getBoresightHourAngle() const { return getLocalEra() - getBoresightRaDec()[0]; }
+lsst::geom::Angle VisitInfo::getBoresightHourAngle() const { return getLocalEra() - getBoresightRaDec()[0]; }
 
-geom::Angle VisitInfo::getBoresightParAngle() const {
-  /**
-   * Compute the parallactic angle.
-   * Defined as the angle between the North celestial pole and Zenith at the boresight.
-   */
-  double _parallactic_y, _parallactic_x, result;
-  _parallactic_y = sin(getBoresightHourAngle().asRadians());
-  _parallactic_x = cos((getBoresightRaDec()[1]).asRadians())*tan(getObservatory().getLatitude().asRadians()) -
-    sin((getBoresightRaDec()[1]).asRadians())*cos(getBoresightHourAngle().asRadians());
-  result = atan2(_parallactic_y, _parallactic_x);
-  return result * geom::radians;
+lsst::geom::Angle VisitInfo::getBoresightParAngle() const {
+    /**
+     * Compute the parallactic angle.
+     * Defined as the angle between the North celestial pole and Zenith at the boresight.
+     */
+    double _parallactic_y, _parallactic_x, result;
+    _parallactic_y = sin(getBoresightHourAngle().asRadians());
+    _parallactic_x =
+            cos((getBoresightRaDec()[1]).asRadians()) * tan(getObservatory().getLatitude().asRadians()) -
+            sin((getBoresightRaDec()[1]).asRadians()) * cos(getBoresightHourAngle().asRadians());
+    result = atan2(_parallactic_y, _parallactic_x);
+    return result * lsst::geom::radians;
 }
 
 std::ostream& operator<<(std::ostream& os, VisitInfo const& visitInfo) {

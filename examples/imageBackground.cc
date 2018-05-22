@@ -25,6 +25,8 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
+
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Background.h"
 #include "lsst/afw/math/Interpolate.h"
@@ -32,7 +34,6 @@
 using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 
@@ -48,7 +49,7 @@ int main() {
     int const nStar = 100;
 
     // declare an image.
-    ImageF img(geom::Extent2I(wid, wid));
+    ImageF img(lsst::geom::Extent2I(wid, wid));
     img = sky;
 
     // put sky and some fake stars in the image, and add uniform noise

@@ -31,8 +31,8 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Weather.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/table/misc.h"  // for RecordId
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -86,9 +86,9 @@ public:
      * @param[in] weather  basic weather information for computing air mass
      */
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
-                       daf::base::DateTime const &date, double ut1, geom::Angle const &era,
-                       geom::SpherePoint const &boresightRaDec, geom::SpherePoint const &boresightAzAlt,
-                       double boresightAirmass, geom::Angle const &boresightRotAngle, RotType const &rotType,
+                       daf::base::DateTime const &date, double ut1, lsst::geom::Angle const &era,
+                       lsst::geom::SpherePoint const &boresightRaDec, lsst::geom::SpherePoint const &boresightAzAlt,
+                       double boresightAirmass, lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
@@ -132,15 +132,15 @@ public:
     double getUt1() const { return _ut1; }
 
     /// get earth rotation angle at middle of exposure
-    geom::Angle getEra() const { return _era; }
+    lsst::geom::Angle getEra() const { return _era; }
 
     /// get ICRS RA/Dec position at the boresight
     /// (and at the middle of the exposure, if it varies with time)
-    geom::SpherePoint getBoresightRaDec() const { return _boresightRaDec; }
+    lsst::geom::SpherePoint getBoresightRaDec() const { return _boresightRaDec; }
 
     /// get refracted apparent topocentric Az/Alt position at the boresight
     /// (and at the middle of the exposure, if it varies with time)
-    geom::SpherePoint getBoresightAzAlt() const { return _boresightAzAlt; }
+    lsst::geom::SpherePoint getBoresightAzAlt() const { return _boresightAzAlt; }
 
     /// get airmass at the boresight, relative to zenith at sea level
     /// (and at the middle of the exposure, if it varies with time)
@@ -152,7 +152,7 @@ public:
      * The meaning of rotation angle depends on @ref RotType "rotType".  For example, if `rotType` is SKY
      * the angle is the position angle of the focal plane +Y with respect to North.
      */
-    geom::Angle getBoresightRotAngle() const { return _boresightRotAngle; }
+    lsst::geom::Angle getBoresightRotAngle() const { return _boresightRotAngle; }
 
     /// get rotation type of boresightRotAngle
     RotType getRotType() const { return _rotType; }
@@ -166,10 +166,10 @@ public:
     bool isPersistable() const { return true; }
 
     // get the local sidereal time on the meridian (equivalent, but not equal, to Local Mean Sidereal Time)
-    geom::Angle getLocalEra() const;
+    lsst::geom::Angle getLocalEra() const;
 
     // get hour angle at the boresight
-    geom::Angle getBoresightHourAngle() const;
+    lsst::geom::Angle getBoresightHourAngle() const;
 
     /**
      * Get parallactic angle at the boresight
@@ -180,7 +180,7 @@ public:
      * For an object on the meridian the angle is zero if it is South of zenith and pi if it is North of zenith
      * The angle is positive for objects East of the meridian, and negative for objects to the West.
      */
-    geom::Angle getBoresightParAngle() const;
+    lsst::geom::Angle getBoresightParAngle() const;
 
 protected:
     virtual std::string getPersistenceName() const;
@@ -193,11 +193,11 @@ private:
     double _darkTime;
     daf::base::DateTime _date;
     double _ut1;
-    geom::Angle _era;
-    geom::SpherePoint _boresightRaDec;
-    geom::SpherePoint _boresightAzAlt;
+    lsst::geom::Angle _era;
+    lsst::geom::SpherePoint _boresightRaDec;
+    lsst::geom::SpherePoint _boresightAzAlt;
     double _boresightAirmass;
-    geom::Angle _boresightRotAngle;
+    lsst::geom::Angle _boresightRotAngle;
     RotType _rotType;
     coord::Observatory _observatory;
     coord::Weather _weather;

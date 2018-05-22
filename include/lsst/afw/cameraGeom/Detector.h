@@ -27,6 +27,7 @@
 #include <vector>
 #include <unordered_map>
 #include "lsst/base.h"
+#include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
@@ -89,8 +90,8 @@ public:
      *   must include the detector name (even though this is redundant).
      */
     explicit Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                      geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
-                      Orientation const &orientation, geom::Extent2D const &pixelSize,
+                      lsst::geom::Box2I const &bbox, lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog,
+                      Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
                       TransformMap::Transforms const &transforms,
                       CrosstalkMatrix const &crosstalk = CrosstalkMatrix());
 
@@ -113,19 +114,19 @@ public:
     std::string getSerial() const { return _serial; }
 
     /** Get the bounding box */
-    lsst::afw::geom::Box2I getBBox() const { return _bbox; }
+    lsst::geom::Box2I getBBox() const { return _bbox; }
 
     /** Get the corners of the detector in the specified camera coordinate system */
-    std::vector<geom::Point2D> getCorners(CameraSys const &cameraSys) const;
+    std::vector<lsst::geom::Point2D> getCorners(CameraSys const &cameraSys) const;
 
     /** Get the corners of the detector in the specified camera coordinate system prefix */
-    std::vector<geom::Point2D> getCorners(CameraSysPrefix const &cameraSysPrefix) const;
+    std::vector<lsst::geom::Point2D> getCorners(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the center of the detector in the specified camera coordinate system */
-    geom::Point2D getCenter(CameraSys const &cameraSys) const;
+    lsst::geom::Point2D getCenter(CameraSys const &cameraSys) const;
 
     /** Get the center of the detector in the specified camera coordinate system prefix */
-    geom::Point2D getCenter(CameraSysPrefix const &cameraSysPrefix) const;
+    lsst::geom::Point2D getCenter(CameraSysPrefix const &cameraSysPrefix) const;
 
     /** Get the amplifier information catalog */
     lsst::afw::table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
@@ -134,7 +135,7 @@ public:
     Orientation const getOrientation() const { return _orientation; }
 
     /** Get size of pixel along (mm) */
-    geom::Extent2D getPixelSize() const { return _pixelSize; }
+    lsst::geom::Extent2D getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
     TransformMap const getTransformMap() const { return _transformMap; }
@@ -217,8 +218,8 @@ public:
      *         `fromSys` or `toSys` is not supported.
      */
     template <typename FromSysT, typename ToSysT>
-    std::shared_ptr<geom::TransformPoint2ToPoint2> getTransform(FromSysT const &fromSys,
-                                                                ToSysT const &toSys) const;
+    std::shared_ptr<afw::geom::TransformPoint2ToPoint2> getTransform(FromSysT const &fromSys,
+                                                                     ToSysT const &toSys) const;
 
     /**
      * Get a coordinate system from a coordinate system (return input unchanged and untested)
@@ -253,7 +254,8 @@ public:
      * @throws pex::exceptions::InvalidParameterError if fromSys or toSys is unknown
      */
     template <typename FromSysT, typename ToSysT>
-    geom::Point2D transform(geom::Point2D const &point, FromSysT const &fromSys, ToSysT const &toSys) const;
+    lsst::geom::Point2D transform(lsst::geom::Point2D const &point, FromSysT const &fromSys,
+                                  ToSysT const &toSys) const;
 
     /**
      * Transform a vector of points from one camera system to another
@@ -268,8 +270,8 @@ public:
      * @throws pex::exceptions::InvalidParameterError if fromSys or toSys is unknown
      */
     template <typename FromSysT, typename ToSysT>
-    std::vector<geom::Point2D> transform(std::vector<geom::Point2D> const &points, FromSysT const &fromSys,
-                                         ToSysT const &toSys) const;
+    std::vector<lsst::geom::Point2D> transform(std::vector<lsst::geom::Point2D> const &points,
+                                               FromSysT const &fromSys, ToSysT const &toSys) const;
 
     /// The "native" coordinate system of this detector.
     CameraSys getNativeCoordSys() const { return _nativeSys; }
@@ -292,11 +294,11 @@ private:
     int _id;                                ///< detector numeric ID
     DetectorType _type;                     ///< type of detectorsize_t
     std::string _serial;                    ///< serial "number" that identifies the physical detector
-    geom::Box2I _bbox;                      ///< bounding box
+    lsst::geom::Box2I _bbox;                      ///< bounding box
     table::AmpInfoCatalog _ampInfoCatalog;  ///< list of amplifier data
     _AmpInfoMap _ampNameIterMap;            ///< map of amplifier name: catalog iterator
     Orientation _orientation;               ///< position and orientation of detector in focal plane
-    geom::Extent2D _pixelSize;              ///< pixel size (mm)
+    lsst::geom::Extent2D _pixelSize;              ///< pixel size (mm)
     CameraSys _nativeSys;                   ///< native coordinate system of this detector
     TransformMap _transformMap;             ///< registry of coordinate transforms
     CrosstalkMatrix _crosstalk;             ///< crosstalk coefficients

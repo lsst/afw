@@ -30,8 +30,8 @@
 #include "astshim.h"
 #include "ndarray.h"
 
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/SpherePoint.h"
 
 namespace lsst {
 namespace afw {
@@ -41,10 +41,10 @@ namespace geom {
  * Virtual base class for endpoints, which are helper classes for Transform
  *
  * Endpoints transform points and lists of points from LSST-specific data types,
- * such as Point2D and SpherePoint, to a form accepted by ast::Mapping.tran.
+ * such as lsst::geom::Point2D and lsst::geom::SpherePoint, to a form accepted by ast::Mapping.tran.
  * Each type of endpoint is used for a particular LSST data type, for example:
- * - Point2Endpoint is used for Point2D data
- * - SpherePointEndpoint for SpherePoint data
+ * - Point2Endpoint is used for lsst::geom::Point2D data
+ * - SpherePointEndpoint for lsst::geom::SpherePoint data
  * - GenericEndpoint is used when no other form will do; its LSST data type
  *   is identical to the type used for ast::Mapping.applyForward.
  *
@@ -259,9 +259,9 @@ public:
 };
 
 /**
- * An endpoint for Point2D
+ * An endpoint for lsst::geom::Point2D
  */
-class Point2Endpoint : public BaseVectorEndpoint<Point2D> {
+class Point2Endpoint : public BaseVectorEndpoint<lsst::geom::Point2D> {
 public:
     Point2Endpoint(Point2Endpoint const &) = default;
     Point2Endpoint(Point2Endpoint &&) = default;
@@ -271,7 +271,7 @@ public:
     /**
      * Construct a Point2Endpoint
      */
-    explicit Point2Endpoint() : BaseVectorEndpoint<Point2D>(2) {}
+    explicit Point2Endpoint() : BaseVectorEndpoint<lsst::geom::Point2D>(2) {}
 
     /**
      * Construct a Point2Endpoint with nAxes specified; nAxes must equal template parameter N
@@ -298,7 +298,7 @@ public:
     /**
      * Check that framePtr points to a Frame, not a subclass
      *
-     * Subclasses are forbidden because Point2D is assumed to be cartesian
+     * Subclasses are forbidden because lsst::geom::Point2D is assumed to be cartesian
      * and subclasses of Frame are not (e.g. SkyFrame, SpecFrame and TimeFrame).
      * Note that SpecFrame and TimeFrame are 1-dimensional so they cannot be used
      * in any case. A CmpFrame could be cartesian, but we play it safe and reject these
@@ -311,11 +311,11 @@ public:
 };
 
 /**
- * An endpoint for SpherePoint
+ * An endpoint for lsst::geom::SpherePoint
  *
  * A SpherePointEndpoint always has 2 axes: longitude, latitude
  */
-class SpherePointEndpoint : public BaseVectorEndpoint<SpherePoint> {
+class SpherePointEndpoint : public BaseVectorEndpoint<lsst::geom::SpherePoint> {
 public:
     SpherePointEndpoint(SpherePointEndpoint const &) = default;
     SpherePointEndpoint(SpherePointEndpoint &&) = default;

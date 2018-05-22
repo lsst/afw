@@ -172,8 +172,8 @@ std::shared_ptr<SpanSet> maskIntersect(SpanSet const & spanSet, image::Mask<T> c
 // comparisons
 SpanSet::SpanSet() : _spanVector(), _bbox(), _area(0) {}
 
-// Construct a SpanSet from a Box2I object
-SpanSet::SpanSet(Box2I const& box) : _bbox(box), _area(box.getArea()) {
+// Construct a SpanSet from an lsst::geom::Box2I object
+SpanSet::SpanSet(lsst::geom::Box2I const& box) : _bbox(box), _area(box.getArea()) {
     int beginY = box.getMinY();
 
     int beginX = box.getMinX();
@@ -188,7 +188,7 @@ SpanSet::SpanSet(Box2I const& box) : _bbox(box), _area(box.getArea()) {
 SpanSet::SpanSet(std::vector<Span> const& vec, bool normalize) : _spanVector(vec) {
     // If the incoming vector is zero, should create an empty spanSet
     if (_spanVector.empty()) {
-        _bbox = Box2I();
+        _bbox = lsst::geom::Box2I();
         _area = 0;
     } else {
         if (normalize) {
@@ -202,7 +202,7 @@ SpanSet::SpanSet(std::vector<Span> const& vec, bool normalize) : _spanVector(vec
 SpanSet::SpanSet(std::vector<Span>&& vec, bool normalize) : _spanVector(std::move(vec)) {
     // If the incoming vector is zero, should create an empty SpanSet
     if (_spanVector.size() == 0) {
-        _bbox = Box2I();
+        _bbox = lsst::geom::Box2I();
         _area = 0;
     } else {
         if (normalize) {
@@ -271,14 +271,14 @@ void SpanSet::_initialize() {
         // Plus one, because end point is inclusive
         _area += span.getMaxX() - span.getMinX() + 1;
     }
-    _bbox = Box2I(Point2I(minX, _spanVector.front().getY()), Point2I(maxX, _spanVector.back().getY()));
+    _bbox = lsst::geom::Box2I(lsst::geom::Point2I(minX, _spanVector.front().getY()), lsst::geom::Point2I(maxX, _spanVector.back().getY()));
 }
 
 // Getter for the area property
 std::size_t SpanSet::getArea() const { return _area; }
 
 // Getter for the bounding box of the SpanSet
-Box2I SpanSet::getBBox() const { return _bbox; }
+lsst::geom::Box2I SpanSet::getBBox() const { return _bbox; }
 
 /* Here is a description of how the _makeLabels and _label function works. In the
    _makeLabels function, a vector is created with the same number of elements as
@@ -416,7 +416,7 @@ std::shared_ptr<SpanSet> SpanSet::shiftedBy(int x, int y) const {
     return makeShift(x, y);
 }
 
-std::shared_ptr<SpanSet> SpanSet::shiftedBy(Extent2I const& offset) const {
+std::shared_ptr<SpanSet> SpanSet::shiftedBy(lsst::geom::Extent2I const& offset) const {
     // Function to create a new SpanSet which is a copy of this, shifted by an extent object
     return makeShift(offset.getX(), offset.getY());
 }
@@ -431,7 +431,7 @@ std::shared_ptr<SpanSet> SpanSet::makeShift(int x, int y) const {
     return std::make_shared<SpanSet>(std::move(tempVec), false);
 }
 
-std::shared_ptr<SpanSet> SpanSet::clippedTo(Box2I const& box) const {
+std::shared_ptr<SpanSet> SpanSet::clippedTo(lsst::geom::Box2I const& box) const {
     /* Return a copy of the current SpanSet but only with values which are contained within
      * the supplied box
      */
@@ -469,8 +469,8 @@ bool SpanSet::contains(SpanSet const& other) const {
         for (auto const& spn : _spanVector) {
             // Check that the end points of the span from other are contained in the
             // span from this
-            if (spn.contains(Point2I(otherSpn.getMinX(), otherSpn.getY())) &&
-                spn.contains(Point2I(otherSpn.getMaxX(), otherSpn.getY()))) {
+            if (spn.contains(lsst::geom::Point2I(otherSpn.getMinX(), otherSpn.getY())) &&
+                spn.contains(lsst::geom::Point2I(otherSpn.getMaxX(), otherSpn.getY()))) {
                 ++counter;
             }
         }
@@ -484,7 +484,7 @@ bool SpanSet::contains(SpanSet const& other) const {
     return true;
 }
 
-bool SpanSet::contains(Point2I const& point) const {
+bool SpanSet::contains(lsst::geom::Point2I const& point) const {
     // Check to see if a given point is found within any spans in this
     for (auto& spn : _spanVector) {
         if (spn.contains(point)) {
@@ -494,7 +494,7 @@ bool SpanSet::contains(Point2I const& point) const {
     return false;
 }
 
-Point2D SpanSet::computeCentroid() const {
+lsst::geom::Point2D SpanSet::computeCentroid() const {
     // Find the centroid of the SpanSet
     std::size_t n = 0;
     double xc = 0, yc = 0;
@@ -510,12 +510,12 @@ Point2D SpanSet::computeCentroid() const {
     }
     assert(n == _area);
 
-    return Point2D(xc / _area, yc / _area);
+    return lsst::geom::Point2D(xc / _area, yc / _area);
 }
 
 ellipses::Quadrupole SpanSet::computeShape() const {
     // Compute the shape of the SpanSet
-    Point2D cen = computeCentroid();
+    lsst::geom::Point2D cen = computeCentroid();
     double const xc = cen.getX();
     double const yc = cen.getY();
 
@@ -680,7 +680,7 @@ bool SpanSet::operator!=(SpanSet const& other) const {
     return _spanVector != other._spanVector;
 }
 
-std::shared_ptr<SpanSet> SpanSet::fromShape(int r, Stencil s, Point2I offset) {
+std::shared_ptr<SpanSet> SpanSet::fromShape(int r, Stencil s, lsst::geom::Point2I offset) {
     // Create a SpanSet from a given Stencil
     std::vector<Span> tempVec;
     tempVec.reserve(2 * r + 1);
@@ -833,33 +833,33 @@ std::shared_ptr<SpanSet> SpanSet::union_(SpanSet const& other) const {
     return std::make_shared<SpanSet>(std::move(tempVec));
 }
 
-std::shared_ptr<SpanSet> SpanSet::transformedBy(LinearTransform const& t) const {
-    // Transform points in SpanSet by LinearTransform
-    return transformedBy(AffineTransform(t));
+std::shared_ptr<SpanSet> SpanSet::transformedBy(lsst::geom::LinearTransform const& t) const {
+    // Transform points in SpanSet by the LinearTransform
+    return transformedBy(lsst::geom::AffineTransform(t));
 }
 
-std::shared_ptr<SpanSet> SpanSet::transformedBy(AffineTransform const& t) const {
-    // Transform points in SpanSet by AffineTransform
+std::shared_ptr<SpanSet> SpanSet::transformedBy(lsst::geom::AffineTransform const& t) const {
+    // Transform points in SpanSet by the AffineTransform
     return transformedBy(*makeTransform(t));
 }
 
 std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t) const {
     // Transform points in SpanSet by Transform<Point2Endpoint, Point2Endpoint>
     // Transform the original bounding box
-    Box2D newBBoxD;
-    std::vector<Point2D> fromCorners;
+    lsst::geom::Box2D newBBoxD;
+    std::vector<lsst::geom::Point2D> fromCorners;
     fromCorners.reserve(4);
     for (auto const & fc: _bbox.getCorners()) {
-        fromCorners.emplace_back(Point2D(fc));
+        fromCorners.emplace_back(lsst::geom::Point2D(fc));
     }
     auto toPoints = t.applyForward(fromCorners);
     for (auto const & tc: toPoints) {
         newBBoxD.include(tc);
     }
 
-    Box2I newBBoxI(newBBoxD);
+    lsst::geom::Box2I newBBoxI(newBBoxD);
 
-    std::vector<Point2D> newBoxPoints;
+    std::vector<lsst::geom::Point2D> newBoxPoints;
     newBoxPoints.reserve(newBBoxI.getWidth());
     std::vector<Span> tempVec;
     for (int y = newBBoxI.getBeginY(); y < newBBoxI.getEndY(); ++y) {
@@ -870,7 +870,7 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
         // but could lead to memory issues for very large bounding boxes)
         newBoxPoints.clear();
         for (int x = newBBoxI.getBeginX(); x < newBBoxI.getEndX(); ++x) {
-            newBoxPoints.emplace_back(Point2D(x, y));
+            newBoxPoints.emplace_back(lsst::geom::Point2D(x, y));
         }
         auto oldBoxPoints = t.applyInverse(newBoxPoints);
         auto oldBoxPointIter = oldBoxPoints.cbegin();
@@ -879,7 +879,7 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
             int const xSource = std::floor(0.5 + p.getX());
             int const ySource = std::floor(0.5 + p.getY());
 
-            if (contains(Point2I(xSource, ySource))) {
+            if (contains(lsst::geom::Point2I(xSource, ySource))) {
                 if (!inSpan) {
                     inSpan = true;
                     start = x;
@@ -897,14 +897,14 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
 }
 
 template <typename ImageT>
-void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, Box2I const& region, bool doClip) const {
-    Box2I bbox;
+void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, lsst::geom::Box2I const& region, bool doClip) const {
+    lsst::geom::Box2I bbox;
     if (region.isEmpty()) {
         bbox = image.getBBox();
     } else {
         bbox = region;
     }
-    auto setterFunc = [](Point2I const& point, ImageT& out, ImageT in) { out = in; };
+    auto setterFunc = [](lsst::geom::Point2I const& point, ImageT& out, ImageT in) { out = in; };
     try {
         if (doClip) {
             auto tmpSpan = this->clippedTo(bbox);
@@ -923,7 +923,7 @@ void SpanSet::setMask(image::Mask<T>& target, T bitmask) const {
     // Use a lambda to set bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
-    auto maskFunctor = [](Point2I const& point, typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
+    auto maskFunctor = [](lsst::geom::Point2I const& point, typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
                           T bitmask) { maskVal |= bitmask; };
     applyFunctor(maskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
 }
@@ -933,7 +933,7 @@ void SpanSet::clearMask(image::Mask<T>& target, T bitmask) const {
     // Use a lambda to clear bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
-    auto clearMaskFunctor = [](Point2I const& point,
+    auto clearMaskFunctor = [](lsst::geom::Point2I const& point,
                                typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
                                T bitmask) { maskVal &= ~bitmask; };
     applyFunctor(clearMaskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
@@ -1036,7 +1036,7 @@ void SpanSet::write(OutputArchiveHandle& handle) const {
 // Explicit instantiations
 #define INSTANTIATE_IMAGE_TYPE(T)                                                                      \
     template void SpanSet::setImage<T>(image::Image<T> & image, T val,                                 \
-                                       geom::Box2I const& region = geom::Box2I(), bool doClip = false) \
+                                       lsst::geom::Box2I const& region = lsst::geom::Box2I(), bool doClip = false) \
             const;
 
 #define INSTANTIATE_MASK_TYPE(T)                                                                           \

@@ -67,7 +67,7 @@ PYBIND11_PLUGIN(schemaMapper) {
     declareSchemaMapperOverloads<float>(cls, "F");
     declareSchemaMapperOverloads<double>(cls, "D");
     declareSchemaMapperOverloads<std::string>(cls, "String");
-    declareSchemaMapperOverloads<lsst::afw::geom::Angle>(cls, "Angle");
+    declareSchemaMapperOverloads<lsst::geom::Angle>(cls, "Angle");
     declareSchemaMapperOverloads<lsst::afw::table::Flag>(cls, "Flag");
     declareSchemaMapperOverloads<lsst::afw::table::Array<std::uint8_t>>(cls, "ArrayB");
     declareSchemaMapperOverloads<lsst::afw::table::Array<std::uint16_t>>(cls, "ArrayU");

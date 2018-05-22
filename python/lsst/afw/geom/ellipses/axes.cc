@@ -61,11 +61,11 @@ PYBIND11_PLUGIN(_axes) {
     clsAxes.def("writeParameters", &Axes::writeParameters);
     clsAxes.def("assign", [](Axes &self, Axes &other) { self = other; });
     clsAxes.def("assign", [](Axes &self, BaseCore &other) { self = other; });
-    clsAxes.def("transform", [](Axes &self, lsst::afw::geom::LinearTransform const &t) {
+    clsAxes.def("transform", [](Axes &self, lsst::geom::LinearTransform const &t) {
         return std::static_pointer_cast<Axes>(self.transform(t).copy());
     });
     clsAxes.def("transformInPlace",
-                [](Axes &self, lsst::afw::geom::LinearTransform const &t) { self.transform(t).inPlace(); });
+                [](Axes &self, lsst::geom::LinearTransform const &t) { self.transform(t).inPlace(); });
 
     return mod.ptr();
 }

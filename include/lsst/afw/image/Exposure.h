@@ -94,7 +94,7 @@ public:
       * @param dimensions desired image width/height
       * @param wcs the SkyWcs
       */
-    explicit Exposure(lsst::afw::geom::Extent2I const& dimensions = lsst::afw::geom::Extent2I(),
+    explicit Exposure(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                       std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and a SkyWcs
@@ -102,7 +102,7 @@ public:
       * @param bbox desired image width/height, and origin
       * @param wcs the SkyWcs
       */
-    explicit Exposure(lsst::afw::geom::Box2I const& bbox,
+    explicit Exposure(lsst::geom::Box2I const& bbox,
                       std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** Construct an Exposure from a MaskedImage and an optional SkyWcs
@@ -131,7 +131,7 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(std::string const& fileName, geom::Box2I const& bbox = geom::Box2I(),
+    explicit Exposure(std::string const& fileName, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                       ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /**
@@ -143,7 +143,7 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(fits::MemFileManager& manager, geom::Box2I const& bbox = geom::Box2I(),
+    explicit Exposure(fits::MemFileManager& manager, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                       ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /**
@@ -155,7 +155,7 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(fits::Fits& fitsfile, geom::Box2I const& bbox = geom::Box2I(),
+    explicit Exposure(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                       ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /** Copy an Exposure
@@ -176,7 +176,7 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if the requested subRegion
      * is not fully contained by the original MaskedImage BBox.
      */
-    Exposure(Exposure const& src, lsst::afw::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
+    Exposure(Exposure const& src, lsst::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
              bool const deep = false);
 
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -226,7 +226,7 @@ public:
     /// Return the Exposure's height
     int getHeight() const { return _maskedImage.getHeight(); }
     /// Return the Exposure's size
-    geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
+    lsst::geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
 
     /**
      * Return the Exposure's column-origin
@@ -248,9 +248,11 @@ public:
      * `Exposure(fileName, hdu, BBox, mode)` ctor or `Exposure(Exposure, BBox)` cctor
      * The origin can be reset with `setXY0`
      */
-    geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
+    lsst::geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin = PARENT) const { return _maskedImage.getBBox(origin); }
+    lsst::geom::Box2I getBBox(ImageOrigin const origin = PARENT) const {
+        return _maskedImage.getBBox(origin);
+    }
     /**
      * Set the Exposure's origin (including correcting the Wcs)
      *
@@ -259,7 +261,7 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::Point2I const& origin);
+    void setXY0(lsst::geom::Point2I const& origin);
 
     // Set Members
     /** Set the MaskedImage of the Exposure.
@@ -401,7 +403,8 @@ public:
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 
-    void _readFits(fits::Fits& fitsfile, geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks);
+    void _readFits(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox, ImageOrigin origin,
+                   bool conformMasks);
 
     MaskedImageT _maskedImage;
     std::shared_ptr<ExposureInfo> _info;
@@ -413,8 +416,9 @@ private:
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>> makeExposure(
         MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& mimage,  ///< the Exposure's image
-        std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>()  ///< the Exposure's WCS
-        ) {
+        std::shared_ptr<geom::SkyWcs const> wcs =
+                std::shared_ptr<geom::SkyWcs const>()  ///< the Exposure's WCS
+) {
     return typename std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>>(
             new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
 }

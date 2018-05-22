@@ -74,21 +74,22 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
 
     const typename OutImageT::SinglePixel edgePixel =
             math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
-    std::vector<geom::Box2I> bboxList;
+    std::vector<lsst::geom::Box2I> bboxList;
 
     // create a list of bounding boxes describing edge regions, in this order:
     // bottom edge, top edge (both edge to edge),
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY)));
-    bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY),
-                                   geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
+                                         lsst::geom::Extent2I(imWidth, numHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
+                                   lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
 
-    for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
+    for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
          ++bboxIter) {
         OutImageT outView(outImage, *bboxIter, image::LOCAL);
         if (doCopyEdge) {
@@ -125,22 +126,22 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
 
     const typename OutImageT::SinglePixel edgePixel =
             math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
-    std::vector<geom::Box2I> bboxList;
+    std::vector<lsst::geom::Box2I> bboxList;
 
     // create a list of bounding boxes describing edge regions, in this order:
     // bottom edge, top edge (both edge to edge),
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
     bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY),
-                                   geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+            lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight), lsst::geom::Extent2I(imWidth, numHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY), lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
+                                   lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
 
     image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
-    for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
+    for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
          ++bboxIter) {
         OutImageT outView(outImage, *bboxIter, image::LOCAL);
         if (doCopyEdge) {

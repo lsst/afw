@@ -50,7 +50,7 @@ namespace afw {
 namespace image {
 
 template <typename PixelT>
-typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_allocateView(geom::Extent2I const& dimensions,
+typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_allocateView(lsst::geom::Extent2I const& dimensions,
                                                                      Manager::Ptr& manager) {
     if (dimensions.getX() < 0 || dimensions.getY() < 0) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
@@ -70,30 +70,32 @@ typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_allocateView(geom::Exten
                                         dimensions.getX() * sizeof(PixelT));
 }
 template <typename PixelT>
-typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(geom::Extent2I const& dimensions,
-                                                                    geom::Extent2I const& offset,
+typename ImageBase<PixelT>::_view_t ImageBase<PixelT>::_makeSubView(lsst::geom::Extent2I const& dimensions,
+                                                                    lsst::geom::Extent2I const& offset,
                                                                     const _view_t& view) {
     if (offset.getX() < 0 || offset.getY() < 0 || offset.getX() + dimensions.getX() > view.width() ||
         offset.getY() + dimensions.getY() > view.height()) {
-        throw LSST_EXCEPT(pex::exceptions::LengthError,
-                          (boost::format("Box2I(Point2I(%d,%d),Extent2I(%d,%d)) doesn't fit in image %dx%d") %
-                           offset.getX() % offset.getY() % dimensions.getX() % dimensions.getY() %
-                           view.width() % view.height())
-                                  .str());
+        throw LSST_EXCEPT(
+                pex::exceptions::LengthError,
+                (boost::format(
+                         "Box2I(Point2I(%d,%d),lsst::geom::Extent2I(%d,%d)) doesn't fit in image %dx%d") %
+                 offset.getX() % offset.getY() % dimensions.getX() % dimensions.getY() % view.width() %
+                 view.height())
+                        .str());
     }
     return boost::gil::subimage_view(view, offset.getX(), offset.getY(), dimensions.getX(),
                                      dimensions.getY());
 }
 
 template <typename PixelT>
-ImageBase<PixelT>::ImageBase(geom::Extent2I const& dimensions)
+ImageBase<PixelT>::ImageBase(lsst::geom::Extent2I const& dimensions)
         : daf::base::Citizen(typeid(this)),
           _origin(0, 0),
           _manager(),
           _gilView(_allocateView(dimensions, _manager)) {}
 
 template <typename PixelT>
-ImageBase<PixelT>::ImageBase(geom::Box2I const& bbox)
+ImageBase<PixelT>::ImageBase(lsst::geom::Box2I const& bbox)
         : daf::base::Citizen(typeid(this)),
           _origin(bbox.getMin()),
           _manager(),
@@ -118,12 +120,12 @@ template <typename PixelT>
 ImageBase<PixelT>::ImageBase(ImageBase&& rhs) : ImageBase(rhs, false) {}
 
 template <typename PixelT>
-ImageBase<PixelT>::ImageBase(ImageBase const& rhs, geom::Box2I const& bbox, ImageOrigin const origin,
+ImageBase<PixelT>::ImageBase(ImageBase const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin,
                              bool const deep
 
                              )
         : daf::base::Citizen(typeid(this)),
-          _origin((origin == PARENT) ? bbox.getMin() : rhs._origin + geom::Extent2I(bbox.getMin())),
+          _origin((origin == PARENT) ? bbox.getMin() : rhs._origin + lsst::geom::Extent2I(bbox.getMin())),
           _manager(rhs._manager),  // reference counted pointer, don't copy pixels
           _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView)) {
     if (deep) {
@@ -134,7 +136,7 @@ ImageBase<PixelT>::ImageBase(ImageBase const& rhs, geom::Box2I const& bbox, Imag
 }
 
 template <typename PixelT>
-ImageBase<PixelT>::ImageBase(Array const& array, bool deep, geom::Point2I const& xy0)
+ImageBase<PixelT>::ImageBase(Array const& array, bool deep, lsst::geom::Point2I const& xy0)
         : daf::base::Citizen(typeid(this)),
           _origin(xy0),
           _manager(array.getManager()),
@@ -167,7 +169,7 @@ ImageBase<PixelT>& ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
 }
 
 template <typename PixelT>
-void ImageBase<PixelT>::assign(ImageBase const& rhs, geom::Box2I const& bbox, ImageOrigin origin) {
+void ImageBase<PixelT>::assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin origin) {
     auto lhsDim = bbox.isEmpty() ? getDimensions() : bbox.getDimensions();
     if (lhsDim != rhs.getDimensions()) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
@@ -178,7 +180,7 @@ void ImageBase<PixelT>::assign(ImageBase const& rhs, geom::Box2I const& bbox, Im
     if (bbox.isEmpty()) {
         copy_pixels(rhs._gilView, _gilView);
     } else {
-        auto lhsOff = (origin == PARENT) ? bbox.getMin() - _origin : geom::Extent2I(bbox.getMin());
+        auto lhsOff = (origin == PARENT) ? bbox.getMin() - _origin : lsst::geom::Extent2I(bbox.getMin());
         auto lhsGilView = _makeSubView(lhsDim, lhsOff, _gilView);
         copy_pixels(rhs._gilView, lhsGilView);
     }
@@ -194,11 +196,10 @@ template <typename PixelT>
 typename ImageBase<PixelT>::PixelReference ImageBase<PixelT>::operator()(int x, int y,
                                                                          CheckIndices const& check) {
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
-        throw LSST_EXCEPT(
-                pex::exceptions::LengthError,
-                (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") % x % y % (getWidth() - 1) %
-                 (getHeight() -
-                  1)).str());
+        throw LSST_EXCEPT(pex::exceptions::LengthError,
+                          (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") % x % y %
+                           (getWidth() - 1) % (getHeight() - 1))
+                                  .str());
     }
 
     return const_cast<typename ImageBase<PixelT>::PixelReference>(
@@ -302,17 +303,18 @@ ImageBase<PixelT>& ImageBase<PixelT>::operator=(PixelT const rhs) {
 //
 template <typename PixelT>
 Image<PixelT>::Image(unsigned int width, unsigned int height, PixelT initialValue)
-        : ImageBase<PixelT>(geom::ExtentI(width, height)) {
+        : ImageBase<PixelT>(lsst::geom::ExtentI(width, height)) {
     *this = initialValue;
 }
 
 template <typename PixelT>
-Image<PixelT>::Image(geom::Extent2I const& dimensions, PixelT initialValue) : ImageBase<PixelT>(dimensions) {
+Image<PixelT>::Image(lsst::geom::Extent2I const& dimensions, PixelT initialValue)
+        : ImageBase<PixelT>(dimensions) {
     *this = initialValue;
 }
 
 template <typename PixelT>
-Image<PixelT>::Image(geom::Box2I const& bbox, PixelT initialValue) : ImageBase<PixelT>(bbox) {
+Image<PixelT>::Image(lsst::geom::Box2I const& bbox, PixelT initialValue) : ImageBase<PixelT>(bbox) {
     *this = initialValue;
 }
 
@@ -323,9 +325,8 @@ template <typename PixelT>
 Image<PixelT>::Image(Image&& rhs) : Image(rhs, false) {}
 
 template <typename PixelT>
-Image<PixelT>::Image(Image const& rhs, geom::Box2I const& bbox, ImageOrigin const origin, bool const deep
-
-                     )
+Image<PixelT>::Image(Image const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin,
+                     bool const deep)
         : ImageBase<PixelT>(rhs, bbox, origin, deep) {}
 
 template <typename PixelT>
@@ -351,7 +352,7 @@ Image<PixelT>& Image<PixelT>::operator=(Image&& rhs) {
 
 template <typename PixelT>
 Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
-                     geom::Box2I const& bbox, ImageOrigin origin)
+                     lsst::geom::Box2I const& bbox, ImageOrigin origin)
         : ImageBase<PixelT>() {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
@@ -367,7 +368,7 @@ Image<PixelT>::Image(std::string const& fileName, int hdu, std::shared_ptr<daf::
 }
 template <typename PixelT>
 Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
-                     std::shared_ptr<daf::base::PropertySet> metadata, geom::Box2I const& bbox,
+                     std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
                      ImageOrigin const origin)
         : ImageBase<PixelT>() {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -377,7 +378,7 @@ Image<PixelT>::Image(fits::MemFileManager& manager, int const hdu,
 
 template <typename PixelT>
 Image<PixelT>::Image(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                     geom::Box2I const& bbox, ImageOrigin const origin)
+                     lsst::geom::Box2I const& bbox, ImageOrigin const origin)
         : ImageBase<PixelT>() {
     typedef boost::mpl::vector<unsigned char, unsigned short, short, int, unsigned int, float, double,
                                std::uint64_t>
@@ -687,16 +688,16 @@ Image<LhsPixelT>& operator/=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs)
     return lhs;
 }
 
-geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
+lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
 {
-    geom::Extent2I dims;
+    lsst::geom::Extent2I dims;
     if (metadata.exists("ZNAXIS1") && metadata.exists("ZNAXIS2")) {
-        dims = geom::Extent2I(metadata.getAsInt("ZNAXIS1"), metadata.getAsInt("ZNAXIS2"));
+        dims = lsst::geom::Extent2I(metadata.getAsInt("ZNAXIS1"), metadata.getAsInt("ZNAXIS2"));
     } else {
-        dims = geom::Extent2I(metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2"));
+        dims = lsst::geom::Extent2I(metadata.getAsInt("NAXIS1"), metadata.getAsInt("NAXIS2"));
     }
-    geom::Point2I xy0 = geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0);
-    return geom::Box2I(xy0, dims);
+    lsst::geom::Point2I xy0 = geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0);
+    return lsst::geom::Box2I(xy0, dims);
 }
 
 template <typename T1, typename T2>

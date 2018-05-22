@@ -22,11 +22,12 @@
 
 import functools
 import numpy
+
+import lsst.geom
 from lsst.pex.config import Config, ListField, makeRegistry, \
     ConfigDictField, ConfigurableField
 from .transformFactory import makeTransform, makeIdentityTransform, \
     makeRadialTransform
-from .affineTransform import AffineTransform
 
 __all__ = ["transformRegistry", "OneTransformConfig", "TransformConfig",
            "IdentityTransformConfig", "AffineTransformConfig", "RadialTransformConfig",
@@ -115,7 +116,7 @@ def affineFactory(config):
     linear = numpy.array(config.linear)
     linear.shape = (2, 2)
     translation = numpy.array(config.translation)
-    return makeTransform(AffineTransform(linear, translation))
+    return makeTransform(lsst.geom.AffineTransform(linear, translation))
 
 
 affineFactory.ConfigClass = AffineTransformConfig

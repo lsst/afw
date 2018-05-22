@@ -32,9 +32,9 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -57,8 +57,8 @@ LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeError,
 
 class Polygon : public afw::table::io::PersistableFacade<Polygon>, public afw::table::io::Persistable {
 public:
-    typedef Box2D Box;
-    typedef Point2D Point;
+    typedef lsst::geom::Box2D Box;
+    typedef lsst::geom::Point2D Point;
 
 
     /**
@@ -95,7 +95,7 @@ public:
      * @param[in] transform  Coordinate transform
      */
     Polygon(Box const& box,
-            AffineTransform const& transform
+            lsst::geom::AffineTransform const& transform
             );
 
     /// Construct a Polygon from a list of vertices
@@ -224,7 +224,7 @@ public:
             TransformPoint2ToPoint2 const& transform  ///< Transform from original to target frame
             ) const;
     std::shared_ptr<Polygon> transform(
-            AffineTransform const& transform  ///< Transform from original to target frame
+            lsst::geom::AffineTransform const& transform  ///< Transform from original to target frame
             ) const;
     //@}
 
@@ -245,9 +245,9 @@ public:
     /// within the polygon.
     ///
     /// Note that the center of the lower-left pixel is 0,0.
-    std::shared_ptr<afw::image::Image<float>> createImage(Box2I const& bbox) const;
-    std::shared_ptr<afw::image::Image<float>> createImage(Extent2I const& extent) const {
-        return createImage(Box2I(Point2I(0, 0), extent));
+    std::shared_ptr<afw::image::Image<float>> createImage(lsst::geom::Box2I const& bbox) const;
+    std::shared_ptr<afw::image::Image<float>> createImage(lsst::geom::Extent2I const& extent) const {
+        return createImage(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), extent));
     }
     //@}
 

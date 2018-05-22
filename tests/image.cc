@@ -34,11 +34,11 @@
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
 
 using namespace std;
 
@@ -98,7 +98,7 @@ void printImage(ImageT const& img, string const& title = "") {
 #endif
 
 ImageT make_image(int const width = 5, int const height = 6) {
-    ImageT img(geom::Extent2I(width, height));
+    ImageT img(lsst::geom::Extent2I(width, height));
 
     int i = 0;
     for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(img(3, 4), 304);
 
     // create a subimage:   x in [1,3], y in [2,4]
-    ImageT subimg(img, geom::Box2I(geom::Point2I(1, 2), geom::Extent2I(3, 3)));
+    ImageT subimg(img, lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Extent2I(3, 3)));
     BOOST_CHECK_EQUAL(subimg.getWidth(), 3);
     BOOST_CHECK_EQUAL(subimg.getHeight(), 3);
     BOOST_CHECK_EQUAL(subimg.getX0(), 1);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(
 BOOST_AUTO_TEST_CASE(
         setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
-    MaskT mask(geom::Extent2I(1, 1));
+    MaskT mask(lsst::geom::Extent2I(1, 1));
     mask = 0x8;
 
 #if PRINT_IMAGE

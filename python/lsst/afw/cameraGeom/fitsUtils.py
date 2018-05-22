@@ -1,10 +1,12 @@
 import re
 import warnings
+
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 from lsst.afw.fits import readMetadata
 import lsst.afw.cameraGeom as afwCameraGeom
-import lsst.afw.geom as afwGeom
+import lsst.afw.geom
 
 
 def getByKey(metadata, key):
@@ -194,7 +196,7 @@ class DetectorBuilder:
            @return  The HeaderAmpMap object containing the mapping
         """
         hMap = HeaderAmpMap()
-        emptyBBox = afwGeom.BoxI()
+        emptyBBox = lsst.geom.BoxI()
         mapList = [('EXTNAME', 'setName'),
                    ('DETSEC', 'setBBox', None, self._makeBbox),
                    ('GAIN', 'setGain', 1.),
@@ -208,7 +210,7 @@ class DetectorBuilder:
                    ('DATASEC', 'setRawDataBBox', None, self._makeBbox),
                    ('FLIPX', 'setRawFlipX', False),
                    ('FLIPY', 'setRawFlipY', False),
-                   ('XYOFF', 'setRawXYOffset', afwGeom.ExtentI(0, 0), self._makeExt),
+                   ('XYOFF', 'setRawXYOffset', lsst.geom.ExtentI(0, 0), self._makeExt),
                    ('HOSCAN', 'setRawHorizontalOverscanBBox',
                     emptyBBox, self._makeBbox),
                    ('VOSCAN', 'setRawVerticalOverscanBBox',
@@ -255,7 +257,7 @@ class DetectorBuilder:
            @param[in] extArr Length 2 array to use in creating the Extent object
            @return  Extent2I constructed from the input list
         """
-        return afwGeom.ExtentI(*extArr)
+        return lsst.geom.ExtentI(*extArr)
 
     def _makeBbox(self, boxString):
         """Helper funtion to make a bounding box from a string representing a FITS style bounding box
@@ -265,10 +267,10 @@ class DetectorBuilder:
         # strip off brackets and split into parts
         x1, x2, y1, y2 = [int(el) for el in re.split(
             '[:,]', boxString.strip()[1:-1])]
-        box = afwGeom.BoxI(afwGeom.PointI(x1, y1), afwGeom.PointI(x2, y2))
+        box = lsst.geom.BoxI(lsst.geom.PointI(x1, y1), lsst.geom.PointI(x2, y2))
         # account for the difference between FITS convention and LSST convention for
         # index of LLC.
-        box.shift(afwGeom.Extent2I(-1, -1))
+        box.shift(lsst.geom.Extent2I(-1, -1))
         return box
 
     def _getBboxX0(self, boxString):
@@ -290,8 +292,8 @@ class DetectorBuilder:
                                      normalized units.
            @return     Transform object describing the radial distortion
         """
-        pScaleRad = afwGeom.arcsecToRad(self.plateScale)
-        return afwGeom.makeRadialTransform([el/pScaleRad for el in radialCoeffs])
+        pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
+        return lsst.afw.geom.makeRadialTransform([el/pScaleRad for el in radialCoeffs])
 
     def buildDetector(self):
         """Take all the information and build a Detector object.  The Detector object is necessary for doing

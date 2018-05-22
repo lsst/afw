@@ -104,7 +104,7 @@ public:
         }
     }
 
-    void operator()(geom::Point2I const &point, PixelT &input) {
+    void operator()(lsst::geom::Point2I const &point, PixelT &input) {
         if (_overwriteId) {
             auto val = input & ~_idMask;
 
@@ -175,7 +175,7 @@ public:
     }
 
     // Take by copy and not be reference on purpose
-    void operator()(geom::Point2I const &point, T val) {
+    void operator()(lsst::geom::Point2I const &point, T val) {
         if (val != _old) {
             _ids.insert(val);
             _old = val;
@@ -224,7 +224,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
     bool const up = ctrl.isUp().first && ctrl.isUp().second;
     bool const down = ctrl.isDown().first && ctrl.isDown().second;
 
-    geom::Box2I const region = lhs.getRegion();
+    lsst::geom::Box2I const region = lhs.getRegion();
     if (region != rhs.getRegion()) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           boost::format("The two FootprintSets must have the same region").str());
@@ -518,7 +518,7 @@ public:
               _min(std::numeric_limits<double>::max()),
               _max(-std::numeric_limits<double>::max()) {}
 
-    void operator()(geom::Point2I const &point, ImageT const &val) {
+    void operator()(lsst::geom::Point2I const &point, ImageT const &val) {
         if (_polarity) {
             if (val > _max) {
                 _max = val;
@@ -607,7 +607,7 @@ static inline IterT advancePtr(IterT varPtr, ThresholdPixelLevel_traits) {
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT, typename ThresholdTraitT>
 static void findFootprints(
         typename FootprintSet::FootprintList *_footprints,  // Footprints
-        geom::Box2I const &_region,                         // BBox of pixels that are being searched
+        lsst::geom::Box2I const &_region,                         // BBox of pixels that are being searched
         image::ImageBase<ImagePixelT> const &img,           // Image to search for objects
         image::Image<VariancePixelT> const *var,            // img's variance
         double const footprintThreshold,                    // threshold value for footprint
@@ -809,8 +809,8 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
                            bool const setPeaks)
         : daf::base::Citizen(typeid(this)),
           _footprints(new FootprintList()),
-          _region(geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
-                  geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())) {
+          _region(lsst::geom::Point2I(maskedImg.getX0(), maskedImg.getY0()),
+                  lsst::geom::Extent2I(maskedImg.getWidth(), maskedImg.getHeight())) {
     typedef typename image::MaskedImage<ImagePixelT, MaskPixelT>::Variance::Pixel VariancePixelT;
     // Find the Footprints
     switch (threshold.getType()) {
@@ -846,7 +846,7 @@ FootprintSet::FootprintSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &ma
     }
 }
 
-FootprintSet::FootprintSet(geom::Box2I region)
+FootprintSet::FootprintSet(lsst::geom::Box2I region)
         : daf::base::Citizen(typeid(this)), _footprints(std::make_shared<FootprintList>()), _region(region) {}
 
 FootprintSet::FootprintSet(FootprintSet const &rhs)
@@ -879,7 +879,7 @@ void FootprintSet::merge(FootprintSet const &rhs, int tGrow, int rGrow, bool iso
     swap(fs);  // Swap the new FootprintSet into place
 }
 
-void FootprintSet::setRegion(geom::Box2I const &region) {
+void FootprintSet::setRegion(lsst::geom::Box2I const &region) {
     _region = region;
 
     for (FootprintSet::FootprintList::iterator ptr = _footprints->begin(), end = _footprints->end();

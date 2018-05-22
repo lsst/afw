@@ -37,7 +37,7 @@ Ellipse::ParameterVector const Ellipse::getParameterVector() const {
 
 void Ellipse::setParameterVector(Ellipse::ParameterVector const& vector) {
     _core->setParameterVector(vector.head<3>());
-    _center = Point2D(vector.tail<2>());
+    _center = lsst::geom::Point2D(vector.tail<2>());
 }
 
 void Ellipse::readParameters(double const* iter) {
@@ -52,9 +52,9 @@ void Ellipse::writeParameters(double* iter) const {
     iter[4] = _center.getY();
 }
 
-Box2D Ellipse::computeBBox() const {
-    Extent2D dimensions = getCore().computeDimensions();
-    return Box2D(getCenter() - dimensions * 0.5, dimensions);
+lsst::geom::Box2D Ellipse::computeBBox() const {
+    lsst::geom::Extent2D dimensions = getCore().computeDimensions();
+    return lsst::geom::Box2D(getCenter() - dimensions * 0.5, dimensions);
 }
 
 Ellipse& Ellipse::operator=(Ellipse const& other) {

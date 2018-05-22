@@ -25,6 +25,7 @@
 #include <iostream>
 #include <cmath>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
@@ -32,13 +33,12 @@
 using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 
 int main() {
     // First we'll try a regular image
-    ImageF img(geom::Extent2I(10, 40));
+    ImageF img(lsst::geom::Extent2I(10, 40));
     img = 100000.0;
 
     {

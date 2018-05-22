@@ -31,6 +31,7 @@
 #include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/pex/exceptions/Exception.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"

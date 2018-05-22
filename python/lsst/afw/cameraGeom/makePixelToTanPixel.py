@@ -19,7 +19,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import lsst.afw.geom as afwGeom
+import lsst.geom
+import lsst.afw.geom
 
 __all__ = ["makePixelToTanPixel"]
 
@@ -29,11 +30,11 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
 
     PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in doc/cameraGeom.dox
 
-    @param[in] bbox  detector bounding box (an lsst.afw.geom.Box2I)
+    @param[in] bbox  detector bounding box (an lsst.geom.Box2I)
     @param[in] orientation  orientation of detector in focal plane (an lsst.afw.cameraGeom.Orientation)
     @param[in] focalPlaneToField  an lsst.afw.geom.Transform that converts from focal plane (mm)
         to field angle coordinates (radians) in the forward direction
-    @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.afw.geom.Extent2D)
+    @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.geom.Extent2D)
     @return a TransformPoint2ToPoint2 whose forward direction converts PIXELS to TAN_PIXELS
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
@@ -44,9 +45,8 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToField, pixelSizeMm):
     # so linearize the forward direction instead. (pixelToField is pixelToFocalPlane,
     # an affine transform, followed by focalPlaneToField,
     # so the same consideration applies to pixelToField)
-    pixAtFieldCtr = pixelToField.applyInverse(afwGeom.Point2D(0, 0))
-    tanPixToFieldAffine = afwGeom.linearizeTransform(pixelToField,
-                                                     pixAtFieldCtr)
-    fieldToTanPix = afwGeom.makeTransform(tanPixToFieldAffine.invert())
+    pixAtFieldCtr = pixelToField.applyInverse(lsst.geom.Point2D(0, 0))
+    tanPixToFieldAffine = lsst.afw.geom.linearizeTransform(pixelToField, pixAtFieldCtr)
+    fieldToTanPix = lsst.afw.geom.makeTransform(tanPixToFieldAffine.invert())
 
     return pixelToField.then(fieldToTanPix)

@@ -30,8 +30,8 @@
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/fits.h"
+#include "lsst/geom.h"
 #include "lsst/afw/geom/Endpoint.h"
-#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
@@ -49,23 +49,26 @@ PYBIND11_PLUGIN(skyWcs) {
 
     py::module::import("lsst.afw.geom.transform");
 
-    mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * degrees, "flipX"_a = false);
+    mod.def("makeCdMatrix", makeCdMatrix, "scale"_a, "orientation"_a = 0 * lsst::geom::degrees,
+            "flipX"_a = false);
     mod.def("makeFlippedWcs", makeFlippedWcs, "wcs"_a, "flipLR"_a, "flipTB"_a, "center"_a);
     mod.def("makeModifiedWcs", makeModifiedWcs, "pixelTransform"_a, "wcs"_a, "modifyActualPixels"_a);
     mod.def("makeSkyWcs",
-            (std::shared_ptr<SkyWcs>(*)(Point2D const &, SpherePoint const &, Eigen::Matrix2d const &,
-                                        std::string const &))makeSkyWcs,
+            (std::shared_ptr<SkyWcs>(*)(lsst::geom::Point2D const &, lsst::geom::SpherePoint const &,
+                                        Eigen::Matrix2d const &, std::string const &))makeSkyWcs,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "projection"_a = "TAN");
     mod.def("makeSkyWcs", (std::shared_ptr<SkyWcs>(*)(daf::base::PropertySet &, bool))makeSkyWcs,
             "metadata"_a, "strip"_a = false);
     mod.def("makeTanSipWcs",
-            (std::shared_ptr<SkyWcs>(*)(Point2D const &, SpherePoint const &, Eigen::Matrix2d const &,
-                                        Eigen::MatrixXd const &, Eigen::MatrixXd const &))makeTanSipWcs,
+            (std::shared_ptr<SkyWcs>(*)(lsst::geom::Point2D const &, lsst::geom::SpherePoint const &,
+                                        Eigen::Matrix2d const &, Eigen::MatrixXd const &,
+                                        Eigen::MatrixXd const &))makeTanSipWcs,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a);
     mod.def("makeTanSipWcs",
-            (std::shared_ptr<SkyWcs>(*)(Point2D const &, SpherePoint const &, Eigen::Matrix2d const &,
+            (std::shared_ptr<SkyWcs>(*)(lsst::geom::Point2D const &, lsst::geom::SpherePoint const &,
+                                        Eigen::Matrix2d const &, Eigen::MatrixXd const &,
                                         Eigen::MatrixXd const &, Eigen::MatrixXd const &,
-                                        Eigen::MatrixXd const &, Eigen::MatrixXd const &))makeTanSipWcs,
+                                        Eigen::MatrixXd const &))makeTanSipWcs,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a, "sipAp"_a, "sipBp"_a);
     mod.def("makeWcsPairTransform", makeWcsPairTransform, "src"_a, "dst"_a);
     mod.def("getIntermediateWorldCoordsToSky", getIntermediateWorldCoordsToSky, "wcs"_a, "simplify"_a = true);
@@ -84,12 +87,14 @@ PYBIND11_PLUGIN(skyWcs) {
 
     cls.def("copyAtShiftedPixelOrigin", &SkyWcs::copyAtShiftedPixelOrigin, "shift"_a);
     cls.def("getFitsMetadata", &SkyWcs::getFitsMetadata, "precise"_a = false);
-    cls.def("getPixelScale", (Angle(SkyWcs::*)(Point2D const &) const) & SkyWcs::getPixelScale, "pixel"_a);
-    cls.def("getPixelScale", (Angle(SkyWcs::*)() const) & SkyWcs::getPixelScale);
+    cls.def("getPixelScale",
+            (lsst::geom::Angle(SkyWcs::*)(lsst::geom::Point2D const &) const) & SkyWcs::getPixelScale,
+            "pixel"_a);
+    cls.def("getPixelScale", (lsst::geom::Angle(SkyWcs::*)() const) & SkyWcs::getPixelScale);
     cls.def("getPixelOrigin", &SkyWcs::getPixelOrigin);
     cls.def("getSkyOrigin", &SkyWcs::getSkyOrigin);
-    cls.def("getCdMatrix", (Eigen::Matrix2d(SkyWcs::*)(Point2D const &) const) & SkyWcs::getCdMatrix,
-            "pixel"_a);
+    cls.def("getCdMatrix",
+            (Eigen::Matrix2d(SkyWcs::*)(lsst::geom::Point2D const &) const) & SkyWcs::getCdMatrix, "pixel"_a);
     cls.def("getCdMatrix", (Eigen::Matrix2d(SkyWcs::*)() const) & SkyWcs::getCdMatrix);
     cls.def("getTanWcs", &SkyWcs::getTanWcs, "pixel"_a);
     cls.def("getFrameDict", [](SkyWcs const &self) { return self.getFrameDict()->copy(); });
@@ -98,29 +103,42 @@ PYBIND11_PLUGIN(skyWcs) {
     cls.def_property_readonly("isFits", &SkyWcs::isFits);
     cls.def_property_readonly("isFlipped", &SkyWcs::isFlipped);
     cls.def("linearizePixelToSky",
-            (AffineTransform(SkyWcs::*)(SpherePoint const &, AngleUnit const &) const) &
+            (lsst::geom::AffineTransform(SkyWcs::*)(lsst::geom::SpherePoint const &,
+                                                    lsst::geom::AngleUnit const &) const) &
                     SkyWcs::linearizePixelToSky,
             "coord"_a, "skyUnit"_a);
     cls.def("linearizePixelToSky",
-            (AffineTransform(SkyWcs::*)(Point2D const &, AngleUnit const &) const) &
+            (lsst::geom::AffineTransform(SkyWcs::*)(lsst::geom::Point2D const &,
+                                                    lsst::geom::AngleUnit const &) const) &
                     SkyWcs::linearizePixelToSky,
             "coord"_a, "skyUnit"_a);
     cls.def("linearizeSkyToPixel",
-            (AffineTransform(SkyWcs::*)(SpherePoint const &, AngleUnit const &) const) &
+            (lsst::geom::AffineTransform(SkyWcs::*)(lsst::geom::SpherePoint const &,
+                                                    lsst::geom::AngleUnit const &) const) &
                     SkyWcs::linearizeSkyToPixel,
             "coord"_a, "skyUnit"_a);
     cls.def("linearizeSkyToPixel",
-            (AffineTransform(SkyWcs::*)(Point2D const &, AngleUnit const &) const) &
+            (lsst::geom::AffineTransform(SkyWcs::*)(lsst::geom::Point2D const &,
+                                                    lsst::geom::AngleUnit const &) const) &
                     SkyWcs::linearizeSkyToPixel,
             "coord"_a, "skyUnit"_a);
-    cls.def("pixelToSky", (SpherePoint(SkyWcs::*)(Point2D const &) const) & SkyWcs::pixelToSky, "pixel"_a);
-    cls.def("pixelToSky", (SpherePoint(SkyWcs::*)(double, double) const) & SkyWcs::pixelToSky, "x"_a, "y"_a);
     cls.def("pixelToSky",
-            (std::vector<SpherePoint>(SkyWcs::*)(std::vector<Point2D> const &) const) & SkyWcs::pixelToSky,
+            (lsst::geom::SpherePoint(SkyWcs::*)(lsst::geom::Point2D const &) const) & SkyWcs::pixelToSky,
             "pixel"_a);
-    cls.def("skyToPixel", (Point2D(SkyWcs::*)(SpherePoint const &) const) & SkyWcs::skyToPixel, "sky"_a);
+    cls.def("pixelToSky", (lsst::geom::SpherePoint(SkyWcs::*)(double, double) const) & SkyWcs::pixelToSky,
+            "x"_a, "y"_a);
+    cls.def("pixelToSky",
+            (std::vector<lsst::geom::SpherePoint>(SkyWcs::*)(std::vector<lsst::geom::Point2D> const &)
+                     const) &
+                    SkyWcs::pixelToSky,
+            "pixel"_a);
     cls.def("skyToPixel",
-            (std::vector<Point2D>(SkyWcs::*)(std::vector<SpherePoint> const &) const) & SkyWcs::skyToPixel,
+            (lsst::geom::Point2D(SkyWcs::*)(lsst::geom::SpherePoint const &) const) & SkyWcs::skyToPixel,
+            "sky"_a);
+    cls.def("skyToPixel",
+            (std::vector<lsst::geom::Point2D>(SkyWcs::*)(std::vector<lsst::geom::SpherePoint> const &)
+                     const) &
+                    SkyWcs::skyToPixel,
             "sky"_a);
     // Do not wrap getShortClassName because it returns the name of the class;
     // use `<class>.__name__` or `type(<instance>).__name__` instead.

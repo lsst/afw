@@ -31,6 +31,7 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/log/Log.h"
+#include "lsst/geom.h"
 #include "lsst/afw/geom/SpanSet.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/fits.h"
@@ -52,9 +53,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testNullSpanSet) {
 
 BOOST_AUTO_TEST_CASE(SpanSet_testBBoxSpanSet) {
     // Create a SpanSet from a box
-    afwGeom::Point2I min(2, 2);
-    afwGeom::Point2I max(6, 6);
-    afwGeom::Box2I BBox(min, max);
+    lsst::geom::Point2I min(2, 2);
+    lsst::geom::Point2I max(6, 6);
+    lsst::geom::Box2I BBox(min, max);
 
     afwGeom::SpanSet boxSS(BBox);
     BOOST_CHECK(boxSS.getArea() == 25);
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSplit) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testShiftedBy) {
-    afwGeom::Extent2I SSextent(afwGeom::Point2I(2, 2));
+    lsst::geom::Extent2I SSextent(lsst::geom::Point2I(2, 2));
     // BBox lower corner should be at -2,-2
     auto SpanSetNoShift = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::CIRCLE);
     auto shiftedSpanSet = SpanSetNoShift->shiftedBy(SSextent);
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testShiftedBy) {
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testClippedTo) {
-    afwGeom::Box2I clipBox(afwGeom::Box2I(afwGeom::Point2I(-2, -2), afwGeom::Point2I(2, 2)));
+    lsst::geom::Box2I clipBox(lsst::geom::Box2I(lsst::geom::Point2I(-2, -2), lsst::geom::Point2I(2, 2)));
     // BBox lower corner shouuld be at -4,-4
     auto SpanSetNoClip = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE);
     auto SpanSetClip = SpanSetNoClip->clippedTo(clipBox);
@@ -202,9 +203,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testTransformed) {
     Eigen::Matrix2d scaleMatrix;
     scaleMatrix.row(0) << 2, 0;
     scaleMatrix.row(1) << 0, 2;
-    afwGeom::LinearTransform transform(scaleMatrix);
+    lsst::geom::LinearTransform transform(scaleMatrix);
     auto SpanSetPreScale = afwGeom::SpanSet::fromShape(2, afwGeom::Stencil::CIRCLE);
-    // transformedBy chains from LinearTransform->AffineTransform->TransformPoint2ToPoint2
+    // transformedBy chains lsst::geom::LinearTransform->lsst::geom::AffineTransform->TransformPoint2ToPoint2
     // so testing LinearTransform tests all function overloads
     auto SpanSetPostScale = SpanSetPreScale->transformedBy(transform);
 
@@ -235,8 +236,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testContains) {
     auto SpanSetLarge = afwGeom::SpanSet::fromShape(4, afwGeom::Stencil::CIRCLE);
     auto SpanSetSmall = afwGeom::SpanSet::fromShape(1, afwGeom::Stencil::CIRCLE)->shiftedBy(1, 1);
     auto SpanSetSmallFar = afwGeom::SpanSet::fromShape(1, afwGeom::Stencil::CIRCLE)->shiftedBy(8, 8);
-    afwGeom::Point2I pointIn(1, 1);
-    afwGeom::Point2I pointOut(20, 20);
+    lsst::geom::Point2I pointIn(1, 1);
+    lsst::geom::Point2I pointOut(20, 20);
 
     BOOST_CHECK(SpanSetLarge->contains(*SpanSetSmall) == true);
     BOOST_CHECK(SpanSetLarge->contains(*SpanSetSmallFar) == false);
@@ -336,7 +337,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFlatten) {
     // Create a SpanSet for those points
     std::vector<afwGeom::Span> spanVector = {afwGeom::Span(0, 0, 1), afwGeom::Span(1, 0, 1)};
     afwGeom::SpanSet spnSt(spanVector);
-    auto flatArr = spnSt.flatten(input, afwGeom::Point2I(-1, -1));
+    auto flatArr = spnSt.flatten(input, lsst::geom::Point2I(-1, -1));
     // Verify the size of the flattened array is the same as the number of pixels in the SpanSet
     BOOST_CHECK(flatArr.size() == spnSt.getArea());
     // Verify that the output values are the same, and in the same order, as the input array
@@ -363,7 +364,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFlatten) {
 
     // Test with a null SpanSet
     afwGeom::SpanSet nullSpanSet;
-    auto nullFlatArray = nullSpanSet.flatten(input, afwGeom::Point2I(-1, -1));
+    auto nullFlatArray = nullSpanSet.flatten(input, lsst::geom::Point2I(-1, -1));
     BOOST_CHECK(nullFlatArray.size() == 0);
 }
 
@@ -400,12 +401,12 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnflatten) {
     int outputSize = 6;
     ndarray::Array<int, 2, 2> unflatOutput = ndarray::allocate(ndarray::makeVector(outputSize, outputSize));
     unflatOutput.deep() = 0;
-    afwGeom::Point2I outputXY0(spnSt.getBBox().getMinX(), spnSt.getBBox().getMinY());
+    lsst::geom::Point2I outputXY0(spnSt.getBBox().getMinX(), spnSt.getBBox().getMinY());
     spnSt.unflatten(unflatOutput, input, outputXY0);
 
     for (int i = 0; i < outputSize; ++i) {
         for (int j = 0; j < outputSize; ++j) {
-            if (spnSt.contains(afwGeom::Point2I(j + outputXY0.getX(), i + outputXY0.getY()))) {
+            if (spnSt.contains(lsst::geom::Point2I(j + outputXY0.getX(), i + outputXY0.getY()))) {
                 BOOST_CHECK(unflatOutput[i][j] == dummyArrayValue);
             } else {
                 BOOST_CHECK(unflatOutput[i][j] == 0);
@@ -438,7 +439,7 @@ BOOST_AUTO_TEST_CASE(SpanSet_testSetMask) {
     auto mskShape = mskArray.getShape();
     for (std::size_t i = 0; i < mskShape[0]; ++i) {
         for (std::size_t j = 0; j < mskShape[1]; ++j) {
-            if (spnSt->contains(afwGeom::Point2I(i, j))) {
+            if (spnSt->contains(lsst::geom::Point2I(i, j))) {
                 BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(3));
             } else {
                 BOOST_CHECK(mskArray[i][j] == static_cast<lsst::afw::image::MaskPixel>(1));
@@ -681,21 +682,21 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     auto SSShape =
             afwGeom::SpanSet::fromShape(spanRadius, afwGeom::Stencil::BOX)->shiftedBy(spanRadius, spanRadius);
     // use a constant as a test of constantGetter
-    SSShape->applyFunctor([](afwGeom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
+    SSShape->applyFunctor([](lsst::geom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
                           imageObject, dataValue);
     SSShape->applyFunctor(
-            [](afwGeom::Point2I pt, int& out, const afwImage::Image<int>::Pixel& in) { out = in; },
+            [](lsst::geom::Point2I pt, int& out, const afwImage::Image<int>::Pixel& in) { out = in; },
             ndarray::ndImage(targetForConstImage), constImageObject);
-    SSShape->applyFunctor([](afwGeom::Point2I pt, int& out,
+    SSShape->applyFunctor([](lsst::geom::Point2I pt, int& out,
                              const lsst::afw::image::MaskPixel& in) { out = static_cast<int>(in); },
                           ndarray::ndImage(targetForConstMask), constMaskObject);
-    SSShape->applyFunctor([](afwGeom::Point2I, int& out, int in) { out = in; }, vecObject.begin(), dataValue);
+    SSShape->applyFunctor([](lsst::geom::Point2I, int& out, int in) { out = in; }, vecObject.begin(), dataValue);
 
     // Check the Image values
     auto bounds = SSShape->getBBox();
     for (int i = bounds.getMinY(); i <= bounds.getMaxY(); ++i) {
         for (int j = bounds.getMinX(); j <= bounds.getMaxX(); ++j) {
-            if (!SSShape->contains(afwGeom::Point2I(j, i))) {
+            if (!SSShape->contains(lsst::geom::Point2I(j, i))) {
                 BOOST_CHECK(imageObject.getArray()[i][j] == initialValue);
                 BOOST_CHECK(targetForConstImage[i][j] == initialValue);
                 BOOST_CHECK(targetForConstMask[i][j] == initialValue);
@@ -717,9 +718,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     }
 
     // Check on the point input of a functor
-    std::vector<afwGeom::Point2I> capturedPoints;
+    std::vector<lsst::geom::Point2I> capturedPoints;
     capturedPoints.reserve(SSShape->getArea());
-    SSShape->applyFunctor([](afwGeom::Point2I point, afwGeom::Point2I& out) { out = point; },
+    SSShape->applyFunctor([](lsst::geom::Point2I point, lsst::geom::Point2I& out) { out = point; },
                           capturedPoints.begin());
 
     auto capturedPointsIter = capturedPoints.begin();
@@ -735,9 +736,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     std::vector<int> nullVecObject(imageDim * imageDim, initialValue);
     afwGeom::SpanSet nullSpanSet;
 
-    nullSpanSet.applyFunctor([](afwGeom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
+    nullSpanSet.applyFunctor([](lsst::geom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
                              imageObject, dataValue);
-    nullSpanSet.applyFunctor([](afwGeom::Point2I, int& out, int in) { out = in; }, vecObject.begin(),
+    nullSpanSet.applyFunctor([](lsst::geom::Point2I, int& out, int in) { out = in; }, vecObject.begin(),
                              dataValue);
 
     // nullSpanSet should not have changed any values

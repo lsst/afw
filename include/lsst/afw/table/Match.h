@@ -33,7 +33,7 @@
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -60,7 +60,7 @@ public:
  *  Lightweight representation of a geometric match between two records.
  *
  *  This is a template so it can hold derived record classes without a lot of
- *  casting and properly use Angle for the distance when we do spherical coordinate
+ *  casting and properly use lsst::geom::Angle for the distance when we do spherical coordinate
  *  matches.
  */
 template <typename Record1, typename Record2>
@@ -153,7 +153,7 @@ template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(
         Cat1 const &cat1,  ///< first catalog
         Cat2 const &cat2,  ///< second catalog
-        Angle radius,      ///< match radius
+        lsst::geom::Angle radius,      ///< match radius
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::findOnlyClosest)
         );
@@ -168,7 +168,7 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(
 template <typename Cat>
 std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(
         Cat const &cat,  ///< the catalog to self-match
-        Angle radius,    ///< match radius
+        lsst::geom::Angle radius,    ///< match radius
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::symmetricMatch)
         );
@@ -190,7 +190,7 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(
  */
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
-                                                                             Cat2 const &cat2, Angle radius,
+                                                                             Cat2 const &cat2, lsst::geom::Angle radius,
                                                                              bool closest);
 
 /**
@@ -208,7 +208,7 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
  * This is instantiated for Simple and Source catalogs.
  */
 template <typename Cat>
-std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat, Angle radius,
+std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat, lsst::geom::Angle radius,
                                                                            bool symmetric);
 
 /**

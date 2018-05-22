@@ -31,8 +31,8 @@
 
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/math/ChebyshevBoundedField.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -102,7 +102,7 @@ public:
      *                             this PhotoCalib is valid at any point (i.e. an empty bbox).
      */
     explicit PhotoCalib(double calibrationMean, double calibrationErr = 0,
-                        afw::geom::Box2I const &bbox = afw::geom::Box2I())
+                        lsst::geom::Box2I const &bbox = lsst::geom::Box2I())
             : _calibrationMean(calibrationMean), _calibrationErr(calibrationErr), _isConstant(true) {
         ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(1, 1));
         coeffs[0][0] = calibrationMean;
@@ -147,9 +147,9 @@ public:
      *
      * @returns    The flux in maggies.
      */
-    double instFluxToMaggies(double instFlux, afw::geom::Point<double, 2> const &point) const;
+    double instFluxToMaggies(double instFlux, lsst::geom::Point<double, 2> const &point) const;
 
-    /// @overload instFluxToMaggies(double, afw::geom::Point<double, 2> const &) const;
+    /// @overload instFluxToMaggies(double, lsst::geom::Point<double, 2> const &) const;
     double instFluxToMaggies(double instFlux) const;
 
     /**
@@ -164,9 +164,9 @@ public:
      * @returns    The flux in maggies and error.
      */
     Measurement instFluxToMaggies(double instFlux, double instFluxErr,
-                                  afw::geom::Point<double, 2> const &point) const;
+                                  lsst::geom::Point<double, 2> const &point) const;
 
-    /// @overload Measurement instFluxToMaggies(double, double, afw::geom::Point<double, 2> const &) const
+    /// @overload Measurement instFluxToMaggies(double, double, lsst::geom::Point<double, 2> const &) const
     Measurement instFluxToMaggies(double instFlux, double instFluxErr) const;
 
     /**
@@ -227,9 +227,9 @@ public:
      *
      * @returns    The AB magnitude.
      */
-    double instFluxToMagnitude(double instFlux, afw::geom::Point<double, 2> const &point) const;
+    double instFluxToMagnitude(double instFlux, lsst::geom::Point<double, 2> const &point) const;
 
-    /// @overload instFluxToMagnitude(double, afw::geom::Point<double, 2> const &) const;
+    /// @overload instFluxToMagnitude(double, lsst::geom::Point<double, 2> const &) const;
     double instFluxToMagnitude(double instFlux) const;
 
     /**
@@ -244,9 +244,9 @@ public:
      * @returns    The AB magnitude and error.
      */
     Measurement instFluxToMagnitude(double instFlux, double instFluxErr,
-                                    afw::geom::Point<double, 2> const &point) const;
+                                    lsst::geom::Point<double, 2> const &point) const;
 
-    /// @overload instFluxToMagnitude(double, double, afw::geom::Point<double, 2> const &) const;
+    /// @overload instFluxToMagnitude(double, double, lsst::geom::Point<double, 2> const &) const;
     Measurement instFluxToMagnitude(double instFlux, double instFluxErr) const;
 
     /**

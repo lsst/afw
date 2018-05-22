@@ -73,7 +73,7 @@ public:
     ImageList getImageList() const;
 
     /// Return the dimension of the images being analyzed
-    geom::Extent2I const getDimensions() const { return _dimensions; }
+    lsst::geom::Extent2I const getDimensions() const { return _dimensions; }
 
     /**
      * Return the mean of the images in ImagePca's list
@@ -105,7 +105,7 @@ private:
 
     ImageList _imageList;           // image to analyze
     std::vector<double> _fluxList;  // fluxes of images
-    geom::Extent2I _dimensions;     // width/height of images on _imageList
+    lsst::geom::Extent2I _dimensions;     // width/height of images on _imageList
 
     bool _constantWeight;  // should all stars have the same weight?
 

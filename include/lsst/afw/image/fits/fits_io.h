@@ -28,8 +28,8 @@
 
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
+#include "lsst/geom.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/geom.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "ndarray.h"
 
@@ -38,8 +38,8 @@ namespace afw {
 namespace image {
 
 template <typename PixelT>
-inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array, geom::Point2I& xy0,
-                            lsst::daf::base::PropertySet& metadata, geom::Box2I bbox = geom::Box2I(),
+inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array, lsst::geom::Point2I& xy0,
+                            lsst::daf::base::PropertySet& metadata, lsst::geom::Box2I bbox = lsst::geom::Box2I(),
                             ImageOrigin origin = PARENT) {
     fitsfile.checkCompressedImagePhu();
     if (!fitsfile.checkImageType<PixelT>()) {
@@ -67,10 +67,10 @@ inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& 
     fitsfile.setHdu(hdu);
 
     // Origin of part of image to read
-    xy0 = geom::Point2I();
+    xy0 = lsst::geom::Point2I();
 
-    geom::Extent2I xyOffset(geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0));
-    geom::Extent2I dimensions = geom::Extent2I(shape[1], shape[0]);
+    lsst::geom::Extent2I xyOffset(geom::getImageXY0FromMetadata(metadata, detail::wcsNameForXY0));
+    lsst::geom::Extent2I dimensions = lsst::geom::Extent2I(shape[1], shape[0]);
 
     if (!bbox.isEmpty()) {
         if (origin == PARENT) {

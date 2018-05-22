@@ -24,15 +24,15 @@
 #include <string>
 #include <algorithm>
 
+#include "lsst/geom.h"
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
 
-namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
 int main() {
-    afwImage::Mask<afwImage::MaskPixel> img(afwGeom::Extent2I(10, 6));
+    afwImage::Mask<afwImage::MaskPixel> img(lsst::geom::Extent2I(10, 6));
     // This is equivalent to mask = 100:
     for (afwImage::Mask<afwImage::MaskPixel>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
@@ -58,9 +58,9 @@ int main() {
 
     // img will be modified
     afwImage::Mask<afwImage::MaskPixel> simg1(
-            img, afwGeom::Box2I(afwGeom::Point2I(1, 1), afwGeom::Extent2I(7, 3)), afwImage::LOCAL);
+            img, lsst::geom::Box2I(lsst::geom::Point2I(1, 1), lsst::geom::Extent2I(7, 3)), afwImage::LOCAL);
     afwImage::Mask<afwImage::MaskPixel> simg(
-            simg1, afwGeom::Box2I(afwGeom::Point2I(0, 0), afwGeom::Extent2I(5, 2)), afwImage::LOCAL);
+            simg1, lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(5, 2)), afwImage::LOCAL);
 
     {
         afwImage::Mask<afwImage::MaskPixel> nimg(simg.getDimensions());

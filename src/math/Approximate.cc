@@ -63,7 +63,7 @@ class ApproximateChebyshev : public Approximate<PixelT> {
     friend std::shared_ptr<Approximate<T>> math::makeApproximate(std::vector<double> const& xVec,
                                                                  std::vector<double> const& yVec,
                                                                  image::MaskedImage<T> const& im,
-                                                                 geom::Box2I const& bbox,
+                                                                 lsst::geom::Box2I const& bbox,
                                                                  ApproximateControl const& ctrl);
 
 public:
@@ -73,7 +73,7 @@ private:
     math::Chebyshev1Function2<double> _poly;
 
     ApproximateChebyshev(std::vector<double> const& xVec, std::vector<double> const& yVec,
-                         image::MaskedImage<PixelT> const& im, geom::Box2I const& bbox,
+                         image::MaskedImage<PixelT> const& im, lsst::geom::Box2I const& bbox,
                          ApproximateControl const& ctrl);
     virtual std::shared_ptr<image::Image<typename Approximate<PixelT>::OutPixelT>> doGetImage(
             int orderX, int orderY) const;
@@ -88,7 +88,7 @@ inline void solveMatrix_Eigen(Eigen::MatrixXd& a, Eigen::VectorXd& b, Eigen::Map
     Eigen::PartialPivLU<Eigen::MatrixXd> lu(a);
     c = lu.solve(b);
 }
-}
+}  // namespace
 
 /**
  * @internal Fit a grid of points to a afw::math::Chebyshev1Function2D
@@ -98,11 +98,11 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         std::vector<double> const& xVec,       ///< @internal the x-values of points
         std::vector<double> const& yVec,       ///< @internal the y-values of points
         image::MaskedImage<PixelT> const& im,  ///< @internal The values at (xVec, yVec)
-        geom::Box2I const& bbox,               ///< @internal Range where approximation should be valid
+        lsst::geom::Box2I const& bbox,               ///< @internal Range where approximation should be valid
         ApproximateControl const& ctrl         ///< @internal desired approximation algorithm
         )
         : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
-          _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox))) {
+          _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), lsst::geom::Box2D(bbox))) {
 #if !defined(NDEBUG)
     {
         std::vector<double> const& coeffs = _poly.getParameters();
@@ -279,7 +279,7 @@ template <typename PixelT>
 std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& x,
                                                      std::vector<double> const& y,
                                                      image::MaskedImage<PixelT> const& im,
-                                                     geom::Box2I const& bbox,
+                                                     lsst::geom::Box2I const& bbox,
                                                      ApproximateControl const& ctrl) {
     switch (ctrl.getStyle()) {
         case ApproximateControl::CHEBYSHEV:
@@ -298,7 +298,7 @@ std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& 
 #define INSTANTIATE(PIXEL_T)                                            \
     template std::shared_ptr<Approximate<PIXEL_T>> makeApproximate(     \
             std::vector<double> const& x, std::vector<double> const& y, \
-            image::MaskedImage<PIXEL_T> const& im, geom::Box2I const& bbox, ApproximateControl const& ctrl)
+            image::MaskedImage<PIXEL_T> const& im, lsst::geom::Box2I const& bbox, ApproximateControl const& ctrl)
 
 INSTANTIATE(float);
 // INSTANTIATE(int);

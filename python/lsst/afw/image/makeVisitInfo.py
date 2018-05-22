@@ -41,16 +41,16 @@ def makeVisitInfo(**kwargs):
                     (lsst.daf.base.DateTime; defaults to date of unix epoch)
     @param[in] ut1  UT1 (universal time) MJD date at middle of exposure (float, defaults to Nan)
     @param[in] era  earth rotation angle at middle of exposure
-                    (lsst.afw.geom.Angle, defaults to Angle(Nan))
+                    (lsst.geom.Angle, defaults to Angle(Nan))
     @param[in] boresightRaDec  ICRS RA/Dec of boresight at middle of exposure
-                    (lsst.afw.geom.SpherePoint; defaults to SpherePoint(Nan, Nan))
+                    (lsst.geom.SpherePoint; defaults to SpherePoint(Nan, Nan))
     @param[in] boresightAzAlt  refracted apparent topocentric Az/Alt of boresight at middle of exposure;
-                    (lsst.afw.geom.SpherePoint; defaults to SpherePoint(Nan, Nan))
+                    (lsst.geom.SpherePoint; defaults to SpherePoint(Nan, Nan))
     @param[in] boresightAirmass  airmass at the boresight, relative to zenith at sea level
                     (float, defaults to Nan)
     @param[in] boresightRotAngle  rotation angle at boresight at middle of exposure;
                     see getBoresightRotAngle for details
-                    (lsst.afw.geom.Angle, defaults to Angle(Nan))
+                    (lsst.geom.Angle, defaults to Angle(Nan))
     @param[in] rotType  rotation type; one of the lsst.afw.image.RotType constants,
                     defaults to RotType.UNKNOWN
     @param[in] observatory  observatory longitude, latitude and altitude,

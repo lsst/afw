@@ -41,7 +41,7 @@ namespace geom {
 class SkyWcs;
 
 /**
- * Transform LSST spatial data, such as Point2D and SpherePoint, using an AST mapping.
+ * Transform LSST spatial data, such as lsst::geom::Point2D and lsst::geom::SpherePoint, using an AST mapping.
  *
  * This class contains two Endpoints, to specify the "from" and "to" LSST data type,
  * and an ast::Mapping to specify the transformation.
@@ -64,10 +64,8 @@ class SkyWcs;
  * so it didn't seem worth the bother.
  */
 template <class FromEndpoint, class ToEndpoint>
-class Transform final :
-    public table::io::PersistableFacade<Transform<FromEndpoint,ToEndpoint>>,
-    public table::io::Persistable
-{
+class Transform final : public table::io::PersistableFacade<Transform<FromEndpoint, ToEndpoint>>,
+                        public table::io::Persistable {
     // SkyWcs is a friend so it can call a protected Transform constructor
     friend class SkyWcs;
 

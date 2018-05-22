@@ -71,7 +71,7 @@ public:
     }
 
     void sampleAt(
-        geom::Point2D const &,
+        lsst::geom::Point2D const &,
         ndarray::Array<double const,1,1> const & wavelengths,
         ndarray::Array<double,1,1> const & out
     ) const override {
@@ -214,7 +214,7 @@ public:
     // is called, and then invoked at every iteration of the loop therein.
     struct Functor {
 
-        Functor(Impl1d const &, geom::Point2D const &) :
+        Functor(Impl1d const &, lsst::geom::Point2D const &) :
             _accel(makeGslPtr(::gsl_interp_accel_alloc(), &gsl_interp_accel_free))
         {}
 
@@ -299,7 +299,7 @@ public:
     // is called, and then invoked at every iteration of the loop therein.
     struct Functor {
 
-        Functor(Impl2d const & parent, geom::Point2D const & point) :
+        Functor(Impl2d const & parent, lsst::geom::Point2D const & point) :
             _radius(point.asEigen().norm()),
             _radiusAccel(makeGslPtr(::gsl_interp_accel_alloc(), &gsl_interp_accel_free)),
             _wavelengthAccel(makeGslPtr(::gsl_interp_accel_alloc(), &gsl_interp_accel_free))
@@ -358,7 +358,7 @@ public:
     }
 
     void sampleAt(
-        geom::Point2D const & point,
+        lsst::geom::Point2D const & point,
         ndarray::Array<double const,1,1> const & wavelengths,
         ndarray::Array<double,1,1> const & out
     ) const override {
@@ -523,7 +523,7 @@ public:
     }
 
     void sampleAt(
-        geom::Point2D const & position,
+        lsst::geom::Point2D const & position,
         ndarray::Array<double const,1,1> const & wavelengths,
         ndarray::Array<double,1,1> const & out
     ) const override {
@@ -625,7 +625,7 @@ public:
     }
 
     void sampleAt(
-        geom::Point2D const & position,
+        lsst::geom::Point2D const & position,
         ndarray::Array<double const,1,1> const & wavelengths,
         ndarray::Array<double,1,1> const & out
     ) const override {
@@ -788,7 +788,7 @@ std::shared_ptr<TransmissionCurve const> TransmissionCurve::transformedBy(
 }
 
 ndarray::Array<double,1,1> TransmissionCurve::sampleAt(
-    geom::Point2D const & position,
+    lsst::geom::Point2D const & position,
     ndarray::Array<double const,1,1> const & wavelengths
 ) const {
     ndarray::Array<double,1,1> out = ndarray::allocate(wavelengths.getSize<0>());

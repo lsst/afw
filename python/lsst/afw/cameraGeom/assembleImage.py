@@ -19,7 +19,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import lsst.afw.geom as afwGeom
+import lsst.geom
 from . import copyDetector
 
 __ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage',
@@ -142,7 +142,7 @@ def makeUpdatedDetector(ccd):
         #
         # All of these have now been transferred to the per-amp geometry
         #
-        amp.setRawXYOffset(afwGeom.ExtentI(0, 0))
+        amp.setRawXYOffset(lsst.geom.ExtentI(0, 0))
         amp.setRawFlipX(False)
         amp.setRawFlipY(False)
 

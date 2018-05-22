@@ -29,7 +29,7 @@
  * Functions for producing Transforms with commonly desired properties.
  */
 
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
 
 namespace lsst {
@@ -43,7 +43,7 @@ namespace geom {
  *
  * @param original the Transform to linearize
  * @param inPoint the point at which a linear approximation is desired
- * @returns an AffineTransform whose value and Jacobian at `inPoint` match those
+ * @returns an lsst::geom::AffineTransform whose value and Jacobian at `inPoint` match those
  *          of `original`. It may be invertible; in general, linearizations
  *          are invertible if the Jacobian at `inPoint` is invertible.
  *
@@ -51,18 +51,19 @@ namespace geom {
  *             have a well-defined value and Jacobian at `inPoint`
  * @exceptsafe Not exception safe.
  */
-AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Point2D const &inPoint);
+lsst::geom::AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original,
+                                               lsst::geom::Point2D const &inPoint);
 
 /**
- * Wrap an AffineTransform as a Transform.
+ * Wrap an lsst::geom::AffineTransform as a Transform.
  *
- * @param affine The AffineTransform to wrap.
- * @returns a Transform that that maps any Point2D `x` to `affine(x)`. It shall
+ * @param affine The lsst::geom::AffineTransform to wrap.
+ * @returns a Transform that that maps any lsst::geom::Point2D `x` to `affine(x)`. It shall
  *          be invertible iff `affine` is invertible.
  *
  * @exceptsafe Provides basic exception safety.
  */
-std::shared_ptr<TransformPoint2ToPoint2> makeTransform(AffineTransform const &affine);
+std::shared_ptr<TransformPoint2ToPoint2> makeTransform(lsst::geom::AffineTransform const &affine);
 
 /**
  * A purely radial polynomial distortion.
@@ -110,7 +111,7 @@ std::shared_ptr<TransformPoint2ToPoint2> makeRadialTransform(std::vector<double>
 /**
  * Trivial Transform x &rarr; x.
  *
- * @returns a Transform mapping any Point2D to itself. The Transform's inverse
+ * @returns a Transform mapping any lsst::geom::Point2D to itself. The Transform's inverse
  *          shall be itself.
  *
  * @exceptsafe Provides basic exception safety.

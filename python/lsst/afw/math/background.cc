@@ -56,12 +56,12 @@ void declareGetImage(PyClass &cls, std::string const &suffix) {
             "interpStyle"_a, "undersampleStyle"_a = "THROW_EXCEPTION");
     cls.def(("getImage" + suffix).c_str(),
             (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
-                    lsst::afw::geom::Box2I const &, Interpolate::Style const, UndersampleStyle const) const) &
+                    lsst::geom::Box2I const &, Interpolate::Style const, UndersampleStyle const) const) &
                     BackgroundMI::getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a = THROW_EXCEPTION);
     cls.def(("getImage" + suffix).c_str(),
             (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
-                    lsst::afw::geom::Box2I const &, std::string const &, std::string const &) const) &
+                    lsst::geom::Box2I const &, std::string const &, std::string const &) const) &
                     BackgroundMI::getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a = "THROW_EXCEPTION");
     cls.def(("getImage" + suffix).c_str(),
@@ -155,7 +155,7 @@ PYBIND11_PLUGIN(_background) {
 
     /* Constructors */
     clsBackgroundMI.def(
-            py::init<geom::Box2I const, image::MaskedImage<typename Background::InternalPixelT> const &>(),
+            py::init<lsst::geom::Box2I const, image::MaskedImage<typename Background::InternalPixelT> const &>(),
             "imageDimensions"_a, "statsImage"_a);
 
     /* Operators */

@@ -58,7 +58,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(unsigned int w
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(geom::Extent2I const& dimensions,
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(lsst::geom::Extent2I const& dimensions,
                                                                   MaskPlaneDict const& planeDict)
         : daf::base::Citizen(typeid(this)),
           _image(new Image(dimensions)),
@@ -70,7 +70,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(geom::Extent2I
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(geom::Box2I const& bbox,
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(lsst::geom::Box2I const& bbox,
                                                                   MaskPlaneDict const& planeDict)
         : daf::base::Citizen(typeid(this)),
           _image(new Image(bbox)),
@@ -84,7 +84,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(geom::Box2I co
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         std::string const& fileName, std::shared_ptr<daf::base::PropertySet> metadata,
-        geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
+        lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
         std::shared_ptr<daf::base::PropertySet> varianceMetadata)
@@ -97,7 +97,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         fits::MemFileManager& manager, std::shared_ptr<daf::base::PropertySet> metadata,
-        geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
+        lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
         std::shared_ptr<daf::base::PropertySet> varianceMetadata)
@@ -137,7 +137,7 @@ void ensureMetadata(std::shared_ptr<daf::base::PropertySet>& metadata) {
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-        fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata, geom::Box2I const& bbox,
+        fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
         ImageOrigin origin, bool conformMasks, bool needAllHdus,
         std::shared_ptr<daf::base::PropertySet> imageMetadata,
         std::shared_ptr<daf::base::PropertySet> maskMetadata,
@@ -247,7 +247,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage&& 
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs,
-                                                                  const geom::Box2I& bbox,
+                                                                  const lsst::geom::Box2I& bbox,
                                                                   ImageOrigin const origin, bool deep
 
                                                                   )
@@ -306,7 +306,7 @@ operator<<=(MaskedImage const& rhs) {
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedImage const& rhs,
-                                                                  geom::Box2I const& bbox,
+                                                                  lsst::geom::Box2I const& bbox,
                                                                   ImageOrigin origin) {
     _image->assign(*rhs.getImage(), bbox, origin);
     _mask->assign(*rhs.getMask(), bbox, origin);

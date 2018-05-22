@@ -23,8 +23,8 @@
 #ifndef AFW_TABLE_Exposure_h_INCLUDED
 #define AFW_TABLE_Exposure_h_INCLUDED
 
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -86,8 +86,8 @@ public:
     RecordId getId() const;
     void setId(RecordId id);
 
-    geom::Box2I getBBox() const;
-    void setBBox(geom::Box2I const& bbox);
+    lsst::geom::Box2I getBBox() const;
+    void setBBox(lsst::geom::Box2I const& bbox);
 
     /**
      *  @brief Return true if the bounding box contains the given celestial coordinate point, taking
@@ -99,7 +99,7 @@ public:
      *
      *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(geom::SpherePoint const& coord, bool includeValidPolygon = false) const;
+    bool contains(lsst::geom::SpherePoint const& coord, bool includeValidPolygon = false) const;
 
     /**
      *  @brief Return true if the bounding box contains the given point, taking into account its Wcs
@@ -111,7 +111,7 @@ public:
      *
      *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(geom::Point2D const& point, geom::SkyWcs const& wcs, bool includeValidPolygon = false) const;
+    bool contains(lsst::geom::Point2D const& point, geom::SkyWcs const& wcs, bool includeValidPolygon = false) const;
 
     //@{
     /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
@@ -442,7 +442,7 @@ public:
      *
      *  @see ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(geom::SpherePoint const& coord, bool includeValidPolygon = false) const;
+    ExposureCatalogT subsetContaining(lsst::geom::SpherePoint const& coord, bool includeValidPolygon = false) const;
 
     /**
      *  Return a shallow subset of the catalog with only those records that contain the given point.
@@ -452,7 +452,7 @@ public:
      *
      *  @see ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(geom::Point2D const& point, geom::SkyWcs const& wcs,
+    ExposureCatalogT subsetContaining(lsst::geom::Point2D const& point, geom::SkyWcs const& wcs,
                                       bool includeValidPolygon = false) const;
 
 protected:

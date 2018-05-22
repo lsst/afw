@@ -67,7 +67,7 @@ Background::Background(ImageT const& img, BackgroundControl const& bgCtrl)
     _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), bgCtrl.getNxSample(), bgCtrl.getNySample());
 }
 
-Background::Background(geom::Box2I const imageBBox, int const nx, int const ny)
+Background::Background(lsst::geom::Box2I const imageBBox, int const nx, int const ny)
         : lsst::daf::base::Citizen(typeid(this)),
           _imgBBox(imageBBox),
           _bctrl(new BackgroundControl(nx, ny)),

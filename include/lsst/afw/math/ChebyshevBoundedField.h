@@ -27,7 +27,7 @@
 #include "ndarray.h"
 
 #include "lsst/pex/config.h"
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/afw/math/BoundedField.h"
 
 namespace lsst {
@@ -87,17 +87,17 @@ public:
      *
      *  Note that because the bounding box provided is always an integer bounding box,
      *  and LSST convention puts the center of each pixel at an integer, the actual
-     *  floating-point domain of the Chebyshev functions is Box2D(bbox), that is, the
+     *  floating-point domain of the Chebyshev functions is lsst::geom::Box2D(bbox), that is, the
      *  box that contains the entirety of all the pixels included in the integer
      *  bounding box.
      *
      *  The coefficients are ordered [y,x], so the shape is (orderY+1, orderX+1),
      *  and the arguments to the Chebyshev functions are transformed such that
-     *  the region Box2D(bbox) is mapped to [-1, 1]x[-1, 1].
+     *  the region lsst::geom::Box2D(bbox) is mapped to [-1, 1]x[-1, 1].
      *
      *  Example:
      *
-     *      bbox = geom::Box2I(geom::Point2I(10, 20), geom::Point2I(30, 40));
+     *      bbox = lsst::geom::Box2I(lsst::geom::Point2I(10, 20), lsst::geom::Point2I(30, 40));
      *      ndarray::Array<double, 2, 2> coeffs = ndarray::allocate(ndarray::makeVector(2, 2));
      *      coeffs[0][0] = 1;
      *      coeffs[1][0] = 2;
@@ -112,7 +112,7 @@ public:
      *  f(x,y) = 1 T_0(x) T_0(y) + 2 T_0(x) T_1(y) + 3 T_1(x) T_0(y) + 4 T_1(x) T_1(y)
      *  @f]
      */
-    ChebyshevBoundedField(afw::geom::Box2I const& bbox,
+    ChebyshevBoundedField(lsst::geom::Box2I const& bbox,
                           ndarray::Array<double const, 2, 2> const& coefficients);
 
     ChebyshevBoundedField(ChebyshevBoundedField const &);
@@ -125,13 +125,13 @@ public:
      *  Fit a Chebyshev approximation to non-gridded data with equal weights.
      *
      *  @param[in]  bbox     Integer bounding box of the resulting approximation.  All
-     *                       given points must lie within Box2D(bbox).
+     *                       given points must lie within lsst::geom::Box2D(bbox).
      *  @param[in]  x        Array of x coordinate values.
      *  @param[in]  y        Array of y coordinate values.
      *  @param[in]  z        Array of field values to be fit at each (x,y) point.
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
-    static std::shared_ptr<ChebyshevBoundedField> fit(afw::geom::Box2I const& bbox,
+    static std::shared_ptr<ChebyshevBoundedField> fit(lsst::geom::Box2I const& bbox,
         ndarray::Array<double const,1> const & x,
         ndarray::Array<double const,1> const & y,
         ndarray::Array<double const,1> const & z,
@@ -141,7 +141,7 @@ public:
      *  Fit a Chebyshev approximation to non-gridded data with unequal weights.
      *
      *  @param[in]  bbox     Integer bounding box of the resulting approximation.  All
-     *                       given points must lie within Box2D(bbox).
+     *                       given points must lie within lsst::geom::Box2D(bbox).
      *  @param[in]  x        Array of x coordinate values.
      *  @param[in]  y        Array of y coordinate values.
      *  @param[in]  z        Array of field values to be fit at each (x,y) point.
@@ -149,7 +149,7 @@ public:
      *                       noise, w = 1/sigma.
      *  @param[in]  ctrl     Specifies the orders and triangularity of the coefficient matrix.
      */
-    static std::shared_ptr<ChebyshevBoundedField> fit(afw::geom::Box2I const& bbox,
+    static std::shared_ptr<ChebyshevBoundedField> fit(lsst::geom::Box2I const& bbox,
         ndarray::Array<double const,1> const & x,
         ndarray::Array<double const,1> const & y,
         ndarray::Array<double const,1> const & z,
@@ -188,10 +188,10 @@ public:
      *  Because this leaves the coefficients unchanged, it is equivalent to transforming the function
      *  by the affine transform that maps the old box to the new one.
      */
-    std::shared_ptr<ChebyshevBoundedField> relocate(geom::Box2I const& bbox) const;
+    std::shared_ptr<ChebyshevBoundedField> relocate(lsst::geom::Box2I const& bbox) const;
 
     /// @copydoc BoundedField::evaluate
-    virtual double evaluate(geom::Point2D const & position) const;
+    virtual double evaluate(lsst::geom::Point2D const & position) const;
 
     using BoundedField::evaluate;
 
@@ -220,9 +220,9 @@ protected:
 private:
     // Internal constructor for fit() routines: just initializes the transform,
     // leaves coefficients empty.
-    explicit ChebyshevBoundedField(afw::geom::Box2I const & bbox);
+    explicit ChebyshevBoundedField(lsst::geom::Box2I const & bbox);
 
-    geom::AffineTransform _toChebyshevRange; // maps points from the bbox to [-1,1]x[-1,1]
+    lsst::geom::AffineTransform _toChebyshevRange; // maps points from the bbox to [-1,1]x[-1,1]
     ndarray::Array<double const,2,2> _coefficients;  // shape=(orderY+1, orderX+1)
 
     virtual std::string toString() const;

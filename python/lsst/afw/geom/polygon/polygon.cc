@@ -27,9 +27,9 @@
 
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/pex/exceptions/python/Exception.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
@@ -59,7 +59,7 @@ PYBIND11_PLUGIN(_polygon) {
     /* Constructors */
     clsPolygon.def(py::init<Polygon::Box const &>());
     clsPolygon.def(py::init<Polygon::Box const &, TransformPoint2ToPoint2 const &>());
-    clsPolygon.def(py::init<Polygon::Box const &, AffineTransform const &>());
+    clsPolygon.def(py::init<Polygon::Box const &, lsst::geom::AffineTransform const &>());
     clsPolygon.def(py::init<std::vector<Polygon::Point> const &>());
 
     table::io::python::addPersistableMethods<Polygon>(clsPolygon);
@@ -81,52 +81,54 @@ PYBIND11_PLUGIN(_polygon) {
     clsPolygon.def("contains", &Polygon::contains);
     clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon const &) const) & Polygon::overlaps);
     clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon::Box const &) const) & Polygon::overlaps);
-    clsPolygon.def("intersectionSingle", (std::shared_ptr<Polygon> (Polygon::*)(Polygon const &) const) &
+    clsPolygon.def("intersectionSingle", (std::shared_ptr<Polygon>(Polygon::*)(Polygon const &) const) &
                                                  Polygon::intersectionSingle);
-    clsPolygon.def("intersectionSingle", (std::shared_ptr<Polygon> (Polygon::*)(Polygon::Box const &) const) &
+    clsPolygon.def("intersectionSingle", (std::shared_ptr<Polygon>(Polygon::*)(Polygon::Box const &) const) &
                                                  Polygon::intersectionSingle);
     clsPolygon.def("intersection",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const) &
+                   (std::vector<std::shared_ptr<Polygon>>(Polygon::*)(Polygon const &) const) &
                            Polygon::intersection);
     clsPolygon.def("intersection",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const) &
+                   (std::vector<std::shared_ptr<Polygon>>(Polygon::*)(Polygon::Box const &) const) &
                            Polygon::intersection);
     clsPolygon.def("unionSingle",
-                   (std::shared_ptr<Polygon> (Polygon::*)(Polygon const &) const) & Polygon::unionSingle);
-    clsPolygon.def("unionSingle", (std::shared_ptr<Polygon> (Polygon::*)(Polygon::Box const &) const) &
-                                          Polygon::unionSingle);
+                   (std::shared_ptr<Polygon>(Polygon::*)(Polygon const &) const) & Polygon::unionSingle);
+    clsPolygon.def("unionSingle",
+                   (std::shared_ptr<Polygon>(Polygon::*)(Polygon::Box const &) const) & Polygon::unionSingle);
 
     // Wrap Polygon::union_ (C++) as Polygon.union (Python)
-    clsPolygon.def("union", (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const) &
+    clsPolygon.def("union", (std::vector<std::shared_ptr<Polygon>>(Polygon::*)(Polygon const &) const) &
                                     Polygon::union_);
-    clsPolygon.def("union", (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const) &
+    clsPolygon.def("union", (std::vector<std::shared_ptr<Polygon>>(Polygon::*)(Polygon::Box const &) const) &
                                     Polygon::union_);
     clsPolygon.def("symDifference",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon const &) const) &
+                   (std::vector<std::shared_ptr<Polygon>>(Polygon::*)(Polygon const &) const) &
                            Polygon::symDifference);
     clsPolygon.def("symDifference",
-                   (std::vector<std::shared_ptr<Polygon>> (Polygon::*)(Polygon::Box const &) const) &
+                   (std::vector<std::shared_ptr<Polygon>>(Polygon::*)(Polygon::Box const &) const) &
                            Polygon::symDifference);
     // clsPolygon.def("simplify", &Polygon::simplify);
     clsPolygon.def("convexHull", &Polygon::convexHull);
     clsPolygon.def("transform",
-                   (std::shared_ptr<Polygon> (Polygon::*)(TransformPoint2ToPoint2 const &) const) &
+                   (std::shared_ptr<Polygon>(Polygon::*)(TransformPoint2ToPoint2 const &) const) &
                            Polygon::transform);
-    clsPolygon.def("transform", (std::shared_ptr<Polygon> (Polygon::*)(AffineTransform const &) const) &
-                                        Polygon::transform);
-    clsPolygon.def("subSample", (std::shared_ptr<Polygon> (Polygon::*)(size_t) const) & Polygon::subSample);
-    clsPolygon.def("subSample", (std::shared_ptr<Polygon> (Polygon::*)(double) const) & Polygon::subSample);
+    clsPolygon.def("transform",
+                   (std::shared_ptr<Polygon>(Polygon::*)(lsst::geom::AffineTransform const &) const) &
+                           Polygon::transform);
+    clsPolygon.def("subSample", (std::shared_ptr<Polygon>(Polygon::*)(size_t) const) & Polygon::subSample);
+    clsPolygon.def("subSample", (std::shared_ptr<Polygon>(Polygon::*)(double) const) & Polygon::subSample);
     clsPolygon.def("createImage",
-                   (std::shared_ptr<afw::image::Image<float>> (Polygon::*)(Box2I const &) const) &
+                   (std::shared_ptr<afw::image::Image<float>>(Polygon::*)(lsst::geom::Box2I const &) const) &
                            Polygon::createImage);
-    clsPolygon.def("createImage",
-                   (std::shared_ptr<afw::image::Image<float>> (Polygon::*)(Extent2I const &) const) &
-                           Polygon::createImage);
+    clsPolygon.def(
+            "createImage",
+            (std::shared_ptr<afw::image::Image<float>>(Polygon::*)(lsst::geom::Extent2I const &) const) &
+                    Polygon::createImage);
     // clsPolygon.def("isPersistable", &Polygon::isPersistable);
 
     return mod.ptr();
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::polygon
+}  // namespace polygon
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

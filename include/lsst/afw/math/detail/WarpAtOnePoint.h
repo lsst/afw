@@ -26,7 +26,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 
 namespace lsst {
 namespace afw {
@@ -46,7 +46,7 @@ public:
               _maskKernelPtr(control.getMaskWarpingKernel()),
               _hasMaskKernel(control.getMaskWarpingKernel()),
               _kernelCtr(_kernelPtr->getCtr()),
-              _maskKernelCtr(_maskKernelPtr ? _maskKernelPtr->getCtr() : lsst::afw::geom::Point2I(0, 0)),
+              _maskKernelCtr(_maskKernelPtr ? _maskKernelPtr->getCtr() : lsst::geom::Point2I(0, 0)),
               _growFullMask(control.getGrowFullMask()),
               _xList(_kernelPtr->getWidth()),
               _yList(_kernelPtr->getHeight()),
@@ -60,7 +60,7 @@ public:
      *
      * The Image specialization ignores the mask warping kernel, even if present
      */
-    bool operator()(typename DestImageT::x_iterator &destXIter, lsst::afw::geom::Point2D const &srcPos,
+    bool operator()(typename DestImageT::x_iterator &destXIter, lsst::geom::Point2D const &srcPos,
                     double relativeArea, lsst::afw::image::detail::Image_tag) {
         // Compute associated source pixel index as integer and nonnegative fractional parts;
         // the latter is used to compute the remapping kernel.
@@ -75,7 +75,7 @@ public:
             --srcIndFracY.first;
         }
 
-        if (_srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+        if (_srcGoodBBox.contains(lsst::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
             // Offset source pixel index from kernel center to kernel corner (0, 0)
             // so we can convolveAtAPoint the pixels that overlap between source and kernel
             int srcStartX = srcIndFracX.first - _kernelCtr[0];
@@ -102,7 +102,7 @@ public:
      * The MaskedImage specialization uses the mask warping kernel, if present, to compute the mask plane;
      * otherwise it uses the normal kernel to compute the mask plane.
      */
-    bool operator()(typename DestImageT::x_iterator &destXIter, lsst::afw::geom::Point2D const &srcPos,
+    bool operator()(typename DestImageT::x_iterator &destXIter, lsst::geom::Point2D const &srcPos,
                     double relativeArea, lsst::afw::image::detail::MaskedImage_tag) {
         // Compute associated source pixel index as integer and nonnegative fractional parts;
         // the latter is used to compute the remapping kernel.
@@ -117,7 +117,7 @@ public:
             --srcIndFracY.first;
         }
 
-        if (_srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+        if (_srcGoodBBox.contains(lsst::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
             // Offset source pixel index from kernel center to kernel corner (0, 0)
             // so we can convolveAtAPoint the pixels that overlap between source and kernel
             int srcStartX = srcIndFracX.first - _kernelCtr[0];
@@ -192,15 +192,15 @@ private:
     std::shared_ptr<lsst::afw::math::SeparableKernel> _kernelPtr;
     std::shared_ptr<lsst::afw::math::SeparableKernel> _maskKernelPtr;
     bool _hasMaskKernel;
-    lsst::afw::geom::Point2I _kernelCtr;
-    lsst::afw::geom::Point2I _maskKernelCtr;
+    lsst::geom::Point2I _kernelCtr;
+    lsst::geom::Point2I _maskKernelCtr;
     lsst::afw::image::MaskPixel _growFullMask;
     std::vector<double> _xList;
     std::vector<double> _yList;
     std::vector<double> _maskXList;
     std::vector<double> _maskYList;
     typename DestImageT::SinglePixel _padValue;
-    lsst::afw::geom::Box2I const _srcGoodBBox;
+    lsst::geom::Box2I const _srcGoodBBox;
 };
 }
 }

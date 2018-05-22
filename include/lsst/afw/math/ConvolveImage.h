@@ -34,7 +34,6 @@
 #include <sstream>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"

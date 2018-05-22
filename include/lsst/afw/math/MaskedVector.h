@@ -42,7 +42,7 @@ public:
 
     explicit MaskedVector(int width = 0)
             :  //, MaskPlaneDict const& planeDict=MaskPlaneDict()) :
-              lsst::afw::image::MaskedImage<EntryT>(geom::Extent2I(width, 1)) {}  //, planeDict) {}
+              lsst::afw::image::MaskedImage<EntryT>(lsst::geom::Extent2I(width, 1)) {}  //, planeDict) {}
 
     MaskedVector(MaskedVector const &) = default;
     MaskedVector(MaskedVector &&) = default;

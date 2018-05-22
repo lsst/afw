@@ -30,8 +30,7 @@
 #include "boost/serialization/nvp.hpp"
 
 #include "lsst/base.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
+#include "lsst/geom.h"
 #include "lsst/afw/geom/SpanPixelIterator.h"
 
 namespace boost {
@@ -74,10 +73,10 @@ public:
     ~Span() = default;
 
     /// Return an iterator to the first pixel in the Span.
-    Iterator begin() const { return Iterator(Point2I(_x0, _y)); }
+    Iterator begin() const { return Iterator(lsst::geom::Point2I(_x0, _y)); }
 
     /// Return an iterator to one past the last pixel in the Span.
-    Iterator end() const { return Iterator(Point2I(_x1 + 1, _y)); }
+    Iterator end() const { return Iterator(lsst::geom::Point2I(_x1 + 1, _y)); }
 
     int getX0() const { return _x0; }                          ///< Return the starting x-value
     int& getX0() { return _x0; }                               ///< Return the starting x-value
@@ -90,12 +89,16 @@ public:
     int getMaxX() const { return _x1; }                        ///< Maximum x-value.
     int getBeginX() const { return _x0; }                      ///< Begin (inclusive) x-value.
     int getEndX() const { return _x1 + 1; }                    ///< End (exclusive) x-value.
-    Point2I const getMin() const { return Point2I(_x0, _y); }  ///< Point corresponding to minimum x.
-    Point2I const getMax() const { return Point2I(_x1, _y); }  ///< Point corresponding to maximum x.
+    lsst::geom::Point2I const getMin() const {
+        return lsst::geom::Point2I(_x0, _y);
+    }  ///< Point corresponding to minimum x.
+    lsst::geom::Point2I const getMax() const {
+        return lsst::geom::Point2I(_x1, _y);
+    }  ///< Point corresponding to maximum x.
 
     bool contains(int x) const { return (x >= _x0) && (x <= _x1); }
     bool contains(int x, int y) const { return (x >= _x0) && (x <= _x1) && (y == _y); }
-    bool contains(Point2I const& point) const { return contains(point.getX(), point.getY()); }
+    bool contains(lsst::geom::Point2I const& point) const { return contains(point.getX(), point.getY()); }
 
     /// Return true if the span contains no pixels.
     bool isEmpty() const { return _x1 < _x0; }

@@ -28,7 +28,7 @@ import re
 import collections
 import astropy.units
 
-from ...geom import Angle
+import lsst.geom
 from lsst.utils import continueClass, TemplateMeta
 
 from .schema import _Key, _Field, _SchemaItem, Schema
@@ -43,7 +43,7 @@ _dtypes = {
     "L": np.int64,
     "F": np.float32,
     "D": np.float64,
-    "Angle": Angle
+    "Angle": lsst.geom.Angle,
 }
 
 

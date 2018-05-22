@@ -24,8 +24,8 @@
 #define TESTSPATIALCELL_H
 #include <memory>
 #include "lsst/pex/policy.h"
+#include "lsst/geom.h"
 #include "lsst/afw/math.h"
-#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 
 /*
@@ -44,9 +44,9 @@ public:
      * @param bbox The object's bounding box
      */
     ExampleCandidate(float const xCenter, float const yCenter, std::shared_ptr<MaskedImageT const> parent,
-                     lsst::afw::geom::Box2I bbox);
+                     lsst::geom::Box2I bbox);
 
-    lsst::afw::geom::Box2I getBBox() const { return _bbox; }
+    lsst::geom::Box2I getBBox() const { return _bbox; }
 
     /// Return candidates rating
     double getCandidateRating() const;
@@ -57,7 +57,7 @@ public:
 private:
     mutable std::shared_ptr<MaskedImageT> _image;
     std::shared_ptr<MaskedImageT const> _parent;
-    lsst::afw::geom::Box2I _bbox;
+    lsst::geom::Box2I _bbox;
 };
 
 /*
@@ -74,7 +74,7 @@ public:
     void processCandidate(lsst::afw::math::SpatialCellCandidate *candidate) {
         ++_n;
 
-        lsst::afw::geom::Box2I box = dynamic_cast<ExampleCandidate *>(candidate)->getBBox();
+        lsst::geom::Box2I box = dynamic_cast<ExampleCandidate *>(candidate)->getBBox();
         _npix += box.getArea();
     }
 

@@ -21,10 +21,10 @@ namespace detail {
 // in the cache because `image::Color` is not currently well-defined
 // or used.
 struct PsfCacheKey {
-    geom::Point2D const position;
+    lsst::geom::Point2D const position;
     image::Color const color;
 
-    PsfCacheKey(geom::Point2D const &position_, image::Color color_ = image::Color())
+    PsfCacheKey(lsst::geom::Point2D const &position_, image::Color color_ = image::Color())
             : position(position_), color(color_) {}
 
     bool operator==(PsfCacheKey const &other) const {
@@ -60,7 +60,7 @@ namespace detection {
 
 namespace {
 
-bool isPointNull(geom::Point2D const &p) { return std::isnan(p.getX()) && std::isnan(p.getY()); }
+bool isPointNull(lsst::geom::Point2D const &p) { return std::isnan(p.getX()) && std::isnan(p.getY()); }
 
 }  // namespace
 
@@ -80,7 +80,7 @@ Psf::Psf(Psf &&other)
           _kernelImageCache(std::move(other._kernelImageCache)) {}
 
 std::shared_ptr<image::Image<double>> Psf::recenterKernelImage(std::shared_ptr<Image> im,
-                                                               geom::Point2D const &position,
+                                                               lsst::geom::Point2D const &position,
                                                                std::string const &warpAlgorithm,
                                                                unsigned int warpBuffer) {
     // "ir" : (integer, residual)
@@ -95,7 +95,7 @@ std::shared_ptr<image::Image<double>> Psf::recenterKernelImage(std::shared_ptr<I
     return im;
 }
 
-std::shared_ptr<Psf::Image> Psf::computeImage(geom::Point2D position, image::Color color,
+std::shared_ptr<Psf::Image> Psf::computeImage(lsst::geom::Point2D position, image::Color color,
                                               ImageOwnerEnum owner) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
@@ -108,7 +108,7 @@ std::shared_ptr<Psf::Image> Psf::computeImage(geom::Point2D position, image::Col
     return result;
 }
 
-std::shared_ptr<Psf::Image> Psf::computeKernelImage(geom::Point2D position, image::Color color,
+std::shared_ptr<Psf::Image> Psf::computeKernelImage(lsst::geom::Point2D position, image::Color color,
                                                     ImageOwnerEnum owner) const {
     if (_isFixed || isPointNull(position)) position = getAveragePosition();
     if (_isFixed || color.isIndeterminate()) color = getAverageColor();
@@ -121,13 +121,13 @@ std::shared_ptr<Psf::Image> Psf::computeKernelImage(geom::Point2D position, imag
     return result;
 }
 
-geom::Box2I Psf::computeBBox(geom::Point2D position, image::Color color) const {
+lsst::geom::Box2I Psf::computeBBox(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     return doComputeBBox(position, color);
 }
 
-std::shared_ptr<math::Kernel const> Psf::getLocalKernel(geom::Point2D position, image::Color color) const {
+std::shared_ptr<math::Kernel const> Psf::getLocalKernel(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     // FixedKernel ctor will deep copy image, so we can use INTERNAL.
@@ -135,32 +135,32 @@ std::shared_ptr<math::Kernel const> Psf::getLocalKernel(geom::Point2D position, 
     return std::make_shared<math::FixedKernel>(*image);
 }
 
-double Psf::computePeak(geom::Point2D position, image::Color color) const {
+double Psf::computePeak(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     std::shared_ptr<Image> image = computeKernelImage(position, color, INTERNAL);
     return (*image)(-image->getX0(), -image->getY0());
 }
 
-double Psf::computeApertureFlux(double radius, geom::Point2D position, image::Color color) const {
+double Psf::computeApertureFlux(double radius, lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     return doComputeApertureFlux(radius, position, color);
 }
 
-geom::ellipses::Quadrupole Psf::computeShape(geom::Point2D position, image::Color color) const {
+geom::ellipses::Quadrupole Psf::computeShape(lsst::geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     return doComputeShape(position, color);
 }
 
-std::shared_ptr<Psf::Image> Psf::doComputeImage(geom::Point2D const &position,
+std::shared_ptr<Psf::Image> Psf::doComputeImage(lsst::geom::Point2D const &position,
                                                 image::Color const &color) const {
     std::shared_ptr<Psf::Image> im = computeKernelImage(position, color, COPY);
     return recenterKernelImage(im, position);
 }
 
-geom::Point2D Psf::getAveragePosition() const { return geom::Point2D(); }
+lsst::geom::Point2D Psf::getAveragePosition() const { return lsst::geom::Point2D(); }
 
 std::size_t Psf::getCacheCapacity() const { return _kernelImageCache->capacity(); }
 

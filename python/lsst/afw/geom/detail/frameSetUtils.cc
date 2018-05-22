@@ -27,8 +27,8 @@
 #include "ndarray/pybind11.h"
 
 #include "lsst/daf/base.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 
 namespace py = pybind11;
@@ -44,9 +44,7 @@ PYBIND11_PLUGIN(frameSetUtils) {
     py::module mod("frameSetUtils");
 
     py::module::import("lsst.daf.base");
-    py::module::import("lsst.afw.geom.angle");
-    py::module::import("lsst.afw.geom.coordinates");
-    py::module::import("lsst.afw.geom.spherePoint");
+    py::module::import("lsst.geom");
 
     mod.def("readFitsWcs", readFitsWcs, "metadata"_a, "strip"_a = true);
     mod.def("readLsstSkyWcs", readLsstSkyWcs, "metadata"_a, "strip"_a = true);

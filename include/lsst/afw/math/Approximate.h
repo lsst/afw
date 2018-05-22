@@ -24,12 +24,10 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/base.h"
+#include "lsst/geom.h"
 
 namespace lsst {
 namespace afw {
-namespace geom {
-class Box2I;
-}
 namespace image {
 template <typename PixelT>
 class Image;
@@ -101,7 +99,7 @@ template <typename PixelT>
 std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& x,
                                                      std::vector<double> const& y,
                                                      image::MaskedImage<PixelT> const& im,
-                                                     geom::Box2I const& bbox, ApproximateControl const& ctrl);
+                                                     lsst::geom::Box2I const& bbox, ApproximateControl const& ctrl);
 
 /**
  * Approximate values for a MaskedImage
@@ -114,7 +112,7 @@ public:
     friend std::shared_ptr<Approximate<PixelT>> makeApproximate<>(std::vector<double> const& x,
                                                                   std::vector<double> const& y,
                                                                   image::MaskedImage<PixelT> const& im,
-                                                                  geom::Box2I const& bbox,
+                                                                  lsst::geom::Box2I const& bbox,
                                                                   ApproximateControl const& ctrl);
     Approximate(Approximate const&) = delete;
     Approximate(Approximate &&) = delete;
@@ -138,14 +136,14 @@ protected:
      */
     Approximate(std::vector<double> const& x,   ///< the x-values of points
                 std::vector<double> const& y,   ///< the y-values of points
-                geom::Box2I const& bbox,        ///< Range where approximation should be valid
+                lsst::geom::Box2I const& bbox,        ///< Range where approximation should be valid
                 ApproximateControl const& ctrl  ///< desired approximation algorithm
                 )
             : _xVec(x), _yVec(y), _bbox(bbox), _ctrl(ctrl) {}
 
     std::vector<double> const _xVec;  ///< the x-values of points
     std::vector<double> const _yVec;  ///< the y-values of points
-    geom::Box2I const _bbox;          ///< Domain for approximation
+    lsst::geom::Box2I const _bbox;          ///< Domain for approximation
     ApproximateControl const _ctrl;   ///< desired approximation algorithm
 private:
     virtual std::shared_ptr<image::Image<OutPixelT>> doGetImage(int orderX, int orderY) const = 0;

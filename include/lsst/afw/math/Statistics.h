@@ -450,7 +450,7 @@ public:
     x_iterator row_end(int) const { return _v.end(); }
     int getWidth() const { return _v.size(); }
     int getHeight() const { return 1; }
-    afw::geom::Extent2I getDimensions() const { return afw::geom::Extent2I(getWidth(), getHeight()); }
+    lsst::geom::Extent2I getDimensions() const { return lsst::geom::Extent2I(getWidth(), getHeight()); }
 
     bool empty() const { return _v.empty(); }
 

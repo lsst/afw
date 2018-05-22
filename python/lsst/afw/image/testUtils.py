@@ -55,7 +55,7 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
 def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
     """!Make an image whose values are a linear ramp
 
-    @param[in] bbox  bounding box of image (an lsst.afw.geom.Box2I)
+    @param[in] bbox  bounding box of image (an lsst.geom.Box2I)
     @param[in] start  starting ramp value, inclusive
     @param[in] stop  ending ramp value, inclusive; if None, increase by integer values
     @param[in] imageClass  type of image (e.g. lsst.afw.image.ImageF)

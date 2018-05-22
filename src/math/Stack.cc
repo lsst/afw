@@ -85,7 +85,7 @@ void checkObjectsAndWeights(ObjectVectorT const &objects, WeightVectorT const &w
 
 template <typename ImageT>
 void checkImageSizes(ImageT const &out, std::vector<std::shared_ptr<ImageT>> const &images) {
-    geom::Extent2I const &dim = out.getDimensions();
+    lsst::geom::Extent2I const &dim = out.getDimensions();
     for (unsigned int i = 0; i < images.size(); ++i) {
         if (images[i]->getDimensions() != dim) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError,
@@ -448,11 +448,11 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(1, image.getHeight())));
         int y = y0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x0, y), geom::Extent2I(image.getWidth(), 1));
+            lsst::geom::Box2I bbox = lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1));
             image::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -460,11 +460,11 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
         }
 
     } else if (dimension == 'y') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(image.getWidth(), 1)));
         int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x, y0), geom::Extent2I(1, image.getHeight()));
+            lsst::geom::Box2I bbox = lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()));
             image::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -490,11 +490,11 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(1, image.getHeight())));
         int y = 0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x0, y), geom::Extent2I(image.getWidth(), 1));
+            lsst::geom::Box2I bbox = lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1));
             image::MaskedImage<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -502,11 +502,11 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
         }
 
     } else if (dimension == 'y') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(image.getWidth(), 1)));
         int x = 0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x, y0), geom::Extent2I(1, image.getHeight()));
+            lsst::geom::Box2I bbox = lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()));
             image::MaskedImage<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,

@@ -23,8 +23,8 @@
 # @file
 # @brief Utilities to use with displaying images
 
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 
 __all__ = (
     "Mosaic",
@@ -201,8 +201,8 @@ class Mosaic:
         self.nx, self.ny = nx, ny
 
         mosaic = images[0].Factory(
-            afwGeom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter,
-                             ny*self.ysize + (ny - 1)*self.gutter)
+            lsst.geom.Extent2I(nx*self.xsize + (nx - 1)*self.gutter,
+                               ny*self.ysize + (ny - 1)*self.gutter)
         )
         try:
             mosaic.set(self.background)
@@ -216,9 +216,9 @@ class Mosaic:
             im = images[i]
 
             if smosaic.getDimensions() != im.getDimensions():  # im is smaller than smosaic
-                llc = afwGeom.PointI((smosaic.getWidth() - im.getWidth())//2,
-                                     (smosaic.getHeight() - im.getHeight())//2)
-                smosaic = smosaic.Factory(smosaic, afwGeom.Box2I(
+                llc = lsst.geom.PointI((smosaic.getWidth() - im.getWidth())//2,
+                                       (smosaic.getHeight() - im.getHeight())//2)
+                smosaic = smosaic.Factory(smosaic, lsst.geom.Box2I(
                     llc, im.getDimensions()), afwImage.LOCAL)
 
             smosaic[:] = im
@@ -258,8 +258,8 @@ class Mosaic:
         if iy is None:
             ix, iy = ix % self.nx, ix//self.nx
 
-        return afwGeom.Box2I(afwGeom.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
-                             afwGeom.ExtentI(self.xsize, self.ysize))
+        return lsst.geom.Box2I(lsst.geom.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
+                               lsst.geom.ExtentI(self.xsize, self.ysize))
 
     def drawLabels(self, labels=None, display="deferToFrame", frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
@@ -391,13 +391,13 @@ def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display="deferToFra
     coaddWcs = exposure.getWcs()
     catalog = exposure.getInfo().getCoaddInputs().ccds
 
-    offset = afwGeom.PointD() - afwGeom.PointD(exposure.getXY0())
+    offset = lsst.geom.PointD() - lsst.geom.PointD(exposure.getXY0())
 
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
     with display.Buffering():
         for record in catalog:
-            ccdBox = afwGeom.Box2D(record.getBBox())
+            ccdBox = lsst.geom.Box2D(record.getBBox())
             ccdCorners = ccdBox.getCorners()
             coaddCorners = [coaddWcs.skyToPixel(record.getWcs().pixelToSky(point)) + offset
                             for point in ccdCorners]

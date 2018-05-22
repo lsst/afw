@@ -20,14 +20,16 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-Orientation::Orientation(geom::Point2D const fpPosition, geom::Point2D const refPoint, geom::Angle const yaw,
-                         geom::Angle const pitch, geom::Angle const roll)
+Orientation::Orientation(lsst::geom::Point2D const fpPosition, lsst::geom::Point2D const refPoint,
+                         lsst::geom::Angle const yaw, lsst::geom::Angle const pitch,
+                         lsst::geom::Angle const roll)
         : _fpPosition(fpPosition), _refPoint(refPoint), _yaw(yaw), _pitch(pitch), _roll(roll), _rotMat() {
     double cosYaw = std::cos(_yaw);
     double sinYaw = std::sin(_yaw);
@@ -59,8 +61,8 @@ int Orientation::getNQuarter() const {
     return std::floor((yawDeg + 45.) / 90.);
 }
 
-std::shared_ptr<geom::TransformPoint2ToPoint2> Orientation::makePixelFpTransform(
-        geom::Extent2D const pixelSizeMm) const {
+std::shared_ptr<afw::geom::TransformPoint2ToPoint2> Orientation::makePixelFpTransform(
+        lsst::geom::Extent2D const pixelSizeMm) const {
     // jacobian = coeffA*pixelSizeMmX, coeffB*pixelSizeMmY,
     //            coeffD*pixelSizeMmX, coeffE*pixelSizeMmY
     Eigen::Matrix2d jacobian =
@@ -69,14 +71,15 @@ std::shared_ptr<geom::TransformPoint2ToPoint2> Orientation::makePixelFpTransform
     Eigen::Vector2d refMm = pixelSizeMm.asEigen().array() * _refPoint.asEigen().array();
     Eigen::Vector2d translation = _fpPosition.asEigen() - (_rotMat * refMm);
 
-    geom::AffineTransform affineTransform = geom::AffineTransform(jacobian, translation);
-    return geom::makeTransform(affineTransform);
+    lsst::geom::AffineTransform affineTransform = lsst::geom::AffineTransform(jacobian, translation);
+    return afw::geom::makeTransform(affineTransform);
 }
 
-std::shared_ptr<geom::TransformPoint2ToPoint2> Orientation::makeFpPixelTransform(
-        geom::Extent2D const pixelSizeMm) const {
+std::shared_ptr<afw::geom::TransformPoint2ToPoint2> Orientation::makeFpPixelTransform(
+        lsst::geom::Extent2D const pixelSizeMm) const {
     return makePixelFpTransform(pixelSizeMm)->getInverse();
 }
+
 }  // namespace cameraGeom
 }  // namespace afw
 }  // namespace lsst

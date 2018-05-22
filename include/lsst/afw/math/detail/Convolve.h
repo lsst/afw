@@ -202,8 +202,8 @@ public:
      *
      * @throws lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
      */
-    KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::afw::geom::Box2I const& bbox,
-                          lsst::afw::geom::Point2I const& xy0, bool doNormalize);
+    KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::geom::Box2I const& bbox,
+                          lsst::geom::Point2I const& xy0, bool doNormalize);
     /**
      * Construct a KernelImagesForRegion with some or all corner images
      *
@@ -224,18 +224,18 @@ public:
      *
      * @warning: if any images are incorrect you will get a mess.
      */
-    KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::afw::geom::Box2I const& bbox,
-                          lsst::afw::geom::Point2I const& xy0, bool doNormalize, ImagePtr bottomLeftImagePtr,
+    KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::geom::Box2I const& bbox,
+                          lsst::geom::Point2I const& xy0, bool doNormalize, ImagePtr bottomLeftImagePtr,
                           ImagePtr bottomRightImagePtr, ImagePtr topLeftImagePtr, ImagePtr topRightImagePtr);
 
     /**
      * Get the bounding box for the region
      */
-    lsst::afw::geom::Box2I getBBox() const { return _bbox; };
+    lsst::geom::Box2I getBBox() const { return _bbox; };
     /**
      * Get xy0 of the image
      */
-    lsst::afw::geom::Point2I getXY0() const { return _xy0; };
+    lsst::geom::Point2I getXY0() const { return _xy0; };
     /**
      * Get the doNormalize parameter
      */
@@ -258,7 +258,7 @@ public:
      *
      * @param location location for which to return pixel index
      */
-    lsst::afw::geom::Point2I getPixelIndex(Location location) const;
+    lsst::geom::Point2I getPixelIndex(Location location) const;
     /**
      * Compute next row of subregions
      *
@@ -318,8 +318,8 @@ private:
 
     // member variables
     KernelConstPtr _kernelPtr;
-    lsst::afw::geom::Box2I _bbox;
-    lsst::afw::geom::Point2I _xy0;
+    lsst::geom::Box2I _bbox;
+    lsst::geom::Point2I _xy0;
     bool _doNormalize;
     mutable std::vector<ImagePtr> _imagePtrList;
 
@@ -418,7 +418,7 @@ void convolveWithInterpolation(OutImageT& outImage, InImageT const& inImage,
 struct ConvolveWithInterpolationWorkingImages {
 public:
     typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-    ConvolveWithInterpolationWorkingImages(geom::Extent2I const& dimensions)
+    ConvolveWithInterpolationWorkingImages(lsst::geom::Extent2I const& dimensions)
             : leftImage(dimensions),
               rightImage(dimensions),
               leftDeltaImage(dimensions),

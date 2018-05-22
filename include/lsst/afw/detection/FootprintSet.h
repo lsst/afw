@@ -28,7 +28,7 @@
  */
 #include <cstdint>
 
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
@@ -104,7 +104,7 @@ public:
      *
      * @param region the desired region
      */
-    FootprintSet(geom::Box2I region);
+    FootprintSet(lsst::geom::Box2I region);
     /**
      * Copy constructor
      *
@@ -140,7 +140,7 @@ public:
     void swap(FootprintSet& rhs) {
         using std::swap;  // See Meyers, Effective C++, Item 25
         swap(*_footprints, *rhs.getFootprints());
-        geom::Box2I rhsRegion = rhs.getRegion();
+        lsst::geom::Box2I rhsRegion = rhs.getRegion();
         rhs.setRegion(getRegion());
         setRegion(rhsRegion);
     }
@@ -182,12 +182,12 @@ public:
      *
      * @note updates all the Footprints' regions too
      */
-    void setRegion(geom::Box2I const& region);
+    void setRegion(lsst::geom::Box2I const& region);
 
     /**
      * Return the corners of the MaskedImage
      */
-    geom::Box2I const getRegion() const { return _region; }
+    lsst::geom::Box2I const getRegion() const { return _region; }
 
     /**
      * Return an Image with pixels set to the Footprint%s in the FootprintSet
@@ -235,7 +235,7 @@ public:
 
 private:
     std::shared_ptr<FootprintList> _footprints;  ///< the Footprints of detected objects
-    geom::Box2I _region;  ///< The corners of the MaskedImage that the detections live in
+    lsst::geom::Box2I _region;  ///< The corners of the MaskedImage that the detections live in
 };
 }
 }

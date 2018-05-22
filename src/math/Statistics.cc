@@ -36,7 +36,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 
 using namespace std;
 namespace pexExceptions = lsst::pex::exceptions;

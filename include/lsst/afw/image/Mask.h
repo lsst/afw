@@ -119,7 +119,7 @@ public:
      * @param dimensions Number of columns, rows
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Extent2I const& dimensions = geom::Extent2I(),
+    explicit Mask(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     /**
      * Construct a Mask initialized to a specified value
@@ -128,7 +128,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Extent2I const& dimensions, MaskPixelT initialValue,
+    explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     /**
      * Construct a Mask initialized to 0x0
@@ -136,7 +136,7 @@ public:
      * @param bbox Desired number of columns/rows and origin
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Box2I const& bbox, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+    explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs = MaskPlaneDict());
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -144,7 +144,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Box2I const& bbox, MaskPixelT initialValue,
+    explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
 
     /**
@@ -168,7 +168,7 @@ public:
     explicit Mask(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
-                  geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT,
+                  lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
     /**
@@ -192,7 +192,7 @@ public:
     explicit Mask(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
-                  geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT,
+                  lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
     /**
@@ -212,7 +212,7 @@ public:
      */
     explicit Mask(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                                                 std::shared_ptr<lsst::daf::base::PropertySet>(),
-                  geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT,
+                  lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
     // generalised copy constructor
@@ -237,11 +237,11 @@ public:
      * @param origin coordinate system of the bbox
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
-    Mask(const Mask& src, const geom::Box2I& bbox, ImageOrigin const origin = PARENT,
+    Mask(const Mask& src, const lsst::geom::Box2I& bbox, ImageOrigin const origin = PARENT,
          const bool deep = false);
 
     explicit Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep = false,
-                  geom::Point2I const& xy0 = geom::Point2I());
+                  lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
 
     void swap(Mask& rhs);
     // Operators

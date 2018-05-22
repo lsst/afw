@@ -29,7 +29,7 @@
 
 #include <type_traits>
 #include "lsst/afw/geom/Span.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/pex/exceptions.h"
@@ -58,12 +58,12 @@ void variadicSpanSetter(Span const spn, T& first, Args&... x) {
 }
 
 template <typename T>
-void variadicBoundChecker(Box2I const box, int area, T const& x) {
+void variadicBoundChecker(lsst::geom::Box2I const box, int area, T const& x) {
     x.checkExtents(box, area);
 }
 
 template <typename T, typename... Args>
-void variadicBoundChecker(Box2I const box, int area, T const& first, Args&... x) {
+void variadicBoundChecker(lsst::geom::Box2I const box, int area, T const& first, Args&... x) {
     variadicBoundChecker(box, area, first);
     variadicBoundChecker(box, area, x...);
 }
@@ -111,7 +111,7 @@ public:
 
     // There is no good way to check the extents of a generic iterator, so make
     // a no-op function to satisfy api
-    void checkExtents(Box2I const& bbox, int area) const {}
+    void checkExtents(lsst::geom::Box2I const& bbox, int area) const {}
 
     void setSpan(Span const& span) {}
 
@@ -138,7 +138,7 @@ public:
 
     // Constants are simply repeated, so no need to check extents, make no-op
     // function
-    void checkExtents(Box2I const& bbox, int area) const {}
+    void checkExtents(lsst::geom::Box2I const& bbox, int area) const {}
 
     void setSpan(Span const& span) {}
 
@@ -157,7 +157,7 @@ class ImageNdGetter {
 public:
     using Reference = typename ndarray::Array<T, N, C>::Reference::Reference;
 
-    ImageNdGetter(ndarray::Array<T, N, C> const& array, geom::Point2I const& xy0)
+    ImageNdGetter(ndarray::Array<T, N, C> const& array, lsst::geom::Point2I const& xy0)
             : _array(array), _xy0(xy0) {}
 
     ImageNdGetter(ImageNdGetter const&) = default;
@@ -166,10 +166,10 @@ public:
     ImageNdGetter& operator=(ImageNdGetter&&) = default;
     ~ImageNdGetter() = default;
 
-    void checkExtents(Box2I const& bbox, int area) const {
+    void checkExtents(lsst::geom::Box2I const& bbox, int area) const {
         // If the bounding box lays outside the are of the image, throw an error
-        geom::Box2I arrayBBox(_xy0,
-                              geom::Extent2I(_array.template getSize<1>(), _array.template getSize<0>()));
+        lsst::geom::Box2I arrayBBox(
+                _xy0, lsst::geom::Extent2I(_array.template getSize<1>(), _array.template getSize<0>()));
         if (!arrayBBox.contains(bbox)) {
             throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                               "SpanSet bounding box lands outside array");
@@ -187,7 +187,7 @@ public:
 
 private:
     ndarray::Array<T, N, C> _array;
-    geom::Point2I _xy0;
+    lsst::geom::Point2I _xy0;
     typename ndarray::Array<T, N, C>::Reference::Iterator _iterX;
 };
 
@@ -205,7 +205,7 @@ public:
     FlatNdGetter& operator=(FlatNdGetter&&) = default;
     ~FlatNdGetter() = default;
 
-    void checkExtents(Box2I const& bbox, int area) const {
+    void checkExtents(lsst::geom::Box2I const& bbox, int area) const {
         // If the area of the array is greater than the size of the array, throw an error
         // as the iteration dimensions will not match
         auto shape = _array.getShape();
@@ -305,7 +305,6 @@ namespace ndarray {
 // This means the function can be used on an ndarray without the need to specify the namespace of
 // the function itself
 namespace details = lsst::afw::geom::details;
-namespace afwGeom = lsst::afw::geom;
 template <typename T, int inA, int inB>
 
 /** Marks a ndarray to be interpreted as a 1D vector when applying a functor from a SpanSet
@@ -332,7 +331,7 @@ details::FlatNdGetter<T, inA, inB> ndFlat(ndarray::Array<T, inA, inB> const& arr
  */
 template <typename T, int inA, int inB>
 details::ImageNdGetter<T, inA, inB> ndImage(ndarray::Array<T, inA, inB> const& array,
-                                            afwGeom::Point2I xy0 = afwGeom::Point2I()) {
+                                            lsst::geom::Point2I xy0 = lsst::geom::Point2I()) {
     // Function to mark a ndarray to be treated as a 2D image by the applyFunctor method
     return details::ImageNdGetter<T, inA, inB>(array, xy0);
 }

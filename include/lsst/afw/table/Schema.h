@@ -7,6 +7,7 @@
 
 #include "ndarray.h"
 #include "lsst/base.h"
+#include "lsst/afw/fits.h"
 #include "lsst/afw/fitsDefaults.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"

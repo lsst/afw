@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <memory>
 #include "boost/filesystem.hpp"
+#include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/fits.h"
@@ -37,7 +38,6 @@
 using namespace std;
 
 namespace dafBase = lsst::daf::base;
-namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace afwFits = lsst::afw::fits;
@@ -127,7 +127,7 @@ void test7() {
     std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, afwFits::DEFAULT_HDU,
                                                                        miMetadata));
     MaskedImageF maskedImage(image);
-    auto wcsFromFITS = std::make_shared<afwGeom::SkyWcs>(*miMetadata);
+    auto wcsFromFITS = std::make_shared<lsst::afw::geom::SkyWcs>(*miMetadata);
     ExposureF exposure(maskedImage, wcsFromFITS);
 
     // Write the Exposure to a RAM FITS file

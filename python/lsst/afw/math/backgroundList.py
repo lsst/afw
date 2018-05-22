@@ -21,7 +21,7 @@
 #
 import os
 import lsst.daf.base as dafBase
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits, DEFAULT_HDU
 from . import mathLib as afwMath
@@ -168,8 +168,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             y0 = md.get("BKGD_Y0")
             width = md.get("BKGD_WIDTH")
             height = md.get("BKGD_HEIGHT")
-            imageBBox = afwGeom.BoxI(afwGeom.PointI(
-                x0, y0), afwGeom.ExtentI(width, height))
+            imageBBox = lsst.geom.BoxI(lsst.geom.PointI(
+                x0, y0), lsst.geom.ExtentI(width, height))
 
             interpStyle = afwMath.Interpolate.Style(md.get("INTERPSTYLE"))
             undersampleStyle = afwMath.UndersampleStyle(

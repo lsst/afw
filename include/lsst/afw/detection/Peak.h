@@ -65,15 +65,15 @@ public:
     int getIy() const;
     void setIx(int ix);
     void setIy(int iy);
-    afw::geom::Point2I getI() const { return afw::geom::Point2I(getIx(), getIy()); }
-    afw::geom::Point2I getCentroid(bool) const { return getI(); }
+    lsst::geom::Point2I getI() const { return lsst::geom::Point2I(getIx(), getIy()); }
+    lsst::geom::Point2I getCentroid(bool) const { return getI(); }
 
     float getFx() const;
     float getFy() const;
     void setFx(float fx);
     void setFy(float fy);
-    afw::geom::Point2D getF() const { return afw::geom::Point2D(getFx(), getFy()); }
-    afw::geom::Point2D getCentroid() const { return getF(); }
+    lsst::geom::Point2D getF() const { return lsst::geom::Point2D(getFx(), getFy()); }
+    lsst::geom::Point2D getCentroid() const { return getF(); }
 
     float getPeakValue() const;
     void setPeakValue(float peakValue);

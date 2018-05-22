@@ -28,7 +28,7 @@
 #include "ndarray.h"
 
 #include "lsst/base.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -39,7 +39,7 @@ namespace math {
 /**
  *  An abstract base class for 2-d functions defined on an integer bounding boxes
  *
- *  Integer bounding boxes (afw.geom.Box2I) are inclusive of the end pixels (integer positions correspond
+ *  Integer bounding boxes (lsst::geom::Box2I) are inclusive of the end pixels (integer positions correspond
  *  to the centers of the pixels and include the entirety of those pixels). Thus a BoundedField defined on
  *  the box [x0, x1] x [y0, y1] actually covers the range [x0 - 0.5, x1 + 0.5] x [y0 - 0.5, y1 + 0.5].
  *
@@ -62,17 +62,17 @@ public:
      *  Subclasses should not provide bounds checking on the given position; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    virtual double evaluate(geom::Point2D const& position) const = 0;
+    virtual double evaluate(lsst::geom::Point2D const& position) const = 0;
 
     /**
      *  Evaluate the field at the given point.
      *
-     *  This delegates to the evaluate() method that takes geom::Point2D.
+     *  This delegates to the evaluate() method that takes lsst::geom::Point2D.
      *
      *  There is no bounds-checking on the given position; this is the responsibility
      *  of the user, who can almost always do it more efficiently.
      */
-    double evaluate(double x, double y) const { return evaluate(geom::Point2D(x, y)); }
+    double evaluate(double x, double y) const { return evaluate(lsst::geom::Point2D(x, y)); }
 
     /**
      *  Evaluate the field at multiple arbitrary points
@@ -107,9 +107,9 @@ public:
      *  Because this is an integer bounding box, its minimum and maximum positions are the
      *  centers of the pixels where the field is valid, but the field can be assumed to be
      *  valid to the edges of those pixels, which is the boundary you'd get by converting
-     *  the returned Box2I into a Box2D.
+     *  the returned lsst::geom::Box2I into a lsst::geom::Box2D.
      */
-    geom::Box2I getBBox() const { return _bbox; }
+    lsst::geom::Box2I getBBox() const { return _bbox; }
 
     /**
      *  Assign the field to an image, overwriting values already present.
@@ -207,10 +207,10 @@ public:
     { return os << bf.toString() << " on " << bf.getBBox(); }
 
 protected:
-    explicit BoundedField(geom::Box2I const& bbox) : _bbox(bbox) {}
+    explicit BoundedField(lsst::geom::Box2I const& bbox) : _bbox(bbox) {}
 
 private:
-    geom::Box2I const _bbox;
+    lsst::geom::Box2I const _bbox;
 
     // String form of the mathematical component (not including the bbox)
     virtual std::string toString() const = 0;

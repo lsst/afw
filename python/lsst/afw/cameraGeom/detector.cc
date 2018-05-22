@@ -30,9 +30,7 @@
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
@@ -48,9 +46,9 @@ namespace cameraGeom {
 template <typename SysT, typename PyClass>
 void declare1SysMethods(PyClass &cls) {
     cls.def("getCorners",
-            (std::vector<geom::Point2D>(Detector::*)(SysT const &) const) & Detector::getCorners,
+            (std::vector<lsst::geom::Point2D>(Detector::*)(SysT const &) const) & Detector::getCorners,
             "cameraSys"_a);
-    cls.def("getCenter", (geom::Point2D(Detector::*)(SysT const &) const) & Detector::getCenter,
+    cls.def("getCenter", (lsst::geom::Point2D(Detector::*)(SysT const &) const) & Detector::getCenter,
             "cameraSys"_a);
     cls.def("hasTransform", (bool (Detector::*)(SysT const &) const) & Detector::hasTransform, "cameraSys"_a);
     cls.def("makeCameraSys", (CameraSys const (Detector::*)(SysT const &) const) & Detector::makeCameraSys,
@@ -66,11 +64,11 @@ void declare2SysMethods(PyClass &cls) {
                     Detector::getTransform,
             "fromSys"_a, "toSys"_a);
     cls.def("transform",
-            (geom::Point2D(Detector::*)(geom::Point2D const &, FromSysT const &, ToSysT const &) const) &
+            (lsst::geom::Point2D(Detector::*)(lsst::geom::Point2D const &, FromSysT const &, ToSysT const &) const) &
                     Detector::transform,
             "point"_a, "fromSys"_a, "toSys"_a);
     cls.def("transform",
-            (std::vector<geom::Point2D>(Detector::*)(std::vector<geom::Point2D> const &, FromSysT const &,
+            (std::vector<lsst::geom::Point2D>(Detector::*)(std::vector<lsst::geom::Point2D> const &, FromSysT const &,
                                                      ToSysT const &) const) &
                     Detector::transform,
             "points"_a, "fromSys"_a, "toSys"_a);
@@ -91,8 +89,8 @@ PYBIND11_PLUGIN(_detector) {
             .export_values();
 
     /* Constructors */
-    cls.def(py::init<std::string const &, int, DetectorType, std::string const &, geom::Box2I const &,
-                     table::AmpInfoCatalog const &, Orientation const &, geom::Extent2D const &,
+    cls.def(py::init<std::string const &, int, DetectorType, std::string const &, lsst::geom::Box2I const &,
+                     table::AmpInfoCatalog const &, Orientation const &, lsst::geom::Extent2D const &,
                      TransformMap::Transforms const &, Detector::CrosstalkMatrix const &>(),
             "name"_a, "id"_a, "type"_a, "serial"_a, "bbox"_a, "ampInfoCatalog"_a, "orientation"_a,
             "pixelSize"_a, "transforms"_a, "crosstalk"_a = Detector::CrosstalkMatrix());

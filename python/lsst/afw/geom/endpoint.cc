@@ -31,8 +31,8 @@
 
 #include "lsst/utils/python.h"
 
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/geom/Endpoint.h"
 
 namespace py = pybind11;
@@ -194,7 +194,7 @@ void declareSpherePointEndpoint(py::module& mod) {
 PYBIND11_PLUGIN(endpoint) {
     py::module mod("endpoint");
 
-    py::module::import("lsst.afw.geom.coordinates");
+    py::module::import("lsst.geom");
 
     declareGenericEndpoint(mod);
     declarePoint2Endpoint(mod);

@@ -286,7 +286,7 @@ double do_updateBadPixels(detail::MaskedImage_tag const&,
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           "Please provide at least one Image for me to update");
     }
-    geom::Extent2I dimensions = imageList[0]->getDimensions();
+    lsst::geom::Extent2I dimensions = imageList[0]->getDimensions();
     int const height = dimensions.getY();
 
     double maxChange = 0.0;  // maximum change to the input images

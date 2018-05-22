@@ -26,7 +26,7 @@
 #include "ndarray_fwd.h"
 
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
@@ -185,7 +185,7 @@ public:
      *              may be modified if an exception is thrown.
      */
     virtual void sampleAt(
-        geom::Point2D const & position,
+        lsst::geom::Point2D const & position,
         ndarray::Array<double const,1,1> const & wavelengths,
         ndarray::Array<double,1,1> const & out
     ) const = 0;
@@ -201,7 +201,7 @@ public:
      *           wavelengths.
      */
     ndarray::Array<double,1,1> sampleAt(
-        geom::Point2D const & position,
+        lsst::geom::Point2D const & position,
         ndarray::Array<double const,1,1> const & wavelengths
     ) const;
 

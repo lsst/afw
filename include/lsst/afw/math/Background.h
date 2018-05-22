@@ -31,7 +31,7 @@
 #include <memory>
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Approximate.h"
@@ -264,7 +264,7 @@ protected:
      * @note This ctor is mostly used to create a Background given its sample values, and that (in turn)
      * is mostly used to implement persistence.
      */
-    explicit Background(geom::Box2I const imageBBox, int const nx, int const ny);
+    explicit Background(lsst::geom::Box2I const imageBBox, int const nx, int const ny);
     /// dtor
     virtual ~Background() = default;
 
@@ -313,7 +313,7 @@ public:
      */
     template <typename PixelT>
     std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage(
-            lsst::afw::geom::Box2I const& bbox, Interpolate::Style const interpStyle,
+            lsst::geom::Box2I const& bbox, Interpolate::Style const interpStyle,
             UndersampleStyle const undersampleStyle = THROW_EXCEPTION) const {
         return _getImage(bbox, interpStyle, undersampleStyle, static_cast<PixelT>(0));
     }
@@ -324,7 +324,7 @@ public:
      */
     template <typename PixelT>
     std::shared_ptr<lsst::afw::image::Image<PixelT>> getImage(
-            lsst::afw::geom::Box2I const& bbox, std::string const& interpStyle,
+            lsst::geom::Box2I const& bbox, std::string const& interpStyle,
             std::string const& undersampleStyle = "THROW_EXCEPTION") const {
         return _getImage(bbox, math::stringToInterpStyle(interpStyle),
                          stringToUndersampleStyle(undersampleStyle), static_cast<PixelT>(0));
@@ -363,13 +363,13 @@ public:
     /**
      * Return the input image's (PARENT) bounding box
      */
-    geom::Box2I getImageBBox() const { return _imgBBox; }
+    lsst::geom::Box2I getImageBBox() const { return _imgBBox; }
 
     std::shared_ptr<BackgroundControl> getBackgroundControl() { return _bctrl; }
     std::shared_ptr<BackgroundControl const> getBackgroundControl() const { return _bctrl; }
 
 protected:
-    geom::Box2I _imgBBox;                              ///< size and origin of input image
+    lsst::geom::Box2I _imgBBox;                              ///< size and origin of input image
     std::shared_ptr<BackgroundControl> _bctrl;         ///< control info set by user.
     mutable Interpolate::Style _asUsedInterpStyle;     ///< the style we actually used
     mutable UndersampleStyle _asUsedUndersampleStyle;  ///< the undersampleStyle we actually used
@@ -394,7 +394,7 @@ protected:
 #define LSST_makeBackground_getApproximate_types (Background::InternalPixelT)
 #define LSST_makeBackground_getImage(m, v, T)                                      \
     virtual std::shared_ptr<lsst::afw::image::Image<T>> _getImage(                 \
-            lsst::afw::geom::Box2I const& bbox,                                    \
+            lsst::geom::Box2I const& bbox,                                    \
             Interpolate::Style const interpStyle, /* Style of the interpolation */ \
             UndersampleStyle const undersampleStyle =                              \
                     THROW_EXCEPTION, /* Behaviour if there are too few points */   \
@@ -477,7 +477,7 @@ public:
      * @param imageDimensions unbinned Image's BBox
      * @param statsImage Internal stats image
      */
-    explicit BackgroundMI(geom::Box2I const imageDimensions,
+    explicit BackgroundMI(lsst::geom::Box2I const imageDimensions,
                           image::MaskedImage<InternalPixelT> const& statsImage);
 
     BackgroundMI(BackgroundMI const &) = delete;
@@ -548,7 +548,7 @@ private:
      * Worker routine for getImage
      */
     template <typename PixelT>
-    std::shared_ptr<image::Image<PixelT>> doGetImage(geom::Box2I const& bbox,
+    std::shared_ptr<image::Image<PixelT>> doGetImage(lsst::geom::Box2I const& bbox,
                                                      Interpolate::Style const interpStyle_,
                                                      UndersampleStyle const undersampleStyle) const;
     // and for _getApproximate

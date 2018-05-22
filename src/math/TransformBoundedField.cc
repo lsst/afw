@@ -38,7 +38,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-TransformBoundedField::TransformBoundedField(geom::Box2I const& bbox, Transform const& transform)
+TransformBoundedField::TransformBoundedField(lsst::geom::Box2I const& bbox, Transform const& transform)
         : BoundedField(bbox), _transform(transform) {
     if (transform.getToEndpoint().getNAxes() != 1) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
@@ -47,7 +47,7 @@ TransformBoundedField::TransformBoundedField(geom::Box2I const& bbox, Transform 
     }
 }
 
-double TransformBoundedField::evaluate(geom::Point2D const& position) const {
+double TransformBoundedField::evaluate(lsst::geom::Point2D const& position) const {
     return _transform.applyForward(position)[0];
 }
 
@@ -109,7 +109,8 @@ public:
         auto bbox = record.get(keys.bbox);
         auto frameSetStr = formatters::bytesToString(record.get(keys.frameSet));
         auto transform =
-                geom::Transform<geom::Point2Endpoint, geom::GenericEndpoint>::readString(frameSetStr);
+                afw::geom::Transform<afw::geom::Point2Endpoint, afw::geom::GenericEndpoint>::readString(
+                        frameSetStr);
         return std::make_shared<TransformBoundedField>(bbox, *transform);
     }
 };

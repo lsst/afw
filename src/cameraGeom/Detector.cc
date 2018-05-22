@@ -29,8 +29,8 @@ namespace afw {
 namespace cameraGeom {
 
 Detector::Detector(std::string const &name, int id, DetectorType type, std::string const &serial,
-                   geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
-                   Orientation const &orientation, geom::Extent2D const &pixelSize,
+                   lsst::geom::Box2I const &bbox, table::AmpInfoCatalog const &ampInfoCatalog,
+                   Orientation const &orientation, lsst::geom::Extent2D const &pixelSize,
                    TransformMap::Transforms const &transforms, CrosstalkMatrix const &crosstalk)
         : _name(name),
           _id(id),
@@ -50,23 +50,23 @@ Detector::Detector(std::string const &name, int id, DetectorType type, std::stri
 Detector::Detector(Detector const &) = default;
 Detector::Detector(Detector &&) = default;
 
-std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
-    std::vector<geom::Point2D> nativeCorners = geom::Box2D(_bbox).getCorners();
+std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
+    std::vector<lsst::geom::Point2D> nativeCorners = lsst::geom::Box2D(_bbox).getCorners();
     auto nativeToCameraSys = _transformMap.getTransform(_nativeSys, cameraSys);
     return nativeToCameraSys->applyForward(nativeCorners);
 }
 
-std::vector<geom::Point2D> Detector::getCorners(CameraSysPrefix const &cameraSysPrefix) const {
+std::vector<lsst::geom::Point2D> Detector::getCorners(CameraSysPrefix const &cameraSysPrefix) const {
     return getCorners(makeCameraSys(cameraSysPrefix));
 }
 
-geom::Point2D Detector::getCenter(CameraSys const &cameraSys) const {
-    auto ctrPix = geom::Box2D(_bbox).getCenter();
+lsst::geom::Point2D Detector::getCenter(CameraSys const &cameraSys) const {
+    auto ctrPix = lsst::geom::Box2D(_bbox).getCenter();
     auto transform = getTransform(PIXELS, cameraSys);
     return transform->applyForward(ctrPix);
 }
 
-geom::Point2D Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
+lsst::geom::Point2D Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
     return getCenter(makeCameraSys(cameraSysPrefix));
 }
 
@@ -102,13 +102,13 @@ std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FromSysT c
 }
 
 template <typename FromSysT, typename ToSysT>
-geom::Point2D Detector::transform(geom::Point2D const &point, FromSysT const &fromSys,
+lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &point, FromSysT const &fromSys,
                                   ToSysT const &toSys) const {
     return _transformMap.transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 template <typename FromSysT, typename ToSysT>
-std::vector<geom::Point2D> Detector::transform(std::vector<geom::Point2D> const &points,
+std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &points,
                                                FromSysT const &fromSys, ToSysT const &toSys) const {
     return _transformMap.transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
@@ -156,8 +156,8 @@ void Detector::_init() {
 #define INSTANTIATE(FROMSYS, TOSYS)                                                                          \
     template std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FROMSYS const &,          \
                                                                                    TOSYS const &) const;     \
-    template geom::Point2D Detector::transform(geom::Point2D const &, FROMSYS const &, TOSYS const &) const; \
-    template std::vector<geom::Point2D> Detector::transform(std::vector<geom::Point2D> const &,              \
+    template lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &, FROMSYS const &, TOSYS const &) const; \
+    template std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &,              \
                                                             FROMSYS const &, TOSYS const &) const;
 
 INSTANTIATE(CameraSys, CameraSys);

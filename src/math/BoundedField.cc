@@ -115,7 +115,7 @@ public:
     // Construct an object to interpolate the given BoundedField on an evenly-spaced grid within a region.
     Interpolator(
         BoundedField const * field,
-        geom::Box2I const * region,
+        lsst::geom::Box2I const * region,
         int xStep,
         int yStep
     ) :
@@ -216,7 +216,7 @@ private:
     }
 
     BoundedField const * _field;
-    geom::Box2I const * _region;
+    lsst::geom::Box2I const * _region;
     Bounds _x;
     Bounds _y;
     double _z00, _z01, _z10, _z11;
@@ -228,7 +228,7 @@ private:
 template <typename T, typename F>
 void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bool overlapOnly, int xStep,
                   int yStep) {
-    geom::Box2I region(field.getBBox());
+    lsst::geom::Box2I region(field.getBBox());
     if (overlapOnly) {
         region.clip(img.getBBox(image::PARENT));
     } else if (region != img.getBBox(image::PARENT)) {

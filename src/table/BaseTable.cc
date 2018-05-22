@@ -170,7 +170,7 @@ struct RecordInitializer {
         std::fill(element, element + size, std::numeric_limits<double>::quiet_NaN());
     }
 
-    static void fill(Angle *element, int size) { fill(reinterpret_cast<double *>(element), size); }
+    static void fill(lsst::geom::Angle *element, int size) { fill(reinterpret_cast<double *>(element), size); }
 
     template <typename T>
     void operator()(SchemaItem<T> const &item) const {

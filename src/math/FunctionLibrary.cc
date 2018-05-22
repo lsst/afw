@@ -166,7 +166,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         Chebyshev1Function2PersistenceHelper keys(catalogs.front().getSchema());
         table::BaseRecord const& record = catalogs.front().front();
-        geom::Box2D bbox(record.get(keys.min), record.get(keys.max));
+        lsst::geom::Box2D bbox(record.get(keys.min), record.get(keys.max));
         return std::make_shared<Chebyshev1Function2<ReturnT> >(keys.coefficients.extractVector(record), bbox);
     }
 
@@ -254,7 +254,7 @@ void Chebyshev1Function2<ReturnT>::write(table::io::OutputArchiveHandle& handle)
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = catalog.addNew();
     keys.coefficients.assignVector(*record, this->getParameters());
-    geom::Box2D bbox = getXYRange();
+    lsst::geom::Box2D bbox = getXYRange();
     record->set(keys.min, bbox.getMin());
     record->set(keys.max, bbox.getMax());
     handle.saveCatalog(catalog);

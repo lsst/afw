@@ -34,9 +34,9 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -57,9 +57,9 @@ void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, mat
     }
 
     // compute region covering good area of output image
-    geom::Box2I fullBBox =
-            geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
-    geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
+    lsst::geom::Box2I fullBBox =
+            lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
+    lsst::geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox, inImage.getXY0(),
                                                            convolutionControl.getDoNormalize()));
     LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
@@ -100,13 +100,13 @@ void convolveRegionWithInterpolation(OutImageT &outImage, InImageT const &inImag
     typedef KernelImage::const_xy_locator KernelConstLocator;
 
     std::shared_ptr<Kernel const> kernelPtr = region.getKernel();
-    geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
+    lsst::geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_LEFT));
     workingImages.rightImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_RIGHT));
     workingImages.kernelImage.assign(workingImages.leftImage);
 
-    geom::Box2I const goodBBox = region.getBBox();
-    geom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
+    lsst::geom::Box2I const goodBBox = region.getBBox();
+    lsst::geom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
 
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels

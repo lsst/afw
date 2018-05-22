@@ -12,7 +12,6 @@
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "ndarray.h"
-#include "lsst/afw/geom.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/KeyBase.h"
 #include "lsst/afw/table/types.h"
@@ -38,7 +37,7 @@ inline int computeCovariancePackedSize(int size) { return size * (size + 1) / 2;
 }  // namespace detail
 
 /**
- *  Field base class default implementation (used for numeric scalars and Angle).
+ *  Field base class default implementation (used for numeric scalars and lsst::geom::Angle).
  */
 template <typename T>
 struct FieldBase {

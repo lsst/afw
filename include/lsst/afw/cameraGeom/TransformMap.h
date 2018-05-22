@@ -31,7 +31,7 @@
 #include "astshim/FrameSet.h"
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/Transform.h"
 
 namespace lsst {
@@ -114,7 +114,7 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
      *         `fromSys` or `toSys` is not supported.
      */
-    geom::Point2D transform(geom::Point2D const &point, CameraSys const &fromSys,
+    lsst::geom::Point2D transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
                             CameraSys const &toSys) const;
 
     /**
@@ -122,7 +122,7 @@ public:
      *
      * @overload
      */
-    std::vector<geom::Point2D> transform(std::vector<geom::Point2D> const &pointList,
+    std::vector<lsst::geom::Point2D> transform(std::vector<lsst::geom::Point2D> const &pointList,
                                          CameraSys const &fromSys, CameraSys const &toSys) const;
 
     CameraSysIterator begin() const { return boost::make_transform_iterator(_frameIds.begin(), GetKey()); }
@@ -186,7 +186,7 @@ private:
                                                     CameraSys const &toSys) const;
 
     /// Allows conversions between LSST and AST data formats
-    static geom::Point2Endpoint _pointConverter;
+    static lsst::afw::geom::Point2Endpoint _pointConverter;
 
     /// Stores information on all relationships between Transforms.
     // May be shared between multiple copies of TransformMap, since TransformMap is immutable

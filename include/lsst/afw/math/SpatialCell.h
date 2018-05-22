@@ -36,7 +36,7 @@
 #include <memory>
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
@@ -235,7 +235,7 @@ public:
      * @param bbox Bounding box of cell in overall image
      * @param candidateList list of candidates to represent this cell
      */
-    SpatialCell(std::string const& label, lsst::afw::geom::Box2I const& bbox = lsst::afw::geom::Box2I(),
+    SpatialCell(std::string const& label, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                 CandidateList const& candidateList = CandidateList());
 
     SpatialCell(SpatialCell const &) = default;
@@ -315,7 +315,7 @@ public:
     /**
      * Get SpatialCell's BBox
      */
-    lsst::afw::geom::Box2I const& getBBox() const { return _bbox; }
+    lsst::geom::Box2I const& getBBox() const { return _bbox; }
     /*
      * Visit our candidates
      */
@@ -376,7 +376,7 @@ public:
 
 private:
     std::string _label;            // Name of cell for logging/trace
-    lsst::afw::geom::Box2I _bbox;  // Bounding box of cell in overall image
+    lsst::geom::Box2I _bbox;  // Bounding box of cell in overall image
     CandidateList _candidateList;  // List of all candidates in the cell
     bool _ignoreBad;               // Don't include BAD candidates when traversing the list
 };
@@ -397,7 +397,7 @@ public:
      *
      * @throws lsst::pex::exceptions::LengthError if nx or ny is non-positive
      */
-    SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize = 0);
+    SpatialCellSet(lsst::geom::Box2I const& region, int xSize, int ySize = 0);
 
     SpatialCellSet(SpatialCellSet const &) = default;
     SpatialCellSet(SpatialCellSet &&) = default;
@@ -417,7 +417,7 @@ public:
     /**
      * Return the bounding box of the %image
      */
-    lsst::afw::geom::Box2I getBBox() const { return _region; };
+    lsst::geom::Box2I getBBox() const { return _region; };
 
     /**
      * Insert a candidate into the correct cell
@@ -485,7 +485,7 @@ public:
     void setIgnoreBad(bool ignoreBad);
 
 private:
-    lsst::afw::geom::Box2I _region;  // Bounding box of overall image
+    lsst::geom::Box2I _region;  // Bounding box of overall image
     CellList _cellList;              // List of SpatialCells
 };
 }

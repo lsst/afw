@@ -169,13 +169,13 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
     auto fits = std::dynamic_pointer_cast<dafPersist::FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "ExposureFormatter read FitsStorage");
-        geom::Box2I box;
+        lsst::geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = geom::Box2I(geom::Point2I(llcX, llcY), geom::Extent2I(width, height));
+            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height));
         }
         image::ImageOrigin origin = image::PARENT;
         if (additionalData->exists("imageOrigin")) {

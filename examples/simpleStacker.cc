@@ -27,12 +27,12 @@
  */
 #include <iostream>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Stack.h"
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MImageF;
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     // regular image
     std::vector<std::shared_ptr<ImageF>> imgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(geom::Extent2I(nX, nY), iImg));
+        std::shared_ptr<ImageF> img = std::shared_ptr<ImageF>(new ImageF(lsst::geom::Extent2I(nX, nY), iImg));
         imgList.push_back(img);
     }
     std::shared_ptr<ImageF> imgStack = math::statisticsStack<float>(imgList, math::MEAN);
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     // masked image
     std::vector<std::shared_ptr<MImageF>> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        std::shared_ptr<MImageF> mimg = std::shared_ptr<MImageF>(new MImageF(geom::Extent2I(nX, nY)));
+        std::shared_ptr<MImageF> mimg = std::shared_ptr<MImageF>(new MImageF(lsst::geom::Extent2I(nX, nY)));
         *mimg->getImage() = iImg;
         *mimg->getMask() = 0x0;
         *mimg->getVariance() = iImg;

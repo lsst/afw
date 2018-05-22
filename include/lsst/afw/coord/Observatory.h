@@ -29,7 +29,7 @@
  */
 
 #include <iostream>
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -41,13 +41,13 @@ namespace coord {
 class Observatory {
 public:
     /**
-     * Construct an Observatory with longitude and latitude specified as lsst::afw::geom::Angle
+     * Construct an Observatory with longitude and latitude specified as lsst::geom::Angle
      *
      * @param[in] longitude  telescope longitude (positive values are E of Greenwich)
      * @param[in] latitude  telescope latitude
      * @param[in] elevation  telescope elevation (meters above reference spheroid)
      */
-    Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude,
+    Observatory(lsst::geom::Angle const longitude, lsst::geom::Angle const latitude,
                 double const elevation);
 
     /**
@@ -67,16 +67,16 @@ public:
     Observatory& operator=(Observatory&&);
 
     /// set telescope longitude
-    void setLongitude(lsst::afw::geom::Angle const longitude);
+    void setLongitude(lsst::geom::Angle const longitude);
     /// set telescope latitude (positive values are E of Greenwich)
-    void setLatitude(lsst::afw::geom::Angle const latitude);
+    void setLatitude(lsst::geom::Angle const latitude);
     /// set telescope elevation (meters above reference spheroid)
     void setElevation(double const elevation);
 
     /// get telescope longitude (positive values are E of Greenwich)
-    lsst::afw::geom::Angle getLongitude() const;
+    lsst::geom::Angle getLongitude() const;
     /// get telescope latitude
-    lsst::afw::geom::Angle getLatitude() const;
+    lsst::geom::Angle getLatitude() const;
     /// get telescope elevation (meters above reference spheroid)
     double getElevation() const { return _elevation; }
 
@@ -90,14 +90,14 @@ public:
     bool operator==(Observatory const& rhs) const {
         auto deltaLongitude = (_latitude - rhs.getLatitude()).wrapCtr();
         auto deltaLatitude = (_longitude - rhs.getLongitude()).wrapCtr();
-        return (deltaLongitude == 0.0 * lsst::afw::geom::degrees) &&
-               (deltaLatitude == 0.0 * lsst::afw::geom::degrees) && ((_elevation - rhs._elevation) == 0.0);
+        return (deltaLongitude == 0.0 * lsst::geom::degrees) &&
+               (deltaLatitude == 0.0 * lsst::geom::degrees) && ((_elevation - rhs._elevation) == 0.0);
     }
     bool operator!=(Observatory const& rhs) const { return !(*this == rhs); }
 
 private:
-    lsst::afw::geom::Angle _latitude;
-    lsst::afw::geom::Angle _longitude;
+    lsst::geom::Angle _latitude;
+    lsst::geom::Angle _longitude;
     double _elevation;
 };
 

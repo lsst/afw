@@ -75,8 +75,8 @@ std::shared_ptr<Kernel> AnalyticKernel::resized(int width, int height) const {
 }
 
 double AnalyticKernel::computeImage(image::Image<Pixel> &image, bool doNormalize, double x, double y) const {
-    geom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
-    image.setXY0(geom::Point2I(-geom::Extent2I(getCtr() + llBorder)));
+    lsst::geom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
+    image.setXY0(lsst::geom::Point2I(-lsst::geom::Extent2I(getCtr() + llBorder)));
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
     }

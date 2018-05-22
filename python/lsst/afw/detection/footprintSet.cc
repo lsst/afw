@@ -91,7 +91,7 @@ PYBIND11_PLUGIN(_footprintSet) {
                         "img"_a, "threshold"_a, "npixMin"_a = 1);
 
     /* Members */
-    clsFootprintSet.def(py::init<geom::Box2I>(), "region"_a);
+    clsFootprintSet.def(py::init<lsst::geom::Box2I>(), "region"_a);
     clsFootprintSet.def(py::init<FootprintSet const &>(), "set"_a);
     clsFootprintSet.def(py::init<FootprintSet const &, int, FootprintControl const &>(), "set"_a, "rGrow"_a,
                         "ctrl"_a);

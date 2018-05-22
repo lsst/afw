@@ -27,6 +27,7 @@
 #include <limits>
 #include <memory>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
@@ -35,7 +36,6 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MaskedImageF;
@@ -92,7 +92,7 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
 int main() {
     // declare an image and a masked image
     int const wid = 1024;
-    ImageF img(geom::Extent2I(wid, wid));
+    ImageF img(lsst::geom::Extent2I(wid, wid));
     MaskedImageF mimg(img.getDimensions());
     std::vector<double> v(0);
     MaskedVectorF mv(wid * wid);

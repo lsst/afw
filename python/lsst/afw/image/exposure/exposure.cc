@@ -67,19 +67,19 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     /* Constructors */
     cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<geom::SkyWcs const>>(), "width"_a, "height"_a,
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
-    cls.def(py::init<geom::Extent2I const &, std::shared_ptr<geom::SkyWcs const>>(), "dimensions"_a = geom::Extent2I(),
+    cls.def(py::init<lsst::geom::Extent2I const &, std::shared_ptr<geom::SkyWcs const>>(), "dimensions"_a = lsst::geom::Extent2I(),
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
-    cls.def(py::init<geom::Box2I const &, std::shared_ptr<geom::SkyWcs const>>(), "bbox"_a,
+    cls.def(py::init<lsst::geom::Box2I const &, std::shared_ptr<geom::SkyWcs const>>(), "bbox"_a,
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
     cls.def(py::init<MaskedImageT &, std::shared_ptr<geom::SkyWcs const>>(), "maskedImage"_a,
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
     cls.def(py::init<MaskedImageT &, std::shared_ptr<ExposureInfo>>(), "maskedImage"_a, "exposureInfo"_a);
-    cls.def(py::init<std::string const &, geom::Box2I const &, ImageOrigin, bool>(), "fileName"_a,
-            "bbox"_a = geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::MemFileManager &, geom::Box2I const &, ImageOrigin, bool>(), "manager"_a,
-            "bbox"_a = geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
+    cls.def(py::init<std::string const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "fileName"_a,
+            "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
+    cls.def(py::init<fits::MemFileManager &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "manager"_a,
+            "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(py::init<ExposureT const &, bool>(), "other"_a, "deep"_a = false);
-    cls.def(py::init<ExposureT const &, geom::Box2I const &, ImageOrigin, bool>(), "other"_a, "bbox"_a,
+    cls.def(py::init<ExposureT const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "other"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);
 
     /* Members */

@@ -311,15 +311,15 @@ static ExposureFitsReader const exposureFitsReader;
 //----- ExposureTable/Record member function implementations -----------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-geom::Box2I ExposureRecord::getBBox() const {
-    return geom::Box2I(get(ExposureTable::getBBoxKey()));
+lsst::geom::Box2I ExposureRecord::getBBox() const {
+    return lsst::geom::Box2I(get(ExposureTable::getBBoxKey()));
 }
 
-void ExposureRecord::setBBox(geom::Box2I const &bbox) {
+void ExposureRecord::setBBox(lsst::geom::Box2I const &bbox) {
     set(ExposureTable::getBBoxKey(), bbox);
 }
 
-bool ExposureRecord::contains(geom::SpherePoint const &coord, bool includeValidPolygon) const {
+bool ExposureRecord::contains(lsst::geom::SpherePoint const &coord, bool includeValidPolygon) const {
     if (!getWcs()) {
         throw LSST_EXCEPT(pex::exceptions::LogicError,
                           "ExposureRecord does not have a Wcs; cannot call contains()");
@@ -331,18 +331,18 @@ bool ExposureRecord::contains(geom::SpherePoint const &coord, bool includeValidP
     }
 
     try {
-        geom::Point2D point = getWcs()->skyToPixel(coord);
+        lsst::geom::Point2D point = getWcs()->skyToPixel(coord);
         if (includeValidPolygon)
-            return (geom::Box2D(getBBox()).contains(point) && getValidPolygon()->contains(point));
+            return (lsst::geom::Box2D(getBBox()).contains(point) && getValidPolygon()->contains(point));
         else
-            return geom::Box2D(getBBox()).contains(point);
+            return lsst::geom::Box2D(getBBox()).contains(point);
     } catch (pex::exceptions::DomainError &) {
         // SkyWcs can throw if the given coordinate is outside the region where the WCS is valid.
         return false;
     }
 }
 
-bool ExposureRecord::contains(geom::Point2D const &point, geom::SkyWcs const &wcs,
+bool ExposureRecord::contains(lsst::geom::Point2D const &point, geom::SkyWcs const &wcs,
                               bool includeValidPolygon) const {
     return contains(wcs.pixelToSky(point), includeValidPolygon);
 }
@@ -443,7 +443,7 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(io::InputAr
 }
 
 template <typename RecordT>
-ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(geom::SpherePoint const &coord,
+ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(lsst::geom::SpherePoint const &coord,
                                                                       bool includeValidPolygon) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
@@ -455,7 +455,7 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(geom::Sphe
 }
 
 template <typename RecordT>
-ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(geom::Point2D const &point,
+ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(lsst::geom::Point2D const &point,
                                                                       geom::SkyWcs const &wcs,
                                                                       bool includeValidPolygon) const {
     ExposureCatalogT result(this->getTable());

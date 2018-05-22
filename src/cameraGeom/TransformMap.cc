@@ -110,7 +110,7 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
 
 }  // namespace
 
-geom::Point2Endpoint TransformMap::_pointConverter;
+lsst::afw::geom::Point2Endpoint TransformMap::_pointConverter;
 
 TransformMap::TransformMap(CameraSys const &reference,
                            std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
@@ -126,13 +126,13 @@ TransformMap::TransformMap(TransformMap const &&other) : TransformMap(other) {}
 // All resources owned by value or by smart pointer
 TransformMap::~TransformMap() = default;
 
-geom::Point2D TransformMap::transform(geom::Point2D const &point, CameraSys const &fromSys,
+lsst::geom::Point2D TransformMap::transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
                                       CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
     return _pointConverter.pointFromData(mapping->applyForward(_pointConverter.dataFromPoint(point)));
 }
 
-std::vector<geom::Point2D> TransformMap::transform(std::vector<geom::Point2D> const &pointList,
+std::vector<lsst::geom::Point2D> TransformMap::transform(std::vector<lsst::geom::Point2D> const &pointList,
                                                    CameraSys const &fromSys, CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
     return _pointConverter.arrayFromData(mapping->applyForward(_pointConverter.dataFromArray(pointList)));

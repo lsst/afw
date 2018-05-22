@@ -1,5 +1,5 @@
 import os.path
-import lsst.afw.geom as afwGeom
+import lsst.geom
 from lsst.afw.table import AmpInfoCatalog
 from .cameraGeomLib import FOCAL_PLANE, FIELD_ANGLE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS, CameraSys, \
     Detector, DetectorType, Orientation, TransformMap
@@ -23,14 +23,14 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToField):
     @return detector (an lsst.afw.cameraGeom.Detector)
     """
     orientation = makeOrientation(detectorConfig)
-    pixelSizeMm = afwGeom.Extent2D(
+    pixelSizeMm = lsst.geom.Extent2D(
         detectorConfig.pixelSize_x, detectorConfig.pixelSize_y)
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
     transforms[FOCAL_PLANE] = orientation.makePixelFpTransform(pixelSizeMm)
 
-    llPoint = afwGeom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
-    urPoint = afwGeom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
-    bbox = afwGeom.Box2I(llPoint, urPoint)
+    llPoint = lsst.geom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
+    urPoint = lsst.geom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
+    bbox = lsst.geom.Box2I(llPoint, urPoint)
 
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
     transforms[tanPixSys] = makePixelToTanPixel(
@@ -87,11 +87,11 @@ def makeOrientation(detectorConfig):
     @param detectorConfig  config for this detector (an lsst.pex.config.Config)
     @return orientation (an lsst.afw.cameraGeom.Orientation)
     """
-    offset = afwGeom.Point2D(detectorConfig.offset_x, detectorConfig.offset_y)
-    refPos = afwGeom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
-    yaw = afwGeom.Angle(detectorConfig.yawDeg, afwGeom.degrees)
-    pitch = afwGeom.Angle(detectorConfig.pitchDeg, afwGeom.degrees)
-    roll = afwGeom.Angle(detectorConfig.rollDeg, afwGeom.degrees)
+    offset = lsst.geom.Point2D(detectorConfig.offset_x, detectorConfig.offset_y)
+    refPos = lsst.geom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
+    yaw = lsst.geom.Angle(detectorConfig.yawDeg, lsst.geom.degrees)
+    pitch = lsst.geom.Angle(detectorConfig.pitchDeg, lsst.geom.degrees)
+    roll = lsst.geom.Angle(detectorConfig.rollDeg, lsst.geom.degrees)
     return Orientation(offset, refPos, yaw, pitch, roll)
 
 

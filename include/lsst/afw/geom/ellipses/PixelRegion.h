@@ -26,8 +26,8 @@
 
 #include "boost/iterator/iterator_facade.hpp"
 
+#include "lsst/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
-#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 
 namespace lsst {
@@ -42,7 +42,7 @@ public:
     Iterator begin() const;
     Iterator end() const;
 
-    Box2I const& getBBox() const { return _bbox; }
+    lsst::geom::Box2I const& getBBox() const { return _bbox; }
 
     Span const getSpanAt(int y) const;
 
@@ -55,11 +55,11 @@ public:
     ~PixelRegion() = default;
 
 private:
-    Point2D _center;
+    lsst::geom::Point2D _center;
     double _detQ;
     double _invQxx;
     double _alpha;
-    Box2I _bbox;
+    lsst::geom::Box2I _bbox;
 };
 
 class PixelRegion::Iterator : public boost::iterator_facade<PixelRegion::Iterator, Span const,

@@ -32,8 +32,8 @@
 
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 #include "lsst/afw/image/ImageBase.h"  // for wcsNameForXY0
@@ -82,7 +82,7 @@ void setMetadataFromFoundValue(daf::base::PropertyList& metadata, std::string co
 
 std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, bool strip) {
     // Exclude WCS A keywords because LSST uses them to store XY0
-    auto wcsANames = createTrivialWcsMetadata("A", Point2I(0, 0))->names();
+    auto wcsANames = createTrivialWcsMetadata("A", lsst::geom::Point2I(0, 0))->names();
     std::set<std::string> excludeNames(wcsANames.begin(), wcsANames.end());
     // Ignore NAXIS1, NAXIS2 because if they are zero then AST will fail to read a WCS
     // Ignore LTV1/2 because LSST adds it and this code should ignore it and not strip it

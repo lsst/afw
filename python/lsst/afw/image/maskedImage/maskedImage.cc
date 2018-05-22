@@ -66,31 +66,31 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
     /* Constructors */
     cls.def(py::init<unsigned int, unsigned int, typename MI::MaskPlaneDict const &>(), "width"_a, "height"_a,
             "planeDict"_a = typename MI::MaskPlaneDict());
-    cls.def(py::init<geom::Extent2I, typename MI::MaskPlaneDict const &>(), "dimensions"_a,
+    cls.def(py::init<lsst::geom::Extent2I, typename MI::MaskPlaneDict const &>(), "dimensions"_a,
             "planeDict"_a = typename MI::MaskPlaneDict());
     cls.def(py::init<typename MI::ImagePtr, typename MI::MaskPtr, typename MI::VariancePtr>(), "image"_a,
             "mask"_a = nullptr, "variance"_a = nullptr);
-    cls.def(py::init<geom::Box2I const &, typename MI::MaskPlaneDict const &>(), "bbox"_a,
+    cls.def(py::init<lsst::geom::Box2I const &, typename MI::MaskPlaneDict const &>(), "bbox"_a,
             "planeDict"_a = typename MI::MaskPlaneDict());
-    cls.def(py::init<std::string const &, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
+    cls.def(py::init<std::string const &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
                      std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
-            "fileName"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+            "fileName"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
             "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
-    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
+    cls.def(py::init<fits::MemFileManager &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool, bool, std::shared_ptr<daf::base::PropertySet>,
                      std::shared_ptr<daf::base::PropertySet>, std::shared_ptr<daf::base::PropertySet>>(),
-            "manager"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+            "manager"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false, "needAllHdus"_a = false, "imageMetadata"_a = nullptr,
             "maskMetadata"_a = nullptr, "varianceMetadata"_a = nullptr);
     cls.def(py::init<MI const &, bool>(), "rhs"_a, "deep"_a = false);
-    cls.def(py::init<MI const &, geom::Box2I const &, ImageOrigin, bool>(), "rhs"_a, "bbox"_a,
+    cls.def(py::init<MI const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "rhs"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);
 
     /* Operators */
     cls.def("swap", &MI::swap);
-    cls.def("assign", &MI::assign, "rhs"_a, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+    cls.def("assign", &MI::assign, "rhs"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             py::is_operator()  // py::is_operator is a workaround for code in slicing.py
                                // that expects NotImplemented to be returned on failure.
             );
@@ -187,7 +187,7 @@ PyMaskedImage<ImagePixelT> declareMaskedImage(py::module &mod, const std::string
     cls.def("getY0", &MI::getY0);
     cls.def("getXY0", &MI::getXY0);
     cls.def("setXY0", (void (MI::*)(int const, int const)) & MI::setXY0, "x0"_a, "y0"_a);
-    cls.def("setXY0", (void (MI::*)(geom::Point2I const)) & MI::setXY0, "origin"_a);
+    cls.def("setXY0", (void (MI::*)(lsst::geom::Point2I const)) & MI::setXY0, "origin"_a);
     cls.def("indexToPosition", &MI::indexToPosition);
     cls.def("positionToIndex", &MI::positionToIndex);
 

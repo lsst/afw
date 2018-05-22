@@ -60,8 +60,8 @@ PYBIND11_PLUGIN(photoCalib) {
 
     /* Constructors */
     cls.def(py::init<>());
-    cls.def(py::init<double, double, afw::geom::Box2I>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
-            "bbox"_a = afw::geom::Box2I());
+    cls.def(py::init<double, double, lsst::geom::Box2I>(), "instFluxMag0"_a, "instFluxMag0Err"_a = 0.0,
+            "bbox"_a = lsst::geom::Box2I());
     cls.def(py::init<std::shared_ptr<afw::math::BoundedField>, double>(), "calibration"_a,
             "instFluxMag0Err"_a = 0.0);
     cls.def(py::init<double, double, std::shared_ptr<afw::math::BoundedField>, bool>(), "instFluxMag0"_a,
@@ -71,14 +71,14 @@ PYBIND11_PLUGIN(photoCalib) {
 
     /* Members - maggies */
     cls.def("instFluxToMaggies",
-            (double (PhotoCalib::*)(double, afw::geom::Point<double, 2> const &) const) &
+            (double (PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
                     PhotoCalib::instFluxToMaggies,
             "instFlux"_a, "point"_a);
     cls.def("instFluxToMaggies", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMaggies,
             "instFlux"_a);
 
     cls.def("instFluxToMaggies",
-            (Measurement(PhotoCalib::*)(double, double, afw::geom::Point<double, 2> const &) const) &
+            (Measurement(PhotoCalib::*)(double, double, lsst::geom::Point<double, 2> const &) const) &
                     PhotoCalib::instFluxToMaggies,
             "instFlux"_a, "instFluxErr"_a, "point"_a);
     cls.def("instFluxToMaggies",
@@ -104,14 +104,14 @@ PYBIND11_PLUGIN(photoCalib) {
 
     /* Members - magnitudes */
     cls.def("instFluxToMagnitude",
-            (double (PhotoCalib::*)(double, afw::geom::Point<double, 2> const &) const) &
+            (double (PhotoCalib::*)(double, lsst::geom::Point<double, 2> const &) const) &
                     PhotoCalib::instFluxToMagnitude,
             "instFlux"_a, "point"_a);
     cls.def("instFluxToMagnitude", (double (PhotoCalib::*)(double) const) & PhotoCalib::instFluxToMagnitude,
             "instFlux"_a);
 
     cls.def("instFluxToMagnitude",
-            (Measurement(PhotoCalib::*)(double, double, afw::geom::Point<double, 2> const &) const) &
+            (Measurement(PhotoCalib::*)(double, double, lsst::geom::Point<double, 2> const &) const) &
                     PhotoCalib::instFluxToMagnitude,
             "instFlux"_a, "instFluxErr"_a, "point"_a);
     cls.def("instFluxToMagnitude",
