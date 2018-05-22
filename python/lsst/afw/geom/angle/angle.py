@@ -1,2 +1,2 @@
 # provide backwards compatibility for pickle
-from .spherePoint import *
+from lsst.geom.angle import *  # noqa F401

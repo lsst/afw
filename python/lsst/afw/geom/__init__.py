@@ -23,15 +23,12 @@
 """Application Framework geometry code including Point, Extent, and ellipses
 """
 
-from .angle import *
-from .coordinates import *
-from .box import *
+# for backwards compatibility make lsst.geom public symbols available in lsst.afw.geom
+from lsst.geom import *
+
 from .ellipses import Ellipse, Quadrupole
 from .polygon import *
 from .span import *
-from .spherePoint import *
-from .linearTransform import *
-from .affineTransform import *
 from .spanSet import *
 
 from . import python
