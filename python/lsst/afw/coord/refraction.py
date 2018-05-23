@@ -69,7 +69,7 @@ def refraction(wavelength, elevation, observatory, weather=None):
         weather = defaultWeather(altitude*units.meter)
     reducedN = deltaN(wavelength, weather)/deltaRefractScale
     temperature = extractTemperature(weather, useKelvin=True)
-    atmosScaleheightRatio = 4.5908E-6*temperature/units.Kelvin
+    atmosScaleheightRatio = 4.5908E-6*temperature.to_value(units.Kelvin)
 
     # Account for oblate Earth
     # This replicates equation 10 of Stone 1996
@@ -164,9 +164,9 @@ def densityFactorDry(weather):
     waterVaporPressure = humidityToPressure(weather)
     airPressure = weather.getAirPressure()*units.pascal
     dryPressure = airPressure - waterVaporPressure
-    eqn = (dryPressure/cds.mbar)*(57.90E-8 - 9.3250E-4*units.Kelvin/temperature +
-                                  0.25844*units.Kelvin**2/temperature**2.)
-    densityFactor = (1. + eqn)*(dryPressure/cds.mbar)/(temperature/units.Kelvin)
+    eqn = dryPressure.to_value(cds.mbar)*(57.90E-8 - 9.3250E-4/temperature.to_value(units.Kelvin) +
+                                          0.25844/temperature.to_value(units.Kelvin)**2.)
+    densityFactor = (1. + eqn)*dryPressure.to_value(cds.mbar)/temperature.to_value(units.Kelvin)
     return densityFactor
 
 
@@ -189,11 +189,11 @@ def densityFactorWater(weather):
     """
     temperature = extractTemperature(weather, useKelvin=True)
     waterVaporPressure = humidityToPressure(weather)
-    densityEqn1 = (-2.37321E-3 + 2.23366*units.Kelvin/temperature -
-                   710.792*units.Kelvin**2/temperature**2. +
-                   7.75141E-4*units.Kelvin**3/temperature**3.)
-    densityEqn2 = (waterVaporPressure/cds.mbar)*(1. + 3.7E-4*waterVaporPressure/cds.mbar)
-    relativeDensity = waterVaporPressure*units.Kelvin/(temperature*cds.mbar)
+    densityEqn1 = (-2.37321E-3 + 2.23366/temperature.to_value(units.Kelvin) -
+                   710.792/temperature.to_value(units.Kelvin)**2. +
+                   7.75141E-4/temperature.to_value(units.Kelvin)**3.)
+    densityEqn2 = waterVaporPressure.to_value(cds.mbar)*(1. + 3.7E-4*waterVaporPressure.to_value(cds.mbar))
+    relativeDensity = waterVaporPressure.to_value(cds.mbar)/temperature.to_value(units.Kelvin)
     densityFactor = (1 + densityEqn2*densityEqn1)*relativeDensity
 
     return densityFactor
@@ -212,8 +212,8 @@ def humidityToPressure(weather):
 
     Returns
     -------
-    `float`
-        The water vapor pressure in millibar
+    `astropy.units.Quantity`
+        The water vapor pressure in Pascals
         calculated from the given humidity and temperature.
     """
     humidity = weather.getHumidity()
@@ -243,7 +243,7 @@ def extractTemperature(weather, useKelvin=False):
 
     Returns
     -------
-    `astropy.units.quantity.Quantity`
+    `astropy.units.Quantity`
         The temperature in Celsius, unless `useKelvin` is set.
     """
     temperature = weather.getAirTemperature()*units.Celsius
@@ -260,7 +260,7 @@ def defaultWeather(altitude):
     weather : `lsst.afw.coord.Weather`
         Class containing the measured temperature, pressure, and humidity
         at the observatory during an observation
-    altitude : `astropy.units.quantity.Quantity`
+    altitude : `astropy.units.Quantity`
         The altitude of the observatory, in meters.
 
     Returns
