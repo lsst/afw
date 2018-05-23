@@ -45,7 +45,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         self.metadata.set("NAXIS", 2)
         self.metadata.set("NAXIS1", 1024)
         self.metadata.set("NAXIS2", 1153)
-        self.metadata.set("RADECSYS", "FK5")
+        self.metadata.set("RADESYS", "FK5")
         self.metadata.set("EQUINOX", 2000.)
 
         self.metadata.setDouble("CRVAL1", 215.604025685476)

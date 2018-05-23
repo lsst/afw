@@ -114,7 +114,7 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
         ps.add("CTYPE%1d" % (ip1,), ctypeStr)
         ps.add("CRPIX%1d" % (ip1,), destCtrFitsPix[i])
         ps.add("CRVAL%1d" % (ip1,), srcCtrSkyPos[i] + skyOffset[i])
-    ps.add("RADECSYS", "ICRS")
+    ps.add("RADESYS", "ICRS")
     ps.add("EQUINOX", 2000)
     ps.add("CD1_1", -destScale * math.cos(destAngleRad))
     ps.add("CD2_1", destScale * math.sin(destAngleRad))
