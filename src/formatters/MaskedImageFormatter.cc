@@ -141,8 +141,8 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
                 maskOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
                 varianceOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("variance"));
             } catch (std::exception const& exc) {
-                LOGLS_WARN(_log, "Unable to construct MaskedImage write options (" << exc.what() <<
-                           "); writing with default options");
+                LOGLS_WARN(_log, "Unable to construct MaskedImage write options ("
+                                         << exc.what() << "); writing with default options");
             }
         }
         ip->writeFits(fits->getPath(), imageOptions, maskOptions, varianceOptions);
@@ -221,6 +221,6 @@ INSTANTIATE(float, MaskPixel, VariancePixel)
 INSTANTIATE(double, MaskPixel, VariancePixel)
 INSTANTIATE(uint64_t, MaskPixel, VariancePixel)
 /// @endcond
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

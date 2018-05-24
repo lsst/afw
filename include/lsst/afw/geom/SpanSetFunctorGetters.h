@@ -295,10 +295,10 @@ IterGetter<T> makeGetter(T iter, typename std::enable_if<is_iterator<T>::value, 
     // Use defined type trait checker to create an iterator getter if the template is an iterator type
     return IterGetter<T>(iter);
 }
-}
-}
-}
-}  // Close namespace lsst::afw::geom::details
+}  // namespace details
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 namespace ndarray {
 // These function are placed in the ndarray namespace to enable function argument namespace lookup
@@ -335,6 +335,6 @@ details::ImageNdGetter<T, inA, inB> ndImage(ndarray::Array<T, inA, inB> const& a
     // Function to mark a ndarray to be treated as a 2D image by the applyFunctor method
     return details::ImageNdGetter<T, inA, inB>(array, xy0);
 }
-}  // Close namespace ndarray
+}  // namespace ndarray
 
 #endif  // LSST_AFW_GEOM_SPANSETFUNCTORGETTERS_H

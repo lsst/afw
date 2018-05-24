@@ -69,7 +69,7 @@ private:
     BaseRecord* _outputRecord;
 };
 
-}  // anonymous
+}  // namespace
 
 void BaseRecord::assign(BaseRecord const& other) {
     if (this->getSchema() != other.getSchema()) {
@@ -92,21 +92,17 @@ void BaseRecord::assign(BaseRecord const& other, SchemaMapper const& mapper) {
     this->_assign(other);                     // let derived classes assign their own stuff
 }
 
-
-void BaseRecord::_stream(std::ostream & os) const {
-    getSchema().forEach(
-        [&os, this](auto const & item) {
-            os << item.field.getName() << ": " << this->get(item.key) << std::endl;
-        }
-    );
+void BaseRecord::_stream(std::ostream& os) const {
+    getSchema().forEach([&os, this](auto const& item) {
+        os << item.field.getName() << ": " << this->get(item.key) << std::endl;
+    });
 }
 
-std::ostream & operator<<(std::ostream & os, BaseRecord const & record) {
+std::ostream& operator<<(std::ostream& os, BaseRecord const& record) {
     record._stream(os);
     return os;
 }
 
-
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

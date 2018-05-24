@@ -34,8 +34,8 @@ class Flag;
 typedef lsst::geom::Angle Angle;
 typedef lsst::geom::SpherePoint SpherePoint;
 //@}
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_misc_h_INCLUDED

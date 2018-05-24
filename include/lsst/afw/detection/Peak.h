@@ -233,8 +233,8 @@ inline void PeakRecord::setPeakValue(float peakValue) { set(PeakTable::getPeakVa
 typedef afw::table::ColumnViewT<PeakRecord> PeakColumnView;
 typedef afw::table::CatalogT<PeakRecord> PeakCatalog;
 typedef afw::table::CatalogT<PeakRecord const> ConstPeakCatalog;
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_DETECTION_Peak_h_INCLUDED

@@ -46,8 +46,8 @@ public:
 
     MaskedVector(MaskedVector const &) = default;
     MaskedVector(MaskedVector &&) = default;
-    MaskedVector & operator=(MaskedVector const &) = default;
-    MaskedVector & operator=(MaskedVector &&) = default;
+    MaskedVector &operator=(MaskedVector const &) = default;
+    MaskedVector &operator=(MaskedVector &&) = default;
     ~MaskedVector() = default;
 
     // Getters
@@ -125,8 +125,8 @@ public:
 
 private:
 };
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

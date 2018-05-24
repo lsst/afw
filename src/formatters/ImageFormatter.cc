@@ -149,8 +149,8 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
             try {
                 options = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("image"));
             } catch (std::exception const& exc) {
-                LOGLS_WARN(_log, "Unable to construct image write options (" << exc.what() <<
-                           "); writing with default options");
+                LOGLS_WARN(_log, "Unable to construct image write options ("
+                                         << exc.what() << "); writing with default options");
             }
         }
 

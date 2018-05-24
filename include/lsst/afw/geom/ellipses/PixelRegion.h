@@ -97,9 +97,9 @@ inline PixelRegion::Iterator PixelRegion::begin() const {
     return Iterator(getSpanAt(_bbox.getBeginY()), this);
 }
 inline PixelRegion::Iterator PixelRegion::end() const { return Iterator(getSpanAt(_bbox.getEndY()), this); }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_PixelRegion_h_INCLUDED

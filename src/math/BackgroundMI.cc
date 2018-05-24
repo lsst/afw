@@ -75,7 +75,7 @@ void cullNan(std::vector<double> const& values, std::vector<double> const& refs,
         }
     }
 }
-}
+}  // namespace
 
 template <typename ImageT>
 BackgroundMI::BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl)
@@ -92,8 +92,9 @@ BackgroundMI::BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl)
 
     for (int iX = 0; iX < nxSample; ++iX) {
         for (int iY = 0; iY < nySample; ++iY) {
-            ImageT subimg = ImageT(img, lsst::geom::Box2I(lsst::geom::Point2I(_xorig[iX], _yorig[iY]),
-                                                    lsst::geom::Extent2I(_xsize[iX], _ysize[iY])),
+            ImageT subimg = ImageT(img,
+                                   lsst::geom::Box2I(lsst::geom::Point2I(_xorig[iX], _yorig[iY]),
+                                                     lsst::geom::Extent2I(_xsize[iX], _ysize[iY])),
                                    image::LOCAL);
 
             std::pair<double, double> res = makeStatistics(subimg, bgCtrl.getStatisticsProperty() | ERRORS,
@@ -104,7 +105,8 @@ BackgroundMI::BackgroundMI(ImageT const& img, BackgroundControl const& bgCtrl)
         }
     }
 }
-BackgroundMI::BackgroundMI(lsst::geom::Box2I const imageBBox, image::MaskedImage<InternalPixelT> const& statsImage)
+BackgroundMI::BackgroundMI(lsst::geom::Box2I const imageBBox,
+                           image::MaskedImage<InternalPixelT> const& statsImage)
         : Background(imageBBox, statsImage.getWidth(), statsImage.getHeight()), _statsImage(statsImage) {}
 
 void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
@@ -396,6 +398,6 @@ BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
 BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
 /// @endcond
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

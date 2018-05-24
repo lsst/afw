@@ -124,8 +124,8 @@ void test7() {
 
     // Read FITS file from disk into an Exposure
     std::shared_ptr<dafBase::PropertySet> miMetadata(new dafBase::PropertySet);
-    std::shared_ptr<ImageF> image = std::shared_ptr<ImageF>(new ImageF(gFilename, afwFits::DEFAULT_HDU,
-                                                                       miMetadata));
+    std::shared_ptr<ImageF> image =
+            std::shared_ptr<ImageF>(new ImageF(gFilename, afwFits::DEFAULT_HDU, miMetadata));
     MaskedImageF maskedImage(image);
     auto wcsFromFITS = std::make_shared<lsst::afw::geom::SkyWcs>(*miMetadata);
     ExposureF exposure(maskedImage, wcsFromFITS);

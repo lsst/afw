@@ -45,7 +45,7 @@ namespace daf {
 namespace base {
 class PropertySet;
 }
-}
+}  // namespace daf
 
 namespace afw {
 namespace image {
@@ -55,8 +55,8 @@ namespace image {
  */
 class FilterProperty {
 public:
-    explicit FilterProperty(std::string const& name, double lambdaEff, 
-                            double lambdaMin=NAN, double lambdaMax=NAN, bool force = false)
+    explicit FilterProperty(std::string const& name, double lambdaEff, double lambdaMin = NAN,
+                            double lambdaMax = NAN, bool force = false)
             : _name(name), _lambdaEff(lambdaEff), _lambdaMin(lambdaMin), _lambdaMax(lambdaMax) {
         _insert(force);
     }
@@ -277,9 +277,9 @@ namespace detail {
  * @return Number of keywords stripped
  */
 int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
-}
-}
-}
-}  // lsst::afw::image
+}  // namespace detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_FILTER_H

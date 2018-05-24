@@ -109,7 +109,6 @@ ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter() = default;
 
-
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         dafBase::Persistable const* persistable, std::shared_ptr<dafPersist::FormatterStorage> storage,
@@ -139,8 +138,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
                 maskOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
                 varianceOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("variance"));
             } catch (std::exception const& exc) {
-                LOGLS_WARN(_log, "Unable to construct Exposure write options (" << exc.what() <<
-                           "); writing with default options");
+                LOGLS_WARN(_log, "Unable to construct Exposure write options ("
+                                         << exc.what() << "); writing with default options");
             }
         }
 
@@ -190,7 +189,8 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
                                                  "data for retrieving Exposure from fits") %
                                    originStr
 
-                                   ).str());
+                                   )
+                                          .str());
             }
         }
         image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
@@ -251,6 +251,6 @@ INSTANTIATE(float, image::MaskPixel, image::VariancePixel)
 INSTANTIATE(double, image::MaskPixel, image::VariancePixel)
 INSTANTIATE(uint64_t, image::MaskPixel, image::VariancePixel)
 /// @endcond
-}
-}
-}  // end afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

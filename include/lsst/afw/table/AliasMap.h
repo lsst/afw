@@ -47,10 +47,10 @@ public:
      */
     AliasMap(AliasMap const& other) : _internal(other._internal), _table(0) {}
     // Delegate to copy-constructor for backwards compatibility
-    AliasMap(AliasMap && other) : AliasMap(other) {}
+    AliasMap(AliasMap&& other) : AliasMap(other) {}
 
-    AliasMap & operator=(AliasMap const &) = default;
-    AliasMap & operator=(AliasMap &&) = default;
+    AliasMap& operator=(AliasMap const&) = default;
+    AliasMap& operator=(AliasMap&&) = default;
     ~AliasMap() = default;
 
     /// An iterator over alias->target pairs.
@@ -130,8 +130,8 @@ private:
     // null.
     BaseTable* _table;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_AliasMap_h_INCLUDED

@@ -63,7 +63,7 @@ namespace detail {
 struct Mask_tag : public detail::basic_tag {};
 
 typedef std::map<std::string, int> MaskPlaneDict;
-}
+}  // namespace detail
 
 /**
  * Represent a 2-dimensional array of bitmask pixels
@@ -210,8 +210,9 @@ public:
      *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
      *  on-disk version.
      */
-    explicit Mask(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                                                std::shared_ptr<lsst::daf::base::PropertySet>(),
+    explicit Mask(fits::Fits& fitsfile,
+                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                          std::shared_ptr<lsst::daf::base::PropertySet>(),
                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
@@ -327,8 +328,9 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<lsst::daf::base::PropertySet>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                    std::string const& mode = "w") const;
 
     /**
@@ -360,12 +362,9 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(
-        std::string const& filename,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr
-    ) const;
+    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
 
     /**
      *  Write a mask to a FITS RAM file.
@@ -375,12 +374,9 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(
-        fits::MemFileManager& manager,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr
-    ) const;
+    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
 
     /**
      *  Write a mask to an open FITS file object.
@@ -389,12 +385,8 @@ public:
      *  @param[in] options       Options controlling writing of FITS image.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(
-        fits::Fits& fitsfile,
-        fits::ImageWriteOptions const& options,
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr
-    ) const;
-
+    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
 
     /**
      *  Read a Mask from a regular FITS file.
@@ -553,8 +545,8 @@ private:
 
 template <typename PixelT>
 void swap(Mask<PixelT>& a, Mask<PixelT>& b);
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_MASK_H

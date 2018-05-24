@@ -43,8 +43,8 @@ template <typename ImageT, typename ExceptionT>
 class try_fits_read_array {
 public:
     try_fits_read_array(fits::Fits& fitsfile, ndarray::Array<typename ImageT::Pixel, 2, 2>& array,
-                        lsst::geom::Point2I& xy0, daf::base::PropertySet& metadata, lsst::geom::Box2I const& bbox,
-                        ImageOrigin const origin)
+                        lsst::geom::Point2I& xy0, daf::base::PropertySet& metadata,
+                        lsst::geom::Box2I const& bbox, ImageOrigin const origin)
             : _fitsfile(&fitsfile),
               _array(array),
               _xy0(xy0),
@@ -85,7 +85,7 @@ private:
     ImageOrigin _origin;
 };
 
-}  // anonymous
+}  // namespace
 
 template <typename supported_fits_types, typename ImageT>
 void fits_read_image(fits::Fits& fitsfile, ImageT& img, lsst::daf::base::PropertySet& metadata,
@@ -113,7 +113,7 @@ void fits_read_image(fits::Fits& fitsfile, ImageT& img,
     fits_read_image<supported_fits_types, ImageT>(fitsfile, img, (metadata ? *metadata : metadata_s), bbox,
                                                   origin);
 }
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 #endif  // !LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED

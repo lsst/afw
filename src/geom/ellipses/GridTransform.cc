@@ -35,7 +35,9 @@ namespace ellipses {
 BaseCore::GridTransform::GridTransform(BaseCore const& input)
         : _input(input), _eig(Quadrupole(input).getMatrix()) {}
 
-lsst::geom::LinearTransform::Matrix BaseCore::GridTransform::getMatrix() const { return _eig.operatorInverseSqrt(); }
+lsst::geom::LinearTransform::Matrix BaseCore::GridTransform::getMatrix() const {
+    return _eig.operatorInverseSqrt();
+}
 
 BaseCore::GridTransform::operator lsst::geom::LinearTransform() const {
     return lsst::geom::LinearTransform(_eig.operatorInverseSqrt());
@@ -75,20 +77,25 @@ BaseCore::GridTransform::DerivativeMatrix BaseCore::GridTransform::d() const {
 
     GridTransform::DerivativeMatrix mid;
     mid(lsst::geom::LinearTransform::XX, C::E1) = dtInv_dg1(0, 0);
-    mid(lsst::geom::LinearTransform::XY, C::E1) = mid(lsst::geom::LinearTransform::YX, C::E1) = dtInv_dg1(0, 1);
+    mid(lsst::geom::LinearTransform::XY, C::E1) = mid(lsst::geom::LinearTransform::YX, C::E1) =
+            dtInv_dg1(0, 1);
     mid(lsst::geom::LinearTransform::YY, C::E1) = dtInv_dg1(1, 1);
     mid(lsst::geom::LinearTransform::XX, C::E2) = dtInv_dg2(0, 0);
-    mid(lsst::geom::LinearTransform::XY, C::E2) = mid(lsst::geom::LinearTransform::YX, C::E2) = dtInv_dg2(0, 1);
+    mid(lsst::geom::LinearTransform::XY, C::E2) = mid(lsst::geom::LinearTransform::YX, C::E2) =
+            dtInv_dg2(0, 1);
     mid(lsst::geom::LinearTransform::YY, C::E2) = dtInv_dg2(1, 1);
     mid(lsst::geom::LinearTransform::XX, C::RADIUS) = dtInv_dr(0, 0);
-    mid(lsst::geom::LinearTransform::XY, C::RADIUS) = mid(lsst::geom::LinearTransform::YX, C::RADIUS) = dtInv_dr(0, 1);
+    mid(lsst::geom::LinearTransform::XY, C::RADIUS) = mid(lsst::geom::LinearTransform::YX, C::RADIUS) =
+            dtInv_dr(0, 1);
     mid(lsst::geom::LinearTransform::YY, C::RADIUS) = dtInv_dr(1, 1);
     return mid * rhs;
 }
 
 double BaseCore::GridTransform::getDeterminant() const { return sqrt(1.0 / _eig.eigenvalues().prod()); }
 
-lsst::geom::LinearTransform BaseCore::GridTransform::invert() const { return lsst::geom::LinearTransform(_eig.operatorSqrt()); }
+lsst::geom::LinearTransform BaseCore::GridTransform::invert() const {
+    return lsst::geom::LinearTransform(_eig.operatorSqrt());
+}
 
 Ellipse::GridTransform::GridTransform(Ellipse const& input) : _input(input), _coreGt(input.getCore()) {}
 
@@ -110,12 +117,18 @@ Ellipse::GridTransform::DerivativeMatrix Ellipse::GridTransform::d() const {
     r(lsst::geom::AffineTransform::Y, Ellipse::X) = -linear[lsst::geom::LinearTransform::YX];
     r(lsst::geom::AffineTransform::X, Ellipse::Y) = -linear[lsst::geom::LinearTransform::XY];
     r(lsst::geom::AffineTransform::Y, Ellipse::Y) = -linear[lsst::geom::LinearTransform::YY];
-    r(lsst::geom::AffineTransform::X, 0) = x * r(lsst::geom::AffineTransform::XX, 0) + y * r(lsst::geom::AffineTransform::XY, 0);
-    r(lsst::geom::AffineTransform::Y, 0) = x * r(lsst::geom::AffineTransform::YX, 0) + y * r(lsst::geom::AffineTransform::YY, 0);
-    r(lsst::geom::AffineTransform::X, 1) = x * r(lsst::geom::AffineTransform::XX, 1) + y * r(lsst::geom::AffineTransform::XY, 1);
-    r(lsst::geom::AffineTransform::Y, 1) = x * r(lsst::geom::AffineTransform::YX, 1) + y * r(lsst::geom::AffineTransform::YY, 1);
-    r(lsst::geom::AffineTransform::X, 2) = x * r(lsst::geom::AffineTransform::XX, 2) + y * r(lsst::geom::AffineTransform::XY, 2);
-    r(lsst::geom::AffineTransform::Y, 2) = x * r(lsst::geom::AffineTransform::YX, 2) + y * r(lsst::geom::AffineTransform::YY, 2);
+    r(lsst::geom::AffineTransform::X, 0) =
+            x * r(lsst::geom::AffineTransform::XX, 0) + y * r(lsst::geom::AffineTransform::XY, 0);
+    r(lsst::geom::AffineTransform::Y, 0) =
+            x * r(lsst::geom::AffineTransform::YX, 0) + y * r(lsst::geom::AffineTransform::YY, 0);
+    r(lsst::geom::AffineTransform::X, 1) =
+            x * r(lsst::geom::AffineTransform::XX, 1) + y * r(lsst::geom::AffineTransform::XY, 1);
+    r(lsst::geom::AffineTransform::Y, 1) =
+            x * r(lsst::geom::AffineTransform::YX, 1) + y * r(lsst::geom::AffineTransform::YY, 1);
+    r(lsst::geom::AffineTransform::X, 2) =
+            x * r(lsst::geom::AffineTransform::XX, 2) + y * r(lsst::geom::AffineTransform::XY, 2);
+    r(lsst::geom::AffineTransform::Y, 2) =
+            x * r(lsst::geom::AffineTransform::YX, 2) + y * r(lsst::geom::AffineTransform::YY, 2);
     return r;
 }
 
@@ -129,7 +142,7 @@ Ellipse::GridTransform::operator lsst::geom::AffineTransform() const {
 lsst::geom::AffineTransform Ellipse::GridTransform::invert() const {
     return lsst::geom::AffineTransform(_coreGt.invert(), lsst::geom::Extent2D(_input.getCenter()));
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

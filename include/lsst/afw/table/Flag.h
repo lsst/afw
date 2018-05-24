@@ -49,8 +49,8 @@ struct FieldBase<Flag> {
 
     FieldBase(FieldBase const &) = default;
     FieldBase(FieldBase &&) = default;
-    FieldBase & operator=(FieldBase const &) = default;
-    FieldBase & operator=(FieldBase &&) = default;
+    FieldBase &operator=(FieldBase const &) = default;
+    FieldBase &operator=(FieldBase &&) = default;
     ~FieldBase() = default;
 
 protected:
@@ -72,8 +72,8 @@ public:
     KeyBase() = default;
     KeyBase(KeyBase const &) = default;
     KeyBase(KeyBase &&) = default;
-    KeyBase & operator=(KeyBase const &) = default;
-    KeyBase & operator=(KeyBase &&) = default;
+    KeyBase &operator=(KeyBase const &) = default;
+    KeyBase &operator=(KeyBase &&) = default;
     ~KeyBase() = default;
 };
 
@@ -139,8 +139,8 @@ public:
 
     Key(Key const &) = default;
     Key(Key &&) = default;
-    Key & operator=(Key const &) = default;
-    Key & operator=(Key &&) = default;
+    Key &operator=(Key const &) = default;
+    Key &operator=(Key &&) = default;
     ~Key() = default;
 
     /// Stringification.
@@ -172,8 +172,8 @@ private:
     int _offset;
     int _bit;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_TABLE_Flag_h_INCLUDED

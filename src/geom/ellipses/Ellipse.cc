@@ -65,7 +65,7 @@ Ellipse& Ellipse::operator=(Ellipse const& other) {
 // Delegate to copy-assignment for backwards compatibility
 Ellipse& Ellipse::operator=(Ellipse&& other) { return *this = other; }
 
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

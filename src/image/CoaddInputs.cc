@@ -47,7 +47,7 @@ public:
 
 CoaddInputsFactory registration("CoaddInputs");
 
-}  // anonymous
+}  // namespace
 
 CoaddInputs::CoaddInputs() : visits(), ccds() {}
 
@@ -73,6 +73,6 @@ void CoaddInputs::write(OutputArchiveHandle& handle) const {
     visits.writeToArchive(handle, true);  // true == permissive - just ignore Psfs, Wcss that can't be saved
     ccds.writeToArchive(handle, true);
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

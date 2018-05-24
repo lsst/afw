@@ -240,9 +240,9 @@ template <typename Output>
 inline BaseCore::Converter<Output> BaseCore::as() const {
     return Converter<Output>(*this);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED

@@ -91,8 +91,7 @@ struct PersistenceHelper {
               frameSet(schema.addField<table::Array<std::uint8_t>>(
                       "frameSet", "FrameSet contained in the Transform", "", 0)) {}
 
-    PersistenceHelper(table::Schema const& s)
-            : schema(s), bbox(s["bbox"]), frameSet(s["frameSet"]) {}
+    PersistenceHelper(table::Schema const& s) : schema(s), bbox(s["bbox"]), frameSet(s["frameSet"]) {}
 };
 
 class TransformBoundedFieldFactory : public table::io::PersistableFactory {
@@ -151,9 +150,7 @@ bool TransformBoundedField::operator==(BoundedField const& rhs) const {
            *(getTransform().getMapping()) == *(rhsCasted->getTransform().getMapping());
 }
 
-std::string TransformBoundedField::toString() const {
-    return "TransformBoundedField";
-}
+std::string TransformBoundedField::toString() const { return "TransformBoundedField"; }
 
 }  // namespace math
 }  // namespace afw

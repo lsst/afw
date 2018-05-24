@@ -41,7 +41,7 @@ template <typename ImageT>
 std::shared_ptr<ImageT> offsetImage(ImageT const& inImage, float dx, float dy,
                                     std::string const& algorithmName, unsigned int buffer
 
-                                    ) {
+) {
     std::shared_ptr<SeparableKernel> offsetKernel = makeWarpingKernel(algorithmName);
 
     std::shared_ptr<ImageT> buffImage;
@@ -133,6 +133,6 @@ INSTANTIATE(double)
 INSTANTIATE(float)
 INSTANTIATE(int)
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

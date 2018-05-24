@@ -96,7 +96,7 @@ Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata) {
 }
 
 lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
-                                      bool strip) {
+                                            bool strip) {
     int x0 = 0;  // Our value of X0
     int y0 = 0;  // Our value of Y0
 
@@ -207,9 +207,9 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(lsst::geom::Point2D 
 }
 
 std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
-        lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval, Eigen::Matrix2d const& cdMatrix,
-        Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
-        Eigen::MatrixXd const& sipBp) {
+        lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,
+        Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB,
+        Eigen::MatrixXd const& sipAp, Eigen::MatrixXd const& sipBp) {
     auto metadata = makeTanSipMetadata(crpix, crval, cdMatrix, sipA, sipB);
     metadata->combine(makeSipMatrixMetadata(sipAp, "AP"));
     metadata->combine(makeSipMatrixMetadata(sipBp, "BP"));

@@ -106,9 +106,9 @@ struct TrapezoidalPacker {
     int m;
     int size;
 };
-}
-}
-}
-}  // namespace lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_MATH_DETAIL_TrapezoidalPacker_h_INCLUDED

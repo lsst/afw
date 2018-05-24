@@ -127,7 +127,8 @@ lsst::geom::Box2I Psf::computeBBox(lsst::geom::Point2D position, image::Color co
     return doComputeBBox(position, color);
 }
 
-std::shared_ptr<math::Kernel const> Psf::getLocalKernel(lsst::geom::Point2D position, image::Color color) const {
+std::shared_ptr<math::Kernel const> Psf::getLocalKernel(lsst::geom::Point2D position,
+                                                        image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
     // FixedKernel ctor will deep copy image, so we can use INTERNAL.

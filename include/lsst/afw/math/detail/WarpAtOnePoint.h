@@ -202,7 +202,7 @@ private:
     typename DestImageT::SinglePixel _padValue;
     lsst::geom::Box2I const _srcGoodBBox;
 };
-}
-}
-}
-}  // lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

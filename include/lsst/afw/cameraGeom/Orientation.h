@@ -119,8 +119,8 @@ private:
     // Turn off alignment since this is dynamically allocated (via Detector)
     Eigen::Matrix<double, 2, 2, Eigen::DontAlign> _rotMat;
 };
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst
 
 #endif

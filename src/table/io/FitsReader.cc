@@ -18,7 +18,7 @@ Registry& getRegistry() {
 
 static FitsReader const baseFitsReader("BASE");
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<BaseTable> FitsReader::makeTable(FitsSchemaInputMapper& mapper,
                                                  std::shared_ptr<daf::base::PropertyList> metadata,
@@ -36,8 +36,8 @@ FitsReader const* FitsReader::_lookupFitsReader(daf::base::PropertyList const& m
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
                 lsst::pex::exceptions::NotFoundError,
-                (boost::format("FitsReader with name '%s' does not exist; check AFW_TYPE keyword.") %
-                 name).str());
+                (boost::format("FitsReader with name '%s' does not exist; check AFW_TYPE keyword.") % name)
+                        .str());
     }
     return i->second;
 }
@@ -52,7 +52,7 @@ void FitsReader::_setupArchive(afw::fits::Fits& fits, FitsSchemaInputMapper& map
         }
     }
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

@@ -87,7 +87,8 @@ template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::~MaskFormatter() = default;
 
 template <typename MaskPixelT>
-void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::shared_ptr<FormatterStorage> storage,
+void MaskFormatter<MaskPixelT>::write(Persistable const* persistable,
+                                      std::shared_ptr<FormatterStorage> storage,
                                       std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "MaskFormatter write start");
     Mask<MaskPixelT> const* ip = dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -112,8 +113,8 @@ void MaskFormatter<MaskPixelT>::write(Persistable const* persistable, std::share
             try {
                 options = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
             } catch (std::exception const& exc) {
-                LOGLS_WARN(_log, "Unable to construct mask write options (" << exc.what() <<
-                           "); writing with default options");
+                LOGLS_WARN(_log, "Unable to construct mask write options ("
+                                         << exc.what() << "); writing with default options");
             }
         }
 
@@ -195,6 +196,6 @@ template class MaskFormatter<MaskPixel>;
 //    boost::archive::binary_oarchive&, int const, Persistable*);
 // template void MaskFormatter<MaskPixel>::delegateSerialize(
 //    boost::archive::binary_iarchive&, int const, Persistable*);
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

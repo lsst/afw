@@ -136,10 +136,10 @@ protected:
     Persistable() = default;
 
     Persistable(Persistable const& other) = default;
-    Persistable(Persistable && other) = default;
+    Persistable(Persistable&& other) = default;
 
-    Persistable & operator=(Persistable const& other) = default;
-    Persistable & operator=(Persistable && other) = default;
+    Persistable& operator=(Persistable const& other) = default;
+    Persistable& operator=(Persistable&& other) = default;
 
 private:
     friend class io::OutputArchive;
@@ -256,9 +256,9 @@ public:
     PersistableFactory(PersistableFactory&&) = delete;
     PersistableFactory& operator=(PersistableFactory&&) = delete;
 };
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_Persistable_h_INCLUDED

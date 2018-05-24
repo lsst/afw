@@ -105,9 +105,9 @@ inline Ellipse::Convolution Ellipse::convolve(Ellipse const &other) {
 inline Ellipse::Convolution const Ellipse::convolve(Ellipse const &other) const {
     return Ellipse::Convolution(const_cast<Ellipse &>(*this), other);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Convolution_h_INCLUDED

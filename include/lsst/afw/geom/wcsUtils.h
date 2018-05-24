@@ -88,7 +88,7 @@ Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata);
  * @param[in] strip  If true, strip the WCS keywords using deleteBasicWcsMetadata, if present.
  */
 lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
-                                      bool strip = false);
+                                            bool strip = false);
 
 /**
  * @internal Extract a SIP matrix from FITS TAN-SIP WCS metadata
@@ -180,9 +180,9 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(lsst::geom::Point2D 
  * @param[in] sipBp    Reverse distortion matrix for axis 2
  */
 std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
-        lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval, Eigen::Matrix2d const& cdMatrix,
-        Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
-        Eigen::MatrixXd const& sipBp);
+        lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,
+        Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB,
+        Eigen::MatrixXd const& sipAp, Eigen::MatrixXd const& sipBp);
 
 }  // namespace geom
 }  // namespace afw

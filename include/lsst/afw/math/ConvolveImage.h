@@ -215,7 +215,7 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
 template <typename ImageT>
 typename ImageT::SinglePixel edgePixel(lsst::afw::image::detail::Image_tag
                                        ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
-                                       ) {
+) {
     typedef typename ImageT::SinglePixel SinglePixelT;
     return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN
                                 ? std::numeric_limits<SinglePixelT>::quiet_NaN()
@@ -234,7 +234,7 @@ template <typename MaskedImageT>
 typename MaskedImageT::SinglePixel edgePixel(
         lsst::afw::image::detail::MaskedImage_tag
         ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
-        ) {
+) {
     typedef typename MaskedImageT::Image::Pixel ImagePixelT;
     typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
 
@@ -329,8 +329,8 @@ inline typename OutImageT::SinglePixel convolveAtAPoint(typename InImageT::const
 
     return outValue;
 }
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)

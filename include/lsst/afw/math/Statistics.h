@@ -50,7 +50,7 @@ template <typename>
 class Image;
 template <typename, typename, typename>
 class MaskedImage;
-}
+}  // namespace image
 namespace math {
 template <typename>
 class MaskedVector;  // forward declaration
@@ -247,8 +247,8 @@ public:
 
     Statistics(Statistics const &) = default;
     Statistics(Statistics &&) = default;
-    Statistics & operator=(Statistics const &) = default;
-    Statistics & operator=(Statistics &&) = default;
+    Statistics &operator=(Statistics const &) = default;
+    Statistics &operator=(Statistics &&) = default;
     ~Statistics() = default;
 
     /** Return the value and error in the specified statistic (e.g. MEAN)
@@ -421,7 +421,7 @@ Statistics makeStatistics(
         lsst::afw::image::Image<Pixel> const &img,            ///< Image (or Image) whose properties we want
         int const flags,                                      ///< Describe what we want to calculate
         StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
-        ) {
+) {
     // make a phony mask that will be compiled out
     MaskImposter<lsst::afw::image::MaskPixel> const msk;
     MaskImposter<WeightPixel> const var;
@@ -467,7 +467,7 @@ template <typename EntryT>
 Statistics makeStatistics(std::vector<EntryT> const &v,  ///< Image (or MaskedImage) whose properties we want
                           int const flags,               ///< Describe what we want to calculate
                           StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
-                          ) {
+) {
     ImageImposter<EntryT> img(v);                   // wrap the vector in a fake image
     MaskImposter<lsst::afw::image::MaskPixel> msk;  // instantiate a fake mask that will be compiled out.
     MaskImposter<WeightPixel> var;
@@ -483,7 +483,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v,  ///< Image (or MaskedIm
                           std::vector<WeightPixel> const &vweights,  ///< Weights
                           int const flags,                           ///< Describe what we want to calculate
                           StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
-                          ) {
+) {
     ImageImposter<EntryT> img(v);                   // wrap the vector in a fake image
     MaskImposter<lsst::afw::image::MaskPixel> msk;  // instantiate a fake mask that will be compiled out.
     MaskImposter<WeightPixel> var;
@@ -501,7 +501,7 @@ template <typename EntryT>
 Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///< MaskedVector
                           int const flags,  ///< Describe what we want to calculate
                           StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
-                          ) {
+) {
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
     } else {
@@ -519,7 +519,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///<
                           std::vector<WeightPixel> const &vweights,         ///< weights
                           int const flags,  ///< Describe what we want to calculate
                           StatisticsControl const &sctrl = StatisticsControl()  ///< Control calculation
-                          ) {
+) {
     ImageImposter<WeightPixel> weights(vweights);
 
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
@@ -529,8 +529,8 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv,  ///<
         return Statistics(*mv.getImage(), *mv.getMask(), var, weights, flags, sctrl);
     }
 }
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

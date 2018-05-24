@@ -75,7 +75,7 @@ Ellipse::Convolution::DerivativeMatrix Ellipse::Convolution::d() const {
 Ellipse::Ellipse(Convolution const& convolution)
         : _core(convolution.self.getCore().convolve(convolution.other.getCore()).copy()),
           _center(convolution.self.getCenter() + lsst::geom::Extent2D(convolution.other.getCenter())) {}
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

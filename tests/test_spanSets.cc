@@ -690,7 +690,8 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     SSShape->applyFunctor([](lsst::geom::Point2I pt, int& out,
                              const lsst::afw::image::MaskPixel& in) { out = static_cast<int>(in); },
                           ndarray::ndImage(targetForConstMask), constMaskObject);
-    SSShape->applyFunctor([](lsst::geom::Point2I, int& out, int in) { out = in; }, vecObject.begin(), dataValue);
+    SSShape->applyFunctor([](lsst::geom::Point2I, int& out, int in) { out = in; }, vecObject.begin(),
+                          dataValue);
 
     // Check the Image values
     auto bounds = SSShape->getBBox();
@@ -736,8 +737,9 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
     std::vector<int> nullVecObject(imageDim * imageDim, initialValue);
     afwGeom::SpanSet nullSpanSet;
 
-    nullSpanSet.applyFunctor([](lsst::geom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; },
-                             imageObject, dataValue);
+    nullSpanSet.applyFunctor(
+            [](lsst::geom::Point2I pt, afwImage::Image<int>::Pixel& out, int in) { out = in; }, imageObject,
+            dataValue);
     nullSpanSet.applyFunctor([](lsst::geom::Point2I, int& out, int in) { out = in; }, vecObject.begin(),
                              dataValue);
 

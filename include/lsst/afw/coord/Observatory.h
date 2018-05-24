@@ -47,8 +47,7 @@ public:
      * @param[in] latitude  telescope latitude
      * @param[in] elevation  telescope elevation (meters above reference spheroid)
      */
-    Observatory(lsst::geom::Angle const longitude, lsst::geom::Angle const latitude,
-                double const elevation);
+    Observatory(lsst::geom::Angle const longitude, lsst::geom::Angle const latitude, double const elevation);
 
     /**
      * Construct an Observatory with longitude and latitude specified as sexagesimal strings
@@ -108,8 +107,8 @@ private:
  * @param[in] obs the Observatory to print
  */
 std::ostream& operator<<(std::ostream& os, Observatory const& obs);
-}
-}
-}
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst
 
 #endif

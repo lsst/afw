@@ -55,8 +55,8 @@ public:
                                     std::vector<double> const &xPositionList, double errorDef);
     MinimizerFunctionBase1(MinimizerFunctionBase1 const &) = default;
     MinimizerFunctionBase1(MinimizerFunctionBase1 &&) = default;
-    MinimizerFunctionBase1 & operator=(MinimizerFunctionBase1 const &) = default;
-    MinimizerFunctionBase1 & operator=(MinimizerFunctionBase1 &&) = default;
+    MinimizerFunctionBase1 &operator=(MinimizerFunctionBase1 const &) = default;
+    MinimizerFunctionBase1 &operator=(MinimizerFunctionBase1 &&) = default;
     virtual ~MinimizerFunctionBase1() = default;
     // Required by ROOT::Minuit2::FCNBase
     virtual double Up() const { return _errorDef; }
@@ -89,8 +89,8 @@ public:
                                     std::vector<double> const &yPositionList, double errorDef);
     MinimizerFunctionBase2(MinimizerFunctionBase2 const &) = default;
     MinimizerFunctionBase2(MinimizerFunctionBase2 &&) = default;
-    MinimizerFunctionBase2 & operator=(MinimizerFunctionBase2 const &) = default;
-    MinimizerFunctionBase2 & operator=(MinimizerFunctionBase2 &&) = default;
+    MinimizerFunctionBase2 &operator=(MinimizerFunctionBase2 const &) = default;
+    MinimizerFunctionBase2 &operator=(MinimizerFunctionBase2 &&) = default;
     virtual ~MinimizerFunctionBase2() = default;
     // Required by ROOT::Minuit2::FCNBase
     virtual double Up() const { return _errorDef; }
@@ -111,7 +111,7 @@ private:
     std::vector<double> _yPositionList;
     double _errorDef;
 };
-}
+}  // namespace
 
 /// @cond
 template <typename ReturnT>
@@ -298,6 +298,6 @@ FitResults minimize(Function2<ReturnT> const &function, std::vector<double> cons
 
 minimizeFuncs(float) minimizeFuncs(double)
 /// @endcond
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

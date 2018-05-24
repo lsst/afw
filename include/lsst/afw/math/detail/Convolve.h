@@ -488,9 +488,9 @@ inline void KernelImagesForRegion::_insertImage(Location location,  ///< locatio
         _imagePtrList[location] = imagePtr;
     }
 }
-}
-}
-}
-}  // lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !defined(LSST_AFW_MATH_DETAIL_CONVOLVE_H)

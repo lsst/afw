@@ -72,8 +72,8 @@ private:
 
     lsst::geom::Point2I _p;
 };
-}
-}
-}  // namespace lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_SpanPixelIterator_h_INCLUDED

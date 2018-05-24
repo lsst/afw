@@ -77,14 +77,14 @@ inline std::shared_ptr<daf::base::PropertyList> readMetadata(std::string const& 
 template <typename ImageT>
 typename ImageT::SinglePixel badPixel(
         typename ImageT::Pixel bad = 0  ///< The bad value if NaN isn't supported
-        ) {
+) {
     typedef typename ImageT::SinglePixel SinglePixelT;
     return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN
                                 ? std::numeric_limits<SinglePixelT>::quiet_NaN()
                                 : bad);
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

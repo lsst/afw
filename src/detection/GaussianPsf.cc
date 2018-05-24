@@ -91,7 +91,7 @@ void checkDimensions(lsst::geom::Extent2I const& dimensions) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 GaussianPsf::GaussianPsf(int width, int height, double sigma)
         : Psf(true), _dimensions(width, height), _sigma(sigma) {
@@ -154,9 +154,11 @@ geom::ellipses::Quadrupole GaussianPsf::doComputeShape(lsst::geom::Point2D const
     return geom::ellipses::Quadrupole(_sigma * _sigma, _sigma * _sigma, 0.0);
 }
 
-lsst::geom::Box2I GaussianPsf::doComputeBBox(lsst::geom::Point2D const& position, image::Color const& color) const {
-    return lsst::geom::Box2I(lsst::geom::Point2I(-_dimensions / 2), _dimensions);  // integer truncation intentional
+lsst::geom::Box2I GaussianPsf::doComputeBBox(lsst::geom::Point2D const& position,
+                                             image::Color const& color) const {
+    return lsst::geom::Box2I(lsst::geom::Point2I(-_dimensions / 2),
+                             _dimensions);  // integer truncation intentional
 }
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

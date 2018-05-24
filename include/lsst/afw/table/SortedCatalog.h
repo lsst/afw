@@ -53,10 +53,10 @@ public:
     using Base::sort;
     using Base::find;
 
-    SortedCatalogT(SortedCatalogT const &) = default;
-    SortedCatalogT(SortedCatalogT &&) = default;
-    SortedCatalogT & operator=(SortedCatalogT const &) = default;
-    SortedCatalogT & operator=(SortedCatalogT &&) = default;
+    SortedCatalogT(SortedCatalogT const&) = default;
+    SortedCatalogT(SortedCatalogT&&) = default;
+    SortedCatalogT& operator=(SortedCatalogT const&) = default;
+    SortedCatalogT& operator=(SortedCatalogT&&) = default;
     ~SortedCatalogT() = default;
 
     /// Return true if the vector is in ascending ID order.
@@ -173,8 +173,8 @@ public:
 protected:
     explicit SortedCatalogT(Base const& other) : Base(other) {}
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_SortedCatalog_h_INCLUDED

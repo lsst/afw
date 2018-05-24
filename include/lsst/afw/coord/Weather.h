@@ -80,8 +80,8 @@ private:
 
 /// print a Weather to an output stream
 std::ostream &operator<<(std::ostream &os, Weather const &weath);
-}
-}
-}  // lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_COORD_WEATHER_H_INCLUDED

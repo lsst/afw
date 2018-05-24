@@ -281,10 +281,10 @@ public:
 
     /// Copy constructor.
     Schema(Schema const& other);
-    Schema(Schema && other);
+    Schema(Schema&& other);
 
-    Schema &operator=(Schema const& other);
-    Schema &operator=(Schema && other);
+    Schema& operator=(Schema const& other);
+    Schema& operator=(Schema&& other);
     ~Schema();
 
     /** Construct from reading a FITS file.
@@ -452,8 +452,8 @@ private:
 inline SubSchema Schema::operator[](std::string const& name) const {
     return SubSchema(_impl, _aliases, name);
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_Schema_h_INCLUDED

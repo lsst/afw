@@ -82,6 +82,6 @@ std::vector<std::shared_ptr<Kernel::SpatialFunction>> Kernel::PersistenceHelper:
     }
     return spatialFunctionList;
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

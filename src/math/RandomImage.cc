@@ -104,7 +104,7 @@ struct do_poisson : public do_random<T> {
 private:
     double const _mu;
 };
-}
+}  // namespace
 
 template <typename ImageT>
 void randomUniformImage(ImageT *image, Random &rand) {
@@ -158,6 +158,6 @@ void randomPoissonImage(ImageT *image, Random &rand, double const mu) {
 INSTANTIATE(double)
 INSTANTIATE(float)
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

@@ -123,6 +123,6 @@ template class DecoratedImage<int>;
 template class DecoratedImage<float>;
 template class DecoratedImage<double>;
 template class DecoratedImage<std::uint64_t>;
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

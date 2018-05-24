@@ -179,8 +179,8 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
             int height = additionalData->get<int>("height");
             box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height));
         }
-        DecoratedImage<ImagePixelT>* ip = 
-            new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu(), box);
+        DecoratedImage<ImagePixelT>* ip =
+                new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu(), box);
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     }

@@ -52,7 +52,7 @@ class SkyWcs;
 namespace polygon {
 class Polygon;
 }
-}
+}  // namespace geom
 
 namespace table {
 
@@ -111,7 +111,8 @@ public:
      *
      *  @throws pex::exceptions::LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(lsst::geom::Point2D const& point, geom::SkyWcs const& wcs, bool includeValidPolygon = false) const;
+    bool contains(lsst::geom::Point2D const& point, geom::SkyWcs const& wcs,
+                  bool includeValidPolygon = false) const;
 
     //@{
     /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
@@ -133,16 +134,18 @@ public:
     std::shared_ptr<image::VisitInfo const> getVisitInfo() const { return _visitInfo; }
     void setVisitInfo(std::shared_ptr<image::VisitInfo const> visitInfo) { _visitInfo = visitInfo; }
 
-    std::shared_ptr<image::TransmissionCurve const> getTransmissionCurve() const { return _transmissionCurve; }
+    std::shared_ptr<image::TransmissionCurve const> getTransmissionCurve() const {
+        return _transmissionCurve;
+    }
     void setTransmissionCurve(std::shared_ptr<image::TransmissionCurve const> transmissionCurve) {
         _transmissionCurve = std::move(transmissionCurve);
     }
     //@}
 
-    ExposureRecord(ExposureRecord const &) = delete;
-    ExposureRecord(ExposureRecord &&) = delete;
-    ExposureRecord & operator=(ExposureRecord const &) = delete;
-    ExposureRecord & operator=(ExposureRecord &&) = delete;
+    ExposureRecord(ExposureRecord const&) = delete;
+    ExposureRecord(ExposureRecord&&) = delete;
+    ExposureRecord& operator=(ExposureRecord const&) = delete;
+    ExposureRecord& operator=(ExposureRecord&&) = delete;
     ~ExposureRecord();
 
 protected:
@@ -236,15 +239,15 @@ public:
         return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other, mapper));
     }
 
-    ExposureTable & operator=(ExposureTable const &) = delete;
-    ExposureTable & operator=(ExposureTable &&) = delete;
+    ExposureTable& operator=(ExposureTable const&) = delete;
+    ExposureTable& operator=(ExposureTable&&) = delete;
     ~ExposureTable();
 
 protected:
     explicit ExposureTable(Schema const& schema);
 
     ExposureTable(ExposureTable const& other);
-    ExposureTable(ExposureTable && other);
+    ExposureTable(ExposureTable&& other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 
@@ -328,10 +331,10 @@ public:
     template <typename OtherRecordT>
     ExposureCatalogT(ExposureCatalogT<OtherRecordT> const& other) : Base(other) {}
 
-    ExposureCatalogT(ExposureCatalogT const &) = default;
-    ExposureCatalogT(ExposureCatalogT &&) = default;
-    ExposureCatalogT & operator=(ExposureCatalogT const &) = default;
-    ExposureCatalogT & operator=(ExposureCatalogT &&) = default;
+    ExposureCatalogT(ExposureCatalogT const&) = default;
+    ExposureCatalogT(ExposureCatalogT&&) = default;
+    ExposureCatalogT& operator=(ExposureCatalogT const&) = default;
+    ExposureCatalogT& operator=(ExposureCatalogT&&) = default;
     ~ExposureCatalogT() = default;
 
     using Base::writeFits;
@@ -442,7 +445,8 @@ public:
      *
      *  @see ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(lsst::geom::SpherePoint const& coord, bool includeValidPolygon = false) const;
+    ExposureCatalogT subsetContaining(lsst::geom::SpherePoint const& coord,
+                                      bool includeValidPolygon = false) const;
 
     /**
      *  Return a shallow subset of the catalog with only those records that contain the given point.
@@ -465,8 +469,8 @@ typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
 
 inline RecordId ExposureRecord::getId() const { return get(ExposureTable::getIdKey()); }
 inline void ExposureRecord::setId(RecordId id) { set(ExposureTable::getIdKey(), id); }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_Exposure_h_INCLUDED

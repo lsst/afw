@@ -57,20 +57,20 @@ template class PointKey<double>;
 //============ BoxKey =====================================================================================
 
 template <typename Box>
-BoxKey<Box> BoxKey<Box>::addFields(Schema & schema, std::string const & name, std::string const & doc,
-                                   std::string const & unit) {
+BoxKey<Box> BoxKey<Box>::addFields(Schema &schema, std::string const &name, std::string const &doc,
+                                   std::string const &unit) {
     auto minKey = PointKey<Element>::addFields(schema, schema.join(name, "min"), doc + " (minimum)", unit);
     auto maxKey = PointKey<Element>::addFields(schema, schema.join(name, "max"), doc + " (maximum)", unit);
     return BoxKey<Box>(minKey, maxKey);
 }
 
 template <typename Box>
-Box BoxKey<Box>::get(BaseRecord const & record) const {
+Box BoxKey<Box>::get(BaseRecord const &record) const {
     return Box(record.get(_min), record.get(_max), /*invert=*/false);
 }
 
 template <typename Box>
-void BoxKey<Box>::set(BaseRecord & record, Box const & value) const {
+void BoxKey<Box>::set(BaseRecord &record, Box const &value) const {
     _min.set(record, value.getMin());
     _max.set(record, value.getMax());
 }
@@ -231,12 +231,11 @@ CovarianceMatrixKey<T, N>::CovarianceMatrixKey(CovarianceMatrixKey const &) = de
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::CovarianceMatrixKey(CovarianceMatrixKey &&) = default;
 template <typename T, int N>
-CovarianceMatrixKey<T, N> & CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey const &) = default;
+CovarianceMatrixKey<T, N> &CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey const &) = default;
 template <typename T, int N>
-CovarianceMatrixKey<T, N> & CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey &&) = default;
+CovarianceMatrixKey<T, N> &CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey &&) = default;
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::~CovarianceMatrixKey() = default;
-
 
 // these are workarounds for the fact that Eigen has different constructors for
 // dynamic-sized matrices and fixed-size matrices, but we don't want to have to
@@ -254,7 +253,7 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> makeZeroMatrix(
     return Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(n, n);
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T, int N>
 Eigen::Matrix<T, N, N> CovarianceMatrixKey<T, N>::get(BaseRecord const &record) const {
@@ -347,15 +346,15 @@ void CovarianceMatrixKey<T, N>::setElement(BaseRecord &record, int i, int j, T v
         if (_cov.empty()) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
-                    (boost::format("Cannot set covariance element %d,%d; no fields for covariance") % i %
-                     j).str());
+                    (boost::format("Cannot set covariance element %d,%d; no fields for covariance") % i % j)
+                            .str());
         }
         Key<T> key = (i < j) ? _cov[j * (j - 1) / 2 + i] : _cov[i * (i - 1) / 2 + j];
         if (!key.isValid()) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
-                    (boost::format("Cannot set covariance element %d,%d; no field for this element") % i %
-                     j).str());
+                    (boost::format("Cannot set covariance element %d,%d; no field for this element") % i % j)
+                            .str());
         }
         record.set(key, value);
     }
@@ -371,6 +370,6 @@ template class CovarianceMatrixKey<double, 3>;
 template class CovarianceMatrixKey<double, 4>;
 template class CovarianceMatrixKey<double, 5>;
 template class CovarianceMatrixKey<double, Eigen::Dynamic>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

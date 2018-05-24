@@ -49,11 +49,11 @@ typedef math::MaskedVector<float> MaskedVectorF;
 template <typename Image>
 void printStats(Image &img, math::StatisticsControl const &sctrl) {
     // initialize a Statistics object with any stats we might want
-    ImgStat stats =
-            math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
-                                              math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
-                                              math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
-                                 sctrl);
+    ImgStat stats = math::makeStatistics(
+            img,
+            math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE | math::ERRORS | math::MIN | math::MAX |
+                    math::VARIANCECLIP | math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
+            sctrl);
 
     // get various stats with getValue() and their errors with getError()
     double const npoint = stats.getValue(math::NPOINT);

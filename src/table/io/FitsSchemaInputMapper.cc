@@ -291,8 +291,8 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
 
 FitsSchemaInputMapper::FitsSchemaInputMapper(FitsSchemaInputMapper const &) = default;
 FitsSchemaInputMapper::FitsSchemaInputMapper(FitsSchemaInputMapper &&) = default;
-FitsSchemaInputMapper & FitsSchemaInputMapper::operator=(FitsSchemaInputMapper const &) = default;
-FitsSchemaInputMapper & FitsSchemaInputMapper::operator=(FitsSchemaInputMapper &&) = default;
+FitsSchemaInputMapper &FitsSchemaInputMapper::operator=(FitsSchemaInputMapper const &) = default;
+FitsSchemaInputMapper &FitsSchemaInputMapper::operator=(FitsSchemaInputMapper &&) = default;
 FitsSchemaInputMapper::~FitsSchemaInputMapper() = default;
 
 void FitsSchemaInputMapper::setArchive(std::shared_ptr<InputArchive> archive) { _impl->archive = archive; }

@@ -192,11 +192,11 @@ public:
 
     /// Copy construct (copy-on-write).
     SchemaMapper(SchemaMapper const& other);
-    SchemaMapper(SchemaMapper && other);
+    SchemaMapper(SchemaMapper&& other);
 
     /// Assignment (copy-on-write).
     SchemaMapper& operator=(SchemaMapper const& other);
-    SchemaMapper& operator=(SchemaMapper && other);
+    SchemaMapper& operator=(SchemaMapper&& other);
 
     ~SchemaMapper();
 
@@ -238,8 +238,8 @@ template <typename Predicate>
 void SchemaMapper::addMappingsWhere(Predicate predicate, bool doReplace) {
     _impl->_input.forEach(AddMappingsWhere<Predicate>(this, predicate, doReplace));
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_SchemaMapper_h_INCLUDED

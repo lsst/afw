@@ -104,8 +104,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     try {
         obj = channel.read();
     } catch (std::runtime_error) {
-        throw LSST_EXCEPT(pex::exceptions::TypeError,
-                          "The metadata does not describe an AST object");
+        throw LSST_EXCEPT(pex::exceptions::TypeError, "The metadata does not describe an AST object");
     }
     auto frameSet = std::dynamic_pointer_cast<ast::FrameSet>(obj);
     if (!frameSet) {
@@ -181,8 +180,7 @@ std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata,
 
     // Find the IWC frame
     if (!rawFrameSet->findFrame(ast::Frame(2, "Domain=IWC"))) {
-        throw LSST_EXCEPT(pex::exceptions::TypeError,
-                          "No IWC frame found; cannot read metadata as a SkyWcs");
+        throw LSST_EXCEPT(pex::exceptions::TypeError, "No IWC frame found; cannot read metadata as a SkyWcs");
     }
     auto const iwcIndex = rawFrameSet->getCurrent();
     auto const iwcFrame = rawFrameSet->getFrame(iwcIndex);

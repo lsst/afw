@@ -38,9 +38,9 @@ namespace afw {
 namespace image {
 
 template <typename PixelT>
-inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array, lsst::geom::Point2I& xy0,
-                            lsst::daf::base::PropertySet& metadata, lsst::geom::Box2I bbox = lsst::geom::Box2I(),
-                            ImageOrigin origin = PARENT) {
+inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& array,
+                            lsst::geom::Point2I& xy0, lsst::daf::base::PropertySet& metadata,
+                            lsst::geom::Box2I bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT) {
     fitsfile.checkCompressedImagePhu();
     if (!fitsfile.checkImageType<PixelT>()) {
         throw LSST_FITS_EXCEPT(fits::FitsTypeError, fitsfile, "Incorrect image type for FITS image");
@@ -96,8 +96,8 @@ inline void fits_read_array(fits::Fits& fitsfile, ndarray::Array<PixelT, 2, 2>& 
     xy0 += xyOffset;
 }
 
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_IMAGE_fits_io_h_INCLUDED

@@ -94,6 +94,6 @@ bool AliasMap::operator==(AliasMap const& other) const { return _internal == oth
 bool AliasMap::contains(AliasMap const& other) const {
     return std::includes(begin(), end(), other.begin(), other.end());
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

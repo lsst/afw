@@ -98,7 +98,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         std::vector<double> const& xVec,       ///< @internal the x-values of points
         std::vector<double> const& yVec,       ///< @internal the y-values of points
         image::MaskedImage<PixelT> const& im,  ///< @internal The values at (xVec, yVec)
-        lsst::geom::Box2I const& bbox,               ///< @internal Range where approximation should be valid
+        lsst::geom::Box2I const& bbox,         ///< @internal Range where approximation should be valid
         ApproximateControl const& ctrl         ///< @internal desired approximation algorithm
         )
         : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
@@ -273,7 +273,7 @@ ApproximateChebyshev<PixelT>::doGetMaskedImage(int orderX, int orderY) const {
 
     return mi;
 }
-}
+}  // namespace
 
 template <typename PixelT>
 std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& x,
@@ -295,15 +295,16 @@ std::shared_ptr<Approximate<PixelT>> makeApproximate(std::vector<double> const& 
  * Explicit instantiations
  *
  */
-#define INSTANTIATE(PIXEL_T)                                            \
-    template std::shared_ptr<Approximate<PIXEL_T>> makeApproximate(     \
-            std::vector<double> const& x, std::vector<double> const& y, \
-            image::MaskedImage<PIXEL_T> const& im, lsst::geom::Box2I const& bbox, ApproximateControl const& ctrl)
+#define INSTANTIATE(PIXEL_T)                                                      \
+    template std::shared_ptr<Approximate<PIXEL_T>> makeApproximate(               \
+            std::vector<double> const& x, std::vector<double> const& y,           \
+            image::MaskedImage<PIXEL_T> const& im, lsst::geom::Box2I const& bbox, \
+            ApproximateControl const& ctrl)
 
 INSTANTIATE(float);
 // INSTANTIATE(int);
 
 /// @endcond
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

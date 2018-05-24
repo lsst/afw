@@ -138,9 +138,7 @@ lsst::geom::Angle SkyWcs::getPixelScale(lsst::geom::Point2D const& pixel) const 
     // (use a vector so all three points can be converted to sky in a single call)
     double const side = 1.0;
     std::vector<lsst::geom::Point2D> pixVec = {
-            pixel,
-            pixel + lsst::geom::Extent2D(side, 0),
-            pixel + lsst::geom::Extent2D(0, side),
+            pixel, pixel + lsst::geom::Extent2D(side, 0), pixel + lsst::geom::Extent2D(0, side),
     };
 
     auto skyVec = pixelToSky(pixVec);

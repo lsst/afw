@@ -52,7 +52,7 @@ namespace fits {
 class Fits;
 class MemFileManager;
 struct ImageWriteOptions;
-}
+}  // namespace fits
 
 namespace image {
 namespace detail {
@@ -70,7 +70,7 @@ struct image_traits {
 };
 //
 std::string const wcsNameForXY0 = "A";  // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
-}
+}  // namespace detail
 
 /// A class used to request that array accesses be checked
 class CheckIndices {
@@ -238,7 +238,8 @@ public:
      *  dimension is contiguous in memory.  If the last dimension is not contiguous, the array
      *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
      */
-    explicit ImageBase(Array const& array, bool deep = false, lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
+    explicit ImageBase(Array const& array, bool deep = false,
+                       lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
 
     virtual ~ImageBase() = default;
     /** Shallow assignment operator.
@@ -271,7 +272,8 @@ public:
      * @throws lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
      * this image do not match.
      */
-    void assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
+    void assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
+                ImageOrigin origin = PARENT);
     //
     // Operators etc.
     //
@@ -471,7 +473,6 @@ protected:
 template <typename PixelT>
 void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b);
 
-
 // Inline template definitions
 
 template <typename PixelT>
@@ -490,9 +491,8 @@ typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
                              this->_manager);
 }
 
-
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

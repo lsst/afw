@@ -47,7 +47,6 @@ std::string const AP_CORR_MAP_FIELD_NAME = "apCorrMap";
 std::string const VALID_POLYGON_FIELD_NAME = "validPolygon";
 std::string const TRANSMISSION_CURVE_FIELD_NAME = "transmissionCurve";
 
-
 int getTableVersion(daf::base::PropertySet &metadata) {
     return metadata.exists(EXPOSURE_TABLE_VERSION_KEY) ? metadata.get<int>(EXPOSURE_TABLE_VERSION_KEY) : 1;
 }
@@ -168,7 +167,7 @@ struct PersistenceHelper {
     }
 };
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureFitsWriter ---------------------------------------------------------------------------------
@@ -226,7 +225,7 @@ void ExposureFitsWriter::_writeRecord(BaseRecord const &r) {
     io::FitsWriter::_writeRecord(*_record);
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureFitsReader ---------------------------------------------------------------------------------
@@ -305,7 +304,7 @@ public:
 
 static ExposureFitsReader const exposureFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureTable/Record member function implementations -----------------------------------------------
@@ -315,9 +314,7 @@ lsst::geom::Box2I ExposureRecord::getBBox() const {
     return lsst::geom::Box2I(get(ExposureTable::getBBoxKey()));
 }
 
-void ExposureRecord::setBBox(lsst::geom::Box2I const &bbox) {
-    set(ExposureTable::getBBoxKey(), bbox);
-}
+void ExposureRecord::setBBox(lsst::geom::Box2I const &bbox) { set(ExposureTable::getBBoxKey(), bbox); }
 
 bool ExposureRecord::contains(lsst::geom::SpherePoint const &coord, bool includeValidPolygon) const {
     if (!getWcs()) {
@@ -479,6 +476,6 @@ template class SortedCatalogT<ExposureRecord const>;
 
 template class ExposureCatalogT<ExposureRecord>;
 template class ExposureCatalogT<ExposureRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

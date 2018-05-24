@@ -243,10 +243,8 @@ public:
     };
 };
 
-
 class ExampleD : public PersistableFacade<ExampleD>, public Comparable {
 public:
-
     static std::shared_ptr<ExampleD> get() {
         static std::shared_ptr<ExampleD> instance(new ExampleD());
         return instance;
@@ -254,24 +252,20 @@ public:
 
     ExampleD(ExampleD const &) = delete;
     ExampleD(ExampleD &&) = delete;
-    ExampleD & operator=(ExampleD const &) = delete;
-    ExampleD & operator=(ExampleD &&) = delete;
+    ExampleD &operator=(ExampleD const &) = delete;
+    ExampleD &operator=(ExampleD &&) = delete;
 
     virtual bool operator==(Comparable const &other) const {
         return static_cast<Comparable const *>(this) == &other;
     }
 
-    virtual void stream(std::ostream &os) const {
-        os << "ExampleD()";
-    }
+    virtual void stream(std::ostream &os) const { os << "ExampleD()"; }
 
     virtual bool isPersistable() const { return true; }
 
     virtual std::string getPersistenceName() const { return "ExampleD"; }
 
-    virtual void write(OutputArchiveHandle &handle) const {
-        handle.saveEmpty();
-    }
+    virtual void write(OutputArchiveHandle &handle) const { handle.saveEmpty(); }
 
     class Factory : public PersistableFactory {
     public:
@@ -288,12 +282,10 @@ private:
     ExampleD() {}
 };
 
-
 static ExampleA::Factory const registrationA("ExampleA");
 static ExampleB::Factory const registrationB("ExampleB");
 static ExampleC::Factory const registrationC("ExampleC");
 static ExampleD::Factory const registrationD("ExampleD");
-
 
 template <int M, int N>
 std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare(
@@ -358,11 +350,11 @@ std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare
     return outputs;
 }
 
-}  // anonymous
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 BOOST_AUTO_TEST_CASE(Simple) {
     using namespace lsst::afw::table::io;
@@ -514,7 +506,7 @@ void compareFunctions(lsst::afw::math::Function<T> const &a, lsst::afw::math::Fu
     }
 }
 
-}  // anonymous
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(GaussianFunction2) {
     namespace afwMath = lsst::afw::math;

@@ -70,8 +70,8 @@ struct ProcessSchema {
     }
 
     void specialize(SchemaItem<lsst::geom::Angle> const& item, int n) const {
-        // Always write units for lsst::geom::Angles as radians (in-memory lsst::geom::Angles field don't use the unit attribute,
-        // single lsst::geom::Angle abstracts that away).
+        // Always write units for lsst::geom::Angles as radians (in-memory lsst::geom::Angles field don't use
+        // the unit attribute, single lsst::geom::Angle abstracts that away).
         fits->writeColumnKey("TUNIT", n, "rad");
         fits->writeColumnKey("TCCLS", n, "Angle", "Field template used by lsst.afw.table");
     }
@@ -97,7 +97,7 @@ void writeAliasMap(Fits& fits, AliasMap const& aliases) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 // the driver for all the above machinery
 void FitsWriter::_writeTable(std::shared_ptr<BaseTable const> const& table, std::size_t nRows) {
@@ -190,7 +190,7 @@ void FitsWriter::_writeRecord(BaseRecord const& record) {
     ++_row;
     _processor->apply(&record);
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

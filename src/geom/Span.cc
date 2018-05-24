@@ -41,6 +41,6 @@ bool Span::operator<(const Span& b) const {
 }
 
 std::string Span::toString() const { return str(boost::format("%d: %d..%d") % _y % _x0 % _x1); }
-}
-}
-}  // namespace lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

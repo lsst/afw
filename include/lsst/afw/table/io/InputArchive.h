@@ -40,11 +40,11 @@ public:
 
     /// Copy-constructor.  Does not deep-copy loaded Persistables.
     InputArchive(InputArchive const& other);
-    InputArchive(InputArchive && other);
+    InputArchive(InputArchive&& other);
 
     /// Assignment.  Does not deep-copy loaded Persistables.
     InputArchive& operator=(InputArchive const& other);
-    InputArchive& operator=(InputArchive && other);
+    InputArchive& operator=(InputArchive&& other);
 
     ~InputArchive();
 
@@ -80,9 +80,9 @@ private:
 
     std::shared_ptr<Impl> _impl;
 };
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_InputArchive_h_INCLUDED

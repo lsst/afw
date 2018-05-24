@@ -119,6 +119,6 @@ std::shared_ptr<dafPersist::Formatter> PsfFormatter::createInstance(
         std::shared_ptr<pexPolicy::Policy> policy) {
     return std::shared_ptr<dafPersist::Formatter>(new PsfFormatter(policy));
 }
-}
-}
-}  // end lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

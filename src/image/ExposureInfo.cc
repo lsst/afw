@@ -53,7 +53,7 @@ int popInt(daf::base::PropertySet& metadata, std::string const& name) {
     return r;
 }
 
-}  // anonymous
+}  // namespace
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
@@ -78,7 +78,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
                            std::shared_ptr<CoaddInputs> const& coaddInputs,
                            std::shared_ptr<ApCorrMap> const& apCorrMap,
                            std::shared_ptr<image::VisitInfo const> const& visitInfo,
-                           std::shared_ptr<TransmissionCurve const> const & transmissionCurve)
+                           std::shared_ptr<TransmissionCurve const> const& transmissionCurve)
         : _wcs(wcs),
           _psf(std::const_pointer_cast<detection::Psf>(psf)),
           _calib(calib ? _cloneCalib(calib) : std::shared_ptr<Calib>(new Calib())),
@@ -90,8 +90,7 @@ ExposureInfo::ExposureInfo(std::shared_ptr<geom::SkyWcs const> const& wcs,
           _coaddInputs(coaddInputs),
           _apCorrMap(_cloneApCorrMap(apCorrMap)),
           _visitInfo(visitInfo),
-          _transmissionCurve(transmissionCurve)
-{}
+          _transmissionCurve(transmissionCurve) {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const& other)
         : _wcs(other._wcs),
@@ -249,7 +248,7 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
     // Try to read WCS from image metadata, and if found, strip the keywords used
     try {
         _wcs = geom::makeSkyWcs(*imageMetadata, true);
-    } catch(lsst::pex::exceptions::TypeError) {
+    } catch (lsst::pex::exceptions::TypeError) {
         LOGLS_DEBUG(_log, "No WCS found in FITS metadata");
     }
 
@@ -329,13 +328,13 @@ void ExposureInfo::_readFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::Pr
         int transmissionCurveId = popInt(*metadata, "TRANSMISSION_CURVE_ID");
         try {
             _transmissionCurve = archive.get<TransmissionCurve>(transmissionCurveId);
-        } catch (pex::exceptions::NotFoundError & err) {
+        } catch (pex::exceptions::NotFoundError& err) {
             LOGLS_WARN(_log, "Could not read TransmissionCurve; setting to null: " << err.what());
         }
     }
 
     _metadata = metadata;
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

@@ -168,34 +168,28 @@ void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile) const {
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    std::string const& fileName,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions
-) const {
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const &fileName,
+                                                   fits::ImageWriteOptions const &imageOptions,
+                                                   fits::ImageWriteOptions const &maskOptions,
+                                                   fits::ImageWriteOptions const &varianceOptions) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, imageOptions, maskOptions, varianceOptions);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    fits::MemFileManager& manager,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions
-) const {
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager &manager,
+                                                   fits::ImageWriteOptions const &imageOptions,
+                                                   fits::ImageWriteOptions const &maskOptions,
+                                                   fits::ImageWriteOptions const &varianceOptions) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, imageOptions, maskOptions, varianceOptions);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    fits::Fits &fitsfile,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions
-) const {
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile,
+                                                   fits::ImageWriteOptions const &imageOptions,
+                                                   fits::ImageWriteOptions const &maskOptions,
+                                                   fits::ImageWriteOptions const &varianceOptions) const {
     ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
     _maskedImage.writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, data.metadata,
                            data.imageMetadata, data.maskMetadata, data.varianceMetadata);
@@ -210,6 +204,6 @@ template class Exposure<float>;
 template class Exposure<double>;
 template class Exposure<std::uint64_t>;
 /// @endcond
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

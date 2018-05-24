@@ -95,10 +95,10 @@ public:
      */
     Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
 
-    Key(Key const &) = default;
-    Key(Key &&) = default;
-    Key & operator=(Key const &) = default;
-    Key & operator=(Key &&) = default;
+    Key(Key const&) = default;
+    Key(Key&&) = default;
+    Key& operator=(Key const&) = default;
+    Key& operator=(Key&&) = default;
     ~Key() = default;
 
     /// Stringification.
@@ -115,8 +115,8 @@ private:
 
     int _offset;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_Key_h_INCLUDED

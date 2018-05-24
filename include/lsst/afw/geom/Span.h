@@ -37,7 +37,7 @@ namespace boost {
 namespace serialization {
 class access;
 }
-}
+}  // namespace boost
 
 namespace lsst {
 namespace afw {
@@ -59,9 +59,7 @@ public:
     Span(int y,   ///< Row that Span's in
          int x0,  ///< Starting column (inclusive)
          int x1)  ///< Ending column (inclusive)
-            : _y(y),
-              _x0(x0),
-              _x1(x1) {}
+            : _y(y), _x0(x0), _x1(x1) {}
 
     /// Construct an empty Span with zero width at the origin.
     Span() : _y(0), _x0(0), _x1(-1) {}
@@ -78,17 +76,17 @@ public:
     /// Return an iterator to one past the last pixel in the Span.
     Iterator end() const { return Iterator(lsst::geom::Point2I(_x1 + 1, _y)); }
 
-    int getX0() const { return _x0; }                          ///< Return the starting x-value
-    int& getX0() { return _x0; }                               ///< Return the starting x-value
-    int getX1() const { return _x1; }                          ///< Return the ending x-value
-    int& getX1() { return _x1; }                               ///< Return the ending x-value
-    int getY() const { return _y; }                            ///< Return the y-value
-    int& getY() { return _y; }                                 ///< Return the y-value
-    int getWidth() const { return _x1 - _x0 + 1; }             ///< Return the number of pixels
-    int getMinX() const { return _x0; }                        ///< Minimum x-value.
-    int getMaxX() const { return _x1; }                        ///< Maximum x-value.
-    int getBeginX() const { return _x0; }                      ///< Begin (inclusive) x-value.
-    int getEndX() const { return _x1 + 1; }                    ///< End (exclusive) x-value.
+    int getX0() const { return _x0; }               ///< Return the starting x-value
+    int& getX0() { return _x0; }                    ///< Return the starting x-value
+    int getX1() const { return _x1; }               ///< Return the ending x-value
+    int& getX1() { return _x1; }                    ///< Return the ending x-value
+    int getY() const { return _y; }                 ///< Return the y-value
+    int& getY() { return _y; }                      ///< Return the y-value
+    int getWidth() const { return _x1 - _x0 + 1; }  ///< Return the number of pixels
+    int getMinX() const { return _x0; }             ///< Minimum x-value.
+    int getMaxX() const { return _x1; }             ///< Maximum x-value.
+    int getBeginX() const { return _x0; }           ///< Begin (inclusive) x-value.
+    int getEndX() const { return _x1 + 1; }         ///< End (exclusive) x-value.
     lsst::geom::Point2I const getMin() const {
         return lsst::geom::Point2I(_x0, _y);
     }  ///< Point corresponding to minimum x.
@@ -140,8 +138,8 @@ private:
     int _x0;  ///< Starting column (inclusive)
     int _x1;  ///< Ending column (inclusive)
 };
-}
-}
-}  // lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_GEOM_Span_h_INCLUDED

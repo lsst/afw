@@ -161,8 +161,8 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> > mergeHeavyFootprints(
         HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h1,
         HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h2);
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif

@@ -89,22 +89,18 @@ public:
      * The function parameters are initialized to 0.
      */
     explicit Function(unsigned int nParams)  ///< number of function parameters
-            : lsst::daf::base::Citizen(typeid(this)),
-              _params(nParams),
-              _isCacheValid(false) {}
+            : lsst::daf::base::Citizen(typeid(this)), _params(nParams), _isCacheValid(false) {}
 
     /**
      * Construct a Function given the function parameters.
      */
     explicit Function(std::vector<double> const& params)  ///< function parameters
-            : lsst::daf::base::Citizen(typeid(this)),
-              _params(params),
-              _isCacheValid(false) {}
+            : lsst::daf::base::Citizen(typeid(this)), _params(params), _isCacheValid(false) {}
 
-    Function(Function const &) = default;
-    Function(Function &&) = default;
-    Function & operator=(Function const &) = default;
-    Function & operator=(Function &&) = default;
+    Function(Function const&) = default;
+    Function(Function&&) = default;
+    Function& operator=(Function const&) = default;
+    Function& operator=(Function&&) = default;
 
     virtual ~Function() = default;
 
@@ -226,10 +222,10 @@ public:
     explicit Function1(std::vector<double> const& params)  ///< function parameters
             : Function<ReturnT>(params) {}
 
-    Function1(Function1 const &) = default;
-    Function1(Function1 &&) = default;
-    Function1 & operator=(Function1 const &) = default;
-    Function1 & operator=(Function1 &&) = default;
+    Function1(Function1 const&) = default;
+    Function1(Function1&&) = default;
+    Function1& operator=(Function1 const&) = default;
+    Function1& operator=(Function1&&) = default;
 
     virtual ~Function1() = default;
 
@@ -292,10 +288,10 @@ public:
     explicit Function2(std::vector<double> const& params)  ///< function parameters
             : Function<ReturnT>(params) {}
 
-    Function2(Function2 const &) = default;
-    Function2(Function2 &&) = default;
-    Function2 & operator=(Function2 const &) = default;
-    Function2 & operator=(Function2 &&) = default;
+    Function2(Function2 const&) = default;
+    Function2(Function2&&) = default;
+    Function2& operator=(Function2 const&) = default;
+    Function2& operator=(Function2&&) = default;
 
     virtual ~Function2() = default;
 
@@ -358,8 +354,7 @@ public:
      * The parameters are initialized to zero.
      */
     explicit BasePolynomialFunction2(unsigned int order)  ///< order of polynomial (0 for constant)
-            : Function2<ReturnT>(BasePolynomialFunction2::nParametersFromOrder(order)),
-              _order(order) {}
+            : Function2<ReturnT>(BasePolynomialFunction2::nParametersFromOrder(order)), _order(order) {}
 
     /**
      * Construct a polynomial function with specified parameters.
@@ -373,10 +368,10 @@ public:
             : Function2<ReturnT>(params),
               _order(BasePolynomialFunction2::orderFromNParameters(static_cast<int>(params.size()))) {}
 
-    BasePolynomialFunction2(BasePolynomialFunction2 const &) = default;
-    BasePolynomialFunction2(BasePolynomialFunction2 &&) = default;
-    BasePolynomialFunction2 & operator=(BasePolynomialFunction2 const &) = default;
-    BasePolynomialFunction2 & operator=(BasePolynomialFunction2 &&) = default;
+    BasePolynomialFunction2(BasePolynomialFunction2 const&) = default;
+    BasePolynomialFunction2(BasePolynomialFunction2&&) = default;
+    BasePolynomialFunction2& operator=(BasePolynomialFunction2 const&) = default;
+    BasePolynomialFunction2& operator=(BasePolynomialFunction2&&) = default;
 
     virtual ~BasePolynomialFunction2() = default;
 
@@ -511,8 +506,8 @@ private:
         ar& make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT>>(*this));
     }
 };
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // #ifndef LSST_AFW_MATH_FUNCTION_H

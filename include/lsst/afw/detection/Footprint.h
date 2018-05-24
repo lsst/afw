@@ -90,8 +90,8 @@ public:
      * @param region Bounding box of the image in which the Footprint was created,
                      defaults to empty box.
      */
-    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const & peakSchema,
-                       lsst::geom::Box2I const & region=lsst::geom::Box2I());
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const &peakSchema,
+                       lsst::geom::Box2I const &region = lsst::geom::Box2I());
 
     /** @brief Constructor of a empty Footprint object
      */
@@ -114,7 +114,7 @@ public:
     virtual bool isHeavy() const { return false; }
 
     /** Return a shared pointer to the SpanSet
-      */
+     */
     std::shared_ptr<geom::SpanSet> getSpans() const { return _spans; }
 
     /** Sets the shared pointer to the SpanSet in the Footprint
@@ -199,10 +199,10 @@ public:
     void shift(int dx, int dy);
 
     /**
-    * Shift a Footprint by a given extent
-    *
-    * @param d ExtentI object which gives the dimensions the Footprint should be shifted
-    */
+     * Shift a Footprint by a given extent
+     *
+     * @param d ExtentI object which gives the dimensions the Footprint should be shifted
+     */
     void shift(lsst::geom::ExtentI const &d) { shift(d.getX(), d.getY()); }
 
     /**
@@ -338,19 +338,19 @@ public:
     bool isContiguous() const { return getSpans()->isContiguous(); };
 
     /**
-    * Split a multi-component Footprint into a vector of contiguous Footprints
-    *
-    * Split a multi-component Footprint such that each Footprint in the output vector
-    * is contiguous and contains only peaks that can be found within the bounds of the
-    * Footprint
-    */
+     * Split a multi-component Footprint into a vector of contiguous Footprints
+     *
+     * Split a multi-component Footprint such that each Footprint in the output vector
+     * is contiguous and contains only peaks that can be found within the bounds of the
+     * Footprint
+     */
     std::vector<std::shared_ptr<Footprint>> split() const;
 
     /**
-    * equality operator
-    *
-    * @param other The Footprint for which equality will be computed
-    */
+     * equality operator
+     *
+     * @param other The Footprint for which equality will be computed
+     */
     bool operator==(Footprint const &other) const;
 
 protected:
@@ -405,8 +405,8 @@ std::shared_ptr<Footprint> mergeFootprints(Footprint const &footprint1, Footprin
  * @param footprint Footprint to turn into bounding box list
  */
 std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const &footprint);
-}
-}
-}  // Close namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_DETECTION_FOOTPRINT_H

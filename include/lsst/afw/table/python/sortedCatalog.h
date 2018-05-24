@@ -82,9 +82,9 @@ PySortedCatalog<Record> declareSortedCatalog(pybind11::module &mod, std::string 
                    "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "flags"_a = 0);
     // readFits taking Fits objects not wrapped, because Fits objects are not wrapped.
 
-    cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset);
+    cls.def("subset", (Catalog(Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset);
     cls.def("subset",
-            (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset);
+            (Catalog(Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset);
 
     // The following three methods shadow those in the base class in C++ (unlike the base class versions,
     // they do not require a ley argument because we assume it's the ID key).  In Python, we make that appear
@@ -117,9 +117,9 @@ PySortedCatalog<Record> declareSortedCatalog(pybind11::module &mod, std::string 
 
     return cls;
 };
-}
-}
-}
-}  // lsst::afw::table::python
+}  // namespace python
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_PYBIND11_CATALOG_H_INCLUDED

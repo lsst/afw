@@ -223,8 +223,8 @@ public:
                         double y = 0.0) const;
 
     /**
-    * Return the Kernel's dimensions (width, height)
-    */
+     * Return the Kernel's dimensions (width, height)
+     */
     lsst::geom::Extent2I const getDimensions() const { return lsst::geom::Extent2I(_width, _height); }
 
     void setDimensions(lsst::geom::Extent2I dims) {
@@ -267,8 +267,7 @@ public:
      * return parent bounding box, with XY0 = -center
      */
     inline lsst::geom::Box2I getBBox() const {
-        return lsst::geom::Box2I(lsst::geom::Point2I(-_ctrX, -_ctrY),
-                                      lsst::geom::Extent2I(_width, _height));
+        return lsst::geom::Box2I(lsst::geom::Point2I(-_ctrX, -_ctrY), lsst::geom::Extent2I(_width, _height));
     }
 
     /**
@@ -446,7 +445,7 @@ public:
      * in which case this is a no-op and getCacheSize always returns 0.
      */
     virtual void computeCache(int const  ///< desired cache size
-                              ) {}
+    ) {}
 
     /**
      * Get the current size of the kernel cache (0 if none or if caches not supported)
@@ -532,14 +531,14 @@ public:
      * Construct a FixedKernel from an image
      */
     explicit FixedKernel(lsst::afw::image::Image<Pixel> const &image  ///< image for kernel
-                         );
+    );
 
     /**
      * Construct a FixedKernel from a generic Kernel
      */
     explicit FixedKernel(lsst::afw::math::Kernel const &kernel,  ///< Kernel to convert to Fixed
-                         lsst::geom::Point2D const &pos     ///< desired position
-                         );
+                         lsst::geom::Point2D const &pos          ///< desired position
+    );
 
     FixedKernel(const FixedKernel &) = delete;
     FixedKernel(FixedKernel &&) = delete;
@@ -833,8 +832,8 @@ public:
     virtual KernelList const &getKernelList() const;
 
     /**
-    * Get the sum of the pixels of each fixed basis kernel
-    */
+     * Get the sum of the pixels of each fixed basis kernel
+     */
     std::vector<double> getKernelSumList() const;
 
     /**
@@ -1120,9 +1119,9 @@ private:
         }
     }
 };
-}
-}
-}  // lsst:afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 namespace boost {
 namespace serialization {
@@ -1153,8 +1152,8 @@ inline void load_construct_data(Archive &ar, lsst::afw::math::DeltaFunctionKerne
     ar >> make_nvp("pixY", y);
     ::new (k) lsst::afw::math::DeltaFunctionKernel(width, height, lsst::geom::Point2I(x, y));
 }
-}
-}
+}  // namespace serialization
+}  // namespace boost
 
 BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
 

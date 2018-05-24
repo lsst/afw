@@ -85,8 +85,8 @@ public:
 
     AmpInfoRecord(AmpInfoRecord const &) = delete;
     AmpInfoRecord(AmpInfoRecord &&) = delete;
-    AmpInfoRecord & operator=(AmpInfoRecord const &) = delete;
-    AmpInfoRecord & operator=(AmpInfoRecord &&) = delete;
+    AmpInfoRecord &operator=(AmpInfoRecord const &) = delete;
+    AmpInfoRecord &operator=(AmpInfoRecord &&) = delete;
     ~AmpInfoRecord();
 
     std::shared_ptr<AmpInfoTable const> getTable() const {
@@ -182,8 +182,8 @@ public:
     static int const MAX_LINEARITY_COEFFS = 4;        // max number of linearity coefficients
     static int const MAX_LINEARITY_TYPE_LENGTH = 64;  // max length for linearity type
 
-    AmpInfoTable & operator=(AmpInfoTable const &) = delete;
-    AmpInfoTable & operator=(AmpInfoTable &&) = delete;
+    AmpInfoTable &operator=(AmpInfoTable const &) = delete;
+    AmpInfoTable &operator=(AmpInfoTable &&) = delete;
     ~AmpInfoTable();
 
     /**
@@ -321,8 +321,8 @@ private:
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits *fitsfile, int flags) const override;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_AmpInfo_h_INCLUDED

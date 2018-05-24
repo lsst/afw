@@ -80,9 +80,9 @@ struct tag<LsstRing> {
     typedef ring_tag type;
 };
 // template<> struct range_value<LsstRing> { typedef LsstPoint type; };
-}
-}
-}  // namespace boost::geometry::traits
+}  // namespace traits
+}  // namespace geometry
+}  // namespace boost
 
 namespace {
 
@@ -109,7 +109,7 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
                        LsstPoint const& first,            // First vertex defining edge
                        LsstPoint const& second,           // Second vertex defining edge
                        size_t const num                   // Number of parts to divide edge into
-                       ) {
+) {
     lsst::geom::Extent2D const delta = (second - first) / num;
     vertices.push_back(first);
     for (size_t i = 1; i < num; ++i) {
@@ -120,8 +120,7 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
 /// @internal Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     std::vector<BoostPolygon> overlap;  // Overlap between pixel and polygon
-    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5),
-                        lsst::geom::Point2D(x + 0.5, y + 0.5));
+    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5));
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (std::vector<BoostPolygon>::const_iterator i = overlap.begin(); i != overlap.end(); ++i) {
@@ -280,7 +279,7 @@ Polygon::Polygon(Polygon::Box const& box) : _impl(new Polygon::Impl(box)) {}
 
 Polygon::Polygon(std::vector<LsstPoint> const& vertices) : _impl(new Polygon::Impl(vertices)) {}
 
-Polygon::Polygon(Polygon::Box const& box, afw::geom::TransformPoint2ToPoint2 const & transform)
+Polygon::Polygon(Polygon::Box const& box, afw::geom::TransformPoint2ToPoint2 const& transform)
         : _impl(new Polygon::Impl()) {
     auto corners = transform.applyForward(boxToCorners(box));
     boost::geometry::assign(_impl->poly, corners);
@@ -577,7 +576,7 @@ void Polygon::write(OutputArchiveHandle& handle) const {
 
     handle.saveCatalog(catalog);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::polygon
+}  // namespace polygon
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

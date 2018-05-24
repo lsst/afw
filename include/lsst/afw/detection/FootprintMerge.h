@@ -140,8 +140,8 @@ private:
     afw::table::SchemaMapper _peakSchemaMapper;
     std::shared_ptr<PeakTable> _peakTable;
 };
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_DETECTION_FOOTPRINTMERGE_H

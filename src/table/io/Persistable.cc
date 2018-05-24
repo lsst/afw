@@ -69,7 +69,7 @@ RegistryMap &getRegistry() {
     return instance;
 }
 
-}  // anonymous
+}  // namespace
 
 PersistableFactory::PersistableFactory(std::string const &name) { getRegistry()[name] = this; }
 
@@ -84,8 +84,8 @@ PersistableFactory const &PersistableFactory::lookup(std::string const &name, st
                         (boost::format(
                                  "PersistableFactory with name '%s' not found, and import of module "
                                  "'%s' failed (possibly because Python calls were not available from C++).") %
-                         name %
-                         module).str());
+                         name % module)
+                                .str());
             }
             i = getRegistry().find(name);
             if (i == getRegistry().end()) {
@@ -95,8 +95,8 @@ PersistableFactory const &PersistableFactory::lookup(std::string const &name, st
                                  "PersistableFactory with name '%s' not found even after successful import "
                                  "of module '%s'.  Please report this as a bug in the persistence "
                                  "implementation for this object.") %
-                         name %
-                         module).str());
+                         name % module)
+                                .str());
             }
         } else {
             throw LSST_EXCEPT(
@@ -105,12 +105,13 @@ PersistableFactory const &PersistableFactory::lookup(std::string const &name, st
                              "PersistableFactory with name '%s' not found, and no Python module to import "
                              "was provided.  Please report this as a bug in the persistence implementation "
                              "for this object.") %
-                     name).str());
+                     name)
+                            .str());
         }
     }
     return *i->second;
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

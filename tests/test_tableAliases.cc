@@ -51,7 +51,7 @@ protected:
 
 TestRecord::TestRecord(std::shared_ptr<TestTable> const& table) : lsst::afw::table::BaseRecord(table) {}
 
-}  // anonymous
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(aliasMapLinks) {
     lsst::afw::table::Schema schema;

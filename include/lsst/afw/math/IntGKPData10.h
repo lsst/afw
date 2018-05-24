@@ -437,8 +437,8 @@ inline const std::vector<Quad>& gkp_wb<Quad>(int level) {
 #endif
 
 }  // end of namespace details
-}
-}
-}  // of namespaces lsst/afw/math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

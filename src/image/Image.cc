@@ -217,9 +217,8 @@ typename ImageBase<PixelT>::PixelConstReference ImageBase<PixelT>::operator()(
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
         throw LSST_EXCEPT(pex::exceptions::LengthError,
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") % x % y %
-                           (this->getWidth() - 1) %
-                           (this->getHeight() -
-                            1)).str());
+                           (this->getWidth() - 1) % (this->getHeight() - 1))
+                                  .str());
     }
 
     return _gilView(x, y)[0];
@@ -414,39 +413,27 @@ void Image<PixelT>::writeFits(fits::Fits& fitsfile,
 }
 
 template <typename PixelT>
-void Image<PixelT>::writeFits(
-    std::string const& filename,
-    fits::ImageWriteOptions const& options,
-    std::string const& mode,
-    std::shared_ptr<daf::base::PropertySet const> header,
-    std::shared_ptr<Mask<MaskPixel> const> mask
-) const {
+void Image<PixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                              std::string const& mode, std::shared_ptr<daf::base::PropertySet const> header,
+                              std::shared_ptr<Mask<MaskPixel> const> mask) const {
     fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header, mask);
 }
 
 template <typename PixelT>
-void Image<PixelT>::writeFits(
-    fits::MemFileManager& manager,
-    fits::ImageWriteOptions const& options,
-    std::string const& mode,
-    std::shared_ptr<daf::base::PropertySet const> header,
-    std::shared_ptr<Mask<MaskPixel> const> mask
-) const {
+void Image<PixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                              std::string const& mode, std::shared_ptr<daf::base::PropertySet const> header,
+                              std::shared_ptr<Mask<MaskPixel> const> mask) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header, mask);
 }
 
 template <typename PixelT>
-void Image<PixelT>::writeFits(
-    fits::Fits& fitsfile,
-    fits::ImageWriteOptions const& options,
-    std::shared_ptr<daf::base::PropertySet const> header,
-    std::shared_ptr<Mask<MaskPixel> const> mask
-) const {
+void Image<PixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                              std::shared_ptr<daf::base::PropertySet const> header,
+                              std::shared_ptr<Mask<MaskPixel> const> mask) const {
     fitsfile.writeImage(*this, options, header, mask);
 }
-
 
 #endif  // !DOXYGEN
 
@@ -662,7 +649,7 @@ template <typename LhsPixelT, typename RhsPixelT>
 struct divideEq : public pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const { return static_cast<LhsPixelT>(lhs / rhs); }
 };
-}
+}  // namespace
 
 template <typename LhsPixelT, typename RhsPixelT>
 Image<LhsPixelT>& operator+=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs) {
@@ -688,8 +675,7 @@ Image<LhsPixelT>& operator/=(Image<LhsPixelT>& lhs, Image<RhsPixelT> const& rhs)
     return lhs;
 }
 
-lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata)
-{
+lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata) {
     lsst::geom::Extent2I dims;
     if (metadata.exists("ZNAXIS1") && metadata.exists("ZNAXIS2")) {
         dims = lsst::geom::Extent2I(metadata.getAsInt("ZNAXIS1"), metadata.getAsInt("ZNAXIS2"));
@@ -774,6 +760,6 @@ INSTANTIATE2(std::uint64_t, double);
 INSTANTIATE2(std::uint64_t, std::uint64_t);
 
 /// @endcond
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

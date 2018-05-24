@@ -50,12 +50,12 @@ class PropertySet;
 namespace persistence {
 class LogicalLocation;
 }
-}
+}  // namespace daf
 namespace pex {
 namespace policy {
 class Policy;
 }
-}
+}  // namespace pex
 namespace afw {
 namespace formatters {
 
@@ -132,15 +132,15 @@ int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop);
 /**
  * Encode a std::string as a vector of uint8
  */
-ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const &str);
+ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const& str);
 
 /**
  * Decode a std::string from a vector of uint8 returned by stringToBytes
  */
 std::string bytesToString(ndarray::Array<std::uint8_t const, 1, 1> const& bytes);
 
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_FORMATTERS_UTILS_H

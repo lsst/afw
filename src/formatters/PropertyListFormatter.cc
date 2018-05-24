@@ -66,7 +66,7 @@ void PropertyListFormatter::write(lsst::daf::base::Persistable const* persistabl
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-PropertyList");
     }
     // TODO: Replace this with something better in DM-10776
-    auto & actualStorage = *storage;
+    auto& actualStorage = *storage;
     if (typeid(actualStorage) == typeid(lsst::daf::persistence::FitsStorage)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "FitsStorage for PropertyList read-only (writing is not supported)");
@@ -84,7 +84,7 @@ std::unique_ptr<daf::base::PropertyList> readMetadataAsUniquePtr(std::string con
 
     return metadata;
 }
-}
+}  // namespace
 
 lsst::daf::base::Persistable* PropertyListFormatter::read(
         std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
@@ -124,6 +124,6 @@ std::shared_ptr<lsst::daf::persistence::Formatter> PropertyListFormatter::create
         std::shared_ptr<lsst::pex::policy::Policy> policy) {
     return std::shared_ptr<lsst::daf::persistence::Formatter>(new PropertyListFormatter(policy));
 }
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

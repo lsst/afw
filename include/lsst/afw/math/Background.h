@@ -169,10 +169,10 @@ public:
         }
     }
 
-    BackgroundControl(BackgroundControl const &) = default;
-    BackgroundControl(BackgroundControl &&) = default;
-    BackgroundControl & operator=(BackgroundControl const &) = default;
-    BackgroundControl & operator=(BackgroundControl &&) = default;
+    BackgroundControl(BackgroundControl const&) = default;
+    BackgroundControl(BackgroundControl&&) = default;
+    BackgroundControl& operator=(BackgroundControl const&) = default;
+    BackgroundControl& operator=(BackgroundControl&&) = default;
 
     virtual ~BackgroundControl() = default;
     void setNxSample(int nxSample) {
@@ -272,9 +272,9 @@ public:
     typedef float InternalPixelT;  ///< type used for any internal images, and returned by getApproximate
 
     Background(Background const&) = delete;
-    Background(Background &&) = delete;
+    Background(Background&&) = delete;
     Background& operator=(Background const&) = delete;
-    Background& operator=(Background &&) = delete;
+    Background& operator=(Background&&) = delete;
 
     /// Add a constant level to a background
     virtual Background& operator+=(float const delta) = 0;
@@ -369,7 +369,7 @@ public:
     std::shared_ptr<BackgroundControl const> getBackgroundControl() const { return _bctrl; }
 
 protected:
-    lsst::geom::Box2I _imgBBox;                              ///< size and origin of input image
+    lsst::geom::Box2I _imgBBox;                        ///< size and origin of input image
     std::shared_ptr<BackgroundControl> _bctrl;         ///< control info set by user.
     mutable Interpolate::Style _asUsedInterpStyle;     ///< the style we actually used
     mutable UndersampleStyle _asUsedUndersampleStyle;  ///< the undersampleStyle we actually used
@@ -394,7 +394,7 @@ protected:
 #define LSST_makeBackground_getApproximate_types (Background::InternalPixelT)
 #define LSST_makeBackground_getImage(m, v, T)                                      \
     virtual std::shared_ptr<lsst::afw::image::Image<T>> _getImage(                 \
-            lsst::geom::Box2I const& bbox,                                    \
+            lsst::geom::Box2I const& bbox,                                         \
             Interpolate::Style const interpStyle, /* Style of the interpolation */ \
             UndersampleStyle const undersampleStyle =                              \
                     THROW_EXCEPTION, /* Behaviour if there are too few points */   \
@@ -480,10 +480,10 @@ public:
     explicit BackgroundMI(lsst::geom::Box2I const imageDimensions,
                           image::MaskedImage<InternalPixelT> const& statsImage);
 
-    BackgroundMI(BackgroundMI const &) = delete;
-    BackgroundMI(BackgroundMI &&) = delete;
-    BackgroundMI & operator=(BackgroundMI const &) = delete;
-    BackgroundMI & operator=(BackgroundMI &&) = delete;
+    BackgroundMI(BackgroundMI const&) = delete;
+    BackgroundMI(BackgroundMI&&) = delete;
+    BackgroundMI& operator=(BackgroundMI const&) = delete;
+    BackgroundMI& operator=(BackgroundMI&&) = delete;
     ~BackgroundMI() = default;
 
     /**
@@ -565,8 +565,8 @@ template <typename ImageT>
 std::shared_ptr<Background> makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
     return std::shared_ptr<Background>(new BackgroundMI(img, bgCtrl));
 }
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  //   LSST_AFW_MATH_BACKGROUND_H

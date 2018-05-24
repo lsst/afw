@@ -49,8 +49,8 @@ namespace math {
  */
 void printKernel(lsst::afw::math::Kernel const &kernel, bool doNormalize, double x = 0, double y = 0,
                  std::string pixelFmt = "%7.3f");
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !defined(LSST_AFW_MATH_KERNELFUNCTIONS_H)

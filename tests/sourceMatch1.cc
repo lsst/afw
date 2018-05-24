@@ -183,7 +183,7 @@ void compareMatches(std::vector<afwTable::SourceMatch> &matches,
     }
 }
 
-}  // namespace <anonymous>
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(
         matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */

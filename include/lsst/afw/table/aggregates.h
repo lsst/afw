@@ -64,10 +64,10 @@ public:
     /// Construct from a pair of Keys
     PointKey(Key<T> const& x, Key<T> const& y) : _x(x), _y(y) {}
 
-    PointKey(PointKey const &) = default;
-    PointKey(PointKey &&) = default;
-    PointKey & operator=(PointKey const &) = default;
-    PointKey & operator=(PointKey &&) = default;
+    PointKey(PointKey const&) = default;
+    PointKey(PointKey&&) = default;
+    PointKey& operator=(PointKey const&) = default;
+    PointKey& operator=(PointKey&&) = default;
     virtual ~PointKey() = default;
 
     /**
@@ -109,7 +109,6 @@ private:
 typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
 
-
 /**
  *  A FunctorKey used to get or set a lsst::geom::Box2I or Box2D from a (min, max) pair of PointKeys.
  *
@@ -118,7 +117,6 @@ typedef PointKey<double> Point2DKey;
 template <typename Box>
 class BoxKey : public FunctorKey<Box> {
 public:
-
     /// Type of coordinate elements (i.e. int or double).
     using Element = typename Box::Element;
 
@@ -154,10 +152,10 @@ public:
      */
     BoxKey(SubSchema const& s) : _min(s["min"]), _max(s["max"]) {}
 
-    BoxKey(BoxKey const &) = default;
-    BoxKey(BoxKey &&) = default;
-    BoxKey & operator=(BoxKey const &) = default;
-    BoxKey & operator=(BoxKey &&) = default;
+    BoxKey(BoxKey const&) = default;
+    BoxKey(BoxKey&&) = default;
+    BoxKey& operator=(BoxKey const&) = default;
+    BoxKey& operator=(BoxKey&&) = default;
     virtual ~BoxKey() = default;
 
     /// Get a Point from the given record
@@ -188,7 +186,6 @@ private:
 
 using Box2IKey = BoxKey<lsst::geom::Box2I>;
 using Box2DKey = BoxKey<lsst::geom::Box2D>;
-
 
 /**
  *  A FunctorKey used to get or set celestial coordinates from a pair of lsst::geom::Angle keys.
@@ -224,10 +221,10 @@ public:
      */
     CoordKey(SubSchema const& s) : _ra(s["ra"]), _dec(s["dec"]) {}
 
-    CoordKey(CoordKey const &) = default;
-    CoordKey(CoordKey &&) = default;
-    CoordKey & operator=(CoordKey const &) = default;
-    CoordKey & operator=(CoordKey &&) = default;
+    CoordKey(CoordKey const&) = default;
+    CoordKey(CoordKey&&) = default;
+    CoordKey& operator=(CoordKey const&) = default;
+    CoordKey& operator=(CoordKey&&) = default;
     virtual ~CoordKey() = default;
 
     /// Get an lsst::geom::SpherePoint from the given record
@@ -300,10 +297,10 @@ public:
      */
     QuadrupoleKey(SubSchema const& s) : _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
 
-    QuadrupoleKey(QuadrupoleKey const &) = default;
-    QuadrupoleKey(QuadrupoleKey &&) = default;
-    QuadrupoleKey & operator=(QuadrupoleKey const &) = default;
-    QuadrupoleKey & operator=(QuadrupoleKey &&) = default;
+    QuadrupoleKey(QuadrupoleKey const&) = default;
+    QuadrupoleKey(QuadrupoleKey&&) = default;
+    QuadrupoleKey& operator=(QuadrupoleKey const&) = default;
+    QuadrupoleKey& operator=(QuadrupoleKey&&) = default;
     virtual ~QuadrupoleKey() = default;
 
     /// Get a Quadrupole from the given record
@@ -370,10 +367,10 @@ public:
      */
     EllipseKey(SubSchema const& s) : _qKey(s), _pKey(s) {}
 
-    EllipseKey(EllipseKey const &) = default;
-    EllipseKey(EllipseKey &&) = default;
-    EllipseKey & operator=(EllipseKey const &) = default;
-    EllipseKey & operator=(EllipseKey &&) = default;
+    EllipseKey(EllipseKey const&) = default;
+    EllipseKey(EllipseKey&&) = default;
+    EllipseKey& operator=(EllipseKey const&) = default;
+    EllipseKey& operator=(EllipseKey&&) = default;
     virtual ~EllipseKey() = default;
 
     /// Get an Ellipse from the given record
@@ -479,10 +476,10 @@ public:
      */
     CovarianceMatrixKey(SubSchema const& s, NameArray const& names);
 
-    CovarianceMatrixKey(CovarianceMatrixKey const &);
-    CovarianceMatrixKey(CovarianceMatrixKey &&);
-    CovarianceMatrixKey & operator=(CovarianceMatrixKey const &);
-    CovarianceMatrixKey & operator=(CovarianceMatrixKey &&);
+    CovarianceMatrixKey(CovarianceMatrixKey const&);
+    CovarianceMatrixKey(CovarianceMatrixKey&&);
+    CovarianceMatrixKey& operator=(CovarianceMatrixKey const&);
+    CovarianceMatrixKey& operator=(CovarianceMatrixKey&&);
     virtual ~CovarianceMatrixKey();
 
     /// Get a covariance matrix from the given record
@@ -515,8 +512,8 @@ private:
     SigmaKeyArray _sigma;
     CovarianceKeyArray _cov;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_aggregates_h_INCLUDED

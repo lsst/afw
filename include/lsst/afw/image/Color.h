@@ -47,15 +47,15 @@ public:
      *  we'd have to define some kind of "color difference" matric, and it's not worthwhile doing
      *  that yet.
      */
-    bool operator==(Color const& other) const {
+    bool operator==(Color const &other) const {
         return (isIndeterminate() && other.isIndeterminate()) || other._g_r == _g_r;
     }
-    bool operator!=(Color const& other) const { return !operator==(other); }
+    bool operator!=(Color const &other) const { return !operator==(other); }
     //@}
 
     /** Return the effective wavelength for this object in the given filter
      */
-    double getLambdaEff(Filter const&  ///< The filter in question
+    double getLambdaEff(Filter const &  ///< The filter in question
                         ) const {
         return 1000 * _g_r;
     }
@@ -63,8 +63,8 @@ public:
 private:
     double _g_r;
 };
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

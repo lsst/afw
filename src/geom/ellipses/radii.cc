@@ -239,7 +239,7 @@ BaseCore::Jacobian LogTraceRadius::dAssignToQuadrupole(Distortion const& distort
     result(2, 1) = r2;
     return result;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

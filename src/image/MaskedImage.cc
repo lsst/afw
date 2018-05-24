@@ -133,7 +133,7 @@ void ensureMetadata(std::shared_ptr<daf::base::PropertySet>& metadata) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
@@ -380,7 +380,7 @@ struct scaledProductVariance {
         return _c * _c * (lhs * lhs * varRhs + rhs * rhs * varLhs);
     }
 };
-}
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
@@ -441,7 +441,7 @@ struct scaledQuotientVariance {
         return (lhs * lhs * varRhs + rhs2 * varLhs) / (_c * _c * rhs2 * rhs2);
     }
 };
-}
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::
@@ -515,7 +515,7 @@ void processPlaneMetadata(std::shared_ptr<daf::base::PropertySet const> metadata
     hdr->set("EXTTYPE", exttype);
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
@@ -529,47 +529,38 @@ void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-    std::string const& fileName,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions,
-    std::shared_ptr<daf::base::PropertySet const> metadata,
-    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
-    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
-    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
-) const {
+        std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
+        fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+        std::shared_ptr<daf::base::PropertySet const> metadata,
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, metadata, imageMetadata,
-              maskMetadata, varianceMetadata);
+    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, metadata, imageMetadata, maskMetadata,
+              varianceMetadata);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-    fits::MemFileManager& manager,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions,
-    std::shared_ptr<daf::base::PropertySet const> metadata,
-    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
-    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
-    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
-) const {
+        fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
+        fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+        std::shared_ptr<daf::base::PropertySet const> metadata,
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
-    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, metadata, imageMetadata,
-              maskMetadata, varianceMetadata);
+    writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, metadata, imageMetadata, maskMetadata,
+              varianceMetadata);
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-    fits::Fits& fitsfile,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions,
-    std::shared_ptr<daf::base::PropertySet const> metadata,
-    std::shared_ptr<daf::base::PropertySet const> imageMetadata,
-    std::shared_ptr<daf::base::PropertySet const> maskMetadata,
-    std::shared_ptr<daf::base::PropertySet const> varianceMetadata
-) const {
+        fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
+        fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+        std::shared_ptr<daf::base::PropertySet const> metadata,
+        std::shared_ptr<daf::base::PropertySet const> imageMetadata,
+        std::shared_ptr<daf::base::PropertySet const> maskMetadata,
+        std::shared_ptr<daf::base::PropertySet const> varianceMetadata) const {
     std::shared_ptr<daf::base::PropertySet> header;
     if (metadata) {
         header = metadata->deepCopy();
@@ -800,6 +791,6 @@ INSTANTIATE2(std::uint64_t, float);
 INSTANTIATE2(std::uint64_t, double);
 INSTANTIATE2(std::uint64_t, std::uint64_t);
 
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

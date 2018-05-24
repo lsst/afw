@@ -23,8 +23,8 @@
  */
 
 /*
-* Simple test code for the Wcs Class
-*/
+ * Simple test code for the Wcs Class
+ */
 
 #include <iostream>
 #include <sstream>

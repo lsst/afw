@@ -71,7 +71,7 @@ std::pair<std::vector<double>, std::vector<double> > recenter(std::vector<double
 
     return std::make_pair(recentered_x, recentered_y);
 }
-}
+}  // namespace
 
 class InterpolateConstant : public Interpolate {
     friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x,
@@ -165,7 +165,7 @@ namespace {
     throw LSST_EXCEPT(pex::exceptions::LogicError,
                       str(boost::format("You can't get here: style == %") % style));
 }
-}
+}  // namespace
 
 class InterpolateGsl : public Interpolate {
     friend std::shared_ptr<Interpolate> makeInterpolate(std::vector<double> const &x,
@@ -356,6 +356,6 @@ std::shared_ptr<Interpolate> makeInterpolate(ndarray::Array<double const, 1> con
     return makeInterpolate(std::vector<double>(x.begin(), x.end()), std::vector<double>(y.begin(), y.end()),
                            style);
 }
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

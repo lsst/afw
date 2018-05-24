@@ -58,10 +58,10 @@ struct MaskedImagePixel_tag {};
 std::string const fitsFile_RE = "\\.fits(\\.[fg]z)?$";
 /// regexp to identify compressed files that we can't write MEFs to
 std::string const compressedFileNoMEF_RE = "(\\.gz)$";
-}
-}
-}
-}
+}  // namespace detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #include "lsst/afw/image/Pixel.h"
 #include "lsst/afw/image/LsstImageTypes.h"
@@ -159,13 +159,13 @@ public:
 
         /// Increment the iterator by `delta`
         MaskedImageIteratorBase& operator+=(std::ptrdiff_t delta  ///< how far to move the iterator
-                                            ) {
+        ) {
             _iter += delta;
             return *this;
         }
         /// Decrement the iterator by `delta`
         MaskedImageIteratorBase& operator-=(std::ptrdiff_t delta  ///< how far to move the iterator
-                                            ) {
+        ) {
             _iter -= delta;
             return *this;
         }
@@ -653,8 +653,8 @@ public:
     explicit MaskedImage(
             std::string const& fileName,
             std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
-            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
-            bool needAllHdus = false,
+            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+            bool conformMasks = false, bool needAllHdus = false,
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
@@ -678,8 +678,8 @@ public:
     explicit MaskedImage(
             fits::MemFileManager& manager,
             std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
-            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
-            bool needAllHdus = false,
+            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+            bool conformMasks = false, bool needAllHdus = false,
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
@@ -703,8 +703,8 @@ public:
     explicit MaskedImage(
             fits::Fits& fitsfile,
             std::shared_ptr<daf::base::PropertySet> metadata = std::shared_ptr<daf::base::PropertySet>(),
-            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT, bool conformMasks = false,
-            bool needAllHdus = false,
+            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
+            bool conformMasks = false, bool needAllHdus = false,
             std::shared_ptr<daf::base::PropertySet> imageMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> maskMetadata = std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<daf::base::PropertySet> varianceMetadata =
@@ -793,7 +793,8 @@ public:
      * @throws lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
      * this image do not match.
      */
-    void assign(MaskedImage const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
+    void assign(MaskedImage const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
+                ImageOrigin origin = PARENT);
 
     /// Add a scalar rhs to a MaskedImage
     MaskedImage& operator+=(ImagePixelT const rhs);
@@ -884,8 +885,9 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<daf::base::PropertySet const>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<daf::base::PropertySet const> metadata =
+                           std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> imageMetadata =
                            std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> maskMetadata =
@@ -906,8 +908,9 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(fits::MemFileManager& manager, std::shared_ptr<daf::base::PropertySet const> metadata =
-                                                          std::shared_ptr<daf::base::PropertySet const>(),
+    void writeFits(fits::MemFileManager& manager,
+                   std::shared_ptr<daf::base::PropertySet const> metadata =
+                           std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> imageMetadata =
                            std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> maskMetadata =
@@ -928,8 +931,9 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet const> metadata =
-                                                 std::shared_ptr<daf::base::PropertySet const>(),
+    void writeFits(fits::Fits& fitsfile,
+                   std::shared_ptr<daf::base::PropertySet const> metadata =
+                           std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> imageMetadata =
                            std::shared_ptr<daf::base::PropertySet const>(),
                    std::shared_ptr<daf::base::PropertySet const> maskMetadata =
@@ -953,16 +957,12 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(
-        std::string const& fileName,
-        fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions,
-        fits::ImageWriteOptions const& varianceOptions,
-        std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr
-    ) const;
+    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
+                   fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+                   std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS file.
@@ -980,16 +980,12 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(
-        fits::MemFileManager& manager,
-        fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions,
-        fits::ImageWriteOptions const& varianceOptions,
-        std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr
-    ) const;
+    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
+                   fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+                   std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr) const;
 
     /**
      *  Write a MaskedImage to a FITS file.
@@ -1007,16 +1003,12 @@ public:
      *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
      *  to indicate that the primary metadata applies to those HDUs as well.
      */
-    void writeFits(
-        fits::Fits& fitsfile,
-        fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions,
-        fits::ImageWriteOptions const& varianceOptions,
-        std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
-        std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr
-    ) const;
+    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
+                   fits::ImageWriteOptions const& maskOptions, fits::ImageWriteOptions const& varianceOptions,
+                   std::shared_ptr<daf::base::PropertySet const> metadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> imageMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> maskMetadata = nullptr,
+                   std::shared_ptr<daf::base::PropertySet const> varianceMetadata = nullptr) const;
 
     /**
      *  Read a MaskedImage from a regular FITS file.
@@ -1048,7 +1040,7 @@ public:
      *
      *  @throws pex::exceptions::LengthError if dimensions do not match.
      */
-    void setImage(Image const & other) { _image->assign(other); }
+    void setImage(Image const& other) { _image->assign(other); }
 
     /// Return a (shared_ptr to) the MaskedImage's %mask
     MaskPtr getMask() const { return _mask; }
@@ -1060,7 +1052,7 @@ public:
      *
      *  @throws pex::exceptions::LengthError if dimensions do not match.
      */
-    void setMask(Mask const & other) { _mask->assign(other); }
+    void setMask(Mask const& other) { _mask->assign(other); }
 
     /**
      *  Set the variance plane's pixel values to those of another Image.
@@ -1069,7 +1061,7 @@ public:
      *
      *  @throws pex::exceptions::LengthError if dimensions do not match.
      */
-    void setVariance(Variance const & other) { _variance->assign(other); }
+    void setVariance(Variance const& other) { _variance->assign(other); }
 
     /// Return a (shared_ptr to) the MaskedImage's variance
     VariancePtr getVariance() const { return _variance; }
@@ -1269,7 +1261,7 @@ MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
         typename std::shared_ptr<Image<ImagePixelT>> image,                                 ///< %image
         typename std::shared_ptr<Mask<MaskPixelT>> mask = Mask<MaskPixelT>(),               ///< mask
         typename std::shared_ptr<Image<VariancePixelT>> variance = Image<VariancePixelT>()  ///< variance
-        ) {
+) {
     return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
 }
 
@@ -1313,8 +1305,8 @@ struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
 
 template <typename ImageT>
 struct GetImage : public GetImage_<ImageT, typename ImageT::image_category> {};
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  //  LSST_IMAGE_MASKEDIMAGE_H

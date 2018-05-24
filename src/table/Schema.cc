@@ -97,7 +97,7 @@ public:
     }
 };
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- SchemaImpl implementation ---------------------------------------------------------------------------
@@ -118,7 +118,7 @@ template <typename T>
 inline int findNamedSubfield(
         SchemaItem<T> const &item, std::string const &name, char delimiter,
         boost::mpl::true_ *  // whether a match is possible based on the type of T; computed by caller
-        ) {
+) {
     if (name.size() <= item.field.getName().size()) return -1;
 
     if (  // compare invocation is equivalent to "name.startswith(item.field.getName())" in Python
@@ -142,7 +142,7 @@ template <typename T>
 inline int findNamedSubfield(
         SchemaItem<T> const &item, std::string const &name, char delimiter,
         boost::mpl::false_ *  // whether a match is possible based on the type of T; computed by caller
-        ) {
+) {
     return -1;
 }
 
@@ -152,7 +152,7 @@ template <typename T, typename U>
 inline void makeSubfieldItem(
         SchemaItem<T> const &item, int index, char delimiter, std::unique_ptr<SchemaItem<U> > &result,
         boost::mpl::true_ *  // whether a match is possible based on the types of T and U; computed by caller
-        ) {
+) {
     result.reset(new SchemaItem<U>(detail::Access::extractElement(item.key, index),
                                    Field<U>(join(item.field.getName(), Key<T>::subfields[index], delimiter),
                                             item.field.getDoc(), item.field.getUnits())));
@@ -163,7 +163,7 @@ template <typename T, typename U>
 inline void makeSubfieldItem(
         SchemaItem<T> const &item, int index, char delimiter, std::unique_ptr<SchemaItem<U> > &result,
         boost::mpl::false_ *  // whether a match is possible based on the types of T and U; computed by caller
-        ) {}
+) {}
 
 // This is a Variant visitation functor used to extract subfield items by name.
 // For example, if we have a Point field "a", if we search the Schema for "a.x",
@@ -194,7 +194,7 @@ struct ExtractItemByName : public boost::static_visitor<> {
     mutable std::unique_ptr<SchemaItem<U> > result;  // where we put the result to signal that we're done
 };
 
-}  // anonymous
+}  // namespace
 
 // Here's the driver for the find-by-name algorithm.
 template <typename T>
@@ -238,7 +238,7 @@ template <typename T, typename U>
 inline int findKeySubfield(
         SchemaItem<T> const &item, Key<U> const &key,
         boost::mpl::true_ *  // whether a match is possible based on the types of T and U; computed by caller
-        ) {
+) {
     int n = (key.getOffset() - item.key.getOffset()) / sizeof(U);
     if (n >= 0 && n < item.key.getElementCount()) {
         return n;
@@ -252,7 +252,7 @@ template <typename T, typename U>
 inline int findKeySubfield(
         SchemaItem<T> const &item, Key<U> const &key,
         boost::mpl::false_ *  // whether a match is possible based on the types of T and U; computed by caller
-        ) {
+) {
     return -1;
 }
 
@@ -281,7 +281,7 @@ struct ExtractItemByKey : public boost::static_visitor<> {
     mutable std::unique_ptr<SchemaItem<U> > result;
 };
 
-}  // anonymous.
+}  // namespace
 
 // Here's the driver for the find-by-key algorithm.  It's pretty similar to the find-by-name algorithm.
 template <typename T>
@@ -376,7 +376,7 @@ inline int findKey(SchemaImpl::OffsetMap const &offsets, SchemaImpl::FlagMap con
     return i->second;
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T>
 void SchemaImpl::replaceField(Key<T> const &key, Field<T> const &field) {
@@ -495,7 +495,8 @@ Key<std::string> SchemaImpl::addField(Field<std::string> const &field, bool doRe
         return addFieldImpl(sizeof(std::string), 1, field, doReplace);
     }
     // Fixed-length string: allocate space for getElementCount() chars
-    return addFieldImpl(sizeof(typename Field<std::string>::Element), field.getElementCount(), field, doReplace);
+    return addFieldImpl(sizeof(typename Field<std::string>::Element), field.getElementCount(), field,
+                        doReplace);
 }
 
 template <typename T>
@@ -610,8 +611,8 @@ Schema::Schema(Schema const &other) : _impl(other._impl), _aliases(other._aliase
 // Delegate to copy constructor  for backwards compatibility
 Schema::Schema(Schema &&other) : Schema(other) {}
 
-Schema &Schema::operator=(Schema const&) = default;
-Schema &Schema::operator=(Schema&&) = default;
+Schema &Schema::operator=(Schema const &) = default;
+Schema &Schema::operator=(Schema &&) = default;
 Schema::~Schema() = default;
 
 Schema Schema::readFits(std::string const &filename, int hdu) {
@@ -736,7 +737,7 @@ struct Stream {
     std::ostream *os;
 };
 
-}  // anonymous
+}  // namespace
 
 std::ostream &operator<<(std::ostream &os, Schema const &schema) {
     os << "Schema(\n";
@@ -789,6 +790,6 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const { return _impl->ge
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_LAYOUT, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

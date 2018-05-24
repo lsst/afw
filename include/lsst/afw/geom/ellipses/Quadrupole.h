@@ -143,9 +143,9 @@ private:
 
     Matrix _matrix;
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED

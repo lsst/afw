@@ -145,11 +145,11 @@ INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
-    rotateImageBy90(afwImage::Mask<afwImage::MaskPixel> const&, int);
-template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
-    flipImage(afwImage::Mask<afwImage::MaskPixel> const&, bool flipLR, bool flipTB);
+template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>> rotateImageBy90(
+        afwImage::Mask<afwImage::MaskPixel> const&, int);
+template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>> flipImage(
+        afwImage::Mask<afwImage::MaskPixel> const&, bool flipLR, bool flipTB);
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

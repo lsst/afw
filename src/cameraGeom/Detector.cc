@@ -103,13 +103,13 @@ std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FromSysT c
 
 template <typename FromSysT, typename ToSysT>
 lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &point, FromSysT const &fromSys,
-                                  ToSysT const &toSys) const {
+                                        ToSysT const &toSys) const {
     return _transformMap.transform(point, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
 template <typename FromSysT, typename ToSysT>
 std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &points,
-                                               FromSysT const &fromSys, ToSysT const &toSys) const {
+                                                     FromSysT const &fromSys, ToSysT const &toSys) const {
     return _transformMap.transform(points, makeCameraSys(fromSys), makeCameraSys(toSys));
 }
 
@@ -153,12 +153,13 @@ void Detector::_init() {
 //
 // Explicit instantiations
 //
-#define INSTANTIATE(FROMSYS, TOSYS)                                                                          \
-    template std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FROMSYS const &,          \
-                                                                                   TOSYS const &) const;     \
-    template lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &, FROMSYS const &, TOSYS const &) const; \
-    template std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &,              \
-                                                            FROMSYS const &, TOSYS const &) const;
+#define INSTANTIATE(FROMSYS, TOSYS)                                                                         \
+    template std::shared_ptr<geom::TransformPoint2ToPoint2> Detector::getTransform(FROMSYS const &,         \
+                                                                                   TOSYS const &) const;    \
+    template lsst::geom::Point2D Detector::transform(lsst::geom::Point2D const &, FROMSYS const &,          \
+                                                     TOSYS const &) const;                                  \
+    template std::vector<lsst::geom::Point2D> Detector::transform(std::vector<lsst::geom::Point2D> const &, \
+                                                                  FROMSYS const &, TOSYS const &) const;
 
 INSTANTIATE(CameraSys, CameraSys);
 INSTANTIATE(CameraSys, CameraSysPrefix);

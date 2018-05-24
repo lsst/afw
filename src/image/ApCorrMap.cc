@@ -108,7 +108,7 @@ std::string getApCorrMapPersistenceName() { return "ApCorrMap"; }
 
 ApCorrMapFactory registration(getApCorrMapPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 bool ApCorrMap::isPersistable() const {
     for (Iterator i = begin(); i != end(); ++i) {
@@ -140,6 +140,6 @@ ApCorrMap& ApCorrMap::operator*=(double const scale) {
     _internal = replacement;
     return *this;
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

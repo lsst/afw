@@ -62,8 +62,8 @@ struct FieldBase {
     }
     FieldBase(FieldBase const &) = default;
     FieldBase(FieldBase &&) = default;
-    FieldBase & operator=(FieldBase const &) = default;
-    FieldBase & operator=(FieldBase &&) = default;
+    FieldBase &operator=(FieldBase const &) = default;
+    FieldBase &operator=(FieldBase &&) = default;
     ~FieldBase() = default;
 
 protected:
@@ -128,8 +128,8 @@ struct FieldBase<Array<U> > {
 
     FieldBase(FieldBase const &) = default;
     FieldBase(FieldBase &&) = default;
-    FieldBase & operator=(FieldBase const &) = default;
-    FieldBase & operator=(FieldBase &&) = default;
+    FieldBase &operator=(FieldBase const &) = default;
+    FieldBase &operator=(FieldBase &&) = default;
     ~FieldBase() = default;
 
     /// Return a string description of the field type.
@@ -249,8 +249,8 @@ struct FieldBase<std::string> {
 
     FieldBase(FieldBase const &) = default;
     FieldBase(FieldBase &&) = default;
-    FieldBase & operator=(FieldBase const &) = default;
-    FieldBase & operator=(FieldBase &&) = default;
+    FieldBase &operator=(FieldBase const &) = default;
+    FieldBase &operator=(FieldBase &&) = default;
     ~FieldBase() = default;
 
     /// Return a string description of the field type.
@@ -266,6 +266,7 @@ struct FieldBase<std::string> {
 
     /// Return true if the field is variable-length (each record can have a different size array).
     bool isVariableLength() const { return _size == 0; }
+
 protected:
     /// Needed to allow Keys to be default-constructed.
     static FieldBase makeDefault() { return FieldBase(0); }
@@ -306,8 +307,8 @@ protected:
 private:
     int _size;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_FieldBase_h_INCLUDED

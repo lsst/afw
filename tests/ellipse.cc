@@ -359,10 +359,10 @@ struct ConvolutionTest {
                            core.getName() % d_analytic % d_numeric));
     }
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 namespace afwEllipses = lsst::afw::geom::ellipses;
 

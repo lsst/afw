@@ -87,8 +87,9 @@ public:
      */
     explicit VisitInfo(table::RecordId exposureId, double exposureTime, double darkTime,
                        daf::base::DateTime const &date, double ut1, lsst::geom::Angle const &era,
-                       lsst::geom::SpherePoint const &boresightRaDec, lsst::geom::SpherePoint const &boresightAzAlt,
-                       double boresightAirmass, lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
+                       lsst::geom::SpherePoint const &boresightRaDec,
+                       lsst::geom::SpherePoint const &boresightAzAlt, double boresightAirmass,
+                       lsst::geom::Angle const &boresightRotAngle, RotType const &rotType,
                        coord::Observatory const &observatory, coord::Weather const &weather)
             : _exposureId(exposureId),
               _exposureTime(exposureTime),
@@ -177,8 +178,8 @@ public:
      * Equal to the angle between the North celestial pole and Zenith at the boresight.
      * Or, the angular separation between two great circle arcs that meet at the object:
      *   One passing through the North celestial pole, and the other through zenith.
-     * For an object on the meridian the angle is zero if it is South of zenith and pi if it is North of zenith
-     * The angle is positive for objects East of the meridian, and negative for objects to the West.
+     * For an object on the meridian the angle is zero if it is South of zenith and pi if it is North of
+     * zenith The angle is positive for objects East of the meridian, and negative for objects to the West.
      */
     lsst::geom::Angle getBoresightParAngle() const;
 

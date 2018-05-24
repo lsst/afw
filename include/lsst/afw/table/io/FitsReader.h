@@ -42,10 +42,10 @@ public:
      */
     explicit FitsReader(std::string const& persistedClassName);
 
-    FitsReader(FitsReader const &) = default;
-    FitsReader(FitsReader &&) = default;
-    FitsReader & operator=(FitsReader const &) = default;
-    FitsReader & operator=(FitsReader &&) = default;
+    FitsReader(FitsReader const&) = default;
+    FitsReader(FitsReader&&) = default;
+    FitsReader& operator=(FitsReader const&) = default;
+    FitsReader& operator=(FitsReader&&) = default;
 
     /**
      *  Create a new Catalog by reading a FITS binary table.
@@ -145,9 +145,9 @@ private:
     void _setupArchive(afw::fits::Fits& fits, FitsSchemaInputMapper& mapper,
                        std::shared_ptr<InputArchive> archive, int ioFlags) const;
 };
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_FitsReader_h_INCLUDED

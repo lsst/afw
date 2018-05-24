@@ -203,7 +203,7 @@ using std::real;
 #ifdef COUNTFEVAL
 int nfeval = 0;
 #endif
-}
+}  // namespace details
 
 template <class T>
 struct IntRegion {
@@ -213,8 +213,8 @@ public:
 
     IntRegion(IntRegion const &) = default;
     IntRegion(IntRegion &&) = default;
-    IntRegion & operator=(IntRegion const &) = default;
-    IntRegion & operator=(IntRegion &&) = default;
+    IntRegion &operator=(IntRegion const &) = default;
+    IntRegion &operator=(IntRegion &&) = default;
     ~IntRegion() = default;
 
     bool operator<(IntRegion<T> const &r2) const { return _error < r2._error; }
@@ -922,7 +922,7 @@ private:
     double _eps;
 };
 
-}  // end of namespace afw::math::details
+}  // namespace details
 
 // =============================================================
 /**
@@ -944,8 +944,8 @@ typename BinaryFunctionT::result_type integrate2d(BinaryFunctionT func,
     FunctionWrapper<BinaryFunctionT> fwrap(func, x1, x2, eps);
     return integrate(fwrap, y1, y2, eps);
 }
-}
-}
-}  // end namespaces lsst/afw/math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

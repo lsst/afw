@@ -204,9 +204,9 @@ extern CameraSysPrefix const ACTUAL_PIXELS;
 std::ostream &operator<<(std::ostream &os, CameraSysPrefix const &detSysPrefix);
 
 std::ostream &operator<<(std::ostream &os, CameraSys const &cameraSys);
-}
-}
-}
+}  // namespace cameraGeom
+}  // namespace afw
+}  // namespace lsst
 
 namespace std {
 template <>
@@ -218,6 +218,6 @@ template <>
 struct hash<lsst::afw::cameraGeom::CameraSys> {
     size_t operator()(lsst::afw::cameraGeom::CameraSys const &obj) const noexcept { return obj.hash(); }
 };
-}
+}  // namespace std
 
 #endif

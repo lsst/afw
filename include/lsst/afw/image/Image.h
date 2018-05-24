@@ -58,7 +58,7 @@ template <typename PixelT>
 class ImageFormatter;
 template <typename PixelT>
 class DecoratedImageFormatter;
-}
+}  // namespace formatters
 
 namespace image {
 
@@ -179,8 +179,9 @@ public:
      *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
      *                              should take into account the xy0 saved with the image.
      */
-    explicit Image(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                                                 std::shared_ptr<lsst::daf::base::PropertySet>(),
+    explicit Image(fits::Fits& fitsfile,
+                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                    lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     // generalised copy constructor
@@ -216,8 +217,9 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<lsst::daf::base::PropertySet const>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
                    std::string const& mode = "w") const;
 
     /**
@@ -250,13 +252,10 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(
-        std::string const& filename,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr,
-        std::shared_ptr<Mask<MaskPixel> const> mask=nullptr
-    ) const;
+    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
      *  Write an image to a FITS RAM file.
@@ -267,13 +266,10 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(
-        fits::MemFileManager& manager,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr,
-        std::shared_ptr<Mask<MaskPixel> const> mask=nullptr
-    ) const;
+    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
      *  Write an image to an open FITS file object.
@@ -283,12 +279,9 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(
-        fits::Fits& fitsfile,
-        fits::ImageWriteOptions const& options,
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr,
-        std::shared_ptr<Mask<MaskPixel> const> mask=nullptr
-    ) const;
+    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
      *  Read an Image from a regular FITS file.
@@ -467,8 +460,9 @@ public:
      * @param metadata metadata to write to header; or NULL
      * @param mode "w" to write a new file; "a" to append
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<lsst::daf::base::PropertySet const>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
                    std::string const& mode = "w") const;
 
     /// Return a shared_ptr to the DecoratedImage's Image
@@ -502,16 +496,16 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
 ///
 /// Note that this modifies the metadata, stripping the WCS headers that
 /// provide the xy0.
-lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata);
+lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata);
 
 /**
  * Return true if the pixels for two images or masks overlap in memory.
  */
-template<typename T1, typename T2>
-bool imagesOverlap(ImageBase<T1> const &image1, ImageBase<T2> const &image2);
+template <typename T1, typename T2>
+bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2);
 
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

@@ -123,7 +123,7 @@ void printVariance(ImageT const& img, string const& title = "") {
         cout << endl;
     }
 }
-}
+}  // namespace
 #endif
 
 ImageT make_image(int const width = 5, int const height = 6) {

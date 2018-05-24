@@ -91,7 +91,6 @@ namespace {
 // premature.
 class Interpolator {
 public:
-
     // Description of a cell to interpolate in one dimension.
     struct Bounds {
         int const step;  // step between min and max, except in the special last row/column
@@ -113,28 +112,22 @@ public:
     };
 
     // Construct an object to interpolate the given BoundedField on an evenly-spaced grid within a region.
-    Interpolator(
-        BoundedField const * field,
-        lsst::geom::Box2I const * region,
-        int xStep,
-        int yStep
-    ) :
-        _field(field),
-        _region(region),
-        _x(xStep),
-        _y(yStep),
-        _z00(std::numeric_limits<double>::quiet_NaN()),
-        _z01(std::numeric_limits<double>::quiet_NaN()),
-        _z10(std::numeric_limits<double>::quiet_NaN()),
-        _z11(std::numeric_limits<double>::quiet_NaN())
-    {}
+    Interpolator(BoundedField const *field, lsst::geom::Box2I const *region, int xStep, int yStep)
+            : _field(field),
+              _region(region),
+              _x(xStep),
+              _y(yStep),
+              _z00(std::numeric_limits<double>::quiet_NaN()),
+              _z01(std::numeric_limits<double>::quiet_NaN()),
+              _z10(std::numeric_limits<double>::quiet_NaN()),
+              _z11(std::numeric_limits<double>::quiet_NaN()) {}
 
     // Actually do the interpolation.
     //
     // This method iterates over rows of cells in y, calling _runRow()
     // to iterate over cells in x.
     template <typename T, typename F>
-    void run(image::Image<T> & img, F functor) {
+    void run(image::Image<T> &img, F functor) {
         _y.reset(_region->getBeginY());
         while (_y.end < _region->getEndY()) {
             _runRow(img, functor);
@@ -142,7 +135,7 @@ public:
             _y.max += _y.step;
             _y.end = _y.max;
         }
-        { // special-case last iteration in y
+        {  // special-case last iteration in y
             _y.max = _region->getMaxY();
             _y.end = _region->getEndY();
             _runRow(img, functor);
@@ -150,10 +143,9 @@ public:
     }
 
 private:
-
     // Process a row of cells, calling _runCell() on each one.
     template <typename T, typename F>
-    void _runRow(image::Image<T> & img, F functor) {
+    void _runRow(image::Image<T> &img, F functor) {
         _x.reset(_region->getBeginX());
         _z00 = _field->evaluate(_x.min, _y.min);
         _z01 = _field->evaluate(_x.min, _y.max);
@@ -167,7 +159,7 @@ private:
             _z00 = _z10;
             _z01 = _z11;
         }
-        { // special-case last iteration in x
+        {  // special-case last iteration in x
             _x.max = _region->getMaxX();
             _x.end = _region->getEndX();
             _z10 = _field->evaluate(_x.max, _y.min);
@@ -181,7 +173,7 @@ private:
     // comes from the need to special-case the unusually-sized final cells and final
     // rows/columns within cells in each dimension.
     template <typename T, typename F>
-    void _runCell(image::Image<T> const & img, F functor) const {
+    void _runCell(image::Image<T> const &img, F functor) const {
         int dy = _y.max - _y.min;
         int dx = _x.max - _x.min;
         // First iteration of each of the for loops below has been
@@ -189,41 +181,38 @@ private:
         // when no interpolation is necessary, but more importantly it
         // allows us to handle dx==0 and dy==0 with no divide-by-zero
         // problems.
-        { // y=_y.min
-            auto rowIter =
-                img.x_at(_x.min - img.getX0(), _y.min - img.getY0());
-            { // x=_x.min
+        {  // y=_y.min
+            auto rowIter = img.x_at(_x.min - img.getX0(), _y.min - img.getY0());
+            {  // x=_x.min
                 functor(*rowIter, _z00);
                 ++rowIter;
             }
             for (int x = _x.min + 1; x < _x.end; ++x, ++rowIter) {
-                functor(*rowIter, ((_x.max - x)*_z00 + (x - _x.min)*_z10)/dx);
+                functor(*rowIter, ((_x.max - x) * _z00 + (x - _x.min) * _z10) / dx);
             }
         }
         for (int y = _y.min + 1; y < _y.end; ++y) {
-            auto rowIter =
-                img.x_at(_x.min - img.getX0(), y - img.getY0());
-            double z0 = ((_y.max - y)*_z00 + (y - _y.min)*_z01)/dy;
-            double z1 = ((_y.max - y)*_z10 + (y - _y.min)*_z11)/dy;
-            { // x=_x.min
+            auto rowIter = img.x_at(_x.min - img.getX0(), y - img.getY0());
+            double z0 = ((_y.max - y) * _z00 + (y - _y.min) * _z01) / dy;
+            double z1 = ((_y.max - y) * _z10 + (y - _y.min) * _z11) / dy;
+            {  // x=_x.min
                 functor(*rowIter, z0);
                 ++rowIter;
             }
             for (int x = _x.min + 1; x < _x.end; ++x, ++rowIter) {
-                functor(*rowIter, ((_x.max - x)*z0 + (x - _x.min)*z1)/dx);
+                functor(*rowIter, ((_x.max - x) * z0 + (x - _x.min) * z1) / dx);
             }
         }
     }
 
-    BoundedField const * _field;
-    lsst::geom::Box2I const * _region;
+    BoundedField const *_field;
+    lsst::geom::Box2I const *_region;
     Bounds _x;
     Bounds _y;
     double _z00, _z01, _z10, _z11;
 };
 
-} // anonymous
-
+}  // namespace
 
 template <typename T, typename F>
 void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bool overlapOnly, int xStep,
@@ -240,16 +229,16 @@ void applyToImage(BoundedField const &field, image::Image<T> &img, F functor, bo
         Interpolator interpolator(&field, &region, xStep, yStep);
         interpolator.run(img, functor);
     } else {
-        for (int y = region.getBeginY(), yEnd=region.getEndY(); y < yEnd; ++y) {
+        for (int y = region.getBeginY(), yEnd = region.getEndY(); y < yEnd; ++y) {
             auto rowIter = img.x_at(region.getBeginX() - img.getX0(), y - img.getY0());
-            for (int x = region.getBeginX(), xEnd=region.getEndX(); x < xEnd; ++x, ++rowIter) {
+            for (int x = region.getBeginX(), xEnd = region.getEndX(); x < xEnd; ++x, ++rowIter) {
                 functor(*rowIter, field.evaluate(x, y));
             }
         }
     }
 }
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf) {
     return *bf * scale;
@@ -261,8 +250,8 @@ void BoundedField::fillImage(image::Image<T> &img, bool overlapOnly, int xStep, 
 }
 
 template <typename T>
-void BoundedField::addToImage(image::Image<T> &img, double scaleBy, bool overlapOnly,
-                              int xStep, int yStep) const {
+void BoundedField::addToImage(image::Image<T> &img, double scaleBy, bool overlapOnly, int xStep,
+                              int yStep) const {
     applyToImage(*this, img, ScaledAdd(scaleBy), overlapOnly, xStep, yStep);
 }
 
@@ -276,7 +265,7 @@ void BoundedField::divideImage(image::Image<T> &img, bool overlapOnly, int xStep
     applyToImage(*this, img, Divide(), overlapOnly, xStep, yStep);
 }
 
-#define INSTANTIATE(T)                                                             \
+#define INSTANTIATE(T)                                                                       \
     template void BoundedField::fillImage(image::Image<T> &, bool, int, int) const;          \
     template void BoundedField::addToImage(image::Image<T> &, double, bool, int, int) const; \
     template void BoundedField::multiplyImage(image::Image<T> &, bool, int, int) const;      \
@@ -285,6 +274,6 @@ void BoundedField::divideImage(image::Image<T> &img, bool overlapOnly, int xStep
 INSTANTIATE(float);
 INSTANTIATE(double);
 
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

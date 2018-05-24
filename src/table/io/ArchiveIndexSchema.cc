@@ -37,7 +37,7 @@ ArchiveIndexSchema::ArchiveIndexSchema()
                   MAX_MODULE_LENGTH)) {
     schema.getCitizen().markPersistent();
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

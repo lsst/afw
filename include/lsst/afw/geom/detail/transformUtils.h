@@ -52,8 +52,8 @@ constexpr int serializationVersion = 1;
  *
  * @param[in] is  input stream from which to deserialize this Transform
  */
-template<class Transform> 
-std::shared_ptr<Transform> readStream(std::istream & is);
+template <class Transform>
+std::shared_ptr<Transform> readStream(std::istream& is);
 
 /**
  * Serialize a Transform to an output stream
@@ -68,15 +68,15 @@ std::shared_ptr<Transform> readStream(std::istream & is);
  * @param[out] os  output stream to which to serialize this Transform
  * @param[in] transform  Transform to serialize
  */
-template<class Transform>
-void writeStream(Transform const & transform, std::ostream & os);
+template <class Transform>
+void writeStream(Transform const& transform, std::ostream& os);
 
 /*
  * Provide definitions here in the header file to avoid the need for explicit instantiations
  */
 
-template<class Transform> 
-std::shared_ptr<Transform> readStream(std::istream & is) {
+template <class Transform>
+std::shared_ptr<Transform> readStream(std::istream& is) {
     int version;
     is >> version;
     if (version != 1) {
@@ -103,8 +103,8 @@ std::shared_ptr<Transform> readStream(std::istream & is) {
     return std::make_shared<Transform>(*mapping);
 }
 
-template<class Transform>
-void writeStream(Transform const & transform, std::ostream & os) {
+template <class Transform>
+void writeStream(Transform const& transform, std::ostream& os) {
     os << serializationVersion << " " << Transform::getShortClassName();
     transform.getMapping()->show(os, false);  // false = do not write comments
 }

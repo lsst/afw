@@ -2067,6 +2067,6 @@ void NeuralNetCovariogram<T>::setSigma1(double sigma1) {
     template class NeuralNetCovariogram<T>;
 
 INSTANTIATEGP(double);
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

@@ -55,7 +55,7 @@ public:
     bool operator()(T pixelValue) { return pixelValue != 0; }
 };
 
-}  // end lsst::afw::geom::details
+}  // namespace details
 
 /** An enumeration class which describes the shapes
 
@@ -457,8 +457,7 @@ public:
      */
     template <typename ImageT>
     void setImage(image::Image<ImageT> &image, ImageT val,
-                  lsst::geom::Box2I const &region = lsst::geom::Box2I(),
-                  bool doClip = false) const;
+                  lsst::geom::Box2I const &region = lsst::geom::Box2I(), bool doClip = false) const;
 
     /** Apply functor on individual elements from the supplied parameters
      *
@@ -660,7 +659,7 @@ public:
         for (size_t y = 0; y < yDim; ++y) {
             auto yWithOffset = y + minY;
             bool inSpan = false;  // are we currently in a span of interest?
-            std::size_t start;  // starting x value of span we're currently in
+            std::size_t start;    // starting x value of span we're currently in
             for (size_t x = 0; x < xDim; ++x) {
                 bool compareValue = comparator((*arrIter)[x]);
                 if (inSpan) {
@@ -680,8 +679,7 @@ public:
             // closed out and added to the vector. The last pixel should be included in the Span
             // and the Span should be closed and added to the vector of spans.
             if (inSpan) {
-                tempVec.push_back(
-                        Span(yWithOffset, start + minX, dimMinusOne + minX));
+                tempVec.push_back(Span(yWithOffset, start + minX, dimMinusOne + minX));
             }
             ++arrIter;
         }
@@ -778,8 +776,8 @@ private:
     // Number of pixels in the SpanSet
     std::size_t _area;
 };
-}
-}
-}  // Close namespace lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_GEOM_SPANSET_H

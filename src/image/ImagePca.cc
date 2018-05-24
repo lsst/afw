@@ -222,7 +222,7 @@ std::shared_ptr<typename MaskedImageT::Image> fitEigenImagesToImage(
         typename ImagePca<MaskedImageT>::ImageList const& eigenImages,  // Eigen images
         int nEigen,                                                     // Number of eigen images to use
         MaskedImageT const& image                                       // The image to be fit
-        ) {
+) {
     typedef typename MaskedImageT::Image ImageT;
 
     if (nEigen == 0) {
@@ -280,7 +280,7 @@ double do_updateBadPixels(detail::MaskedImage_tag const&,
                           typename ImagePca<ImageT>::ImageList const& eigenImages,  // Eigen images
                           unsigned long mask,  ///< @internal Mask defining bad pixels
                           int const ncomp      ///< @internal Number of components to use in estimate
-                          ) {
+) {
     int const nImage = imageList.size();
     if (nImage == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,

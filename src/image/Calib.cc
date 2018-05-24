@@ -60,9 +60,9 @@ template <typename T>
 ndarray::Array<T, 1> abMagErrFromFluxErr(ndarray::Array<T const, 1> const& fluxErr,
                                          ndarray::Array<T const, 1> const& flux) {
     if (flux.getNumElements() != fluxErr.getNumElements()) {
-        throw LSST_EXCEPT(pex::exceptions::LengthError,
-                          (boost::format("Length mismatch: %d vs %d") % flux.getNumElements() %
-                           fluxErr.getNumElements()).str());
+        throw LSST_EXCEPT(pex::exceptions::LengthError, (boost::format("Length mismatch: %d vs %d") %
+                                                         flux.getNumElements() % fluxErr.getNumElements())
+                                                                .str());
     }
     ndarray::Array<T, 1> out = ndarray::allocate(flux.getShape());
     for (std::size_t ii = 0; ii < flux.getNumElements(); ++ii) {
@@ -86,9 +86,9 @@ template <typename T>
 ndarray::Array<T, 1> fluxErrFromABMagErr(ndarray::Array<T const, 1> const& magErr,
                                          ndarray::Array<T const, 1> const& mag) {
     if (mag.getNumElements() != magErr.getNumElements()) {
-        throw LSST_EXCEPT(pex::exceptions::LengthError,
-                          (boost::format("Length mismatch: %d vs %d") % mag.getNumElements() %
-                           magErr.getNumElements()).str());
+        throw LSST_EXCEPT(pex::exceptions::LengthError, (boost::format("Length mismatch: %d vs %d") %
+                                                         mag.getNumElements() % magErr.getNumElements())
+                                                                .str());
     }
     ndarray::Array<T, 1> out = ndarray::allocate(mag.getShape());
     for (std::size_t ii = 0; ii < mag.getNumElements(); ++ii) {
@@ -96,7 +96,6 @@ ndarray::Array<T, 1> fluxErrFromABMagErr(ndarray::Array<T const, 1> const& magEr
     }
     return out;
 }
-
 
 Calib::Calib() : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 Calib::Calib(double fluxMag0) : _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
@@ -170,7 +169,7 @@ int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
 
     return nstripped;
 }
-}
+}  // namespace detail
 
 bool Calib::operator==(Calib const& rhs) const {
     return _fluxMag0 == rhs._fluxMag0 && _fluxMag0Sigma == rhs._fluxMag0Sigma;
@@ -219,12 +218,12 @@ inline double convertToFluxErr(double fluxMag0InvSNR, double flux, double magErr
 }
 inline double convertToMag(double fluxMag0, double flux) { return -2.5 * ::log10(flux / fluxMag0); }
 
-inline void convertToMagWithErr(double* mag, double* magErr, double fluxMag0, double fluxMag0Err,
-                                double flux, double fluxErr) {
-    *mag = -2.5*std::log10(flux/fluxMag0);
-    double const x = fluxErr/flux;
-    double const y = fluxMag0Err/fluxMag0;
-    *magErr = (2.5/std::log(10.0))*std::sqrt(x*x + y*y);
+inline void convertToMagWithErr(double* mag, double* magErr, double fluxMag0, double fluxMag0Err, double flux,
+                                double fluxErr) {
+    *mag = -2.5 * std::log10(flux / fluxMag0);
+    double const x = fluxErr / flux;
+    double const y = fluxMag0Err / fluxMag0;
+    *magErr = (2.5 / std::log(10.0)) * std::sqrt(x * x + y * y);
 }
 
 }  // anonymous namespace
@@ -419,7 +418,7 @@ std::string getCalibPersistenceName() { return "Calib"; }
 
 CalibFactory registration(getCalibPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string Calib::getPersistenceName() const { return getCalibPersistenceName(); }
 
@@ -439,19 +438,18 @@ Calib& Calib::operator*=(double const scale) {
     return *this;
 }
 
-
 // Explicit instantiation
-#define INSTANTIATE(TYPE) \
-template ndarray::Array<TYPE, 1> abMagFromFlux(ndarray::Array<TYPE const, 1> const& flux); \
-template ndarray::Array<TYPE, 1> abMagErrFromFluxErr(ndarray::Array<TYPE const, 1> const& fluxErr, \
-                                                     ndarray::Array<TYPE const, 1> const& flux); \
-template ndarray::Array<TYPE, 1> fluxFromABMag(ndarray::Array<TYPE const, 1> const& mag); \
-template ndarray::Array<TYPE, 1> fluxErrFromABMagErr(ndarray::Array<TYPE const, 1> const& magErr, \
-                                                     ndarray::Array<TYPE const, 1> const& mag);
+#define INSTANTIATE(TYPE)                                                                              \
+    template ndarray::Array<TYPE, 1> abMagFromFlux(ndarray::Array<TYPE const, 1> const& flux);         \
+    template ndarray::Array<TYPE, 1> abMagErrFromFluxErr(ndarray::Array<TYPE const, 1> const& fluxErr, \
+                                                         ndarray::Array<TYPE const, 1> const& flux);   \
+    template ndarray::Array<TYPE, 1> fluxFromABMag(ndarray::Array<TYPE const, 1> const& mag);          \
+    template ndarray::Array<TYPE, 1> fluxErrFromABMagErr(ndarray::Array<TYPE const, 1> const& magErr,  \
+                                                         ndarray::Array<TYPE const, 1> const& mag);
 
 INSTANTIATE(float);
 INSTANTIATE(double);
 
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

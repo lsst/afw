@@ -147,7 +147,7 @@ struct AnalyticKernelPersistenceHelper : public Kernel::PersistenceHelper {
             : Kernel::PersistenceHelper(schema_), kernelFunction(schema["kernelfunction"]) {}
 };
 
-}  // anonymous
+}  // namespace
 
 class AnalyticKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -181,7 +181,7 @@ std::string getAnalyticKernelPersistenceName() { return "AnalyticKernel"; }
 
 AnalyticKernel::Factory registration(getAnalyticKernelPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string AnalyticKernel::getPersistenceName() const { return getAnalyticKernelPersistenceName(); }
 
@@ -190,6 +190,6 @@ void AnalyticKernel::write(OutputArchiveHandle &handle) const {
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.kernelFunction, handle.put(_kernelFunctionPtr.get()));
 }
-}
-}
 }  // namespace math
+}  // namespace afw
+}  // namespace lsst

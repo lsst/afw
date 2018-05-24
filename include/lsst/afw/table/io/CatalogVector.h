@@ -27,9 +27,9 @@ namespace io {
  *  and copy constructors for CatalogVector.
  */
 class CatalogVector : public std::vector<BaseCatalog> {};
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_CatalogVector_h_INCLUDED

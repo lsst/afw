@@ -47,7 +47,7 @@ struct CandidatePtrMore : public std::binary_function<std::shared_ptr<SpatialCel
         return a->getCandidateRating() > b->getCandidateRating();
     }
 };
-}
+}  // namespace
 
 int SpatialCellCandidate::_CandidateId = 0;
 
@@ -348,14 +348,15 @@ struct CellContains : public std::unary_function<std::shared_ptr<SpatialCell>, b
     CellContains(std::shared_ptr<SpatialCellCandidate> candidate) : _candidate(candidate) {}
 
     bool operator()(std::shared_ptr<SpatialCell> cell) {
-        return cell->getBBox().contains(lsst::geom::Point2I(image::positionToIndex(_candidate->getXCenter()),
-                                                      image::positionToIndex(_candidate->getYCenter())));
+        return cell->getBBox().contains(
+                lsst::geom::Point2I(image::positionToIndex(_candidate->getXCenter()),
+                                    image::positionToIndex(_candidate->getYCenter())));
     }
 
 private:
     std::shared_ptr<SpatialCellCandidate> _candidate;
 };
-}
+}  // namespace
 
 void SpatialCellSet::insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate) {
     CellList::iterator pos = std::find_if(_cellList.begin(), _cellList.end(), CellContains(candidate));
@@ -434,6 +435,6 @@ void SpatialCellSet::setIgnoreBad(bool ignoreBad) {
         (*cell)->setIgnoreBad(ignoreBad);
     }
 }
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

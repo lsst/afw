@@ -126,8 +126,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void fillImage(image::Image<T>& image, bool overlapOnly = false,
-                   int xStep = 1, int yStep = 1) const;
+    void fillImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
 
     /**
      *  Add the field or a constant multiple of it to an image in-place
@@ -145,8 +144,8 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false,
-                    int xStep = 1, int yStep = 1) const;
+    void addToImage(image::Image<T>& image, double scaleBy = 1.0, bool overlapOnly = false, int xStep = 1,
+                    int yStep = 1) const;
 
     /**
      *  Multiply an image by the field in-place.
@@ -163,8 +162,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void multiplyImage(image::Image<T>& image, bool overlapOnly = false,
-                       int xStep = 1, int yStep = 1) const;
+    void multiplyImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
 
     /**
      *  Divide an image by the field in-place.
@@ -181,8 +179,7 @@ public:
      *         and overlapOnly=false.
      */
     template <typename T>
-    void divideImage(image::Image<T>& image, bool overlapOnly = false,
-                     int xStep = 1, int yStep = 1) const;
+    void divideImage(image::Image<T>& image, bool overlapOnly = false, int xStep = 1, int yStep = 1) const;
 
     /**
      *  Return a scaled BoundedField
@@ -198,13 +195,14 @@ public:
     bool operator!=(BoundedField const& rhs) const { return !(*this == rhs); };
 
     virtual ~BoundedField() = default;
-    BoundedField(BoundedField const &) = default;
-    BoundedField(BoundedField &&) = default;
-    BoundedField & operator=(BoundedField const &) = delete;
-    BoundedField & operator=(BoundedField &&) = delete;
+    BoundedField(BoundedField const&) = default;
+    BoundedField(BoundedField&&) = default;
+    BoundedField& operator=(BoundedField const&) = delete;
+    BoundedField& operator=(BoundedField&&) = delete;
 
-    friend std::ostream & operator<<(std::ostream & os, BoundedField const & bf)
-    { return os << bf.toString() << " on " << bf.getBBox(); }
+    friend std::ostream& operator<<(std::ostream& os, BoundedField const& bf) {
+        return os << bf.toString() << " on " << bf.getBBox();
+    }
 
 protected:
     explicit BoundedField(lsst::geom::Box2I const& bbox) : _bbox(bbox) {}
@@ -217,8 +215,8 @@ private:
 };
 
 std::shared_ptr<BoundedField> operator*(double const scale, std::shared_ptr<BoundedField const> bf);
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_MATH_BoundedField_h_INCLUDED

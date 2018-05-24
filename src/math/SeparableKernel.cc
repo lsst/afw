@@ -299,7 +299,7 @@ void _computeCache(int const cacheSize, std::vector<double> const& x,
         }
     }
 }
-}
+}  // namespace
 
 void SeparableKernel::computeCache(int const cacheSize) {
     SeparableKernel::KernelFunctionPtr func;
@@ -312,6 +312,6 @@ void SeparableKernel::computeCache(int const cacheSize) {
 }
 
 int SeparableKernel::getCacheSize() const { return _kernelColCache.size(); };
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

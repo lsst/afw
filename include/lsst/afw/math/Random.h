@@ -147,8 +147,8 @@ public:
     // Use compiler generated destructor and shallow copy constructor/assignment operator
     Random(Random const &) = default;
     Random(Random &&) = default;
-    Random & operator=(Random const &) = default;
-    Random & operator=(Random &&) = default;
+    Random &operator=(Random const &) = default;
+    Random &operator=(Random &&) = default;
     ~Random() = default;
 
     /**
@@ -299,7 +299,7 @@ private:
      * @throws lsst::pex::exceptions::InvalidParameterError
      *      Thrown if the requested algorithm is not supported.
      */
-    void initialize(std::string const & algorithm);
+    void initialize(std::string const &algorithm);
 };
 
 /*
@@ -372,8 +372,8 @@ void randomChisqImage(ImageT *image, Random &rand, double const nu);
  */
 template <typename ImageT>
 void randomPoissonImage(ImageT *image, Random &rand, double const mu);
-}
-}
-}  // end of namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_MATH_RANDOM_H

@@ -63,9 +63,9 @@ typedef Separable<ReducedShear, DeterminantRadius> SeparableReducedShearDetermin
 typedef Separable<ReducedShear, TraceRadius> SeparableReducedShearTraceRadius;
 typedef Separable<ReducedShear, LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
 typedef Separable<ReducedShear, LogTraceRadius> SeparableReducedShearLogTraceRadius;
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_H

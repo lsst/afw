@@ -37,8 +37,8 @@ namespace geom {
 namespace {
 
 /* These classes are used in the erode operator to quickly calculate the
-* contents of the shrunken SpanSet
-*/
+ * contents of the shrunken SpanSet
+ */
 
 struct PrimaryRun {
     int m, y, xmin, xmax;
@@ -113,11 +113,11 @@ bool spansContiguous(Span const& a, Span const& b, bool compareY = true) {
             templated parameter to ensure the check is compiled away if it can be
 */
 template <typename T, bool invert>
-std::shared_ptr<SpanSet> maskIntersect(SpanSet const & spanSet, image::Mask<T> const & mask, T bitmask) {
+std::shared_ptr<SpanSet> maskIntersect(SpanSet const& spanSet, image::Mask<T> const& mask, T bitmask) {
     // This vector will store our output spans
     std::vector<Span> newVec;
     auto maskBBox = mask.getBBox();
-    for (auto const & spn : spanSet) {
+    for (auto const& spn : spanSet) {
         // Variable to mark if a new span has been started
         // Reset the started flag for each different span
         bool started = false;
@@ -132,7 +132,7 @@ std::shared_ptr<SpanSet> maskIntersect(SpanSet const & spanSet, image::Mask<T> c
         // Limit the scope of iteration to be within the mask's bounds
         int startX = std::max(spn.getMinX(), maskBBox.getMinX());
         int endX = std::min(spn.getMaxX(), maskBBox.getMaxX());
-        for (int x = startX; x <= endX; ++x){
+        for (int x = startX; x <= endX; ++x) {
             // Find if the pixel matches the given bit pattern
             bool pixelCompare = mask.get0(x, y) & bitmask;
             // if the templated boolean indicates the compliment of the mask is desired, invert the
@@ -155,7 +155,7 @@ std::shared_ptr<SpanSet> maskIntersect(SpanSet const & spanSet, image::Mask<T> c
                     // Span
                     newVec.push_back(Span(y, minX, maxX));
                 }
-            } else if(started) {
+            } else if (started) {
                 // A span was started but the current pixel is not to be included in the new SpanSet,
                 // the current SpanSet should be close and added to the vector
                 newVec.push_back(Span(y, minX, maxX));
@@ -232,10 +232,10 @@ void SpanSet::_runNormalize() {
     // between spans should a new span be added.
     // Start iteration from "1" as the 0th element is already in the newSpans vector
     for (auto iter = ++(_spanVector.begin()); iter != _spanVector.end(); ++iter) {
-        auto & newSpansEnd = newSpans.back();
+        auto& newSpansEnd = newSpans.back();
         if (spansContiguous(newSpansEnd, *iter)) {
             newSpansEnd = Span(newSpansEnd.getY(), std::min(newSpansEnd.getMinX(), iter->getMinX()),
-                                 std::max(newSpansEnd.getMaxX(), iter->getMaxX()));
+                               std::max(newSpansEnd.getMaxX(), iter->getMaxX()));
         } else {
             newSpans.push_back(Span(*iter));
         }
@@ -271,7 +271,8 @@ void SpanSet::_initialize() {
         // Plus one, because end point is inclusive
         _area += span.getMaxX() - span.getMinX() + 1;
     }
-    _bbox = lsst::geom::Box2I(lsst::geom::Point2I(minX, _spanVector.front().getY()), lsst::geom::Point2I(maxX, _spanVector.back().getY()));
+    _bbox = lsst::geom::Box2I(lsst::geom::Point2I(minX, _spanVector.front().getY()),
+                              lsst::geom::Point2I(maxX, _spanVector.back().getY()));
 }
 
 // Getter for the area property
@@ -788,12 +789,12 @@ std::shared_ptr<SpanSet> SpanSet::intersectNot(SpanSet const& other) const {
                     }
                 } else {
                     // A span is in the process of being created and should be finished and added
-                    tempVec.push_back(Span(spn.getY(), spanBottom,
-                                           std::min(spn.getMaxX(), otherIter->getMinX() - 1)));
+                    tempVec.push_back(
+                            Span(spn.getY(), spanBottom, std::min(spn.getMaxX(), otherIter->getMinX() - 1)));
                     spanStarted = false;
                     // Check if the span in *this extends past that of the Span from other, if so
                     // begin a new Span
-                    if (spn.getMaxX() > otherIter->getMaxX()){
+                    if (spn.getMaxX() > otherIter->getMaxX()) {
                         spanStarted = true;
                         spanBottom = otherIter->getMaxX() + 1;
                     }
@@ -849,11 +850,11 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
     lsst::geom::Box2D newBBoxD;
     std::vector<lsst::geom::Point2D> fromCorners;
     fromCorners.reserve(4);
-    for (auto const & fc: _bbox.getCorners()) {
+    for (auto const& fc : _bbox.getCorners()) {
         fromCorners.emplace_back(lsst::geom::Point2D(fc));
     }
     auto toPoints = t.applyForward(fromCorners);
-    for (auto const & tc: toPoints) {
+    for (auto const& tc : toPoints) {
         newBBoxD.include(tc);
     }
 
@@ -897,7 +898,8 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t
 }
 
 template <typename ImageT>
-void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, lsst::geom::Box2I const& region, bool doClip) const {
+void SpanSet::setImage(image::Image<ImageT>& image, ImageT val, lsst::geom::Box2I const& region,
+                       bool doClip) const {
     lsst::geom::Box2I bbox;
     if (region.isEmpty()) {
         bbox = image.getBBox();
@@ -923,7 +925,8 @@ void SpanSet::setMask(image::Mask<T>& target, T bitmask) const {
     // Use a lambda to set bits in a mask at the locations given by SpanSet
     auto targetArray = target.getArray();
     auto xy0 = target.getBBox().getMin();
-    auto maskFunctor = [](lsst::geom::Point2I const& point, typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
+    auto maskFunctor = [](lsst::geom::Point2I const& point,
+                          typename details::ImageNdGetter<T, 2, 1>::Reference maskVal,
                           T bitmask) { maskVal |= bitmask; };
     applyFunctor(maskFunctor, ndarray::ndImage(targetArray, xy0), bitmask);
 }
@@ -1015,7 +1018,7 @@ public:
 // that does the work is in the base class ctor)
 SpanSetFactory registration(getSpanSetPersistenceName());
 
-}  // end anonymous
+}  // namespace
 
 std::string SpanSet::getPersistenceName() const { return getSpanSetPersistenceName(); }
 
@@ -1034,10 +1037,10 @@ void SpanSet::write(OutputArchiveHandle& handle) const {
 
 //
 // Explicit instantiations
-#define INSTANTIATE_IMAGE_TYPE(T)                                                                      \
-    template void SpanSet::setImage<T>(image::Image<T> & image, T val,                                 \
-                                       lsst::geom::Box2I const& region = lsst::geom::Box2I(), bool doClip = false) \
-            const;
+#define INSTANTIATE_IMAGE_TYPE(T)                                                             \
+    template void SpanSet::setImage<T>(image::Image<T> & image, T val,                        \
+                                       lsst::geom::Box2I const& region = lsst::geom::Box2I(), \
+                                       bool doClip = false) const;
 
 #define INSTANTIATE_MASK_TYPE(T)                                                                           \
     template void SpanSet::setMask<T>(image::Mask<T> & target, T bitmask) const;                           \
@@ -1054,6 +1057,6 @@ INSTANTIATE_IMAGE_TYPE(float);
 INSTANTIATE_IMAGE_TYPE(double);
 
 INSTANTIATE_MASK_TYPE(image::MaskPixel)
-}
-}
-}  // Close lsst::afw::geom
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

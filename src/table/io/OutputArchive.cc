@@ -26,7 +26,7 @@ typedef std::map<void const *, int> Map;
 
 typedef Map::value_type MapItem;
 
-}  // anonymous
+}  // namespace
 
 // ----- OutputArchive::Impl --------------------------------------------------------------------------------
 
@@ -53,9 +53,7 @@ public:
         return BaseCatalog(iter->getTable());
     }
 
-    std::shared_ptr<BaseRecord> addIndexRecord(
-        int id, std::string const & name, std::string const & module
-    ) {
+    std::shared_ptr<BaseRecord> addIndexRecord(int id, std::string const &name, std::string const &module) {
         auto indexRecord = _index.addNew();
         indexRecord->set(indexKeys.id, id);
         indexRecord->set(indexKeys.name, name);
@@ -63,7 +61,7 @@ public:
         return indexRecord;
     }
 
-    void saveEmpty(int id, std::string const & name, std::string const & module) {
+    void saveEmpty(int id, std::string const &name, std::string const &module) {
         auto indexRecord = addIndexRecord(id, name, module);
         indexRecord->set(indexKeys.nRows, 0);
         indexRecord->set(indexKeys.catPersistable, ArchiveIndexSchema::NO_CATALOGS_SAVED);
@@ -187,9 +185,7 @@ void OutputArchive::writeFits(fits::Fits &fitsfile) const { _impl->writeFits(fit
 
 BaseCatalog OutputArchiveHandle::makeCatalog(Schema const &schema) { return _impl->makeCatalog(schema); }
 
-void OutputArchiveHandle::saveEmpty() {
-    _impl->saveEmpty(_id, _name, _module);
-}
+void OutputArchiveHandle::saveEmpty() { _impl->saveEmpty(_id, _name, _module); }
 
 void OutputArchiveHandle::saveCatalog(BaseCatalog const &catalog) {
     _impl->saveCatalog(catalog, _id, _name, _module, _catPersistable);
@@ -207,7 +203,7 @@ OutputArchiveHandle::OutputArchiveHandle(int id, std::string const &name, std::s
         : _id(id), _catPersistable(0), _name(name), _module(module), _impl(impl) {}
 
 OutputArchiveHandle::~OutputArchiveHandle() {}
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

@@ -77,19 +77,19 @@ void Footprint::clipTo(lsst::geom::Box2I const& box) {
 bool Footprint::contains(lsst::geom::Point2I const& pix) const { return getSpans()->contains(pix); }
 
 std::shared_ptr<Footprint> Footprint::transform(std::shared_ptr<geom::SkyWcs> source,
-                                                std::shared_ptr<geom::SkyWcs> target, lsst::geom::Box2I const& region,
-                                                bool doClip) const {
+                                                std::shared_ptr<geom::SkyWcs> target,
+                                                lsst::geom::Box2I const& region, bool doClip) const {
     auto srcToTarget = geom::makeWcsPairTransform(*source, *target);
     return transform(*srcToTarget, region, doClip);
 }
 
-std::shared_ptr<Footprint> Footprint::transform(lsst::geom::LinearTransform const& t, lsst::geom::Box2I const& region,
-                                                bool doClip) const {
+std::shared_ptr<Footprint> Footprint::transform(lsst::geom::LinearTransform const& t,
+                                                lsst::geom::Box2I const& region, bool doClip) const {
     return transform(lsst::geom::AffineTransform(t), region, doClip);
 }
 
-std::shared_ptr<Footprint> Footprint::transform(lsst::geom::AffineTransform const& t, lsst::geom::Box2I const& region,
-                                                bool doClip) const {
+std::shared_ptr<Footprint> Footprint::transform(lsst::geom::AffineTransform const& t,
+                                                lsst::geom::Box2I const& region, bool doClip) const {
     return transform(*geom::makeTransform(t), region, doClip);
 }
 
@@ -107,7 +107,8 @@ std::shared_ptr<Footprint> Footprint::transform(geom::TransformPoint2ToPoint2 co
     }
     auto newPeakPosList = t.applyForward(peakPosList);
     auto newPeakPos = newPeakPosList.cbegin();
-    for (auto peak = getPeaks().cbegin(), endPeak = getPeaks().cend(); peak != endPeak; ++peak, ++newPeakPos) {
+    for (auto peak = getPeaks().cbegin(), endPeak = getPeaks().cend(); peak != endPeak;
+         ++peak, ++newPeakPos) {
         newFootprint->addPeak(newPeakPos->getX(), newPeakPos->getY(), peak->getPeakValue());
     }
     if (doClip) {
@@ -423,6 +424,6 @@ void Footprint::setPeakCatalog(PeakCatalog const& otherPeaks) {
     // this syntax doesn't work in Python, which is why this method has to exist
     getPeaks() = otherPeaks;
 }
-}
-}
-}  // End lsst::afw::detection namespace
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

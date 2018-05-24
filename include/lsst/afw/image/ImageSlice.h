@@ -113,7 +113,7 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
         }
     }
 }
-}
+}  // namespace details
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
@@ -232,8 +232,8 @@ std::shared_ptr<Image<PixelT>> operator/(Image<PixelT> const &img, ImageSlice<Pi
  */
 template <typename PixelT>
 void operator/=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

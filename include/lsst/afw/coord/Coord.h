@@ -60,8 +60,8 @@ std::string angleToDmsString(lsst::geom::Angle const deg);
 /// a function to convert decimal degrees to a string with form hh:mm:ss.s
 std::string angleToHmsString(lsst::geom::Angle const deg);
 
-}
-}
-}
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst
 
 #endif

@@ -33,8 +33,9 @@ public:
                        std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
                        std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
-    virtual lsst::daf::base::Persistable* read(std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
-                                               std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
+    virtual lsst::daf::base::Persistable* read(
+            std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
+            std::shared_ptr<lsst::daf::base::PropertySet> additionalData);
 
     virtual void update(lsst::daf::base::Persistable* persistable,
                         std::shared_ptr<lsst::daf::persistence::FormatterStorage> storage,
@@ -73,8 +74,8 @@ private:
     static lsst::daf::persistence::FormatterRegistration doubleGaussianPsfRegistration;
     static lsst::daf::persistence::FormatterRegistration pcaPsfRegistration;
 };
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif

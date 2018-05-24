@@ -107,13 +107,13 @@ struct RemoveMinimalSchema {
     Schema minimal;
 };
 
-}  // anonymous
+}  // namespace
 
 SchemaMapper::SchemaMapper() : _impl(new Impl(Schema(), Schema())) {}
 
 SchemaMapper::SchemaMapper(SchemaMapper const &other) : _impl(new Impl(*other._impl)) {}
 // Delegate to copy constructor for backwards compatibility
-SchemaMapper::SchemaMapper(SchemaMapper && other) : SchemaMapper(other) {}
+SchemaMapper::SchemaMapper(SchemaMapper &&other) : SchemaMapper(other) {}
 
 SchemaMapper::SchemaMapper(Schema const &input, Schema const &output) : _impl(new Impl(input, output)) {}
 
@@ -261,6 +261,6 @@ std::vector<SchemaMapper> SchemaMapper::join(std::vector<Schema> const &inputs,
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_LAYOUTMAPPER, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_FIELD_TYPE_N, AFW_TABLE_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

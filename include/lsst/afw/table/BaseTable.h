@@ -155,8 +155,8 @@ public:
     static std::shared_ptr<BaseTable> make(Schema const& schema);
 
     // Tables are not assignable to prevent type slicing.
-    BaseTable & operator=(BaseTable const& other) = delete;
-    BaseTable & operator=(BaseTable && other) = delete;
+    BaseTable& operator=(BaseTable const& other) = delete;
+    BaseTable& operator=(BaseTable&& other) = delete;
 
     virtual ~BaseTable();
 
@@ -190,7 +190,7 @@ protected:
         if (_metadata) _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
     }
     // Delegate to copy-constructor for backwards compatibility
-    BaseTable(BaseTable && other) : BaseTable(other) {}
+    BaseTable(BaseTable&& other) : BaseTable(other) {}
 
 private:
     friend class BaseRecord;
@@ -220,8 +220,8 @@ private:
     ndarray::Manager::Ptr _manager;                      // current memory block to use for new records
     std::shared_ptr<daf::base::PropertyList> _metadata;  // flexible metadata; may be null
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_BaseTable_h_INCLUDED

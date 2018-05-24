@@ -101,7 +101,7 @@ BaseCore::Jacobian Axes::_dAssignFromAxes(double a, double b, double theta) {
     _vector[THETA] = theta;
     return Jacobian::Identity();
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

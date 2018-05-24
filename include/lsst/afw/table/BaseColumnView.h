@@ -147,10 +147,10 @@ public:
     static bool isRangeContiguous(std::shared_ptr<BaseTable> const& table, InputIterator first,
                                   InputIterator last);
 
-    BaseColumnView(BaseColumnView const &);
-    BaseColumnView(BaseColumnView &&);
-    BaseColumnView & operator=(BaseColumnView const &);
-    BaseColumnView & operator=(BaseColumnView &&);
+    BaseColumnView(BaseColumnView const&);
+    BaseColumnView(BaseColumnView&&);
+    BaseColumnView& operator=(BaseColumnView const&);
+    BaseColumnView& operator=(BaseColumnView&&);
 
     ~BaseColumnView();
 
@@ -183,10 +183,10 @@ public:
         return ColumnViewT(BaseColumnView::make(table, first, last));
     }
 
-    ColumnViewT(ColumnViewT const &) = default;
-    ColumnViewT(ColumnViewT &&) = default;
-    ColumnViewT & operator=(ColumnViewT const &) = default;
-    ColumnViewT & operator=(ColumnViewT &&) = default;
+    ColumnViewT(ColumnViewT const&) = default;
+    ColumnViewT(ColumnViewT&&) = default;
+    ColumnViewT& operator=(ColumnViewT const&) = default;
+    ColumnViewT& operator=(ColumnViewT&&) = default;
     ~ColumnViewT() = default;
 
 protected:
@@ -231,8 +231,8 @@ bool BaseColumnView::isRangeContiguous(std::shared_ptr<BaseTable> const& table, 
     }
     return true;
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_BaseColumnView_h_INCLUDED

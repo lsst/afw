@@ -147,7 +147,7 @@ public:
     /// Shallow copy constructor.
     CatalogT(CatalogT const& other) : _table(other._table), _internal(other._internal) {}
     // Delegate to copy constructor for backward compatibility
-    CatalogT(CatalogT && other) : CatalogT(other) {}
+    CatalogT(CatalogT&& other) : CatalogT(other) {}
 
     ~CatalogT() = default;
 
@@ -170,7 +170,7 @@ public:
         return *this;
     }
     // Delegate to copy assignment for backward compatibility
-    CatalogT& operator=(CatalogT && other) { return *this = other; }
+    CatalogT& operator=(CatalogT&& other) { return *this = other; }
 
     /**
      *  Return the subset of a catalog corresponding to the True values of the given mask array.
@@ -182,8 +182,8 @@ public:
             throw LSST_EXCEPT(
                     pex::exceptions::LengthError,
                     (boost::format("Mask array with %d elements applied to catalog with %d elements") %
-                     mask.size() %
-                     size()).str());
+                     mask.size() % size())
+                            .str());
         }
         CatalogT<RecordT> result(getTable());
         ndarray::Array<bool const, 1>::Iterator maskIter = mask.begin();
@@ -881,8 +881,8 @@ std::pair<int, int> _Catalog_equal_range(Catalog const& catalog, T const& value,
 }
 
 //@}
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_Catalog_h_INCLUDED

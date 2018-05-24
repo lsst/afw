@@ -98,7 +98,7 @@ SourceMatchVector matchXy(
         double radius,              ///< match radius (pixels)
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::findOnlyClosest)
-        );
+);
 
 /**
  * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
@@ -110,7 +110,7 @@ SourceMatchVector matchXy(
         double radius,             ///< match radius (pixels)
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::symmetricMatch)
-        );
+);
 
 /**
  * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
@@ -151,12 +151,12 @@ SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetri
  */
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(
-        Cat1 const &cat1,  ///< first catalog
-        Cat2 const &cat2,  ///< second catalog
-        lsst::geom::Angle radius,      ///< match radius
+        Cat1 const &cat1,          ///< first catalog
+        Cat2 const &cat2,          ///< second catalog
+        lsst::geom::Angle radius,  ///< match radius
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::findOnlyClosest)
-        );
+);
 
 /*
  * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to `cat`,
@@ -167,11 +167,11 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(
  */
 template <typename Cat>
 std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(
-        Cat const &cat,  ///< the catalog to self-match
-        lsst::geom::Angle radius,    ///< match radius
+        Cat const &cat,            ///< the catalog to self-match
+        lsst::geom::Angle radius,  ///< match radius
         MatchControl const &mc =
                 MatchControl()  ///< how to do the matching (obeys MatchControl::symmetricMatch)
-        );
+);
 
 /**
  * Compute all tuples (s1,s2,d) where s1 belings to `cat1`, s2 belongs to `cat2` and
@@ -190,7 +190,8 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(
  */
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
-                                                                             Cat2 const &cat2, lsst::geom::Angle radius,
+                                                                             Cat2 const &cat2,
+                                                                             lsst::geom::Angle radius,
                                                                              bool closest);
 
 /**
@@ -208,7 +209,8 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
  * This is instantiated for Simple and Source catalogs.
  */
 template <typename Cat>
-std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat, lsst::geom::Angle radius,
+std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat,
+                                                                           lsst::geom::Angle radius,
                                                                            bool symmetric);
 
 /**
@@ -245,8 +247,8 @@ template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > unpackMatches(BaseCatalog const &matches,
                                                                                 Cat1 const &cat1,
                                                                                 Cat2 const &cat2);
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // #ifndef LSST_AFW_TABLE_MATCH_H

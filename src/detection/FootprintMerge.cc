@@ -196,7 +196,7 @@ private:
         getMergedFootprint()->getPeaks().insert(getMergedFootprint()->getPeaks().end(), newPeaks.begin(),
                                                 newPeaks.end(),
                                                 true  // deep-copy
-                                                );
+        );
     }
 
     std::vector<std::shared_ptr<Footprint>> _footprints;
@@ -301,6 +301,6 @@ void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat) {
         outputCat.push_back((**iter).getSource());
     }
 }
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

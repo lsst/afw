@@ -43,7 +43,7 @@ namespace detail {
 /// Key for caching PSFs with lsst::utils::Cache
 struct PsfCacheKey;
 
-} // namespace detail
+}  // namespace detail
 
 class PsfFormatter;
 
@@ -119,7 +119,7 @@ public:
      *
      *  Must be implemented by derived classes.
      */
-    virtual std::shared_ptr<Psf> resized(int width, int height)  const = 0;
+    virtual std::shared_ptr<Psf> resized(int width, int height) const = 0;
 
     /**
      *  Return an Image of the PSF, in a form that can be compared directly with star images.
@@ -239,7 +239,7 @@ public:
      *  Return the bounding box of the image returned by computeKernelImage()
      */
     lsst::geom::Box2I computeBBox(lsst::geom::Point2D position = makeNullPoint(),
-                            image::Color color = image::Color()) const;
+                                  image::Color color = image::Color()) const;
 
     /**
      * Helper function for Psf::doComputeImage(): converts a kernel image (centered at (0,0) when xy0
@@ -284,7 +284,7 @@ protected:
      *                      the same image, regardless of color or position arguments.
      *  @param[in] capacity  Capacity of the caches.
      */
-    explicit Psf(bool isFixed = false, std::size_t capacity=100);
+    explicit Psf(bool isFixed = false, std::size_t capacity = 100);
 
 private:
     //@{
@@ -314,8 +314,8 @@ private:
 
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_DETECTION_Psf_h_INCLUDED

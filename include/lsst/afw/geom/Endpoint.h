@@ -98,7 +98,7 @@ public:
      */
     // Note: while defining operator==(BaseEndpoint<OtherPoint, OtherArray> const &)
     // would be more Pythonic, it's very hard to get such a method template to play well with pybind11
-    virtual bool operator==(BaseEndpoint const & other) const noexcept;
+    virtual bool operator==(BaseEndpoint const &other) const noexcept;
 
     /**
      * Determine whether two endpoints do not represent the same conversion.
@@ -106,9 +106,7 @@ public:
      * @returns the inverse of operator==. See that operator's documentation
      *          for important caveats.
      */
-    bool operator!=(BaseEndpoint const & other) const noexcept {
-        return !(*this == other);
-    }
+    bool operator!=(BaseEndpoint const &other) const noexcept { return !(*this == other); }
 
     /**
      * Get raw data from a single point
@@ -187,7 +185,6 @@ protected:
 private:
     int _nAxes;  /// number of axes in a point
 };
-
 
 /**
  * Base class for endpoints with Array = std::vector<Point> where Point has 2 dimensions

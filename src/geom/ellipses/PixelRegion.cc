@@ -53,7 +53,7 @@ Span const PixelRegion::getSpanAt(int y) const {
     }  // Note that we return an empty span when d <= 0.0 or d is NaN.
     return Span(y, std::ceil(x0), std::floor(x1));
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

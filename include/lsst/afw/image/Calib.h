@@ -44,7 +44,7 @@ namespace daf {
 namespace base {
 class PropertySet;
 }
-}
+}  // namespace daf
 
 namespace afw {
 namespace cameraGeom {
@@ -69,7 +69,6 @@ inline double fluxFromABMag(double mag) { return std::pow(10.0, -0.4 * mag) * Ja
 inline double fluxErrFromABMagErr(double magErr, double mag) {
     return std::abs(-0.4 * magErr * fluxFromABMag(mag) * std::log(10.0));
 }
-
 
 /// Compute AB magnitude from flux in Janskys
 template <typename T>
@@ -229,9 +228,9 @@ namespace detail {
  * @returns Number of keywords stripped
  */
 int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata);
-}
-}
-}
-}  // lsst::afw::image
+}  // namespace detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_CALIB_H

@@ -180,10 +180,10 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
             this->_spatialFunctionList.begin();
     KernelList::const_iterator kIter = _kernelList.begin();
     KernelList::const_iterator const kEnd = _kernelList.end();
-    auto & firstSpFunc = *firstSpFuncPtr;
-    auto & firstType = typeid(firstSpFunc);     // noncopyable object of static storage duration
+    auto &firstSpFunc = *firstSpFuncPtr;
+    auto &firstType = typeid(firstSpFunc);  // noncopyable object of static storage duration
     for (; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
-        auto & spFunc = **spFuncPtrIter;
+        auto &spFunc = **spFuncPtrIter;
         if (typeid(spFunc) != firstType) {
             return std::shared_ptr<Kernel>();
         }
@@ -316,7 +316,7 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
     }
 };
 
-}  // anonymous
+}  // namespace
 
 class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -356,7 +356,7 @@ std::string getLinearCombinationKernelPersistenceName() { return "LinearCombinat
 
 LinearCombinationKernel::Factory registration(getLinearCombinationKernelPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string LinearCombinationKernel::getPersistenceName() const {
     return getLinearCombinationKernelPersistenceName();
@@ -378,6 +378,6 @@ void LinearCombinationKernel::write(OutputArchiveHandle &handle) const {
         }
     }
 }
-}
-}
 }  // namespace math
+}  // namespace afw
+}  // namespace lsst

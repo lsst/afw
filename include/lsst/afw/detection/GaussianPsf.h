@@ -110,8 +110,8 @@ private:
     lsst::geom::Extent2I _dimensions;
     double _sigma;
 };
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_DETECTION_Psf_h_INCLUDED

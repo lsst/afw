@@ -42,12 +42,13 @@ namespace geom {
 
 template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool simplify)
-    : _fromEndpoint(mapping.getNIn()),
-      _mapping(simplify ? mapping.simplify() : mapping.copy()), _toEndpoint(mapping.getNOut()) {}
+        : _fromEndpoint(mapping.getNIn()),
+          _mapping(simplify ? mapping.simplify() : mapping.copy()),
+          _toEndpoint(mapping.getNOut()) {}
 
 template <typename FromEndpoint, typename ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bool simplify)
-    : _fromEndpoint(frameSet.getNIn()), _mapping(), _toEndpoint(frameSet.getNOut()) {
+        : _fromEndpoint(frameSet.getNIn()), _mapping(), _toEndpoint(frameSet.getNOut()) {
     auto frameSetCopy = frameSet.copy();
     // Normalize the base and current frame in a way that affects its behavior as a mapping.
     // To do this one must set the current frame to the frame to be normalized
@@ -71,12 +72,11 @@ Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bo
 
 template <typename FromEndpoint, typename ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::Mapping> mapping)
-    : _fromEndpoint(mapping->getNIn()), _mapping(mapping), _toEndpoint(mapping->getNOut()) {
-}
+        : _fromEndpoint(mapping->getNIn()), _mapping(mapping), _toEndpoint(mapping->getNOut()) {}
 
 template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyForward(
-    typename FromEndpoint::Point const &point) const {
+        typename FromEndpoint::Point const &point) const {
     auto const rawFromData = _fromEndpoint.dataFromPoint(point);
     auto rawToData = _mapping->applyForward(rawFromData);
     return _toEndpoint.pointFromData(rawToData);
@@ -84,7 +84,7 @@ typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyForward(
 
 template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyForward(
-    typename FromEndpoint::Array const &array) const {
+        typename FromEndpoint::Array const &array) const {
     auto const rawFromData = _fromEndpoint.dataFromArray(array);
     auto rawToData = _mapping->applyForward(rawFromData);
     return _toEndpoint.arrayFromData(rawToData);
@@ -92,7 +92,7 @@ typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyForward(
 
 template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyInverse(
-    typename ToEndpoint::Point const &point) const {
+        typename ToEndpoint::Point const &point) const {
     auto const rawFromData = _toEndpoint.dataFromPoint(point);
     auto rawToData = _mapping->applyInverse(rawFromData);
     return _fromEndpoint.pointFromData(rawToData);
@@ -100,7 +100,7 @@ typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyInverse(
 
 template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
-    typename ToEndpoint::Array const &array) const {
+        typename ToEndpoint::Array const &array) const {
     auto const rawFromData = _toEndpoint.dataFromArray(array);
     auto rawToData = _mapping->applyInverse(rawFromData);
     return _fromEndpoint.arrayFromData(rawToData);
@@ -142,13 +142,13 @@ std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
 
 template <class FromEndpoint, class ToEndpoint>
 std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readStream(
-std::istream &is) {
+        std::istream &is) {
     return detail::readStream<Transform<FromEndpoint, ToEndpoint>>(is);
 }
 
 template <class FromEndpoint, class ToEndpoint>
 std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readString(
-std::string &str) {
+        std::string &str) {
     std::istringstream is(str);
     return Transform<FromEndpoint, ToEndpoint>::readStream(is);
 }
@@ -168,7 +168,7 @@ std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
 template <class FromEndpoint, class ToEndpoint>
 template <class NextToEndpoint>
 std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> Transform<FromEndpoint, ToEndpoint>::then(
-Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
+        Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
     if (_toEndpoint.getNAxes() == next.getFromEndpoint().getNAxes()) {
         auto nextMapping = next.getMapping();
         auto combinedMapping = getMapping()->then(*next.getMapping());
@@ -197,81 +197,71 @@ public:
     table::Schema schema;
     table::Key<table::Array<std::uint8_t>> bytes;
 
-    static TransformPersistenceHelper const & get() {
+    static TransformPersistenceHelper const &get() {
         static TransformPersistenceHelper instance;
         return instance;
     }
 
     // No copying
     TransformPersistenceHelper(TransformPersistenceHelper const &) = delete;
-    TransformPersistenceHelper& operator=(TransformPersistenceHelper const &) = delete;
+    TransformPersistenceHelper &operator=(TransformPersistenceHelper const &) = delete;
 
     // No moving
-    TransformPersistenceHelper(TransformPersistenceHelper&&) = delete;
-    TransformPersistenceHelper& operator=(TransformPersistenceHelper&&) = delete;
+    TransformPersistenceHelper(TransformPersistenceHelper &&) = delete;
+    TransformPersistenceHelper &operator=(TransformPersistenceHelper &&) = delete;
 
 private:
-    TransformPersistenceHelper() :
-        schema(),
-        bytes(
-            schema.addField<table::Array<std::uint8_t>>(
-                "bytes",
-                "a bytestring containing the output of Transform.writeString", ""
-            )
-        )
-    {
+    TransformPersistenceHelper()
+            : schema(),
+              bytes(schema.addField<table::Array<std::uint8_t>>(
+                      "bytes", "a bytestring containing the output of Transform.writeString", "")) {
         schema.getCitizen().markPersistent();
     }
-
 };
 
 template <typename FromEndpoint, typename ToEndpoint>
 class TransformFactory : public table::io::PersistableFactory {
 public:
-    explicit TransformFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+    explicit TransformFactory(std::string const &name) : table::io::PersistableFactory(name) {}
 
-    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-            CatalogVector const& catalogs) const {
-        auto const & keys = TransformPersistenceHelper::get();
+    virtual std::shared_ptr<table::io::Persistable> read(InputArchive const &archive,
+                                                         CatalogVector const &catalogs) const {
+        auto const &keys = TransformPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
-        auto const & record = catalogs.front().front();
+        auto const &record = catalogs.front().front();
         std::string stringRep = formatters::bytesToString(record.get(keys.bytes));
         return Transform<FromEndpoint, ToEndpoint>::readString(stringRep);
     }
 };
 
-} // anonymous
-
-
+}  // namespace
 
 template <class FromEndpoint, class ToEndpoint>
 void Transform<FromEndpoint, ToEndpoint>::write(OutputArchiveHandle &handle) const {
-    auto const& keys = TransformPersistenceHelper::get();
+    auto const &keys = TransformPersistenceHelper::get();
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     std::shared_ptr<table::BaseRecord> record = cat.addNew();
     record->set(keys.bytes, formatters::stringToBytes(writeString()));
     handle.saveCatalog(cat);
 }
 
-
 #define INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, NextToEndpoint) \
     template std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>>   \
     Transform<FromEndpoint, ToEndpoint>::then<NextToEndpoint>(          \
             Transform<ToEndpoint, NextToEndpoint> const &next, bool) const;
 
-#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                \
-    template class Transform<FromEndpoint, ToEndpoint>;                \
-    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(       \
-            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform); \
-    namespace {                                                        \
-        TransformFactory<FromEndpoint, ToEndpoint> registration ## FromEndpoint ## ToEndpoint(       \
-            Transform<FromEndpoint, ToEndpoint>::getShortClassName()   \
-        );                                                             \
-    }                                                                  \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)   \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)    \
+#define INSTANTIATE_TRANSFORM(FromEndpoint, ToEndpoint)                                \
+    template class Transform<FromEndpoint, ToEndpoint>;                                \
+    template std::ostream &operator<<<FromEndpoint, ToEndpoint>(                       \
+            std::ostream &os, Transform<FromEndpoint, ToEndpoint> const &transform);   \
+    namespace {                                                                        \
+    TransformFactory<FromEndpoint, ToEndpoint> registration##FromEndpoint##ToEndpoint( \
+            Transform<FromEndpoint, ToEndpoint>::getShortClassName());                 \
+    }                                                                                  \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)                   \
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)                    \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, SpherePointEndpoint)
 
 // explicit instantiations

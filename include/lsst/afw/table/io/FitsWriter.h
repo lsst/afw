@@ -78,10 +78,10 @@ public:
     /// Construct from a wrapped cfitsio pointer.
     explicit FitsWriter(Fits* fits, int flags) : _fits(fits), _flags(flags) {}
 
-    FitsWriter(FitsWriter const &) = default;
-    FitsWriter(FitsWriter &&) = default;
-    FitsWriter & operator=(FitsWriter const &) = default;
-    FitsWriter & operator=(FitsWriter &&) = default;
+    FitsWriter(FitsWriter const&) = default;
+    FitsWriter(FitsWriter&&) = default;
+    FitsWriter& operator=(FitsWriter const&) = default;
+    FitsWriter& operator=(FitsWriter&&) = default;
     ~FitsWriter() = default;
 
 protected:
@@ -103,9 +103,9 @@ private:
 
     std::shared_ptr<ProcessRecords> _processor;  // a private Schema::forEach functor that write records
 };
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_FitsWriter_h_INCLUDED

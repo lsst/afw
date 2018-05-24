@@ -67,10 +67,10 @@ struct Field : public FieldBase<T> {
     Field(std::string const& name, std::string const& doc, FieldBase<T> const& size)
             : FieldBase<T>(size), _name(name), _doc(doc), _units() {}
 
-    Field(Field const &) = default;
-    Field(Field &&) = default;
-    Field & operator=(Field const &) = default;
-    Field & operator=(Field &&) = default;
+    Field(Field const&) = default;
+    Field(Field&&) = default;
+    Field& operator=(Field const&) = default;
+    Field& operator=(Field&&) = default;
     ~Field() = default;
 
     /// Return the name of the field.
@@ -101,8 +101,8 @@ private:
     std::string _doc;
     std::string _units;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_Field_h_INCLUDED

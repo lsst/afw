@@ -47,8 +47,8 @@ namespace geom {
 namespace polygon {
 class Polygon;
 class SkyWcs;
-}
-}
+}  // namespace polygon
+}  // namespace geom
 
 namespace fits {
 class Fits;
@@ -197,7 +197,6 @@ public:
     /// Set the exposure's transmission curve.
     void setTransmissionCurve(std::shared_ptr<TransmissionCurve const> tc) { _transmissionCurve = tc; }
 
-
     /**
      *  Construct an ExposureInfo from its various components.
      *
@@ -213,15 +212,15 @@ public:
                     std::shared_ptr<cameraGeom::Detector const>(),
             std::shared_ptr<geom::polygon::Polygon const> const& polygon =
                     std::shared_ptr<geom::polygon::Polygon const>(),
-            Filter const& filter = Filter(), std::shared_ptr<daf::base::PropertySet> const& metadata =
-                                                     std::shared_ptr<daf::base::PropertySet>(),
+            Filter const& filter = Filter(),
+            std::shared_ptr<daf::base::PropertySet> const& metadata =
+                    std::shared_ptr<daf::base::PropertySet>(),
             std::shared_ptr<CoaddInputs> const& coaddInputs = std::shared_ptr<CoaddInputs>(),
             std::shared_ptr<ApCorrMap> const& apCorrMap = std::shared_ptr<ApCorrMap>(),
             std::shared_ptr<image::VisitInfo const> const& visitInfo =
                     std::shared_ptr<image::VisitInfo const>(),
-            std::shared_ptr<TransmissionCurve const> const & transmissionCurve =
-                    std::shared_ptr<TransmissionCurve>()
-    );
+            std::shared_ptr<TransmissionCurve const> const& transmissionCurve =
+                    std::shared_ptr<TransmissionCurve>());
 
     /// Copy constructor; deep-copies all components except the metadata.
     ExposureInfo(ExposureInfo const& other);
@@ -312,8 +311,8 @@ private:
     std::shared_ptr<image::VisitInfo const> _visitInfo;
     std::shared_ptr<TransmissionCurve const> _transmissionCurve;
 };
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED

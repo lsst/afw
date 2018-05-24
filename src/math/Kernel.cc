@@ -237,6 +237,6 @@ void Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
 }
 
 std::string Kernel::getPythonModule() const { return "lsst.afw.math"; }
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

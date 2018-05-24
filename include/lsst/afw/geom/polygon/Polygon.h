@@ -60,7 +60,6 @@ public:
     typedef lsst::geom::Box2D Box;
     typedef lsst::geom::Point2D Point;
 
-
     /**
      * Construct a rectangular Polygon whose vertices are the corners of a box
      */
@@ -81,9 +80,7 @@ public:
      * @param[in] box  Initial box
      * @param[in] transform  Coordinate transform
      */
-    Polygon(Box const& box,
-            TransformPoint2ToPoint2 const& transform
-            );
+    Polygon(Box const& box, TransformPoint2ToPoint2 const& transform);
 
     /**
      * Construct a 4-sided Polygon from a transformed box
@@ -94,9 +91,7 @@ public:
      * @param[in] box  Initial box
      * @param[in] transform  Coordinate transform
      */
-    Polygon(Box const& box,
-            lsst::geom::AffineTransform const& transform
-            );
+    Polygon(Box const& box, lsst::geom::AffineTransform const& transform);
 
     /// Construct a Polygon from a list of vertices
     explicit Polygon(std::vector<Point> const& vertices);
@@ -271,9 +266,9 @@ private:
 
 /// Stream polygon
 std::ostream& operator<<(std::ostream& os, Polygon const& poly);
-}
-}
-}
-}  // namespace lsst::afw::geom::polygon
+}  // namespace polygon
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif

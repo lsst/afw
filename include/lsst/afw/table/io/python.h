@@ -84,7 +84,7 @@ void declarePersistableFacade(pybind11::module &module, std::string const &suffi
  *   table::io::PersistableFacade<Class> and table::io::Persistable as subclasses.
  * - Call this function to wrap the methods that make your object persistable.
  */
-template <typename Class, typename ...Args>
+template <typename Class, typename... Args>
 void addPersistableMethods(pybind11::class_<Class, Args...> &cls) {
     cls.def_static("readFits",
                    (std::shared_ptr<Class>(*)(std::string const &, int)) & PersistableFacade<Class>::readFits,
@@ -100,10 +100,10 @@ void addPersistableMethods(pybind11::class_<Class, Args...> &cls) {
             "manager"_a, "mode"_a = "w");
     cls.def("isPersistable", &Class::isPersistable);
 }
-}
-}
-}
-}
-}  // lsst::afw::table::io::python
+}  // namespace python
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif

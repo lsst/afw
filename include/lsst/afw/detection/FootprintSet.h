@@ -112,7 +112,7 @@ public:
      */
     FootprintSet(FootprintSet const& rhs);
     FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
-    FootprintSet(FootprintSet && rhs);
+    FootprintSet(FootprintSet&& rhs);
     ~FootprintSet();
     /**
      * Grow all the Footprints in the input FootprintSet, returning a new FootprintSet
@@ -135,7 +135,7 @@ public:
 
     /// Assignment operator.
     FootprintSet& operator=(FootprintSet const& rhs);
-    FootprintSet& operator=(FootprintSet && rhs);
+    FootprintSet& operator=(FootprintSet&& rhs);
 
     void swap(FootprintSet& rhs) {
         using std::swap;  // See Meyers, Effective C++, Item 25
@@ -200,7 +200,7 @@ public:
     template <typename MaskPixelT>
     void setMask(image::Mask<MaskPixelT>* mask,  ///< Set bits in the mask
                  std::string const& planeName    ///< Here's the name of the mask plane to fit
-                 ) {
+    ) {
         for (auto const& foot : *_footprints) {
             foot->getSpans()->setMask(*mask, image::Mask<MaskPixelT>::getPlaneBitMask(planeName));
         }
@@ -209,7 +209,7 @@ public:
     template <typename MaskPixelT>
     void setMask(std::shared_ptr<image::Mask<MaskPixelT>> mask,  ///< Set bits in the mask
                  std::string const& planeName                    ///< Here's the name of the mask plane to fit
-                 ) {
+    ) {
         setMask(mask.get(), planeName);
     }
 
@@ -237,8 +237,8 @@ private:
     std::shared_ptr<FootprintList> _footprints;  ///< the Footprints of detected objects
     lsst::geom::Box2I _region;  ///< The corners of the MaskedImage that the detections live in
 };
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif

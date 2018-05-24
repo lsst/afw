@@ -294,11 +294,11 @@ private:
     int _id;                                ///< detector numeric ID
     DetectorType _type;                     ///< type of detectorsize_t
     std::string _serial;                    ///< serial "number" that identifies the physical detector
-    lsst::geom::Box2I _bbox;                      ///< bounding box
+    lsst::geom::Box2I _bbox;                ///< bounding box
     table::AmpInfoCatalog _ampInfoCatalog;  ///< list of amplifier data
     _AmpInfoMap _ampNameIterMap;            ///< map of amplifier name: catalog iterator
     Orientation _orientation;               ///< position and orientation of detector in focal plane
-    lsst::geom::Extent2D _pixelSize;              ///< pixel size (mm)
+    lsst::geom::Extent2D _pixelSize;        ///< pixel size (mm)
     CameraSys _nativeSys;                   ///< native coordinate system of this detector
     TransformMap _transformMap;             ///< registry of coordinate transforms
     CrosstalkMatrix _crosstalk;             ///< crosstalk coefficients

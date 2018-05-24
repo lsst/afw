@@ -438,15 +438,15 @@ void convolveWithBruteForce(OutImageT& convolvedImage, InImageT const& inImage, 
 #define NL /* */
 // Instantiate Image or MaskedImage versions
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE)                                              \
-    template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, math::Kernel const&,    \
+    template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &, math::Kernel const&,   \
                                 math::ConvolutionControl const&);                                          \
-    NL template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&,                      \
+    NL template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &,                     \
                                    math::DeltaFunctionKernel const&, math::ConvolutionControl const&);     \
-    NL template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&,                      \
+    NL template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &,                     \
                                    math::LinearCombinationKernel const&, math::ConvolutionControl const&); \
-    NL template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&,                      \
+    NL template void basicConvolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &,                     \
                                    math::SeparableKernel const&, math::ConvolutionControl const&);         \
-    NL template void convolveWithBruteForce(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&,             \
+    NL template void convolveWithBruteForce(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &,            \
                                             math::Kernel const&, math::ConvolutionControl const&);
 // Instantiate both Image and MaskedImage versions
 #define INSTANTIATE(OUTPIXTYPE, INPIXTYPE)             \
@@ -463,7 +463,7 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-}
-}
-}
-}  // end lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

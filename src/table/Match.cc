@@ -138,14 +138,15 @@ double toUnitSphereDistanceSquared(lsst::geom::Angle theta) noexcept {
  */
 lsst::geom::Angle fromUnitSphereDistanceSquared(double d2) noexcept {
     // acos(1 - 0.5*d2) doesn't require sqrt but isn't as precise for small d2
-    return 2.0*std::asin(0.5*std::sqrt(d2))*lsst::geom::radians;
+    return 2.0 * std::asin(0.5 * std::sqrt(d2)) * lsst::geom::radians;
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
-                                                                             Cat2 const &cat2, lsst::geom::Angle radius,
+                                                                             Cat2 const &cat2,
+                                                                             lsst::geom::Angle radius,
                                                                              bool closest) {
     MatchControl mc;
     mc.findOnlyClosest = closest;
@@ -155,7 +156,8 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
 
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
-                                                                             Cat2 const &cat2, lsst::geom::Angle radius,
+                                                                             Cat2 const &cat2,
+                                                                             lsst::geom::Angle radius,
                                                                              MatchControl const &mc) {
     typedef Match<typename Cat1::Record, typename Cat2::Record> MatchT;
     std::vector<MatchT> matches;
@@ -223,7 +225,7 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
     return matches;
 }
 
-#define LSST_MATCH_RADEC(RTYPE, C1, C2)                             \
+#define LSST_MATCH_RADEC(RTYPE, C1, C2)                                         \
     template RTYPE matchRaDec(C1 const &, C2 const &, lsst::geom::Angle, bool); \
     template RTYPE matchRaDec(C1 const &, C2 const &, lsst::geom::Angle, MatchControl const &)
 
@@ -284,7 +286,7 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat c
     return matches;
 }
 
-#define LSST_MATCH_RADEC(RTYPE, C)                     \
+#define LSST_MATCH_RADEC(RTYPE, C)                                 \
     template RTYPE matchRaDec(C const &, lsst::geom::Angle, bool); \
     template RTYPE matchRaDec(C const &, lsst::geom::Angle, MatchControl const &)
 
@@ -470,14 +472,14 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > unpackMatches(
         if (k1 != first.end()) {
             j->first = k1;
         } else {
-            LOGLS_WARN(tableLog, "Persisted match record with ID " << i->get(inKey1)
-                                                                   << " not found in catalog 1.");
+            LOGLS_WARN(tableLog,
+                       "Persisted match record with ID " << i->get(inKey1) << " not found in catalog 1.");
         }
         if (k2 != second.end()) {
             j->second = k2;
         } else {
-            LOGLS_WARN(tableLog, "Persisted match record with ID " << i->get(inKey2)
-                                                                   << " not found in catalog 2.");
+            LOGLS_WARN(tableLog,
+                       "Persisted match record with ID " << i->get(inKey2) << " not found in catalog 2.");
         }
         j->distance = i->get(keyD);
     }
@@ -488,6 +490,6 @@ template SimpleMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog cons
 template ReferenceMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog const &,
                                             SourceCatalog const &);
 template SourceMatchVector unpackMatches(BaseCatalog const &, SourceCatalog const &, SourceCatalog const &);
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

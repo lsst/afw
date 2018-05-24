@@ -112,9 +112,9 @@ inline BaseCore::GridTransform const BaseCore::getGridTransform() const {
 inline Ellipse::GridTransform const Ellipse::getGridTransform() const {
     return Ellipse::GridTransform(*this);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED

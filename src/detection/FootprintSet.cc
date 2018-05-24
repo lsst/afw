@@ -213,7 +213,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
                                 FootprintSet const &rhs,      // the FootprintSet to be merged into lhs
                                 int rRhs,                     // Grow rhs Footprints by this many pixels
                                 FootprintControl const &ctrl  // Control how the grow is done
-                                ) {
+) {
     typedef FootprintSet::FootprintList FootprintList;
     // The isXXX routines return <isset, value>
     bool const circular = ctrl.isCircular().first && ctrl.isCircular().second;
@@ -246,10 +246,10 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
     int const lhsIdMask = (lhsIdNbit == 0) ? 0x0 : (1 << lhsIdNbit) - 1;
 
     if (std::size_t(nRhs << lhsIdNbit) > std::numeric_limits<IdPixelT>::max() - 1) {
-        throw LSST_EXCEPT(
-                pex::exceptions::OverflowError,
-                (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef") % nLhs %
-                 nRhs).str());
+        throw LSST_EXCEPT(pex::exceptions::OverflowError,
+                          (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef") %
+                           nLhs % nRhs)
+                                  .str());
     }
     /*
      * When we insert grown Footprints into the idImage we can potentially overwrite an entire Footprint,
@@ -260,7 +260,7 @@ FootprintSet mergeFootprintSets(FootprintSet const &lhs,      // the FootprintSe
     OldIdMap overwrittenIds;  // here's a map from id -> overwritten IDs
 
     auto grower = [&circular, &up, &down, &left, &right, &isotropic](
-            std::shared_ptr<Footprint> const &foot, int amount) -> std::shared_ptr<Footprint> {
+                          std::shared_ptr<Footprint> const &foot, int amount) -> std::shared_ptr<Footprint> {
         if (circular) {
             auto element = isotropic ? geom::Stencil::CIRCLE : geom::Stencil::MANHATTAN;
             auto tmpFoot = std::make_shared<Footprint>(foot->getSpans()->dilated(amount, element),
@@ -442,7 +442,7 @@ public:
  * comparison functor; sort by ID then row
  */
 struct IdSpanCompare {
-    bool operator()(IdSpan const & a, IdSpan const & b) const {
+    bool operator()(IdSpan const &a, IdSpan const &b) const {
         if (a.id < b.id) {
             return true;
         } else if (a.id > b.id) {
@@ -466,7 +466,7 @@ int resolve_alias(std::vector<int> const &aliases, /* list of aliases */
     return (resolved);
 }
 /// @endcond
-}
+}  // namespace
 
 namespace {
 template <typename ImageT>
@@ -564,7 +564,7 @@ template <typename ImageT>
 void findPeaks(std::shared_ptr<Footprint>, ImageT const &, bool, ThresholdBitmask_traits) {
     ;
 }
-}
+}  // namespace
 
 /*
  * Functions to determine if a pixel's in a Footprint
@@ -607,7 +607,7 @@ static inline IterT advancePtr(IterT varPtr, ThresholdPixelLevel_traits) {
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT, typename ThresholdTraitT>
 static void findFootprints(
         typename FootprintSet::FootprintList *_footprints,  // Footprints
-        lsst::geom::Box2I const &_region,                         // BBox of pixels that are being searched
+        lsst::geom::Box2I const &_region,                   // BBox of pixels that are being searched
         image::ImageBase<ImagePixelT> const &img,           // Image to search for objects
         image::Image<VariancePixelT> const *var,            // img's variance
         double const footprintThreshold,                    // threshold value for footprint
@@ -615,7 +615,7 @@ static void findFootprints(
         bool const polarity,                      // if false, search _below_ thresholdVal
         int const npixMin,                        // minimum number of pixels in an object
         bool const setPeaks                       // should I set the Peaks list?
-        ) {
+) {
     int id;       /* object ID */
     int in_span;  /* object ID of current IdSpan */
     int nobj = 0; /* number of objects found */
@@ -641,8 +641,8 @@ static void findFootprints(
     std::vector<int> aliases;          // aliases for initially disjoint parts of Footprints
     aliases.reserve(1 + height / 20);  // initial size of aliases
 
-    std::vector<IdSpan> spans;  // y:x0,x1 for objects
-    spans.reserve(aliases.capacity());           // initial size of spans
+    std::vector<IdSpan> spans;          // y:x0,x1 for objects
+    spans.reserve(aliases.capacity());  // initial size of spans
 
     aliases.push_back(0);  // 0 --> 0
                            /*
@@ -987,8 +987,8 @@ INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
-}
-}
-}  // end lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !DOXYGEN

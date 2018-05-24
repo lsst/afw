@@ -57,8 +57,8 @@ void convolveWithInterpolation(OutImageT &outImage, InImageT const &inImage, mat
     }
 
     // compute region covering good area of output image
-    lsst::geom::Box2I fullBBox =
-            lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
+    lsst::geom::Box2I fullBBox = lsst::geom::Box2I(
+            lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(outImage.getWidth(), outImage.getHeight()));
     lsst::geom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox, inImage.getXY0(),
                                                            convolutionControl.getDoNormalize()));
@@ -190,7 +190,7 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-}
-}
-}
-}  // end math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

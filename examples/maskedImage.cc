@@ -102,7 +102,7 @@ void printVariance(image::MaskedImage<ImagePixelT> const& img, string const& tit
         cout << endl;
     }
 }
-}
+}  // namespace
 
 int main() {
     image::MaskedImage<ImagePixelT> img(lsst::geom::Extent2I(3, 5));

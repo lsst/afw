@@ -179,9 +179,9 @@ private:
     std::shared_ptr<BaseCore> _core;
     lsst::geom::Point2D _center;
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Ellipse_h_INCLUDED

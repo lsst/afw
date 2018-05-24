@@ -50,10 +50,10 @@ public:
     virtual ~DefectBase() = default;
 
     lsst::geom::Box2I const& getBBox() const { return _bbox; }  ///< Return the Defect's bounding box
-    int getX0() const { return _bbox.getMinX(); }         ///< Return the Defect's left column
-    int getX1() const { return _bbox.getMaxX(); }         ///< Return the Defect's right column
-    int getY0() const { return _bbox.getMinY(); }         ///< Return the Defect's bottom row
-    int getY1() const { return _bbox.getMaxY(); }         ///< Return the Defect's top row
+    int getX0() const { return _bbox.getMinX(); }               ///< Return the Defect's left column
+    int getX1() const { return _bbox.getMaxX(); }               ///< Return the Defect's right column
+    int getY0() const { return _bbox.getMinY(); }               ///< Return the Defect's bottom row
+    int getY1() const { return _bbox.getMaxY(); }               ///< Return the Defect's top row
 
     void clip(lsst::geom::Box2I const& bbox) { _bbox.clip(bbox); }
 
@@ -62,7 +62,7 @@ public:
      */
     void shift(int dx,  ///< How much to move defect in column direction
                int dy   ///< How much to move in row direction
-               ) {
+    ) {
         _bbox.shift(lsst::geom::Extent2I(dx, dy));
     }
     void shift(lsst::geom::Extent2I const& d) { _bbox.shift(d); }
@@ -70,8 +70,8 @@ public:
 private:
     lsst::geom::Box2I _bbox;  ///< Bounding box for bad pixels
 };
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

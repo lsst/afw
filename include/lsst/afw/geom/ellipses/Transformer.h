@@ -72,7 +72,7 @@ public:
     /// Return the derivative of transformed core with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    BaseCore &input;                   ///< input core to be transformed
+    BaseCore &input;                               ///< input core to be transformed
     lsst::geom::LinearTransform const &transform;  ///< transform object
 };
 
@@ -109,7 +109,7 @@ public:
     /// Return the derivative of transform output ellipse with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    Ellipse &input;                    ///< input ellipse to be transformed
+    Ellipse &input;                                ///< input ellipse to be transformed
     lsst::geom::AffineTransform const &transform;  ///< transform object
 };
 
@@ -132,9 +132,9 @@ inline Ellipse::Transformer const Ellipse::transform(lsst::geom::AffineTransform
 inline Ellipse::Ellipse(Ellipse::Transformer const &other)
         : _core(other.input.getCore().transform(other.transform.getLinear()).copy()),
           _center(other.transform(other.input.getCenter())) {}
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Transformer_h_INCLUDED

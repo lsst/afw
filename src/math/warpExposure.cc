@@ -222,10 +222,12 @@ void WarpingControl::setMaskWarpingKernel(SeparableKernel const &maskWarpingKern
 
 void WarpingControl::_testWarpingKernels(SeparableKernel const &warpingKernel,
                                          SeparableKernel const &maskWarpingKernel) const {
-    lsst::geom::Box2I kernelBBox = lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(warpingKernel.getCtr()),
-                                         warpingKernel.getDimensions());
-    lsst::geom::Box2I maskKernelBBox = lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(maskWarpingKernel.getCtr()),
-                                             maskWarpingKernel.getDimensions());
+    lsst::geom::Box2I kernelBBox =
+            lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(warpingKernel.getCtr()),
+                              warpingKernel.getDimensions());
+    lsst::geom::Box2I maskKernelBBox =
+            lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(maskWarpingKernel.getCtr()),
+                              maskWarpingKernel.getDimensions());
     if (!kernelBBox.contains(maskKernelBBox)) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "warping kernel is smaller than mask warping kernel");
@@ -252,21 +254,23 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
 
 namespace {
 
-inline lsst::geom::Point2D computeSrcPos(int destCol,                   ///< @internal destination column index
-                                   int destRow,                   ///< @internal destination row index
-                                   lsst::geom::Point2D const &destXY0,  ///< @internal xy0 of destination image
-                                   geom::SkyWcs const &destWcs,   ///< @internal WCS of remapped %image
-                                   geom::SkyWcs const &srcWcs)    ///< @internal WCS of source %image
+inline lsst::geom::Point2D computeSrcPos(
+        int destCol,                         ///< @internal destination column index
+        int destRow,                         ///< @internal destination row index
+        lsst::geom::Point2D const &destXY0,  ///< @internal xy0 of destination image
+        geom::SkyWcs const &destWcs,         ///< @internal WCS of remapped %image
+        geom::SkyWcs const &srcWcs)          ///< @internal WCS of source %image
 {
     lsst::geom::Point2D const destPix(image::indexToPosition(destCol + destXY0[0]),
-                                image::indexToPosition(destRow + destXY0[1]));
+                                      image::indexToPosition(destRow + destXY0[1]));
     return srcWcs.skyToPixel(destWcs.pixelToSky(destPix));
 }
 
 inline double computeRelativeArea(
-        lsst::geom::Point2D const &srcPos,      /// @internal source position at desired destination pixel
-        lsst::geom::Point2D const &leftSrcPos,  /// @internal source position one destination pixel to the left
-        lsst::geom::Point2D const &upSrcPos)    /// @internal source position one destination pixel above
+        lsst::geom::Point2D const &srcPos,  /// @internal source position at desired destination pixel
+        lsst::geom::Point2D const
+                &leftSrcPos,                  /// @internal source position one destination pixel to the left
+        lsst::geom::Point2D const &upSrcPos)  /// @internal source position one destination pixel above
 {
     lsst::geom::Extent2D dSrcA = srcPos - leftSrcPos;
     lsst::geom::Extent2D dSrcB = srcPos - upSrcPos;
@@ -396,7 +400,8 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
             int const endCol = edgeColList[colBand];
             lsst::geom::Point2D leftSrcPos = srcPosView[prevEndCol];
 
-            lsst::geom::Extent2D xDeltaSrcPos = (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
+            lsst::geom::Extent2D xDeltaSrcPos =
+                    (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
 
             for (int col = prevEndCol + 1; col <= endCol; ++col) {
                 srcPosView[col] = srcPosView[col - 1] + xDeltaSrcPos;
@@ -504,8 +509,9 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
 
 template <typename DestImageT, typename SrcImageT>
 int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
-                      lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,
-                      WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
+                      lsst::geom::LinearTransform const &linearTransform,
+                      lsst::geom::Point2D const &centerPosition, WarpingControl const &control,
+                      typename DestImageT::SinglePixel padValue) {
     // force src and dest to be the same size and xy0
     if ((destImage.getWidth() != srcImage.getWidth()) || (destImage.getHeight() != srcImage.getHeight()) ||
         (destImage.getXY0() != srcImage.getXY0())) {
@@ -518,7 +524,8 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
     SrcImageT srcImageCopy(srcImage, true);
     srcImageCopy.setXY0(0, 0);
     destImage.setXY0(0, 0);
-    lsst::geom::Extent2D cLocal = lsst::geom::Extent2D(centerPosition) - lsst::geom::Extent2D(srcImage.getXY0());
+    lsst::geom::Extent2D cLocal =
+            lsst::geom::Extent2D(centerPosition) - lsst::geom::Extent2D(srcImage.getXY0());
 
     // for the affine transform, the centerPosition will not only get sheared, but also
     // moved slightly.  So we'll include a translation to move it back by an amount
@@ -558,11 +565,11 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
 #define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT)                                                         \
     template int warpCenteredImage(                                                                          \
             IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,                       \
-            lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,               \
+            lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,   \
             WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                    \
     NL template int warpCenteredImage(                                                                       \
             MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,           \
-            lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,               \
+            lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,   \
             WarpingControl const &control, MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);              \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,     \
                               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control, \

@@ -70,8 +70,8 @@ public:
     /// return type of threshold
     ThresholdType getType() const { return _type; }
 
-    static ThresholdType parseTypeString(std::string const& typeStr);
-    static std::string getTypeString(ThresholdType const& type);
+    static ThresholdType parseTypeString(std::string const &typeStr);
+    static std::string getTypeString(ThresholdType const &type);
 
     /**
      * return value of threshold, to be interpreted via type
@@ -86,13 +86,13 @@ public:
      * @returns value of threshold
      */
     template <typename ImageT>
-    double getValue(ImageT const& image) const;
+    double getValue(ImageT const &image) const;
 
     /// return Threshold's polarity
     bool getPolarity() const { return _polarity; }
     /// set Threshold's polarity
     void setPolarity(bool const polarity  ///< desired polarity
-                     ) {
+    ) {
         _polarity = polarity;
     }
 
@@ -100,7 +100,7 @@ public:
     double getIncludeMultiplier() const { return _includeMultiplier; }
     /// set includeMultiplier
     void setIncludeMultiplier(double const includeMultiplier  ///< desired multiplier
-                              ) {
+    ) {
         _includeMultiplier = includeMultiplier;
     }
 
@@ -122,8 +122,8 @@ private:
  * @returns desired Threshold
  */
 Threshold createThreshold(const double value, const std::string type = "value", const bool polarity = true);
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif

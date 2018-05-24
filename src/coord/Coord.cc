@@ -149,6 +149,6 @@ lsst::geom::Angle hmsStringToAngle(std::string const hms) { return xmsStringToAn
 
 lsst::geom::Angle dmsStringToAngle(std::string const dms) { return xmsStringToAngle(dms, geom::degrees); }
 
-}
-}
-}  // end lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

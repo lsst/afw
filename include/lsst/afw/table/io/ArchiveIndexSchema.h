@@ -65,9 +65,9 @@ struct ArchiveIndexSchema {
 private:
     ArchiveIndexSchema();
 };
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_ArchiveInputSchema_h_INCLUDED
