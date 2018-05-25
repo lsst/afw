@@ -27,12 +27,12 @@ from ..schema import Schema
 from .match import SimpleMatch, ReferenceMatch, SourceMatch
 
 
-def __repr__(self):
+def __repr__(self):  # noqa: N807
     return "Match(%s,\n            %s,\n            %g)" % \
         (repr(self.first), repr(self.second), self.distance)
 
 
-def __str__(self):
+def __str__(self):  # noqa: N807
     def sourceRaDec(s):
         if hasattr(s, "getRa") and hasattr(s, "getDec"):
             return " RA,Dec=(%g,%g) deg" % (s.getRa().asDegrees(), s.getDec().asDegrees())
@@ -49,7 +49,7 @@ def __str__(self):
     return "Match(%s, %s, dist %g)" % (sourceStr(self.first), sourceStr(self.second), self.distance,)
 
 
-def __getitem__(self, i):
+def __getitem__(self, i):  # noqa: N807
     """Treat a Match as a tuple of length 3: (first, second, distance)"""
     if i > 2 or i < -3:
         raise IndexError(i)
@@ -63,7 +63,7 @@ def __getitem__(self, i):
         return self.distance
 
 
-def __setitem__(self, i, val):
+def __setitem__(self, i, val):  # noqa: N807
     """Treat a Match as a tuple of length 3: (first, second, distance)"""
     if i > 2 or i < -3:
         raise IndexError(i)
@@ -77,7 +77,7 @@ def __setitem__(self, i, val):
         self.distance = val
 
 
-def __len__(self):
+def __len__(self):  # noqa: N807
     return 3
 
 
