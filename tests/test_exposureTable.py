@@ -62,7 +62,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         metadata.set("NAXIS", 2)
         metadata.set("NAXIS1", 1024)
         metadata.set("NAXIS2", 1153)
-        metadata.set("RADECSYS", 'FK5')
+        metadata.set("RADESYS", 'FK5')
         metadata.set("EQUINOX", 2000.)
         metadata.setDouble("CRVAL1", 215.604025685476)
         metadata.setDouble("CRVAL2", 53.1595451514076)

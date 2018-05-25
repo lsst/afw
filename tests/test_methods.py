@@ -250,7 +250,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                              afwGeom.Extent2I(3001, 3001))
         ctrPix = afwGeom.Point2I(1500, 1500)
         metadata = dafBase.PropertySet()
-        metadata.set("RADECSYS", "FK5")
+        metadata.set("RADESYS", "FK5")
         metadata.set("EQUINOX", 2000.0)
         metadata.set("CTYPE1", "RA---TAN")
         metadata.set("CTYPE2", "DEC--TAN")
