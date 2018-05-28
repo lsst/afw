@@ -91,10 +91,10 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         self.base = 456  # Base value for pixels
         self.highValue = 789  # Value for high pixel
         self.lowValue = 123  # Value for low pixel
-        self.maskedValue = 123456  # Value for masked pixel (to throw off statistics)
         self.highPixel = (1, 1)  # Location of high pixel
         self.lowPixel = (2, 2)  # Location of low pixel
         self.maskedPixel = (3, 3)  # Location of masked pixel
+        self.maskedValue = 12345  # Value for masked pixel (to throw off statistics)
         self.badMask = "BAD"  # Mask plane to set for masked pixel
         self.stdev = 5.0  # Noise stdev to add to image
 
