@@ -133,7 +133,7 @@ def supportSlicing(cls):
         box, index, origin = interpretSliceArgs(imageSlice, self.getBBox)
         if box is not None:
             return self.subset(box, origin=origin)
-        return self.get(index, origin=origin)
+        return self._get(index, origin=origin)
     cls.__getitem__ = __getitem__
 
     def __setitem__(self, imageSlice, rhs):
@@ -143,5 +143,5 @@ def supportSlicing(cls):
                 lhs = self.subset(box, origin=origin)
                 lhs.set(rhs)
         else:
-            self.set(index, origin=origin, value=rhs)
+            self._set(index, origin=origin, value=rhs)
     cls.__setitem__ = __setitem__

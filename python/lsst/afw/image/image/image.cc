@@ -105,7 +105,7 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
 
     cls.def("set", [](ImageBase<PixelT> &img, PixelT val) { img = val; });
     cls.def(
-        "set",
+        "_set",
         [](ImageBase<PixelT> &img, geom::Point2I const & index, PixelT val, ImageOrigin origin) {
             python::checkBounds(index, img.getBBox(origin));
             img.get(index, origin) = val;
@@ -113,7 +113,7 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
         "index"_a, "value"_a, "origin"_a
     );
     cls.def(
-        "get",
+        "_get",
         [](ImageBase<PixelT> &img, geom::Point2I const & index, ImageOrigin origin) {
             python::checkBounds(index, img.getBBox(origin));
             return img.get(index, origin);
