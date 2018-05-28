@@ -77,12 +77,12 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(afwImage.innerProduct(im1, im2),
                          width*height*val1*val2)
 
-        im2.set(0, 0, 0)
+        im2[0, 0, afwImage.LOCAL] = 0
         self.assertEqual(afwImage.innerProduct(im1, im2),
                          (width*height - 1)*val1*val2)
 
-        im2.set(0, 0, val2)             # reinstate value
-        im2.set(width - 1, height - 1, 1)
+        im2[0, 0, afwImage.LOCAL] = val2             # reinstate value
+        im2[width - 1, height - 1, afwImage.LOCAL] = 1
         self.assertEqual(afwImage.innerProduct(im1, im2),
                          (width*height - 1)*val1*val2 + val1)
 
@@ -99,7 +99,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
 
         vec = self.ImageSet.getImageList()
         self.assertEqual(len(vec), nImage)
-        self.assertEqual(vec[nImage - 1].get(0, 0), val)
+        self.assertEqual(vec[nImage - 1][0, 0, afwImage.LOCAL], val)
 
         def tst():
             """Try adding an image with no flux"""
@@ -127,8 +127,8 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
 
         self.assertEqual(mean.getWidth(), width)
         self.assertEqual(mean.getHeight(), height)
-        self.assertEqual(mean.get(0, 0), meanVal)
-        self.assertEqual(mean.get(width - 1, height - 1), meanVal)
+        self.assertEqual(mean[0, 0, afwImage.LOCAL], meanVal)
+        self.assertEqual(mean[width - 1, height - 1, afwImage.LOCAL], meanVal)
 
     def testPca(self):
         """Test calculating PCA"""
@@ -196,7 +196,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             im.set(val)
 
             if i == 1:
-                im.set(width//2, height//2, np.nan)
+                im[width//2, height//2, afwImage.LOCAL] = np.nan
 
             self.ImageSet.addImage(im, 1.0)
 

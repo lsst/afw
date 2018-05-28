@@ -56,7 +56,7 @@ def toString(*args):
 
 def peakFromImage(im, pos):
     """Function to extract the sort key of peak height. Sort by decreasing peak height."""
-    val = im.get(pos[0], pos[1])[0]
+    val = im[pos[0], pos[1], afwImage.LOCAL][0]
     return -1.0 * val
 
 
@@ -71,7 +71,7 @@ class Object:
         for sp in self.spans:
             y, x0, x1 = sp
             for x in range(x0, x1+1):
-                im.set(x, y, self.val)
+                im[x, y, afwImage.LOCAL] = self.val
 
     def __eq__(self, other):
         for osp, sp in zip(other.getSpans(), self.spans):
@@ -147,7 +147,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage.get(x, sp.getY()),
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL],
                                      objects[i].getId())
 
     def testFootprintSetImageId(self):
@@ -162,7 +162,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage.get(x, sp.getY()), i + 1)
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
@@ -233,7 +233,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGrowCircular(self):
         """Grow footprints in all 4 directions using the FootprintSet/FootprintControl constructor """
         im = afwImage.MaskedImageF(11, 11)
-        im.set(5, 5, (10,))
+        im[5, 5, afwImage.LOCAL] = (10, 0x0, 0.0)
         fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), 1)
 
@@ -265,7 +265,7 @@ class FootprintSetTestCase(unittest.TestCase):
         im = afwImage.MaskedImageF(11, 11)
         x0, y0, ny = 5, 5, 3
         for y in range(y0 - ny//2, y0 + ny//2 + 1):
-            im.set(x0, y, (10,))
+            im[x0, y, afwImage.LOCAL] = (10, 0x0, 0.0)
         fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), 1)
 
@@ -292,12 +292,12 @@ class FootprintSetTestCase(unittest.TestCase):
             if fctrl.isLeft()[1]:
                 nextra += ngrow
                 for y in range(y0 - ny//2, y0 + ny//2 + 1):
-                    self.assertNotEqual(im.getMask().get(x0 - 1, y), 0)
+                    self.assertNotEqual(im.getMask()[x0 - 1, y, afwImage.LOCAL], 0)
 
             if fctrl.isRight()[1]:
                 nextra += ngrow
                 for y in range(y0 - ny//2, y0 + ny//2 + 1):
-                    self.assertNotEqual(im.getMask().get(x0 + 1, y), 0)
+                    self.assertNotEqual(im.getMask()[x0 + 1, y, afwImage.LOCAL], 0)
 
             self.assertEqual(foot.getArea(), (1 + nextra)*ny)
         #
@@ -321,12 +321,12 @@ class FootprintSetTestCase(unittest.TestCase):
             if fctrl.isUp()[1]:
                 nextra += ngrow
                 for y in range(y0 + ny//2 + 1, y0 + ny//2 + ngrow + 1):
-                    self.assertNotEqual(im.getMask().get(x0, y), 0)
+                    self.assertNotEqual(im.getMask()[x0, y, afwImage.LOCAL], 0)
 
             if fctrl.isDown()[1]:
                 nextra += ngrow
                 for y in range(y0 - ny//2 - 1, y0 - ny//2 - ngrow - 1):
-                    self.assertNotEqual(im.getMask().get(x0, y), 0)
+                    self.assertNotEqual(im.getMask()[x0, y, afwImage.LOCAL], 0)
 
             self.assertEqual(foot.getArea(), ny + nextra)
 
@@ -344,7 +344,7 @@ class FootprintSetTestCase(unittest.TestCase):
         ]:
             im = afwImage.MaskedImageF(11, 11)
             for x, y in xy:
-                im.set(x, y, (10,))
+                im[x, y, afwImage.LOCAL] = (10, 0x0, 0.0)
             fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
             self.assertEqual(len(fs.getFootprints()), 1)
 
@@ -371,7 +371,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         import numpy
         for x in range(im.getWidth()):
-            im.set(x, im.getHeight() - 1, (numpy.Inf, 0x0, 0))
+            im[x, -1, afwImage.LOCAL] = (numpy.Inf, 0x0, 0)
 
         ds = afwDetect.FootprintSet(im, afwDetect.createThreshold(100))
 
@@ -415,7 +415,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.im.set((0, 0x0, 0))                       # clear image
         for obj in self.objects:
             for x, y, I in obj:
-                self.im.getImage().set(x, y, I)
+                self.im.getImage()[x, y, afwImage.LOCAL] = I
 
         if False and display:
             ds9.mtv(self.im, frame=0)
@@ -443,7 +443,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             """Sort self.peaks in decreasing peak height to match Footprint.getPeaks()"""
             return p[2] * -1.0
         for i, peaks in enumerate(self.peaks):
-            self.peaks[i] = sorted([(x, y, self.im.getImage().get(x, y)) for x, y in peaks],
+            self.peaks[i] = sorted([(x, y, self.im.getImage()[x, y, afwImage.LOCAL]) for x, y in peaks],
                                    key=peakDescending)
 
         threshold = afwDetect.Threshold(
@@ -540,7 +540,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         """Test that multiple peaks are handled correctly"""
         def callback():
             x, y = 12, 7
-            self.im.getImage().set(x, y, 100)
+            self.im.getImage()[x, y, afwImage.LOCAL] = 100
             self.peaks[1].append((x, y))
 
         self.doTestPeaks(callback=callback)
@@ -549,7 +549,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         """Test that multiple negative peaks are handled correctly"""
         def callback():
             x, y = 12, 7
-            self.im.getImage().set(x, y, -100)
+            self.im.getImage()[x, y, afwImage.LOCAL] = -100
             self.peaks[1].append((x, y))
 
         self.doTestPeaks(polarity=False, callback=callback)
@@ -557,7 +557,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
     def testGrowFootprints(self):
         """Test that we can grow footprints, correctly merging those that now touch"""
         def callback():
-            self.im.getImage().set(10, 4, 20)
+            self.im.getImage()[10, 4, afwImage.LOCAL] = 20
             self.peaks[-2].append((10, 4,))
 
         self.doTestPeaks(dwidth=1, dheight=1, callback=callback, grow=1)
@@ -567,7 +567,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         N.b. this caused RHL's initial implementation to crash
         """
         def callback():
-            self.im.getImage().set(10, 4, 20)
+            self.im.getImage()[10, 4, afwImage.LOCAL] = 20
             self.peaks[-2].append((10, 4, ))
 
             def peaksSortKey(p):
@@ -592,13 +592,13 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                      (4, 4), (8, 4),
                      (4, 3), (8, 3),
                      ]:
-            self.im.getImage().set(x, y, value)
+            self.im.getImage()[x, y, afwImage.LOCAL] = value
             value -= 1e-3
 
-        self.im.getImage().set(4, 7, 15)
+        self.im.getImage()[4, 7, afwImage.LOCAL] = 15
         self.peaks.append([(4, 7,), ])
 
-        self.im.getImage().set(6, 5, 30)
+        self.im.getImage()[6, 5, afwImage.LOCAL] = 30
         self.peaks[0].append((6, 5,))
 
         self.fs = afwDetect.FootprintSet(
@@ -643,7 +643,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         def callback():
             x, y, value = x0 + 10, y0 + 4, -20
-            self.im.getImage().set(x, y, value)
+            self.im.getImage()[x, y, afwImage.LOCAL] = value
             peaks2.append((x, y, value))
 
         for grow1, grow2 in [(1, 1), (3, 3), (6, 6), ]:
@@ -679,11 +679,11 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.peaks, self.objects = [], []
 
             for x, y, I in [[6, 4, 20], [6, 5, 10]]:
-                self.im.getImage().set(x, y, I)
+                self.im.getImage()[x, y, afwImage.LOCAL] = I
             self.peaks.append([[6, 4]])
 
             x, y, value = 8, 4, -20
-            self.im.getImage().set(x, y, value)
+            self.im.getImage()[x, y, afwImage.LOCAL] = value
             peaks2.append((x, y, value))
 
         grow1, grow2 = 0, 3

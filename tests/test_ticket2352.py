@@ -48,7 +48,7 @@ class ReadMefTest(unittest.TestCase):
         self.assertEqual(header.getScalar("EXTNAME").strip(), name)
 
         image = afwImage.ImageI(filename)
-        self.assertEqual(image.get(0, 0), value)
+        self.assertEqual(image[0, 0, afwImage.LOCAL], value)
 
     def testExtName(self):
         self.checkExtName("ONE", 1, 2)

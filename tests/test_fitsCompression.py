@@ -35,6 +35,7 @@ import lsst.afw.geom
 import lsst.afw.image
 import lsst.afw.fits
 import lsst.utils.tests
+from lsst.afw.image import LOCAL
 from lsst.afw.fits import ImageScalingOptions, ImageCompressionOptions
 
 
@@ -91,10 +92,10 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         self.base = 456  # Base value for pixels
         self.highValue = 789  # Value for high pixel
         self.lowValue = 123  # Value for low pixel
-        self.highPixel = (1, 1)  # Location of high pixel
-        self.lowPixel = (2, 2)  # Location of low pixel
-        self.maskedPixel = (3, 3)  # Location of masked pixel
         self.maskedValue = 12345  # Value for masked pixel (to throw off statistics)
+        self.highPixel = lsst.afw.geom.Point2I(1, 1)  # Location of high pixel
+        self.lowPixel = lsst.afw.geom.Point2I(2, 2)  # Location of low pixel
+        self.maskedPixel = lsst.afw.geom.Point2I(3, 3)  # Location of masked pixel
         self.badMask = "BAD"  # Mask plane to set for masked pixel
         self.stdev = 5.0  # Noise stdev to add to image
 
@@ -129,10 +130,10 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         mask.addMaskPlane(self.badMask)
         bad = mask.getPlaneBitMask(self.badMask)
         image.set(self.base)
-        image.set(self.highPixel[0], self.highPixel[1], self.highValue)
-        image.set(self.lowPixel[0], self.lowPixel[1], self.lowValue)
-        image.set(self.maskedPixel[0], self.maskedPixel[1], self.maskedValue)
-        mask.set(self.maskedPixel[0], self.maskedPixel[1], bad)
+        image[self.highPixel, LOCAL] = self.highValue
+        image[self.lowPixel, LOCAL] = self.lowValue
+        image[self.maskedPixel, LOCAL] = self.maskedValue
+        mask[self.maskedPixel, LOCAL] = bad
 
         rng = np.random.RandomState(12345)
         dtype = image.getArray().dtype
@@ -193,10 +194,10 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             Relative/absolute tolerance for comparison.
         """
         if np.isnan(expected):
-            self.assertTrue(np.isnan(unpersisted.get(*xy)))
+            self.assertTrue(np.isnan(unpersisted[xy, LOCAL]))
         else:
-            self.assertFloatsAlmostEqual(unpersisted.get(*xy), expected, rtol=rtol, atol=atol)
-        unpersisted.set(xy[0], xy[1], original.get(*xy))  # for ease of comparison of the whole image
+            self.assertFloatsAlmostEqual(unpersisted[xy, LOCAL], expected, rtol=rtol, atol=atol)
+        unpersisted[xy, LOCAL] = original[xy, LOCAL]  # for ease of comparison of the whole image
 
     def checkSpecialPixels(self, original, unpersisted, maxValue, minValue, rtol=None, atol=None):
         """Check the special pixels
@@ -212,9 +213,9 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
         rtol, atol : `float` or `None`
             Relative/absolute tolerance for comparison.
         """
-        highValue = original.get(*self.highPixel)
-        lowValue = original.get(*self.lowPixel)
-        maskedValue = original.get(*self.maskedPixel)
+        highValue = original[self.highPixel, LOCAL]
+        lowValue = original[self.lowPixel, LOCAL]
+        maskedValue = original[self.maskedPixel, LOCAL]
 
         expectHigh = min(highValue, maxValue)
         expectLow = max(lowValue, minValue)

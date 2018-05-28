@@ -263,8 +263,8 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
                 self.maskedImage, refMaskedImage, self.cnvMaskedImage]), frame=0)
             if False:
                 for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
-                    print("Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
-                                                     self.cnvMaskedImage.getMask().get(x, y)))
+                    print("Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask()[x, y, afwImage.LOCAL],
+                                                     self.cnvMaskedImage.getMask()[x, y, afwImage.LOCAL]))
 
         self.assertImagesAlmostEqual(
             self.cnvImage, refMaskedImage.getImage(), atol=atol, rtol=rtol)

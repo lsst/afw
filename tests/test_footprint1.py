@@ -79,7 +79,7 @@ class Object:
         for sp in self.spans:
             y, x0, x1 = sp
             for x in range(x0, x1+1):
-                im.set(x, y, self.val)
+                im[x, y, afwImage.LOCAL] = self.val
 
     def __eq__(self, other):
         for osp, sp in zip(other.getSpans(), self.spans):
@@ -595,7 +595,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
             for y in range(y0, y1 + 1):
                 for x in range(x0, x1 + 1):
-                    idImageFromBBox.set(x, y, 1)
+                    idImageFromBBox[x, y, afwImage.LOCAL] = 1
 
             if display:
                 x0 -= 0.5
@@ -658,14 +658,14 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         objects = ds.getFootprints()
         afwDetect.setMaskFromFootprintList(mi.getMask(), objects, 0x1)
 
-        self.assertEqual(mi.getMask().get(4, 2), 0x0)
-        self.assertEqual(mi.getMask().get(3, 6), 0x1)
+        self.assertEqual(mi.getMask()[4, 2, afwImage.LOCAL], 0x0)
+        self.assertEqual(mi.getMask()[3, 6, afwImage.LOCAL], 0x1)
 
-        self.assertEqual(mi.getImage().get(3, 6), 20)
+        self.assertEqual(mi.getImage()[3, 6, afwImage.LOCAL], 20)
         for ft in objects:
             ft.spans.setImage(mi.getImage(), 5.0)
-        self.assertEqual(mi.getImage().get(4, 2), 10)
-        self.assertEqual(mi.getImage().get(3, 6), 5)
+        self.assertEqual(mi.getImage()[4, 2, afwImage.LOCAL], 10)
+        self.assertEqual(mi.getImage()[3, 6, afwImage.LOCAL], 5)
 
         if display:
             ds9.mtv(mi, frame=1)
@@ -703,7 +703,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         bitmask = mi.getMask().getPlaneBitMask("DETECTED")
         for y in range(im.getHeight()):
             for x in range(im.getWidth()):
-                self.assertEqual(mi.getMask().get(x, y), bitmask)
+                self.assertEqual(mi.getMask()[x, y, afwImage.LOCAL], bitmask)
 
     def testTransform(self):
         dims = lsst.geom.Extent2I(512, 512)
@@ -1026,9 +1026,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         # Find edges with an edge-detection kernel
         image = makeImage(self.foot)
         kernel = afwImage.ImageD(3, 3)
-        kernel.set(1, 1, 4)
+        kernel[1, 1, afwImage.LOCAL] = 4
         for x, y in [(1, 2), (0, 1), (1, 0), (2, 1)]:
-            kernel.set(x, y, -1)
+            kernel[x, y, afwImage.LOCAL] = -1
         kernel.setXY0(1, 1)
         result = afwImage.ImageI(bbox)
         result.set(0)
@@ -1109,10 +1109,10 @@ class FootprintSetTestCase(unittest.TestCase):
         """Check that we found the correct number of objects using FootprintSet and PIXEL_STDEV"""
         threshold = 4.5                 # in units of sigma
 
-        self.ms.set(2, 4, (10, 0x0, 36))  # not detected (high variance)
+        self.ms[2, 4, afwImage.LOCAL] = (10, 0x0, 36)  # not detected (high variance)
 
         y, x = self.objects[2].spans[0][0:2]
-        self.ms.set(x, y, (threshold, 0x0, 1.0))
+        self.ms[x, y, afwImage.LOCAL] = (threshold, 0x0, 1.0)
 
         ds = afwDetect.FootprintSet(self.ms,
                                     afwDetect.createThreshold(threshold, "pixel_stdev"), "OBJECT")
@@ -1135,7 +1135,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(mask.get(x, sp.getY()),
+                    self.assertEqual(mask[x, sp.getY(), afwImage.LOCAL],
                                      mask.getPlaneBitMask("OBJECT"))
 
     def testFootprintsImageId(self):
@@ -1155,7 +1155,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage.get(x, sp.getY()),
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL],
                                      objects[i].getId())
 
     def testFootprintSetImageId(self):
@@ -1170,7 +1170,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
-                    self.assertEqual(idImage.get(x, sp.getY()), i + 1)
+                    self.assertEqual(idImage[x, sp.getY(), afwImage.LOCAL], i + 1)
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
@@ -1274,12 +1274,12 @@ class NaNFootprintSetTestCase(unittest.TestCase):
             obj.insert(im)
 
         self.NaN = float("NaN")
-        im.set(3, 7, self.NaN)
-        im.set(0, 0, self.NaN)
-        im.set(8, 2, self.NaN)
+        im[3, 7, afwImage.LOCAL] = self.NaN
+        im[0, 0, afwImage.LOCAL] = self.NaN
+        im[8, 2, afwImage.LOCAL] = self.NaN
 
         # connects the two objects with value==20 together if NaN is detected
-        im.set(9, 6, self.NaN)
+        im[9, 6, afwImage.LOCAL] = self.NaN
 
         if False and display:
             ds9.mtv(im, frame=0)

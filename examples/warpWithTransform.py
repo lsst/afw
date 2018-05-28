@@ -26,7 +26,7 @@ def main():
             ic = i - (y0 - yorig)
             jc = j - (x0 - xorig)
             r = math.sqrt(ic*ic + jc*jc)
-            img.set(j, i, 1.0*math.exp(-r**2/(2.0*psfSigma**2)))
+            img[j, i, afwImage.LOCAL] = 1.0*math.exp(-r**2/(2.0*psfSigma**2))
 
     # now warp it about the centroid using a linear transform
 

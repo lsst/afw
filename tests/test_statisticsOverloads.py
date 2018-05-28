@@ -177,10 +177,10 @@ class StatisticsTestCase(unittest.TestCase):
         mask = afwImage.Mask(lsst.geom.Extent2I(10, 10))
         mask.set(0x0)
 
-        mask.set(1, 1, 0x10)
-        mask.set(3, 1, 0x08)
-        mask.set(5, 4, 0x08)
-        mask.set(4, 5, 0x02)
+        mask[1, 1, afwImage.LOCAL] = 0x10
+        mask[3, 1, afwImage.LOCAL] = 0x08
+        mask[5, 4, afwImage.LOCAL] = 0x08
+        mask[4, 5, afwImage.LOCAL] = 0x02
 
         stats = afwMath.makeStatistics(mask, afwMath.SUM | afwMath.NPOINT)
         self.assertEqual(mask.getWidth()*mask.getHeight(),

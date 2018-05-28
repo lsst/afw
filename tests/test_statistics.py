@@ -106,7 +106,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         mean = stats.getResult(afwMath.MEAN)
         sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean[0], self.image.get(0, 0))
+        self.assertEqual(mean[0], self.image[0, 0, afwImage.LOCAL])
         self.assertEqual(
             mean[1],
             sd/math.sqrt(self.image.getWidth()*self.image.getHeight()))
@@ -143,15 +143,15 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         n = stats.getValue(afwMath.NPOINT)
         sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean[0], image2.get(0, 0) + 0.5)
+        self.assertEqual(mean[0], image2[0, 0, afwImage.LOCAL] + 0.5)
         self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
         self.assertAlmostEqual(
             mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
         meanSquare = afwMath.makeStatistics(
             image2, afwMath.MEANSQUARE).getValue()
-        self.assertEqual(meanSquare, 0.5*(image2.get(0, 0) ** 2 +
-                                          image2.get(0, 1) ** 2))
+        self.assertEqual(meanSquare, 0.5*(image2[0, 0, afwImage.LOCAL] ** 2 +
+                                          image2[0, 1, afwImage.LOCAL] ** 2))
 
     def testStatsStdevclip(self):
         """Test STDEVCLIP; cf. #611"""
@@ -207,11 +207,11 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
             if useImage:
                 self.image = afwImage.ImageF(100, 100)
                 self.image.set(self.val)
-                self.image.set(x, y, badVal)
+                self.image[x, y, afwImage.LOCAL] = badVal
             else:
                 self.image = afwImage.MaskedImageF(100, 100)
                 self.image.set(self.val, 0x0, 1.0)
-                self.image.set(x, y, (badVal, 0x0, 1.0))
+                self.image[x, y, afwImage.LOCAL] = (badVal, 0x0, 1.0)
 
             self.assertEqual(
                 afwMath.makeStatistics(self.image, afwMath.MAX).getValue(),
@@ -288,7 +288,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         for y in range(ny):
             for x in range(nx):
                 z = z0 + dzdx*x
-                img.set(x, y, z)
+                img[x, y, afwImage.LOCAL] = z
                 stdev += (z - mean)*(z - mean)
 
         stdev = math.sqrt(stdev/(nx*ny - 1))
@@ -307,7 +307,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         mean, meanErr = stats.getResult(afwMath.MEAN)
         sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean, img.get(nx//2, ny//2))
+        self.assertEqual(mean, img[nx//2, ny//2, afwImage.LOCAL])
         self.assertEqual(meanErr, sd/math.sqrt(img.getWidth()*img.getHeight()))
 
         # ===============================================================================
@@ -328,10 +328,10 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         mask = afwImage.Mask(lsst.geom.Extent2I(10, 10))
         mask.set(0x0)
 
-        mask.set(1, 1, 0x10)
-        mask.set(3, 1, 0x08)
-        mask.set(5, 4, 0x08)
-        mask.set(4, 5, 0x02)
+        mask[1, 1, afwImage.LOCAL] = 0x10
+        mask[3, 1, afwImage.LOCAL] = 0x08
+        mask[5, 4, afwImage.LOCAL] = 0x08
+        mask[4, 5, afwImage.LOCAL] = 0x02
 
         stats = afwMath.makeStatistics(mask, afwMath.SUM | afwMath.NPOINT)
         self.assertEqual(mask.getWidth()*mask.getHeight(),
@@ -387,7 +387,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
         # test the case with one valid pixel ... mean is ok, but stdev should
         # still be nan
-        mimg.getMask().set(1, 1, 0x0)
+        mimg.getMask()[1, 1, afwImage.LOCAL] = 0x0
         stat = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
@@ -395,7 +395,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(stdev, stdev)  # NaN does not equal itself
 
         # test the case with two valid pixels ... both mean and stdev are ok
-        mimg.getMask().set(1, 2, 0x0)
+        mimg.getMask()[1, 2, afwImage.LOCAL] = 0x0
         stat = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
@@ -524,7 +524,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
         Insert a single bad pixel; it should be clipped.
         """
-        self.image.set(0, 0, 0)
+        self.image[0, 0, afwImage.LOCAL] = 0
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP | afwMath.NCLIPPED | afwMath.NPOINT)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
         self.assertEqual(stats.getValue(afwMath.NCLIPPED), 1)
@@ -538,7 +538,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         mask = afwImage.Mask(self.image.getBBox())
         mask.set(0)
         self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 0)
-        mask.set(1, 1, maskVal)
+        mask[1, 1, afwImage.LOCAL] = maskVal
         self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 1)
 
 

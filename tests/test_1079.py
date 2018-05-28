@@ -73,8 +73,7 @@ class SavingSubImagesTest(unittest.TestCase):
 
         self.parent.getMaskedImage().set(0)
         for p in self.testPositions:
-            self.parent.getMaskedImage().set(
-                int(p[0]), int(p[1]), (10 + p[0],))
+            self.parent.image[lsst.geom.Point2I(p), afwImage.LOCAL] = 10 + p[0]
 
     def tearDown(self):
         del self.parent
@@ -155,8 +154,8 @@ class SavingSubImagesTest(unittest.TestCase):
                 #
                 # Check that we're talking about the same pixel
                 #
-                self.assertEqual(self.parent.getMaskedImage().get(int(p[0]), int(p[1])),
-                                 subImg.getMaskedImage().get(int(subP[0]), int(subP[1])))
+                self.assertEqual(self.parent.maskedImage[lsst.geom.Point2I(p), afwImage.LOCAL],
+                                 subImg.maskedImage[lsst.geom.Point2I(subP), afwImage.LOCAL])
 
                 self.assertEqual(adParent[0], adSub[0],
                                  "RAs are equal; deep = %s" % deep)

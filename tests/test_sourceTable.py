@@ -316,11 +316,10 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         im = mim.getImage()
         msk = mim.getMask()
         var = mim.getVariance()
-        for y in range(H):
-            for x in range(W):
-                im.set(x, y, y * 1e6 + x * 1e3)
-                msk.set(x, y, (y << 8) | x)
-                var.set(x, y, y * 1e2 + x)
+        x, y = np.meshgrid(np.arange(W, dtype=int), np.arange(H, dtype=int))
+        im.array[:] = y*1E6 + x*1E3
+        msk.array[:] = (y << 8) | x
+        var.array[:] = y*1E2 + x
         spanSet = lsst.afw.geom.SpanSet.fromShape(20).shiftedBy(50, 50)
         circ = lsst.afw.detection.Footprint(spanSet)
         heavy = lsst.afw.detection.makeHeavyFootprint(circ, mim)
@@ -374,13 +373,13 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             for y in range(H):
                 for x in range(W):
                     if circ.contains(lsst.geom.Point2I(x, y)):
-                        self.assertEqual(im.get(x, y), im3.get(x, y))
-                        self.assertEqual(msk.get(x, y), ma3.get(x, y))
-                        self.assertEqual(var.get(x, y), va3.get(x, y))
+                        self.assertEqual(im[x, y, lsst.afw.image.PARENT], im3[x, y, lsst.afw.image.PARENT])
+                        self.assertEqual(msk[x, y, lsst.afw.image.PARENT], ma3[x, y, lsst.afw.image.PARENT])
+                        self.assertEqual(var[x, y, lsst.afw.image.PARENT], va3[x, y, lsst.afw.image.PARENT])
                     else:
-                        self.assertEqual(im3.get(x, y), 0.)
-                        self.assertEqual(ma3.get(x, y), 0.)
-                        self.assertEqual(va3.get(x, y), 0.)
+                        self.assertEqual(im3[x, y, lsst.afw.image.PARENT], 0.)
+                        self.assertEqual(ma3[x, y, lsst.afw.image.PARENT], 0.)
+                        self.assertEqual(va3[x, y, lsst.afw.image.PARENT], 0.)
 
             cat3 = lsst.afw.table.SourceCatalog.readFits(
                 fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)

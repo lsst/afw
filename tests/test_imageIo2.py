@@ -37,7 +37,7 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(image.getX0(), original.getX0())
         for x in range(0, original.getWidth()):
             for y in range(0, image.getHeight()):
-                self.assertEqual(image.get(x, y), original.get(x, y))
+                self.assertEqual(image[x, y, afwImage.LOCAL], original[x, y, afwImage.LOCAL])
 
     def setUp(self):
         # Create the additionalData PropertySet
@@ -54,7 +54,7 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
             image = Image(self.cols, self.rows)
             for x in range(0, self.cols):
                 for y in range(0, self.rows):
-                    image.set(x, y, x + y)
+                    image[x, y, afwImage.PARENT] = x + y
 
             with lsst.utils.tests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
                 image.writeFits(filename)

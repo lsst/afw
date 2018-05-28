@@ -158,8 +158,8 @@ class StatisticsTestCase(unittest.TestCase):
 
     def testWeightedSimple(self):
         mimg = afwImage.MaskedImageF(lsst.geom.Extent2I(1, 2))
-        mimg.set(0, 0, (self.valR, 0x0, self.valR))
-        mimg.set(0, 1, (self.valL, 0x0, self.valL))
+        mimg[0, 0, afwImage.LOCAL] = (self.valR, 0x0, self.valR)
+        mimg[0, 1, afwImage.LOCAL] = (self.valL, 0x0, self.valL)
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setWeighted(True)

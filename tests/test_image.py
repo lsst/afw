@@ -69,7 +69,7 @@ def makeRampImage(width, height, imgClass=afwImage.ImageF):
     val = 0
     for yInd in range(height):
         for xInd in range(width):
-            im.set(xInd, yInd, val)
+            im[xInd, yInd, afwImage.PARENT] = val
             val += 1
     return im
 
@@ -111,8 +111,8 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             array1[:, :] = np.random.uniform(low=0, high=10, size=array1.shape)
             for j in range(image1.getHeight()):
                 for i in range(image1.getWidth()):
-                    self.assertEqual(image1.get(i, j), array1[j, i])
-                    self.assertEqual(image2.get(i, j), array1[j, i])
+                    self.assertEqual(image1[i, j, afwImage.LOCAL], array1[j, i])
+                    self.assertEqual(image2[i, j, afwImage.LOCAL], array1[j, i])
             array3 = np.random.uniform(low=0, high=10,
                                        size=array1.shape).astype(array1.dtype)
             image1.array[:] = array3
@@ -162,28 +162,22 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         val = 666
         for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
             im = ctor(10, 10, val)
-            self.assertEqual(im.get(0, 0), val)
+            self.assertEqual(im[0, 0, afwImage.PARENT], val)
 
             im2 = ctor(lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
                                        lsst.geom.Extent2I(10, 10)), val)
-            self.assertEqual(im2.get(0, 0), val)
+            self.assertEqual(im2[0, 0, afwImage.PARENT], val)
 
     def testSetGetImages(self):
-        self.assertEqual(self.image1.get(0, 0), self.val1)
-
-    def testGetSet0Images(self):
-        self.assertEqual(self.image1.get0(0, 0), self.val1)
         self.image1.setXY0(3, 4)
-        self.assertEqual(self.image1.get0(3, 4), self.val1)
-
-        def f1():
-            return self.image1.get0(0, 0)
-        self.assertRaises(lsst.pex.exceptions.LengthError, f1)
-        self.image1.set(0, 0, 42.)
-        self.assertEqual(self.image1.get0(3, 4), 42.)
-        self.image1.set0(3, 4, self.val1)
-        self.assertEqual(self.image1.get0(3, 4), self.val1)
-        self.assertEqual(self.image1.get(0, 0), self.val1)
+        self.assertEqual(self.image1[0, 0, afwImage.LOCAL], self.val1)
+        self.assertEqual(self.image1[3, 4, afwImage.PARENT], self.val1)
+        self.image1[0, 0, afwImage.LOCAL] = 42.
+        self.assertEqual(self.image1[0, 0, afwImage.LOCAL], 42.)
+        self.assertEqual(self.image1[3, 4, afwImage.PARENT], 42.)
+        self.image1[3, 4, afwImage.PARENT] = self.val1
+        self.assertEqual(self.image1[0, 0, afwImage.LOCAL], self.val1)
+        self.assertEqual(self.image1[3, 4, afwImage.PARENT], self.val1)
 
     def testAllocateLargeImages(self):
         """Try to allocate a Very large image"""
@@ -199,15 +193,15 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.image2 += self.image1
         self.image1 += self.val1
 
-        self.assertEqual(self.image1.get(0, 0), 2*self.val1)
-        self.assertEqual(self.image2.get(0, 0), self.val1 + self.val2)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], 2*self.val1)
+        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val1 + self.val2)
 
         self.image1.set(self.val1)
         self.image1 += self.function
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1.get(i, j),
+                self.assertEqual(self.image1[i, j, afwImage.PARENT],
                                  self.val1 + self.function(i, j))
 
     def testAssignWithBBox(self):
@@ -288,48 +282,25 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             destIm.assign(srcIm, lsst.geom.Box2I())
             self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
-    def testBoundsChecking(self):
-        """Check that pixel indexes are checked in python"""
-        tsts = []
-
-        def tst():
-            self.image1.get(-1, 0)
-        tsts.append(tst)
-
-        def tst():
-            self.image1.get(0, -1)
-        tsts.append(tst)
-
-        def tst():
-            self.image1.get(self.image1.getWidth(), 0)
-        tsts.append(tst)
-
-        def tst():
-            self.image1.get(0, self.image1.getHeight())
-        tsts.append(tst)
-
-        for tst in tsts:
-            self.assertRaises(lsst.pex.exceptions.LengthError, tst)
-
     def testAddScaledImages(self):
         c = 10.0
         self.image1.scaledPlus(c, self.image2)
 
-        self.assertEqual(self.image1.get(0, 0), self.val1 + c*self.val2)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1 + c*self.val2)
 
     def testSubtractImages(self):
         self.image2 -= self.image1
         self.image1 -= self.val1
 
-        self.assertEqual(self.image1.get(0, 0), 0)
-        self.assertEqual(self.image2.get(0, 0), self.val2 - self.val1)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], 0)
+        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val2 - self.val1)
 
         self.image1.set(self.val1)
         self.image1 -= self.function
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1.get(i, j),
+                self.assertEqual(self.image1[i, j, afwImage.PARENT],
                                  self.val1 - self.function(i, j))
 
     def testArithmeticImagesMismatch(self):
@@ -375,41 +346,41 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         c = 10.0
         self.image1.scaledMinus(c, self.image2)
 
-        self.assertEqual(self.image1.get(0, 0), self.val1 - c*self.val2)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1 - c*self.val2)
 
     def testMultiplyImages(self):
         self.image2 *= self.image1
         self.image1 *= self.val1
 
-        self.assertEqual(self.image1.get(0, 0), self.val1*self.val1)
-        self.assertEqual(self.image2.get(0, 0), self.val2*self.val1)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1*self.val1)
+        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val2*self.val1)
 
     def testMultiplesScaledImages(self):
         c = 10.0
         self.image1.scaledMultiplies(c, self.image2)
 
-        self.assertEqual(self.image1.get(0, 0), self.val1 * c*self.val2)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1 * c*self.val2)
 
     def testDivideImages(self):
         self.image2 /= self.image1
         self.image1 /= self.val1
 
-        self.assertEqual(self.image1.get(0, 0), 1)
-        self.assertEqual(self.image2.get(0, 0), self.val2/self.val1)
+        self.assertEqual(self.image1[0, 0, afwImage.PARENT], 1)
+        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val2/self.val1)
 
     def testDividesScaledImages(self):
         c = 10.0
         self.image1.scaledDivides(c, self.image2)
 
-        self.assertAlmostEqual(self.image1.get(0, 0), self.val1/(c*self.val2))
+        self.assertAlmostEqual(self.image1[0, 0, afwImage.PARENT], self.val1/(c*self.val2))
 
     def testCopyConstructors(self):
         dimage = afwImage.ImageF(self.image1, True)  # deep copy
         simage = afwImage.ImageF(self.image1)  # shallow copy
 
         self.image1 += 2                # should only change dimage
-        self.assertEqual(dimage.get(0, 0), self.val1)
-        self.assertEqual(simage.get(0, 0), self.val1 + 2)
+        self.assertEqual(dimage[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(simage[0, 0, afwImage.PARENT], self.val1 + 2)
 
     def testGeneralisedCopyConstructors(self):
         # these are generalised (templated) copy constructors in C++
@@ -417,19 +388,19 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         imageF = imageU.convertF()
         imageD = imageF.convertD()
 
-        self.assertEqual(imageU.get(0, 0), self.val1)
-        self.assertEqual(imageF.get(0, 0), self.val1)
-        self.assertEqual(imageD.get(0, 0), self.val1)
+        self.assertEqual(imageU[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(imageF[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(imageD[0, 0, afwImage.PARENT], self.val1)
 
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
 
-        self.assertEqual(img.get(x0 - 1, y0 - 1), self.val1)
-        self.assertEqual(img.get(x0, y0), 666)
-        self.assertEqual(img.get(x0 + 3, y0), self.val1)
-        self.assertEqual(img.get(x0, y0 + 1), 666)
-        self.assertEqual(img.get(x0 + 3, y0 + 1), self.val1)
-        self.assertEqual(img.get(x0, y0 + 2), self.val1)
+        self.assertEqual(img[x0 - 1, y0 - 1, afwImage.LOCAL], self.val1)
+        self.assertEqual(img[x0, y0, afwImage.LOCAL], 666)
+        self.assertEqual(img[x0 + 3, y0, afwImage.LOCAL], self.val1)
+        self.assertEqual(img[x0, y0 + 1, afwImage.LOCAL], 666)
+        self.assertEqual(img[x0 + 3, y0 + 1, afwImage.LOCAL], self.val1)
+        self.assertEqual(img[x0, y0 + 2, afwImage.LOCAL], self.val1)
 
     def testOrigin(self):
         """Check that we can set and read the origin"""
@@ -479,7 +450,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testSubimages2(self):
         """Test subimages when we've played with the (x0, y0) value"""
 
-        self.image1.set(9, 4, 888)
+        self.image1[9, 4, afwImage.PARENT] = 888
 
         simage1 = afwImage.ImageF(
             self.image1,
@@ -524,46 +495,15 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         del self.image1                 # tempt C++ to reuse the memory
         self.image1 = factory(dims)
-        self.assertEqual(self.image1.get(10, 10), 0)
-
-    def testImageSlices(self):
-        """Test image slicing, which generate sub-images using Box2I under the covers"""
-        im = afwImage.ImageF(10, 20)
-        im[-1, :] = -5
-        im[..., 18] = -5              # equivalent to im[:, 18]
-        im[4, 10] = 10
-        im[-3:, -2:] = 100
-        im[-2, -2] = -10
-        sim = im[1:4, 6:10]
-        sim[:] = -1
-        im[0:4, 0:4] = im[2:6, 8:12]
-
-        if display:
-            ds9.mtv(im)
-
-        self.assertEqual(im.get(0, 6), 0)
-        self.assertEqual(im.get(9, 15), -5)
-        self.assertEqual(im.get(5, 18), -5)
-        self.assertEqual(im.get(6, 17), 0)
-        self.assertEqual(im.get(7, 18), 100)
-        self.assertEqual(im.get(9, 19), 100)
-        self.assertEqual(im.get(8, 18), -10)
-        self.assertEqual(im.get(1, 6), -1)
-        self.assertEqual(im.get(3, 9), -1)
-        self.assertEqual(im.get(4, 10), 10)
-        self.assertEqual(im.get(4, 9), 0)
-        self.assertEqual(im.get(2, 2), 10)
-        self.assertEqual(im.get(0, 0), -1)
+        self.assertEqual(self.image1[10, 10, afwImage.PARENT], 0)
 
     def testImageSlicesOrigin(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.ImageF(10, 20)
         im.setXY0(50, 100)
-        im[-1, :, afwImage.PARENT] = -5
-        im[..., 118, afwImage.PARENT] = -5              # equivalent to im[:, 118]
         im[54, 110, afwImage.PARENT] = 10
-        im[-3:, -2:, afwImage.PARENT] = 100
-        im[-2, -2, afwImage.PARENT] = -10
+        im[-3:, -2:, afwImage.LOCAL] = 100
+        im[-2, -2, afwImage.LOCAL] = -10
         sim = im[51:54, 106:110, afwImage.PARENT]
         sim[:] = -1
         im[50:54, 100:104, afwImage.PARENT] = im[2:6, 8:12, afwImage.LOCAL]
@@ -571,32 +511,30 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         if display:
             ds9.mtv(im)
 
-        self.assertEqual(im.get(0, 6), 0)
-        self.assertEqual(im.get(9, 15), -5)
-        self.assertEqual(im.get(5, 18), -5)
-        self.assertEqual(im.get(6, 17), 0)
-        self.assertEqual(im.get(7, 18), 100)
-        self.assertEqual(im.get(9, 19), 100)
-        self.assertEqual(im.get(8, 18), -10)
-        self.assertEqual(im.get(1, 6), -1)
-        self.assertEqual(im.get(3, 9), -1)
-        self.assertEqual(im.get(4, 10), 10)
-        self.assertEqual(im.get(4, 9), 0)
-        self.assertEqual(im.get(2, 2), 10)
-        self.assertEqual(im.get(0, 0), -1)
+        self.assertEqual(im[0, 6, afwImage.LOCAL], 0)
+        self.assertEqual(im[6, 17, afwImage.LOCAL], 0)
+        self.assertEqual(im[7, 18, afwImage.LOCAL], 100)
+        self.assertEqual(im[9, 19, afwImage.LOCAL], 100)
+        self.assertEqual(im[8, 18, afwImage.LOCAL], -10)
+        self.assertEqual(im[1, 6, afwImage.LOCAL], -1)
+        self.assertEqual(im[3, 9, afwImage.LOCAL], -1)
+        self.assertEqual(im[4, 10, afwImage.LOCAL], 10)
+        self.assertEqual(im[4, 9, afwImage.LOCAL], 0)
+        self.assertEqual(im[2, 2, afwImage.LOCAL], 10)
+        self.assertEqual(im[0, 0, afwImage.LOCAL], -1)
 
     def testImageSliceFromBox(self):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         bbox = lsst.geom.BoxI(lsst.geom.PointI(1, 3), lsst.geom.PointI(6, 9))
-        im[bbox] = -1
+        im[bbox, afwImage.PARENT] = -1
 
         if display:
             ds9.mtv(im)
 
-        self.assertEqual(im.get(0, 6), 0)
-        self.assertEqual(im.get(1, 6), -1)
-        self.assertEqual(im.get(3, 9), -1)
+        self.assertEqual(im[0, 6, afwImage.PARENT], 0)
+        self.assertEqual(im[1, 6, afwImage.PARENT], -1)
+        self.assertEqual(im[3, 9, afwImage.PARENT], -1)
 
     def testImageSliceFromBoxOrigin(self):
         """Test using a Box2I to index an Image"""
@@ -608,43 +546,26 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         if display:
             ds9.mtv(im)
 
-        self.assertEqual(im.get(0, 6), 0)
-        self.assertEqual(im.get(1, 6), -1)
-        self.assertEqual(im.get(3, 9), -1)
-
-    def testConversionToScalar(self):
-        """Test that 1-pixel images can be converted to scalars"""
-        self.assertEqual(int(afwImage.ImageI(1, 1)), 0.0)
-        self.assertEqual(float(afwImage.ImageI(1, 1)), 0.0)
-
-        im = afwImage.ImageF(10, 20)
-        im.set(666)
-
-        self.assertEqual(float(im[0, 0]), 666)
-        self.assertEqual(int(im[0, 0]), 666)
-
-        # only single pixel images may be converted
-        self.assertRaises(TypeError, int, im)
-        # only single pixel images may be converted
-        self.assertRaises(TypeError, float, im)
+        self.assertEqual(im[0, 6, afwImage.LOCAL], 0)
+        self.assertEqual(im[1, 6, afwImage.LOCAL], -1)
+        self.assertEqual(im[3, 9, afwImage.LOCAL], -1)
 
     def testClone(self):
         """Test that clone works properly"""
         im = afwImage.ImageF(10, 20)
-        im[0, 0] = 100
+        im[0, 0, afwImage.PARENT] = 100
 
         im2 = im.clone()                # check that clone with no arguments makes a deep copy
         self.assertEqual(im.getDimensions(), im2.getDimensions())
-        self.assertEqual(im.get(0, 0), im2.get(0, 0))
-        im2[0, 0] += 100
-        self.assertNotEqual(im.get(0, 0), im2.get(0, 0))  # so it's a deep copy
+        self.assertEqual(im[0, 0, afwImage.PARENT], im2[0, 0, afwImage.PARENT])
+        im2[0, 0, afwImage.PARENT] += 100
+        self.assertNotEqual(im[0, 0, afwImage.PARENT], im2[0, 0, afwImage.PARENT])  # so it's a deep copy
 
-        im2 = im[0:3, 0:5].clone()  # check that we can slice-then-clone
+        im2 = im[0:3, 0:5, afwImage.PARENT].clone()  # check that we can slice-then-clone
         self.assertEqual(im2.getDimensions(), lsst.geom.ExtentI(3, 5))
-        self.assertEqual(im.get(0, 0), im2.get(0, 0))
-        im2[0, 0] += 10
-        # equivalent to im.get(0, 0) etc.
-        self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))
+        self.assertEqual(im[0, 0, afwImage.PARENT], im2[0, 0, afwImage.PARENT])
+        im2[0, 0, afwImage.PARENT] += 10
+        self.assertNotEqual(float(im[0, 0, afwImage.PARENT]), float(im2[0, 0, afwImage.PARENT]))
 
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):
@@ -657,7 +578,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         self.dimage1 = afwImage.DecoratedImageF(
             lsst.geom.Extent2I(self.width, self.height)
         )
-        self.dimage1.getImage().set(self.val1)
+        self.dimage1.image.set(self.val1)
 
         if afwdataDir is not None:
             self.fileForMetadata = os.path.join(
@@ -670,25 +591,25 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     def testCreateDecoratedImage(self):
         self.assertEqual(self.dimage1.getWidth(), self.width)
         self.assertEqual(self.dimage1.getHeight(), self.height)
-        self.assertEqual(self.dimage1.getImage().get(0, 0), self.val1)
+        self.assertEqual(self.dimage1.image[0, 0, afwImage.PARENT], self.val1)
 
     def testCreateDecoratedImageFromImage(self):
         image = afwImage.ImageF(lsst.geom.Extent2I(self.width, self.height))
-        image[:] = self.dimage1.getImage()
+        image[:] = self.dimage1.image
 
         dimage = afwImage.DecoratedImageF(image)
         self.assertEqual(dimage.getWidth(), self.width)
         self.assertEqual(dimage.getHeight(), self.height)
-        self.assertEqual(dimage.getImage().get(0, 0), self.val1)
+        self.assertEqual(dimage.image[0, 0, afwImage.PARENT], self.val1)
 
     def testCopyConstructors(self):
         dimage = afwImage.DecoratedImageF(self.dimage1, True)  # deep copy
-        self.dimage1.getImage().set(0, 0, 1 + 2*self.val1)
-        self.assertEqual(dimage.getImage().get(0, 0), self.val1)
+        self.dimage1.image[0, 0, afwImage.PARENT] = 1 + 2*self.val1
+        self.assertEqual(dimage.image[0, 0, afwImage.PARENT], self.val1)
 
         dimage = afwImage.DecoratedImageF(self.dimage1)  # shallow copy
-        self.dimage1.getImage().set(0, 0, 1 + 2*self.val1)
-        self.assertNotEqual(dimage.getImage().get(0, 0), self.val1)
+        self.dimage1.image[0, 0, afwImage.PARENT] = 1 + 2*self.val1
+        self.assertNotEqual(dimage.image[0, 0, afwImage.PARENT], self.val1)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
@@ -705,8 +626,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         imgF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["img"])
 
         self.assertEqual(imgU.getHeight(), 256)
-        self.assertEqual(imgF.getImage().getWidth(), 256)
-        self.assertEqual(imgU.getImage().get(0, 0), imgF.getImage().get(0, 0))
+        self.assertEqual(imgF.image.getWidth(), 256)
+        self.assertEqual(imgU.image[0, 0, afwImage.LOCAL], imgF.image[0, 0, afwImage.LOCAL])
         #
         # Check the metadata
         #
@@ -723,17 +644,17 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         varF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"])
 
         self.assertEqual(varU.getHeight(), 256)
-        self.assertEqual(varF.getImage().getWidth(), 256)
-        self.assertEqual(varU.getImage().get(0, 0), varF.getImage().get(0, 0))
+        self.assertEqual(varF.image.getWidth(), 256)
+        self.assertEqual(varU.image[0, 0, afwImage.LOCAL], varF.image[0, 0, afwImage.LOCAL])
         #
         # Read a char image
         #
         maskImg = afwImage.DecoratedImageU(
-            self.fileForMetadata, hdus["msk"]).getImage()  # read a char file
+            self.fileForMetadata, hdus["msk"]).image  # read a char file
 
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)
-        self.assertEqual(maskImg.get(0, 0), 1)
+        self.assertEqual(maskImg[0, 0, afwImage.LOCAL], 1)
         #
         # Read a U16 image
         #
@@ -758,8 +679,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
             #
             rimage = afwImage.DecoratedImageF(tmpFile)
 
-            self.assertEqual(self.dimage1.getImage().get(0, 0),
-                             rimage.getImage().get(0, 0))
+            self.assertEqual(self.dimage1.image[0, 0, afwImage.LOCAL],
+                             rimage.image[0, 0, afwImage.LOCAL])
             #
             # Check that we wrote (and read) the metadata successfully
             if self.fileForMetadata:
@@ -794,7 +715,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     def testTicket1040(self):
         """ How to repeat from #1040"""
         image = afwImage.ImageD(lsst.geom.Extent2I(6, 6))
-        image.set(2, 2, 100)
+        image[2, 2, afwImage.PARENT] = 100
 
         bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(5, 5))
         subImage = image.Factory(image, bbox)
@@ -804,7 +725,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(subImage, frame=0, title="subImage")
             ds9.mtv(subImageF, frame=1, title="converted subImage")
 
-        self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
+        self.assertEqual(subImage[1, 1, afwImage.LOCAL], subImageF[1, 1, afwImage.LOCAL])
 
     def testDM882(self):
         """Test that we can write a dotted header unit to a FITS file. See DM-882."""
@@ -834,7 +755,7 @@ def printImg(img):
     for r in range(img.getHeight() - 1, -1, -1):
         print("%4d " % r, end=' ')
         for c in range(img.getWidth()):
-            print("%7.1f" % float(img.get(c, r)), end=' ')
+            print("%7.1f" % float(img[c, r, afwImage.LOCAL]), end=' ')
         print()
 
 

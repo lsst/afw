@@ -41,23 +41,6 @@ except pexExcept.NotFoundError:
 class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
     """A test case for Image Persistence"""
 
-    def checkImages(self, image, image2):
-        # Check that two images are identical (well, actually check only every
-        # 4th pixel)
-        assert image.getHeight() == image2.getHeight()
-        assert image.getWidth() == image2.getWidth()
-        assert image.getY0() == image2.getY0()
-        assert image.getX0() == image2.getX0()
-        for x in range(0, image.getWidth(), 2):
-            for y in range(0, image.getHeight(), 2):
-                pixel1 = image.get(x, y)
-                pixel2 = image2.get(x, y)
-                # Persisting through Boost text archives causes conversion error!
-                # assert abs(pixel1 - pixel2) / pixel1 < 1e-7, \
-                assert pixel1 == pixel2, \
-                    "Differing pixel2 at %d, %d: %f, %f" % (
-                        x, y, pixel1, pixel2)
-
     def setUp(self):
         # Create the additionalData PropertySet
         self.additionalData = dafBase.PropertySet()
@@ -100,7 +83,7 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
             "ImageF", storageList, self.additionalData)
 
         # Check the resulting Image
-        self.checkImages(self.image, image2)
+        self.assertImagesEqual(self.image, image2)
 
     def testBoostPersistence(self):
         """Persist the image using boost"""
@@ -120,7 +103,7 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
                 "ImageF", storageList, self.additionalData)
 
             # Check the resulting Image
-            self.checkImages(self.image, image2)
+            self.assertImagesEqual(self.image, image2)
 
     def testBoostPersistenceU16(self):
         """Persist a U16 image using boost"""
@@ -145,7 +128,7 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
                 "ImageF", storageList, self.additionalData)
 
             # Check the resulting Image
-            self.checkImages(self.image, image2)
+            self.assertImagesEqual(self.image, image2)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

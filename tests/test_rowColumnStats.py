@@ -65,14 +65,14 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         for y in range(self.n):
             for x in range(self.n):
                 val = 1.0*x + 2.0*y
-                self.img.set(x, y, val)
+                self.img[x, y, afwImage.LOCAL] = val
                 self.column[y] += val
                 self.row[x] += val
 
         for i in range(self.n):
             self.row[i] /= self.n
             self.column[i] /= self.n
-            self.colPlus[i] = self.img.get(0, i) + self.column[i]
+            self.colPlus[i] = self.img[0, i, afwImage.LOCAL] + self.column[i]
 
         # get stats on the columns and rows
         self.imgProjectCol = afwMath.statisticsStack(
@@ -88,12 +88,12 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
     def testColumnStats(self):
         """Test the column statistics """
         for i in range(self.n):
-            self.assertEqual(self.imgProjectCol.get(0, i)[0], self.column[i])
+            self.assertEqual(self.imgProjectCol[0, i, afwImage.LOCAL][0], self.column[i])
 
     def testRowStats(self):
         """Test the row statistics """
         for i in range(self.n):
-            self.assertEqual(self.imgProjectRow.get(i, 0)[0], self.row[i])
+            self.assertEqual(self.imgProjectRow[i, 0, afwImage.LOCAL][0], self.row[i])
 
     def testColumnOperators(self):
         """ Test operator overloading on columns """
@@ -108,17 +108,17 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         imgDiv = self.img / columnSlice
 
         for i in range(self.n):
-            self.assertAlmostEqual(imgAdd.get(0, i),
-                                   self.img.get(0, i) + columnSlice.get(0, i))
-            self.assertAlmostEqual(imgAdd2.get(0, i),
-                                   imgAdd.get(0, i))
-            self.assertAlmostEqual(imgSub.get(0, i),
-                                   self.img.get(0, i) - columnSlice.get(0, i))
-            self.assertAlmostEqual(imgMul.get(0, i),
-                                   self.img.get(0, i) * columnSlice.get(0, i))
-            self.assertAlmostEqual(imgMul2.get(0, i), imgMul.get(0, i))
-            self.assertAlmostEqual(imgDiv.get(0, i),
-                                   self.img.get(0, i) / columnSlice.get(0, i))
+            self.assertAlmostEqual(imgAdd[0, i, afwImage.LOCAL],
+                                   self.img[0, i, afwImage.LOCAL] + columnSlice[0, i, afwImage.LOCAL])
+            self.assertAlmostEqual(imgAdd2[0, i, afwImage.LOCAL],
+                                   imgAdd[0, i, afwImage.LOCAL])
+            self.assertAlmostEqual(imgSub[0, i, afwImage.LOCAL],
+                                   self.img[0, i, afwImage.LOCAL] - columnSlice[0, i, afwImage.LOCAL])
+            self.assertAlmostEqual(imgMul[0, i, afwImage.LOCAL],
+                                   self.img[0, i, afwImage.LOCAL] * columnSlice[0, i, afwImage.LOCAL])
+            self.assertAlmostEqual(imgMul2[0, i, afwImage.LOCAL], imgMul[0, i, afwImage.LOCAL])
+            self.assertAlmostEqual(imgDiv[0, i, afwImage.LOCAL],
+                                   self.img[0, i, afwImage.LOCAL] / columnSlice[0, i, afwImage.LOCAL])
 
 
 #################################################################

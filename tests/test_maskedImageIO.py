@@ -106,8 +106,8 @@ class MaskedImageTestCase(unittest.TestCase):
         if display:
             ds9.mtv(self.mi)
 
-        self.assertEqual(image.get(32, 1), 3728)
-        self.assertEqual(mask.get(0, 0), 2)  # == BAD
+        self.assertEqual(image[32, 1, afwImage.LOCAL], 3728)
+        self.assertEqual(mask[0, 0, afwImage.LOCAL], 2)  # == BAD
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadImage(self):
@@ -117,9 +117,9 @@ class MaskedImageTestCase(unittest.TestCase):
         image = afwImage.ImageF(filename)
         maskedImage = afwImage.MaskedImageF(filename)
         exposure = afwImage.ExposureF(filename)
-        self.assertEqual(image.get(0, 0), maskedImage.getImage().get(0, 0))
+        self.assertEqual(image[0, 0, afwImage.LOCAL], maskedImage.image[0, 0, afwImage.LOCAL])
         self.assertEqual(
-            image.get(0, 0), exposure.getMaskedImage().getImage().get(0, 0))
+            image[0, 0, afwImage.LOCAL], exposure.getMaskedImage().image[0, 0, afwImage.LOCAL])
         self.assertTrue(np.all(maskedImage.getMask().getArray() == 0))
         self.assertTrue(
             np.all(exposure.getMaskedImage().getMask().getArray() == 0))
@@ -138,9 +138,9 @@ class MaskedImageTestCase(unittest.TestCase):
         image = self.mi.getImage()
         mask = self.mi.getMask()
 
-        self.assertEqual(image.get(32, 1), 3728)
+        self.assertEqual(image[32, 1, afwImage.LOCAL], 3728)
         # i.e. not shifted 1 place to the right
-        self.assertEqual(mask.get(0, 0), 1)
+        self.assertEqual(mask[0, 0, afwImage.LOCAL], 1)
 
         self.assertEqual(mask.getMaskPlane("CR"), 3,
                          "Plane CR has value specified in FITS file")

@@ -43,15 +43,15 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
     def createImage(self, factory=afwImage.ImageF):
         image = factory(self.xSize, self.ySize)
         image.setXY0(lsst.geom.Point2I(self.x0, self.y0))
-        image.getArray()[:] = self.createPattern()
+        image.array[:] = self.createPattern()
         return image
 
     def createMaskedImage(self, factory=afwImage.MaskedImageF):
         image = factory(self.xSize, self.ySize)
         image.setXY0(lsst.geom.Point2I(self.x0, self.y0))
-        image.getImage().getArray()[:] = self.createPattern()
-        image.getMask().getArray()[:] = self.createPattern()
-        image.getVariance().getArray()[:] = self.createPattern()
+        image.image.array[:] = self.createPattern()
+        image.mask.array[:] = self.createPattern()
+        image.variance.array[:] = self.createPattern()
         return image
 
     def createPattern(self):
@@ -59,24 +59,18 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
         yy, xx = np.ogrid[0:self.ySize, 0:self.xSize]
         return self.xSize*yy + xx
 
-    def assertImagesEqual(self, image, original):
-        self.assertEqual(image.__class__.__name__, original.__class__.__name__)
-        self.assertEqual(image.getHeight(), original.getHeight())
-        self.assertEqual(image.getWidth(), original.getWidth())
-        self.assertEqual(image.getY0(), original.getY0())
-        self.assertEqual(image.getX0(), original.getX0())
-        for x in range(0, original.getWidth()):
-            for y in range(0, image.getHeight()):
-                self.assertEqual(image.get(x, y), original.get(x, y))
-
     def checkImages(self, original):
         image = pickle.loads(pickle.dumps(original))
         self.assertImagesEqual(image, original)
 
+    def checkMaskedImages(self, original):
+        image = pickle.loads(pickle.dumps(original))
+        self.assertMaskedImagesEqual(image, original)
+
     def checkExposures(self, original):
         image = pickle.loads(pickle.dumps(original))
-        self.assertImagesEqual(image.getMaskedImage(),
-                               original.getMaskedImage())
+        self.assertMaskedImagesEqual(image.getMaskedImage(),
+                                     original.getMaskedImage())
         self.assertEqual(image.getWcs(), original.getWcs())
 
     def testImage(self):
@@ -98,7 +92,7 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
                             afwImage.MaskedImageD,
                             ):
             image = self.createMaskedImage(MaskedImage)
-            self.checkImages(image)
+            self.checkMaskedImages(image)
             exposure = afwImage.makeExposure(image, wcs)
             self.checkExposures(exposure)
 

@@ -17,10 +17,10 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
         fp = afwDet.Footprint(spanSet)
         mi = afwImage.MaskedImageF(im)
         # set a mask bit before grabbing the heavyfootprint
-        mi.getMask().set(50, 50, 1)
+        mi.mask[50, 50, afwImage.LOCAL] = 1
         heavy = afwDet.makeHeavyFootprint(fp, mi)
         # reset it
-        mi.getMask().set(50, 50, 0)
+        mi.mask[50, 50, afwImage.LOCAL] = 0
 
         schema = afwTable.SourceTable.makeMinimalSchema()
         table = afwTable.SourceTable.make(schema)
@@ -32,33 +32,33 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
 
         fp = catalog[0].getFootprint()
         # change one pixel...
-        self.assertEqual(mi.getImage().get(50, 50), 42)
-        self.assertEqual(mi.getMask().get(50, 50), 0)
-        mi.getImage().set(50, 50, 100)
-        mi.getMask().set(50, 50, 2)
-        mi.getMask().set(51, 50, 2)
-        self.assertEqual(mi.getImage().get(50, 50), 100)
-        self.assertEqual(mi.getMask().get(50, 50), 2)
-        self.assertEqual(mi.getMask().get(51, 50), 2)
+        self.assertEqual(mi.image[50, 50, afwImage.LOCAL], 42)
+        self.assertEqual(mi.mask[50, 50, afwImage.LOCAL], 0)
+        mi.image[50, 50, afwImage.LOCAL] = 100
+        mi.mask[50, 50, afwImage.LOCAL] = 2
+        mi.mask[51, 50, afwImage.LOCAL] = 2
+        self.assertEqual(mi.image[50, 50, afwImage.LOCAL], 100)
+        self.assertEqual(mi.mask[50, 50, afwImage.LOCAL], 2)
+        self.assertEqual(mi.mask[51, 50, afwImage.LOCAL], 2)
         # reinsert the heavy footprint; it should reset the pixel value.
         # insert(MaskedImage)
         fp.insert(mi)
-        self.assertEqual(mi.getImage().get(50, 50), 42)
-        self.assertEqual(mi.getMask().get(50, 50), 1)
-        self.assertEqual(mi.getMask().get(51, 50), 0)
+        self.assertEqual(mi.image[50, 50, afwImage.LOCAL], 42)
+        self.assertEqual(mi.mask[50, 50, afwImage.LOCAL], 1)
+        self.assertEqual(mi.mask[51, 50, afwImage.LOCAL], 0)
 
         # Also test insert(Image)
-        im = mi.getImage()
-        self.assertEqual(im.get(50, 50), 42)
-        im.set(50, 50, 100)
-        self.assertEqual(im.get(50, 50), 100)
-        self.assertEqual(mi.getImage().get(50, 50), 100)
+        im = mi.image
+        self.assertEqual(im[50, 50, afwImage.LOCAL], 42)
+        im[50, 50, afwImage.LOCAL] = 100
+        self.assertEqual(im[50, 50, afwImage.LOCAL], 100)
+        self.assertEqual(mi.image[50, 50, afwImage.LOCAL], 100)
         # reinsert the heavy footprint; it should reset the pixel value.
         fp.insert(im)
-        self.assertEqual(im.get(50, 50), 42)
-        self.assertEqual(mi.getImage().get(50, 50), 42)
-        self.assertEqual(mi.getMask().get(50, 50), 1)
-        self.assertEqual(mi.getMask().get(51, 50), 0)
+        self.assertEqual(im[50, 50, afwImage.LOCAL], 42)
+        self.assertEqual(mi.image[50, 50, afwImage.LOCAL], 42)
+        self.assertEqual(mi.mask[50, 50, afwImage.LOCAL], 1)
+        self.assertEqual(mi.mask[51, 50, afwImage.LOCAL], 0)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

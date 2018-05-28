@@ -61,7 +61,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
 
         col, row, val = 0, 0, 1154
-        self.assertEqual(im.get(col, row), val)
+        self.assertEqual(im[col, row, afwImage.LOCAL], val)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testS16(self):
@@ -72,7 +72,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(im)
 
         col, row, val = 32, 1, 62
-        self.assertEqual(im.get(col, row), val)
+        self.assertEqual(im[col, row, afwImage.LOCAL], val)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testF32(self):
@@ -80,14 +80,14 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI.fits"), 3)
 
         col, row, val = 32, 1, 39.11672
-        self.assertAlmostEqual(im.get(col, row), val, 4)
+        self.assertAlmostEqual(im[col, row, afwImage.LOCAL], val, 4)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testF64(self):
         """Test reading a U16 file into a F64 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
         col, row, val = 0, 0, 1154
-        self.assertEqual(im.get(col, row), val)
+        self.assertEqual(im[col, row, afwImage.LOCAL], val)
 
         # print "IM = ", im
     def testWriteReadF64(self):
@@ -111,7 +111,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
 
         self.assertEqual(im2.getDimensions(), sim.getDimensions())
-        self.assertEqual(im2.get(1, 1), sim.get(1, 1))
+        self.assertEqual(im2[1, 1, afwImage.LOCAL], sim[1, 1, afwImage.LOCAL])
 
         self.assertEqual(im2.getX0(), sim.getX0())
         self.assertEqual(im2.getY0(), sim.getY0())
@@ -135,7 +135,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
 
             for hdu in range(4):
                 im = afwImage.ImageF(tmpFile, hdu)
-                self.assertEqual(im.get(0, 0), 100*hdu)
+                self.assertEqual(im[0, 0, afwImage.LOCAL], 100*hdu)
 
     def testWriteBool(self):
         """Test that we can read and write bools"""

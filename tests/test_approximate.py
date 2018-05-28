@@ -51,10 +51,8 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         rampCoeffs = (1000, 1, 1)
         for i in range(ramp.getHeight()):
             for j in range(ramp.getWidth()):
-                ramp.set(
-                    j, i,
-                    (rampCoeffs[0] + rampCoeffs[1]*x[j] + rampCoeffs[2]*y[i],
-                     0x0, var))
+                ramp[j, i, afwImage.LOCAL] = (rampCoeffs[0] + rampCoeffs[1]*x[j] + rampCoeffs[2]*y[i],
+                                              0x0, var)
 
         return ramp, rampCoeffs, x, y
 
@@ -64,7 +62,7 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
         binsize = 1
         ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
         # Add a (labelled) bad value
-        ramp.set(ramp.getWidth()//2, ramp.getHeight()//2, (0, 0x1, np.nan))
+        ramp[ramp.getWidth()//2, ramp.getHeight()//2, afwImage.LOCAL] = (0, 0x1, np.nan)
 
         if display:
             ds9.mtv(ramp, title="Input", frame=0)
@@ -91,7 +89,7 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
 
             for x, y in aim.getBBox().getCorners():
                 self.assertEqual(
-                    aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
+                    aim[x, y, afwImage.LOCAL], rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
     def testChebyshevEqualOrder(self):
         """Check that we enforce the condition orderX == orderY"""
@@ -146,7 +144,7 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
                     val = np.mean(aim.getArray()) if order == 0 else \
                         rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y
 
-                    self.assertEqual(aim.get(x, y), val)
+                    self.assertEqual(aim[x, y, afwImage.LOCAL], val)
         # Check that we can't "truncate" the expansion to a higher order than
         # we requested
         self.assertRaises(pexExcept.InvalidParameterError,

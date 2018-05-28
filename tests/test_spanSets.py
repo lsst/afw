@@ -365,7 +365,7 @@ class SpanSetTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(point in spans)
 
         # Pixels not matching the desired bit plane are ignored as they should be
-        mask.set(point.getX() - xy0.getX(), point.getY() - xy0.getY(), other)  # unset one pixel
+        mask[point, afwImage.PARENT] = other  # unset one pixel
         spans = afwGeom.SpanSet.fromMask(mask, value)
         self.assertEqual(spans.getArea(), box.getArea() - 1)
         self.assertEqual(spans.getBBox(), box)

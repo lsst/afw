@@ -62,10 +62,10 @@ def run(frame=6):
 
     for obj in objects:
         for x, y, I in obj:
-            im.getImage().set(x, y, I)
+            im.getImage()[x, y, afwImage.LOCAL] = I
 
     im.getVariance().set(1)
-    im.getVariance().set(10, 4, 0.5**2)
+    im.getVariance()[10, 4, afwImage.LOCAL] = 0.5**2
     #
     # Detect the objects at 10 counts or above
     #
