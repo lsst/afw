@@ -127,6 +127,9 @@ static void declareMask(py::module &mod, std::string const &suffix) {
     cls.def_static("readFits", (Mask<MaskPixelT>(*)(fits::MemFileManager &, int))Mask<MaskPixelT>::readFits,
                    "manager"_a, "hdu"_a = fits::DEFAULT_HDU);
     cls.def_static("interpret", Mask<MaskPixelT>::interpret);
+
+    cls.def("subset", &Mask<MaskPixelT>::subset, "bbox"_a, "origin"_a=PARENT);
+
     cls.def("getAsString", &Mask<MaskPixelT>::getAsString);
     cls.def("clearAllMaskPlanes", &Mask<MaskPixelT>::clearAllMaskPlanes);
     cls.def("clearMaskPlane", &Mask<MaskPixelT>::clearMaskPlane);
