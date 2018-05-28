@@ -32,43 +32,55 @@ from .maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU,
 
 class MaskedImage(metaclass=TemplateMeta):
 
-    def set(self, x, y=None, values=None):
-        """Set the point (x, y) to a triple (value, mask, variance)"""
-
-        if values is None:
-            assert (y is None)
-            values = x
+    def set(self, value, mask=None, variance=None):
+        """Assign a tuple of scalars to the entirety of all three planes.
+        """
+        if mask is None and variance is None:
             try:
-                self.getImage().set(values[0])
-                self.getMask().set(values[1])
-                self.getVariance().set(values[2])
+                value, mask, variance = value
             except TypeError:
-                self.getImage().set(values)
-                self.getMask().set(0)
-                self.getVariance().set(0)
-        else:
-            try:
-                self.getImage().set(x, y, values[0])
-                if len(values) > 1:
-                    self.getMask().set(x, y, values[1])
-                if len(values) > 2:
-                    self.getVariance().set(x, y, values[2])
-            except TypeError:
-                self.getImage().set(x)
-                self.getMask().set(y)
-                self.getVariance().set(values)
+                pass
+        self.image.set(value)
+        if mask is not None:
+            self.mask.set(mask)
+        if variance is not None:
+            self.variance.set(variance)
 
-    def get(self, x, y):
-        """Return a triple (value, mask, variance) at the point (x, y)"""
-        return (self.getImage().get(x, y),
-                self.getMask().get(x, y),
-                self.getVariance().get(x, y))
+    def _set(self, index, value, origin):
+        """Set the pixel at the given index to a triple (value, mask, variance).
+
+        Parameters
+        ----------
+        index : `geom.Point2I`
+            Position of the pixel to assign to.
+        value : `tuple`
+            A tuple of (value, mask, variance) scalars.
+        origin : `ImageOrigin`
+            Coordinate system of ``index`` (`PARENT` or `LOCAL`).
+        """
+        self.image[index, origin] = value[0]
+        self.mask[index, origin] = value[1]
+        self.variance[index, origin] = value[2]
+
+    def _get(self, index, origin):
+        """Return a triple (value, mask, variance) at the given index.
+
+        Parameters
+        ----------
+        index : `geom.Point2I`
+            Position of the pixel to assign to.
+        origin : `ImageOrigin`
+            Coordinate system of ``index`` (`PARENT` or `LOCAL`).
+        """
+        return (self.image[index, origin],
+                self.mask[index, origin],
+                self.variance[index, origin])
 
     def getArrays(self):
         """Return a tuple (value, mask, variance) numpy arrays."""
-        return (self.getImage().getArray() if self.getImage() else None,
-                self.getMask().getArray() if self.getMask() else None,
-                self.getVariance().getArray() if self.getVariance() else None)
+        return (self.image.array if self.image else None,
+                self.mask.array if self.mask else None,
+                self.variance.array if self.variance else None)
 
     def convertF(self):
         return MaskedImageF(self, True)
