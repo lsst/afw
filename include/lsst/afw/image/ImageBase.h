@@ -274,9 +274,12 @@ public:
      */
     void assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                 ImageOrigin origin = PARENT);
-    //
-    // Operators etc.
-    //
+
+    //@{
+    /**
+     * @deprecated Deprecated in 16.0.  No timeline for removal.
+     * Replaced by get(Point2I, ImageOrigin).
+     */
     /// Return a reference to the pixel `(x, y)`
     PixelReference operator()(int x, int y);
     /// Return a reference to the pixel `(x, y)` with bounds checking
@@ -293,6 +296,23 @@ public:
     void set0(int x, int y, const PixelT v) { operator()(x - getX0(), y - getY0()) = v; }
     void set0(int x, int y, const PixelT v, CheckIndices const& check) {
         operator()(x - getX0(), y - getY0(), check) = v;
+    }
+    //@}
+
+    /// Return a reference to a single pixel (with no bounds check).
+    PixelReference get(lsst::geom::Point2I const & index, ImageOrigin origin);
+
+    /// Return a const reference to a single pixel (with no bounds check).
+    PixelConstReference get(lsst::geom::Point2I const & index, ImageOrigin origin) const;
+
+    /// Return a reference to a single pixel in PARENT coordinates (with no bounds check).
+    PixelReference operator[](lsst::geom::Point2I const & index) {
+        return get(index, PARENT);
+    }
+
+    /// Return a reference to a single pixel in PARENT coordinates (with no bounds check).
+    PixelConstReference operator[](lsst::geom::Point2I const & index) const {
+        return get(index, PARENT);
     }
 
     /// Return the number of columns in the %image

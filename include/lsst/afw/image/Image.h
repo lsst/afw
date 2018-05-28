@@ -232,6 +232,8 @@ public:
         return subset(bbox);
     }
 
+    using ImageBase<PixelT>::operator[];
+
     /**
      *  Write an image to a regular FITS file.
      *

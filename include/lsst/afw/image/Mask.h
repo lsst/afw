@@ -283,6 +283,8 @@ public:
         return subset(bbox);
     }
 
+    using ImageBase<MaskPixelT>::operator[];
+
     /**
      * Return the bitmask corresponding to a vector of plane names OR'd together
      *
