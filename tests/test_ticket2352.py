@@ -23,7 +23,6 @@
 #   https://dev.lsstcorp.org/trac/ticket/2352
 # "Support multi-extension input FITS files"
 
-from __future__ import absolute_import, division, print_function
 import os
 import os.path
 import unittest

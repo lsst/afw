@@ -22,5 +22,4 @@
 
 """Support code for lsst.afw.math
 """
-from __future__ import absolute_import
 from .detailLib import *

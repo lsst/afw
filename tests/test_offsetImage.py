@@ -29,11 +29,9 @@ or
    python
    >>> import offsetImage; offsetImage.run()
 """
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -48,7 +46,7 @@ except NameError:
     display = False
 
 
-class offsetImageTestCase(unittest.TestCase):
+class OffsetImageTestCase(unittest.TestCase):
     """A test case for offsetImage"""
 
     def setUp(self):
@@ -158,7 +156,7 @@ class offsetImageTestCase(unittest.TestCase):
                         self.assertLess(abs(imGoodVals.mean()), maxMean*amp)
                         self.assertLess(abs(imGoodVals.max()), maxLim*amp)
                         self.assertLess(abs(imGoodVals.min()), maxLim*amp)
-                    except:
+                    except Exception:
                         print("failed on algorithm=%s; dx = %s; dy = %s" %
                               (algorithm, dx, dy))
                         raise
@@ -192,7 +190,7 @@ def getOrigFracShift(dx, dy):
     return (int(dOrigX), int(dOrigY), dFracX, dFracY)
 
 
-class transformImageTestCase(unittest.TestCase):
+class TransformImageTestCase(unittest.TestCase):
     """A test case for rotating images"""
 
     def setUp(self):
@@ -237,7 +235,7 @@ class transformImageTestCase(unittest.TestCase):
         afwMath.flipImage(mask, True, False)
 
 
-class binImageTestCase(unittest.TestCase):
+class BinImageTestCase(unittest.TestCase):
     """A test case for binning images"""
 
     def setUp(self):

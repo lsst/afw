@@ -22,8 +22,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-from builtins import range
 import math
 import sys
 import os
@@ -116,7 +114,7 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
         ps.add("CTYPE%1d" % (ip1,), ctypeStr)
         ps.add("CRPIX%1d" % (ip1,), destCtrFitsPix[i])
         ps.add("CRVAL%1d" % (ip1,), srcCtrSkyPos[i] + skyOffset[i])
-    ps.add("RADECSYS", "ICRS")
+    ps.add("RADESYS", "ICRS")
     ps.add("EQUINOX", 2000)
     ps.add("CD1_1", -destScale * math.cos(destAngleRad))
     ps.add("CD2_1", destScale * math.sin(destAngleRad))
@@ -174,13 +172,13 @@ def run():
                         interpLength,
                     )
                     destWcs = makeWcs(
-                        projName = "TAN",
-                        destCtrInd = destCtrInd,
-                        skyOffset = skyOffset,
-                        rotAng = rotAng,
-                        scaleFac = scaleFac,
-                        srcWcs = srcWcs,
-                        srcCtrInd = srcCtrInd,
+                        projName="TAN",
+                        destCtrInd=destCtrInd,
+                        skyOffset=skyOffset,
+                        rotAng=rotAng,
+                        scaleFac=scaleFac,
+                        srcWcs=srcWcs,
+                        srcCtrInd=srcCtrInd,
                     )
                     destExposure.setWcs(destWcs)
                     dTime, nIter, goodPix = timeWarp(

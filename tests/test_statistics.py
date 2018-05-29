@@ -30,12 +30,10 @@ or
    >>> import statistics; statistics.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import math
 import os
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -541,6 +539,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 0)
         mask.set(1, 1, maskVal)
         self.assertEqual(afwMath.makeStatistics(self.image, mask, afwMath.NMASKED, ctrl).getValue(), 1)
+
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

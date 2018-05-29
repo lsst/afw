@@ -19,8 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
-from builtins import range
 from .cameraGeomLib import FOCAL_PLANE, PIXELS
 from .detectorCollection import DetectorCollection
 from .pupil import PupilFactory
@@ -29,7 +27,7 @@ import lsst.afw.geom as afwGeom
 
 class Camera(DetectorCollection):
     """!A collection of Detectors plus additional coordinate system support
-    
+
     Camera.transform transforms points from one camera coordinate system to another.
 
     Camera.getTransform returns a transform between camera coordinate systems.

@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = []
 
@@ -30,7 +29,7 @@ from .source import SourceCatalog, SourceTable
 Catalog.register("Source", SourceCatalog)
 
 
-@continueClass
+@continueClass  # noqa F811
 class SourceCatalog:
 
     def getChildren(self, parent, *args):

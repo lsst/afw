@@ -22,7 +22,6 @@
 
 """Test warpExposure
 """
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
 
@@ -31,7 +30,7 @@ import numpy as np
 import lsst.utils
 import lsst.utils.tests
 import lsst.daf.base as dafBase
-import lsst.afw.coord as afwCoord
+from lsst.afw.coord import Observatory, Weather
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -78,14 +77,13 @@ def makeVisitInfo():
                               date=dafBase.DateTime(65321.1, dafBase.DateTime.MJD, dafBase.DateTime.TAI),
                               ut1=12345.1,
                               era=45.1*afwGeom.degrees,
-                              boresightRaDec=afwCoord.IcrsCoord(23.1*afwGeom.degrees, 73.2*afwGeom.degrees),
-                              boresightAzAlt=afwCoord.Coord(134.5*afwGeom.degrees, 33.3*afwGeom.degrees),
+                              boresightRaDec=afwGeom.SpherePoint(23.1, 73.2, afwGeom.degrees),
+                              boresightAzAlt=afwGeom.SpherePoint(134.5, 33.3, afwGeom.degrees),
                               boresightAirmass=1.73,
                               boresightRotAngle=73.2*afwGeom.degrees,
                               rotType=afwImage.RotType.SKY,
-                              observatory=afwCoord.Observatory(
-                                  11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
-                              weather=afwCoord.Weather(1.1, 2.2, 34.5),
+                              observatory=Observatory(11.1*afwGeom.degrees, 22.2*afwGeom.degrees, 0.333),
+                              weather=Weather(1.1, 2.2, 34.5),
                               )
 
 
@@ -186,44 +184,34 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         exposureWithoutWcs = afwImage.ExposureF(mi.getDimensions())
         warpingControl = afwMath.WarpingControl(
             "bilinear", "", 0, interpLength)
-        try:
-            afwMath.warpExposure(
-                exposureWithWcs, exposureWithoutWcs, warpingControl)
-            self.fail("warping from a source Exception with no Wcs should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpExposure(exposureWithoutWcs,
-                                 exposureWithWcs, warpingControl)
-            self.fail(
-                "warping into a destination Exception with no Wcs should fail")
-        except Exception:
-            pass
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingControl)
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingControl)
 
     def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
         """
-        originalExposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
+        wcs = afwGeom.makeSkyWcs(
+            crpix=afwGeom.Point2D(0, 0),
+            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
+            cdMatrix=afwGeom.makeCdMatrix(1.0e-8*afwGeom.degrees),
+        )
+        exposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100), wcs)
+        maskedImage = exposure.getMaskedImage()
         warpingControl = afwMath.WarpingControl(
             "bilinear", "", 0, interpLength)
-        try:
-            afwMath.warpExposure(
-                originalExposure, originalExposure, warpingControl)
-            self.fail("warpExposure in place (dest is src) should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
-                              originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingControl)
-            self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
-                              originalExposure.getImage(), originalExposure.getWcs(), warpingControl)
-            self.fail("warpImage<Image> in place (dest is src) should fail")
-        except Exception:
-            pass
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpExposure(exposure, exposure, warpingControl)
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpImage(maskedImage, wcs, maskedImage, wcs, warpingControl)
+
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwMath.warpImage(maskedImage.getImage(), wcs, maskedImage.getImage(), wcs, warpingControl)
 
     def testWarpingControl(self):
         """Test the basic mechanics of WarpingControl
@@ -260,19 +248,19 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             ("bilinear", "lanczos4"),
             ("lanczos3", "lanczos4"),
         ):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 afwMath.WarpingControl(kernelName, maskKernelName)
 
         # error: new mask kernel larger than main kernel
         warpingControl = afwMath.WarpingControl("bilinear")
         for maskKernelName in ("lanczos3", "lanczos4"):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 warpingControl.setMaskWarpingKernelName(maskKernelName)
 
         # error: new kernel smaller than mask kernel
         warpingControl = afwMath.WarpingControl("lanczos4", "lanczos4")
         for kernelName in ("bilinear", "lanczos3"):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 warpingControl.setWarpingKernelName(kernelName)
 
         # OK: main kernel at least as big as mask kernel
@@ -292,7 +280,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             ("lanczos3", "badname"),
             ("lanczos3", "lanczos"),
         ):
-            with self.assertRaises(pexExcept.Exception):
+            with self.assertRaises(pexExcept.InvalidParameterError):
                 afwMath.WarpingControl(kernelName, maskKernelName)
 
     def testWarpMask(self):
@@ -373,8 +361,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             rtol = 4e-5
             atol = 1e-2
             warpingControl = afwMath.WarpingControl(
-                warpingKernelName = kernelName,
-                interpLength = interpLength,
+                warpingKernelName=kernelName,
+                interpLength=interpLength,
             )
 
             originalExposure = afwImage.ExposureF(originalExposurePath)
@@ -409,14 +397,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
         fromWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(0, 0),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
 
         toWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(410000, 11441),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(45, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(45, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=0.00011*afwGeom.degrees, flipX=True),
             projection="CEA",
         )
@@ -452,14 +440,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """
         fromWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(0, 0),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(359, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=1.0e-8*afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
 
         toWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(0, 0),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(358, 0), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(358, 0, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=1.1e-8*afwGeom.degrees),
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), toWcs)
@@ -492,12 +480,12 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """
         srcWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(10, 11),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.7, 32.9), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(41.7, 32.9, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=0.2*afwGeom.degrees),
         )
         destWcs = afwGeom.makeSkyWcs(
             crpix=afwGeom.Point2D(9, 10),
-            crval=afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
+            crval=afwGeom.SpherePoint(41.65, 32.95, afwGeom.degrees),
             cdMatrix=afwGeom.makeCdMatrix(scale=0.17*afwGeom.degrees),
         )
 
@@ -563,7 +551,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
         - useWarpExposure: if True, call warpExposure to warp an ExposureF,
-            else call warpImage to warp an ImageF and also call the XYTransform version
+            else call warpImage to warp an ImageF and also call the Transform version
         - useSubregion: if True then the original source exposure (from which the usual
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,

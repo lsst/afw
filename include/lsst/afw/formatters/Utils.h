@@ -119,24 +119,6 @@ std::vector<std::string> getAllSliceTableNames(
         std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
         std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 
-/**
- * Creates the table identified by calling getTableName() with the given `policy` and `properties`.
- * A key named  `"${itemName}.templateTableName"` (where `${itemName}` refers to the value of a
- * property named `"itemName"` extracted from `properties`) must be available and set to the name
- * of the template table to use for creation.
- *
- * Note that the template table must exist in the database identified by `location`, and that if
- * the desired table already exists, an exception is thrown.
- */
-void createTable(lsst::daf::persistence::LogicalLocation const& location,
-                 std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-                 std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-
-/** Drops the database table(s) identified by getAllSliceTables(). */
-void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
-                        std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-                        std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
-
 int extractSliceId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 int64_t extractFpaExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);
 int64_t extractCcdExposureId(std::shared_ptr<lsst::daf::base::PropertySet const> const& properties);

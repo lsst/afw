@@ -20,12 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
-
-from builtins import zip
-from builtins import range
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom

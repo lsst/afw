@@ -24,18 +24,14 @@ Tests for lsst.afw.cameraGeom.Orientation
 
 @todo: test the transforms against expected
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import range
-from builtins import object
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 from lsst.afw.cameraGeom import Orientation
 
 
-class OrientationWrapper(object):
+class OrientationWrapper:
 
     def __init__(self,
                  fpPosition=afwGeom.Point2D(0, 0),

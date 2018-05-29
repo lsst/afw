@@ -21,15 +21,15 @@
 #
 
 ##
-# \file
-# \brief Support for talking to ds9 from python
-# \deprecated  New code should use lsst.afw.display and set the backend to ds9
-
-from __future__ import absolute_import, division, print_function
+# @file
+# @brief Support for talking to ds9 from python
+# @deprecated  New code should use lsst.afw.display and set the backend to ds9
 
 import lsst.afw.display
 import lsst.afw.image as afwImage
 from .interface import getDisplay as _getDisplay, setDefaultBackend
+# Backwards compatibility.  Downstream code should be converted to use display.RED etc.
+from .interface import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE  # noqa F401
 try:
     loaded
 except NameError:
@@ -44,30 +44,26 @@ except NameError:
         # exception being thrown for future reference. Following changes to
         # exception scope rules in Python 3 (see PEP 3110), it's now regarded
         # as clearer to make the capture explicit using the following class.
-        class _RaiseException(object):
+        class _RaiseException:
             def __init__(self, exception):
                 # The exception being caught above may have a bulky context which we
                 # don't want to capture in a closure for all time: see DM-9504 for a
                 # full discussion. We therefore define a new exception of the same
                 # type, which just encodes the error text.
-                self.exception = type(e)("%s (is display_ds9 setup?)" % e)
+                self.exception = type(exception)("%s (is display_ds9 setup?)" % exception)
 
             def __call__(self, *args, **kwargs):
                 raise self.exception
 
         getDisplay = _RaiseException(e)
 
-        class DisplayImpl(object):
+        class DisplayImpl:
             __init__ = getDisplay
 
         loaded = False
     else:
         loaded = True
 
-#
-# Backwards compatibility.  Downstream code should be converted to use display.RED etc.
-#
-from lsst.afw.display import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE
 
 def Buffering():
     # always use the real one

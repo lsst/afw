@@ -21,7 +21,6 @@
 #
 """Basic test of Warp (the warping algorithm is thoroughly tested in lsst.afw.math)
 """
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
 

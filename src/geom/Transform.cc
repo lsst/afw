@@ -41,24 +41,13 @@ namespace geom {
 
 template <class FromEndpoint, class ToEndpoint>
 Transform<FromEndpoint, ToEndpoint>::Transform(ast::Mapping const &mapping, bool simplify)
-        : _fromEndpoint(mapping.getNIn()), _frameSet(), _toEndpoint(mapping.getNOut()) {
-    auto fromFrame = _fromEndpoint.makeFrame();
-    auto toFrame = _toEndpoint.makeFrame();
-    if (simplify) {
-        _frameSet = std::make_shared<ast::FrameSet>(*fromFrame, *(mapping.simplify()), *toFrame);
-    } else {
-        _frameSet = std::make_shared<ast::FrameSet>(*fromFrame, mapping, *toFrame);
-    }
-}
-
-template <class FromEndpoint, class ToEndpoint>
-Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bool simplify)
-        : Transform(simplify ? std::dynamic_pointer_cast<ast::FrameSet>(frameSet.simplify())
-                             : frameSet.copy()) {}
+    : _fromEndpoint(mapping.getNIn()),
+      _mapping(simplify ? mapping.simplify() : mapping.copy()), _toEndpoint(mapping.getNOut()) {}
 
 template <typename FromEndpoint, typename ToEndpoint>
-Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> frameSet)
-        : _fromEndpoint(frameSet->getNIn()), _frameSet(frameSet), _toEndpoint(frameSet->getNOut()) {
+Transform<FromEndpoint, ToEndpoint>::Transform(ast::FrameSet const &frameSet, bool simplify)
+    : _fromEndpoint(frameSet.getNIn()), _mapping(), _toEndpoint(frameSet.getNOut()) {
+    auto frameSetCopy = frameSet.copy();
     // Normalize the base and current frame in a way that affects its behavior as a mapping.
     // To do this one must set the current frame to the frame to be normalized
     // and normalize the frame set as a frame (i.e. normalize the frame "in situ").
@@ -66,67 +55,63 @@ Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::FrameSet> fr
     // the frame is altered but not the associated mapping!
 
     // Normalize the current frame by normalizing the frameset as a frame
-    _toEndpoint.normalizeFrame(frameSet);
+    _toEndpoint.normalizeFrame(frameSetCopy);
 
     // Normalize the base frame by temporarily making it the current frame,
     // normalizing the frameset as a frame, then making it the base frame again
-    bool baseWasSet = frameSet->test("Base");
-    const int baseIndex = frameSet->getBase();
-    bool currentWasSet = frameSet->test("Current");
-    const int currentIndex = frameSet->getCurrent();
-    frameSet->setCurrent(baseIndex);
-    _fromEndpoint.normalizeFrame(frameSet);
-    if (baseWasSet) {
-        frameSet->setBase(baseIndex);
-    } else {
-        frameSet->clear("Base");
-    }
-    if (currentWasSet) {
-        frameSet->setCurrent(currentIndex);
-    } else {
-        frameSet->clear("Current");
-    }
+    const int baseIndex = frameSetCopy->getBase();
+    const int currentIndex = frameSetCopy->getCurrent();
+    frameSetCopy->setCurrent(baseIndex);
+    _fromEndpoint.normalizeFrame(frameSetCopy);
+    frameSetCopy->setBase(baseIndex);
+    frameSetCopy->setCurrent(currentIndex);
+    _mapping = simplify ? frameSetCopy->getMapping()->simplify() : frameSetCopy->getMapping();
+}
+
+template <typename FromEndpoint, typename ToEndpoint>
+Transform<FromEndpoint, ToEndpoint>::Transform(std::shared_ptr<ast::Mapping> mapping)
+    : _fromEndpoint(mapping->getNIn()), _mapping(mapping), _toEndpoint(mapping->getNOut()) {
 }
 
 template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyForward(
-        typename FromEndpoint::Point const &point) const {
+    typename FromEndpoint::Point const &point) const {
     auto const rawFromData = _fromEndpoint.dataFromPoint(point);
-    auto rawToData = _frameSet->applyForward(rawFromData);
+    auto rawToData = _mapping->applyForward(rawFromData);
     return _toEndpoint.pointFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
 typename ToEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyForward(
-        typename FromEndpoint::Array const &array) const {
+    typename FromEndpoint::Array const &array) const {
     auto const rawFromData = _fromEndpoint.dataFromArray(array);
-    auto rawToData = _frameSet->applyForward(rawFromData);
+    auto rawToData = _mapping->applyForward(rawFromData);
     return _toEndpoint.arrayFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Point Transform<FromEndpoint, ToEndpoint>::applyInverse(
-        typename ToEndpoint::Point const &point) const {
+    typename ToEndpoint::Point const &point) const {
     auto const rawFromData = _toEndpoint.dataFromPoint(point);
-    auto rawToData = _frameSet->applyInverse(rawFromData);
+    auto rawToData = _mapping->applyInverse(rawFromData);
     return _fromEndpoint.pointFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
 typename FromEndpoint::Array Transform<FromEndpoint, ToEndpoint>::applyInverse(
-        typename ToEndpoint::Array const &array) const {
+    typename ToEndpoint::Array const &array) const {
     auto const rawFromData = _toEndpoint.dataFromArray(array);
-    auto rawToData = _frameSet->applyInverse(rawFromData);
+    auto rawToData = _mapping->applyInverse(rawFromData);
     return _fromEndpoint.arrayFromData(rawToData);
 }
 
 template <class FromEndpoint, class ToEndpoint>
 std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToEndpoint>::getInverse() const {
-    auto inverse = std::dynamic_pointer_cast<ast::FrameSet>(_frameSet->getInverse());
+    auto inverse = std::dynamic_pointer_cast<ast::Mapping>(_mapping->getInverse());
     if (!inverse) {
         // don't throw std::bad_cast because it doesn't let you provide debugging info
         std::ostringstream buffer;
-        buffer << "FrameSet.getInverse() does not return a FrameSet. Called from: " << _frameSet;
+        buffer << "Mapping.getInverse() does not return a Mapping. Called from: " << _mapping;
         throw LSST_EXCEPT(pex::exceptions::LogicError, buffer.str());
     }
     return std::make_shared<Transform<ToEndpoint, FromEndpoint>>(*inverse);
@@ -134,21 +119,17 @@ std::shared_ptr<Transform<ToEndpoint, FromEndpoint>> Transform<FromEndpoint, ToE
 
 template <class FromEndpoint, class ToEndpoint>
 Eigen::MatrixXd Transform<FromEndpoint, ToEndpoint>::getJacobian(FromPoint const &x) const {
-    try {
-        int const nIn = _fromEndpoint.getNAxes();
-        int const nOut = _toEndpoint.getNAxes();
-        std::vector<double> const point = _fromEndpoint.dataFromPoint(x);
+    int const nIn = _fromEndpoint.getNAxes();
+    int const nOut = _toEndpoint.getNAxes();
+    std::vector<double> const point = _fromEndpoint.dataFromPoint(x);
 
-        Eigen::MatrixXd jacobian(nOut, nIn);
-        for (int i = 0; i < nOut; ++i) {
-            for (int j = 0; j < nIn; ++j) {
-                jacobian(i, j) = _frameSet->rate(point, i + 1, j + 1);
-            }
+    Eigen::MatrixXd jacobian(nOut, nIn);
+    for (int i = 0; i < nOut; ++i) {
+        for (int j = 0; j < nIn; ++j) {
+            jacobian(i, j) = _mapping->rate(point, i + 1, j + 1);
         }
-        return jacobian;
-    } catch (std::bad_alloc const &e) {
-        std::throw_with_nested(LSST_EXCEPT(pex::exceptions::MemoryError, "Could not allocate Jacobian."));
     }
+    return jacobian;
 }
 
 template <class FromEndpoint, class ToEndpoint>
@@ -160,13 +141,13 @@ std::string Transform<FromEndpoint, ToEndpoint>::getShortClassName() {
 
 template <class FromEndpoint, class ToEndpoint>
 std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readStream(
-        std::istream &is) {
+std::istream &is) {
     return detail::readStream<Transform<FromEndpoint, ToEndpoint>>(is);
 }
 
 template <class FromEndpoint, class ToEndpoint>
 std::shared_ptr<Transform<FromEndpoint, ToEndpoint>> Transform<FromEndpoint, ToEndpoint>::readString(
-        std::string &str) {
+std::string &str) {
     std::istringstream is(str);
     return Transform<FromEndpoint, ToEndpoint>::readStream(is);
 }
@@ -186,15 +167,14 @@ std::string Transform<FromEndpoint, ToEndpoint>::writeString() const {
 template <class FromEndpoint, class ToEndpoint>
 template <class NextToEndpoint>
 std::shared_ptr<Transform<FromEndpoint, NextToEndpoint>> Transform<FromEndpoint, ToEndpoint>::then(
-        Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
+Transform<ToEndpoint, NextToEndpoint> const &next, bool simplify) const {
     if (_toEndpoint.getNAxes() == next.getFromEndpoint().getNAxes()) {
-        auto nextFrameSet = next.getFrameSet();
+        auto nextMapping = next.getMapping();
+        auto combinedMapping = getMapping()->then(*next.getMapping());
         if (simplify) {
-            auto simplifiedMap = getFrameSet()->then(*nextFrameSet).simplify();
-            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*simplifiedMap);
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(*combinedMapping.simplify());
         } else {
-            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(
-                    *ast::append(*getFrameSet(), *nextFrameSet));
+            return std::make_shared<Transform<FromEndpoint, NextToEndpoint>>(combinedMapping);
         }
     } else {
         auto message = "Cannot match " + std::to_string(_toEndpoint.getNAxes()) + "-D to-endpoint to " +
@@ -250,7 +230,7 @@ public:
     explicit TransformFactory(std::string const & name) : table::io::PersistableFactory(name) {}
 
     virtual std::shared_ptr<table::io::Persistable> read(InputArchive const& archive,
-                                                         CatalogVector const& catalogs) const {
+            CatalogVector const& catalogs) const {
         auto const & keys = TransformPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
@@ -291,18 +271,18 @@ void Transform<FromEndpoint, ToEndpoint>::write(OutputArchiveHandle &handle) con
     }                                                                  \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, GenericEndpoint)   \
     INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, Point2Endpoint)    \
-    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, IcrsCoordEndpoint)
+    INSTANTIATE_OVERLOADS(FromEndpoint, ToEndpoint, SpherePointEndpoint)
 
 // explicit instantiations
 INSTANTIATE_TRANSFORM(GenericEndpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(GenericEndpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(GenericEndpoint, IcrsCoordEndpoint);
+INSTANTIATE_TRANSFORM(GenericEndpoint, SpherePointEndpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, GenericEndpoint);
 INSTANTIATE_TRANSFORM(Point2Endpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(Point2Endpoint, IcrsCoordEndpoint);
-INSTANTIATE_TRANSFORM(IcrsCoordEndpoint, GenericEndpoint);
-INSTANTIATE_TRANSFORM(IcrsCoordEndpoint, Point2Endpoint);
-INSTANTIATE_TRANSFORM(IcrsCoordEndpoint, IcrsCoordEndpoint);
+INSTANTIATE_TRANSFORM(Point2Endpoint, SpherePointEndpoint);
+INSTANTIATE_TRANSFORM(SpherePointEndpoint, GenericEndpoint);
+INSTANTIATE_TRANSFORM(SpherePointEndpoint, Point2Endpoint);
+INSTANTIATE_TRANSFORM(SpherePointEndpoint, SpherePointEndpoint);
 
 }  // namespace geom
 }  // namespace afw

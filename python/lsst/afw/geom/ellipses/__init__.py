@@ -22,7 +22,6 @@
 
 """lsst.afw.geom.ellipses
 """
-from __future__ import absolute_import
 from .ellipsesLib import *
 
 Separable = {
@@ -37,7 +36,7 @@ Separable = {
 }
 
 
-class EllipseMatplotlibInterface(object):
+class EllipseMatplotlibInterface:
     """An interface for drawing the ellipse using matplotlib.
 
     This is typically initiated by calling Ellipse.plot(), which

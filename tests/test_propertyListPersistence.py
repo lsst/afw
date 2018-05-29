@@ -20,7 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
 
@@ -28,7 +27,7 @@ import lsst.utils
 import lsst.utils.tests
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
-import lsst.afw.image as afwImage       # import the formatter for PropertyList
+import lsst.afw.image as afwImage  # noqa F401 import the formatter for PropertyList
 
 
 class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):

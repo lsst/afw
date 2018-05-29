@@ -28,6 +28,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
+#include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
@@ -839,48 +840,10 @@ std::shared_ptr<SpanSet> SpanSet::transformedBy(LinearTransform const& t) const 
 
 std::shared_ptr<SpanSet> SpanSet::transformedBy(AffineTransform const& t) const {
     // Transform points in SpanSet by AffineTransform
-    return transformedBy(AffineXYTransform(t));
+    return transformedBy(*makeTransform(t));
 }
 
-std::shared_ptr<SpanSet> SpanSet::transformedBy(XYTransform const& t) const {
-    // Transform points in SpanSet by XYTransform
-    // Transform the original bounding box
-    Box2D newBBoxD;
-    newBBoxD.include(t.forwardTransform(Point2D(_bbox.getMinX(), _bbox.getMinY())));
-    newBBoxD.include(t.forwardTransform(Point2D(_bbox.getMinX(), _bbox.getMaxY())));
-    newBBoxD.include(t.forwardTransform(Point2D(_bbox.getMaxX(), _bbox.getMinY())));
-    newBBoxD.include(t.forwardTransform(Point2D(_bbox.getMaxX(), _bbox.getMaxY())));
-
-    Box2I newBBoxI(newBBoxD);
-
-    std::vector<Span> tempVec;
-    for (int y = newBBoxI.getBeginY(); y < newBBoxI.getEndY(); ++y) {
-        bool inSpan = false;  // Are we in a span?
-        int start = -1;       // Start of span
-
-        for (int x = newBBoxI.getBeginX(); x < newBBoxI.getEndX(); ++x) {
-            Point2D p = t.reverseTransform(Point2D(x, y));
-            int const xSource = std::floor(0.5 + p.getX());
-            int const ySource = std::floor(0.5 + p.getY());
-
-            if (contains(Point2I(xSource, ySource))) {
-                if (!inSpan) {
-                    inSpan = true;
-                    start = x;
-                }
-            } else if (inSpan) {
-                inSpan = false;
-                tempVec.push_back(Span(y, start, x - 1));
-            }
-        }
-        if (inSpan) {
-            tempVec.push_back(Span(y, start, newBBoxI.getMaxX()));
-        }
-    }
-    return std::make_shared<SpanSet>(std::move(tempVec));
-}
-
-std::shared_ptr<SpanSet> SpanSet::transformedBy(Transform<Point2Endpoint, Point2Endpoint> const& t) const {
+std::shared_ptr<SpanSet> SpanSet::transformedBy(TransformPoint2ToPoint2 const& t) const {
     // Transform points in SpanSet by Transform<Point2Endpoint, Point2Endpoint>
     // Transform the original bounding box
     Box2D newBBoxD;

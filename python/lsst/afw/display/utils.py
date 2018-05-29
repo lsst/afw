@@ -20,13 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-# \file
-# \brief Utilities to use with displaying images
-
-from __future__ import absolute_import, division, print_function
-from builtins import str
-from builtins import range
-from builtins import object
+# @file
+# @brief Utilities to use with displaying images
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -70,7 +65,7 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
     return display
 
 
-class Mosaic(object):
+class Mosaic:
     """A class to handle mosaics of one or more identically-sized images (or Masks or MaskedImages)
     E.g.
     m = Mosaic()
@@ -290,7 +285,7 @@ class Mosaic(object):
                     label, ctype = labels[i], None
                     try:
                         label, ctype = label
-                    except:
+                    except Exception:
                         pass
 
                     if not label:

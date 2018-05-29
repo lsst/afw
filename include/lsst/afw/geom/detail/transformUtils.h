@@ -30,7 +30,6 @@
 #include "astshim.h"
 #include "ndarray.h"
 
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Endpoint.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/daf/base/PropertyList.h"
@@ -49,7 +48,7 @@ constexpr int serializationVersion = 1;
  * or any other compatible class, i.e. it must support the following (see Transform.h for details):
  * - a constructor that takes an ast::FrameSet
  * - static method getShortClassName
- * - method getFrameSet
+ * - method getMapping
  *
  * @param[in] is  input stream from which to deserialize this Transform
  */
@@ -93,21 +92,21 @@ std::shared_ptr<Transform> readStream(std::istream & is) {
     }
     auto astStream = ast::Stream(&is, nullptr);
     auto astObjectPtr = ast::Channel(astStream).read();
-    auto frameSet = std::dynamic_pointer_cast<ast::FrameSet>(astObjectPtr);
-    if (!frameSet) {
+    auto mapping = std::dynamic_pointer_cast<ast::Mapping>(astObjectPtr);
+    if (!mapping) {
         std::ostringstream os;
         os << "The AST serialization was read as a " << astObjectPtr->getClassName()
-           << " instead of a FrameSet";
+           << " instead of a Mapping";
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
     }
 
-    return std::make_shared<Transform>(*frameSet);
+    return std::make_shared<Transform>(*mapping);
 }
 
 template<class Transform>
 void writeStream(Transform const & transform, std::ostream & os) {
     os << serializationVersion << " " << Transform::getShortClassName();
-    transform.getFrameSet()->show(os, false);  // false = do not write comments
+    transform.getMapping()->show(os, false);  // false = do not write comments
 }
 
 }  // namespace detail

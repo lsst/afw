@@ -30,7 +30,6 @@ and makes wrapping Base catalogs more similar to all other types of catalog.
 
 #include "pybind11/pybind11.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
@@ -132,6 +131,8 @@ PyBaseRecord declareBaseRecord(py::module &mod) {
         key.attr("set")(self, value);
     };
 
+    utils::python::addOutputOp(cls, "__str__");  // __repr__ is defined in baseContinued.py
+
     // The distinction between get/set and operator[] is meaningful in C++, because "record[k] = v"
     // operates by returning an object that can be assigned to.
     // But there's no meaningful difference between get/set and __getitem__/__setitem__.
@@ -169,11 +170,6 @@ PYBIND11_PLUGIN(base) {
 
     py::module::import("lsst.afw.table.schema");
     py::module::import("lsst.afw.table.baseColumnView");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     auto clsBaseTable = declareBaseTable(mod);
     auto clsBaseRecord = declareBaseRecord(mod);

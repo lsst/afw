@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = ["makeVisitInfo"]
 
@@ -44,10 +43,9 @@ def makeVisitInfo(**kwargs):
     @param[in] era  earth rotation angle at middle of exposure
                     (lsst.afw.geom.Angle, defaults to Angle(Nan))
     @param[in] boresightRaDec  ICRS RA/Dec of boresight at middle of exposure
-                    (lsst.afw.coord.IcrsCoord; defaults to IcrsCoord(Nan, Nan));
-                    other Coord types are accepted and converted to Icrs
+                    (lsst.afw.geom.SpherePoint; defaults to SpherePoint(Nan, Nan))
     @param[in] boresightAzAlt  refracted apparent topocentric Az/Alt of boresight at middle of exposure;
-                    (lsst.afw.coord.Coord; defaults to Coord(Nan, Nan))
+                    (lsst.afw.geom.SpherePoint; defaults to SpherePoint(Nan, Nan))
     @param[in] boresightAirmass  airmass at the boresight, relative to zenith at sea level
                     (float, defaults to Nan)
     @param[in] boresightRotAngle  rotation angle at boresight at middle of exposure;

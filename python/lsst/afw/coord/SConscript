@@ -1,5 +1,4 @@
 ## -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['observatory',
-                                  'weather',
-                                  'coord'])
+                                  'weather'])

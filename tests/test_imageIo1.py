@@ -23,11 +23,8 @@
 """
 Test cases to test image I/O
 """
-from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
-
-from builtins import range
 
 import lsst.utils
 import lsst.afw.geom as afwGeom

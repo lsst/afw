@@ -24,9 +24,7 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/math/Interpolate.h"
 
@@ -37,11 +35,6 @@ using namespace lsst::afw::math;
 
 PYBIND11_PLUGIN(_interpolate) {
     py::module mod("_interpolate", "Python wrapper for afw _interpolate library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     py::class_<Interpolate, std::shared_ptr<Interpolate>> clsInterpolate(mod, "Interpolate");
     py::enum_<Interpolate::Style>(clsInterpolate, "Style")

@@ -20,10 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -31,7 +29,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
 
 
-class weightedStatsBugTestCase(unittest.TestCase):
+class WeightedStatsBugTestCase(unittest.TestCase):
 
     def reportBadPixels(self, maskedImage, badPixelMask):
         """Report the number of bad pixels in each plane of a masked image

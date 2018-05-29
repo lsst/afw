@@ -22,7 +22,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import os
 import lsst.utils
 import lsst.afw.image as afwImage
@@ -50,8 +49,6 @@ def simpleBackground(image):
     bctrl = afwMath.BackgroundControl(nx, ny)
 
     bkgd = afwMath.makeBackground(image, bctrl)
-
-    statsImage = bkgd.getStatsImage()
 
     image -= bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE)
 
@@ -81,9 +78,6 @@ def complexBackground(image):
 
     statsImage = bkgd.getStatsImage()
     ds9.mtv(statsImage.getVariance())
-
-    bkdgImages = dict(SPLINE = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE),
-                      LINEAR = bkgd.getImageF(afwMath.Interpolate.LINEAR))
 
     return bkgd
 

@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 from .python import transformRegistry
 
@@ -28,10 +27,20 @@ __all__ = ["transformFromString"]
 
 def transformFromString(data):
     """Read a Transform from a string that was saved using
-    Transform.writeString
+    ``Transform.writeString``
 
-    Unlike Transform.readString, you need not know the Transform class in
+    Unlike ``Transform.readString``, you need not know the ``Transform`` class in
     advance
+
+    Parameters
+    ----------
+    data : `str`
+        A string in the format produced by ``Transform.writeString``.
+
+    Returns
+    -------
+    transform : a ``Transform`` class
+        An object of the same type used to create ``data``.
     """
     version, transformClassName, remainder = data.split(" ", 2)
     try:

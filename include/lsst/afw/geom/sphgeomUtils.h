@@ -1,8 +1,6 @@
-// -*- lsst-c++ -*-
-
 /*
  * LSST Data Management System
- * Copyright 2015 LSST Corporation.
+ * Copyright 2017 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,29 +20,27 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <memory>
-#include "lsst/afw/geom/Functor.h"
+#ifndef LSST_AFW_GEOM_DETAILS_SPHGEOMUTILS_H
+#define LSST_AFW_GEOM_DETAILS_SPHGEOMUTILS_H
+
+/*
+ * Utilities to ease interaction with lsst.sphgeom
+ */
+
+#include "Eigen/Core"
+
+#include "lsst/sphgeom/Vector3d.h"
 
 namespace lsst {
 namespace afw {
 namespace geom {
 
-LinearFunctor::LinearFunctor(double slope, double intercept)
-        : Functor("LinearFunctor"), _slope(slope), _intercept(intercept) {}
-
-LinearFunctor::LinearFunctor(LinearFunctor const &) = default;
-LinearFunctor::LinearFunctor(LinearFunctor &&) = default;
-LinearFunctor &LinearFunctor::operator=(LinearFunctor const &) = default;
-LinearFunctor &LinearFunctor::operator=(LinearFunctor &&) = default;
-
-std::shared_ptr<Functor> LinearFunctor::clone() const {
-    return std::make_shared<LinearFunctor>(_slope, _intercept);
+Eigen::Vector3d asEigen(sphgeom::Vector3d const &vector) {
+    return Eigen::Vector3d(vector.x(), vector.y(), vector.z());
 }
-
-double LinearFunctor::operator()(double x) const { return _slope * x + _intercept; }
-
-double LinearFunctor::derivative(double x) const { return _slope; }
 
 }  // namespace geom
 }  // namespace afw
 }  // namespace lsst
+
+#endif  // LSST_AFW_GEOM_DETAILS_SPHGEOMUTILS_H

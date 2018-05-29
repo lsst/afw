@@ -19,17 +19,15 @@
 # the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = ["makeMergedSchema", "copyIntoCatalog",
            "matchesToCatalog", "matchesFromCatalog"]
 
 import os.path
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
+import lsst.pex.exceptions as pexExcept
 from .schema import Schema
 from .schemaMapper import SchemaMapper
 from .base import BaseCatalog
@@ -43,12 +41,12 @@ from lsst.utils import getPackageDir
 def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
     """Create a SchemaMapper between the input source and target schemas
 
-    \param[in]  sourceSchema  input source schema that fields will be mapped from
-    \param[in]  targetSchema  target schema that fields will be mapped to
-    \param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
-    \param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
+    @param[in]  sourceSchema  input source schema that fields will be mapped from
+    @param[in]  targetSchema  target schema that fields will be mapped to
+    @param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
+    @param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
 
-    \return     SchemaMapper between source and target schemas
+    @return     SchemaMapper between source and target schemas
     """
     m = SchemaMapper(sourceSchema, targetSchema)
     for key, field in sourceSchema:
@@ -64,12 +62,12 @@ def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None)
 
 def makeMergedSchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
     """Return a schema that is a deep copy of a mapping between source and target schemas
-    \param[in]  sourceSchema  input source schema that fields will be mapped from
-    \param[in]  targetSchema  target schema that fields will be mapped to
-    \param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
-    \param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
+    @param[in]  sourceSchema  input source schema that fields will be mapped from
+    @param[in]  targetSchema  target schema that fields will be mapped to
+    @param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
+    @param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
 
-    \return     schema        schema that is the result of the mapping between source and target schemas
+    @return     schema        schema that is the result of the mapping between source and target schemas
     """
     return makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix).getOutputSchema()
 
@@ -77,11 +75,11 @@ def makeMergedSchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix
 def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targetPrefix=None):
     """Copy entries from one Catalog into another
 
-    \param[in]     catalog       source catalog to be copied from
-    \param[in/out] target        target catalog to be copied to (edited in place)
-    \param[in]     souceSchema   schema of source catalog (optional)
-    \param[in]     sourcePrefix  if set, only those keys with that prefix will be copied
-    \param[in]     targetPrefix  if set, prepend it to the copied (target) key name
+    @param[in]     catalog       source catalog to be copied from
+    @param[in/out] target        target catalog to be copied to (edited in place)
+    @param[in]     souceSchema   schema of source catalog (optional)
+    @param[in]     sourcePrefix  if set, only those keys with that prefix will be copied
+    @param[in]     targetPrefix  if set, prepend it to the copied (target) key name
     """
     if sourceSchema is None:
         sourceSchema = catalog.schema
@@ -103,13 +101,13 @@ def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targe
 def matchesToCatalog(matches, matchMeta):
     """Denormalise matches into a Catalog of "unpacked matches"
 
-    \param[in] matches    unpacked matches, i.e. a list of Match objects whose schema
+    @param[in] matches    unpacked matches, i.e. a list of Match objects whose schema
                           has "first" and "second" attributes which, resepectively, contain the
                           reference and source catalog entries, and a "distance" field (the
                           measured distance between the reference and source objects)
-    \param[in] matchMeta  metadata for matches (must have .add attribute)
+    @param[in] matchMeta  metadata for matches (must have .add attribute)
 
-    \return  lsst.afw.table.BaseCatalog of matches (with ref_ and src_ prefix identifiers
+    @return  lsst.afw.table.BaseCatalog of matches (with ref_ and src_ prefix identifiers
              for referece and source entries, respectively)
     """
     if len(matches) == 0:
@@ -135,7 +133,7 @@ def matchesToCatalog(matches, matchMeta):
     # obtain reference catalog name if one is setup
     try:
         catalogName = os.path.basename(getPackageDir("astrometry_net_data"))
-    except:
+    except pexExcept.NotFoundError:
         catalogName = "NOT_SET"
     matchMeta.add("REFCAT", catalogName)
     mergedCatalog.getTable().setMetadata(matchMeta)
@@ -146,12 +144,12 @@ def matchesToCatalog(matches, matchMeta):
 def matchesFromCatalog(catalog, sourceSlotConfig=None):
     """Generate a list of ReferenceMatches from a Catalog of "unpacked matches"
 
-    \param[in] catalog           catalog of matches.  Must have schema where reference entries are
+    @param[in] catalog           catalog of matches.  Must have schema where reference entries are
                                  prefixed with "ref_" and source entries are prefixed with "src_"
-    \param[in] sourceSlotConfig  an lsst.meas.base.baseMeasurement.SourceSlotConfig configuration
+    @param[in] sourceSlotConfig  an lsst.meas.base.baseMeasurement.SourceSlotConfig configuration
                                  for source slots (optional)
 
-    \returns   lsst.afw.table.ReferenceMatch of matches
+    @returns   lsst.afw.table.ReferenceMatch of matches
     """
     refSchema = makeMergedSchema(
         catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")

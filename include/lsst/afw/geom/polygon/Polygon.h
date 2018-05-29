@@ -36,7 +36,6 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 
@@ -84,19 +83,6 @@ public:
      */
     Polygon(Box const& box,
             TransformPoint2ToPoint2 const& transform
-            );
-
-    /**
-     * Construct a 4-sided Polygon from a transformed box
-     *
-     * The resulting polygon has 4 vertices: the corners of the box
-     * transformed by `transform` in the forward direction
-     *
-     * @param[in] box  Initial box
-     * @param[in] transform  Coordinate transform
-     */
-    Polygon(Box const& box,
-            std::shared_ptr<XYTransform const> const& transform
             );
 
     /**
@@ -236,9 +222,6 @@ public:
     /// Greater fidelity might be achieved by using "subSample" before transforming.
     std::shared_ptr<Polygon> transform(
             TransformPoint2ToPoint2 const& transform  ///< Transform from original to target frame
-            ) const;
-    std::shared_ptr<Polygon> transform(
-            std::shared_ptr<XYTransform const> const& transform  ///< Transform from original to target frame
             ) const;
     std::shared_ptr<Polygon> transform(
             AffineTransform const& transform  ///< Transform from original to target frame

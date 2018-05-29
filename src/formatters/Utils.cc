@@ -34,11 +34,10 @@
 #include <vector>
 
 #include "boost/format.hpp"
-
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/policy/Policy.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
-#include "lsst/daf/persistence/DbTsvStorage.h"
 #include "lsst/afw/formatters/Utils.h"
 
 using std::int64_t;
@@ -185,30 +184,6 @@ std::vector<std::string> getAllSliceTableNames(std::shared_ptr<Policy const> con
         names.push_back(LogicalLocation(pattern, props).locString());
     }
     return names;
-}
-
-void createTable(lsst::daf::persistence::LogicalLocation const& location,
-                 std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-                 std::shared_ptr<PropertySet const> const& properties) {
-    std::string itemName(getItemName(properties));
-    std::string name(getTableName(policy, properties));
-    std::string model(policy->getString(itemName + ".templateTableName"));
-
-    lsst::daf::persistence::DbTsvStorage db;
-    db.setPersistLocation(location);
-    db.createTableFromTemplate(name, model);
-}
-
-void dropAllSliceTables(lsst::daf::persistence::LogicalLocation const& location,
-                        std::shared_ptr<lsst::pex::policy::Policy const> const& policy,
-                        std::shared_ptr<PropertySet const> const& properties) {
-    std::vector<std::string> names = getAllSliceTableNames(policy, properties);
-
-    lsst::daf::persistence::DbTsvStorage db;
-    db.setPersistLocation(location);
-    for (std::vector<std::string>::const_iterator i(names.begin()), end(names.end()); i != end; ++i) {
-        db.dropTable(*i);
-    }
 }
 
 int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {

@@ -147,8 +147,9 @@ void DecoratedImageFormatter<ImagePixelT>::write(Persistable const* persistable,
 }
 
 template <typename ImagePixelT>
-Persistable* DecoratedImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage> storage,
-                                                        std::shared_ptr<lsst::daf::base::PropertySet>) {
+Persistable* DecoratedImageFormatter<ImagePixelT>::read(
+        std::shared_ptr<FormatterStorage> storage,
+        std::shared_ptr<lsst::daf::base::PropertySet> additionalData) {
     LOGL_DEBUG(_log, "DecoratedImageFormatter read start");
     // TODO: Replace this with something better in DM-10776
     auto boost = std::dynamic_pointer_cast<BoostStorage>(storage);
@@ -170,11 +171,16 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(std::shared_ptr<Formatte
     auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "DecoratedImageFormatter read FitsStorage");
-
-        DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu());
-        // @todo Do something with these fields?
-        // int _X0;
-        // int _Y0;
+        geom::Box2I box;
+        if (additionalData->exists("llcX")) {
+            int llcX = additionalData->get<int>("llcX");
+            int llcY = additionalData->get<int>("llxY");
+            int width = additionalData->get<int>("width");
+            int height = additionalData->get<int>("height");
+            box = geom::Box2I(geom::Point2I(llcX, llcY), geom::Extent2I(width, height));
+        }
+        DecoratedImage<ImagePixelT>* ip = 
+            new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu(), box);
         LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     }

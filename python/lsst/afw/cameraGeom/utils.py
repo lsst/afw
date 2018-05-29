@@ -21,21 +21,17 @@
 #
 
 """
-Support for cameraGeom
+Support for displaying cameraGeom objects.
 """
-from __future__ import absolute_import, division, print_function
-from builtins import zip
-from builtins import next
-from builtins import str
-from builtins import range
-from builtins import object
 import math
 import numpy
+import warnings
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.daf.base as dafBase
+import lsst.log
 
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
@@ -47,12 +43,21 @@ import lsst.afw.display.utils as displayUtils
 
 
 def prepareWcsData(wcs, amp, isTrimmed=True):
-    """!Put Wcs from an Amp image into CCD coordinates
+    """Put Wcs from an Amp image into CCD coordinates
 
-    @param[in] wcs  WCS object
-    @param[in] amp  Amp object to use
-    @param[in] isTrimmed  Is the image to which the WCS refers trimmed of non-imaging pixels?
-    @returns modified wcs
+    Parameters
+    ----------
+    wcs : `lsst.afw.geom.SkyWcs`
+        The WCS object to start from.
+    amp : `lsst.afw.table.AmpInfoRecord`
+        Amp object to use
+    isTrimmed : `bool`
+        Is the image to which the WCS refers trimmed of non-imaging pixels?
+
+    Returns
+    -------
+    ampWcs : `lsst.afw.geom.SkyWcs`
+        The modified WCS.
     """
     if not amp.getHasRawInfo():
         raise RuntimeError("Cannot modify wcs without raw amp information")
@@ -73,17 +78,29 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
 
 def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
                    useIds=False, showFig=True, savePath=None):
-    """!Make a plot of the focal plane along with a set points that sample the field of view
+    """Make a plot of the focal plane along with a set points that sample
+    the field of view.
 
-    @param[in] camera  a camera object
-    @param[in] fieldSizeDeg_x  Amount of the field to sample in x in degrees
-    @param[in] fieldSizeDeg_y  Amount of the field to sample in y in degrees
-    @param[in] dx  Spacing of sample points in x in degrees
-    @param[in] dy  Spacing of sample points in y in degrees
-    @param[in] figsize  matplotlib style tuple indicating the size of the figure in inches
-    @param[in] useIds Label detectors by name, not id
-    @param[in] showFig  Display the figure on the screen?
-    @param[in] savePath  If not None, save a copy of the figure to this name
+    Parameters
+    ----------
+    camera : `lsst.afw.cameraGeom.Camera`
+        A camera object
+    fieldSizeDeg_x : `float`
+        Amount of the field to sample in x in degrees
+    fieldSizeDeg_y : `float` or None
+        Amount of the field to sample in y in degrees
+    dx : `float`
+        Spacing of sample points in x in degrees
+    dy : `float`
+        Spacing of sample points in y in degrees
+    figsize : `tuple` containing two `float`s
+        Matplotlib style tuple indicating the size of the figure in inches
+    useIds : `bool`
+        Label detectors by name, not id?
+    showFig : `bool`
+        Display the figure on the screen?
+    savePath : `str` or None
+        If not None, save a copy of the figure to this name.
     """
     try:
         from matplotlib.patches import Polygon
@@ -155,19 +172,32 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
 
 
 def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0,
-                     scaleGain = lambda gain: (gain*1000)//10):
-    """!Make an image from an amp object
+                     scaleGain=lambda gain: (gain*1000)//10):
+    """Make an image from an amp object.
 
-    Since images are integer images by default, the gain needs to be scaled to give enough dynamic range
-    to see variation from amp to amp.  The scaling algorithm is assignable.
+    Since images are integer images by default, the gain needs to be scaled to
+    give enough dynamic range to see variation from amp to amp.
+    The scaling algorithm is assignable.
 
-    @param[in] amp  Amp record to use for constructing the raw amp image
-    @param[in] imValue  Value to assign to the constructed image scaleGain(gain) is used if not set
-    @param[in] imageFactory  Type of image to construct
-    @param[in] markSize  Size of mark at read corner in pixels
-    @param[in] markValue  Value of pixels in the read corner mark
-    @param[in] scaleGain  The function by which to scale the gain
-    @return an untrimmed amp image
+    Parameters
+    ----------
+    amp : `lsst.afw.table.AmpInfoRecord`
+        Amp record to use for constructing the raw amp image.
+    imValue : `float` or None
+        Value to assign to the constructed image, or scaleGain(gain) if None.
+    imageFactory : callable like `lsst.afw.image.Image`
+        Type of image to construct.
+    markSize : `float`
+        Size of mark at read corner in pixels.
+    markValue : `float`
+        Value of pixels in the read corner mark.
+    scaleGain : callable
+        The function by which to scale the gain (must take a single argument).
+
+    Returns
+    -------
+    ampImage : `lsst.afw.image`
+        An untrimmed amp image, of the type produced by ``imageFactory``.
     """
     if not amp.getHasRawInfo():
         raise RuntimeError(
@@ -204,11 +234,18 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
 
 
 def calcRawCcdBBox(ccd):
-    """!Calculate the raw ccd bounding box
+    """Calculate the raw ccd bounding box.
 
-    @param[in] ccd  Detector for with to calculate the un-trimmed bounding box
-    @return Box2I of the un-trimmed Detector,
-            or None if there is not enough information to calculate raw BBox
+    Parameters
+    ----------
+    ccd : `lsst.afw.cameraGeom.Detector`
+        Detector for which to calculate the un-trimmed bounding box.
+
+    Returns
+    -------
+    box : `Box2I` or None
+        Bounding box of the un-trimmed Detector, or None if there is not enough
+        information to calculate raw BBox.
     """
     bbox = afwGeom.Box2I()
     for amp in ccd:
@@ -222,15 +259,27 @@ def calcRawCcdBBox(ccd):
 
 def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImage.ImageU, rcMarkSize=10,
                      binSize=1):
-    """!Make an Image of a Ccd
+    """Make an Image of a CCD.
 
-    @param[in] ccd  Detector to use in making the image
-    @param[in] isTrimmed  Assemble a trimmed Detector image if True
-    @param[in] showAmpGain  Use the per amp gain to color the pixels in the image
-    @param[in] imageFactory  Image type to generate
-    @param[in] rcMarkSize  Size of the mark to make in the amp images at the read corner
-    @param[in] binSize  Bin the image by this factor in both dimensions
-    @return Image of the Detector
+    Parameters
+    ----------
+    ccd : `lsst.afw.cameraGeom.Detector`
+        Detector to use in making the image.
+    isTrimmed : `bool`
+        Assemble a trimmed Detector image.
+    showAmpGain : `bool`
+        Use the per-amp gain to color the pixels in the image?
+    imageFactory : callable like `lsst.afw.image.Image`
+        Image type to generate.
+    rcMarkSize : `float`
+        Size of the mark to make in the amp images at the read corner.
+    binSize : `int`
+        Bin the image by this factor in both dimensions.
+
+    Returns
+    -------
+    image : `lsst.afw.image.Image`
+        Image of the Detector (type returned by ``imageFactory``).
     """
     ampImages = []
     index = 0
@@ -264,23 +313,32 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     return ccdImage
 
 
-class FakeImageDataSource(object):
-    """A class to retrieve synthetic images for display by the show* methods"""
+class FakeImageDataSource:
+    """A class to retrieve synthetic images for display by the show* methods
+
+    Parameters
+    ----------
+    isTrimmed : `bool`
+        Should amps be trimmed?
+    verbose : `bool`
+        Be chatty?
+    background : `float`
+        The value of any pixels that lie outside the CCDs.
+    showAmpGain : `bool`
+        Color the amp segments with the gain of the amp?
+    markSize : `float`
+        Size of the side of the box used to mark the read corner.
+    markValue : `float`
+        Value to assign the read corner mark.
+    ampImValue : `float` or None
+        Value to assign to amps; scaleGain(gain) is used if None.
+    scaleGain : callable
+        Function to scale the gain by.
+    """
 
     def __init__(self, isTrimmed=True, verbose=False, background=numpy.nan,
                  showAmpGain=True, markSize=10, markValue=0,
                  ampImValue=None, scaleGain=lambda gain: (gain*1000)//10):
-        """!Construct a FakeImageDataSource
-
-        @param[in] isTrimmed  Should amps be trimmed?
-        @param[in] verbose  Be chatty
-        @param[in] background  The value of any pixels that lie outside the CCDs
-        @param[in] showAmpGain  color the amp segments with the gain of the amp
-        @param[in] markSize  size of the side of the box used to mark the read corner
-        @param[in] markValue  value to assing the read corner mark
-        @param[in] ampImValue  Value to assing to amps.  scaleGain(gain) is used if None
-        @param[in] scaleGain  function to scale the gain by
-        """
         self.isTrimmed = isTrimmed
         self.verbose = verbose
         self.background = background
@@ -291,20 +349,39 @@ class FakeImageDataSource(object):
         self.scaleGain = scaleGain
 
     def getCcdImage(self, det, imageFactory, binSize):
-        """!Return a CCD image for the detector and the (possibly updated) Detector
+        """Return a CCD image for the detector and the (possibly updated) Detector.
 
-        @param[in] det: Detector to use for making the image
-        @param[in] imageFactory: image constructor for making the image
-        @param[in] binSize: number of pixels per bin axis
+        Parameters
+        ----------
+        det : `lsst.afw.cameraGeom.Detector`
+            Detector to use for making the image.
+        imageFactory : callable like `lsst.afw.image.Image`
+            Image constructor for making the image.
+        binSize : `int`
+            Bin the image by this factor in both dimensions.
+
+        Returns
+        -------
+        ccdImage : `lsst.afw.image.Image`
+            The constructed image.
         """
         return makeImageFromCcd(det, isTrimmed=self.isTrimmed, showAmpGain=self.showAmpGain,
                                 imageFactory=imageFactory, binSize=binSize), det
 
     def getAmpImage(self, amp, imageFactory):
-        """!Return an amp segment image
+        """Return an amp segment image.
 
-        @param[in] amp  AmpInfoTable for this amp
-        @param[in] imageFactory  image constructor fo making the imag
+        Parameters
+        ----------
+        amp : `lsst.afw.table.AmpInfoTable`
+            AmpInfoTable for this amp.
+        imageFactory : callable like `lsst.afw.image.Image`
+            Image constructor for making the image.
+
+        Returns
+        -------
+        ampImage : `lsst.afw.image.Image`
+            The constructed image.
         """
         ampImage = makeImageFromAmp(amp, imValue=self.ampImValue, imageFactory=imageFactory,
                                     markSize=self.markSize, markValue=self.markValue,
@@ -315,35 +392,46 @@ class FakeImageDataSource(object):
 
 
 class ButlerImage(FakeImageDataSource):
-    """A class to return an Image of a given Ccd using the butler"""
+    """A class to return an Image of a given Ccd using the butler.
+
+    Parameters
+    ----------
+    butler : `lsst.daf.persistence.Butler` or None
+        The butler to use. If None, an empty image is returned.
+    type : `str`
+        The type of image to read (e.g. raw, bias, flat, calexp).
+    isTrimmed : `bool`
+        If true, the showCamera command expects to be given trimmed images.
+    verbose : `bool`
+        Be chatty (in particular, log any error messages from the butler)?
+    background : `float`
+        The value of any pixels that lie outside the CCDs.
+    callback : callable
+        A function called with (image, ccd, butler) for every image, which
+        returns the image to be displayed (e.g. rawCallback). The image must
+        be of the correct size, allowing for the value of isTrimmed.
+    *args : `list`
+        Passed to the butler.
+    **kwargs : `dict`
+        Passed to the butler.
+
+    Notes
+    -----
+    You can define a short named function as a callback::
+
+        def callback(im, ccd, imageSource):
+            return cameraGeom.utils.rawCallback(im, ccd, imageSource, correctGain=True)
+    """
 
     def __init__(self, butler=None, type="raw",
-                 isTrimmed=True, verbose=False, background=numpy.nan, gravity=None,
+                 isTrimmed=True, verbose=False, background=numpy.nan,
                  callback=None, *args, **kwargs):
-        """!Create an object that knows how to prepare images for showCamera using the butler
-
-        \param butler  The butler to use.  If no butler is provided an empty image is returned
-        \param type  The type of image to read (e.g. raw, bias, flat, calexp)
-        \param isTrimmed  If true, the showCamera command expects to be given trimmed images
-        \param verbose  Be chatty (in particular, print any error messages from the butler)
-        \param background  The value of any pixels that lie outside the CCDs
-        \param  gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
-                 Specify how to fit the image into the available space; N => align top, W => align left
-        \param callback A function called with (image, ccd, butler) for every image, which returns the image
-                  to be displayed (e.g. rawCallback).  The image must be of the correct size, allowing
-                  for the value of isTrimmed
-        \param *args, *kwargs Passed to the butler
-
-        N.b. You can use a lambda as a callback, e.g.
-            callback=lambda im, ccd, imageSource : cgUtils.rawCallback(im, ccd, imageSource, correctGain=True)
-        """
         super(ButlerImage, self).__init__(*args)
         self.isTrimmed = isTrimmed
         self.type = type
         self.butler = butler
         self.kwargs = kwargs
         self.isRaw = False
-        self.gravity = gravity
         self.background = background
         self.verbose = verbose
         self.callback = callback
@@ -360,6 +448,8 @@ class ButlerImage(FakeImageDataSource):
 
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1):
         """Return an image of the specified ccd, and also the (possibly updated) ccd"""
+
+        log = lsst.log.Log.getLogger("afw.cameraGeom.utils.ButlerImage")
 
         if self.isTrimmed:
             bbox = ccd.getBBox()
@@ -394,7 +484,7 @@ class ButlerImage(FakeImageDataSource):
 
             if e:
                 if self.verbose:
-                    print("Reading %s: %s" % (ccd.getId(), e))
+                    log.info("Reading %s: %s" % (ccd.getId(), e))
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize), ccd
@@ -411,7 +501,7 @@ class ButlerImage(FakeImageDataSource):
                 im = self.callback(im, ccd, imageSource=self)
             except Exception as e:
                 if self.verbose:
-                    print("callback failed: %s" % e)
+                    log.error("callback failed: %s" % e)
                 im = imageFactory(*bbox.getDimensions())
 
         return self._prepareImage(ccd, im, binSize, allowRotate=allowRotate), ccd
@@ -419,17 +509,32 @@ class ButlerImage(FakeImageDataSource):
 
 def rawCallback(im, ccd=None, imageSource=None,
                 correctGain=False, subtractBias=False, convertToFloat=False):
-    """!A callback function that may or may not subtract bias/correct gain/trim a raw image
+    """A callback function that may or may not subtract bias/correct gain/trim
+    a raw image.
 
-    @param im   An image of a chip, ready to be binned and maybe rotated.  Maybe an Exposure,
-                a MaskedImage or an Image
-    @param ccd  The Detector; if None assume that im is an exposure and extract it's Detector
-    @param imageSource  An object derived from FakeImageDataSource (typically ButlerImage)
-    @param correctGain  Correct each amplifier for its gain
-    @param subtractBias Subtract the bias from each amplifier
-    @param convertToFloat  Convert im to floating point if possible
+    Paramters
+    ---------
+    im : `lsst.afw.image.Image` or `lsst.afw.image.MaskedImage` or `lsst.afw.image.Exposure`
+       An image of a chip, ready to be binned and maybe rotated.
+    ccd : `lsst.afw.cameraGeom.Detector` or None
+        The Detector; if None assume that im is an exposure and extract its Detector.
+    imageSource : `FakeImageDataSource` or None
+        Source to get ccd images.  Must have a `getCcdImage()` method.
+    correctGain : `bool`
+        Correct each amplifier for its gain?
+    subtractBias : `bool`
+        Subtract the bias from each amplifier?
+    convertToFloat : `bool`
+        Convert im to floating point if possible.
 
-    N.b. if imageSource is derived from ButlerImage, imageSource.butler is available
+    Returns
+    -------
+    image : `lsst.afw.image.Image` like
+        The constructed image (type returned by ``im.Factory``).
+
+    Notes
+    -----
+    If imageSource is derived from ButlerImage, imageSource.butler is available.
     """
     if ccd is None:
         ccd = im.getDetector()
@@ -471,24 +576,35 @@ def rawCallback(im, ccd=None, imageSource=None,
 
 def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
                     isTrimmed=False, ccdOrigin=(0, 0), display=None, binSize=1):
-    """!Overlay bounding boxes on an image display
+    """Overlay bounding boxes on an image display.
 
-    @param[in] ccd  Detector to iterate for the amp bounding boxes
-    @param[in] untrimmedCcdBbox  Bounding box of the un-trimmed Detector
-    @param[in] nQuarter  number of 90 degree rotations to apply to the bounding boxes (used for rotated chips)
-    @param[in] isTrimmed  Is the Detector image over which the boxes are layed trimmed?
-    @param[in] ccdOrigin  Detector origin relative to the  parent origin if in a larger pixel grid
-    @param[in] display image display to display on
-    @param[in] binSize  binning factor
+    Parameters
+    ----------
+    ccd : `lsst.afw.cameraGeom.Detector`
+        Detector to iterate for the amp bounding boxes.
+    untrimmedCcdBbox : `lsst.afw.geom.Box` or None
+        Bounding box of the un-trimmed Detector.
+    nQuarter : `int`
+        number of 90 degree rotations to apply to the bounding boxes (used for rotated chips).
+    isTrimmed : `bool`
+        Is the Detector image over which the boxes are layed trimmed?
+    ccdOrigin : `tuple` of `float`
+        Detector origin relative to the parent origin if in a larger pixel grid.
+    display : `lsst.afw.display.Display`
+        Image display to display on.
+    binSize : `int`
+        Bin the image by this factor in both dimensions.
 
+    Notes
+    -----
     The colours are:
-       Entire detector        GREEN
-       All data for amp       GREEN
-       HorizontalPrescan      YELLOW
-       HorizontalOverscan     RED
-       Data                   BLUE
-       VerticalOverscan       MAGENTA
-       VerticalOverscan       MAGENTA
+    - Entire detector        GREEN
+    - All data for amp       GREEN
+    - HorizontalPrescan      YELLOW
+    - HorizontalOverscan     RED
+    - Data                   BLUE
+    - VerticalOverscan       MAGENTA
+    - VerticalOverscan       MAGENTA
     """
     if not display:                     # should be second parameter, and not defaulted!!
         raise RuntimeError("Please specify a display")
@@ -560,13 +676,20 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
 
 def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None, overlay=True,
             imageFactory=afwImage.ImageU):
-    """!Show an amp in an image display
+    """Show an amp in an image display.
 
-    @param[in] amp  amp record to use in display
-    @param[in] imageSource  Source for getting the amp image.  Must have a getAmpImage method.
-    @param[in] display image display to use
-    @param[in] overlay  Overlay bounding boxes?
-    @param[in] imageFactory  Type of image to display (only used if ampImage is None)
+    Parameters
+    ----------
+    amp : `lsst.afw.tables.AmpInfoRecord`
+        Amp record to use in display.
+    imageSource : `FakeImageDataSource` or None
+        Source for getting the amp image.  Must have a ``getAmpImage()`` method.
+    display : `lsst.afw.display.Display`
+        Image display to use.
+    overlay : `bool`
+        Overlay bounding boxes?
+    imageFactory : callable like `lsst.afw.image.Image`
+        Type of image to display (only used if ampImage is None).
     """
 
     if not display:
@@ -603,17 +726,31 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
 
 def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, overlay=True,
             imageFactory=afwImage.ImageF, binSize=1, inCameraCoords=False):
-    """!Show a CCD on display
+    """Show a CCD on display.
 
-    @param[in] ccd  Detector to use in display
-    @param[in] imageSource  Source for producing images to display.  Must have a getCcdImage method.
-    @param[in] display image display to use
-    @param[in] frame  frame ID on which to display
-    @param[in] overlay  Show amp bounding boxes on the displayed image?
-    @param[in] imageFactory  The image factory to use in generating the images.
-    @param[in] binSize  Binning factor
-    @param[in] inCameraCoords  Show the Detector in camera coordinates?
+    Parameters
+    ----------
+    ccd : `lsst.afw.cameraGeom.Detector`
+        Detector to use in display.
+    imageSource : `FakeImageDataSource` or None
+        Source to get ccd images.  Must have a ``getCcdImage()`` method.
+    display : `lsst.afw.display.Display`
+        image display to use.
+    frame : None
+        frame ID on which to display. **Deprecated** in v12.
+    overlay : `bool`
+        Show amp bounding boxes on the displayed image?
+    imageFactory : callable like `lsst.afw.image.Image`
+        The image factory to use in generating the images.
+    binSize : `int`
+        Bin the image by this factor in both dimensions.
+    inCameraCoords : `bool`
+        Show the Detector in camera coordinates?
     """
+    if frame is not None:
+        warnings.warn("The frame kwarg is deprecated; use the `lsst.afw.display` system instead.",
+                      DeprecationWarning)
+
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
     ccdOrigin = afwGeom.Point2I(0, 0)
@@ -645,13 +782,23 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
 
 
 def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
-    """!Get the bounding boxes of a list of Detectors within a camera sized pixel grid
+    """Get the bounding boxes of a list of Detectors within a camera sized pixel grid
 
-    @param[in] ccdList  List of Detector
-    @param[in] binSize  Binning factor
-    @param[in] pixelSize_o  Size of the pixel in mm.
-    @param[in] origin  origin of the camera pixel grid in pixels
-    @return a list of bounding boxes in camera pixel coordinates
+    Parameters
+    ----------
+    ccdList : `lsst.afw.cameraGeom.Detector`
+        List of Detector.
+    binSize : `int`
+        Bin the image by this factor in both dimensions.
+    pixelSize_o : `float`
+        Size of the pixel in mm.
+    origin : `int`
+        Origin of the camera pixel grid in pixels.
+
+    Returns
+    -------
+    boxList : `list` of `lsst.afw.geom.Box`
+        A list of bounding boxes in camera pixel coordinates.
     """
     boxList = []
     for ccd in ccdList:
@@ -679,12 +826,21 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
 
 
 def getCameraImageBBox(camBbox, pixelSize, bufferSize):
-    """!Get the bounding box of a camera sized image in pixels
+    """Get the bounding box of a camera sized image in pixels
 
-    @param[in] camBbox  Camera bounding box in focal plane coordinates (mm)
-    @param[in] pixelSize  Size of a detector pixel in mm
-    @param[in] bufferSize  Buffer around edge of image in pixels
-    @return the resulting bounding box
+    Parameters
+    ----------
+    camBbox : `lsst.afw.geom.Box2D`
+        Camera bounding box in focal plane coordinates (mm).
+    pixelSize : `float`
+        Size of a detector pixel in mm.
+    bufferSize : `int`
+        Buffer around edge of image in pixels.
+
+    Returns
+    -------
+    box : `lsst.afw.geom.Box2I`
+        The resulting bounding box.
     """
     pixMin = afwGeom.Point2I(int(camBbox.getMinX()//pixelSize.getX()),
                              int(camBbox.getMinY()//pixelSize.getY()))
@@ -697,18 +853,37 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
 
 def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10,
                         imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, binSize=1):
-    """!Make an Image of a Camera
+    """Make an Image of a Camera.
 
-    @param[in] camera  Camera object to use to make the image
-    @param[in] detectorNameList  List of detector names to use in building the image.
-               Use all Detectors if None.
-    @param[in] background  Value to use where there is no Detector
-    @param[in] bufferSize  Size of border in binned pixels to make around the camera image
-    @param[in] imageSource  Source to get ccd images.  Must have a getCcdImage method
-    @param[in] imageFactory  Type of image to build
-    @param[in] binSize  bin factor
-    @return an image of the camera
+    Put each detector's image in the correct location and orientation on the
+    focal plane. The input images can be binned to an integer fraction of their
+    original bboxes.
+
+    Parameters
+    ----------
+    camera : `lsst.afw.cameraGeom.Camera`
+        Camera object to use to make the image.
+    detectorNameList : `list` of `str`
+        List of detector names from `camera` to use in building the image.
+        Use all Detectors if None.
+    background : `float`
+        Value to use where there is no Detector.
+    bufferSize : `int`
+        Size of border in binned pixels to make around the camera image.
+    imageSource : `FakeImageDataSource` or None
+        Source to get ccd images.  Must have a ``getCcdImage()`` method.
+    imageFactory : callable like `lsst.afw.image.Image`
+        Type of image to build.
+    binSize : `int`
+        Bin the image by this factor in both dimensions.
+
+    Returns
+    -------
+    image : `lsst.afw.image.Image`
+        Image of the entire camera.
     """
+    log = lsst.log.Log.getLogger("afw.cameraGeom.utils.makeImageFromCamera")
+
     if detectorNameList is None:
         ccdList = camera
     else:
@@ -734,10 +909,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
     for det, bbox in zip(ccdList, boxList):
-        try:
-            im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
-        except Exception as e:
-            print("Unable to get image for detector %s: %s" % (det.getName(), e))
+        im = imageSource.getCcdImage(det, imageFactory, binSize)[0]
+        if im is None:
             continue
 
         nQuarter = det.getOrientation().getNQuarter()
@@ -747,9 +920,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         import lsst.pex.exceptions as pexExceptions
         try:
             imView[:] = im
-        except pexExceptions.LengthError:
-            print("Unable to fit image for detector \"%s\" into image of camera" % (
-                det.getName()))
+        except pexExceptions.LengthError as e:
+            log.error("Unable to fit image for detector \"%s\" into image of camera: %s" % (det.getName(), e))
 
     return camIm
 
@@ -758,30 +930,57 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                detectorNameList=None, binSize=10, bufferSize=10, frame=None, overlay=True, title="",
                showWcs=None, ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None,
                **kwargs):
-    """!Show a Camera on display, with the specified display
+    """Show a Camera on display, with the specified display.
 
     The rotation of the sensors is snapped to the nearest multiple of 90 deg.
-    Also note that the pixel size is constant over the image array. The lower left corner (LLC) of each
-    sensor amp is snapped to the LLC of the pixel containing the LLC of the image.
-    if overlay show the IDs and detector boundaries
+    Also note that the pixel size is constant over the image array. The lower
+    left corner (LLC) of each sensor amp is snapped to the LLC of the pixel
+    containing the LLC of the image.
 
-    @param[in] camera  Camera to show
-    @param[in] imageSource  Source to get Ccd images from.  Must have a getCcdImage method.
-    @param[in] imageFactory  Type of image to make
-    @param[in] detectorNameList  List of names of Detectors to use. If None use all
-    @param[in] binSize  bin factor
-    @param[in] bufferSize  size of border in binned pixels to make around camera image.
-    @param[in] frame  specify image display (@deprecated; new code should use display)
-    @param[in] overlay  Overlay Detector IDs and boundaries?
-    @param[in] title  Title in display
-    @param[in] showWcs whether to include a WCS in the display
-    @param[in] ctype  Color to use when drawing Detector boundaries
-    @param[in] textSize  Size of detector labels
-    @param[in] originAtCenter Put origin of the camera WCS at the center of the image? Else it will be LL
-    @param[in] display  image display on which to display
-    @param[in] **kwargs all remaining keyword arguments are passed to makeImageFromCamera
-    @return the mosaic image
+    Parameters
+    ----------
+    camera : `lsst.afw.cameraGeom.Camera`
+        Camera object to use to make the image.
+    imageSource : `FakeImageDataSource` or None
+        Source to get ccd images.  Must have a ``getCcdImage()`` method.
+    imageFactory : `lsst.afw.image.Image`
+        Type of image to make
+    detectorNameList : `list` of `str`
+        List of detector names from `camera` to use in building the image.
+        Use all Detectors if None.
+    binSize : `int`
+        Bin the image by this factor in both dimensions.
+    bufferSize : `int`
+        Size of border in binned pixels to make around the camera image.
+    frame : None
+        specify image display. **Deprecated** in v12.
+    overlay : `bool`
+        Overlay Detector IDs and boundaries?
+    title : `str`
+        Title to use in display.
+    showWcs : `bool`
+        Include a WCS in the display?
+    ctype : `lsst.afw.display.COLOR` or `str`
+        Color to use when drawing Detector boundaries.
+    textSize : `float`
+        Size of detector labels
+    originAtCenter : `bool`
+        Put origin of the camera WCS at the center of the image?
+        If False, the origin will be at the lower left.
+    display : `lsst.afw.display`
+        Image display on which to display.
+    **kwargs :
+        All remaining keyword arguments are passed to makeImageFromCamera
+
+    Returns
+    -------
+    image : `lsst.afw.image.Image`
+        The mosaic image.
     """
+    if frame is not None:
+        warnings.warn("The frame kwarg is deprecated; use the `lsst.afw.display` system instead.",
+                      DeprecationWarning)
+
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
     if binSize < 1:
@@ -839,11 +1038,20 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
 
 def makeFocalPlaneWcs(pixelSize, referencePixel):
-    """!Make a WCS for the focal plane geometry (i.e. returning positions in "mm")
+    """Make a WCS for the focal plane geometry
+    (i.e. one that returns positions in "mm")
 
-    @param[in] pixelSize  Size of the image pixels in physical units
-    @param[in] referencePixel  Pixel for origin of WCS
-    @return Wcs object for mapping between pixels and focal plane.
+    Parameters
+    ----------
+    pixelSize : `float`
+        Size of the image pixels in physical units
+    referencePixel : `lsst.afw.geom.Point2D`
+        Pixel for origin of WCS
+
+    Returns
+    -------
+    `lsst.afw.geom.Wcs`
+        Wcs object for mapping between pixels and focal plane.
     """
 
     md = dafBase.PropertySet()
@@ -863,11 +1071,19 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
 
 
 def findAmp(ccd, pixelPosition):
-    """!Find the Amp with the specified pixel position within the composite
+    """Find the Amp with the specified pixel position within the composite
 
-    @param[in] ccd  Detector to look in
-    @param[in] pixelPosition  Point2I containing the pixel position
-    @return Amp record in which pixelPosition falls or None if no Amp found.
+    Parameters
+    ----------
+    ccd : `lsst.afw.cameraGeom.Detector`
+        Detector to look in.
+    pixelPosition : `lsst.afw.geom.Point2I`
+        The pixel position to find the amp for.
+
+    Returns
+    -------
+    `lsst.afw.table.AmpInfoCatalog`
+        Amp record in which pixelPosition falls or None if no Amp found.
     """
 
     for amp in ccd:

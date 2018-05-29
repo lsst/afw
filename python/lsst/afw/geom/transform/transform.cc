@@ -25,7 +25,6 @@
 
 #include "astshim.h"
 #include "pybind11/stl.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/table/io/python.h"
@@ -46,8 +45,7 @@ template <class Class>
 std::string formatStr(Class const &self, std::string const &pyClassName) {
     std::ostringstream os;
     os << pyClassName;
-    auto const frameSet = self.getFrameSet();
-    os << "[" << frameSet->getNIn() << "->" << frameSet->getNOut() << "]";
+    os << "[" << self.getFromEndpoint().getNAxes() << "->" << self.getToEndpoint().getNAxes() << "]";
     return os.str();
 }
 
@@ -86,9 +84,9 @@ void declareTransform(py::module &mod) {
     cls.def_property_readonly("fromEndpoint", &Class::getFromEndpoint);
     cls.def_property_readonly("toEndpoint", &Class::getToEndpoint);
 
-    // Return a copy of the contained FrameSet in order to assure changing the returned FrameSet
-    // will not affect the contained FrameSet (since Python ignores constness)
-    cls.def("getFrameSet", [](Class const &self) { return self.getFrameSet()->copy(); });
+    // Return a copy of the contained Mapping in order to assure changing the returned Mapping
+    // will not affect the contained Mapping (since Python ignores constness)
+    cls.def("getMapping", [](Class const &self) { return self.getMapping()->copy(); });
 
     cls.def("applyForward", (ToArray(Class::*)(FromArray const &) const) & Class::applyForward, "array"_a);
     cls.def("applyForward", (ToPoint(Class::*)(FromPoint const &) const) & Class::applyForward, "point"_a);
@@ -106,7 +104,7 @@ void declareTransform(py::module &mod) {
 
     declareMethodTemplates<FromEndpoint, ToEndpoint, GenericEndpoint>(cls);
     declareMethodTemplates<FromEndpoint, ToEndpoint, Point2Endpoint>(cls);
-    declareMethodTemplates<FromEndpoint, ToEndpoint, IcrsCoordEndpoint>(cls);
+    declareMethodTemplates<FromEndpoint, ToEndpoint, SpherePointEndpoint>(cls);
 
     // str(self) = "<Python class name>[<nIn>-><nOut>]"
     cls.def("__str__", [pyClassName](Class const &self) { return formatStr(self, pyClassName); });
@@ -123,21 +121,15 @@ PYBIND11_PLUGIN(transform) {
     py::module::import("astshim");
     py::module::import("lsst.afw.geom.endpoint");
 
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
-
     declareTransform<GenericEndpoint, GenericEndpoint>(mod);
     declareTransform<GenericEndpoint, Point2Endpoint>(mod);
-    declareTransform<GenericEndpoint, IcrsCoordEndpoint>(mod);
+    declareTransform<GenericEndpoint, SpherePointEndpoint>(mod);
     declareTransform<Point2Endpoint, GenericEndpoint>(mod);
     declareTransform<Point2Endpoint, Point2Endpoint>(mod);
-    declareTransform<Point2Endpoint, IcrsCoordEndpoint>(mod);
-    declareTransform<IcrsCoordEndpoint, GenericEndpoint>(mod);
-    declareTransform<IcrsCoordEndpoint, Point2Endpoint>(mod);
-    declareTransform<IcrsCoordEndpoint, IcrsCoordEndpoint>(mod);
+    declareTransform<Point2Endpoint, SpherePointEndpoint>(mod);
+    declareTransform<SpherePointEndpoint, GenericEndpoint>(mod);
+    declareTransform<SpherePointEndpoint, Point2Endpoint>(mod);
+    declareTransform<SpherePointEndpoint, SpherePointEndpoint>(mod);
 
     return mod.ptr();
 }

@@ -1,10 +1,5 @@
-from __future__ import absolute_import, division, print_function
-
 import collections
 
-from builtins import zip
-from builtins import range
-from builtins import object
 import numpy
 
 import lsst.afw.geom
@@ -13,7 +8,7 @@ from .aggregates import CoordKey
 from .source import SourceRecord
 
 
-class MultiMatch(object):
+class MultiMatch:
 
     def __init__(self, schema, dataIdFormat, coordField="coord", idField="id", radius=None,
                  RecordClass=SourceRecord):

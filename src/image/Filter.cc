@@ -28,6 +28,7 @@
 //         Implements looking up a filter identifier by name.
 //
 //##====----------------                                ----------------====##/
+#include <cmath>
 #include "boost/format.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "lsst/pex/exceptions.h"
@@ -43,9 +44,15 @@ namespace image {
 FilterProperty::PropertyMap* FilterProperty::_propertyMap = NULL;
 
 FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertySet const& prop, bool force)
-        : _name(name), _lambdaEff(-1) {
+        : _name(name), _lambdaEff(NAN), _lambdaMin(NAN), _lambdaMax(NAN)  {
     if (prop.exists("lambdaEff")) {
         _lambdaEff = prop.getAsDouble("lambdaEff");
+    }
+    if (prop.exists("lambdaMin")) {
+        _lambdaMin = prop.getAsDouble("lambdaMin");
+    }
+    if (prop.exists("lambdaMax")) {
+        _lambdaMax = prop.getAsDouble("lambdaMax");
     }
     _insert(force);
 }
@@ -54,6 +61,12 @@ FilterProperty::FilterProperty(std::string const& name, lsst::pex::policy::Polic
         : _name(name), _lambdaEff(-1) {
     if (pol.exists("lambdaEff")) {
         _lambdaEff = pol.getDouble("lambdaEff");
+    }
+    if (pol.exists("lambdaMin")) {
+        _lambdaMin = pol.getDouble("lambdaMin");
+    }
+    if (pol.exists("lambdaMax")) {
+        _lambdaMax = pol.getDouble("lambdaMax");
     }
     _insert(force);
 }

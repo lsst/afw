@@ -19,14 +19,11 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
-from past.builtins import basestring
-from builtins import object
 from lsst.afw.geom import Box2D
 from .cameraGeomLib import FOCAL_PLANE
 
 
-class DetectorCollection(object):
+class DetectorCollection:
     """!An immutable collection of Detectors that can be accessed by name or ID
     """
 
@@ -61,7 +58,7 @@ class DetectorCollection(object):
 
         @param[in] key  detector name or ID
         """
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             return self._nameDetectorDict[key]
         else:
             return self._idDetectorDict[key]
@@ -71,7 +68,7 @@ class DetectorCollection(object):
 
         @param[in] key  detector name or ID
         """
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             return key in self._nameDetectorDict
         else:
             return key in self._idDetectorDict

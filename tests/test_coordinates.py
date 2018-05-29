@@ -30,20 +30,17 @@ or
    >>> import coordinates; coordinates.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import math
 import operator
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as geom
 
 
-class CoordinateTestCase(object):
+class CoordinateTestCase:
     """Mixin for some of the tests below.
     """
 
@@ -255,35 +252,21 @@ class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
         self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test invalid constructors
-        try:
-            e1 = geom.Extent2D(1.2, 3.4)
+        e1 = geom.Extent2D(1.2, 3.4)
+        with self.assertRaises(TypeError):
             e2 = geom.Extent2I(e1)
-        except:
-            pass
-        else:
-            self.fail("Should not allow conversion Extent2D to Extent2I")
-        try:
-            e1 = geom.Extent3D(1.2, 3.4, 5.6)
-            e2 = geom.Extent3I(e1)
-        except:
-            pass
-        else:
-            self.fail("Should not allow conversion Extent3D to Extent3I")
 
-        try:
-            e1 = geom.Point2D(1.2, 3.4)
-            e2 = geom.Extent2I(e1)
-        except:
-            pass
-        else:
-            self.fail("Should not allow conversion Point2D to Extent 2I")
-        try:
-            e1 = geom.Point3D(1.2, 3.4, 5.6)
+        e1 = geom.Extent3D(1.2, 3.4, 5.6)
+        with self.assertRaises(TypeError):
             e2 = geom.Extent3I(e1)
-        except:
-            pass
-        else:
-            self.fail("Should not allow conversion Point3D to Extent3I")
+
+        e1 = geom.Point2D(1.2, 3.4)
+        with self.assertRaises(TypeError):
+            e2 = geom.Extent2I(e1)
+
+        e1 = geom.Point3D(1.2, 3.4, 5.6)
+        with self.assertRaises(TypeError):
+            e2 = geom.Extent3I(e1)
 
 
 class OperatorTestCase(lsst.utils.tests.TestCase):

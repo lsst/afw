@@ -25,7 +25,6 @@
 """
 Examples of using Footprints
 """
-from __future__ import absolute_import, division, print_function
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom

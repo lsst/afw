@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from builtins import object
 import re
 import warnings
 import lsst.afw.image as afwImage
@@ -68,7 +66,8 @@ class HeaderMap(dict):
                     # Only apply transform if the metadata has a value for this key
                     # otherwise assume the default value is transformed.
                     value = attrDict['default']
-                    self._applyVal(obj, value, key, lambda x: x)
+                    if value is not None:
+                        self._applyVal(obj, value, key, lambda x: x)
             except Exception as e:
                 if doRaise:
                     raise
@@ -98,7 +97,7 @@ class HeaderDetectorMap(HeaderMap):
         obj.__setattr__(attrName, transform(value))
 
 
-class DetectorBuilder(object):
+class DetectorBuilder:
     def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1.,
                  radialCoeffs=(0., 1.), clobberMetadata=False, doRaise=True):
         ''' @param[in] detectorFileName  FITS file containing the detector description.

@@ -25,9 +25,7 @@
 
 #include <memory>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/utils/python.h"
 
@@ -62,11 +60,6 @@ void declareTemplates(PyClass &cls) {
 
 PYBIND11_PLUGIN(_boundedField) {
     py::module mod("_boundedField", "Python wrapper for afw _boundedField library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     PyClass cls(mod, "BoundedField");
 

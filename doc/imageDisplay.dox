@@ -1,7 +1,6 @@
 namespace lsst { namespace afw { namespace image {
 /**
 \page afwSecDisplay  How to display images
-\section afwSecDisplay  How to display images
 
  - \ref afwSecImageDisplay
  - \ref afwSecImageTypes

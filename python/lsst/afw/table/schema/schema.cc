@@ -25,7 +25,6 @@
 
 #include <sstream>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/utils/python.h"
@@ -389,11 +388,6 @@ void declareSubSchema(py::module &mod) {
 
 PYBIND11_PLUGIN(schema) {
     py::module mod("schema");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     // We'll add instantiations of Field, Key, and SchemaItem to these private
     // dicts, and then in schemaContinued.py we'll add them to a TemplateMeta

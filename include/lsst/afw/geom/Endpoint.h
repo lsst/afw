@@ -30,8 +30,8 @@
 #include "astshim.h"
 #include "ndarray.h"
 
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/SpherePoint.h"
 
 namespace lsst {
 namespace afw {
@@ -41,10 +41,10 @@ namespace geom {
  * Virtual base class for endpoints, which are helper classes for Transform
  *
  * Endpoints transform points and lists of points from LSST-specific data types,
- * such as Point2D and IcrsCoord, to a form accepted by ast::Mapping.tran.
+ * such as Point2D and SpherePoint, to a form accepted by ast::Mapping.tran.
  * Each type of endpoint is used for a particular LSST data type, for example:
  * - Point2Endpoint is used for Point2D data
- * - IcrsCoordEndpoint for IcrsCoord data
+ * - SpherePointEndpoint for SpherePoint data
  * - GenericEndpoint is used when no other form will do; its LSST data type
  *   is identical to the type used for ast::Mapping.applyForward.
  *
@@ -311,24 +311,24 @@ public:
 };
 
 /**
- * An endpoint for IcrsCoord
+ * An endpoint for SpherePoint
  *
- * A IcrsCoordEndpoint always has 2 axes: RA, Dec
+ * A SpherePointEndpoint always has 2 axes: longitude, latitude
  */
-class IcrsCoordEndpoint : public BaseVectorEndpoint<coord::IcrsCoord> {
+class SpherePointEndpoint : public BaseVectorEndpoint<SpherePoint> {
 public:
-    IcrsCoordEndpoint(IcrsCoordEndpoint const &) = default;
-    IcrsCoordEndpoint(IcrsCoordEndpoint &&) = default;
-    IcrsCoordEndpoint &operator=(IcrsCoordEndpoint const &) = delete;
-    IcrsCoordEndpoint &operator=(IcrsCoordEndpoint &&) = delete;
+    SpherePointEndpoint(SpherePointEndpoint const &) = default;
+    SpherePointEndpoint(SpherePointEndpoint &&) = default;
+    SpherePointEndpoint &operator=(SpherePointEndpoint const &) = delete;
+    SpherePointEndpoint &operator=(SpherePointEndpoint &&) = delete;
 
     /**
-     * Construct a IcrsCoordEndpoint
+     * Construct a SpherePointEndpoint
      */
-    explicit IcrsCoordEndpoint() : BaseVectorEndpoint(2) {}
+    explicit SpherePointEndpoint() : BaseVectorEndpoint(2) {}
 
     /**
-     * Construct a IcrsCoordEndpoint with nAxes specified; nAxes must equal 2
+     * Construct a SpherePointEndpoint with nAxes specified; nAxes must equal 2
      *
      * This constructor is primarily used by Transform; other users are encouraged
      * to use the default constructor.
@@ -337,9 +337,9 @@ public:
      *
      * @throws lsst.pex.exceptions.InvalidParameterError if nAxes != 2
      */
-    explicit IcrsCoordEndpoint(int nAxes);
+    explicit SpherePointEndpoint(int nAxes);
 
-    virtual ~IcrsCoordEndpoint() = default;
+    virtual ~SpherePointEndpoint() = default;
 
     virtual std::vector<double> dataFromPoint(Point const &point) const override;
 
@@ -356,7 +356,7 @@ public:
     virtual void normalizeFrame(std::shared_ptr<ast::Frame> framePtr) const override;
 
     /// Get the class name prefix, e.g. "Point2" for "Point2Endpoint"
-    static std::string getClassPrefix() { return "IcrsCoord"; };
+    static std::string getClassPrefix() { return "SpherePoint"; };
 };
 
 /// Print "GenericEndpoint(_n_)" to the ostream where `_n_` is the number of axes, e.g. "GenericAxes(4)"
@@ -365,8 +365,8 @@ std::ostream &operator<<(std::ostream &os, GenericEndpoint const &endpoint);
 /// Print "Point2Endpoint()" to the ostream
 std::ostream &operator<<(std::ostream &os, Point2Endpoint const &endpoint);
 
-/// Print "IcrsCoordEndpoint()" to the ostream
-std::ostream &operator<<(std::ostream &os, IcrsCoordEndpoint const &endpoint);
+/// Print "SpherePointEndpoint()" to the ostream
+std::ostream &operator<<(std::ostream &os, SpherePointEndpoint const &endpoint);
 
 }  // namespace geom
 }  // namespace afw

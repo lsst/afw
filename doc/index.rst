@@ -1,15 +1,24 @@
-.. currentmodule:: lsst.afw
+#########################
+afw documentation preview
+#########################
 
-.. _afw:
+.. This page is for local development only. It isn't published to pipelines.lsst.io.
 
-###############################
-lsst.afw
-###############################
+.. Link the index pages of package and module documentation directions (listed in manifest.yaml).
 
-``lsst.afw`` contains all the low level pieces which are used to construct the lsst data processing pipeline.
-
-Afw Modules 
-==============
 .. toctree::
-   geom/index
+   :maxdepth: 1
+
+   afw/index
+   lsst.afw.cameraGeom/index
+   lsst.afw.coord/index
+   lsst.afw.detection/index
+   lsst.afw.display/index
+   lsst.afw.fits/index
+   lsst.afw.formatters/index
+   lsst.afw.geom/index
+   lsst.afw.image/index
+   lsst.afw.math/index
+   lsst.afw.table/index
    detection/index
+   FITS headers for exposures.rst

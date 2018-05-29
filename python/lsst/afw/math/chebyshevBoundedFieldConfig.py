@@ -20,8 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 import lsst.pex.config
 
 from ._chebyshevBoundedField import ChebyshevBoundedField, ChebyshevBoundedFieldControl

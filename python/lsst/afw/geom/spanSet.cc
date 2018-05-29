@@ -29,7 +29,6 @@
 #include <string>
 #include <iostream>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
@@ -190,11 +189,6 @@ PYBIND11_PLUGIN(spanSet) {
 
     py::module::import("lsst.afw.geom.span");
 
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
-
     py::enum_<Stencil>(mod, "Stencil")
             .value("CIRCLE", Stencil::CIRCLE)
             .value("BOX", Stencil::BOX)
@@ -221,8 +215,8 @@ PYBIND11_PLUGIN(spanSet) {
             (std::shared_ptr<SpanSet> (SpanSet::*)(LinearTransform const &) const) & SpanSet::transformedBy);
     cls.def("transformedBy",
             (std::shared_ptr<SpanSet> (SpanSet::*)(AffineTransform const &) const) & SpanSet::transformedBy);
-    cls.def("transformedBy",
-            (std::shared_ptr<SpanSet> (SpanSet::*)(XYTransform const &) const) & SpanSet::transformedBy);
+    cls.def("transformedBy", (std::shared_ptr<SpanSet>(SpanSet::*)(TransformPoint2ToPoint2 const &) const) &
+                                     SpanSet::transformedBy);
     cls.def("overlaps", &SpanSet::overlaps);
     cls.def("contains", (bool (SpanSet::*)(SpanSet const &) const) & SpanSet::contains);
     cls.def("contains", (bool (SpanSet::*)(Point2I const &) const) & SpanSet::contains);

@@ -24,9 +24,7 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
@@ -43,11 +41,6 @@ using namespace ellipses;
 
 PYBIND11_PLUGIN(_ellipse) {
     py::module mod("_ellipse", "Python wrapper for afw _ellipse library");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
 
     /* Module level */
     py::class_<Ellipse, std::shared_ptr<Ellipse>> clsEllipse(mod, "Ellipse");

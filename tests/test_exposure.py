@@ -24,7 +24,6 @@
 Test lsst.afw.image.Exposure
 """
 
-from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
@@ -34,7 +33,7 @@ from numpy.testing import assert_allclose
 import lsst.utils
 import lsst.utils.tests
 import lsst.afw.image as afwImage
-import lsst.afw.coord as afwCoord
+from lsst.afw.coord import Weather
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
@@ -281,12 +280,12 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureId = 5
         exposureTime = 12.3
         boresightRotAngle = 45.6 * afwGeom.degrees
-        weather = afwCoord.Weather(1.1, 2.2, 0.3)
+        weather = Weather(1.1, 2.2, 0.3)
         visitInfo = afwImage.VisitInfo(
-            exposureId = exposureId,
-            exposureTime = exposureTime,
-            boresightRotAngle = boresightRotAngle,
-            weather = weather,
+            exposureId=exposureId,
+            exposureTime=exposureTime,
+            boresightRotAngle=boresightRotAngle,
+            weather=weather,
         )
         # Calib used to have exposure time and exposure date, so check for lack
         # of interference
@@ -430,7 +429,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         subExpSkyPos = subExposure.getWcs().pixelToSky(0, 0)
 
-        self.assertCoordsAlmostEqual(parentSkyPos, subExpSkyPos, msg="Wcs in sub image has changed")
+        self.assertSpherePointsAlmostEqual(parentSkyPos, subExpSkyPos, msg="Wcs in sub image has changed")
 
     def testReadWriteFits(self):
         """Test readFits and writeFits.
@@ -514,7 +513,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         for xSubInd in (0, subDim.getX()-1):
             for ySubInd in (0, subDim.getY()-1):
-                self.assertCoordsAlmostEqual(
+                self.assertSpherePointsAlmostEqual(
                     mainWcs.pixelToSky(
                         afwImage.indexToPosition(xSubInd),
                         afwImage.indexToPosition(ySubInd),
@@ -681,7 +680,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             md = readMetadata(tmpFile)
             wcs = afwGeom.makeSkyWcs(md, False)
             self.assertPairsAlmostEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
-            self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
+            self.assertSpherePointsAlmostEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
             assert_allclose(wcs.getCdMatrix(), self.wcs.getCdMatrix(), atol=1e-10)
             frazzle = md.get("FRAZZLE")
             self.assertTrue(frazzle)

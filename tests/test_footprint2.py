@@ -30,12 +30,7 @@ or
    >>> import footprint2; footprint2.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import zip
-from builtins import range
-from builtins import object
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
@@ -64,7 +59,7 @@ def peakFromImage(im, pos):
     return -1.0 * val
 
 
-class Object(object):
+class Object:
 
     def __init__(self, val, spans):
         self.val = val
@@ -589,15 +584,15 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.im.getImage().set(0)
         self.peaks = []
 
-        I = 11
+        value = 11
         for x, y in [(4, 7), (5, 7), (6, 7), (7, 7), (8, 7),
                      (4, 6), (8, 6),
                      (4, 5), (8, 5),
                      (4, 4), (8, 4),
                      (4, 3), (8, 3),
                      ]:
-            self.im.getImage().set(x, y, I)
-            I -= 1e-3
+            self.im.getImage().set(x, y, value)
+            value -= 1e-3
 
         self.im.getImage().set(4, 7, 15)
         self.peaks.append([(4, 7,), ])
@@ -646,9 +641,9 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         dwidth, dheight = 6, 7
 
         def callback():
-            x, y, I = x0 + 10, y0 + 4, -20
-            self.im.getImage().set(x, y, I)
-            peaks2.append((x, y, I))
+            x, y, value = x0 + 10, y0 + 4, -20
+            self.im.getImage().set(x, y, value)
+            peaks2.append((x, y, value))
 
         for grow1, grow2 in [(1, 1), (3, 3), (6, 6), ]:
             peaks2 = []
@@ -686,9 +681,9 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 self.im.getImage().set(x, y, I)
             self.peaks.append([[6, 4]])
 
-            x, y, I = 8, 4, -20
-            self.im.getImage().set(x, y, I)
-            peaks2.append((x, y, I))
+            x, y, value = 8, 4, -20
+            self.im.getImage().set(x, y, value)
+            peaks2.append((x, y, value))
 
         grow1, grow2 = 0, 3
         peaks2 = []

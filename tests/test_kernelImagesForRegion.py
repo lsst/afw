@@ -19,11 +19,9 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -186,7 +184,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                 subregion = regionRow.getRegion(xInd)
                 try:
                     self.assertRegionCorrect(subregion)
-                except:
+                except Exception:
                     print("failed on xInd=%s, yInd=%s" % (xInd, yInd))
                     raise
                 bbox = subregion.getBBox()

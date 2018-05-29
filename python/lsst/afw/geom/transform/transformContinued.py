@@ -19,14 +19,13 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 from ..python import addTransformMethods
 from . import transform
 
 __all__ = []
 
-endpoints = ("Generic", "Point2", "IcrsCoord")
+endpoints = ("Generic", "Point2", "SpherePoint")
 
 for fromPoint in endpoints:
     for toPoint in endpoints:

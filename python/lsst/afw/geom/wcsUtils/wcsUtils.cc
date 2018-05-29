@@ -24,13 +24,13 @@
 #include <memory>
 
 #include "astshim.h"
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 #include "ndarray/eigen.h"
 
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/wcsUtils.h"
 
 namespace py = pybind11;
@@ -44,12 +44,6 @@ namespace {
 PYBIND11_PLUGIN(wcsUtils) {
     py::module mod("wcsUtils");
 
-    // Need to import numpy for ndarray and eigen conversions
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    }
-
     mod.def("createTrivialWcsMetadata", createTrivialWcsMetadata, "wcsName"_a, "xy0"_a);
     mod.def("deleteBasicWcsMetadata", deleteBasicWcsMetadata, "metadata"_a, "wcsName"_a);
     mod.def("getCdMatrixFromMetadata", getCdMatrixFromMetadata, "metadata"_a);
@@ -61,12 +55,12 @@ PYBIND11_PLUGIN(wcsUtils) {
     mod.def("makeSimpleWcsMetadata", makeSimpleWcsMetadata, "crpix"_a, "crval"_a, "cdMatrix"_a,
             "projection"_a = "TAN");
     mod.def("makeTanSipMetadata",
-            (std::shared_ptr<daf::base::PropertyList>(*)(Point2D const&, coord::IcrsCoord const&,
+            (std::shared_ptr<daf::base::PropertyList>(*)(Point2D const&, SpherePoint const&,
                                                          Eigen::Matrix2d const&, Eigen::MatrixXd const&,
                                                          Eigen::MatrixXd const&))makeTanSipMetadata,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a);
     mod.def("makeTanSipMetadata",
-            (std::shared_ptr<daf::base::PropertyList>(*)(Point2D const&, coord::IcrsCoord const&,
+            (std::shared_ptr<daf::base::PropertyList>(*)(Point2D const&, SpherePoint const&,
                                                          Eigen::Matrix2d const&, Eigen::MatrixXd const&,
                                                          Eigen::MatrixXd const&, Eigen::MatrixXd const&,
                                                          Eigen::MatrixXd const&))makeTanSipMetadata,

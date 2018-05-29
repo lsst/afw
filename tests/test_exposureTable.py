@@ -30,7 +30,6 @@ or
    >>> import testExposureTable; testExposureTable.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
@@ -40,8 +39,9 @@ import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.daf.base import DateTime, PropertySet
 import lsst.afw.table
-from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D, makeSkyWcs, Polygon
-import lsst.afw.coord
+from lsst.afw.coord import Observatory, Weather
+from lsst.afw.geom import arcseconds, degrees, radians, Point2D, Extent2D, Box2D, \
+    makeSkyWcs, Polygon, SpherePoint
 import lsst.afw.image
 import lsst.afw.detection
 from testTableArchivesLib import DummyPsf
@@ -62,7 +62,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         metadata.set("NAXIS", 2)
         metadata.set("NAXIS1", 1024)
         metadata.set("NAXIS2", 1153)
-        metadata.set("RADECSYS", 'FK5')
+        metadata.set("RADESYS", 'FK5')
         metadata.set("EQUINOX", 2000.)
         metadata.setDouble("CRVAL1", 215.604025685476)
         metadata.setDouble("CRVAL2", 53.1595451514076)
@@ -84,14 +84,14 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             11.02,
             DateTime(65321.1, DateTime.MJD, DateTime.TAI),
             12345.1,
-            45.1*lsst.afw.geom.degrees,
-            lsst.afw.coord.IcrsCoord(23.1*degrees, 73.2*degrees),
-            lsst.afw.coord.Coord(134.5*degrees, 33.3*degrees),
+            45.1*degrees,
+            SpherePoint(23.1*degrees, 73.2*degrees),
+            SpherePoint(134.5*degrees, 33.3*degrees),
             1.73,
             73.2*degrees,
             lsst.afw.image.RotType.SKY,
-            lsst.afw.coord.Observatory(11.1*degrees, 22.2*degrees, 0.333),
-            lsst.afw.coord.Weather(1.1, 2.2, 34.5),
+            Observatory(11.1*degrees, 22.2*degrees, 0.333),
+            Weather(1.1, 2.2, 34.5),
         )
 
     @staticmethod
@@ -196,12 +196,12 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         # make a very slightly perturbed wcs so the celestial transform isn't a
         # no-op
         crval2 = self.wcs.getSkyOrigin()
-        crval2.reset(crval2.getLongitude() + 5*arcseconds,
-                     crval2.getLatitude() - 5*arcseconds)
+        crval2 = lsst.afw.geom.SpherePoint(crval2.getLongitude() + 5*arcseconds,
+                                           crval2.getLatitude() - 5*arcseconds)
         wcs2 = makeSkyWcs(
-            crval = crval2,
-            crpix = self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
-            cdMatrix = self.wcs.getCdMatrix() * 1.1,
+            crval=crval2,
+            crpix=self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
+            cdMatrix=self.wcs.getCdMatrix() * 1.1,
         )
         for x1, y1 in points:
             p1 = lsst.afw.geom.Point2D(x1, y1)
@@ -217,8 +217,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(inside, record in subset1)
                 self.assertEqual(inside, record in subset2)
 
-        crazyPoint = lsst.afw.coord.IcrsCoord(crval2.getLongitude() + np.pi*radians,
-                                              crval2.getLatitude())
+        crazyPoint = lsst.afw.geom.SpherePoint(crval2.getLongitude() + np.pi*radians,
+                                               crval2.getLatitude())
         subset3 = self.cat.subsetContaining(crazyPoint)
         self.assertEqual(len(subset3), 0)
 
@@ -260,6 +260,12 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
         self.assertIsNone(catV1[0].getVisitInfo())
         self.assertIsNone(catV1[1].getVisitInfo())
+
+    def testBoolArraySubset(self):
+        i = np.array([True, False], dtype=bool)
+        subset = self.cat[i]
+        self.assertEqual(len(subset), 1)
+        self.assertEqual(subset[0], self.cat[0])
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

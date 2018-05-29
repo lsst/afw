@@ -1,5 +1,3 @@
-
-
 #
 # LSST Data Management System
 # Copyright 2008-2017 LSST Corporation.
@@ -32,22 +30,16 @@ or
    >>> import footprint1; footprint1.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import math
 import sys
 import unittest
 import os
 
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
 import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
-import lsst.afw.coord as afwCoord
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
@@ -72,7 +64,7 @@ def toString(*args):
     return "%d: %d..%d" % (y, x0, x1)
 
 
-class Object(object):
+class Object:
 
     def __init__(self, val, spans):
         self.val = val
@@ -717,7 +709,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), dims)
         radius = 5
         offset = afwGeom.Extent2D(123, 456)
-        crval = afwCoord.IcrsCoord(0*afwGeom.degrees, 0*afwGeom.degrees)
+        crval = afwGeom.SpherePoint(0*afwGeom.degrees, 0*afwGeom.degrees)
         crpix = afwGeom.Point2D(0, 0)
         cdMatrix = np.array([1.0e-5, 0.0, 0.0, 1.0e-5])
         cdMatrix.shape = (2, 2)
@@ -810,14 +802,11 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         source.set(1.0)
 
         foot = afwDetect.Footprint()
-        spanList = [afwGeom.Span(*s) for s in ((50, 50, 60),  # Oversized on the source image, right; only some pixels overlap
-                                               # Oversized on the source, left and right; and on sub-target
-                                               # image, top
-                                               (60, 0, 100),
-                                               # Oversized on the source image, top, left and right; aiming
-                                               # for segfault
-                                               (99, 0, 1000)
-                                               )]
+        spanList = [afwGeom.Span(*s) for s in (
+            (50, 50, 60),  # Oversized on the source image, right; only some pixels overlap
+            (60, 0, 100),  # Oversized on the source, left and right; and on sub-target image, top
+            (99, 0, 1000),  # Oversized on the source image, top, left and right; aiming for segfault
+        )]
         foot.spans = afwGeom.SpanSet(spanList)
 
         foot.spans.clippedTo(subTarget.getBBox()).clippedTo(source.getBBox()).\

@@ -19,7 +19,6 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
@@ -30,7 +29,6 @@ from lsst.pex.exceptions import TypeError
 from lsst.daf.base import PropertyList
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
-from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import arcseconds, degrees, makeSkyWcs, makeCdMatrix
 from lsst.afw.geom.wcsUtils import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
     getCdMatrixFromMetadata, getSipMatrixFromMetadata, getImageXY0FromMetadata, \
@@ -59,17 +57,17 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         self.plateScale = 0.15 * arcseconds  # angle/pixel
         self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2000, 4000))
         self.crpix = afwGeom.Point2D(1000, 2000)
-        self.crval = IcrsCoord(10 * degrees, 40 * degrees)
+        self.crval = afwGeom.SpherePoint(10 * degrees, 40 * degrees)
         self.orientation = -45 * degrees
         self.scale = 1.0 * arcseconds
         # position of 0,0 pixel position in focal plane
         self.ccdPositionMm = afwGeom.Point2D(25.0, 10.0)
-        self.focalPlaneToPixel = self.makeAffineTransform(
-            offset = afwGeom.Extent2D(self.ccdPositionMm),
-            rotation = self.ccdOrientation,
-            scale = self.pixelSizeMm,
+        self.pixelToFocalPlane = self.makeAffineTransform(
+            offset=afwGeom.Extent2D(self.ccdPositionMm),
+            rotation=self.ccdOrientation,
+            scale=self.pixelSizeMm,
         )
-        cdMatrix = makeCdMatrix(scale = self.scale, orientation = self.orientation)
+        cdMatrix = makeCdMatrix(scale=self.scale, orientation=self.orientation)
         self.tanWcs = makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
         self.radPerMm = self.plateScale.asRadians() / self.pixelSizeMm  # at center of field
         bboxD = afwGeom.Box2D(self.bbox)
@@ -100,26 +98,28 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         """
         focalPlaneToFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         wcs = makeDistortedTanWcs(
-            tanWcs = self.tanWcs,
-            pixelToFocalPlane = self.focalPlaneToPixel.getInverse(),
-            focalPlaneToFieldAngle = focalPlaneToFieldAngle,
+            tanWcs=self.tanWcs,
+            pixelToFocalPlane=self.pixelToFocalPlane,
+            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
-        self.assertWcsAlmostEqualOverBBox(wcs, self.tanWcs, bbox = self.bbox)
+        self.assertWcsAlmostEqualOverBBox(wcs, self.tanWcs, bbox=self.bbox)
 
     def testDistortion(self):
         """Test makeDistortedTanWcs using a non-affine transform for pixelToFocalPlane
         """
-        # Compute a distorted wcs that matches self.tanWcs at the center
-        # of the field
-        focalPlaneToFieldAngle = afwGeom.makeRadialTransform([0.0, self.radPerMm, 0.0, self.radPerMm])
+        # Compute a distorted wcs that matches self.tanWcs at the center of the field;
+        # the amount of distortion is 10s of pixels over the detector
+        fieldAngleToFocalPlane = afwGeom.makeRadialTransform([0.0, 1/self.radPerMm, 0.0, 1000/self.radPerMm])
+        focalPlaneToFieldAngle = fieldAngleToFocalPlane.getInverse()
+        focalPlaneToTanFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         wcs = makeDistortedTanWcs(
-            tanWcs = self.tanWcs,
-            pixelToFocalPlane = self.focalPlaneToPixel.getInverse(),
-            focalPlaneToFieldAngle = focalPlaneToFieldAngle,
+            tanWcs=self.tanWcs,
+            pixelToFocalPlane=self.pixelToFocalPlane,
+            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
 
         # At the center of the focal plane both WCS should give the same sky position
-        pixelAtCtr = self.focalPlaneToPixel.applyForward(afwGeom.Point2D(0, 0))
+        pixelAtCtr = self.pixelToFocalPlane.applyInverse(afwGeom.Point2D(0, 0))
         tanSkyAtCtr = self.tanWcs.pixelToSky(pixelAtCtr)
         skyAtCtr = wcs.pixelToSky(pixelAtCtr)
         self.assertPairsAlmostEqual(tanSkyAtCtr, skyAtCtr)
@@ -132,32 +132,27 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         # since for a given pointing, field angle gives position on the sky
         skyPoints = self.tanWcs.pixelToSky(self.pixelPoints)
 
-        pixelToFocalPlane = self.focalPlaneToPixel.getInverse()
-
-        focalPlaneToTanFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         tanFieldAnglePoints = focalPlaneToTanFieldAngle.applyForward(
-            pixelToFocalPlane.applyForward(self.tanWcs.skyToPixel(skyPoints)))
-
+            self.pixelToFocalPlane.applyForward(self.tanWcs.skyToPixel(skyPoints)))
         fieldAnglePoints = focalPlaneToFieldAngle.applyForward(
-            pixelToFocalPlane.applyForward(wcs.skyToPixel(skyPoints)))
-
+            self.pixelToFocalPlane.applyForward(wcs.skyToPixel(skyPoints)))
         assert_allclose(tanFieldAnglePoints, fieldAnglePoints)
 
         # The inverse should also be true: for a set of field angle points
         # the following sky positions should be almost equal:
         # fieldAngle -> fieldAngleToTanFocalPlane -> focalPlaneToPixel -> tanWcs.pixelToSky
         # fieldAngle -> fieldAngleToFocalPlane -> focalPlaneToPixel -> wcs.pixelToSky
+        focalPlaneToPixel = self.pixelToFocalPlane.getInverse()
         fieldAngleToTanFocalPlane = focalPlaneToTanFieldAngle.getInverse()
         tanSkyPoints2 = self.tanWcs.pixelToSky(
-            self.focalPlaneToPixel.applyForward(
+            focalPlaneToPixel.applyForward(
                 fieldAngleToTanFocalPlane.applyForward(fieldAnglePoints)))
 
-        fieldAngleToFocalPlane = focalPlaneToFieldAngle.getInverse()
         skyPoints2 = wcs.pixelToSky(
-            self.focalPlaneToPixel.applyForward(
+            focalPlaneToPixel.applyForward(
                 fieldAngleToFocalPlane.applyForward(fieldAnglePoints)))
 
-        self.assertCoordListsAlmostEqual(tanSkyPoints2, skyPoints2)
+        self.assertSpherePointListsAlmostEqual(tanSkyPoints2, skyPoints2)
 
 
 class ComputePixelToDistortedPixelTestCase(BaseTestCase):
@@ -172,8 +167,8 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
         """
         focalPlaneToFieldAngle = self.makeAffineTransform(scale=self.radPerMm)
         pixelToDistortedPixel = computePixelToDistortedPixel(
-            pixelToFocalPlane = self.focalPlaneToPixel.getInverse(),
-            focalPlaneToFieldAngle = focalPlaneToFieldAngle,
+            pixelToFocalPlane=self.pixelToFocalPlane,
+            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
         bboxD = afwGeom.Box2D(self.bbox)
         pixelPoints = bboxD.getCorners()
@@ -190,18 +185,18 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
         """
         focalPlaneToFieldAngle = afwGeom.makeRadialTransform([0.0, self.radPerMm, 0.0, self.radPerMm])
         pixelToDistortedPixel = computePixelToDistortedPixel(
-            pixelToFocalPlane = self.focalPlaneToPixel.getInverse(),
-            focalPlaneToFieldAngle = focalPlaneToFieldAngle,
+            pixelToFocalPlane=self.pixelToFocalPlane,
+            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
         # Do not try to make pixelToDistortedPixel -> self.tanWcs into a WCS
-        # because the frame names will be wrong; use a TransformPoint2ToIcrsCoord instead
-        tanWcsTransform = afwGeom.TransformPoint2ToIcrsCoord(self.tanWcs.getFrameDict())
+        # because the frame names will be wrong; use a TransformPoint2ToafwGeom.SpherePoint instead
+        tanWcsTransform = afwGeom.TransformPoint2ToSpherePoint(self.tanWcs.getFrameDict())
         pixelToDistortedSky = pixelToDistortedPixel.then(tanWcsTransform)
 
         wcs = makeDistortedTanWcs(
-            tanWcs = self.tanWcs,
-            pixelToFocalPlane = self.focalPlaneToPixel.getInverse(),
-            focalPlaneToFieldAngle = focalPlaneToFieldAngle,
+            tanWcs=self.tanWcs,
+            pixelToFocalPlane=self.pixelToFocalPlane,
+            focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
 
         bboxD = afwGeom.Box2D(self.bbox)
@@ -210,7 +205,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
 
         skyPoints1 = pixelToDistortedSky.applyForward(pixelPoints)
         skyPoints2 = wcs.pixelToSky(pixelPoints)
-        self.assertCoordListsAlmostEqual(skyPoints1, skyPoints2)
+        self.assertSpherePointListsAlmostEqual(skyPoints1, skyPoints2)
 
         pixelPoints1 = pixelToDistortedSky.applyInverse(skyPoints1)
         pixelPoints2 = wcs.skyToPixel(skyPoints1)
@@ -491,31 +486,31 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         """
         crpix = afwGeom.Point2D(self.metadata.get("CRPIX1") - 1,
                                 self.metadata.get("CRPIX2") - 1)
-        crval = IcrsCoord(self.metadata.get("CRVAL1") * degrees,
-                          self.metadata.get("CRVAL2") * degrees)
+        crval = afwGeom.SpherePoint(self.metadata.get("CRVAL1") * degrees,
+                                    self.metadata.get("CRVAL2") * degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")
         sipAp = getSipMatrixFromMetadata(self.metadata, "AP")
         sipBp = getSipMatrixFromMetadata(self.metadata, "BP")
         forwardMetadata = makeTanSipMetadata(
-            crpix = crpix,
-            crval = crval,
-            cdMatrix = cdMatrix,
-            sipA = sipA,
-            sipB = sipB,
+            crpix=crpix,
+            crval=crval,
+            cdMatrix=cdMatrix,
+            sipA=sipA,
+            sipB=sipB,
         )
         self.assertFalse(forwardMetadata.exists("AP_ORDER"))
         self.assertFalse(forwardMetadata.exists("BP_ORDER"))
 
         fullMetadata = makeTanSipMetadata(
-            crpix = crpix,
-            crval = crval,
-            cdMatrix = cdMatrix,
-            sipA = sipA,
-            sipB = sipB,
-            sipAp = sipAp,
-            sipBp = sipBp,
+            crpix=crpix,
+            crval=crval,
+            cdMatrix=cdMatrix,
+            sipA=sipA,
+            sipB=sipB,
+            sipAp=sipAp,
+            sipBp=sipBp,
         )
         for cardName in ("CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2", "CTYPE1", "CTYPE2",
                          "CUNIT1", "CUNIT2", "RADESYS"):

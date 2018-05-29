@@ -75,9 +75,8 @@ std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &reference, Map co
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
         }
 
-        auto toFrame = value->getFrameSet()->getFrame(ast::FrameSet::CURRENT);
-        toFrame->setIdent(key.getSysName());
-        result->addFrame(ast::FrameSet::BASE, *(value->getFrameSet()->getMapping()), *toFrame);
+        auto toFrame = ast::Frame(2, "Ident=" + key.getSysName());
+        result->addFrame(ast::FrameSet::BASE, *(value->getMapping()), toFrame);
     }
     return result;
 }

@@ -31,11 +31,10 @@ lsst::afw::geom::Transform<FromEndpoint, ToEndpoint>
 and subclasses, such as lsst::afw::geom::SkyWcs.
 
 In Python the templated Transform classes have names such as
-`lsst.afw.geom.TransformIcrsCoordToPoint2` for
-`lsst::afw::geom::Transform<IcrsCoordEndpoint, Point2Endpoint>`
+`lsst.afw.geom.TransformSpherePointToPoint2` for
+`lsst::afw::geom::Transform<SpherePointEndpoint, Point2Endpoint>`
 """
 
-from __future__ import absolute_import, division, print_function
 
 __all__ = ["addTransformMethods", "reduceTransform", "transformRegistry"]
 
@@ -53,13 +52,13 @@ def getJacobian(self, x):
     return matrix
 
 
-def then(self, next, simplify = True):
+def then(self, next, simplify=True):
     """Concatenate two transforms
 
     The result of A.then(B) is is C(x) = B(A(x))
     """
     if self.toEndpoint == next.fromEndpoint:
-        return self._then(next, simplify = simplify)
+        return self._then(next, simplify=simplify)
     else:
         raise lsst.pex.exceptions.InvalidParameterError(
             "Cannot concatenate %r and %r: endpoints do not match."
@@ -102,7 +101,7 @@ def addTransformMethods(cls):
     ----------
     cls : :ref:`_pybind11_transform_classes`
     A Transform class or subclass, e.g.
-    `lsst.afw.geom.TransformPoint2ToIcrsCoord`
+    `lsst.afw.geom.TransformPoint2ToSpherePoint`
     """
     global transformRegistry
     className = cls.__name__

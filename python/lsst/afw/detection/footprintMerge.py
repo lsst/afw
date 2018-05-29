@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 
 from ._footprintMerge import FootprintMergeList
 
@@ -16,12 +15,12 @@ def getMergedSourceCatalog(self, catalogs, filters,
     # if peak is not an array, create an array the size of catalogs
     try:
         len(samePeakDist)
-    except:
+    except TypeError:
         samePeakDist = [samePeakDist] * len(catalogs)
 
     try:
         len(peakDist)
-    except:
+    except TypeError:
         peakDist = [peakDist] * len(catalogs)
 
     if len(peakDist) != len(catalogs):

@@ -319,7 +319,7 @@ void ExposureRecord::setBBox(geom::Box2I const &bbox) {
     set(ExposureTable::getBBoxKey(), bbox);
 }
 
-bool ExposureRecord::contains(Coord const &coord, bool includeValidPolygon) const {
+bool ExposureRecord::contains(geom::SpherePoint const &coord, bool includeValidPolygon) const {
     if (!getWcs()) {
         throw LSST_EXCEPT(pex::exceptions::LogicError,
                           "ExposureRecord does not have a Wcs; cannot call contains()");
@@ -330,16 +330,14 @@ bool ExposureRecord::contains(Coord const &coord, bool includeValidPolygon) cons
         includeValidPolygon = false;
     }
 
-    IcrsCoord icrsCoord(coord[0], coord[1]);
     try {
-        geom::Point2D point = getWcs()->skyToPixel(icrsCoord);
+        geom::Point2D point = getWcs()->skyToPixel(coord);
         if (includeValidPolygon)
             return (geom::Box2D(getBBox()).contains(point) && getValidPolygon()->contains(point));
         else
             return geom::Box2D(getBBox()).contains(point);
     } catch (pex::exceptions::DomainError &) {
-        // Wcs can throw if the given coordinate is outside the region
-        // where the Wcs is valid.
+        // SkyWcs can throw if the given coordinate is outside the region where the WCS is valid.
         return false;
     }
 }
@@ -445,7 +443,7 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(io::InputAr
 }
 
 template <typename RecordT>
-ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(Coord const &coord,
+ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::subsetContaining(geom::SpherePoint const &coord,
                                                                       bool includeValidPolygon) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {

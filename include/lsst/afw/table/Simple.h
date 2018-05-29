@@ -61,9 +61,8 @@ public:
     RecordId getId() const;
     void setId(RecordId id);
 
-    IcrsCoord getCoord() const;
-    void setCoord(IcrsCoord const& coord);
-    void setCoord(Coord const& coord);
+    SpherePoint getCoord() const;
+    void setCoord(SpherePoint const& coord);
 
     Angle getRa() const;
     void setRa(Angle ra);
@@ -218,9 +217,8 @@ private:
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }
 inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id); }
 
-inline IcrsCoord SimpleRecord::getCoord() const { return get(SimpleTable::getCoordKey()); }
-inline void SimpleRecord::setCoord(IcrsCoord const& coord) { set(SimpleTable::getCoordKey(), coord); }
-inline void SimpleRecord::setCoord(Coord const& coord) { SimpleTable::getCoordKey().set(*this, coord); }
+inline SpherePoint SimpleRecord::getCoord() const { return get(SimpleTable::getCoordKey()); }
+inline void SimpleRecord::setCoord(SpherePoint const& coord) { set(SimpleTable::getCoordKey(), coord); }
 
 inline Angle SimpleRecord::getRa() const { return get(SimpleTable::getCoordKey().getRa()); }
 inline void SimpleRecord::setRa(Angle ra) { set(SimpleTable::getCoordKey().getRa(), ra); }

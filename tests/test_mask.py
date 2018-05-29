@@ -29,11 +29,9 @@ or
    python
    >>> import Mask; Mask.run()
 """
-from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils
@@ -320,8 +318,7 @@ class MaskTestCase(utilsTests.TestCase):
     def testCtorWithPlaneDefs(self):
         """Test that we can create a Mask with a given MaskPlaneDict"""
         FOO, val = "FOO", 2
-        mask = afwImage.Mask(100, 200, {FOO: val}
-                              )
+        mask = afwImage.Mask(100, 200, {FOO: val})
         mpd = mask.getMaskPlaneDict()
         self.assertIn(FOO, mpd.keys())
         self.assertEqual(mpd[FOO], val)

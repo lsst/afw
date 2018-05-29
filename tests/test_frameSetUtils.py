@@ -1,10 +1,8 @@
-from __future__ import absolute_import, division, print_function
 import unittest
 
 from astropy.coordinates import SkyCoord
 
 import astshim as ast
-from lsst.afw.coord import IcrsCoord
 from lsst.afw.geom import arcseconds, degrees, radians, Point2D, SpherePoint, makeCdMatrix
 from lsst.afw.geom.detail import readFitsWcs, readLsstSkyWcs, getPropertyListFromFitsChan
 from lsst.afw.geom.wcsUtils import makeSimpleWcsMetadata
@@ -20,7 +18,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         # arbitrary values
         self.crpix = Point2D(100, 100)
-        self.crval = IcrsCoord(30 * degrees, 45 * degrees)
+        self.crval = SpherePoint(30 * degrees, 45 * degrees)
         self.scale = 1.0 * arcseconds
 
     def makeMetadata(self):
@@ -34,9 +32,9 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         orientation = 0 * degrees
         flipX = False
         metadata = makeSimpleWcsMetadata(
-            crpix = self.crpix,
-            crval = self.crval,
-            cdMatrix = makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX),
+            crpix=self.crpix,
+            crval=self.crval,
+            cdMatrix=makeCdMatrix(scale=self.scale, orientation=orientation, flipX=flipX),
         )
         self.assertEqual(metadata.nameCount(), 12)  # 2 CD terms are zero and so are omitted
         metadata.add("SIMPLE", True)
@@ -116,7 +114,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         frameSet1 = readLsstSkyWcs(metadata, strip=False)
         self.assertEqual(len(metadata.toList()), nKeys)
 
-        crval = IcrsCoord(metadata.get("CRVAL1")*degrees, metadata.get("CRVAL2")*degrees)
+        crval = SpherePoint(metadata.get("CRVAL1")*degrees, metadata.get("CRVAL2")*degrees)
         crvalRad = crval.getPosition(radians)
         desiredCrpix = self.getCrpix(metadata)
         computedCrpix = frameSet1.applyInverse(crvalRad)
@@ -292,7 +290,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
 
     def testMakeSimpleWcsMetadata(self):
         crpix = Point2D(111.1, 222.2)
-        crval = IcrsCoord(45.6 * degrees, 12.3 * degrees)
+        crval = SpherePoint(45.6 * degrees, 12.3 * degrees)
         scale = 1 * arcseconds
         for orientation in (0 * degrees, 21 * degrees):
             cdMatrix = makeCdMatrix(scale=scale, orientation=orientation)

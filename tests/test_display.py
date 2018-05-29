@@ -31,12 +31,8 @@ or
    >>> display.backend = "ds9"   # optional
    >>> display.run()
 """
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
-
-from builtins import next
-from builtins import range
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
@@ -179,7 +175,6 @@ class DisplayTestCase(unittest.TestCase):
 
         del self.display0
         afwDisplay.delAllDisplays()
-
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

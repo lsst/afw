@@ -65,7 +65,7 @@ char const *const Random::_seedEnvVarName = "LSST_RNG_SEED";
 void Random::initialize() {
     ::gsl_rng *rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
     if (rng == 0) {
-        throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_alloc() failed");
+        throw std::bad_alloc();
     }
     // This seed is guaranteed to be non-zero.
     // We want to give a non-zero seed to GSL to avoid it choosing its own.
@@ -118,7 +118,7 @@ Random Random::deepCopy() const {
     Random rng = *this;
     rng._rng.reset(::gsl_rng_clone(_rng.get()), ::gsl_rng_free);
     if (!rng._rng) {
-        throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_clone() failed");
+        throw std::bad_alloc();
     }
     return rng;
 }

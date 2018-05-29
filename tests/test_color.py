@@ -19,12 +19,9 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -246,7 +243,7 @@ class FilterTestCase(lsst.utils.tests.TestCase):
                             lambdaEff in wavelengths.items() if name == "g"][0]  # for tests
 
     def defineFilterProperty(self, name, lambdaEff, force=False):
-        return afwImage.FilterProperty(name, lambdaEff, force)
+        return afwImage.FilterProperty(name, lambdaEff, force=force)
 
     def testListFilters(self):
         self.assertEqual(afwImage.Filter.getNames(), list(self.filters))
@@ -294,8 +291,22 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(f.getFilterProperty().getLambdaEff(),
                          self.g_lambdaEff)
         self.assertEqual(f.getFilterProperty(),
-                         self.defineFilterProperty("gX", self.g_lambdaEff, True))
+                         self.defineFilterProperty("gX", self.g_lambdaEff, force=True))
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
+
+    def testLambdaMinMax(self):
+        """Test additional properties for minimum and maximum wavelength for a filter."""
+        filt = afwImage.Filter("g")
+        # LambdaMin and LambdaMax are undefined for the test SDSS filter, and should return nan
+        self.assertTrue(np.isnan(filt.getFilterProperty().getLambdaMin()))
+        self.assertTrue(np.isnan(filt.getFilterProperty().getLambdaMax()))
+        lambdaEff = 476.31
+        lambdaMin = 405
+        lambdaMax = 552
+        imageUtils.defineFilter("gNew", lambdaEff, lambdaMin=lambdaMin, lambdaMax=lambdaMax)
+        filtNew = afwImage.Filter("gNew")
+        self.assertEqual(lambdaMin, filtNew.getFilterProperty().getLambdaMin())
+        self.assertEqual(lambdaMax, filtNew.getFilterProperty().getLambdaMax())
 
     def testFilterAliases(self):
         """Test that we can provide an alias for a Filter"""

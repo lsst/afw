@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import, division, print_function
 import lsst.afw.geom.ellipses
 import numpy
 from matplotlib import pyplot
@@ -29,10 +28,6 @@ def main():
     transX = mgt[0, 0] * allX + mgt[0, 1] * allY + mgt[0, 2]
     transY = mgt[1, 0] * allX + mgt[1, 1] * allY + mgt[1, 2]
     allR = (transX**2 + transY**2)**0.5
-    for span in region:
-        for point in span:
-            transPoint = gt(lsst.afw.geom.Point2D(point))
-            r = (transPoint.getX()**2 + transPoint.getY()**2)**0.5
     pyplot.plot(ellX, ellY, 'ro', markeredgewidth=0, alpha=0.5)
     pyplot.plot(allX[allR < 1], allY[allR < 1], '+')
     pyplot.plot(allX[allR > 1], allY[allR > 1], 'x')

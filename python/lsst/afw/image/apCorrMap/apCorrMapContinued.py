@@ -20,13 +20,11 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 from lsst.utils import continueClass
 from .apCorrMap import ApCorrMap
 
 
-@continueClass
+@continueClass  # noqa F811
 class ApCorrMap:
 
     def keys(self):

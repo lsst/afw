@@ -22,12 +22,7 @@
 """
 Tests for lsst.afw.cameraGeom.TransformMap
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import range
-from builtins import object
-from builtins import zip
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -35,7 +30,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
 
-class TransformWrapper(object):
+class TransformWrapper:
     """Wrap a TransformMap transformation as a function(Point2D)->Point2D
     """
 
@@ -48,7 +43,7 @@ class TransformWrapper(object):
         return self.transformMap.transform(point, self.fromSys, self.toSys)
 
 
-class Composition(object):
+class Composition:
     """Wrap a pair of function(Point2D)->Point2D functions as a single
     function that calls the first function, then the second function on the
     result

@@ -35,12 +35,12 @@
 #include "lsst/afw/table.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/OutputArchive.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 #include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
@@ -143,7 +143,6 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     auto skyVec = pixelToSky(pixVec);
 
     // Work in 3-space to avoid RA wrapping and pole issues
-    // (warning: getVector().asEigen() here produces incorrect results; I'm not sure why)
     auto skyLL = skyVec[0].getVector();
     auto skyDx = skyVec[1].getVector() - skyLL;
     auto skyDy = skyVec[2].getVector() - skyLL;
@@ -151,11 +150,11 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     // Compute pixel scale in radians = sqrt(pixel area in radians^2)
     // pixel area in radians^2 = area of parallelogram with sides skyDx, skyDy = |skyDx cross skyDy|
     // Use squared norm to avoid two square roots
-    double skyAreaSq = skyDx.asEigen().cross(skyDy.asEigen()).squaredNorm();
+    double skyAreaSq = skyDx.cross(skyDy).getSquaredNorm();
     return (std::pow(skyAreaSq, 0.25) / side) * radians;
 }
 
-coord::IcrsCoord SkyWcs::getSkyOrigin() const {
+SpherePoint SkyWcs::getSkyOrigin() const {
     // CRVAL is stored as the SkyRef property of the sky frame (the current frame of the SkyWcs)
     auto skyFrame = std::dynamic_pointer_cast<ast::SkyFrame>(
             getFrameDict()->getFrame(ast::FrameDict::CURRENT, false));  // false: do not copy
@@ -163,7 +162,7 @@ coord::IcrsCoord SkyWcs::getSkyOrigin() const {
         throw LSST_EXCEPT(pex::exceptions::LogicError, "Current frame is not a SkyFrame");
     }
     auto const crvalRad = skyFrame->getSkyRef();
-    return coord::IcrsCoord(crvalRad[0] * radians, crvalRad[1] * radians);
+    return SpherePoint(crvalRad[0] * radians, crvalRad[1] * radians);
 }
 
 Eigen::Matrix2d SkyWcs::getCdMatrix(Point2D const& pixel) const {
@@ -216,11 +215,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
 }
 
 std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const {
-    auto frameDict = std::static_pointer_cast<const ast::FrameDict>(_transform->getFrameSet());
-    if (!frameDict) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "Could not cast FrameSet to FrameDict");
-    }
-    return frameDict;
+    return _frameDict;
 }
 
 bool SkyWcs::isFits() const {
@@ -234,14 +229,14 @@ bool SkyWcs::isFits() const {
     return true;
 }
 
-AffineTransform SkyWcs::linearizePixelToSky(coord::IcrsCoord const& coord, AngleUnit const& skyUnit) const {
+AffineTransform SkyWcs::linearizePixelToSky(SpherePoint const& coord, AngleUnit const& skyUnit) const {
     return _linearizePixelToSky(skyToPixel(coord), coord, skyUnit);
 }
 AffineTransform SkyWcs::linearizePixelToSky(Point2D const& pix, AngleUnit const& skyUnit) const {
     return _linearizePixelToSky(pix, pixelToSky(pix), skyUnit);
 }
 
-AffineTransform SkyWcs::linearizeSkyToPixel(coord::IcrsCoord const& coord, AngleUnit const& skyUnit) const {
+AffineTransform SkyWcs::linearizeSkyToPixel(SpherePoint const& coord, AngleUnit const& skyUnit) const {
     return _linearizeSkyToPixel(skyToPixel(coord), coord, skyUnit);
 }
 
@@ -317,7 +312,7 @@ void SkyWcs::write(OutputArchiveHandle& handle) const {
 }
 
 SkyWcs::SkyWcs(std::shared_ptr<ast::FrameDict> frameDict)
-        : _transform(new TransformPoint2ToIcrsCoord(std::move(frameDict))),
+        : _frameDict(frameDict), _transform(),
           _pixelOrigin(),
           _pixelScaleAtOrigin(0 * radians) {
     _computeCache();
@@ -364,7 +359,7 @@ std::shared_ptr<ast::FrameDict> SkyWcs::_checkFrameDict(ast::FrameDict const& fr
     return frameDict.copy();
 }
 
-AffineTransform SkyWcs::_linearizePixelToSky(Point2D const& pix00, coord::IcrsCoord const& coord,
+AffineTransform SkyWcs::_linearizePixelToSky(Point2D const& pix00, SpherePoint const& coord,
                                              AngleUnit const& skyUnit) const {
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners
     // of a square drawn in pixel. It'd be better to center the square at sky00,
@@ -388,7 +383,7 @@ AffineTransform SkyWcs::_linearizePixelToSky(Point2D const& pix00, coord::IcrsCo
     return AffineTransform(m, (sky00v - m * pix00v));
 }
 
-AffineTransform SkyWcs::_linearizeSkyToPixel(Point2D const& pix00, coord::IcrsCoord const& coord,
+AffineTransform SkyWcs::_linearizeSkyToPixel(Point2D const& pix00, SpherePoint const& coord,
                                              AngleUnit const& skyUnit) const {
     AffineTransform inverse = _linearizePixelToSky(pix00, coord, skyUnit);
     return inverse.invert();
@@ -415,7 +410,7 @@ std::shared_ptr<SkyWcs> makeFlippedWcs(SkyWcs const& wcs, bool flipLR, bool flip
 
 std::shared_ptr<SkyWcs> makeModifiedWcs(TransformPoint2ToPoint2 const& pixelTransform, SkyWcs const& wcs,
                                         bool modifyActualPixels) {
-    auto const pixelMapping = pixelTransform.getFrameSet()->getMapping();
+    auto const pixelMapping = pixelTransform.getMapping();
     auto oldFrameDict = wcs.getFrameDict();
     bool const hasActualPixels = oldFrameDict->hasDomain("ACTUAL_PIXELS");
     auto const pixelFrame = oldFrameDict->getFrame("PIXELS", false);
@@ -452,20 +447,20 @@ std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertySet& metadata, bool strip)
     return std::make_shared<SkyWcs>(metadata, strip);
 }
 
-std::shared_ptr<SkyWcs> makeSkyWcs(Point2D const& crpix, coord::IcrsCoord const& crval,
+std::shared_ptr<SkyWcs> makeSkyWcs(Point2D const& crpix, SpherePoint const& crval,
                                    Eigen::Matrix2d const& cdMatrix, std::string const& projection) {
     auto metadata = makeSimpleWcsMetadata(crpix, crval, cdMatrix, projection);
     return std::make_shared<SkyWcs>(*metadata);
 }
 
-std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, coord::IcrsCoord const& crval,
+std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, SpherePoint const& crval,
                                       Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA,
                                       Eigen::MatrixXd const& sipB) {
     auto metadata = makeTanSipMetadata(crpix, crval, cdMatrix, sipA, sipB);
     return std::make_shared<SkyWcs>(*metadata);
 }
 
-std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, coord::IcrsCoord const& crval,
+std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, SpherePoint const& crval,
                                       Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA,
                                       Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
                                       Eigen::MatrixXd const& sipBp) {
@@ -473,10 +468,10 @@ std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, coord::IcrsCoord con
     return std::make_shared<SkyWcs>(*metadata);
 }
 
-std::shared_ptr<TransformPoint2ToIcrsCoord> getIntermediateWorldCoordsToSky(SkyWcs const& wcs,
+std::shared_ptr<TransformPoint2ToSpherePoint> getIntermediateWorldCoordsToSky(SkyWcs const& wcs,
                                                                             bool simplify) {
     auto iwcToSky = wcs.getFrameDict()->getMapping("IWC", "SKY");
-    return std::make_shared<TransformPoint2ToIcrsCoord>(*iwcToSky, simplify);
+    return std::make_shared<TransformPoint2ToSpherePoint>(*iwcToSky, simplify);
 }
 
 std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWcs const& wcs, bool simplify) {

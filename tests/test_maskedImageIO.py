@@ -30,14 +30,12 @@ or
    >>> import MaskedImageIO; MaskedImageIO.run()
 """
 
-from __future__ import absolute_import, division, print_function
 import contextlib
 import os.path
 import unittest
 import shutil
 import tempfile
 
-from builtins import object
 import numpy as np
 import astropy.io.fits
 
@@ -216,7 +214,7 @@ def tmpFits(*hdus):
         shutil.rmtree(tempdir)
 
 
-class MultiExtensionTestCase(object):
+class MultiExtensionTestCase:
     """Base class for testing that we correctly read multi-extension FITS files.
 
     MEF files may be read to either MaskedImage or Exposure objects. We apply

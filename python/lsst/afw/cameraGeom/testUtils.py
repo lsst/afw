@@ -1,8 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from builtins import str
-from builtins import zip
-from builtins import range
-from builtins import object
 import os
 
 import numpy as np
@@ -20,7 +15,7 @@ from .transformConfig import TransformMapConfig
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
 
-class DetectorWrapper(object):
+class DetectorWrapper:
     """!A Detector and the data used to construct it
 
     Intended for use with unit tests, thus saves a copy of all input parameters.
@@ -96,10 +91,10 @@ class DetectorWrapper(object):
                                0.0, self.radialDistortion/pScaleRad]
         focalPlaneToField = afwGeom.makeRadialTransform(radialDistortCoeffs)
         pixelToTanPixel = makePixelToTanPixel(
-            bbox = self.bbox,
-            orientation = self.orientation,
-            focalPlaneToField = focalPlaneToField,
-            pixelSizeMm = self.pixelSize,
+            bbox=self.bbox,
+            orientation=self.orientation,
+            focalPlaneToField=focalPlaneToField,
+            pixelSizeMm=self.pixelSize,
         )
 
         self.transMap = {
@@ -126,7 +121,7 @@ class DetectorWrapper(object):
         )
 
 
-class CameraWrapper(object):
+class CameraWrapper:
     """A simple Camera and the data used to construct it
 
     Intended for use with unit tests, thus saves some interesting information.
@@ -144,7 +139,8 @@ class CameraWrapper(object):
             or with one raw image per detector (False)
         """
         afwDir = lsst.utils.getPackageDir("afw")
-        self._afwTestDir = os.path.join(afwDir, "tests")
+        self._afwTestDataDir = os.path.join(afwDir, "python", "lsst", "afw",
+                                            "cameraGeom", "testData")
 
         # Info to store for unit tests
         self.plateScale = float(plateScale)
@@ -344,9 +340,9 @@ class CameraWrapper(object):
         @param[in] isLsstLike  if True then there is one raw image per amplifier;
             if False then there is one raw image per detector
         """
-        detFile = os.path.join(self._afwTestDir, "testCameraDetectors.dat")
+        detFile = os.path.join(self._afwTestDataDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)
-        ampFile = os.path.join(self._afwTestDir, "testCameraAmps.dat")
+        ampFile = os.path.join(self._afwTestDataDir, "testCameraAmps.dat")
         ampCatalogDict = self.makeAmpCatalogs(ampFile, isLsstLike=isLsstLike)
         camConfig = CameraConfig()
         camConfig.name = "testCamera%s"%('LSST' if isLsstLike else 'SC')

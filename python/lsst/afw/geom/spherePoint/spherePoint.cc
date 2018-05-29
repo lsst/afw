@@ -28,6 +28,9 @@
 #include "lsst/utils/python.h"
 
 #include "lsst/utils/python.h"
+#include "lsst/sphgeom/UnitVector3d.h"
+#include "lsst/sphgeom/Vector3d.h"
+#include "lsst/sphgeom/LonLat.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/SpherePoint.h"
@@ -44,17 +47,25 @@ using PySpherePoint = py::class_<SpherePoint, std::shared_ptr<SpherePoint>>;
 PYBIND11_PLUGIN(spherePoint) {
     py::module mod("spherePoint");
 
+    py::module::import("lsst.sphgeom");
     py::module::import("lsst.afw.geom.angle");
     py::module::import("lsst.afw.geom.coordinates");
 
     /* Module level */
+    mod.def("averageSpherePoint", averageSpherePoint);
     PySpherePoint cls(mod, "SpherePoint");
 
     /* Constructors */
+    cls.def(py::init<>());
     cls.def(py::init<Angle const &, Angle const &>(), "longitude"_a, "latitude"_a);
     cls.def(py::init<double, double, AngleUnit>(), "longitude"_a, "latitude"_a, "units"_a);
-    cls.def(py::init<Point3D const &>(), "vector"_a);
+    cls.def(py::init<sphgeom::Vector3d const &>(), "vector"_a);
+    cls.def(py::init<sphgeom::UnitVector3d const &>(), "unitVector"_a);
+    cls.def(py::init<sphgeom::LonLat const &>(), "lonLat"_a);
     cls.def(py::init<SpherePoint const &>(), "other"_a);
+
+    py::implicitly_convertible<SpherePoint, sphgeom::LonLat>();
+    py::implicitly_convertible<sphgeom::LonLat, SpherePoint>();
 
     /* Operators */
     cls.def("__getitem__",
@@ -65,13 +76,17 @@ PYBIND11_PLUGIN(spherePoint) {
     /* Members */
     cls.def("getLongitude", &SpherePoint::getLongitude);
     cls.def("getLatitude", &SpherePoint::getLatitude);
+    cls.def("getRa", &SpherePoint::getRa);
+    cls.def("getDec", &SpherePoint::getDec);
     cls.def("getVector", &SpherePoint::getVector);
+    cls.def("getPosition", &SpherePoint::getPosition, "units"_a);
     cls.def("atPole", &SpherePoint::atPole);
     cls.def("isFinite", &SpherePoint::isFinite);
     cls.def("bearingTo", &SpherePoint::bearingTo, "other"_a);
     cls.def("separation", &SpherePoint::separation, "other"_a);
     cls.def("rotated", &SpherePoint::rotated, "axis"_a, "amount"_a);
     cls.def("offset", &SpherePoint::offset, "bearing"_a, "amount"_a);
+    cls.def("getTangentPlaneOffset", &SpherePoint::getTangentPlaneOffset, "other"_a);
     utils::python::addOutputOp(cls, "__str__");
     cls.def("__len__", [](SpherePoint const &) { return 2; });
     cls.def("__reduce__", [cls](SpherePoint const &self) {

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from ._polygon import Polygon
 
 __all__ = []  # import this module only for its side effects
@@ -45,9 +43,18 @@ def display(self, xy0=None, frame=1, ctype=None):
 def plot(self, axes=None, **kwargs):
     """Plot polygon with matplotlib
 
-    @param axes: Matplotlib axes to use, or None
-    @param kwargs: Additional arguments for plotting (e.g., color, line type)
-    @return Matplotlib axes
+    Parameters
+    ----------
+    axes : `matplotlib.axes.Axes`
+        Matplotlib axes to use, or None
+    kwargs : any
+        Additional arguments to `matplotlib.axes.Axes.plot`
+        or `matplotlib.axes.Axes.scatter`.
+
+    Returns
+    -------
+    axes : `matplotlib.axes.Axes`
+        The axes used to make the plot (same as ``axes``, if provided).
     """
     import numpy
     if axes is None:

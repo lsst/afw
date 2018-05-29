@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from builtins import object
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -29,7 +27,7 @@ from lsst.afw.fits import FitsError, MemFileManager, reduceToFits, Fits, DEFAULT
 from . import mathLib as afwMath
 
 
-class BackgroundList(object):
+class BackgroundList:
     """A list-like class to contain a list of (afwMath.Background, interpStyle, undersampleStyle) tuples
 
 In deference to the deprecated-but-not-yet-removed Background.getImage() API, we also accept a single

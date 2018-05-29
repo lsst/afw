@@ -19,11 +19,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 
 __all__ = []  # importing this module adds methods to BaseColumnView
-
-from past.builtins import basestring
 
 import numpy as np
 
@@ -36,7 +33,7 @@ from .baseColumnView import _BaseColumnViewBase
 # base class, so we use the same naming convention we use for those.
 
 
-@continueClass
+@continueClass  # noqa F811
 class _BaseColumnViewBase:
 
     def getBits(self, keys=None):
@@ -49,7 +46,7 @@ class _BaseColumnViewBase:
             return self.getAllBits()
         arg = []
         for k in keys:
-            if isinstance(k, basestring):
+            if isinstance(k, str):
                 arg.append(self.schema.find(k).key)
             else:
                 arg.append(k)
@@ -58,7 +55,7 @@ class _BaseColumnViewBase:
     def __getitem__(self, key):
         """Get a column view; key may be a key object or the name of a field.
         """
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             keyobj = self.schema.find(key).key
         else:
             keyobj = key

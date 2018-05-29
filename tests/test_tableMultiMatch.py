@@ -30,8 +30,6 @@
 # discovery to only run tests found in the subclasses.
 """Tests for lsst.afw.table.multiMatch."""
 
-from __future__ import absolute_import, division, print_function
-
 import os
 import re
 import unittest

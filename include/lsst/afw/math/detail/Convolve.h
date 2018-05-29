@@ -62,7 +62,7 @@ namespace detail {
  * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
  * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
  * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throws std::bad_alloc when allocation of CPU memory fails
  */
 template <typename OutImageT, typename InImageT>
 void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, lsst::afw::math::Kernel const& kernel,
@@ -79,7 +79,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage, lsst::afw
 template <typename OutImageT, typename InImageT>
 void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
                    lsst::afw::math::DeltaFunctionKernel const& kernel,
-                   lsst::afw::math::ConvolutionControl const&);
+                   lsst::afw::math::ConvolutionControl const& convolutionControl);
 
 /**
  * A version of basicConvolve that should be used when convolving a LinearCombinationKernel
@@ -98,7 +98,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
  * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
  * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
  * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throws std::bad_alloc when allocation of CPU memory fails
  *
  * @ingroup afw
  */
@@ -139,7 +139,7 @@ void basicConvolve(OutImageT& convolvedImage, InImageT const& inImage,
  * @throws lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
  * @throws lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
  * @throws lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throws lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throws std::bad_alloc when allocation of CPU memory fails
  *
  * @warning Low-level convolution function that does not set edge pixels.
  */

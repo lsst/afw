@@ -29,15 +29,12 @@
 # both the testing class and the implementation class allowing test
 # discovery to only run tests found in the subclasses.
 
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
-from builtins import zip
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 
@@ -47,7 +44,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
     """
 
     def setUp(self):
-        self.crval = afwCoord.IcrsCoord(afwGeom.PointD(44., 45.))
+        self.crval = afwGeom.SpherePoint(44.0, 45.0, afwGeom.degrees)
         self.crpix = afwGeom.Point2D(15000, 4000)
 
         arcsecPerPixel = 1/3600.0
@@ -161,8 +158,8 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
 
             srcCoord = src.get(self.srcCoordKey)
             refCoord = refObj.get(self.refCoordKey)
-            self.assertCoordsAlmostEqual(
-                srcCoord, refCoord, maxDiff=maxSkyDiff)
+            self.assertSpherePointsAlmostEqual(
+                srcCoord, refCoord, maxSep=maxSkyDiff)
 
     def setCatalogs(self, maxPix, numPoints):
         """Set the source centroids and reference object coords

@@ -20,11 +20,9 @@
 # see  < http://www.lsstcorp.org/LegalNotices/ > .
 #
 
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -34,7 +32,7 @@ import lsst.pex.exceptions as pex
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 
-class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
+class KdTreeGaussianProcessTestCase(lsst.utils.tests.TestCase):
 
     def testKdTreeGetData(self):
         """

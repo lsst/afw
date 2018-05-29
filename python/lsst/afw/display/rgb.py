@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-from builtins import object
 #
 # LSST Data Management System
 # Copyright 2015-2016 LSST/AURA
@@ -31,9 +29,9 @@ from lsst.afw.display.displayLib import replaceSaturatedPixels, getZScale
 
 def computeIntensity(imageR, imageG=None, imageB=None):
     """!Return a naive total intensity from the red, blue, and green intensities
-    \param imageR intensity of image that'll be mapped to red; or intensity if imageG and imageB are None
-    \param imageG intensity of image that'll be mapped to green; or None
-    \param imageB intensity of image that'll be mapped to blue; or None
+    @param imageR intensity of image that'll be mapped to red; or intensity if imageG and imageB are None
+    @param imageG intensity of image that'll be mapped to green; or None
+    @param imageB intensity of image that'll be mapped to blue; or None
 
     Inputs may be MaskedImages, Images, or numpy arrays and the return is of the same type
     """
@@ -64,13 +62,13 @@ def computeIntensity(imageR, imageG=None, imageB=None):
     return intensity
 
 
-class Mapping(object):
+class Mapping:
     """!Baseclass to map red, blue, green intensities into uint8 values"""
 
     def __init__(self, minimum=None, image=None):
         """!Create a mapping
-        \param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
-        \param image The image to be used to calculate the mapping.
+        @param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
+        @param image The image to be used to calculate the mapping.
 
         If provided, also the default for makeRgbImage()
         """
@@ -78,7 +76,7 @@ class Mapping(object):
 
         try:
             len(minimum)
-        except:
+        except TypeError:
             minimum = 3*[minimum]
         assert len(minimum) == 3, "Please provide 1 or 3 values for minimum"
 
@@ -88,12 +86,12 @@ class Mapping(object):
     def makeRgbImage(self, imageR=None, imageG=None, imageB=None,
                      xSize=None, ySize=None, rescaleFactor=None):
         """!Convert 3 arrays, imageR, imageG, and imageB into a numpy RGB image
-        \param imageR Image to map to red (if None, use the image passed to the ctor)
-        \param imageG Image to map to green (if None, use imageR)
-        \param imageB Image to map to blue (if None, use imageR)
-        \param xSize  Desired width of RGB image (or None).  If ySize is None, preserve aspect ratio
-        \param ySize  Desired height of RGB image (or None)
-        \param rescaleFactor Make size of output image rescaleFactor*size of the input image (or None)
+        @param imageR Image to map to red (if None, use the image passed to the ctor)
+        @param imageG Image to map to green (if None, use imageR)
+        @param imageB Image to map to blue (if None, use imageR)
+        @param xSize  Desired width of RGB image (or None).  If ySize is None, preserve aspect ratio
+        @param ySize  Desired height of RGB image (or None)
+        @param rescaleFactor Make size of output image rescaleFactor*size of the input image (or None)
 
         N.b. images may be afwImage.Images or numpy arrays
         """
@@ -149,10 +147,11 @@ class Mapping(object):
         """
         return computeIntensity(imageR, imageG, imageB)
 
-    def mapIntensityToUint8(self, I):
+    def mapIntensityToUint8(self, intensity):
         """Map an intensity into the range of a uint8, [0, 255] (but not converted to uint8)"""
         with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
-            return np.where(I <= 0, 0, np.where(I < self._uint8Max, I, self._uint8Max))
+            return np.where(intensity <= 0, 0,
+                            np.where(intensity < self._uint8Max, intensity, self._uint8Max))
 
     def _convertImagesToUint8(self, imageR, imageG, imageB):
         """Use the mapping to convert images imageR, imageG, and imageB to a triplet of uint8 images"""
@@ -196,9 +195,9 @@ class LinearMapping(Mapping):
     def __init__(self, minimum=None, maximum=None, image=None):
         """!A linear stretch from [minimum, maximum]; if one or both are omitted use image minimum/maximum to set them
 
-        \param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
-        \param maximum  Intensity that should be mapped to white (a scalar)
-        \param image    Image to estimate minimum/maximum if not explicitly set
+        @param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
+        @param maximum  Intensity that should be mapped to white (a scalar)
+        @param image    Image to estimate minimum/maximum if not explicitly set
         """
 
         if minimum is None or maximum is None:
@@ -219,15 +218,16 @@ class LinearMapping(Mapping):
             assert maximum - minimum != 0, "minimum and maximum values must not be equal"
             self._range = float(maximum - minimum)
 
-    def mapIntensityToUint8(self, I):
+    def mapIntensityToUint8(self, intensity):
         """Return an array which, when multiplied by an image, returns that image mapped to the range of a
         uint8, [0, 255] (but not converted to uint8)
 
         The intensity is assumed to have had minimum subtracted (as that can be done per-band)
         """
         with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
-            return np.where(I <= 0, 0,
-                            np.where(I >= self._range, self._uint8Max/I, self._uint8Max/self._range))
+            return np.where(intensity <= 0, 0,
+                            np.where(intensity >= self._range,
+                                     self._uint8Max/intensity, self._uint8Max/self._range))
 
 
 class ZScaleMapping(LinearMapping):
@@ -239,9 +239,9 @@ class ZScaleMapping(LinearMapping):
 
     def __init__(self, image, nSamples=1000, contrast=0.25):
         """!A linear stretch from [z1, z2] chosen by the zscale algorithm
-        \param image    Image whose parameters are desired
-        \param nSamples The number of samples to use to estimate the zscale parameters
-        \param contrast The number of samples to use to estimate the zscale parameters
+        @param image    Image whose parameters are desired
+        @param nSamples The number of samples to use to estimate the zscale parameters
+        @param contrast The number of samples to use to estimate the zscale parameters
         """
 
         if not hasattr(image, "getArray"):
@@ -281,14 +281,14 @@ class AsinhMapping(Mapping):
 
         self._soften = Q/float(dataRange)
 
-    def mapIntensityToUint8(self, I):
+    def mapIntensityToUint8(self, intensity):
         """Return an array which, when multiplied by an image, returns that image mapped to the range of a
         uint8, [0, 255] (but not converted to uint8)
 
         The intensity is assumed to have had minimum subtracted (as that can be done per-band)
         """
         with np.errstate(invalid='ignore', divide='ignore'):  # n.b. np.where can't and doesn't short-circuit
-            return np.where(I <= 0, 0, np.arcsinh(I*self._soften)*self._slope/I)
+            return np.where(intensity <= 0, 0, np.arcsinh(intensity*self._soften)*self._slope/intensity)
 
 
 class AsinhZScaleMapping(AsinhMapping):
@@ -303,9 +303,9 @@ class AsinhZScaleMapping(AsinhMapping):
         """!
         Create an asinh mapping from an image, setting the linear part of the stretch using zscale
 
-        \param image The image to analyse, or a list of 3 images to be converted to an intensity image
-        \param Q The asinh softening parameter
-        \param pedestal The value, or array of 3 values, to subtract from the images; or None
+        @param image The image to analyse, or a list of 3 images to be converted to an intensity image
+        @param Q The asinh softening parameter
+        @param pedestal The value, or array of 3 values, to subtract from the images; or None
 
         N.b. pedestal, if not None, is removed from the images when calculating the zscale
         stretch, and added back into Mapping.minimum[]
@@ -380,8 +380,8 @@ def makeRGB(imageR, imageG=None, imageB=None, minimum=0, dataRange=5, Q=8, fileN
 
 def displayRGB(rgb, show=True):
     """!Display an rgb image using matplotlib
-    \param rgb  The RGB image in question
-    \param show If true, call plt.show()
+    @param rgb  The RGB image in question
+    @param show If true, call plt.show()
     """
     import matplotlib.pyplot as plt
     plt.imshow(rgb, interpolation='nearest', origin="lower")
@@ -392,8 +392,8 @@ def displayRGB(rgb, show=True):
 
 def writeRGB(fileName, rgbImage):
     """!Write an RGB image to disk
-    \param fileName The output file.  The suffix defines the format, and must be supported by matplotlib
-    \param rgbImage The image, as made by e.g. makeRGB
+    @param fileName The output file.  The suffix defines the format, and must be supported by matplotlib
+    @param rgbImage The image, as made by e.g. makeRGB
 
     Most versions of matplotlib support png and pdf (although the eps/pdf/svg writers may be buggy,
     possibly due an interaction with useTeX=True in the matplotlib settings).
@@ -408,8 +408,8 @@ def writeRGB(fileName, rgbImage):
 #
 
 
-class asinhMappingF(object):
-    """!\deprecated Object used to support legacy API"""
+class asinhMappingF:  # noqa N801
+    """!@deprecated Object used to support legacy API"""
 
     def __init__(self, minimum, dataRange, Q):
         self.minimum = minimum
@@ -417,19 +417,19 @@ class asinhMappingF(object):
         self.Q = Q
 
 
-class _RgbImageF(object):
-    """!\deprecated Object used to support legacy API"""
+class _RgbImageF:
+    """!@deprecated Object used to support legacy API"""
 
     def __init__(self, imageR, imageG, imageB, mapping):
-        """!\deprecated Legacy API"""
+        """!@deprecated Legacy API"""
         asinh = AsinhMapping(mapping.minimum, mapping.dataRange, mapping.Q)
         self.rgb = asinh.makeRgbImage(imageR, imageG, imageB)
 
     def write(self, fileName):
-        """!\deprecated Legacy API"""
+        """!@deprecated Legacy API"""
         writeRGB(fileName, self.rgb)
 
 
 def RgbImageF(imageR, imageG, imageB, mapping):
-    """!\deprecated Legacy API"""
+    """!@deprecated Legacy API"""
     return _RgbImageF(imageR, imageG, imageB, mapping)

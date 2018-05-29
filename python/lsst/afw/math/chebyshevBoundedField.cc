@@ -24,9 +24,7 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/pex/config/python.h" // defines LSST_DECLARE_CONTROL_FIELD
 #include "lsst/afw/table/io/python.h"
@@ -51,11 +49,6 @@ void declareTemplates(ClsField & cls) {
 
 PYBIND11_PLUGIN(_chebyshevBoundedField) {
     py::module mod("_chebyshevBoundedField", "Python wrapper for afw _chebyshevBoundedField library");
-
-    if (_import_array() < 0) {
-            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-            return nullptr;
-    };
 
     /* Module level */
     py::class_<ChebyshevBoundedFieldControl> clsChebyshevBoundedFieldControl(mod,

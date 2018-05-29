@@ -22,10 +22,7 @@
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
-from __future__ import absolute_import, division, print_function
 import unittest
-
-from builtins import object
 
 import lsst.utils.tests
 import lsst.daf.base as dafBase
@@ -33,7 +30,7 @@ import lsst.afw.image as afwImage
 from lsst.afw.cameraGeom.fitsUtils import getByKey, setByKey, HeaderAmpMap, HeaderDetectorMap, DetectorBuilder
 
 
-class AmpTestObject(object):
+class AmpTestObject:
 
     def name(self, a):
         self.name = a
@@ -45,7 +42,7 @@ class AmpTestObject(object):
         self.defaultval = c
 
 
-class DetTestObject(object):
+class DetTestObject:
 
     def __init__(self):
         return

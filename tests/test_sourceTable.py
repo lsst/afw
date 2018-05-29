@@ -29,22 +29,18 @@ or
    python
    >>> import testSourceTable; testSourceTable.run()
 """
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
 import tempfile
 import pickle
 import math
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
-import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
@@ -66,8 +62,8 @@ def makeCov(size, dtype):
 
 
 def makeWcs():
-    crval = lsst.afw.coord.IcrsCoord(1.606631 * lsst.afw.geom.degrees,
-                                     5.090329 * lsst.afw.geom.degrees)
+    crval = lsst.afw.geom.SpherePoint(1.606631 * lsst.afw.geom.degrees,
+                                      5.090329 * lsst.afw.geom.degrees)
     crpix = lsst.afw.geom.Point2D(2036.0, 2000.0)
     cdMatrix = np.array([5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5])
     cdMatrix.shape = (2, 2)
@@ -684,7 +680,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         # Extracting a flag column
         column = "a_flag"
         array = nonContiguous[column]
-        self.assertFloatsEqual(np.flip(array, 0), self.catalog[column])
+        np.testing.assert_equal(np.flip(array, 0), self.catalog[column])
         with self.assertRaises(ValueError):
             array[1] = True  # Should be immutable
 

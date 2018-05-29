@@ -27,6 +27,7 @@
 
 #include "boost/test/unit_test.hpp"
 
+#include "lsst/sphgeom/Vector3d.h"
 #include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/pex/exceptions/Exception.h"
 
@@ -44,7 +45,7 @@ namespace geom {
  * is an identical but independent copy.
  */
 BOOST_AUTO_TEST_CASE(SpherePointCopyResult, *boost::unit_test::tolerance(1e-14)) {
-    SpherePoint original(Point3D(0.34, -1.2, 0.97));
+    SpherePoint original(sphgeom::Vector3d(0.34, -1.2, 0.97));
     SpherePoint copy(original);
 
     // Want exact equality, not floating-point equality, for results of copy-construction
@@ -65,7 +66,7 @@ BOOST_AUTO_TEST_CASE(SpherePointCopyResult, *boost::unit_test::tolerance(1e-14))
  * is an identical copy.
  */
 BOOST_AUTO_TEST_CASE(SpherePointMoveResult, *boost::unit_test::tolerance(1e-14)) {
-    SpherePoint original(Point3D(0.34, -1.2, 0.97));
+    SpherePoint original(sphgeom::Vector3d(0.34, -1.2, 0.97));
     // Don't compare Angles in case there's aliasing of some sort
     double const oldLon = original.getLongitude().asDegrees();
     double const oldLat = original.getLatitude().asDegrees();
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(SpherePointMoveResult, *boost::unit_test::tolerance(1e-14))
  * but independent copy.
  */
 BOOST_AUTO_TEST_CASE(assignCopyResult, *boost::unit_test::tolerance(1e-14)) {
-    SpherePoint original(Point3D(0.34, -1.2, 0.97));
+    SpherePoint original(sphgeom::Vector3d(0.34, -1.2, 0.97));
     // Don't compare Angles in case there's aliasing of some sort
     double const oldLon = original.getLongitude().asDegrees();
     double const oldLat = original.getLatitude().asDegrees();
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(assignCopyResult, *boost::unit_test::tolerance(1e-14)) {
  * copy.
  */
 BOOST_AUTO_TEST_CASE(assignMoveResult, *boost::unit_test::tolerance(1e-14)) {
-    SpherePoint original(Point3D(0.34, -1.2, 0.97));
+    SpherePoint original(sphgeom::Vector3d(0.34, -1.2, 0.97));
     // Don't compare Angles in case there's aliasing of some sort
     double const oldLon = original.getLongitude().asDegrees();
     double const oldLat = original.getLatitude().asDegrees();
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(assignMoveResult, *boost::unit_test::tolerance(1e-14)) {
  * correctly.
  */
 BOOST_AUTO_TEST_CASE(getItemError) {
-    SpherePoint point(Point3D(1.0, 1.0, 1.0));
+    SpherePoint point(sphgeom::Vector3d(1.0, 1.0, 1.0));
 
     BOOST_CHECK_THROW(point[2], pex::exceptions::OutOfRangeError);
     BOOST_CHECK_THROW(point[-1], pex::exceptions::OutOfRangeError);

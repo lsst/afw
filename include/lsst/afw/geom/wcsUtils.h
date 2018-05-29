@@ -145,7 +145,7 @@ for more sophisticated FITS WCS.
 @param[in] projection  The name of the FITS WCS projection, e.g. "TAN" or "STG"
 */
 std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(Point2D const& crpix,
-                                                               coord::IcrsCoord const& crval,
+                                                               SpherePoint const& crval,
                                                                Eigen::Matrix2d const& cdMatrix,
                                                                std::string const& projection = "TAN");
 
@@ -161,7 +161,7 @@ std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(Point2D const& cr
  * @param[in] sipB     Forward distortion matrix for axis 2
  */
 std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(Point2D const& crpix,
-                                                            coord::IcrsCoord const& crval,
+                                                            SpherePoint const& crval,
                                                             Eigen::Matrix2d const& cdMatrix,
                                                             Eigen::MatrixXd const& sipA,
                                                             Eigen::MatrixXd const& sipB);
@@ -180,7 +180,7 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(Point2D const& crpix
  * @param[in] sipBp    Reverse distortion matrix for axis 2
  */
 std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
-        Point2D const& crpix, coord::IcrsCoord const& crval, Eigen::Matrix2d const& cdMatrix,
+        Point2D const& crpix, SpherePoint const& crval, Eigen::Matrix2d const& cdMatrix,
         Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
         Eigen::MatrixXd const& sipBp);
 

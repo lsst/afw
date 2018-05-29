@@ -19,18 +19,15 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division, print_function
 import contextlib
 import math
 import unittest
 import re
 
-from builtins import range
 import numpy as np
 
 import lsst.utils.tests
 import lsst.daf.base as dafBase
-import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.image.testUtils import imagesDiffer
@@ -167,36 +164,6 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                         self.assertBoxesAlmostEqual(
                             box0, box3, maxDiff=radDiff*0.999999)
 
-    def testAssertCoordsAlmostEqual(self):
-        """Test assertCoordsAlmostEqual"""
-        for raDecDeg in ((45, 45), (-70, 89), (130, -89.5)):
-            raDecDeg = [val*afwGeom.degrees for val in raDecDeg]
-            coord0 = afwCoord.IcrsCoord(*raDecDeg)
-            self.assertCoordsAlmostEqual(
-                coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
-            # sanity-check deprecated version
-            with self.assertWarns(DeprecationWarning):
-                self.assertCoordsNearlyEqual(
-                    coord0, coord0, maxDiff=1e-7*afwGeom.arcseconds)
-
-            for offAng in (0, 45, 90):
-                offAng = offAng*afwGeom.degrees
-                for offDist in (0.001, 0.1):
-                    offDist = offDist*afwGeom.arcseconds
-                    coord1 = coord0.toGalactic()
-                    coord1.offset(offAng, offDist)
-                    self.assertCoordsAlmostEqual(
-                        coord0, coord1, maxDiff=offDist*1.00001)
-                    with self.assertRaises(AssertionError):
-                        self.assertCoordsAlmostEqual(
-                            coord0, coord1, maxDiff=offDist*0.99999)
-
-            # test wraparound in RA
-            coord2 = afwCoord.IcrsCoord(
-                raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
-            self.assertCoordsAlmostEqual(
-                coord0, coord2, maxDiff=1e-7*afwGeom.arcseconds)
-
     def testAssertSpherePointsAlmostEqual(self):
         """Test assertSpherePointsAlmostEqual"""
         for raDecDeg in ((45, 45), (-70, 89), (130, -89.5)):
@@ -283,7 +250,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                              afwGeom.Extent2I(3001, 3001))
         ctrPix = afwGeom.Point2I(1500, 1500)
         metadata = dafBase.PropertySet()
-        metadata.set("RADECSYS", "FK5")
+        metadata.set("RADESYS", "FK5")
         metadata.set("EQUINOX", 2000.0)
         metadata.set("CTYPE1", "RA---TAN")
         metadata.set("CTYPE2", "DEC--TAN")

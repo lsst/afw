@@ -20,15 +20,12 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import math
 import os.path
 import unittest
 import pickle
 from functools import reduce
 
-from builtins import zip
-from builtins import range
 import numpy as np
 
 import lsst.utils

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function
 import itertools
 import os
 import sys
@@ -12,10 +11,9 @@ from numpy.testing import assert_allclose
 
 import lsst.utils.tests
 from lsst.daf.base import PropertyList
-from lsst.afw.coord import IcrsCoord
-from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, \
+from lsst.afw.geom import Extent2D, Point2D, Extent2I, Point2I, SpherePoint, \
     Box2I, Box2D, degrees, arcseconds, radians, wcsAlmostEqualOverBBox, \
-    TransformPoint2ToPoint2, TransformPoint2ToIcrsCoord, makeRadialTransform, \
+    TransformPoint2ToPoint2, TransformPoint2ToSpherePoint, makeRadialTransform, \
     SkyWcs, makeSkyWcs, makeCdMatrix, makeWcsPairTransform, \
     makeFlippedWcs, makeModifiedWcs, makeTanSipWcs, \
     getIntermediateWorldCoordsToSky, getPixelToIntermediateWorldCoords
@@ -35,7 +33,7 @@ def addActualPixelsFrame(skyWcs, actualPixelsToPixels):
     actualPixelsToPixels : `lsst.afw.geom.TransformPoint2ToPoint2`
         The transform from ACTUAL_PIXELS to PIXELS
     """
-    actualPixelsToPixelsMap = actualPixelsToPixels.getFrameSet()
+    actualPixelsToPixelsMap = actualPixelsToPixels.getMapping()
     actualPixelsFrame = ast.Frame(2, "Domain=ACTUAL_PIXELS")
     frameDict = skyWcs.getFrameDict()
     frameDict.addFrame("PIXELS", actualPixelsToPixelsMap.getInverse(), actualPixelsFrame)
@@ -122,14 +120,14 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         for flipLR, flipTB in itertools.product((False, True), (False, True)):
             flippedWcs = makeFlippedWcs(wcs=skyWcs, flipLR=flipLR, flipTB=flipTB, center=center)
             # the center is unchanged
-            self.assertCoordsAlmostEqual(skyWcs.pixelToSky(center),
-                                         flippedWcs.pixelToSky(center), maxDiff=skyAtol)
+            self.assertSpherePointsAlmostEqual(skyWcs.pixelToSky(center),
+                                               flippedWcs.pixelToSky(center), maxSep=skyAtol)
 
             for isR, isT in itertools.product((False, True), (False, True)):
                 origPos = cornerDict[(isR, isT)]
                 flippedPos = cornerDict[(isR ^ flipLR, isT ^ flipTB)]
-                self.assertCoordsAlmostEqual(skyWcs.pixelToSky(origPos),
-                                             flippedWcs.pixelToSky(flippedPos), maxDiff=skyAtol)
+                self.assertSpherePointsAlmostEqual(skyWcs.pixelToSky(origPos),
+                                                   flippedWcs.pixelToSky(flippedPos), maxSep=skyAtol)
 
     def assertSkyWcsAstropyWcsAlmostEqual(self, skyWcs, astropyWcs, bbox,
                                           pixAtol=1e-4, skyAtol=1e-4*arcseconds, checkRoundTrip=True):
@@ -144,7 +142,7 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         # pixelToSky
         skyPosList = skyWcs.pixelToSky(pixPosList)
         astropySkyPosList = self.astropyPixelsToSky(astropyWcs=astropyWcs, pixPosList=pixPosList)
-        self.assertCoordListsAlmostEqual(skyPosList, astropySkyPosList, maxDiff=skyAtol)
+        self.assertSpherePointListsAlmostEqual(skyPosList, astropySkyPosList, maxSep=skyAtol)
 
         if not checkRoundTrip:
             return
@@ -166,25 +164,25 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
 
         @param[in] astropyWcs  a celestial astropy.wcs.WCS with 2 axes in RA, Dec order
         @param[in] pixPosList 0-based pixel positions as lsst.afw.geom.Point2D or similar pairs
-        @returns sky coordinates as a list of lsst.afw.coord.IcrsCoord
+        @returns sky coordinates as a list of lsst.afw.geom.SpherePoint
 
         Converts the output to ICRS
         """
         xarr = [p[0] for p in pixPosList]
         yarr = [p[1] for p in pixPosList]
-        skyCoordList = astropy.wcs.utils.pixel_to_skycoord(xp = xarr,
-                                                           yp = yarr,
-                                                           wcs = astropyWcs,
-                                                           origin = 0,
-                                                           mode = "all")
+        skyCoordList = astropy.wcs.utils.pixel_to_skycoord(xp=xarr,
+                                                           yp=yarr,
+                                                           wcs=astropyWcs,
+                                                           origin=0,
+                                                           mode="all")
         icrsList = [sc.transform_to("icrs") for sc in skyCoordList]
-        return [IcrsCoord(sc.ra.deg * degrees, sc.dec.deg * degrees) for sc in icrsList]
+        return [SpherePoint(sc.ra.deg * degrees, sc.dec.deg * degrees) for sc in icrsList]
 
     def astropySkyToPixels(self, astropyWcs, skyPosList):
         """Use an astropy wcs to convert pixels to sky
 
         @param[in] astropyWcs  a celestial astropy.wcs.WCS with 2 axes in RA, Dec order
-        @param[in] skyPosList ICRS sky coordinates as a list of lsst.afw.coord.IcrsCoord
+        @param[in] skyPosList ICRS sky coordinates as a list of lsst.afw.geom.SpherePoint
         @returns a list of lsst.afw.geom.Point2D, 0-based pixel positions
 
         Converts the input from ICRS to the coordinate system of the wcs
@@ -192,11 +190,11 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
         skyCoordList = [astropy.coordinates.SkyCoord(c[0].asDegrees(),
                                                      c[1].asDegrees(),
                                                      frame="icrs",
-                                                     unit = "deg") for c in skyPosList]
-        xyArr = [astropy.wcs.utils.skycoord_to_pixel(coords = sc,
-                                                     wcs = astropyWcs,
-                                                     origin = 0,
-                                                     mode = "all") for sc in skyCoordList]
+                                                     unit="deg") for c in skyPosList]
+        xyArr = [astropy.wcs.utils.skycoord_to_pixel(coords=sc,
+                                                     wcs=astropyWcs,
+                                                     origin=0,
+                                                     mode="all") for sc in skyCoordList]
         # float is needed to avoid truncation to int
         return [Point2D(float(x), float(y)) for x, y in xyArr]
 
@@ -208,11 +206,11 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
     def setUp(self):
         self.crpix = Point2D(100, 100)
         self.crvalList = [
-            IcrsCoord(0 * degrees, 45 * degrees),
-            IcrsCoord(0.00001 * degrees, 45 * degrees),
-            IcrsCoord(359.99999 * degrees, 45 * degrees),
-            IcrsCoord(30 * degrees, 89.99999 * degrees),
-            IcrsCoord(30 * degrees, -89.99999 * degrees),
+            SpherePoint(0 * degrees, 45 * degrees),
+            SpherePoint(0.00001 * degrees, 45 * degrees),
+            SpherePoint(359.99999 * degrees, 45 * degrees),
+            SpherePoint(30 * degrees, 89.99999 * degrees),
+            SpherePoint(30 * degrees, -89.99999 * degrees),
         ]
         self.orientationList = [
             0 * degrees,
@@ -231,7 +229,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
         Parameters
         ----------
-        crval : `lsst.afw.coord.IcrsCoord`
+        crval : `lsst.afw.geom.SpherePoint`
             Desired reference sky position.
             Must not be at either pole.
         orientation : `lsst.afw.geom.Angle`
@@ -256,14 +254,6 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
         xoffAng = 0*degrees if flipX else 180*degrees
 
-        def safeOffset(crval, direction, amount):
-            try:
-                offsetCoord = crval.toIcrs()
-                offsetCoord.offset(direction, amount)
-                return offsetCoord
-            except Exception:
-                return IcrsCoord(crval[0] + direction, crval - amount)
-
         pixelList = [
             Point2D(self.crpix[0], self.crpix[1]),
             Point2D(self.crpix[0] + 1, self.crpix[1]),
@@ -274,14 +264,14 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         # check pixels to sky
         predSkyList = [
             crval,
-            safeOffset(crval, xoffAng - orientation, self.scale),
-            safeOffset(crval, 90*degrees - orientation, self.scale),
+            crval.offset(xoffAng - orientation, self.scale),
+            crval.offset(90*degrees - orientation, self.scale),
         ]
-        self.assertCoordListsAlmostEqual(predSkyList, skyList)
-        self.assertCoordListsAlmostEqual(predSkyList, wcs.pixelToSky(pixelList))
+        self.assertSpherePointListsAlmostEqual(predSkyList, skyList)
+        self.assertSpherePointListsAlmostEqual(predSkyList, wcs.pixelToSky(pixelList))
         for pixel, predSky in zip(pixelList, predSkyList):
-            self.assertCoordsAlmostEqual(predSky, wcs.pixelToSky(pixel))
-            self.assertCoordsAlmostEqual(predSky, wcs.pixelToSky(pixel[0], pixel[1]))
+            self.assertSpherePointsAlmostEqual(predSky, wcs.pixelToSky(pixel))
+            self.assertSpherePointsAlmostEqual(predSky, wcs.pixelToSky(pixel[0], pixel[1]))
 
         # check sky to pixels
         self.assertPairListsAlmostEqual(pixelList, wcs.skyToPixel(skyList))
@@ -291,8 +281,8 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
             # self.assertPairsAlmostEqual(pixel, wcs.skyToPixel(sky[0], sky[1]))
 
         # check CRVAL round trip
-        self.assertCoordsAlmostEqual(wcs.getSkyOrigin(), crval,
-                                     maxDiff=self.tinyAngle)
+        self.assertSpherePointsAlmostEqual(wcs.getSkyOrigin(), crval,
+                                           maxSep=self.tinyAngle)
 
         crpix = wcs.getPixelOrigin()
         self.assertPairsAlmostEqual(crpix, self.crpix, maxDiff=self.tinyPixels)
@@ -319,11 +309,11 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         predShiftedPixelOrigin = self.crpix + offset
         self.assertPairsAlmostEqual(shiftedWcs.getPixelOrigin(), predShiftedPixelOrigin,
                                     maxDiff=self.tinyPixels)
-        self.assertCoordsAlmostEqual(shiftedWcs.getSkyOrigin(), crval, maxDiff=self.tinyAngle)
+        self.assertSpherePointsAlmostEqual(shiftedWcs.getSkyOrigin(), crval, maxSep=self.tinyAngle)
 
         shiftedPixelList = [p + offset for p in pixelList]
         shiftedSkyList = shiftedWcs.pixelToSky(shiftedPixelList)
-        self.assertCoordListsAlmostEqual(skyList, shiftedSkyList, maxDiff=self.tinyAngle)
+        self.assertSpherePointListsAlmostEqual(skyList, shiftedSkyList, maxSep=self.tinyAngle)
 
         # Check that the shifted WCS can be round tripped as FITS metadata
         shiftedMetadata = shiftedWcs.getFitsMetadata(precise=True)
@@ -360,9 +350,9 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         for crval, orientation, flipX in itertools.product(self.crvalList,
                                                            self.orientationList,
                                                            (False, True)):
-            self.checkTanWcs(crval = crval,
-                             orientation = orientation,
-                             flipX = flipX,
+            self.checkTanWcs(crval=crval,
+                             orientation=orientation,
+                             flipX=flipX,
                              )
 
     def testTanWcsFromFrameDict(self):
@@ -410,12 +400,12 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
             # compare pixels to sky
             desiredSkyList = desiredPixelsToSky.applyForward(pixPointList)
-            self.assertCoordListsAlmostEqual(skyList, desiredSkyList)
+            self.assertSpherePointListsAlmostEqual(skyList, desiredSkyList)
 
             # compare pixels to IWC
             pixelsToIwc = TransformPoint2ToPoint2(modifiedFrameDict.getMapping("PIXELS", "IWC"))
             desiredPixelsToIwc = TransformPoint2ToPoint2(
-                pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
+                pixelTransform.getMapping().then(originalFrameDict.getMapping("PIXELS", "IWC")))
             self.assertPairListsAlmostEqual(pixelsToIwc.applyForward(pixPointList),
                                             desiredPixelsToIwc.applyForward(pixPointList))
 
@@ -457,10 +447,10 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
                 desiredPixelsToSky = pixelTransform.then(originalWcs.getTransform())
             else:
                 originalPixelsToSky = \
-                    TransformPoint2ToIcrsCoord(originalFrameDict.getMapping("PIXELS", "SKY"))
+                    TransformPoint2ToSpherePoint(originalFrameDict.getMapping("PIXELS", "SKY"))
                 desiredPixelsToSky = actualPixelsToPixels.then(pixelTransform).then(originalPixelsToSky)
             desiredSkyList = desiredPixelsToSky.applyForward(pixPointList)
-            self.assertCoordListsAlmostEqual(skyList, desiredSkyList)
+            self.assertSpherePointListsAlmostEqual(skyList, desiredSkyList)
 
             # compare ACTUAL_PIXELS to PIXELS and PIXELS to IWC
             if modifyActualPixels:
@@ -481,7 +471,7 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
 
                 # check that PIXELS to IWC has been modified as expected
                 desiredPixelsToIwc = TransformPoint2ToPoint2(
-                    pixelTransform.getFrameSet().then(originalFrameDict.getMapping("PIXELS", "IWC")))
+                    pixelTransform.getMapping().then(originalFrameDict.getMapping("PIXELS", "IWC")))
                 self.assertPairListsAlmostEqual(modifiedPixelsToIwc.applyForward(pixPointList),
                                                 desiredPixelsToIwc.applyForward(pixPointList))
 
@@ -551,7 +541,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
         bbox = Box2D(Point2D(-1000, -1000), Extent2D(3000, 3000))
@@ -560,8 +550,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
     def testLinearizeMethods(self):
         skyWcs = makeSkyWcs(self.metadata)
         # use a sky position near, but not at, the WCS origin
-        sky00 = skyWcs.getSkyOrigin()
-        sky00.offset(45 * degrees, 1.2 * degrees)
+        sky00 = skyWcs.getSkyOrigin().offset(45 * degrees, 1.2 * degrees)
         pix00 = skyWcs.skyToPixel(sky00)
         for skyUnit in (degrees, radians):
             linPixToSky1 = skyWcs.linearizePixelToSky(sky00, skyUnit)  # should match inverse of linSkyToPix1
@@ -586,10 +575,10 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
             self.assertAlmostEqual(pixelArea, predictedPixelArea)
 
     def testBasics(self):
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         self.assertEqual(len(self.metadata.names(False)), 14)
         self.checkWcs(skyWcs)
-        makeSkyWcs(self.metadata, strip = True)
+        makeSkyWcs(self.metadata, strip=True)
         self.assertEqual(len(self.metadata.names(False)), 0)
 
     def testNormalizationFk5(self):
@@ -610,15 +599,15 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
         # compare to computed crval
         computedCrval = skyWcs.pixelToSky(crpix)
-        self.assertCoordsAlmostEqual(crval, computedCrval)
+        self.assertSpherePointsAlmostEqual(crval, computedCrval)
 
         # get predicted crval by converting with astropy
         crvalFk5 = astropy.coordinates.SkyCoord(crvalFk5Deg[0], crvalFk5Deg[1], frame="fk5",
                                                 equinox="J%f" % (equinox,), unit="deg")
         predictedCrvalIcrs = crvalFk5.icrs
-        predictedCrval = IcrsCoord(predictedCrvalIcrs.ra.radian*radians,
-                                   predictedCrvalIcrs.dec.radian*radians)
-        self.assertCoordsAlmostEqual(crval, predictedCrval, maxDiff=0.002*arcseconds)
+        predictedCrval = SpherePoint(predictedCrvalIcrs.ra.radian*radians,
+                                     predictedCrvalIcrs.dec.radian*radians)
+        self.assertSpherePointsAlmostEqual(crval, predictedCrval, maxSep=0.002*arcseconds)
 
     def testNormalizationDecRa(self):
         """Test that a Dec, RA WCS is normalized to RA, Dec
@@ -626,8 +615,8 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         crpix = Point2D(self.metadata.get("CRPIX1") - 1, self.metadata.get("CRPIX2") - 1)
 
         # swap RA, Decaxes in metadata
-        crvalIn = IcrsCoord(self.metadata.get("CRVAL1")*degrees,
-                            self.metadata.get("CRVAL2")*degrees)
+        crvalIn = SpherePoint(self.metadata.get("CRVAL1")*degrees,
+                              self.metadata.get("CRVAL2")*degrees)
         self.metadata.set("CRVAL1", crvalIn[1].asDegrees())
         self.metadata.set("CRVAL2", crvalIn[0].asDegrees())
         self.metadata.set("CTYPE1", "DEC--TAN")
@@ -638,11 +627,11 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
         # compare pixel origin to input crval
         crval = skyWcs.getSkyOrigin()
-        self.assertCoordsAlmostEqual(crval, crvalIn)
+        self.assertSpherePointsAlmostEqual(crval, crvalIn)
 
         # compare to computed crval
         computedCrval = skyWcs.pixelToSky(crpix)
-        self.assertCoordsAlmostEqual(crval, computedCrval)
+        self.assertSpherePointsAlmostEqual(crval, computedCrval)
 
     def testReadDESHeader(self):
         """Verify that we can read a DES header"""
@@ -650,7 +639,7 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         self.metadata.set("CTYPE1", "RA---TPV")
         self.metadata.set("CTYPE2", "DEC--TPV")
 
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         self.checkWcs(skyWcs)
 
     def testCD_PC(self):
@@ -676,13 +665,13 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         ):
             md.set(k, v)
 
-        wcs = makeSkyWcs(md, strip = False)
+        wcs = makeSkyWcs(md, strip=False)
 
         pixPos = Point2D(1000, 2000)
-        pred_skyPos = IcrsCoord(4.459815023498577 * degrees, 16.544199850984768 * degrees)
+        pred_skyPos = SpherePoint(4.459815023498577 * degrees, 16.544199850984768 * degrees)
 
         skyPos = wcs.pixelToSky(pixPos)
-        self.assertCoordsAlmostEqual(skyPos, pred_skyPos)
+        self.assertSpherePointsAlmostEqual(skyPos, pred_skyPos)
 
         for badPC in (False, True):
             for k, v in (
@@ -700,9 +689,9 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
                         self.assertEqual(md.get("CD%d_%d" % (i, j)),
                                          md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
 
-            wcs2 = makeSkyWcs(md, strip = False)
+            wcs2 = makeSkyWcs(md, strip=False)
             skyPos2 = wcs2.pixelToSky(pixPos)
-            self.assertCoordsAlmostEqual(skyPos2, pred_skyPos)
+            self.assertSpherePointsAlmostEqual(skyPos2, pred_skyPos)
 
 
 class TestTanSipTestCase(SkyWcsBaseTestCase):
@@ -852,10 +841,10 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
             pixelToIwc = getPixelToIntermediateWorldCoords(skyWcs, simplify)
             iwcToSky = getIntermediateWorldCoordsToSky(skyWcs, simplify)
             self.assertTrue(isinstance(pixelToIwc, TransformPoint2ToPoint2))
-            self.assertTrue(isinstance(iwcToSky, TransformPoint2ToIcrsCoord))
+            self.assertTrue(isinstance(iwcToSky, TransformPoint2ToSpherePoint))
             if simplify:
-                self.assertTrue(pixelToIwc.getFrameSet().getMapping().isSimple)
-                self.assertTrue(iwcToSky.getFrameSet().getMapping().isSimple)
+                self.assertTrue(pixelToIwc.getMapping().isSimple)
+                self.assertTrue(iwcToSky.getMapping().isSimple)
             # else the mapping may have already been simplified inside the WCS,
             # so don't assert isSimple is false
 
@@ -867,7 +856,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
                     pixPosList.append(Point2D(dx, dy) + crpix)
             iwcPosList = pixelToIwc.applyForward(pixPosList)
             skyPosList = iwcToSky.applyForward(iwcPosList)
-            self.assertCoordListsAlmostEqual(skyPosList, skyWcs.pixelToSky(pixPosList))
+            self.assertSpherePointListsAlmostEqual(skyPosList, skyWcs.pixelToSky(pixPosList))
             self.assertPairListsAlmostEqual(pixelToIwc.applyInverse(iwcToSky.applyInverse(skyPosList)),
                                             skyWcs.skyToPixel(skyPosList))
 
@@ -886,7 +875,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "astropy.wcs rejects the header on py2")
     def testAgainstAstropyWcs(self):
-        skyWcs = makeSkyWcs(self.metadata, strip = False)
+        skyWcs = makeSkyWcs(self.metadata, strip=False)
         header = makeLimitedFitsHeader(self.metadata)
         astropyWcs = astropy.wcs.WCS(header)
         self.assertSkyWcsAstropyWcsAlmostEqual(skyWcs=skyWcs, astropyWcs=astropyWcs, bbox=self.bbox)
@@ -895,7 +884,7 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
         referenceWcs = makeSkyWcs(self.metadata, strip=False)
 
         crpix = Point2D(self.metadata.get("CRPIX1") - 1, self.metadata.get("CRPIX2") - 1)
-        crval = IcrsCoord(self.metadata.get("CRVAL1") * degrees, self.metadata.get("CRVAL2") * degrees)
+        crval = SpherePoint(self.metadata.get("CRVAL1") * degrees, self.metadata.get("CRVAL2") * degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")
@@ -976,10 +965,10 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
         SkyWcsBaseTestCase.setUp(self)
         crpix = Point2D(100, 100)
         crvalList = [
-            IcrsCoord(0 * degrees, 45 * degrees),
-            IcrsCoord(0.00001 * degrees, 45 * degrees),
-            IcrsCoord(359.99999 * degrees, 45 * degrees),
-            IcrsCoord(30 * degrees, 89.99999 * degrees),
+            SpherePoint(0 * degrees, 45 * degrees),
+            SpherePoint(0.00001 * degrees, 45 * degrees),
+            SpherePoint(359.99999 * degrees, 45 * degrees),
+            SpherePoint(30 * degrees, 89.99999 * degrees),
         ]
         orientationList = [
             0 * degrees,
@@ -998,31 +987,24 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
                     crpix=crpix,
                     crval=crval,
                     cdMatrix=cd))
-
-    def points(self):
-        for x in (0.0, -2.0, 42.5, 1042.3):
-            for y in (27.6, -0.1, 0.0, 196.0):
-                yield Point2D(x, y)
+        self.pixelPoints = [Point2D(x, y) for x, y in
+                            itertools.product((0.0, -2.0, 42.5, 1042.3),
+                                              (27.6, -0.1, 0.0, 196.0))]
 
     def testGenericWcs(self):
         """Test that input and output points represent the same sky position.
 
         Would prefer a black-box test, but don't have the numbers for it.
         """
+        inPoints = self.pixelPoints
         for wcs1 in self.wcsList:
             for wcs2 in self.wcsList:
                 transform = makeWcsPairTransform(wcs1, wcs2)
-                # check that the transform has been simplified
-                frameSet = transform.getFrameSet()
-                self.assertEqual(frameSet.nFrame, 2)
-                for point1 in self.points():
-                    point2 = transform.applyForward(point1)
-                    self.assertPairsAlmostEqual(
-                        transform.applyInverse(point2),
-                        point1)
-                    self.assertCoordsAlmostEqual(
-                        wcs1.pixelToSky(point1),
-                        wcs2.pixelToSky(point2))
+                outPoints = transform.applyForward(inPoints)
+                inPointsRoundTrip = transform.applyInverse(outPoints)
+                self.assertPairListsAlmostEqual(inPoints, inPointsRoundTrip)
+                self.assertSpherePointListsAlmostEqual(wcs1.pixelToSky(inPoints),
+                                                       wcs2.pixelToSky(outPoints))
 
     def testSameWcs(self):
         """Confirm that pairing two identical Wcs gives an identity transform.
@@ -1030,13 +1012,12 @@ class WcsPairTransformTestCase(SkyWcsBaseTestCase):
         for wcs in self.wcsList:
             transform = makeWcsPairTransform(wcs, wcs)
             # check that the transform has been simplified
-            frameSet = transform.getFrameSet()
-            self.assertEqual(frameSet.nFrame, 2)
-            for point in self.points():
-                outPoint1 = transform.applyForward(point)
-                outPoint2 = transform.applyInverse(outPoint1)
-                self.assertPairsAlmostEqual(point, outPoint1)
-                self.assertPairsAlmostEqual(outPoint1, outPoint2)
+            self.assertTrue(transform.getMapping().isSimple)
+            # check the transform
+            outPoints1 = transform.applyForward(self.pixelPoints)
+            outPoints2 = transform.applyInverse(outPoints1)
+            self.assertPairListsAlmostEqual(self.pixelPoints, outPoints1)
+            self.assertPairListsAlmostEqual(outPoints1, outPoints2)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

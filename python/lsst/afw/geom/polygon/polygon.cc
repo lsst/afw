@@ -31,7 +31,6 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
@@ -60,7 +59,6 @@ PYBIND11_PLUGIN(_polygon) {
     /* Constructors */
     clsPolygon.def(py::init<Polygon::Box const &>());
     clsPolygon.def(py::init<Polygon::Box const &, TransformPoint2ToPoint2 const &>());
-    clsPolygon.def(py::init<Polygon::Box const &, std::shared_ptr<XYTransform const> const &>());
     clsPolygon.def(py::init<Polygon::Box const &, AffineTransform const &>());
     clsPolygon.def(py::init<std::vector<Polygon::Point> const &>());
 
@@ -113,9 +111,6 @@ PYBIND11_PLUGIN(_polygon) {
     clsPolygon.def("convexHull", &Polygon::convexHull);
     clsPolygon.def("transform",
                    (std::shared_ptr<Polygon> (Polygon::*)(TransformPoint2ToPoint2 const &) const) &
-                           Polygon::transform);
-    clsPolygon.def("transform",
-                   (std::shared_ptr<Polygon> (Polygon::*)(std::shared_ptr<XYTransform const> const &) const) &
                            Polygon::transform);
     clsPolygon.def("transform", (std::shared_ptr<Polygon> (Polygon::*)(AffineTransform const &) const) &
                                         Polygon::transform);

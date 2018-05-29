@@ -1,12 +1,11 @@
-from __future__ import absolute_import, division, print_function
-
 __all__ = []
 
 from lsst.utils import continueClass
 from ._fits import (Fits, ImageWriteOptions, ImageCompressionOptions, ImageScalingOptions,
                     compressionAlgorithmToString, scalingAlgorithmToString)
 
-@continueClass
+
+@continueClass  # noqa F811
 class Fits:
     def __enter__(self):
         return self
@@ -15,13 +14,13 @@ class Fits:
         self.closeFile()
 
 
-@continueClass
+@continueClass  # noqa F811
 class ImageWriteOptions:
     def __repr__(self):
         return "%s(compression=%r, scaling=%r)" % (self.__class__.__name__, self.compression, self.scaling)
 
 
-@continueClass
+@continueClass  # noqa F811
 class ImageCompressionOptions:
     def __repr__(self):
         return ("%s(algorithm=%r, tiles=%r, quantizeLevel=%f" %
@@ -29,7 +28,7 @@ class ImageCompressionOptions:
                  self.tiles.tolist(), self.quantizeLevel))
 
 
-@continueClass
+@continueClass  # noqa F811
 class ImageScalingOptions:
     def __repr__(self):
         return ("%s(algorithm=%r, bitpix=%d, maskPlanes=%s, seed=%d, quantizeLevel=%f, quantizePad=%f, "

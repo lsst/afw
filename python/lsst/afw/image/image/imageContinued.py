@@ -20,11 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
-
 __all__ = ["Image", "DecoratedImage"]
-
-from future.utils import with_metaclass
 
 import numpy as np
 from lsst.utils import TemplateMeta
@@ -34,7 +30,7 @@ from .image import ImageI, ImageF, ImageD, ImageU, ImageL
 from .image import DecoratedImageI, DecoratedImageF, DecoratedImageD, DecoratedImageU, DecoratedImageL
 
 
-class Image(with_metaclass(TemplateMeta, object)):
+class Image(metaclass=TemplateMeta):
 
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
@@ -53,7 +49,7 @@ Image.alias("U", ImageU)
 Image.alias("L", ImageL)
 
 
-class DecoratedImage(with_metaclass(TemplateMeta, object)):
+class DecoratedImage(metaclass=TemplateMeta):
 
     def convertF(self):
         return ImageF(self, deep=True)

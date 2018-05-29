@@ -29,6 +29,7 @@
 #include <memory>
 
 #include "lsst/daf/base.h"
+#include "lsst/utils/CacheFwd.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
@@ -37,6 +38,12 @@
 namespace lsst {
 namespace afw {
 namespace detection {
+namespace detail {
+
+/// Key for caching PSFs with lsst::utils::Cache
+struct PsfCacheKey;
+
+} // namespace detail
 
 class PsfFormatter;
 
@@ -86,12 +93,12 @@ public:
                       */
     };
 
-    Psf(Psf const&) = default;
-    Psf(Psf&&) = default;
+    Psf(Psf const&);
     Psf& operator=(Psf const&) = delete;
     Psf& operator=(Psf&&) = delete;
 
-    virtual ~Psf() = default;
+    Psf(Psf&&);
+    virtual ~Psf();
 
     /**
      *  Polymorphic deep-copy.
@@ -254,14 +261,27 @@ public:
                                                       std::string const& warpAlgorithm = "lanczos5",
                                                       unsigned int warpBuffer = 5);
 
+    /** Return the capacity of the caches
+     *
+     * Both the image and kernel image caches have the same capacity.
+     */
+    std::size_t getCacheCapacity() const;
+
+    /** Set the capacity of the caches
+     *
+     * Both the image and kernel image caches will be set to this capacity.
+     */
+    void setCacheCapacity(std::size_t capacity);
+
 protected:
     /**
      *  Main constructor for subclasses.
      *
      *  @param[in] isFixed  Should be true for Psf for which doComputeKernelImage always returns
      *                      the same image, regardless of color or position arguments.
+     *  @param[in] capacity  Capacity of the caches.
      */
-    explicit Psf(bool isFixed = false);
+    explicit Psf(bool isFixed = false, std::size_t capacity=100);
 
 private:
     //@{
@@ -284,12 +304,9 @@ private:
     //@}
 
     bool const _isFixed;
-    mutable std::shared_ptr<Image> _cachedImage;
-    mutable std::shared_ptr<Image> _cachedKernelImage;
-    mutable image::Color _cachedImageColor;
-    mutable image::Color _cachedKernelImageColor;
-    mutable geom::Point2D _cachedImagePosition;
-    mutable geom::Point2D _cachedKernelImagePosition;
+    using PsfCache = utils::Cache<detail::PsfCacheKey, std::shared_ptr<Image>>;
+    std::unique_ptr<PsfCache> _imageCache;
+    std::unique_ptr<PsfCache> _kernelImageCache;
 
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };

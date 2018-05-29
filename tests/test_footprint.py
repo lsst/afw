@@ -1,4 +1,3 @@
-
 #
 # Copyright 2008-2017  AURA/LSST.
 #
@@ -20,7 +19,6 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
-from __future__ import absolute_import, division, print_function
 import unittest
 import tempfile
 
@@ -34,8 +32,7 @@ class FootprintTestCase(unittest.TestCase):
     def setUp(self):
         self.spanRad = 4
         self.regionRad = 10
-        self.spans = afwGeom.SpanSet.fromShape(self.spanRad,
-                                                      afwGeom.Stencil.BOX)
+        self.spans = afwGeom.SpanSet.fromShape(self.spanRad, afwGeom.Stencil.BOX)
         minPoint = afwGeom.Point2I(-self.regionRad, -self.regionRad)
         maxPoint = afwGeom.Point2I(self.regionRad, self.regionRad)
         self.region = afwGeom.Box2I(minPoint, maxPoint)
@@ -175,8 +172,7 @@ class FootprintTestCase(unittest.TestCase):
 
         # Test erode
         kernelRad = 1
-        kernel = afwGeom.SpanSet.fromShape(kernelRad,
-                                                  afwGeom.Stencil.BOX)
+        kernel = afwGeom.SpanSet.fromShape(kernelRad, afwGeom.Stencil.BOX)
         self.footprint.erode(kernel)
 
         # Verify the eroded dimensions

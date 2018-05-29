@@ -23,13 +23,12 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Schema.h"
@@ -111,10 +110,7 @@ static void declareCoordKey(py::module &mod) {
     cls.def("getDec", &CoordKey::getDec);
     cls.def("isValid", &CoordKey::isValid);
     cls.def("get", [](CoordKey &self, BaseRecord const &record) { return self.get(record); });
-    cls.def("set",
-            (void (CoordKey::*)(BaseRecord & record, coord::IcrsCoord const &value) const) & CoordKey::set);
-    cls.def("set",
-            (void (CoordKey::*)(BaseRecord & record, coord::Coord const &value) const) & CoordKey::set);
+    cls.def("set", &CoordKey::set);
 }
 
 static void declareQuadrupoleKey(py::module &mod) {
@@ -187,11 +183,6 @@ PYBIND11_PLUGIN(aggregates) {
     py::module::import("lsst.afw.geom.ellipses");
     py::module::import("lsst.afw.table.base");
     py::module mod("aggregates");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     py::enum_<CoordinateType>(mod, "CoordinateType")
             .value("PIXEL", CoordinateType::PIXEL)

@@ -24,9 +24,7 @@
 
 #include <memory>
 
-#include "numpy/arrayobject.h"
 #include "ndarray/pybind11.h"
-#include "ndarray/converter.h"
 
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
@@ -212,11 +210,6 @@ PYBIND11_PLUGIN(source) {
     py::module::import("lsst.afw.table.slots");
 
     py::module mod("source");
-
-    if (_import_array() < 0) {
-        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
-        return nullptr;
-    };
 
     // SourceFitsFlags enum values are used as integer masks, so wrap as attributes instead of an enum
     // static_cast is required to avoid an import error (py::cast and py::int_ do not work by themselves

@@ -46,7 +46,6 @@
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
@@ -288,8 +287,8 @@ template <typename DestImageT, typename SrcImageT>
 int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control,
               typename DestImageT::SinglePixel padValue) {
-    if (details::isSameObject(destImage, srcImage)) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destImage is srcImage; cannot warp in place");
+    if (imagesOverlap(destImage, srcImage)) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destImage overlaps srcImage; cannot warp");
     }
     if (destImage.getBBox(image::LOCAL).isEmpty()) {
         return 0;

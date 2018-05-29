@@ -30,13 +30,12 @@ or
    >>> import Image; Image.run()
 """
 
-from __future__ import absolute_import, division, print_function
+import itertools
 import os.path
 import shutil
 import tempfile
 import unittest
 
-from builtins import range
 import numpy as np
 
 import lsst.utils
@@ -124,6 +123,40 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             array4 += 5
             image1.array += 5
             np.testing.assert_array_equal(image1.array, array4)
+
+    def testImagesOverlap(self):
+        dim = afwGeom.Extent2I(10, 8)
+        # a set of bounding boxes, some of which overlap each other
+        # and some of which do not, and include the full image bounding box
+        bboxes = (
+            afwGeom.Box2I(afwGeom.Point2I(0, 0), dim),
+            afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(3, 3)),
+            afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Extent2I(6, 4)),
+            afwGeom.Box2I(afwGeom.Point2I(4, 4), afwGeom.Extent2I(6, 4)),
+        )
+
+        imageClasses = (afwImage.ImageF, afwImage.ImageD, afwImage.ImageI, afwImage.Mask)
+
+        for ImageClass1, ImageClass2 in itertools.product(imageClasses, imageClasses):
+            with self.subTest(ImageClass1=ImageClass1, ImageClass2=ImageClass2):
+                image1 = ImageClass1(dim)
+                self.assertTrue(afwImage.imagesOverlap(image1, image1))
+
+                image2 = ImageClass2(dim)
+                self.assertFalse(afwImage.imagesOverlap(image1, image2))
+                self.assertFalse(afwImage.imagesOverlap(image2, image1))
+
+                for bboxa, bboxb in itertools.product(bboxes, bboxes):
+                    shouldOverlap = bboxa.overlaps(bboxb)
+                    with self.subTest(bboxa=bboxa, bboxb=bboxb):
+                        subim1a = ImageClass1(image1, bboxa)
+                        subim1b = ImageClass1(image1, bboxb)
+                        self.assertEqual(afwImage.imagesOverlap(subim1a, subim1b), shouldOverlap)
+                        self.assertEqual(afwImage.imagesOverlap(subim1b, subim1a), shouldOverlap)
+
+                        subim2b = ImageClass2(image2, bboxb)
+                        self.assertFalse(afwImage.imagesOverlap(subim1a, subim2b))
+                        self.assertFalse(afwImage.imagesOverlap(subim2b, subim1a))
 
     def testInitializeImages(self):
         val = 666

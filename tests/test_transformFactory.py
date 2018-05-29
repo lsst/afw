@@ -23,7 +23,6 @@
 """Tests for custom Transforms and their factories
 """
 
-from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
@@ -43,7 +42,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
     def setUp(self):
         TransformTestBaseClass.setUp(self)
         self.endpointPrefixes = tuple(
-            x for x in self.endpointPrefixes if x != "IcrsCoord")
+            x for x in self.endpointPrefixes if x != "SpherePoint")
 
     def point2DList(self):
         for x in (-1.1, 0, 2.2):
@@ -90,7 +89,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         outPointLinearized = affine(linPoint)
         assert_allclose(toEndpoint.dataFromPoint(outPoint),
                         toEndpoint.dataFromPoint(outPointLinearized),
-                        err_msg = msg)
+                        err_msg=msg)
         jacobian = transform.getJacobian(linPoint)
         jacobianLinearized = affine.getLinear().getMatrix()
         assert_allclose(jacobian, jacobianLinearized)
@@ -108,8 +107,8 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
             assert_allclose(
                 toEndpoint.dataFromPoint(tweakedOutPoint),
                 toEndpoint.dataFromPoint(tweakedOutPointLinearized),
-                atol = 1e-3,
-                err_msg = msg)
+                atol=1e-3,
+                err_msg=msg)
 
         # Is affine invertible?
         # AST lets all-zero MatrixMaps be invertible though inverse
@@ -128,11 +127,11 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
                 roundTrip = inverse(tweakedOutPoint)
                 assert_allclose(
                     roundTrip, tweakedInPoint,
-                    err_msg = pointMsg)
+                    err_msg=pointMsg)
                 assert_allclose(
                     inverse.getLinear().getMatrix(),
                     np.linalg.inv(jacobian),
-                    err_msg = pointMsg)
+                    err_msg=pointMsg)
         else:
             # TODO: replace with correct type after fixing DM-11248
             with self.assertRaises(Exception):
@@ -309,7 +308,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
 
     def checkRadialInvertible(self, transform, coeffs):
         self.checkRadial(transform, coeffs)
-        self.checkRoundTrip(transform, rtol = 0.01)
+        self.checkRoundTrip(transform, rtol=0.01)
 
     def testBadRadial(self):
         """Test radial with invalid coefficients

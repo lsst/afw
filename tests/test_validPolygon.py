@@ -29,11 +29,8 @@ or
    python
    >>> import testValidPolygonTestCase; testPolygonTestCase.run()
 """
-from __future__ import absolute_import, division, print_function
 import os
 import unittest
-
-from builtins import zip
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
