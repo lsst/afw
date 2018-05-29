@@ -1,5 +1,5 @@
 from lsst.geom import Point2I, Box2I
-from .image import LOCAL, ImageOrigin
+from .image import LOCAL, PARENT, ImageOrigin
 
 __all__ = ["supportSlicing"]
 
@@ -106,6 +106,9 @@ def interpretSliceArgs(sliceArgs, bboxGetter):
         x, y = slices
     if isinstance(x, slice):
         if isinstance(y, slice):
+            # TODO: Remove this block after PARENT is set as the default.
+            if x.start is None and y.start is None and x.stop is None and y.stop is None:
+                origin = PARENT
             return makeBoxFromSlices(x, y, origin=origin, parent=bboxGetter(origin)), None, origin
         raise TypeError("Mixed indices of the form (slice, int) are not supported for images.")
     else:
