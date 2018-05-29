@@ -26,10 +26,37 @@ import numpy as np
 
 from lsst.utils import TemplateMeta
 
+from ..slicing import supportSlicing
 from .exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL
 
 
 class Exposure(metaclass=TemplateMeta):
+
+    def _set(self, index, value, origin):
+        """Set the pixel at the given index to a triple (value, mask, variance).
+
+        Parameters
+        ----------
+        index : `geom.Point2I`
+            Position of the pixel to assign to.
+        value : `tuple`
+            A tuple of (value, mask, variance) scalars.
+        origin : `ImageOrigin`
+            Coordinate system of ``index`` (`PARENT` or `LOCAL`).
+        """
+        self.maskedImage._set(index, value=value, origin=origin)
+
+    def _get(self, index, origin):
+        """Return a triple (value, mask, variance) at the given index.
+
+        Parameters
+        ----------
+        index : `geom.Point2I`
+            Position of the pixel to assign to.
+        origin : `ImageOrigin`
+            Coordinate system of ``index`` (`PARENT` or `LOCAL`).
+        """
+        return self.maskedImage._get(index, origin=origin)
 
     def __reduce__(self):
         from lsst.afw.fits import reduceToFits
@@ -40,22 +67,6 @@ class Exposure(metaclass=TemplateMeta):
 
     def convertD(self):
         return ExposureD(self, deep=True)
-
-    @classmethod
-    def Factory(cls, *args, **kwargs):
-        """Construct a new Exposure of the same dtype.
-        """
-        return cls(*args, **kwargs)
-
-    def clone(self):
-        """Return a deep copy of self"""
-        return self.Factory(self, deep=True)
-
-    def __getitem__(self, imageSlice):
-        return self.Factory(self.getMaskedImage()[imageSlice])
-
-    def __setitem__(self, imageSlice, rhs):
-        self.getMaskedImage[imageSlice] = rhs.getMaskedImage()
 
     def getImage(self):
         return self.maskedImage.image
@@ -92,3 +103,6 @@ Exposure.alias("F", ExposureF)
 Exposure.alias("D", ExposureD)
 Exposure.alias("U", ExposureU)
 Exposure.alias("L", ExposureL)
+
+for cls in set(Exposure.values()):
+    supportSlicing(cls)

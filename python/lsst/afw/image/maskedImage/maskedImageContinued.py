@@ -40,11 +40,13 @@ class MaskedImage(metaclass=TemplateMeta):
                 value, mask, variance = value
             except TypeError:
                 pass
+        if mask is None:
+            mask = 0
+        if variance is None:
+            variance = 0.0
         self.image.set(value)
-        if mask is not None:
-            self.mask.set(mask)
-        if variance is not None:
-            self.variance.set(variance)
+        self.mask.set(mask)
+        self.variance.set(variance)
 
     def _set(self, index, value, origin):
         """Set the pixel at the given index to a triple (value, mask, variance).
