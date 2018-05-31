@@ -22,11 +22,11 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
 #include <stdexcept>
+#include <cstdint>
 
 #include "boost/format.hpp"
-#include <memory>
-#include <cstdint>
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/daf/base/PropertySet.h"
