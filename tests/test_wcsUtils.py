@@ -27,6 +27,7 @@ from numpy.testing import assert_allclose
 
 from lsst.pex.exceptions import TypeError
 from lsst.daf.base import PropertyList
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
 from lsst.afw.geom import arcseconds, degrees, makeSkyWcs, makeCdMatrix
@@ -55,32 +56,32 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         self.pixelSizeMm = 0.024  # mm/pixel
         self.ccdOrientation = 5 * degrees  # orientation of pixel w.r.t. focal plane
         self.plateScale = 0.15 * arcseconds  # angle/pixel
-        self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2000, 4000))
-        self.crpix = afwGeom.Point2D(1000, 2000)
-        self.crval = afwGeom.SpherePoint(10 * degrees, 40 * degrees)
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 4000))
+        self.crpix = lsst.geom.Point2D(1000, 2000)
+        self.crval = lsst.geom.SpherePoint(10 * degrees, 40 * degrees)
         self.orientation = -45 * degrees
         self.scale = 1.0 * arcseconds
         # position of 0,0 pixel position in focal plane
-        self.ccdPositionMm = afwGeom.Point2D(25.0, 10.0)
+        self.ccdPositionMm = lsst.geom.Point2D(25.0, 10.0)
         self.pixelToFocalPlane = self.makeAffineTransform(
-            offset=afwGeom.Extent2D(self.ccdPositionMm),
+            offset=lsst.geom.Extent2D(self.ccdPositionMm),
             rotation=self.ccdOrientation,
             scale=self.pixelSizeMm,
         )
         cdMatrix = makeCdMatrix(scale=self.scale, orientation=self.orientation)
         self.tanWcs = makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
         self.radPerMm = self.plateScale.asRadians() / self.pixelSizeMm  # at center of field
-        bboxD = afwGeom.Box2D(self.bbox)
+        bboxD = lsst.geom.Box2D(self.bbox)
         self.pixelPoints = bboxD.getCorners()
         self.pixelPoints.append(bboxD.getCenter())
 
-    def makeAffineTransform(self, offset=(0, 0), rotation=0*afwGeom.degrees, scale=1.0):
+    def makeAffineTransform(self, offset=(0, 0), rotation=0*lsst.geom.degrees, scale=1.0):
         """Make an affine TransformPoint2ToPoint2 that first adds the specified offset,
         then scales and rotates the result
         """
-        rotScale = afwGeom.AffineTransform(afwGeom.LinearTransform.makeScaling(scale) *
-                                           afwGeom.LinearTransform.makeRotation(rotation))
-        offset = afwGeom.AffineTransform(afwGeom.Extent2D(*offset))
+        rotScale = lsst.geom.AffineTransform(lsst.geom.LinearTransform.makeScaling(scale) *
+                                             lsst.geom.LinearTransform.makeRotation(rotation))
+        offset = lsst.geom.AffineTransform(lsst.geom.Extent2D(*offset))
         # AffineTransform a*b = b.then(a)
         return afwGeom.makeTransform(rotScale * offset)
 
@@ -119,7 +120,7 @@ class MakeDistortedTanWcsTestCase(BaseTestCase):
         )
 
         # At the center of the focal plane both WCS should give the same sky position
-        pixelAtCtr = self.pixelToFocalPlane.applyInverse(afwGeom.Point2D(0, 0))
+        pixelAtCtr = self.pixelToFocalPlane.applyInverse(lsst.geom.Point2D(0, 0))
         tanSkyAtCtr = self.tanWcs.pixelToSky(pixelAtCtr)
         skyAtCtr = wcs.pixelToSky(pixelAtCtr)
         self.assertPairsAlmostEqual(tanSkyAtCtr, skyAtCtr)
@@ -170,7 +171,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
             pixelToFocalPlane=self.pixelToFocalPlane,
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
-        bboxD = afwGeom.Box2D(self.bbox)
+        bboxD = lsst.geom.Box2D(self.bbox)
         pixelPoints = bboxD.getCorners()
         pixelPoints.append(bboxD.getCenter())
 
@@ -189,7 +190,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
         # Do not try to make pixelToDistortedPixel -> self.tanWcs into a WCS
-        # because the frame names will be wrong; use a TransformPoint2ToafwGeom.SpherePoint instead
+        # because the frame names will be wrong; use a TransformPoint2Tolsst.geom.SpherePoint instead
         tanWcsTransform = afwGeom.TransformPoint2ToSpherePoint(self.tanWcs.getFrameDict())
         pixelToDistortedSky = pixelToDistortedPixel.then(tanWcsTransform)
 
@@ -199,7 +200,7 @@ class ComputePixelToDistortedPixelTestCase(BaseTestCase):
             focalPlaneToFieldAngle=focalPlaneToFieldAngle,
         )
 
-        bboxD = afwGeom.Box2D(self.bbox)
+        bboxD = lsst.geom.Box2D(self.bbox)
         pixelPoints = bboxD.getCorners()
         pixelPoints.append(bboxD.getCenter())
 
@@ -322,7 +323,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
 
     def testCreateTrivialWcsAsPropertySet(self):
         wcsName = "Z"  # arbitrary
-        xy0 = afwGeom.Point2I(47, -200)  # arbitrary
+        xy0 = lsst.geom.Point2I(47, -200)  # arbitrary
         metadata = createTrivialWcsMetadata(wcsName=wcsName, xy0=xy0)
         desiredNameValueList = (  # names are missing wcsName suffix
             ("CRPIX1", 1.0),
@@ -340,7 +341,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
 
     def testDeleteBasicWcsMetadata(self):
         wcsName = "Q"  # arbitrary
-        metadata = createTrivialWcsMetadata(wcsName=wcsName, xy0=afwGeom.Point2I(0, 0))
+        metadata = createTrivialWcsMetadata(wcsName=wcsName, xy0=lsst.geom.Point2I(0, 0))
         # add the other keywords that will be deleted
         for i in range(2):
             for j in range(2):
@@ -370,12 +371,12 @@ class DetailTestCase(lsst.utils.tests.TestCase):
 
     def testGetImageXY0FromMetadata(self):
         wcsName = "Z"  # arbitrary
-        xy0 = afwGeom.Point2I(47, -200)  # arbitrary with a negative value to check rounding
+        xy0 = lsst.geom.Point2I(47, -200)  # arbitrary with a negative value to check rounding
         metadata = createTrivialWcsMetadata(wcsName=wcsName, xy0=xy0)
 
         # reading the wrong wcsName should be treated as no data available
         xy0WrongWcsName = getImageXY0FromMetadata(metadata=metadata, wcsName="X", strip=True)
-        self.assertEqual(xy0WrongWcsName, afwGeom.Point2I(0, 0))
+        self.assertEqual(xy0WrongWcsName, lsst.geom.Point2I(0, 0))
         self.assertEqual(len(metadata.names(True)), 8)
 
         # deleting one of the required keywords should be treated as no data available
@@ -384,7 +385,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             removedValue = metadata.get(nameToRemove)
             metadata.remove(nameToRemove)
             xy0MissingWcsKey = getImageXY0FromMetadata(metadata=metadata, wcsName=wcsName, strip=True)
-            self.assertEqual(xy0MissingWcsKey, afwGeom.Point2I(0, 0))
+            self.assertEqual(xy0MissingWcsKey, lsst.geom.Point2I(0, 0))
             self.assertEqual(len(metadata.names(True)), 7)
             # restore removed item
             metadata.set(nameToRemove, removedValue)
@@ -395,7 +396,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             nameToChange = "CRPIX%d%s" % (i, wcsName)
             metadata.set(nameToChange, 1.1)
             xy0WrongWcsName = getImageXY0FromMetadata(metadata=metadata, wcsName=wcsName, strip=True)
-            self.assertEqual(xy0WrongWcsName, afwGeom.Point2I(0, 0))
+            self.assertEqual(xy0WrongWcsName, lsst.geom.Point2I(0, 0))
             self.assertEqual(len(metadata.names(True)), 8)
             # restore altered CRPIX value
             metadata.set(nameToChange, 1.0)
@@ -484,10 +485,10 @@ class DetailTestCase(lsst.utils.tests.TestCase):
     def testMakeTanSipMetadata(self):
         """Test makeTanSipMetadata
         """
-        crpix = afwGeom.Point2D(self.metadata.get("CRPIX1") - 1,
-                                self.metadata.get("CRPIX2") - 1)
-        crval = afwGeom.SpherePoint(self.metadata.get("CRVAL1") * degrees,
-                                    self.metadata.get("CRVAL2") * degrees)
+        crpix = lsst.geom.Point2D(self.metadata.get("CRPIX1") - 1,
+                                  self.metadata.get("CRPIX2") - 1)
+        crval = lsst.geom.SpherePoint(self.metadata.get("CRVAL1") * degrees,
+                                      self.metadata.get("CRVAL2") * degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")

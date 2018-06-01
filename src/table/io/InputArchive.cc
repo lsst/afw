@@ -31,7 +31,7 @@ struct IndexSortCompare {
     }
 };
 
-}  // anonymous
+}  // namespace
 
 // ----- InputArchive::Impl ---------------------------------------------------------------------------------
 
@@ -56,8 +56,8 @@ public:
                     throw LSST_EXCEPT(
                             MalformedArchiveError,
                             (boost::format("Inconsistent name in index for ID %d; got '%s', expected '%s'") %
-                             indexIter->get(indexKeys.id) % indexIter->get(indexKeys.name) %
-                             name).str());
+                             indexIter->get(indexKeys.id) % indexIter->get(indexKeys.name) % name)
+                                    .str());
                 }
                 if (module.empty()) {
                     module = indexIter->get(indexKeys.module);
@@ -66,8 +66,8 @@ public:
                             MalformedArchiveError,
                             (boost::format(
                                      "Inconsistent module in index for ID %d; got '%s', expected '%s'") %
-                             indexIter->get(indexKeys.id) % indexIter->get(indexKeys.module) %
-                             module).str());
+                             indexIter->get(indexKeys.id) % indexIter->get(indexKeys.module) % module)
+                                    .str());
                 }
                 int catArchive = indexIter->get(indexKeys.catArchive);
                 if (catArchive == ArchiveIndexSchema::NO_CATALOGS_SAVED) {
@@ -90,8 +90,8 @@ public:
                                       (boost::format("Index and data catalogs do not agree for ID %d; "
                                                      "catalog %d has %d rows, not %d") %
                                        indexIter->get(indexKeys.id) % indexIter->get(indexKeys.catArchive) %
-                                       fullCatalog.size() %
-                                       i2).str());
+                                       fullCatalog.size() % i2)
+                                              .str());
                 }
                 factoryArgs.push_back(BaseCatalog(fullCatalog.getTable(), fullCatalog.begin() + i1,
                                                   fullCatalog.begin() + i2));
@@ -117,7 +117,8 @@ public:
             throw LSST_EXCEPT(pex::exceptions::NotFoundError,
                               (boost::format("Not trying to reload object with id=%d; a previous attempt to "
                                              "load it already failed.") %
-                               id).str());
+                               id)
+                                      .str());
         }
         return r.first->second;
     }
@@ -167,14 +168,14 @@ InputArchive::InputArchive(BaseCatalog const& index, CatalogVector const& catalo
 
 InputArchive::InputArchive(InputArchive const& other) : _impl(other._impl) {}
 // Delegate to copy constructor for backwards compatibility
-InputArchive::InputArchive(InputArchive && other) : InputArchive(other) {}
+InputArchive::InputArchive(InputArchive&& other) : InputArchive(other) {}
 
 InputArchive& InputArchive::operator=(InputArchive const& other) {
     _impl = other._impl;
     return *this;
 }
 // Delegate to copy assignment for backwards compatibility
-InputArchive& InputArchive::operator=(InputArchive && other) { return *this = other; }
+InputArchive& InputArchive::operator=(InputArchive&& other) { return *this = other; }
 
 InputArchive::~InputArchive() = default;
 
@@ -213,7 +214,7 @@ InputArchive InputArchive::readFits(fits::Fits& fitsfile) {
     std::shared_ptr<Impl> impl(new Impl(index, catalogs));
     return InputArchive(impl);
 }
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

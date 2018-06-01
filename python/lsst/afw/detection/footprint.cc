@@ -71,12 +71,12 @@ PYBIND11_PLUGIN(_footprint) {
 
     /* Footprint Constructors */
     py::class_<Footprint, std::shared_ptr<Footprint>, daf::base::Citizen> clsFootprint(mod, "Footprint");
-    clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, geom::Box2I const &>(), "inputSpans"_a,
-                     "region"_a = geom::Box2I());
+    clsFootprint.def(py::init<std::shared_ptr<geom::SpanSet>, lsst::geom::Box2I const &>(), "inputSpans"_a,
+                     "region"_a = lsst::geom::Box2I());
 
     clsFootprint.def(
-            py::init<std::shared_ptr<geom::SpanSet>, afw::table::Schema const &, geom::Box2I const &>(),
-            "inputSpans"_a, "peakSchema"_a, "region"_a = geom::Box2I());
+            py::init<std::shared_ptr<geom::SpanSet>, afw::table::Schema const &, lsst::geom::Box2I const &>(),
+            "inputSpans"_a, "peakSchema"_a, "region"_a = lsst::geom::Box2I());
     clsFootprint.def(py::init<Footprint const &>());
     clsFootprint.def(py::init<>());
 
@@ -94,7 +94,7 @@ PYBIND11_PLUGIN(_footprint) {
     clsFootprint.def("getCentroid", &Footprint::getCentroid);
     clsFootprint.def("getShape", &Footprint::getShape);
     clsFootprint.def("shift", (void (Footprint::*)(int, int)) & Footprint::shift);
-    clsFootprint.def("shift", (void (Footprint::*)(geom::ExtentI const &)) & Footprint::shift);
+    clsFootprint.def("shift", (void (Footprint::*)(lsst::geom::ExtentI const &)) & Footprint::shift);
     clsFootprint.def("getBBox", &Footprint::getBBox);
     clsFootprint.def("getRegion", &Footprint::getRegion);
     clsFootprint.def("setRegion", &Footprint::setRegion);
@@ -102,18 +102,18 @@ PYBIND11_PLUGIN(_footprint) {
     clsFootprint.def("contains", &Footprint::contains);
     clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
                                           std::shared_ptr<geom::SkyWcs>, std::shared_ptr<geom::SkyWcs>,
-                                          geom::Box2I const &, bool) const) &
+                                          lsst::geom::Box2I const &, bool) const) &
                                           Footprint::transform,
                      "source"_a, "target"_a, "region"_a, "doClip"_a = true);
     clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          geom::LinearTransform const &, geom::Box2I const &, bool) const) &
+                                          lsst::geom::LinearTransform const &, lsst::geom::Box2I const &, bool) const) &
                                           Footprint::transform);
     clsFootprint.def("transform", (std::shared_ptr<Footprint> (Footprint::*)(
-                                          geom::AffineTransform const &, geom::Box2I const &, bool) const) &
+                                          lsst::geom::AffineTransform const &, lsst::geom::Box2I const &, bool) const) &
                                           Footprint::transform);
     clsFootprint.def("transform",
                      (std::shared_ptr<Footprint>(Footprint::*)(geom::TransformPoint2ToPoint2 const &,
-                                                               geom::Box2I const &, bool) const) &
+                                                               lsst::geom::Box2I const &, bool) const) &
                              Footprint::transform);
     clsFootprint.def("dilate", (void (Footprint::*)(int, geom::Stencil)) & Footprint::dilate, "r"_a,
                      "stencil"_a = geom::Stencil::CIRCLE);
@@ -142,7 +142,7 @@ PYBIND11_PLUGIN(_footprint) {
                                        py::return_value_policy::reference);
 
     /* Python Operators functions */
-    clsFootprint.def("__contains__", [](Footprint const &self, geom::Point2I const &point) -> bool {
+    clsFootprint.def("__contains__", [](Footprint const &self, lsst::geom::Point2I const &point) -> bool {
         return self.contains(point);
     });
     clsFootprint.def("__eq__",

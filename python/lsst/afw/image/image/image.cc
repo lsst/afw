@@ -67,14 +67,14 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
 
     using Array = typename ImageBase<PixelT>::Array;
 
-    cls.def(py::init<geom::Extent2I const &>(), "dimensions"_a = geom::Extent2I());
+    cls.def(py::init<lsst::geom::Extent2I const &>(), "dimensions"_a = lsst::geom::Extent2I());
     cls.def(py::init<ImageBase<PixelT> const &, bool>(), "src"_a, "deep"_a = false);
-    cls.def(py::init<ImageBase<PixelT> const &, geom::Box2I const &, ImageOrigin, bool>(), "src"_a, "bbox"_a,
+    cls.def(py::init<ImageBase<PixelT> const &, lsst::geom::Box2I const &, ImageOrigin, bool>(), "src"_a, "bbox"_a,
             "origin"_a = PARENT, "deep"_a = false);
-    cls.def(py::init<Array const &, bool, geom::Point2I const &>(), "array"_a, "deep"_a = false,
-            "xy0"_a = geom::Point2I());
+    cls.def(py::init<Array const &, bool, lsst::geom::Point2I const &>(), "array"_a, "deep"_a = false,
+            "xy0"_a = lsst::geom::Point2I());
 
-    cls.def("assign", &ImageBase<PixelT>::assign, "rhs"_a, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+    cls.def("assign", &ImageBase<PixelT>::assign, "rhs"_a, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             py::is_operator());  // py::is_operator is a workaround for code in slicing.py
                                  // that expects NotImplemented to be returned on failure.
     cls.def("getWidth", &ImageBase<PixelT>::getWidth);
@@ -96,7 +96,7 @@ static void declareImageBase(py::module &mod, std::string const &suffix) {
             }
         }
     );
-    cls.def("setXY0", (void (ImageBase<PixelT>::*)(geom::Point2I const)) & ImageBase<PixelT>::setXY0,
+    cls.def("setXY0", (void (ImageBase<PixelT>::*)(lsst::geom::Point2I const)) & ImageBase<PixelT>::setXY0,
             "xy0"_a);
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) & ImageBase<PixelT>::setXY0, "x0"_a,
             "y0"_a);
@@ -109,24 +109,24 @@ static PyImage<PixelT> declareImage(py::module &mod, const std::string &suffix) 
 
     /* Constructors */
     cls.def(py::init<unsigned int, unsigned int, PixelT>(), "width"_a, "height"_a, "intialValue"_a = 0);
-    cls.def(py::init<geom::Extent2I const &, PixelT>(), "dimensions"_a = geom::Extent2I(),
+    cls.def(py::init<lsst::geom::Extent2I const &, PixelT>(), "dimensions"_a = lsst::geom::Extent2I(),
             "initialValue"_a = 0);
-    cls.def(py::init<geom::Box2I const &, PixelT>(), "bbox"_a, "initialValue"_a = 0);
-    cls.def(py::init<Image<PixelT> const &, geom::Box2I const &, ImageOrigin const, const bool>(), "rhs"_a,
+    cls.def(py::init<lsst::geom::Box2I const &, PixelT>(), "bbox"_a, "initialValue"_a = 0);
+    cls.def(py::init<Image<PixelT> const &, lsst::geom::Box2I const &, ImageOrigin const, const bool>(), "rhs"_a,
             "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
-    cls.def(py::init<ndarray::Array<PixelT, 2, 1> const &, bool, geom::Point2I const &>(), "array"_a,
-            "deep"_a = false, "xy0"_a = geom::Point2I());
-    cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
+    cls.def(py::init<ndarray::Array<PixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
+            "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
+    cls.def(py::init<std::string const &, int, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin>(),
-            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<daf::base::PropertySet>,
-                     geom::Box2I const &, ImageOrigin>(),
-            "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+                     lsst::geom::Box2I const &, ImageOrigin>(),
+            "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT);
-    cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>, geom::Box2I const &,
+    cls.def(py::init<fits::Fits &, std::shared_ptr<daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin>(),
-            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT);
+            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT);
 
     /* Operators */
     cls.def("__iadd__", [](Image<PixelT> &self, PixelT const &other) { return self += other; });
@@ -213,12 +213,12 @@ template <typename PixelT>
 static void declareDecoratedImage(py::module &mod, std::string const &suffix) {
     PyDecoratedImage<PixelT> cls(mod, ("DecoratedImage" + suffix).c_str());
 
-    cls.def(py::init<const lsst::afw::geom::Extent2I &>(), "dimensions"_a = lsst::afw::geom::Extent2I());
-    cls.def(py::init<const lsst::afw::geom::Box2I &>(), "bbox"_a);
+    cls.def(py::init<const lsst::geom::Extent2I &>(), "dimensions"_a = lsst::geom::Extent2I());
+    cls.def(py::init<const lsst::geom::Box2I &>(), "bbox"_a);
     cls.def(py::init<std::shared_ptr<Image<PixelT>>>(), "rhs"_a);
     cls.def(py::init<DecoratedImage<PixelT> const &, const bool>(), "rhs"_a, "deep"_a = false);
-    cls.def(py::init<std::string const &, const int, lsst::afw::geom::Box2I const &, ImageOrigin const>(),
-            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "bbox"_a = lsst::afw::geom::Box2I(),
+    cls.def(py::init<std::string const &, const int, lsst::geom::Box2I const &, ImageOrigin const>(),
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT);
 
     cls.def("getMetadata", &DecoratedImage<PixelT>::getMetadata);

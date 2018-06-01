@@ -176,7 +176,7 @@ public:
     virtual ~BaseRecord() { _table->_destroy(*this); }
 
     /// Write the record's content out, one field on each line.
-    friend std::ostream & operator<<(std::ostream & os, BaseRecord const & record);
+    friend std::ostream& operator<<(std::ostream& os, BaseRecord const& record);
 
 protected:
     /// Called by assign() after transferring fields to allow subclass data members to be copied.
@@ -184,7 +184,7 @@ protected:
 
     /// Called by operator<<.  Overrides should call the base class implementation and append
     /// additional fields on new lines, with the syntax "%(name)s: %(value)s".
-    virtual void _stream(std::ostream & os) const;
+    virtual void _stream(std::ostream& os) const;
 
     /// Construct a record with uninitialized data.
     BaseRecord(std::shared_ptr<BaseTable> const& table) : daf::base::Citizen(typeid(this)), _table(table) {
@@ -200,8 +200,8 @@ private:
     std::shared_ptr<BaseTable> _table;  // the associated table
     ndarray::Manager::Ptr _manager;  // shared manager for lifetime of _data (like shared_ptr with no pointer)
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_BaseRecord_h_INCLUDED

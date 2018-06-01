@@ -31,7 +31,7 @@
 #include "astshim/FrameSet.h"
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/Transform.h"
 
 namespace lsst {
@@ -56,7 +56,7 @@ namespace cameraGeom {
  */
 class TransformMap final {
 private:
-     // Functor for boost::transform_iterator: given an entry in a std::map or unordered_map, return the key
+    // Functor for boost::transform_iterator: given an entry in a std::map or unordered_map, return the key
     struct GetKey {
         CameraSys const &operator()(std::pair<const CameraSys, int> const &p) const { return p.first; };
     };
@@ -114,16 +114,16 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
      *         `fromSys` or `toSys` is not supported.
      */
-    geom::Point2D transform(geom::Point2D const &point, CameraSys const &fromSys,
-                            CameraSys const &toSys) const;
+    lsst::geom::Point2D transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
+                                  CameraSys const &toSys) const;
 
     /**
      * Convert a list of points from one coordinate system to another.
      *
      * @overload
      */
-    std::vector<geom::Point2D> transform(std::vector<geom::Point2D> const &pointList,
-                                         CameraSys const &fromSys, CameraSys const &toSys) const;
+    std::vector<lsst::geom::Point2D> transform(std::vector<lsst::geom::Point2D> const &pointList,
+                                               CameraSys const &fromSys, CameraSys const &toSys) const;
 
     CameraSysIterator begin() const { return boost::make_transform_iterator(_frameIds.begin(), GetKey()); }
 
@@ -182,11 +182,10 @@ private:
      * @throws lsst::pex::exceptions::InvalidParameterError Thrown if either
      *         `fromSys` or `toSys` is not supported.
      */
-    std::shared_ptr<ast::Mapping const> _getMapping(CameraSys const &fromSys,
-                                                    CameraSys const &toSys) const;
+    std::shared_ptr<ast::Mapping const> _getMapping(CameraSys const &fromSys, CameraSys const &toSys) const;
 
     /// Allows conversions between LSST and AST data formats
-    static geom::Point2Endpoint _pointConverter;
+    static lsst::afw::geom::Point2Endpoint _pointConverter;
 
     /// Stores information on all relationships between Transforms.
     // May be shared between multiple copies of TransformMap, since TransformMap is immutable

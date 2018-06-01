@@ -29,10 +29,10 @@
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/geom.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelPersistenceHelper.h"
-#include "lsst/afw/geom.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 
@@ -129,8 +129,8 @@ void LinearCombinationKernel::checkKernelList(const KernelList &kernelList) cons
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelList has no elements");
     }
 
-    geom::Extent2I const dim0 = kernelList[0]->getDimensions();
-    geom::Point2I const ctr0 = kernelList[0]->getCtr();
+    lsst::geom::Extent2I const dim0 = kernelList[0]->getDimensions();
+    lsst::geom::Point2I const ctr0 = kernelList[0]->getCtr();
 
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
         if (kernelList[ii]->getDimensions() != dim0) {
@@ -180,10 +180,10 @@ std::shared_ptr<Kernel> LinearCombinationKernel::refactor() const {
             this->_spatialFunctionList.begin();
     KernelList::const_iterator kIter = _kernelList.begin();
     KernelList::const_iterator const kEnd = _kernelList.end();
-    auto & firstSpFunc = *firstSpFuncPtr;
-    auto & firstType = typeid(firstSpFunc);     // noncopyable object of static storage duration
+    auto &firstSpFunc = *firstSpFuncPtr;
+    auto &firstType = typeid(firstSpFunc);  // noncopyable object of static storage duration
     for (; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
-        auto & spFunc = **spFuncPtrIter;
+        auto &spFunc = **spFuncPtrIter;
         if (typeid(spFunc) != firstType) {
             return std::shared_ptr<Kernel>();
         }
@@ -316,7 +316,7 @@ struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelp
     }
 };
 
-}  // anonymous
+}  // namespace
 
 class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -326,7 +326,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const &record = catalogs.front().front();
-        geom::Extent2I dimensions(record.get(keys.dimensions));
+        lsst::geom::Extent2I dimensions(record.get(keys.dimensions));
         std::vector<std::shared_ptr<Kernel>> componentList(keys.components.getSize());
         for (std::size_t i = 0; i < componentList.size(); ++i) {
             componentList[i] = archive.get<Kernel>(record[keys.components[i]]);
@@ -356,7 +356,7 @@ std::string getLinearCombinationKernelPersistenceName() { return "LinearCombinat
 
 LinearCombinationKernel::Factory registration(getLinearCombinationKernelPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string LinearCombinationKernel::getPersistenceName() const {
     return getLinearCombinationKernelPersistenceName();
@@ -378,6 +378,6 @@ void LinearCombinationKernel::write(OutputArchiveHandle &handle) const {
         }
     }
 }
-}
-}
 }  // namespace math
+}  // namespace afw
+}  // namespace lsst

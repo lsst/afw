@@ -98,13 +98,13 @@ BOOST_AUTO_TEST_CASE(getJacobianDimensions) {
 
             auto fromAxes = transform.getFromEndpoint().getNAxes();
             auto toAxes = transform.getToEndpoint().getNAxes();
-            BOOST_TEST(jacobian.rows() == toAxes, "Matrix has " << jacobian.rows() << " rows, expected "
-                                                                << toAxes << msg);
-            BOOST_TEST(jacobian.cols() == fromAxes, "Matrix has " << jacobian.cols() << " columns, expected "
-                                                                  << fromAxes << msg);
+            BOOST_TEST(jacobian.rows() == toAxes,
+                       "Matrix has " << jacobian.rows() << " rows, expected " << toAxes << msg);
+            BOOST_TEST(jacobian.cols() == fromAxes,
+                       "Matrix has " << jacobian.cols() << " columns, expected " << fromAxes << msg);
         }
     }
 }
-}
-}
-} /* namespace lsst::afw::geom */
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

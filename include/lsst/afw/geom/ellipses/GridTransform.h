@@ -34,7 +34,7 @@
 #include "Eigen/Eigenvalues"
 
 #include "lsst/afw/geom/ellipses/Ellipse.h"
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/AffineTransform.h"
 
 namespace lsst {
 namespace afw {
@@ -42,7 +42,7 @@ namespace geom {
 namespace ellipses {
 
 /**
- *  @brief A temporary-only expression object representing a LinearTransform that
+ *  @brief A temporary-only expression object representing an lsst::geom::LinearTransform that
  *         maps the ellipse core to a unit circle.
  */
 class BaseCore::GridTransform {
@@ -53,20 +53,20 @@ public:
     /// Standard constructor.
     explicit GridTransform(BaseCore const& input);
 
-    /// Convert the proxy to a LinearTransform.
-    operator LinearTransform() const;
+    /// Convert the proxy to an lsst::geom::LinearTransform.
+    operator lsst::geom::LinearTransform() const;
 
     /// Return the transform matrix as an Eigen object.
-    LinearTransform::Matrix getMatrix() const;
+    lsst::geom::LinearTransform::Matrix getMatrix() const;
 
     /// Return the derivative of the transform with respect to input core.
     DerivativeMatrix d() const;
 
-    /// Return the determinant of the LinearTransform.
+    /// Return the determinant of the lsst::geom::LinearTransform.
     double getDeterminant() const;
 
-    /// Return the inverse of the LinearTransform;
-    LinearTransform invert() const;
+    /// Return the inverse of the lsst::geom::LinearTransform;
+    lsst::geom::LinearTransform invert() const;
 
 private:
     BaseCore const& _input;  ///< @internal input core to be transformed
@@ -74,7 +74,7 @@ private:
 };
 
 /**
- *  @brief A temporary-only expression object representing an AffineTransform that
+ *  @brief A temporary-only expression object representing an lsst::geom::AffineTransform that
  *         maps the Ellipse to a unit circle at the origin.
  */
 class Ellipse::GridTransform {
@@ -86,19 +86,19 @@ public:
     explicit GridTransform(Ellipse const& input);
 
     /// Return the transform matrix as an Eigen object.
-    AffineTransform::Matrix getMatrix() const;
+    lsst::geom::AffineTransform::Matrix getMatrix() const;
 
     /// Return the derivative of transform with respect to input ellipse.
     DerivativeMatrix d() const;
 
-    /// Return the determinant of the AffineTransform.
+    /// Return the determinant of the lsst::geom::AffineTransform.
     double getDeterminant() const;
 
-    /// Convert the proxy to a AffineTransform.
-    operator AffineTransform() const;
+    /// Convert the proxy to an lsst::geom::AffineTransform.
+    operator lsst::geom::AffineTransform() const;
 
     /// Return the inverse of the AffineTransform.
-    AffineTransform invert() const;
+    lsst::geom::AffineTransform invert() const;
 
 private:
     Ellipse const& _input;  ///< @internal input ellipse to be transformed
@@ -112,9 +112,9 @@ inline BaseCore::GridTransform const BaseCore::getGridTransform() const {
 inline Ellipse::GridTransform const Ellipse::getGridTransform() const {
     return Ellipse::GridTransform(*this);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED

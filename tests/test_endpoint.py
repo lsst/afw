@@ -25,6 +25,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astshim
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.pex.exceptions import InvalidParameterError
 from lsst.afw.geom.testUtils import TransformTestBaseClass
@@ -39,7 +40,7 @@ class EndpointTestCase(TransformTestBaseClass):
         self.assertEqual("SpherePoint", afwGeom.SpherePointEndpoint.getClassPrefix())
         endpoint = afwGeom.SpherePointEndpoint()
         self.checkEndpointBasics(
-            endpoint=endpoint, pointType=afwGeom.SpherePoint, nAxes=2)
+            endpoint=endpoint, pointType=lsst.geom.SpherePoint, nAxes=2)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.SpherePointEndpoint()")
         self.assertEqual("{}".format(endpoint), "SpherePointEndpoint()")
 
@@ -70,7 +71,7 @@ class EndpointTestCase(TransformTestBaseClass):
         self.assertEqual("Point2", afwGeom.Point2Endpoint.getClassPrefix())
         endpoint = afwGeom.Point2Endpoint()
         self.checkEndpointBasics(
-            endpoint=endpoint, pointType=afwGeom.Point2D, nAxes=2)
+            endpoint=endpoint, pointType=lsst.geom.Point2D, nAxes=2)
         self.assertEqual(repr(endpoint), "lsst.afw.geom.Point2Endpoint()")
         self.assertEqual("{}".format(endpoint), "Point2Endpoint()")
 
@@ -106,7 +107,7 @@ class EndpointTestCase(TransformTestBaseClass):
                 afwGeom.GenericEndpoint(nAxes)
 
     def checkEndpointBasics(self, endpoint, pointType, nAxes):
-        isAngle = pointType == afwGeom.SpherePoint  # point components are Angles
+        isAngle = pointType == lsst.geom.SpherePoint  # point components are Angles
 
         baseMsg = "endpoint={}, pointType={}, nAxes={}".format(
             endpoint, pointType, nAxes)
@@ -129,7 +130,7 @@ class EndpointTestCase(TransformTestBaseClass):
                     msg = "{}, endpoint={}, i={}, point={}".format(
                         baseMsg, endpoint, i, point)
                     if isAngle:
-                        desAngle = rawData[axis, i] * afwGeom.radians
+                        desAngle = rawData[axis, i] * lsst.geom.radians
                         self.assertAnglesAlmostEqual(
                             point[axis], desAngle, msg=msg)
                     else:
@@ -146,7 +147,7 @@ class EndpointTestCase(TransformTestBaseClass):
         for axis in range(nAxes):
             msg = "{}, axis={}".format(baseMsg, axis)
             if isAngle:
-                desAngle = pointData[axis] * afwGeom.radians
+                desAngle = pointData[axis] * lsst.geom.radians
                 self.assertAnglesAlmostEqual(point[axis], desAngle, msg=msg)
             else:
                 self.assertAlmostEqual(point[axis], pointData[axis], msg=msg)

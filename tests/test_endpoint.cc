@@ -61,10 +61,10 @@ class GratuitousSpherePointEndpoint : public SpherePointEndpoint {
  */
 class CoolSpherePointEndpoint : public SpherePointEndpoint {
 public:
-    CoolSpherePointEndpoint(string const & coolness) : SpherePointEndpoint(), _coolness(coolness) {}
+    CoolSpherePointEndpoint(string const &coolness) : SpherePointEndpoint(), _coolness(coolness) {}
     string getCoolness() const noexcept { return _coolness; }
 
-    bool operator==(BaseEndpoint const & other) const noexcept override {
+    bool operator==(BaseEndpoint const &other) const noexcept override {
         if (!SpherePointEndpoint::operator==(other)) {
             return false;
         } else {
@@ -77,7 +77,7 @@ public:
 private:
     string const _coolness;
 };
-}
+}  // namespace
 
 /// Test whether Endpoint equality treats subclasses as non-substitutable.
 BOOST_AUTO_TEST_CASE(EndpointEqualsNotPolymorphic) {
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(EndpointEqualsNotPolymorphic) {
     BOOST_TEST(!(subclass == superclass));
 }
 
-string printEquals(bool equal, string const & name1, string const & name2) {
+string printEquals(bool equal, string const &name1, string const &name2) {
     return name1 + (equal ? " == " : " != ") + name2;
 }
 
@@ -103,11 +103,9 @@ BOOST_AUTO_TEST_CASE(EndpointEqualsAlgebraic) {
     using namespace std::string_literals;
 
     vector<std::shared_ptr<SpherePointEndpoint const>> endpoints = {
-        make_shared<CoolSpherePointEndpoint>("Very cool"s),
-        make_shared<CoolSpherePointEndpoint>("Slightly nifty"s),
-        make_shared<CoolSpherePointEndpoint>("Very cool"s),
-        make_shared<SpherePointEndpoint>()
-    };
+            make_shared<CoolSpherePointEndpoint>("Very cool"s),
+            make_shared<CoolSpherePointEndpoint>("Slightly nifty"s),
+            make_shared<CoolSpherePointEndpoint>("Very cool"s), make_shared<SpherePointEndpoint>()};
 
     BOOST_TEST(*(endpoints[0]) != *(endpoints[1]));
     BOOST_TEST(*(endpoints[1]) != *(endpoints[0]));
@@ -132,17 +130,14 @@ BOOST_AUTO_TEST_CASE(EndpointEqualsAlgebraic) {
                 // Iteration covers all permutations, so no need to test, for example,
                 //     point1 == point3 && point2 == point3 => point1 == point2
                 bool const transitive = !equals12 || !equals13 || equals23;
-                BOOST_TEST(
-                    transitive,
-                    "Not transitive: " << printEquals(equals12, "1", "2") << " "
-                                       << printEquals(equals13, "1", "3") << " "
-                                       << printEquals(equals23, "2", "3")
-                );
+                BOOST_TEST(transitive, "Not transitive: " << printEquals(equals12, "1", "2") << " "
+                                                          << printEquals(equals13, "1", "3") << " "
+                                                          << printEquals(equals23, "2", "3"));
             }
         }
     }
 }
 
-}
-}
-} /* namespace lsst::afw::geom */
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

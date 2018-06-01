@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+import lsst.geom
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom as cameraGeom
-import lsst.afw.geom as afwGeom
 
 # Construct a mock LSST-like camera.
 # Normally you would obtain a camera from a data butler using butler.get("camera")
@@ -14,7 +14,7 @@ camera = testUtils.CameraWrapper(isLsstLike=True).camera
 det = camera["R:1,0 S:1,1"]
 
 # Convert a 2-d point from PIXELS to both FOCAL_PLANE and FIELD_ANGLE coordinates.
-pixelPos = afwGeom.Point2D(25, 43.2)
+pixelPos = lsst.geom.Point2D(25, 43.2)
 # position in focal plane in mm
 focalPlanePos = det.transform(pixelPos, cameraGeom.PIXELS, cameraGeom.FOCAL_PLANE)
 # position in as a field angle, in radians

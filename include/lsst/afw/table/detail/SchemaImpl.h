@@ -205,9 +205,9 @@ private:
     OffsetMap _offsets;    // Offset to vector-index map for regular fields.
     FlagMap _flags;        // Offset to vector-index map for flags.
 };
-}
-}
-}
-}  // namespace lsst::afw::table::detail
+}  // namespace detail
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_DETAIL_SchemaImpl_h_INCLUDED

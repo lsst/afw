@@ -64,7 +64,7 @@ public:
 #define DEFINE_ACCESSORS(NAME, UNAME)                                \
     /** Set whether Footprint should be grown in a NAME sort of   */ \
     void grow##UNAME(bool val /**!< Should grow be of type NAME? */  \
-                     ) {                                             \
+    ) {                                                              \
         _##NAME = val ? TRUE_ : FALSE_;                              \
     }                                                                \
     /** Return <isSet, Value> for NAME grows */                      \
@@ -79,7 +79,7 @@ public:
 
     /// Set whether Footprint should be grown isotropically
     void growIsotropic(bool val  ///< Should grow be isotropic?
-                       ) {
+    ) {
         _circular = TRUE_;
         _isotropic = val ? TRUE_ : FALSE_;
     }
@@ -128,8 +128,8 @@ private:
     long _maskVal;
     double _varianceVal;
 };
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif

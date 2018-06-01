@@ -51,25 +51,25 @@ public:
 
     double getValue() const { return _x; }
 
-    virtual lsst::afw::geom::Box2I doComputeBBox(lsst::afw::geom::Point2D const& position,
-                                                 lsst::afw::image::Color const& color) const {
-        return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-1, -1), lsst::afw::geom::Point2I(1, 1));
+    virtual lsst::geom::Box2I doComputeBBox(lsst::geom::Point2D const& position,
+                                            lsst::afw::image::Color const& color) const {
+        return lsst::geom::Box2I(lsst::geom::Point2I(-1, -1), lsst::geom::Point2I(1, 1));
     }
 
     explicit DummyPsf(double x) : _x(x) {}
 
 protected:
-    virtual std::shared_ptr<Image> doComputeKernelImage(lsst::afw::geom::Point2D const& ccdXY,
+    virtual std::shared_ptr<Image> doComputeKernelImage(lsst::geom::Point2D const& ccdXY,
                                                         lsst::afw::image::Color const& color) const {
         return std::shared_ptr<Image>();
     }
 
-    virtual double doComputeApertureFlux(double radius, lsst::afw::geom::Point2D const& ccdXY,
+    virtual double doComputeApertureFlux(double radius, lsst::geom::Point2D const& ccdXY,
                                          lsst::afw::image::Color const& color) const {
         return 0.0;
     }
 
-    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(lsst::afw::geom::Point2D const& ccdXY,
+    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(lsst::geom::Point2D const& ccdXY,
                                                                  lsst::afw::image::Color const& color) const {
         return lsst::afw::geom::ellipses::Quadrupole();
     }
@@ -125,7 +125,7 @@ public:
 
 DummyPsfFactory registration("DummyPsf");
 
-}  // anonymous
+}  // namespace
 
 void DummyPsf::write(OutputArchiveHandle& handle) const {
     static DummyPsfPersistenceHelper const& keys = DummyPsfPersistenceHelper::get();

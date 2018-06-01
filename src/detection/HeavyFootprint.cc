@@ -46,7 +46,7 @@ template <typename T>
 struct FlattenWithSetter {
     FlattenWithSetter(T val) : _val(val) {}
 
-    void operator()(geom::Point2I const& point, T& out, T& in) {
+    void operator()(lsst::geom::Point2I const& point, T& out, T& in) {
         out = in;
         in = _val;
     }
@@ -60,7 +60,7 @@ struct FlattenWithSetter<lsst::afw::image::MaskPixel> {
     using T = lsst::afw::image::MaskPixel;
     FlattenWithSetter(T val) : _mask(~val) {}
 
-    void operator()(geom::Point2I const& point, T& out, T& in) {
+    void operator()(lsst::geom::Point2I const& point, T& out, T& in) {
         out = in;
         in &= _mask;
     }
@@ -68,7 +68,7 @@ struct FlattenWithSetter<lsst::afw::image::MaskPixel> {
 private:
     T _mask;
 };
-}
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
@@ -135,7 +135,7 @@ std::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>> mergeHe
     std::shared_ptr<Footprint> foot = mergeFootprints(h1, h2);
 
     // Find the union bounding-box
-    geom::Box2I bbox(h1.getBBox());
+    lsst::geom::Box2I bbox(h1.getBBox());
     bbox.include(h2.getBBox());
 
     // Create union-bb-sized images and insert the heavies
@@ -258,7 +258,7 @@ struct ComputeSuffix<int> {
     static std::string apply() { return "I"; }
 };
 
-}  // anonymous
+}  // namespace
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::string HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::getPersistenceName() const {
@@ -341,6 +341,6 @@ INSTANTIATE(std::uint16_t);
 INSTANTIATE(double);
 INSTANTIATE(float);
 INSTANTIATE(int);
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

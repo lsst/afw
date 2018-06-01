@@ -51,31 +51,31 @@ static void declareMask(py::module &mod, std::string const &suffix) {
                      typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "width"_a, "height"_a, "initialValue"_a,
             "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<geom::Extent2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
-            "dimensions"_a = geom::Extent2I(), "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<geom::Extent2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
-            "dimensions"_a = geom::Extent2I(), "initialValue"_a,
+    cls.def(py::init<lsst::geom::Extent2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
+            "dimensions"_a = lsst::geom::Extent2I(), "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
+    cls.def(py::init<lsst::geom::Extent2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
+            "dimensions"_a = lsst::geom::Extent2I(), "initialValue"_a,
             "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<geom::Box2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(), "bbox"_a,
+    cls.def(py::init<lsst::geom::Box2I const &, typename Mask<MaskPixelT>::MaskPlaneDict const &>(), "bbox"_a,
             "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
-    cls.def(py::init<geom::Box2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
+    cls.def(py::init<lsst::geom::Box2I const &, MaskPixelT, typename Mask<MaskPixelT>::MaskPlaneDict const &>(),
             "bbox"_a, "initialValue"_a, "planeDefs"_a = typename Mask<MaskPixelT>::MaskPlaneDict());
     cls.def(py::init<const Mask<MaskPixelT> &, const bool>(), "src"_a, "deep"_a = false);
-    cls.def(py::init<const Mask<MaskPixelT> &, const geom::Box2I &, ImageOrigin const, const bool>(), "src"_a,
+    cls.def(py::init<const Mask<MaskPixelT> &, const lsst::geom::Box2I &, ImageOrigin const, const bool>(), "src"_a,
             "bbox"_a, "origin"_a = PARENT, "deep"_a = false);
-    cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, geom::Point2I const &>(), "array"_a,
-            "deep"_a = false, "xy0"_a = geom::Point2I());
+    cls.def(py::init<ndarray::Array<MaskPixelT, 2, 1> const &, bool, lsst::geom::Point2I const &>(), "array"_a,
+            "deep"_a = false, "xy0"_a = lsst::geom::Point2I());
     cls.def(py::init<std::string const &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
-                     geom::Box2I const &, ImageOrigin, bool>(),
-            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+                     lsst::geom::Box2I const &, ImageOrigin, bool>(),
+            "fileName"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
     cls.def(py::init<fits::MemFileManager &, int, std::shared_ptr<lsst::daf::base::PropertySet>,
-                     geom::Box2I const &, ImageOrigin, bool>(),
-            "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(),
+                     lsst::geom::Box2I const &, ImageOrigin, bool>(),
+            "manager"_a, "hdu"_a = fits::DEFAULT_HDU, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(),
             "origin"_a = PARENT, "conformMasks"_a = false);
-    cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, geom::Box2I const &,
+    cls.def(py::init<fits::Fits &, std::shared_ptr<lsst::daf::base::PropertySet>, lsst::geom::Box2I const &,
                      ImageOrigin, bool>(),
-            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = geom::Box2I(), "origin"_a = PARENT,
+            "fitsFile"_a, "metadata"_a = nullptr, "bbox"_a = lsst::geom::Box2I(), "origin"_a = PARENT,
             "conformMasks"_a = false);
 
     /* Operators */

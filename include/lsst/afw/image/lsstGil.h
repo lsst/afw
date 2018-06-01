@@ -87,9 +87,9 @@ template <typename T>
 boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_locator<T>& loc, pair2I off) {
     return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
 }
-}
-}
-}  // namespace lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 namespace boost {
 namespace gil {
@@ -226,8 +226,8 @@ LSST_BOOST_GIL_OP_EQUALS_ALL(gray64f_noscale)
 
 #undef LSST_BOOST_GIL_OP_EQUALS
 #undef LSST_BOOST_GIL_OP_EQUALS_ALL
-}
-}  // namespace boost::gil
+}  // namespace gil
+}  // namespace boost
 
 namespace lsst {
 namespace afw {
@@ -334,7 +334,7 @@ struct CheckBoost64 {
     typedef boost::mpl::if_<std::is_same<long long, std::int64_t>, unsigned long long, struct unknown_u>::type
             type_u;
 };
-}
+}  // namespace
 
 template <>
 struct types_traits<CheckBoost64::type, false> {
@@ -375,9 +375,9 @@ struct const_locator_type {  // should assert that T is a locator
 
 typedef boost::gil::point2<std::ptrdiff_t> difference_type;  // type used to advance locators
 }
-}
-}
-}  // namespace lsst::afw::image::detail
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 namespace boost {
 namespace gil {
@@ -411,7 +411,7 @@ GIL_FORCEINLINE F transform_pixels(const View1& src1, const View2& src2, const V
     }
     return fun;
 }
-}
-}  // namespace boost::gil
+}  // namespace gil
+}  // namespace boost
 #endif
 /// @endcond

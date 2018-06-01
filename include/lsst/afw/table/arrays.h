@@ -96,10 +96,10 @@ public:
      */
     ArrayKey(SubSchema const& s);
 
-    ArrayKey(ArrayKey const &);
-    ArrayKey(ArrayKey &&);
-    ArrayKey & operator=(ArrayKey const &);
-    ArrayKey & operator=(ArrayKey &&);
+    ArrayKey(ArrayKey const&);
+    ArrayKey(ArrayKey&&);
+    ArrayKey& operator=(ArrayKey const&);
+    ArrayKey& operator=(ArrayKey&&);
     ~ArrayKey();
 
     /// Return the number of elements in the array.
@@ -138,8 +138,8 @@ private:
     Key<T> _begin;
     int _size;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_arrays_h_INCLUDED

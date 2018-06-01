@@ -10,7 +10,7 @@ namespace daf {
 namespace base {
 class PropertySet;
 }
-}  // namespace daf::base
+}  // namespace daf
 
 namespace afw {
 
@@ -47,7 +47,7 @@ namespace table {
 class SlotDefinition {
 public:
     /// Construct a SlotDefinition from the name of the slot (e.g. "Centroid" or "PsfFlux")
-    explicit SlotDefinition(std::string const& name) : _name(name) {}
+    explicit SlotDefinition(std::string const &name) : _name(name) {}
 
     /// Return the name of the slot (e.g. "Centroid" or "PsfFlux")
     std::string getName() const { return _name; }
@@ -61,8 +61,8 @@ public:
 
     SlotDefinition(SlotDefinition const &) = default;
     SlotDefinition(SlotDefinition &&) = default;
-    SlotDefinition & operator=(SlotDefinition const &) = default;
-    SlotDefinition & operator=(SlotDefinition &&) = default;
+    SlotDefinition &operator=(SlotDefinition const &) = default;
+    SlotDefinition &operator=(SlotDefinition &&) = default;
     ~SlotDefinition() = default;
 
 protected:
@@ -78,7 +78,7 @@ public:
     typedef Key<double> ErrKey;   ///< Key type used to access the slot uncertainty
 
     /// Construct a SlotDefinition from the name of the slot (e.g. "PsfFlux")
-    explicit FluxSlotDefinition(std::string const& name) : SlotDefinition(name) {}
+    explicit FluxSlotDefinition(std::string const &name) : SlotDefinition(name) {}
 
     /// Return true if the key associated with the measurement is valid.
     bool isValid() const { return _measKey.isValid(); }
@@ -102,12 +102,12 @@ public:
      *                       have affected this slot, and avoid unnecessary work if not).
      *  @param[in] schema    Schema to search for Keys.
      */
-    void setKeys(std::string const& alias, Schema const& schema);
+    void setKeys(std::string const &alias, Schema const &schema);
 
     FluxSlotDefinition(FluxSlotDefinition const &) = default;
     FluxSlotDefinition(FluxSlotDefinition &&) = default;
-    FluxSlotDefinition & operator=(FluxSlotDefinition const &) = default;
-    FluxSlotDefinition & operator=(FluxSlotDefinition &&) = default;
+    FluxSlotDefinition &operator=(FluxSlotDefinition const &) = default;
+    FluxSlotDefinition &operator=(FluxSlotDefinition &&) = default;
     ~FluxSlotDefinition() = default;
 
 private:
@@ -119,13 +119,13 @@ private:
 /// SlotDefinition specialization for centroids
 class CentroidSlotDefinition : public SlotDefinition {
 public:
-    typedef geom::Point2D MeasValue;               ///< Type returned by accessing the slot measurement
+    typedef lsst::geom::Point2D MeasValue;         ///< Type returned by accessing the slot measurement
     typedef Eigen::Matrix<float, 2, 2> ErrValue;   ///< Type returned by accessing the slot uncertainty
     typedef Point2DKey MeasKey;                    ///< Key type used to access the slot measurement
     typedef CovarianceMatrixKey<float, 2> ErrKey;  ///< Key type used to access the slot uncertainty
 
     /// Construct a SlotDefinition from the name of the slot (e.g. "Centroid")
-    explicit CentroidSlotDefinition(std::string const& name) : SlotDefinition(name) {}
+    explicit CentroidSlotDefinition(std::string const &name) : SlotDefinition(name) {}
 
     /// Return true if the key associated with the measurement is valid.
     bool isValid() const { return _measKey.isValid(); }
@@ -149,12 +149,12 @@ public:
      *                       have affected this slot, and avoid unnecessary work if not).
      *  @param[in] schema    Schema to search for Keys.
      */
-    void setKeys(std::string const& alias, Schema const& schema);
+    void setKeys(std::string const &alias, Schema const &schema);
 
     CentroidSlotDefinition(CentroidSlotDefinition const &) = default;
     CentroidSlotDefinition(CentroidSlotDefinition &&) = default;
-    CentroidSlotDefinition & operator=(CentroidSlotDefinition const &) = default;
-    CentroidSlotDefinition & operator=(CentroidSlotDefinition &&) = default;
+    CentroidSlotDefinition &operator=(CentroidSlotDefinition const &) = default;
+    CentroidSlotDefinition &operator=(CentroidSlotDefinition &&) = default;
     ~CentroidSlotDefinition() = default;
 
 private:
@@ -172,7 +172,7 @@ public:
     typedef CovarianceMatrixKey<float, 3> ErrKey;  ///< Key type used to access the slot uncertainty
 
     /// Construct a SlotDefinition from the name of the slot (e.g. "Shape")
-    explicit ShapeSlotDefinition(std::string const& name) : SlotDefinition(name) {}
+    explicit ShapeSlotDefinition(std::string const &name) : SlotDefinition(name) {}
 
     /// Return true if the key associated with the measurement is valid.
     bool isValid() const { return _measKey.isValid(); }
@@ -196,12 +196,12 @@ public:
      *                       have affected this slot, and avoid unnecessary work if not).
      *  @param[in] schema    Schema to search for Keys.
      */
-    void setKeys(std::string const& alias, Schema const& schema);
+    void setKeys(std::string const &alias, Schema const &schema);
 
     ShapeSlotDefinition(ShapeSlotDefinition const &) = default;
     ShapeSlotDefinition(ShapeSlotDefinition &&) = default;
-    ShapeSlotDefinition & operator=(ShapeSlotDefinition const &) = default;
-    ShapeSlotDefinition & operator=(ShapeSlotDefinition &&) = default;
+    ShapeSlotDefinition &operator=(ShapeSlotDefinition const &) = default;
+    ShapeSlotDefinition &operator=(ShapeSlotDefinition &&) = default;
     ~ShapeSlotDefinition() = default;
 
 private:
@@ -226,13 +226,13 @@ struct SlotSuite {
     ShapeSlotDefinition defShape;
 
     /// Handle a callback from an AliasMap informing the table that an alias has changed.
-    void handleAliasChange(std::string const& alias, Schema const& schema);
+    void handleAliasChange(std::string const &alias, Schema const &schema);
 
     /// Initialize the slots.
-    explicit SlotSuite(Schema const& schema);
+    explicit SlotSuite(Schema const &schema);
 };
-}
-}
-}  // lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_TABLE_slots_h_INCLUDED

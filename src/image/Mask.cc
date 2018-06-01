@@ -54,6 +54,7 @@
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
+#include "lsst/geom.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/image/Mask.h"
@@ -68,7 +69,6 @@
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
-namespace afwGeom = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 namespace pexExcept = lsst::pex::exceptions;
 
@@ -143,7 +143,7 @@ private:
 bool operator!=(MapWithHash const& lhs, MapWithHash const& rhs) { return !(lhs == rhs); }
 
 class DictState;  // forward declaration
-}
+}  // namespace
 
 namespace detail {
 /*
@@ -178,7 +178,7 @@ public:
     static std::shared_ptr<MaskDict> incrDefaultVersion();
     static void listMaskDicts();
 };
-}
+}  // namespace detail
 
 namespace {
 /*
@@ -249,7 +249,7 @@ private:
 };
 
 static DictState _state;
-}
+}  // namespace
 
 namespace detail {
 /*
@@ -320,7 +320,7 @@ int detail::MaskDict::getMaskPlane(const std::string& name) const {
 
     return (i == end()) ? -1 : i->second;
 }
-}
+}  // namespace detail
 
 namespace {
 /*
@@ -341,7 +341,7 @@ void setInitMaskBits(std::shared_ptr<detail::MaskDict> dict) {
     dict->add("SUSPECT", ++i);
     dict->add("NO_DATA", ++i);
 }
-}
+}  // namespace
 
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
@@ -352,7 +352,7 @@ void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPlaneDict const& planeDefs)
-        : ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)) {
+        : ImageBase<MaskPixelT>(lsst::geom::ExtentI(width, height)) {
     _initializePlanes(planeDefs);
     *this = 0x0;
 }
@@ -360,20 +360,20 @@ Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPlaneDict co
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(unsigned int width, unsigned int height, MaskPixelT initialValue,
                        MaskPlaneDict const& planeDefs)
-        : ImageBase<MaskPixelT>(afwGeom::ExtentI(width, height)) {
+        : ImageBase<MaskPixelT>(lsst::geom::ExtentI(width, height)) {
     _initializePlanes(planeDefs);
     *this = initialValue;
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(afwGeom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs)
+Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(dimensions) {
     _initializePlanes(planeDefs);
     *this = 0x0;
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(afwGeom::Extent2I const& dimensions, MaskPixelT initialValue,
+Mask<MaskPixelT>::Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                        MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(dimensions) {
     _initializePlanes(planeDefs);
@@ -381,21 +381,22 @@ Mask<MaskPixelT>::Mask(afwGeom::Extent2I const& dimensions, MaskPixelT initialVa
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(afwGeom::Box2I const& bbox, MaskPlaneDict const& planeDefs)
+Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(bbox) {
     _initializePlanes(planeDefs);
     *this = 0x0;
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(afwGeom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs)
+Mask<MaskPixelT>::Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue, MaskPlaneDict const& planeDefs)
         : ImageBase<MaskPixelT>(bbox) {
     _initializePlanes(planeDefs);
     *this = initialValue;
 }
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(Mask const& rhs, afwGeom::Box2I const& bbox, ImageOrigin const origin, bool const deep)
+Mask<MaskPixelT>::Mask(Mask const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin,
+                       bool const deep)
         : ImageBase<MaskPixelT>(rhs, bbox, origin, deep), _maskDict(rhs._maskDict) {}
 
 template <typename MaskPixelT>
@@ -409,7 +410,8 @@ template <typename MaskPixelT>
 Mask<MaskPixelT>::~Mask() = default;
 
 template <typename MaskPixelT>
-Mask<MaskPixelT>::Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep, geom::Point2I const& xy0)
+Mask<MaskPixelT>::Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep,
+                       lsst::geom::Point2I const& xy0)
         : image::ImageBase<MaskPixelT>(array, deep, xy0), _maskDict(detail::MaskDict::makeMaskDict()) {}
 
 template <typename PixelT>
@@ -449,7 +451,7 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(MaskPixelT const rhs) {
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf::base::PropertySet> metadata,
-                       afw::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks)
+                       lsst::geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
@@ -458,7 +460,7 @@ Mask<MaskPixelT>::Mask(std::string const& fileName, int hdu, std::shared_ptr<daf
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
-                       std::shared_ptr<daf::base::PropertySet> metadata, afw::geom::Box2I const& bbox,
+                       std::shared_ptr<daf::base::PropertySet> metadata, lsst::geom::Box2I const& bbox,
                        ImageOrigin origin, bool conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -468,7 +470,7 @@ Mask<MaskPixelT>::Mask(fits::MemFileManager& manager, int hdu,
 
 template <typename MaskPixelT>
 Mask<MaskPixelT>::Mask(fits::Fits& fitsfile, std::shared_ptr<daf::base::PropertySet> metadata,
-                       afw::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
+                       lsst::geom::Box2I const& bbox, ImageOrigin const origin, bool const conformMasks)
         : ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) {
     // These are the permitted input file types
     typedef boost::mpl::vector<unsigned char, unsigned short, short, std::int32_t> fits_mask_types;
@@ -518,35 +520,26 @@ void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile,
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::writeFits(
-    std::string const& filename,
-    fits::ImageWriteOptions const& options,
-    std::string const& mode,
-    std::shared_ptr<daf::base::PropertySet const> header
-) const {
+void Mask<MaskPixelT>::writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                                 std::string const& mode,
+                                 std::shared_ptr<daf::base::PropertySet const> header) const {
     fits::Fits fitsfile(filename, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::writeFits(
-    fits::MemFileManager& manager,
-    fits::ImageWriteOptions const& options,
-    std::string const& mode,
-    std::shared_ptr<daf::base::PropertySet const> header
-) const {
+void Mask<MaskPixelT>::writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                                 std::string const& mode,
+                                 std::shared_ptr<daf::base::PropertySet const> header) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, options, header);
 }
 
 template <typename MaskPixelT>
-void Mask<MaskPixelT>::writeFits(
-    fits::Fits& fitsfile,
-    fits::ImageWriteOptions const& options,
-    std::shared_ptr<daf::base::PropertySet const> header
-) const {
-    std::shared_ptr<daf::base::PropertySet> useHeader = header ? header->deepCopy() :
-        std::make_shared<dafBase::PropertySet>();
+void Mask<MaskPixelT>::writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                                 std::shared_ptr<daf::base::PropertySet const> header) const {
+    std::shared_ptr<daf::base::PropertySet> useHeader =
+            header ? header->deepCopy() : std::make_shared<dafBase::PropertySet>();
     addMaskPlanesToMetadata(useHeader);
     fitsfile.writeImage(*this, options, useHeader);
 }
@@ -559,11 +552,11 @@ struct addPlaneFunctor {
 
     void operator()(MapWithHash* dict) {
         detail::MaskPlaneDict::const_iterator const it =  // is id already used in this Mask?
-                std::find_if(
-                        dict->begin(), dict->end(),
-                        std::bind(std::equal_to<int>(), std::bind(&detail::MaskPlaneDict::value_type::second,
-                                                                  std::placeholders::_1),
-                                  _id));
+                std::find_if(dict->begin(), dict->end(),
+                             std::bind(std::equal_to<int>(),
+                                       std::bind(&detail::MaskPlaneDict::value_type::second,
+                                                 std::placeholders::_1),
+                                       _id));
         if (it != dict->end()) {  // mask plane is already in use
             return;
         }
@@ -576,7 +569,7 @@ struct addPlaneFunctor {
     std::string const& _name;
     int _id;
 };
-}
+}  // namespace
 
 template <typename MaskPixelT>
 std::string Mask<MaskPixelT>::interpret(MaskPixelT value) {
@@ -645,7 +638,7 @@ void Mask<MaskPixelT>::removeMaskPlane(const std::string& name) {
 template <typename MaskPixelT>
 void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, bool const removeFromDefault
 
-                                               ) {
+) {
     clearMaskPlane(getMaskPlane(name));  // clear this bits in this Mask
 
     if (_maskDict == detail::MaskDict::makeMaskDict() && removeFromDefault) {  // we are the default
@@ -991,6 +984,6 @@ std::shared_ptr<detail::MaskDict> Mask<MaskPixelT>::_maskPlaneDict() {
 // Explicit instantiations
 //
 template class Mask<MaskPixel>;
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

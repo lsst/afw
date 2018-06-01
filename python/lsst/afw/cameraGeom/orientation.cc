@@ -42,9 +42,9 @@ PYBIND11_PLUGIN(_orientation) {
     /* Member types and enums */
 
     /* Constructors */
-    cls.def(py::init<geom::Point2D, geom::Point2D, geom::Angle, geom::Angle, geom::Angle>(),
-            "fpPosition"_a = geom::Point2D(0, 0), "refPoint"_a = geom::Point2D(-0.5, -0.5),
-            "yaw"_a = geom::Angle(0), "pitch"_a = geom::Angle(0), "roll"_a = geom::Angle(0));
+    cls.def(py::init<lsst::geom::Point2D, lsst::geom::Point2D, lsst::geom::Angle, lsst::geom::Angle, lsst::geom::Angle>(),
+            "fpPosition"_a = lsst::geom::Point2D(0, 0), "refPoint"_a = lsst::geom::Point2D(-0.5, -0.5),
+            "yaw"_a = lsst::geom::Angle(0), "pitch"_a = lsst::geom::Angle(0), "roll"_a = lsst::geom::Angle(0));
 
     /* Operators */
 

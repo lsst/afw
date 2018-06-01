@@ -47,7 +47,7 @@ struct CandidatePtrMore : public std::binary_function<std::shared_ptr<SpatialCel
         return a->getCandidateRating() > b->getCandidateRating();
     }
 };
-}
+}  // namespace
 
 int SpatialCellCandidate::_CandidateId = 0;
 
@@ -70,7 +70,7 @@ int SpatialCellImageCandidate::_width = 0;
 
 int SpatialCellImageCandidate::_height = 0;
 
-SpatialCell::SpatialCell(std::string const &label, geom::Box2I const &bbox,
+SpatialCell::SpatialCell(std::string const &label, lsst::geom::Box2I const &bbox,
                          CandidateList const &candidateList)
         : _label(label), _bbox(bbox), _candidateList(candidateList), _ignoreBad(true) {
     LOGL_DEBUG("afw.math.SpatialCell", "Cell %s : created with %d candidates", this->_label.c_str(),
@@ -300,7 +300,7 @@ std::shared_ptr<SpatialCellCandidate> SpatialCellCandidateIterator::operator*() 
     return *_iterator;
 }
 
-SpatialCellSet::SpatialCellSet(geom::Box2I const &region, int xSize, int ySize)
+SpatialCellSet::SpatialCellSet(lsst::geom::Box2I const &region, int xSize, int ySize)
         : _region(region), _cellList(CellList()) {
     if (ySize == 0) {
         ySize = xSize;
@@ -332,7 +332,7 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const &region, int xSize, int ySize)
         for (int x = 0; x < nx; ++x) {
             // nx may not be a factor of width
             int const x1 = (x == nx - 1) ? region.getMaxX() : x0 + xSize - 1;
-            geom::Box2I bbox(geom::Point2I(x0, y0), geom::Point2I(x1, y1));
+            lsst::geom::Box2I bbox(lsst::geom::Point2I(x0, y0), lsst::geom::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(std::shared_ptr<SpatialCell>(new SpatialCell(label, bbox)));
@@ -348,14 +348,15 @@ struct CellContains : public std::unary_function<std::shared_ptr<SpatialCell>, b
     CellContains(std::shared_ptr<SpatialCellCandidate> candidate) : _candidate(candidate) {}
 
     bool operator()(std::shared_ptr<SpatialCell> cell) {
-        return cell->getBBox().contains(geom::Point2I(image::positionToIndex(_candidate->getXCenter()),
-                                                      image::positionToIndex(_candidate->getYCenter())));
+        return cell->getBBox().contains(
+                lsst::geom::Point2I(image::positionToIndex(_candidate->getXCenter()),
+                                    image::positionToIndex(_candidate->getYCenter())));
     }
 
 private:
     std::shared_ptr<SpatialCellCandidate> _candidate;
 };
-}
+}  // namespace
 
 void SpatialCellSet::insertCandidate(std::shared_ptr<SpatialCellCandidate> candidate) {
     CellList::iterator pos = std::find_if(_cellList.begin(), _cellList.end(), CellContains(candidate));
@@ -434,6 +435,6 @@ void SpatialCellSet::setIgnoreBad(bool ignoreBad) {
         (*cell)->setIgnoreBad(ignoreBad);
     }
 }
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

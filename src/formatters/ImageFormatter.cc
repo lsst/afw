@@ -63,7 +63,6 @@ using lsst::daf::persistence::FormatterStorage;
 using lsst::afw::image::Image;
 
 namespace afwImg = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -150,8 +149,8 @@ void ImageFormatter<ImagePixelT>::write(Persistable const* persistable,
             try {
                 options = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("image"));
             } catch (std::exception const& exc) {
-                LOGLS_WARN(_log, "Unable to construct image write options (" << exc.what() <<
-                           "); writing with default options");
+                LOGLS_WARN(_log, "Unable to construct image write options ("
+                                         << exc.what() << "); writing with default options");
             }
         }
 
@@ -189,13 +188,13 @@ Persistable* ImageFormatter<ImagePixelT>::read(std::shared_ptr<FormatterStorage>
     auto fits = std::dynamic_pointer_cast<FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "ImageFormatter read FitsStorage");
-        geom::Box2I box;
+        lsst::geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = geom::Box2I(geom::Point2I(llcX, llcY), geom::Extent2I(width, height));
+            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height));
         }
         afwImg::ImageOrigin origin = afwImg::PARENT;
         if (additionalData->exists("imageOrigin")) {
@@ -248,7 +247,7 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(Archive& ar, int const, Pers
     }
     ar& make_nvp("width", width) & make_nvp("height", height);
     if (Archive::is_loading::value) {
-        std::unique_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(geom::Extent2I(width, height)));
+        std::unique_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(lsst::geom::Extent2I(width, height)));
         typename Image<ImagePixelT>::Array array = ni->getArray();
         ar& make_nvp("array", boost::serialization::make_array(array.getData(), array.getNumElements()));
         ip->swap(*ni);

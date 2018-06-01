@@ -23,10 +23,10 @@
 /*
  * An include file to include the header files for lsst::afw::image
  */
-#ifndef LSST_IMAGE_H
-#define LSST_IMAGE_H
+#ifndef LSST_AFW_IMAGE_H
+#define LSST_AFW_IMAGE_H
 
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/ApCorrMap.h"
@@ -42,4 +42,4 @@
                             * should really be including image.h) we include it here.
                             */
 
-#endif  // LSST_IMAGE_H
+#endif  // LSST_AFW_IMAGE_H

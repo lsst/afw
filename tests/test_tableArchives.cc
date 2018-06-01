@@ -17,6 +17,7 @@
 #include "Eigen/Core"
 
 #include "lsst/utils/Utils.h"
+#include "lsst/geom.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -242,10 +243,8 @@ public:
     };
 };
 
-
 class ExampleD : public PersistableFacade<ExampleD>, public Comparable {
 public:
-
     static std::shared_ptr<ExampleD> get() {
         static std::shared_ptr<ExampleD> instance(new ExampleD());
         return instance;
@@ -253,24 +252,20 @@ public:
 
     ExampleD(ExampleD const &) = delete;
     ExampleD(ExampleD &&) = delete;
-    ExampleD & operator=(ExampleD const &) = delete;
-    ExampleD & operator=(ExampleD &&) = delete;
+    ExampleD &operator=(ExampleD const &) = delete;
+    ExampleD &operator=(ExampleD &&) = delete;
 
     virtual bool operator==(Comparable const &other) const {
         return static_cast<Comparable const *>(this) == &other;
     }
 
-    virtual void stream(std::ostream &os) const {
-        os << "ExampleD()";
-    }
+    virtual void stream(std::ostream &os) const { os << "ExampleD()"; }
 
     virtual bool isPersistable() const { return true; }
 
     virtual std::string getPersistenceName() const { return "ExampleD"; }
 
-    virtual void write(OutputArchiveHandle &handle) const {
-        handle.saveEmpty();
-    }
+    virtual void write(OutputArchiveHandle &handle) const { handle.saveEmpty(); }
 
     class Factory : public PersistableFactory {
     public:
@@ -287,12 +282,10 @@ private:
     ExampleD() {}
 };
 
-
 static ExampleA::Factory const registrationA("ExampleA");
 static ExampleB::Factory const registrationB("ExampleB");
 static ExampleC::Factory const registrationC("ExampleC");
 static ExampleD::Factory const registrationD("ExampleD");
-
 
 template <int M, int N>
 std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare(
@@ -357,11 +350,11 @@ std::vector<ndarray::Vector<std::shared_ptr<Comparable>, M>> roundtripAndCompare
     return outputs;
 }
 
-}  // anonymous
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 BOOST_AUTO_TEST_CASE(Simple) {
     using namespace lsst::afw::table::io;
@@ -513,7 +506,7 @@ void compareFunctions(lsst::afw::math::Function<T> const &a, lsst::afw::math::Fu
     }
 }
 
-}  // anonymous
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(GaussianFunction2) {
     namespace afwMath = lsst::afw::math;
@@ -613,14 +606,13 @@ BOOST_AUTO_TEST_CASE(AnalyticKernel2) {
 BOOST_AUTO_TEST_CASE(LinearCombinationKernel1) {
     namespace afwMath = lsst::afw::math;
     namespace afwImage = lsst::afw::image;
-    namespace afwGeom = lsst::afw::geom;
     int const nComponents = 4;
     int const width = 5;
     int const height = 7;
     std::vector<std::shared_ptr<afwMath::Kernel>> kernelList(nComponents);
     std::vector<std::shared_ptr<afwMath::Kernel::SpatialFunction>> spatialFunctionList(nComponents);
     for (int i = 0; i < nComponents; ++i) {
-        kernelList[i].reset(new afwMath::DeltaFunctionKernel(width, height, afwGeom::Point2I(i, i)));
+        kernelList[i].reset(new afwMath::DeltaFunctionKernel(width, height, lsst::geom::Point2I(i, i)));
         spatialFunctionList[i].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(10)));
     }
     std::shared_ptr<afwMath::LinearCombinationKernel> p1(
@@ -648,14 +640,13 @@ BOOST_AUTO_TEST_CASE(LinearCombinationKernel1) {
 BOOST_AUTO_TEST_CASE(LinearCombinationKernel2) {
     namespace afwMath = lsst::afw::math;
     namespace afwImage = lsst::afw::image;
-    namespace afwGeom = lsst::afw::geom;
     int const nComponents = 4;
     int const width = 5;
     int const height = 7;
     std::vector<std::shared_ptr<afwMath::Kernel>> kernelList(nComponents);
     std::vector<double> kernelParams = makeRandomVector(nComponents);
     for (int i = 0; i < nComponents; ++i) {
-        kernelList[i].reset(new afwMath::DeltaFunctionKernel(width, height, afwGeom::Point2I(i, i)));
+        kernelList[i].reset(new afwMath::DeltaFunctionKernel(width, height, lsst::geom::Point2I(i, i)));
         kernelParams[i] *= kernelParams[i];  // want positive amplitudes
     }
     std::shared_ptr<afwMath::LinearCombinationKernel> p1(
@@ -706,12 +697,12 @@ BOOST_AUTO_TEST_CASE(ArchiveMetadata) {
     using namespace lsst::afw::detection;
     using namespace lsst::afw::geom;
     OutputArchive outArchive;
-    outArchive.put(
-            std::make_shared<Footprint>(std::make_shared<SpanSet>(Box2I(Point2I(2, 3), Point2I(5, 4)))));
-    outArchive.put(
-            std::make_shared<Footprint>(std::make_shared<SpanSet>(Box2I(Point2I(1, 2), Point2I(7, 6)))));
-    outArchive.put(std::make_shared<HeavyFootprint<float>>(
-            Footprint(std::make_shared<SpanSet>(Box2I(Point2I(1, 2), Point2I(7, 6))))));
+    outArchive.put(std::make_shared<Footprint>(std::make_shared<SpanSet>(
+            lsst::geom::Box2I(lsst::geom::Point2I(2, 3), lsst::geom::Point2I(5, 4)))));
+    outArchive.put(std::make_shared<Footprint>(std::make_shared<SpanSet>(
+            lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Point2I(7, 6)))));
+    outArchive.put(std::make_shared<HeavyFootprint<float>>(Footprint(std::make_shared<SpanSet>(
+            lsst::geom::Box2I(lsst::geom::Point2I(1, 2), lsst::geom::Point2I(7, 6))))));
     MemFileManager manager;
     Fits outFits(manager, "w", Fits::AUTO_CHECK);
     outArchive.writeFits(outFits);

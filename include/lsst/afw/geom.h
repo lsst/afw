@@ -25,11 +25,9 @@
  *
  * Does not include lsst/afw/geom/ellipses.h.
  */
-#ifndef LSST_GEOM_H
-#define LSST_GEOM_H
+#ifndef LSST_AFW_GEOM_H
+#define LSST_AFW_GEOM_H
 
-#include "lsst/afw/geom/CoordinateBase.h"
-#include "lsst/afw/geom/CoordinateExpr.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
@@ -45,4 +43,4 @@
 #include "lsst/afw/geom/transformFactory.h"
 #include "lsst/afw/geom/SkyWcs.h"
 
-#endif  // LSST_GEOM_H
+#endif  // LSST_AFW_GEOM_H

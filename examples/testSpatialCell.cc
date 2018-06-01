@@ -25,7 +25,7 @@
 #include "testSpatialCell.h"
 
 ExampleCandidate::ExampleCandidate(float const xCenter, float const yCenter,
-                                   std::shared_ptr<MaskedImageT const> parent, lsst::afw::geom::Box2I bbox)
+                                   std::shared_ptr<MaskedImageT const> parent, lsst::geom::Box2I bbox)
         : lsst::afw::math::SpatialCellImageCandidate(xCenter, yCenter), _parent(parent), _bbox(bbox) {}
 
 double ExampleCandidate::getCandidateRating() const {

@@ -24,6 +24,7 @@ import os
 import unittest
 
 import lsst.utils
+import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.afw.fits import readMetadata
 import lsst.utils.tests
@@ -45,8 +46,8 @@ class WCSTestRaWrap(unittest.TestCase):
         crval = wcs1.getSkyOrigin()
         cd = wcs1.getCdMatrix()
         print(cd)
-        crval_p = afwGeom.Point2D(crval.getLongitude().asDegrees(),
-                                  crval.getLatitude().asDegrees())
+        crval_p = lsst.geom.Point2D(crval.getLongitude().asDegrees(),
+                                    crval.getLatitude().asDegrees())
         origin = wcs1.getPixelOrigin()
         print(crval_p)
         print(origin)
@@ -56,7 +57,7 @@ class WCSTestRaWrap(unittest.TestCase):
             print(wcs)
             print('x, y, RA, Dec, pixscale("/pix), pixscale2')
             for x, y in [(0, 0), (300, 0), (350, 0), (360, 0), (370, 0), (380, 0), (400, 0)]:
-                pixPos = afwGeom.PointD(x, y)
+                pixPos = lsst.geom.PointD(x, y)
                 radec = wcs.pixelToSky(pixPos)
                 ra = radec.getLongitude().asDegrees()
                 dec = radec.getLatitude().asDegrees()

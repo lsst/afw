@@ -48,7 +48,7 @@ FixedKernel::FixedKernel(image::Image<Pixel> const& image)
     this->_sum = imSum;
 }
 
-FixedKernel::FixedKernel(Kernel const& kernel, geom::Point2D const& pos)
+FixedKernel::FixedKernel(Kernel const& kernel, lsst::geom::Point2D const& pos)
         : Kernel(kernel.getWidth(), kernel.getHeight(), 0), _image(kernel.getDimensions()), _sum(0) {
     _sum = kernel.computeImage(_image, false, pos[0], pos[1]);
 }
@@ -67,18 +67,18 @@ std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
     }
     if ((width - getWidth()) % 2 || (height - getHeight()) % 2) {
         std::ostringstream os;
-        os << "Cannot resize FixedKernel from (" << getWidth() << ", " << getHeight() << ") to ("
-           << width << ", " << height << "), because at least one dimension would change by an odd value.";
+        os << "Cannot resize FixedKernel from (" << getWidth() << ", " << getHeight() << ") to (" << width
+           << ", " << height << "), because at least one dimension would change by an odd value.";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
-    lsst::afw::geom::Box2I bboxNew(lsst::afw::geom::Point2I((1 - width) / 2, (1 - height) / 2),
-                                   lsst::afw::geom::Extent2I(width, height));
+    lsst::geom::Box2I bboxNew(lsst::geom::Point2I((1 - width) / 2, (1 - height) / 2),
+                              lsst::geom::Extent2I(width, height));
     std::shared_ptr<image::Image<Pixel>> imNew = std::make_shared<image::Image<Pixel>>(bboxNew);
 
     // getBBox() instantiates a new BBox from member data _width, _height, _ctrX, _ctrY
     // so modifying it is OK
-    lsst::afw::geom::Box2I bboxIntersect = getBBox();
+    lsst::geom::Box2I bboxIntersect = getBBox();
     bboxIntersect.clip(bboxNew);
 
     // Kernel (this) and member image (this->_image) do not always have same XY0.
@@ -86,9 +86,8 @@ std::shared_ptr<Kernel> FixedKernel::resized(int width, int height) const {
     // but BBox of member image is ignored by the kernel.
     int offsetX = _image.getX0() - getBBox().getMinX();
     int offsetY = _image.getY0() - getBBox().getMinY();
-    lsst::afw::geom::Box2I bboxIntersectShifted = lsst::afw::geom::Box2I(
-            lsst::afw::geom::Point2I(bboxIntersect.getMinX() + offsetX,
-                                     bboxIntersect.getMinY() + offsetY),
+    lsst::geom::Box2I bboxIntersectShifted = lsst::geom::Box2I(
+            lsst::geom::Point2I(bboxIntersect.getMinX() + offsetX, bboxIntersect.getMinY() + offsetY),
             bboxIntersect.getDimensions());
     image::Image<Pixel> imIntersect = image::Image<Pixel>(_image, bboxIntersectShifted);
 
@@ -133,18 +132,18 @@ std::string FixedKernel::toString(std::string const& prefix) const {
 namespace {
 
 struct FixedKernelPersistenceHelper : public Kernel::PersistenceHelper {
-    table::Key<table::Array<Kernel::Pixel> > image;
+    table::Key<table::Array<Kernel::Pixel>> image;
 
-    explicit FixedKernelPersistenceHelper(geom::Extent2I const& dimensions)
+    explicit FixedKernelPersistenceHelper(lsst::geom::Extent2I const& dimensions)
             : Kernel::PersistenceHelper(0),
-              image(schema.addField<table::Array<Kernel::Pixel> >("image", "pixel values (row-major)",
-                                                                  dimensions.getX() * dimensions.getY())) {}
+              image(schema.addField<table::Array<Kernel::Pixel>>("image", "pixel values (row-major)",
+                                                                 dimensions.getX() * dimensions.getY())) {}
 
     explicit FixedKernelPersistenceHelper(table::Schema const& schema_)
             : Kernel::PersistenceHelper(schema_), image(schema["image"]) {}
 };
 
-}  // anonymous
+}  // namespace
 
 class FixedKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -154,7 +153,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         FixedKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const& record = catalogs.front().front();
-        image::Image<Pixel> image(geom::Extent2I(record.get(keys.dimensions)));
+        image::Image<Pixel> image(lsst::geom::Extent2I(record.get(keys.dimensions)));
         ndarray::flatten<1>(ndarray::static_dimension_cast<2>(image.getArray())) = record[keys.image];
         std::shared_ptr<FixedKernel> result = std::make_shared<FixedKernel>(image);
         result->setCtr(record.get(keys.center));
@@ -170,7 +169,7 @@ std::string getFixedKernelPersistenceName() { return "FixedKernel"; }
 
 FixedKernel::Factory registration(getFixedKernelPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string FixedKernel::getPersistenceName() const { return getFixedKernelPersistenceName(); }
 
@@ -179,6 +178,6 @@ void FixedKernel::write(OutputArchiveHandle& handle) const {
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     (*record)[keys.image] = ndarray::flatten<1>(ndarray::copy(_image.getArray()));
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

@@ -35,10 +35,12 @@ namespace ellipses {
 BaseCore::GridTransform::GridTransform(BaseCore const& input)
         : _input(input), _eig(Quadrupole(input).getMatrix()) {}
 
-LinearTransform::Matrix BaseCore::GridTransform::getMatrix() const { return _eig.operatorInverseSqrt(); }
+lsst::geom::LinearTransform::Matrix BaseCore::GridTransform::getMatrix() const {
+    return _eig.operatorInverseSqrt();
+}
 
-BaseCore::GridTransform::operator LinearTransform() const {
-    return LinearTransform(_eig.operatorInverseSqrt());
+BaseCore::GridTransform::operator lsst::geom::LinearTransform() const {
+    return lsst::geom::LinearTransform(_eig.operatorInverseSqrt());
 }
 
 BaseCore::GridTransform::DerivativeMatrix BaseCore::GridTransform::d() const {
@@ -74,26 +76,31 @@ BaseCore::GridTransform::DerivativeMatrix BaseCore::GridTransform::d() const {
     Eigen::Matrix2d dtInv_dr = -tInv * dt_dr * tInv;
 
     GridTransform::DerivativeMatrix mid;
-    mid(LinearTransform::XX, C::E1) = dtInv_dg1(0, 0);
-    mid(LinearTransform::XY, C::E1) = mid(LinearTransform::YX, C::E1) = dtInv_dg1(0, 1);
-    mid(LinearTransform::YY, C::E1) = dtInv_dg1(1, 1);
-    mid(LinearTransform::XX, C::E2) = dtInv_dg2(0, 0);
-    mid(LinearTransform::XY, C::E2) = mid(LinearTransform::YX, C::E2) = dtInv_dg2(0, 1);
-    mid(LinearTransform::YY, C::E2) = dtInv_dg2(1, 1);
-    mid(LinearTransform::XX, C::RADIUS) = dtInv_dr(0, 0);
-    mid(LinearTransform::XY, C::RADIUS) = mid(LinearTransform::YX, C::RADIUS) = dtInv_dr(0, 1);
-    mid(LinearTransform::YY, C::RADIUS) = dtInv_dr(1, 1);
+    mid(lsst::geom::LinearTransform::XX, C::E1) = dtInv_dg1(0, 0);
+    mid(lsst::geom::LinearTransform::XY, C::E1) = mid(lsst::geom::LinearTransform::YX, C::E1) =
+            dtInv_dg1(0, 1);
+    mid(lsst::geom::LinearTransform::YY, C::E1) = dtInv_dg1(1, 1);
+    mid(lsst::geom::LinearTransform::XX, C::E2) = dtInv_dg2(0, 0);
+    mid(lsst::geom::LinearTransform::XY, C::E2) = mid(lsst::geom::LinearTransform::YX, C::E2) =
+            dtInv_dg2(0, 1);
+    mid(lsst::geom::LinearTransform::YY, C::E2) = dtInv_dg2(1, 1);
+    mid(lsst::geom::LinearTransform::XX, C::RADIUS) = dtInv_dr(0, 0);
+    mid(lsst::geom::LinearTransform::XY, C::RADIUS) = mid(lsst::geom::LinearTransform::YX, C::RADIUS) =
+            dtInv_dr(0, 1);
+    mid(lsst::geom::LinearTransform::YY, C::RADIUS) = dtInv_dr(1, 1);
     return mid * rhs;
 }
 
 double BaseCore::GridTransform::getDeterminant() const { return sqrt(1.0 / _eig.eigenvalues().prod()); }
 
-LinearTransform BaseCore::GridTransform::invert() const { return LinearTransform(_eig.operatorSqrt()); }
+lsst::geom::LinearTransform BaseCore::GridTransform::invert() const {
+    return lsst::geom::LinearTransform(_eig.operatorSqrt());
+}
 
 Ellipse::GridTransform::GridTransform(Ellipse const& input) : _input(input), _coreGt(input.getCore()) {}
 
-AffineTransform::Matrix Ellipse::GridTransform::getMatrix() const {
-    AffineTransform::Matrix r = AffineTransform::Matrix::Zero();
+lsst::geom::AffineTransform::Matrix Ellipse::GridTransform::getMatrix() const {
+    lsst::geom::AffineTransform::Matrix r = lsst::geom::AffineTransform::Matrix::Zero();
     r.block<2, 2>(0, 0) = _coreGt.getMatrix();
     r.block<2, 1>(0, 2) = -r.block<2, 2>(0, 0) * _input.getCenter().asEigen();
     r(2, 2) = 1.0;
@@ -102,34 +109,40 @@ AffineTransform::Matrix Ellipse::GridTransform::getMatrix() const {
 
 Ellipse::GridTransform::DerivativeMatrix Ellipse::GridTransform::d() const {
     DerivativeMatrix r = DerivativeMatrix::Zero();
-    LinearTransform linear = _coreGt;
+    lsst::geom::LinearTransform linear = _coreGt;
     r.block<4, 3>(0, 0) = _coreGt.d();
     double x = -_input.getCenter().getX();
     double y = -_input.getCenter().getY();
-    r(AffineTransform::X, Ellipse::X) = -linear[LinearTransform::XX];
-    r(AffineTransform::Y, Ellipse::X) = -linear[LinearTransform::YX];
-    r(AffineTransform::X, Ellipse::Y) = -linear[LinearTransform::XY];
-    r(AffineTransform::Y, Ellipse::Y) = -linear[LinearTransform::YY];
-    r(AffineTransform::X, 0) = x * r(AffineTransform::XX, 0) + y * r(AffineTransform::XY, 0);
-    r(AffineTransform::Y, 0) = x * r(AffineTransform::YX, 0) + y * r(AffineTransform::YY, 0);
-    r(AffineTransform::X, 1) = x * r(AffineTransform::XX, 1) + y * r(AffineTransform::XY, 1);
-    r(AffineTransform::Y, 1) = x * r(AffineTransform::YX, 1) + y * r(AffineTransform::YY, 1);
-    r(AffineTransform::X, 2) = x * r(AffineTransform::XX, 2) + y * r(AffineTransform::XY, 2);
-    r(AffineTransform::Y, 2) = x * r(AffineTransform::YX, 2) + y * r(AffineTransform::YY, 2);
+    r(lsst::geom::AffineTransform::X, Ellipse::X) = -linear[lsst::geom::LinearTransform::XX];
+    r(lsst::geom::AffineTransform::Y, Ellipse::X) = -linear[lsst::geom::LinearTransform::YX];
+    r(lsst::geom::AffineTransform::X, Ellipse::Y) = -linear[lsst::geom::LinearTransform::XY];
+    r(lsst::geom::AffineTransform::Y, Ellipse::Y) = -linear[lsst::geom::LinearTransform::YY];
+    r(lsst::geom::AffineTransform::X, 0) =
+            x * r(lsst::geom::AffineTransform::XX, 0) + y * r(lsst::geom::AffineTransform::XY, 0);
+    r(lsst::geom::AffineTransform::Y, 0) =
+            x * r(lsst::geom::AffineTransform::YX, 0) + y * r(lsst::geom::AffineTransform::YY, 0);
+    r(lsst::geom::AffineTransform::X, 1) =
+            x * r(lsst::geom::AffineTransform::XX, 1) + y * r(lsst::geom::AffineTransform::XY, 1);
+    r(lsst::geom::AffineTransform::Y, 1) =
+            x * r(lsst::geom::AffineTransform::YX, 1) + y * r(lsst::geom::AffineTransform::YY, 1);
+    r(lsst::geom::AffineTransform::X, 2) =
+            x * r(lsst::geom::AffineTransform::XX, 2) + y * r(lsst::geom::AffineTransform::XY, 2);
+    r(lsst::geom::AffineTransform::Y, 2) =
+            x * r(lsst::geom::AffineTransform::YX, 2) + y * r(lsst::geom::AffineTransform::YY, 2);
     return r;
 }
 
 double Ellipse::GridTransform::getDeterminant() const { return _coreGt.getDeterminant(); }
 
-Ellipse::GridTransform::operator AffineTransform() const {
-    LinearTransform linear = _coreGt;
-    return AffineTransform(linear, linear(Point2D() - _input.getCenter()));
+Ellipse::GridTransform::operator lsst::geom::AffineTransform() const {
+    lsst::geom::LinearTransform linear = _coreGt;
+    return lsst::geom::AffineTransform(linear, linear(lsst::geom::Point2D() - _input.getCenter()));
 }
 
-AffineTransform Ellipse::GridTransform::invert() const {
-    return AffineTransform(_coreGt.invert(), afw::geom::Extent2D(_input.getCenter()));
+lsst::geom::AffineTransform Ellipse::GridTransform::invert() const {
+    return lsst::geom::AffineTransform(_coreGt.invert(), lsst::geom::Extent2D(_input.getCenter()));
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

@@ -31,8 +31,8 @@
  *  Note: do not include directly; use the main ellipse header file.
  */
 
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
-#include "lsst/afw/geom/AffineTransform.h"
 
 namespace lsst {
 namespace afw {
@@ -55,7 +55,8 @@ public:
     typedef Eigen::Matrix<double, 3, 4> TransformDerivativeMatrix;
 
     /// Standard constructor.
-    Transformer(BaseCore &input_, LinearTransform const &transform_) : input(input_), transform(transform_) {}
+    Transformer(BaseCore &input_, lsst::geom::LinearTransform const &transform_)
+            : input(input_), transform(transform_) {}
 
     /// Return a new transformed ellipse core.
     std::shared_ptr<BaseCore> copy() const;
@@ -71,8 +72,8 @@ public:
     /// Return the derivative of transformed core with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    BaseCore &input;                   ///< input core to be transformed
-    LinearTransform const &transform;  ///< transform object
+    BaseCore &input;                               ///< input core to be transformed
+    lsst::geom::LinearTransform const &transform;  ///< transform object
 };
 
 /**
@@ -91,7 +92,8 @@ public:
     typedef Eigen::Matrix<double, 5, 6> TransformDerivativeMatrix;
 
     /// Standard constructor.
-    Transformer(Ellipse &input_, AffineTransform const &transform_) : input(input_), transform(transform_) {}
+    Transformer(Ellipse &input_, lsst::geom::AffineTransform const &transform_)
+            : input(input_), transform(transform_) {}
 
     /// Return a new transformed ellipse.
     std::shared_ptr<Ellipse> copy() const;
@@ -107,32 +109,32 @@ public:
     /// Return the derivative of transform output ellipse with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    Ellipse &input;                    ///< input ellipse to be transformed
-    AffineTransform const &transform;  ///< transform object
+    Ellipse &input;                                ///< input ellipse to be transformed
+    lsst::geom::AffineTransform const &transform;  ///< transform object
 };
 
-inline BaseCore::Transformer BaseCore::transform(LinearTransform const &transform) {
+inline BaseCore::Transformer BaseCore::transform(lsst::geom::LinearTransform const &transform) {
     return BaseCore::Transformer(*this, transform);
 }
 
-inline BaseCore::Transformer const BaseCore::transform(LinearTransform const &transform) const {
+inline BaseCore::Transformer const BaseCore::transform(lsst::geom::LinearTransform const &transform) const {
     return BaseCore::Transformer(const_cast<BaseCore &>(*this), transform);
 }
 
-inline Ellipse::Transformer Ellipse::transform(AffineTransform const &transform) {
+inline Ellipse::Transformer Ellipse::transform(lsst::geom::AffineTransform const &transform) {
     return Ellipse::Transformer(*this, transform);
 }
 
-inline Ellipse::Transformer const Ellipse::transform(AffineTransform const &transform) const {
+inline Ellipse::Transformer const Ellipse::transform(lsst::geom::AffineTransform const &transform) const {
     return Ellipse::Transformer(const_cast<Ellipse &>(*this), transform);
 }
 
 inline Ellipse::Ellipse(Ellipse::Transformer const &other)
         : _core(other.input.getCore().transform(other.transform.getLinear()).copy()),
           _center(other.transform(other.input.getCenter())) {}
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Transformer_h_INCLUDED

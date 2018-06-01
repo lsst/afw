@@ -19,10 +19,10 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import lsst.geom
 from .cameraGeomLib import FOCAL_PLANE, PIXELS
 from .detectorCollection import DetectorCollection
 from .pupil import PupilFactory
-import lsst.afw.geom as afwGeom
 
 
 class Camera(DetectorCollection):
@@ -103,7 +103,7 @@ class Camera(DetectorCollection):
     def findDetectors(self, point, cameraSys):
         """!Find the detectors that cover a point in any camera system
 
-        @param[in] point  position to use in lookup (lsst.afw.geom.Point2D)
+        @param[in] point  position to use in lookup (lsst.geom.Point2D)
         @param[in] cameraSys  camera coordinate system of `point`
         @return a list of zero or more Detectors that overlap the specified point
         """
@@ -115,14 +115,14 @@ class Camera(DetectorCollection):
         for detector in self:
             nativeToPixels = detector.getTransform(self._nativeCameraSys, PIXELS)
             pointPixels = nativeToPixels.applyForward(nativePoint)
-            if afwGeom.Box2D(detector.getBBox()).contains(pointPixels):
+            if lsst.geom.Box2D(detector.getBBox()).contains(pointPixels):
                 detectorList.append(detector)
         return detectorList
 
     def findDetectorsList(self, pointList, cameraSys):
         """!Find the detectors that cover a list of points in any camera system
 
-        @param[in] pointList  a list of points (lsst.afw.geom.Point2D)
+        @param[in] pointList  a list of points (lsst.geom.Point2D)
         @param[in] cameraSys  the camera coordinate system of the points in `pointList`
         @return a list of lists; each list contains the names of all detectors
         which contain the corresponding point
@@ -140,7 +140,7 @@ class Camera(DetectorCollection):
             pixelSys = detector.makeCameraSys(PIXELS)
             transform = detector.getTransformMap().getTransform(self._nativeCameraSys, pixelSys)
             detectorPointList = transform.applyForward(nativePointList)
-            box = afwGeom.Box2D(detector.getBBox())
+            box = lsst.geom.Box2D(detector.getBBox())
             for i, pt in enumerate(detectorPointList):
                 if box.contains(pt):
                     detectorList[i].append(detector)
@@ -177,10 +177,10 @@ class Camera(DetectorCollection):
         """!Transform a point or list of points from one camera coordinate system
         to another
 
-        @param[in] points  an lsst.afw.geom.Point2D or list of Point2D
+        @param[in] points  an lsst.geom.Point2D or list of Point2D
         @param[in] fromSys  Transform from this CameraSys
         @param[in] toSys  Transform to this CameraSys
-        @return `points` transformed to `toSys` (an lsst.afw.geom.Point2D
+        @return `points` transformed to `toSys` (an lsst.geom.Point2D
         or list of Point2D)
         """
         transform = self.getTransform(fromSys, toSys)

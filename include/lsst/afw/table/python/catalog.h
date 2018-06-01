@@ -36,12 +36,11 @@ namespace python {
 template <typename Record>
 using PyCatalog = pybind11::class_<CatalogT<Record>, std::shared_ptr<CatalogT<Record>>>;
 
-
 /// Extract a column from a potentially non-contiguous Catalog
 template <typename T, typename Record>
 ndarray::Array<typename Field<T>::Value const, 1, 1> _getArrayFromCatalog(
-    CatalogT<Record> const& catalog,  ///< Catalog
-    Key<T> const& key  ///< Key to column to extract
+        CatalogT<Record> const &catalog,  ///< Catalog
+        Key<T> const &key                 ///< Key to column to extract
 ) {
     ndarray::Array<typename Field<T>::Value, 1, 1> out = ndarray::allocate(catalog.size());
     auto outIter = out.begin();
@@ -52,12 +51,12 @@ ndarray::Array<typename Field<T>::Value const, 1, 1> _getArrayFromCatalog(
     return out;
 }
 
-// Specialization of the above for Angle: have to return a double array (in
-// radians), since NumPy arrays can't hold Angles.
+// Specialization of the above for lsst::geom::Angle: have to return a double array (in
+// radians), since NumPy arrays can't hold lsst::geom::Angles.
 template <typename Record>
 ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
-    CatalogT<Record> const& catalog,  ///< Catalog
-    Key<Angle> const& key  ///< Key to column to extract
+        CatalogT<Record> const &catalog,   ///< Catalog
+        Key<lsst::geom::Angle> const &key  ///< Key to column to extract
 ) {
     ndarray::Array<double, 1, 1> out = ndarray::allocate(catalog.size());
     auto outIter = out.begin();
@@ -67,7 +66,6 @@ ndarray::Array<double const, 1, 1> _getArrayFromCatalog(
     }
     return out;
 }
-
 
 /**
 Declare field-type-specific overloaded catalog member functions for one field type
@@ -111,9 +109,8 @@ void declareCatalogOverloads(PyCatalog<Record> &cls) {
         return py::slice(a, b, 1);
     });
 
-    cls.def("_getitem_", [](Catalog const& self, Key<T> const& key) {
-        return _getArrayFromCatalog(self, key);
-    });
+    cls.def("_getitem_",
+            [](Catalog const &self, Key<T> const &key) { return _getArrayFromCatalog(self, key); });
 }
 
 /**
@@ -209,25 +206,25 @@ PyCatalog<Record> declareCatalog(pybind11::module &mod, std::string const &name,
             (void (Catalog::*)(fits::MemFileManager &, std::string const &, int) const) & Catalog::writeFits,
             "manager"_a, "mode"_a = "w", "flags"_a = 0);
     cls.def("reserve", &Catalog::reserve);
-    cls.def("subset", (Catalog (Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset);
+    cls.def("subset", (Catalog(Catalog::*)(ndarray::Array<bool const, 1> const &) const) & Catalog::subset);
     cls.def("subset",
-            (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset);
+            (Catalog(Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset);
 
     declareCatalogOverloads<std::int32_t>(cls);
     declareCatalogOverloads<std::int64_t>(cls);
     declareCatalogOverloads<float>(cls);
     declareCatalogOverloads<double>(cls);
-    declareCatalogOverloads<lsst::afw::geom::Angle>(cls);
+    declareCatalogOverloads<lsst::geom::Angle>(cls);
 
-    cls.def("_getitem_", [](Catalog const& self, Key<Flag> const& key) -> ndarray::Array<bool const, 1, 0> {
+    cls.def("_getitem_", [](Catalog const &self, Key<Flag> const &key) -> ndarray::Array<bool const, 1, 0> {
         return _getArrayFromCatalog(self, key);
     });
 
     return cls;
 };
-}
-}
-}
-}  // lsst::afw::table::python
+}  // namespace python
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_TABLE_PYTHON_CATALOG_H_INCLUDED

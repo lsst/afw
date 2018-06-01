@@ -22,7 +22,7 @@
  */
 
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/BaseRecord.h"
 
@@ -41,12 +41,12 @@ PointKey<T> PointKey<T>::addFields(Schema &schema, std::string const &name, std:
 }
 
 template <typename T>
-geom::Point<T, 2> PointKey<T>::get(BaseRecord const &record) const {
-    return geom::Point<T, 2>(record.get(_x), record.get(_y));
+lsst::geom::Point<T, 2> PointKey<T>::get(BaseRecord const &record) const {
+    return lsst::geom::Point<T, 2>(record.get(_x), record.get(_y));
 }
 
 template <typename T>
-void PointKey<T>::set(BaseRecord &record, geom::Point<T, 2> const &value) const {
+void PointKey<T>::set(BaseRecord &record, lsst::geom::Point<T, 2> const &value) const {
     record.set(_x, value.getX());
     record.set(_y, value.getY());
 }
@@ -57,40 +57,40 @@ template class PointKey<double>;
 //============ BoxKey =====================================================================================
 
 template <typename Box>
-BoxKey<Box> BoxKey<Box>::addFields(Schema & schema, std::string const & name, std::string const & doc,
-                                   std::string const & unit) {
+BoxKey<Box> BoxKey<Box>::addFields(Schema &schema, std::string const &name, std::string const &doc,
+                                   std::string const &unit) {
     auto minKey = PointKey<Element>::addFields(schema, schema.join(name, "min"), doc + " (minimum)", unit);
     auto maxKey = PointKey<Element>::addFields(schema, schema.join(name, "max"), doc + " (maximum)", unit);
     return BoxKey<Box>(minKey, maxKey);
 }
 
 template <typename Box>
-Box BoxKey<Box>::get(BaseRecord const & record) const {
+Box BoxKey<Box>::get(BaseRecord const &record) const {
     return Box(record.get(_min), record.get(_max), /*invert=*/false);
 }
 
 template <typename Box>
-void BoxKey<Box>::set(BaseRecord & record, Box const & value) const {
+void BoxKey<Box>::set(BaseRecord &record, Box const &value) const {
     _min.set(record, value.getMin());
     _max.set(record, value.getMax());
 }
 
-template class BoxKey<geom::Box2I>;
-template class BoxKey<geom::Box2D>;
+template class BoxKey<lsst::geom::Box2I>;
+template class BoxKey<lsst::geom::Box2D>;
 
 //============ CoordKey =====================================================================================
 
 CoordKey CoordKey::addFields(Schema &schema, std::string const &name, std::string const &doc) {
-    Key<geom::Angle> ra = schema.addField<geom::Angle>(schema.join(name, "ra"), doc);
-    Key<geom::Angle> dec = schema.addField<geom::Angle>(schema.join(name, "dec"), doc);
+    Key<lsst::geom::Angle> ra = schema.addField<lsst::geom::Angle>(schema.join(name, "ra"), doc);
+    Key<lsst::geom::Angle> dec = schema.addField<lsst::geom::Angle>(schema.join(name, "dec"), doc);
     return CoordKey(ra, dec);
 }
 
-geom::SpherePoint CoordKey::get(BaseRecord const &record) const {
-    return geom::SpherePoint(record.get(_ra), record.get(_dec));
+lsst::geom::SpherePoint CoordKey::get(BaseRecord const &record) const {
+    return lsst::geom::SpherePoint(record.get(_ra), record.get(_dec));
 }
 
-void CoordKey::set(BaseRecord &record, geom::SpherePoint const &value) const {
+void CoordKey::set(BaseRecord &record, lsst::geom::SpherePoint const &value) const {
     record.set(_ra, value.getLongitude());
     record.set(_dec, value.getLatitude());
 }
@@ -231,12 +231,11 @@ CovarianceMatrixKey<T, N>::CovarianceMatrixKey(CovarianceMatrixKey const &) = de
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::CovarianceMatrixKey(CovarianceMatrixKey &&) = default;
 template <typename T, int N>
-CovarianceMatrixKey<T, N> & CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey const &) = default;
+CovarianceMatrixKey<T, N> &CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey const &) = default;
 template <typename T, int N>
-CovarianceMatrixKey<T, N> & CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey &&) = default;
+CovarianceMatrixKey<T, N> &CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey &&) = default;
 template <typename T, int N>
 CovarianceMatrixKey<T, N>::~CovarianceMatrixKey() = default;
-
 
 // these are workarounds for the fact that Eigen has different constructors for
 // dynamic-sized matrices and fixed-size matrices, but we don't want to have to
@@ -254,7 +253,7 @@ Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> makeZeroMatrix(
     return Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(n, n);
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T, int N>
 Eigen::Matrix<T, N, N> CovarianceMatrixKey<T, N>::get(BaseRecord const &record) const {
@@ -347,15 +346,15 @@ void CovarianceMatrixKey<T, N>::setElement(BaseRecord &record, int i, int j, T v
         if (_cov.empty()) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
-                    (boost::format("Cannot set covariance element %d,%d; no fields for covariance") % i %
-                     j).str());
+                    (boost::format("Cannot set covariance element %d,%d; no fields for covariance") % i % j)
+                            .str());
         }
         Key<T> key = (i < j) ? _cov[j * (j - 1) / 2 + i] : _cov[i * (i - 1) / 2 + j];
         if (!key.isValid()) {
             throw LSST_EXCEPT(
                     pex::exceptions::LogicError,
-                    (boost::format("Cannot set covariance element %d,%d; no field for this element") % i %
-                     j).str());
+                    (boost::format("Cannot set covariance element %d,%d; no field for this element") % i % j)
+                            .str());
         }
         record.set(key, value);
     }
@@ -371,6 +370,6 @@ template class CovarianceMatrixKey<double, 3>;
 template class CovarianceMatrixKey<double, 4>;
 template class CovarianceMatrixKey<double, 5>;
 template class CovarianceMatrixKey<double, Eigen::Dynamic>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

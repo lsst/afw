@@ -25,8 +25,8 @@
 import numpy
 import matplotlib.pyplot as plt
 
+import lsst.geom
 import lsst.afw.cameraGeom as cameraGeom
-import lsst.afw.geom as afwGeom
 
 
 def main(camera, sample=20, showDistortion=True):
@@ -75,7 +75,7 @@ def main(camera, sample=20, showDistortion=True):
                 yDistort = []
                 for x, y in zip(xList, yList):
                     position = ccd.getPositionFromPixel(
-                        afwGeom.Point2D(x, y))  # focal plane position
+                        lsst.geom.Point2D(x, y))  # focal plane position
 
                     xOriginal.append(position.getMm().getX())
                     yOriginal.append(position.getMm().getY())
@@ -84,8 +84,8 @@ def main(camera, sample=20, showDistortion=True):
                         continue
 
                     # Calculate offset (in CCD pixels) due to distortion
-                    distortion = dist.distort(afwGeom.Point2D(
-                        x, y), ccd) - afwGeom.Extent2D(x, y)
+                    distortion = dist.distort(lsst.geom.Point2D(
+                        x, y), ccd) - lsst.geom.Extent2D(x, y)
 
                     # Calculate the distorted position
                     distorted = position + \
@@ -101,7 +101,7 @@ def main(camera, sample=20, showDistortion=True):
 
             if fig:
                 x, y = ccd.getPositionFromPixel(
-                    afwGeom.Point2D(width/2, height/2)).getMm()
+                    lsst.geom.Point2D(width/2, height/2)).getMm()
                 ax.text(x, y, ccd.getId().getSerial(), ha='center')
 
     if fig:

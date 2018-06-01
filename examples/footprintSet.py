@@ -26,8 +26,8 @@
 Examples of using Footprints
 """
 
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
 import lsst.afw.display.ds9 as ds9
 
@@ -49,7 +49,7 @@ def showPeaks(im=None, fs=None, frame=0):
 
 
 def run(frame=6):
-    im = afwImage.MaskedImageF(afwGeom.Extent2I(14, 10))
+    im = afwImage.MaskedImageF(lsst.geom.Extent2I(14, 10))
     #
     # Populate the image with objects that we should detect
     #

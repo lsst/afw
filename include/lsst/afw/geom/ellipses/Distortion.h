@@ -82,9 +82,9 @@ public:
 
     static std::string getName() { return "Distortion"; }
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Distortion_h_INCLUDED

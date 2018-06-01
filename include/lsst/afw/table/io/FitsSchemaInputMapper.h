@@ -69,8 +69,8 @@ public:
 
     FitsSchemaInputMapper(FitsSchemaInputMapper const &);
     FitsSchemaInputMapper(FitsSchemaInputMapper &&);
-    FitsSchemaInputMapper & operator=(FitsSchemaInputMapper const &);
-    FitsSchemaInputMapper & operator=(FitsSchemaInputMapper &&);
+    FitsSchemaInputMapper &operator=(FitsSchemaInputMapper const &);
+    FitsSchemaInputMapper &operator=(FitsSchemaInputMapper &&);
     ~FitsSchemaInputMapper();
 
     /**
@@ -143,9 +143,9 @@ private:
     class Impl;
     std::shared_ptr<Impl> _impl;
 };
-}
-}
-}
-}  // namespace lsst::afw::table::io
+}  // namespace io
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IO_FitsSchemaInputMapper_h_INCLUDED

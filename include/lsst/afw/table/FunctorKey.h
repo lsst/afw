@@ -112,8 +112,8 @@ public:
 
     virtual ~ConstReferenceFunctorKey() = default;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_FunctorKey_h_INCLUDED

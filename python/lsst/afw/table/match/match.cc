@@ -57,12 +57,12 @@ void declareMatch2(py::module &mod, std::string const &prefix) {
     // Free Functions
     mod.def("unpackMatches", &unpackMatches<Catalog1, Catalog2>, "matches"_a, "cat1"_a, "cat2"_a);
 
-    mod.def("matchRaDec", (MatchList(*)(Catalog1 const &, Catalog2 const &, geom::Angle,
+    mod.def("matchRaDec", (MatchList(*)(Catalog1 const &, Catalog2 const &, lsst::geom::Angle,
                                         MatchControl const &))matchRaDec<Catalog1, Catalog2>,
             "cat1"_a, "cat2"_a, "radius"_a, "mc"_a = MatchControl());
     // The following is deprecated; consider changing the code instead of wrapping it:
     // mod.def("matchRaDec",
-    //         (MatchList (*)(Catalog1 const &, Catalog2 const &, geom::Angle, bool))
+    //         (MatchList (*)(Catalog1 const &, Catalog2 const &, lsst::geom::Angle, bool))
     //          matchRaDec<Catalog1, Catalog2>, "cat1"_a, "cat2"_a, "radius"_a, "closest"_a);
 };
 
@@ -71,11 +71,11 @@ template <typename Catalog>
 void declareMatch1(py::module &mod) {
     typedef std::vector<Match<typename Catalog::Record, typename Catalog::Record>> MatchList;
     mod.def("matchRaDec",
-            (MatchList(*)(Catalog const &, geom::Angle, MatchControl const &))matchRaDec<Catalog>, "cat"_a,
-            "radius"_a, "mc"_a = MatchControl());
+            (MatchList(*)(Catalog const &, lsst::geom::Angle, MatchControl const &))matchRaDec<Catalog>,
+            "cat"_a, "radius"_a, "mc"_a = MatchControl());
     // The following is deprecated; consider changing the code instead of wrapping it:
     // mod.def("matchRaDec",
-    //         (MatchList (*)(Catalog const &, geom::Angle, bool))
+    //         (MatchList (*)(Catalog const &, lsst::geom::Angle, bool))
     //          &matchRaDec<Catalog1>, "cat"_a, "radius"_a, "symmetric"_a);
 }
 

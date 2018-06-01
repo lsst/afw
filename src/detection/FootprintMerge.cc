@@ -122,7 +122,7 @@ public:
     }
 
     // Get the bounding box of the merge
-    afw::geom::Box2I getBBox() const { return getMergedFootprint()->getBBox(); }
+    lsst::geom::Box2I getBBox() const { return getMergedFootprint()->getBBox(); }
 
     std::shared_ptr<Footprint> getMergedFootprint() const { return _source->getFootprint(); }
 
@@ -196,7 +196,7 @@ private:
         getMergedFootprint()->getPeaks().insert(getMergedFootprint()->getPeaks().end(), newPeaks.begin(),
                                                 newPeaks.end(),
                                                 true  // deep-copy
-                                                );
+        );
     }
 
     std::vector<std::shared_ptr<Footprint>> _footprints;
@@ -265,8 +265,8 @@ void FootprintMergeList::addCatalog(std::shared_ptr<afw::table::SourceTable> sou
             FootprintMergeVec::iterator iter = _mergeList.begin();
             while (iter != _mergeList.end()) {
                 // Grow by one pixel to allow for touching
-                geom::Box2I box((**iter).getBBox());
-                box.grow(geom::Extent2I(1, 1));
+                lsst::geom::Box2I box((**iter).getBBox());
+                box.grow(lsst::geom::Extent2I(1, 1));
                 if (box.overlaps(foot->getBBox()) && (**iter).overlaps(*foot)) {
                     if (!first) {
                         first = *iter;
@@ -301,6 +301,6 @@ void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat) {
         outputCat.push_back((**iter).getSource());
     }
 }
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

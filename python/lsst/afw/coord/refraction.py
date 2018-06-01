@@ -24,7 +24,7 @@ from astropy import units
 from astropy.units import cds
 import numpy as np
 
-from lsst.afw.geom import Angle
+import lsst.geom
 from lsst.afw.coord import Weather
 
 __all__ = ["refraction", "differentialRefraction"]
@@ -43,7 +43,7 @@ def refraction(wavelength, elevation, observatory, weather=None):
     ----------
     wavelength : `float`
         wavelength is in nm (valid for 230.2 < wavelength < 2058.6)
-    elevation : `lsst.afw.geom.Angle`
+    elevation : `lsst.geom.Angle`
         Elevation of the observation, as an Angle.
     observatory : `lsst.afw.coord.Observatory`
         Class containing the longitude, latitude,
@@ -55,7 +55,7 @@ def refraction(wavelength, elevation, observatory, weather=None):
 
     Returns
     -------
-    `lsst.afw.geom.Angle`
+    `lsst.geom.Angle`
         The angular refraction for light of the given wavelength,
         under the given observing conditions.
     """
@@ -80,7 +80,7 @@ def refraction(wavelength, elevation, observatory, weather=None):
     tanZ = np.tan(np.pi/2. - elevation.asRadians())
     atmosTerm1 = reducedN*relativeGravity*(1. - atmosScaleheightRatio)
     atmosTerm2 = reducedN*relativeGravity*(atmosScaleheightRatio - reducedN/2.)
-    result = Angle(atmosTerm1*tanZ + atmosTerm2*tanZ**3.)
+    result = float(atmosTerm1*tanZ + atmosTerm2*tanZ**3.)*lsst.geom.radians
     return result
 
 
@@ -93,7 +93,7 @@ def differentialRefraction(wavelength, wavelengthRef, elevation, observatory, we
         wavelength is in nm (valid for 230.2 < wavelength < 2058.6)
     wavelengthRef : `float`
         Reference wavelength, typically the effective wavelength of a filter.
-    elevation : `lsst.afw.geom.Angle`
+    elevation : `lsst.geom.Angle`
         Elevation of the observation, as an Angle.
     observatory : `lsst.afw.coord.Observatory`
         Class containing the longitude, latitude,
@@ -105,7 +105,7 @@ def differentialRefraction(wavelength, wavelengthRef, elevation, observatory, we
 
     Returns
     -------
-    `lsst.afw.geom.Angle`
+    `lsst.geom.Angle`
         The refraction at `wavelength` - the refraction at `wavelengthRef`.
     """
     refractionStart = refraction(wavelength, elevation, observatory, weather=weather)

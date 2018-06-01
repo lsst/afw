@@ -57,8 +57,8 @@ PyColumnView<Record> declareColumnView(pybind11::module& mod, std::string const&
     cls.def_property_readonly("table", &ColumnViewT<Record>::getTable);
     return cls;
 };
-}
-}
-}
-}  // namespace lsst::afw::table::python
+}  // namespace python
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 #endif

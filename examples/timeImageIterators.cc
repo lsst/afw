@@ -25,10 +25,10 @@
 #include <ctime>
 #include <valarray>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image.h"
 
 namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
 
 int main(int argc, char **argv) {
     typedef image::Image<float> ImageT;
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         std::istringstream(argv[3]) >> nRows;
     }
 
-    ImageT image(geom::Extent2I(nCols, nRows));
+    ImageT image(lsst::geom::Extent2I(nCols, nRows));
 
     std::cout << "\tCols\tRows\tMPix\tSecPerIter\tMPix/sec" << std::endl;
     //

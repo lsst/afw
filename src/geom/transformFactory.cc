@@ -129,7 +129,8 @@ ast::PolyMap makeOneDDistortion(std::vector<double> const &coeffs) {
 
 }  // namespace
 
-AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Point2D const &inPoint) {
+lsst::geom::AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original,
+                                               lsst::geom::Point2D const &inPoint) {
     auto outPoint = original.applyForward(inPoint);
     Eigen::Matrix2d jacobian = original.getJacobian(inPoint);
     for (int i = 0; i < 2; ++i) {
@@ -147,16 +148,17 @@ AffineTransform linearizeTransform(TransformPoint2ToPoint2 const &original, Poin
 
     // y(x) = J (x - x0) + y0 = J x + (y0 - J x0)
     auto offset = outPoint.asEigen() - jacobian * inPoint.asEigen();
-    return AffineTransform(jacobian, offset);
+    return lsst::geom::AffineTransform(jacobian, offset);
 }
 
-std::shared_ptr<TransformPoint2ToPoint2> makeTransform(AffineTransform const &affine) {
-    auto const offset = Point2D(affine.getTranslation());
+std::shared_ptr<TransformPoint2ToPoint2> makeTransform(lsst::geom::AffineTransform const &affine) {
+    auto const offset = lsst::geom::Point2D(affine.getTranslation());
     auto const jacobian = affine.getLinear().getMatrix();
 
     Point2Endpoint toEndpoint;
     auto const map = ast::MatrixMap(toNdArray(jacobian))
-                             .then(ast::ShiftMap(toEndpoint.dataFromPoint(offset))).simplify();
+                             .then(ast::ShiftMap(toEndpoint.dataFromPoint(offset)))
+                             .simplify();
     return std::make_shared<TransformPoint2ToPoint2>(*map);
 }
 

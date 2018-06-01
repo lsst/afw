@@ -36,7 +36,7 @@
 #include <memory>
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
@@ -48,7 +48,7 @@ template <typename ImagePixelT>
 class Image;
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImage;
-}
+}  // namespace image
 
 namespace math {
 
@@ -76,10 +76,10 @@ public:
                          )
             : _id(++_CandidateId), _status(UNKNOWN), _xCenter(xCenter), _yCenter(yCenter) {}
 
-    SpatialCellCandidate(SpatialCellCandidate const &) = default;
-    SpatialCellCandidate(SpatialCellCandidate &&) = default;
-    SpatialCellCandidate & operator=(SpatialCellCandidate const &) = default;
-    SpatialCellCandidate & operator=(SpatialCellCandidate &&) = default;
+    SpatialCellCandidate(SpatialCellCandidate const&) = default;
+    SpatialCellCandidate(SpatialCellCandidate&&) = default;
+    SpatialCellCandidate& operator=(SpatialCellCandidate const&) = default;
+    SpatialCellCandidate& operator=(SpatialCellCandidate&&) = default;
 
     /**
      * (virtual) destructor -- this is a base class you know
@@ -130,10 +130,10 @@ public:
                               float const yCenter   ///< The object's row-centre
                               )
             : SpatialCellCandidate(xCenter, yCenter), _chi2(std::numeric_limits<double>::max()) {}
-    SpatialCellImageCandidate(SpatialCellImageCandidate const &) = default;
-    SpatialCellImageCandidate(SpatialCellImageCandidate &&) = default;
-    SpatialCellImageCandidate & operator=(SpatialCellImageCandidate const &) = default;
-    SpatialCellImageCandidate & operator=(SpatialCellImageCandidate &&) = default;
+    SpatialCellImageCandidate(SpatialCellImageCandidate const&) = default;
+    SpatialCellImageCandidate(SpatialCellImageCandidate&&) = default;
+    SpatialCellImageCandidate& operator=(SpatialCellImageCandidate const&) = default;
+    SpatialCellImageCandidate& operator=(SpatialCellImageCandidate&&) = default;
     virtual ~SpatialCellImageCandidate() = default;
 
     /// Set the width of the image that getImage should return
@@ -235,13 +235,13 @@ public:
      * @param bbox Bounding box of cell in overall image
      * @param candidateList list of candidates to represent this cell
      */
-    SpatialCell(std::string const& label, lsst::afw::geom::Box2I const& bbox = lsst::afw::geom::Box2I(),
+    SpatialCell(std::string const& label, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                 CandidateList const& candidateList = CandidateList());
 
-    SpatialCell(SpatialCell const &) = default;
-    SpatialCell(SpatialCell &&) = default;
-    SpatialCell & operator=(SpatialCell const &) = default;
-    SpatialCell & operator=(SpatialCell &&) = default;
+    SpatialCell(SpatialCell const&) = default;
+    SpatialCell(SpatialCell&&) = default;
+    SpatialCell& operator=(SpatialCell const&) = default;
+    SpatialCell& operator=(SpatialCell&&) = default;
 
     /**
      * Destructor
@@ -268,7 +268,7 @@ public:
         return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), _ignoreBad);
     }
     SpatialCellCandidateIterator begin(bool ignoreBad  ///< If true, ignore BAD candidates
-                                       ) {
+    ) {
         return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad);
     }
     /**
@@ -278,7 +278,7 @@ public:
         return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), _ignoreBad, true);
     }
     SpatialCellCandidateIterator end(bool ignoreBad  ///< If true, ignore BAD candidates
-                                     ) {
+    ) {
         return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad, true);
     }
     /**
@@ -315,7 +315,7 @@ public:
     /**
      * Get SpatialCell's BBox
      */
-    lsst::afw::geom::Box2I const& getBBox() const { return _bbox; }
+    lsst::geom::Box2I const& getBBox() const { return _bbox; }
     /*
      * Visit our candidates
      */
@@ -376,7 +376,7 @@ public:
 
 private:
     std::string _label;            // Name of cell for logging/trace
-    lsst::afw::geom::Box2I _bbox;  // Bounding box of cell in overall image
+    lsst::geom::Box2I _bbox;       // Bounding box of cell in overall image
     CandidateList _candidateList;  // List of all candidates in the cell
     bool _ignoreBad;               // Don't include BAD candidates when traversing the list
 };
@@ -397,12 +397,12 @@ public:
      *
      * @throws lsst::pex::exceptions::LengthError if nx or ny is non-positive
      */
-    SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize = 0);
+    SpatialCellSet(lsst::geom::Box2I const& region, int xSize, int ySize = 0);
 
-    SpatialCellSet(SpatialCellSet const &) = default;
-    SpatialCellSet(SpatialCellSet &&) = default;
-    SpatialCellSet & operator=(SpatialCellSet const &) = default;
-    SpatialCellSet & operator=(SpatialCellSet &&) = default;
+    SpatialCellSet(SpatialCellSet const&) = default;
+    SpatialCellSet(SpatialCellSet&&) = default;
+    SpatialCellSet& operator=(SpatialCellSet const&) = default;
+    SpatialCellSet& operator=(SpatialCellSet&&) = default;
 
     /**
      * Destructor
@@ -417,7 +417,7 @@ public:
     /**
      * Return the bounding box of the %image
      */
-    lsst::afw::geom::Box2I getBBox() const { return _region; };
+    lsst::geom::Box2I getBBox() const { return _region; };
 
     /**
      * Insert a candidate into the correct cell
@@ -485,11 +485,11 @@ public:
     void setIgnoreBad(bool ignoreBad);
 
 private:
-    lsst::afw::geom::Box2I _region;  // Bounding box of overall image
-    CellList _cellList;              // List of SpatialCells
+    lsst::geom::Box2I _region;  // Bounding box of overall image
+    CellList _cellList;         // List of SpatialCells
 };
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

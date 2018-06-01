@@ -33,7 +33,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 from astshim.test import makeForwardPolyMap, makeTwoWayPolyMap
 from lsst.afw.geom.wcsUtils import getCdMatrixFromMetadata
 
-from .box import Box2I, Box2D
+import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.pex.exceptions import InvalidParameterError
 import lsst.utils
@@ -49,7 +49,7 @@ class BoxGrid:
 
     Parameters
     ----------
-    box : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
+    box : `lsst.geom.Box2I` or `lsst.geom.Box2D`
         the box to subdivide; the boxes in the grid will be of the same type
     numColRow : pair of `int`
         number of columns and rows
@@ -61,9 +61,9 @@ class BoxGrid:
                 "numColRow=%r; must be a sequence of two integers" % (numColRow,))
         self._numColRow = tuple(int(val) for val in numColRow)
 
-        if isinstance(box, Box2I):
+        if isinstance(box, lsst.geom.Box2I):
             stopDelta = 1
-        elif isinstance(box, Box2D):
+        elif isinstance(box, lsst.geom.Box2D):
             stopDelta = 0
         else:
             raise RuntimeError("Unknown class %s of box %s" % (type(box), box))
@@ -94,7 +94,7 @@ class BoxGrid:
 
         Returns
         -------
-        subBox : `lsst.afw.geom.Box2I` or `lsst.afw.geom.Box2D`
+        subBox : `lsst.geom.Box2I` or `lsst.geom.Box2D`
         """
         beg = self.pointClass(*[self._divList[i][indXY[i]] for i in range(2)])
         end = self.pointClass(

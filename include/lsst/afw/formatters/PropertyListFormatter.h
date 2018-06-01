@@ -67,8 +67,8 @@ private:
 
     static daf::persistence::FormatterRegistration registration;
 };
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst
 
 #endif

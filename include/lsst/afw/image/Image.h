@@ -38,9 +38,7 @@
 #include <climits>
 #include <memory>
 
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/ImageBase.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/ImageUtils.h"
@@ -60,7 +58,7 @@ template <typename PixelT>
 class ImageFormatter;
 template <typename PixelT>
 class DecoratedImageFormatter;
-}
+}  // namespace formatters
 
 namespace image {
 
@@ -102,14 +100,14 @@ public:
      * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
      * which may be conveniently used to make objects of an appropriate size
      */
-    explicit Image(geom::Extent2I const& dimensions = geom::Extent2I(), PixelT initialValue = 0);
+    explicit Image(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(), PixelT initialValue = 0);
     /**
      * Create an initialized Image of the specified size
      *
      * @param bbox dimensions and origin of desired Image
      * @param initialValue Initial value
      */
-    explicit Image(geom::Box2I const& bbox, PixelT initialValue = 0);
+    explicit Image(lsst::geom::Box2I const& bbox, PixelT initialValue = 0);
 
     /**
      * Copy constructor to make a copy of part of an Image.
@@ -124,7 +122,7 @@ public:
      * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
      * this is probably what you want
      */
-    explicit Image(Image const& rhs, geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
+    explicit Image(Image const& rhs, lsst::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
                    const bool deep = false);
     /**
      * Copy constructor.
@@ -153,7 +151,7 @@ public:
     explicit Image(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
-                   geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT);
+                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     /**
      *  Construct an Image by reading a FITS image in memory.
@@ -170,7 +168,7 @@ public:
     explicit Image(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
                    std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                            std::shared_ptr<lsst::daf::base::PropertySet>(),
-                   geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT);
+                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     /**
      *  Construct an Image from an already-open FITS object.
@@ -181,16 +179,17 @@ public:
      *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
      *                              should take into account the xy0 saved with the image.
      */
-    explicit Image(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                                                 std::shared_ptr<lsst::daf::base::PropertySet>(),
-                   geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT);
+    explicit Image(fits::Fits& fitsfile,
+                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet>(),
+                   lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT);
 
     // generalised copy constructor
     template <typename OtherPixelT>
     Image(Image<OtherPixelT> const& rhs, const bool deep) : image::ImageBase<PixelT>(rhs, deep) {}
 
     explicit Image(ndarray::Array<PixelT, 2, 1> const& array, bool deep = false,
-                   geom::Point2I const& xy0 = geom::Point2I())
+                   lsst::geom::Point2I const& xy0 = lsst::geom::Point2I())
             : image::ImageBase<PixelT>(array, deep, xy0) {}
 
     virtual ~Image() = default;
@@ -218,8 +217,9 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<lsst::daf::base::PropertySet const>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
                    std::string const& mode = "w") const;
 
     /**
@@ -252,13 +252,10 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(
-        std::string const& filename,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr,
-        std::shared_ptr<Mask<MaskPixel> const> mask=nullptr
-    ) const;
+    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
      *  Write an image to a FITS RAM file.
@@ -269,13 +266,10 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(
-        fits::MemFileManager& manager,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr,
-        std::shared_ptr<Mask<MaskPixel> const> mask=nullptr
-    ) const;
+    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
      *  Write an image to an open FITS file object.
@@ -285,12 +279,9 @@ public:
      *  @param[in] header        Additional values to write to the header (may be null).
      *  @param[in] mask          Mask, for calculation of statistics.
      */
-    void writeFits(
-        fits::Fits& fitsfile,
-        fits::ImageWriteOptions const& options,
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr,
-        std::shared_ptr<Mask<MaskPixel> const> mask=nullptr
-    ) const;
+    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr,
+                   std::shared_ptr<Mask<MaskPixel> const> mask = nullptr) const;
 
     /**
      *  Read an Image from a regular FITS file.
@@ -398,7 +389,7 @@ public:
      *
      * @param dimensions desired number of columns. rows
      */
-    explicit DecoratedImage(const geom::Extent2I& dimensions = geom::Extent2I());
+    explicit DecoratedImage(const lsst::geom::Extent2I& dimensions = lsst::geom::Extent2I());
     /**
      * Create an %image of the specified size
      *
@@ -407,7 +398,7 @@ public:
      * @note Many lsst::afw::image and lsst::afw::math objects define a `dimensions` member
      * which may be conveniently used to make objects of an appropriate size
      */
-    explicit DecoratedImage(const geom::Box2I& bbox);
+    explicit DecoratedImage(const lsst::geom::Box2I& bbox);
     /**
      * Create a DecoratedImage wrapping `rhs`
      *
@@ -434,7 +425,8 @@ public:
      * @param origin Coordinate system of the bbox
      */
     explicit DecoratedImage(std::string const& fileName, const int hdu = fits::DEFAULT_HDU,
-                            geom::Box2I const& bbox = geom::Box2I(), ImageOrigin const origin = PARENT);
+                            lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
+                            ImageOrigin const origin = PARENT);
 
     /**
      * Assignment operator
@@ -457,7 +449,7 @@ public:
     int getY0() const { return _image->getY0(); }
 
     /// Return the %image's size;  useful for passing to constructors
-    const geom::Extent2I getDimensions() const { return _image->getDimensions(); }
+    const lsst::geom::Extent2I getDimensions() const { return _image->getDimensions(); }
 
     void swap(DecoratedImage& rhs);
 
@@ -468,8 +460,9 @@ public:
      * @param metadata metadata to write to header; or NULL
      * @param mode "w" to write a new file; "a" to append
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<lsst::daf::base::PropertySet const>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet const>(),
                    std::string const& mode = "w") const;
 
     /// Return a shared_ptr to the DecoratedImage's Image
@@ -503,16 +496,16 @@ void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
 ///
 /// Note that this modifies the metadata, stripping the WCS headers that
 /// provide the xy0.
-geom::Box2I bboxFromMetadata(daf::base::PropertySet & metadata);
+lsst::geom::Box2I bboxFromMetadata(daf::base::PropertySet& metadata);
 
 /**
  * Return true if the pixels for two images or masks overlap in memory.
  */
-template<typename T1, typename T2>
-bool imagesOverlap(ImageBase<T1> const &image1, ImageBase<T2> const &image2);
+template <typename T1, typename T2>
+bool imagesOverlap(ImageBase<T1> const& image1, ImageBase<T2> const& image2);
 
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

@@ -38,9 +38,9 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
@@ -60,7 +60,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
+        self.image = afwImage.ImageF(lsst.geom.Extent2I(100, 200))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -128,7 +128,8 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(image2.getHeight() % 2, 0)
         width = image2.getWidth()
         for y in range(1, image2.getHeight(), 2):
-            sim = image2.Factory(image2, afwGeom.Box2I(afwGeom.Point2I(0, y), afwGeom.Extent2I(width, 1)),
+            sim = image2.Factory(image2,
+                                 lsst.geom.Box2I(lsst.geom.Point2I(0, y), lsst.geom.Extent2I(width, 1)),
                                  afwImage.LOCAL)
             sim += 1
 
@@ -278,7 +279,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
         nx = 101
         ny = 64
-        img = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
+        img = afwImage.ImageF(lsst.geom.Extent2I(nx, ny))
 
         z0 = 10.0
         dzdx = 1.0
@@ -324,7 +325,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
                          stats.getValue(afwMath.MEANCLIP))
 
     def testMask(self):
-        mask = afwImage.Mask(afwGeom.Extent2I(10, 10))
+        mask = afwImage.Mask(lsst.geom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)
@@ -373,7 +374,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         ctrl = afwMath.StatisticsControl()
         ctrl.setAndMask(~0x0)
 
-        mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        mimg = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         mimg.set([self.val, 0x1, self.val])
 
         # test the case with no valid pixels ... both mean and stdev should be
@@ -403,7 +404,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def testTicket1125(self):
         """Ticket 1125 reported that the clipped routines were aborting when called with no valid pixels. """
-        mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        mimg = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         mimg.set([self.val, 0x1, self.val])
 
         ctrl = afwMath.StatisticsControl()
@@ -419,7 +420,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
     def testWeightedSum(self):
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        mi = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         mi.getImage().set(1.0)
         mi.getVariance().set(0.1)
 
@@ -437,7 +438,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         weight, mean = 0.1, 1.0
 
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        mi = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         npix = 10*10
         mi.getImage().set(mean)
         mi.getVariance().set(np.nan)
@@ -460,7 +461,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         weight, mean, variance = 0.1, 1.0, 10.0
 
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        mi = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 10))
         npix = 10*10
         mi.getImage().set(mean)
         mi.getVariance().set(variance)
@@ -492,7 +493,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         # With only one point, the sample variance returns NaN to avoid a divide by zero error
         # Thus, on the second iteration, the clip width (based on _variance) is NaN and corrupts
         #   all further calculations.
-        img = afwImage.ImageF(afwGeom.Extent2I(1, 1))
+        img = afwImage.ImageF(lsst.geom.Extent2I(1, 1))
         img.set(0)
         stats = afwMath.makeStatistics(img, afwMath.MEANCLIP | afwMath.NCLIPPED)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), 0)
@@ -512,7 +513,7 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
                           self.image, mask, afwMath.MEDIAN, ctrl)
         subMask = afwImage.Mask(
             mask,
-            afwGeom.Box2I(afwGeom.Point2I(dims*(scale - 1)), dims))
+            lsst.geom.Box2I(lsst.geom.Point2I(dims*(scale - 1)), dims))
         subMask.set(0)
         # Using subMask is successful.
         self.assertEqual(afwMath.makeStatistics(self.image, subMask, afwMath.MEDIAN, ctrl).getValue(),

@@ -556,7 +556,7 @@ doPlus(ExprT1 e1, ExprT2 e2, double const alpha, boost::mpl::false_) {
                       bitwise_or<typename exprTraits<ExprT1>::MaskPixelT>,
                       variance_plus_covar<typename exprTraits<ExprT1>::VariancePixelT> >(e1, e2, alpha);
 }
-}
+}  // namespace
 
 /// Like operator+(), but assume that covariance's 2*alpha*sqrt(vx*vy)
 template <typename ExprT1, typename ExprT2>
@@ -564,7 +564,7 @@ inline ExprT1 plus(
         ExprT1& lhs,        ///< Left hand value
         ExprT2 const& rhs,  ///< Right hand value
         float covariance    ///< Assume that covariance is 2*alpha*sqrt(vx*vy) (if variances are known)
-        ) {
+) {
     return doPlus(lhs, rhs, covariance, typename std::is_arithmetic<ExprT1>::type());
 }
 
@@ -648,8 +648,8 @@ template <typename ExprT1, typename ExprT2, typename BinOp, typename MaskBinOp, 
 std::ostream& operator<<(std::ostream& os, BinaryExpr<ExprT1, ExprT2, BinOp, MaskBinOp, VarBinOp> const& v) {
     return os << "(" << v.image() << ", " << v.mask() << ", " << v.variance() << ")";
 }
-}
-}
-}
-}
+}  // namespace pixel
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 #endif

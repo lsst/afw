@@ -30,6 +30,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.image
@@ -51,8 +52,8 @@ def makeCov(size, dtype):
 
 
 def makeWcs():
-    crval = lsst.afw.geom.SpherePoint(1.606631, 5.090329, lsst.afw.geom.degrees)
-    crpix = lsst.afw.geom.Point2D(2036., 2000.)
+    crval = lsst.geom.SpherePoint(1.606631, 5.090329, lsst.geom.degrees)
+    crpix = lsst.geom.Point2D(2036., 2000.)
     cdMatrix = np.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]])
     return lsst.afw.geom.makeSkyWcs(crval=crval, crpix=crpix, cdMatrix=cdMatrix)
 
@@ -63,7 +64,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.set(self.fluxKey, np.random.randn())
         record.set(self.fluxErrKey, np.random.randn())
         record.set(self.centroidKey,
-                   lsst.afw.geom.Point2D(*np.random.randn(2)))
+                   lsst.geom.Point2D(*np.random.randn(2)))
         record.set(self.centroidErrKey, makeCov(2, np.float32))
         record.set(self.shapeKey,
                    lsst.afw.geom.Quadrupole(*np.random.randn(3)))

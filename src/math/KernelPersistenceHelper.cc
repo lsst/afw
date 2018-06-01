@@ -54,7 +54,7 @@ std::shared_ptr<afw::table::BaseRecord> Kernel::PersistenceHelper::write(
         afw::table::io::OutputArchiveHandle& handle, Kernel const& kernel) const {
     afw::table::BaseCatalog catalog = handle.makeCatalog(schema);
     std::shared_ptr<afw::table::BaseRecord> record = catalog.addNew();
-    record->set(dimensions, geom::Point2I(kernel.getDimensions()));
+    record->set(dimensions, lsst::geom::Point2I(kernel.getDimensions()));
     record->set(center, kernel.getCtr());
     if (spatialFunctions.isValid()) {
         writeSpatialFunctions(handle, *record, kernel._spatialFunctionList);
@@ -82,6 +82,6 @@ std::vector<std::shared_ptr<Kernel::SpatialFunction>> Kernel::PersistenceHelper:
     }
     return spatialFunctionList;
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

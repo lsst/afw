@@ -24,6 +24,7 @@ import unittest
 
 import astropy.io.fits
 
+import lsst.geom
 import lsst.afw.image
 import lsst.afw.geom
 import lsst.utils.tests
@@ -156,7 +157,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         """Test that we load the Wcs from the binary table instead of headers when possible."""
         self.addSipMetadata()
         wcsIn = lsst.afw.geom.makeSkyWcs(self.metadata)
-        dim = lsst.afw.geom.Extent2I(20, 30)
+        dim = lsst.geom.Extent2I(20, 30)
         expIn = lsst.afw.image.ExposureF(dim)
         expIn.setWcs(wcsIn)
         with lsst.utils.tests.getTempFilePath(".fits") as fileName:

@@ -109,7 +109,6 @@ ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter() = default;
 
-
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         dafBase::Persistable const* persistable, std::shared_ptr<dafPersist::FormatterStorage> storage,
@@ -139,8 +138,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
                 maskOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("mask"));
                 varianceOptions = fits::ImageWriteOptions(*additionalData->getAsPropertySetPtr("variance"));
             } catch (std::exception const& exc) {
-                LOGLS_WARN(_log, "Unable to construct Exposure write options (" << exc.what() <<
-                           "); writing with default options");
+                LOGLS_WARN(_log, "Unable to construct Exposure write options ("
+                                         << exc.what() << "); writing with default options");
             }
         }
 
@@ -169,13 +168,13 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
     auto fits = std::dynamic_pointer_cast<dafPersist::FitsStorage>(storage);
     if (fits) {
         LOGL_DEBUG(_log, "ExposureFormatter read FitsStorage");
-        geom::Box2I box;
+        lsst::geom::Box2I box;
         if (additionalData->exists("llcX")) {
             int llcX = additionalData->get<int>("llcX");
             int llcY = additionalData->get<int>("llcY");
             int width = additionalData->get<int>("width");
             int height = additionalData->get<int>("height");
-            box = geom::Box2I(geom::Point2I(llcX, llcY), geom::Extent2I(width, height));
+            box = lsst::geom::Box2I(lsst::geom::Point2I(llcX, llcY), lsst::geom::Extent2I(width, height));
         }
         image::ImageOrigin origin = image::PARENT;
         if (additionalData->exists("imageOrigin")) {
@@ -190,7 +189,8 @@ dafBase::Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>
                                                  "data for retrieving Exposure from fits") %
                                    originStr
 
-                                   ).str());
+                                   )
+                                          .str());
             }
         }
         image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
@@ -251,6 +251,6 @@ INSTANTIATE(float, image::MaskPixel, image::VariancePixel)
 INSTANTIATE(double, image::MaskPixel, image::VariancePixel)
 INSTANTIATE(uint64_t, image::MaskPixel, image::VariancePixel)
 /// @endcond
-}
-}
-}  // end afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

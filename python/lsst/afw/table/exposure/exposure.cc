@@ -27,9 +27,10 @@
 
 #include "lsst/afw/detection/Psf.h"  // forward-declared by Exposure.h
 #include "lsst/afw/fits.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/polygon/Polygon.h"  // forward-declared by Exposure.h
+#include "lsst/afw/geom/SkyWcs.h"           // forward-declared by Transform.h
 #include "lsst/afw/image/ApCorrMap.h"       // forward-declared by Exposure.h
 #include "lsst/afw/image/Calib.h"           // forward-declared by Exposure.h
 #include "lsst/afw/image/VisitInfo.h"       // forward-declared by Exposure.h
@@ -66,9 +67,9 @@ PyExposureRecord declareExposureRecord(py::module &mod) {
     cls.def("getTable", &ExposureRecord::getTable);
     cls.def_property_readonly("table", &ExposureRecord::getTable);
     cls.def("contains",
-            (bool (ExposureRecord::*)(geom::SpherePoint const &, bool) const) & ExposureRecord::contains,
+            (bool (ExposureRecord::*)(lsst::geom::SpherePoint const &, bool) const) & ExposureRecord::contains,
             "coord"_a, "includeValidPolygon"_a = false);
-    cls.def("contains", (bool (ExposureRecord::*)(geom::Point2D const &, geom::SkyWcs const &, bool) const) &
+    cls.def("contains", (bool (ExposureRecord::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
                                 ExposureRecord::contains,
             "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
     cls.def("getWcs", &ExposureRecord::getWcs);
@@ -142,10 +143,10 @@ PyExposureCatalog declareExposureCatalog(py::module &mod) {
             (Catalog (Catalog::*)(std::ptrdiff_t, std::ptrdiff_t, std::ptrdiff_t) const) & Catalog::subset,
             "startd"_a, "stopd"_a, "step"_a);
     cls.def("subsetContaining",
-            (Catalog(Catalog::*)(geom::SpherePoint const &, bool) const) & Catalog::subsetContaining,
+            (Catalog(Catalog::*)(lsst::geom::SpherePoint const &, bool) const) & Catalog::subsetContaining,
             "coord"_a, "includeValidPolygon"_a = false);
     cls.def("subsetContaining",
-            (Catalog(Catalog::*)(geom::Point2D const &, geom::SkyWcs const &, bool) const) &
+            (Catalog(Catalog::*)(lsst::geom::Point2D const &, geom::SkyWcs const &, bool) const) &
                     Catalog::subsetContaining,
             "point"_a, "wcs"_a, "includeValidPolygon"_a = false);
     return cls;

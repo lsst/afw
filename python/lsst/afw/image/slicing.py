@@ -1,4 +1,4 @@
-import lsst.afw.geom as afwGeom
+import lsst.geom
 from .image import LOCAL, PARENT, ImageOrigin
 
 __all__ = ["supportSlicing"]
@@ -9,7 +9,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
     This is the worker routine behind __getitem__ and __setitem__
 
     The imageSlice may be:
-       lsst.afw.geom.Box2I
+       lsst.geom.Box2I
        slice, slice
        :
     Only the first one or two parts of the slice are recognised (no stride), a single int is
@@ -51,7 +51,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
         origin = _origin
         imageSlice = imageSlice[0] if len(imageSlice) <= 2 else imageSlice[:-1]
 
-    if isinstance(imageSlice, afwGeom.Box2I):
+    if isinstance(imageSlice, lsst.geom.Box2I):
         return imageSlice, origin
 
     if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
@@ -86,7 +86,7 @@ def _getBBoxFromSliceTuple(img, imageSlice):
         imageSlice.append(s)
 
     x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
-    return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1)), LOCAL
+    return lsst.geom.Box2I(lsst.geom.Point2I(x[0], y[0]), lsst.geom.Point2I(x[1] - 1, y[1] - 1)), LOCAL
 
 
 def supportSlicing(cls):
@@ -126,7 +126,7 @@ def supportSlicing(cls):
 
     def __float__(self):
         """Convert a 1x1 image to a floating scalar"""
-        if self.getDimensions() != afwGeom.Extent2I(1, 1):
+        if self.getDimensions() != lsst.geom.Extent2I(1, 1):
             raise TypeError(
                 "Only single-pixel images may be converted to python scalars")
 

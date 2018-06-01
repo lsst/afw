@@ -36,7 +36,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-import lsst.afw.geom
+import lsst.geom
 import lsst.afw.image
 import lsst.afw.math
 
@@ -60,8 +60,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         self.longMessage = True
         np.random.seed(5)
-        self.bbox = lsst.afw.geom.Box2I(
-            lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
+        self.bbox = lsst.geom.Box2I(
+            lsst.geom.Point2I(-5, -5), lsst.geom.Point2I(5, 5))
         self.x1d = np.linspace(self.bbox.getBeginX(), self.bbox.getEndX())
         self.y1d = np.linspace(self.bbox.getBeginY(), self.bbox.getEndY())
         self.x2d, self.y2d = np.meshgrid(self.x1d, self.y1d)
@@ -88,8 +88,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
     def testFillImageInterpolation(self):
         ctrl, coefficients = self.cases[-2]
-        bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(10, 15),
-                                   lsst.afw.geom.Extent2I(360, 350))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(10, 15),
+                               lsst.geom.Extent2I(360, 350))
         field = lsst.afw.math.ChebyshevBoundedField(bbox, coefficients)
         image1 = lsst.afw.image.ImageF(bbox)
         image2 = lsst.afw.image.ImageF(bbox)
@@ -108,7 +108,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         (at the top of this file).
         """
         factor = 12.345
-        boxD = lsst.afw.geom.Box2D(self.bbox)
+        boxD = lsst.geom.Box2D(self.bbox)
         # sx, sy: transform from self.bbox range to [-1, -1]
         sx = 2.0 / boxD.getWidth()
         sy = 2.0 / boxD.getHeight()
@@ -148,8 +148,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         actually (-0.5, 1.5) when converted to a Box2D), and the translation
         doesn't affect the integral.
         """
-        bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(0, 0),
-                                   lsst.afw.geom.Point2I(1, 1))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                               lsst.geom.Point2I(1, 1))
 
         # 0th order polynomial
         coeffs = np.array([[5.0]])
@@ -204,8 +204,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             integrate2dBox[1, 2, -2.5, 5.5, -3.5, 7.5]
             integrate2dBox[2, 2, -2.5, 5.5, -3.5, 7.5]
         """
-        bbox = lsst.afw.geom.Box2I(
-            lsst.afw.geom.Point2I(-2, -3), lsst.afw.geom.Point2I(5, 7))
+        bbox = lsst.geom.Box2I(
+            lsst.geom.Point2I(-2, -3), lsst.geom.Point2I(5, 7))
 
         # 0th order polynomial
         coeffs = np.array([[5.0]])
@@ -240,8 +240,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         Similarly, the mean of the (n,m)th 2d Chebyshev is the appropriate
         product of the above.
         """
-        bbox = lsst.afw.geom.Box2I(
-            lsst.afw.geom.Point2I(-2, -3), lsst.afw.geom.Point2I(5, 7))
+        bbox = lsst.geom.Box2I(
+            lsst.geom.Point2I(-2, -3), lsst.geom.Point2I(5, 7))
 
         coeffs = np.array([[5.0]])
         field = lsst.afw.math.ChebyshevBoundedField(bbox, coeffs)
@@ -300,7 +300,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         """Test that we can fit 1-d arrays produced by a ChebyshevBoundedField and
         get the same coefficients back.
         """
-        boxD = lsst.afw.geom.Box2D(self.bbox)
+        boxD = lsst.geom.Box2D(self.bbox)
         nPoints = 50
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             for ctrl, coefficients in self.cases:
@@ -318,7 +318,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                 self.assertFloatsAlmostEqual(z1, z2, rtol=1E-13)
 
             # test with an empty bbox
-            inField = lsst.afw.math.ChebyshevBoundedField(lsst.afw.geom.Box2I(),
+            inField = lsst.afw.math.ChebyshevBoundedField(lsst.geom.Box2I(),
                                                           np.array([[1.0, 2.0], [3.0, 4.0]]))
             inField.writeFits(filename)
             outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
@@ -372,8 +372,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(field1, field2)
 
         # different bbox
-        bbox1 = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-10, -10), lsst.afw.geom.Point2I(5, 5))
-        bbox2 = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
+        bbox1 = lsst.geom.Box2I(lsst.geom.Point2I(-10, -10), lsst.geom.Point2I(5, 5))
+        bbox2 = lsst.geom.Box2I(lsst.geom.Point2I(-5, -5), lsst.geom.Point2I(5, 5))
         field1 = lsst.afw.math.ChebyshevBoundedField(bbox1, np.array([[1.0]]))
         field2 = lsst.afw.math.ChebyshevBoundedField(bbox2, np.array([[1.0]]))
         self.assertNotEqual(field1, field2)

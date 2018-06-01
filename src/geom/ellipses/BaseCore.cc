@@ -24,7 +24,7 @@
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 #include <boost/format.hpp>
 #include <map>
 
@@ -51,7 +51,7 @@ std::shared_ptr<BaseCore> getRegistryCopy(std::string const& name) {
     return i->second->clone();
 }
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<BaseCore> BaseCore::make(std::string const& name) {
     std::shared_ptr<BaseCore> result = getRegistryCopy(name);
@@ -112,7 +112,7 @@ void BaseCore::scale(double factor) {
 double BaseCore::getArea() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
-    return a * b * geom::PI;
+    return a * b * lsst::geom::PI;
 }
 
 double BaseCore::getDeterminantRadius() const {
@@ -127,7 +127,7 @@ double BaseCore::getTraceRadius() const {
     return std::sqrt(0.5 * (ixx + iyy));
 }
 
-Extent2D BaseCore::computeDimensions() const {
+lsst::geom::Extent2D BaseCore::computeDimensions() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     double c = std::cos(theta);
@@ -136,7 +136,7 @@ Extent2D BaseCore::computeDimensions() const {
     s *= s;
     b *= b;
     a *= a;
-    Extent2D dimensions(std::sqrt(b * s + a * c), std::sqrt(a * s + b * c));
+    lsst::geom::Extent2D dimensions(std::sqrt(b * s + a * c), std::sqrt(a * s + b * c));
     dimensions *= 2;
     return dimensions;
 }
@@ -256,7 +256,7 @@ BaseCore::Jacobian BaseCore::_dAssignAxesToQuadrupole(double a, double b, double
     m(2, 2) *= (c - s);
     return m;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

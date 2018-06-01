@@ -23,10 +23,7 @@
 # the asserts are automatically imported so unit tests can find them without special imports;
 # the other functions are hidden unless explicitly asked for
 __all__ = ["assertImagesAlmostEqual", "assertImagesEqual", "assertMasksEqual",
-           "assertMaskedImagesAlmostEqual", "assertMaskedImagesEqual",
-           "assertImagesNearlyEqual", "assertMaskedImagesNearlyEqual"]
-
-import warnings
+           "assertMaskedImagesAlmostEqual", "assertMaskedImagesEqual"]
 
 import numpy as np
 
@@ -55,7 +52,7 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
 def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
     """!Make an image whose values are a linear ramp
 
-    @param[in] bbox  bounding box of image (an lsst.afw.geom.Box2I)
+    @param[in] bbox  bounding box of image (an lsst.geom.Box2I)
     @param[in] start  starting ramp value, inclusive
     @param[in] stop  ending ramp value, inclusive; if None, increase by integer values
     @param[in] imageClass  type of image (e.g. lsst.afw.image.ImageF)
@@ -374,17 +371,3 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
         errStrList.insert(0, errStr)
 
     return "; ".join(errStrList)
-
-
-@lsst.utils.tests.inTestCase
-def assertImagesNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertImagesAlmostEqual",
-                  DeprecationWarning, 2)
-    assertImagesAlmostEqual(*args, **kwargs)
-
-
-@lsst.utils.tests.inTestCase
-def assertMaskedImagesNearlyEqual(*args, **kwargs):
-    warnings.warn("Deprecated. Use assertMaskedImagesAlmostEqual",
-                  DeprecationWarning, 2)
-    assertMaskedImagesAlmostEqual(*args, **kwargs)

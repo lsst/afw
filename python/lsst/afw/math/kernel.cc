@@ -83,7 +83,7 @@ PYBIND11_PLUGIN(_kernel) {
 
     clsFixedKernel.def(py::init<>());
     clsFixedKernel.def(py::init<lsst::afw::image::Image<Kernel::Pixel> const &>(), "image"_a);
-    clsFixedKernel.def(py::init<lsst::afw::math::Kernel const &, lsst::afw::geom::Point2D const &>(),
+    clsFixedKernel.def(py::init<lsst::afw::math::Kernel const &, lsst::geom::Point2D const &>(),
                        "kernel"_a, "pos"_a);
     clsFixedKernel.def("clone", &FixedKernel::clone);
     clsFixedKernel.def("resized", &FixedKernel::resized, "width"_a, "height"_a);
@@ -115,7 +115,7 @@ PYBIND11_PLUGIN(_kernel) {
     py::class_<DeltaFunctionKernel, std::shared_ptr<DeltaFunctionKernel>, Kernel> clsDeltaFunctionKernel(
             mod, "DeltaFunctionKernel");
 
-    clsDeltaFunctionKernel.def(py::init<int, int, lsst::afw::geom::Point2I const &>(), "width"_a, "height"_a,
+    clsDeltaFunctionKernel.def(py::init<int, int, lsst::geom::Point2I const &>(), "width"_a, "height"_a,
                                "point"_a);
     clsDeltaFunctionKernel.def("clone", &DeltaFunctionKernel::clone);
     clsDeltaFunctionKernel.def("resized", &DeltaFunctionKernel::resized, "width"_a, "height"_a);

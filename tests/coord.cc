@@ -33,25 +33,25 @@
 
 #include "boost/test/unit_test.hpp"
 
+#include "lsst/geom.h"
 #include "lsst/afw/coord.h"
 
 #define CHECK_DIFF(x1, x2, d) BOOST_CHECK_SMALL(x1 - x2, d)
 
 using namespace std;
 namespace afwCoord = lsst::afw::coord;
-namespace afwGeom = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     std::string rastr = "10:00:00.00";
     std::string decstr = "-02:30:00.00";
-    afwGeom::Angle ra = afwCoord::hmsStringToAngle(rastr);
-    afwGeom::Angle dec = afwCoord::dmsStringToAngle(decstr);
+    lsst::geom::Angle ra = afwCoord::hmsStringToAngle(rastr);
+    lsst::geom::Angle dec = afwCoord::dmsStringToAngle(decstr);
 
     CHECK_DIFF(ra.asDegrees(), 150.0, 1e-8);
     CHECK_DIFF(dec.asDegrees(), -2.5, 1e-8);
 
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
-    ra -= (0.000001 * afwGeom::degrees);
+    ra -= (0.000001 * lsst::geom::degrees);
     std::string raStr2 = afwCoord::angleToHmsString(ra);
     BOOST_CHECK_EQUAL(raStr2, rastr);
 }

@@ -21,7 +21,7 @@ extern "C" {
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/fitsCompression.h"
 
@@ -101,16 +101,16 @@ std::string makeLimitedFitsHeaderImpl(std::vector<std::string> const &paramNames
 /// The current implementation assumes (and checks with an assertion) that the shortened versions of the
 /// provided set of strings are unique.
 class StringStartSet {
-  public:
+public:
     /// Construct from initializer_list of strings
-    StringStartSet(std::initializer_list<std::string> const& input) : _minSize(-1) {
-        for (auto const& word : input) {
+    StringStartSet(std::initializer_list<std::string> const &input) : _minSize(-1) {
+        for (auto const &word : input) {
             std::size_t const size = word.size();
             if (size < _minSize) {
                 _minSize = size;
             }
         }
-        for (auto const& word : input) {
+        for (auto const &word : input) {
             std::string const start = startString(word);
             assert(_words.count(start) == 0);  // This should be the only word that starts this way
             _words[start] = word;
@@ -118,24 +118,24 @@ class StringStartSet {
     }
 
     /// Return whether a string starts with any of the originally provided strings
-    bool matches(std::string const& key) const {
+    bool matches(std::string const &key) const {
         auto const iter = _words.find(startString(key));
         if (iter == _words.end()) {
             return false;
         }
         // Check that the full word matches too
-        std::string const& word = iter->second;
+        std::string const &word = iter->second;
         return key.compare(0, word.size(), word) == 0;
     }
 
-  private:
+private:
     typedef std::unordered_map<std::string, std::string> Map;
 
     /// Return the start of the word
-    std::string startString(std::string const& word) const { return word.substr(0, _minSize); }
+    std::string startString(std::string const &word) const { return word.substr(0, _minSize); }
 
     std::size_t _minSize;  // Minimum length of provided words
-    Map _words;  // Start of words --> full word
+    Map _words;            // Start of words --> full word
 };
 
 /// Keys we leave entirely to cfitsio
@@ -144,34 +144,29 @@ class StringStartSet {
 /// Also, the user has no business reading them, since the use of FITS is
 /// an implementation detail that should be opaque to the user.
 static std::unordered_set<std::string> const ignoreKeys = {
-    // FITS core keywords
-    "SIMPLE", "BITPIX", "NAXIS", "EXTEND", "GCOUNT", "PCOUNT", "XTENSION", "TFIELDS", "BSCALE", "BZERO",
-    // FITS compression keywords
-    "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM",
-    // Not essential, but will prevent fitsverify warnings
-    "DATASUM", "CHECKSUM"
-    };
+        // FITS core keywords
+        "SIMPLE", "BITPIX", "NAXIS", "EXTEND", "GCOUNT", "PCOUNT", "XTENSION", "TFIELDS", "BSCALE", "BZERO",
+        // FITS compression keywords
+        "ZBITPIX", "ZIMAGE", "ZCMPTYPE", "ZSIMPLE", "ZEXTEND", "ZBLANK", "ZDATASUM", "ZHECKSUM",
+        // Not essential, but will prevent fitsverify warnings
+        "DATASUM", "CHECKSUM"};
 
 /// Starting part of keys we leave entirely to cfitsio
 ///
 /// If we write any of these keys ourselves, it may corrupt the FITS file.
 /// Also, the user has no business reading them, since the use of FITS is
 /// an implementation detail that should be opaque to the user.
-StringStartSet const ignoreKeyStarts {
-    // FITS core keywords
-    "NAXIS", "TZERO", "TSCAL",
-    // FITS compression keywords
-    "ZNAXIS", "ZTILE", "ZNAME", "ZVAL"
-    };
+StringStartSet const ignoreKeyStarts{// FITS core keywords
+                                     "NAXIS", "TZERO", "TSCAL",
+                                     // FITS compression keywords
+                                     "ZNAXIS", "ZTILE", "ZNAME", "ZVAL"};
 
 /// Starting part of keys we refuse to write when given bulk keywords
 ///
 /// If we write any of these keys ourselves, it may corrupt the FITS file.
 /// We would prefer not to read them either but our Catalog reading code
 /// cares about them.
-StringStartSet const ignoreKeyStartsWrite {
-    "TFORM", "TTYPE"
-    };
+StringStartSet const ignoreKeyStartsWrite{"TFORM", "TTYPE"};
 
 // Strip leading and trailing single quotes and whitespace from a string.
 std::string strip(std::string const &s) {
@@ -196,7 +191,7 @@ char getFormatCode(float *) { return 'E'; }
 char getFormatCode(double *) { return 'D'; }
 char getFormatCode(std::complex<float> *) { return 'C'; }
 char getFormatCode(std::complex<double> *) { return 'M'; }
-char getFormatCode(geom::Angle *) { return 'D'; }
+char getFormatCode(lsst::geom::Angle *) { return 'D'; }
 
 // ---- Create a TFORM value for the given type and size ----------------------------------------------------
 
@@ -275,7 +270,7 @@ struct FitsType<double> {
     static int const CONSTANT = TDOUBLE;
 };
 template <>
-struct FitsType<geom::Angle> {
+struct FitsType<lsst::geom::Angle> {
     static int const CONSTANT = TDOUBLE;
 };
 template <>
@@ -339,16 +334,22 @@ static bool allowImageCompression = true;
 
 int fitsTypeForBitpix(int bitpix) {
     switch (bitpix) {
-      case 8: return TBYTE;
-      case 16: return TSHORT;
-      case 32: return TINT;
-      case 64: return TLONGLONG;
-      case -32: return TFLOAT;
-      case -64: return TDOUBLE;
-      default:
-        std::ostringstream os;
-        os << "Invalid bitpix value: " << bitpix;
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
+        case 8:
+            return TBYTE;
+        case 16:
+            return TSHORT;
+        case 32:
+            return TINT;
+        case 64:
+            return TLONGLONG;
+        case -32:
+            return TFLOAT;
+        case -64:
+            return TDOUBLE;
+        default:
+            std::ostringstream os;
+            os << "Invalid bitpix value: " << bitpix;
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, os.str());
     }
 }
 
@@ -381,7 +382,7 @@ ItemInfo isCommentIsValid(daf::base::PropertyList const &pl, std::string const &
     return ItemInfo(false, true);
 }
 
-}  // anonymous
+}  // namespace
 
 // ----------------------------------------------------------------------------------------------------------
 // ---- Implementations for stuff in fits.h -----------------------------------------------------------------
@@ -611,7 +612,7 @@ void writeKeyImpl(Fits &fits, char const *key, double const &value, char const *
     }
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T>
 void Fits::updateKey(std::string const &key, T const &value, std::string const &comment) {
@@ -726,7 +727,7 @@ void readKeyImpl(Fits &fits, char const *key, double &value) {
     }
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename T>
 void Fits::readKey(std::string const &key, T &value) {
@@ -795,9 +796,8 @@ void Fits::forEachKey(HeaderIterationFunctor &functor) {
 
 namespace {
 
-bool isKeyIgnored(std::string const &key, bool write=false) {
-    return ((ignoreKeys.find(key) != ignoreKeys.end()) ||
-            ignoreKeyStarts.matches(key) ||
+bool isKeyIgnored(std::string const &key, bool write = false) {
+    return ((ignoreKeys.find(key) != ignoreKeys.end()) || ignoreKeyStarts.matches(key) ||
             (write && ignoreKeyStartsWrite.matches(key)));
 }
 
@@ -956,7 +956,7 @@ void writeKeyFromProperty(Fits &fits, daf::base::PropertySet const &metadata, st
     }
 }
 
-}  // anonymous
+}  // namespace
 
 void Fits::readMetadata(daf::base::PropertySet &metadata, bool strip) {
     MetadataIterationFunctor f;
@@ -1120,8 +1120,7 @@ void Fits::createEmpty() {
 }
 
 void Fits::createImageImpl(int bitpix, int naxis, long const *naxes) {
-    fits_create_img(reinterpret_cast<fitsfile *>(fptr), bitpix, naxis,
-                    const_cast<long*>(naxes), &status);
+    fits_create_img(reinterpret_cast<fitsfile *>(fptr), bitpix, naxis, const_cast<long *>(naxes), &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating new image HDU");
     }
@@ -1143,40 +1142,41 @@ namespace {
 /// Compression is a property of the file in cfitsio, so we need to set it,
 /// do our stuff and then disable it.
 struct ImageCompressionContext {
-  public:
-    ImageCompressionContext(Fits & fits_, ImageCompressionOptions const& useThis)
-        : fits(fits_), old(fits.getImageCompression()) {
+public:
+    ImageCompressionContext(Fits &fits_, ImageCompressionOptions const &useThis)
+            : fits(fits_), old(fits.getImageCompression()) {
         fits.setImageCompression(useThis);
     }
     ~ImageCompressionContext() {
         int status = 0;
         std::swap(status, fits.status);
         try {
-             fits.setImageCompression(old);
+            fits.setImageCompression(old);
         } catch (...) {
             LOGLS_WARN("afw.fits",
                        makeErrorMessage(fits.fptr, fits.status, "Failed to restore compression settings"));
         }
         std::swap(status, fits.status);
     }
-  private:
-    Fits & fits;  // FITS file we're working on
+
+private:
+    Fits &fits;                   // FITS file we're working on
     ImageCompressionOptions old;  // Former compression options, to be restored
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 template <typename T>
-void Fits::writeImage(
-    image::ImageBase<T> const& image,
-    ImageWriteOptions const& options,
-    std::shared_ptr<daf::base::PropertySet const> header,
-    std::shared_ptr<image::Mask<image::MaskPixel> const> mask
-) {
+void Fits::writeImage(image::ImageBase<T> const &image, ImageWriteOptions const &options,
+                      std::shared_ptr<daf::base::PropertySet const> header,
+                      std::shared_ptr<image::Mask<image::MaskPixel> const> mask) {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
-    ImageCompressionOptions const& compression = image.getBBox().getArea() > 0 ? options.compression :
-        ImageCompressionOptions(ImageCompressionOptions::NONE);  // cfitsio can't compress empty images
-    ImageCompressionContext comp(*this, compression);  // RAII
+    ImageCompressionOptions const &compression =
+            image.getBBox().getArea() > 0
+                    ? options.compression
+                    : ImageCompressionOptions(
+                              ImageCompressionOptions::NONE);  // cfitsio can't compress empty images
+    ImageCompressionContext comp(*this, compression);          // RAII
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Activating compression for write image");
     }
@@ -1189,7 +1189,7 @@ void Fits::writeImage(
 
     // Write the header
     std::shared_ptr<daf::base::PropertyList> wcsMetadata =
-        geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
+            geom::createTrivialWcsMetadata(image::detail::wcsNameForXY0, image.getXY0());
     if (header) {
         std::shared_ptr<daf::base::PropertySet> copy = header->deepCopy();
         copy->combine(wcsMetadata);
@@ -1219,8 +1219,8 @@ void Fits::writeImage(
 
     // Write the pixels
     int const fitsType = scale.bitpix == 0 ? FitsType<T>::CONSTANT : fitsTypeForBitpix(scale.bitpix);
-    fits_write_img(fits, fitsType, 1, pixels->getNumElements(),
-                   const_cast<void*>(pixels->getData()), &status);
+    fits_write_img(fits, fitsType, 1, pixels->getNumElements(), const_cast<void *>(pixels->getData()),
+                   &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Writing image");
     }
@@ -1240,10 +1240,10 @@ void Fits::writeImage(
                                    "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
             }
         } else {
-            fits_write_key_dbl(fits, "BZERO", scale.bzero, 12,
-                               "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
-            fits_write_key_dbl(fits, "BSCALE", scale.bscale, 12,
-                               "Scaling: MEMORY = BZERO + BSCALE * DISK", &status);
+            fits_write_key_dbl(fits, "BZERO", scale.bzero, 12, "Scaling: MEMORY = BZERO + BSCALE * DISK",
+                               &status);
+            fits_write_key_dbl(fits, "BSCALE", scale.bscale, 12, "Scaling: MEMORY = BZERO + BSCALE * DISK",
+                               &status);
         }
         if (behavior & AUTO_CHECK) {
             LSST_FITS_CHECK_STATUS(*this, "Writing BSCALE,BZERO");
@@ -1271,11 +1271,10 @@ void Fits::writeImage(
     }
 }
 
-
 namespace {
 
 /// Value for BLANK pixels
-template <typename T, class Enable=void>
+template <typename T, class Enable = void>
 struct NullValue {
     static T constexpr value = 0;
 };
@@ -1286,14 +1285,14 @@ struct NullValue<T, typename std::enable_if<std::numeric_limits<T>::has_quiet_Na
     static T constexpr value = std::numeric_limits<T>::quiet_NaN();
 };
 
-}
+}  // namespace
 
 template <typename T>
 void Fits::readImageImpl(int nAxis, T *data, long *begin, long *end, long *increment) {
     T null = NullValue<T>::value;
     int anyNulls = 0;
     fits_read_subset(reinterpret_cast<fitsfile *>(fptr), FitsType<T>::CONSTANT, begin, end, increment,
-                     reinterpret_cast<void*>(&null), data, &anyNulls, &status);
+                     reinterpret_cast<void *>(&null), data, &anyNulls, &status);
     if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Reading image");
 }
 
@@ -1324,19 +1323,18 @@ bool Fits::checkImageType() {
         // Everything can be represented by double
         return true;
     }
-    assert((std::is_same<T, float>::value)); // Everything else has been dealt with
+    assert((std::is_same<T, float>::value));  // Everything else has been dealt with
     switch (imageType) {
-      case TLONGLONG:
-      case TDOUBLE:
-        // Not enough precision in 'float'
-        return false;
-      default:
-        return true;
+        case TLONGLONG:
+        case TDOUBLE:
+            // Not enough precision in 'float'
+            return false;
+        default:
+            return true;
     }
 }
 
-ImageCompressionOptions Fits::getImageCompression()
-{
+ImageCompressionOptions Fits::getImageCompression() {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
     int compType = 0;  // cfitsio compression type
     fits_get_compression_type(fits, &compType, &status);
@@ -1359,12 +1357,11 @@ ImageCompressionOptions Fits::getImageCompression()
     return ImageCompressionOptions(compressionAlgorithmFromCfitsio(compType), tiles, quantizeLevel);
 }
 
-void Fits::setImageCompression(ImageCompressionOptions const& comp)
-{
+void Fits::setImageCompression(ImageCompressionOptions const &comp) {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
     fits_unset_compression_request(fits, &status);  // wipe the slate and start over
-    ImageCompressionOptions::CompressionAlgorithm const algorithm = allowImageCompression ? comp.algorithm :
-        ImageCompressionOptions::NONE;
+    ImageCompressionOptions::CompressionAlgorithm const algorithm =
+            allowImageCompression ? comp.algorithm : ImageCompressionOptions::NONE;
     fits_set_compression_type(fits, compressionAlgorithmToCfitsio(algorithm), &status);
     if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Setting compression type");
@@ -1388,13 +1385,9 @@ void Fits::setImageCompression(ImageCompressionOptions const& comp)
     }
 }
 
-void setAllowImageCompression(bool allow) {
-    allowImageCompression = allow;
-}
+void setAllowImageCompression(bool allow) { allowImageCompression = allow; }
 
-bool getAllowImageCompression() {
-    return allowImageCompression;
-}
+bool getAllowImageCompression() { return allowImageCompression; }
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
 
@@ -1548,13 +1541,11 @@ namespace {
 
 // RAII for moving the HDU
 class HduMove {
-  public:
+public:
     HduMove() = delete;
-    HduMove(HduMove const&) = delete;
+    HduMove(HduMove const &) = delete;
 
-    HduMove(Fits & fits, int hdu) : _fits(fits), _enabled(true) {
-        _fits.setHdu(hdu);
-    }
+    HduMove(Fits &fits, int hdu) : _fits(fits), _enabled(true) { _fits.setHdu(hdu); }
     ~HduMove() {
         if (!_enabled) {
             return;
@@ -1562,21 +1553,20 @@ class HduMove {
         int status = 0;
         std::swap(status, _fits.status);
         try {
-             _fits.setHdu(0);
+            _fits.setHdu(0);
         } catch (...) {
-            LOGLS_WARN("afw.fits",
-                       makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to PHU"));
+            LOGLS_WARN("afw.fits", makeErrorMessage(_fits.fptr, _fits.status, "Failed to move back to PHU"));
         }
         std::swap(status, _fits.status);
     }
     void disable() { _enabled = false; }
 
-  private:
-    Fits & _fits;  // FITS file we're working on
+private:
+    Fits &_fits;    // FITS file we're working on
     bool _enabled;  // Move back to PHU on destruction?
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
 bool Fits::checkCompressedImagePhu() {
     auto fits = reinterpret_cast<fitsfile *>(fptr);
@@ -1604,56 +1594,36 @@ bool Fits::checkCompressedImagePhu() {
     return isCompressed;
 }
 
-
-ImageWriteOptions::ImageWriteOptions(daf::base::PropertySet const& config)
-  : compression(
-        fits::compressionAlgorithmFromString(config.get<std::string>("compression.algorithm")),
-        std::vector<long>{config.getAsInt64("compression.columns"), config.getAsInt64("compression.rows")},
-        config.getAsDouble("compression.quantizeLevel")
-    ),
-    scaling(
-        fits::scalingAlgorithmFromString(config.get<std::string>("scaling.algorithm")),
-        config.getAsInt("scaling.bitpix"),
-        config.exists("scaling.maskPlanes") ? config.getArray<std::string>("scaling.maskPlanes") :
-            std::vector<std::string>{},
-        config.getAsInt("scaling.seed"),
-        config.getAsDouble("scaling.quantizeLevel"),
-        config.getAsDouble("scaling.quantizePad"),
-        config.get<bool>("scaling.fuzz"),
-        config.getAsDouble("scaling.bscale"),
-        config.getAsDouble("scaling.bzero")
-    )
-{}
-
+ImageWriteOptions::ImageWriteOptions(daf::base::PropertySet const &config)
+        : compression(fits::compressionAlgorithmFromString(config.get<std::string>("compression.algorithm")),
+                      std::vector<long>{config.getAsInt64("compression.columns"),
+                                        config.getAsInt64("compression.rows")},
+                      config.getAsDouble("compression.quantizeLevel")),
+          scaling(fits::scalingAlgorithmFromString(config.get<std::string>("scaling.algorithm")),
+                  config.getAsInt("scaling.bitpix"),
+                  config.exists("scaling.maskPlanes") ? config.getArray<std::string>("scaling.maskPlanes")
+                                                      : std::vector<std::string>{},
+                  config.getAsInt("scaling.seed"), config.getAsDouble("scaling.quantizeLevel"),
+                  config.getAsDouble("scaling.quantizePad"), config.get<bool>("scaling.fuzz"),
+                  config.getAsDouble("scaling.bscale"), config.getAsDouble("scaling.bzero")) {}
 
 namespace {
 
 template <typename T>
-void validateEntry(
-    daf::base::PropertySet & output,
-    daf::base::PropertySet const& input,
-    std::string const& name,
-    T defaultValue
-) {
+void validateEntry(daf::base::PropertySet &output, daf::base::PropertySet const &input,
+                   std::string const &name, T defaultValue) {
     output.add(name, input.get<T>(name, defaultValue));
 }
 
-
 template <typename T>
-void validateEntry(
-    daf::base::PropertySet & output,
-    daf::base::PropertySet const& input,
-    std::string const& name,
-    std::vector<T> defaultValue
-) {
+void validateEntry(daf::base::PropertySet &output, daf::base::PropertySet const &input,
+                   std::string const &name, std::vector<T> defaultValue) {
     output.add(name, input.exists(name) ? input.getArray<T>(name) : defaultValue);
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
-
-std::shared_ptr<daf::base::PropertySet>
-ImageWriteOptions::validate(daf::base::PropertySet const& config) {
+std::shared_ptr<daf::base::PropertySet> ImageWriteOptions::validate(daf::base::PropertySet const &config) {
     auto validated = std::make_shared<daf::base::PropertySet>();
 
     validateEntry(*validated, config, "compression.algorithm", std::string("NONE"));
@@ -1672,7 +1642,7 @@ ImageWriteOptions::validate(daf::base::PropertySet const& config) {
     validateEntry(*validated, config, "scaling.bzero", 0.0);
 
     // Check for additional entries that we don't support (e.g., from typos)
-    for (auto const& name : config.names(false)) {
+    for (auto const &name : config.names(false)) {
         if (!validated->exists(name)) {
             std::ostringstream os;
             os << "Invalid image write option: " << name;
@@ -1682,7 +1652,6 @@ ImageWriteOptions::validate(daf::base::PropertySet const& config) {
 
     return validated;
 }
-
 
 #define INSTANTIATE_KEY_OPS(r, data, T)                                                            \
     template void Fits::updateKey(std::string const &, T const &, std::string const &);            \
@@ -1695,14 +1664,13 @@ ImageWriteOptions::validate(daf::base::PropertySet const& config) {
     template void Fits::writeColumnKey(std::string const &, int, T const &);                       \
     template void Fits::readKey(std::string const &, T &);
 
-#define INSTANTIATE_IMAGE_OPS(r, data, T)                                \
-    template void Fits::writeImageImpl(T const *, int);                  \
-    template void Fits::writeImage(image::ImageBase<T> const&, \
-                                   ImageWriteOptions const&, \
-                                   std::shared_ptr<daf::base::PropertySet const>, \
-                                   std::shared_ptr<image::Mask<image::MaskPixel> const>); \
-    template void Fits::readImageImpl(int, T *, long *, long *, long *); \
-    template bool Fits::checkImageType<T>();                             \
+#define INSTANTIATE_IMAGE_OPS(r, data, T)                                                  \
+    template void Fits::writeImageImpl(T const *, int);                                    \
+    template void Fits::writeImage(image::ImageBase<T> const &, ImageWriteOptions const &, \
+                                   std::shared_ptr<daf::base::PropertySet const>,          \
+                                   std::shared_ptr<image::Mask<image::MaskPixel> const>);  \
+    template void Fits::readImageImpl(int, T *, long *, long *, long *);                   \
+    template bool Fits::checkImageType<T>();                                               \
     template int getBitPix<T>();
 
 #define INSTANTIATE_TABLE_OPS(r, data, T)                                \
@@ -1722,11 +1690,11 @@ ImageWriteOptions::validate(daf::base::PropertySet const& config) {
 
 #define COLUMN_TYPES                                                                             \
     (bool)(std::string)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t)( \
-            std::int64_t)(float)(double)(geom::Angle)(std::complex<float>)(std::complex<double>)
+            std::int64_t)(float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define COLUMN_ARRAY_TYPES                                                                              \
     (bool)(char)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t)(std::int64_t)( \
-            float)(double)(geom::Angle)(std::complex<float>)(std::complex<double>)
+            float)(double)(lsst::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define IMAGE_TYPES \
     (unsigned char)(short)(unsigned short)(int)(unsigned int)(std::int64_t)(std::uint64_t)(float)(double)
@@ -1735,6 +1703,6 @@ BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_OPS, _, COLUMN_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_ARRAY_OPS, _, COLUMN_ARRAY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_IMAGE_OPS, _, IMAGE_TYPES)
-}
-}
-}  // namespace lsst::afw::fits
+}  // namespace fits
+}  // namespace afw
+}  // namespace lsst

@@ -44,7 +44,6 @@
 using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 namespace utf = boost::unit_test;
 
 typedef image::Image<float> Image;
@@ -55,7 +54,7 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
 
     int nX = 40;
     int nY = 40;
-    Image img(geom::Extent2I(nX, nY));
+    Image img(lsst::geom::Extent2I(nX, nY));
     Image::Pixel const pixVal = 10000;
     img = pixVal;
 
@@ -147,7 +146,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         // make a ramping image (spline should be exact for linear increasing image
         int const nX = 512;
         int const nY = 512;
-        image::Image<float> rampimg = image::Image<float>(geom::Extent2I(nX, nY));
+        image::Image<float> rampimg = image::Image<float>(lsst::geom::Extent2I(nX, nY));
         float dzdx = 0.1;
         float dzdy = 0.2;
         float z0 = 10000.0;
@@ -191,7 +190,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         // make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         int const nX = 512;
         int const nY = 512;
-        image::Image<float> parabimg = image::Image<float>(geom::Extent2I(nX, nY));
+        image::Image<float> parabimg = image::Image<float>(lsst::geom::Extent2I(nX, nY));
         float d2zdx2 = -1.0e-4;
         float d2zdy2 = -1.0e-4;
         float dzdx = 0.1;

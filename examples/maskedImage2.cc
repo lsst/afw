@@ -20,14 +20,14 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
 typedef image::MaskedImage<int> ImageT;
 
 int main() {
-    ImageT in(geom::Extent2I(10, 6));
+    ImageT in(lsst::geom::Extent2I(10, 6));
 
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
@@ -104,9 +104,10 @@ int main() {
     // Normalise the kernel.  I.e. divide the smoothed parts of image2 by 16
     //
     {
-        ImageT center =
-                ImageT(*out2, geom::Box2I(geom::Point2I(1, 1), in.getDimensions() - geom::Extent2I(-2)),
-                       image::LOCAL);
+        ImageT center = ImageT(
+                *out2,
+                lsst::geom::Box2I(lsst::geom::Point2I(1, 1), in.getDimensions() - lsst::geom::Extent2I(-2)),
+                image::LOCAL);
         center /= 16;
     }
     //

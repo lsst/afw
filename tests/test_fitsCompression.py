@@ -30,6 +30,7 @@ import astropy.io.fits
 import lsst.utils
 import lsst.daf.base
 import lsst.daf.persistence
+import lsst.geom
 import lsst.afw.geom
 import lsst.afw.image
 import lsst.afw.fits
@@ -86,7 +87,7 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
     (low, high and masked pixels) that we check.
     """
     def setUp(self):
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(123, 456), lsst.afw.geom.Extent2I(7, 8))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(123, 456), lsst.geom.Extent2I(7, 8))
         self.base = 456  # Base value for pixels
         self.highValue = 789  # Value for high pixel
         self.lowValue = 123  # Value for low pixel
@@ -395,7 +396,7 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
     that will affect the compression ratio (e.g., size, noise properties).
     """
     def setUp(self):
-        self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(123, 456), lsst.afw.geom.Extent2I(7, 8))
+        self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(123, 456), lsst.geom.Extent2I(7, 8))
         self.background = 12345.6789  # Background value
         self.noise = 67.89  # Noise (stdev)
         self.maskPlanes = ["FOO", "BAR"]  # Mask planes to add
@@ -851,10 +852,10 @@ class EmptyExposureTestCase(lsst.utils.tests.TestCase):
             Compression algorithm to try.
         """
         exp = lsst.afw.image.ExposureF(0, 0)
-        degrees = lsst.afw.geom.degrees
+        degrees = lsst.geom.degrees
         cdMatrix = np.array([[1.0e-4, 0.0], [0.0, 1.0e-4]], dtype=float)
-        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval=lsst.afw.geom.SpherePoint(0*degrees, 0*degrees),
-                                            crpix=lsst.afw.geom.Point2D(0.0, 0.0),
+        exp.setWcs(lsst.afw.geom.makeSkyWcs(crval=lsst.geom.SpherePoint(0*degrees, 0*degrees),
+                                            crpix=lsst.geom.Point2D(0.0, 0.0),
                                             cdMatrix=cdMatrix))
         imageOptions = lsst.afw.fits.ImageWriteOptions(ImageCompressionOptions(algorithm))
         maskOptions = lsst.afw.fits.ImageWriteOptions(exp.getMaskedImage().getMask())
@@ -862,7 +863,7 @@ class EmptyExposureTestCase(lsst.utils.tests.TestCase):
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             exp.writeFits(filename, imageOptions, maskOptions, varianceOptions)
             unpersisted = type(exp)(filename)
-        self.assertEqual(unpersisted.getMaskedImage().getDimensions(), lsst.afw.geom.Extent2I(0, 0))
+        self.assertEqual(unpersisted.getMaskedImage().getDimensions(), lsst.geom.Extent2I(0, 0))
         self.assertEqual(unpersisted.getWcs(), exp.getWcs())
 
     def testEmptyExposure(self):

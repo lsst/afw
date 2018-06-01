@@ -40,16 +40,16 @@ class Parametric {
 public:
     Parametric(Ellipse const& ellipse);
 
-    Point2D operator()(double t) const { return _center + _u * std::cos(t) + _v * std::sin(t); }
+    lsst::geom::Point2D operator()(double t) const { return _center + _u * std::cos(t) + _v * std::sin(t); }
 
 private:
-    Point2D _center;
-    Extent2D _u;
-    Extent2D _v;
+    lsst::geom::Point2D _center;
+    lsst::geom::Extent2D _u;
+    lsst::geom::Extent2D _v;
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Parametric_h_INCLUDED

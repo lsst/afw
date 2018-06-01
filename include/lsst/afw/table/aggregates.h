@@ -25,17 +25,11 @@
 
 #include "lsst/afw/table/FunctorKey.h"
 #include "lsst/afw/table/Schema.h"
+#include "lsst/geom.h"
 
 namespace lsst {
 namespace afw {
-
 namespace geom {
-
-template <typename T, int N>
-class Point;
-
-class Box2I;
-class Box2D;
 
 namespace ellipses {
 
@@ -47,10 +41,10 @@ class Quadrupole;
 namespace table {
 
 /**
- *  A FunctorKey used to get or set a geom::Point from an (x,y) pair of int or double Keys.
+ *  A FunctorKey used to get or set a lsst::geom::Point from an (x,y) pair of int or double Keys.
  */
 template <typename T>
-class PointKey : public FunctorKey<lsst::afw::geom::Point<T, 2> > {
+class PointKey : public FunctorKey<lsst::geom::Point<T, 2> > {
 public:
     /**
      *  Add a pair of _x, _y fields to a Schema, and return a PointKey that points to them.
@@ -70,10 +64,10 @@ public:
     /// Construct from a pair of Keys
     PointKey(Key<T> const& x, Key<T> const& y) : _x(x), _y(y) {}
 
-    PointKey(PointKey const &) = default;
-    PointKey(PointKey &&) = default;
-    PointKey & operator=(PointKey const &) = default;
-    PointKey & operator=(PointKey &&) = default;
+    PointKey(PointKey const&) = default;
+    PointKey(PointKey&&) = default;
+    PointKey& operator=(PointKey const&) = default;
+    PointKey& operator=(PointKey&&) = default;
     virtual ~PointKey() = default;
 
     /**
@@ -87,10 +81,10 @@ public:
     PointKey(SubSchema const& s) : _x(s["x"]), _y(s["y"]) {}
 
     /// Get a Point from the given record
-    virtual geom::Point<T, 2> get(BaseRecord const& record) const;
+    virtual lsst::geom::Point<T, 2> get(BaseRecord const& record) const;
 
     /// Set a Point in the given record
-    virtual void set(BaseRecord& record, geom::Point<T, 2> const& value) const;
+    virtual void set(BaseRecord& record, lsst::geom::Point<T, 2> const& value) const;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
@@ -115,16 +109,14 @@ private:
 typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
 
-
 /**
- *  A FunctorKey used to get or set a geom::Box2I or Box2D from a (min, max) pair of PointKeys.
+ *  A FunctorKey used to get or set a lsst::geom::Box2I or Box2D from a (min, max) pair of PointKeys.
  *
  *  The Box2IKey and Box2DKey typedefs should be preferred to using the template name directly.
  */
 template <typename Box>
 class BoxKey : public FunctorKey<Box> {
 public:
-
     /// Type of coordinate elements (i.e. int or double).
     using Element = typename Box::Element;
 
@@ -160,10 +152,10 @@ public:
      */
     BoxKey(SubSchema const& s) : _min(s["min"]), _max(s["max"]) {}
 
-    BoxKey(BoxKey const &) = default;
-    BoxKey(BoxKey &&) = default;
-    BoxKey & operator=(BoxKey const &) = default;
-    BoxKey & operator=(BoxKey &&) = default;
+    BoxKey(BoxKey const&) = default;
+    BoxKey(BoxKey&&) = default;
+    BoxKey& operator=(BoxKey const&) = default;
+    BoxKey& operator=(BoxKey&&) = default;
     virtual ~BoxKey() = default;
 
     /// Get a Point from the given record
@@ -192,17 +184,16 @@ private:
     PointKey<Element> _max;
 };
 
-using Box2IKey = BoxKey<geom::Box2I>;
-using Box2DKey = BoxKey<geom::Box2D>;
-
+using Box2IKey = BoxKey<lsst::geom::Box2I>;
+using Box2DKey = BoxKey<lsst::geom::Box2D>;
 
 /**
- *  A FunctorKey used to get or set celestial coordinates from a pair of Angle keys.
+ *  A FunctorKey used to get or set celestial coordinates from a pair of lsst::geom::Angle keys.
  *
  *  Coords are always stored and returned in the ICRS system. Coords in other
  *  systems may be assigned, but this will result in a conversion to ICRS.
  */
-class CoordKey : public FunctorKey<SpherePoint> {
+class CoordKey : public FunctorKey<lsst::geom::SpherePoint> {
 public:
     /**
      *  Add a pair of _ra, _dec fields to a Schema, and return a CoordKey that points to them.
@@ -218,7 +209,7 @@ public:
     CoordKey() : _ra(), _dec() {}
 
     /// Construct from a pair of Keys
-    CoordKey(Key<geom::Angle> const& ra, Key<geom::Angle> const& dec) : _ra(ra), _dec(dec) {}
+    CoordKey(Key<lsst::geom::Angle> const& ra, Key<lsst::geom::Angle> const& dec) : _ra(ra), _dec(dec) {}
 
     /**
      *  Construct from a subschema, assuming ra and dec subfields.
@@ -230,17 +221,17 @@ public:
      */
     CoordKey(SubSchema const& s) : _ra(s["ra"]), _dec(s["dec"]) {}
 
-    CoordKey(CoordKey const &) = default;
-    CoordKey(CoordKey &&) = default;
-    CoordKey & operator=(CoordKey const &) = default;
-    CoordKey & operator=(CoordKey &&) = default;
+    CoordKey(CoordKey const&) = default;
+    CoordKey(CoordKey&&) = default;
+    CoordKey& operator=(CoordKey const&) = default;
+    CoordKey& operator=(CoordKey&&) = default;
     virtual ~CoordKey() = default;
 
-    /// Get an SpherePoint from the given record
-    virtual SpherePoint get(BaseRecord const& record) const;
+    /// Get an lsst::geom::SpherePoint from the given record
+    virtual lsst::geom::SpherePoint get(BaseRecord const& record) const;
 
-    /// Set an SpherePoint in the given record
-    virtual void set(BaseRecord& record, SpherePoint const& value) const;
+    /// Set an lsst::geom::SpherePoint in the given record
+    virtual void set(BaseRecord& record, lsst::geom::SpherePoint const& value) const;
 
     //@{
     /// Compare CoordKeys for equality using the constituent `ra` and `dec` Keys
@@ -252,13 +243,13 @@ public:
 
     //@{
     /// Return a constituent Key
-    Key<geom::Angle> getRa() const { return _ra; }
-    Key<geom::Angle> getDec() const { return _dec; }
+    Key<lsst::geom::Angle> getRa() const { return _ra; }
+    Key<lsst::geom::Angle> getDec() const { return _dec; }
     //@}
 
 private:
-    Key<geom::Angle> _ra;
-    Key<geom::Angle> _dec;
+    Key<lsst::geom::Angle> _ra;
+    Key<lsst::geom::Angle> _dec;
 };
 
 //@{
@@ -306,10 +297,10 @@ public:
      */
     QuadrupoleKey(SubSchema const& s) : _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
 
-    QuadrupoleKey(QuadrupoleKey const &) = default;
-    QuadrupoleKey(QuadrupoleKey &&) = default;
-    QuadrupoleKey & operator=(QuadrupoleKey const &) = default;
-    QuadrupoleKey & operator=(QuadrupoleKey &&) = default;
+    QuadrupoleKey(QuadrupoleKey const&) = default;
+    QuadrupoleKey(QuadrupoleKey&&) = default;
+    QuadrupoleKey& operator=(QuadrupoleKey const&) = default;
+    QuadrupoleKey& operator=(QuadrupoleKey&&) = default;
     virtual ~QuadrupoleKey() = default;
 
     /// Get a Quadrupole from the given record
@@ -376,10 +367,10 @@ public:
      */
     EllipseKey(SubSchema const& s) : _qKey(s), _pKey(s) {}
 
-    EllipseKey(EllipseKey const &) = default;
-    EllipseKey(EllipseKey &&) = default;
-    EllipseKey & operator=(EllipseKey const &) = default;
-    EllipseKey & operator=(EllipseKey &&) = default;
+    EllipseKey(EllipseKey const&) = default;
+    EllipseKey(EllipseKey&&) = default;
+    EllipseKey& operator=(EllipseKey const&) = default;
+    EllipseKey& operator=(EllipseKey&&) = default;
     virtual ~EllipseKey() = default;
 
     /// Get an Ellipse from the given record
@@ -485,10 +476,10 @@ public:
      */
     CovarianceMatrixKey(SubSchema const& s, NameArray const& names);
 
-    CovarianceMatrixKey(CovarianceMatrixKey const &);
-    CovarianceMatrixKey(CovarianceMatrixKey &&);
-    CovarianceMatrixKey & operator=(CovarianceMatrixKey const &);
-    CovarianceMatrixKey & operator=(CovarianceMatrixKey &&);
+    CovarianceMatrixKey(CovarianceMatrixKey const&);
+    CovarianceMatrixKey(CovarianceMatrixKey&&);
+    CovarianceMatrixKey& operator=(CovarianceMatrixKey const&);
+    CovarianceMatrixKey& operator=(CovarianceMatrixKey&&);
     virtual ~CovarianceMatrixKey();
 
     /// Get a covariance matrix from the given record
@@ -521,8 +512,8 @@ private:
     SigmaKeyArray _sigma;
     CovarianceKeyArray _cov;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_aggregates_h_INCLUDED

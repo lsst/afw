@@ -32,6 +32,7 @@ from numpy.testing import assert_allclose
 
 import lsst.utils
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.image as afwImage
 from lsst.afw.coord import Weather
 import lsst.afw.geom as afwGeom
@@ -85,7 +86,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # n.b. the (100, 100, ...) form
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
         # test with ExtentI(100, 100) too
-        self.exposureCrOnly = afwImage.ExposureF(afwGeom.ExtentI(100, 100))
+        self.exposureCrOnly = afwImage.ExposureF(lsst.geom.ExtentI(100, 100))
 
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
@@ -279,7 +280,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         """Test saving an exposure to FITS and reading it back in preserves (some) VisitInfo fields"""
         exposureId = 5
         exposureTime = 12.3
-        boresightRotAngle = 45.6 * afwGeom.degrees
+        boresightRotAngle = 45.6 * lsst.geom.degrees
         weather = Weather(1.1, 2.2, 0.3)
         visitInfo = afwImage.VisitInfo(
             exposureId=exposureId,
@@ -386,8 +387,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         #
         # This subExposure is valid
         #
-        subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50),
-                                afwGeom.Extent2I(10, 10))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(40, 50),
+                                  lsst.geom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(
             self.exposureCrWcs, subBBox, afwImage.LOCAL)
 
@@ -397,8 +398,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
 
-        subRegion3 = afwGeom.Box2I(afwGeom.Point2I(100, 100),
-                                   afwGeom.Extent2I(10, 10))
+        subRegion3 = lsst.geom.Box2I(lsst.geom.Point2I(100, 100),
+                                     lsst.geom.Extent2I(10, 10))
 
         def getSubRegion():
             self.exposureCrWcs.Factory(
@@ -410,8 +411,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # from the MaskedImage class only for the MaskedImage small_MI.
         # small_MI (cols, rows) = (256, 256)
 
-        subRegion4 = afwGeom.Box2I(afwGeom.Point2I(250, 250),
-                                   afwGeom.Extent2I(10, 10))
+        subRegion4 = lsst.geom.Box2I(lsst.geom.Point2I(250, 250),
+                                     lsst.geom.Extent2I(10, 10))
 
         def getSubRegion():
             self.exposureCrWcs.Factory(
@@ -421,8 +422,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         # check the sub- and parent- exposures are using the same Wcs
         # transformation
-        subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50),
-                                afwGeom.Extent2I(10, 10))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(40, 50),
+                                  lsst.geom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(
             self.exposureCrWcs, subBBox, afwImage.LOCAL)
         parentSkyPos = self.exposureCrWcs.getWcs().pixelToSky(0, 0)
@@ -438,8 +439,8 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mainExposure = afwImage.ExposureF(inFilePathSmall)
         mainExposure.setDetector(self.detector)
 
-        subBBox = afwGeom.Box2I(afwGeom.Point2I(10, 10),
-                                afwGeom.Extent2I(40, 50))
+        subBBox = lsst.geom.Box2I(lsst.geom.Point2I(10, 10),
+                                  lsst.geom.Extent2I(40, 50))
         subExposure = mainExposure.Factory(
             mainExposure, subBBox, afwImage.LOCAL)
         self.checkWcs(mainExposure, subExposure)
@@ -529,7 +530,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(e1.getDetector().getSerial(),
                          e2.getDetector().getSerial())
         self.assertEqual(e1.getFilter().getName(), e2.getFilter().getName())
-        xy = afwGeom.Point2D(0, 0)
+        xy = lsst.geom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0],
                          e2.getWcs().pixelToSky(xy)[0])
         self.assertEqual(e1.getCalib(), e2.getCalib())
@@ -559,7 +560,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # cen0 = exposureU.getDetector().getCenterPixel()
         # x0,y0 = cen0
         # det = exposureF.getDetector()
-        # det.setCenterPixel(afwGeom.Point2D(999.0, 437.8))
+        # det.setCenterPixel(lsst.geom.Point2D(999.0, 437.8))
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
 
@@ -595,7 +596,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mi.getMask().set(5)
         mi.getVariance().set(200)
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(1, 0), afwGeom.Extent2I(5, 4))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 0), lsst.geom.Extent2I(5, 4))
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         miCopy = expCopy.getMaskedImage()
         miCopy.getImage().set(-50)
@@ -629,7 +630,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exp = afwImage.ExposureF(10, 10)
         expMeta = exp.getMetadata()
         expMeta.set("foo", 5)
-        bbox = afwGeom.Box2I(afwGeom.Point2I(1, 0), afwGeom.Extent2I(5, 5))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 0), lsst.geom.Extent2I(5, 5))
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
@@ -639,9 +640,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in lsst.utils.tests.MemoryTestCase)"""
-        afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
+        afwImage.makeMaskedImage(afwImage.ImageU(lsst.geom.Extent2I(10, 20)))
         afwImage.makeExposure(afwImage.makeMaskedImage(
-            afwImage.ImageU(afwGeom.Extent2I(10, 20))))
+            afwImage.ImageU(lsst.geom.Extent2I(10, 20))))
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
@@ -651,10 +652,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # N.b. Exposures don't support setting/getting the pixels so can't
         # replicate e.g. Image's slice tests
         sexp = exp[1:4, 6:10]
-        self.assertEqual(sexp.getDimensions(), afwGeom.ExtentI(3, 4))
+        self.assertEqual(sexp.getDimensions(), lsst.geom.ExtentI(3, 4))
         sexp = exp[..., -3:]
         self.assertEqual(sexp.getDimensions(),
-                         afwGeom.ExtentI(exp.getWidth(), 3))
+                         lsst.geom.ExtentI(exp.getWidth(), 3))
         self.assertEqual(sexp.getMaskedImage().get(sexp.getWidth() - 1, sexp.getHeight() - 1),
                          exp.getMaskedImage().get(exp.getWidth() - 1, exp.getHeight() - 1))
 

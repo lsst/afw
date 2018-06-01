@@ -40,7 +40,7 @@
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/base/Citizen.h"
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
@@ -223,11 +223,11 @@ public:
                         double y = 0.0) const;
 
     /**
-    * Return the Kernel's dimensions (width, height)
-    */
-    geom::Extent2I const getDimensions() const { return geom::Extent2I(_width, _height); }
+     * Return the Kernel's dimensions (width, height)
+     */
+    lsst::geom::Extent2I const getDimensions() const { return lsst::geom::Extent2I(_width, _height); }
 
-    void setDimensions(geom::Extent2I dims) {
+    void setDimensions(lsst::geom::Extent2I dims) {
         _width = dims.getX();
         _height = dims.getY();
     }
@@ -247,7 +247,7 @@ public:
     /**
      * Return index of kernel's center
      */
-    inline lsst::afw::geom::Point2I getCtr() const { return lsst::afw::geom::Point2I(_ctrX, _ctrY); }
+    inline lsst::geom::Point2I getCtr() const { return lsst::geom::Point2I(_ctrX, _ctrY); }
 
     /**
      * Return x index of kernel's center
@@ -266,9 +266,8 @@ public:
     /**
      * return parent bounding box, with XY0 = -center
      */
-    inline lsst::afw::geom::Box2I getBBox() const {
-        return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-_ctrX, -_ctrY),
-                                      lsst::afw::geom::Extent2I(_width, _height));
+    inline lsst::geom::Box2I getBBox() const {
+        return lsst::geom::Box2I(lsst::geom::Point2I(-_ctrX, -_ctrY), lsst::geom::Extent2I(_width, _height));
     }
 
     /**
@@ -323,7 +322,7 @@ public:
      *
      * @returns the bbox expanded by the kernel.
      */
-    lsst::afw::geom::Box2I growBBox(lsst::afw::geom::Box2I const &bbox) const;
+    lsst::geom::Box2I growBBox(lsst::geom::Box2I const &bbox) const;
 
     /**
      * Given a bounding box for an image one wishes to convolve with this kernel,
@@ -335,12 +334,12 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if the resulting box would have
      * dimension < 1 in either axis
      */
-    lsst::afw::geom::Box2I shrinkBBox(lsst::afw::geom::Box2I const &bbox) const;
+    lsst::geom::Box2I shrinkBBox(lsst::geom::Box2I const &bbox) const;
 
     /**
      * Set index of kernel's center
      */
-    inline void setCtr(lsst::afw::geom::Point2I ctr) {
+    inline void setCtr(lsst::geom::Point2I ctr) {
         _ctrX = ctr.getX();
         _ctrY = ctr.getY();
         _setKernelXY();
@@ -446,7 +445,7 @@ public:
      * in which case this is a no-op and getCacheSize always returns 0.
      */
     virtual void computeCache(int const  ///< desired cache size
-                              ) {}
+    ) {}
 
     /**
      * Get the current size of the kernel cache (0 if none or if caches not supported)
@@ -532,14 +531,14 @@ public:
      * Construct a FixedKernel from an image
      */
     explicit FixedKernel(lsst::afw::image::Image<Pixel> const &image  ///< image for kernel
-                         );
+    );
 
     /**
      * Construct a FixedKernel from a generic Kernel
      */
     explicit FixedKernel(lsst::afw::math::Kernel const &kernel,  ///< Kernel to convert to Fixed
-                         lsst::afw::geom::Point2D const &pos     ///< desired position
-                         );
+                         lsst::geom::Point2D const &pos          ///< desired position
+    );
 
     FixedKernel(const FixedKernel &) = delete;
     FixedKernel(FixedKernel &&) = delete;
@@ -722,7 +721,7 @@ public:
      *
      * @throws pex::exceptions::InvalidParameterError if active pixel is off the kernel
      */
-    explicit DeltaFunctionKernel(int width, int height, lsst::afw::geom::Point2I const &point);
+    explicit DeltaFunctionKernel(int width, int height, lsst::geom::Point2I const &point);
 
     DeltaFunctionKernel(const DeltaFunctionKernel &) = delete;
     DeltaFunctionKernel(DeltaFunctionKernel &&) = delete;
@@ -735,7 +734,7 @@ public:
 
     virtual std::shared_ptr<Kernel> resized(int width, int height) const;
 
-    lsst::afw::geom::Point2I getPixel() const { return _pixel; }
+    lsst::geom::Point2I getPixel() const { return _pixel; }
 
     virtual std::string toString(std::string const &prefix = "") const;
 
@@ -751,7 +750,7 @@ protected:
     virtual void write(OutputArchiveHandle &handle) const;
 
 private:
-    lsst::afw::geom::Point2I _pixel;
+    lsst::geom::Point2I _pixel;
 
     friend class boost::serialization::access;
     template <class Archive>
@@ -833,8 +832,8 @@ public:
     virtual KernelList const &getKernelList() const;
 
     /**
-    * Get the sum of the pixels of each fixed basis kernel
-    */
+     * Get the sum of the pixels of each fixed basis kernel
+     */
     std::vector<double> getKernelSumList() const;
 
     /**
@@ -1106,8 +1105,8 @@ private:
     }
 
     virtual void _setKernelXY() {
-        lsst::afw::geom::Extent2I const dim = getDimensions();
-        lsst::afw::geom::Point2I const ctr = getCtr();
+        lsst::geom::Extent2I const dim = getDimensions();
+        lsst::geom::Point2I const ctr = getCtr();
 
         assert(dim[0] == static_cast<int>(_kernelX.size()));
         for (int i = 0; i != dim.getX(); ++i) {
@@ -1120,9 +1119,9 @@ private:
         }
     }
 };
-}
-}
-}  // lsst:afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 namespace boost {
 namespace serialization {
@@ -1151,10 +1150,10 @@ inline void load_construct_data(Archive &ar, lsst::afw::math::DeltaFunctionKerne
     ar >> make_nvp("height", height);
     ar >> make_nvp("pixX", x);
     ar >> make_nvp("pixY", y);
-    ::new (k) lsst::afw::math::DeltaFunctionKernel(width, height, lsst::afw::geom::Point2I(x, y));
+    ::new (k) lsst::afw::math::DeltaFunctionKernel(width, height, lsst::geom::Point2I(x, y));
 }
-}
-}
+}  // namespace serialization
+}  // namespace boost
 
 BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
 

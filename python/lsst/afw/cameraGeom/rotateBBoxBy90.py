@@ -20,7 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import numpy
-import lsst.afw.geom as afwGeom
+
+import lsst.geom
 
 __all__ = ["rotateBBoxBy90"]
 
@@ -57,7 +58,7 @@ def rotateBBoxBy90(bbox, n90, dimensions):
     else:
         raise ValueError("n90 must be an integer")
 
-    centerPixel = afwGeom.Point2I(int(dimensions[0]/2), int(dimensions[1]/2))
+    centerPixel = lsst.geom.Point2I(int(dimensions[0]/2), int(dimensions[1]/2))
 
     xCorner = numpy.array([(corner.getX() - centerPixel[0])
                            for corner in bbox.getCorners()])
@@ -87,13 +88,13 @@ def rotateBBoxBy90(bbox, n90, dimensions):
             y0 -= 1
             y1 -= 1
 
-    LLC = afwGeom.Point2I(centerPixel[0] + x0, centerPixel[1] + y0)
-    URC = afwGeom.Point2I(centerPixel[0] + x1, centerPixel[1] + y1)
+    LLC = lsst.geom.Point2I(centerPixel[0] + x0, centerPixel[1] + y0)
+    URC = lsst.geom.Point2I(centerPixel[0] + x1, centerPixel[1] + y1)
 
-    newBbox = afwGeom.Box2I(LLC, URC)
+    newBbox = lsst.geom.Box2I(LLC, URC)
 
     dxy0 = centerPixel[0] - centerPixel[1]
     if n90%2 == 1 and not dxy0 == 0:
-        newBbox.shift(afwGeom.Extent2I(-dxy0, dxy0))
+        newBbox.shift(lsst.geom.Extent2I(-dxy0, dxy0))
 
     return newBbox

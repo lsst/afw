@@ -35,7 +35,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
@@ -46,8 +46,8 @@ namespace afw {
 namespace math {
 namespace detail {
 
-KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr kernelPtr, geom::Box2I const &bbox,
-                                             geom::Point2I const &xy0, bool doNormalize)
+KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr kernelPtr, lsst::geom::Box2I const &bbox,
+                                             lsst::geom::Point2I const &xy0, bool doNormalize)
         : daf::base::Citizen(typeid(this)),
           _kernelPtr(kernelPtr),
           _bbox(bbox),
@@ -64,8 +64,8 @@ KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr kernelPtr, geom::Box
                _doNormalize);
 }
 
-KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr const kernelPtr, geom::Box2I const &bbox,
-                                             geom::Point2I const &xy0, bool doNormalize,
+KernelImagesForRegion::KernelImagesForRegion(KernelConstPtr const kernelPtr, lsst::geom::Box2I const &bbox,
+                                             lsst::geom::Point2I const &xy0, bool doNormalize,
                                              ImagePtr bottomLeftImagePtr, ImagePtr bottomRightImagePtr,
                                              ImagePtr topLeftImagePtr, ImagePtr topRightImagePtr)
         : daf::base::Citizen(typeid(this)),
@@ -99,19 +99,19 @@ KernelImagesForRegion::ImagePtr KernelImagesForRegion::getImage(Location locatio
     return imagePtr;
 }
 
-geom::Point2I KernelImagesForRegion::getPixelIndex(Location location) const {
+lsst::geom::Point2I KernelImagesForRegion::getPixelIndex(Location location) const {
     switch (location) {
         case BOTTOM_LEFT:
             return _bbox.getMin();
             break;  // paranoia
         case BOTTOM_RIGHT:
-            return geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
+            return lsst::geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMinY());
             break;  // paranoia
         case TOP_LEFT:
-            return geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
+            return lsst::geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1);
             break;  // paranoia
         case TOP_RIGHT:
-            return geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
+            return lsst::geom::Point2I(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
             break;  // paranoia
         default: {
             std::ostringstream os;
@@ -154,7 +154,7 @@ bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow
         ImagePtr tlImagePtr;
         ImagePtr const trImageNullPtr;
 
-        geom::Point2I blCorner = geom::Point2I(this->_bbox.getMinX(), startY);
+        lsst::geom::Point2I blCorner = lsst::geom::Point2I(this->_bbox.getMinX(), startY);
 
         int remWidth = this->_bbox.getWidth();
         int remXDiv = regionRow.getNX();
@@ -165,15 +165,15 @@ bool KernelImagesForRegion::computeNextRow(RowOfKernelImagesForRegion &regionRow
             remWidth -= width;
 
             std::shared_ptr<KernelImagesForRegion> regionPtr(new KernelImagesForRegion(
-                    _kernelPtr, geom::Box2I(blCorner, geom::Extent2I(width, height)), _xy0, _doNormalize,
-                    blImagePtr, brImagePtr, tlImagePtr, trImageNullPtr));
+                    _kernelPtr, lsst::geom::Box2I(blCorner, lsst::geom::Extent2I(width, height)), _xy0,
+                    _doNormalize, blImagePtr, brImagePtr, tlImagePtr, trImageNullPtr));
             *rgnIter = regionPtr;
 
             if (!tlImagePtr) {
                 regionPtr->getImage(TOP_LEFT);
             }
 
-            blCorner += geom::Extent2I(width, 0);
+            blCorner += lsst::geom::Extent2I(width, 0);
             blImagePtr = regionPtr->getImage(BOTTOM_RIGHT);
             tlImagePtr = regionPtr->getImage(TOP_RIGHT);
         }
@@ -189,7 +189,7 @@ void KernelImagesForRegion::_computeImage(Location location) const {
         throw LSST_EXCEPT(pexExcept::NotFoundError, os.str());
     }
 
-    geom::Point2I pixelIndex = getPixelIndex(location);
+    lsst::geom::Point2I pixelIndex = getPixelIndex(location);
     _kernelPtr->computeImage(*imagePtr, _doNormalize, image::indexToPosition(pixelIndex.getX() + _xy0[0]),
                              image::indexToPosition(pixelIndex.getY() + _xy0[1]));
 }
@@ -218,8 +218,8 @@ std::vector<int> KernelImagesForRegion::_computeSubregionLengths(int length, int
 
 void KernelImagesForRegion::_moveUp(bool isFirst, int newHeight) {
     // move bbox up (this must be done before recomputing the top kernel images)
-    _bbox = geom::Box2I(geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
-                        geom::Extent2I(_bbox.getWidth(), newHeight));
+    _bbox = lsst::geom::Box2I(lsst::geom::Point2I(_bbox.getMinX(), _bbox.getMaxY() + 1),
+                              lsst::geom::Extent2I(_bbox.getWidth(), newHeight));
 
     // swap top and bottom image pointers
     _imagePtrList[BOTTOM_RIGHT].swap(_imagePtrList[TOP_RIGHT]);
@@ -242,7 +242,7 @@ RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(int nx, int ny)
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     };
 }
-}
-}
-}
-}  // end lsst::afw::math::detail
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

@@ -104,7 +104,7 @@ private:
     char *_end;
 };
 
-}  // anonymous
+}  // namespace
 
 // =============== BaseTable implementation (see header for docs) ===========================================
 
@@ -170,7 +170,9 @@ struct RecordInitializer {
         std::fill(element, element + size, std::numeric_limits<double>::quiet_NaN());
     }
 
-    static void fill(Angle *element, int size) { fill(reinterpret_cast<double *>(element), size); }
+    static void fill(lsst::geom::Angle *element, int size) {
+        fill(reinterpret_cast<double *>(element), size);
+    }
 
     template <typename T>
     void operator()(SchemaItem<T> const &item) const {
@@ -194,8 +196,7 @@ struct RecordInitializer {
             // Use placement new because the memory (for one std::string) is already allocated
             new (reinterpret_cast<std::string *>(data + item.key.getOffset())) std::string();
         } else {
-            fill(reinterpret_cast<char *>(data + item.key.getOffset()),
-                 item.key.getElementCount());
+            fill(reinterpret_cast<char *>(data + item.key.getOffset()), item.key.getElementCount());
         }
     }
 
@@ -222,14 +223,14 @@ struct RecordDestroyer {
         if (item.key.isVariableLength()) {
             using std::string;  // invoking the destructor on a qualified name doesn't compile in gcc 4.8.1
                                 // https://stackoverflow.com/q/24593942
-            (*reinterpret_cast<string*>(data + item.key.getOffset())).~string();
+            (*reinterpret_cast<string *>(data + item.key.getOffset())).~string();
         }
     }
 
     char *data;
 };
 
-}  // anonymous
+}  // namespace
 
 void BaseTable::_initialize(BaseRecord &record) {
     record._data = Block::get(_schema.getRecordSize(), _manager);
@@ -257,6 +258,6 @@ int BaseTable::nRecordsPerBlock = 100;
 
 template class CatalogT<BaseRecord>;
 template class CatalogT<BaseRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

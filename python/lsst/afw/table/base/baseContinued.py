@@ -52,7 +52,7 @@ class BaseRecord:
         split : `bool`
             If True, fields with named subfields (e.g. points) will be split
             into separate items in the dict; instead of {"point":
-            lsst.afw.geom.Point2I(2,3)}, for instance, you'd get {"point.x":
+            lsst.geom.Point2I(2,3)}, for instance, you'd get {"point.x":
             2, "point.y": 3}. Default is False.
 
         regex : `str` or `re` pattern object

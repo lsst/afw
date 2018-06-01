@@ -69,7 +69,7 @@ public:
         sec = s;
     };
     // unit could be "degrees" or "hours"
-    Dms(geom::Angle const deg00, geom::AngleUnit const unit = geom::degrees) {
+    Dms(lsst::geom::Angle const deg00, lsst::geom::AngleUnit const unit = geom::degrees) {
         double deg0 = deg00.asAngularUnits(unit);
         double const absVal = std::fabs(deg0);
         sign = (deg0 >= 0) ? 1 : -1;
@@ -88,7 +88,7 @@ public:
 
 /* ******************* Public functions ******************* */
 
-static std::string angleToXmsString(geom::Angle const a, geom::AngleUnit const unit) {
+static std::string angleToXmsString(lsst::geom::Angle const a, lsst::geom::AngleUnit const unit) {
     Dms dms(a, unit);
 
     // make sure rounding won't give 60.00 for sec or min
@@ -112,18 +112,18 @@ static std::string angleToXmsString(geom::Angle const a, geom::AngleUnit const u
     return s;
 }
 
-std::string angleToDmsString(geom::Angle const a) { return angleToXmsString(a, geom::degrees); }
+std::string angleToDmsString(lsst::geom::Angle const a) { return angleToXmsString(a, geom::degrees); }
 
-std::string angleToHmsString(geom::Angle const a) { return angleToXmsString(a, geom::hours); }
+std::string angleToHmsString(lsst::geom::Angle const a) { return angleToXmsString(a, geom::hours); }
 
 /**
- * @internal Convert a XX:mm:ss string to Angle
+ * @internal Convert a XX:mm:ss string to lsst::geom::Angle
  *
  * @param dms Coord as a string in dd:mm:ss format
  * @param unit the units assumed for the first part of `dms`. The second and third
  *             parts shall be defined to be 1/60 and 1/3600 of `unit`, respectively.
  */
-static geom::Angle xmsStringToAngle(std::string const dms, geom::AngleUnit unit) {
+static lsst::geom::Angle xmsStringToAngle(std::string const dms, lsst::geom::AngleUnit unit) {
     if (dms.find(":") == std::string::npos) {
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("String is not in xx:mm:ss format: %s") % dms).str());
@@ -138,17 +138,17 @@ static geom::Angle xmsStringToAngle(std::string const dms, geom::AngleUnit unit)
     int const min = atoi(elements[1].c_str());
     double const sec = atof(elements[2].c_str());
 
-    geom::Angle ang = (deg + min / 60.0 + sec / 3600.0) * unit;
+    lsst::geom::Angle ang = (deg + min / 60.0 + sec / 3600.0) * unit;
     if ((elements[0].c_str())[0] == '-') {
         ang *= -1.0;
     }
     return ang;
 }
 
-geom::Angle hmsStringToAngle(std::string const hms) { return xmsStringToAngle(hms, geom::hours); }
+lsst::geom::Angle hmsStringToAngle(std::string const hms) { return xmsStringToAngle(hms, geom::hours); }
 
-geom::Angle dmsStringToAngle(std::string const dms) { return xmsStringToAngle(dms, geom::degrees); }
+lsst::geom::Angle dmsStringToAngle(std::string const dms) { return xmsStringToAngle(dms, geom::degrees); }
 
-}
-}
-}  // end lsst::afw::coord
+}  // namespace coord
+}  // namespace afw
+}  // namespace lsst

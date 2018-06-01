@@ -85,7 +85,7 @@ void checkObjectsAndWeights(ObjectVectorT const &objects, WeightVectorT const &w
 
 template <typename ImageT>
 void checkImageSizes(ImageT const &out, std::vector<std::shared_ptr<ImageT>> const &images) {
-    geom::Extent2I const &dim = out.getDimensions();
+    lsst::geom::Extent2I const &dim = out.getDimensions();
     for (unsigned int i = 0; i < images.size(); ++i) {
         if (images[i]->getDimensions() != dim) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterError,
@@ -115,12 +115,9 @@ void checkImageSizes(ImageT const &out, std::vector<std::shared_ptr<ImageT>> con
 template <typename PixelT, bool isWeighted, bool useVariance>
 void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                              std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> const &images,
-                             Property flags, StatisticsControl const &sctrl,
-                             image::MaskPixel const clipped,
-                             std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap,
+                             Property flags, StatisticsControl const &sctrl, image::MaskPixel const clipped,
+                             std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &maskMap,
                              WeightVector const &wvector = WeightVector()) {
-
-
     // get a list of row_begin iterators
     typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
     std::vector<x_iterator> rows;
@@ -189,7 +186,7 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
             // Check to see if any pixels were rejected by masking, and apply
             // any associated masks to the result.
             if (stat.getValue(NMASKED) > 0) {
-                for (auto const & pair : maskMap) {
+                for (auto const &pair : maskMap) {
                     for (auto pp = pixelSet.begin(); pp != pixelSet.end(); ++pp) {
                         if ((*pp).mask() & pair.first) {
                             msk |= pair.second;
@@ -206,15 +203,12 @@ void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
 template <typename PixelT, bool isWeighted, bool useVariance>
 void computeMaskedImageStack(image::MaskedImage<PixelT> &imgStack,
                              std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> const &images,
-                             Property flags, StatisticsControl const &sctrl,
-                             image::MaskPixel const clipped,
-                             image::MaskPixel const excuse,
-                             WeightVector const &wvector = WeightVector()) {
+                             Property flags, StatisticsControl const &sctrl, image::MaskPixel const clipped,
+                             image::MaskPixel const excuse, WeightVector const &wvector = WeightVector()) {
     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> maskMap;
     maskMap.push_back(std::make_pair(sctrl.getAndMask() & ~excuse, clipped));
-    computeMaskedImageStack<PixelT, isWeighted, useVariance>(
-        imgStack, images, flags, sctrl, clipped, maskMap, wvector
-    );
+    computeMaskedImageStack<PixelT, isWeighted, useVariance>(imgStack, images, flags, sctrl, clipped, maskMap,
+                                                             wvector);
 }
 //@}
 
@@ -238,7 +232,7 @@ template <typename PixelT>
 std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(
         std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> &images, Property flags,
         StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel clipped,
-        std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap) {
+        std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &maskMap) {
     if (images.size() == 0) {
         throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
@@ -259,8 +253,8 @@ void statisticsStack(image::MaskedImage<PixelT> &out,
 
     if (sctrl.getWeighted()) {
         if (wvector.empty()) {
-            return computeMaskedImageStack<PixelT, true, true>(out, images, flags, sctrl,
-                                                               clipped, excuse);  // use variance
+            return computeMaskedImageStack<PixelT, true, true>(out, images, flags, sctrl, clipped,
+                                                               excuse);  // use variance
         } else {
             return computeMaskedImageStack<PixelT, true, false>(out, images, flags, sctrl, clipped, excuse,
                                                                 wvector);  // use wvector
@@ -274,15 +268,15 @@ template <typename PixelT>
 void statisticsStack(image::MaskedImage<PixelT> &out,
                      std::vector<std::shared_ptr<image::MaskedImage<PixelT>>> &images, Property flags,
                      StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel clipped,
-                     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap) {
+                     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &maskMap) {
     checkObjectsAndWeights(images, wvector);
     checkOnlyOneFlag(flags);
     checkImageSizes(out, images);
 
     if (sctrl.getWeighted()) {
         if (wvector.empty()) {
-            return computeMaskedImageStack<PixelT, true, true>(out, images, flags, sctrl,
-                                                               clipped, maskMap);  // use variance
+            return computeMaskedImageStack<PixelT, true, true>(out, images, flags, sctrl, clipped,
+                                                               maskMap);  // use variance
         } else {
             return computeMaskedImageStack<PixelT, true, false>(out, images, flags, sctrl, clipped, maskMap,
                                                                 wvector);  // use wvector
@@ -448,11 +442,12 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(1, image.getHeight())));
         int y = y0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x0, y), geom::Extent2I(image.getWidth(), 1));
+            lsst::geom::Box2I bbox =
+                    lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1));
             image::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -460,11 +455,12 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::Image<PixelT>
         }
 
     } else if (dimension == 'y') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(image.getWidth(), 1)));
         int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x, y0), geom::Extent2I(1, image.getHeight()));
+            lsst::geom::Box2I bbox =
+                    lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()));
             image::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -490,11 +486,12 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(1, image.getHeight())));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(1, image.getHeight())));
         int y = 0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x0, y), geom::Extent2I(image.getWidth(), 1));
+            lsst::geom::Box2I bbox =
+                    lsst::geom::Box2I(lsst::geom::Point2I(x0, y), lsst::geom::Extent2I(image.getWidth(), 1));
             image::MaskedImage<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -502,11 +499,12 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
         }
 
     } else if (dimension == 'y') {
-        imgOut = std::shared_ptr<MImage>(new MImage(geom::Extent2I(image.getWidth(), 1)));
+        imgOut = std::shared_ptr<MImage>(new MImage(lsst::geom::Extent2I(image.getWidth(), 1)));
         int x = 0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-            geom::Box2I bbox = geom::Box2I(geom::Point2I(x, y0), geom::Extent2I(1, image.getHeight()));
+            lsst::geom::Box2I bbox =
+                    lsst::geom::Box2I(lsst::geom::Point2I(x, y0), lsst::geom::Extent2I(1, image.getHeight()));
             image::MaskedImage<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | ERRORS, sctrl);
             *oPtr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0,
@@ -540,10 +538,10 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
             std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, Property flags,                 \
             StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,                   \
             std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const &);                             \
-    template void statisticsStack<TYPE>(                                                                     \
-            image::MaskedImage<TYPE> & out, std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, \
-            Property flags, StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,   \
-            image::MaskPixel);                                                                               \
+    template void statisticsStack<TYPE>(image::MaskedImage<TYPE> & out,                                      \
+                                        std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images,     \
+                                        Property flags, StatisticsControl const &sctrl,                      \
+                                        WeightVector const &wvector, image::MaskPixel, image::MaskPixel);    \
     template void statisticsStack<TYPE>(                                                                     \
             image::MaskedImage<TYPE> & out, std::vector<std::shared_ptr<image::MaskedImage<TYPE>>> & images, \
             Property flags, StatisticsControl const &sctrl, WeightVector const &wvector, image::MaskPixel,   \
@@ -561,6 +559,6 @@ std::shared_ptr<image::MaskedImage<PixelT>> statisticsStack(image::MaskedImage<P
 INSTANTIATE_STACKS(double)
 INSTANTIATE_STACKS(float)
 /// @endcond
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

@@ -37,7 +37,7 @@ PYBIND11_PLUGIN(_observatory) {
     py::class_<Observatory, std::shared_ptr<Observatory>> cls(mod, "Observatory");
 
     /* Constructors */
-    cls.def(py::init<lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const>());
+    cls.def(py::init<lsst::geom::Angle const, lsst::geom::Angle const, double const>());
     cls.def(py::init<std::string const, std::string const, double const>());
 
     /* Operators */

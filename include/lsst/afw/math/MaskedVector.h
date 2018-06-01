@@ -42,12 +42,12 @@ public:
 
     explicit MaskedVector(int width = 0)
             :  //, MaskPlaneDict const& planeDict=MaskPlaneDict()) :
-              lsst::afw::image::MaskedImage<EntryT>(geom::Extent2I(width, 1)) {}  //, planeDict) {}
+              lsst::afw::image::MaskedImage<EntryT>(lsst::geom::Extent2I(width, 1)) {}  //, planeDict) {}
 
     MaskedVector(MaskedVector const &) = default;
     MaskedVector(MaskedVector &&) = default;
-    MaskedVector & operator=(MaskedVector const &) = default;
-    MaskedVector & operator=(MaskedVector &&) = default;
+    MaskedVector &operator=(MaskedVector const &) = default;
+    MaskedVector &operator=(MaskedVector &&) = default;
     ~MaskedVector() = default;
 
     // Getters
@@ -125,8 +125,8 @@ public:
 
 private:
 };
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

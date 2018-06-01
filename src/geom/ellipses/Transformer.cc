@@ -54,16 +54,16 @@ BaseCore::Transformer::DerivativeMatrix BaseCore::Transformer::d() const {
     m = transform.getMatrix() * m * transform.getMatrix().transpose();
     Jacobian lhs = output->_dAssignFromQuadrupole(m(0, 0), m(1, 1), m(0, 1));
     Jacobian mid = Jacobian::Zero();
-    mid(0, 0) = transform[LinearTransform::XX] * transform[LinearTransform::XX];
-    mid(0, 1) = transform[LinearTransform::XY] * transform[LinearTransform::XY];
-    mid(0, 2) = 2 * transform[LinearTransform::XY] * transform[LinearTransform::XX];
-    mid(1, 0) = transform[LinearTransform::YX] * transform[LinearTransform::YX];
-    mid(1, 1) = transform[LinearTransform::YY] * transform[LinearTransform::YY];
-    mid(1, 2) = 2 * transform[LinearTransform::YY] * transform[LinearTransform::YX];
-    mid(2, 0) = transform[LinearTransform::YX] * transform[LinearTransform::XX];
-    mid(2, 1) = transform[LinearTransform::YY] * transform[LinearTransform::XY];
-    mid(2, 2) = transform[LinearTransform::XX] * transform[LinearTransform::YY] +
-                transform[LinearTransform::XY] * transform[LinearTransform::YX];
+    mid(0, 0) = transform[lsst::geom::LinearTransform::XX] * transform[lsst::geom::LinearTransform::XX];
+    mid(0, 1) = transform[lsst::geom::LinearTransform::XY] * transform[lsst::geom::LinearTransform::XY];
+    mid(0, 2) = 2 * transform[lsst::geom::LinearTransform::XY] * transform[lsst::geom::LinearTransform::XX];
+    mid(1, 0) = transform[lsst::geom::LinearTransform::YX] * transform[lsst::geom::LinearTransform::YX];
+    mid(1, 1) = transform[lsst::geom::LinearTransform::YY] * transform[lsst::geom::LinearTransform::YY];
+    mid(1, 2) = 2 * transform[lsst::geom::LinearTransform::YY] * transform[lsst::geom::LinearTransform::YX];
+    mid(2, 0) = transform[lsst::geom::LinearTransform::YX] * transform[lsst::geom::LinearTransform::XX];
+    mid(2, 1) = transform[lsst::geom::LinearTransform::YY] * transform[lsst::geom::LinearTransform::XY];
+    mid(2, 2) = transform[lsst::geom::LinearTransform::XX] * transform[lsst::geom::LinearTransform::YY] +
+                transform[lsst::geom::LinearTransform::XY] * transform[lsst::geom::LinearTransform::YX];
     return lhs * mid * rhs;
 }
 
@@ -73,22 +73,22 @@ BaseCore::Transformer::TransformDerivativeMatrix BaseCore::Transformer::dTransfo
     input._assignToQuadrupole(m(0, 0), m(1, 1), m(0, 1));
     Eigen::Matrix<double, 3, 4> mid = Eigen::Matrix<double, 3, 4>::Zero();
     m(1, 0) = m(0, 1);
-    mid(0, LinearTransform::XX) =
-            2.0 * (transform[LinearTransform::XX] * m(0, 0) + transform[LinearTransform::XY] * m(0, 1));
-    mid(0, LinearTransform::XY) =
-            2.0 * (transform[LinearTransform::XX] * m(0, 1) + transform[LinearTransform::XY] * m(1, 1));
-    mid(1, LinearTransform::YX) =
-            2.0 * (transform[LinearTransform::YX] * m(0, 0) + transform[LinearTransform::YY] * m(0, 1));
-    mid(1, LinearTransform::YY) =
-            2.0 * (transform[LinearTransform::YX] * m(0, 1) + transform[LinearTransform::YY] * m(1, 1));
-    mid(2, LinearTransform::XX) =
-            transform[LinearTransform::YX] * m(0, 0) + transform[LinearTransform::YY] * m(0, 1);
-    mid(2, LinearTransform::XY) =
-            transform[LinearTransform::YX] * m(0, 1) + transform[LinearTransform::YY] * m(1, 1);
-    mid(2, LinearTransform::YX) =
-            transform[LinearTransform::XX] * m(0, 0) + transform[LinearTransform::XY] * m(0, 1);
-    mid(2, LinearTransform::YY) =
-            transform[LinearTransform::XX] * m(0, 1) + transform[LinearTransform::XY] * m(1, 1);
+    mid(0, lsst::geom::LinearTransform::XX) = 2.0 * (transform[lsst::geom::LinearTransform::XX] * m(0, 0) +
+                                                     transform[lsst::geom::LinearTransform::XY] * m(0, 1));
+    mid(0, lsst::geom::LinearTransform::XY) = 2.0 * (transform[lsst::geom::LinearTransform::XX] * m(0, 1) +
+                                                     transform[lsst::geom::LinearTransform::XY] * m(1, 1));
+    mid(1, lsst::geom::LinearTransform::YX) = 2.0 * (transform[lsst::geom::LinearTransform::YX] * m(0, 0) +
+                                                     transform[lsst::geom::LinearTransform::YY] * m(0, 1));
+    mid(1, lsst::geom::LinearTransform::YY) = 2.0 * (transform[lsst::geom::LinearTransform::YX] * m(0, 1) +
+                                                     transform[lsst::geom::LinearTransform::YY] * m(1, 1));
+    mid(2, lsst::geom::LinearTransform::XX) = transform[lsst::geom::LinearTransform::YX] * m(0, 0) +
+                                              transform[lsst::geom::LinearTransform::YY] * m(0, 1);
+    mid(2, lsst::geom::LinearTransform::XY) = transform[lsst::geom::LinearTransform::YX] * m(0, 1) +
+                                              transform[lsst::geom::LinearTransform::YY] * m(1, 1);
+    mid(2, lsst::geom::LinearTransform::YX) = transform[lsst::geom::LinearTransform::XX] * m(0, 0) +
+                                              transform[lsst::geom::LinearTransform::XY] * m(0, 1);
+    mid(2, lsst::geom::LinearTransform::YY) = transform[lsst::geom::LinearTransform::XX] * m(0, 1) +
+                                              transform[lsst::geom::LinearTransform::XY] * m(1, 1);
     m = transform.getMatrix() * m * transform.getMatrix().transpose();
     Jacobian lhs = output->_dAssignFromQuadrupole(m(0, 0), m(1, 1), m(0, 1));
     return lhs * mid;
@@ -118,7 +118,7 @@ Ellipse::Transformer::TransformDerivativeMatrix Ellipse::Transformer::dTransform
     r.block<3, 4>(0, 0) = input.getCore().transform(transform.getLinear()).dTransform();
     return r;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

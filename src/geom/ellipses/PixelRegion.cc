@@ -31,7 +31,7 @@ namespace geom {
 namespace ellipses {
 
 PixelRegion::PixelRegion(Ellipse const& ellipse)
-        : _center(ellipse.getCenter()), _bbox(ellipse.computeBBox(), Box2I::EXPAND) {
+        : _center(ellipse.getCenter()), _bbox(ellipse.computeBBox(), lsst::geom::Box2I::EXPAND) {
     Quadrupole::Matrix q = Quadrupole(ellipse.getCore()).getMatrix();
     _detQ = q(0, 0) * q(1, 1) - q(0, 1) * q(0, 1);
     _invQxx = q(1, 1) / _detQ;
@@ -53,7 +53,7 @@ Span const PixelRegion::getSpanAt(int y) const {
     }  // Note that we return an empty span when d <= 0.0 or d is NaN.
     return Span(y, std::ceil(x0), std::floor(x1));
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

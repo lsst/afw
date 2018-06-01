@@ -31,6 +31,9 @@
 
 #include "astshim.h"
 
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/table.h"
 #include "lsst/afw/table/io/CatalogVector.h"
@@ -38,9 +41,6 @@
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 #include "lsst/afw/geom/detail/transformUtils.h"
 #include "lsst/afw/geom/wcsUtils.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
@@ -108,7 +108,8 @@ SkyWcsFactory registration(getSkyWcsPersistenceName());
 
 }  // namespace
 
-Eigen::Matrix2d makeCdMatrix(Angle const& scale, Angle const& orientation, bool flipX) {
+Eigen::Matrix2d makeCdMatrix(lsst::geom::Angle const& scale, lsst::geom::Angle const& orientation,
+                             bool flipX) {
     Eigen::Matrix2d cdMatrix;
     double orientRad = orientation.asRadians();
     double scaleDeg = scale.asDegrees();
@@ -132,12 +133,12 @@ SkyWcs::SkyWcs(ast::FrameDict const& frameDict) : SkyWcs(_checkFrameDict(frameDi
 
 bool SkyWcs::operator==(SkyWcs const& other) const { return writeString() == other.writeString(); }
 
-Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
+lsst::geom::Angle SkyWcs::getPixelScale(lsst::geom::Point2D const& pixel) const {
     // Compute pixVec containing the pixel position and two nearby points
     // (use a vector so all three points can be converted to sky in a single call)
     double const side = 1.0;
-    std::vector<Point2D> pixVec = {
-            pixel, pixel + Extent2D(side, 0), pixel + Extent2D(0, side),
+    std::vector<lsst::geom::Point2D> pixVec = {
+            pixel, pixel + lsst::geom::Extent2D(side, 0), pixel + lsst::geom::Extent2D(0, side),
     };
 
     auto skyVec = pixelToSky(pixVec);
@@ -151,10 +152,10 @@ Angle SkyWcs::getPixelScale(Point2D const& pixel) const {
     // pixel area in radians^2 = area of parallelogram with sides skyDx, skyDy = |skyDx cross skyDy|
     // Use squared norm to avoid two square roots
     double skyAreaSq = skyDx.cross(skyDy).getSquaredNorm();
-    return (std::pow(skyAreaSq, 0.25) / side) * radians;
+    return (std::pow(skyAreaSq, 0.25) / side) * lsst::geom::radians;
 }
 
-SpherePoint SkyWcs::getSkyOrigin() const {
+lsst::geom::SpherePoint SkyWcs::getSkyOrigin() const {
     // CRVAL is stored as the SkyRef property of the sky frame (the current frame of the SkyWcs)
     auto skyFrame = std::dynamic_pointer_cast<ast::SkyFrame>(
             getFrameDict()->getFrame(ast::FrameDict::CURRENT, false));  // false: do not copy
@@ -162,10 +163,10 @@ SpherePoint SkyWcs::getSkyOrigin() const {
         throw LSST_EXCEPT(pex::exceptions::LogicError, "Current frame is not a SkyFrame");
     }
     auto const crvalRad = skyFrame->getSkyRef();
-    return SpherePoint(crvalRad[0] * radians, crvalRad[1] * radians);
+    return lsst::geom::SpherePoint(crvalRad[0] * lsst::geom::radians, crvalRad[1] * lsst::geom::radians);
 }
 
-Eigen::Matrix2d SkyWcs::getCdMatrix(Point2D const& pixel) const {
+Eigen::Matrix2d SkyWcs::getCdMatrix(lsst::geom::Point2D const& pixel) const {
     auto const pixelToIwc = getFrameDict()->getMapping(ast::FrameSet::BASE, "IWC");
     auto const pixelToIwcTransform = TransformPoint2ToPoint2(*pixelToIwc);
     return pixelToIwcTransform.getJacobian(pixel);
@@ -173,14 +174,14 @@ Eigen::Matrix2d SkyWcs::getCdMatrix(Point2D const& pixel) const {
 
 Eigen::Matrix2d SkyWcs::getCdMatrix() const { return getCdMatrix(getPixelOrigin()); }
 
-std::shared_ptr<SkyWcs> SkyWcs::getTanWcs(Point2D const& pixel) const {
+std::shared_ptr<SkyWcs> SkyWcs::getTanWcs(lsst::geom::Point2D const& pixel) const {
     auto const crval = pixelToSky(pixel);
     auto const cdMatrix = getCdMatrix(pixel);
     auto metadata = makeSimpleWcsMetadata(pixel, crval, cdMatrix);
     return std::make_shared<SkyWcs>(*metadata);
 }
 
-std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(Extent2D const& shift) const {
+std::shared_ptr<SkyWcs> SkyWcs::copyAtShiftedPixelOrigin(lsst::geom::Extent2D const& shift) const {
     auto newToOldPixel = TransformPoint2ToPoint2(ast::ShiftMap({-shift[0], -shift[1]}));
     return makeModifiedWcs(newToOldPixel, *this, true);
 }
@@ -214,9 +215,7 @@ std::shared_ptr<daf::base::PropertyList> SkyWcs::getFitsMetadata(bool precise) c
     return detail::getPropertyListFromFitsChan(fitsChan);
 }
 
-std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const {
-    return _frameDict;
-}
+std::shared_ptr<const ast::FrameDict> SkyWcs::getFrameDict() const { return _frameDict; }
 
 bool SkyWcs::isFits() const {
     try {
@@ -229,18 +228,22 @@ bool SkyWcs::isFits() const {
     return true;
 }
 
-AffineTransform SkyWcs::linearizePixelToSky(SpherePoint const& coord, AngleUnit const& skyUnit) const {
+lsst::geom::AffineTransform SkyWcs::linearizePixelToSky(lsst::geom::SpherePoint const& coord,
+                                                        lsst::geom::AngleUnit const& skyUnit) const {
     return _linearizePixelToSky(skyToPixel(coord), coord, skyUnit);
 }
-AffineTransform SkyWcs::linearizePixelToSky(Point2D const& pix, AngleUnit const& skyUnit) const {
+lsst::geom::AffineTransform SkyWcs::linearizePixelToSky(lsst::geom::Point2D const& pix,
+                                                        lsst::geom::AngleUnit const& skyUnit) const {
     return _linearizePixelToSky(pix, pixelToSky(pix), skyUnit);
 }
 
-AffineTransform SkyWcs::linearizeSkyToPixel(SpherePoint const& coord, AngleUnit const& skyUnit) const {
+lsst::geom::AffineTransform SkyWcs::linearizeSkyToPixel(lsst::geom::SpherePoint const& coord,
+                                                        lsst::geom::AngleUnit const& skyUnit) const {
     return _linearizeSkyToPixel(skyToPixel(coord), coord, skyUnit);
 }
 
-AffineTransform SkyWcs::linearizeSkyToPixel(Point2D const& pix, AngleUnit const& skyUnit) const {
+lsst::geom::AffineTransform SkyWcs::linearizeSkyToPixel(lsst::geom::Point2D const& pix,
+                                                        lsst::geom::AngleUnit const& skyUnit) const {
     return _linearizeSkyToPixel(pix, pixelToSky(pix), skyUnit);
 }
 
@@ -258,8 +261,7 @@ std::shared_ptr<SkyWcs> SkyWcs::readStream(std::istream& is) {
     int version;
     is >> version;
     if (version != 1) {
-        throw LSST_EXCEPT(pex::exceptions::TypeError,
-                          "Unsupported version " + std::to_string(version));
+        throw LSST_EXCEPT(pex::exceptions::TypeError, "Unsupported version " + std::to_string(version));
     }
     std::string shortClassName;
     is >> shortClassName;
@@ -312,9 +314,7 @@ void SkyWcs::write(OutputArchiveHandle& handle) const {
 }
 
 SkyWcs::SkyWcs(std::shared_ptr<ast::FrameDict> frameDict)
-        : _frameDict(frameDict), _transform(),
-          _pixelOrigin(),
-          _pixelScaleAtOrigin(0 * radians) {
+        : _frameDict(frameDict), _transform(), _pixelOrigin(), _pixelScaleAtOrigin(0 * lsst::geom::radians) {
     _computeCache();
 };
 
@@ -359,15 +359,16 @@ std::shared_ptr<ast::FrameDict> SkyWcs::_checkFrameDict(ast::FrameDict const& fr
     return frameDict.copy();
 }
 
-AffineTransform SkyWcs::_linearizePixelToSky(Point2D const& pix00, SpherePoint const& coord,
-                                             AngleUnit const& skyUnit) const {
+lsst::geom::AffineTransform SkyWcs::_linearizePixelToSky(lsst::geom::Point2D const& pix00,
+                                                         lsst::geom::SpherePoint const& coord,
+                                                         lsst::geom::AngleUnit const& skyUnit) const {
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners
     // of a square drawn in pixel. It'd be better to center the square at sky00,
     // but that would involve another conversion between sky and pixel coordinates
     const double side = 1.0;  // length of the square's sides in pixels
     auto const sky00 = coord.getPosition(skyUnit);
-    auto const dsky10 = coord.getTangentPlaneOffset(pixelToSky(pix00 + Extent2D(side, 0)));
-    auto const dsky01 = coord.getTangentPlaneOffset(pixelToSky(pix00 + Extent2D(0, side)));
+    auto const dsky10 = coord.getTangentPlaneOffset(pixelToSky(pix00 + lsst::geom::Extent2D(side, 0)));
+    auto const dsky01 = coord.getTangentPlaneOffset(pixelToSky(pix00 + lsst::geom::Extent2D(0, side)));
 
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.first.asAngularUnits(skyUnit) / side;
@@ -379,18 +380,19 @@ AffineTransform SkyWcs::_linearizePixelToSky(Point2D const& pix00, SpherePoint c
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    // return AffineTransform(m, Extent2D(sky00v - m * pix00v));
-    return AffineTransform(m, (sky00v - m * pix00v));
+    // return lsst::geom::AffineTransform(m, lsst::geom::Extent2D(sky00v - m * pix00v));
+    return lsst::geom::AffineTransform(m, (sky00v - m * pix00v));
 }
 
-AffineTransform SkyWcs::_linearizeSkyToPixel(Point2D const& pix00, SpherePoint const& coord,
-                                             AngleUnit const& skyUnit) const {
-    AffineTransform inverse = _linearizePixelToSky(pix00, coord, skyUnit);
+lsst::geom::AffineTransform SkyWcs::_linearizeSkyToPixel(lsst::geom::Point2D const& pix00,
+                                                         lsst::geom::SpherePoint const& coord,
+                                                         lsst::geom::AngleUnit const& skyUnit) const {
+    lsst::geom::AffineTransform inverse = _linearizePixelToSky(pix00, coord, skyUnit);
     return inverse.invert();
 }
 
 std::shared_ptr<SkyWcs> makeFlippedWcs(SkyWcs const& wcs, bool flipLR, bool flipTB,
-                                       geom::Point2D const& center) {
+                                       lsst::geom::Point2D const& center) {
     double const dx = 1000;  // any "reasonable" number of pixels will do
     std::vector<double> inLL = {center[0] - dx, center[1] - dx};
     std::vector<double> inUR = {center[0] + dx, center[1] + dx};
@@ -447,20 +449,20 @@ std::shared_ptr<SkyWcs> makeSkyWcs(daf::base::PropertySet& metadata, bool strip)
     return std::make_shared<SkyWcs>(metadata, strip);
 }
 
-std::shared_ptr<SkyWcs> makeSkyWcs(Point2D const& crpix, SpherePoint const& crval,
+std::shared_ptr<SkyWcs> makeSkyWcs(lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,
                                    Eigen::Matrix2d const& cdMatrix, std::string const& projection) {
     auto metadata = makeSimpleWcsMetadata(crpix, crval, cdMatrix, projection);
     return std::make_shared<SkyWcs>(*metadata);
 }
 
-std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, SpherePoint const& crval,
+std::shared_ptr<SkyWcs> makeTanSipWcs(lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,
                                       Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA,
                                       Eigen::MatrixXd const& sipB) {
     auto metadata = makeTanSipMetadata(crpix, crval, cdMatrix, sipA, sipB);
     return std::make_shared<SkyWcs>(*metadata);
 }
 
-std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, SpherePoint const& crval,
+std::shared_ptr<SkyWcs> makeTanSipWcs(lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,
                                       Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA,
                                       Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
                                       Eigen::MatrixXd const& sipBp) {
@@ -469,7 +471,7 @@ std::shared_ptr<SkyWcs> makeTanSipWcs(Point2D const& crpix, SpherePoint const& c
 }
 
 std::shared_ptr<TransformPoint2ToSpherePoint> getIntermediateWorldCoordsToSky(SkyWcs const& wcs,
-                                                                            bool simplify) {
+                                                                              bool simplify) {
     auto iwcToSky = wcs.getFrameDict()->getMapping("IWC", "SKY");
     return std::make_shared<TransformPoint2ToSpherePoint>(*iwcToSky, simplify);
 }
@@ -479,7 +481,7 @@ std::shared_ptr<TransformPoint2ToPoint2> getPixelToIntermediateWorldCoords(SkyWc
     return std::make_shared<TransformPoint2ToPoint2>(*pixelToIwc, simplify);
 }
 
-std::ostream &operator<<(std::ostream &os, SkyWcs const &wcs) {
+std::ostream& operator<<(std::ostream& os, SkyWcs const& wcs) {
     os << "SkyWcs";
     return os;
 };

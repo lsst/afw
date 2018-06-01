@@ -33,10 +33,10 @@ Parametric::Parametric(Ellipse const& ellipse) : _center(ellipse.getCenter()) {
     ellipse.getCore()._assignToAxes(a, b, theta);
     double c = std::cos(theta);
     double s = std::sin(theta);
-    _u = Extent2D(a * c, a * s);
-    _v = Extent2D(-b * s, b * c);
+    _u = lsst::geom::Extent2D(a * c, a * s);
+    _v = lsst::geom::Extent2D(-b * s, b * c);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

@@ -63,7 +63,7 @@ namespace detail {
 struct Mask_tag : public detail::basic_tag {};
 
 typedef std::map<std::string, int> MaskPlaneDict;
-}
+}  // namespace detail
 
 /**
  * Represent a 2-dimensional array of bitmask pixels
@@ -119,7 +119,7 @@ public:
      * @param dimensions Number of columns, rows
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Extent2I const& dimensions = geom::Extent2I(),
+    explicit Mask(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     /**
      * Construct a Mask initialized to a specified value
@@ -128,7 +128,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Extent2I const& dimensions, MaskPixelT initialValue,
+    explicit Mask(lsst::geom::Extent2I const& dimensions, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     /**
      * Construct a Mask initialized to 0x0
@@ -136,7 +136,7 @@ public:
      * @param bbox Desired number of columns/rows and origin
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Box2I const& bbox, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+    explicit Mask(lsst::geom::Box2I const& bbox, MaskPlaneDict const& planeDefs = MaskPlaneDict());
     /**
      * Construct a Mask initialized to a specified value
      *
@@ -144,7 +144,7 @@ public:
      * @param initialValue Initial value
      * @param planeDefs desired mask planes
      */
-    explicit Mask(geom::Box2I const& bbox, MaskPixelT initialValue,
+    explicit Mask(lsst::geom::Box2I const& bbox, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
 
     /**
@@ -168,7 +168,7 @@ public:
     explicit Mask(std::string const& fileName, int hdu = fits::DEFAULT_HDU,
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
-                  geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT,
+                  lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
     /**
@@ -192,7 +192,7 @@ public:
     explicit Mask(fits::MemFileManager& manager, int hdu = fits::DEFAULT_HDU,
                   std::shared_ptr<lsst::daf::base::PropertySet> metadata =
                           std::shared_ptr<lsst::daf::base::PropertySet>(),
-                  geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT,
+                  lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
     /**
@@ -210,9 +210,10 @@ public:
      *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
      *  on-disk version.
      */
-    explicit Mask(fits::Fits& fitsfile, std::shared_ptr<lsst::daf::base::PropertySet> metadata =
-                                                std::shared_ptr<lsst::daf::base::PropertySet>(),
-                  geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT,
+    explicit Mask(fits::Fits& fitsfile,
+                  std::shared_ptr<lsst::daf::base::PropertySet> metadata =
+                          std::shared_ptr<lsst::daf::base::PropertySet>(),
+                  lsst::geom::Box2I const& bbox = lsst::geom::Box2I(), ImageOrigin origin = PARENT,
                   bool conformMasks = false);
 
     // generalised copy constructor
@@ -237,11 +238,11 @@ public:
      * @param origin coordinate system of the bbox
      * @param deep deep copy? (construct a view with shared pixels if false)
      */
-    Mask(const Mask& src, const geom::Box2I& bbox, ImageOrigin const origin = PARENT,
+    Mask(const Mask& src, const lsst::geom::Box2I& bbox, ImageOrigin const origin = PARENT,
          const bool deep = false);
 
     explicit Mask(ndarray::Array<MaskPixelT, 2, 1> const& array, bool deep = false,
-                  geom::Point2I const& xy0 = geom::Point2I());
+                  lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
 
     void swap(Mask& rhs);
     // Operators
@@ -327,8 +328,9 @@ public:
      *  @param[in] metadata      Additional values to write to the header (may be null).
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      */
-    void writeFits(std::string const& fileName, std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
-                                                        std::shared_ptr<lsst::daf::base::PropertySet>(),
+    void writeFits(std::string const& fileName,
+                   std::shared_ptr<lsst::daf::base::PropertySet const> metadata =
+                           std::shared_ptr<lsst::daf::base::PropertySet>(),
                    std::string const& mode = "w") const;
 
     /**
@@ -360,12 +362,9 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(
-        std::string const& filename,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr
-    ) const;
+    void writeFits(std::string const& filename, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
 
     /**
      *  Write a mask to a FITS RAM file.
@@ -375,12 +374,9 @@ public:
      *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(
-        fits::MemFileManager& manager,
-        fits::ImageWriteOptions const& options,
-        std::string const& mode = "w",
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr
-    ) const;
+    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& options,
+                   std::string const& mode = "w",
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
 
     /**
      *  Write a mask to an open FITS file object.
@@ -389,12 +385,8 @@ public:
      *  @param[in] options       Options controlling writing of FITS image.
      *  @param[in] header        Additional values to write to the header (may be null).
      */
-    void writeFits(
-        fits::Fits& fitsfile,
-        fits::ImageWriteOptions const& options,
-        std::shared_ptr<daf::base::PropertySet const> header=nullptr
-    ) const;
-
+    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& options,
+                   std::shared_ptr<daf::base::PropertySet const> header = nullptr) const;
 
     /**
      *  Read a Mask from a regular FITS file.
@@ -553,8 +545,8 @@ private:
 
 template <typename PixelT>
 void swap(Mask<PixelT>& a, Mask<PixelT>& b);
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_MASK_H

@@ -301,7 +301,7 @@ private:
     Eigen::VectorXd _tmp;
 };
 
-}  // anonymous
+}  // namespace
 
 void LeastSquares::setThreshold(double threshold) {
     _impl->threshold = threshold;
@@ -360,10 +360,10 @@ LeastSquares::LeastSquares(Factorization factorization, int dimension) {
     _impl->factorization = factorization;
 }
 
-LeastSquares::LeastSquares(LeastSquares const &) = default;
-LeastSquares::LeastSquares(LeastSquares &&) = default;
-LeastSquares & LeastSquares::operator=(LeastSquares const &) = default;
-LeastSquares & LeastSquares::operator=(LeastSquares &&) = default;
+LeastSquares::LeastSquares(LeastSquares const&) = default;
+LeastSquares::LeastSquares(LeastSquares&&) = default;
+LeastSquares& LeastSquares::operator=(LeastSquares const&) = default;
+LeastSquares& LeastSquares::operator=(LeastSquares&&) = default;
 
 LeastSquares::~LeastSquares() = default;
 
@@ -422,6 +422,6 @@ void LeastSquares::_factor(bool haveNormalEquations) {
     }
     _impl->factor();
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

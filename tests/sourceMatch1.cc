@@ -33,13 +33,12 @@
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
+#include "lsst/geom.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Match.h"
 #include "lsst/afw/math/Random.h"
-#include "lsst/afw/geom/Angle.h"
 
 namespace math = lsst::afw::math;
-namespace afwGeom = lsst::afw::geom;
 namespace afwTable = lsst::afw::table;
 
 namespace {
@@ -69,10 +68,10 @@ void makeSources(afwTable::SourceCatalog &set, int n) {
     for (int i = 0; i < n; ++i) {
         std::shared_ptr<afwTable::SourceRecord> src = set.addNew();
         src->setId(i);
-        src->set(set.getTable()->getCentroidKey(), afwGeom::Point2D(rng().uniform(), rng().uniform()));
+        src->set(set.getTable()->getCentroidKey(), lsst::geom::Point2D(rng().uniform(), rng().uniform()));
         double z = rng().flat(-1.0, 1.0);
-        src->set(afwTable::SourceTable::getCoordKey().getRa(), rng().flat(0.0, 360.) * afwGeom::degrees);
-        src->set(afwTable::SourceTable::getCoordKey().getDec(), std::asin(z) * afwGeom::radians);
+        src->set(afwTable::SourceTable::getCoordKey().getRa(), rng().flat(0.0, 360.) * lsst::geom::degrees);
+        src->set(afwTable::SourceTable::getCoordKey().getDec(), std::asin(z) * lsst::geom::radians);
     }
 }
 
@@ -184,13 +183,13 @@ void compareMatches(std::vector<afwTable::SourceMatch> &matches,
     }
 }
 
-}  // namespace <anonymous>
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(
         matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;     // # of points to generate
     double const M = 8.0;  // avg. # of matches
-    afwGeom::Angle radius = std::acos(1.0 - 2.0 * M / N) * afwGeom::radians;
+    lsst::geom::Angle radius = std::acos(1.0 - 2.0 * M / N) * lsst::geom::radians;
 
     afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
@@ -204,7 +203,7 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
                                           "Boost non-Std" */
     int const N = 500;                 // # of points to generate
     double const M = 8.0;              // avg. # of matches
-    afwGeom::Angle radius = std::acos(1.0 - 2.0 * M / N) * afwGeom::radians;
+    lsst::geom::Angle radius = std::acos(1.0 - 2.0 * M / N) * lsst::geom::radians;
 
     afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
@@ -217,7 +216,7 @@ BOOST_AUTO_TEST_CASE(
         matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;     // # of points to generate
     double const M = 8.0;  // avg. # of matches
-    double const radius = std::sqrt(M / (afwGeom::PI * static_cast<double>(N)));
+    double const radius = std::sqrt(M / (lsst::geom::PI * static_cast<double>(N)));
 
     afwTable::SourceCatalog set1(getGlobalTable()), set2(getGlobalTable());
     makeSources(set1, N);
@@ -231,7 +230,7 @@ BOOST_AUTO_TEST_CASE(
         matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;     // # of points to generate
     double const M = 8.0;  // avg. # of matches
-    double const radius = std::sqrt(M / (afwGeom::PI * static_cast<double>(N)));
+    double const radius = std::sqrt(M / (lsst::geom::PI * static_cast<double>(N)));
 
     afwTable::SourceCatalog set(getGlobalTable());
     makeSources(set, N);
@@ -246,12 +245,12 @@ static void normalizeRaDec(afwTable::SourceCatalog &ss) {
         r = ss[i].getRa().asRadians();
         d = ss[i].getDec().asRadians();
         // wrap Dec over the (north) pole
-        if (d > afwGeom::HALFPI) {
-            d = afwGeom::PI - d;
-            r = r + afwGeom::PI;
+        if (d > lsst::geom::HALFPI) {
+            d = lsst::geom::PI - d;
+            r = r + lsst::geom::PI;
         }
-        ss[i].set(afwTable::SourceTable::getCoordKey().getRa(), r * afwGeom::radians);
-        ss[i].set(afwTable::SourceTable::getCoordKey().getDec(), d * afwGeom::radians);
+        ss[i].set(afwTable::SourceTable::getCoordKey().getRa(), r * lsst::geom::radians);
+        ss[i].set(afwTable::SourceTable::getCoordKey().getDec(), d * lsst::geom::radians);
     }
 }
 
@@ -262,17 +261,17 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     // for each source, add a true match right on top, plus one within range
     // and one outside range in each direction.
 
-    afwGeom::Angle rad = 0.1 * afwGeom::degrees;
+    lsst::geom::Angle rad = 0.1 * lsst::geom::degrees;
     int id1 = 0;
     int id2 = 1000000;
     for (double j = 0.1; j < 1; j += 0.1) {
         for (int i = 0; i < 360; i += 45) {
-            afwGeom::Angle ra = i * afwGeom::degrees;
-            afwGeom::Angle dec = (90 - j) * afwGeom::degrees;
-            afwGeom::Angle ddec1 = rad;
-            afwGeom::Angle dra1 = rad / cos(dec);
-            afwGeom::Angle ddec2 = 2. * rad;
-            afwGeom::Angle dra2 = 2. * rad / cos(dec);
+            lsst::geom::Angle ra = i * lsst::geom::degrees;
+            lsst::geom::Angle dec = (90 - j) * lsst::geom::degrees;
+            lsst::geom::Angle ddec1 = rad;
+            lsst::geom::Angle dra1 = rad / cos(dec);
+            lsst::geom::Angle ddec2 = 2. * rad;
+            lsst::geom::Angle dra2 = 2. * rad / cos(dec);
 
             std::shared_ptr<afwTable::SourceRecord> src1 = set1.addNew();
             src1->setId(id1);

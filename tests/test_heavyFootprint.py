@@ -36,6 +36,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
 import lsst.afw.geom as afwGeom
@@ -156,7 +157,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         fs.makeHeavy(self.mi)
 
-        bbox = afwGeom.BoxI(afwGeom.PointI(9, 1), afwGeom.ExtentI(7, 4))
+        bbox = lsst.geom.BoxI(lsst.geom.PointI(9, 1), lsst.geom.ExtentI(7, 4))
         omi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL, True)
         omi.set((0, 0x0, 0))
 

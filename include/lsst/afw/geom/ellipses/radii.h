@@ -289,9 +289,9 @@ inline LogTraceRadius &LogTraceRadius::operator=(TraceRadius const &other) {
     _value = std::log(other);
     return *this;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_radii_h_INCLUDED

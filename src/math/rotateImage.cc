@@ -25,11 +25,11 @@
  */
 #include <cstdint>
 
+#include "lsst/geom.h"
 #include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
 namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
 namespace afw {
@@ -48,7 +48,7 @@ std::shared_ptr<ImageT> rotateImageBy90(ImageT const& inImage, int nQuarter) {
             outImage.reset(new ImageT(inImage, true));  // a deep copy of inImage
             break;
         case 1:
-            outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
+            outImage.reset(new ImageT(lsst::geom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
             for (int y = 0; y != inImage.getHeight(); ++y) {
                 typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
@@ -72,7 +72,7 @@ std::shared_ptr<ImageT> rotateImageBy90(ImageT const& inImage, int nQuarter) {
             }
             break;
         case 3:
-            outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
+            outImage.reset(new ImageT(lsst::geom::Extent2I(inImage.getHeight(), inImage.getWidth())));
 
             for (int y = 0; y != inImage.getHeight(); ++y) {
                 typename ImageT::y_iterator optr = outImage->y_at(y, inImage.getWidth() - 1);
@@ -145,11 +145,11 @@ INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
-    rotateImageBy90(afwImage::Mask<afwImage::MaskPixel> const&, int);
-template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>>
-    flipImage(afwImage::Mask<afwImage::MaskPixel> const&, bool flipLR, bool flipTB);
+template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>> rotateImageBy90(
+        afwImage::Mask<afwImage::MaskPixel> const&, int);
+template std::shared_ptr<afwImage::Mask<afwImage::MaskPixel>> flipImage(
+        afwImage::Mask<afwImage::MaskPixel> const&, bool flipLR, bool flipTB);
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

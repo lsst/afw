@@ -33,6 +33,7 @@ or
 import unittest
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
@@ -84,7 +85,7 @@ class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
 
     def setUp(self):
-        self.im = afwImage.ImageU(afwGeom.Extent2I(12, 8))
+        self.im = afwImage.ImageU(lsst.geom.Extent2I(12, 8))
         #
         # Objects that we should detect
         #
@@ -106,7 +107,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
 
-        afwDetect.FootprintSet(afwImage.ImageU(afwGeom.Extent2I(10, 20)),
+        afwDetect.FootprintSet(afwImage.ImageU(lsst.geom.Extent2I(10, 20)),
                                afwDetect.Threshold(10))
 
     def testFootprints(self):
@@ -365,7 +366,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testInf(self):
         """Test detection for images with Infs"""
 
-        im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
+        im = afwImage.MaskedImageF(lsst.geom.Extent2I(10, 20))
         im.set(0)
 
         import numpy
@@ -388,7 +389,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
     def doSetUp(self, dwidth=0, dheight=0, x0=0, y0=0):
         width, height = 14 + x0 + dwidth, 10 + y0 + dheight
-        self.im = afwImage.MaskedImageF(afwGeom.Extent2I(width, height))
+        self.im = afwImage.MaskedImageF(lsst.geom.Extent2I(width, height))
         #
         # Objects that we should detect
         #

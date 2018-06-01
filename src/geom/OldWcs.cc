@@ -45,7 +45,7 @@ namespace {
  *
  * From https://stackoverflow.com/a/2072890
  */
-inline bool endsWith(std::string const & value, std::string const & suffix) {
+inline bool endsWith(std::string const& value, std::string const& suffix) {
     if (suffix.size() > value.size()) {
         return false;
     }

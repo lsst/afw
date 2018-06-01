@@ -127,7 +127,7 @@ struct ExtractFlagItems {
     std::vector<SchemaItem<Flag> > *items;
 };
 
-}  // anonymous
+}  // namespace
 
 BitsColumn BaseColumnView::getAllBits() const {
     BitsColumn result(_impl->recordCount);
@@ -149,8 +149,8 @@ BitsColumn BaseColumnView::getAllBits() const {
 
 BaseColumnView::BaseColumnView(BaseColumnView const &) = default;
 BaseColumnView::BaseColumnView(BaseColumnView &&) = default;
-BaseColumnView & BaseColumnView::operator=(BaseColumnView const &) = default;
-BaseColumnView & BaseColumnView::operator=(BaseColumnView &&) = default;
+BaseColumnView &BaseColumnView::operator=(BaseColumnView const &) = default;
+BaseColumnView &BaseColumnView::operator=(BaseColumnView &&) = default;
 
 // needs to be in source file so it can (implicitly) call Impl's (implicit) dtor
 BaseColumnView::~BaseColumnView() = default;
@@ -172,6 +172,6 @@ BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_COLUMNVIEW_SCALAR, _,
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_COLUMNVIEW_ARRAY, _,
                       BOOST_PP_TUPLE_TO_SEQ(AFW_TABLE_ARRAY_FIELD_TYPE_N, AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE))
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

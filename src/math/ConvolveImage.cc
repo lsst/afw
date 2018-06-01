@@ -51,17 +51,17 @@ namespace math {
 namespace {
 
 /**
-* Set the edge pixels of a convolved Image based on size of the convolution kernel used
-*
-* Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
-* (if there is one) when doCopyEdge is true.
-*
-* @param[out] outImage %image whose edge pixels are to be set
-* @param[in] kernel convolution kernel; kernel size is used to determine the edge
-* @param[in] inImage %image whose edge pixels are to be copied; ignored if doCopyEdge is false
-* @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true,
-*                   copy edge pixels from input and set EDGE bit of mask
-*/
+ * Set the edge pixels of a convolved Image based on size of the convolution kernel used
+ *
+ * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
+ * (if there is one) when doCopyEdge is true.
+ *
+ * @param[out] outImage %image whose edge pixels are to be set
+ * @param[in] kernel convolution kernel; kernel size is used to determine the edge
+ * @param[in] inImage %image whose edge pixels are to be copied; ignored if doCopyEdge is false
+ * @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true,
+ *                   copy edge pixels from input and set EDGE bit of mask
+ */
 template <typename OutImageT, typename InImageT>
 inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT const& inImage, bool doCopyEdge,
                           image::detail::Image_tag) {
@@ -74,22 +74,23 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
 
     const typename OutImageT::SinglePixel edgePixel =
             math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
-    std::vector<geom::Box2I> bboxList;
+    std::vector<lsst::geom::Box2I> bboxList;
 
     // create a list of bounding boxes describing edge regions, in this order:
     // bottom edge, top edge (both edge to edge),
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY)));
-    bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY),
-                                   geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
+                                         lsst::geom::Extent2I(imWidth, numHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
+                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
 
-    for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
-         ++bboxIter) {
+    for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin();
+         bboxIter != bboxList.end(); ++bboxIter) {
         OutImageT outView(outImage, *bboxIter, image::LOCAL);
         if (doCopyEdge) {
             // note: set only works with data of the same type
@@ -102,17 +103,17 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
 }
 
 /**
-* Set the edge pixels of a convolved MaskedImage based on size of the convolution kernel used
-*
-* Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
-* (if there is one) when doCopyEdge is true.
-*
-* @param[out] outImage %image whose edge pixels are to be set
-* @param[in] kernel convolution kernel; kernel size is used to determine the edge
-* @param[in] inImage  %image whose edge pixels are to be copied; ignored if doCopyEdge false
-* @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true, copy \
-*                       edge pixels from input and set EDGE bit of mask
-*/
+ * Set the edge pixels of a convolved MaskedImage based on size of the convolution kernel used
+ *
+ * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
+ * (if there is one) when doCopyEdge is true.
+ *
+ * @param[out] outImage %image whose edge pixels are to be set
+ * @param[in] kernel convolution kernel; kernel size is used to determine the edge
+ * @param[in] inImage  %image whose edge pixels are to be copied; ignored if doCopyEdge false
+ * @param[in] doCopyEdge if false (default), set edge pixels to the standard edge pixel; if true, copy \
+ *                       edge pixels from input and set EDGE bit of mask
+ */
 template <typename OutImageT, typename InImageT>
 inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT const& inImage, bool doCopyEdge,
                           image::detail::MaskedImage_tag) {
@@ -125,23 +126,24 @@ inline void setEdgePixels(OutImageT& outImage, Kernel const& kernel, InImageT co
 
     const typename OutImageT::SinglePixel edgePixel =
             math::edgePixel<OutImageT>(typename image::detail::image_traits<OutImageT>::image_category());
-    std::vector<geom::Box2I> bboxList;
+    std::vector<lsst::geom::Box2I> bboxList;
 
     // create a list of bounding boxes describing edge regions, in this order:
     // bottom edge, top edge (both edge to edge),
     // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
     int const numHeight = kHeight - (1 + kCtrY);
     int const numWidth = kWidth - (1 + kCtrX);
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(imWidth, kCtrY)));
-    bboxList.push_back(
-            geom::Box2I(geom::Point2I(0, imHeight - numHeight), geom::Extent2I(imWidth, numHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(0, kCtrY), geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
-    bboxList.push_back(geom::Box2I(geom::Point2I(imWidth - numWidth, kCtrY),
-                                   geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, 0), lsst::geom::Extent2I(imWidth, kCtrY)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, imHeight - numHeight),
+                                         lsst::geom::Extent2I(imWidth, numHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(0, kCtrY),
+                                         lsst::geom::Extent2I(kCtrX, imHeight + 1 - kHeight)));
+    bboxList.push_back(lsst::geom::Box2I(lsst::geom::Point2I(imWidth - numWidth, kCtrY),
+                                         lsst::geom::Extent2I(numWidth, imHeight + 1 - kHeight)));
 
     image::MaskPixel const edgeMask = image::Mask<image::MaskPixel>::getPlaneBitMask("EDGE");
-    for (std::vector<geom::Box2I>::const_iterator bboxIter = bboxList.begin(); bboxIter != bboxList.end();
-         ++bboxIter) {
+    for (std::vector<lsst::geom::Box2I>::const_iterator bboxIter = bboxList.begin();
+         bboxIter != bboxList.end(); ++bboxIter) {
         OutImageT outView(outImage, *bboxIter, image::LOCAL);
         if (doCopyEdge) {
             // note: set only works with data of the same type
@@ -224,11 +226,11 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
 // IMGMACRO = IMAGE or MASKEDIMAGE
 // KERNELTYPE = a kernel class
 //
-#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE)                       \
-    template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, \
-                           bool);                                                                      \
-    NL template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&,    \
-                              ConvolutionControl const&);                                              \
+#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE)                        \
+    template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &, KERNELTYPE const&, bool, \
+                           bool);                                                                       \
+    NL template void convolve(IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const &, KERNELTYPE const&,    \
+                              ConvolutionControl const&);                                               \
     NL
 //
 // Instantiate Image or MaskedImage versions of all functions defined in this file.
@@ -236,8 +238,8 @@ void convolve(OutImageT& convolvedImage, InImageT const& inImage, KernelT const&
 // IMGMACRO = IMAGE or MASKEDIMAGE
 //
 #define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE)                                             \
-    template void scaledPlus(IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double,           \
-                             IMGMACRO(INPIXTYPE) const&);                                                 \
+    template void scaledPlus(IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const &, double,          \
+                             IMGMACRO(INPIXTYPE) const &);                                                \
     NL INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE,                                       \
                                    AnalyticKernel) INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE,      \
                                                                                INPIXTYPE,                 \
@@ -264,6 +266,6 @@ INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
 INSTANTIATE(std::uint16_t, std::uint16_t)
 /// @endcond
-}
-}
-}  // end math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

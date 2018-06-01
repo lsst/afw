@@ -61,14 +61,14 @@ public:
     RecordId getId() const;
     void setId(RecordId id);
 
-    SpherePoint getCoord() const;
-    void setCoord(SpherePoint const& coord);
+    lsst::geom::SpherePoint getCoord() const;
+    void setCoord(lsst::geom::SpherePoint const& coord);
 
-    Angle getRa() const;
-    void setRa(Angle ra);
+    lsst::geom::Angle getRa() const;
+    void setRa(lsst::geom::Angle ra);
 
-    Angle getDec() const;
-    void setDec(Angle dec);
+    lsst::geom::Angle getDec() const;
+    void setDec(lsst::geom::Angle dec);
     //@}
 
     SimpleRecord(const SimpleRecord&) = delete;
@@ -187,7 +187,7 @@ protected:
     SimpleTable(Schema const& schema, std::shared_ptr<IdFactory> const& idFactory);
 
     explicit SimpleTable(SimpleTable const& other);
-    explicit SimpleTable(SimpleTable && other);
+    explicit SimpleTable(SimpleTable&& other);
 
     std::shared_ptr<BaseTable> _clone() const override;
 
@@ -217,16 +217,18 @@ private:
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }
 inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id); }
 
-inline SpherePoint SimpleRecord::getCoord() const { return get(SimpleTable::getCoordKey()); }
-inline void SimpleRecord::setCoord(SpherePoint const& coord) { set(SimpleTable::getCoordKey(), coord); }
-
-inline Angle SimpleRecord::getRa() const { return get(SimpleTable::getCoordKey().getRa()); }
-inline void SimpleRecord::setRa(Angle ra) { set(SimpleTable::getCoordKey().getRa(), ra); }
-
-inline Angle SimpleRecord::getDec() const { return get(SimpleTable::getCoordKey().getDec()); }
-inline void SimpleRecord::setDec(Angle dec) { set(SimpleTable::getCoordKey().getDec(), dec); }
+inline lsst::geom::SpherePoint SimpleRecord::getCoord() const { return get(SimpleTable::getCoordKey()); }
+inline void SimpleRecord::setCoord(lsst::geom::SpherePoint const& coord) {
+    set(SimpleTable::getCoordKey(), coord);
 }
-}
-}  // namespace lsst::afw::table
+
+inline lsst::geom::Angle SimpleRecord::getRa() const { return get(SimpleTable::getCoordKey().getRa()); }
+inline void SimpleRecord::setRa(lsst::geom::Angle ra) { set(SimpleTable::getCoordKey().getRa(), ra); }
+
+inline lsst::geom::Angle SimpleRecord::getDec() const { return get(SimpleTable::getCoordKey().getDec()); }
+inline void SimpleRecord::setDec(lsst::geom::Angle dec) { set(SimpleTable::getCoordKey().getDec(), dec); }
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_Simple_h_INCLUDED

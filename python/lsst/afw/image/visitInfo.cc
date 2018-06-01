@@ -31,8 +31,8 @@
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Weather.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/image/VisitInfo.h"
@@ -47,7 +47,7 @@ namespace image {
 namespace {
 
 static double const nan(std::numeric_limits<double>::quiet_NaN());
-static geom::Angle const nanAngle(nan);
+static lsst::geom::Angle const nanAngle(nan);
 
 }  // namespace
 
@@ -69,12 +69,12 @@ PYBIND11_PLUGIN(visitInfo) {
 
     /* Constructors */
     cls.def(py::init<table::RecordId, double, double, daf::base::DateTime const &, double,
-                     geom::Angle const &, geom::SpherePoint const &, geom::SpherePoint const &, double,
-                     geom::Angle const &, RotType const &, coord::Observatory const &,
+                     lsst::geom::Angle const &, lsst::geom::SpherePoint const &, lsst::geom::SpherePoint const &, double,
+                     lsst::geom::Angle const &, RotType const &, coord::Observatory const &,
                      coord::Weather const &>(),
             "exposureId"_a = 0, "exposureTime"_a = nan, "darkTime"_a = nan, "date"_a = daf::base::DateTime(),
-            "ut1"_a = nan, "era"_a = nanAngle, "boresightRaDec"_a = geom::SpherePoint(nanAngle, nanAngle),
-            "boresightAzAlt"_a = geom::SpherePoint(nanAngle, nanAngle), "boresightAirmass"_a = nan,
+            "ut1"_a = nan, "era"_a = nanAngle, "boresightRaDec"_a = lsst::geom::SpherePoint(nanAngle, nanAngle),
+            "boresightAzAlt"_a = lsst::geom::SpherePoint(nanAngle, nanAngle), "boresightAirmass"_a = nan,
             "boresightRotAngle"_a = nanAngle, "rotType"_a = RotType::UNKNOWN,
             "observatory"_a = coord::Observatory(nanAngle, nanAngle, nan),
             "weather"_a = coord::Weather(nan, nan, nan));

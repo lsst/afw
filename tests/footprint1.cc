@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3
     LOG_CONFIG();
     LOG_SET_LVL("afw.detection", LOG_LVL_INFO);
 
-    image::MaskedImage<ImagePixelT> img(geom::Extent2I(10, 20));
+    image::MaskedImage<ImagePixelT> img(lsst::geom::Extent2I(10, 20));
     *img.getImage() = 100;
 
     detection::FootprintSet ds_by_value1(img, 0);

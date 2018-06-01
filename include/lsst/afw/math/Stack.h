@@ -52,7 +52,7 @@ std::shared_ptr<lsst::afw::image::Image<PixelT>> statisticsStack(
         StatisticsControl const& sctrl = StatisticsControl(),                   ///< Control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
                 std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
-        );
+);
 
 /**
  * @ brief compute statistical stack of Image.  Write to output image in-situ
@@ -65,8 +65,7 @@ void statisticsStack(
         StatisticsControl const& sctrl = StatisticsControl(),                   ///< Control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
                 std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
-        );
-
+);
 
 /**
  * A function to compute some statistics of a stack of Masked Images
@@ -89,13 +88,9 @@ void statisticsStack(
  */
 template <typename PixelT>
 std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
-        std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>>& images,
-        Property flags,
-        StatisticsControl const& sctrl,
-        std::vector<lsst::afw::image::VariancePixel> const& wvector,
-        image::MaskPixel clipped,
-        std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap
-);
+        std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>>& images, Property flags,
+        StatisticsControl const& sctrl, std::vector<lsst::afw::image::VariancePixel> const& wvector,
+        image::MaskPixel clipped, std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const& maskMap);
 
 /**
  * A function to compute some statistics of a stack of Masked Images
@@ -113,10 +108,9 @@ std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
         StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
                 std::vector<lsst::afw::image::VariancePixel>(0),  ///< vector containing weights
-        image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped or masked
-        image::MaskPixel excuse=0 ///< bitmask to excuse from marking as clipped
+        image::MaskPixel clipped = 0,  ///< bitmask to set if any input was clipped or masked
+        image::MaskPixel excuse = 0    ///< bitmask to excuse from marking as clipped
 );
-
 
 /**
  * A function to compute some statistics of a stack of Masked Images
@@ -141,12 +135,9 @@ std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
 template <typename PixelT>
 void statisticsStack(lsst::afw::image::MaskedImage<PixelT>& out,
                      std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>>>& images,
-                     Property flags,
-                     StatisticsControl const& sctrl,
-                     std::vector<lsst::afw::image::VariancePixel> const& wvector,
-                     image::MaskPixel clipped,
-                     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const & maskMap
-                     );
+                     Property flags, StatisticsControl const& sctrl,
+                     std::vector<lsst::afw::image::VariancePixel> const& wvector, image::MaskPixel clipped,
+                     std::vector<std::pair<image::MaskPixel, image::MaskPixel>> const& maskMap);
 
 /**
  * @ brief compute statistical stack of MaskedImage.  Write to output image in-situ
@@ -159,9 +150,9 @@ void statisticsStack(lsst::afw::image::MaskedImage<PixelT>& out,  ///< Output im
                      StatisticsControl const& sctrl = StatisticsControl(),  ///< control structure
                      std::vector<lsst::afw::image::VariancePixel> const& wvector =
                              std::vector<lsst::afw::image::VariancePixel>(0),  ///< vector containing weights
-                     image::MaskPixel clipped=0, ///< bitmask to set if any input was clipped or masked
-                     image::MaskPixel excuse=0 ///< bitmask to excuse from marking as clipped
-                     );
+                     image::MaskPixel clipped = 0,  ///< bitmask to set if any input was clipped or masked
+                     image::MaskPixel excuse = 0    ///< bitmask to excuse from marking as clipped
+);
 
 /**
  * A function to compute some statistics of a stack of std::vectors
@@ -173,7 +164,7 @@ std::shared_ptr<std::vector<PixelT>> statisticsStack(
         StatisticsControl const& sctrl = StatisticsControl(),        ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector =
                 std::vector<lsst::afw::image::VariancePixel>(0)  ///< vector containing weights
-        );
+);
 
 /* ****************************************************************** *
  *
@@ -195,8 +186,8 @@ template <typename PixelT>
 std::shared_ptr<lsst::afw::image::MaskedImage<PixelT>> statisticsStack(
         lsst::afw::image::MaskedImage<PixelT> const& image, Property flags, char dimension,
         StatisticsControl const& sctrl = StatisticsControl());
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

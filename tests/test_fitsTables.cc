@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r1->set(e_g_d, 3.14E12);
         r1->set(e_g_d_flag1, false);
         r1->set(e_g_d_flag2, true);
-        r1->set(a_b_p, lsst::afw::geom::Point2D(1.2, 0.5));
+        r1->set(a_b_p, lsst::geom::Point2D(1.2, 0.5));
         r1->set(a_s, "foo");
         vector.push_back(r1);
 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r2->set(e_g_d, 12.2E-3);
         r2->set(e_g_d_flag1, true);
         r2->set(e_g_d_flag2, false);
-        r2->set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
+        r2->set(a_b_p, lsst::geom::Point2D(-32.1, 63.2));
         r2->set(a_s, "bar");
         auto fp2 = std::make_shared<Footprint>();
         std::vector<lsst::afw::geom::Span> tempSpanList2 = {lsst::afw::geom::Span(3, 2, 7),

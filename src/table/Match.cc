@@ -28,8 +28,8 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
+#include "lsst/geom/Angle.h"
 #include "lsst/afw/table/Match.h"
-#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -72,11 +72,11 @@ struct CmpRecordPtr {
 template <typename Cat>
 size_t makeRecordPositions(Cat const &cat, RecordPos<typename Cat::Record> *positions) {
     size_t n = 0;
-    Key<Angle> raKey = Cat::Table::getCoordKey().getRa();
-    Key<Angle> decKey = Cat::Table::getCoordKey().getDec();
+    Key<lsst::geom::Angle> raKey = Cat::Table::getCoordKey().getRa();
+    Key<lsst::geom::Angle> decKey = Cat::Table::getCoordKey().getDec();
     for (typename Cat::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
-        geom::Angle ra = i->get(raKey);
-        geom::Angle dec = i->get(decKey);
+        lsst::geom::Angle ra = i->get(raKey);
+        lsst::geom::Angle dec = i->get(decKey);
         if (std::isnan(ra.asRadians()) || std::isnan(dec.asRadians())) {
             continue;
         }
@@ -100,14 +100,14 @@ template size_t makeRecordPositions(SourceCatalog const &, RecordPos<SourceRecor
 
 template <typename Cat1, typename Cat2>
 bool doSelfMatchIfSame(std::vector<Match<typename Cat1::Record, typename Cat2::Record> > &result,
-                       Cat1 const &cat1, Cat2 const &cat2, Angle radius) {
+                       Cat1 const &cat1, Cat2 const &cat2, lsst::geom::Angle radius) {
     // types are different, so the catalogs are never the same.
     return false;
 }
 
 template <typename Cat>
 bool doSelfMatchIfSame(std::vector<Match<typename Cat::Record, typename Cat::Record> > &result,
-                       Cat const &cat1, Cat const &cat2, Angle radius) {
+                       Cat const &cat1, Cat const &cat2, lsst::geom::Angle radius) {
     if (&cat1 == &cat2) {
         result = matchRaDec(cat1, radius);
         return true;
@@ -123,7 +123,7 @@ bool doSelfMatchIfSame(std::vector<Match<typename Cat::Record, typename Cat::Rec
  * @param theta the angle between two unit vectors
  * @returns the squared distance between the two vectors
  */
-double toUnitSphereDistanceSquared(afw::geom::Angle theta) noexcept {
+double toUnitSphereDistanceSquared(lsst::geom::Angle theta) noexcept {
     return 2. * (1. - std::cos(theta.asRadians()));
     // == 4.0 * pow(std::sin(0.5 * theta.asRadians()), 2.0)
 }
@@ -136,16 +136,17 @@ double toUnitSphereDistanceSquared(afw::geom::Angle theta) noexcept {
  * @param d2 the squared distance between two unit vectors
  * @returns the angle between the two vectors
  */
-Angle fromUnitSphereDistanceSquared(double d2) noexcept {
+lsst::geom::Angle fromUnitSphereDistanceSquared(double d2) noexcept {
     // acos(1 - 0.5*d2) doesn't require sqrt but isn't as precise for small d2
-    return 2.0*std::asin(0.5*std::sqrt(d2))*afw::geom::radians;
+    return 2.0 * std::asin(0.5 * std::sqrt(d2)) * lsst::geom::radians;
 }
 
-}  // anonymous
+}  // namespace
 
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
-                                                                             Cat2 const &cat2, Angle radius,
+                                                                             Cat2 const &cat2,
+                                                                             lsst::geom::Angle radius,
                                                                              bool closest) {
     MatchControl mc;
     mc.findOnlyClosest = closest;
@@ -155,14 +156,15 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
 
 template <typename Cat1, typename Cat2>
 std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat1 const &cat1,
-                                                                             Cat2 const &cat2, Angle radius,
+                                                                             Cat2 const &cat2,
+                                                                             lsst::geom::Angle radius,
                                                                              MatchControl const &mc) {
     typedef Match<typename Cat1::Record, typename Cat2::Record> MatchT;
     std::vector<MatchT> matches;
 
     if (doSelfMatchIfSame(matches, cat1, cat2, radius)) return matches;
 
-    if (radius < 0.0 || (radius > (45. * geom::degrees))) {
+    if (radius < 0.0 || (radius > (45. * lsst::geom::degrees))) {
         throw LSST_EXCEPT(pex::exceptions::RangeError, "match radius out of range (0 to 45 degrees)");
     }
     if (cat1.size() == 0 || cat2.size() == 0) {
@@ -223,9 +225,9 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > matchRaDec(Cat
     return matches;
 }
 
-#define LSST_MATCH_RADEC(RTYPE, C1, C2)                             \
-    template RTYPE matchRaDec(C1 const &, C2 const &, Angle, bool); \
-    template RTYPE matchRaDec(C1 const &, C2 const &, Angle, MatchControl const &)
+#define LSST_MATCH_RADEC(RTYPE, C1, C2)                                         \
+    template RTYPE matchRaDec(C1 const &, C2 const &, lsst::geom::Angle, bool); \
+    template RTYPE matchRaDec(C1 const &, C2 const &, lsst::geom::Angle, MatchControl const &)
 
 LSST_MATCH_RADEC(SimpleMatchVector, SimpleCatalog, SimpleCatalog);
 LSST_MATCH_RADEC(ReferenceMatchVector, SimpleCatalog, SourceCatalog);
@@ -234,7 +236,8 @@ LSST_MATCH_RADEC(SourceMatchVector, SourceCatalog, SourceCatalog);
 #undef LSST_MATCH_RADEC
 
 template <typename Cat>
-std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat, geom::Angle radius,
+std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat,
+                                                                           lsst::geom::Angle radius,
                                                                            bool symmetric) {
     MatchControl mc;
     mc.symmetricMatch = symmetric;
@@ -243,12 +246,13 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat c
 }
 
 template <typename Cat>
-std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat, geom::Angle radius,
+std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat const &cat,
+                                                                           lsst::geom::Angle radius,
                                                                            MatchControl const &mc) {
     typedef Match<typename Cat::Record, typename Cat::Record> MatchT;
     std::vector<MatchT> matches;
 
-    if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
+    if (radius < 0.0 || radius > (45.0 * lsst::geom::degrees)) {
         throw LSST_EXCEPT(pex::exceptions::RangeError, "match radius out of range (0 to 45 degrees)");
     }
     if (cat.size() == 0) {
@@ -271,7 +275,7 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat c
             double dz = pos[i].z - pos[j].z;
             double d2 = dx * dx + dy * dy + dz * dz;
             if (d2 < d2Limit) {
-                Angle d = fromUnitSphereDistanceSquared(d2);
+                lsst::geom::Angle d = fromUnitSphereDistanceSquared(d2);
                 matches.push_back(MatchT(pos[i].src, pos[j].src, d));
                 if (mc.symmetricMatch) {
                     matches.push_back(MatchT(pos[j].src, pos[i].src, d));
@@ -282,9 +286,9 @@ std::vector<Match<typename Cat::Record, typename Cat::Record> > matchRaDec(Cat c
     return matches;
 }
 
-#define LSST_MATCH_RADEC(RTYPE, C)                     \
-    template RTYPE matchRaDec(C const &, Angle, bool); \
-    template RTYPE matchRaDec(C const &, Angle, MatchControl const &)
+#define LSST_MATCH_RADEC(RTYPE, C)                                 \
+    template RTYPE matchRaDec(C const &, lsst::geom::Angle, bool); \
+    template RTYPE matchRaDec(C const &, lsst::geom::Angle, MatchControl const &)
 
 LSST_MATCH_RADEC(SimpleMatchVector, SimpleCatalog);
 LSST_MATCH_RADEC(SourceMatchVector, SourceCatalog);
@@ -468,14 +472,14 @@ std::vector<Match<typename Cat1::Record, typename Cat2::Record> > unpackMatches(
         if (k1 != first.end()) {
             j->first = k1;
         } else {
-            LOGLS_WARN(tableLog, "Persisted match record with ID " << i->get(inKey1)
-                                                                   << " not found in catalog 1.");
+            LOGLS_WARN(tableLog,
+                       "Persisted match record with ID " << i->get(inKey1) << " not found in catalog 1.");
         }
         if (k2 != second.end()) {
             j->second = k2;
         } else {
-            LOGLS_WARN(tableLog, "Persisted match record with ID " << i->get(inKey2)
-                                                                   << " not found in catalog 2.");
+            LOGLS_WARN(tableLog,
+                       "Persisted match record with ID " << i->get(inKey2) << " not found in catalog 2.");
         }
         j->distance = i->get(keyD);
     }
@@ -486,6 +490,6 @@ template SimpleMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog cons
 template ReferenceMatchVector unpackMatches(BaseCatalog const &, SimpleCatalog const &,
                                             SourceCatalog const &);
 template SourceMatchVector unpackMatches(BaseCatalog const &, SourceCatalog const &, SourceCatalog const &);
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

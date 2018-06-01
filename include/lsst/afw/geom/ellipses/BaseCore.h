@@ -36,7 +36,7 @@
 #include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/LinearTransform.h"
+#include "lsst/geom/LinearTransform.h"
 
 namespace lsst {
 namespace afw {
@@ -114,19 +114,19 @@ public:
     /**
      *  @name Coordinate transforms
      *
-     *  These member functions transform the ellipse by the given LinearTransform.
+     *  These member functions transform the ellipse by the given lsst::geom::LinearTransform.
      *  The transform can be done in-place by calling inPlace() on the returned
      *  expression object, or returned as a new shared_ptr by calling copy().
      */
     //@{
-    Transformer transform(LinearTransform const& transform);
-    Transformer const transform(LinearTransform const& transform) const;
+    Transformer transform(lsst::geom::LinearTransform const& transform);
+    Transformer const transform(lsst::geom::LinearTransform const& transform) const;
     //@}
 
     /**
      *  Return the transform that maps the ellipse to the unit circle.
      *
-     *  The returned proxy object is implicitly convertible to LinearTransform
+     *  The returned proxy object is implicitly convertible to lsst::geom::LinearTransform
      *  and also supports differentiation.
      */
     GridTransform const getGridTransform() const;
@@ -140,7 +140,7 @@ public:
     //@}
 
     /// Return the size of the bounding box for the ellipse core.
-    Extent2D computeDimensions() const;
+    lsst::geom::Extent2D computeDimensions() const;
 
     virtual void readParameters(double const* iter) = 0;
 
@@ -240,9 +240,9 @@ template <typename Output>
 inline BaseCore::Converter<Output> BaseCore::as() const {
     return Converter<Output>(*this);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED

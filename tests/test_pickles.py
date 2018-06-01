@@ -29,6 +29,7 @@ import pickle
 
 import lsst.daf.base as dafBase
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as geomEllip
 
@@ -61,7 +62,7 @@ class PickleBase:
 class AngleTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
-        self.data = 1.0*afwGeom.degrees
+        self.data = 1.0*lsst.geom.degrees
 
 
 class QuadrupoleTestCase(PickleBase, unittest.TestCase):
@@ -82,80 +83,80 @@ class Point2DTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y = 1.0, 1.0
-        self.data = afwGeom.Point2D(x, y)
+        self.data = lsst.geom.Point2D(x, y)
 
 
 class Point2ITestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y = 1, 1
-        self.data = afwGeom.Point2I(x, y)
+        self.data = lsst.geom.Point2I(x, y)
 
 
 class Point3DTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1.0, 1.0, 1.0
-        self.data = afwGeom.Point3D(x, y, z)
+        self.data = lsst.geom.Point3D(x, y, z)
 
 
 class Point3ITestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1, 1, 1
-        self.data = afwGeom.Point3I(x, y, z)
+        self.data = lsst.geom.Point3I(x, y, z)
 
 
 class Extent2DTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y = 1.0, 1.0
-        self.data = afwGeom.Extent2D(x, y)
+        self.data = lsst.geom.Extent2D(x, y)
 
 
 class Extent3DTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1, 1, 1
-        self.data = afwGeom.Extent3D(x, y, z)
+        self.data = lsst.geom.Extent3D(x, y, z)
 
 
 class Extent2ITestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y = 1, 1
-        self.data = afwGeom.Extent2I(x, y)
+        self.data = lsst.geom.Extent2I(x, y)
 
 
 class Extent3ITestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1, 1, 1
-        self.data = afwGeom.Extent3I(x, y, z)
+        self.data = lsst.geom.Extent3I(x, y, z)
 
 
 class Box2DTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
-        p, e = afwGeom.Point2D(1.0, 1.0), afwGeom.Extent2D(0.5, 0.5)
-        self.data = afwGeom.Box2D(p, e)
+        p, e = lsst.geom.Point2D(1.0, 1.0), lsst.geom.Extent2D(0.5, 0.5)
+        self.data = lsst.geom.Box2D(p, e)
 
 
 class Box2ITestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
-        p, e = afwGeom.Point2I(1, 2), afwGeom.Extent2I(1, 1)
-        self.data = afwGeom.Box2I(p, e)
+        p, e = lsst.geom.Point2I(1, 2), lsst.geom.Extent2I(1, 1)
+        self.data = lsst.geom.Box2I(p, e)
 
 
 class AffineTransformTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         scale = 2.2
-        linear = afwGeom.LinearTransform().makeScaling(scale)
+        linear = lsst.geom.LinearTransform().makeScaling(scale)
         dx, dy = 1.1, 3.3
-        trans = afwGeom.Extent2D(dx, dy)
-        self.data = afwGeom.AffineTransform(linear, trans)
+        trans = lsst.geom.Extent2D(dx, dy)
+        self.data = lsst.geom.AffineTransform(linear, trans)
 
     def assertPickled(self, new):
         self.assertListEqual(new.getMatrix().flatten().tolist(),
@@ -166,7 +167,7 @@ class LinearTransformTestCase(PickleBase, unittest.TestCase):
 
     def setUp(self):
         scale = 2.0
-        self.data = afwGeom.LinearTransform().makeScaling(scale)
+        self.data = lsst.geom.LinearTransform().makeScaling(scale)
 
     def assertPickled(self, new):
         self.assertListEqual(new.getMatrix().flatten().tolist(),

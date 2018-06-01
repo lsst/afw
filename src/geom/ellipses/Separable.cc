@@ -71,7 +71,7 @@ Separable<Ellipticity_, Radius_>& Separable<Ellipticity_, Radius_>::operator=(
 // Delegate to copy-constructor for backwards compatibility
 template <typename Ellipticity_, typename Radius_>
 Separable<Ellipticity_, Radius_>& Separable<Ellipticity_, Radius_>::operator=(
-        Separable<Ellipticity_, Radius_> && other) {
+        Separable<Ellipticity_, Radius_>&& other) {
     return *this = other;
 }
 template <typename Ellipticity_, typename Radius_>
@@ -177,7 +177,7 @@ template class Separable<ReducedShear, DeterminantRadius>;
 template class Separable<ReducedShear, TraceRadius>;
 template class Separable<ReducedShear, LogDeterminantRadius>;
 template class Separable<ReducedShear, LogTraceRadius>;
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

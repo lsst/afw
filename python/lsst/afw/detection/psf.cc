@@ -27,7 +27,7 @@
 
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 #include "lsst/afw/detection/Psf.h"
@@ -40,7 +40,7 @@ namespace afw {
 namespace detection {
 
 namespace {
-auto const NullPoint = geom::Point2D(std::numeric_limits<double>::quiet_NaN());
+auto const NullPoint = lsst::geom::Point2D(std::numeric_limits<double>::quiet_NaN());
 }
 
 PYBIND11_PLUGIN(_psf) {

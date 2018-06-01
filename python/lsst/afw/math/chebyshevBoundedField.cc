@@ -61,7 +61,7 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     /* Constructors */
     clsChebyshevBoundedFieldControl.def(py::init<>());
     clsChebyshevBoundedField.def(
-            py::init<lsst::afw::geom::Box2I const &, ndarray::Array<double const, 2, 2> const &>());
+            py::init<lsst::geom::Box2I const &, ndarray::Array<double const, 2, 2> const &>());
 
     /* Operators are defined only in the BoundedField base class;
        we let Python inheritance provide them here. */
@@ -76,13 +76,13 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
     clsChebyshevBoundedField.def("getCoefficients", &ChebyshevBoundedField::getCoefficients);
     clsChebyshevBoundedField.def_static(
             "fit", (std::shared_ptr<ChebyshevBoundedField>(*)(
-                           lsst::afw::geom::Box2I const &, ndarray::Array<double const, 1> const &,
+                           lsst::geom::Box2I const &, ndarray::Array<double const, 1> const &,
                            ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &,
                            Control const &)) &
                            ChebyshevBoundedField::fit);
     clsChebyshevBoundedField.def_static(
             "fit", (std::shared_ptr<ChebyshevBoundedField>(*)(
-                           lsst::afw::geom::Box2I const &, ndarray::Array<double const, 1> const &,
+                           lsst::geom::Box2I const &, ndarray::Array<double const, 1> const &,
                            ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &,
                            ndarray::Array<double const, 1> const &, Control const &)) &
                            ChebyshevBoundedField::fit);

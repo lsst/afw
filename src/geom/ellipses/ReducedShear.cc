@@ -94,7 +94,7 @@ detail::EllipticityBase::Jacobian ReducedShear::dAssign(ConformalShear const& ot
     result(1, 0) = result(0, 1) = other.getE1() * other.getE2() * beta;
     return result;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

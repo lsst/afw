@@ -22,7 +22,7 @@
 
 import unittest
 
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.table as afwTable
 import lsst.utils.tests
 
@@ -53,8 +53,8 @@ class MatchXyTest(unittest.TestCase):
             if i % 3 != 0:
                 # These will provide the exact matches, though the two records we're setting right now won't
                 # match each other (because cat2 counts down in reverse).
-                r1.set(centroidKey, afwGeom.Point2D(i, i))
-                r2.set(centroidKey, afwGeom.Point2D(j, j))
+                r1.set(centroidKey, lsst.geom.Point2D(i, i))
+                r2.set(centroidKey, lsst.geom.Point2D(j, j))
                 self.nUniqueMatch += 1
             elif i == 3:
                 # Deliberately offset position in cat2 by 2 pixels and a bit so that it will match a
@@ -65,12 +65,12 @@ class MatchXyTest(unittest.TestCase):
                 # clear which one will be taken as the match (in fact, it
                 # appears to depend on the compiler).
                 offset = 2 + 0.5*self.matchRadius
-                r1.set(centroidKey, afwGeom.Point2D(i, i))
-                r2.set(centroidKey, afwGeom.Point2D(j + offset, j + offset))
+                r1.set(centroidKey, lsst.geom.Point2D(i, i))
+                r2.set(centroidKey, lsst.geom.Point2D(j + offset, j + offset))
             else:
                 # Test that we can handle NANs
-                r1.set(centroidKey, afwGeom.Point2D(nan, nan))
-                r2.set(centroidKey, afwGeom.Point2D(nan, nan))
+                r1.set(centroidKey, lsst.geom.Point2D(nan, nan))
+                r2.set(centroidKey, lsst.geom.Point2D(nan, nan))
 
     def tearDown(self):
         del self.cat2

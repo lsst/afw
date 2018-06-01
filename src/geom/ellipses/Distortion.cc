@@ -90,7 +90,7 @@ void Distortion::normalize() {
                           "Distortion magnitude cannot be greater than one.");
     }
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

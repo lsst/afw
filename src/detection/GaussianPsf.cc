@@ -85,20 +85,20 @@ public:
 
 GaussianPsfFactory registration("GaussianPsf");
 
-void checkDimensions(geom::Extent2I const& dimensions) {
+void checkDimensions(lsst::geom::Extent2I const& dimensions) {
     if (dimensions.getX() % 2 == 0 || dimensions.getY() % 2 == 2) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "GaussianPsf dimensions must be odd");
     }
 }
 
-}  // anonymous
+}  // namespace
 
 GaussianPsf::GaussianPsf(int width, int height, double sigma)
         : Psf(true), _dimensions(width, height), _sigma(sigma) {
     checkDimensions(_dimensions);
 }
 
-GaussianPsf::GaussianPsf(geom::Extent2I const& dimensions, double sigma)
+GaussianPsf::GaussianPsf(lsst::geom::Extent2I const& dimensions, double sigma)
         : Psf(true), _dimensions(dimensions), _sigma(sigma) {
     checkDimensions(_dimensions);
 }
@@ -112,7 +112,7 @@ std::shared_ptr<afw::detection::Psf> GaussianPsf::clone() const {
 }
 
 std::shared_ptr<afw::detection::Psf> GaussianPsf::resized(int width, int height) const {
-    return std::make_shared<GaussianPsf>(geom::Extent2I(width, height), _sigma);
+    return std::make_shared<GaussianPsf>(lsst::geom::Extent2I(width, height), _sigma);
 }
 
 std::string GaussianPsf::getPersistenceName() const { return "GaussianPsf"; }
@@ -129,7 +129,7 @@ void GaussianPsf::write(OutputArchiveHandle& handle) const {
     handle.saveCatalog(catalog);
 }
 
-std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(geom::Point2D const&,
+std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(lsst::geom::Point2D const&,
                                                                       image::Color const&) const {
     std::shared_ptr<Image> r(new Image(computeBBox()));
     Image::Array array = r->getArray();
@@ -144,19 +144,21 @@ std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(geom::Poin
     return r;
 }
 
-double GaussianPsf::doComputeApertureFlux(double radius, geom::Point2D const& position,
+double GaussianPsf::doComputeApertureFlux(double radius, lsst::geom::Point2D const& position,
                                           image::Color const& color) const {
     return 1.0 - std::exp(-0.5 * radius * radius / (_sigma * _sigma));
 }
 
-geom::ellipses::Quadrupole GaussianPsf::doComputeShape(geom::Point2D const& position,
+geom::ellipses::Quadrupole GaussianPsf::doComputeShape(lsst::geom::Point2D const& position,
                                                        image::Color const& color) const {
     return geom::ellipses::Quadrupole(_sigma * _sigma, _sigma * _sigma, 0.0);
 }
 
-geom::Box2I GaussianPsf::doComputeBBox(geom::Point2D const& position, image::Color const& color) const {
-    return geom::Box2I(geom::Point2I(-_dimensions / 2), _dimensions);  // integer truncation intentional
+lsst::geom::Box2I GaussianPsf::doComputeBBox(lsst::geom::Point2D const& position,
+                                             image::Color const& color) const {
+    return lsst::geom::Box2I(lsst::geom::Point2I(-_dimensions / 2),
+                             _dimensions);  // integer truncation intentional
 }
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

@@ -73,11 +73,11 @@ void declareSeparable(py::module &mod, const std::string &suffix) {
     cls.def("normalize", &Class::normalize);
     cls.def("assign", [](Class &self, Class &other) { self = other; });
     cls.def("assign", [](Class &self, BaseCore &other) { self = other; });
-    cls.def("transform", [](Class &self, lsst::afw::geom::LinearTransform const &t) {
+    cls.def("transform", [](Class &self, lsst::geom::LinearTransform const &t) {
         return std::static_pointer_cast<Class>(self.transform(t).copy());
     });
     cls.def("transformInPlace",
-            [](Class &self, lsst::afw::geom::LinearTransform const &t) { self.transform(t).inPlace(); });
+            [](Class &self, lsst::geom::LinearTransform const &t) { self.transform(t).inPlace(); });
     cls.def("__str__",
             [](Class &self) { return py::str("(%s, %s)").format(self.getEllipticity(), self.getRadius()); });
     cls.def("__repr__", [](Class &self) {

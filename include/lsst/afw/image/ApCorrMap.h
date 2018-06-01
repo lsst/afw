@@ -89,8 +89,8 @@ private:
 
     Internal _internal;
 };
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_IMAGE_ApCorrMap_h_INCLUDED

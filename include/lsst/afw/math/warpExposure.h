@@ -34,6 +34,7 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/geom.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Exposure.h"
@@ -456,11 +457,11 @@ int warpExposure(
  * being careful.
  */
 template <typename DestImageT, typename SrcImageT>
-int warpImage(DestImageT &destImage,                 ///< remapped %image
-              geom::SkyWcs const &destWcs,           ///< WCS of remapped %image
-              SrcImageT const &srcImage,             ///< source %image
-              geom::SkyWcs const &srcWcs,            ///< WCS of source %image
-              WarpingControl const &control,         ///< control parameters
+int warpImage(DestImageT &destImage,          ///< remapped %image
+              geom::SkyWcs const &destWcs,    ///< WCS of remapped %image
+              SrcImageT const &srcImage,      ///< source %image
+              geom::SkyWcs const &srcWcs,     ///< WCS of source %image
+              WarpingControl const &control,  ///< control parameters
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
               ///< use this value for undefined (edge) pixels
@@ -481,10 +482,8 @@ int warpImage(DestImageT &destImage,                 ///< remapped %image
  * @return the number of good pixels
  */
 template <typename DestImageT, typename SrcImageT>
-int warpImage(DestImageT &destImage,
-              SrcImageT const &srcImage,
-              geom::TransformPoint2ToPoint2 const & srcToDest,
-              WarpingControl const &control,
+int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
+              geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control,
               typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                       typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()));
 
@@ -495,11 +494,11 @@ int warpImage(DestImageT &destImage,
  */
 template <typename DestImageT, typename SrcImageT>
 int warpCenteredImage(
-        DestImageT &destImage,                                    ///< remapped %image
-        SrcImageT const &srcImage,                                ///< source %image
-        lsst::afw::geom::LinearTransform const &linearTransform,  ///< linear transformation to apply
-        lsst::afw::geom::Point2D const &centerPosition,  ///< pixel position for location of linearTransform
-        WarpingControl const &control,                   ///< control parameters
+        DestImageT &destImage,                               ///< remapped %image
+        SrcImageT const &srcImage,                           ///< source %image
+        lsst::geom::LinearTransform const &linearTransform,  ///< linear transformation to apply
+        lsst::geom::Point2D const &centerPosition,  ///< pixel position for location of linearTransform
+        WarpingControl const &control,              ///< control parameters
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
                 typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
         ///< use this value for undefined (edge) pixels

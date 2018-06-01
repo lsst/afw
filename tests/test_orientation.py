@@ -27,18 +27,18 @@ Tests for lsst.afw.cameraGeom.Orientation
 import unittest
 
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 from lsst.afw.cameraGeom import Orientation
 
 
 class OrientationWrapper:
 
     def __init__(self,
-                 fpPosition=afwGeom.Point2D(0, 0),
-                 refPoint=afwGeom.Point2D(-0.5, -0.5),
-                 yaw=afwGeom.Angle(0),
-                 pitch=afwGeom.Angle(0),
-                 roll=afwGeom.Angle(0),
+                 fpPosition=lsst.geom.Point2D(0, 0),
+                 refPoint=lsst.geom.Point2D(-0.5, -0.5),
+                 yaw=lsst.geom.Angle(0),
+                 pitch=lsst.geom.Angle(0),
+                 roll=lsst.geom.Angle(0),
                  ):
         self.fpPosition = fpPosition
         self.refPoint = refPoint
@@ -57,25 +57,25 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
         for i in range(2):
             self.assertAlmostEqual(0, orient.getFpPosition()[i])
             self.assertAlmostEqual(-0.5, orient.getReferencePoint()[i])
-        zeroAngle = afwGeom.Angle(0)
+        zeroAngle = lsst.geom.Angle(0)
         self.assertAlmostEqual(zeroAngle, orient.getYaw())
         self.assertAlmostEqual(zeroAngle, orient.getRoll())
         self.assertAlmostEqual(zeroAngle, orient.getPitch())
 
-        fwdTransform = orient.makeFpPixelTransform(afwGeom.Extent2D(1.0))
+        fwdTransform = orient.makeFpPixelTransform(lsst.geom.Extent2D(1.0))
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
-                xy = afwGeom.Point2D(x, y)
+                xy = lsst.geom.Point2D(x, y)
                 fwdXY = fwdTransform.applyForward(xy)
                 for i in range(2):
-                    self.assertPairsAlmostEqual(xy - afwGeom.Extent2D(0.5), fwdXY)
+                    self.assertPairsAlmostEqual(xy - lsst.geom.Extent2D(0.5), fwdXY)
         self.compareTransforms(orient)
 
     def testGetNQuarter(self):
         """Test the getNQuarter method
         """
-        refPos = afwGeom.Point2D(0., 0.)
-        fpPos = afwGeom.Point2D(0., 0.)
+        refPos = lsst.geom.Point2D(0., 0.)
+        fpPos = lsst.geom.Point2D(0., 0.)
         angles = ((0., 0), (90., 1), (180., 2), (270., 3), (360., 4),
                   (0.1, 0), (44.9, 0), (45.1, 1), (89.9, 1), (90.1, 1),
                   (134.9, 1), (135.1, 2), (179.9, 2), (180.1, 2), (224.9, 2),
@@ -83,26 +83,26 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
                   (359.9, 4))
         for angle in angles:
             orient = Orientation(
-                fpPos, refPos, afwGeom.Angle(angle[0], afwGeom.degrees))
+                fpPos, refPos, lsst.geom.Angle(angle[0], lsst.geom.degrees))
             self.assertEqual(orient.getNQuarter(), angle[1])
 
-    def checkTransforms(self, orientWrapper, pixelSize=afwGeom.Extent2D(0.12, 0.21)):
+    def checkTransforms(self, orientWrapper, pixelSize=lsst.geom.Extent2D(0.12, 0.21)):
         """Check that the transforms do what we expect them to
         """
         pixToFpTransform = orientWrapper.orient.makeFpPixelTransform(pixelSize)
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
-                pixPos = afwGeom.Point2D(x, y)
+                pixPos = lsst.geom.Point2D(x, y)
                 pixToFpTransform.forwardTransform(pixPos)
 
-    def compareTransforms(self, orient, pixelSize=afwGeom.Extent2D(0.12, 0.21)):
+    def compareTransforms(self, orient, pixelSize=lsst.geom.Extent2D(0.12, 0.21)):
         """Compare makeFpPixelTransform and makePixelFpTransform to each other
         """
         fwdTransform = orient.makeFpPixelTransform(pixelSize)
         revTransform = orient.makePixelFpTransform(pixelSize)
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
-                pixPos = afwGeom.Point2D(x, y)
+                pixPos = lsst.geom.Point2D(x, y)
                 fwdFPPos = fwdTransform.applyForward(pixPos)
                 fwdPixPos = fwdTransform.applyInverse(fwdFPPos)
                 revPixPos = revTransform.applyForward(fwdFPPos)
@@ -116,11 +116,11 @@ class OrientationTestCase(lsst.utils.tests.TestCase):
         """Test getters
         """
         ow = OrientationWrapper(
-            fpPosition=afwGeom.Point2D(0.1, -0.2),
-            refPoint=afwGeom.Point2D(-5.7, 42.3),
-            yaw=afwGeom.Angle(-0.53),
-            pitch=afwGeom.Angle(0.234),
-            roll=afwGeom.Angle(1.2),
+            fpPosition=lsst.geom.Point2D(0.1, -0.2),
+            refPoint=lsst.geom.Point2D(-5.7, 42.3),
+            yaw=lsst.geom.Angle(-0.53),
+            pitch=lsst.geom.Angle(0.234),
+            roll=lsst.geom.Angle(1.2),
         )
         for i in range(2):
             self.assertAlmostEqual(

@@ -31,8 +31,8 @@ public:
             --_lower;
             throw LSST_EXCEPT(pex::exceptions::LengthError,
                               (boost::format("Next ID '%s' is too large for the number of reserved bits") %
-                               (_lower +
-                                1)).str());
+                               (_lower + 1))
+                                      .str());
         }
         return _upper | _lower;
     }
@@ -65,13 +65,13 @@ private:
     RecordId _lower;
 };
 
-}  // anonymous
+}  // namespace
 
 std::shared_ptr<IdFactory> IdFactory::makeSimple() { return std::make_shared<SimpleIdFactory>(); }
 
 std::shared_ptr<IdFactory> IdFactory::makeSource(RecordId expId, int reserved) {
     return std::make_shared<SourceIdFactory>(expId, reserved);
 }
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

@@ -81,9 +81,9 @@ public:
         schema._impl->_recordSize += bytes;
     }
 };
-}
-}
-}
-}  // namespace lsst::afw::table::detail
+}  // namespace detail
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_DETAIL_Access_h_INCLUDED

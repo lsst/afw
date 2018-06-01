@@ -43,7 +43,7 @@ int main() {
             for (unsigned int col = 0; col < kernelCols; ++col) {
                 std::cout << boost::format("Delta function kernel %3d: col=%d, row=%d\n") % ind % col % row;
                 std::shared_ptr<afwMath::Kernel> kernelPtr(new afwMath::DeltaFunctionKernel(
-                        kernelCols, kernelRows, lsst::afw::geom::Point2I(col, row)));
+                        kernelCols, kernelRows, lsst::geom::Point2I(col, row)));
                 kernelList.push_back(kernelPtr);
                 ++ind;
             }

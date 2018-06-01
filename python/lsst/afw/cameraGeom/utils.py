@@ -27,6 +27,7 @@ import math
 import numpy
 import warnings
 
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -65,15 +66,15 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
         ampBox = amp.getRawDataBBox()
     else:
         ampBox = amp.getRawBBox()
-    ampCenter = afwGeom.Point2D(ampBox.getDimensions() / 2.0)
+    ampCenter = lsst.geom.Point2D(ampBox.getDimensions() / 2.0)
     wcs = afwGeom.makeFlippedWcs(wcs, amp.getRawFlipX(), amp.getRawFlipY(), ampCenter)
     # Shift WCS for trimming
     if isTrimmed:
         trim_shift = ampBox.getMin() - amp.getBBox().getMin()
-        wcs = wcs.copyAtShiftedPixelOrigin(afwGeom.Extent2D(-trim_shift.getX(), -trim_shift.getY()))
+        wcs = wcs.copyAtShiftedPixelOrigin(lsst.geom.Extent2D(-trim_shift.getX(), -trim_shift.getY()))
     # Account for shift of amp data in larger ccd matrix
     offset = amp.getRawXYOffset()
-    return wcs.copyAtShiftedPixelOrigin(afwGeom.Extent2D(offset))
+    return wcs.copyAtShiftedPixelOrigin(lsst.geom.Extent2D(offset))
 
 
 def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
@@ -125,7 +126,7 @@ def plotFocalPlane(camera, fieldSizeDeg_x=0, fieldSizeDeg_y=None, dx=0.1, dy=0.1
     pcolors = []
 
     # compute focal plane positions corresponding to field angles field_gridx, field_gridy
-    posFieldAngleList = [afwGeom.Point2D(x.asRadians(), y.asRadians())
+    posFieldAngleList = [lsst.geom.Point2D(x.asRadians(), y.asRadians())
                          for x, y in zip(field_gridx, field_gridy)]
     posFocalPlaneList = camera.transform(posFieldAngleList, FIELD_ANGLE, FOCAL_PLANE)
     for posFocalPlane in posFocalPlaneList:
@@ -210,22 +211,22 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     else:
         img.set(imValue)
     # Set the first pixel read to a different value
-    markbbox = afwGeom.Box2I()
+    markbbox = lsst.geom.Box2I()
     if amp.getReadoutCorner() == 0:
         markbbox.include(dbbox.getMin())
-        markbbox.include(dbbox.getMin()+afwGeom.Extent2I(markSize, markSize))
+        markbbox.include(dbbox.getMin()+lsst.geom.Extent2I(markSize, markSize))
     elif amp.getReadoutCorner() == 1:
-        cornerPoint = afwGeom.Point2I(dbbox.getMaxX(), dbbox.getMinY())
+        cornerPoint = lsst.geom.Point2I(dbbox.getMaxX(), dbbox.getMinY())
         markbbox.include(cornerPoint)
-        markbbox.include(cornerPoint + afwGeom.Extent2I(-markSize, markSize))
+        markbbox.include(cornerPoint + lsst.geom.Extent2I(-markSize, markSize))
     elif amp.getReadoutCorner() == 2:
-        cornerPoint = afwGeom.Point2I(dbbox.getMax())
+        cornerPoint = lsst.geom.Point2I(dbbox.getMax())
         markbbox.include(cornerPoint)
-        markbbox.include(cornerPoint + afwGeom.Extent2I(-markSize, -markSize))
+        markbbox.include(cornerPoint + lsst.geom.Extent2I(-markSize, -markSize))
     elif amp.getReadoutCorner() == 3:
-        cornerPoint = afwGeom.Point2I(dbbox.getMinX(), dbbox.getMaxY())
+        cornerPoint = lsst.geom.Point2I(dbbox.getMinX(), dbbox.getMaxY())
         markbbox.include(cornerPoint)
-        markbbox.include(cornerPoint + afwGeom.Extent2I(markSize, -markSize))
+        markbbox.include(cornerPoint + lsst.geom.Extent2I(markSize, -markSize))
     else:
         raise RuntimeError("Could not set readout corner")
     mimg = imageFactory(img, markbbox)
@@ -247,7 +248,7 @@ def calcRawCcdBBox(ccd):
         Bounding box of the un-trimmed Detector, or None if there is not enough
         information to calculate raw BBox.
     """
-    bbox = afwGeom.Box2I()
+    bbox = lsst.geom.Box2I()
     for amp in ccd:
         if not amp.getHasRawInfo():
             return None
@@ -582,7 +583,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
     ----------
     ccd : `lsst.afw.cameraGeom.Detector`
         Detector to iterate for the amp bounding boxes.
-    untrimmedCcdBbox : `lsst.afw.geom.Box` or None
+    untrimmedCcdBbox : `lsst.geom.Box2I` or None
         Bounding box of the un-trimmed Detector.
     nQuarter : `int`
         number of 90 degree rotations to apply to the bounding boxes (used for rotated chips).
@@ -613,7 +614,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox=None, nQuarter=0,
         if isTrimmed:
             untrimmedCcdBbox = ccd.getBBox()
         else:
-            untrimmedCcdBbox = afwGeom.Box2I()
+            untrimmedCcdBbox = lsst.geom.Box2I()
             for a in ccd.getAmpInfoCatalog():
                 bbox = a.getRawBBox()
                 untrimmedCcdBbox.include(bbox)
@@ -718,8 +719,8 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
             for bbox, borderWidth, ctype in bboxes:
                 if bbox.isEmpty():
                     continue
-                bbox = afwGeom.Box2I(bbox)
-                bbox.shift(-afwGeom.ExtentI(xy0))
+                bbox = lsst.geom.Box2I(bbox)
+                bbox.shift(-lsst.geom.ExtentI(xy0))
                 displayUtils.drawBBox(
                     bbox, borderWidth=borderWidth, ctype=ctype, display=display)
 
@@ -753,7 +754,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
 
     display = _getDisplayFromDisplayOrFrame(display, frame)
 
-    ccdOrigin = afwGeom.Point2I(0, 0)
+    ccdOrigin = lsst.geom.Point2I(0, 0)
     nQuarter = 0
     ccdImage, ccd = imageSource.getCcdImage(
         ccd, imageFactory=imageFactory, binSize=binSize)
@@ -797,7 +798,7 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
 
     Returns
     -------
-    boxList : `list` of `lsst.afw.geom.Box`
+    boxList : `list` of `lsst.geom.Box2I`
         A list of bounding boxes in camera pixel coordinates.
     """
     boxList = []
@@ -806,7 +807,7 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
             raise RuntimeError(
                 "Cameras with detectors with different pixel scales are not currently supported")
 
-        dbbox = afwGeom.Box2D()
+        dbbox = lsst.geom.Box2D()
         for corner in ccd.getCorners(FOCAL_PLANE):
             dbbox.include(corner)
         llc = dbbox.getMin()
@@ -814,13 +815,13 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
         cbbox = ccd.getBBox()
         ex = cbbox.getDimensions().getX()//binSize
         ey = cbbox.getDimensions().getY()//binSize
-        bbox = afwGeom.Box2I(
-            cbbox.getMin(), afwGeom.Extent2I(int(ex), int(ey)))
+        bbox = lsst.geom.Box2I(
+            cbbox.getMin(), lsst.geom.Extent2I(int(ex), int(ey)))
         bbox = rotateBBoxBy90(bbox, nQuarter, bbox.getDimensions())
-        bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize),
-                                    int(llc.getY()//pixelSize_o.getY()/binSize)))
-        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//binSize),
-                                    -int(origin.getY())//binSize))
+        bbox.shift(lsst.geom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize),
+                                      int(llc.getY()//pixelSize_o.getY()/binSize)))
+        bbox.shift(lsst.geom.Extent2I(-int(origin.getX()//binSize),
+                                      -int(origin.getY())//binSize))
         boxList.append(bbox)
     return boxList
 
@@ -830,7 +831,7 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
 
     Parameters
     ----------
-    camBbox : `lsst.afw.geom.Box2D`
+    camBbox : `lsst.geom.Box2D`
         Camera bounding box in focal plane coordinates (mm).
     pixelSize : `float`
         Size of a detector pixel in mm.
@@ -839,14 +840,14 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
 
     Returns
     -------
-    box : `lsst.afw.geom.Box2I`
+    box : `lsst.geom.Box2I`
         The resulting bounding box.
     """
-    pixMin = afwGeom.Point2I(int(camBbox.getMinX()//pixelSize.getX()),
-                             int(camBbox.getMinY()//pixelSize.getY()))
-    pixMax = afwGeom.Point2I(int(camBbox.getMaxX()//pixelSize.getX()),
-                             int(camBbox.getMaxY()//pixelSize.getY()))
-    retBox = afwGeom.Box2I(pixMin, pixMax)
+    pixMin = lsst.geom.Point2I(int(camBbox.getMinX()//pixelSize.getX()),
+                               int(camBbox.getMinY()//pixelSize.getY()))
+    pixMax = lsst.geom.Point2I(int(camBbox.getMaxX()//pixelSize.getX()),
+                               int(camBbox.getMaxY()//pixelSize.getY()))
+    retBox = lsst.geom.Box2I(pixMin, pixMax)
     retBox.grow(bufferSize)
     return retBox
 
@@ -892,7 +893,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     if detectorNameList is None:
         camBbox = camera.getFpBBox()
     else:
-        camBbox = afwGeom.Box2D()
+        camBbox = lsst.geom.Box2D()
         for detName in detectorNameList:
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
@@ -997,7 +998,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     if detectorNameList is None:
         camBbox = camera.getFpBBox()
     else:
-        camBbox = afwGeom.Box2D()
+        camBbox = lsst.geom.Box2D()
         for detName in detectorNameList:
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
@@ -1005,10 +1006,10 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
     if showWcs:
         if originAtCenter:
-            wcsReferencePixel = afwGeom.Box2D(
+            wcsReferencePixel = lsst.geom.Box2D(
                 cameraImage.getBBox()).getCenter()
         else:
-            wcsReferencePixel = afwGeom.Point2I(0, 0)
+            wcsReferencePixel = lsst.geom.Point2I(0, 0)
         wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
     else:
         wcs = None
@@ -1045,7 +1046,7 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
     ----------
     pixelSize : `float`
         Size of the image pixels in physical units
-    referencePixel : `lsst.afw.geom.Point2D`
+    referencePixel : `lsst.geom.Point2D`
         Pixel for origin of WCS
 
     Returns
@@ -1056,7 +1057,7 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
 
     md = dafBase.PropertySet()
     if referencePixel is None:
-        referencePixel = afwGeom.PointD(0, 0)
+        referencePixel = lsst.geom.PointD(0, 0)
     for i in range(2):
         md.set("CRPIX%d"%(i+1), referencePixel[i])
         md.set("CRVAL%d"%(i+1), 0.)
@@ -1077,7 +1078,7 @@ def findAmp(ccd, pixelPosition):
     ----------
     ccd : `lsst.afw.cameraGeom.Detector`
         Detector to look in.
-    pixelPosition : `lsst.afw.geom.Point2I`
+    pixelPosition : `lsst.geom.Point2I`
         The pixel position to find the amp for.
 
     Returns

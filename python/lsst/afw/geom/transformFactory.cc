@@ -24,8 +24,8 @@
 
 #include "ndarray/pybind11.h"
 
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/AffineTransform.h"
 #include "lsst/afw/geom/transformFactory.h"
 
 namespace py = pybind11;
@@ -42,10 +42,10 @@ PYBIND11_PLUGIN(transformFactory) {
     py::module::import("lsst.afw.geom.transform");
 
     mod.def("linearizeTransform",
-            (AffineTransform(*)(TransformPoint2ToPoint2 const &, Point2D const &)) & linearizeTransform,
+            (lsst::geom::AffineTransform(*)(TransformPoint2ToPoint2 const &, lsst::geom::Point2D const &)) & linearizeTransform,
             "original"_a, "point"_a);
     mod.def("makeTransform",
-            (std::shared_ptr<TransformPoint2ToPoint2>(*)(AffineTransform const &)) & makeTransform,
+            (std::shared_ptr<TransformPoint2ToPoint2>(*)(lsst::geom::AffineTransform const &)) & makeTransform,
             "affine"_a);
     mod.def("makeRadialTransform",
             (std::shared_ptr<TransformPoint2ToPoint2>(*)(std::vector<double> const &)) & makeRadialTransform,

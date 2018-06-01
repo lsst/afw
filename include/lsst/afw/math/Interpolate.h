@@ -31,8 +31,8 @@ namespace afw {
 namespace math {
 
 /*
-* Interpolate values for a set of x,y vector<>s
-*/
+ * Interpolate values for a set of x,y vector<>s
+ */
 class Interpolate {
 public:
     enum Style {
@@ -115,8 +115,8 @@ Interpolate::Style lookupMaxInterpStyle(int const n);
  * @param style The style in question
  */
 int lookupMinInterpPoints(Interpolate::Style const style);
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_MATH_INTERPOLATE_H

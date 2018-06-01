@@ -119,7 +119,7 @@ BaseCore::Jacobian Quadrupole::_dAssignFromAxes(double a, double b, double theta
     _matrix(1, 0) = _matrix(0, 1);
     return r;
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

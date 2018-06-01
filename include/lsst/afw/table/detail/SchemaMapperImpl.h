@@ -86,9 +86,9 @@ private:
     Schema _output;
     KeyPairMap _map;
 };
-}
-}
-}
-}  // namespace lsst::afw::table::detail
+}  // namespace detail
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_DETAIL_SchemaMapperImpl_h_INCLUDED

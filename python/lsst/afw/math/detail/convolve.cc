@@ -89,12 +89,12 @@ PYBIND11_PLUGIN(_convolve) {
             .export_values();
 
     clsKernelImagesForRegion.def(
-            py::init<KernelImagesForRegion::KernelConstPtr, lsst::afw::geom::Box2I const &,
-                     lsst::afw::geom::Point2I const &, bool>(),
+            py::init<KernelImagesForRegion::KernelConstPtr, lsst::geom::Box2I const &,
+                     lsst::geom::Point2I const &, bool>(),
             "kernelPtr"_a, "bbox"_a, "xy0"_a, "doNormalize"_a);
     clsKernelImagesForRegion.def(
-            py::init<KernelImagesForRegion::KernelConstPtr, lsst::afw::geom::Box2I const &,
-                     lsst::afw::geom::Point2I const &, bool, KernelImagesForRegion::ImagePtr,
+            py::init<KernelImagesForRegion::KernelConstPtr, lsst::geom::Box2I const &,
+                     lsst::geom::Point2I const &, bool, KernelImagesForRegion::ImagePtr,
                      KernelImagesForRegion::ImagePtr, KernelImagesForRegion::ImagePtr,
                      KernelImagesForRegion::ImagePtr>(),
             "kernelPtr"_a, "bbox"_a, "xy0"_a, "doNormalize"_a, "bottomLeftImagePtr"_a,

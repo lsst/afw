@@ -27,6 +27,7 @@
 #include <limits>
 #include <memory>
 
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
@@ -35,7 +36,6 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MaskedImageF;
@@ -49,11 +49,11 @@ typedef math::MaskedVector<float> MaskedVectorF;
 template <typename Image>
 void printStats(Image &img, math::StatisticsControl const &sctrl) {
     // initialize a Statistics object with any stats we might want
-    ImgStat stats =
-            math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
-                                              math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
-                                              math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
-                                 sctrl);
+    ImgStat stats = math::makeStatistics(
+            img,
+            math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE | math::ERRORS | math::MIN | math::MAX |
+                    math::VARIANCECLIP | math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
+            sctrl);
 
     // get various stats with getValue() and their errors with getError()
     double const npoint = stats.getValue(math::NPOINT);
@@ -92,7 +92,7 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
 int main() {
     // declare an image and a masked image
     int const wid = 1024;
-    ImageF img(geom::Extent2I(wid, wid));
+    ImageF img(lsst::geom::Extent2I(wid, wid));
     MaskedImageF mimg(img.getDimensions());
     std::vector<double> v(0);
     MaskedVectorF mv(wid * wid);

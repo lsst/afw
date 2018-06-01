@@ -43,7 +43,7 @@ PYBIND11_PLUGIN(_baseCore) {
     py::class_<BaseCore::Convolution> clsBaseCoreConvolution(clsBaseCore, "Convolution");
     py::class_<BaseCore::Transformer> clsBaseCoreTransformer(clsBaseCore, "Transformer");
 
-    //    clsBaseCoreTransformer.def(py::init<BaseCore &, LinearTransform const &>());
+    //    clsBaseCoreTransformer.def(py::init<BaseCore &, lsst::geom::LinearTransform const &>());
     //
     //    clsBaseCoreTransformer.def("inPlace", &BaseCore::Transformer::inPlace);
     //    clsBaseCoreTransformer.def("apply", &BaseCore::Transformer::apply);
@@ -69,13 +69,13 @@ PYBIND11_PLUGIN(_baseCore) {
     clsBaseCore.def("getDeterminantRadius", &BaseCore::getDeterminantRadius);
     clsBaseCore.def("getTraceRadius", &BaseCore::getTraceRadius);
     //    clsBaseCore.def("transform", (typename BaseCore::Transformer const
-    //    (BaseCore::*)(lsst::afw::geom::LinearTransform const &) const) &BaseCore::transform);
+    //    (BaseCore::*)(lsst::geom::LinearTransform const &) const) &BaseCore::transform);
     //    clsBaseCore.def("getGridTransform", &BaseCore::getGridTransform);
     clsBaseCore.def("convolve", (BaseCore::Convolution (BaseCore::*)(BaseCore const &)) & BaseCore::convolve);
     clsBaseCore.def("computeDimensions", &BaseCore::computeDimensions);
     clsBaseCore.def("getParameterVector", &BaseCore::getParameterVector);
     clsBaseCore.def("setParameterVector", &BaseCore::setParameterVector);
-    //    clsBaseCore.def("transformInPlace", [](BaseCore & self, lsst::afw::geom::LinearTransform const & t)
+    //    clsBaseCore.def("transformInPlace", [](BaseCore & self, lsst::geom::LinearTransform const & t)
     //    {
     //       self.transform(t).inPlace();
     //    });

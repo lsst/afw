@@ -22,7 +22,7 @@
 
 __all__ = ["getSipMatrixFromMetadata", "makeDistortedTanWcs", "computePixelToDistortedPixel"]
 
-from ..coordinates import Point2D
+import lsst.geom
 from ..transformFactory import linearizeTransform, makeTransform
 from ..skyWcs import makeModifiedWcs
 from .wcsUtils import _getSipMatrixFromMetadata
@@ -176,7 +176,8 @@ def computePixelToDistortedPixel(pixelToFocalPlane, focalPlaneToFieldAngle):
         A transform that applies the effect of the optical distortion model.
     """
     # return pixelToFocalPlane -> focalPlaneToFieldAngle -> tanFieldAngleToocalPlane -> focalPlaneToPixel
-    focalPlaneToTanFieldAngle = makeTransform(linearizeTransform(focalPlaneToFieldAngle, Point2D(0, 0)))
+    focalPlaneToTanFieldAngle = makeTransform(linearizeTransform(focalPlaneToFieldAngle,
+                                                                 lsst.geom.Point2D(0, 0)))
     return pixelToFocalPlane.then(focalPlaneToFieldAngle) \
         .then(focalPlaneToTanFieldAngle.getInverse()) \
         .then(pixelToFocalPlane.getInverse())

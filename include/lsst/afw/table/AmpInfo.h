@@ -85,8 +85,8 @@ public:
 
     AmpInfoRecord(AmpInfoRecord const &) = delete;
     AmpInfoRecord(AmpInfoRecord &&) = delete;
-    AmpInfoRecord & operator=(AmpInfoRecord const &) = delete;
-    AmpInfoRecord & operator=(AmpInfoRecord &&) = delete;
+    AmpInfoRecord &operator=(AmpInfoRecord const &) = delete;
+    AmpInfoRecord &operator=(AmpInfoRecord &&) = delete;
     ~AmpInfoRecord();
 
     std::shared_ptr<AmpInfoTable const> getTable() const {
@@ -98,8 +98,8 @@ public:
     std::string getName() const;
     void setName(std::string const &name);  ///< name of amplifier location in camera
 
-    geom::Box2I getBBox() const;
-    void setBBox(geom::Box2I const &bbox);  ///< bounding box of amplifier pixels in assembled image
+    lsst::geom::Box2I getBBox() const;
+    void setBBox(lsst::geom::Box2I const &bbox);  ///< bounding box of amplifier pixels in assembled image
 
     double getGain() const;
     void setGain(double gain);  ///< amplifier gain in e-/ADU
@@ -130,11 +130,12 @@ public:
     bool getHasRawInfo() const;
     void setHasRawInfo(bool hasRawInfo);  ///< does this table have raw amplifier information?
 
-    geom::Box2I getRawBBox() const;
-    void setRawBBox(geom::Box2I const &bbox);  ///< bounding box of all amplifier pixels on raw image
+    lsst::geom::Box2I getRawBBox() const;
+    void setRawBBox(lsst::geom::Box2I const &bbox);  ///< bounding box of all amplifier pixels on raw image
 
-    geom::Box2I getRawDataBBox() const;
-    void setRawDataBBox(geom::Box2I const &bbox);  ///< bounding box of amplifier image pixels on raw image
+    lsst::geom::Box2I getRawDataBBox() const;
+    void setRawDataBBox(
+            lsst::geom::Box2I const &bbox);  ///< bounding box of amplifier image pixels on raw image
 
     bool getRawFlipX() const;
     void setRawFlipX(bool rawFlipX);  ///< flip row order to make assembled image?
@@ -142,21 +143,21 @@ public:
     bool getRawFlipY() const;
     void setRawFlipY(bool rawFlipY);  ///< flip column order to make an assembled image?
 
-    geom::Extent2I getRawXYOffset() const;
-    void setRawXYOffset(
-            geom::Extent2I const &xy);  ///< offset for assembling a raw CCD image: desired xy0 - raw xy0
+    lsst::geom::Extent2I getRawXYOffset() const;
+    void setRawXYOffset(lsst::geom::Extent2I const
+                                &xy);  ///< offset for assembling a raw CCD image: desired xy0 - raw xy0
 
-    geom::Box2I getRawHorizontalOverscanBBox() const;
+    lsst::geom::Box2I getRawHorizontalOverscanBBox() const;
     void setRawHorizontalOverscanBBox(
-            geom::Box2I const &bbox);  ///< bounding box of usable horizontal overscan pixels
+            lsst::geom::Box2I const &bbox);  ///< bounding box of usable horizontal overscan pixels
 
-    geom::Box2I getRawVerticalOverscanBBox() const;
+    lsst::geom::Box2I getRawVerticalOverscanBBox() const;
     void setRawVerticalOverscanBBox(
-            geom::Box2I const &bbox);  ///< bounding box of usable vertical overscan pixels
+            lsst::geom::Box2I const &bbox);  ///< bounding box of usable vertical overscan pixels
 
-    geom::Box2I getRawPrescanBBox() const;
-    void setRawPrescanBBox(
-            geom::Box2I const &bbox);  ///< bounding box of usable (horizontal) prescan pixels on raw image
+    lsst::geom::Box2I getRawPrescanBBox() const;
+    void setRawPrescanBBox(lsst::geom::Box2I const &bbox);  ///< bounding box of usable (horizontal) prescan
+                                                            ///< pixels on raw image
 
     //@}
 
@@ -181,8 +182,8 @@ public:
     static int const MAX_LINEARITY_COEFFS = 4;        // max number of linearity coefficients
     static int const MAX_LINEARITY_TYPE_LENGTH = 64;  // max length for linearity type
 
-    AmpInfoTable & operator=(AmpInfoTable const &) = delete;
-    AmpInfoTable & operator=(AmpInfoTable &&) = delete;
+    AmpInfoTable &operator=(AmpInfoTable const &) = delete;
+    AmpInfoTable &operator=(AmpInfoTable &&) = delete;
     ~AmpInfoTable();
 
     /**
@@ -320,8 +321,8 @@ private:
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     std::shared_ptr<io::FitsWriter> makeFitsWriter(fits::Fits *fitsfile, int flags) const override;
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_AmpInfo_h_INCLUDED

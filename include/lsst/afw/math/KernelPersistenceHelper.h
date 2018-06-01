@@ -54,8 +54,8 @@ struct Kernel::PersistenceHelper {
     std::vector<SpatialFunctionPtr> readSpatialFunctions(afw::table::io::InputArchive const& archive,
                                                          afw::table::BaseRecord const& record) const;
 };
-}
-}
-}  // lsst:afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_MATH_KernelPersistenceHelper_h_INCLUDED)

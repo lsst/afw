@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 from lsst.afw.image.testUtils import makeRampImage
 
@@ -15,8 +15,8 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
         """!Test small ramp images with unit interval for known values
         """
         for imageClass in (afwImage.ImageU, afwImage.ImageF, afwImage.ImageD):
-            dim = afwGeom.Extent2I(7, 9)
-            box = afwGeom.Box2I(afwGeom.Point2I(-1, 3), dim)
+            dim = lsst.geom.Extent2I(7, 9)
+            box = lsst.geom.Box2I(lsst.geom.Point2I(-1, 3), dim)
             numPix = dim[0]*dim[1]
             for start in (-5, 0, 4):
                 if imageClass == afwImage.ImageU and start < 0:
@@ -34,8 +34,8 @@ class MakeRampImageTestCase(lsst.utils.tests.TestCase):
         """!Test a small ramp image with non-integer increments
         """
         for imageClass in (afwImage.ImageU, afwImage.ImageF, afwImage.ImageD):
-            dim = afwGeom.Extent2I(7, 9)
-            box = afwGeom.Box2I(afwGeom.Point2I(-1, 3), dim)
+            dim = lsst.geom.Extent2I(7, 9)
+            box = lsst.geom.Box2I(lsst.geom.Point2I(-1, 3), dim)
             numPix = dim[0]*dim[1]
             for start in (-5.1, 0, 4.3):
                 if imageClass == afwImage.ImageU and start < 0:

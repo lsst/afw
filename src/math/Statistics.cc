@@ -36,7 +36,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 
 using namespace std;
 namespace pexExceptions = lsst::pex::exceptions;
@@ -594,7 +594,7 @@ std::shared_ptr<std::vector<typename ImageT::Pixel> > makeVectorCopy(ImageT cons
 
     return imgcp;
 }
-}
+}  // namespace
 
 double StatisticsControl::getMaskPropagationThreshold(int bit) const {
     int oldSize = _maskPropagationThresholds.size();
@@ -688,7 +688,7 @@ template <typename ImageT, typename PixelT>
 void checkDimensions(ImageT const &image1, MaskImposter<PixelT> const &image2) {}
 template <typename ImageT, typename PixelT>
 void checkDimensions(MaskImposter<PixelT> const &image1, ImageT const &image2) {}
-}
+}  // namespace
 
 template <typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
 Statistics::Statistics(ImageT const &img, MaskT const &msk, VarianceT const &var, WeightT const &weights,
@@ -1056,6 +1056,6 @@ INSTANTIATE_IMAGE_STATISTICS(std::uint16_t);
 INSTANTIATE_IMAGE_STATISTICS(std::uint64_t);
 
 /// @endcond
-}
-}
-}  // end math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

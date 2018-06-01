@@ -27,7 +27,7 @@ import os.path
 import unittest
 
 import lsst.utils
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.fits as afwFits
 import lsst.utils.tests
@@ -93,7 +93,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
-            im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
+            im = afwImage.ImageD(lsst.geom.Extent2I(100, 100))
             im.set(666)
             im.writeFits(tmpFile)
             afwImage.ImageD(tmpFile)
@@ -104,8 +104,8 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 3
         im = afwImage.ImageF(fileName, hdu)
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120),
-                             afwGeom.Extent2I(20, 15))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(110, 120),
+                               lsst.geom.Extent2I(20, 15))
         sim = im.Factory(im, bbox, afwImage.LOCAL)
 
         im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
@@ -123,7 +123,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         compressed images.
         """
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile, afwFits.imageCompressionDisabled():
-            im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
+            im = afwImage.ImageF(lsst.geom.Extent2I(20, 20))
 
             for hdu in range(4):
                 im.set(100*hdu)
@@ -143,7 +143,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
         import lsst.daf.base as dafBase
 
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
-            im = afwImage.ImageF(afwGeom.ExtentI(10, 20))
+            im = afwImage.ImageF(lsst.geom.ExtentI(10, 20))
             md = dafBase.PropertySet()
             keys = {"BAD": False,
                     "GOOD": True,
@@ -179,13 +179,16 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBBoxFromMetadata(self):
         self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_img.fits"),
-                                   afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2112, 4644)))
+                                   lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                                                   lsst.geom.Extent2I(2112, 4644)))
         for hdu in range(1, 4):
             self.checkBBoxFromMetadata(os.path.join(dataDir, "871034p_1_MI.fits"),
-                                       afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(2112, 4644)),
+                                       lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
+                                                       lsst.geom.Extent2I(2112, 4644)),
                                        hdu=hdu)
             self.checkBBoxFromMetadata(os.path.join(dataDir, "medsub.fits"),
-                                       afwGeom.Box2I(afwGeom.Point2I(40, 150), afwGeom.Extent2I(145, 200)),
+                                       lsst.geom.Box2I(lsst.geom.Point2I(40, 150),
+                                                       lsst.geom.Extent2I(145, 200)),
                                        hdu=hdu)
 
 

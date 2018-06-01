@@ -6,6 +6,7 @@
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
 
+#include "lsst/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "Eigen/LU"
 
@@ -224,7 +225,7 @@ struct TransformerTest {
         static int const N = 5;
 
         Ellipse ellipse;
-        AffineTransform transform;
+        lsst::geom::AffineTransform transform;
 
         Eigen::Matrix<double, 5, 1> operator()(Eigen::Matrix<double, 5, 1> const& x) {
             ellipse.setParameterVector(x);
@@ -232,7 +233,7 @@ struct TransformerTest {
             return ellipse.getParameterVector();
         }
 
-        Functor1(Ellipse const& ellipse_, AffineTransform const& transform_)
+        Functor1(Ellipse const& ellipse_, lsst::geom::AffineTransform const& transform_)
                 : ellipse(ellipse_), transform(transform_) {}
     };
 
@@ -241,23 +242,23 @@ struct TransformerTest {
         static int const N = 6;
 
         Ellipse ellipse;
-        AffineTransform transform;
+        lsst::geom::AffineTransform transform;
 
         Eigen::Matrix<double, 5, 1> operator()(Eigen::Matrix<double, 6, 1> const& x) {
             transform.setParameterVector(x);
             return ellipse.transform(transform).copy()->getParameterVector();
         }
 
-        Functor2(Ellipse const& ellipse_, AffineTransform const& transform_)
+        Functor2(Ellipse const& ellipse_, lsst::geom::AffineTransform const& transform_)
                 : ellipse(ellipse_), transform(transform_) {}
     };
 
     template <typename Core>
     static void apply(Core const& core) {
-        Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
+        Ellipse input(core, lsst::geom::Point2D(Eigen::Vector2d::Random()));
         Eigen::Matrix2d tm;
         tm << -0.2704311, 0.9044595, 0.0268018, 0.8323901;
-        AffineTransform transform(tm, Eigen::Vector2d::Random());
+        lsst::geom::AffineTransform transform(tm, Eigen::Vector2d::Random());
         Functor1 f1(input, transform);
         Functor2 f2(input, transform);
         Ellipse output = input.transform(transform);
@@ -286,7 +287,7 @@ struct GridTransformTest {
 
         Eigen::Matrix<double, M, 1> operator()(Eigen::Matrix<double, N, 1> const& x) {
             ellipse.setParameterVector(x);
-            return AffineTransform(ellipse.getGridTransform()).getParameterVector();
+            return lsst::geom::AffineTransform(ellipse.getGridTransform()).getParameterVector();
         }
 
         Functor(Ellipse const& ellipse_) : ellipse(ellipse_) {}
@@ -294,8 +295,8 @@ struct GridTransformTest {
 
     template <typename T>
     static void apply(T const& core) {
-        Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
-        AffineTransform output = input.getGridTransform();
+        Ellipse input(core, lsst::geom::Point2D(Eigen::Vector2d::Random()));
+        lsst::geom::AffineTransform output = input.getGridTransform();
         BOOST_CHECK_MESSAGE(
                 output.getMatrix().isApprox(input.getGridTransform().getMatrix(), 1E-12),
                 boost::str(
@@ -315,8 +316,8 @@ struct GridTransformTest {
                 boost::str(boost::format("GridTransform::d failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n") %
                            core.getName() % d_analytic % d_numeric));
 
-        AffineTransform inverse1 = input.getGridTransform().invert();
-        AffineTransform inverse2 = AffineTransform(input.getGridTransform()).invert();
+        lsst::geom::AffineTransform inverse1 = input.getGridTransform().invert();
+        lsst::geom::AffineTransform inverse2 = lsst::geom::AffineTransform(input.getGridTransform()).invert();
         static double const TRANSFORM_INVERSE_EPSILON = 1E-8;
         BOOST_CHECK_CLOSE(inverse1[0], inverse2[0], TRANSFORM_INVERSE_EPSILON);
         BOOST_CHECK_CLOSE(inverse1[1], inverse2[1], TRANSFORM_INVERSE_EPSILON);
@@ -358,13 +359,12 @@ struct ConvolutionTest {
                            core.getName() % d_analytic % d_numeric));
     }
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 namespace afwEllipses = lsst::afw::geom::ellipses;
-namespace afwGeom = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(EllipticityTest) {
     afwEllipses::invokeEllipticityTest<afwEllipses::EllipticityConversionTest>();
@@ -373,9 +373,9 @@ BOOST_AUTO_TEST_CASE(EllipticityTest) {
 BOOST_AUTO_TEST_CASE(ParametricTest) {
     afwEllipses::Parametric p(afwEllipses::Ellipse(afwEllipses::Quadrupole(3, 2, -0.65)));
     BOOST_CHECK(p(1.45).asEigen().isApprox(
-            afwGeom::Point2D::EigenVector(0.76537615289287353, 1.0573336496088439)));
+            lsst::geom::Point2D::EigenVector(0.76537615289287353, 1.0573336496088439)));
     BOOST_CHECK(p(-2.56).asEigen().isApprox(
-            afwGeom::Point2D::EigenVector(-1.6804596457433354, 0.03378847788858419)));
+            lsst::geom::Point2D::EigenVector(-1.6804596457433354, 0.03378847788858419)));
 }
 
 BOOST_AUTO_TEST_CASE(CoreConversion) { afwEllipses::invokeCoreTest<afwEllipses::CoreConversionTest>(false); }

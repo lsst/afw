@@ -86,7 +86,7 @@ std::shared_ptr<ImageT> binImage(ImageT const& inImage, int const binX, int cons
 template <typename ImageT>
 std::shared_ptr<ImageT> binImage(ImageT const& inImage, int const binsize,
                                  lsst::afw::math::Property const flags = lsst::afw::math::MEAN);
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 #endif

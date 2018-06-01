@@ -35,9 +35,9 @@ import unittest
 import numpy as np
 
 import lsst.utils.tests
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -278,7 +278,7 @@ class BinImageTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MAX), val)
 
         inImage.set(0)
-        subImg = inImage.Factory(inImage, afwGeom.BoxI(afwGeom.PointI(4, 4), afwGeom.ExtentI(4, 8)),
+        subImg = inImage.Factory(inImage, lsst.geom.BoxI(lsst.geom.PointI(4, 4), lsst.geom.ExtentI(4, 8)),
                                  afwImage.LOCAL)
         subImg.set(100)
         del subImg

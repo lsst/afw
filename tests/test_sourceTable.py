@@ -39,6 +39,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.image
@@ -62,9 +63,9 @@ def makeCov(size, dtype):
 
 
 def makeWcs():
-    crval = lsst.afw.geom.SpherePoint(1.606631 * lsst.afw.geom.degrees,
-                                      5.090329 * lsst.afw.geom.degrees)
-    crpix = lsst.afw.geom.Point2D(2036.0, 2000.0)
+    crval = lsst.geom.SpherePoint(1.606631 * lsst.geom.degrees,
+                                  5.090329 * lsst.geom.degrees)
+    crpix = lsst.geom.Point2D(2036.0, 2000.0)
     cdMatrix = np.array([5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5])
     cdMatrix.shape = (2, 2)
     return lsst.afw.geom.makeSkyWcs(crpix=crpix, crval=crval, cdMatrix=cdMatrix)
@@ -372,7 +373,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             va3 = mim3.getVariance()
             for y in range(H):
                 for x in range(W):
-                    if circ.contains(lsst.afw.geom.Point2I(x, y)):
+                    if circ.contains(lsst.geom.Point2I(x, y)):
                         self.assertEqual(im.get(x, y), im3.get(x, y))
                         self.assertEqual(msk.get(x, y), ma3.get(x, y))
                         self.assertEqual(var.get(x, y), va3.get(x, y))
@@ -545,11 +546,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(len(fp1.getPeaks()), 1)
         self.assertEqual(len(fp2.getPeaks()), 1)
         self.assertEqual(fp1.getBBox(),
-                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(129, 2),
-                                             lsst.afw.geom.Extent2I(25, 29)))
+                         lsst.geom.Box2I(lsst.geom.Point2I(129, 2),
+                                         lsst.geom.Extent2I(25, 29)))
         self.assertEqual(fp2.getBBox(),
-                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(1184, 2),
-                                             lsst.afw.geom.Extent2I(78, 38)))
+                         lsst.geom.Box2I(lsst.geom.Point2I(1184, 2),
+                                         lsst.geom.Extent2I(78, 38)))
         hfp = lsst.afw.detection.HeavyFootprintF(fp2)
         self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
         self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())

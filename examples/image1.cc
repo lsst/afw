@@ -26,18 +26,18 @@
 
 // Include the necessary headers;
 // if using many image modules then you may prefer to include "lsst/afw/image.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 
 // Declare the desired Image type.
 // Note: only specific types are supported; for the list of available types
 // see the explicit instantiation code at the end of lsst/afw/image/src/Image.cc
 namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 typedef afwImage::Image<int> ImageT;
 
 int main() {
     // Declare an Image; its pixels are not yet initialized.
-    ImageT img(afwGeom::Extent2I(10, 6));
+    ImageT img(lsst::geom::Extent2I(10, 6));
 
     // Initialize all pixels to a given value.
     img = 100;

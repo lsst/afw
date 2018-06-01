@@ -36,9 +36,7 @@
 
 #include <memory>
 
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/Function.h"
@@ -54,7 +52,7 @@ namespace fits {
 class Fits;
 class MemFileManager;
 struct ImageWriteOptions;
-}
+}  // namespace fits
 
 namespace image {
 namespace detail {
@@ -72,7 +70,7 @@ struct image_traits {
 };
 //
 std::string const wcsNameForXY0 = "A";  // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
-}
+}  // namespace detail
 
 /// A class used to request that array accesses be checked
 class CheckIndices {
@@ -176,13 +174,13 @@ public:
      * allocate a new image with the specified dimensions.
      * Sets origin at (0,0)
      */
-    explicit ImageBase(const geom::Extent2I& dimensions = geom::Extent2I());
+    explicit ImageBase(const lsst::geom::Extent2I& dimensions = lsst::geom::Extent2I());
     /**
      * Allocator Constructor
      *
      * allocate a new image with the specified dimensions and origin
      */
-    explicit ImageBase(const geom::Box2I& bbox);
+    explicit ImageBase(const lsst::geom::Box2I& bbox);
     /**
      * Copy constructor.
      *
@@ -209,7 +207,7 @@ public:
      * @note Unless `deep` is `true`, the new %image will share the old %image's pixels;
      * this is probably what you want
      */
-    explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox, const ImageOrigin origin = PARENT,
+    explicit ImageBase(const ImageBase& src, const lsst::geom::Box2I& bbox, const ImageOrigin origin = PARENT,
                        const bool deep = false);
     /**
      * generalised copy constructor
@@ -240,7 +238,8 @@ public:
      *  dimension is contiguous in memory.  If the last dimension is not contiguous, the array
      *  will be deep-copied in Python, but the constructor will fail to compile in pure C++.
      */
-    explicit ImageBase(Array const& array, bool deep = false, geom::Point2I const& xy0 = geom::Point2I());
+    explicit ImageBase(Array const& array, bool deep = false,
+                       lsst::geom::Point2I const& xy0 = lsst::geom::Point2I());
 
     virtual ~ImageBase() = default;
     /** Shallow assignment operator.
@@ -273,7 +272,8 @@ public:
      * @throws lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
      * this image do not match.
      */
-    void assign(ImageBase const& rhs, geom::Box2I const& bbox = geom::Box2I(), ImageOrigin origin = PARENT);
+    void assign(ImageBase const& rhs, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
+                ImageOrigin origin = PARENT);
     //
     // Operators etc.
     //
@@ -323,7 +323,7 @@ public:
      * `ImageBase(fileName, hdu, BBox, mode)` ctor or `ImageBase(ImageBase, BBox)` cctor
      * The origin can be reset with `setXY0`
      */
-    geom::Point2I getXY0() const { return _origin; }
+    lsst::geom::Point2I getXY0() const { return _origin; }
 
     /**
      * Convert image position to index (nearest integer and fractional parts)
@@ -356,7 +356,7 @@ public:
     }
 
     /// Return the %image's size;  useful for passing to constructors
-    geom::Extent2I getDimensions() const { return geom::Extent2I(getWidth(), getHeight()); }
+    lsst::geom::Extent2I getDimensions() const { return lsst::geom::Extent2I(getWidth(), getHeight()); }
 
     void swap(ImageBase& rhs);
 
@@ -434,7 +434,7 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::Point2I const origin) { _origin = origin; }
+    void setXY0(lsst::geom::Point2I const origin) { _origin = origin; }
     /**
      * Set the ImageBase's origin
      *
@@ -443,17 +443,17 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(int const x0, int const y0) { setXY0(geom::Point2I(x0, y0)); }
+    void setXY0(int const x0, int const y0) { setXY0(lsst::geom::Point2I(x0, y0)); }
 
-    geom::Box2I getBBox(ImageOrigin origin = PARENT) const {
+    lsst::geom::Box2I getBBox(ImageOrigin origin = PARENT) const {
         if (origin == PARENT) {
-            return geom::Box2I(_origin, getDimensions());
+            return lsst::geom::Box2I(_origin, getDimensions());
         } else
-            return geom::Box2I(geom::Point2I(0, 0), getDimensions());
+            return lsst::geom::Box2I(lsst::geom::Point2I(0, 0), getDimensions());
     }
 
 private:
-    geom::Point2I _origin;
+    lsst::geom::Point2I _origin;
     Manager::Ptr _manager;
     _view_t _gilView;
 
@@ -461,8 +461,8 @@ private:
     // by the user
 
 protected:
-    static _view_t _allocateView(geom::Extent2I const& dimensions, Manager::Ptr& manager);
-    static _view_t _makeSubView(geom::Extent2I const& dimensions, geom::Extent2I const& offset,
+    static _view_t _allocateView(lsst::geom::Extent2I const& dimensions, Manager::Ptr& manager);
+    static _view_t _makeSubView(lsst::geom::Extent2I const& dimensions, lsst::geom::Extent2I const& offset,
                                 const _view_t& view);
 
     _view_t _getRawView() const { return _gilView; }
@@ -472,7 +472,6 @@ protected:
 
 template <typename PixelT>
 void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b);
-
 
 // Inline template definitions
 
@@ -492,9 +491,8 @@ typename ImageBase<PixelT>::ConstArray ImageBase<PixelT>::getArray() const {
                              this->_manager);
 }
 
-
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif

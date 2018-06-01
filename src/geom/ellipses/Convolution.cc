@@ -56,13 +56,14 @@ void BaseCore::Convolution::apply(BaseCore& result) const {
 }
 
 std::shared_ptr<Ellipse> Ellipse::Convolution::copy() const {
-    return std::make_shared<Ellipse>(self.getCore().convolve(other.getCore()).copy(),
-                                     PointD(self.getCenter() + Extent2D(other.getCenter())));
+    return std::make_shared<Ellipse>(
+            self.getCore().convolve(other.getCore()).copy(),
+            lsst::geom::Point2D(self.getCenter() + lsst::geom::Extent2D(other.getCenter())));
 }
 
 void Ellipse::Convolution::inPlace() {
     self.getCore().convolve(other.getCore()).inPlace();
-    self.setCenter(self.getCenter() + Extent2D(other.getCenter()));
+    self.setCenter(self.getCenter() + lsst::geom::Extent2D(other.getCenter()));
 }
 
 Ellipse::Convolution::DerivativeMatrix Ellipse::Convolution::d() const {
@@ -73,8 +74,8 @@ Ellipse::Convolution::DerivativeMatrix Ellipse::Convolution::d() const {
 
 Ellipse::Ellipse(Convolution const& convolution)
         : _core(convolution.self.getCore().convolve(convolution.other.getCore()).copy()),
-          _center(convolution.self.getCenter() + Extent2D(convolution.other.getCenter())) {}
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+          _center(convolution.self.getCenter() + lsst::geom::Extent2D(convolution.other.getCenter())) {}
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

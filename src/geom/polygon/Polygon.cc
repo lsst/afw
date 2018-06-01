@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/Extent.h"
+#include "lsst/geom/Extent.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -47,7 +47,7 @@ struct access<LsstPoint, dim> {
 
 // Setting up LsstBox
 //
-// No setters, because it's inefficient (can't set individual elements of Box2D directly).
+// No setters, because it's inefficient (can't set individual elements of lsst::geom::Box2D directly).
 // For box outputs from boost::geometry we'll use BoostBox and then convert.
 template <>
 struct tag<LsstBox> {
@@ -80,9 +80,9 @@ struct tag<LsstRing> {
     typedef ring_tag type;
 };
 // template<> struct range_value<LsstRing> { typedef LsstPoint type; };
-}
-}
-}  // namespace boost::geometry::traits
+}  // namespace traits
+}  // namespace geometry
+}  // namespace boost
 
 namespace {
 
@@ -109,8 +109,8 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
                        LsstPoint const& first,            // First vertex defining edge
                        LsstPoint const& second,           // Second vertex defining edge
                        size_t const num                   // Number of parts to divide edge into
-                       ) {
-    lsst::afw::geom::Extent2D const delta = (second - first) / num;
+) {
+    lsst::geom::Extent2D const delta = (second - first) / num;
     vertices.push_back(first);
     for (size_t i = 1; i < num; ++i) {
         vertices.push_back(first + delta * i);
@@ -120,8 +120,7 @@ void addSubSampledEdge(std::vector<LsstPoint>& vertices,  // Vector of points to
 /// @internal Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y) {
     std::vector<BoostPolygon> overlap;  // Overlap between pixel and polygon
-    LsstBox const pixel(lsst::afw::geom::Point2D(x - 0.5, y - 0.5),
-                        lsst::afw::geom::Point2D(x + 0.5, y + 0.5));
+    LsstBox const pixel(lsst::geom::Point2D(x - 0.5, y - 0.5), lsst::geom::Point2D(x + 0.5, y + 0.5));
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (std::vector<BoostPolygon>::const_iterator i = overlap.begin(); i != overlap.end(); ++i) {
@@ -280,14 +279,14 @@ Polygon::Polygon(Polygon::Box const& box) : _impl(new Polygon::Impl(box)) {}
 
 Polygon::Polygon(std::vector<LsstPoint> const& vertices) : _impl(new Polygon::Impl(vertices)) {}
 
-Polygon::Polygon(Polygon::Box const& box, afw::geom::TransformPoint2ToPoint2 const & transform)
+Polygon::Polygon(Polygon::Box const& box, afw::geom::TransformPoint2ToPoint2 const& transform)
         : _impl(new Polygon::Impl()) {
     auto corners = transform.applyForward(boxToCorners(box));
     boost::geometry::assign(_impl->poly, corners);
     _impl->check();
 }
 
-Polygon::Polygon(Polygon::Box const& box, afw::geom::AffineTransform const& transform)
+Polygon::Polygon(Polygon::Box const& box, lsst::geom::AffineTransform const& transform)
         : _impl(new Polygon::Impl()) {
     std::vector<LsstPoint> corners = boxToCorners(box);
     for (std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
@@ -396,7 +395,7 @@ std::shared_ptr<Polygon> Polygon::transform(TransformPoint2ToPoint2 const& trans
     return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(newVertices))));
 }
 
-std::shared_ptr<Polygon> Polygon::transform(AffineTransform const& transform) const {
+std::shared_ptr<Polygon> Polygon::transform(lsst::geom::AffineTransform const& transform) const {
     std::vector<LsstPoint> vertices;  // New vertices
     vertices.reserve(getNumEdges());
     for (std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
@@ -428,12 +427,12 @@ std::shared_ptr<Polygon> Polygon::subSample(double maxLength) const {
     return std::shared_ptr<Polygon>(new Polygon(std::shared_ptr<Impl>(new Impl(vertices))));
 }
 
-std::shared_ptr<afw::image::Image<float>> Polygon::createImage(afw::geom::Box2I const& bbox) const {
+std::shared_ptr<afw::image::Image<float>> Polygon::createImage(lsst::geom::Box2I const& bbox) const {
     typedef afw::image::Image<float> Image;
     std::shared_ptr<Image> image = std::make_shared<Image>(bbox);
     image->setXY0(bbox.getMin());
     *image = 0.0;
-    afw::geom::Box2D bounds = getBBox();  // Polygon bounds
+    lsst::geom::Box2D bounds = getBBox();  // Polygon bounds
     int xMin = std::max(static_cast<int>(bounds.getMinX()), bbox.getMinX());
     int xMax = std::min(static_cast<int>(::ceil(bounds.getMaxX())), bbox.getMaxX());
     int yMin = std::max(static_cast<int>(bounds.getMinY()), bbox.getMinY());
@@ -442,7 +441,7 @@ std::shared_ptr<afw::image::Image<float>> Polygon::createImage(afw::geom::Box2I 
         double const yPixelMin = (double)y - 0.5, yPixelMax = (double)y + 0.5;
         BoostPolygon row;  // A polygon of row y
         boost::geometry::assign(
-                row, LsstBox(afw::geom::Point2D(xMin, yPixelMin), afw::geom::Point2D(xMax, yPixelMax)));
+                row, LsstBox(lsst::geom::Point2D(xMin, yPixelMin), lsst::geom::Point2D(xMax, yPixelMax)));
         std::vector<BoostPolygon> intersections;
         boost::geometry::intersection(_impl->poly, row, intersections);
 
@@ -577,7 +576,7 @@ void Polygon::write(OutputArchiveHandle& handle) const {
 
     handle.saveCatalog(catalog);
 }
-}
-}
-}
-}  // namespace lsst::afw::geom::polygon
+}  // namespace polygon
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst

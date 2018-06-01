@@ -32,9 +32,9 @@ def __contains__(self, point):
 
 def display(self, xy0=None, frame=1, ctype=None):
     """Display polygon on existing frame in ds9"""
-    import lsst.afw.geom as afwGeom
+    import lsst.geom
     import lsst.afw.display.ds9 as ds9
-    xy0 = afwGeom.Extent2D(0, 0) if xy0 is None else afwGeom.Extent2D(xy0)
+    xy0 = lsst.geom.Extent2D(0, 0) if xy0 is None else lsst.geom.Extent2D(xy0)
     with ds9.Buffering():
         for p1, p2 in self.getEdges():
             ds9.line((p1 - xy0, p2 - xy0), frame=frame, ctype=ctype)

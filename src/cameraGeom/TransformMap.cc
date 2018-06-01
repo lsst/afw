@@ -55,7 +55,7 @@ std::unique_ptr<ast::FrameSet> makeTransforms(CameraSys const &reference, Map co
     ast::Frame rootFrame(2, "Ident=" + reference.getSysName());
     auto result = std::unique_ptr<ast::FrameSet>(new ast::FrameSet(rootFrame));
 
-    for (auto const & keyValue : transforms) {
+    for (auto const &keyValue : transforms) {
         CameraSys const key = keyValue.first;
         std::shared_ptr<geom::TransformPoint2ToPoint2> const value = keyValue.second;
 
@@ -101,7 +101,7 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
     std::unordered_map<CameraSys, int> result({std::make_pair(reference, 1)});
     int nFrames = 1;
 
-    for (auto const & keyValue : transforms) {
+    for (auto const &keyValue : transforms) {
         CameraSys const key = keyValue.first;
         result.emplace(key, ++nFrames);
     }
@@ -110,10 +110,11 @@ std::unordered_map<CameraSys, int> makeTranslator(CameraSys const &reference, Ma
 
 }  // namespace
 
-geom::Point2Endpoint TransformMap::_pointConverter;
+lsst::afw::geom::Point2Endpoint TransformMap::_pointConverter;
 
-TransformMap::TransformMap(CameraSys const &reference,
-                           std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
+TransformMap::TransformMap(
+        CameraSys const &reference,
+        std::unordered_map<CameraSys, std::shared_ptr<geom::TransformPoint2ToPoint2>> const &transforms)
         : _transforms(makeTransforms(reference, transforms)),
           _frameIds(makeTranslator(reference, transforms)) {}
 
@@ -126,14 +127,15 @@ TransformMap::TransformMap(TransformMap const &&other) : TransformMap(other) {}
 // All resources owned by value or by smart pointer
 TransformMap::~TransformMap() = default;
 
-geom::Point2D TransformMap::transform(geom::Point2D const &point, CameraSys const &fromSys,
-                                      CameraSys const &toSys) const {
+lsst::geom::Point2D TransformMap::transform(lsst::geom::Point2D const &point, CameraSys const &fromSys,
+                                            CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
     return _pointConverter.pointFromData(mapping->applyForward(_pointConverter.dataFromPoint(point)));
 }
 
-std::vector<geom::Point2D> TransformMap::transform(std::vector<geom::Point2D> const &pointList,
-                                                   CameraSys const &fromSys, CameraSys const &toSys) const {
+std::vector<lsst::geom::Point2D> TransformMap::transform(std::vector<lsst::geom::Point2D> const &pointList,
+                                                         CameraSys const &fromSys,
+                                                         CameraSys const &toSys) const {
     auto mapping = _getMapping(fromSys, toSys);
     return _pointConverter.arrayFromData(mapping->applyForward(_pointConverter.dataFromArray(pointList)));
 }

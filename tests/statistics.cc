@@ -37,6 +37,7 @@
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 
@@ -44,7 +45,6 @@ using namespace std;
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace geom = lsst::afw::geom;
 namespace utf = boost::unit_test;
 
 typedef image::Image<float> Image;
@@ -52,7 +52,7 @@ typedef image::DecoratedImage<float> DecoratedImage;
 
 BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25
                                            "Boost non-Std" */
-    Image img(geom::Extent2I(10, 40));
+    Image img(lsst::geom::Extent2I(10, 40));
     Image::Pixel const pixval = 10000;
     img = pixval;
 
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 
     int nx = 101;
     int ny = 64;
-    Image img(geom::Extent2I(nx, ny));
+    Image img(lsst::geom::Extent2I(nx, ny));
 
     double z0 = 10.0;
     double dzdx = 1.0;
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
 
     int nx = 101;
     int ny = 64;
-    Image img(geom::Extent2I(nx, ny));
+    Image img(lsst::geom::Extent2I(nx, ny));
     img = NaN;
     double z0 = 10.0;
 

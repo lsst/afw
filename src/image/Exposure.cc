@@ -52,12 +52,13 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(unsigned int width, unsigned int he
         : daf::base::Citizen(typeid(this)), _maskedImage(width, height), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Extent2I const &dimensions,
+Exposure<ImageT, MaskT, VarianceT>::Exposure(lsst::geom::Extent2I const &dimensions,
                                              std::shared_ptr<geom::SkyWcs const> wcs)
         : daf::base::Citizen(typeid(this)), _maskedImage(dimensions), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(geom::Box2I const &bbox, std::shared_ptr<geom::SkyWcs const> wcs)
+Exposure<ImageT, MaskT, VarianceT>::Exposure(lsst::geom::Box2I const &bbox,
+                                             std::shared_ptr<geom::SkyWcs const> wcs)
         : daf::base::Citizen(typeid(this)), _maskedImage(bbox), _info(new ExposureInfo(wcs)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
@@ -81,14 +82,14 @@ template <typename ImageT, typename MaskT, typename VarianceT>
 Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure &&src) : Exposure(src) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, geom::Box2I const &bbox,
+Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, lsst::geom::Box2I const &bbox,
                                              ImageOrigin const origin, bool const deep)
         : daf::base::Citizen(typeid(this)),
           _maskedImage(src.getMaskedImage(), bbox, origin, deep),
           _info(new ExposureInfo(*src.getInfo(), deep)) {}
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, geom::Box2I const &bbox,
+Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, lsst::geom::Box2I const &bbox,
                                              ImageOrigin origin, bool conformMasks)
         : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -96,7 +97,7 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const &fileName, geom::
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::MemFileManager &manager, geom::Box2I const &bbox,
+Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::MemFileManager &manager, lsst::geom::Box2I const &bbox,
                                              ImageOrigin origin, bool conformMasks)
         : daf::base::Citizen(typeid(this)), _maskedImage(), _info(new ExposureInfo()) {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -104,14 +105,14 @@ Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::MemFileManager &manager, geom
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsfile, geom::Box2I const &bbox,
+Exposure<ImageT, MaskT, VarianceT>::Exposure(fits::Fits &fitsfile, lsst::geom::Box2I const &bbox,
                                              ImageOrigin origin, bool conformMasks)
         : daf::base::Citizen(typeid(this)) {
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::_readFits(fits::Fits &fitsfile, geom::Box2I const &bbox,
+void Exposure<ImageT, MaskT, VarianceT>::_readFits(fits::Fits &fitsfile, lsst::geom::Box2I const &bbox,
                                                    ImageOrigin origin, bool conformMasks) {
     std::shared_ptr<daf::base::PropertySet> metadata(new daf::base::PropertyList());
     std::shared_ptr<daf::base::PropertySet> imageMetadata(new daf::base::PropertyList());
@@ -130,10 +131,10 @@ void Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImag
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::setXY0(geom::Point2I const &origin) {
-    geom::Point2I old(_maskedImage.getXY0());
+void Exposure<ImageT, MaskT, VarianceT>::setXY0(lsst::geom::Point2I const &origin) {
+    lsst::geom::Point2I old(_maskedImage.getXY0());
     if (_info->hasWcs()) {
-        auto shift = geom::Extent2D(origin - old);
+        auto shift = lsst::geom::Extent2D(origin - old);
         auto newWcs = _info->getWcs()->copyAtShiftedPixelOrigin(shift);
         _info->setWcs(newWcs);
     }
@@ -167,34 +168,28 @@ void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile) const {
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    std::string const& fileName,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions
-) const {
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const &fileName,
+                                                   fits::ImageWriteOptions const &imageOptions,
+                                                   fits::ImageWriteOptions const &maskOptions,
+                                                   fits::ImageWriteOptions const &varianceOptions) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, imageOptions, maskOptions, varianceOptions);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    fits::MemFileManager& manager,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions
-) const {
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager &manager,
+                                                   fits::ImageWriteOptions const &imageOptions,
+                                                   fits::ImageWriteOptions const &maskOptions,
+                                                   fits::ImageWriteOptions const &varianceOptions) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile, imageOptions, maskOptions, varianceOptions);
 }
 
 template <typename ImageT, typename MaskT, typename VarianceT>
-void Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    fits::Fits &fitsfile,
-    fits::ImageWriteOptions const& imageOptions,
-    fits::ImageWriteOptions const& maskOptions,
-    fits::ImageWriteOptions const& varianceOptions
-) const {
+void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile,
+                                                   fits::ImageWriteOptions const &imageOptions,
+                                                   fits::ImageWriteOptions const &maskOptions,
+                                                   fits::ImageWriteOptions const &varianceOptions) const {
     ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
     _maskedImage.writeFits(fitsfile, imageOptions, maskOptions, varianceOptions, data.metadata,
                            data.imageMetadata, data.maskMetadata, data.varianceMetadata);
@@ -209,6 +204,6 @@ template class Exposure<float>;
 template class Exposure<double>;
 template class Exposure<std::uint64_t>;
 /// @endcond
-}
-}
-}  // end lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

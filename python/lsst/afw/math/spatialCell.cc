@@ -26,7 +26,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
+#include "lsst/afw/image.h"
 #include "lsst/afw/math/SpatialCell.h"
 
 namespace py = pybind11;
@@ -77,8 +78,8 @@ void wrapSpatialCellCandidateIterator(py::module &mod) {
 void wrapSpatialCell(py::module &mod) {
     py::class_<SpatialCell, std::shared_ptr<SpatialCell>> cls(mod, "SpatialCell");
 
-    cls.def(py::init<std::string const &, geom::Box2I const &, CandidateList const &>(), "label"_a,
-            "bbox"_a = geom::Box2I(), "candidateList"_a = CandidateList());
+    cls.def(py::init<std::string const &, lsst::geom::Box2I const &, CandidateList const &>(), "label"_a,
+            "bbox"_a = lsst::geom::Box2I(), "candidateList"_a = CandidateList());
 
     cls.def("empty", &SpatialCell::empty);
     cls.def("size", &SpatialCell::size);
@@ -109,7 +110,7 @@ void wrapSpatialCell(py::module &mod) {
 void wrapSpatialCellSet(py::module &mod) {
     py::class_<SpatialCellSet, std::shared_ptr<SpatialCellSet>> cls(mod, "SpatialCellSet");
 
-    cls.def(py::init<geom::Box2I const &, int, int>(), "region"_a, "xSize"_a, "ySize"_a = 0);
+    cls.def(py::init<lsst::geom::Box2I const &, int, int>(), "region"_a, "xSize"_a, "ySize"_a = 0);
 
     cls.def("getCellList", &SpatialCellSet::getCellList);
     cls.def("getBBox", &SpatialCellSet::getBBox);
@@ -205,7 +206,7 @@ void wrapTestClasses(py::module &mod) {
         /// @internal Return the %image
         std::shared_ptr<MaskedImageT const> getMaskedImage() const {
             if (!_image) {
-                _image = std::make_shared<MaskedImageT>(geom::ExtentI(getWidth(), getHeight()));
+                _image = std::make_shared<MaskedImageT>(lsst::geom::ExtentI(getWidth(), getHeight()));
                 *_image->getImage() = _flux;
             }
             return _image;

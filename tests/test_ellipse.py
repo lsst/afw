@@ -26,6 +26,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.geom.ellipses
 import lsst.afw.image
 
@@ -72,12 +73,12 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             vec = np.random.randn(3) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
             self.assertImagesEqual(core.getParameterVector(), vec)
-            center = lsst.afw.geom.Point2D(*np.random.randn(2))
+            center = lsst.geom.Point2D(*np.random.randn(2))
             ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
             self.assertFloatsAlmostEqual(
                 core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
-            self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
+            self.assertEqual(lsst.geom.Point2D, type(ellipse.getCenter()))
             newcore = lsst.afw.geom.ellipses.Axes(1, 2, 3)
             newcore.normalize()
             core.assign(newcore)
@@ -93,7 +94,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def testTransform(self):
         for core in self.cores:
-            transform = lsst.afw.geom.LinearTransform(np.random.randn(2, 2))
+            transform = lsst.geom.LinearTransform(np.random.randn(2, 2))
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assertIsNot(t1, core)
@@ -103,7 +104,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
     def testPixelRegion(self):
         for core in self.cores:
             e = lsst.afw.geom.ellipses.Ellipse(
-                core, lsst.afw.geom.Point2D(*np.random.randn(2)))
+                core, lsst.geom.Point2D(*np.random.randn(2)))
             region = lsst.afw.geom.ellipses.PixelRegion(e)
             bbox = region.getBBox()
             bbox.grow(2)
@@ -115,9 +116,9 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             gt = e.getGridTransform()
             for i in range(bbox.getBeginY(), bbox.getEndY()):
                 for j in range(bbox.getBeginX(), bbox.getEndX()):
-                    point = lsst.afw.geom.Point2I(j, i)
+                    point = lsst.geom.Point2I(j, i)
                     adjusted = point - bbox.getMin()
-                    transformed = gt(lsst.afw.geom.Point2D(point))
+                    transformed = gt(lsst.geom.Point2D(point))
                     r = (transformed.getX()**2 + transformed.getY()**2)**0.5
                     if array[adjusted.getY(), adjusted.getX()]:
                         self.assertLessEqual(

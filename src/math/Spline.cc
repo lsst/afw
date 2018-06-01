@@ -9,9 +9,7 @@
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/afw/math/detail/Spline.h"
-#include "lsst/afw/geom/Angle.h"
-
-namespace afwGeom = lsst::afw::geom;
+#include "lsst/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -128,8 +126,8 @@ void TautSpline::calculateTautSpline(std::vector<double> const &x, std::vector<d
             if (tau[i - 1] >= tau[i]) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                   (boost::format("point %d and the next, %f %f, are out of order") % (i - 1) %
-                                   tau[i - 1] %
-                                   tau[i]).str());
+                                   tau[i - 1] % tau[i])
+                                          .str());
             }
         }
 
@@ -963,7 +961,7 @@ static void sperr1(const double x[], double avh, const double dy[], int n, doubl
 void TautSpline::calculateTautSplineEvenOdd(std::vector<double> const &_tau, std::vector<double> const &_gtau,
                                             double const gamma,
                                             bool const even  // ensure Even symmetry
-                                            ) {
+) {
     const double *tau = &_tau[0];
     const double *gtau = &_gtau[0];
     int const ntau = _tau.size();  // size of tau and gtau, must be >= 2
@@ -1177,8 +1175,8 @@ void do_cubic(double a, double b, double c, double d, std::vector<double> &roots
         double const theta = ::acos(r / sq3);  // sq3 cannot be zero
 
         roots.push_back(-2 * sq * cos(theta / 3) - b / 3);
-        roots.push_back(-2 * sq * cos((theta + afwGeom::TWOPI) / 3) - b / 3);
-        roots.push_back(-2 * sq * cos((theta - afwGeom::TWOPI) / 3) - b / 3);
+        roots.push_back(-2 * sq * cos((theta + lsst::geom::TWOPI) / 3) - b / 3);
+        roots.push_back(-2 * sq * cos((theta - lsst::geom::TWOPI) / 3) - b / 3);
         /*
          * sort roots
          */
@@ -1223,7 +1221,7 @@ void do_cubic(double a, double b, double c, double d, std::vector<double> &roots
         return;
     }
 }
-}
+}  // namespace
 
 std::vector<double> Spline::roots(double const value, double a, double const b) const {
     /*
@@ -1289,7 +1287,7 @@ std::vector<double> Spline::roots(double const value, double a, double const b) 
 
     return roots;
 }
-}
-}
-}
-}
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

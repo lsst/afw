@@ -75,8 +75,8 @@ std::shared_ptr<Kernel> AnalyticKernel::resized(int width, int height) const {
 }
 
 double AnalyticKernel::computeImage(image::Image<Pixel> &image, bool doNormalize, double x, double y) const {
-    geom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
-    image.setXY0(geom::Point2I(-geom::Extent2I(getCtr() + llBorder)));
+    lsst::geom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
+    image.setXY0(lsst::geom::Point2I(-lsst::geom::Extent2I(getCtr() + llBorder)));
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
     }
@@ -147,7 +147,7 @@ struct AnalyticKernelPersistenceHelper : public Kernel::PersistenceHelper {
             : Kernel::PersistenceHelper(schema_), kernelFunction(schema["kernelfunction"]) {}
 };
 
-}  // anonymous
+}  // namespace
 
 class AnalyticKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -181,7 +181,7 @@ std::string getAnalyticKernelPersistenceName() { return "AnalyticKernel"; }
 
 AnalyticKernel::Factory registration(getAnalyticKernelPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string AnalyticKernel::getPersistenceName() const { return getAnalyticKernelPersistenceName(); }
 
@@ -190,6 +190,6 @@ void AnalyticKernel::write(OutputArchiveHandle &handle) const {
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.kernelFunction, handle.put(_kernelFunctionPtr.get()));
 }
-}
-}
 }  // namespace math
+}  // namespace afw
+}  // namespace lsst

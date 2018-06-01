@@ -44,7 +44,7 @@ namespace image {
 FilterProperty::PropertyMap* FilterProperty::_propertyMap = NULL;
 
 FilterProperty::FilterProperty(std::string const& name, lsst::daf::base::PropertySet const& prop, bool force)
-        : _name(name), _lambdaEff(NAN), _lambdaMin(NAN), _lambdaMax(NAN)  {
+        : _name(name), _lambdaEff(NAN), _lambdaMin(NAN), _lambdaMax(NAN) {
     if (prop.exists("lambdaEff")) {
         _lambdaEff = prop.getAsDouble("lambdaEff");
     }
@@ -144,7 +144,7 @@ int stripFilterKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) 
 
     return nstripped;
 }
-}
+}  // namespace detail
 
 // N.b. we cannot declare a std::vector<std::string const&> as there's no way to push the references
 std::vector<std::string> Filter::getAliases() const {
@@ -307,6 +307,6 @@ FilterProperty const& Filter::getFilterProperty() const {
 
     return FilterProperty::lookup(name);
 }
-}
-}
-}
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

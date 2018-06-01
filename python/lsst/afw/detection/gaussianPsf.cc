@@ -43,7 +43,7 @@ PYBIND11_PLUGIN(_gaussianPsf) {
 
     /* Constructors */
     clsGaussianPsf.def(py::init<int, int, double>(), "width"_a, "height"_a, "sigma"_a);
-    clsGaussianPsf.def(py::init<geom::Extent2I const &, double>(), "dimensions"_a, "sigma"_a);
+    clsGaussianPsf.def(py::init<lsst::geom::Extent2I const &, double>(), "dimensions"_a, "sigma"_a);
 
     /* Members */
     clsGaussianPsf.def("clone", &GaussianPsf::clone);

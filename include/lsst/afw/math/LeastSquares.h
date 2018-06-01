@@ -307,10 +307,10 @@ public:
      */
     LeastSquares(Factorization factorization, int dimension);
 
-    LeastSquares(LeastSquares const &);
-    LeastSquares(LeastSquares &&);
-    LeastSquares & operator=(LeastSquares const &);
-    LeastSquares & operator=(LeastSquares &&);
+    LeastSquares(LeastSquares const&);
+    LeastSquares(LeastSquares&&);
+    LeastSquares& operator=(LeastSquares const&);
+    LeastSquares& operator=(LeastSquares&&);
 
     // Need to define dtor in source file so it can see Impl declaration.
     ~LeastSquares();
@@ -337,8 +337,8 @@ private:
 
     std::shared_ptr<Impl> _impl;
 };
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_MATH_LeastSquares_h_INCLUDED

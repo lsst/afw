@@ -26,13 +26,12 @@
 #include "ndarray_fwd.h"
 
 #include "lsst/afw/geom/Transform.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
 namespace afw {
 namespace image {
-
 
 /**
  *  A spatially-varying transmission curve as a function of wavelength.
@@ -58,10 +57,8 @@ namespace image {
  */
 class TransmissionCurve : public table::io::PersistableFacade<TransmissionCurve>,
                           public table::io::Persistable,
-                          public std::enable_shared_from_this<TransmissionCurve>
-{
+                          public std::enable_shared_from_this<TransmissionCurve> {
 public:
-
     /**
      *  Create a new TranmissionCurve that has unit thoughput at all wavelengths everywhere.
      */
@@ -82,10 +79,9 @@ public:
      *  Throughput outside the given wavelength domain is assumed to be constant.
      */
     static std::shared_ptr<TransmissionCurve const> makeSpatiallyConstant(
-        ndarray::Array<double const,1> const & throughput,
-        ndarray::Array<double const,1> const & wavelengths,
-        double throughputAtMin=0.0, double throughputAtMax=0.0
-    );
+            ndarray::Array<double const, 1> const &throughput,
+            ndarray::Array<double const, 1> const &wavelengths, double throughputAtMin = 0.0,
+            double throughputAtMax = 0.0);
 
     /**
      *  Create a new TransmissionCurve with throughput varying as function of radius.
@@ -106,11 +102,9 @@ public:
      *  to be constant.
      */
     static std::shared_ptr<TransmissionCurve const> makeRadial(
-        ndarray::Array<double const,2> const & throughput,
-        ndarray::Array<double const,1> const & wavelengths,
-        ndarray::Array<double const,1> const & radii,
-        double throughputAtMin=0.0, double throughputAtMax=0.0
-    );
+            ndarray::Array<double const, 2> const &throughput,
+            ndarray::Array<double const, 1> const &wavelengths, ndarray::Array<double const, 1> const &radii,
+            double throughputAtMin = 0.0, double throughputAtMax = 0.0);
 
     /**
      *  Return a new TransmissionCurve that simply multiplies the values of two others.
@@ -124,7 +118,7 @@ public:
      *  @note This is also mapped to __mul__ in Python (overriding operator*
      *        in C++ would be problematic due to the use of shared_ptr).
      */
-    std::shared_ptr<TransmissionCurve const> multipliedBy(TransmissionCurve const & other) const;
+    std::shared_ptr<TransmissionCurve const> multipliedBy(TransmissionCurve const &other) const;
 
     /**
      *  Return a view of a TransmissionCurve in a different coordinate system.
@@ -134,8 +128,7 @@ public:
      *  and then calls `base.sampleAt` on the result.
      */
     std::shared_ptr<TransmissionCurve const> transformedBy(
-        std::shared_ptr<geom::TransformPoint2ToPoint2> transform
-    ) const;
+            std::shared_ptr<geom::TransformPoint2ToPoint2> transform) const;
 
     // TransmissionCurve is not copyable.
     TransmissionCurve(TransmissionCurve const &) = delete;
@@ -144,10 +137,10 @@ public:
     TransmissionCurve(TransmissionCurve &&) = delete;
 
     // TransmissionCurve is not copy-assignable.
-    TransmissionCurve & operator=(TransmissionCurve const &) = delete;
+    TransmissionCurve &operator=(TransmissionCurve const &) = delete;
 
     // TransmissionCurve is not move-assignable.
-    TransmissionCurve & operator=(TransmissionCurve &&) = delete;
+    TransmissionCurve &operator=(TransmissionCurve &&) = delete;
 
     virtual ~TransmissionCurve() = default;
 
@@ -160,13 +153,13 @@ public:
      *  Min and/or max values may be infinite to indicate an analytic curve
      *  with no wavelength bounds.
      */
-    virtual std::pair<double,double> getWavelengthBounds() const = 0;
+    virtual std::pair<double, double> getWavelengthBounds() const = 0;
 
     /**
      *  Return the throughput value that will be returned for wavelengths
      *  below and above getWavelenthBounds().first and .second (respectively).
      */
-    virtual std::pair<double,double> getThroughputAtBounds() const = 0;
+    virtual std::pair<double, double> getThroughputAtBounds() const = 0;
 
     /**
      *  Evaluate the throughput at a position into a provided output array.
@@ -184,12 +177,9 @@ public:
      *  @exceptsafe Provides basic exception safety: the `out` array values
      *              may be modified if an exception is thrown.
      */
-    virtual void sampleAt(
-        geom::Point2D const & position,
-        ndarray::Array<double const,1,1> const & wavelengths,
-        ndarray::Array<double,1,1> const & out
-    ) const = 0;
-
+    virtual void sampleAt(lsst::geom::Point2D const &position,
+                          ndarray::Array<double const, 1, 1> const &wavelengths,
+                          ndarray::Array<double, 1, 1> const &out) const = 0;
 
     /**
      *  Evaluate the throughput at a position into a new array.
@@ -200,13 +190,10 @@ public:
      *  @return  Computed throughput values, in an array with the same size as
      *           wavelengths.
      */
-    ndarray::Array<double,1,1> sampleAt(
-        geom::Point2D const & position,
-        ndarray::Array<double const,1,1> const & wavelengths
-    ) const;
+    ndarray::Array<double, 1, 1> sampleAt(lsst::geom::Point2D const &position,
+                                          ndarray::Array<double const, 1, 1> const &wavelengths) const;
 
 protected:
-
     /**
      *  Polymorphic implementation for transformedBy().
      *
@@ -219,8 +206,7 @@ protected:
      *                        of the returned transform to that of this.
      */
     virtual std::shared_ptr<TransmissionCurve const> _transformedByImpl(
-        std::shared_ptr<geom::TransformPoint2ToPoint2> transform
-    ) const;
+            std::shared_ptr<geom::TransformPoint2ToPoint2> transform) const;
 
     /**
      *  One-way polymorphic implementation for multipliedBy().
@@ -235,16 +221,15 @@ protected:
      *  @param[in] other      The other TransmissionCurve to multiply with self.
      */
     virtual std::shared_ptr<TransmissionCurve const> _multipliedByImpl(
-        std::shared_ptr<TransmissionCurve const> other
-    ) const;
+            std::shared_ptr<TransmissionCurve const> other) const;
 
     TransmissionCurve() = default;
 
     std::string getPythonModule() const override;
-
 };
 
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
-}}} // lsst::afw::image
-
-#endif // !LSST_AFW_IMAGE_TRANSMISSIONCURVE_H_INCLUDED
+#endif  // !LSST_AFW_IMAGE_TRANSMISSIONCURVE_H_INCLUDED

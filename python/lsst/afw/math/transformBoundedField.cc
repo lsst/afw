@@ -47,7 +47,7 @@ PYBIND11_PLUGIN(_transformBoundedField) {
     /* Module level */
     ClsField cls(mod, "TransformBoundedField");
 
-    cls.def(py::init<lsst::afw::geom::Box2I const &, TransformBoundedField::Transform const &>(), "bbox"_a,
+    cls.def(py::init<lsst::geom::Box2I const &, TransformBoundedField::Transform const &>(), "bbox"_a,
             "transform"_a);
 
     table::io::python::addPersistableMethods<TransformBoundedField>(cls);
@@ -61,7 +61,7 @@ PYBIND11_PLUGIN(_transformBoundedField) {
             (ndarray::Array<double, 1, 1>(TransformBoundedField::*)(
                     ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &
                     TransformBoundedField::evaluate);
-    cls.def("evaluate", (double (TransformBoundedField::*)(lsst::afw::geom::Point2D const &) const) &
+    cls.def("evaluate", (double (TransformBoundedField::*)(lsst::geom::Point2D const &) const) &
                                 TransformBoundedField::evaluate);
 
     return mod.ptr();

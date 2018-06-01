@@ -25,20 +25,19 @@
  * is that you can set display == True and see what's going on
  */
 #include <string>
+#include "lsst/geom.h"
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
-#include "lsst/afw/geom.h"
 
 #include "testSpatialCell.h"
 
 namespace afwDetect = lsst::afw::detection;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
-namespace afwGeom = lsst::afw::geom;
 typedef float PixelT;
 
 std::pair<std::shared_ptr<afwImage::MaskedImage<PixelT>>, std::shared_ptr<afwDetect::FootprintSet>>
@@ -61,7 +60,7 @@ void SpatialCellSetDemo() {
     for (afwDetect::FootprintSet::FootprintList::iterator ptr = fs->getFootprints()->begin(),
                                                           end = fs->getFootprints()->end();
          ptr != end; ++ptr) {
-        afwGeom::Box2I const bbox = (*ptr)->getBBox();
+        lsst::geom::Box2I const bbox = (*ptr)->getBBox();
         float const xc = (bbox.getMinX() + bbox.getMaxX()) / 2.0;
         float const yc = (bbox.getMinY() + bbox.getMaxY()) / 2.0;
         std::shared_ptr<ExampleCandidate> tc(new ExampleCandidate(xc, yc, im, bbox));
@@ -82,7 +81,7 @@ void SpatialCellSetDemo() {
 
         for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
              candidate != candidateEnd; ++candidate) {
-            afwGeom::Box2I box = dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
+            lsst::geom::Box2I box = dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
 
 #if 0
             std::cout << boost::format("%d %5.2f %5.2f %d\n")
@@ -122,7 +121,8 @@ readImage() {
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
 
-        afwGeom::Box2I bbox = afwGeom::Box2I(afwGeom::Point2I(270, 2530), afwGeom::Extent2I(512, 512));
+        lsst::geom::Box2I bbox =
+                lsst::geom::Box2I(lsst::geom::Point2I(270, 2530), lsst::geom::Extent2I(512, 512));
 
         std::shared_ptr<lsst::daf::base::PropertySet> md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, md, bbox));

@@ -36,9 +36,9 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.daf.base
 import lsst.afw.table
-import lsst.afw.geom
 import lsst.afw.fits
 
 try:
@@ -141,7 +141,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.checkScalarAccessors(record, kF, "fF", 2.5, 3.5)
         self.checkScalarAccessors(record, kD, "fD", 2.5, 3.5)
         self.checkScalarAccessors(record, kAngle, "fAngle",
-                                  5.1 * lsst.afw.geom.degrees, -4.1 * lsst.afw.geom.degrees)
+                                  5.1 * lsst.geom.degrees, -4.1 * lsst.geom.degrees)
         self.checkScalarAccessors(record, kString, "fString", "ab", "abcd")
         self.checkArrayAccessors(record, kArrayB, "fArrayB",
                                  makeArray(kArrayB.getSize(), dtype=np.uint8))
@@ -219,7 +219,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[0].set(kFlag3, False)
         catalog[0].set(kArrayF, np.array([-0.5, -0.25], dtype=np.float32))
         catalog[0].set(kArrayD, np.array([-1.5, -1.25, 3.375], dtype=np.float64))
-        catalog[0].set(kAngle, lsst.afw.geom.Angle(0.25))
+        catalog[0].set(kAngle, lsst.geom.Angle(0.25))
         catalog[0].set(kArrayU, np.array([2, 3, 4, 1], dtype=np.uint16))
         col1a = catalog[kI]
         self.assertEqual(col1a.shape, (1,))
@@ -234,7 +234,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[1].set(kFlag3, True)
         catalog[1].set(kArrayF, np.array([-3.25, -0.75], dtype=np.float32))
         catalog[1].set(kArrayD, np.array([-1.25, -2.75, 0.625], dtype=np.float64))
-        catalog[1].set(kAngle, lsst.afw.geom.Angle(0.15))
+        catalog[1].set(kAngle, lsst.geom.Angle(0.15))
         catalog[1].set(kArrayU, np.array([5, 6, 8, 7], dtype=np.uint16))
         col1b = catalog[kI]
         self.assertEqual(col1b.shape, (2,))
@@ -250,7 +250,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         for key in [kAngle]:
             array = columns[key]
             for i in [0, 1]:
-                self.assertEqual(lsst.afw.geom.Angle(array[i]),
+                self.assertEqual(lsst.geom.Angle(array[i]),
                                  catalog[i].get(key))
         for key in [kB, kU, kI, kF, kD]:
             vals = columns[key].copy()
@@ -335,8 +335,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             record.set("a_d1", np.random.randint(100))
             record.set("a_d2", np.random.randn())
             record.set(pointKey,
-                       lsst.afw.geom.Point2I(np.random.randint(10),
-                                             np.random.randint(10)))
+                       lsst.geom.Point2I(np.random.randint(10), np.random.randint(10)))
             record.set(covKey, np.random.randn(3, 3).astype(np.float32))
         d = record.extract("*")
         self.assertEqual(set(d.keys()), set(schema.getNames()))
@@ -726,7 +725,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             "point_i_x": 4, "point_i_y": 5,
             "point_d_x": 3.5, "point_d_y": 2.0,
             "moments_xx": 5.0, "moments_yy": 6.5, "moments_xy": 2.25,
-            "coord_ra": 1.0*lsst.afw.geom.radians, "coord_dec": 0.5*lsst.afw.geom.radians,
+            "coord_ra": 1.0*lsst.geom.radians, "coord_dec": 0.5*lsst.geom.radians,
         }
         covValues = {
             "cov_z": np.array([[4.00, 1.25, 1.50, 0.75],

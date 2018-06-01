@@ -145,9 +145,9 @@ private:
     Ellipticity _ellipticity;
     Radius _radius;
 };
-}
-}
-}
-}  // namespace lsst::afw::geom::ellipses
+}  // namespace ellipses
+}  // namespace geom
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED

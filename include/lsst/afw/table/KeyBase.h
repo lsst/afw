@@ -36,8 +36,8 @@ public:
 
     Key<Array<U> > slice(int begin, int end) const;  ///< Return a key for a range of elements
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_KeyBase_h_INCLUDED

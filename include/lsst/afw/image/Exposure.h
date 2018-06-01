@@ -43,34 +43,34 @@ class ExposureFormatter;
 namespace image {
 
 /** A class to contain the data, WCS, and other information needed to describe an %image of the sky.
-  * Exposure Class Implementation for LSST: a templated framework class
-  * for creating an Exposure from a MaskedImage and a Wcs.
-  *
-  * An Exposure is required to take one afwImage::MaskedImage or a region (col,
-  * row) defining the size of a MaskedImage (this can be of size 0,0).  An
-  * Exposure can (but is not required to) contain an afwImage::SkyWcs.
-  *
-  * The template types should optimally be a float, double, unsigned int 16 bit,
-  * or unsigned int 32 bit for the image (pixel) type and an unsigned int 32 bit
-  * for the mask type.  These types have been explicitly instantiated for the
-  * Exposure class.  All MaskedImage and Wcs constructors are 'const' to allow
-  * for views and copying.
-  *
-  * An Exposure can get and return its MaskedImage, SkyWcs, and a subExposure.
-  * The getSubExposure member takes a BBox region defining the subRegion of
-  * the original Exposure to be returned.  The member retrieves the MaskedImage
-  * corresponding to the subRegion.  The MaskedImage class throws an exception
-  * for any subRegion extending beyond the original MaskedImage bounding
-  * box. This member is not yet fully implemented because it requires the SkyWcs
-  * class to return the SkyWcs metadata to the member so the CRPIX values of the
-  * SkyWcs can be adjusted to reflect the new subMaskedImage origin.  The
-  * getSubExposure member will eventually return a subExposure consisting of
-  * the subMAskedImage and the SkyWcs object with its corresponding adjusted
-  * metadata.
-  *
-  * The hasWcs member is used to determine if the Exposure has a SkyWcs.  It is not
-  * required to have one.
-  */
+ * Exposure Class Implementation for LSST: a templated framework class
+ * for creating an Exposure from a MaskedImage and a Wcs.
+ *
+ * An Exposure is required to take one afwImage::MaskedImage or a region (col,
+ * row) defining the size of a MaskedImage (this can be of size 0,0).  An
+ * Exposure can (but is not required to) contain an afwImage::SkyWcs.
+ *
+ * The template types should optimally be a float, double, unsigned int 16 bit,
+ * or unsigned int 32 bit for the image (pixel) type and an unsigned int 32 bit
+ * for the mask type.  These types have been explicitly instantiated for the
+ * Exposure class.  All MaskedImage and Wcs constructors are 'const' to allow
+ * for views and copying.
+ *
+ * An Exposure can get and return its MaskedImage, SkyWcs, and a subExposure.
+ * The getSubExposure member takes a BBox region defining the subRegion of
+ * the original Exposure to be returned.  The member retrieves the MaskedImage
+ * corresponding to the subRegion.  The MaskedImage class throws an exception
+ * for any subRegion extending beyond the original MaskedImage bounding
+ * box. This member is not yet fully implemented because it requires the SkyWcs
+ * class to return the SkyWcs metadata to the member so the CRPIX values of the
+ * SkyWcs can be adjusted to reflect the new subMaskedImage origin.  The
+ * getSubExposure member will eventually return a subExposure consisting of
+ * the subMAskedImage and the SkyWcs object with its corresponding adjusted
+ * metadata.
+ *
+ * The hasWcs member is used to determine if the Exposure has a SkyWcs.  It is not
+ * required to have one.
+ */
 template <typename ImageT, typename MaskT = lsst::afw::image::MaskPixel,
           typename VarianceT = lsst::afw::image::VariancePixel>
 class Exposure : public lsst::daf::base::Persistable, public lsst::daf::base::Citizen {
@@ -79,47 +79,47 @@ public:
 
     // Class Constructors and Destructor
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-      * a SkyWcs (which may be default constructed)
-      *
-      * @param width number of columns
-      * @param height number of rows
-      * @param wcs the SkyWcs
-      */
+     * a SkyWcs (which may be default constructed)
+     *
+     * @param width number of columns
+     * @param height number of rows
+     * @param wcs the SkyWcs
+     */
     explicit Exposure(unsigned int width, unsigned int height,
                       std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
-      * a SkyWcs (which may be default constructed)
-      *
-      * @param dimensions desired image width/height
-      * @param wcs the SkyWcs
-      */
-    explicit Exposure(lsst::afw::geom::Extent2I const& dimensions = lsst::afw::geom::Extent2I(),
+     * a SkyWcs (which may be default constructed)
+     *
+     * @param dimensions desired image width/height
+     * @param wcs the SkyWcs
+     */
+    explicit Exposure(lsst::geom::Extent2I const& dimensions = lsst::geom::Extent2I(),
                       std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and a SkyWcs
-      *
-      * @param bbox desired image width/height, and origin
-      * @param wcs the SkyWcs
-      */
-    explicit Exposure(lsst::afw::geom::Box2I const& bbox,
+     *
+     * @param bbox desired image width/height, and origin
+     * @param wcs the SkyWcs
+     */
+    explicit Exposure(lsst::geom::Box2I const& bbox,
                       std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** Construct an Exposure from a MaskedImage and an optional SkyWcs
      *
      * @param maskedImage the MaskedImage
      * @param wcs the SkyWcs
-      */
+     */
     explicit Exposure(MaskedImageT& maskedImage,
                       std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>());
 
     /** Construct an Exposure from a MaskedImage and an ExposureInfo
-      *
-      * If the ExposureInfo is an empty pointer then a new empty ExposureInfo is used
-      *
-      * @param maskedImage the MaskedImage
-      * @param info the ExposureInfo
-      */
+     *
+     * If the ExposureInfo is an empty pointer then a new empty ExposureInfo is used
+     *
+     * @param maskedImage the MaskedImage
+     * @param info the ExposureInfo
+     */
     explicit Exposure(MaskedImageT& maskedImage, std::shared_ptr<ExposureInfo> info);
 
     /**
@@ -131,7 +131,7 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(std::string const& fileName, geom::Box2I const& bbox = geom::Box2I(),
+    explicit Exposure(std::string const& fileName, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                       ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /**
@@ -143,7 +143,7 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(fits::MemFileManager& manager, geom::Box2I const& bbox = geom::Box2I(),
+    explicit Exposure(fits::MemFileManager& manager, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                       ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /**
@@ -155,7 +155,7 @@ public:
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
-    explicit Exposure(fits::Fits& fitsfile, geom::Box2I const& bbox = geom::Box2I(),
+    explicit Exposure(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox = lsst::geom::Box2I(),
                       ImageOrigin origin = PARENT, bool conformMasks = false);
 
     /** Copy an Exposure
@@ -176,7 +176,7 @@ public:
      * @throws lsst::pex::exceptions::InvalidParameterError if the requested subRegion
      * is not fully contained by the original MaskedImage BBox.
      */
-    Exposure(Exposure const& src, lsst::afw::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
+    Exposure(Exposure const& src, lsst::geom::Box2I const& bbox, ImageOrigin const origin = PARENT,
              bool const deep = false);
 
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -226,7 +226,7 @@ public:
     /// Return the Exposure's height
     int getHeight() const { return _maskedImage.getHeight(); }
     /// Return the Exposure's size
-    geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
+    lsst::geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
 
     /**
      * Return the Exposure's column-origin
@@ -248,9 +248,11 @@ public:
      * `Exposure(fileName, hdu, BBox, mode)` ctor or `Exposure(Exposure, BBox)` cctor
      * The origin can be reset with `setXY0`
      */
-    geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
+    lsst::geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin = PARENT) const { return _maskedImage.getBBox(origin); }
+    lsst::geom::Box2I getBBox(ImageOrigin const origin = PARENT) const {
+        return _maskedImage.getBBox(origin);
+    }
     /**
      * Set the Exposure's origin (including correcting the Wcs)
      *
@@ -259,7 +261,7 @@ public:
      * @note There are use cases (e.g. memory overlays) that may want to set these values, but
      * don't do so unless you are an Expert.
      */
-    void setXY0(geom::Point2I const& origin);
+    void setXY0(lsst::geom::Point2I const& origin);
 
     // Set Members
     /** Set the MaskedImage of the Exposure.
@@ -343,12 +345,9 @@ public:
      *  @param[in] maskOptions     Options controlling writing of mask as FITS.
      *  @param[in] varianceOptions Options controlling writing of variance as FITS.
      */
-    void writeFits(
-        std::string const& fileName,
-        fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions,
-        fits::ImageWriteOptions const& varianceOptions
-   ) const;
+    void writeFits(std::string const& fileName, fits::ImageWriteOptions const& imageOptions,
+                   fits::ImageWriteOptions const& maskOptions,
+                   fits::ImageWriteOptions const& varianceOptions) const;
 
     /**
      *  Write an Exposure to a regular multi-extension FITS file.
@@ -358,12 +357,9 @@ public:
      *  @param[in] maskOptions     Options controlling writing of mask as FITS.
      *  @param[in] varianceOptions Options controlling writing of variance as FITS.
      */
-    void writeFits(
-        fits::MemFileManager& manager,
-        fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions,
-        fits::ImageWriteOptions const& varianceOptions
-   ) const;
+    void writeFits(fits::MemFileManager& manager, fits::ImageWriteOptions const& imageOptions,
+                   fits::ImageWriteOptions const& maskOptions,
+                   fits::ImageWriteOptions const& varianceOptions) const;
 
     /**
      *  Write an Exposure to a regular multi-extension FITS file.
@@ -373,12 +369,9 @@ public:
      *  @param[in] maskOptions     Options controlling writing of mask as FITS.
      *  @param[in] varianceOptions Options controlling writing of variance as FITS.
      */
-    void writeFits(
-        fits::Fits& fitsfile,
-        fits::ImageWriteOptions const& imageOptions,
-        fits::ImageWriteOptions const& maskOptions,
-        fits::ImageWriteOptions const& varianceOptions
-   ) const;
+    void writeFits(fits::Fits& fitsfile, fits::ImageWriteOptions const& imageOptions,
+                   fits::ImageWriteOptions const& maskOptions,
+                   fits::ImageWriteOptions const& varianceOptions) const;
 
     /**
      *  Read an Exposure from a regular FITS file.
@@ -401,7 +394,8 @@ public:
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 
-    void _readFits(fits::Fits& fitsfile, geom::Box2I const& bbox, ImageOrigin origin, bool conformMasks);
+    void _readFits(fits::Fits& fitsfile, lsst::geom::Box2I const& bbox, ImageOrigin origin,
+                   bool conformMasks);
 
     MaskedImageT _maskedImage;
     std::shared_ptr<ExposureInfo> _info;
@@ -413,13 +407,14 @@ private:
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>> makeExposure(
         MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& mimage,  ///< the Exposure's image
-        std::shared_ptr<geom::SkyWcs const> wcs = std::shared_ptr<geom::SkyWcs const>()  ///< the Exposure's WCS
-        ) {
+        std::shared_ptr<geom::SkyWcs const> wcs =
+                std::shared_ptr<geom::SkyWcs const>()  ///< the Exposure's WCS
+) {
     return typename std::shared_ptr<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>>(
             new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(mimage, wcs));
 }
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_EXPOSURE_H

@@ -83,8 +83,8 @@ protected:
     virtual std::string getPythonModule() const;
     virtual void write(OutputArchiveHandle& handle) const;
 };
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_IMAGE_CoaddInputs_h_INCLUDED

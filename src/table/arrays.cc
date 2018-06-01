@@ -99,9 +99,9 @@ ArrayKey<T>::ArrayKey(ArrayKey const &) = default;
 template <typename T>
 ArrayKey<T>::ArrayKey(ArrayKey &&) = default;
 template <typename T>
-ArrayKey<T> & ArrayKey<T>::operator=(ArrayKey const &) = default;
+ArrayKey<T> &ArrayKey<T>::operator=(ArrayKey const &) = default;
 template <typename T>
-ArrayKey<T> & ArrayKey<T>::operator=(ArrayKey &&) = default;
+ArrayKey<T> &ArrayKey<T>::operator=(ArrayKey &&) = default;
 template <typename T>
 ArrayKey<T>::~ArrayKey() = default;
 
@@ -150,6 +150,6 @@ ArrayKey<T> ArrayKey<T>::slice(int begin, int end) const {
 
 template class ArrayKey<float>;
 template class ArrayKey<double>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

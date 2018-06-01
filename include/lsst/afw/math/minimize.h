@@ -108,8 +108,8 @@ FitResults minimize(lsst::afw::math::Function2<ReturnT> const &function,
                     std::vector<double> const &measurementList, std::vector<double> const &varianceList,
                     std::vector<double> const &xPositionList, std::vector<double> const &yPositionList,
                     double errorDef);
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !defined(LSST_AFW_MATH_MINIMIZE_H)

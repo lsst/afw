@@ -24,8 +24,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Box.h"
+#include "lsst/geom/Point.h"
 
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Function.h"
@@ -96,10 +96,10 @@ void declareChebyshevFunctions(py::module &mod, const std::string &suffix) {
                BasePolynomialFunction2<ReturnT>>
             clsChebyshev1Function2(mod, ("Chebyshev1Function2" + suffix).c_str());
 
-    clsChebyshev1Function2.def(py::init<std::vector<double>, geom::Box2D const &>(), "params"_a,
-                               "xyRange"_a = geom::Box2D(geom::Point2D(-1.0, -1.0), geom::Point2D(1.0, 1.0)));
-    clsChebyshev1Function2.def(py::init<unsigned int, geom::Box2D const &>(), "order"_a,
-                               "xyRange"_a = geom::Box2D(geom::Point2D(-1.0, -1.0), geom::Point2D(1.0, 1.0)));
+    clsChebyshev1Function2.def(py::init<std::vector<double>, lsst::geom::Box2D const &>(), "params"_a,
+                               "xyRange"_a = lsst::geom::Box2D(lsst::geom::Point2D(-1.0, -1.0), lsst::geom::Point2D(1.0, 1.0)));
+    clsChebyshev1Function2.def(py::init<unsigned int, lsst::geom::Box2D const &>(), "order"_a,
+                               "xyRange"_a = lsst::geom::Box2D(lsst::geom::Point2D(-1.0, -1.0), lsst::geom::Point2D(1.0, 1.0)));
 
     clsChebyshev1Function2.def("__call__", &Chebyshev1Function2<ReturnT>::operator(), "x"_a, "y"_a);
     clsChebyshev1Function2.def("clone", &Chebyshev1Function2<ReturnT>::clone);

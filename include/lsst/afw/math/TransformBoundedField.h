@@ -43,12 +43,12 @@ namespace math {
 class TransformBoundedField : public table::io::PersistableFacade<TransformBoundedField>,
                               public BoundedField {
 public:
-    using Transform = geom::Transform<geom::Point2Endpoint, geom::GenericEndpoint>;
+    using Transform = afw::geom::Transform<afw::geom::Point2Endpoint, afw::geom::GenericEndpoint>;
 
     /**
      *  Create a TransformBoundedField from a bounding box and transform.
      */
-    TransformBoundedField(geom::Box2I const &bbox, Transform const &transform);
+    TransformBoundedField(lsst::geom::Box2I const &bbox, Transform const &transform);
 
     ~TransformBoundedField() = default;
 
@@ -61,7 +61,7 @@ public:
     Transform getTransform() const { return _transform; }
 
     /// @copydoc BoundedField::evaluate
-    double evaluate(geom::Point2D const &position) const override;
+    double evaluate(lsst::geom::Point2D const &position) const override;
 
     /// @copydoc BoundedField::evaluate
     ndarray::Array<double, 1, 1> evaluate(ndarray::Array<double const, 1> const &x,
@@ -88,7 +88,7 @@ protected:
 private:
     // Internal constructor for fit() routines: just initializes the transform,
     // leaves coefficients empty.
-    explicit TransformBoundedField(afw::geom::Box2I const &bbox);
+    explicit TransformBoundedField(lsst::geom::Box2I const &bbox);
 
     std::string toString() const override;
 

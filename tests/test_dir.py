@@ -26,8 +26,8 @@ Test for the custom __dir__ added to tables/baseContinued.py
 import unittest
 import lsst.utils.tests
 
+import lsst.geom
 import lsst.afw.table
-import lsst.afw.geom
 
 
 class DirTestCase(lsst.utils.tests.TestCase):
@@ -37,8 +37,8 @@ class DirTestCase(lsst.utils.tests.TestCase):
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         catalog = lsst.afw.table.SourceCatalog(schema)
         record = catalog.addNew()
-        record['coord_dec'] = lsst.afw.geom.degrees*(-5.0)
-        record['coord_ra'] = lsst.afw.geom.degrees*(22)
+        record['coord_dec'] = lsst.geom.degrees*(-5.0)
+        record['coord_ra'] = lsst.geom.degrees*(22)
         record['id'] = 8
         record['parent'] = 3
         # Compare catalog attributes with those from various catalog subclasses

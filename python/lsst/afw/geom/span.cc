@@ -42,7 +42,7 @@ using PySpan = py::class_<Span, std::shared_ptr<Span>>;
 class SpanIterator {
 public:
     SpanIterator(const Span &s) : _it{s.begin()}, _end{s.end()} {};
-    Point2I next() {
+    lsst::geom::Point2I next() {
         if (_it == _end) {
             throw py::stop_iteration();
         }
@@ -63,7 +63,7 @@ static void declareSpanIterator(py::module &mod) {
 PYBIND11_PLUGIN(span) {
     py::module mod("span");
 
-    py::module::import("lsst.afw.geom.coordinates");
+    py::module::import("lsst.geom");
 
     declareSpanIterator(mod);
 
@@ -91,7 +91,7 @@ PYBIND11_PLUGIN(span) {
     cls.def("getMax", &Span::getMax);
     cls.def("contains", (bool (Span::*)(int) const) & Span::contains);
     cls.def("contains", (bool (Span::*)(int, int) const) & Span::contains);
-    cls.def("contains", (bool (Span::*)(Point2I const &) const) & Span::contains);
+    cls.def("contains", (bool (Span::*)(lsst::geom::Point2I const &) const) & Span::contains);
     cls.def("isEmpty", &Span::isEmpty);
     cls.def("toString", &Span::toString);
     cls.def("shift", &Span::shift);

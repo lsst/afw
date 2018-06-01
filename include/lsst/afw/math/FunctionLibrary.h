@@ -30,9 +30,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "lsst/afw/geom.h"
+#include "lsst/geom.h"
 #include "lsst/afw/math/Function.h"
-#include "lsst/afw/geom/Angle.h"
+#include "lsst/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -58,10 +58,10 @@ public:
      */
     explicit IntegerDeltaFunction1(double xo) : Function1<ReturnT>(0), _xo(xo) {}
 
-    IntegerDeltaFunction1(IntegerDeltaFunction1 const &) = default;
-    IntegerDeltaFunction1(IntegerDeltaFunction1 &&) = default;
-    IntegerDeltaFunction1 & operator=(IntegerDeltaFunction1 const &) = default;
-    IntegerDeltaFunction1 & operator=(IntegerDeltaFunction1 &&) = default;
+    IntegerDeltaFunction1(IntegerDeltaFunction1 const&) = default;
+    IntegerDeltaFunction1(IntegerDeltaFunction1&&) = default;
+    IntegerDeltaFunction1& operator=(IntegerDeltaFunction1 const&) = default;
+    IntegerDeltaFunction1& operator=(IntegerDeltaFunction1&&) = default;
     virtual ~IntegerDeltaFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
@@ -111,10 +111,10 @@ public:
      */
     explicit IntegerDeltaFunction2(double xo, double yo) : Function2<ReturnT>(0), _xo(xo), _yo(yo) {}
 
-    IntegerDeltaFunction2(IntegerDeltaFunction2 const &) = default;
-    IntegerDeltaFunction2(IntegerDeltaFunction2 &&) = default;
-    IntegerDeltaFunction2 & operator=(IntegerDeltaFunction2 const &) = default;
-    IntegerDeltaFunction2 & operator=(IntegerDeltaFunction2 &&) = default;
+    IntegerDeltaFunction2(IntegerDeltaFunction2 const&) = default;
+    IntegerDeltaFunction2(IntegerDeltaFunction2&&) = default;
+    IntegerDeltaFunction2& operator=(IntegerDeltaFunction2 const&) = default;
+    IntegerDeltaFunction2& operator=(IntegerDeltaFunction2&&) = default;
     virtual ~IntegerDeltaFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
@@ -167,14 +167,13 @@ public:
      * Construct a Gaussian function with specified sigma
      */
     explicit GaussianFunction1(double sigma)  ///< sigma
-            : Function1<ReturnT>(1),
-              _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {
+            : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::geom::TWOPI)) {
         this->_params[0] = sigma;
     }
-    GaussianFunction1(GaussianFunction1 const &) = default;
-    GaussianFunction1(GaussianFunction1 &&) = default;
-    GaussianFunction1 & operator=(GaussianFunction1 const &) = default;
-    GaussianFunction1 & operator=(GaussianFunction1 &&) = default;
+    GaussianFunction1(GaussianFunction1 const&) = default;
+    GaussianFunction1(GaussianFunction1&&) = default;
+    GaussianFunction1& operator=(GaussianFunction1 const&) = default;
+    GaussianFunction1& operator=(GaussianFunction1&&) = default;
     virtual ~GaussianFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
@@ -198,7 +197,7 @@ private:
 
 protected:
     /* Default constructor: intended only for serialization */
-    explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::afw::geom::TWOPI)) {}
+    explicit GaussianFunction1() : Function1<ReturnT>(1), _multFac(1.0 / std::sqrt(lsst::geom::TWOPI)) {}
 
 private:
     friend class boost::serialization::access;
@@ -231,18 +230,17 @@ public:
     explicit GaussianFunction2(double sigma1,       ///< sigma along the pos1 axis
                                double sigma2,       ///< sigma along the pos2 axis
                                double angle = 0.0)  ///< angle of pos1 axis, in rad (along x=0, y=pi/2)
-            : Function2<ReturnT>(3),
-              _multFac(1.0 / (lsst::afw::geom::TWOPI)) {
+            : Function2<ReturnT>(3), _multFac(1.0 / (lsst::geom::TWOPI)) {
         this->_params[0] = sigma1;
         this->_params[1] = sigma2;
         this->_params[2] = angle;
         _updateCache();
     }
 
-    GaussianFunction2(GaussianFunction2 const &) = default;
-    GaussianFunction2(GaussianFunction2 &&) = default;
-    GaussianFunction2 & operator=(GaussianFunction2 const &) = default;
-    GaussianFunction2 & operator=(GaussianFunction2 &&) = default;
+    GaussianFunction2(GaussianFunction2 const&) = default;
+    GaussianFunction2(GaussianFunction2&&) = default;
+    GaussianFunction2& operator=(GaussianFunction2 const&) = default;
+    GaussianFunction2& operator=(GaussianFunction2&&) = default;
     virtual ~GaussianFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
@@ -277,22 +275,22 @@ protected:
 
 private:
     /**
-    * Update cached values
-    *
-    * sin(angle) and cos(angle) are cached to speed computation
-    * and angle is cached so one can check if an update is required
-    *
-    * The current design is to have operator() update the cache if needed.
-    * An alternate design is to update the cache when the parameters are set,
-    * not test in operator().
-    * The main advantage to updating in operator() is safety and simplicity.
-    * The test is performed in one place, and it is the place where it matters the most.
-    * In contrast, there are multiple member functions to set parameters, and all must be overloaded
-    * to update the cache; miss one and the function silently misbehaves.
-    * There are trade-offs, of course. Testing the cache in operator() slows down operator() slightly.
-    * The overhead is small, but the function is typically evaulated more often
-    * than its parameters are changed.
-    */
+     * Update cached values
+     *
+     * sin(angle) and cos(angle) are cached to speed computation
+     * and angle is cached so one can check if an update is required
+     *
+     * The current design is to have operator() update the cache if needed.
+     * An alternate design is to update the cache when the parameters are set,
+     * not test in operator().
+     * The main advantage to updating in operator() is safety and simplicity.
+     * The test is performed in one place, and it is the place where it matters the most.
+     * In contrast, there are multiple member functions to set parameters, and all must be overloaded
+     * to update the cache; miss one and the function silently misbehaves.
+     * There are trade-offs, of course. Testing the cache in operator() slows down operator() slightly.
+     * The overhead is small, but the function is typically evaulated more often
+     * than its parameters are changed.
+     */
     void _updateCache() const {
         _angle = this->_params[2];
         _sinAngle = std::sin(_angle);
@@ -307,7 +305,7 @@ protected:
     /* Default constructor: intended only for serialization */
     explicit GaussianFunction2()
             : Function2<ReturnT>(3),
-              _multFac(1.0 / (lsst::afw::geom::TWOPI)),
+              _multFac(1.0 / (lsst::geom::TWOPI)),
               _angle(0.0),
               _sinAngle(0.0),
               _cosAngle(1.0) {}
@@ -347,17 +345,16 @@ public:
             double sigma1,      ///< sigma of main Gaussian
             double sigma2 = 0,  ///< sigma of second Gaussian
             double ampl2 = 0)   ///< amplitude of second Gaussian as a fraction of main Gaussian at peak
-            : Function2<ReturnT>(3),
-              _multFac(1.0 / (lsst::afw::geom::TWOPI)) {
+            : Function2<ReturnT>(3), _multFac(1.0 / (lsst::geom::TWOPI)) {
         this->_params[0] = sigma1;
         this->_params[1] = sigma2;
         this->_params[2] = ampl2;
     }
 
-    DoubleGaussianFunction2(DoubleGaussianFunction2 const &) = default;
-    DoubleGaussianFunction2(DoubleGaussianFunction2 &&) = default;
-    DoubleGaussianFunction2 & operator=(DoubleGaussianFunction2 const &) = default;
-    DoubleGaussianFunction2 & operator=(DoubleGaussianFunction2 &&) = default;
+    DoubleGaussianFunction2(DoubleGaussianFunction2 const&) = default;
+    DoubleGaussianFunction2(DoubleGaussianFunction2&&) = default;
+    DoubleGaussianFunction2& operator=(DoubleGaussianFunction2 const&) = default;
+    DoubleGaussianFunction2& operator=(DoubleGaussianFunction2&&) = default;
     virtual ~DoubleGaussianFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
@@ -394,7 +391,7 @@ private:
 
 protected:
     /* Default constructor: intended only for serialization */
-    explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::afw::geom::TWOPI)) {}
+    explicit DoubleGaussianFunction2() : Function2<ReturnT>(3), _multFac(1.0 / (lsst::geom::TWOPI)) {}
 
 private:
     friend class boost::serialization::access;
@@ -437,10 +434,10 @@ public:
         }
     }
 
-    PolynomialFunction1(PolynomialFunction1 const &) = default;
-    PolynomialFunction1(PolynomialFunction1 &&) = default;
-    PolynomialFunction1 & operator=(PolynomialFunction1 const &) = default;
-    PolynomialFunction1 & operator=(PolynomialFunction1 &&) = default;
+    PolynomialFunction1(PolynomialFunction1 const&) = default;
+    PolynomialFunction1(PolynomialFunction1&&) = default;
+    PolynomialFunction1& operator=(PolynomialFunction1 const&) = default;
+    PolynomialFunction1& operator=(PolynomialFunction1&&) = default;
     virtual ~PolynomialFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
@@ -507,9 +504,7 @@ public:
      * The parameters are initialized to zero.
      */
     explicit PolynomialFunction2(unsigned int order)  ///< order of polynomial (0 for constant)
-            : BasePolynomialFunction2<ReturnT>(order),
-              _oldY(0),
-              _xCoeffs(this->_order + 1) {}
+            : BasePolynomialFunction2<ReturnT>(order), _oldY(0), _xCoeffs(this->_order + 1) {}
 
     /**
      * Construct a polynomial function with specified parameters.
@@ -524,14 +519,12 @@ public:
     explicit PolynomialFunction2(
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
                                          ///< length must be one of 1, 3, 6, 10, 15...
-            : BasePolynomialFunction2<ReturnT>(params),
-              _oldY(0),
-              _xCoeffs(this->_order + 1) {}
+            : BasePolynomialFunction2<ReturnT>(params), _oldY(0), _xCoeffs(this->_order + 1) {}
 
-    PolynomialFunction2(PolynomialFunction2 const &) = default;
-    PolynomialFunction2(PolynomialFunction2 &&) = default;
-    PolynomialFunction2 & operator=(PolynomialFunction2 const &) = default;
-    PolynomialFunction2 & operator=(PolynomialFunction2 &&) = default;
+    PolynomialFunction2(PolynomialFunction2 const&) = default;
+    PolynomialFunction2(PolynomialFunction2&&) = default;
+    PolynomialFunction2& operator=(PolynomialFunction2 const&) = default;
+    PolynomialFunction2& operator=(PolynomialFunction2&&) = default;
     virtual ~PolynomialFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
@@ -674,10 +667,10 @@ public:
         _initialize(minX, maxX);
     }
 
-    Chebyshev1Function1(Chebyshev1Function1 const &) = default;
-    Chebyshev1Function1(Chebyshev1Function1 &&) = default;
-    Chebyshev1Function1 & operator=(Chebyshev1Function1 const &) = default;
-    Chebyshev1Function1 & operator=(Chebyshev1Function1 &&) = default;
+    Chebyshev1Function1(Chebyshev1Function1 const&) = default;
+    Chebyshev1Function1(Chebyshev1Function1&&) = default;
+    Chebyshev1Function1& operator=(Chebyshev1Function1 const&) = default;
+    Chebyshev1Function1& operator=(Chebyshev1Function1&&) = default;
     virtual ~Chebyshev1Function1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
@@ -800,9 +793,9 @@ public:
      * The parameters are initialized to zero.
      */
     explicit Chebyshev1Function2(unsigned int order,  ///< order of polynomial (0 for constant)
-                                 lsst::afw::geom::Box2D const& xyRange = lsst::afw::geom::Box2D(
-                                         lsst::afw::geom::Point2D(-1.0, -1.0),
-                                         lsst::afw::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
+                                 lsst::geom::Box2D const& xyRange = lsst::geom::Box2D(
+                                         lsst::geom::Point2D(-1.0, -1.0),
+                                         lsst::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
             : BasePolynomialFunction2<ReturnT>(order),
               _oldYPrime(0),
               _yCheby(this->_order + 1),
@@ -819,9 +812,9 @@ public:
      */
     explicit Chebyshev1Function2(std::vector<double> params,  ///< polynomial coefficients
                                                               ///< length must be one of 1, 3, 6, 10, 15...
-                                 lsst::afw::geom::Box2D const& xyRange = lsst::afw::geom::Box2D(
-                                         lsst::afw::geom::Point2D(-1.0, -1.0),
-                                         lsst::afw::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
+                                 lsst::geom::Box2D const& xyRange = lsst::geom::Box2D(
+                                         lsst::geom::Point2D(-1.0, -1.0),
+                                         lsst::geom::Point2D(1.0, 1.0)))  ///< allowed x,y range
             : BasePolynomialFunction2<ReturnT>(params),
               _oldYPrime(0),
               _yCheby(this->_order + 1),
@@ -829,10 +822,10 @@ public:
         _initialize(xyRange);
     }
 
-    Chebyshev1Function2(Chebyshev1Function2 const &) = default;
-    Chebyshev1Function2(Chebyshev1Function2 &&) = default;
-    Chebyshev1Function2 & operator=(Chebyshev1Function2 const &) = default;
-    Chebyshev1Function2 & operator=(Chebyshev1Function2 &&) = default;
+    Chebyshev1Function2(Chebyshev1Function2 const&) = default;
+    Chebyshev1Function2(Chebyshev1Function2&&) = default;
+    Chebyshev1Function2& operator=(Chebyshev1Function2 const&) = default;
+    Chebyshev1Function2& operator=(Chebyshev1Function2&&) = default;
     virtual ~Chebyshev1Function2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
@@ -843,9 +836,8 @@ public:
     /**
      * Get x,y range
      */
-    lsst::afw::geom::Box2D getXYRange() const {
-        return lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(_minX, _minY),
-                                      lsst::afw::geom::Point2D(_maxX, _maxY));
+    lsst::geom::Box2D getXYRange() const {
+        return lsst::geom::Box2D(lsst::geom::Point2D(_minX, _minY), lsst::geom::Point2D(_maxX, _maxY));
     };
 
     /**
@@ -960,7 +952,7 @@ private:
     /**
      * initialize private constants
      */
-    void _initialize(lsst::afw::geom::Box2D const& xyRange) {
+    void _initialize(lsst::geom::Box2D const& xyRange) {
         _minX = xyRange.getMinX();
         _minY = xyRange.getMinY();
         _maxX = xyRange.getMaxX();
@@ -1025,15 +1017,14 @@ public:
      */
     explicit LanczosFunction1(unsigned int n,        ///< order of Lanczos function
                               double xOffset = 0.0)  ///< x offset
-            : Function1<ReturnT>(1),
-              _invN(1.0 / static_cast<double>(n)) {
+            : Function1<ReturnT>(1), _invN(1.0 / static_cast<double>(n)) {
         this->_params[0] = xOffset;
     }
 
-    LanczosFunction1(LanczosFunction1 const &) = default;
-    LanczosFunction1(LanczosFunction1 &&) = default;
-    LanczosFunction1 & operator=(LanczosFunction1 const &) = default;
-    LanczosFunction1 & operator=(LanczosFunction1 &&) = default;
+    LanczosFunction1(LanczosFunction1 const&) = default;
+    LanczosFunction1(LanczosFunction1&&) = default;
+    LanczosFunction1& operator=(LanczosFunction1 const&) = default;
+    LanczosFunction1& operator=(LanczosFunction1&&) = default;
     virtual ~LanczosFunction1() = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
@@ -1041,7 +1032,7 @@ public:
     }
 
     virtual ReturnT operator()(double x) const {
-        double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
+        double xArg1 = (x - this->_params[0]) * lsst::geom::PI;
         double xArg2 = xArg1 * _invN;
         if (std::fabs(xArg1) > 1.0e-5) {
             return static_cast<ReturnT>(std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2));
@@ -1100,16 +1091,15 @@ public:
     explicit LanczosFunction2(unsigned int n,        ///< order of Lanczos function
                               double xOffset = 0.0,  ///< x offset
                               double yOffset = 0.0)  ///< y offset
-            : Function2<ReturnT>(2),
-              _invN(1.0 / static_cast<double>(n)) {
+            : Function2<ReturnT>(2), _invN(1.0 / static_cast<double>(n)) {
         this->_params[0] = xOffset;
         this->_params[1] = yOffset;
     }
 
-    LanczosFunction2(LanczosFunction2 const &) = default;
-    LanczosFunction2(LanczosFunction2 &&) = default;
-    LanczosFunction2 & operator=(LanczosFunction2 const &) = default;
-    LanczosFunction2 & operator=(LanczosFunction2 &&) = default;
+    LanczosFunction2(LanczosFunction2 const&) = default;
+    LanczosFunction2(LanczosFunction2&&) = default;
+    LanczosFunction2& operator=(LanczosFunction2 const&) = default;
+    LanczosFunction2& operator=(LanczosFunction2&&) = default;
     virtual ~LanczosFunction2() = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
@@ -1118,13 +1108,13 @@ public:
     }
 
     virtual ReturnT operator()(double x, double y) const {
-        double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
+        double xArg1 = (x - this->_params[0]) * lsst::geom::PI;
         double xArg2 = xArg1 * _invN;
         double xFunc = 1;
         if (std::fabs(xArg1) > 1.0e-5) {
             xFunc = std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2);
         }
-        double yArg1 = (y - this->_params[1]) * lsst::afw::geom::PI;
+        double yArg1 = (y - this->_params[1]) * lsst::geom::PI;
         double yArg2 = yArg1 * _invN;
         double yFunc = 1;
         if (std::fabs(yArg1) > 1.0e-5) {
@@ -1161,8 +1151,8 @@ private:
         ar& make_nvp("invN", this->_invN);
     }
 };
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H

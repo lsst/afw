@@ -57,7 +57,7 @@ void PeakFitsWriter::_writeTable(std::shared_ptr<afw::table::BaseTable const> co
     _fits->writeKey("AFW_TYPE", "PEAK", "Tells lsst::afw to load this as a Peak table.");
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- PeakFitsReader ---------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ public:
 // registers the reader so FitsReader::make can use it.
 static PeakFitsReader const peakFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- PeakTable/Record member function implementations -----------------------------------------------
@@ -178,6 +178,6 @@ namespace table {
 
 template class CatalogT<afw::detection::PeakRecord>;
 template class CatalogT<afw::detection::PeakRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

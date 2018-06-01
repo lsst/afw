@@ -24,7 +24,7 @@
 
 #include <vector>
 
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/TransformMap.h"
 
@@ -57,12 +57,12 @@ PYBIND11_PLUGIN(_transformMap) {
 
     /* Members */
     cls.def("transform",
-            (geom::Point2D(TransformMap::*)(geom::Point2D const &, CameraSys const &, CameraSys const &)
+            (lsst::geom::Point2D(TransformMap::*)(lsst::geom::Point2D const &, CameraSys const &, CameraSys const &)
                      const) &
                     TransformMap::transform,
             "point"_a, "fromSys"_a, "toSys"_a);
     cls.def("transform",
-            (std::vector<geom::Point2D>(TransformMap::*)(std::vector<geom::Point2D> const &,
+            (std::vector<lsst::geom::Point2D>(TransformMap::*)(std::vector<lsst::geom::Point2D> const &,
                                                          CameraSys const &, CameraSys const &) const) &
                     TransformMap::transform,
             "pointList"_a, "fromSys"_a, "toSys"_a);

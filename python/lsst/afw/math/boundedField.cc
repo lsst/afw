@@ -30,7 +30,7 @@
 #include "lsst/utils/python.h"
 
 #include "lsst/afw/table/io/Persistable.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/io/python.h"  // for addPersistableMethods
 
@@ -77,7 +77,7 @@ PYBIND11_PLUGIN(_boundedField) {
                                                             ndarray::Array<double const, 1> const &) const) &
                     BoundedField::evaluate);
     cls.def("evaluate",
-            (double (BoundedField::*)(lsst::afw::geom::Point2D const &) const) & BoundedField::evaluate);
+            (double (BoundedField::*)(lsst::geom::Point2D const &) const) & BoundedField::evaluate);
     cls.def("integrate", &BoundedField::integrate);
     cls.def("mean", &BoundedField::mean);
     cls.def("getBBox", &BoundedField::getBBox);

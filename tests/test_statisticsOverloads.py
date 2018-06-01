@@ -34,8 +34,8 @@ import unittest
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 
 try:
@@ -55,28 +55,28 @@ class StatisticsTestCase(unittest.TestCase):
 
         # Integers
         self.mimgI = afwImage.MaskedImageI(
-            afwGeom.Extent2I(self.nRow, self.nCol))
+            lsst.geom.Extent2I(self.nRow, self.nCol))
         self.mimgI.set(self.val, 0x0, self.val)
         self.imgI = afwImage.ImageI(
-            afwGeom.Extent2I(self.nRow, self.nCol), self.val)
+            lsst.geom.Extent2I(self.nRow, self.nCol), self.val)
         # TODO: pybind11, this should probably be ndarray
         self.vecI = [self.val for i in range(self.nRow*self.nCol)]
 
         # floats
         self.mimgF = afwImage.MaskedImageF(
-            afwGeom.Extent2I(self.nRow, self.nCol))
+            lsst.geom.Extent2I(self.nRow, self.nCol))
         self.mimgF.set(self.val, 0x0, self.val)
         self.imgF = afwImage.ImageF(
-            afwGeom.Extent2I(self.nRow, self.nCol), self.val)
+            lsst.geom.Extent2I(self.nRow, self.nCol), self.val)
         # TODO: pybind11, this should probably be ndarray
         self.vecF = [float(self.val) for i in range(self.nRow*self.nCol)]
 
         # doubles
         self.mimgD = afwImage.MaskedImageD(
-            afwGeom.Extent2I(self.nRow, self.nCol))
+            lsst.geom.Extent2I(self.nRow, self.nCol))
         self.mimgD.set(self.val, 0x0, self.val)
         self.imgD = afwImage.ImageD(
-            afwGeom.Extent2I(self.nRow, self.nCol), self.val)
+            lsst.geom.Extent2I(self.nRow, self.nCol), self.val)
         # TODO: pybind11, this should probably be ndarray
         self.vecD = [float(self.val) for i in range(self.nRow*self.nCol)]
 
@@ -174,7 +174,7 @@ class StatisticsTestCase(unittest.TestCase):
 
     # Test the Mask specialization
     def testMask(self):
-        mask = afwImage.Mask(afwGeom.Extent2I(10, 10))
+        mask = afwImage.Mask(lsst.geom.Extent2I(10, 10))
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)

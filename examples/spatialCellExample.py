@@ -37,9 +37,9 @@ import sys
 
 import lsst.utils
 import lsst.afw.detection as afwDetect
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math.mathLib as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
 import testSpatialCellLib
@@ -62,13 +62,13 @@ def readImage(filename=None):
         filename = os.path.join(afwDataDir, "CFHT", "D4",
                                 "cal-53535-i-797722_1.fits")
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(270, 2530),
-                             afwGeom.Extent2I(512, 512))
+        bbox = lsst.geom.Box2I(lsst.geom.Point2I(270, 2530),
+                               lsst.geom.Extent2I(512, 512))
     else:
         bbox = None
 
     mi = afwImage.MaskedImageF(filename, bbox=bbox, origin=afwImage.LOCAL)
-    mi.setXY0(afwGeom.Point2I(0, 0))
+    mi.setXY0(lsst.geom.Point2I(0, 0))
     #
     # Subtract the background.  We'd use a canned procedure, but that's in meas/utils/sourceDetection.py. We
     # can't fix those pesky cosmic rays either, as that's in a dependent product (meas/algorithms) too
@@ -113,7 +113,7 @@ def SpatialCellSetDemo(filename=None):
     #
     # Create an (empty) SpatialCellSet
     #
-    cellSet = afwMath.SpatialCellSet(afwGeom.Box2I(afwGeom.Point2I(0, 0), im.getDimensions()),
+    cellSet = afwMath.SpatialCellSet(lsst.geom.Box2I(lsst.geom.Point2I(0, 0), im.getDimensions()),
                                      260, 200)
 
     if display:

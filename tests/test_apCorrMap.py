@@ -37,7 +37,7 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-import lsst.afw.geom
+import lsst.geom
 import lsst.afw.math
 import lsst.afw.image
 
@@ -51,8 +51,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         np.random.seed(100)
-        self.bbox = lsst.afw.geom.Box2I(
-            lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
+        self.bbox = lsst.geom.Box2I(
+            lsst.geom.Point2I(-5, -5), lsst.geom.Point2I(5, 5))
         self.map = lsst.afw.image.ApCorrMap()
         for name in ("a", "b", "c"):
             self.map.set(name, lsst.afw.math.ChebyshevBoundedField(

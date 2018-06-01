@@ -43,6 +43,7 @@
 
 #include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/geom.h"
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/Kernel.h"
@@ -221,10 +222,12 @@ void WarpingControl::setMaskWarpingKernel(SeparableKernel const &maskWarpingKern
 
 void WarpingControl::_testWarpingKernels(SeparableKernel const &warpingKernel,
                                          SeparableKernel const &maskWarpingKernel) const {
-    geom::Box2I kernelBBox = geom::Box2I(geom::Point2I(0, 0) - geom::Extent2I(warpingKernel.getCtr()),
-                                         warpingKernel.getDimensions());
-    geom::Box2I maskKernelBBox = geom::Box2I(geom::Point2I(0, 0) - geom::Extent2I(maskWarpingKernel.getCtr()),
-                                             maskWarpingKernel.getDimensions());
+    lsst::geom::Box2I kernelBBox =
+            lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(warpingKernel.getCtr()),
+                              warpingKernel.getDimensions());
+    lsst::geom::Box2I maskKernelBBox =
+            lsst::geom::Box2I(lsst::geom::Point2I(0, 0) - lsst::geom::Extent2I(maskWarpingKernel.getCtr()),
+                              maskWarpingKernel.getDimensions());
     if (!kernelBBox.contains(maskKernelBBox)) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                           "warping kernel is smaller than mask warping kernel");
@@ -251,24 +254,26 @@ int warpExposure(DestExposureT &destExposure, SrcExposureT const &srcExposure, W
 
 namespace {
 
-inline geom::Point2D computeSrcPos(int destCol,                   ///< @internal destination column index
-                                   int destRow,                   ///< @internal destination row index
-                                   geom::Point2D const &destXY0,  ///< @internal xy0 of destination image
-                                   geom::SkyWcs const &destWcs,   ///< @internal WCS of remapped %image
-                                   geom::SkyWcs const &srcWcs)    ///< @internal WCS of source %image
+inline lsst::geom::Point2D computeSrcPos(
+        int destCol,                         ///< @internal destination column index
+        int destRow,                         ///< @internal destination row index
+        lsst::geom::Point2D const &destXY0,  ///< @internal xy0 of destination image
+        geom::SkyWcs const &destWcs,         ///< @internal WCS of remapped %image
+        geom::SkyWcs const &srcWcs)          ///< @internal WCS of source %image
 {
-    geom::Point2D const destPix(image::indexToPosition(destCol + destXY0[0]),
-                                image::indexToPosition(destRow + destXY0[1]));
+    lsst::geom::Point2D const destPix(image::indexToPosition(destCol + destXY0[0]),
+                                      image::indexToPosition(destRow + destXY0[1]));
     return srcWcs.skyToPixel(destWcs.pixelToSky(destPix));
 }
 
 inline double computeRelativeArea(
-        geom::Point2D const &srcPos,      /// @internal source position at desired destination pixel
-        geom::Point2D const &leftSrcPos,  /// @internal source position one destination pixel to the left
-        geom::Point2D const &upSrcPos)    /// @internal source position one destination pixel above
+        lsst::geom::Point2D const &srcPos,  /// @internal source position at desired destination pixel
+        lsst::geom::Point2D const
+                &leftSrcPos,                  /// @internal source position one destination pixel to the left
+        lsst::geom::Point2D const &upSrcPos)  /// @internal source position one destination pixel above
 {
-    geom::Extent2D dSrcA = srcPos - leftSrcPos;
-    geom::Extent2D dSrcB = srcPos - upSrcPos;
+    lsst::geom::Extent2D dSrcA = srcPos - leftSrcPos;
+    lsst::geom::Extent2D dSrcB = srcPos - upSrcPos;
 
     return std::abs(dSrcA.getX() * dSrcB.getY() - dSrcA.getY() * dSrcB.getX());
 }
@@ -369,7 +374,7 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         assert(edgeColList.back() == maxCol);
 
         // A list of delta source positions along the edge columns of the horizontal interpolation bands
-        std::vector<geom::Extent2D> yDeltaSrcPosList(edgeColList.size());
+        std::vector<lsst::geom::Extent2D> yDeltaSrcPosList(edgeColList.size());
 
         // A cache of pixel positions on the source corresponding to the previous or current row
         // of the destination image.
@@ -377,25 +382,26 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
         // area To simplify the indexing, use an iterator that starts at begin+1, thus: srcPosView =
         // srcPosList.begin() + 1 srcPosView[col-1] and lower indices are for this row srcPosView[col] and
         // higher indices are for the previous row
-        std::vector<geom::Point2D> srcPosList(1 + destWidth);
-        std::vector<geom::Point2D>::iterator const srcPosView = srcPosList.begin() + 1;
+        std::vector<lsst::geom::Point2D> srcPosList(1 + destWidth);
+        std::vector<lsst::geom::Point2D>::iterator const srcPosView = srcPosList.begin() + 1;
 
-        std::vector<geom::Point2D> endColPosList;
+        std::vector<lsst::geom::Point2D> endColPosList;
         endColPosList.reserve(numColEdges);
 
         // Initialize srcPosList for row -1
         for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
             int const endCol = edgeColList[colBand];
-            endColPosList.emplace_back(geom::Point2D(endCol, -1));
+            endColPosList.emplace_back(lsst::geom::Point2D(endCol, -1));
         }
         auto rightSrcPosList = localDestToParentSrc->applyForward(endColPosList);
         srcPosView[-1] = rightSrcPosList[0];
         for (int colBand = 1, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
             int const prevEndCol = edgeColList[colBand - 1];
             int const endCol = edgeColList[colBand];
-            geom::Point2D leftSrcPos = srcPosView[prevEndCol];
+            lsst::geom::Point2D leftSrcPos = srcPosView[prevEndCol];
 
-            geom::Extent2D xDeltaSrcPos = (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
+            lsst::geom::Extent2D xDeltaSrcPos =
+                    (rightSrcPosList[colBand] - leftSrcPos) * invWidthList[colBand];
 
             for (int col = prevEndCol + 1; col <= endCol; ++col) {
                 srcPosView[col] = srcPosView[col - 1] + xDeltaSrcPos;
@@ -415,11 +421,11 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
             double interpInvHeight = 1.0 / static_cast<double>(endRow - prevEndRow);
 
             // Set yDeltaSrcPosList for this horizontal interpolation band
-            std::vector<geom::Point2D> destRowPosList;
+            std::vector<lsst::geom::Point2D> destRowPosList;
             destRowPosList.reserve(edgeColList.size());
             for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
                 int endCol = edgeColList[colBand];
-                destRowPosList.emplace_back(geom::Point2D(endCol, endRow));
+                destRowPosList.emplace_back(lsst::geom::Point2D(endCol, endRow));
             }
             auto bottomSrcPosList = localDestToParentSrc->applyForward(destRowPosList);
             for (int colBand = 0, endBand = edgeColList.size(); colBand < endBand; ++colBand) {
@@ -440,13 +446,13 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
                     // Compute xDeltaSrcPos; remember that srcPosView contains
                     // positions for this row in prevEndCol and smaller indices,
                     // and positions for the previous row for larger indices (including endCol)
-                    geom::Point2D leftSrcPos = srcPosView[prevEndCol];
-                    geom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
-                    geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
+                    lsst::geom::Point2D leftSrcPos = srcPosView[prevEndCol];
+                    lsst::geom::Point2D rightSrcPos = srcPosView[endCol] + yDeltaSrcPosList[colBand];
+                    lsst::geom::Extent2D xDeltaSrcPos = (rightSrcPos - leftSrcPos) * invWidthList[colBand];
 
                     for (int col = prevEndCol + 1; col <= endCol; ++col, ++destXIter) {
-                        geom::Point2D leftSrcPos = srcPosView[col - 1];
-                        geom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
+                        lsst::geom::Point2D leftSrcPos = srcPosView[col - 1];
+                        lsst::geom::Point2D srcPos = leftSrcPos + xDeltaSrcPos;
                         double relativeArea = computeRelativeArea(srcPos, leftSrcPos, srcPosView[col]);
 
                         srcPosView[col] = srcPos;
@@ -466,17 +472,17 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
 
         // prevSrcPosList = source positions from the previous row; these are used to compute pixel area;
         // to begin, compute sources positions corresponding to destination row = -1
-        std::vector<geom::Point2D> destPosList;
+        std::vector<lsst::geom::Point2D> destPosList;
         destPosList.reserve(1 + destWidth);
         for (int col = -1; col < destWidth; ++col) {
-            destPosList.emplace_back(geom::Point2D(col, -1));
+            destPosList.emplace_back(lsst::geom::Point2D(col, -1));
         }
         auto prevSrcPosList = localDestToParentSrc->applyForward(destPosList);
 
         for (int row = 0; row < destHeight; ++row) {
             destPosList.clear();
             for (int col = -1; col < destWidth; ++col) {
-                destPosList.emplace_back(geom::Point2D(col, row));
+                destPosList.emplace_back(lsst::geom::Point2D(col, row));
             }
             auto srcPosList = localDestToParentSrc->applyForward(destPosList);
 
@@ -503,8 +509,9 @@ int warpImage(DestImageT &destImage, SrcImageT const &srcImage,
 
 template <typename DestImageT, typename SrcImageT>
 int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
-                      geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,
-                      WarpingControl const &control, typename DestImageT::SinglePixel padValue) {
+                      lsst::geom::LinearTransform const &linearTransform,
+                      lsst::geom::Point2D const &centerPosition, WarpingControl const &control,
+                      typename DestImageT::SinglePixel padValue) {
     // force src and dest to be the same size and xy0
     if ((destImage.getWidth() != srcImage.getWidth()) || (destImage.getHeight() != srcImage.getHeight()) ||
         (destImage.getXY0() != srcImage.getXY0())) {
@@ -517,12 +524,13 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
     SrcImageT srcImageCopy(srcImage, true);
     srcImageCopy.setXY0(0, 0);
     destImage.setXY0(0, 0);
-    geom::Extent2D cLocal = geom::Extent2D(centerPosition) - geom::Extent2D(srcImage.getXY0());
+    lsst::geom::Extent2D cLocal =
+            lsst::geom::Extent2D(centerPosition) - lsst::geom::Extent2D(srcImage.getXY0());
 
     // for the affine transform, the centerPosition will not only get sheared, but also
     // moved slightly.  So we'll include a translation to move it back by an amount
     // centerPosition - translatedCenterPosition
-    geom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
+    lsst::geom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
     std::shared_ptr<geom::TransformPoint2ToPoint2> affineTransform22 = geom::makeTransform(affTran);
 
 // now warp
@@ -557,11 +565,11 @@ int warpCenteredImage(DestImageT &destImage, SrcImageT const &srcImage,
 #define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT)                                                         \
     template int warpCenteredImage(                                                                          \
             IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,                       \
-            geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,               \
+            lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,   \
             WarpingControl const &control, IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);                    \
     NL template int warpCenteredImage(                                                                       \
             MASKEDIMAGE(DESTIMAGEPIXELT) & destImage, MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage,           \
-            geom::LinearTransform const &linearTransform, geom::Point2D const &centerPosition,               \
+            lsst::geom::LinearTransform const &linearTransform, lsst::geom::Point2D const &centerPosition,   \
             WarpingControl const &control, MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue);              \
     NL template int warpImage(IMAGE(DESTIMAGEPIXELT) & destImage, IMAGE(SRCIMAGEPIXELT) const &srcImage,     \
                               geom::TransformPoint2ToPoint2 const &srcToDest, WarpingControl const &control, \

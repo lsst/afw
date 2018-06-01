@@ -17,6 +17,8 @@ namespace fits {
  */
 const int DEFAULT_HDU = INT_MIN;
 
-}}} // namespace lsst::afw::fits
+}  // namespace fits
+}  // namespace afw
+}  // namespace lsst
 
 #endif

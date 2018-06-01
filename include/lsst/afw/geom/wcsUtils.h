@@ -29,7 +29,7 @@
 #include "Eigen/Core"
 
 #include "lsst/daf/base.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/SkyWcs.h"
 
 namespace lsst {
@@ -50,7 +50,7 @@ namespace geom {
  * @param xy0  Parent coordinate of lower left corner pixel of image
  */
 std::shared_ptr<daf::base::PropertyList> createTrivialWcsMetadata(std::string const& wcsName,
-                                                                  geom::Point2I const& xy0);
+                                                                  lsst::geom::Point2I const& xy0);
 
 /**
  * @internal Delete metadata for a named WCS
@@ -87,8 +87,8 @@ Eigen::Matrix2d getCdMatrixFromMetadata(daf::base::PropertySet& metadata);
  * @param[in] wcsName the WCS to search, e.g. "A"
  * @param[in] strip  If true, strip the WCS keywords using deleteBasicWcsMetadata, if present.
  */
-geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
-                                      bool strip = false);
+lsst::geom::Point2I getImageXY0FromMetadata(daf::base::PropertySet& metadata, std::string const& wcsName,
+                                            bool strip = false);
 
 /**
  * @internal Extract a SIP matrix from FITS TAN-SIP WCS metadata
@@ -144,8 +144,8 @@ for more sophisticated FITS WCS.
                         and i, j have range [1, 2]
 @param[in] projection  The name of the FITS WCS projection, e.g. "TAN" or "STG"
 */
-std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(Point2D const& crpix,
-                                                               SpherePoint const& crval,
+std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(lsst::geom::Point2D const& crpix,
+                                                               lsst::geom::SpherePoint const& crval,
                                                                Eigen::Matrix2d const& cdMatrix,
                                                                std::string const& projection = "TAN");
 
@@ -160,8 +160,8 @@ std::shared_ptr<daf::base::PropertyList> makeSimpleWcsMetadata(Point2D const& cr
  * @param[in] sipA     Forward distortion matrix for axis 1
  * @param[in] sipB     Forward distortion matrix for axis 2
  */
-std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(Point2D const& crpix,
-                                                            SpherePoint const& crval,
+std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(lsst::geom::Point2D const& crpix,
+                                                            lsst::geom::SpherePoint const& crval,
                                                             Eigen::Matrix2d const& cdMatrix,
                                                             Eigen::MatrixXd const& sipA,
                                                             Eigen::MatrixXd const& sipB);
@@ -180,9 +180,9 @@ std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(Point2D const& crpix
  * @param[in] sipBp    Reverse distortion matrix for axis 2
  */
 std::shared_ptr<daf::base::PropertyList> makeTanSipMetadata(
-        Point2D const& crpix, SpherePoint const& crval, Eigen::Matrix2d const& cdMatrix,
-        Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB, Eigen::MatrixXd const& sipAp,
-        Eigen::MatrixXd const& sipBp);
+        lsst::geom::Point2D const& crpix, lsst::geom::SpherePoint const& crval,
+        Eigen::Matrix2d const& cdMatrix, Eigen::MatrixXd const& sipA, Eigen::MatrixXd const& sipB,
+        Eigen::MatrixXd const& sipAp, Eigen::MatrixXd const& sipBp);
 
 }  // namespace geom
 }  // namespace afw

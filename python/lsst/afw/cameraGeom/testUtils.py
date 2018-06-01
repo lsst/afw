@@ -3,6 +3,7 @@ import os
 import numpy as np
 
 import lsst.utils
+import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 from .cameraGeomLib import PIXELS, TAN_PIXELS, FIELD_ANGLE, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
@@ -43,10 +44,10 @@ class DetectorWrapper:
         @param[in] id  detector ID (int)
         @param[in] detType  detector type (an lsst.afw.cameraGeom.DetectorType)
         @param[in] serial  serial "number" (a string)
-        @param[in] bbox  bounding box; defaults to (0, 0), (1024x1024) (an lsst.afw.geom.Box2I)
+        @param[in] bbox  bounding box; defaults to (0, 0), (1024x1024) (an lsst.geom.Box2I)
         @param[in] numAmps  number of amplifiers (int)
-        @param[in] pixelSize  pixel size (mm) (an lsst.afw.geom.Point2D)
-        @param[in] ampExtent  dimensions of amplifier image bbox (an lsst.afw.geom.Extent2I)
+        @param[in] pixelSize  pixel size (mm) (an lsst.geom.Point2D)
+        @param[in] ampExtent  dimensions of amplifier image bbox (an lsst.geom.Extent2I)
         @param[in] orientation  orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
         @param[in] plateScale  plate scale in arcsec/mm; 20.0 is for LSST
         @param[in] radialDistortion  radial distortion, in mm/rad^2
@@ -64,11 +65,10 @@ class DetectorWrapper:
         self.type = detType
         self.serial = serial
         if bbox is None:
-            bbox = afwGeom.Box2I(afwGeom.Point2I(
-                0, 0), afwGeom.Extent2I(1024, 1048))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(1024, 1048))
         self.bbox = bbox
-        self.pixelSize = afwGeom.Extent2D(*pixelSize)
-        self.ampExtent = afwGeom.Extent2I(*ampExtent)
+        self.pixelSize = lsst.geom.Extent2D(*pixelSize)
+        self.ampExtent = lsst.geom.Extent2I(*ampExtent)
         self.plateScale = float(plateScale)
         self.radialDistortion = float(radialDistortion)
         schema = afwTable.AmpInfoTable.makeMinimalSchema()
@@ -77,8 +77,7 @@ class DetectorWrapper:
             record = self.ampInfo.addNew()
             ampName = "amp %d" % (i + 1,)
             record.setName(ampName)
-            record.setBBox(afwGeom.Box2I(
-                afwGeom.Point2I(-1, 1), self.ampExtent))
+            record.setBBox(lsst.geom.Box2I(lsst.geom.Point2I(-1, 1), self.ampExtent))
             record.setGain(1.71234e3)
             record.setReadNoise(0.521237e2)
             record.setReadoutCorner(afwTable.LL)
@@ -86,7 +85,7 @@ class DetectorWrapper:
         self.orientation = orientation
 
         # compute TAN_PIXELS transform
-        pScaleRad = afwGeom.arcsecToRad(self.plateScale)
+        pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
         radialDistortCoeffs = [0.0, 1.0/pScaleRad,
                                0.0, self.radialDistortion/pScaleRad]
         focalPlaneToField = afwGeom.makeRadialTransform(radialDistortCoeffs)
@@ -236,41 +235,41 @@ class CameraWrapper:
                 ampTablesDict[amp['ccd_name']] = ampCatalog
                 self.ampInfoDict[amp['ccd_name']] = {'namps': 1, 'linInfo': {}}
             record = ampCatalog.addNew()
-            bbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['trimmed_xmin']),
-                                                 int(amp['trimmed_ymin'])),
-                                 afwGeom.Point2I(int(amp['trimmed_xmax']),
-                                                 int(amp['trimmed_ymax'])))
-            rawBbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['raw_xmin']),
-                                                    int(amp['raw_ymin'])),
-                                    afwGeom.Point2I(int(amp['raw_xmax']),
-                                                    int(amp['raw_ymax'])))
-            rawDataBbox = afwGeom.Box2I(
-                afwGeom.Point2I(int(amp['raw_data_xmin']),
-                                int(amp['raw_data_ymin'])),
-                afwGeom.Point2I(int(amp['raw_data_xmax']),
-                                int(amp['raw_data_ymax'])))
-            rawHOverscanBbox = afwGeom.Box2I(
-                afwGeom.Point2I(int(amp['hoscan_xmin']),
-                                int(amp['hoscan_ymin'])),
-                afwGeom.Point2I(int(amp['hoscan_xmax']),
-                                int(amp['hoscan_ymax'])))
-            rawVOverscanBbox = afwGeom.Box2I(
-                afwGeom.Point2I(int(amp['voscan_xmin']),
-                                int(amp['voscan_ymin'])),
-                afwGeom.Point2I(int(amp['voscan_xmax']),
-                                int(amp['voscan_ymax'])))
-            rawPrescanBbox = afwGeom.Box2I(
-                afwGeom.Point2I(int(amp['pscan_xmin']),
-                                int(amp['pscan_ymin'])),
-                afwGeom.Point2I(int(amp['pscan_xmax']),
-                                int(amp['pscan_ymax'])))
+            bbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['trimmed_xmin']),
+                                                     int(amp['trimmed_ymin'])),
+                                   lsst.geom.Point2I(int(amp['trimmed_xmax']),
+                                                     int(amp['trimmed_ymax'])))
+            rawBbox = lsst.geom.Box2I(lsst.geom.Point2I(int(amp['raw_xmin']),
+                                                        int(amp['raw_ymin'])),
+                                      lsst.geom.Point2I(int(amp['raw_xmax']),
+                                                        int(amp['raw_ymax'])))
+            rawDataBbox = lsst.geom.Box2I(
+                lsst.geom.Point2I(int(amp['raw_data_xmin']),
+                                  int(amp['raw_data_ymin'])),
+                lsst.geom.Point2I(int(amp['raw_data_xmax']),
+                                  int(amp['raw_data_ymax'])))
+            rawHOverscanBbox = lsst.geom.Box2I(
+                lsst.geom.Point2I(int(amp['hoscan_xmin']),
+                                  int(amp['hoscan_ymin'])),
+                lsst.geom.Point2I(int(amp['hoscan_xmax']),
+                                  int(amp['hoscan_ymax'])))
+            rawVOverscanBbox = lsst.geom.Box2I(
+                lsst.geom.Point2I(int(amp['voscan_xmin']),
+                                  int(amp['voscan_ymin'])),
+                lsst.geom.Point2I(int(amp['voscan_xmax']),
+                                  int(amp['voscan_ymax'])))
+            rawPrescanBbox = lsst.geom.Box2I(
+                lsst.geom.Point2I(int(amp['pscan_xmin']),
+                                  int(amp['pscan_ymin'])),
+                lsst.geom.Point2I(int(amp['pscan_xmax']),
+                                  int(amp['pscan_ymax'])))
             xoffset = int(amp['x_offset'])
             yoffset = int(amp['y_offset'])
             flipx = bool(int(amp['flipx']))
             flipy = bool(int(amp['flipy']))
             readcorner = 'LL'
             if not isLsstLike:
-                offext = afwGeom.Extent2I(xoffset, yoffset)
+                offext = lsst.geom.Extent2I(xoffset, yoffset)
                 if flipx:
                     xExt = rawBbox.getDimensions().getX()
                     rawBbox.flipLR(xExt)
@@ -305,7 +304,7 @@ class CameraWrapper:
                 rawPrescanBbox.shift(offext)
                 xoffset = 0
                 yoffset = 0
-            offset = afwGeom.Extent2I(xoffset, yoffset)
+            offset = lsst.geom.Extent2I(xoffset, yoffset)
             record.setBBox(bbox)
             record.setRawXYOffset(offset)
             record.setName(str(amp['name']))
@@ -349,7 +348,7 @@ class CameraWrapper:
         camConfig.detectorList = dict((i, detConfig)
                                       for i, detConfig in enumerate(detectorConfigs))
         camConfig.plateScale = self.plateScale
-        pScaleRad = afwGeom.arcsecToRad(self.plateScale)
+        pScaleRad = lsst.geom.arcsecToRad(self.plateScale)
         radialDistortCoeffs = [0.0, 1.0/pScaleRad,
                                0.0, self.radialDistortion/pScaleRad]
         tConfig = afwGeom.TransformConfig()

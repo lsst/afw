@@ -124,6 +124,6 @@ Threshold createThreshold(double const value, std::string const typeStr, bool co
 INSTANTIATE(Image);
 INSTANTIATE(MaskedImage);
 #endif
-}
-}
-}
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst

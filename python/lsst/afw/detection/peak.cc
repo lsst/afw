@@ -60,8 +60,8 @@ void declarePeakRecord(PyPeakRecord &cls) {
     cls.def("setIx", &PeakRecord::setIx);
     cls.def("setIy", &PeakRecord::setIy);
     cls.def("getI", &PeakRecord::getI);
-    cls.def("getCentroid", (afw::geom::Point2I (PeakRecord::*)(bool) const) & PeakRecord::getCentroid);
-    cls.def("getCentroid", (afw::geom::Point2D (PeakRecord::*)() const) & PeakRecord::getCentroid);
+    cls.def("getCentroid", (lsst::geom::Point2I (PeakRecord::*)(bool) const) & PeakRecord::getCentroid);
+    cls.def("getCentroid", (lsst::geom::Point2D (PeakRecord::*)() const) & PeakRecord::getCentroid);
     cls.def("getFx", &PeakRecord::getFx);
     cls.def("getFy", &PeakRecord::getFy);
     cls.def("setFx", &PeakRecord::setFx);

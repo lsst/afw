@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
-import lsst.afw.geom.ellipses
 import numpy
 from matplotlib import pyplot
+
+import lsst.geom
+import lsst.afw.geom.ellipses
 
 
 def main():
     axes = lsst.afw.geom.ellipses.Axes(4, 3, 1)
     ellipse = lsst.afw.geom.ellipses.Ellipse(
-        axes, lsst.afw.geom.Point2D(0.25338, 0.76032))
+        axes, lsst.geom.Point2D(0.25338, 0.76032))
     region = lsst.afw.geom.ellipses.PixelRegion(ellipse)
-    for bbox in [ellipse.computeBBox(), lsst.afw.geom.Box2D(region.getBBox())]:
+    for bbox in [ellipse.computeBBox(), lsst.geom.Box2D(region.getBBox())]:
         corners = bbox.getCorners()
         pyplot.fill([p.getX() for p in corners], [p.getY()
                                                   for p in corners], alpha=0.2)

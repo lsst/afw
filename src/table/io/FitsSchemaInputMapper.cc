@@ -14,6 +14,7 @@
 #include "boost/multi_index/member.hpp"
 
 #include "lsst/log/Log.h"
+#include "lsst/geom.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 #include "lsst/afw/table/aggregates.h"
 
@@ -290,8 +291,8 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList &metadata, 
 
 FitsSchemaInputMapper::FitsSchemaInputMapper(FitsSchemaInputMapper const &) = default;
 FitsSchemaInputMapper::FitsSchemaInputMapper(FitsSchemaInputMapper &&) = default;
-FitsSchemaInputMapper & FitsSchemaInputMapper::operator=(FitsSchemaInputMapper const &) = default;
-FitsSchemaInputMapper & FitsSchemaInputMapper::operator=(FitsSchemaInputMapper &&) = default;
+FitsSchemaInputMapper &FitsSchemaInputMapper::operator=(FitsSchemaInputMapper const &) = default;
+FitsSchemaInputMapper &FitsSchemaInputMapper::operator=(FitsSchemaInputMapper &&) = default;
 FitsSchemaInputMapper::~FitsSchemaInputMapper() = default;
 
 void FitsSchemaInputMapper::setArchive(std::shared_ptr<InputArchive> archive) { _impl->archive = archive; }
@@ -383,12 +384,12 @@ class AngleReader : public FitsColumnReader {
 public:
     static std::unique_ptr<FitsColumnReader> make(
             Schema &schema, FitsSchemaItem const &item,
-            FieldBase<afw::geom::Angle> const &base = FieldBase<afw::geom::Angle>()) {
+            FieldBase<lsst::geom::Angle> const &base = FieldBase<lsst::geom::Angle>()) {
         return std::unique_ptr<FitsColumnReader>(new AngleReader(schema, item, base));
     }
 
-    AngleReader(Schema &schema, FitsSchemaItem const &item, FieldBase<afw::geom::Angle> const &base)
-            : _column(item.column), _key(schema.addField<afw::geom::Angle>(item.ttype, item.doc, "", base)) {
+    AngleReader(Schema &schema, FitsSchemaItem const &item, FieldBase<lsst::geom::Angle> const &base)
+            : _column(item.column), _key(schema.addField<lsst::geom::Angle>(item.ttype, item.doc, "", base)) {
         // We require an LSST-specific key in the headers before parsing a column
         // as Angle at all, so we don't need to worry about other units or other
         // spellings of radians.  We do continue to support no units for backwards
@@ -403,12 +404,12 @@ public:
                           std::shared_ptr<InputArchive> const &archive) const {
         double tmp = 0;
         fits.readTableScalar(row, _column, tmp);
-        record.set(_key, tmp * afw::geom::radians);
+        record.set(_key, tmp * lsst::geom::radians);
     }
 
 private:
     int _column;
-    Key<afw::geom::Angle> _key;
+    Key<lsst::geom::Angle> _key;
 };
 
 class StringReader : public FitsColumnReader {
@@ -474,7 +475,7 @@ public:
                           std::shared_ptr<InputArchive> const &archive) const {
         std::array<T, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
-        record.set(_key, geom::Point<T, 2>(buffer[0], buffer[1]));
+        record.set(_key, lsst::geom::Point<T, 2>(buffer[0], buffer[1]));
     }
 
 private:
@@ -495,9 +496,9 @@ public:
 
     virtual void readCell(BaseRecord &record, std::size_t row, afw::fits::Fits &fits,
                           std::shared_ptr<InputArchive> const &archive) const {
-        std::array<geom::Angle, 2> buffer;
+        std::array<lsst::geom::Angle, 2> buffer;
         fits.readTableArray(row, _column, 2, buffer.data());
-        record.set(_key, geom::SpherePoint(buffer[0], buffer[1]));
+        record.set(_key, lsst::geom::SpherePoint(buffer[0], buffer[1]));
     }
 
 private:

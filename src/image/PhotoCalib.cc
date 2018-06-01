@@ -22,7 +22,7 @@
 
 #include <cmath>
 
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/image/PhotoCalib.h"
 #include "lsst/afw/math/BoundedField.h"
 #include "lsst/afw/table/Source.h"
@@ -56,7 +56,7 @@ double toMagnitudeErr(double instFlux, double instFluxErr, double scale, double 
 
 // ------------------- Conversions to Maggies -------------------
 
-double PhotoCalib::instFluxToMaggies(double instFlux, afw::geom::Point<double, 2> const &point) const {
+double PhotoCalib::instFluxToMaggies(double instFlux, lsst::geom::Point<double, 2> const &point) const {
     if (_isConstant)
         return toMaggies(instFlux, _calibrationMean);
     else
@@ -66,7 +66,7 @@ double PhotoCalib::instFluxToMaggies(double instFlux, afw::geom::Point<double, 2
 double PhotoCalib::instFluxToMaggies(double instFlux) const { return toMaggies(instFlux, _calibrationMean); }
 
 Measurement PhotoCalib::instFluxToMaggies(double instFlux, double instFluxErr,
-                                          afw::geom::Point<double, 2> const &point) const {
+                                          lsst::geom::Point<double, 2> const &point) const {
     double calibration, err, maggies;
     if (_isConstant)
         calibration = _calibrationMean;
@@ -114,7 +114,7 @@ void PhotoCalib::instFluxToMaggies(afw::table::SourceCatalog &sourceCatalog, std
 
 // ------------------- Conversions to Magnitudes -------------------
 
-double PhotoCalib::instFluxToMagnitude(double instFlux, afw::geom::Point<double, 2> const &point) const {
+double PhotoCalib::instFluxToMagnitude(double instFlux, lsst::geom::Point<double, 2> const &point) const {
     if (_isConstant)
         return toMagnitude(instFlux, _calibrationMean);
     else
@@ -126,7 +126,7 @@ double PhotoCalib::instFluxToMagnitude(double instFlux) const {
 }
 
 Measurement PhotoCalib::instFluxToMagnitude(double instFlux, double instFluxErr,
-                                            afw::geom::Point<double, 2> const &point) const {
+                                            lsst::geom::Point<double, 2> const &point) const {
     double calibration, err, magnitude;
     if (_isConstant)
         calibration = _calibrationMean;

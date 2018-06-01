@@ -36,7 +36,7 @@ void AmpInfoFitsWriter::_writeTable(std::shared_ptr<BaseTable const> const &t, s
     _fits->writeKey("AFW_TYPE", "AMPINFO", "Tells lsst::afw to load this as a AmpInfo table.");
 }
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- AmpInfoFitsReader ---------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ public:
 
 static AmpInfoFitsReader const ampInfoFitsReader;
 
-}  // anonymous
+}  // namespace
 
 //-----------------------------------------------------------------------------------------------------------
 //----- AmpInfoTable/Record member function implementations -----------------------------------------------
@@ -176,13 +176,13 @@ std::shared_ptr<BaseRecord> AmpInfoTable::_makeRecord() {
 std::string AmpInfoRecord::getName() const { return get(AmpInfoTable::getNameKey()); }
 void AmpInfoRecord::setName(std::string const &name) { set(AmpInfoTable::getNameKey(), name); }
 
-geom::Box2I AmpInfoRecord::getBBox() const {
-    return geom::Box2I(get(AmpInfoTable::getBBoxMinKey()),
-                       geom::Extent2I(get(AmpInfoTable::getBBoxExtentKey())));
+lsst::geom::Box2I AmpInfoRecord::getBBox() const {
+    return lsst::geom::Box2I(get(AmpInfoTable::getBBoxMinKey()),
+                             lsst::geom::Extent2I(get(AmpInfoTable::getBBoxExtentKey())));
 }
-void AmpInfoRecord::setBBox(geom::Box2I const &bbox) {
+void AmpInfoRecord::setBBox(lsst::geom::Box2I const &bbox) {
     set(AmpInfoTable::getBBoxMinKey(), bbox.getMin());
-    set(AmpInfoTable::getBBoxExtentKey(), geom::Point2I(bbox.getDimensions()));
+    set(AmpInfoTable::getBBoxExtentKey(), lsst::geom::Point2I(bbox.getDimensions()));
 }
 
 double AmpInfoRecord::getGain() const { return get(AmpInfoTable::getGainKey()); }
@@ -225,22 +225,22 @@ void AmpInfoRecord::setHasRawInfo(bool hasrawamplifier) {
     set(AmpInfoTable::getHasRawInfoKey(), hasrawamplifier);
 }
 
-geom::Box2I AmpInfoRecord::getRawBBox() const {
-    return geom::Box2I(get(AmpInfoTable::getRawBBoxMinKey()),
-                       geom::Extent2I(get(AmpInfoTable::getRawBBoxExtentKey())));
+lsst::geom::Box2I AmpInfoRecord::getRawBBox() const {
+    return lsst::geom::Box2I(get(AmpInfoTable::getRawBBoxMinKey()),
+                             lsst::geom::Extent2I(get(AmpInfoTable::getRawBBoxExtentKey())));
 }
-void AmpInfoRecord::setRawBBox(geom::Box2I const &bbox) {
+void AmpInfoRecord::setRawBBox(lsst::geom::Box2I const &bbox) {
     set(AmpInfoTable::getRawBBoxMinKey(), bbox.getMin());
-    set(AmpInfoTable::getRawBBoxExtentKey(), geom::Point2I(bbox.getDimensions()));
+    set(AmpInfoTable::getRawBBoxExtentKey(), lsst::geom::Point2I(bbox.getDimensions()));
 }
 
-geom::Box2I AmpInfoRecord::getRawDataBBox() const {
-    return geom::Box2I(get(AmpInfoTable::getRawDataBBoxMinKey()),
-                       geom::Extent2I(get(AmpInfoTable::getRawDataBBoxExtentKey())));
+lsst::geom::Box2I AmpInfoRecord::getRawDataBBox() const {
+    return lsst::geom::Box2I(get(AmpInfoTable::getRawDataBBoxMinKey()),
+                             lsst::geom::Extent2I(get(AmpInfoTable::getRawDataBBoxExtentKey())));
 }
-void AmpInfoRecord::setRawDataBBox(geom::Box2I const &bbox) {
+void AmpInfoRecord::setRawDataBBox(lsst::geom::Box2I const &bbox) {
     set(AmpInfoTable::getRawDataBBoxMinKey(), bbox.getMin());
-    set(AmpInfoTable::getRawDataBBoxExtentKey(), geom::Point2I(bbox.getDimensions()));
+    set(AmpInfoTable::getRawDataBBoxExtentKey(), lsst::geom::Point2I(bbox.getDimensions()));
 }
 
 bool AmpInfoRecord::getRawFlipX() const { return get(AmpInfoTable::getRawFlipXKey()); }
@@ -249,42 +249,43 @@ void AmpInfoRecord::setRawFlipX(bool rawFlipX) { set(AmpInfoTable::getRawFlipXKe
 bool AmpInfoRecord::getRawFlipY() const { return get(AmpInfoTable::getRawFlipYKey()); }
 void AmpInfoRecord::setRawFlipY(bool rawFlipY) { set(AmpInfoTable::getRawFlipYKey(), rawFlipY); }
 
-geom::Extent2I AmpInfoRecord::getRawXYOffset() const {
-    return geom::Extent2I(get(AmpInfoTable::getRawXYOffsetKey()));
+lsst::geom::Extent2I AmpInfoRecord::getRawXYOffset() const {
+    return lsst::geom::Extent2I(get(AmpInfoTable::getRawXYOffsetKey()));
 }
-void AmpInfoRecord::setRawXYOffset(geom::Extent2I const &rawxyoffset) {
-    set(AmpInfoTable::getRawXYOffsetKey(), geom::Point2I(rawxyoffset.asPair()));
+void AmpInfoRecord::setRawXYOffset(lsst::geom::Extent2I const &rawxyoffset) {
+    set(AmpInfoTable::getRawXYOffsetKey(), lsst::geom::Point2I(rawxyoffset.asPair()));
 }
 
-geom::Box2I AmpInfoRecord::getRawHorizontalOverscanBBox() const {
-    return geom::Box2I(get(AmpInfoTable::getRawHorizontalOverscanBBoxMinKey()),
-                       geom::Extent2I(get(AmpInfoTable::getRawHorizontalOverscanBBoxExtentKey())));
+lsst::geom::Box2I AmpInfoRecord::getRawHorizontalOverscanBBox() const {
+    return lsst::geom::Box2I(
+            get(AmpInfoTable::getRawHorizontalOverscanBBoxMinKey()),
+            lsst::geom::Extent2I(get(AmpInfoTable::getRawHorizontalOverscanBBoxExtentKey())));
 }
-void AmpInfoRecord::setRawHorizontalOverscanBBox(geom::Box2I const &bbox) {
+void AmpInfoRecord::setRawHorizontalOverscanBBox(lsst::geom::Box2I const &bbox) {
     set(AmpInfoTable::getRawHorizontalOverscanBBoxMinKey(), bbox.getMin());
-    set(AmpInfoTable::getRawHorizontalOverscanBBoxExtentKey(), geom::Point2I(bbox.getDimensions()));
+    set(AmpInfoTable::getRawHorizontalOverscanBBoxExtentKey(), lsst::geom::Point2I(bbox.getDimensions()));
 }
 
-geom::Box2I AmpInfoRecord::getRawVerticalOverscanBBox() const {
-    return geom::Box2I(get(AmpInfoTable::getRawVerticalOverscanBBoxMinKey()),
-                       geom::Extent2I(get(AmpInfoTable::getRawVerticalOverscanBBoxExtentKey())));
+lsst::geom::Box2I AmpInfoRecord::getRawVerticalOverscanBBox() const {
+    return lsst::geom::Box2I(get(AmpInfoTable::getRawVerticalOverscanBBoxMinKey()),
+                             lsst::geom::Extent2I(get(AmpInfoTable::getRawVerticalOverscanBBoxExtentKey())));
 }
-void AmpInfoRecord::setRawVerticalOverscanBBox(geom::Box2I const &bbox) {
+void AmpInfoRecord::setRawVerticalOverscanBBox(lsst::geom::Box2I const &bbox) {
     set(AmpInfoTable::getRawVerticalOverscanBBoxMinKey(), bbox.getMin());
-    set(AmpInfoTable::getRawVerticalOverscanBBoxExtentKey(), geom::Point2I(bbox.getDimensions()));
+    set(AmpInfoTable::getRawVerticalOverscanBBoxExtentKey(), lsst::geom::Point2I(bbox.getDimensions()));
 }
 
-geom::Box2I AmpInfoRecord::getRawPrescanBBox() const {
-    return geom::Box2I(get(AmpInfoTable::getRawPrescanBBoxMinKey()),
-                       geom::Extent2I(get(AmpInfoTable::getRawPrescanBBoxExtentKey())));
+lsst::geom::Box2I AmpInfoRecord::getRawPrescanBBox() const {
+    return lsst::geom::Box2I(get(AmpInfoTable::getRawPrescanBBoxMinKey()),
+                             lsst::geom::Extent2I(get(AmpInfoTable::getRawPrescanBBoxExtentKey())));
 }
-void AmpInfoRecord::setRawPrescanBBox(geom::Box2I const &bbox) {
+void AmpInfoRecord::setRawPrescanBBox(lsst::geom::Box2I const &bbox) {
     set(AmpInfoTable::getRawPrescanBBoxMinKey(), bbox.getMin());
-    set(AmpInfoTable::getRawPrescanBBoxExtentKey(), geom::Point2I(bbox.getDimensions()));
+    set(AmpInfoTable::getRawPrescanBBoxExtentKey(), lsst::geom::Point2I(bbox.getDimensions()));
 }
 
 template class CatalogT<AmpInfoRecord>;
 template class CatalogT<AmpInfoRecord const>;
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst

@@ -54,7 +54,8 @@ std::shared_ptr<ImageT> binImage(ImageT const& in, int const binX, int const bin
     int const outWidth = in.getWidth() / binX;
     int const outHeight = in.getHeight() / binY;
 
-    std::shared_ptr<ImageT> out = std::shared_ptr<ImageT>(new ImageT(geom::Extent2I(outWidth, outHeight)));
+    std::shared_ptr<ImageT> out =
+            std::shared_ptr<ImageT>(new ImageT(lsst::geom::Extent2I(outWidth, outHeight)));
     out->setXY0(in.getXY0());
     *out = typename ImageT::SinglePixel(0);
 
@@ -100,6 +101,6 @@ INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
 /// @endcond
-}
-}
-}
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

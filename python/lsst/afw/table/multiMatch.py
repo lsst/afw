@@ -2,7 +2,7 @@ import collections
 
 import numpy
 
-import lsst.afw.geom
+import lsst.geom
 from .schemaMapper import SchemaMapper
 from .aggregates import CoordKey
 from .source import SourceRecord
@@ -19,13 +19,13 @@ class MultiMatch:
           dataIdFormat -- dict of name: type for all data ID keys (e.g. {"visit":int, "ccd":int}).
           coordField ---- prefix for _ra and _dec fields that contain the coordinates to use for the match.
           idField ------- name of the field in schema that contains unique object IDs.
-          radius -------- lsst.afw.geom.Angle; maximum separation for a match.  Defaults to 0.5 arcseconds.
+          radius -------- lsst.geom.Angle; maximum separation for a match.  Defaults to 0.5 arcseconds.
           RecordClass --- type of record (a subclass of lsst.afw.table.BaseRecord) to expect in catalogs
                           to be matched.
         """
         if radius is None:
-            radius = 0.5*lsst.afw.geom.arcseconds
-        elif not isinstance(radius, lsst.afw.geom.Angle):
+            radius = 0.5*lsst.geom.arcseconds
+        elif not isinstance(radius, lsst.geom.Angle):
             raise ValueError("'radius' argument must be an Angle")
         self.radius = radius
         self.mapper = SchemaMapper(schema)

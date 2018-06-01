@@ -34,7 +34,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-DeltaFunctionKernel::DeltaFunctionKernel(int width, int height, geom::Point2I const& point)
+DeltaFunctionKernel::DeltaFunctionKernel(int width, int height, lsst::geom::Point2I const& point)
         : Kernel(width, height, 0), _pixel(point) {
     if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
         std::ostringstream os;
@@ -60,10 +60,10 @@ std::shared_ptr<Kernel> DeltaFunctionKernel::resized(int width, int height) cons
            << width << ", " << height << "), because at least one dimension would change by an odd value.";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
-    int newPixelX = getPixel().getX() + padX/2;
-    int newPixelY = getPixel().getY() + padY/2;
-    std::shared_ptr<Kernel> retPtr = std::make_shared<DeltaFunctionKernel>(
-            width, height, lsst::afw::geom::Point2I(newPixelX, newPixelY));
+    int newPixelX = getPixel().getX() + padX / 2;
+    int newPixelY = getPixel().getY() + padY / 2;
+    std::shared_ptr<Kernel> retPtr =
+            std::make_shared<DeltaFunctionKernel>(width, height, lsst::geom::Point2I(newPixelX, newPixelY));
     return retPtr;
 }
 
@@ -116,7 +116,7 @@ private:
     }
 };
 
-}  // anonymous
+}  // namespace
 
 class DeltaFunctionKernel::Factory : public afw::table::io::PersistableFactory {
 public:
@@ -143,7 +143,7 @@ std::string getDeltaFunctionKernelPersistenceName() { return "DeltaFunctionKerne
 
 DeltaFunctionKernel::Factory registration(getDeltaFunctionKernelPersistenceName());
 
-}  // anonymous
+}  // namespace
 
 std::string DeltaFunctionKernel::getPersistenceName() const {
     return getDeltaFunctionKernelPersistenceName();
@@ -154,6 +154,6 @@ void DeltaFunctionKernel::write(OutputArchiveHandle& handle) const {
     std::shared_ptr<afw::table::BaseRecord> record = keys.write(handle, *this);
     record->set(keys.pixel, _pixel);
 }
-}
-}
-}  // namespace lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

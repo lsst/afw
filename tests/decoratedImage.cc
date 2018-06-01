@@ -39,7 +39,6 @@
 
 namespace daf_base = lsst::daf::base;
 namespace image = lsst::afw::image;
-namespace geom = lsst::afw::geom;
 
 using namespace std;
 
@@ -48,7 +47,7 @@ typedef image::Image<PixelT> ImageT;
 typedef image::DecoratedImage<PixelT> DecoratedImageT;
 
 DecoratedImageT make_image(int const width = 5, int const height = 6) {
-    DecoratedImageT dimg(geom::Extent2I(width, height));
+    DecoratedImageT dimg(lsst::geom::Extent2I(width, height));
     std::shared_ptr<ImageT> img = dimg.getImage();
 
     int i = 0;

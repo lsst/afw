@@ -120,8 +120,8 @@ class OutputArchive;
 class CatalogVector;
 
 }  // namespace io
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_TABLE_fwd_h_INCLUDED

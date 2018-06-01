@@ -53,14 +53,14 @@ public:
     IdFactory(IdFactory &&) = default;
 
     // Protected to prevent slicing.
-    IdFactory & operator=(IdFactory const& other) = delete;
-    IdFactory & operator=(IdFactory && other) = delete;
+    IdFactory &operator=(IdFactory const &other) = delete;
+    IdFactory &operator=(IdFactory &&other) = delete;
     virtual ~IdFactory() = default;
 
 private:
 };
-}
-}
-}  // namespace lsst::afw::table
+}  // namespace table
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !AFW_TABLE_IdFactory_h_INCLUDED

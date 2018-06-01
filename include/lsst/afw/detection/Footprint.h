@@ -35,9 +35,9 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
-#include "lsst/afw/geom/Box.h"
+#include "lsst/geom/Box.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/afw/geom/LinearTransform.h"
+#include "lsst/geom/LinearTransform.h"
 #include "lsst/afw/geom/SkyWcs.h"
 #include "lsst/afw/geom/Transform.h"
 #include "lsst/afw/table/fwd.h"
@@ -79,7 +79,8 @@ public:
      * @param region Bounding box of the image in which the Footprint was created,
                      defaults to empty box.
      */
-    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans,
+                       lsst::geom::Box2I const &region = lsst::geom::Box2I());
 
     /** @brief Constructor for the Footprint object
      *
@@ -89,8 +90,8 @@ public:
      * @param region Bounding box of the image in which the Footprint was created,
                      defaults to empty box.
      */
-    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const & peakSchema,
-                       geom::Box2I const & region=geom::Box2I());
+    explicit Footprint(std::shared_ptr<geom::SpanSet> inputSpans, afw::table::Schema const &peakSchema,
+                       lsst::geom::Box2I const &region = lsst::geom::Box2I());
 
     /** @brief Constructor of a empty Footprint object
      */
@@ -98,7 +99,7 @@ public:
             : lsst::daf::base::Citizen(typeid(this)),
               _spans(std::make_shared<geom::SpanSet>()),
               _peaks(PeakTable::makeMinimalSchema()),
-              _region(geom::Box2I()) {}
+              _region(lsst::geom::Box2I()) {}
 
     Footprint(Footprint const &other) = default;
     Footprint(Footprint &&) = default;
@@ -113,7 +114,7 @@ public:
     virtual bool isHeavy() const { return false; }
 
     /** Return a shared pointer to the SpanSet
-      */
+     */
     std::shared_ptr<geom::SpanSet> getSpans() const { return _spans; }
 
     /** Sets the shared pointer to the SpanSet in the Footprint
@@ -179,7 +180,7 @@ public:
      *
      * The centroid is calculated as the mean of the pixel centers
      */
-    geom::Point2D getCentroid() const { return _spans->computeCentroid(); }
+    lsst::geom::Point2D getCentroid() const { return _spans->computeCentroid(); }
 
     /**
      * Return the Footprint's shape (interpreted as an ellipse)
@@ -198,28 +199,28 @@ public:
     void shift(int dx, int dy);
 
     /**
-    * Shift a Footprint by a given extent
-    *
-    * @param d ExtentI object which gives the dimensions the Footprint should be shifted
-    */
-    void shift(geom::ExtentI const &d) { shift(d.getX(), d.getY()); }
+     * Shift a Footprint by a given extent
+     *
+     * @param d ExtentI object which gives the dimensions the Footprint should be shifted
+     */
+    void shift(lsst::geom::ExtentI const &d) { shift(d.getX(), d.getY()); }
 
     /**
      * Return the Footprint's bounding box
      */
-    geom::Box2I getBBox() const { return _spans->getBBox(); }
+    lsst::geom::Box2I getBBox() const { return _spans->getBBox(); }
 
     /**
      * Return the corners of the MaskedImage the footprints live in
      */
-    geom::Box2I getRegion() const { return _region; }
+    lsst::geom::Box2I getRegion() const { return _region; }
 
     /**
      * Set the corners of the MaskedImage wherein the footprints dwell
      *
      * @param region A box describing the corners of the Image the Footprint derives from
      */
-    void setRegion(geom::Box2I const &region) { _region = region; }
+    void setRegion(lsst::geom::Box2I const &region) { _region = region; }
 
     /**
      * Clip the Footprint such that all values lie inside the supplied Bounding Box
@@ -227,14 +228,14 @@ public:
      * @param bbox Integer box object that defines the boundaries the footprint should be
      *             clipped to.
      */
-    void clipTo(geom::Box2I const &bbox);
+    void clipTo(lsst::geom::Box2I const &bbox);
 
     /**
      * Tests if a pixel postion falls inside the Footprint
      *
      * @param pix Integer point object defining the position of a pixel to test
      */
-    bool contains(geom::Point2I const &pix) const;
+    bool contains(lsst::geom::Point2I const &pix) const;
 
     /**
      *  Transform the footprint from one WCS to another
@@ -246,8 +247,8 @@ public:
      *  @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
     std::shared_ptr<Footprint> transform(std::shared_ptr<geom::SkyWcs> source,
-                                         std::shared_ptr<geom::SkyWcs> target, geom::Box2I const &region,
-                                         bool doClip = true) const;
+                                         std::shared_ptr<geom::SkyWcs> target,
+                                         lsst::geom::Box2I const &region, bool doClip = true) const;
 
     /** Return a new Footprint whose pixels are the product of applying the specified transformation
      *
@@ -256,8 +257,8 @@ public:
      *               NOT the same as the footprint's bounding box.
      * @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
-    std::shared_ptr<Footprint> transform(geom::LinearTransform const &t, geom::Box2I const &region,
-                                         bool doClip = true) const;
+    std::shared_ptr<Footprint> transform(lsst::geom::LinearTransform const &t,
+                                         lsst::geom::Box2I const &region, bool doClip = true) const;
 
     /** Return a new Footprint whose pixels are the product of applying the specified transformation
      *
@@ -266,8 +267,8 @@ public:
      *               NOT the same as the footprint's bounding box.
      * @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
-    std::shared_ptr<Footprint> transform(geom::AffineTransform const &t, geom::Box2I const &region,
-                                         bool doClip = true) const;
+    std::shared_ptr<Footprint> transform(lsst::geom::AffineTransform const &t,
+                                         lsst::geom::Box2I const &region, bool doClip = true) const;
 
     /** Return a new Footprint whose pixels are the product of applying the specified transformation
      *
@@ -276,8 +277,8 @@ public:
      *               NOT the same as the footprint's bounding box.
      * @param doClip If true, clip the new footprint to the region bbox before returning it.
      */
-    std::shared_ptr<Footprint> transform(geom::TransformPoint2ToPoint2 const &t, geom::Box2I const &region,
-                                         bool doClip = true) const;
+    std::shared_ptr<Footprint> transform(geom::TransformPoint2ToPoint2 const &t,
+                                         lsst::geom::Box2I const &region, bool doClip = true) const;
 
     /**
      * Report if this object is persistable
@@ -337,19 +338,19 @@ public:
     bool isContiguous() const { return getSpans()->isContiguous(); };
 
     /**
-    * Split a multi-component Footprint into a vector of contiguous Footprints
-    *
-    * Split a multi-component Footprint such that each Footprint in the output vector
-    * is contiguous and contains only peaks that can be found within the bounds of the
-    * Footprint
-    */
+     * Split a multi-component Footprint into a vector of contiguous Footprints
+     *
+     * Split a multi-component Footprint such that each Footprint in the output vector
+     * is contiguous and contains only peaks that can be found within the bounds of the
+     * Footprint
+     */
     std::vector<std::shared_ptr<Footprint>> split() const;
 
     /**
-    * equality operator
-    *
-    * @param other The Footprint for which equality will be computed
-    */
+     * equality operator
+     *
+     * @param other The Footprint for which equality will be computed
+     */
     bool operator==(Footprint const &other) const;
 
 protected:
@@ -385,13 +386,13 @@ private:
 
     std::shared_ptr<geom::SpanSet> _spans;  ///< @internal The SpanSet representing area on image
     PeakCatalog _peaks;                     ///< @internal The peaks lying in this footprint
-    geom::Box2I _region;  ///< @internal The corners of the MaskedImage the footprints live in
+    lsst::geom::Box2I _region;  ///< @internal The corners of the MaskedImage the footprints live in
 };
 
 /**
  * @brief Merges two Footprints -- appends their peaks, and unions their
  * spans, returning a new Footprint. Region is not preserved, and is set to an empty
- * Box2I object.
+ * lsst::geom::Box2I object.
  */
 std::shared_ptr<Footprint> mergeFootprints(Footprint const &footprint1, Footprint const &footprint2);
 
@@ -403,9 +404,9 @@ std::shared_ptr<Footprint> mergeFootprints(Footprint const &footprint1, Footprin
  *
  * @param footprint Footprint to turn into bounding box list
  */
-std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const &footprint);
-}
-}
-}  // Close namespace lsst::afw::detection
+std::vector<lsst::geom::Box2I> footprintToBBoxList(Footprint const &footprint);
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_DETECTION_FOOTPRINT_H

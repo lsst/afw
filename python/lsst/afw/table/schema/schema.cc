@@ -403,7 +403,7 @@ PYBIND11_PLUGIN(schema) {
     declareSchemaType<float>(mod);
     declareSchemaType<double>(mod);
     declareSchemaType<std::string>(mod);
-    declareSchemaType<geom::Angle>(mod);
+    declareSchemaType<lsst::geom::Angle>(mod);
     declareSchemaType<Array<std::uint8_t>>(mod);
     declareSchemaType<Array<std::uint16_t>>(mod);
     declareSchemaType<Array<int>>(mod);

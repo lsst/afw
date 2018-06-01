@@ -15,10 +15,10 @@ class Spline {
 public:
     virtual ~Spline() = default;
 
-    Spline(Spline const &) = default;
-    Spline(Spline &&) = default;
-    Spline & operator=(Spline const &) = default;
-    Spline & operator=(Spline &&) = default;
+    Spline(Spline const&) = default;
+    Spline(Spline&&) = default;
+    Spline& operator=(Spline const&) = default;
+    Spline& operator=(Spline&&) = default;
 
     /**
      * Interpolate a Spline.
@@ -228,8 +228,8 @@ public:
     SmoothedSpline(std::vector<double> const& x, std::vector<double> const& y, std::vector<double> const& dy,
                    double s, double* chisq = NULL, std::vector<double>* errs = NULL);
 };
-}
-}
-}
-}
+}  // namespace detail
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 #endif

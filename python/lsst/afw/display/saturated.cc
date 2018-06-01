@@ -19,7 +19,7 @@ public:
 
     void setValue(float value) { _value = value; }
 
-    void operator()(geom::Point2I const& point, typename ImageT::Pixel& arrayInput) { arrayInput = _value; }
+    void operator()(lsst::geom::Point2I const& point, typename ImageT::Pixel& arrayInput) { arrayInput = _value; }
 
 private:
     float _value;

@@ -36,8 +36,8 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.geom
 import lsst.afw.table
-import lsst.afw.geom
 
 try:
     type(display)
@@ -59,7 +59,7 @@ class SchemaTestCase(unittest.TestCase):
             schema, "a_b_p", "point", "pixel")
         abi_k = schema.addField("a_b_i", type=np.int32, doc="int")
         acf_k = schema.addField("a_c_f", type=np.float32, doc="float")
-        egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
+        egd_k = schema.addField("e_g_d", type=lsst.geom.Angle, doc="angle")
 
         # Basic test for all native key types.
         for name, key in (("a_b_i", abi_k), ("a_c_f", acf_k), ("e_g_d", egd_k)):

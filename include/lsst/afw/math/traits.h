@@ -65,8 +65,8 @@ struct kernel_traits {
 
 extern generic_kernel_tag generic_kernel_tag_;
 extern deltafunction_kernel_tag deltafunction_kernel_tag_;
-}
-}
-}  // lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst
 
 #endif

@@ -23,8 +23,7 @@
 #ifndef LSST_AFW_DETECTION_GaussianPsf_h_INCLUDED
 #define LSST_AFW_DETECTION_GaussianPsf_h_INCLUDED
 
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace lsst {
@@ -57,7 +56,7 @@ public:
      *  @param[in] dimensions     Number of columns, rows in realizations of the PSF at a point.
      *  @param[in] sigma   Radius of the Gaussian.
      */
-    GaussianPsf(geom::Extent2I const& dimensions, double sigma);
+    GaussianPsf(lsst::geom::Extent2I const& dimensions, double sigma);
 
     ~GaussianPsf();
     GaussianPsf(GaussianPsf const&);
@@ -72,7 +71,7 @@ public:
     virtual std::shared_ptr<afw::detection::Psf> resized(int width, int height) const;
 
     /// Return the dimensions of the images returned by computeImage()
-    geom::Extent2I getDimensions() const { return _dimensions; }
+    lsst::geom::Extent2I getDimensions() const { return _dimensions; }
 
     /// Return the radius of the Gaussian.
     double getSigma() const { return _sigma; }
@@ -92,26 +91,27 @@ private:
       // but it's tricky to get the position right in all corner cases, and it's
       // not actually performance-critical, so we should just wait for #3116.
     virtual std::shared_ptr<Image> doComputeImage(
-        geom::Point2D const & position, image::Color const& color
+        lsst::geom::Point2D const & position, image::Color const& color
     ) const;
 #endif
 
-    virtual std::shared_ptr<Image> doComputeKernelImage(geom::Point2D const& position,
+    virtual std::shared_ptr<Image> doComputeKernelImage(lsst::geom::Point2D const& position,
                                                         image::Color const& color) const;
 
-    virtual double doComputeApertureFlux(double radius, geom::Point2D const& position,
+    virtual double doComputeApertureFlux(double radius, lsst::geom::Point2D const& position,
                                          image::Color const& color) const;
 
-    virtual geom::ellipses::Quadrupole doComputeShape(geom::Point2D const& position,
+    virtual geom::ellipses::Quadrupole doComputeShape(lsst::geom::Point2D const& position,
                                                       image::Color const& color) const;
 
-    virtual geom::Box2I doComputeBBox(geom::Point2D const& position, image::Color const& color) const;
+    virtual lsst::geom::Box2I doComputeBBox(lsst::geom::Point2D const& position,
+                                            image::Color const& color) const;
 
-    geom::Extent2I _dimensions;
+    lsst::geom::Extent2I _dimensions;
     double _sigma;
 };
-}
-}
-}  // namespace lsst::afw::detection
+}  // namespace detection
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_DETECTION_Psf_h_INCLUDED

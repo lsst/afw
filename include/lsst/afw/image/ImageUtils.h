@@ -53,7 +53,7 @@ const double PixelZeroPos = 0.0;
  * @returns image position
  */
 inline double indexToPosition(double ind  ///< image index
-                              ) {
+) {
     return ind + PixelZeroPos;
 }
 
@@ -67,7 +67,7 @@ inline double indexToPosition(double ind  ///< image index
  * @returns nearest integer index
  */
 inline int positionToIndex(double pos  ///< image position
-                           ) {
+) {
     return static_cast<int>(std::floor(pos + 0.5 - PixelZeroPos));
 }
 
@@ -84,7 +84,7 @@ inline int positionToIndex(double pos  ///< image position
  */
 inline int positionToIndex(double &residual,  ///< fractional part of index
                            double pos         ///< image position
-                           ) {
+) {
     double fullIndex = pos - PixelZeroPos;
     double roundedIndex = std::floor(fullIndex + 0.5);
     residual = fullIndex - roundedIndex;
@@ -97,14 +97,14 @@ inline int positionToIndex(double &residual,  ///< fractional part of index
  */
 inline std::pair<int, double> positionToIndex(double const pos,  ///< image position
                                               bool               ///< ignored; just to disambiguate
-                                              ) {
+) {
     double residual;                                 // fractional part of index
     int const ind = positionToIndex(residual, pos);  // integral part
 
     return std::pair<int, double>(ind, residual);
 }
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // LSST_AFW_IMAGE_IMAGEUTILS_H

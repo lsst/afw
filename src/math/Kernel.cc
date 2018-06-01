@@ -178,20 +178,22 @@ std::vector<Kernel::SpatialFunctionPtr> Kernel::getSpatialFunctionList() const {
 
 std::vector<double> Kernel::getKernelParameters() const { return std::vector<double>(); }
 
-geom::Box2I Kernel::growBBox(geom::Box2I const &bbox) const {
-    return geom::Box2I(geom::Point2I(bbox.getMin() - geom::Extent2I(getCtr())),
-                       geom::Extent2I(bbox.getDimensions() + getDimensions() - geom::Extent2I(1, 1)));
+lsst::geom::Box2I Kernel::growBBox(lsst::geom::Box2I const &bbox) const {
+    return lsst::geom::Box2I(
+            lsst::geom::Point2I(bbox.getMin() - lsst::geom::Extent2I(getCtr())),
+            lsst::geom::Extent2I(bbox.getDimensions() + getDimensions() - lsst::geom::Extent2I(1, 1)));
 }
 
-geom::Box2I Kernel::shrinkBBox(geom::Box2I const &bbox) const {
+lsst::geom::Box2I Kernel::shrinkBBox(lsst::geom::Box2I const &bbox) const {
     if ((bbox.getWidth() < getWidth()) || ((bbox.getHeight() < getHeight()))) {
         std::ostringstream os;
         os << "bbox dimensions = " << bbox.getDimensions() << " < (" << getWidth() << ", " << getHeight()
            << ") in one or both dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
-    return geom::Box2I(geom::Point2I(bbox.getMinX() + getCtrX(), bbox.getMinY() + getCtrY()),
-                       geom::Extent2I(bbox.getWidth() + 1 - getWidth(), bbox.getHeight() + 1 - getHeight()));
+    return lsst::geom::Box2I(
+            lsst::geom::Point2I(bbox.getMinX() + getCtrX(), bbox.getMinY() + getCtrY()),
+            lsst::geom::Extent2I(bbox.getWidth() + 1 - getWidth(), bbox.getHeight() + 1 - getHeight()));
 }
 
 std::string Kernel::toString(std::string const &prefix) const {
@@ -235,6 +237,6 @@ void Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
 }
 
 std::string Kernel::getPythonModule() const { return "lsst.afw.math"; }
-}
-}
-}  // end lsst::afw::math
+}  // namespace math
+}  // namespace afw
+}  // namespace lsst

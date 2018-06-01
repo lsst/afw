@@ -186,9 +186,7 @@ std::vector<std::string> getAllSliceTableNames(std::shared_ptr<Policy const> con
     return names;
 }
 
-int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) {
-    return prop.paramNames(false).size();
-}
+int countFitsHeaderCards(lsst::daf::base::PropertySet const& prop) { return prop.paramNames(false).size(); }
 
 ndarray::Array<std::uint8_t, 1, 1> stringToBytes(std::string const& str) {
     auto nbytes = str.size() * sizeof(char) / sizeof(std::uint8_t);
@@ -207,6 +205,6 @@ std::string bytesToString(ndarray::Array<std::uint8_t const, 1, 1> const& bytes)
     return std::string(charCArr, nchars);
 }
 
-}
-}
-}  // namespace lsst::afw::formatters
+}  // namespace formatters
+}  // namespace afw
+}  // namespace lsst

@@ -25,11 +25,11 @@
 #include <algorithm>
 
 #include "lsst/utils/Utils.h"
+#include "lsst/geom.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 
 namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
 
 template <typename PixelT>
 void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
@@ -54,7 +54,7 @@ void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
 }
 
 int main(int argc, char* argv[]) {
-    afwImage::DecoratedImage<float> dimg(afwGeom::Extent2I(10, 6));
+    afwImage::DecoratedImage<float> dimg(lsst::geom::Extent2I(10, 6));
     afwImage::Image<float> img(*dimg.getImage());
 
     std::string file_u16;

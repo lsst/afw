@@ -81,7 +81,7 @@ inline std::string makeErrorMessage(void* fptr, int status, boost::format const&
 
 /**
  * Format a PropertySet into an FITS header string in a simplistic fashion.
- * 
+ *
  * This function is designed to format data for creating a WCS. As such, it is quite limited:
  * - It skips entries whose name is longer than 8 characters, since none are used for FITS-WCS
  * - It skips string entries if the fully formatted string is longer than 80 characters
@@ -200,7 +200,6 @@ private:
     bool _managed;
 };
 
-
 /// Construct a contiguous ndarray
 ///
 /// A deep copy is only performed if the array is not already contiguous.
@@ -211,7 +210,6 @@ ndarray::Array<T const, N, N> const makeContiguousArray(ndarray::Array<T, N, C> 
     return contiguous;
 }
 
-
 /// Options for writing an image to FITS
 ///
 /// An image being written to FITS may be scaled (quantised) and/or
@@ -219,7 +217,7 @@ ndarray::Array<T const, N, N> const makeContiguousArray(ndarray::Array<T, N, C> 
 /// each of those separately.
 struct ImageWriteOptions {
     ImageCompressionOptions compression;  ///< Options controlling compression
-    ImageScalingOptions scaling;  ///< Options controlling scaling
+    ImageScalingOptions scaling;          ///< Options controlling scaling
 
     /// Construct with default options for images
     template <typename T>
@@ -230,14 +228,14 @@ struct ImageWriteOptions {
     explicit ImageWriteOptions(image::Mask<T> const& mask) : compression(mask) {}
 
     /// Construct with specific compression and scaling options
-    explicit ImageWriteOptions(
-        ImageCompressionOptions const& compression_=ImageCompressionOptions(ImageCompressionOptions::NONE),
-        ImageScalingOptions const& scaling_=ImageScalingOptions())
-      : compression(compression_), scaling(scaling_) {}
+    explicit ImageWriteOptions(ImageCompressionOptions const& compression_ =
+                                       ImageCompressionOptions(ImageCompressionOptions::NONE),
+                               ImageScalingOptions const& scaling_ = ImageScalingOptions())
+            : compression(compression_), scaling(scaling_) {}
 
     /// Construct with specific scaling options
     explicit ImageWriteOptions(ImageScalingOptions const& scaling_)
-      : compression(ImageCompressionOptions::NONE), scaling(scaling_) {}
+            : compression(ImageCompressionOptions::NONE), scaling(scaling_) {}
 
     /// Construct from a PropertySet
     ///
@@ -493,12 +491,10 @@ public:
      */
     template <typename T>
     void writeImage(
-        image::ImageBase<T> const& image,
-        ImageWriteOptions const& options,
-        std::shared_ptr<daf::base::PropertySet const> header=std::shared_ptr<daf::base::PropertyList>(),
-        std::shared_ptr<image::Mask<image::MaskPixel> const> mask=
-            std::shared_ptr<image::Mask<image::MaskPixel>>()
-    );
+            image::ImageBase<T> const& image, ImageWriteOptions const& options,
+            std::shared_ptr<daf::base::PropertySet const> header = std::shared_ptr<daf::base::PropertyList>(),
+            std::shared_ptr<image::Mask<image::MaskPixel> const> mask =
+                    std::shared_ptr<image::Mask<image::MaskPixel>>());
 
     /// Return the number of dimensions in the current HDU.
     int getImageDim();
@@ -705,12 +701,11 @@ std::shared_ptr<daf::base::PropertyList> readMetadata(fits::MemFileManager& mana
  */
 std::shared_ptr<daf::base::PropertyList> readMetadata(fits::Fits& fitsfile, bool strip = false);
 
-
 void setAllowImageCompression(bool allow);
 bool getAllowImageCompression();
 
-}
-}
-}  /// namespace lsst::afw::fits
+}  // namespace fits
+}  // namespace afw
+}  // namespace lsst
 
 #endif  // !LSST_AFW_fits_h_INCLUDED

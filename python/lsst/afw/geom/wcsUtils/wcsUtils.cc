@@ -28,9 +28,9 @@
 #include "ndarray/eigen.h"
 
 #include "lsst/daf/base.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/SpherePoint.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/Point.h"
+#include "lsst/geom/SpherePoint.h"
 #include "lsst/afw/geom/wcsUtils.h"
 
 namespace py = pybind11;
@@ -55,15 +55,15 @@ PYBIND11_PLUGIN(wcsUtils) {
     mod.def("makeSimpleWcsMetadata", makeSimpleWcsMetadata, "crpix"_a, "crval"_a, "cdMatrix"_a,
             "projection"_a = "TAN");
     mod.def("makeTanSipMetadata",
-            (std::shared_ptr<daf::base::PropertyList>(*)(Point2D const&, SpherePoint const&,
-                                                         Eigen::Matrix2d const&, Eigen::MatrixXd const&,
-                                                         Eigen::MatrixXd const&))makeTanSipMetadata,
+            (std::shared_ptr<daf::base::PropertyList>(*)(
+                    lsst::geom::Point2D const&, lsst::geom::SpherePoint const&, Eigen::Matrix2d const&,
+                    Eigen::MatrixXd const&, Eigen::MatrixXd const&))makeTanSipMetadata,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a);
     mod.def("makeTanSipMetadata",
-            (std::shared_ptr<daf::base::PropertyList>(*)(Point2D const&, SpherePoint const&,
-                                                         Eigen::Matrix2d const&, Eigen::MatrixXd const&,
-                                                         Eigen::MatrixXd const&, Eigen::MatrixXd const&,
-                                                         Eigen::MatrixXd const&))makeTanSipMetadata,
+            (std::shared_ptr<daf::base::PropertyList>(*)(
+                    lsst::geom::Point2D const&, lsst::geom::SpherePoint const&, Eigen::Matrix2d const&,
+                    Eigen::MatrixXd const&, Eigen::MatrixXd const&, Eigen::MatrixXd const&,
+                    Eigen::MatrixXd const&))makeTanSipMetadata,
             "crpix"_a, "crval"_a, "cdMatrix"_a, "sipA"_a, "sipB"_a, "sipAp"_a, "sipBp"_a);
     return mod.ptr();
 }

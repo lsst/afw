@@ -31,6 +31,7 @@ from numpy.testing import assert_allclose
 
 from astshim.test import makeForwardPolyMap
 
+import lsst.geom
 import lsst.afw.geom as afwGeom
 from lsst.afw.geom.testUtils import TransformTestBaseClass
 import lsst.pex.exceptions as pexExcept
@@ -47,13 +48,13 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
     def point2DList(self):
         for x in (-1.1, 0, 2.2):
             for y in (3.1, 0, 2.1):
-                yield afwGeom.Point2D(x, y)
+                yield lsst.geom.Point2D(x, y)
 
     def testLinearize(self):
         for transform, invertible in (
             (afwGeom.TransformPoint2ToPoint2(makeForwardPolyMap(2, 2)), False),
             (afwGeom.makeIdentityTransform(), True),
-            (afwGeom.makeTransform(afwGeom.AffineTransform(np.array([[3.0, -2.0], [2.0, -1.0]]))), True),
+            (afwGeom.makeTransform(lsst.geom.AffineTransform(np.array([[3.0, -2.0], [2.0, -1.0]]))), True),
             (afwGeom.makeRadialTransform([0.0, 8.0e-05, 0.0, -4.5e-12]), True),
         ):
             self.checkLinearize(transform, invertible)
@@ -82,7 +83,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         rawLinPoint = self.makeRawPointData(nIn)
         linPoint = fromEndpoint.pointFromData(rawLinPoint)
         affine = afwGeom.linearizeTransform(transform, linPoint)
-        self.assertIsInstance(affine, afwGeom.AffineTransform)
+        self.assertIsInstance(affine, lsst.geom.AffineTransform)
 
         # Does affine match exact transform at linPoint?
         outPoint = transform.applyForward(linPoint)
@@ -199,7 +200,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         def check(transform):
             self.checkTranslateAffine(
                 transform,
-                afwGeom.Extent2D(*affineConfig.translation))
+                lsst.geom.Extent2D(*affineConfig.translation))
         self.checkGenericTransform(affineFactory, affineConfig, check)
 
     def checkTranslateAffine(self, transform, offset):
@@ -228,7 +229,7 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
     def checkLinearAffine(self, transform, matrix):
         for fromPoint in self.point2DList():
             toPoint = transform.applyForward(fromPoint)
-            predToPoint = afwGeom.Point2D(
+            predToPoint = lsst.geom.Point2D(
                 matrix[0] * fromPoint[0] +
                 matrix[1] * fromPoint[1],
                 matrix[2] * fromPoint[0] +
@@ -253,14 +254,14 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
         def check(transform):
             self.checkFullAffine(
                 transform,
-                afwGeom.Extent2D(*affineConfig.translation),
+                lsst.geom.Extent2D(*affineConfig.translation),
                 affineConfig.linear)
         self.checkGenericTransform(affineFactory, affineConfig, check)
 
     def checkFullAffine(self, transform, offset, matrix):
             for fromPoint in self.point2DList():
                 toPoint = transform.applyForward(fromPoint)
-                predToPoint = afwGeom.Point2D(
+                predToPoint = lsst.geom.Point2D(
                     matrix[0] * fromPoint[0] +
                     matrix[1] * fromPoint[1],
                     matrix[2] * fromPoint[0] +
@@ -297,11 +298,11 @@ class TransformFactoryTestSuite(TransformTestBaseClass):
             predToRadius = fromRadius * \
                 (coeffs[3] * fromRadius**2 + coeffs[2] * fromRadius + coeffs[1])
             if predToRadius > 0:
-                predToPoint = afwGeom.Point2D(
+                predToPoint = lsst.geom.Point2D(
                     predToRadius * math.cos(fromAngle),
                     predToRadius * math.sin(fromAngle))
             else:
-                predToPoint = afwGeom.Point2D()
+                predToPoint = lsst.geom.Point2D()
             toPoint = transform.applyForward(fromPoint)
             # Don't let NaNs pass the test!
             assert_allclose(toPoint, predToPoint, atol=1e-14)

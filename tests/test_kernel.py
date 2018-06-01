@@ -28,7 +28,7 @@ from numpy.testing import assert_allclose
 
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
@@ -58,7 +58,7 @@ def makeDeltaFunctionKernelList(kWidth, kHeight):
     for activeCol in range(kWidth):
         for activeRow in range(kHeight):
             kVec.append(afwMath.DeltaFunctionKernel(
-                kWidth, kHeight, afwGeom.Point2I(activeCol, activeRow)))
+                kWidth, kHeight, lsst.geom.Point2I(activeCol, activeRow)))
     return kVec
 
 
@@ -185,7 +185,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
     def testShrinkGrowBBox(self):
         """Test Kernel methods shrinkBBox and growBBox
         """
-        boxStart = afwGeom.Point2I(3, -3)
+        boxStart = lsst.geom.Point2I(3, -3)
         for kWidth in (1, 2, 6):
             for kHeight in (1, 2, 5):
                 for deltaWidth in (-1, 0, 1, 20):
@@ -193,9 +193,9 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     for deltaHeight in (-1, 0, 1, 20):
                         fullHeight = kHeight + deltaHeight
                         kernel = afwMath.DeltaFunctionKernel(
-                            kWidth, kHeight, afwGeom.Point2I(0, 0))
-                        fullBBox = afwGeom.Box2I(
-                            boxStart, afwGeom.Extent2I(fullWidth, fullHeight))
+                            kWidth, kHeight, lsst.geom.Point2I(0, 0))
+                        fullBBox = lsst.geom.Box2I(
+                            boxStart, lsst.geom.Extent2I(fullWidth, fullHeight))
                         if (fullWidth < kWidth) or (fullHeight < kHeight):
                             self.assertRaises(
                                 Exception, kernel.shrinkBBox, fullBBox)
@@ -222,7 +222,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
-                                                             afwGeom.Point2I(activeCol, activeRow))
+                                                             lsst.geom.Point2I(activeCol, activeRow))
                         kImage = afwImage.ImageD(kernel.getDimensions())
                         kSum = kernel.computeImage(kImage, False)
                         self.assertEqual(kSum, 1.0)
@@ -236,11 +236,11 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                             self.fail(errStr)
 
                 self.assertRaises(pexExcept.InvalidParameterError,
-                                  afwMath.DeltaFunctionKernel, 0, kHeight, afwGeom.Point2I(kWidth, kHeight))
+                                  afwMath.DeltaFunctionKernel, 0, kHeight, lsst.geom.Point2I(kWidth, kHeight))
                 self.assertRaises(pexExcept.InvalidParameterError,
-                                  afwMath.DeltaFunctionKernel, kWidth, 0, afwGeom.Point2I(kWidth, kHeight))
+                                  afwMath.DeltaFunctionKernel, kWidth, 0, lsst.geom.Point2I(kWidth, kHeight))
 
-        kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
+        kernel = afwMath.DeltaFunctionKernel(5, 6, lsst.geom.Point2I(1, 1))
         self.basicTests(kernel, 0)
 
         kernelResized = self.verifyResized(kernel, oddPadRaises=True)
@@ -256,7 +256,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         inArr = np.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
-        inImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
+        inImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
@@ -487,9 +487,9 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         spFunc = afwMath.PolynomialFunction2D(1)
         kernelList = []
         kernelList.append(afwMath.FixedKernel(
-            afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.1)))
+            afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight), 0.1)))
         kernelList.append(afwMath.FixedKernel(
-            afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.2)))
+            afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight), 0.2)))
 
         for numKernelParams in (2, 4):
             spFuncList = []
@@ -529,7 +529,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     continue
                 try:
                     afwMath.DeltaFunctionKernel(
-                        kWidth, kHeight, afwGeom.Point2I(pointX, pointY))
+                        kWidth, kHeight, lsst.geom.Point2I(pointX, pointY))
                     self.fail("Should have failed with point not on kernel")
                 except pexExcept.Exception:
                     pass
@@ -577,7 +577,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         # check that we can construct a FixedKernel from a LinearCombinationKernel
         #
         x, y = 100, 200
-        kernel2 = afwMath.FixedKernel(kernel, afwGeom.PointD(x, y))
+        kernel2 = afwMath.FixedKernel(kernel, lsst.geom.PointD(x, y))
 
         self.assertTrue(re.search("AnalyticKernel", kernel.toString()))
         self.assertFalse(kernel2.isSpatiallyVarying())
@@ -631,7 +631,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, 2, nSpatialParams=3)
         kernel.setSpatialParameters(sParams)
-        kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
+        kImage = afwImage.ImageD(lsst.geom.Extent2I(kWidth, kHeight))
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
             (1.0, 0.0, 1.0, 0.0),
@@ -727,7 +727,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         """
         gaussFunc2D = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         gaussFunc1D = afwMath.GaussianFunction1D(1.0)
-        zeroPoint = afwGeom.Point2I(0, 0)
+        zeroPoint = lsst.geom.Point2I(0, 0)
         for kWidth in (-1, 0, 1):
             for kHeight in (-1, 0, 1):
                 if (kHeight > 0) and (kWidth > 0):
@@ -735,7 +735,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 if (kHeight >= 0) and (kWidth >= 0):
                     # don't try to create an image with negative dimensions
                     blankImage = afwImage.ImageF(
-                        afwGeom.Extent2I(kWidth, kHeight))
+                        lsst.geom.Extent2I(kWidth, kHeight))
                     self.assertRaises(
                         Exception, afwMath.FixedKernel, blankImage)
                 self.assertRaises(
@@ -859,7 +859,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     self.assertAlmostEqual(ksum, 1.0)
                     llBorder = ((image.getDimensions() -
                                  kernelDim) / 2).truncate()
-                    predCtr = afwGeom.Point2I(llBorder + kernelCtr)
+                    predCtr = lsst.geom.Point2I(llBorder + kernelCtr)
                     self.assertEqual(kernel.getCtr(), predCtr)
                 else:
                     self.assertRaises(

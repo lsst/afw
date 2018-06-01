@@ -20,7 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import lsst.pex.config as pexConfig
-import lsst.afw.geom as afwGeom
+import lsst.geom
 import lsst.afw.image as afwImage
 from . import mathLib
 
@@ -38,13 +38,13 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
 
     @return destBBox: bounding box of warped exposure
     """
-    srcPosBox = afwGeom.Box2D(srcBBox)
-    destPosBox = afwGeom.Box2D()
+    srcPosBox = lsst.geom.Box2D(srcBBox)
+    destPosBox = lsst.geom.Box2D()
     for inX in (srcPosBox.getMinX(), srcPosBox.getMaxX()):
         for inY in (srcPosBox.getMinY(), srcPosBox.getMaxY()):
             destPos = destWcs.skyToPixel(srcWcs.pixelToSky(inX, inY))
             destPosBox.include(destPos)
-    destBBox = afwGeom.Box2I(destPosBox, afwGeom.Box2I.EXPAND)
+    destBBox = lsst.geom.Box2I(destPosBox, lsst.geom.Box2I.EXPAND)
     return destBBox
 
 
@@ -147,11 +147,11 @@ class Warper:
             if negative then the bbox is shrunk;
             border is applied before maxBBox;
             ignored if destBBox is not None
-        @param maxBBox: maximum allowed parent bbox of warped exposure (an afwGeom.Box2I or None);
+        @param maxBBox: maximum allowed parent bbox of warped exposure (an lsst.geom.Box2I or None);
             if None then the warped exposure will be just big enough to contain all warped pixels;
             if provided then the warped exposure may be smaller, and so missing some warped pixels;
             ignored if destBBox is not None
-        @param destBBox: exact parent bbox of warped exposure (an afwGeom.Box2I or None);
+        @param destBBox: exact parent bbox of warped exposure (an lsst.geom.Box2I or None);
             if None then border and maxBBox are used to determine the bbox,
             otherwise border and maxBBox are ignored
 
@@ -182,11 +182,11 @@ class Warper:
             if negative then the bbox is shrunk;
             border is applied before maxBBox;
             ignored if destBBox is not None
-        @param maxBBox: maximum allowed parent bbox of warped image (an afwGeom.Box2I or None);
+        @param maxBBox: maximum allowed parent bbox of warped image (an lsst.geom.Box2I or None);
             if None then the warped image will be just big enough to contain all warped pixels;
             if provided then the warped image may be smaller, and so missing some warped pixels;
             ignored if destBBox is not None
-        @param destBBox: exact parent bbox of warped image (an afwGeom.Box2I or None);
+        @param destBBox: exact parent bbox of warped image (an lsst.geom.Box2I or None);
             if None then border and maxBBox are used to determine the bbox,
             otherwise border and maxBBox are ignored
 
@@ -215,11 +215,11 @@ class Warper:
             if negative then the bbox is shrunk;
             border is applied before maxBBox;
             ignored if destBBox is not None
-        @param maxBBox: maximum allowed parent bbox of warped image (an afwGeom.Box2I or None);
+        @param maxBBox: maximum allowed parent bbox of warped image (an lsst.geom.Box2I or None);
             if None then the warped image will be just big enough to contain all warped pixels;
             if provided then the warped image may be smaller, and so missing some warped pixels;
             ignored if destBBox is not None
-        @param destBBox: exact parent bbox of warped image (an afwGeom.Box2I or None);
+        @param destBBox: exact parent bbox of warped image (an lsst.geom.Box2I or None);
             if None then border and maxBBox are used to determine the bbox,
             otherwise border and maxBBox are ignored
         """

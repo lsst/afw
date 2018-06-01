@@ -32,8 +32,8 @@
 
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/geom/Angle.h"
+#include "lsst/geom/Point.h"
 #include "lsst/afw/geom/wcsUtils.h"
 #include "lsst/afw/geom/detail/frameSetUtils.h"
 #include "lsst/afw/image/ImageBase.h"  // for wcsNameForXY0
@@ -82,7 +82,7 @@ void setMetadataFromFoundValue(daf::base::PropertyList& metadata, std::string co
 
 std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, bool strip) {
     // Exclude WCS A keywords because LSST uses them to store XY0
-    auto wcsANames = createTrivialWcsMetadata("A", Point2I(0, 0))->names();
+    auto wcsANames = createTrivialWcsMetadata("A", lsst::geom::Point2I(0, 0))->names();
     std::set<std::string> excludeNames(wcsANames.begin(), wcsANames.end());
     // Ignore NAXIS1, NAXIS2 because if they are zero then AST will fail to read a WCS
     // Ignore LTV1/2 because LSST adds it and this code should ignore it and not strip it
@@ -104,8 +104,7 @@ std::shared_ptr<ast::FrameSet> readFitsWcs(daf::base::PropertySet& metadata, boo
     try {
         obj = channel.read();
     } catch (std::runtime_error) {
-        throw LSST_EXCEPT(pex::exceptions::TypeError,
-                          "The metadata does not describe an AST object");
+        throw LSST_EXCEPT(pex::exceptions::TypeError, "The metadata does not describe an AST object");
     }
     auto frameSet = std::dynamic_pointer_cast<ast::FrameSet>(obj);
     if (!frameSet) {
@@ -181,8 +180,7 @@ std::shared_ptr<ast::FrameDict> readLsstSkyWcs(daf::base::PropertySet& metadata,
 
     // Find the IWC frame
     if (!rawFrameSet->findFrame(ast::Frame(2, "Domain=IWC"))) {
-        throw LSST_EXCEPT(pex::exceptions::TypeError,
-                          "No IWC frame found; cannot read metadata as a SkyWcs");
+        throw LSST_EXCEPT(pex::exceptions::TypeError, "No IWC frame found; cannot read metadata as a SkyWcs");
     }
     auto const iwcIndex = rawFrameSet->getCurrent();
     auto const iwcFrame = rawFrameSet->getFrame(iwcIndex);

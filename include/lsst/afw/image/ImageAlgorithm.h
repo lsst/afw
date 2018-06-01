@@ -97,7 +97,7 @@ struct pixelOp2XY : public std::function<LhsT(int, int, LhsT, RhsT)> {
 template <typename LhsT>
 void for_each_pixel(Image<LhsT>& lhs,           ///< Image to set
                     pixelOp0<LhsT> const& func  ///< functor to call
-                    ) {
+) {
     for (int y = 0; y != lhs.getHeight(); ++y) {
         for (typename Image<LhsT>::x_iterator lhsPtr = lhs.row_begin(y), lhsEnd = lhs.row_end(y);
              lhsPtr != lhsEnd; ++lhsPtr) {
@@ -112,7 +112,7 @@ void for_each_pixel(Image<LhsT>& lhs,           ///< Image to set
 template <typename LhsT>
 void for_each_pixel(Image<LhsT>& lhs,           ///< Image to set
                     pixelOp1<LhsT> const& func  ///< functor to call
-                    ) {
+) {
     for (int y = 0; y != lhs.getHeight(); ++y) {
         for (typename Image<LhsT>::x_iterator lhsPtr = lhs.row_begin(y), lhsEnd = lhs.row_end(y);
              lhsPtr != lhsEnd; ++lhsPtr) {
@@ -129,7 +129,7 @@ void for_each_pixel(Image<LhsT>& lhs,           ///< Image to set
 template <typename LhsT>
 void for_each_pixel(Image<LhsT>& lhs,             ///< Image to set
                     pixelOp1XY<LhsT> const& func  ///< functor to call
-                    ) {
+) {
     for (int y = 0; y != lhs.getHeight(); ++y) {
         int x = lhs.getX0();
         for (typename Image<LhsT>::x_iterator lhsPtr = lhs.row_begin(y), lhsEnd = lhs.row_end(y);
@@ -146,7 +146,7 @@ template <typename LhsT, typename RhsT>
 void for_each_pixel(Image<LhsT>& lhs,           ///< Image to set
                     Image<RhsT> const& rhs,     ///< other Image to pass to `func`
                     pixelOp1<RhsT> const& func  ///< functor to call
-                    ) {
+) {
     if (lhs.getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % lhs.getWidth() %
@@ -171,7 +171,7 @@ template <typename LhsT, typename RhsT>
 void for_each_pixel(Image<LhsT>& lhs,                 ///< Image to set
                     Image<RhsT> const& rhs,           ///< other Image to pass to `func`
                     pixelOp2<LhsT, RhsT> const& func  ///< functor to call
-                    ) {
+) {
     if (lhs.getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % lhs.getWidth() %
@@ -197,7 +197,7 @@ template <typename LhsT, typename RhsT>
 void for_each_pixel(Image<LhsT>& lhs,                   ///< Image to set
                     Image<RhsT> const& rhs,             ///< other Image to pass to `func`
                     pixelOp2XY<LhsT, RhsT> const& func  ///< functor to call
-                    ) {
+) {
     if (lhs.getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") % lhs.getWidth() %
@@ -214,8 +214,8 @@ void for_each_pixel(Image<LhsT>& lhs,                   ///< Image to set
         }
     }
 }
-}
-}
-}  // lsst::afw::image
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst
 
 #endif
