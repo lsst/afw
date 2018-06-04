@@ -61,9 +61,9 @@ class TestTestUtils(lsst.utils.tests.TestCase):
         wcs1 = lsst.afw.geom.makeSkyWcs(metadata)
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
-                                          maxDiffSky=1e-7*lsst.geom.arcseconds, maxDiffPix=1e-7)
+                                          maxDiffSky=0*lsst.geom.arcseconds, maxDiffPix=0)
         self.assertTrue(afwGeom.wcsAlmostEqualOverBBox(wcs0, wcs0, bbox,
-                                                       maxDiffSky=1e-7*lsst.geom.arcseconds, maxDiffPix=1e-7))
+                                                       maxDiffSky=0*lsst.geom.arcseconds, maxDiffPix=0))
 
         self.assertWcsAlmostEqualOverBBox(wcs0, wcs1, bbox,
                                           maxDiffSky=0.04*lsst.geom.arcseconds, maxDiffPix=0.02)
