@@ -81,14 +81,16 @@ class SkyWcsBaseTestCase(lsst.utils.tests.TestCase):
             exposure.writeFits(outFile)
             exposureRoundTrip = ExposureF(outFile)
         wcsFromExposure = exposureRoundTrip.getWcs()
-        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromExposure, bbox)
+        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromExposure, bbox, maxDiffPix=0,
+                                          maxDiffSky=0*lsst.geom.radians)
 
     def checkFrameDictConstructor(self, skyWcs, bbox):
         """Check that the FrameDict constructor works
         """
         frameDict = skyWcs.getFrameDict()
         wcsFromFrameDict = SkyWcs(frameDict)
-        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromFrameDict, bbox)
+        self.assertWcsAlmostEqualOverBBox(skyWcs, wcsFromFrameDict, bbox, maxDiffPix=0,
+                                          maxDiffSky=0*lsst.geom.radians)
 
         self.checkPersistence(wcsFromFrameDict, bbox)
 
@@ -910,7 +912,8 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
             wcsFromMetadata.writeFits(filePath)
             wcsFromFits = SkyWcs.readFits(filePath)
 
-        self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, self.bbox)
+        self.assertWcsAlmostEqualOverBBox(wcsFromFits, wcsFromMetadata, self.bbox, maxDiffPix=0,
+                                          maxDiffSky=0*lsst.geom.radians)
 
     def testReadOldTanSipFits(self):
         """Test reading a FITS file containing data for an lsst::afw::image::TanWcs
