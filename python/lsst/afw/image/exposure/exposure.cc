@@ -65,10 +65,10 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
 
     /* Constructors */
-    cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<geom::SkyWcs const>>(), "width"_a, "height"_a,
-            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
-    cls.def(py::init<lsst::geom::Extent2I const &, std::shared_ptr<geom::SkyWcs const>>(), "dimensions"_a = lsst::geom::Extent2I(),
-            "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
+    cls.def(py::init<unsigned int, unsigned int, std::shared_ptr<geom::SkyWcs const>>(), "width"_a,
+            "height"_a, "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
+    cls.def(py::init<lsst::geom::Extent2I const &, std::shared_ptr<geom::SkyWcs const>>(),
+            "dimensions"_a = lsst::geom::Extent2I(), "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
     cls.def(py::init<lsst::geom::Box2I const &, std::shared_ptr<geom::SkyWcs const>>(), "bbox"_a,
             "wcs"_a = std::shared_ptr<geom::SkyWcs const>());
     cls.def(py::init<MaskedImageT &, std::shared_ptr<geom::SkyWcs const>>(), "maskedImage"_a,
@@ -83,13 +83,10 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
             "origin"_a = PARENT, "deep"_a = false);
 
     /* Members */
-    cls.def("getMaskedImage", (MaskedImageT (ExposureT::*)()) & ExposureT::getMaskedImage);
+    cls.def("getMaskedImage", (MaskedImageT(ExposureT::*)()) & ExposureT::getMaskedImage);
     cls.def("setMaskedImage", &ExposureT::setMaskedImage, "maskedImage"_a);
-    cls.def_property(
-        "maskedImage",
-        (MaskedImageT (ExposureT::*)()) & ExposureT::getMaskedImage,
-        &ExposureT::setMaskedImage
-    );
+    cls.def_property("maskedImage", (MaskedImageT(ExposureT::*)()) & ExposureT::getMaskedImage,
+                     &ExposureT::setMaskedImage);
     cls.def("getMetadata", &ExposureT::getMetadata);
     cls.def("setMetadata", &ExposureT::setMetadata, "metadata"_a);
     cls.def("getWidth", &ExposureT::getWidth);
@@ -100,45 +97,48 @@ PyExposure<PixelT> declareExposure(py::module &mod, const std::string &suffix) {
     cls.def("getXY0", &ExposureT::getXY0);
     cls.def("setXY0", &ExposureT::setXY0, "xy0"_a);
     cls.def("getBBox", &ExposureT::getBBox, "origin"_a = PARENT);
-    cls.def("getWcs", (std::shared_ptr<geom::SkyWcs> (ExposureT::*)()) & ExposureT::getWcs);
+    cls.def("getWcs", (std::shared_ptr<geom::SkyWcs>(ExposureT::*)()) & ExposureT::getWcs);
     cls.def("setWcs", &ExposureT::setWcs, "wcs"_a);
     cls.def("hasWcs", &ExposureT::hasWcs);
     cls.def("getDetector", &ExposureT::getDetector);
     cls.def("setDetector", &ExposureT::setDetector, "detector"_a);
     cls.def("getFilter", &ExposureT::getFilter);
     cls.def("setFilter", &ExposureT::setFilter, "filter"_a);
-    cls.def("getCalib", (std::shared_ptr<Calib> (ExposureT::*)()) & ExposureT::getCalib);
+    cls.def("getCalib", (std::shared_ptr<Calib>(ExposureT::*)()) & ExposureT::getCalib);
     cls.def("setCalib", &ExposureT::setCalib, "calib"_a);
-    cls.def("getPsf", (std::shared_ptr<detection::Psf> (ExposureT::*)()) & ExposureT::getPsf);
+    cls.def("getPsf", (std::shared_ptr<detection::Psf>(ExposureT::*)()) & ExposureT::getPsf);
     cls.def("setPsf", &ExposureT::setPsf, "psf"_a);
     cls.def("hasPsf", &ExposureT::hasPsf);
-    cls.def("getInfo", (std::shared_ptr<ExposureInfo> (ExposureT::*)()) & ExposureT::getInfo);
+    cls.def("getInfo", (std::shared_ptr<ExposureInfo>(ExposureT::*)()) & ExposureT::getInfo);
     cls.def("setInfo", &ExposureT::setInfo, "exposureInfo"_a);
 
     cls.def("writeFits", (void (ExposureT::*)(std::string const &) const) & ExposureT::writeFits);
     cls.def("writeFits", (void (ExposureT::*)(fits::MemFileManager &) const) & ExposureT::writeFits);
-    cls.def("writeFits", [](ExposureT & self, fits::Fits &fits) { self.writeFits(fits); });
+    cls.def("writeFits", [](ExposureT &self, fits::Fits &fits) { self.writeFits(fits); });
 
-    cls.def("writeFits", [](ExposureT & self, std::string const& filename,
-                            fits::ImageWriteOptions const& imageOptions,
-                            fits::ImageWriteOptions const& maskOptions,
-                            fits::ImageWriteOptions const& varianceOptions) {
-                                self.writeFits(filename, imageOptions, maskOptions, varianceOptions); },
+    cls.def("writeFits",
+            [](ExposureT &self, std::string const &filename, fits::ImageWriteOptions const &imageOptions,
+               fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
+                self.writeFits(filename, imageOptions, maskOptions, varianceOptions);
+            },
             "filename"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
-    cls.def("writeFits", [](ExposureT & self, fits::MemFileManager &manager,
-                            fits::ImageWriteOptions const& imageOptions,
-                            fits::ImageWriteOptions const& maskOptions,
-                            fits::ImageWriteOptions const& varianceOptions) {
-                                self.writeFits(manager, imageOptions, maskOptions, varianceOptions); },
+    cls.def("writeFits",
+            [](ExposureT &self, fits::MemFileManager &manager, fits::ImageWriteOptions const &imageOptions,
+               fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
+                self.writeFits(manager, imageOptions, maskOptions, varianceOptions);
+            },
             "manager"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
-    cls.def("writeFits", [](ExposureT & self, fits::Fits &fits, fits::ImageWriteOptions const& imageOptions,
-                            fits::ImageWriteOptions const& maskOptions,
-                            fits::ImageWriteOptions const& varianceOptions) {
-                                self.writeFits(fits, imageOptions, maskOptions, varianceOptions); },
+    cls.def("writeFits",
+            [](ExposureT &self, fits::Fits &fits, fits::ImageWriteOptions const &imageOptions,
+               fits::ImageWriteOptions const &maskOptions, fits::ImageWriteOptions const &varianceOptions) {
+                self.writeFits(fits, imageOptions, maskOptions, varianceOptions);
+            },
             "fits"_a, "imageOptions"_a, "maskOptions"_a, "varianceOptions"_a);
 
     cls.def_static("readFits", (ExposureT(*)(std::string const &))ExposureT::readFits);
     cls.def_static("readFits", (ExposureT(*)(fits::MemFileManager &))ExposureT::readFits);
+
+    cls.def("getCutout", &ExposureT::getCutout, "center"_a, "size"_a);
 
     return cls;
 }
@@ -172,7 +172,7 @@ PYBIND11_PLUGIN(exposure) {
 
     return mod.ptr();
 }
-}
-}
-}
-}  // namespace lsst::afw::image::<anonymous>
+}  // namespace
+}  // namespace image
+}  // namespace afw
+}  // namespace lsst

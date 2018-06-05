@@ -709,6 +709,70 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             exposure3 = afwImage.ExposureF(tmpFile)
             self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
 
+    def testGetCutout(self):
+        wcs = self.smallExposure.getWcs()
+
+        dimensions = [lsst.geom.Extent2I(100, 50), lsst.geom.Extent2I(15, 15), lsst.geom.Extent2I(0, 10),
+                      lsst.geom.Extent2I(25, 30), lsst.geom.Extent2I(15, -5)]
+        locations = [("center", self._getExposureCenter(self.smallExposure)),
+                     ("edge", wcs.pixelToSky(lsst.geom.Point2D(0, 0))),
+                     ("rounding test", wcs.pixelToSky(lsst.geom.Point2D(0.2, 0.7))),
+                     ("just inside", wcs.pixelToSky(lsst.geom.Point2D(-0.5 + 1e-4, -0.5 + 1e-4))),
+                     ("just outside", wcs.pixelToSky(lsst.geom.Point2D(-0.5 - 1e-4, -0.5 - 1e-4))),
+                     ("outside", wcs.pixelToSky(lsst.geom.Point2D(-1000, -1000)))]
+        for cutoutSize in dimensions:
+            for label, cutoutCenter in locations:
+                msg = 'Cutout size = %s, location = %s' % (cutoutSize, label)
+                if "outside" not in label and all(cutoutSize.gt(0)):
+                    cutout = self.smallExposure.getCutout(cutoutCenter, cutoutSize)
+                    centerInPixels = wcs.skyToPixel(cutoutCenter)
+                    precision = (1 + 1e-4)*np.sqrt(0.5)*wcs.getPixelScale(centerInPixels)
+                    self._checkCutoutProperties(cutout, cutoutSize, cutoutCenter, precision, msg)
+
+                    # Need a valid WCS
+                    with self.assertRaises(pexExcept.LogicError, msg=msg):
+                        self.exposureMiOnly.getCutout(cutoutCenter, cutoutSize)
+                else:
+                    with self.assertRaises(pexExcept.InvalidParameterError):
+                        self.smallExposure.getCutout(cutoutCenter, cutoutSize)
+
+    def _checkCutoutProperties(self, cutout, size, center, precision, msg):
+        """Test whether a cutout has the desired size and position.
+
+        Parameters
+        ----------
+        cutout : `lsst.afw.image.Exposure`
+            The cutout to test.
+        size : `lsst.geom.Extent2I`
+            The expected dimensions of ``cutout``.
+        center : `lsst.geom.SpherePoint`
+            The expected center of ``cutout``.
+        precision : `lsst.geom.Angle`
+            The precision to which ``center`` must match.
+        msg : `str`
+            An error message suffix describing test parameters.
+        """
+        newCenter = self._getExposureCenter(cutout)
+        self.assertIsNotNone(cutout, msg=msg)
+        self.assertSpherePointsAlmostEqual(newCenter, center, maxSep=precision, msg=msg)
+        self.assertEqual(cutout.getWidth(), size[0], msg=msg)
+        self.assertEqual(cutout.getHeight(), size[1], msg=msg)
+
+    def _getExposureCenter(self, exposure):
+        """Return the sky coordinates of an Exposure's center.
+
+        Parameters
+        ----------
+        exposure : `lsst.afw.image.Exposure`
+            The image whose center is desired.
+
+        Returns
+        -------
+        center : `lsst.geom.SpherePoint`
+            The position at the center of ``exposure``.
+        """
+        return exposure.getWcs().pixelToSky(lsst.geom.Box2D(exposure.getBBox()).getCenter())
+
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
