@@ -71,10 +71,10 @@ def _compareWcsOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*lsst.geom.arcseconds,
     if nx < 1 or ny < 1:
         raise RuntimeError(
             "nx = %s and ny = %s must both be positive" % (nx, ny))
-    if maxDiffSky <= 0*lsst.geom.arcseconds:
-        raise RuntimeError("maxDiffSky = %s must be positive" % (maxDiffSky,))
-    if maxDiffPix <= 0:
-        raise RuntimeError("maxDiffPix = %s must be positive" % (maxDiffPix,))
+    if maxDiffSky < 0*lsst.geom.arcseconds:
+        raise RuntimeError("maxDiffSky = %s must not be negative" % (maxDiffSky,))
+    if maxDiffPix < 0:
+        raise RuntimeError("maxDiffPix = %s must not be negative" % (maxDiffPix,))
 
     bboxd = lsst.geom.Box2D(bbox)
     xList = np.linspace(bboxd.getMinX(), bboxd.getMaxX(), nx)
