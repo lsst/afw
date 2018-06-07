@@ -235,7 +235,7 @@ public:
     virtual void updateSolution() { solution.asEigen() = _ldlt.solve(rhs); }
 
     virtual void updateCovariance() {
-        ndarray::EigenView<double, 2, 2> cov(covariance);
+        auto cov = covariance.asEigen();
         cov.setIdentity();
         cov = _ldlt.solve(cov);
     }
