@@ -140,7 +140,7 @@ std::shared_ptr<GaussianPsf::Image> GaussianPsf::doComputeKernelImage(lsst::geom
             sum += row[xIndex] = std::exp(-0.5 * (x * x + y * y) / (_sigma * _sigma));
         }
     }
-    array.asEigen() /= sum;
+    ndarray::asEigenMatrix(array) /= sum;
     return r;
 }
 

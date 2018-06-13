@@ -122,8 +122,8 @@ public:
         // the weird C++ syntax required for calling a templated member function
         // called "cast" in this context; see
         // http://eigen.tuxfamily.org/dox-devel/TopicTemplateKeyword.html
-        _getDesignMatrix() = design.asEigen().template cast<double>();
-        _getDataVector() = data.asEigen().template cast<double>();
+        _getDesignMatrix() = ndarray::asEigenMatrix(design).template cast<double>();
+        _getDataVector() = ndarray::asEigenMatrix(data).template cast<double>();
         _factor(false);
     }
 
@@ -138,7 +138,7 @@ public:
     /// Reset the design matrix given as an ndarray; dimension and data are not changed.
     template <typename T1, int C1>
     void setDesignMatrix(ndarray::Array<T1, 2, C1> const& design) {
-        _getDesignMatrix() = design.asEigen().template cast<double>();
+        _getDesignMatrix() = ndarray::asEigenMatrix(design).template cast<double>();
         _factor(false);
     }
 
@@ -173,11 +173,11 @@ public:
     template <typename T1, typename T2, int C1, int C2>
     void setNormalEquations(ndarray::Array<T1, 2, C1> const& fisher, ndarray::Array<T2, 1, C2> const& rhs) {
         if ((C1 > 0) == bool(Eigen::MatrixXd::IsRowMajor)) {
-            _getFisherMatrix() = fisher.asEigen().template cast<double>();
+            _getFisherMatrix() = ndarray::asEigenMatrix(fisher).template cast<double>();
         } else {
-            _getFisherMatrix() = fisher.asEigen().transpose().template cast<double>();
+            _getFisherMatrix() = ndarray::asEigenMatrix(fisher).transpose().template cast<double>();
         }
-        _getRhsVector() = rhs.asEigen().template cast<double>();
+        _getRhsVector() = ndarray::asEigenMatrix(rhs).template cast<double>();
         _factor(true);
     }
 
@@ -223,7 +223,7 @@ public:
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use getSolution().asEigen().
+     *  If you want an Eigen object instead, just use ndarray::asEigenMatrix(getSolution()).
      *
      *  The solution is cached the first time this member function is called, and will be
      *  reused unless the matrices are reset or the threshold is changed.
@@ -237,7 +237,7 @@ public:
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use getCovariance().asEigen().
+     *  If you want an Eigen object instead, just use ndarray::asEigenMatrix(getCovariance()).
      *
      *  The covariance is cached the first time this member function is called, and will be
      *  reused unless the matrices are reset or the threshold is changed.
@@ -254,7 +254,7 @@ public:
      *  by future calls to LeastSquares member functions, so it's best to promptly copy the
      *  result elsewhere.
      *
-     *  If you want an Eigen object instead, just use getFisherMatrix().asEigen().
+     *  If you want an Eigen object instead, just use ndarray::asEigenMatrix(getFisherMatrix()).
      */
     ndarray::Array<double const, 2, 2> getFisherMatrix();
 

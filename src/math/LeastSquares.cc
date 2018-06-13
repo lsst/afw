@@ -165,9 +165,9 @@ public:
                     "Cannot compute NORMAL_CHOLESKY diagnostic from NORMAL_EIGENSYSTEM factorization.");
         }
         if (_eig.info() == Eigen::Success) {
-            diagnostic.asEigen() = _eig.eigenvalues().reverse();
+            ndarray::asEigenMatrix(diagnostic) = _eig.eigenvalues().reverse();
         } else {
-            diagnostic.asEigen() = _svd.singularValues();
+            ndarray::asEigenMatrix(diagnostic) = _svd.singularValues();
         }
         if (whichDiagnostic == LeastSquares::DIRECT_SVD) {
             diagnostic.asEigen<Eigen::ArrayXpr>() = diagnostic.asEigen<Eigen::ArrayXpr>().sqrt();
@@ -176,33 +176,35 @@ public:
 
     virtual void updateSolution() {
         if (rank == 0) {
-            solution.asEigen().setZero();
+            ndarray::asEigenMatrix(solution).setZero();
             return;
         }
         if (_eig.info() == Eigen::Success) {
             _tmp.head(rank) = _eig.eigenvectors().rightCols(rank).adjoint() * rhs;
             _tmp.head(rank).array() /= _eig.eigenvalues().tail(rank).array();
-            solution.asEigen() = _eig.eigenvectors().rightCols(rank) * _tmp.head(rank);
+            ndarray::asEigenMatrix(solution) = _eig.eigenvectors().rightCols(rank) * _tmp.head(rank);
         } else {
             _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * rhs;
             _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
-            solution.asEigen() = _svd.matrixU().leftCols(rank) * _tmp.head(rank);
+            ndarray::asEigenMatrix(solution) = _svd.matrixU().leftCols(rank) * _tmp.head(rank);
         }
     }
 
     virtual void updateCovariance() {
         if (rank == 0) {
-            covariance.asEigen().setZero();
+            ndarray::asEigenMatrix(covariance).setZero();
             return;
         }
         if (_eig.info() == Eigen::Success) {
-            covariance.asEigen() = _eig.eigenvectors().rightCols(rank) *
-                                   _eig.eigenvalues().tail(rank).array().inverse().matrix().asDiagonal() *
-                                   _eig.eigenvectors().rightCols(rank).adjoint();
+            ndarray::asEigenMatrix(covariance) =
+                    _eig.eigenvectors().rightCols(rank) *
+                    _eig.eigenvalues().tail(rank).array().inverse().matrix().asDiagonal() *
+                    _eig.eigenvectors().rightCols(rank).adjoint();
         } else {
-            covariance.asEigen() = _svd.matrixU().leftCols(rank) *
-                                   _svd.singularValues().head(rank).array().inverse().matrix().asDiagonal() *
-                                   _svd.matrixU().leftCols(rank).adjoint();
+            ndarray::asEigenMatrix(covariance) =
+                    _svd.matrixU().leftCols(rank) *
+                    _svd.singularValues().head(rank).array().inverse().matrix().asDiagonal() *
+                    _svd.matrixU().leftCols(rank).adjoint();
         }
     }
 
@@ -229,13 +231,13 @@ public:
                     pex::exceptions::LogicError,
                     "Can only compute NORMAL_CHOLESKY diagnostic from NORMAL_CHOLESKY factorization.");
         }
-        diagnostic.asEigen() = _ldlt.vectorD();
+        ndarray::asEigenMatrix(diagnostic) = _ldlt.vectorD();
     }
 
-    virtual void updateSolution() { solution.asEigen() = _ldlt.solve(rhs); }
+    virtual void updateSolution() { ndarray::asEigenMatrix(solution) = _ldlt.solve(rhs); }
 
     virtual void updateCovariance() {
-        auto cov = covariance.asEigen();
+        auto cov = ndarray::asEigenMatrix(covariance);
         cov.setIdentity();
         cov = _ldlt.solve(cov);
     }
@@ -270,27 +272,27 @@ public:
                         pex::exceptions::LogicError,
                         "Can only compute NORMAL_CHOLESKY diagnostic from DIRECT_SVD factorization.");
             case LeastSquares::DIRECT_SVD:
-                diagnostic.asEigen() = _svd.singularValues();
+                ndarray::asEigenMatrix(diagnostic) = _svd.singularValues();
                 break;
         }
     }
 
     virtual void updateSolution() {
         if (rank == 0) {
-            solution.asEigen().setZero();
+            ndarray::asEigenMatrix(solution).setZero();
             return;
         }
         _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
         _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
-        solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
+        ndarray::asEigenMatrix(solution) = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
     }
 
     virtual void updateCovariance() {
         if (rank == 0) {
-            covariance.asEigen().setZero();
+            ndarray::asEigenMatrix(covariance).setZero();
             return;
         }
-        covariance.asEigen() =
+        ndarray::asEigenMatrix(covariance) =
                 _svd.matrixV().leftCols(rank) *
                 _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal() *
                 _svd.matrixV().leftCols(rank).adjoint();
