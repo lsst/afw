@@ -199,30 +199,6 @@ void Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits &fitsfile,
 
 namespace {
 /**
- * Create a box centered as closely as possible on a particular point.
- *
- * @param center The desired center of the box.
- * @param size The desired width and height (in that order) of the box.
- *
- * @returns a box with size ``size`` and center within half a pixel of ``center`` in either dimension.
- *
- * @throws lsst::pex::exceptions::InvalidParameterError Thrown if ``size`` has invalid dimensions.
- */
-lsst::geom::Box2I _makeCenteredBox(lsst::geom::Point2D const &center, lsst::geom::Extent2I const &size) {
-    if (size[0] <= 0 || size[1] <= 0) {
-        std::stringstream buffer;
-        buffer << "Cannot create bounding box with dimensions " << size;
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
-    }
-
-    lsst::geom::Point2D corner(center);
-    corner.shift(-0.5 * lsst::geom::Extent2D(size));
-    // compensate for Box2I's coordinate conventions (where max = min + size - 1)
-    corner.shift(lsst::geom::Extent2D(0.5, 0.5));
-    return lsst::geom::Box2I(lsst::geom::Point2I(corner), size, false);
-}
-
-/**
  * Copy all overlapping pixels from one Exposure to another.
  *
  * If no pixels overlap, ``destination`` shall not be modified.
@@ -249,15 +225,20 @@ Exposure<ImageT, MaskT, VarianceT> Exposure<ImageT, MaskT, VarianceT>::getCutout
     if (!hasWcs()) {
         throw LSST_EXCEPT(pex::exceptions::LogicError, "Cannot look up source position without WCS.");
     }
-
     lsst::geom::Point2D pixelCenter = getWcs()->skyToPixel(center);
+
     if (!lsst::geom::Box2D(getBBox()).contains(pixelCenter)) {
         std::stringstream buffer;
         buffer << "Point " << center << " lies at pixel " << pixelCenter << ", which lies outside Exposure "
                << getBBox();
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
     }
-    lsst::geom::Box2I bbox = _makeCenteredBox(pixelCenter, size);
+    if (size[0] <= 0 || size[1] <= 0) {
+        std::stringstream buffer;
+        buffer << "Cannot create bounding box with dimensions " << size;
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, buffer.str());
+    }
+    lsst::geom::Box2I bbox = lsst::geom::Box2I::makeCenteredBox(pixelCenter, size);
 
     // cutout must have independent ExposureInfo
     auto copyInfo = std::make_shared<ExposureInfo>(*getInfo());
