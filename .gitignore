@@ -9,6 +9,7 @@ _build.*
 *.dSYM/
 core.*
 .cache/
+.coverage
 .pytest_cache/
 .sconf_temp
 .sconsign.dblite
