@@ -476,7 +476,7 @@ std::vector<double> makeRandomVector(int size) {
 
 ndarray::Array<double, 2, 2> makeRandomArray(int width, int height) {
     ndarray::Array<double, 2, 2> array(ndarray::allocate(height, width));
-    array.asEigen().setRandom();
+    ndarray::asEigenMatrix(array).setRandom();
     return array;
 }
 

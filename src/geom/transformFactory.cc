@@ -81,7 +81,7 @@ ndarray::Array<typename Eigen::MatrixBase<Derived>::Scalar, 2, 2> toNdArray(
         Eigen::MatrixBase<Derived> const &matrix) {
     ndarray::Array<typename Eigen::MatrixBase<Derived>::Scalar, 2, 2> array =
             ndarray::allocate(ndarray::makeVector(matrix.rows(), matrix.cols()));
-    array.asEigen() = matrix;
+    ndarray::asEigenMatrix(array) = matrix;
     return array;
 }
 
