@@ -43,7 +43,7 @@ def makeRotationMatrix(angle, scale):
     return np.array([
         ([cosAng, sinAng]),
         ([-sinAng, cosAng]),
-    ], dtype=float) * scale
+    ], dtype=float)*scale
 
 
 class BaseTestCase(lsst.utils.tests.TestCase):
@@ -53,13 +53,13 @@ class BaseTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         # define the position and size of one CCD in the focal plane
         self.pixelSizeMm = 0.024  # mm/pixel
-        self.ccdOrientation = 5 * lsst.geom.degrees  # orientation of pixel w.r.t. focal plane
-        self.plateScale = 0.15 * lsst.geom.arcseconds  # angle/pixel
+        self.ccdOrientation = 5*lsst.geom.degrees  # orientation of pixel w.r.t. focal plane
+        self.plateScale = 0.15*lsst.geom.arcseconds  # angle/pixel
         self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 4000))
         self.crpix = lsst.geom.Point2D(1000, 2000)
-        self.crval = lsst.geom.SpherePoint(10 * lsst.geom.degrees, 40 * lsst.geom.degrees)
-        self.orientation = -45 * lsst.geom.degrees
-        self.scale = 1.0 * lsst.geom.arcseconds
+        self.crval = lsst.geom.SpherePoint(10, 40, lsst.geom.degrees)
+        self.orientation = -45*lsst.geom.degrees
+        self.scale = 1.0*lsst.geom.arcseconds
         # position of 0,0 pixel position in focal plane
         self.ccdPositionMm = lsst.geom.Point2D(25.0, 10.0)
         self.pixelToFocalPlane = self.makeAffineTransform(
@@ -69,7 +69,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
         )
         cdMatrix = afwGeom.makeCdMatrix(scale=self.scale, orientation=self.orientation)
         self.tanWcs = afwGeom.makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
-        self.radPerMm = self.plateScale.asRadians() / self.pixelSizeMm  # at center of field
+        self.radPerMm = self.plateScale.asRadians()/self.pixelSizeMm  # at center of field
         bboxD = lsst.geom.Box2D(self.bbox)
         self.pixelPoints = bboxD.getCorners()
         self.pixelPoints.append(bboxD.getCenter())
@@ -82,7 +82,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
                                              lsst.geom.LinearTransform.makeRotation(rotation))
         offset = lsst.geom.AffineTransform(lsst.geom.Extent2D(*offset))
         # AffineTransform a*b = b.then(a)
-        return afwGeom.makeTransform(rotScale * offset)
+        return afwGeom.makeTransform(rotScale*offset)
 
 
 class MakeDistortedTanWcsTestCase(BaseTestCase):
