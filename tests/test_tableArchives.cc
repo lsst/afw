@@ -421,9 +421,9 @@ BOOST_AUTO_TEST_CASE(IncompatibleSchemas) {
     std::shared_ptr<Comparable> a1(new ExampleA(3, 2.5, av1));
 
     ndarray::Array<float, 1, 1> av2 = ndarray::allocate(3);
-    av1[0] = 2.1;
-    av1[1] = 2.2;
-    av1[1] = 2.3;
+    av2[0] = 2.1;
+    av2[1] = 2.2;
+    av2[2] = 2.3;
     std::shared_ptr<Comparable> a2(new ExampleA(4, 3.5, av2));
 
     roundtripAndCompare(ndarray::makeVector(a1, a2), ndarray::makeVector<ndarray::Size>(1, 1));
