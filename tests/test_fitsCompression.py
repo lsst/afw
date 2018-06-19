@@ -148,11 +148,11 @@ class ImageScalingTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(image.getBBox(), unpersisted.getBBox())
 
             header = lsst.afw.fits.readMetadata(filename)
-            bscale = header.get("BSCALE")
-            bzero = header.get("BZERO")
+            bscale = header.getScalar("BSCALE")
+            bzero = header.getScalar("BZERO")
 
             if scaling.algorithm != ImageScalingOptions.NONE:
-                self.assertEqual(header.get("BITPIX"), scaling.bitpix)
+                self.assertEqual(header.getScalar("BITPIX"), scaling.bitpix)
 
             if scaling.bitpix == 8:  # unsigned, says FITS
                 maxValue = bscale*(2**scaling.bitpix - 1) + bzero
@@ -708,8 +708,8 @@ class ImageCompressionTestCase(lsst.utils.tests.TestCase):
                     original.writeFits(fits, options)
                 cfitsio = cls(filename)
                 header = lsst.afw.fits.readMetadata(filename, 1)
-                seed = header.get("ZDITHER0")
-                self.assertEqual(header.get("BSCALE"), bscaleSet)
+                seed = header.getScalar("ZDITHER0")
+                self.assertEqual(header.getScalar("BSCALE"), bscaleSet)
 
             compression = ImageCompressionOptions(algorithm, tiles, 0.0)
             scaling = ImageScalingOptions(ImageScalingOptions.MANUAL, 32, [u"BAD"], bscale=bscaleSet,

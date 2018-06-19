@@ -222,7 +222,7 @@ def makeSipIwcToPixel(metadata):
         pixelPosition = pixel origin + uv + inverseSipPolynomial(uv)
         where uv = inverseCdMatrix * iwcPosition
     """
-    crpix = (metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
+    crpix = (metadata.getScalar("CRPIX1") - 1, metadata.getScalar("CRPIX2") - 1)
     pixelRelativeToAbsoluteMap = ast.ShiftMap(crpix)
     cdMatrix = getCdMatrixFromMetadata(metadata)
     cdMatrixMap = ast.MatrixMap(cdMatrix.copy())
@@ -261,7 +261,7 @@ def makeSipPixelToIwc(metadata):
         iwcPosition = cdMatrix * (dxy + sipPolynomial(dxy))
         where dxy = pixelPosition - pixelOrigin
     """
-    crpix = (metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
+    crpix = (metadata.getScalar("CRPIX1") - 1, metadata.getScalar("CRPIX2") - 1)
     pixelAbsoluteToRelativeMap = ast.ShiftMap(crpix).getInverse()
     cdMatrix = getCdMatrixFromMetadata(metadata)
     cdMatrixMap = ast.MatrixMap(cdMatrix.copy())

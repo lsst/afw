@@ -44,8 +44,8 @@ class ReadMefTest(unittest.TestCase):
         filename = DATA + "[%s]" % name
 
         header = readMetadata(filename)
-        self.assertEqual(header.get("EXT_NUM"), extNum)
-        self.assertEqual(header.get("EXTNAME").strip(), name)
+        self.assertEqual(header.getScalar("EXT_NUM"), extNum)
+        self.assertEqual(header.getScalar("EXTNAME").strip(), name)
 
         image = afwImage.ImageI(filename)
         self.assertEqual(image.get(0, 0), value)
@@ -59,7 +59,7 @@ class ReadMefTest(unittest.TestCase):
         if hdu is None:
             hdu = DEFAULT_HDU
         header = readMetadata(DATA, hdu)
-        self.assertEqual(header.get("EXT_NUM"), extNum)
+        self.assertEqual(header.getScalar("EXT_NUM"), extNum)
 
     def testExtNum(self):
         # N.b.  The test file was written with 1-indexed EXT_NUMs

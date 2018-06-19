@@ -788,8 +788,8 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
 
         meta = readMetadata(self.fileForMetadata)
         self.assertIn("NAXIS1", meta.names())
-        self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
-        self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
+        self.assertEqual(im.getWidth(), meta.getScalar("NAXIS1"))
+        self.assertEqual(im.getHeight(), meta.getScalar("NAXIS2"))
 
     def testTicket1040(self):
         """ How to repeat from #1040"""
@@ -814,7 +814,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         try:
             self.dimage1.writeFits(testfile)
             meta = readMetadata(testfile)
-            self.assertEqual(meta.get("A.B.C.D"), 12345)
+            self.assertEqual(meta.getScalar("A.B.C.D"), 12345)
         finally:
             shutil.rmtree(tempdir)
 

@@ -302,8 +302,8 @@ class SimpleSkyWcsTestCase(SkyWcsBaseTestCase):
         # check that getFitsMetadata can operate at high precision
         # and has axis order RA, Dec
         fitsMetadata = wcs.getFitsMetadata(True)
-        self.assertEqual(fitsMetadata.get("CTYPE1")[0:4], "RA--")
-        self.assertEqual(fitsMetadata.get("CTYPE2")[0:4], "DEC-")
+        self.assertEqual(fitsMetadata.getScalar("CTYPE1")[0:4], "RA--")
+        self.assertEqual(fitsMetadata.getScalar("CTYPE2")[0:4], "DEC-")
 
         # Compute a WCS with the pixel origin shifted by an arbitrary amount
         # The resulting sky origin should not change
@@ -532,12 +532,12 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
         skyOrigin = skyWcs.getSkyOrigin()
         for i in range(2):
             # subtract 1 from FITS CRPIX to get LSST convention
-            self.assertAlmostEqual(pixelOrigin[i], self.metadata.get("CRPIX%s" % (i+1,)) - 1)
+            self.assertAlmostEqual(pixelOrigin[i], self.metadata.getScalar("CRPIX%s" % (i+1,)) - 1)
             self.assertAnglesAlmostEqual(skyOrigin[i],
-                                         self.metadata.get("CRVAL%s" % (i+1,))*lsst.geom.degrees)
+                                         self.metadata.getScalar("CRVAL%s" % (i+1,))*lsst.geom.degrees)
         cdMatrix = skyWcs.getCdMatrix()
         for i, j in itertools.product(range(2), range(2)):
-            self.assertAlmostEqual(cdMatrix[i, j], self.metadata.get("CD%s_%s" % (i+1, j+1)))
+            self.assertAlmostEqual(cdMatrix[i, j], self.metadata.getScalar("CD%s_%s" % (i+1, j+1)))
 
         self.assertTrue(skyWcs.isFits)
 
@@ -595,9 +595,9 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
 
         metadata.set("RADESYS", "FK5")
         metadata.set("EQUINOX", equinox)
-        crpix = lsst.geom.Point2D(metadata.get("CRPIX1") - 1, metadata.get("CRPIX2") - 1)
+        crpix = lsst.geom.Point2D(metadata.getScalar("CRPIX1") - 1, metadata.getScalar("CRPIX2") - 1)
         # record the original CRVAL before reading and stripping metadata
-        crvalFk5Deg = (metadata.get("CRVAL1"), metadata.get("CRVAL2"))
+        crvalFk5Deg = (metadata.getScalar("CRVAL1"), metadata.getScalar("CRVAL2"))
 
         # create the wcs and retrieve crval
         skyWcs = makeSkyWcs(metadata)
@@ -618,11 +618,12 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
     def testNormalizationDecRa(self):
         """Test that a Dec, RA WCS is normalized to RA, Dec
         """
-        crpix = lsst.geom.Point2D(self.metadata.get("CRPIX1") - 1, self.metadata.get("CRPIX2") - 1)
+        crpix = lsst.geom.Point2D(self.metadata.getScalar("CRPIX1") - 1,
+                                  self.metadata.getScalar("CRPIX2") - 1)
 
         # swap RA, Decaxes in metadata
-        crvalIn = lsst.geom.SpherePoint(self.metadata.get("CRVAL1"), self.metadata.get("CRVAL2"),
-                                        lsst.geom.degrees)
+        crvalIn = lsst.geom.SpherePoint(self.metadata.getScalar("CRVAL1"),
+                                        self.metadata.getScalar("CRVAL2"), lsst.geom.degrees)
         self.metadata.set("CRVAL1", crvalIn[1].asDegrees())
         self.metadata.set("CRVAL2", crvalIn[0].asDegrees())
         self.metadata.set("CTYPE1", "DEC--TAN")
@@ -692,8 +693,8 @@ class MetadataWcsTestCase(SkyWcsBaseTestCase):
             if not badPC:
                 for i in (1, 2,):
                     for j in (1, 2,):
-                        self.assertEqual(md.get("CD%d_%d" % (i, j)),
-                                         md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
+                        self.assertEqual(md.getScalar("CD%d_%d" % (i, j)),
+                                         md.getScalar("CDELT%d" % i)*md.getScalar("PC00%d00%d" % (i, j)))
 
             wcs2 = makeSkyWcs(md, strip=False)
             skyPos2 = wcs2.pixelToSky(pixPos)
@@ -841,7 +842,8 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
     def testGetIntermediateWorldCoordsToSky(self):
         """Test getIntermediateWorldCoordsToSky and getPixelToIntermediateWorldCoords
         """
-        crpix = lsst.geom.Extent2D(self.metadata.get("CRPIX1") - 1, self.metadata.get("CRPIX2") - 1)
+        crpix = lsst.geom.Extent2D(self.metadata.getScalar("CRPIX1") - 1,
+                                   self.metadata.getScalar("CRPIX2") - 1)
         skyWcs = makeSkyWcs(self.metadata, strip=False)
         for simplify in (False, True):
             pixelToIwc = getPixelToIntermediateWorldCoords(skyWcs, simplify)
@@ -889,9 +891,10 @@ class TestTanSipTestCase(SkyWcsBaseTestCase):
     def testMakeTanSipWcs(self):
         referenceWcs = makeSkyWcs(self.metadata, strip=False)
 
-        crpix = lsst.geom.Point2D(self.metadata.get("CRPIX1") - 1, self.metadata.get("CRPIX2") - 1)
-        crval = lsst.geom.SpherePoint(self.metadata.get("CRVAL1"), self.metadata.get("CRVAL2"),
-                                      lsst.geom.degrees)
+        crpix = lsst.geom.Point2D(self.metadata.getScalar("CRPIX1") - 1,
+                                  self.metadata.getScalar("CRPIX2") - 1)
+        crval = lsst.geom.SpherePoint(self.metadata.getScalar("CRVAL1"),
+                                      self.metadata.getScalar("CRVAL2"), lsst.geom.degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")

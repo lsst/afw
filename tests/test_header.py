@@ -54,10 +54,10 @@ class HeaderTestCase(lsst.utils.tests.TestCase):
         for k, v in header.items():
             self.assertTrue(metadata.exists(k))
             if isinstance(v, float) and numpy.isnan(v):
-                self.assertIsInstance(metadata.get(k), float)
-                self.assertTrue(numpy.isnan(metadata.get(k)))
+                self.assertIsInstance(metadata.getScalar(k), float)
+                self.assertTrue(numpy.isnan(metadata.getScalar(k)))
             else:
-                self.assertEqual(metadata.get(k), v)
+                self.assertEqual(metadata.getScalar(k), v)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

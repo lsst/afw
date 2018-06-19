@@ -95,7 +95,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         for tup in self.mdMapList:
             ham.addEntry(*tup)
         ham.setAttributes(tao, self.metadata)
-        self.assertEqual(tao.name, self.metadata.get('NAME'))
+        self.assertEqual(tao.name, self.metadata.getScalar('NAME'))
         self.assertEqual(tao.testsec, 'Test String')
         self.assertEqual(tao.defaultval, 'Default')
 
@@ -104,7 +104,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         for tup in self.mdMapList:
             hdm.addEntry(*tup)
         hdm.setAttributes(tdo, self.metadata)
-        self.assertEqual(tdo.name, self.metadata.get('NAME'))
+        self.assertEqual(tdo.name, self.metadata.getScalar('NAME'))
         self.assertEqual(tdo.testsec, 'Test String')
         self.assertEqual(tdo.defaultval, 'Default')
 

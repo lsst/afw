@@ -164,29 +164,29 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
             statsImage = afwImage.makeMaskedImage(img, msk, var)
 
-            x0 = md.get("BKGD_X0")
-            y0 = md.get("BKGD_Y0")
-            width = md.get("BKGD_WIDTH")
-            height = md.get("BKGD_HEIGHT")
+            x0 = md.getScalar("BKGD_X0")
+            y0 = md.getScalar("BKGD_Y0")
+            width = md.getScalar("BKGD_WIDTH")
+            height = md.getScalar("BKGD_HEIGHT")
             imageBBox = lsst.geom.BoxI(lsst.geom.PointI(
                 x0, y0), lsst.geom.ExtentI(width, height))
 
-            interpStyle = afwMath.Interpolate.Style(md.get("INTERPSTYLE"))
+            interpStyle = afwMath.Interpolate.Style(md.getScalar("INTERPSTYLE"))
             undersampleStyle = afwMath.UndersampleStyle(
-                md.get("UNDERSAMPLESTYLE"))
+                md.getScalar("UNDERSAMPLESTYLE"))
 
             # Older outputs won't have APPROX* settings.  Provide alternative defaults.
             # Note: Currently X- and Y-orders must be equal due to a limitation in
             #       math::Chebyshev1Function2.  Setting approxOrderY = -1 is equivalent
             #       to saying approxOrderY = approxOrderX.
-            approxStyle = md.get("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
+            approxStyle = md.getScalar("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
                 else afwMath.ApproximateControl.UNKNOWN
             approxStyle = afwMath.ApproximateControl.Style(approxStyle)
-            approxOrderX = md.get(
+            approxOrderX = md.getScalar(
                 "APPROXORDERX") if "APPROXORDERX" in md.names() else 1
-            approxOrderY = md.get(
+            approxOrderY = md.getScalar(
                 "APPROXORDERY") if "APPROXORDERY" in md.names() else -1
-            approxWeighting = md.get(
+            approxWeighting = md.getScalar(
                 "APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)

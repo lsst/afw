@@ -68,8 +68,8 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         """Get CRPIX from metadata using the LSST convention: 0-based in parent coordinates
         """
         return Point2D(   # zero-based, hence the - 1
-            metadata.get("CRPIX1") + metadata.get("CRVAL1A") - 1,
-            metadata.get("CRPIX2") + metadata.get("CRVAL2A") - 1,
+            metadata.getScalar("CRPIX1") + metadata.getScalar("CRVAL1A") - 1,
+            metadata.getScalar("CRPIX2") + metadata.getScalar("CRVAL2A") - 1,
         )
 
     def testReadFitsWcsStripMetadata(self):
@@ -96,7 +96,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         metadata1 = self.makeMetadata()
         metadata1.set("RADESYS", "ICRS")
         frameSet1 = readFitsWcs(metadata1, strip=False)
-        self.assertEqual(metadata1.get("RADESYS"), "ICRS")
+        self.assertEqual(metadata1.getScalar("RADESYS"), "ICRS")
 
         metadata2 = self.makeMetadata()
         metadata2.remove("RADESYS")
@@ -104,7 +104,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         frameSet2 = readFitsWcs(metadata2, strip=False)
         # metadata will have been corrected by readFitsWcs
         self.assertFalse(metadata2.exists("RADECSYS"))
-        self.assertEqual(metadata2.get("RADESYS"), "ICRS")
+        self.assertEqual(metadata2.getScalar("RADESYS"), "ICRS")
         self.assertEqual(frameSet1, frameSet2)
 
     def testReadLsstSkyWcsStripMetadata(self):
@@ -114,7 +114,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         frameSet1 = readLsstSkyWcs(metadata, strip=False)
         self.assertEqual(len(metadata.toList()), nKeys)
 
-        crval = SpherePoint(metadata.get("CRVAL1")*degrees, metadata.get("CRVAL2")*degrees)
+        crval = SpherePoint(metadata.getScalar("CRVAL1"), metadata.getScalar("CRVAL2"), degrees)
         crvalRad = crval.getPosition(radians)
         desiredCrpix = self.getCrpix(metadata)
         computedCrpix = frameSet1.applyInverse(crvalRad)
@@ -146,7 +146,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         metadata.set("EQUINOX", equinox)
         crpix = self.getCrpix(metadata)
         # record the original CRVAL before reading and stripping metadata
-        crvalFk5Deg = (metadata.get("CRVAL1"), metadata.get("CRVAL2"))
+        crvalFk5Deg = (metadata.getScalar("CRVAL1"), metadata.getScalar("CRVAL2"))
 
         # read frameSet and compute crval
         frameSet = readLsstSkyWcs(metadata, strip=True)
@@ -177,7 +177,7 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         crpix = self.getCrpix(metadata)
 
         # swap RA, Decaxes in metadata
-        crvalIn = SpherePoint(metadata.get("CRVAL1")*degrees, metadata.get("CRVAL2")*degrees)
+        crvalIn = SpherePoint(metadata.getScalar("CRVAL1"), metadata.getScalar("CRVAL2"), degrees)
         metadata.set("CRVAL1", crvalIn[1].asDegrees())
         metadata.set("CRVAL2", crvalIn[0].asDegrees())
         metadata.set("CTYPE1", "DEC--TAN")
@@ -213,12 +213,12 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         metadata = getPropertyListFromFitsChan(fc)
         self.assertEqual(metadata.getOrderedNames(), expectedNames)
 
-        self.assertEqual(metadata.get("ACONT"), continueVal)
-        self.assertAlmostEqual(metadata.get("AFLOAT"), floatVal)
-        self.assertEqual(metadata.get("ANINT"), intVal)
-        self.assertEqual(metadata.get("ALOGICAL"), logicalVal)
-        self.assertEqual(metadata.get("ASTRING"), stringVal)
-        self.assertEqual(metadata.get("ACONT"), continueVal)
+        self.assertEqual(metadata.getScalar("ACONT"), continueVal)
+        self.assertAlmostEqual(metadata.getScalar("AFLOAT"), floatVal)
+        self.assertEqual(metadata.getScalar("ANINT"), intVal)
+        self.assertEqual(metadata.getScalar("ALOGICAL"), logicalVal)
+        self.assertEqual(metadata.getScalar("ASTRING"), stringVal)
+        self.assertEqual(metadata.getScalar("ACONT"), continueVal)
 
         for name in expectedNames:
             self.assertEqual(metadata.getComment(name), "Comment for %s" % (name,))
@@ -268,12 +268,12 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
         metadata = getPropertyListFromFitsChan(fc)
         self.assertEqual(metadata.getOrderedNames(), ["ACONT", "AFLOAT", "ANINT", "ALOGICAL", "ASTRING"])
 
-        self.assertEqual(metadata.get("ACONT"), continueVal)
-        self.assertAlmostEqual(metadata.get("AFLOAT"), floatVal)
-        self.assertEqual(metadata.get("ANINT"), intVal)
-        self.assertEqual(metadata.get("ALOGICAL"), logicalVal)
-        self.assertEqual(metadata.get("ASTRING"), stringVal)
-        self.assertEqual(metadata.get("ACONT"), continueVal)
+        self.assertEqual(metadata.getScalar("ACONT"), continueVal)
+        self.assertAlmostEqual(metadata.getScalar("AFLOAT"), floatVal)
+        self.assertEqual(metadata.getScalar("ANINT"), intVal)
+        self.assertEqual(metadata.getScalar("ALOGICAL"), logicalVal)
+        self.assertEqual(metadata.getScalar("ASTRING"), stringVal)
+        self.assertEqual(metadata.getScalar("ACONT"), continueVal)
 
     def testGetPropertyListFromFitsChanUnsupportedTypes(self):
         fc = ast.FitsChan(ast.StringStream())
@@ -299,19 +299,19 @@ class FrameSetUtilsTestCase(lsst.utils.tests.TestCase):
                                                  cdMatrix=cdMatrix, projection=projection)
                 desiredLength = 12 if orientation == 0 * degrees else 14
                 self.assertEqual(len(metadata.names()), desiredLength)
-                self.assertEqual(metadata.get("RADESYS"), "ICRS")
-                self.assertAlmostEqual(metadata.get("EQUINOX"), 2000.0)
-                self.assertEqual(metadata.get("CTYPE1"), "RA---" + projection)
-                self.assertEqual(metadata.get("CTYPE2"), "DEC--" + projection)
+                self.assertEqual(metadata.getScalar("RADESYS"), "ICRS")
+                self.assertAlmostEqual(metadata.getScalar("EQUINOX"), 2000.0)
+                self.assertEqual(metadata.getScalar("CTYPE1"), "RA---" + projection)
+                self.assertEqual(metadata.getScalar("CTYPE2"), "DEC--" + projection)
                 for i in range(2):
-                    self.assertAlmostEqual(metadata.get("CRPIX%d" % (i + 1,)), crpix[i] + 1)
-                    self.assertAlmostEqual(metadata.get("CRVAL%d" % (i + 1,)), crval[i].asDegrees())
-                    self.assertEqual(metadata.get("CUNIT%d" % (i + 1,)), "deg")
+                    self.assertAlmostEqual(metadata.getScalar("CRPIX%d" % (i + 1,)), crpix[i] + 1)
+                    self.assertAlmostEqual(metadata.getScalar("CRVAL%d" % (i + 1,)), crval[i].asDegrees())
+                    self.assertEqual(metadata.getScalar("CUNIT%d" % (i + 1,)), "deg")
                 for i in range(2):
                     for j in range(2):
                         name = "CD%d_%d" % (i + 1, j + 1)
                         if cdMatrix[i, j] != 0:
-                            self.assertAlmostEqual(metadata.get(name), cdMatrix[i, j])
+                            self.assertAlmostEqual(metadata.getScalar(name), cdMatrix[i, j])
                         else:
                             self.assertFalse(metadata.exists(name))
 
