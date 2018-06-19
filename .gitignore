@@ -13,6 +13,7 @@ core.*
 .pytest_cache/
 .sconf_temp
 .sconsign.dblite
+.coverage
 config.log
 memleak.fits
 pytest_session.txt
