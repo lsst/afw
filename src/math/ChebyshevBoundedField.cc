@@ -175,9 +175,9 @@ std::shared_ptr<ChebyshevBoundedField> ChebyshevBoundedField::fit(lsst::geom::Bo
     ndarray::Array<double, 2, 2> matrix = makeMatrix(x, y, result->_toChebyshevRange, packer, ctrl);
     // We want to do weighted least squares, so we multiply both the data vector 'b' and the
     // matrix 'A' by the weights.
-    matrix.asEigen<Eigen::ArrayXpr>().colwise() *= w.asEigen<Eigen::ArrayXpr>();
+    ndarray::asEigenArray(matrix).colwise() *= ndarray::asEigenArray(w);
     ndarray::Array<double, 1, 1> wz = ndarray::copy(z);
-    wz.asEigen<Eigen::ArrayXpr>() *= w.asEigen<Eigen::ArrayXpr>();
+    ndarray::asEigenArray(wz) *= ndarray::asEigenArray(w);
     // Solve the linear least squares problem.
     LeastSquares lstsq = LeastSquares::fromDesignMatrix(matrix, wz, LeastSquares::NORMAL_EIGENSYSTEM);
     // Unpack the solution into a 2-d matrix, with zeros for values we didn't fit.
