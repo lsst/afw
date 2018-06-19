@@ -30,7 +30,6 @@ from lsst.daf.base import PropertyList
 import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
-from lsst.afw.geom import arcseconds, degrees, makeSkyWcs, makeCdMatrix
 from lsst.afw.geom.wcsUtils import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
     getCdMatrixFromMetadata, getSipMatrixFromMetadata, getImageXY0FromMetadata, \
     hasSipMatrix, makeSipMatrixMetadata, makeTanSipMetadata, \
@@ -54,13 +53,13 @@ class BaseTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         # define the position and size of one CCD in the focal plane
         self.pixelSizeMm = 0.024  # mm/pixel
-        self.ccdOrientation = 5 * degrees  # orientation of pixel w.r.t. focal plane
-        self.plateScale = 0.15 * arcseconds  # angle/pixel
+        self.ccdOrientation = 5 * lsst.geom.degrees  # orientation of pixel w.r.t. focal plane
+        self.plateScale = 0.15 * lsst.geom.arcseconds  # angle/pixel
         self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 4000))
         self.crpix = lsst.geom.Point2D(1000, 2000)
-        self.crval = lsst.geom.SpherePoint(10 * degrees, 40 * degrees)
-        self.orientation = -45 * degrees
-        self.scale = 1.0 * arcseconds
+        self.crval = lsst.geom.SpherePoint(10 * lsst.geom.degrees, 40 * lsst.geom.degrees)
+        self.orientation = -45 * lsst.geom.degrees
+        self.scale = 1.0 * lsst.geom.arcseconds
         # position of 0,0 pixel position in focal plane
         self.ccdPositionMm = lsst.geom.Point2D(25.0, 10.0)
         self.pixelToFocalPlane = self.makeAffineTransform(
@@ -68,8 +67,8 @@ class BaseTestCase(lsst.utils.tests.TestCase):
             rotation=self.ccdOrientation,
             scale=self.pixelSizeMm,
         )
-        cdMatrix = makeCdMatrix(scale=self.scale, orientation=self.orientation)
-        self.tanWcs = makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
+        cdMatrix = afwGeom.makeCdMatrix(scale=self.scale, orientation=self.orientation)
+        self.tanWcs = afwGeom.makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
         self.radPerMm = self.plateScale.asRadians() / self.pixelSizeMm  # at center of field
         bboxD = lsst.geom.Box2D(self.bbox)
         self.pixelPoints = bboxD.getCorners()
@@ -488,7 +487,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         crpix = lsst.geom.Point2D(self.metadata.getScalar("CRPIX1") - 1,
                                   self.metadata.getScalar("CRPIX2") - 1)
         crval = lsst.geom.SpherePoint(self.metadata.getScalar("CRVAL1"),
-                                      self.metadata.getScalar("CRVAL2"), degrees)
+                                      self.metadata.getScalar("CRVAL2"), lsst.geom.degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")
