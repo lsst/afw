@@ -73,7 +73,7 @@ public:
                               std::string const& unit, int size);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    ArrayKey() noexcept : _begin() {}
+    ArrayKey() noexcept : _begin(), _size(0) {}
 
     /// Construct from a vector of scalar Keys
     explicit ArrayKey(std::vector<Key<T> > const& keys);
@@ -100,7 +100,7 @@ public:
     ArrayKey(ArrayKey&&) noexcept;
     ArrayKey& operator=(ArrayKey const&) noexcept;
     ArrayKey& operator=(ArrayKey&&) noexcept;
-    ~ArrayKey() noexcept;
+    virtual ~ArrayKey() noexcept;
 
     /// Return the number of elements in the array.
     int getSize() const noexcept { return _size; }
