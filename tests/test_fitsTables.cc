@@ -14,6 +14,7 @@
 
 #include "boost/filesystem.hpp"
 
+#include "lsst/utils/Utils.h"
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/SpanSet.h"
@@ -50,7 +51,8 @@ struct ExtractSchemaStrings {
 BOOST_AUTO_TEST_CASE(testFits) {
     using namespace lsst::afw::table;
 
-    std::string filename = "tests/data/testTable.fits";
+    std::string afwDir = lsst::utils::getPackageDir("afw");
+    std::string filename = afwDir + "/tests/data/testTable.fits";
 
     Schema schema = SourceTable::makeMinimalSchema();
     Key<int> a_b_i = schema.addField<int>("a_b_i", "int");
