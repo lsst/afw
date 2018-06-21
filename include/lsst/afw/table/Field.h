@@ -62,19 +62,19 @@ struct Field : public FieldBase<T> {
             : FieldBase<T>(size), _name(name), _doc(doc), _units() {}
 
     Field(Field const&) = default;
-    Field(Field&&) = default;
+    Field(Field&&) noexcept = default;
     Field& operator=(Field const&) = default;
-    Field& operator=(Field&&) = default;
-    ~Field() = default;
+    Field& operator=(Field&&) noexcept = default;
+    ~Field() noexcept = default;
 
     /// Return the name of the field.
-    std::string const& getName() const { return _name; }
+    std::string const& getName() const noexcept { return _name; }
 
     /// Return the documentation for the field.
-    std::string const& getDoc() const { return _doc; }
+    std::string const& getDoc() const noexcept { return _doc; }
 
     /// Return the units for the field.
-    std::string const& getUnits() const { return _units; }
+    std::string const& getUnits() const noexcept { return _units; }
 
     /// Stringification.
     inline friend std::ostream& operator<<(std::ostream& os, Field<T> const& field) {

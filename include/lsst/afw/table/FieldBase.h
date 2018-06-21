@@ -47,7 +47,7 @@ struct FieldBase {
     typedef T Element;                ///< the type of subfields (the same as the type itself for scalars)
 
     /// Return the number of subfield elements (always one for scalars).
-    int getElementCount() const { return 1; }
+    int getElementCount() const noexcept { return 1; }
 
     /// Return a string description of the field type.
     static std::string getTypeString();
@@ -60,15 +60,15 @@ struct FieldBase {
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError,
                           "Constructor disabled (this Field type is not sized).");
     }
-    FieldBase(FieldBase const &) = default;
-    FieldBase(FieldBase &&) = default;
-    FieldBase &operator=(FieldBase const &) = default;
-    FieldBase &operator=(FieldBase &&) = default;
-    ~FieldBase() = default;
+    FieldBase(FieldBase const &) noexcept = default;
+    FieldBase(FieldBase &&) noexcept = default;
+    FieldBase &operator=(FieldBase const &) noexcept = default;
+    FieldBase &operator=(FieldBase &&) noexcept = default;
+    ~FieldBase() noexcept = default;
 
 protected:
     /// Needed to allow Keys to be default-constructed.
-    static FieldBase makeDefault() { return FieldBase(); }
+    static FieldBase makeDefault() noexcept { return FieldBase(); }
 
     /// Defines how Fields are printed.
     void stream(std::ostream &os) const {}
@@ -126,29 +126,29 @@ struct FieldBase<Array<U> > {
                               "A non-negative size must be provided when constructing an array field.");
     }
 
-    FieldBase(FieldBase const &) = default;
-    FieldBase(FieldBase &&) = default;
-    FieldBase &operator=(FieldBase const &) = default;
-    FieldBase &operator=(FieldBase &&) = default;
-    ~FieldBase() = default;
+    FieldBase(FieldBase const &) noexcept = default;
+    FieldBase(FieldBase &&) noexcept = default;
+    FieldBase &operator=(FieldBase const &) noexcept = default;
+    FieldBase &operator=(FieldBase &&) noexcept = default;
+    ~FieldBase() noexcept = default;
 
     /// Return a string description of the field type.
     static std::string getTypeString();
 
     /// Return the number of subfield elements (equal to the size of the array),
     /// or 0 for a variable-length array.
-    int getElementCount() const { return _size; }
+    int getElementCount() const noexcept { return _size; }
 
     /// Return the size of the array (equal to the number of subfield elements),
     /// or 0 for a variable-length array.
-    int getSize() const { return _size; }
+    int getSize() const noexcept { return _size; }
 
     /// Return true if the field is variable-length (each record can have a different size array).
-    bool isVariableLength() const { return _size == 0; }
+    bool isVariableLength() const noexcept { return _size == 0; }
 
 protected:
     /// Needed to allow Keys to be default-constructed.
-    static FieldBase makeDefault() { return FieldBase(0); }
+    static FieldBase makeDefault() noexcept { return FieldBase(0); }
 
     /// Defines how Fields are printed.
     void stream(std::ostream &os) const { os << ", size=" << _size; }
@@ -247,29 +247,29 @@ struct FieldBase<std::string> {
      */
     FieldBase(int size = -1);
 
-    FieldBase(FieldBase const &) = default;
-    FieldBase(FieldBase &&) = default;
-    FieldBase &operator=(FieldBase const &) = default;
-    FieldBase &operator=(FieldBase &&) = default;
-    ~FieldBase() = default;
+    FieldBase(FieldBase const &) noexcept = default;
+    FieldBase(FieldBase &&) noexcept = default;
+    FieldBase &operator=(FieldBase const &) noexcept = default;
+    FieldBase &operator=(FieldBase &&) noexcept = default;
+    ~FieldBase() noexcept = default;
 
     /// Return a string description of the field type.
     static std::string getTypeString();
 
     /// @brief Return the number of subfield elements (equal to the size of the string,
     ///        including a null terminator), or 0 for a variable-length string.
-    int getElementCount() const { return _size; }
+    int getElementCount() const noexcept { return _size; }
 
     /// @brief Return the maximum length of the string, including a null terminator
     ///        (equal to the number of subfield elements), or 0 for a variable-length string.
-    int getSize() const { return _size; }
+    int getSize() const noexcept { return _size; }
 
     /// Return true if the field is variable-length (each record can have a different size array).
-    bool isVariableLength() const { return _size == 0; }
+    bool isVariableLength() const noexcept { return _size == 0; }
 
 protected:
     /// Needed to allow Keys to be default-constructed.
-    static FieldBase makeDefault() { return FieldBase(0); }
+    static FieldBase makeDefault() noexcept { return FieldBase(0); }
 
     /// Defines how Fields are printed.
     void stream(std::ostream &os) const { os << ", size=" << _size; }

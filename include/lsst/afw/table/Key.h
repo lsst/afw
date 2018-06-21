@@ -61,22 +61,22 @@ public:
      *  the two keys will be equal).
      */
     template <typename OtherT>
-    bool operator==(Key<OtherT> const& other) const {
+    bool operator==(Key<OtherT> const& other) const noexcept {
         return false;
     }
     template <typename OtherT>
-    bool operator!=(Key<OtherT> const& other) const {
+    bool operator!=(Key<OtherT> const& other) const noexcept {
         return true;
     }
 
-    bool operator==(Key const& other) const {
+    bool operator==(Key const& other) const noexcept {
         return _offset == other._offset && this->getElementCount() == other.getElementCount();
     }
-    bool operator!=(Key const& other) const { return !this->operator==(other); }
+    bool operator!=(Key const& other) const noexcept { return !this->operator==(other); }
     //@}
 
     /// Return the offset (in bytes) of this field within a record.
-    int getOffset() const { return _offset; }
+    int getOffset() const noexcept { return _offset; }
 
     /**
      *  Return true if the key was initialized to valid offset.
@@ -86,20 +86,20 @@ public:
      *
      *  A key that is default constructed will always be invalid.
      */
-    bool isValid() const { return _offset >= 0; }
+    bool isValid() const noexcept { return _offset >= 0; }
 
     /**
      *  Default construct a field.
      *
      *  The new field will be invalid until a valid Key is assigned to it.
      */
-    Key() : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
+    Key() noexcept : FieldBase<T>(FieldBase<T>::makeDefault()), _offset(-1) {}
 
-    Key(Key const&) = default;
-    Key(Key&&) = default;
-    Key& operator=(Key const&) = default;
-    Key& operator=(Key&&) = default;
-    ~Key() = default;
+    Key(Key const&) noexcept = default;
+    Key(Key&&) noexcept = default;
+    Key& operator=(Key const&) noexcept = default;
+    Key& operator=(Key&&) noexcept = default;
+    ~Key() noexcept = default;
 
     /// Stringification.
     inline friend std::ostream& operator<<(std::ostream& os, Key<T> const& key) {
@@ -111,7 +111,8 @@ private:
     friend class detail::Access;
     friend class BaseRecord;
 
-    explicit Key(int offset, FieldBase<T> const& fb = FieldBase<T>()) : FieldBase<T>(fb), _offset(offset) {}
+    explicit Key(int offset, FieldBase<T> const& fb = FieldBase<T>()) noexcept
+            : FieldBase<T>(fb), _offset(offset) {}
 
     int _offset;
 };
