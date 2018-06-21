@@ -98,7 +98,7 @@ public:
     //@}
 
     /// Swap two polygons
-    void swap(Polygon& other) { std::swap(this->_impl, other._impl); }
+    void swap(Polygon& other) noexcept { std::swap(this->_impl, other._impl); }
 
     /// Return number of edges
     ///
