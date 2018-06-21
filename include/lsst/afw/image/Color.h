@@ -31,10 +31,10 @@ public:
     Color(Color &&) = default;
     Color &operator=(Color const &) = default;
     Color &operator=(Color &&) = default;
-    ~Color() = default;
+    ~Color() noexcept = default;
 
     /// Whether the color is the special value that indicates that it is unspecified.
-    bool isIndeterminate() const { return std::isnan(_g_r); }
+    bool isIndeterminate() const noexcept { return std::isnan(_g_r); }
 
     //@{
     /**
@@ -47,10 +47,10 @@ public:
      *  we'd have to define some kind of "color difference" matric, and it's not worthwhile doing
      *  that yet.
      */
-    bool operator==(Color const &other) const {
+    bool operator==(Color const &other) const noexcept {
         return (isIndeterminate() && other.isIndeterminate()) || other._g_r == _g_r;
     }
-    bool operator!=(Color const &other) const { return !operator==(other); }
+    bool operator!=(Color const &other) const noexcept { return !operator==(other); }
     //@}
 
     /** Return the effective wavelength for this object in the given filter

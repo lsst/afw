@@ -79,38 +79,38 @@ public:
                             bool force = false);
 
     FilterProperty(FilterProperty const&) = default;
-    FilterProperty(FilterProperty&&) = default;
+    FilterProperty(FilterProperty&&) noexcept = default;
     FilterProperty& operator=(FilterProperty const&) = default;
-    FilterProperty& operator=(FilterProperty&&) = default;
-    ~FilterProperty() = default;
+    FilterProperty& operator=(FilterProperty&&) noexcept = default;
+    ~FilterProperty() noexcept = default;
 
     /**
      * Return a filter's name
      */
-    std::string const& getName() const { return _name; }
+    std::string const& getName() const noexcept { return _name; }
     /**
      * Return the filter's effective wavelength (nm)
      */
-    double getLambdaEff() const { return _lambdaEff; }
+    double getLambdaEff() const noexcept { return _lambdaEff; }
     /**
      * Return the filter's minimum wavelength (nm) where the transmission is above 1% of the maximum.
      */
-    double getLambdaMin() const { return _lambdaMin; }
+    double getLambdaMin() const noexcept { return _lambdaMin; }
     /**
      * Return the filter's maximum wavelength (nm) where the transmission is above 1% of the maximum.
      */
-    double getLambdaMax() const { return _lambdaMax; }
+    double getLambdaMax() const noexcept { return _lambdaMax; }
     /**
      * Return true iff two FilterProperties are identical
      *
      * @param rhs Object to compare with this
      */
-    bool operator==(FilterProperty const& rhs) const;
+    bool operator==(FilterProperty const& rhs) const noexcept;
     /**
      * Return true iff rhs != this
      */
     bool operator!=(FilterProperty const& rhs  ///< Object to compare with this
-                    ) const {
+                    ) const noexcept {
         return !(*this == rhs);
     }
     /**
@@ -177,25 +177,25 @@ public:
     explicit Filter(std::shared_ptr<lsst::daf::base::PropertySet const> metadata, bool const force = false);
 
     Filter(Filter const&) = default;
-    Filter(Filter&&) = default;
+    Filter(Filter&&) noexcept = default;
     Filter& operator=(Filter const&) = default;
-    Filter& operator=(Filter&&) = default;
-    ~Filter() = default;
+    Filter& operator=(Filter&&) noexcept = default;
+    ~Filter() noexcept = default;
 
     /**
      * Are two filters identical?
      */
-    bool operator==(Filter const& rhs) const;
-    bool operator!=(Filter const& rhs) const { return !(*this == rhs); }
+    bool operator==(Filter const& rhs) const noexcept;
+    bool operator!=(Filter const& rhs) const noexcept { return !(*this == rhs); }
 
     /**
      * Return a Filter's integral id
      */
-    int getId() const { return _id; }
+    int getId() const noexcept { return _id; }
     /**
      * Return a Filter's name
      */
-    std::string const& getName() const { return _name; }
+    std::string const& getName() const noexcept { return _name; }
     /**
      * Return a filter's canonical name
      *

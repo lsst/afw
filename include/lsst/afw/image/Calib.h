@@ -63,10 +63,10 @@ inline double abMagErrFromFluxErr(double fluxErr, double flux) {
 }
 
 /// Compute flux in Janskys from AB magnitude
-inline double fluxFromABMag(double mag) { return std::pow(10.0, -0.4 * mag) * JanskysPerABFlux; }
+inline double fluxFromABMag(double mag) noexcept { return std::pow(10.0, -0.4 * mag) * JanskysPerABFlux; }
 
 /// Compute flux error in Janskys from AB magnitude error and AB magnitude
-inline double fluxErrFromABMagErr(double magErr, double mag) {
+inline double fluxErrFromABMagErr(double magErr, double mag) noexcept {
     return std::abs(-0.4 * magErr * fluxFromABMag(mag) * std::log(10.0));
 }
 
@@ -97,7 +97,7 @@ public:
     /**
      * ctor
      */
-    explicit Calib();
+    explicit Calib() noexcept;
     /**
      * ctor from a given fluxMagnitude zero point
      */
@@ -115,11 +115,11 @@ public:
      */
     explicit Calib(std::shared_ptr<lsst::daf::base::PropertySet const>);
 
-    Calib(Calib const&);
-    Calib(Calib&&);
-    Calib& operator=(Calib const&);
-    Calib& operator=(Calib&&);
-    virtual ~Calib();
+    Calib(Calib const&) noexcept;
+    Calib(Calib&&) noexcept;
+    Calib& operator=(Calib const&) noexcept;
+    Calib& operator=(Calib&&) noexcept;
+    virtual ~Calib() noexcept;
 
     /**
      * Set the flux of a zero-magnitude object
@@ -185,18 +185,18 @@ public:
      *
      * @param raiseException Should the exception be raised?
      */
-    static void setThrowOnNegativeFlux(bool raiseException);
+    static void setThrowOnNegativeFlux(bool raiseException) noexcept;
     /**
      * Tell me whether Calib will throw an exception if asked to convert a flux to a magnitude
      */
-    static bool getThrowOnNegativeFlux();
+    static bool getThrowOnNegativeFlux() noexcept;
     /**
      * Are two Calibs identical?
      *
      * @note Maybe this should be an approximate comparison
      */
-    bool operator==(Calib const& rhs) const;
-    bool operator!=(Calib const& rhs) const { return !(*this == rhs); }
+    bool operator==(Calib const& rhs) const noexcept;
+    bool operator!=(Calib const& rhs) const noexcept { return !(*this == rhs); }
 
     Calib& operator*=(double const scale);
     Calib& operator/=(double const scale) {

@@ -43,19 +43,19 @@ public:
     explicit DefectBase(const lsst::geom::Box2I& bbox  ///< Bad pixels' bounding box
                         )
             : _bbox(bbox) {}
-    DefectBase(DefectBase const&) = default;
-    DefectBase(DefectBase&&) = default;
-    DefectBase& operator=(DefectBase const&) = default;
-    DefectBase& operator=(DefectBase&&) = default;
-    virtual ~DefectBase() = default;
+    DefectBase(DefectBase const&) noexcept = default;
+    DefectBase(DefectBase&&) noexcept = default;
+    DefectBase& operator=(DefectBase const&) noexcept = default;
+    DefectBase& operator=(DefectBase&&) noexcept = default;
+    virtual ~DefectBase() noexcept = default;
 
-    lsst::geom::Box2I const& getBBox() const { return _bbox; }  ///< Return the Defect's bounding box
-    int getX0() const { return _bbox.getMinX(); }               ///< Return the Defect's left column
-    int getX1() const { return _bbox.getMaxX(); }               ///< Return the Defect's right column
-    int getY0() const { return _bbox.getMinY(); }               ///< Return the Defect's bottom row
-    int getY1() const { return _bbox.getMaxY(); }               ///< Return the Defect's top row
+    lsst::geom::Box2I const& getBBox() const noexcept { return _bbox; }  ///< Return the Defect's bounding box
+    int getX0() const noexcept { return _bbox.getMinX(); }               ///< Return the Defect's left column
+    int getX1() const noexcept { return _bbox.getMaxX(); }               ///< Return the Defect's right column
+    int getY0() const noexcept { return _bbox.getMinY(); }               ///< Return the Defect's bottom row
+    int getY1() const noexcept { return _bbox.getMaxY(); }               ///< Return the Defect's top row
 
-    void clip(lsst::geom::Box2I const& bbox) { _bbox.clip(bbox); }
+    void clip(lsst::geom::Box2I const& bbox) noexcept { _bbox.clip(bbox); }
 
     /**
      * Offset a Defect by `(dx, dy)`

@@ -97,7 +97,7 @@ ndarray::Array<T, 1> fluxErrFromABMagErr(ndarray::Array<T const, 1> const& magEr
     return out;
 }
 
-Calib::Calib() : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
+Calib::Calib() noexcept : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 Calib::Calib(double fluxMag0) : _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
 Calib::Calib(std::vector<std::shared_ptr<Calib const>> const& calibs) : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {
     if (calibs.empty()) {
@@ -141,15 +141,15 @@ Calib::Calib(std::shared_ptr<lsst::daf::base::PropertySet const> metadata) {
     _fluxMag0Sigma = fluxMag0Sigma;
 }
 bool Calib::_throwOnNegativeFlux = true;
-void Calib::setThrowOnNegativeFlux(bool raiseException) { _throwOnNegativeFlux = raiseException; }
+void Calib::setThrowOnNegativeFlux(bool raiseException) noexcept { _throwOnNegativeFlux = raiseException; }
 
-bool Calib::getThrowOnNegativeFlux() { return _throwOnNegativeFlux; }
+bool Calib::getThrowOnNegativeFlux() noexcept { return _throwOnNegativeFlux; }
 
-Calib::Calib(Calib const&) = default;
-Calib::Calib(Calib&&) = default;
-Calib& Calib::operator=(Calib const&) = default;
-Calib& Calib::operator=(Calib&&) = default;
-Calib::~Calib() = default;
+Calib::Calib(Calib const&) noexcept = default;
+Calib::Calib(Calib&&) noexcept = default;
+Calib& Calib::operator=(Calib const&) noexcept = default;
+Calib& Calib::operator=(Calib&&) noexcept = default;
+Calib::~Calib() noexcept = default;
 
 namespace detail {
 int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
@@ -171,7 +171,7 @@ int stripCalibKeywords(std::shared_ptr<lsst::daf::base::PropertySet> metadata) {
 }
 }  // namespace detail
 
-bool Calib::operator==(Calib const& rhs) const {
+bool Calib::operator==(Calib const& rhs) const noexcept {
     return _fluxMag0 == rhs._fluxMag0 && _fluxMag0Sigma == rhs._fluxMag0Sigma;
 }
 
