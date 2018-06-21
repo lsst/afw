@@ -248,7 +248,7 @@ public:
 
     //@{
     /// Whether Polygon is persistable which is always true
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;

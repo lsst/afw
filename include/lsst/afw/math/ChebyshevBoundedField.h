@@ -202,7 +202,7 @@ public:
     virtual double mean() const;
 
     /// ChebyshevBoundedField is always persistable.
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
     /// @copydoc BoundedField::operator*
     virtual std::shared_ptr<BoundedField> operator*(double const scale) const;

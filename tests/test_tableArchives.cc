@@ -71,7 +71,7 @@ public:
 
     ExampleA(int v1, double v2, ndarray::Array<float, 1, 1> const &v3) : var1(v1), var2(v2), var3(v3) {}
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept { return true; }
 
     virtual std::string getPersistenceName() const { return "ExampleA"; }
 
@@ -126,7 +126,7 @@ public:
 
     ExampleB(int v1, std::vector<double> const &v2) : var1(v1), var2(v2) {}
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept { return true; }
 
     virtual std::string getPersistenceName() const { return "ExampleB"; }
 
@@ -203,7 +203,7 @@ public:
              std::shared_ptr<Comparable> v3 = std::shared_ptr<Comparable>())
             : var1(v1), var2(v2), var3(v3) {}
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept { return true; }
 
     virtual std::string getPersistenceName() const { return "ExampleC"; }
 
@@ -261,7 +261,7 @@ public:
 
     virtual void stream(std::ostream &os) const { os << "ExampleD()"; }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept { return true; }
 
     virtual std::string getPersistenceName() const { return "ExampleD"; }
 

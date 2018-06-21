@@ -262,7 +262,7 @@ public:
     std::string writeString() const;
 
     /// Whether the Transform is persistable via afw::table::io (always true).
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
     /**

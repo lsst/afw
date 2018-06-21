@@ -555,7 +555,7 @@ public:
 
     virtual Pixel getSum() const { return _sum; }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
@@ -676,7 +676,7 @@ public:
 
     virtual std::string toString(std::string const &prefix = "") const;
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
@@ -738,7 +738,7 @@ public:
 
     virtual std::string toString(std::string const &prefix = "") const;
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 
@@ -891,7 +891,7 @@ public:
 
     virtual std::string toString(std::string const &prefix = "") const;
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
     class Factory;
 

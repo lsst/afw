@@ -204,7 +204,7 @@ public:
         return *this;
     }
 
-    bool isPersistable() const { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;

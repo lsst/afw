@@ -99,9 +99,9 @@ public:
     void writeFits(fits::Fits& fitsfile) const;
 
     /// Return true if this particular object can be persisted using afw::table::io.
-    virtual bool isPersistable() const { return false; }
+    virtual bool isPersistable() const noexcept { return false; }
 
-    virtual ~Persistable() = default;
+    virtual ~Persistable() noexcept = default;
 
 protected:
     // convenient for derived classes not in afw::table::io
@@ -133,13 +133,13 @@ protected:
      */
     virtual void write(OutputArchiveHandle& handle) const;
 
-    Persistable() = default;
+    Persistable() noexcept = default;
 
-    Persistable(Persistable const& other) = default;
-    Persistable(Persistable&& other) = default;
+    Persistable(Persistable const& other) noexcept = default;
+    Persistable(Persistable&& other) noexcept = default;
 
-    Persistable& operator=(Persistable const& other) = default;
-    Persistable& operator=(Persistable&& other) = default;
+    Persistable& operator=(Persistable const& other) noexcept = default;
+    Persistable& operator=(Persistable&& other) noexcept = default;
 
 private:
     friend class io::OutputArchive;
@@ -246,7 +246,7 @@ public:
      */
     static PersistableFactory const& lookup(std::string const& name, std::string const& module = "");
 
-    virtual ~PersistableFactory() = default;
+    virtual ~PersistableFactory() noexcept = default;
 
     // No copying
     PersistableFactory(const PersistableFactory&) = delete;

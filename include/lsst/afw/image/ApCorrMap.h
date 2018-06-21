@@ -74,7 +74,7 @@ public:
     void set(std::string const& name, std::shared_ptr<math::BoundedField> field);
 
     /// Whether the map is persistable (true IFF all contained BoundedFields are persistable).
-    virtual bool isPersistable() const;
+    virtual bool isPersistable() const noexcept override;
 
     /// Scale all fields by a constant
     ApCorrMap& operator*=(double const scale);
