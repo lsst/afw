@@ -44,7 +44,7 @@ public:
 
     virtual T get(BaseRecord const& record) const = 0;
 
-    virtual ~OutputFunctorKey() = default;
+    virtual ~OutputFunctorKey() noexcept = default;
 };
 
 /**
@@ -61,7 +61,7 @@ public:
 
     virtual void set(BaseRecord& record, T const& value) const = 0;
 
-    virtual ~InputFunctorKey() = default;
+    virtual ~InputFunctorKey() noexcept = default;
 };
 
 /**
@@ -92,7 +92,7 @@ class ReferenceFunctorKey {
 public:
     virtual T getReference(BaseRecord& record) const = 0;
 
-    virtual ~ReferenceFunctorKey() = default;
+    virtual ~ReferenceFunctorKey() noexcept = default;
 };
 
 /**
@@ -110,7 +110,7 @@ class ConstReferenceFunctorKey {
 public:
     virtual T getConstReference(BaseRecord const& record) const = 0;
 
-    virtual ~ConstReferenceFunctorKey() = default;
+    virtual ~ConstReferenceFunctorKey() noexcept = default;
 };
 }  // namespace table
 }  // namespace afw

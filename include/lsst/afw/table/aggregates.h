@@ -59,16 +59,16 @@ public:
                               std::string const& unit);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    PointKey() : _x(), _y() {}
+    PointKey() noexcept : _x(), _y() {}
 
     /// Construct from a pair of Keys
-    PointKey(Key<T> const& x, Key<T> const& y) : _x(x), _y(y) {}
+    PointKey(Key<T> const& x, Key<T> const& y) noexcept : _x(x), _y(y) {}
 
-    PointKey(PointKey const&) = default;
-    PointKey(PointKey&&) = default;
-    PointKey& operator=(PointKey const&) = default;
-    PointKey& operator=(PointKey&&) = default;
-    virtual ~PointKey() = default;
+    PointKey(PointKey const&) noexcept = default;
+    PointKey(PointKey&&) noexcept = default;
+    PointKey& operator=(PointKey const&) noexcept = default;
+    PointKey& operator=(PointKey&&) noexcept = default;
+    virtual ~PointKey() noexcept = default;
 
     /**
      *  Construct from a subschema, assuming x and y subfields
@@ -88,18 +88,18 @@ public:
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
-    bool operator==(PointKey<T> const& other) const { return _x == other._x && _y == other._y; }
-    bool operator!=(PointKey<T> const& other) const { return !(*this == other); }
+    bool operator==(PointKey<T> const& other) const noexcept { return _x == other._x && _y == other._y; }
+    bool operator!=(PointKey<T> const& other) const noexcept { return !(*this == other); }
     //@}
 
     /// Return True if both the x and y Keys are valid.
-    bool isValid() const { return _x.isValid() && _y.isValid(); }
+    bool isValid() const noexcept { return _x.isValid() && _y.isValid(); }
 
     /// Return the underlying x Key
-    Key<T> getX() const { return _x; }
+    Key<T> getX() const noexcept { return _x; }
 
     /// Return the underlying y Key
-    Key<T> getY() const { return _y; }
+    Key<T> getY() const noexcept { return _y; }
 
 private:
     Key<T> _x;
@@ -137,10 +137,10 @@ public:
                             std::string const& unit);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    BoxKey() = default;
+    BoxKey() noexcept = default;
 
     /// Construct from a pair of PointKeys
-    BoxKey(PointKey<Element> const& min, PointKey<Element> const& max) : _min(min), _max(max) {}
+    BoxKey(PointKey<Element> const& min, PointKey<Element> const& max) noexcept : _min(min), _max(max) {}
 
     /**
      *  Construct from a subschema, assuming _min_x, _max_x, _min_y, _max_y subfields
@@ -152,11 +152,11 @@ public:
      */
     BoxKey(SubSchema const& s) : _min(s["min"]), _max(s["max"]) {}
 
-    BoxKey(BoxKey const&) = default;
-    BoxKey(BoxKey&&) = default;
-    BoxKey& operator=(BoxKey const&) = default;
-    BoxKey& operator=(BoxKey&&) = default;
-    virtual ~BoxKey() = default;
+    BoxKey(BoxKey const&) noexcept = default;
+    BoxKey(BoxKey&&) noexcept = default;
+    BoxKey& operator=(BoxKey const&) noexcept = default;
+    BoxKey& operator=(BoxKey&&) noexcept = default;
+    virtual ~BoxKey() noexcept = default;
 
     /// Get a Point from the given record
     virtual Box get(BaseRecord const& record) const;
@@ -166,18 +166,18 @@ public:
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
-    bool operator==(BoxKey const& other) const { return _min == other._min && _max == other._max; }
-    bool operator!=(BoxKey const& other) const { return !(*this == other); }
+    bool operator==(BoxKey const& other) const noexcept { return _min == other._min && _max == other._max; }
+    bool operator!=(BoxKey const& other) const noexcept { return !(*this == other); }
     //@}
 
     /// Return True if both the min and max PointKeys are valid.
-    bool isValid() const { return _min.isValid() && _max.isValid(); }
+    bool isValid() const noexcept { return _min.isValid() && _max.isValid(); }
 
     /// Return the underlying min PointKey
-    PointKey<Element> getMin() const { return _min; }
+    PointKey<Element> getMin() const noexcept { return _min; }
 
     /// Return the underlying max PointKey
-    PointKey<Element> getMax() const { return _max; }
+    PointKey<Element> getMax() const noexcept { return _max; }
 
 private:
     PointKey<Element> _min;
@@ -206,10 +206,11 @@ public:
     static CoordKey addFields(afw::table::Schema& schema, std::string const& name, std::string const& doc);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    CoordKey() : _ra(), _dec() {}
+    CoordKey() noexcept : _ra(), _dec() {}
 
     /// Construct from a pair of Keys
-    CoordKey(Key<lsst::geom::Angle> const& ra, Key<lsst::geom::Angle> const& dec) : _ra(ra), _dec(dec) {}
+    CoordKey(Key<lsst::geom::Angle> const& ra, Key<lsst::geom::Angle> const& dec) noexcept
+            : _ra(ra), _dec(dec) {}
 
     /**
      *  Construct from a subschema, assuming ra and dec subfields.
@@ -221,11 +222,11 @@ public:
      */
     CoordKey(SubSchema const& s) : _ra(s["ra"]), _dec(s["dec"]) {}
 
-    CoordKey(CoordKey const&) = default;
-    CoordKey(CoordKey&&) = default;
-    CoordKey& operator=(CoordKey const&) = default;
-    CoordKey& operator=(CoordKey&&) = default;
-    virtual ~CoordKey() = default;
+    CoordKey(CoordKey const&) noexcept = default;
+    CoordKey(CoordKey&&) noexcept = default;
+    CoordKey& operator=(CoordKey const&) noexcept = default;
+    CoordKey& operator=(CoordKey&&) noexcept = default;
+    virtual ~CoordKey() noexcept = default;
 
     /// Get an lsst::geom::SpherePoint from the given record
     virtual lsst::geom::SpherePoint get(BaseRecord const& record) const;
@@ -235,16 +236,16 @@ public:
 
     //@{
     /// Compare CoordKeys for equality using the constituent `ra` and `dec` Keys
-    bool operator==(CoordKey const& other) const { return _ra == other._ra && _dec == other._dec; }
-    bool operator!=(CoordKey const& other) const { return !(*this == other); }
+    bool operator==(CoordKey const& other) const noexcept { return _ra == other._ra && _dec == other._dec; }
+    bool operator!=(CoordKey const& other) const noexcept { return !(*this == other); }
     //@}
 
-    bool isValid() const { return _ra.isValid() && _dec.isValid(); }
+    bool isValid() const noexcept { return _ra.isValid() && _dec.isValid(); }
 
     //@{
     /// Return a constituent Key
-    Key<lsst::geom::Angle> getRa() const { return _ra; }
-    Key<lsst::geom::Angle> getDec() const { return _dec; }
+    Key<lsst::geom::Angle> getRa() const noexcept { return _ra; }
+    Key<lsst::geom::Angle> getDec() const noexcept { return _dec; }
     //@}
 
 private:
@@ -281,10 +282,10 @@ public:
                                    CoordinateType coordType = CoordinateType::PIXEL);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    QuadrupoleKey() : _ixx(), _iyy(), _ixy() {}
+    QuadrupoleKey() noexcept : _ixx(), _iyy(), _ixy() {}
 
     /// Construct from individual Keys
-    QuadrupoleKey(Key<double> const& ixx, Key<double> const& iyy, Key<double> const& ixy)
+    QuadrupoleKey(Key<double> const& ixx, Key<double> const& iyy, Key<double> const& ixy) noexcept
             : _ixx(ixx), _iyy(iyy), _ixy(ixy) {}
 
     /**
@@ -297,11 +298,11 @@ public:
      */
     QuadrupoleKey(SubSchema const& s) : _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
 
-    QuadrupoleKey(QuadrupoleKey const&) = default;
-    QuadrupoleKey(QuadrupoleKey&&) = default;
-    QuadrupoleKey& operator=(QuadrupoleKey const&) = default;
-    QuadrupoleKey& operator=(QuadrupoleKey&&) = default;
-    virtual ~QuadrupoleKey() = default;
+    QuadrupoleKey(QuadrupoleKey const&) noexcept = default;
+    QuadrupoleKey(QuadrupoleKey&&) noexcept = default;
+    QuadrupoleKey& operator=(QuadrupoleKey const&) noexcept = default;
+    QuadrupoleKey& operator=(QuadrupoleKey&&) noexcept = default;
+    virtual ~QuadrupoleKey() noexcept = default;
 
     /// Get a Quadrupole from the given record
     virtual geom::ellipses::Quadrupole get(BaseRecord const& record) const;
@@ -311,20 +312,20 @@ public:
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying Ixx, Iyy, Ixy Keys
-    bool operator==(QuadrupoleKey const& other) const {
+    bool operator==(QuadrupoleKey const& other) const noexcept {
         return _ixx == other._ixx && _iyy == other._iyy && _ixy == other._ixy;
     }
-    bool operator!=(QuadrupoleKey const& other) const { return !(*this == other); }
+    bool operator!=(QuadrupoleKey const& other) const noexcept { return !(*this == other); }
     //@}
 
     /// Return True if all the constituent Keys are valid.
-    bool isValid() const { return _ixx.isValid() && _iyy.isValid() && _ixy.isValid(); }
+    bool isValid() const noexcept { return _ixx.isValid() && _iyy.isValid() && _ixy.isValid(); }
 
     //@{
     /// Return a constituent Key
-    Key<double> getIxx() const { return _ixx; }
-    Key<double> getIyy() const { return _iyy; }
-    Key<double> getIxy() const { return _ixy; }
+    Key<double> getIxx() const noexcept { return _ixx; }
+    Key<double> getIyy() const noexcept { return _iyy; }
+    Key<double> getIxy() const noexcept { return _ixy; }
     //@}
 
 private:
@@ -352,10 +353,10 @@ public:
                                 std::string const& unit);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    EllipseKey() : _qKey(), _pKey() {}
+    EllipseKey() noexcept : _qKey(), _pKey() {}
 
     /// Construct from individual Keys
-    EllipseKey(QuadrupoleKey const& qKey, PointKey<double> const& pKey) : _qKey(qKey), _pKey(pKey) {}
+    EllipseKey(QuadrupoleKey const& qKey, PointKey<double> const& pKey) noexcept : _qKey(qKey), _pKey(pKey) {}
 
     /**
      *  Construct from a subschema, assuming (xx, yy, xy, x, y) subfields
@@ -367,11 +368,11 @@ public:
      */
     EllipseKey(SubSchema const& s) : _qKey(s), _pKey(s) {}
 
-    EllipseKey(EllipseKey const&) = default;
-    EllipseKey(EllipseKey&&) = default;
-    EllipseKey& operator=(EllipseKey const&) = default;
-    EllipseKey& operator=(EllipseKey&&) = default;
-    virtual ~EllipseKey() = default;
+    EllipseKey(EllipseKey const&) noexcept = default;
+    EllipseKey(EllipseKey&&) noexcept = default;
+    EllipseKey& operator=(EllipseKey const&) noexcept = default;
+    EllipseKey& operator=(EllipseKey&&) noexcept = default;
+    virtual ~EllipseKey() noexcept = default;
 
     /// Get an Ellipse from the given record
     virtual geom::ellipses::Ellipse get(BaseRecord const& record) const;
@@ -381,17 +382,19 @@ public:
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying Ixx, Iyy, Ixy Keys
-    bool operator==(EllipseKey const& other) const { return _qKey == other._qKey && _pKey == other._pKey; }
-    bool operator!=(EllipseKey const& other) const { return !(*this == other); }
+    bool operator==(EllipseKey const& other) const noexcept {
+        return _qKey == other._qKey && _pKey == other._pKey;
+    }
+    bool operator!=(EllipseKey const& other) const noexcept { return !(*this == other); }
     //@}
 
     /// Return True if all the constituent Keys are valid.
-    bool isValid() const { return _qKey.isValid() && _pKey.isValid(); }
+    bool isValid() const noexcept { return _qKey.isValid() && _pKey.isValid(); }
 
     //@{
     /// Return constituent FunctorKeys
-    QuadrupoleKey getCore() const { return _qKey; }
-    PointKey<double> getCenter() const { return _pKey; }
+    QuadrupoleKey getCore() const noexcept { return _qKey; }
+    PointKey<double> getCenter() const noexcept { return _pKey; }
     //@}
 
 private:
@@ -480,7 +483,7 @@ public:
     CovarianceMatrixKey(CovarianceMatrixKey&&);
     CovarianceMatrixKey& operator=(CovarianceMatrixKey const&);
     CovarianceMatrixKey& operator=(CovarianceMatrixKey&&);
-    virtual ~CovarianceMatrixKey();
+    virtual ~CovarianceMatrixKey() noexcept;
 
     /// Get a covariance matrix from the given record
     virtual Eigen::Matrix<T, N, N> get(BaseRecord const& record) const;
@@ -500,12 +503,12 @@ public:
      *  Note that if the only one or more off-diagonal keys are invalid, we assume that means those terms
      *  are zero, not that the whole FunctorKey is invalid.
      */
-    bool isValid() const;
+    bool isValid() const noexcept;
 
     //@{
     /// Compare the FunctorKey for equality with another, using its constituent Keys
-    bool operator==(CovarianceMatrixKey const& other) const;
-    bool operator!=(CovarianceMatrixKey const& other) const { return !(*this == other); }
+    bool operator==(CovarianceMatrixKey const& other) const noexcept;
+    bool operator!=(CovarianceMatrixKey const& other) const noexcept { return !(*this == other); }
     //@}
 
 private:
