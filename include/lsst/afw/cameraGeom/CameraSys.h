@@ -47,20 +47,20 @@ public:
                              )
             : _sysName(sysName) {}
 
-    ~CameraSysPrefix() = default;
+    ~CameraSysPrefix() noexcept = default;
     CameraSysPrefix(CameraSysPrefix const &) = default;
-    CameraSysPrefix(CameraSysPrefix &&) = default;
+    CameraSysPrefix(CameraSysPrefix &&) noexcept = default;
     CameraSysPrefix &operator=(CameraSysPrefix const &) = default;
-    CameraSysPrefix &operator=(CameraSysPrefix &&) = default;
+    CameraSysPrefix &operator=(CameraSysPrefix &&) noexcept = default;
 
     /**
      * Get coordinate system name
      */
     std::string getSysName() const { return _sysName; };
 
-    bool operator==(CameraSysPrefix const &rhs) const { return _sysName == rhs.getSysName(); }
+    bool operator==(CameraSysPrefix const &rhs) const noexcept { return _sysName == rhs.getSysName(); }
 
-    bool operator!=(CameraSysPrefix const &rhs) const { return !(*this == rhs); }
+    bool operator!=(CameraSysPrefix const &rhs) const noexcept { return !(*this == rhs); }
 
     /**
      * Hash function for this object.
@@ -101,11 +101,11 @@ public:
     /// default constructor so SWIG can wrap a vector of pairs containing these
     CameraSys() : _sysName("?"), _detectorName(){};
 
-    ~CameraSys() = default;
+    ~CameraSys() noexcept = default;
     CameraSys(CameraSys const &) = default;
-    CameraSys(CameraSys &&) = default;
+    CameraSys(CameraSys &&) noexcept = default;
     CameraSys &operator=(CameraSys const &) = default;
-    CameraSys &operator=(CameraSys &&) = default;
+    CameraSys &operator=(CameraSys &&) noexcept = default;
 
     /**
      * Get coordinate system name
@@ -120,16 +120,16 @@ public:
     /**
      * Does this have a non-blank detector name?
      */
-    bool hasDetectorName() const { return !_detectorName.empty(); }
+    bool hasDetectorName() const noexcept { return !_detectorName.empty(); }
 
-    bool operator==(CameraSys const &rhs) const {
+    bool operator==(CameraSys const &rhs) const noexcept {
         return _sysName == rhs.getSysName() && _detectorName == rhs.getDetectorName();
     }
 
-    bool operator!=(CameraSys const &rhs) const { return !(*this == rhs); }
+    bool operator!=(CameraSys const &rhs) const noexcept { return !(*this == rhs); }
 
     // less-than operator required for use in std::map
-    bool operator<(CameraSys const &rhs) const {
+    bool operator<(CameraSys const &rhs) const noexcept {
         if (_sysName == rhs.getSysName()) {
             return _detectorName < rhs.getDetectorName();
         } else {

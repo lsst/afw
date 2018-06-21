@@ -65,29 +65,29 @@ public:
                                  0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
     );
 
-    ~Orientation();
-    Orientation(Orientation const &);
-    Orientation(Orientation &&);
-    Orientation &operator=(Orientation const &);
-    Orientation &operator=(Orientation &&);
+    ~Orientation() noexcept;
+    Orientation(Orientation const &) noexcept;
+    Orientation(Orientation &&) noexcept;
+    Orientation &operator=(Orientation const &) noexcept;
+    Orientation &operator=(Orientation &&) noexcept;
 
     /// Return focal plane position of detector reference point (mm)
-    lsst::geom::Point2D getFpPosition() const { return _fpPosition; }
+    lsst::geom::Point2D getFpPosition() const noexcept { return _fpPosition; }
 
     /// Return detector reference point (pixels)
-    lsst::geom::Point2D getReferencePoint() const { return _refPoint; }
+    lsst::geom::Point2D getReferencePoint() const noexcept { return _refPoint; }
 
     /// Return the yaw angle
-    lsst::geom::Angle getYaw() const { return _yaw; }
+    lsst::geom::Angle getYaw() const noexcept { return _yaw; }
 
     /// Return the pitch angle
-    lsst::geom::Angle getPitch() const { return _pitch; }
+    lsst::geom::Angle getPitch() const noexcept { return _pitch; }
 
     /// Return the roll angle
-    lsst::geom::Angle getRoll() const { return _roll; }
+    lsst::geom::Angle getRoll() const noexcept { return _roll; }
 
     /// Return the number of quarter turns (rounded to the closest quarter)
-    int getNQuarter() const;
+    int getNQuarter() const noexcept;
 
     /**
      * Generate a Transform from pixel to focal plane coordinates

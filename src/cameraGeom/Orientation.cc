@@ -47,13 +47,42 @@ Orientation::Orientation(lsst::geom::Point2D const fpPosition, lsst::geom::Point
             cosYaw * cosRoll + sinYaw * sinPitch * sinRoll;
 }
 
-Orientation::~Orientation() = default;
-Orientation::Orientation(Orientation const &) = default;
-Orientation::Orientation(Orientation &&) = default;
-Orientation &Orientation::operator=(Orientation const &) = default;
-Orientation &Orientation::operator=(Orientation &&) = default;
+Orientation::~Orientation() noexcept = default;
+// Can't combine noexcept and =default until Eigen::Matrix supports noexcept
+Orientation::Orientation(Orientation const &other) noexcept
+        : _fpPosition(other._fpPosition),
+          _refPoint(other._refPoint),
+          _yaw(other._yaw),
+          _pitch(other._pitch),
+          _roll(other._roll),
+          _rotMat(other._rotMat) {}
+Orientation::Orientation(Orientation &&other) noexcept
+        : _fpPosition(std::move(other._fpPosition)),
+          _refPoint(std::move(other._refPoint)),
+          _yaw(std::move(other._yaw)),
+          _pitch(std::move(other._pitch)),
+          _roll(std::move(other._roll)),
+          _rotMat(std::move(other._rotMat)) {}
+Orientation &Orientation::operator=(Orientation const &other) noexcept {
+    _fpPosition = other._fpPosition;
+    _refPoint = other._refPoint;
+    _yaw = other._yaw;
+    _pitch = other._pitch;
+    _roll = other._roll;
+    _rotMat = other._rotMat;
+    return *this;
+}
+Orientation &Orientation::operator=(Orientation &&other) noexcept {
+    _fpPosition = std::move(other._fpPosition);
+    _refPoint = std::move(other._refPoint);
+    _yaw = std::move(other._yaw);
+    _pitch = std::move(other._pitch);
+    _roll = std::move(other._roll);
+    _rotMat = std::move(other._rotMat);
+    return *this;
+}
 
-int Orientation::getNQuarter() const {
+int Orientation::getNQuarter() const noexcept {
     float yawDeg = _yaw.asDegrees();
     while (yawDeg < 0.) {
         yawDeg += 360.;
