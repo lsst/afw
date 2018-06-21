@@ -27,16 +27,9 @@
 /*
  * Functions to handle coordinates
  */
-#include <iostream>
-#include <limits>
-#include <map>
-#include <memory>
+#include <string>
 
-#include "lsst/base.h"
-#include "lsst/geom/Point.h"
 #include "lsst/geom/Angle.h"
-#include "lsst/afw/coord/Observatory.h"
-#include "lsst/daf/base.h"
 
 namespace lsst {
 namespace afw {
