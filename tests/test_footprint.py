@@ -19,6 +19,7 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
+import os
 import unittest
 import tempfile
 
@@ -247,7 +248,8 @@ class FootprintTestCase(unittest.TestCase):
         del footprintFromFile
 
     def testLegacyFootprints(self):
-        fileName = 'tests/data/preSpanSetsFootprint.fits'
+        testPath = os.path.abspath(os.path.dirname(__file__))
+        fileName = os.path.join(testPath, 'data', 'preSpanSetsFootprint.fits')
         legacyFootprint = afwDet.Footprint.readFits(fileName)
 
         # Calculate some quantifying numbers from the legacy Footprint to ensure
