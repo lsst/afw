@@ -45,33 +45,35 @@ void declareMakeBackground(py::module &mod) {
 template <typename PixelT, typename PyClass>
 void declareGetImage(PyClass &cls, std::string const &suffix) {
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (Background::*)(
                     Interpolate::Style const, UndersampleStyle const) const) &
-                    BackgroundMI::getImage<PixelT>,
+                    Background::getImage<PixelT>,
             "interpStyle"_a, "undersampleStyle"_a = THROW_EXCEPTION);
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(std::string const &,
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (Background::*)(std::string const &,
                                                                                 std::string const &) const) &
-                    BackgroundMI::getImage<PixelT>,
+                    Background::getImage<PixelT>,
             "interpStyle"_a, "undersampleStyle"_a = "THROW_EXCEPTION");
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (Background::*)(
                     lsst::geom::Box2I const &, Interpolate::Style const, UndersampleStyle const) const) &
-                    BackgroundMI::getImage<PixelT>,
+                    Background::getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a = THROW_EXCEPTION);
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)(
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (Background::*)(
                     lsst::geom::Box2I const &, std::string const &, std::string const &) const) &
-                    BackgroundMI::getImage<PixelT>,
+                    Background::getImage<PixelT>,
             "bbox"_a, "interpStyle"_a, "undersampleStyle"_a = "THROW_EXCEPTION");
     cls.def(("getImage" + suffix).c_str(),
-            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (BackgroundMI::*)() const) &
-                    BackgroundMI::getImage<PixelT>);
+            (std::shared_ptr<lsst::afw::image::Image<PixelT>> (Background::*)() const) &
+                    Background::getImage<PixelT>);
 }
 }
 
 PYBIND11_PLUGIN(_background) {
     py::module mod("_background", "Python wrapper for afw _background library");
+
+    py::module::import("lsst.afw.image.image");
 
     /* Member types and enums */
     py::enum_<UndersampleStyle>(mod, "UndersampleStyle")
@@ -163,8 +165,6 @@ PYBIND11_PLUGIN(_background) {
     clsBackgroundMI.def("__isub__", &BackgroundMI::operator-=);
 
     /* Members */
-    declareGetImage<float>(clsBackgroundMI, "F");
-
     clsBackgroundMI.def("getPixel",
                         (double (BackgroundMI::*)(Interpolate::Style const, int const, int const) const) &
                                 BackgroundMI::getPixel);
