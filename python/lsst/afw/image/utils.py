@@ -21,7 +21,7 @@
 #
 
 __all__ = ["clipImage", "resetFilters", "defineFilter",
-           "defineFiltersFromPolicy", "CalibNoThrow"]
+           "defineFiltersFromPolicy", "CalibNoThrow", "projectImage", "getProjectionIndices"]
 
 import numpy as np
 
@@ -107,3 +107,105 @@ E.g.
 
     def __exit__(self, *args):
         Calib.setThrowOnNegativeFlux(self._throwOnNegative)
+
+
+def getProjectionIndices(imageBBox, targetBBox):
+    """Get the indices to project an image
+
+    Given an image and target bounding box,
+    calculate the indices needed to appropriately
+    slice the input image and target image to
+    projec the image to the target.
+
+    Parameters
+    ----------
+    imageBBox: Box2I
+        Bounding box of the input image
+    targetBBox: Box2I
+        Bounding box of the target image
+
+    Returns
+    -------
+    targetSlices, imageIndices: tuple, tuple
+        Slices of the target and input images
+        in the form (by, bx), (iy, ix).
+    """
+    def getMin(dXmin):
+        """Get minimum indices"""
+        if dXmin < 0:
+            bxStart = -dXmin
+            ixStart = 0
+        else:
+            bxStart = 0
+            ixStart = dXmin
+        return bxStart, ixStart
+
+    def getMax(dXmax):
+        """Get maximum indices"""
+        if dXmax < 0:
+            bxEnd = None
+            ixEnd = dXmax
+        elif dXmax != 0:
+            bxEnd = -dXmax
+            ixEnd = None
+        else:
+            bxEnd = ixEnd = None
+        return bxEnd, ixEnd
+
+    dXmin = targetBBox.getMinX() - imageBBox.getMinX()
+    dXmax = targetBBox.getMaxX() - imageBBox.getMaxX()
+    dYmin = targetBBox.getMinY() - imageBBox.getMinY()
+    dYmax = targetBBox.getMaxY() - imageBBox.getMaxY()
+
+    bxStart, ixStart = getMin(dXmin)
+    byStart, iyStart = getMin(dYmin)
+    bxEnd, ixEnd = getMax(dXmax)
+    byEnd, iyEnd = getMax(dYmax)
+
+    bx = slice(bxStart, bxEnd)
+    by = slice(byStart, byEnd)
+    ix = slice(ixStart, ixEnd)
+    iy = slice(iyStart, iyEnd)
+    return (by, bx), (iy, ix)
+
+
+def projectImage(image, bbox, fill=0):
+    """Project an image into a bounding box
+
+    Project an image into a new image with a
+    (potentially) different bounding box.
+
+    Parameters
+    ----------
+    image: `afw.Image` or `afw.MaskedImage`
+        The image to project
+    bbox: `Box2I`
+        The bounding box to project onto.
+    fill: number
+        The value to fill the region of the new
+        image outside the bounding box of the original.
+
+    Returns
+    -------
+    newImage: `afw.Image` or `afw.MaskedImage`
+        The new image with the input image projected
+        into it's bounding box.
+    """
+    if image.getBBox() == bbox:
+        return image
+    (by, bx), (iy, ix) = getProjectionIndices(image.getBBox(), bbox)
+
+    if isinstance(image, MaskedImage):
+        newImage = type(image.image)(bbox)
+        newImage.array[by, bx] = image.image.array[iy, ix]
+        newMask = type(image.mask)(bbox)
+        newMask.array[by, bx] = image.mask.array[iy, ix]
+        newVariance = type(image.image)(bbox)
+        newVariance.array[by, bx] = image.variance.array[iy, ix]
+        newImage = MaskedImage(image=newImage, mask=newMask, variance=newVariance, dtype=newImage.array.dtype)
+    else:
+        newImage = type(image)(bbox)
+        if fill != 0:
+            newImage.set(fill)
+        newImage.array[by, bx] = image.array[iy, ix]
+    return newImage
