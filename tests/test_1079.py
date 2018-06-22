@@ -249,10 +249,10 @@ class SavingSubImagesTest(unittest.TestCase):
                 self.assertTrue(hdr.exists(name), name +
                                 " not saved to FITS header")
                 self.assertIsInstance(
-                    hdr.get(name), numbers.Real, name + " is not numeric")
+                    hdr.getScalar(name), numbers.Real, name + " is not numeric")
                 self.assertNotIsInstance(
-                    hdr.get(name), numbers.Integral, name + " is an int")
-                self.assertEqual(hdr.get(name), value,
+                    hdr.getScalar(name), numbers.Integral, name + " is an int")
+                self.assertEqual(hdr.getScalar(name), value,
                                  name + " has wrong value")
 
             checkLtvHeader(hdr, "LTV1", -1*x0)
@@ -263,11 +263,11 @@ class SavingSubImagesTest(unittest.TestCase):
             self.assertTrue(hdr.exists("CRPIX2"),
                             "CRPIX2 not saved to fits header")
 
-            fitsCrpix = [hdr.get("CRPIX1"), hdr.get("CRPIX2")]
+            fitsCrpix = [hdr.getScalar("CRPIX1"), hdr.getScalar("CRPIX2")]
             self.assertAlmostEqual(
-                fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
+                fitsCrpix[0] - hdr.getScalar("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
             self.assertAlmostEqual(
-                fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
+                fitsCrpix[1] - hdr.getScalar("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

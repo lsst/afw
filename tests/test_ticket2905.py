@@ -39,7 +39,7 @@ class Ticket2905Test(unittest.TestCase):
     def test(self):
         path = os.path.join(testPath, "data", "ticket2905.fits")
         md = readMetadata(path)
-        value = md.get("INR-STR")
+        value = md.getScalar("INR-STR")
         self.assertEqual(type(value), float)
         self.assertEqual(value, 2.0e-5)
 

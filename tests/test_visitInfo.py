@@ -183,39 +183,39 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
             self.assertEqual(metadata.nameCount(), 20)
-            self.assertEqual(metadata.get("EXPID"), item.exposureId)
-            self.assertEqual(metadata.get("EXPTIME"), item.exposureTime)
-            self.assertEqual(metadata.get("DARKTIME"), item.darkTime)
-            self.assertEqual(metadata.get("DATE-AVG"),
+            self.assertEqual(metadata.getScalar("EXPID"), item.exposureId)
+            self.assertEqual(metadata.getScalar("EXPTIME"), item.exposureTime)
+            self.assertEqual(metadata.getScalar("DARKTIME"), item.darkTime)
+            self.assertEqual(metadata.getScalar("DATE-AVG"),
                              item.date.toString(DateTime.TAI))
-            self.assertEqual(metadata.get("TIMESYS"), "TAI")
-            self.assertEqual(metadata.get("MJD-AVG-UT1"), item.ut1)
-            self.assertEqual(metadata.get("AVG-ERA"), item.era.asDegrees())
-            self.assertEqual(metadata.get("BORE-RA"),
+            self.assertEqual(metadata.getScalar("TIMESYS"), "TAI")
+            self.assertEqual(metadata.getScalar("MJD-AVG-UT1"), item.ut1)
+            self.assertEqual(metadata.getScalar("AVG-ERA"), item.era.asDegrees())
+            self.assertEqual(metadata.getScalar("BORE-RA"),
                              item.boresightRaDec[0].asDegrees())
-            self.assertEqual(metadata.get("BORE-DEC"),
+            self.assertEqual(metadata.getScalar("BORE-DEC"),
                              item.boresightRaDec[1].asDegrees())
-            self.assertEqual(metadata.get("BORE-AZ"),
+            self.assertEqual(metadata.getScalar("BORE-AZ"),
                              item.boresightAzAlt[0].asDegrees())
-            self.assertEqual(metadata.get("BORE-ALT"),
+            self.assertEqual(metadata.getScalar("BORE-ALT"),
                              item.boresightAzAlt[1].asDegrees())
-            self.assertEqual(metadata.get("BORE-AIRMASS"),
+            self.assertEqual(metadata.getScalar("BORE-AIRMASS"),
                              item.boresightAirmass)
-            self.assertEqual(metadata.get("BORE-ROTANG"),
+            self.assertEqual(metadata.getScalar("BORE-ROTANG"),
                              item.boresightRotAngle.asDegrees())
-            self.assertEqual(metadata.get("ROTTYPE"),
+            self.assertEqual(metadata.getScalar("ROTTYPE"),
                              RotTypeEnumNameDict[item.rotType])
-            self.assertEqual(metadata.get("OBS-LONG"),
+            self.assertEqual(metadata.getScalar("OBS-LONG"),
                              item.observatory.getLongitude().asDegrees())
-            self.assertEqual(metadata.get("OBS-LAT"),
+            self.assertEqual(metadata.getScalar("OBS-LAT"),
                              item.observatory.getLatitude().asDegrees())
-            self.assertEqual(metadata.get("OBS-ELEV"),
+            self.assertEqual(metadata.getScalar("OBS-ELEV"),
                              item.observatory.getElevation())
-            self.assertEqual(metadata.get("AIRTEMP"),
+            self.assertEqual(metadata.getScalar("AIRTEMP"),
                              item.weather.getAirTemperature())
-            self.assertEqual(metadata.get("AIRPRESS"),
+            self.assertEqual(metadata.getScalar("AIRPRESS"),
                              item.weather.getAirPressure())
-            self.assertEqual(metadata.get("HUMIDITY"),
+            self.assertEqual(metadata.getScalar("HUMIDITY"),
                              item.weather.getHumidity())
 
     def testSetVisitInfoMetadataMissingValues(self):
@@ -223,7 +223,7 @@ class VisitInfoTestCase(lsst.utils.tests.TestCase):
         visitInfo = afwImage.VisitInfo()  # only rot type is known
         metadata = PropertyList()
         afwImage.setVisitInfoMetadata(metadata, visitInfo)
-        self.assertEqual(metadata.get("ROTTYPE"),
+        self.assertEqual(metadata.getScalar("ROTTYPE"),
                          RotTypeEnumNameDict[afwImage.RotType.UNKNOWN])
         self.assertEqual(metadata.nameCount(), 1)
 

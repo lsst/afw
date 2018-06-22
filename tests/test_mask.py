@@ -262,7 +262,7 @@ class MaskTestCase(utilsTests.TestCase):
             # Check that we wrote (and read) the metadata successfully
             mp_ = "MP_" if True else self.Mask.maskPlanePrefix()  # currently private
             for (k, v) in self.Mask().getMaskPlaneDict().items():
-                self.assertEqual(md.get(mp_ + k), v)
+                self.assertEqual(md.getArray(mp_ + k), v)
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""

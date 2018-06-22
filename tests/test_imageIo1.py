@@ -156,7 +156,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             jim = afwImage.DecoratedImageF(tmpFile)
 
             for k, v in keys.items():
-                self.assertEqual(jim.getMetadata().get(k), v)
+                self.assertEqual(jim.getMetadata().getScalar(k), v)
 
     def testLongStrings(self):
         keyWord = 'ZZZ'
@@ -169,7 +169,7 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             expOrig.writeFits(tmpFile)
 
             expNew = afwImage.ExposureF(tmpFile)
-            self.assertEqual(expNew.getMetadata().get(keyWord), longString)
+            self.assertEqual(expNew.getMetadata().getScalar(keyWord), longString)
 
     def checkBBoxFromMetadata(self, filename, expected, hdu=0):
         metadata = afwFits.readMetadata(filename, hdu)

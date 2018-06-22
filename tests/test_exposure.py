@@ -620,9 +620,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         expCopy = exp.clone()
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
-        self.assertEqual(expCopyMeta.get("foo"), 6)
+        self.assertEqual(expCopyMeta.getScalar("foo"), 6)
         # this will fail if the bug is present
-        self.assertEqual(expMeta.get("foo"), 5)
+        self.assertEqual(expMeta.getScalar("foo"), 5)
 
     def testDeepCopySubMetadata(self):
         """Make sure a deep copy of a subregion of an Exposure has a deep copy of metadata (ticket #2568)
@@ -634,9 +634,9 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
-        self.assertEqual(expCopyMeta.get("foo"), 6)
+        self.assertEqual(expCopyMeta.getScalar("foo"), 6)
         # this will fail if the bug is present
-        self.assertEqual(expMeta.get("foo"), 5)
+        self.assertEqual(expMeta.getScalar("foo"), 5)
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in lsst.utils.tests.MemoryTestCase)"""
@@ -683,7 +683,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             self.assertPairsAlmostEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
             self.assertSpherePointsAlmostEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
             assert_allclose(wcs.getCdMatrix(), self.wcs.getCdMatrix(), atol=1e-10)
-            frazzle = md.get("FRAZZLE")
+            frazzle = md.getScalar("FRAZZLE")
             self.assertTrue(frazzle)
 
     def testArchiveKeys(self):

@@ -17,7 +17,7 @@ def getByKey(metadata, key):
     """
     mdKeys = metadata.paramNames()
     if key in mdKeys:
-        return metadata.get(key)
+        return metadata.getScalar(key)
     else:
         return None
 

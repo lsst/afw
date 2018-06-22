@@ -30,7 +30,6 @@ from lsst.daf.base import PropertyList
 import lsst.geom
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
-from lsst.afw.geom import arcseconds, degrees, makeSkyWcs, makeCdMatrix
 from lsst.afw.geom.wcsUtils import createTrivialWcsMetadata, deleteBasicWcsMetadata, \
     getCdMatrixFromMetadata, getSipMatrixFromMetadata, getImageXY0FromMetadata, \
     hasSipMatrix, makeSipMatrixMetadata, makeTanSipMetadata, \
@@ -44,7 +43,7 @@ def makeRotationMatrix(angle, scale):
     return np.array([
         ([cosAng, sinAng]),
         ([-sinAng, cosAng]),
-    ], dtype=float) * scale
+    ], dtype=float)*scale
 
 
 class BaseTestCase(lsst.utils.tests.TestCase):
@@ -54,13 +53,13 @@ class BaseTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         # define the position and size of one CCD in the focal plane
         self.pixelSizeMm = 0.024  # mm/pixel
-        self.ccdOrientation = 5 * degrees  # orientation of pixel w.r.t. focal plane
-        self.plateScale = 0.15 * arcseconds  # angle/pixel
+        self.ccdOrientation = 5*lsst.geom.degrees  # orientation of pixel w.r.t. focal plane
+        self.plateScale = 0.15*lsst.geom.arcseconds  # angle/pixel
         self.bbox = lsst.geom.Box2I(lsst.geom.Point2I(0, 0), lsst.geom.Extent2I(2000, 4000))
         self.crpix = lsst.geom.Point2D(1000, 2000)
-        self.crval = lsst.geom.SpherePoint(10 * degrees, 40 * degrees)
-        self.orientation = -45 * degrees
-        self.scale = 1.0 * arcseconds
+        self.crval = lsst.geom.SpherePoint(10, 40, lsst.geom.degrees)
+        self.orientation = -45*lsst.geom.degrees
+        self.scale = 1.0*lsst.geom.arcseconds
         # position of 0,0 pixel position in focal plane
         self.ccdPositionMm = lsst.geom.Point2D(25.0, 10.0)
         self.pixelToFocalPlane = self.makeAffineTransform(
@@ -68,9 +67,9 @@ class BaseTestCase(lsst.utils.tests.TestCase):
             rotation=self.ccdOrientation,
             scale=self.pixelSizeMm,
         )
-        cdMatrix = makeCdMatrix(scale=self.scale, orientation=self.orientation)
-        self.tanWcs = makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
-        self.radPerMm = self.plateScale.asRadians() / self.pixelSizeMm  # at center of field
+        cdMatrix = afwGeom.makeCdMatrix(scale=self.scale, orientation=self.orientation)
+        self.tanWcs = afwGeom.makeSkyWcs(crpix=self.crpix, crval=self.crval, cdMatrix=cdMatrix)
+        self.radPerMm = self.plateScale.asRadians()/self.pixelSizeMm  # at center of field
         bboxD = lsst.geom.Box2D(self.bbox)
         self.pixelPoints = bboxD.getCorners()
         self.pixelPoints.append(bboxD.getCenter())
@@ -83,7 +82,7 @@ class BaseTestCase(lsst.utils.tests.TestCase):
                                              lsst.geom.LinearTransform.makeRotation(rotation))
         offset = lsst.geom.AffineTransform(lsst.geom.Extent2D(*offset))
         # AffineTransform a*b = b.then(a)
-        return afwGeom.makeTransform(rotScale * offset)
+        return afwGeom.makeTransform(rotScale*offset)
 
 
 class MakeDistortedTanWcsTestCase(BaseTestCase):
@@ -337,7 +336,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         )
         self.assertEqual(len(metadata.names(True)), len(desiredNameValueList))
         for name, value in desiredNameValueList:
-            self.assertEqual(metadata.get(name + wcsName), value)
+            self.assertEqual(metadata.getScalar(name + wcsName), value)
 
     def testDeleteBasicWcsMetadata(self):
         wcsName = "Q"  # arbitrary
@@ -358,7 +357,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         # deleting data for the right WCS deletes all but one keyword
         deleteBasicWcsMetadata(metadata=metadata, wcsName=wcsName)
         self.assertEqual(len(metadata.names(True)), 1)
-        self.assertEqual(metadata.get("NAXIS1"), 100)
+        self.assertEqual(metadata.getScalar("NAXIS1"), 100)
 
         # try with a smattering of keywords (should silently ignore the missing ones)
         metadata.set("WCSAXES%s" % (wcsName,), 2)
@@ -367,7 +366,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         metadata.set("CRVAL1%s" % (wcsName,), 55)
         deleteBasicWcsMetadata(metadata=metadata, wcsName=wcsName)
         self.assertEqual(len(metadata.names(True)), 1)
-        self.assertEqual(metadata.get("NAXIS1"), 100)
+        self.assertEqual(metadata.getScalar("NAXIS1"), 100)
 
     def testGetImageXY0FromMetadata(self):
         wcsName = "Z"  # arbitrary
@@ -382,7 +381,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         # deleting one of the required keywords should be treated as no data available
         for namePrefixToRemove in ("CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2"):
             nameToRemove = namePrefixToRemove + wcsName
-            removedValue = metadata.get(nameToRemove)
+            removedValue = metadata.getScalar(nameToRemove)
             metadata.remove(nameToRemove)
             xy0MissingWcsKey = getImageXY0FromMetadata(metadata=metadata, wcsName=wcsName, strip=True)
             self.assertEqual(xy0MissingWcsKey, lsst.geom.Point2I(0, 0))
@@ -423,24 +422,24 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         for name in ("A", "B", "AP", "BP"):
             self.assertTrue(hasSipMatrix(self.metadata, name))
             sipMatrix = getSipMatrixFromMetadata(self.metadata, name)
-            width = self.metadata.get("%s_ORDER" % (name,)) + 1
+            width = self.metadata.getScalar("%s_ORDER" % (name,)) + 1
             self.assertEqual(sipMatrix.shape, (width, width))
             for i in range(width):
                 for j in range(width):
                     # SIP matrix terms use 0-based indexing
                     cardName = "%s_%d_%d" % (name, i, j)
                     if self.metadata.exists(cardName):
-                        self.assertEqual(sipMatrix[i, j], self.metadata.get(cardName))
+                        self.assertEqual(sipMatrix[i, j], self.metadata.getScalar(cardName))
                     else:
                         self.assertEqual(sipMatrix[i, j], 0.0)
 
             metadata = makeSipMatrixMetadata(sipMatrix, name)
             for name in metadata.names(False):
-                value = metadata.get(name)
+                value = metadata.getScalar(name)
                 if (name.endswith("ORDER")):
                     self.assertEqual(width, value + 1)
                 else:
-                    self.assertEqual(value, self.metadata.get(name))
+                    self.assertEqual(value, self.metadata.getScalar(name))
                     self.assertNotEqual(value, 0.0)  # 0s are omitted
 
         # try metadata with only the ORDER keyword; the matrix should be all zeros
@@ -466,7 +465,7 @@ class DetailTestCase(lsst.utils.tests.TestCase):
         for i in range(2):
             for j in range(2):
                 cardName = "CD%d_%d" % (i + 1, j + 1)
-                self.assertEqual(cdMatrix[i, j], self.metadata.get(cardName))
+                self.assertEqual(cdMatrix[i, j], self.metadata.getScalar(cardName))
 
         metadata = PropertyList()
         with self.assertRaises(TypeError):
@@ -485,10 +484,10 @@ class DetailTestCase(lsst.utils.tests.TestCase):
     def testMakeTanSipMetadata(self):
         """Test makeTanSipMetadata
         """
-        crpix = lsst.geom.Point2D(self.metadata.get("CRPIX1") - 1,
-                                  self.metadata.get("CRPIX2") - 1)
-        crval = lsst.geom.SpherePoint(self.metadata.get("CRVAL1") * degrees,
-                                      self.metadata.get("CRVAL2") * degrees)
+        crpix = lsst.geom.Point2D(self.metadata.getScalar("CRPIX1") - 1,
+                                  self.metadata.getScalar("CRPIX2") - 1)
+        crval = lsst.geom.SpherePoint(self.metadata.getScalar("CRVAL1"),
+                                      self.metadata.getScalar("CRVAL2"), lsst.geom.degrees)
         cdMatrix = getCdMatrixFromMetadata(self.metadata)
         sipA = getSipMatrixFromMetadata(self.metadata, "A")
         sipB = getSipMatrixFromMetadata(self.metadata, "B")
@@ -524,14 +523,14 @@ class DetailTestCase(lsst.utils.tests.TestCase):
             self.checkSipMetadata(name, matrix, fullMetadata)
 
     def checkSipMetadata(self, name, sipMatrix, metadata):
-        width = metadata.get("%s_ORDER" % (name,)) + 1
+        width = metadata.getScalar("%s_ORDER" % (name,)) + 1
         self.assertEqual(width, sipMatrix.shape[0])
         for i in range(width):
             for j in range(width):
                 cardName = "%s_%s_%s" % (name, i, j)
                 value = sipMatrix[i, j]
                 if value != 0 or metadata.exists(cardName):
-                    self.assertEqual(value, metadata.get(cardName))
+                    self.assertEqual(value, metadata.getScalar(cardName))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

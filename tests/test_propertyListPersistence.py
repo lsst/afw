@@ -58,7 +58,7 @@ class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):
         propertyList = self.persistence.unsafeRetrieve(
             "PropertyList", storageList, None)
 
-        self.assertEqual(propertyList.get("AR_HDU"), 5)
+        self.assertEqual(propertyList.getScalar("AR_HDU"), 5)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

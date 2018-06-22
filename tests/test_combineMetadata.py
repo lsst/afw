@@ -27,16 +27,6 @@ from lsst.daf.base import PropertyList
 from lsst.afw.fits import combineMetadata
 
 
-def getLast(listOrItem):
-    """A very primitive means of getting the last item in a collection
-
-    This only works for list, since that is all this test needs
-    """
-    if type(listOrItem) == list:
-        return listOrItem[-1]
-    return listOrItem
-
-
 class CombineMetadataTestCase(lsst.utils.tests.TestCase):
 
     def assertMetadataEqual(self, md1, md2):
@@ -44,8 +34,8 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         names2 = md2.getOrderedNames()
         self.assertEqual(names1, names2)
         for name in names1:
-            item1 = md1.get(name)
-            item2 = md2.get(name)
+            item1 = md1.getArray(name)
+            item2 = md2.getArray(name)
             self.assertEqual(item1, item2)
             self.assertEqual(type(item1), type(item2))
 
@@ -73,16 +63,16 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(result.getOrderedNames(),
                          ["int1", "float1", "string1", "COMMENT", "HISTORY",
                          "int2", "float2", "string2"])
-        self.assertEqual(result.get("COMMENT"), ["md1 comment", "md2 comment"])
-        self.assertEqual(result.get("HISTORY"), ["md1 history", "md2 history"])
+        self.assertEqual(result.getArray("COMMENT"), ["md1 comment", "md2 comment"])
+        self.assertEqual(result.getArray("HISTORY"), ["md1 history", "md2 history"])
         for name in md1.getOrderedNames():
             if name in ("COMMENT", "HISTORY"):
                 continue
-            self.assertEqual(result.get(name), getLast(md1.get(name)))
+            self.assertEqual(result.getScalar(name), md1.getArray(name)[-1])
         for name in md2.getOrderedNames():
             if name in ("COMMENT", "HISTORY"):
                 continue
-            self.assertEqual(result.get(name), getLast(md2.get(name)))
+            self.assertEqual(result.getScalar(name), md2.getArray(name)[-1])
 
         # input should be unchanged
         self.assertMetadataEqual(md1, md1Copy)
@@ -142,9 +132,9 @@ class CombineMetadataTestCase(lsst.utils.tests.TestCase):
         md2NameSet = set(md2Names)
         for name in result.getOrderedNames():
             if name in md2NameSet:
-                self.assertEqual(result.get(name), getLast(md2.get(name)))
+                self.assertEqual(result.getScalar(name), md2.getArray(name)[-1])
             else:
-                self.assertEqual(result.get(name), getLast(md1.get(name)))
+                self.assertEqual(result.getScalar(name), md1.getArray(name)[-1])
 
         # input should be unchanged
         self.assertMetadataEqual(md1, md1Copy)
