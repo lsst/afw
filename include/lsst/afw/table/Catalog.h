@@ -552,7 +552,7 @@ public:
     }
 
     /// Shallow swap of two catalogs.
-    void swap(CatalogT& other) {
+    void swap(CatalogT& other) noexcept {
         _table.swap(other._table);
         _internal.swap(other._internal);
     }
