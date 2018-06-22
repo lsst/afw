@@ -130,14 +130,14 @@ public:
     void setMaskPropagationThreshold(int bit, double threshold);
     //@}
 
-    double getNumSigmaClip() const { return _numSigmaClip; }
-    int getNumIter() const { return _numIter; }
-    int getAndMask() const { return _andMask; }
-    int getNoGoodPixelsMask() const { return _noGoodPixelsMask; }
-    bool getNanSafe() const { return _isNanSafe; }
-    bool getWeighted() const { return _useWeights == WEIGHTS_TRUE ? true : false; }
-    bool getWeightedIsSet() const { return _useWeights != WEIGHTS_NONE ? true : false; }
-    bool getCalcErrorFromInputVariance() const { return _calcErrorFromInputVariance; }
+    double getNumSigmaClip() const noexcept { return _numSigmaClip; }
+    int getNumIter() const noexcept { return _numIter; }
+    int getAndMask() const noexcept { return _andMask; }
+    int getNoGoodPixelsMask() const noexcept { return _noGoodPixelsMask; }
+    bool getNanSafe() const noexcept { return _isNanSafe; }
+    bool getWeighted() const noexcept { return _useWeights == WEIGHTS_TRUE ? true : false; }
+    bool getWeightedIsSet() const noexcept { return _useWeights != WEIGHTS_NONE ? true : false; }
+    bool getCalcErrorFromInputVariance() const noexcept { return _calcErrorFromInputVariance; }
 
     void setNumSigmaClip(double numSigmaClip) {
         assert(numSigmaClip > 0);
@@ -149,9 +149,9 @@ public:
     }
     void setAndMask(int andMask) { _andMask = andMask; }
     void setNoGoodPixelsMask(int noGoodPixelsMask) { _noGoodPixelsMask = noGoodPixelsMask; }
-    void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
-    void setWeighted(bool useWeights) { _useWeights = useWeights ? WEIGHTS_TRUE : WEIGHTS_FALSE; }
-    void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) {
+    void setNanSafe(bool isNanSafe) noexcept { _isNanSafe = isNanSafe; }
+    void setWeighted(bool useWeights) noexcept { _useWeights = useWeights ? WEIGHTS_TRUE : WEIGHTS_FALSE; }
+    void setCalcErrorFromInputVariance(bool calcErrorFromInputVariance) noexcept {
         _calcErrorFromInputVariance = calcErrorFromInputVariance;
     }
 
@@ -249,7 +249,7 @@ public:
     Statistics(Statistics &&) = default;
     Statistics &operator=(Statistics const &) = default;
     Statistics &operator=(Statistics &&) = default;
-    ~Statistics() = default;
+    ~Statistics() noexcept = default;
 
     /** Return the value and error in the specified statistic (e.g. MEAN)
      *
@@ -280,7 +280,7 @@ public:
      *             asked for one property in the constructor, that property is returned
      */
     double getValue(Property const prop = NOTHING) const;
-    lsst::afw::image::MaskPixel getOrMask() const { return _allPixelOrMask; }
+    lsst::afw::image::MaskPixel getOrMask() const noexcept { return _allPixelOrMask; }
 
 private:
     long _flags;  // The desired calculation
@@ -329,7 +329,7 @@ public:
 
 private:
     friend class boost::iterator_core_access;
-    void increment() { ; }  // never actually advance the iterator
+    void increment() noexcept { ; }  // never actually advance the iterator
 };
 /**
  * @brief A Mask wrapper to provide an infinite_iterator for Mask::row_begin().  This allows a fake
@@ -339,8 +339,8 @@ template <typename ValueT>
 class MaskImposter {
 public:
     typedef infinite_iterator<ValueT> x_iterator;
-    explicit MaskImposter(ValueT val = 0) { _val[0] = val; }
-    x_iterator row_begin(int) const { return x_iterator(_val); }
+    explicit MaskImposter(ValueT val = 0) noexcept { _val[0] = val; }
+    x_iterator row_begin(int) const noexcept { return x_iterator(_val); }
 
 private:
     ValueT _val[1];
@@ -446,13 +446,15 @@ public:
     explicit ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
 
     // The methods we'll use in Statistics
-    x_iterator row_begin(int) const { return _v.begin(); }
-    x_iterator row_end(int) const { return _v.end(); }
-    int getWidth() const { return _v.size(); }
-    int getHeight() const { return 1; }
-    lsst::geom::Extent2I getDimensions() const { return lsst::geom::Extent2I(getWidth(), getHeight()); }
+    x_iterator row_begin(int) const noexcept { return _v.begin(); }
+    x_iterator row_end(int) const noexcept { return _v.end(); }
+    int getWidth() const noexcept { return _v.size(); }
+    int getHeight() const noexcept { return 1; }
+    lsst::geom::Extent2I getDimensions() const noexcept {
+        return lsst::geom::Extent2I(getWidth(), getHeight());
+    }
 
-    bool empty() const { return _v.empty(); }
+    bool empty() const noexcept { return _v.empty(); }
 
 private:
     std::vector<ValueT> const &_v;                                // a private reference to the data
