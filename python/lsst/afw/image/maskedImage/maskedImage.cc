@@ -224,7 +224,6 @@ PYBIND11_PLUGIN(maskedImage) {
     py::module mod("maskedImage");
 
     py::module::import("lsst.afw.image.image");
-    py::module::import("lsst.afw.image.mask");
 
     auto clsMaskedImageF = declareMaskedImage<float>(mod, "F");
     auto clsMaskedImageD = declareMaskedImage<double>(mod, "D");

@@ -25,7 +25,7 @@ __all__ = ["Mask", "MaskPixel"]
 import numpy as np
 
 from lsst.utils import TemplateMeta
-from .mask import MaskX
+from .image import MaskX
 from ..slicing import supportSlicing
 
 supportSlicing(MaskX)
