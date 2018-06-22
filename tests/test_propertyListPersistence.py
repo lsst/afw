@@ -45,8 +45,9 @@ class PropertyListPersistenceTestCase(lsst.utils.tests.TestCase):
         """Test unpersisting from FITS"""
 
         # Set up the LogicalLocation.
+        testPath = os.path.abspath(os.path.dirname(__file__))
         logicalLocation = dafPers.LogicalLocation(
-            os.path.join("tests", "data", "HSC-0908120-056-small.fits"))
+            os.path.join(testPath, "data", "HSC-0908120-056-small.fits"))
 
         # Create a FitsStorage and put it in a StorageList.
         storage = self.persistence.getRetrieveStorage(
