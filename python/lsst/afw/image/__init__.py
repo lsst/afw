@@ -39,6 +39,7 @@ from .photoCalib import *
 from .imagePca import *
 from .imageUtils import *
 from .readMetadata import *
+from .multiband import *
 
 from .basicUtils import *
 from .testUtils import *
