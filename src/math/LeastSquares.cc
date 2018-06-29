@@ -170,7 +170,7 @@ public:
             ndarray::asEigenMatrix(diagnostic) = _svd.singularValues();
         }
         if (whichDiagnostic == LeastSquares::DIRECT_SVD) {
-            diagnostic.asEigen<Eigen::ArrayXpr>() = diagnostic.asEigen<Eigen::ArrayXpr>().sqrt();
+            ndarray::asEigenArray(diagnostic) = ndarray::asEigenArray(diagnostic).sqrt();
         }
     }
 
@@ -265,7 +265,7 @@ public:
     virtual void updateDiagnostic() {
         switch (whichDiagnostic) {
             case LeastSquares::NORMAL_EIGENSYSTEM:
-                diagnostic.asEigen<Eigen::ArrayXpr>() = _svd.singularValues().array().square();
+                ndarray::asEigenArray(diagnostic) = _svd.singularValues().array().square();
                 break;
             case LeastSquares::NORMAL_CHOLESKY:
                 throw LSST_EXCEPT(

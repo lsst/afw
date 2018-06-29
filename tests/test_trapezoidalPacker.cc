@@ -14,7 +14,7 @@ typedef lsst::afw::math::ChebyshevBoundedFieldControl Control;
 
 ndarray::Array<double, 1, 1> makeRandomArray(int n) {
     ndarray::Array<double, 1, 1> result = ndarray::allocate(n);
-    result.asEigen<Eigen::ArrayXpr>().setRandom();
+    ndarray::asEigenArray(result).setRandom();
     return result;
 }
 

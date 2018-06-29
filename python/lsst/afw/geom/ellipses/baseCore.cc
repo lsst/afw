@@ -20,8 +20,9 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "pybind11/pybind11.h"
+#include "pybind11/eigen.h"
+#include "pybind11/stl.h"
 
 #include "ndarray/pybind11.h"
 
