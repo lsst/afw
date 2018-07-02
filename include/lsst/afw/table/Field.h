@@ -29,11 +29,8 @@ struct Field : public FieldBase<T> {
      *  Construct a new field.
      *
      *  @param[in]  name         Name of the field.  Schemas provide extra functionality for names
-     *                           whose components are separated by periods.  It may also be practical
-     *                           to limit field names to lowercase letters, numbers, and periods,
-     *                           as only those names can be round-tripped with FITS I/O (periods are
-     *                           converted to underscores in FITS, but hence cannot be distinguished
-     *                           from underscores in field names).
+     *                           whose components are separated by underscores.  Field names should
+     *                           be limited to letters, numbers, and underscores.
      *  @param[in]  doc          Documentation for the field.  Should not contain single-quotes
      *                           to avoid FITS round-trip problems.
      *  @param[in]  units        Units for the field.  Should not contain single-quotes
@@ -52,11 +49,8 @@ struct Field : public FieldBase<T> {
      *  Construct a new field.
      *
      *  @param[in]  name         Name of the field.  Schemas provide extra functionality for names
-     *                           whose components are separated by periods.  It may also be practical
-     *                           to limit field names to lowercase letters, numbers, and periods,
-     *                           as only those names can be round-tripped with FITS I/O (periods are
-     *                           converted to underscores in FITS, but hence cannot be distinguished
-     *                           from underscores in field names).
+     *                           whose components are separated by underscores.  Field names should
+     *                           be limited to letters, numbers, and underscores.
      *  @param[in]  doc          Documentation for the field.
      *  @param[in]  size         Size of the field as an integer, if appropriate.  Field types that
      *                           accept a size have a FieldBase that is implicitly constructable from

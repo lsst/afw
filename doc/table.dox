@@ -158,17 +158,64 @@ namespace lsst { namespace afw { namespace table {
  *  discussed below).
  *
  *  @section afwTableFieldNames Field Names
- *  By convention, field names are all lowercase and have '.'-separated elements.  Only letters, numbers
- *  and periods should be used.  These rules are not enforced, but names that do not meet these requirements
- *  may not round-trip correctly in FITS (periods are converted to underscores in the FITS persistence
- *  layer, so we cannot distinguish between the two when we read tables from FITS).
- *  Schema provides extra functionality for names with period-separated elements; these elements can
- *  be accessed separately individually with the bracket operators.  More information on schema namespaces
- *  can be found in the Schema and SubSchema class documentation, and the testSchema.py unit test may
- *  also be a useful example.
  *
- *  Other field strings (documentation and units) are essentially arbitrary, but should not contain
- *  single quotes, as these may also confuse FITS parsers (even when escaped).
+ *  By convention, field names are camel case and have '_'-separated elements.
+ *  Only letters, numbers, and underscores should be used.
+ *  These rules are not enforced, but names that do not meet these requirements
+ *  may not round-trip correctly in FITS.
+ *
+ *  Underscores should be used as a sort of namespace separator (much like '.'
+ *  in Python; we use underscore instead so we don't need to translate field
+ *  names when using them in SQL).  These namespace elements typically indicate
+ *  things like the module or Task containing the algorithm that produced the
+ *  field, the name of the algorithm, and (finally) the name of the particular
+ *  output produced by that algorithm.
+ *
+ *  For example:
+ *
+ *    - `base_SdssShape_xx` is produced by the SdssShape algorithm located in
+ *      the meas_base package (we drop "meas_" since so many algorithms are in
+ *      meas_* packages; see `lsst.meas.base.generateAlgorithmName`), and this
+ *      particular field represents the x-x second-moment of the source.
+ *
+ *    - `deblend_nChild` is produced by `SourceDeblendTask`, where `deblend`
+ *      is an abbreviation of the Task, and `nChild` is a value produced by
+ *      it.  There are no hard rules for how to abbreviate the name of a Task
+ *      when generating its field names; we trust developer judgement in
+ *      selecting a prefix that is both concise and unambiguous.
+ *
+ *  Note that some underscore-separated elements are themselves multiple words,
+ *  such as `SdssShape` or `nChild`, and we use CamelCase, not more underscores,
+ *  to separate words.
+ *  Two rules of thumb are:
+ *
+ *    -  if two words are not individually meaningful (or mean something
+ *       different when separated), join them with CamelCase;
+ *
+ *    -  if the prefix of a field name represents a conceptual group of
+ *       multiple fields, use underscores to join the group name to the group
+ *       elements.
+ *
+ *  We also do not have hard rules about whether words begin with uppercase or
+ *  lowercase, with three exceptions:
+ *
+ *    - The first namespace element (typically a module or Task abbreviation)
+ *      should start with a lowercase letter.
+ *
+ *    - The last namespace element (the name of a particular value) should
+ *      begin with a lowercase letter.
+ *
+ *    - Names that correspond to a Python or C++ class that produce the field
+ *      should start with uppercase (to match the name of the class).
+ *
+ *  Schema provides extra functionality for names with underscore-separated
+ *  elements; these elements can be accessed individually with the
+ *  bracket operators.  More information on this behavior can be found in the
+ *  Schema and SubSchema class documentation.
+ *
+ *  Other field strings (documentation and units) are essentially arbitrary,
+ *  but should not contain single quotes, as these may also confuse FITS
+ *  parsers (even when escaped).
  *
  *  @section afwTableVariableLengthArrays Variable-Length Arrays
  *
