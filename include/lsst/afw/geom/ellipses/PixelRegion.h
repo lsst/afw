@@ -33,17 +33,35 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 
+/**
+ *  A lazy representation of the set of pixels whose centers are within an Ellipse.
+ */
 class PixelRegion {
 public:
     class Iterator;
 
+    //@{
+    /// Iterate over the Spans covered by the Ellipse.
     Iterator begin() const;
     Iterator end() const;
+    //@}
 
+    /**
+     * Return a pixel bounding box for the ellipse.
+     *
+     * The returned box is permitted to include pixels whose centers are not
+     * within the ellipse.
+     */
     lsst::geom::Box2I const& getBBox() const { return _bbox; }
 
+    /**
+     * Return a Span representing the extent of the ellipse for the given row.
+     */
     Span const getSpanAt(int y) const;
 
+    /**
+     * Construct a new PixelRegion from the given Ellipse.
+     */
     explicit PixelRegion(Ellipse const& ellipse);
 
     PixelRegion(PixelRegion const&) = default;
@@ -60,8 +78,14 @@ private:
     lsst::geom::Box2I _bbox;
 };
 
-class PixelRegion::Iterator : public boost::iterator_facade<PixelRegion::Iterator, Span const,
-                                                            boost::random_access_traversal_tag> {
+
+/**
+ * A generating iterator for the Spans covered by an Ellipse.
+ *
+ * This class provides most of the functionality of BidirectionalIterator, but
+ * does not make a multi-pass guarantee, and is hence formally only an
+ * InputIterator.
+ */
 class PixelRegion::Iterator {
 public:
 
@@ -126,7 +150,9 @@ private:
 inline PixelRegion::Iterator PixelRegion::begin() const {
     return Iterator(getSpanAt(_bbox.getBeginY()), this);
 }
+
 inline PixelRegion::Iterator PixelRegion::end() const { return Iterator(getSpanAt(_bbox.getEndY()), this); }
+
 }  // namespace ellipses
 }  // namespace geom
 }  // namespace afw
