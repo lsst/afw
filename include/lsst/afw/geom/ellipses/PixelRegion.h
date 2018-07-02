@@ -24,8 +24,6 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_PixelRegion_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_PixelRegion_h_INCLUDED
 
-#include "boost/iterator/iterator_facade.hpp"
-
 #include "lsst/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
@@ -64,7 +62,15 @@ private:
 
 class PixelRegion::Iterator : public boost::iterator_facade<PixelRegion::Iterator, Span const,
                                                             boost::random_access_traversal_tag> {
+class PixelRegion::Iterator {
 public:
+
+    using value_type = Span;
+    using reference = Span const &;
+    using pointer = Span const *;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+
     explicit Iterator(Span const& s = Span(0, 0, 0), PixelRegion const* region = NULL)
             : _s(s), _region(region) {}
 
@@ -74,21 +80,45 @@ public:
     Iterator& operator=(Iterator&&) = default;
     ~Iterator() = default;
 
+    bool operator==(Iterator const & other) const {
+        return _s == other._s;
+    }
+
+    bool operator!=(Iterator const & other) const {
+        return !(*this == other);
+    }
+
+    reference operator*() const {
+        return _s;
+    }
+
+    pointer operator->() const {
+        return &_s;
+    }
+
+    Iterator & operator++() {
+        _s = _region->getSpanAt(_s.getY() + 1);
+        return *this;
+    }
+
+    Iterator & operator--() {
+        _s = _region->getSpanAt(_s.getY() - 1);
+        return *this;
+    }
+
+    Iterator operator++(int) {
+        Iterator copy(*this);
+        ++(this);
+        return copy;
+    }
+
+    Iterator operator--(int) {
+        Iterator copy(*this);
+        --(this);
+        return copy;
+    }
+
 private:
-    friend class boost::iterator_core_access;
-
-    Span const& dereference() const { return _s; }
-
-    void increment() { _s = _region->getSpanAt(_s.getY() + 1); }
-
-    void decrement() { _s = _region->getSpanAt(_s.getY() - 1); }
-
-    void advance(int n) { _s = _region->getSpanAt(_s.getY() + n); }
-
-    bool equal(Iterator const& other) const { return _s == other._s; }
-
-    int distance_to(Iterator const& other) const { return other._s.getY() - _s.getY(); }
-
     Span _s;
     PixelRegion const* _region;
 };
