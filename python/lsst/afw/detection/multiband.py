@@ -35,45 +35,43 @@ class MultibandFootprint(MultibandBase):
 
     A `MultibandFootprint` is a collection of HeavyFootprints that have
     the same `SpanSet` and `peakCatalog` but different flux in each band.
+
+    Parameters
+    ----------
+    filters: list
+        List of filter names.
+        If `singles` is an `OrderedDict` then this argument is ignored,
+        otherwise it is required.
+    singles: list
+        A list of single band `HeavyFootprint` objects.
+        Either `singles` or `images` must be specified.
+        If `singles` is not `None`, then all arguments other than
+        `filters` are ignored.
+        Each `HeavyFootprint` should have the same `PeakCatalog` but
+        is allowed to have a different `SpanSet`, in which case the
+        `SpanSet` for each band is combined into the `SpanSet` of the
+        `MultibandFootprint`.
+    images: array, `MultibandImage`, or list of `afw.Image` objects
+        An array or `MultibandImage` (or collection of images in each band)
+        to convert into `HeavyFootprint` objects.
+        Only pixels above the `thresh` value for at least one band
+        will be included in the `SpanSet` and resulting footprints.
+    footprint: `Footprint`
+        `Footprint` that contains the `SpanSet` and `PeakCatalog`
+        to use for the `HeavyFootprint` in each band.
+    xy0: `Point2I`
+        If `images` is an array and `footprint` is `None` then specifying
+        `xy0` gives the location of the minimum `x` and `y` value of the
+        `images`.
+    peaks: `PeakCatalog`
+        Catalog containing information about the peaks located in the
+        footprints.
+    thresh: float or list of floats
+        Threshold in each band (or the same threshold to be used in all bands)
+        to include a pixel in the `SpanSet` of the `MultibandFootprint`.
+        If `Footprint` is not `None` then `thresh` is ignored.
     """
     def __init__(self, filters, singles=None, images=None, footprint=None, xy0=None, peaks=None, thresh=0):
-        """Initialize a `MultibandFootprint` object
-
-        Parameters
-        ----------
-        filters: list
-            List of filter names.
-            If `singles` is an `OrderedDict` then this argument is ignored,
-            otherwise it is required.
-        singles: list
-            A list of single band `HeavyFootprint` objects.
-            Either `singles` or `images` must be specified.
-            If `singles` is not `None`, then all arguments other than
-            `filters` are ignored.
-            Each `HeavyFootprint` should have the same `PeakCatalog` but
-            is allowed to have a different `SpanSet`, in which case the
-            `SpanSet` for each band is combined into the `SpanSet` of the
-            `MultibandFootprint`.
-        images: array, `MultibandImage`, or list of `afw.Image` objects
-            An array or `MultibandImage` (or collection of images in each band)
-            to convert into `HeavyFootprint` objects.
-            Only pixels above the `thresh` value for at least one band
-            will be included in the `SpanSet` and resulting footprints.
-        footprint: `Footprint`
-            `Footprint` that contains the `SpanSet` and `PeakCatalog`
-            to use for the `HeavyFootprint` in each band.
-        xy0: `Point2I`
-            If `images` is an array and `footprint` is `None` then specifying
-            `xy0` gives the location of the minimum `x` and `y` value of the
-            `images`.
-        peaks: `PeakCatalog`
-            Catalog containing information about the peaks located in the
-            footprints.
-        thresh: float or list of floats
-            Threshold in each band (or the same threshold to be used in all bands)
-            to include a pixel in the `SpanSet` of the `MultibandFootprint`.
-            If `Footprint` is not `None` then `thresh` is ignored.
-        """
         if singles is None and images is not None:
             from lsst.afw.image.utils import projectImage
             if len(images) != len(filters):

@@ -39,20 +39,18 @@ class MultibandBase(object):
     `MultibandBase` is designed to contain the most important universal
     methods for initializing, slicing, and extracting common parameters
     (such as the bounding box or XY0 position) to all of the single band classes.
+
+    Must be overloaded in derived classes to use `array` and slicing
+    functionality.
+
+    Parameters
+    ----------
+    filters: list
+        List of filter names.
+    singles: list
+        List of single band objects
     """
     def __init__(self, filters, singles):
-        """Initialize a `MultibandBase` object
-
-        Must be overloaded in derived classes to use `array` and slicing
-        functionality.
-
-        Parameters
-        ----------
-        filters: list
-            List of filter names.
-        singles: list
-            List of single band objects
-        """
         self._filters = tuple([f for f in filters])
         self._singles = tuple(singles)
         self._bbox = self._singles[0].getBBox()

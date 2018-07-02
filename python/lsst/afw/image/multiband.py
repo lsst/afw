@@ -37,27 +37,25 @@ class MultibandPixel(MultibandBase):
     There are a few methods from `MultibandBase` that are overloaded,
     since a `MultibandPixel` has a `Point2I` for it's boudning box
     as opposed to a `Box2I`.
+
+    Parameters
+    ----------
+    singles: list or `MultibandPixel`
+        Either a list of single band objects or
+        an instance of a `MultibandPixel`
+    filters: list
+        List of filter names. If `singles` is an `OrderedDict` or
+        a `MultibandPixel` then this arguement is ignored,
+        otherwise it is required.
+    bbox: Point2I
+        Location of the pixel in the parent image.
+        Unlike other objects that inherit from `MultibandBase`,
+        `MultibandPixel` objects don't have a full `Box2I`
+        bounding box, since they only contain a single pixel,
+        so the bounding box cannot be inherited from the
+        list of `singles`.
     """
     def __init__(self, filters, singles, bbox):
-        """Initialize a `MultibandPixel` object
-
-        Parameters
-        ----------
-        singles: list or `MultibandPixel`
-            Either a list of single band objects or
-            an instance of a `MultibandPixel`
-        filters: list
-            List of filter names. If `singles` is an `OrderedDict` or
-            a `MultibandPixel` then this arguement is ignored,
-            otherwise it is required.
-        bbox: Point2I
-            Location of the pixel in the parent image.
-            Unlike other objects that inherit from `MultibandBase`,
-            `MultibandPixel` objects don't have a full `Box2I`
-            bounding box, since they only contain a single pixel,
-            so the bounding box cannot be inherited from the
-            list of `singles`.
-        """
         if any([arg is None for arg in [singles, filters, bbox]]):
             err = "Expected an array of `singles`, a list of `filters, and a `bbox`"
             raise NotImplementedError(err)
@@ -156,42 +154,40 @@ class MultibandImage(MultibandBase):
     This class acts as a container for multiple `afw.Image` objects.
     All images must be contained in the same bounding box,
     and have the same data type.
+
+    Parameters
+    ----------
+    singles: list
+        A list of single band objects.
+        If `array` is not `None`, then `singles` is ignored
+    filters: list
+        List of filter names. If `singles` is an `OrderedDict`
+        then this argument is ignored, otherwise it is required.
+    array: 3D numpy array
+        Array (filters, y, x) of multiband data.
+        If this is used to initialize a `MultibandImage`,
+        either `bbox` or `singles` is also required.
+    singleType: class
+        Class of the single band objects.
+        This is ignored unless `singles` and `array`
+        are both `None`, in which case it is required.
+    bbox: `Box2I`
+        Location of the array in the parent image.
+        This argument is ignored if `singles` is not `None`.
+    filterKwargs: dict
+        Keyword arguments to pass to `_fullInitialize` to
+        initialize a new instance of an inherited class
+        that are different for each filter.
+        The keys are the names of the arguments and the values
+        should also be dictionaries, with filter names as keys
+        and the value of the argument for a given filter as values.
+    kwargs: dict
+        Keyword arguments to pass to `_fullInitialize` to
+        initialize a new instance of an inherited class that are the
+        same in all bands.
     """
     def __init__(self, filters, singles=None, array=None, bbox=None,
                  singleType=ImageF, filterKwargs=None, **kwargs):
-        """Initialize a `MultibandBase` object
-
-        Parameters
-        ----------
-        singles: list
-            A list of single band objects.
-            If `array` is not `None`, then `singles` is ignored
-        filters: list
-            List of filter names. If `singles` is an `OrderedDict`
-            then this argument is ignored, otherwise it is required.
-        array: 3D numpy array
-            Array (filters, y, x) of multiband data.
-            If this is used to initialize a `MultibandImage`,
-            either `bbox` or `singles` is also required.
-        singleType: class
-            Class of the single band objects.
-            This is ignored unless `singles` and `array`
-            are both `None`, in which case it is required.
-        bbox: `Box2I`
-            Location of the array in the parent image.
-            This argument is ignored if `singles` is not `None`.
-        filterKwargs: dict
-            Keyword arguments to pass to `_fullInitialize` to
-            initialize a new instance of an inherited class
-            that are different for each filter.
-            The keys are the names of the arguments and the values
-            should also be dictionaries, with filter names as keys
-            and the value of the argument for a given filter as values.
-        kwargs: dict
-            Keyword arguments to pass to `_fullInitialize` to
-            initialize a new instance of an inherited class that are the
-            same in all bands.
-        """
         # Create the single band objects from the array
         if array is not None and filters is not None:
             if len(array) != len(filters):
@@ -328,12 +324,12 @@ class MultibandImage(MultibandBase):
 
 
 class MultibandMask(MultibandImage):
+    """Multiband Mask class
+
+    See `MultibandImage` for a description of the parameters..
+    """
     def __init__(self, filters, singles=None, array=None, bbox=None,
                  singleType=Mask, filterKwargs=None, **kwargs):
-        """Initialize a `MultibandMask` object
-
-        See `MultibandImage` for a description of the parameters..
-        """
         super().__init__(filters, singles, array, bbox, singleType, filterKwargs, **kwargs)
         # Set Mask specific properties
         refMask = self._singles[0]
@@ -519,44 +515,42 @@ class MultibandTripleBase(MultibandBase):
     This is a base class inherited by multiband classes
     with `image`, `mask`, and `variance` objects,
     such as `MultibandMaskedImage` and `MultibandExposure`.
+
+    Parameters
+    ----------
+    singles: list or `OrderedDict`
+        Either a list of single band objects or an `OrderedDict` with
+        filter names as keys and single band objects as values.
+        If no `singles` are specified then `image`, `mask`, and `variance`
+        must be given.
+    filters: list
+        List of filter names. If `singles` is an `OrderedDict`
+        then this argument is ignored, otherwise it is required.
+    image: list
+        List of `Image` objects that represent the image in each band.
+        Ignored if `singles` is not `None`.
+    mask: list
+        List of `Mask` objects that represent the mask in each band.
+        Ignored if `singles` is not `None`.
+    variance: list
+        List of `Image` objects that represent the variance in each band.
+        Ignored if `singles` is not `None`.
+    singleType: class
+        Class of single band objects.
+    filterKwargs: dict
+        Keyword arguments to pass to `_fullInitialize` to
+        initialize a new instance of an inherited class
+        that are different for each filter.
+        The keys are the names of the arguments and the values
+        should also be dictionaries, with filter names as keys
+        and the value of the argument for a given filter as values.
+    kwargs: dict
+        Keyword arguments to pass to `_fullInitialize` to
+        initialize a new instance of an inherited class that are the
+        same in all bands.
     """
     def __init__(self, filters, singles=None, image=None, mask=None, variance=None,
                  singleType=MaskedImageF, filterKwargs=None, **kwargs):
-        """Initialize a `MultibandTripleBase` object
-
-        Parameters
-        ----------
-        singles: list or `OrderedDict`
-            Either a list of single band objects or an `OrderedDict` with
-            filter names as keys and single band objects as values.
-            If no `singles` are specified then `image`, `mask`, and `variance`
-            must be given.
-        filters: list
-            List of filter names. If `singles` is an `OrderedDict`
-            then this argument is ignored, otherwise it is required.
-        image: list
-            List of `Image` objects that represent the image in each band.
-            Ignored if `singles` is not `None`.
-        mask: list
-            List of `Mask` objects that represent the mask in each band.
-            Ignored if `singles` is not `None`.
-        variance: list
-            List of `Image` objects that represent the variance in each band.
-            Ignored if `singles` is not `None`.
-        singleType: class
-            Class of single band objects.
-        filterKwargs: dict
-            Keyword arguments to pass to `_fullInitialize` to
-            initialize a new instance of an inherited class
-            that are different for each filter.
-            The keys are the names of the arguments and the values
-            should also be dictionaries, with filter names as keys
-            and the value of the argument for a given filter as values.
-        kwargs: dict
-            Keyword arguments to pass to `_fullInitialize` to
-            initialize a new instance of an inherited class that are the
-            same in all bands.
-        """
         if singles is not None:
             # Extract the single band objects and filters
             super().__init__(filters, singles)
@@ -772,12 +766,10 @@ class MultibandMaskedPixel(MultibandTripleBase):
     All masked pixels must have the same bounding box (`Point2I`),
     and the associated pixels in each band must all have the same
     data types for the `image`, `mask`, and `variance` objects.
+
+    See `MultibandTripleBase` for parameter definitions.
     """
     def __init__(self, filters, singles=None, image=None, mask=None, variance=None, bbox=None):
-        """Initialize a `MultibandMaskedPixel` object
-
-        See `MultibandTripleBase` for parameter definitions.
-        """
         self._bbox = bbox
         super().__init__(filters, singles, image, mask, variance, MaskedPixel)
         # Make sure that the bounding box has been setup properly
@@ -890,13 +882,11 @@ class MultibandMaskedImage(MultibandTripleBase):
     This class acts as a container for multiple `afw.MaskedImage` objects.
     All masked images must have the same bounding box, and the associated
     images must all have the same data type.
+
+    See `MultibandTripleBase` for parameter definitions.
     """
     def __init__(self, filters, singles=None, image=None, mask=None, variance=None,
                  filterKwargs=None, **kwargs):
-        """Initialize a `MultibandMaskedImage` object
-
-        See `MultibandTripleBase` for parameter definitions.
-        """
         super().__init__(filters, singles, image, mask, variance, MaskedImageF, filterKwargs, **kwargs)
         self._bbox = self.singles[0].getBBox()
         if not np.all([single.getBBox() == self.getBBox() for single in self.singles]):
@@ -941,13 +931,11 @@ class MultibandExposure(MultibandTripleBase):
     This class acts as a container for multiple `afw.Exposure` objects.
     All exposures must have the same bounding box, and the associated
     images must all have the same data type.
+
+    See `MultibandTripleBase` for parameter definitions.
     """
     def __init__(self, filters, singles=None, image=None, mask=None, variance=None,
                  psfs=None, filterKwargs=None, singleType=ExposureF, **kwargs):
-        """Initialize a `MultibandMaskedImage` object
-
-        See `MultibandTripleBase` for parameter definitions.
-        """
         super().__init__(filters, singles, image, mask, variance, singleType, filterKwargs, **kwargs)
         if psfs is not None:
             self.setAllPsfs(psfs)
