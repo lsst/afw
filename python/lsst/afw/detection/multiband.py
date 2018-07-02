@@ -242,3 +242,17 @@ class MultibandFootprint(MultibandBase):
         prevent the user from setting the bounding box or XY0 in the base class.
         """
         raise ValueError("Cannot update the bounding box of a `MultibandFootprint")
+
+    def copy(self, deep=False):
+        """Copy the current object
+
+        Parameters
+        ----------
+        deep: bool
+            Whether or not to make a deep copy
+        """
+        if deep:
+            raise NotImplementedError("Cannot make a deep copy of a Heavy Footprint")
+        else:
+            result = MultibandFootprint(self.filters, self.singles)
+        return result

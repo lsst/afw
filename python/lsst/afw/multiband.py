@@ -21,13 +21,15 @@
 
 __all__ = ["MultibandBase"]
 
+from abc import ABC, abstractmethod
+
 import numpy as np
 
 from lsst.geom import Point2I, Box2I
 from .image import PARENT
 
 
-class MultibandBase(object):
+class MultibandBase(ABC):
     """Base class for multiband objects
 
     The LSST stack has a number of image-like classes that have
@@ -38,10 +40,9 @@ class MultibandBase(object):
 
     `MultibandBase` is designed to contain the most important universal
     methods for initializing, slicing, and extracting common parameters
-    (such as the bounding box or XY0 position) to all of the single band classes.
-
-    Must be overloaded in derived classes to use `array` and slicing
-    functionality.
+    (such as the bounding box or XY0 position) to all of the single band classes,
+    as long as derived classes either call the base class `__init__`
+    or set the `_filters`, `_singles`, `_bbox`, and `_singleType` properties.
 
     Parameters
     ----------
@@ -65,6 +66,7 @@ class MultibandBase(object):
             err = "`singles` are required to have the same type, received {0}"
             raise ValueError(err.format(singleTypes))
 
+    @abstractmethod
     def copy(self, deep=False):
         """Copy the current object
 
@@ -80,8 +82,7 @@ class MultibandBase(object):
         result: `MultibandBase`
             copy of the instance that inherits from `MultibandBase`
         """
-        err = "_copySingles must be implemented in an inherited class to enable copies"
-        raise NotImplementedError(err)
+        pass
 
     @property
     def filters(self):
@@ -420,6 +421,7 @@ class MultibandBase(object):
         bbox = Box2I(xy0, xyF)
         return bbox
 
+    @abstractmethod
     def _slice(self, filters, filterIndex, indices):
         """Slice the current object and return the result
 
@@ -446,9 +448,7 @@ class MultibandBase(object):
             same class or a different class depending on the
             slice being made.
         """
-        err = ("_slice must be overloaded in inherited classes to "
-               "slice along image dimensions")
-        raise NotImplementedError(err)
+        pass
 
     def __repr__(self):
         result = "<{0}, filters={1}, bbox={2}>".format(

@@ -147,6 +147,9 @@ class MultibandPixel(MultibandBase):
             raise ValueError(err.format(bbox))
         self._bbox = bbox
 
+    def _slice(self, filters, filterIndex, indices):
+        pass
+
 
 class MultibandImage(MultibandBase):
     """Multiband Image class
