@@ -92,7 +92,7 @@ class MultibandBase(ABC):
 
     @property
     def singles(self):
-        """List of afw single band objects
+        """List of single band objects
         """
         return self._singles
 
@@ -143,7 +143,7 @@ class MultibandBase(ABC):
         This is the position of `self.getBBox().getMin()`,
         but available as a tuple for numpy array indexing.
         """
-        return np.array([self.y0, self.x0])
+        return (self.y0, self.x0)
 
     @property
     def width(self):
@@ -174,7 +174,7 @@ class MultibandBase(ABC):
 
         # Return the single band object if the first
         # index is not a list or slice.
-        filters, filterIndex = self.filterToIndex(indices[0])
+        filters, filterIndex = self._filterToIndex(indices[0])
         if not isinstance(filterIndex, slice) and len(filterIndex) == 1:
             single = self.singles[filterIndex[0]]
             # This temporary code is needed until image-like objects
@@ -203,42 +203,55 @@ class MultibandBase(ABC):
 
         return self._slice(filters=filters, filterIndex=filterIndex, indices=indices[1:])
 
-    def filterToIndex(self, filterIndex):
+    def _filterToIndex(self, filterIndex):
         """Convert a string of filter names to an index or a slice
+
+        Because `filterIndex` can either be a string (or list of strings),
+        an integer (or list of integers), or a slice, it can be useful to have
+        both the names of all indices used (`filterNames`)
+        and a slice or list of numerical indices to each filter name in
+        `self.filters` (`filterIndices`).
 
         Parameters
         ----------
         filterIndex: string, slice, or integer
-            Index to specify a filter or list of filters
+            Index to specify a filter or list of filters,
+            for example "R" or ["R", "G", "B"] or 0 or [0,1]
+            or slice(1, 3, None).
 
         Returns
         -------
-        filters: list of `str`
+        filterNames: list of `str`
             Names of the filters in the slice
-        index: slice, int, or list of int's
-            Index to slice the parent with the
-            chosen filters.
+        filterIndex: slice, int, or list of int's
+            Index of each filter in `filterNames` in
+            `self.filters`.
         """
-        filters = filterIndex
-
         if isinstance(filterIndex, str):
-            filters = [filterIndex]
-            index = [self.filters.index(filterIndex)]
+            filterNames = [filterIndex]
+            filterIndices = [self.filters.index(filterIndex)]
         elif np.issubdtype(type(filterIndex), np.integer):
-            filters = [self.filters[filterIndex]]
-            index = [filterIndex]
+            filterNames = [self.filters[filterIndex]]
+            filterIndices = [filterIndex]
         elif isinstance(filterIndex, slice):
-            filters = self.filters[filters]
-            index = filterIndex
+            filterNames = self.filters[filterIndex]
+            filterIndices = filterIndex
         elif not isinstance(filterIndex[0], str):
             # filterIndex is list of ints
-            filters = [self.filters[f] for f in filterIndex]
-            index = filterIndex
+            filterNames = [self.filters[f] for f in filterIndex]
+            filterIndices = filterIndex
         else:
             # filterIndex is a list of strings
-            filters = filterIndex
-            index = [self.filters.index(f) for f in filters]
-        return tuple(filters), index
+            filterNames = filterIndex
+            filterIndices = [self.filters.index(f) for f in filterIndex]
+        return tuple(filterNames), filterIndices
+
+    def _indexError(self, indices):
+        """To make indexing faster we stringify the error on the fly, if needed
+        """
+        indexError = "Exected a tuple of 1 or 2 indices, a Point2I, or a Box2I, but received {0}"
+        indexError = indexError.format(indices)
+        return indexError
 
     def imageIndicesToNumpy(self, indices):
         """Convert slicing format to numpy
@@ -253,7 +266,7 @@ class MultibandBase(ABC):
 
         Parameters
         ----------
-        indices: list-like, `Point2I` or `Box2I`
+        indices: `sequence`, `Point2I` or `Box2I`
             An `(xIndex, yIndex)` pair, or a single `(xIndex,)` tuple,
             where `xIndex` and `yIndex` can be a `slice`, `int`,
             or list of `int` objects, and if only a single `xIndex` is
@@ -271,15 +284,13 @@ class MultibandBase(ABC):
         sy = None
 
         # The same IndexError is used in multiple places, so create it once
-        indexError = "Exected a tuple of 1 or 2 indices, a Point2I, or a Box2I, but received {0}"
-        indexError = indexError.format(indices)
         # Make sure that `indices` is list-like
         if isinstance(indices, Point2I) or isinstance(indices, Box2I):
             indices = [indices]
 
         if isinstance(indices[0], Point2I) or isinstance(indices[0], Box2I):
             if len(indices) != 1:
-                raise IndexError(indexError)
+                raise IndexError(self._indexError(indices))
             if isinstance(indices[0], Point2I):
                 sx = indices[0].getX() - x0
                 sy = indices[0].getY() - y0
@@ -295,7 +306,7 @@ class MultibandBase(ABC):
             elif len(indices) == 1:
                 sx = indices[0]
             else:
-                raise IndexError(indexError)
+                raise IndexError(self._indexError(indices))
 
             if sx is not None:
                 sx = self._removeOffset(sx, x0, bbox.getMaxX())
@@ -350,9 +361,7 @@ class MultibandBase(ABC):
                 raise IndexError("Image slicing must be contiguous")
             newIndex = slice(start, stop)
         elif hasattr(index, "__len__"):
-            newIndex = []
-            for i in index:
-                newIndex.append(_applyBBox(i, x0, xf))
+            newIndex = [_applyBBox(i, x0, xf) for i in index]
         else:
             newIndex = _applyBBox(index, x0, xf)
         return newIndex

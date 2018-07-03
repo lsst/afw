@@ -117,7 +117,7 @@ class MultibandPixel(MultibandBase):
                    "only accepts a filterIndex")
             raise IndexError(err)
         # Make the index into a valid numpy index or slice
-        filters, filterIndex = self.filterToIndex(indices)
+        filters, filterIndex = self._filterToIndex(indices)
         if len(filters) == 1 and not isinstance(filterIndex, slice):
             # The user only requested a pixel in a single band, so return it
             return self.array[filterIndex[0]]
@@ -456,7 +456,7 @@ class MultibandMask(MultibandImage):
 
         # Return the single band object if the first
         # index is not a list or slice.
-        filters, filterIndex = self.filterToIndex(indices[0])
+        filters, filterIndex = self._filterToIndex(indices[0])
         if len(indices) > 1:
             sy, sx = self.imageIndicesToNumpy(indices[1:])
         else:
@@ -492,7 +492,7 @@ class MultibandMask(MultibandImage):
             y -= self.y0
 
         if filters is not None:
-            filters, filterIndex = self.filterToIndex(filters)
+            filters, filterIndex = self._filterToIndex(filters)
         else:
             filterIndex = range(len(self))
         if isinstance(filterIndex, slice):

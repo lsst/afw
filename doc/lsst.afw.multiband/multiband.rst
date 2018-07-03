@@ -218,7 +218,7 @@ The inverse can be accomplished using the `origin` property:
 .. code-block:: python
 
     import numpy as np
-    iy, ix = mImage.origin + np.array([2, 1])
+    iy, ix = np.array(mImage.origin) + np.array([2, 1])
     print(iy, ix)
     mImage.array[0, 2, 1] = 14
     print(mImage[0, ix, iy])
