@@ -174,7 +174,7 @@ class MultibandBase(ABC):
 
         # Return the single band object if the first
         # index is not a list or slice.
-        filters, filterIndex = self._filterToIndex(indices[0])
+        filters, filterIndex = self._filterNamesToIndex(indices[0])
         if not isinstance(filterIndex, slice) and len(filterIndex) == 1:
             single = self.singles[filterIndex[0]]
             # This temporary code is needed until image-like objects
@@ -203,47 +203,57 @@ class MultibandBase(ABC):
 
         return self._slice(filters=filters, filterIndex=filterIndex, indices=indices[1:])
 
-    def _filterToIndex(self, filterIndex):
-        """Convert a string of filter names to an index or a slice
+    def __iter__(self):
+        self._filterIndex = 0
+        return self
 
-        Because `filterIndex` can either be a string (or list of strings),
-        an integer (or list of integers), or a slice, it can be useful to have
-        both the names of all indices used (`filterNames`)
-        and a slice or list of numerical indices to each filter name in
-        `self.filters` (`filterIndices`).
+    def __next__(self):
+        if self._filterIndex < len(self.filters):
+            result = self.singles[self._filterIndex]
+            self._filterIndex += 1
+        else:
+            raise StopIteration
+        return result
+
+    def _filterNamesToIndex(self, filterIndex):
+        """Convert a list of filter names to an index or a slice
 
         Parameters
         ----------
-        filterIndex: string, slice, or integer
+        filterIndex: iterable or object
             Index to specify a filter or list of filters,
-            for example "R" or ["R", "G", "B"] or 0 or [0,1]
-            or slice(1, 3, None).
+            usually a string or enum.
+            For example `filterIndex` can be
+            `"R"` or `["R", "G", "B"]` or `[Filter.R, Filter.G, Filter.B]`,
+            if `Filter` is an enum.
 
         Returns
         -------
-        filterNames: list of `str`
+        filterNames: list
             Names of the filters in the slice
-        filterIndex: slice, int, or list of int's
+        filterIndex: slice or list of `int`
             Index of each filter in `filterNames` in
             `self.filters`.
         """
-        if isinstance(filterIndex, str):
-            filterNames = [filterIndex]
-            filterIndices = [self.filters.index(filterIndex)]
-        elif np.issubdtype(type(filterIndex), np.integer):
-            filterNames = [self.filters[filterIndex]]
-            filterIndices = [filterIndex]
-        elif isinstance(filterIndex, slice):
-            filterNames = self.filters[filterIndex]
-            filterIndices = filterIndex
-        elif not isinstance(filterIndex[0], str):
-            # filterIndex is list of ints
-            filterNames = [self.filters[f] for f in filterIndex]
-            filterIndices = filterIndex
+        if isinstance(filterIndex, slice):
+            if filterIndex.start is not None:
+                start = self.filters.index(filterIndex.start)
+            else:
+                start = None
+            if filterIndex.stop is not None:
+                stop = self.filters.index(filterIndex.stop)
+            else:
+                stop = None
+            filterIndices = slice(start, stop, filterIndex.step)
+            filterNames = self.filters[filterIndices]
         else:
-            # filterIndex is a list of strings
-            filterNames = filterIndex
-            filterIndices = [self.filters.index(f) for f in filterIndex]
+            try:
+                # Check to see if the filterIndex is an iterable
+                filterNames = [f for f in filterIndex]
+            except TypeError:
+                filterNames = [filterIndex]
+            print("names:", filterNames)
+            filterIndices = [self.filters.index(f) for f in filterNames]
         return tuple(filterNames), filterIndices
 
     def _indexError(self, indices):

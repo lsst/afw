@@ -85,8 +85,9 @@ class MultibandFootprint(MultibandBase):
 
                 # If images is a list of `afw Image` objects then
                 # merge the SpanSet in each band into a single Footprint
-                if isinstance(images[0], Image):
+                if isinstance(images, MultibandBase) or isinstance(images[0], Image):
                     spans = SpanSet()
+                    print(images.__repr__())
                     for n, image in enumerate(images):
                         mask = image.array > thresh[n]
                         mask = Mask(mask.astype(np.int32), xy0=image.getBBox().getMin())
@@ -105,8 +106,15 @@ class MultibandFootprint(MultibandBase):
                     self._footprint.setPeakCatalog(peaks)
             else:
                 self._footprint = footprint
-            if not isinstance(images[0], MaskedImage):
-                if not isinstance(images[0], Image):
+
+            # Since MultibandBase doesn't support integer indexing,
+            # use the appropriate index to check the type of the images
+            if isinstance(images, MultibandBase):
+                fidx = images.filters[0]
+            else:
+                fidx = 0
+            if not isinstance(images[fidx], MaskedImage):
+                if not isinstance(images[fidx], Image):
                     images = [Image(i, dtype=i.dtype, xy0=xy0) for i in images]
                 images = [MaskedImage(i, dtype=i.dtype) for i in images]
 
@@ -126,7 +134,8 @@ class MultibandFootprint(MultibandBase):
                     newVariance.array[sy, sx] += image.variance.array
                     images[n] = MaskedImage(image=newImage, mask=newMask, variance=newVariance,
                                             dtype=newImage.array.dtype)
-            singles = [makeHeavyFootprint(self._footprint, images[n]) for n in range(len(filters))]
+            print("images:", [image for image in images])
+            singles = [makeHeavyFootprint(self._footprint, image) for image in images]
         elif singles is not None:
             # Verify that all of the `HeavyFootprint`s have the same PeakCatalog
             peaks = singles[0].getPeaks()

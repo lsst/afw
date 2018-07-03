@@ -38,24 +38,25 @@ from lsst.afw.image.multiband import MaskedPixel, MultibandMaskedPixel, Multiban
 
 
 def _testImageFilterSlicing(cls, mImage, singleType, bbox, value):
-    assert isinstance(mImage[0], singleType)
     assert isinstance(mImage["R"], singleType)
     assert isinstance(mImage[:], type(mImage))
-    idx = np.int32(2)
-    assert isinstance(mImage[idx], singleType)
 
-    cls.assertEqual(mImage[2], mImage["I"])
-    cls.assertEqual(mImage[0, -1, -1], value)
-    cls.assertEqual(mImage[0].array.shape, (100, 200))
-    cls.assertEqual(mImage[:2].array.shape, (2, 100, 200))
-    cls.assertEqual(mImage[:2].filters, ("G", "R"))
-    cls.assertEqual(mImage[:2].getBBox(), bbox)
+    cls.assertEqual(mImage["G", -1, -1], value)
+    cls.assertEqual(mImage["G"].array.shape, (100, 200))
+    cls.assertEqual(mImage[:"I"].array.shape, (2, 100, 200))
+    cls.assertEqual(mImage[:"I"].filters, ("G", "R"))
+    cls.assertEqual(mImage[:"I"].getBBox(), bbox)
     cls.assertEqual(mImage[["G", "I"]].array.shape, (2, 100, 200))
     cls.assertEqual(mImage[["G", "I"]].filters, ("G", "I"))
     cls.assertEqual(mImage[["G", "I"]].getBBox(), bbox)
 
-    cls.assertEqual(mImage[0:1].filters, ("G",))
-    cls.assertEqual(mImage[1:3].filters, ("R", "I"))
+    cls.assertEqual(mImage["G":"R"].filters, ("G",))
+
+    if "Z" in mImage.filters:
+        filterSlice = slice("R", "Z")
+    else:
+        filterSlice = slice("R", None)
+    cls.assertEqual(mImage[filterSlice].filters, ("R", "I"))
     cls.assertEqual(mImage.filters, tuple(cls.filters))
 
 
@@ -73,13 +74,13 @@ def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
     cls.assertEqual(mImage[:, 1010, 2010].getBBox(), Point2I(1010, 2010))
     cls.assertEqual(mImage[:, Point2I(1075, 2015)].getBBox(), coord)
 
-    cls.assertEqual(mImage[0, 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
+    cls.assertEqual(mImage["G", 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
     cls.assertEqual(mImage["R", -20:-10, -10:-5].getBBox(),
                     Box2I(Point2I(1179, 2089), Extent2I(10, 5)))
-    cls.assertEqual(mImage[2, :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
-    cls.assertEqual(mImage[1, bbox].getBBox(), bbox)
+    cls.assertEqual(mImage["I", :1100, :2050].getBBox(), Box2I(Point2I(1000, 2000), Extent2I(100, 50)))
+    cls.assertEqual(mImage["R", bbox].getBBox(), bbox)
     cls.assertEqual(mImage["I", 1010, 2010], iVal)
-    cls.assertEqual(mImage[1, Point2I(1075, 2015)], rVal)
+    cls.assertEqual(mImage["R", Point2I(1075, 2015)], rVal)
 
     with cls.assertRaises(IndexError):
         mImage[:, 0]
@@ -98,18 +99,22 @@ def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
 
 
 def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
-    mImage1[:1, bbox2].array = value2
-    cls.assertFloatsEqual(mImage1[0, bbox2].array, mImage2[0].array)
-    cls.assertFloatsEqual(mImage1[1].array, value1)
+    mImage1[:"R", bbox2].array = value2
+    cls.assertFloatsEqual(mImage1["G", bbox2].array, mImage2["G"].array)
+    cls.assertFloatsEqual(mImage1["R"].array, value1)
     mImage1.setXY0(Point2I(500, 150))
     cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(500, 150), Extent2I(bbox1.getDimensions())))
 
-    mImage1[0].array[:] = value2
-    cls.assertFloatsEqual(mImage1[0].array, value2)
+    mImage1["G"].array[:] = value2
+    cls.assertFloatsEqual(mImage1["G"].array, value2)
     cls.assertFloatsEqual(mImage1.array[0], value2)
 
-    mImage1[1:3].array[:] = 7
-    cls.assertFloatsEqual(mImage1[2].array, 7)
+    if "Z" in mImage1.filters:
+        filterSlice = slice("R", "Z")
+    else:
+        filterSlice = slice("R", None)
+    mImage1[filterSlice].array[:] = 7
+    cls.assertFloatsEqual(mImage1["I"].array, 7)
 
 
 def _testImageCopy(cls, mImage1, value1, value2):
@@ -123,8 +128,8 @@ def _testImageCopy(cls, mImage1, value1, value2):
     mImage2.array[:] = value2
     cls.assertFloatsEqual(mImage1.array, value1)
     cls.assertFloatsEqual(mImage2.array, value2)
-    cls.assertFloatsEqual(mImage1[0].array, value1)
-    cls.assertFloatsEqual(mImage2[0].array, value2)
+    cls.assertFloatsEqual(mImage1["G"].array, value1)
+    cls.assertFloatsEqual(mImage2["G"].array, value2)
 
     mImage2 = mImage1.copy()
     mImage2.setXY0(Point2I(11, 23))
@@ -136,8 +141,8 @@ def _testImageCopy(cls, mImage1, value1, value2):
     mImage2.array[:] = value2
     cls.assertFloatsEqual(mImage1.array, value2)
     cls.assertFloatsEqual(mImage2.array, value2)
-    cls.assertFloatsEqual(mImage1[0].array, value2)
-    cls.assertFloatsEqual(mImage2[0].array, value2)
+    cls.assertFloatsEqual(mImage1["G"].array, value2)
+    cls.assertFloatsEqual(mImage2["G"].array, value2)
 
 
 class MultibandPixelTestCase(lsst.utils.tests.TestCase):
@@ -157,7 +162,7 @@ class MultibandPixelTestCase(lsst.utils.tests.TestCase):
 
     def testFilterSlicing(self):
         pixel = self.pixel
-        self.assertEqual(pixel[1], 1.)
+        self.assertEqual(pixel["R"], 1.)
         self.assertFloatsEqual(pixel.array, np.arange(5))
         self.assertFloatsEqual(pixel.singles, np.arange(5))
         self.assertFloatsEqual(pixel[["G", "I"]].array, [0, 2])
@@ -272,8 +277,8 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
 
     def _bitOperator(self, op):
         op(self.mMask2, self.mMask1)
-        for n in range(len(self.mMask1)):
-            op(self.mMask1[n], self.values2[n])
+        for n, mask in enumerate(self.mMask1):
+            op(mask, self.values2[n])
 
         self.assertFloatsEqual(self.mMask1.array, self.mMask2.array)
         expect = np.empty_like(self.mMask1.array)
@@ -294,10 +299,10 @@ class MultibandMaskTestCase(lsst.utils.tests.TestCase):
         mMask.set(self.CR)
         self.assertFloatsEqual(mMask.array, self.CR)
         mMask.set(self.EDGE, "G")
-        self.assertFloatsEqual(mMask[1:].array, self.CR)
-        self.assertFloatsEqual(mMask[0].array, self.EDGE)
-        mMask.set(self.BAD, slice(1, 3))
-        self.assertFloatsEqual(mMask[1:].array, self.BAD)
+        self.assertFloatsEqual(mMask["R":].array, self.CR)
+        self.assertFloatsEqual(mMask["G"].array, self.EDGE)
+        mMask.set(self.BAD, slice("R", None))
+        self.assertFloatsEqual(mMask["R":].array, self.BAD)
         mMask.set(self.CR | self.EDGE, "R", 1100, 2050)
         self.assertEqual(mMask["R", 1100, 2050], self.CR | self.EDGE)
         self.assertEqual(mMask["R", 1101, 2051], self.BAD)
@@ -362,9 +367,9 @@ class MultibandMaskedPixelTestCase(lsst.utils.tests.TestCase):
 
     def testFilterSlicing(self):
         pixel = self.pixel
-        self.assertEqual(pixel[1].image, 10.)
-        self.assertEqual(pixel[2].mask, 1)
-        self.assertEqual(pixel[0].variance, 1e-2)
+        self.assertEqual(pixel["R"].image, 10.)
+        self.assertEqual(pixel["I"].mask, 1)
+        self.assertEqual(pixel["G"].variance, 1e-2)
         self.assertFloatsEqual(pixel.image, np.ones((len(self.filters),))*10)
         self.assertFloatsEqual(pixel.mask, np.ones((len(self.filters),)))
         self.assertFloatsEqual(pixel.variance, np.ones((len(self.filters),))*1e-2)
@@ -405,17 +410,15 @@ class MultibandMaskedPixelTestCase(lsst.utils.tests.TestCase):
 
 
 def _testMaskedImageFilters(cls, maskedImage, singleType):
-    assert isinstance(maskedImage[0], singleType)
     assert isinstance(maskedImage["R"], singleType)
-    assert isinstance(maskedImage.image[0], ImageF)
-    assert isinstance(maskedImage.mask[1], Mask)
-    assert isinstance(maskedImage.variance[2], ImageF)
+    assert isinstance(maskedImage.image["G"], ImageF)
+    assert isinstance(maskedImage.mask["R"], Mask)
+    assert isinstance(maskedImage.variance["I"], ImageF)
 
-    cls.assertEqual(maskedImage[2], maskedImage["I"])
-    cls.assertEqual(maskedImage[0].image.array.shape, (100, 200))
-    cls.assertEqual(maskedImage[:2].mask.array.shape, (2, 100, 200))
-    cls.assertEqual(maskedImage[:2].filters, ("G", "R"))
-    cls.assertEqual(maskedImage[:2].getBBox(), cls.bbox)
+    cls.assertEqual(maskedImage["G"].image.array.shape, (100, 200))
+    cls.assertEqual(maskedImage[:"I"].mask.array.shape, (2, 100, 200))
+    cls.assertEqual(maskedImage[:"I"].filters, ("G", "R"))
+    cls.assertEqual(maskedImage[:"I"].getBBox(), cls.bbox)
     cls.assertEqual(maskedImage[["G", "I"]].getBBox(), cls.bbox)
 
     cls.assertEqual(maskedImage.filters, tuple(cls.filters))
@@ -434,10 +437,10 @@ def _testMaskedImageSlicing(cls, maskedImage):
     cls.assertEqual(maskedImage.image.getBBox(), newBox)
     cls.assertEqual(maskedImage.mask.getBBox(), newBox)
     cls.assertEqual(maskedImage.variance.getBBox(), newBox)
-    cls.assertEqual(maskedImage[0].getBBox(), newBox)
-    cls.assertEqual(maskedImage[0].image.getBBox(), newBox)
-    cls.assertEqual(maskedImage[1].mask.getBBox(), newBox)
-    cls.assertEqual(maskedImage[2].variance.getBBox(), newBox)
+    cls.assertEqual(maskedImage["G"].getBBox(), newBox)
+    cls.assertEqual(maskedImage["G"].image.getBBox(), newBox)
+    cls.assertEqual(maskedImage["R"].mask.getBBox(), newBox)
+    cls.assertEqual(maskedImage["I"].variance.getBBox(), newBox)
 
     with cls.assertRaises(ValueError):
         maskedImage.setBBox(subBox)
@@ -447,44 +450,44 @@ def _testMaskedmageModification(cls, maskedImage):
     images = [ImageF(cls.bbox, 10*cls.imgValue) for f in cls.filters]
     mImage = MultibandImage(cls.filters, images)
     maskedImage.image = mImage
-    cls.assertFloatsEqual(maskedImage.image[0].array, mImage.array[0])
-    cls.assertFloatsEqual(maskedImage[0].image.array, mImage.array[0])
+    cls.assertFloatsEqual(maskedImage.image["G"].array, mImage.array[0])
+    cls.assertFloatsEqual(maskedImage["G"].image.array, mImage.array[0])
 
     singles = [cls.Mask(cls.bbox) for f in range(len(cls.filters))]
     for n in range(len(singles)):
         singles[n].set(cls.maskValue*2)
     mMask = MultibandMask(cls.filters, singles)
     maskedImage.mask = mMask
-    cls.assertFloatsEqual(maskedImage.mask[0].array, mMask.array[0])
-    cls.assertFloatsEqual(maskedImage[0].mask.array, mMask.array[0])
+    cls.assertFloatsEqual(maskedImage.mask["G"].array, mMask.array[0])
+    cls.assertFloatsEqual(maskedImage["G"].mask.array, mMask.array[0])
 
     images = [ImageF(cls.bbox, .1 * cls.varValue) for f in cls.filters]
     mVariance = MultibandImage(cls.filters, images)
     maskedImage.variance = mVariance
-    cls.assertFloatsEqual(maskedImage.variance[0].array, mVariance.array[0])
-    cls.assertFloatsEqual(maskedImage[0].variance.array, mVariance.array[0])
+    cls.assertFloatsEqual(maskedImage.variance["G"].array, mVariance.array[0])
+    cls.assertFloatsEqual(maskedImage["G"].variance.array, mVariance.array[0])
 
     subBox = Box2I(Point2I(1100, 2025), Extent2I(30, 50))
     maskedImage.image[:, subBox].array = 12
-    cls.assertFloatsEqual(maskedImage.image[0, subBox].array, 12)
-    cls.assertFloatsEqual(maskedImage[0, subBox].image.array, 12)
-    maskedImage[1, subBox].image.set(15)
-    cls.assertFloatsEqual(maskedImage.image[1, subBox].array, 15)
-    cls.assertFloatsEqual(maskedImage[1, subBox].image.array, 15)
+    cls.assertFloatsEqual(maskedImage.image["G", subBox].array, 12)
+    cls.assertFloatsEqual(maskedImage["G", subBox].image.array, 12)
+    maskedImage["R", subBox].image.set(15)
+    cls.assertFloatsEqual(maskedImage.image["R", subBox].array, 15)
+    cls.assertFloatsEqual(maskedImage["R", subBox].image.array, 15)
 
     maskedImage.mask[:, subBox].array = 64
-    cls.assertFloatsEqual(maskedImage.mask[0, subBox].array, 64)
-    cls.assertFloatsEqual(maskedImage[0, subBox].mask.array, 64)
-    maskedImage[1, subBox].mask.set(128)
-    cls.assertFloatsEqual(maskedImage.mask[1, subBox].array, 128)
-    cls.assertFloatsEqual(maskedImage[1, subBox].mask.array, 128)
+    cls.assertFloatsEqual(maskedImage.mask["G", subBox].array, 64)
+    cls.assertFloatsEqual(maskedImage["G", subBox].mask.array, 64)
+    maskedImage["R", subBox].mask.set(128)
+    cls.assertFloatsEqual(maskedImage.mask["R", subBox].array, 128)
+    cls.assertFloatsEqual(maskedImage["R", subBox].mask.array, 128)
 
     maskedImage.variance[:, subBox].array = 1e-6
-    cls.assertFloatsEqual(maskedImage.variance[0, subBox].array, 1e-6)
-    cls.assertFloatsEqual(maskedImage[0, subBox].variance.array, 1e-6)
-    maskedImage[1, subBox].variance.set(1e-7)
-    cls.assertFloatsEqual(maskedImage.variance[1, subBox].array, 1e-7)
-    cls.assertFloatsEqual(maskedImage[1, subBox].variance.array, 1e-7)
+    cls.assertFloatsEqual(maskedImage.variance["G", subBox].array, 1e-6)
+    cls.assertFloatsEqual(maskedImage["G", subBox].variance.array, 1e-6)
+    maskedImage["R", subBox].variance.set(1e-7)
+    cls.assertFloatsEqual(maskedImage.variance["R", subBox].array, 1e-7)
+    cls.assertFloatsEqual(maskedImage["R", subBox].variance.array, 1e-7)
 
 
 def _testMaskedImageCopy(cls, maskedImage1):
@@ -499,15 +502,15 @@ def _testMaskedImageCopy(cls, maskedImage1):
     maskedImage2.image.array = 1
     cls.assertFloatsEqual(maskedImage1.image.array, cls.imgValue)
     cls.assertFloatsEqual(maskedImage2.image.array, 1)
-    cls.assertFloatsEqual(maskedImage1[0].image.array, cls.imgValue)
-    cls.assertFloatsEqual(maskedImage2[0].image.array, 1)
+    cls.assertFloatsEqual(maskedImage1["G"].image.array, cls.imgValue)
+    cls.assertFloatsEqual(maskedImage2["G"].image.array, 1)
 
     maskedImage2 = maskedImage1.copy()
     maskedImage2.image.array = 1
     cls.assertFloatsEqual(maskedImage1.image.array, 1)
     cls.assertFloatsEqual(maskedImage2.image.array, 1)
-    cls.assertFloatsEqual(maskedImage1[0].image.array, 1)
-    cls.assertFloatsEqual(maskedImage2[0].image.array, 1)
+    cls.assertFloatsEqual(maskedImage1["G"].image.array, 1)
+    cls.assertFloatsEqual(maskedImage2["G"].image.array, 1)
 
 
 class MultibandMaskedImageTestCase(lsst.utils.tests.TestCase):
@@ -753,19 +756,18 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsAlmostEqual(mFoot.getArray(), fpImage)
 
     def testSlicing(self):
-        assert isinstance(self.mFoot[0], HeavyFootprintF)
         assert isinstance(self.mFoot["R"], HeavyFootprintF)
         assert isinstance(self.mFoot[:], MultibandFootprint)
 
-        self.assertEqual(self.mFoot[2], self.mFoot["I"])
-        self.assertEqual(self.mFoot[:2].filters, ("G", "R"))
-        self.assertEqual(self.mFoot[:2].getBBox(), self.bbox)
+        self.assertEqual(self.mFoot["I"], self.mFoot["I"])
+        self.assertEqual(self.mFoot[:"I"].filters, ("G", "R"))
+        self.assertEqual(self.mFoot[:"I"].getBBox(), self.bbox)
         self.assertEqual(self.mFoot[["G", "I"]].filters, ("G", "I"))
         self.assertEqual(self.mFoot[["G", "I"]].getBBox(), self.bbox)
 
         with self.assertRaises(IndexError):
-            self.mFoot[2, 4, 5]
-            self.mFoot[2, :, :]
+            self.mFoot["I", 4, 5]
+            self.mFoot["I", :, :]
             self.mFoot[:, :, :]
 
     def testSpans(self):
