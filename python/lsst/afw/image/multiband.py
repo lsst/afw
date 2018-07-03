@@ -128,25 +128,6 @@ class MultibandPixel(MultibandBase):
         # No need to update the bounding box, since pixels can only be sliced in the filter dimension
         return result
 
-    def setBBox(self, bbox):
-        """Overload `MultibandBase.setBBox`
-
-        Since the "single band objects" are elements
-        of an array and do not have a bounding box,
-        overloading `setBBox` is needed to prevent the
-        code from attempting to set the bounding box of
-        each item in `singles`.
-
-        Parameters
-        ----------
-        bbox: Point2I
-            Pixel location in the parent image
-        """
-        if not isinstance(bbox, Point2I):
-            err = "The bounding box for a `MultibandPixel` should always be a `Point2I`, received {0}"
-            raise ValueError(err.format(bbox))
-        self._bbox = bbox
-
     def _slice(self, filters, filterIndex, indices):
         pass
 
@@ -605,24 +586,22 @@ class MultibandTripleBase(MultibandBase):
         self._mask = MultibandMask(filters, mask)
         self._variance = MultibandImage(filters, variance)
 
-    def setBBox(self, bbox):
-        """Set the bounding box
+    def shiftedTo(self, xy0):
+        """Shift the bounding box but keep the same Extent
 
-        This is different than `MultibandBase.setBBox`
+        This is different than `MultibandBase.shiftedTo`
         because the multiband `image`, `mask`, and `variance` objects
         must all have their bounding boxes updated.
 
         Parameters
         ----------
-        bbox: `Box2I` or tuple of indices
-            Bounding box to set as the current bounding box.
-            If a tuple of indices is passed, a new bounding box
-            is created from them and used.
+        xy0: `Point2I`
+            New minimum bounds of the bounding box
         """
-        super().setBBox(bbox)
-        self.image.setBBox(bbox)
-        self.mask.setBBox(bbox)
-        self.variance.setBBox(bbox)
+        super().shiftedTo(xy0)
+        self.image.shiftedTo(xy0)
+        self.mask.shiftedTo(xy0)
+        self.variance.shiftedTo(xy0)
 
     def copy(self, deep=False):
         """Make a copy of the current instance
@@ -863,25 +842,6 @@ class MultibandMaskedPixel(MultibandTripleBase):
         else:
             result = MaskedPixel(image, mask, variance, self.getBBox())
         return result
-
-    def setBBox(self, bbox):
-        """Overload `MultibandBase.setBBox`
-
-        Since the "single band objects" are elements
-        of an array and do not have a bounding box,
-        overloading `setBBox` is needed to prevent the
-        code from attempting to set the bounding box of
-        each item in `singles`.
-
-        Parameters
-        ----------
-        bbox: Point2I
-            Pixel location in the parent image
-        """
-        if not isinstance(bbox, Point2I):
-            err = "The bounding box for a `MultibandPixel` should always be a `Point2I`, received {0}"
-            raise ValueError(err.format(bbox))
-        self._bbox = bbox
 
 
 class MultibandMaskedImage(MultibandTripleBase):

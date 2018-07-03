@@ -87,7 +87,6 @@ class MultibandFootprint(MultibandBase):
                 # merge the SpanSet in each band into a single Footprint
                 if isinstance(images, MultibandBase) or isinstance(images[0], Image):
                     spans = SpanSet()
-                    print(images.__repr__())
                     for n, image in enumerate(images):
                         mask = image.array > thresh[n]
                         mask = Mask(mask.astype(np.int32), xy0=image.getBBox().getMin())
@@ -126,15 +125,12 @@ class MultibandFootprint(MultibandBase):
                     newImage = type(image.image)(bbox)
                     newMask = type(image.mask)(bbox)
                     newVariance = type(image.variance)(bbox)
-                    print(image.getBBox())
                     sy, sx = self.imageIndicesToNumpy(image.getBBox())
-                    print(sy, sx, newImage.getBBox())
                     newImage.array[sy, sx] += image.image.array
                     newMask.array[sy, sx] += image.mask.array
                     newVariance.array[sy, sx] += image.variance.array
                     images[n] = MaskedImage(image=newImage, mask=newMask, variance=newVariance,
                                             dtype=newImage.array.dtype)
-            print("images:", [image for image in images])
             singles = [makeHeavyFootprint(self._footprint, image) for image in images]
         elif singles is not None:
             # Verify that all of the `HeavyFootprint`s have the same PeakCatalog

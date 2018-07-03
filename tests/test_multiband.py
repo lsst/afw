@@ -94,8 +94,6 @@ def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
         mImage[:, :, 10:]
     with cls.assertRaises(IndexError):
         mImage[:, :, :10]
-    with cls.assertRaises(ValueError):
-        mImage.setBBox(bbox)
 
 
 def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
@@ -115,6 +113,17 @@ def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
         filterSlice = slice("R", None)
     mImage1[filterSlice].array[:] = 7
     cls.assertFloatsEqual(mImage1["I"].array, 7)
+    newBBox = Box2I(Point2I(10000, 20000), mImage1.getBBox().getDimensions())
+    mImage1.shiftedTo(newBBox.getMin())
+    cls.assertEqual(mImage1.getBBox(), newBBox)
+    for image in mImage1:
+        cls.assertEqual(image.getBBox(), newBBox)
+    offset = Extent2I(-9000, -18000)
+    mImage1.shiftedBy(offset)
+    newBBox = Box2I(Point2I(1000, 2000), newBBox.getDimensions())
+    cls.assertEqual(mImage1.getBBox(), newBBox)
+    for image in mImage1:
+        cls.assertEqual(image.getBBox(), newBBox)
 
 
 def _testImageCopy(cls, mImage1, value1, value2):
@@ -432,7 +441,7 @@ def _testMaskedImageSlicing(cls, maskedImage):
     cls.assertEqual(maskedImage[:, subBox].variance.getBBox(), subBox)
 
     newBox = Box2I(Point2I(100, 500), Extent2I(200, 100))
-    maskedImage.setBBox(newBox)
+    maskedImage.shiftedTo(newBox.getMin())
     cls.assertEqual(maskedImage.getBBox(), newBox)
     cls.assertEqual(maskedImage.image.getBBox(), newBox)
     cls.assertEqual(maskedImage.mask.getBBox(), newBox)
@@ -441,9 +450,6 @@ def _testMaskedImageSlicing(cls, maskedImage):
     cls.assertEqual(maskedImage["G"].image.getBBox(), newBox)
     cls.assertEqual(maskedImage["R"].mask.getBBox(), newBox)
     cls.assertEqual(maskedImage["I"].variance.getBBox(), newBox)
-
-    with cls.assertRaises(ValueError):
-        maskedImage.setBBox(subBox)
 
 
 def _testMaskedmageModification(cls, maskedImage):

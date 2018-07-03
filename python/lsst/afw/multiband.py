@@ -252,7 +252,6 @@ class MultibandBase(ABC):
                 filterNames = [f for f in filterIndex]
             except TypeError:
                 filterNames = [filterIndex]
-            print("names:", filterNames)
             filterIndices = [self.filters.index(f) for f in filterNames]
         return tuple(filterNames), filterIndices
 
@@ -376,28 +375,28 @@ class MultibandBase(ABC):
             newIndex = _applyBBox(index, x0, xf)
         return newIndex
 
-    def setBBox(self, bbox):
-        """Set the bounding box
+    def shiftedTo(self, xy0):
+        """Shift the bounding box but keep the same Extent
 
         Parameters
         ----------
-        bbox: `Box2I` or tuple of indices
-            Bounding box to set as the current bounding box.
-            If a tuple of indices is passed, a new bounding box
-            is created from them and used.
+        xy0: `Point2I`
+            New minimum bounds of the bounding box
         """
-        if not isinstance(bbox, Box2I):
-            bbox = self.getBBoxFromIndices(bbox)
-
-        if bbox.getDimensions() != self.getBBox().getDimensions():
-            err = ("The new bounding box must have the same dimensions "
-                   "The current bounding box has dimensions {0}, "
-                   "while the new bounding box has dimensions {1}")
-            raise ValueError(err.format(bbox.getDimensions(), self.getBBox().getDimensions()))
-
-        self._bbox = bbox
+        self._bbox = Box2I(xy0, self._bbox.getDimensions())
         for singleObj in self.singles:
-            singleObj.setXY0(bbox.getMin())
+            singleObj.setXY0(xy0)
+
+    def shiftedBy(self, offset):
+        """Shift a bounding box by an offset, but keep the same Extent
+
+        Parameters
+        ----------
+        offset: `Extent2I`
+            Amount to shift the bounding box in x and y.
+        """
+        xy0 = self._bbox.getMin() + offset
+        self.shiftedTo(xy0)
 
     def getBBoxFromIndices(self, indices):
         """Set the current bounding box from a set of slices
