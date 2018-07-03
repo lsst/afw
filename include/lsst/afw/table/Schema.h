@@ -32,11 +32,13 @@ class BaseRecord;
  *  Because offsets for fields are assigned when the field is added to the Schema,
  *  Schemas do not support removing fields, though they do allow renaming.
  *
- *  Field names in Schemas are expected to be dot-separated names (e.g. 'a.b.c').  The SubSchema
+ *  Field names in Schemas are expected to be underscore-separated names (e.g. 'a_b_c',
+ *  but see @ref afwTableFieldNames for the full conventions, including when to use
+ *  underscores vs. CamelCase).  The SubSchema
  *  class and Schema::operator[] provide a heirarchical interface to these names, but are
  *  implemented entirely as string splitting/joining operations that ultimately forward to
  *  member functions that operate on the fully-qualified field name, so there is no requirement
- *  that names be separated by periods, and no performance advantage to using a SubSchema.
+ *  that names be separated by underscores, and no performance advantage to using a SubSchema.
  *
  *  A SchemaMapper object can be used to define a relationship between two Schemas to be used
  *  when copying values from one table to another or loading/saving selected fields to disk.
@@ -132,8 +134,8 @@ public:
      *  Return a set of field names in the schema.
      *
      *  If topOnly==true, return a unique list of only the part
-     *  of the names before the first period.  For example,
-     *  if the full list of field names is ['a.b.c', 'a.d', 'e.f'],
+     *  of the names before the first underscore.  For example,
+     *  if the full list of field names is ['a_b_c', 'a_d', 'e_f'],
      *  topOnly==true will return ['a', 'e'].
      *
      *  Returns an instance of Python's builtin set in Python.
@@ -323,7 +325,7 @@ private:
 /**
  *  A proxy type for name lookups in a Schema.
  *
- *  Elements of schema names are assumed to be separated by periods ("a.b.c.d");
+ *  Elements of schema names are assumed to be separated by underscores ("a_b_c");
  *  an incomplete lookup is one that does not resolve to a field.  Not that even
  *  complete lookups can have nested names; a Point field, for instance, has "x"
  *  and "y" nested names.
@@ -341,16 +343,16 @@ private:
  *  Some examples:
  *
  *      Schema schema(false);
- *      Key<int> a_i = schema.addField<int>("a.i", "integer field");
- *      Key< Point<double> > a_p = schema.addField< Point<double> >("a.p", "point field");
+ *      Key<int> a_i = schema.addField<int>("a_i", "integer field");
+ *      Key< Point<double> > a_p = schema.addField< Point<double> >("a_p", "point field");
  *
- *      assert(schema["a.i"] == a_i);
+ *      assert(schema["a_i"] == a_i);
  *      SubSchema a = schema["a"];
  *      assert(a["i"] == a_i);
- *      Field<int> f_a_i = schema["a.i"];
+ *      Field<int> f_a_i = schema["a_i"];
  *      assert(f_a_i.getDoc() == "integer field");
- *      assert(schema["a.i"] == "a.i");
- *      assert(schema.find("a.p.x") == a_p.getX());
+ *      assert(schema["a_i"] == "a_i");
+ *      assert(schema.find("a_p_x") == a_p.getX());
  */
 class SubSchema {
     typedef detail::SchemaImpl Impl;
