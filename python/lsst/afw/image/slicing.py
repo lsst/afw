@@ -5,12 +5,12 @@ __all__ = ["supportSlicing"]
 
 
 def splitSliceArgs(sliceArgs):
-    """Separate the actual slice from an origin arguments to __getitem__ or
-    __setitem__, using a default for the origin if it is not provided.
+    """Separate the actual slice from origin arguments to __getitem__ or
+    __setitem__, using PARENT for the origin if it is not provided.
 
     See interpretSliceArgs for more information.
     """
-    defaultOrigin = NotImplemented  # TODO: change default origin to PARENT.
+    defaultOrigin = PARENT
     try:
         if isinstance(sliceArgs[-1], ImageOrigin):
             # Args are already a tuple that includes the origin.
@@ -106,9 +106,6 @@ def interpretSliceArgs(sliceArgs, bboxGetter):
         x, y = slices
     if isinstance(x, slice):
         if isinstance(y, slice):
-            # TODO: Remove this block after PARENT is set as the default.
-            if x.start is None and y.start is None and x.stop is None and y.stop is None:
-                origin = PARENT
             return makeBoxFromSlices(x, y, origin=origin, parent=bboxGetter(origin)), None, origin
         raise TypeError("Mixed indices of the form (slice, int) are not supported for images.")
     else:
