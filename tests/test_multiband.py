@@ -71,8 +71,8 @@ def _testImageSlicing(cls, mImage, gVal, rVal, iVal):
     coord = Point2I(1075, 2015)
     bbox = Box2I(Point2I(1050, 2010), coord)
     cls.assertEqual(mImage[:, bbox].getBBox(), bbox)
-    cls.assertEqual(mImage[:, 1010, 2010].getBBox(), Point2I(1010, 2010))
-    cls.assertEqual(mImage[:, Point2I(1075, 2015)].getBBox(), coord)
+    cls.assertEqual(mImage[:, 1010, 2010].getBBox().getMin(), Point2I(1010, 2010))
+    cls.assertEqual(mImage[:, Point2I(1075, 2015)].getBBox().getMin(), coord)
 
     cls.assertEqual(mImage["G", 1100:, 2025:].getBBox(), Box2I(Point2I(1100, 2025), Extent2I(100, 75)))
     cls.assertEqual(mImage["R", -20:-10, -10:-5].getBBox(),
@@ -100,7 +100,7 @@ def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
     mImage1[:"R", bbox2].array = value2
     cls.assertFloatsEqual(mImage1["G", bbox2].array, mImage2["G"].array)
     cls.assertFloatsEqual(mImage1["R"].array, value1)
-    mImage1.setXY0(Point2I(500, 150))
+    mImage1.shiftedTo(Point2I(500, 150))
     cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(500, 150), Extent2I(bbox1.getDimensions())))
 
     mImage1["G"].array[:] = value2
@@ -128,7 +128,7 @@ def _testImageModification(cls, mImage1, mImage2, bbox1, bbox2, value1, value2):
 
 def _testImageCopy(cls, mImage1, value1, value2):
     mImage2 = mImage1.copy(True)
-    mImage2.setXY0(Point2I(11, 23))
+    mImage2.shiftedTo(Point2I(11, 23))
     cls.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
     cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
     cls.assertTrue(np.all([s.getBBox() == mImage1.getBBox() for s in mImage1.singles]))
@@ -141,7 +141,7 @@ def _testImageCopy(cls, mImage1, value1, value2):
     cls.assertFloatsEqual(mImage2["G"].array, value2)
 
     mImage2 = mImage1.copy()
-    mImage2.setXY0(Point2I(11, 23))
+    mImage2.shiftedTo(Point2I(11, 23))
     cls.assertEqual(mImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
     cls.assertEqual(mImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
     cls.assertTrue(np.all([s.getBBox() == mImage2.getBBox() for s in mImage1.singles]))
@@ -180,14 +180,14 @@ class MultibandPixelTestCase(lsst.utils.tests.TestCase):
         pixel = self.pixel.copy(deep=True)
         otherPixel = pixel.copy(deep=True)
         pixel.getBBox().shift(Extent2I(9, -2))
-        self.assertEqual(pixel.getBBox(), Point2I(110, 500))
-        self.assertEqual(otherPixel.getBBox(), Point2I(101, 502))
+        self.assertEqual(pixel.getBBox().getMin(), Point2I(110, 500))
+        self.assertEqual(otherPixel.getBBox().getMin(), Point2I(101, 502))
 
         pixel = self.pixel.copy(deep=True)
         otherPixel = pixel.copy()
         pixel.getBBox().shift(Extent2I(9, -2))
-        self.assertEqual(pixel.getBBox(), Point2I(110, 500))
-        self.assertEqual(otherPixel.getBBox(), Point2I(110, 500))
+        self.assertEqual(pixel.getBBox().getMin(), Point2I(110, 500))
+        self.assertEqual(otherPixel.getBBox().getMin(), Point2I(110, 500))
 
     def testPixelModification(self):
         pixel = self.pixel
@@ -361,15 +361,17 @@ class MultibandMaskedPixelTestCase(lsst.utils.tests.TestCase):
     """
     def setUp(self):
         np.random.seed(1)
-        self.bbox = Point2I(101, 502)
+        self.coords = Point2I(101, 502)
+        self.bbox = Box2I(self.coords, Extent2I(1, 1))
         self.filters = ["G", "R", "I", "Z", "Y"]
         self.image = np.ones((len(self.filters),), dtype=float) * 10
         self.mask = np.ones((len(self.filters),))
         self.variance = np.ones((len(self.filters),)) * 1e-2
         self.pixel = MultibandMaskedPixel(filters=self.filters, image=self.image, mask=self.mask,
-                                          variance=self.variance, bbox=self.bbox)
+                                          variance=self.variance, coords=self.coords)
 
     def tearDown(self):
+        del self.coords
         del self.bbox
         del self.filters
         del self.pixel
@@ -397,22 +399,22 @@ class MultibandMaskedPixelTestCase(lsst.utils.tests.TestCase):
         pixel = self.pixel.copy(deep=True)
         otherPixel = pixel.copy(deep=True)
         pixel.getBBox().shift(Extent2I(9, -2))
-        self.assertEqual(pixel.getBBox(), Point2I(110, 500))
-        self.assertEqual(otherPixel.getBBox(), Point2I(101, 502))
+        self.assertEqual(pixel.getBBox().getMin(), Point2I(110, 500))
+        self.assertEqual(otherPixel.getBBox().getMin(), Point2I(101, 502))
 
         pixel = self.pixel.copy(deep=True)
         otherPixel = pixel.copy()
         pixel.getBBox().shift(Extent2I(9, -2))
-        self.assertEqual(pixel.getBBox(), Point2I(110, 500))
-        self.assertEqual(otherPixel.getBBox(), Point2I(110, 500))
+        self.assertEqual(pixel.getBBox().getMin(), Point2I(110, 500))
+        self.assertEqual(otherPixel.getBBox().getMin(), Point2I(110, 500))
 
     def testPixelModification(self):
         ones = np.ones((len(self.filters),))
         pixel = self.pixel
         otherPixel = pixel.copy(deep=True)
-        otherPixel.image = MultibandPixel(self.filters, ones*8, pixel.getBBox())
-        otherPixel.mask = MultibandPixel(self.filters, ones*2, pixel.getBBox())
-        otherPixel.variance = MultibandPixel(self.filters, ones*1e-3, pixel.getBBox())
+        otherPixel.image = MultibandPixel(self.filters, ones*8, pixel.getBBox().getMin())
+        otherPixel.mask = MultibandPixel(self.filters, ones*2, pixel.getBBox().getMin())
+        otherPixel.variance = MultibandPixel(self.filters, ones*1e-3, pixel.getBBox().getMin())
 
         self.assertFloatsEqual(pixel.image, ones * 10)
         # Stopped development of this test here, since this class is likely to be removed
@@ -499,7 +501,7 @@ def _testMaskedmageModification(cls, maskedImage):
 def _testMaskedImageCopy(cls, maskedImage1):
     maskedImage2 = maskedImage1.copy(True)
 
-    maskedImage2.setXY0(Point2I(11, 23))
+    maskedImage2.shiftedTo(Point2I(11, 23))
     cls.assertEqual(maskedImage2.getBBox(), Box2I(Point2I(11, 23), Extent2I(200, 100)))
     cls.assertEqual(maskedImage1.getBBox(), Box2I(Point2I(1000, 2000), Extent2I(200, 100)))
     cls.assertTrue(np.all([img.getBBox() == maskedImage1.getBBox() for img in maskedImage1.image]))
@@ -735,7 +737,7 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
                 fpImage = np.array(images)[:, 1:-1, 1:-1]
             except IndexError:
                 fpImage = np.array([img.array for img in images])[:, 1:-1, 1:-1]
-            self.assertFloatsAlmostEqual(mFoot.getArray(), fpImage)
+            self.assertFloatsAlmostEqual(mFoot.getImage().array, fpImage)
             if peaks is not None:
                 self.verifyPeaks(mFoot.getPeaks(), peaks)
 
@@ -759,7 +761,10 @@ class MultibandFootprintTestCase(lsst.utils.tests.TestCase):
         fpImage = np.array(images)[:, 3:-3, 3:-3]
         mask = np.all(fpImage <= np.array(thresh)[:, None, None], axis=0)
         fpImage[:, mask] = 0
-        self.assertFloatsAlmostEqual(mFoot.getArray(), fpImage)
+        self.assertFloatsAlmostEqual(mFoot.getImage().array, fpImage)
+        img = mFoot.getImage().array
+        img[img == 0] = 1.1
+        self.assertFloatsAlmostEqual(mFoot.getImage(fill=1.1).array, img)
 
     def testSlicing(self):
         assert isinstance(self.mFoot["R"], HeavyFootprintF)

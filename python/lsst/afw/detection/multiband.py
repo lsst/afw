@@ -58,7 +58,7 @@ class MultibandFootprint(MultibandBase):
         will be included in the `SpanSet` and resulting footprints.
     footprint: `Footprint`
         `Footprint` that contains the `SpanSet` and `PeakCatalog`
-        to use for the `HeavyFootprint` in each band.
+        to use for the `HeavyFootprint` in each band (if `singles` is `None`)
     xy0: `Point2I`
         If `images` is an array and `footprint` is `None` then specifying
         `xy0` gives the location of the minimum `x` and `y` value of the
@@ -186,9 +186,7 @@ class MultibandFootprint(MultibandBase):
         if isinstance(filterIndex, slice):
             singles = self.singles[filterIndex]
         else:
-            singles = []
-            for f in filterIndex:
-                singles.append(self.singles[f])
+            singles = [self.singles[f] for f in filterIndex]
         result = MultibandFootprint(filters=filters, singles=singles)
         return result
 
@@ -215,38 +213,11 @@ class MultibandFootprint(MultibandBase):
         images = []
         for heavy in self.singles:
             _img = Image(bbox, dtype=heavy.getImageArray().dtype)
+            _img.set(fill)
             heavy.insert(_img)
             images.append(_img)
         image = MultibandImage(filters=self.filters, singles=images)
         return image
-
-    def getArray(self, bbox=None, fill=0):
-        """Convert a `MultibandFootprint` to a numpy array
-
-        See `self.getImage` for a description of the parameters
-
-        Results
-        -------
-        result: np.array
-            Multiband image data cube
-        """
-        return self.getImage(bbox, fill).array
-
-    def setBBox(self, bbox):
-        """Overload the baseclass method to set the bounding box
-
-        The bounding box of a `MultibandFootprint` is set, so we
-        prevent the user from setting the bounding box in the base class.
-        """
-        raise ValueError("Cannot update the bounding box of a `MultibandFootprint")
-
-    def setXY0(self, xy0):
-        """Overload the baseclass method to set the XY0 position
-
-        The bounding box of a `MultibandFootprint` is set, so we
-        prevent the user from setting the bounding box or XY0 in the base class.
-        """
-        raise ValueError("Cannot update the bounding box of a `MultibandFootprint")
 
     def copy(self, deep=False):
         """Copy the current object

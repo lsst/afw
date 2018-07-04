@@ -26,17 +26,14 @@ import numpy as np
 from lsst.geom import Point2I, Box2I, Extent2I
 from . import ImageF, MaskedImageF, Mask, ExposureF
 from . import maskedImage as afwMaskedImage
-from lsst.afw.multiband import MultibandBase
+from ..multiband import MultibandBase
 
 
 class MultibandPixel(MultibandBase):
     """Multiband Pixel class
 
     This represent acts as a container for a single pixel
-    (scaler) in multiple bands.
-    There are a few methods from `MultibandBase` that are overloaded,
-    since a `MultibandPixel` has a `Point2I` for it's boudning box
-    as opposed to a `Box2I`.
+    (scalar) in multiple bands.
 
     Parameters
     ----------
@@ -47,7 +44,7 @@ class MultibandPixel(MultibandBase):
         List of filter names. If `singles` is an `OrderedDict` or
         a `MultibandPixel` then this arguement is ignored,
         otherwise it is required.
-    bbox: Point2I
+    coords: Point2I
         Location of the pixel in the parent image.
         Unlike other objects that inherit from `MultibandBase`,
         `MultibandPixel` objects don't have a full `Box2I`
@@ -55,21 +52,21 @@ class MultibandPixel(MultibandBase):
         so the bounding box cannot be inherited from the
         list of `singles`.
     """
-    def __init__(self, filters, singles, bbox):
-        if any([arg is None for arg in [singles, filters, bbox]]):
+    def __init__(self, filters, singles, coords):
+        if any([arg is None for arg in [singles, filters, coords]]):
             err = "Expected an array of `singles`, a list of `filters, and a `bbox`"
             raise NotImplementedError(err)
 
         self._singles = np.array(singles)
         self._filters = tuple(filters)
-        self._bbox = bbox
+        self._bbox = Box2I(coords, Extent2I(1, 1))
         self._singleType = self.singles.dtype
 
         # Make sure that the bounding box has been setup properly
-        if not isinstance(self.getBBox(), Point2I):
+        if self.getBBox().getDimensions() != Extent2I(1,1):
             err = ("Something went wrong, the bounding box for a `MultibandPixel` "
-                   "should always be a `Point2I`, received {0}")
-            raise RuntimeError(err.format(self.getBBox()))
+                   "should always have dimensions (1,1), received {0}")
+            raise RuntimeError(err.format(self.getBBox().getDimensions()))
 
     def _getArray(self):
         """Data cube array in multiple bands
@@ -95,14 +92,14 @@ class MultibandPixel(MultibandBase):
         if deep:
             filters = tuple([f for f in self.filters])
             singles = np.copy(self.singles)
-            # For MultibandPixels, `bbox` is a `Point2I`
-            coords = self.getBBox()
-            bbox = Point2I(coords.getX(), coords.getY())
-        else:
-            filters = self.filters
-            singles = self.singles
-            bbox = self.getBBox()
-        return MultibandPixel(filters=filters, singles=singles, bbox=bbox)
+            coords = self.getBBox().getMin()
+            return MultibandPixel(filters=filters, singles=singles, coords=coords)
+
+        filters = self.filters
+        singles = self.singles
+        result = MultibandPixel(filters=filters, singles=singles, coords=self.getBBox().getMin())
+        result._bbox = self.getBBox()
+        return result
 
     def __getitem__(self, indices):
         """Get a slice of the underlying array
@@ -284,11 +281,11 @@ class MultibandImage(MultibandBase):
                 result = MultibandPixel(
                     singles=array,
                     filters=filters,
-                    bbox=Point2I(sx + self.x0, sy + self.y0)
+                    coords=Point2I(sx + self.x0, sy + self.y0)
                 )
                 return result
             # Set the bbox size based on the slices
-            bbox = self.getBBoxFromIndices(allSlices[1:])
+            bbox = self._getBBoxFromIndices(allSlices[1:])
             singles = self._arrayToSingles(array, self.singleType, bbox.getMin())
             result = type(self)(filters, singles, array=array)
         else:
@@ -689,13 +686,11 @@ class MultibandTripleBase(MultibandBase):
 class MaskedPixel(object):
     """A single pixel with an image, mask, and variance
     """
-    def __init__(self, image, mask, variance, bbox):
+    def __init__(self, image, mask, variance, coords):
         self._image = image
         self._mask = mask
         self._variance = variance
-        self._bbox = bbox
-
-        assert isinstance(self.getBBox(), Point2I)
+        self._bbox = Box2I(coords, Extent2I(1, 1))
 
     def copy(self, deep=False):
         """Make a copy of the current instance
@@ -704,11 +699,7 @@ class MaskedPixel(object):
         numbers, so only the bounding boxes changes
         for deep copies.
         """
-        if deep:
-            bbox = Point2I(self.getBBox())
-        else:
-            bbox = self.getBBox()
-        return MaskedPixel(self.image, self.mask, self.variance, bbox)
+        return MaskedPixel(self.image, self.mask, self.variance, self.getBBox().getMin())
 
     def getImage(self):
         return self._image
@@ -751,14 +742,14 @@ class MultibandMaskedPixel(MultibandTripleBase):
 
     See `MultibandTripleBase` for parameter definitions.
     """
-    def __init__(self, filters, singles=None, image=None, mask=None, variance=None, bbox=None):
-        self._bbox = bbox
+    def __init__(self, filters, singles=None, image=None, mask=None, variance=None, coords=None):
+        self._bbox = Box2I(coords, Extent2I(1, 1))
         super().__init__(filters, singles, image, mask, variance, MaskedPixel)
         # Make sure that the bounding box has been setup properly
-        if not isinstance(self.getBBox(), Point2I):
+        if self.getBBox().getDimensions() != Extent2I(1,1):
             err = ("Something went wrong, the bounding box for a `MultibandPixel` "
-                   "should always be a `Point2I`, received {0}")
-            raise RuntimeError(err.format(self.getBBox()))
+                   "should always have dimensions (1,1), received {0}")
+            raise RuntimeError(err.format(self.getBBox().getDimensions()))
 
     def _buildSingles(self, image=None, mask=None, variance=None):
         """Make a new list of single band objects
@@ -793,7 +784,7 @@ class MultibandMaskedPixel(MultibandTripleBase):
             else:
                 fidx = n
             single = self.singleType(image=image[fidx], mask=mask[fidx], variance=variance[fidx],
-                                     bbox=self.getBBox())
+                                     coords=self.getBBox().getMin())
             singles.append(single)
         return tuple(singles)
 
@@ -802,9 +793,10 @@ class MultibandMaskedPixel(MultibandTripleBase):
 
         See `MultibandTripleBase` for parameter descriptions.
         """
-        self._image = MultibandPixel(filters, image, bbox=self.getBBox())
-        self._mask = MultibandPixel(filters, mask, bbox=self.getBBox())
-        self._variance = MultibandPixel(filters, variance, bbox=self.getBBox())
+        coords = self.getBBox().getMin()
+        self._image = MultibandPixel(filters, image, coords=coords)
+        self._mask = MultibandPixel(filters, mask, coords=coords)
+        self._variance = MultibandPixel(filters, variance, coords=coords)
 
     def copy(self, deep=False):
         """Make a copy of the current instance
@@ -817,13 +809,16 @@ class MultibandMaskedPixel(MultibandTripleBase):
             filters = tuple([f for f in self.filters])
             singles = tuple([s.copy(True) for s in self.singles])
             # For MultibandPixels, `bbox` is a `Point2I`
-            coords = self.getBBox()
-            bbox = Point2I(coords.getX(), coords.getY())
-        else:
-            filters = self.filters
-            singles = self.singles
-            bbox = self.getBBox()
-        return MultibandMaskedPixel(filters=filters, singles=singles, bbox=bbox)
+            coords = self.getBBox().getMin()
+            coords = Point2I(coords.getX(), coords.getY())
+            return MultibandMaskedPixel(filters=filters, singles=singles, coords=coords)
+
+        filters = self.filters
+        singles = self.singles
+        coords = self.getBBox().getMin()
+        result = MultibandMaskedPixel(filters=filters, singles=singles, coords=coords)
+        result._bbox = self._bbox
+        return result
 
     def __getitem__(self, indices):
         """Get a slice of the underlying array
@@ -838,9 +833,9 @@ class MultibandMaskedPixel(MultibandTripleBase):
 
         if hasattr(image, "__len__"):
             result = MultibandMaskedPixel(filters=self.filters, image=image, mask=mask,
-                                          variance=variance, bbox=self.getBBox())
+                                          variance=variance, coords=self.getBBox().getMin())
         else:
-            result = MaskedPixel(image, mask, variance, self.getBBox())
+            result = MaskedPixel(image, mask, variance, self.getBBox().getMin())
         return result
 
 

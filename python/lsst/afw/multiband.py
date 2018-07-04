@@ -50,8 +50,11 @@ class MultibandBase(ABC):
         List of filter names.
     singles: list
         List of single band objects
+    bbox: Box2I
+        By default `MultibandBase` uses `singles[0].getBBox()` to set
+        the bounding box of the multiband
     """
-    def __init__(self, filters, singles):
+    def __init__(self, filters, singles, bbox=None):
         self._filters = tuple([f for f in filters])
         self._singles = tuple(singles)
         self._bbox = self._singles[0].getBBox()
@@ -111,14 +114,6 @@ class MultibandBase(ABC):
         """Minimum coordinate in the bounding box
         """
         return self.getBBox().getMin()
-
-    def setXY0(self, xy0):
-        """Update the XY0 position for each single band object
-        """
-        bbox = self.getBBox()
-        self._bbox = Box2I(xy0, bbox.getDimensions())
-        for n in range(len(self)):
-            self.singles[n].setXY0(xy0)
 
     @property
     def x0(self):
@@ -193,7 +188,7 @@ class MultibandBase(ABC):
                     return self._slice(filters=filters, filterIndex=filterIndex, indices=indices[1:])
                 elif not isinstance(indices[1], Box2I):
                     # Convert indices into a bounding box
-                    bbox = self.getBBoxFromIndices((indexY, indexX))
+                    bbox = self._getBBoxFromIndices((indexY, indexX))
                 else:
                     bbox = indices[1]
                 result = single.Factory(single, bbox, PARENT)
@@ -398,7 +393,7 @@ class MultibandBase(ABC):
         xy0 = self._bbox.getMin() + offset
         self.shiftedTo(xy0)
 
-    def getBBoxFromIndices(self, indices):
+    def _getBBoxFromIndices(self, indices):
         """Set the current bounding box from a set of slices
 
         This method creates the bounding box for this
