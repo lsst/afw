@@ -8,7 +8,23 @@ def splitSliceArgs(sliceArgs):
     """Separate the actual slice from origin arguments to __getitem__ or
     __setitem__, using PARENT for the origin if it is not provided.
 
+    Parameter
+    ---------
+    sliceArgs : `tuple`, `Box2I`, or `Point2I`
+        The first argument passed to an image-like object's
+        ``__getitem__`` or ``__setitem__``.
+
+    Returns
+    -------
+    sliceArgs : `tuple`, `Box2I`, or `Point2I`
+        The original sliceArgs passed in, with any ImageOrigin argument
+        stripped off.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+
     See interpretSliceArgs for more information.
+
+    Intended primarily for internal use by `supportSlicing()`.
     """
     defaultOrigin = PARENT
     try:
@@ -34,6 +50,26 @@ def handleNegativeIndex(index, size, origin, default):
 
     When negative indices are used in PARENT coordinates, we interpret them as
     actual negative pixel values.
+
+    Parameters
+    ----------
+    index : `int` or `None`
+        1-d pixel index to interpret, as given by a caller to an image-like
+        object's ``__getitem__`` or ``__setitem__``.
+    size : `int`
+        Size of the image in the dimension corresponding to ``index``.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+    default : `int`
+        Index to return if `index` is None.
+
+    Returns
+    -------
+    index : `int`
+        If ``origin==PARENT``, either the given ``index`` or ``default``.
+        If ``origin==LOCAL``, an equivalent index guaranteed to be nonnegative.
+
+    Intended primarily for internal use by `supportSlicing()`.
     """
     if index is None:
         assert default is not None
@@ -43,27 +79,65 @@ def handleNegativeIndex(index, size, origin, default):
     return index
 
 
-def makePointFromIndices(x, y, origin, parent):
+def makePointFromIndices(x, y, origin, bbox):
     """Create a Point2I from an x, y pair, correctly handling negative indices.
+
+    Parameters
+    ----------
+    x : `int`
+        Column index.
+    y : `int`
+        Row index.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+    bbox : `Box2I`
+        Bounding box of the image being indexed, obtained using
+        ``getBBox(origin)``.
+
+    Returns
+    -------
+    point : `Point2I`
+        A point corresponding to the given indices.
+
+    Intended primarily for internal use by `supportSlicing()`.
     """
     return Point2I(
-        handleNegativeIndex(x, parent.getWidth(), origin, default=None),
-        handleNegativeIndex(y, parent.getHeight(), origin, default=None)
+        handleNegativeIndex(x, bbox.getWidth(), origin, default=None),
+        handleNegativeIndex(y, bbox.getHeight(), origin, default=None)
     )
 
 
-def makeBoxFromSlices(x, y, origin, parent):
+def makeBoxFromSlices(x, y, origin, bbox):
     """Transform a tuple of slice objects into a Box2I, correctly handling negative indices.
+
+    Parameters
+    ----------
+    x : `slice`
+        Column index range.  Step must be None.
+    y : `slice`
+        Row index range.  Step must be None.
+    origin : `ImageOrigin`
+        Enum value that sets whether or not to consider xy0 in positions.
+    bbox : `Box2I`
+        Bounding box of the image being indexed, obtained using
+        ``getBBox(origin)``.
+
+    Returns
+    -------
+    bbox : `Box2I`
+        A point corresponding to the given indices.
+
+    Intended primarily for internal use by `supportSlicing()`.
     """
     if x.step is not None or y.step is not None:
         raise ValueError("Slices with steps are not supported in image indexing.")
     begin = Point2I(
-        handleNegativeIndex(x.start, parent.getWidth(), origin, default=parent.getBeginX()),
-        handleNegativeIndex(y.start, parent.getHeight(), origin, default=parent.getBeginY())
+        handleNegativeIndex(x.start, bbox.getWidth(), origin, default=bbox.getBeginX()),
+        handleNegativeIndex(y.start, bbox.getHeight(), origin, default=bbox.getBeginY())
     )
     end = Point2I(
-        handleNegativeIndex(x.stop, parent.getWidth(), origin, default=parent.getEndX()),
-        handleNegativeIndex(y.stop, parent.getHeight(), origin, default=parent.getEndY())
+        handleNegativeIndex(x.stop, bbox.getWidth(), origin, default=bbox.getEndX()),
+        handleNegativeIndex(y.stop, bbox.getHeight(), origin, default=bbox.getEndY())
     )
     return Box2I(begin, end - begin)
 
@@ -90,6 +164,8 @@ def interpretSliceArgs(sliceArgs, bboxGetter):
         box.
     origin : `ImageOrigin`
         Enum indicating whether to account for xy0.
+
+    Intended primarily for internal use by `supportSlicing()`.
     """
     slices, origin = splitSliceArgs(sliceArgs)
     if isinstance(slices, Point2I):
@@ -106,12 +182,12 @@ def interpretSliceArgs(sliceArgs, bboxGetter):
         x, y = slices
     if isinstance(x, slice):
         if isinstance(y, slice):
-            return makeBoxFromSlices(x, y, origin=origin, parent=bboxGetter(origin)), None, origin
+            return makeBoxFromSlices(x, y, origin=origin, bbox=bboxGetter(origin)), None, origin
         raise TypeError("Mixed indices of the form (slice, int) are not supported for images.")
     else:
         if isinstance(y, slice):
             raise TypeError("Mixed indices of the form (int, slice) are not supported for images.")
-        return None, makePointFromIndices(x, y, origin=origin, parent=bboxGetter(origin)), origin
+        return None, makePointFromIndices(x, y, origin=origin, bbox=bboxGetter(origin)), origin
 
 
 def supportSlicing(cls):
