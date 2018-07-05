@@ -145,7 +145,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     mi1 = mi.Factory(mi, True)
                     plane0 = getattr(mi0, getName)()
                     plane1 = getattr(mi1, getName)()
-                    plane1[2, 2, afwImage.PARENT] = errVal
+                    plane1[2, 2] = errVal
                     with self.assertRaises(Exception):
                         self.assertImagesAlmostEqual(plane0, plane1)
                     with self.assertRaises(Exception):
@@ -178,7 +178,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     mi1 = mi.Factory(mi, True)
                     plane0 = getattr(mi0, getName)()
                     plane1 = getattr(mi1, getName)()
-                    plane1[2, 2, afwImage.PARENT] += dval
+                    plane1[2, 2] += dval
                     val1 = plane1[2, 2, afwImage.LOCAL]
                     self.assertImagesAlmostEqual(
                         plane0, plane1, rtol=0, atol=dval + epsilon)
@@ -207,7 +207,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     mi1 = mi.Factory(mi, True)
                     plane0 = getattr(mi0, getName)()
                     plane1 = getattr(mi1, getName)()
-                    plane1[2, 2, afwImage.PARENT] += dval
+                    plane1[2, 2] += dval
                     val1 = plane1[2, 2, afwImage.LOCAL]
                     # int value and test is <= so epsilon not required for atol
                     # but rtol is a fraction, so epsilon is still safest for
@@ -322,9 +322,9 @@ def makeRampMaskedImageWithNans(width, height, imgClass=afwImage.MaskedImageF):
     mi = makeRampMaskedImage(width, height, imgClass)
 
     var = mi.getVariance()
-    var[0, 0, afwImage.PARENT] = np.nan
-    var[1, 0, afwImage.PARENT] = np.inf
-    var[0, 1, afwImage.PARENT] = -np.inf
+    var[0, 0] = np.nan
+    var[1, 0] = np.inf
+    var[0, 1] = -np.inf
 
     im = mi.getImage()
     try:
@@ -335,9 +335,9 @@ def makeRampMaskedImageWithNans(width, height, imgClass=afwImage.MaskedImageF):
         pass
     else:
         # image plane does support nan, etc.
-        im[0, 0, afwImage.PARENT] = np.nan
-        im[1, 0, afwImage.PARENT] = np.inf
-        im[0, 1, afwImage.PARENT] = -np.inf
+        im[0, 0] = np.nan
+        im[1, 0] = np.inf
+        im[0, 1] = -np.inf
     return mi
 
 

@@ -54,7 +54,7 @@ class ImageIoTestCase(lsst.utils.tests.TestCase):
             image = Image(self.cols, self.rows)
             for x in range(0, self.cols):
                 for y in range(0, self.rows):
-                    image[x, y, afwImage.PARENT] = x + y
+                    image[x, y] = x + y
 
             with lsst.utils.tests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
                 image.writeFits(filename)

@@ -559,10 +559,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         initialValue = 20
         mi = afwImage.MaskedImageF(500, 200)
         mi.set((initialValue, 0x0, 1.0))
-        mi.image[0:200, :, afwImage.PARENT] = np.nan
+        mi.image[0:200, :] = np.nan
         badBits = mi.mask.getPlaneBitMask(
             ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
-        mi.mask[0:400, :, afwImage.PARENT] |= badBits
+        mi.mask[0:400, :] |= badBits
 
         if debugMode:
             ds9.mtv(mi, frame=0)
@@ -581,7 +581,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bkgdImage = bkgd.getImageF(
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
         self.assertEqual(
-            np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array), initialValue)
+            np.mean(bkgdImage[0:100, 0:100].array), initialValue)
         if debugMode:
             ds9.mtv(bkgdImage, frame=2)
         # Check that we can fix the NaNs in the statsImage
@@ -591,7 +591,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
         self.assertAlmostEqual(
-            np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array, dtype=np.float64),
+            np.mean(bkgdImage[0:100, 0:100].array, dtype=np.float64),
             initialValue)
 
     def testBadRows(self):
@@ -599,10 +599,10 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         initialValue = 20
         mi = afwImage.MaskedImageF(500, 200)
         mi.set((initialValue, 0x0, 1.0))
-        mi.image[:, 0:100, afwImage.PARENT] = np.nan
+        mi.image[:, 0:100] = np.nan
         badBits = mi.mask.getPlaneBitMask(
             ['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
-        mi.mask[0:400, :, afwImage.PARENT] |= badBits
+        mi.mask[0:400, :] |= badBits
 
         if debugMode:
             ds9.mtv(mi, frame=0)
@@ -624,7 +624,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
             bkgdImage = bkgd.getImageF(
                 interpStyle, afwMath.REDUCE_INTERP_ORDER)
             self.assertEqual(
-                np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array), initialValue)
+                np.mean(bkgdImage[0:100, 0:100].array), initialValue)
             if debugMode:
                 ds9.mtv(bkgdImage, frame=frame)
 
@@ -636,7 +636,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # is enough to redeem the entire image
         for pix00 in [np.nan, initialValue]:
             mi.image[:] = np.nan
-            mi.image[0, 0, afwImage.PARENT] = pix00
+            mi.image[0, 0] = pix00
 
             sctrl = afwMath.StatisticsControl()
             nx, ny = 17, 17
@@ -650,7 +650,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                 # fixed
                 bkgdImage = bkgd.getImageF(
                     interpStyle, afwMath.REDUCE_INTERP_ORDER)
-                val = np.mean(bkgdImage[0:100, 0:100, afwImage.PARENT].array)
+                val = np.mean(bkgdImage[0:100, 0:100].array)
 
                 if np.isfinite(pix00):
                     self.assertEqual(val, pix00)
@@ -787,7 +787,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         approxWeighting = True
 
         im = self.image.Factory(
-            self.image, self.image.getBBox(afwImage.PARENT))
+            self.image, self.image.getBBox())
         arr = im.getArray()
         arr += np.random.normal(size=(im.getHeight(), im.getWidth()))
 

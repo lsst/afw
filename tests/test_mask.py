@@ -140,10 +140,10 @@ class MaskTestCase(utilsTests.TestCase):
     def testInitializeMasks(self):
         val = 0x1234
         msk = afwImage.Mask(lsst.geom.ExtentI(10, 10), val)
-        self.assertEqual(msk[0, 0, afwImage.PARENT], val)
+        self.assertEqual(msk[0, 0], val)
 
     def testSetGetMasks(self):
-        self.assertEqual(self.mask1[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(self.mask1[0, 0], self.val1)
 
     def testOrMasks(self):
         self.mask2 |= self.mask1
@@ -286,11 +286,11 @@ class MaskTestCase(utilsTests.TestCase):
 
         del self.mask1                 # tempt C++ to reuse the memory
         self.mask1 = factory(dims)
-        self.assertEqual(self.mask1[10, 10, afwImage.PARENT], 0)
+        self.assertEqual(self.mask1[10, 10], 0)
 
         del self.mask1
         self.mask1 = factory(lsst.geom.ExtentI(20, 20))
-        self.assertEqual(self.mask1[10, 10, afwImage.PARENT], 0)
+        self.assertEqual(self.mask1[10, 10], 0)
 
     def testCtorWithPlaneDefs(self):
         """Test that we can create a Mask with a given MaskPlaneDict"""
@@ -304,24 +304,24 @@ class MaskTestCase(utilsTests.TestCase):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.Mask(10, 20)
         im[-3:, -2:, afwImage.LOCAL] = 0x4
-        im[4, 10, afwImage.PARENT] = 0x2
-        sim = im[1:4, 6:10, afwImage.PARENT]
+        im[4, 10] = 0x2
+        sim = im[1:4, 6:10]
         sim[:] = 0x8
-        im[0:4, 0:4, afwImage.PARENT] = im[2:6, 8:12, afwImage.PARENT]
+        im[0:4, 0:4] = im[2:6, 8:12]
 
         if display:
             ds9.mtv(im)
 
-        self.assertEqual(im[0, 6, afwImage.PARENT], 0)
-        self.assertEqual(im[6, 17, afwImage.PARENT], 0)
-        self.assertEqual(im[7, 18, afwImage.PARENT], 0x4)
-        self.assertEqual(im[9, 19, afwImage.PARENT], 0x4)
-        self.assertEqual(im[1, 6, afwImage.PARENT], 0x8)
-        self.assertEqual(im[3, 9, afwImage.PARENT], 0x8)
-        self.assertEqual(im[4, 10, afwImage.PARENT], 0x2)
-        self.assertEqual(im[4, 9, afwImage.PARENT], 0)
-        self.assertEqual(im[2, 2, afwImage.PARENT], 0x2)
-        self.assertEqual(im[0, 0, afwImage.PARENT], 0x8)
+        self.assertEqual(im[0, 6], 0)
+        self.assertEqual(im[6, 17], 0)
+        self.assertEqual(im[7, 18], 0x4)
+        self.assertEqual(im[9, 19], 0x4)
+        self.assertEqual(im[1, 6], 0x8)
+        self.assertEqual(im[3, 9], 0x8)
+        self.assertEqual(im[4, 10], 0x2)
+        self.assertEqual(im[4, 9], 0)
+        self.assertEqual(im[2, 2], 0x2)
+        self.assertEqual(im[0, 0], 0x8)
 
     def testInterpret(self):
         """Interpretation of Mask values"""
@@ -587,29 +587,29 @@ class OldMaskTestCase(unittest.TestCase):
             ds9.mtv(im)
             ds9.mtv(testMask3)
 
-        self.assertEqual(testMask3[0, 0, afwImage.PARENT], testMask3.getPlaneBitMask(name1))
-        self.assertEqual(testMask3[0, 1, afwImage.PARENT], testMask3.getPlaneBitMask(name2))
+        self.assertEqual(testMask3[0, 0], testMask3.getPlaneBitMask(name1))
+        self.assertEqual(testMask3[0, 1], testMask3.getPlaneBitMask(name2))
 
         self.testMask.removeAndClearMaskPlane(name1, True)
         self.testMask.removeAndClearMaskPlane(name2, True)
         self.Mask.addMaskPlane(name2)  # added in opposite order to testMask3
         self.Mask.addMaskPlane(name1)
 
-        self.assertEqual(self.testMask[0, 0, afwImage.PARENT], 0)
+        self.assertEqual(self.testMask[0, 0], 0)
 
         if display:
             ds9.mtv(im, frame=1)
             ds9.mtv(testMask3, frame=1)
 
-        self.assertNotEqual(testMask3[0, 0, afwImage.PARENT],
+        self.assertNotEqual(testMask3[0, 0],
                             testMask3.getPlaneBitMask(name1))
-        self.assertNotEqual(testMask3[0, 1, afwImage.PARENT],
+        self.assertNotEqual(testMask3[0, 1],
                             testMask3.getPlaneBitMask(name2))
 
         testMask3.conformMaskPlanes(oldDict)
 
-        self.assertEqual(testMask3[0, 0, afwImage.PARENT], testMask3.getPlaneBitMask(name1))
-        self.assertEqual(testMask3[0, 1, afwImage.PARENT], testMask3.getPlaneBitMask(name2))
+        self.assertEqual(testMask3[0, 0], testMask3.getPlaneBitMask(name1))
+        self.assertEqual(testMask3[0, 1], testMask3.getPlaneBitMask(name2))
 
         if display:
             ds9.mtv(im, frame=2)

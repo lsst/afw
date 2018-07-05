@@ -69,7 +69,7 @@ def makeRampImage(width, height, imgClass=afwImage.ImageF):
     val = 0
     for yInd in range(height):
         for xInd in range(width):
-            im[xInd, yInd, afwImage.PARENT] = val
+            im[xInd, yInd] = val
             val += 1
     return im
 
@@ -162,22 +162,22 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         val = 666
         for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
             im = ctor(10, 10, val)
-            self.assertEqual(im[0, 0, afwImage.PARENT], val)
+            self.assertEqual(im[0, 0], val)
 
             im2 = ctor(lsst.geom.Box2I(lsst.geom.Point2I(0, 0),
                                        lsst.geom.Extent2I(10, 10)), val)
-            self.assertEqual(im2[0, 0, afwImage.PARENT], val)
+            self.assertEqual(im2[0, 0], val)
 
     def testSetGetImages(self):
         self.image1.setXY0(3, 4)
         self.assertEqual(self.image1[0, 0, afwImage.LOCAL], self.val1)
-        self.assertEqual(self.image1[3, 4, afwImage.PARENT], self.val1)
+        self.assertEqual(self.image1[3, 4], self.val1)
         self.image1[0, 0, afwImage.LOCAL] = 42.
         self.assertEqual(self.image1[0, 0, afwImage.LOCAL], 42.)
-        self.assertEqual(self.image1[3, 4, afwImage.PARENT], 42.)
-        self.image1[3, 4, afwImage.PARENT] = self.val1
+        self.assertEqual(self.image1[3, 4], 42.)
+        self.image1[3, 4] = self.val1
         self.assertEqual(self.image1[0, 0, afwImage.LOCAL], self.val1)
-        self.assertEqual(self.image1[3, 4, afwImage.PARENT], self.val1)
+        self.assertEqual(self.image1[3, 4], self.val1)
 
     def testAllocateLargeImages(self):
         """Try to allocate a Very large image"""
@@ -193,15 +193,15 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.image2 += self.image1
         self.image1 += self.val1
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], 2*self.val1)
-        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val1 + self.val2)
+        self.assertEqual(self.image1[0, 0], 2*self.val1)
+        self.assertEqual(self.image2[0, 0], self.val1 + self.val2)
 
         self.image1.set(self.val1)
         self.image1 += self.function
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1[i, j, afwImage.PARENT],
+                self.assertEqual(self.image1[i, j],
                                  self.val1 + self.function(i, j))
 
     def testAssignWithBBox(self):
@@ -286,21 +286,21 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         c = 10.0
         self.image1.scaledPlus(c, self.image2)
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1 + c*self.val2)
+        self.assertEqual(self.image1[0, 0], self.val1 + c*self.val2)
 
     def testSubtractImages(self):
         self.image2 -= self.image1
         self.image1 -= self.val1
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], 0)
-        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val2 - self.val1)
+        self.assertEqual(self.image1[0, 0], 0)
+        self.assertEqual(self.image2[0, 0], self.val2 - self.val1)
 
         self.image1.set(self.val1)
         self.image1 -= self.function
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1[i, j, afwImage.PARENT],
+                self.assertEqual(self.image1[i, j],
                                  self.val1 - self.function(i, j))
 
     def testArithmeticImagesMismatch(self):
@@ -346,41 +346,41 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         c = 10.0
         self.image1.scaledMinus(c, self.image2)
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1 - c*self.val2)
+        self.assertEqual(self.image1[0, 0], self.val1 - c*self.val2)
 
     def testMultiplyImages(self):
         self.image2 *= self.image1
         self.image1 *= self.val1
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1*self.val1)
-        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val2*self.val1)
+        self.assertEqual(self.image1[0, 0], self.val1*self.val1)
+        self.assertEqual(self.image2[0, 0], self.val2*self.val1)
 
     def testMultiplesScaledImages(self):
         c = 10.0
         self.image1.scaledMultiplies(c, self.image2)
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], self.val1 * c*self.val2)
+        self.assertEqual(self.image1[0, 0], self.val1 * c*self.val2)
 
     def testDivideImages(self):
         self.image2 /= self.image1
         self.image1 /= self.val1
 
-        self.assertEqual(self.image1[0, 0, afwImage.PARENT], 1)
-        self.assertEqual(self.image2[0, 0, afwImage.PARENT], self.val2/self.val1)
+        self.assertEqual(self.image1[0, 0], 1)
+        self.assertEqual(self.image2[0, 0], self.val2/self.val1)
 
     def testDividesScaledImages(self):
         c = 10.0
         self.image1.scaledDivides(c, self.image2)
 
-        self.assertAlmostEqual(self.image1[0, 0, afwImage.PARENT], self.val1/(c*self.val2))
+        self.assertAlmostEqual(self.image1[0, 0], self.val1/(c*self.val2))
 
     def testCopyConstructors(self):
         dimage = afwImage.ImageF(self.image1, True)  # deep copy
         simage = afwImage.ImageF(self.image1)  # shallow copy
 
         self.image1 += 2                # should only change dimage
-        self.assertEqual(dimage[0, 0, afwImage.PARENT], self.val1)
-        self.assertEqual(simage[0, 0, afwImage.PARENT], self.val1 + 2)
+        self.assertEqual(dimage[0, 0], self.val1)
+        self.assertEqual(simage[0, 0], self.val1 + 2)
 
     def testGeneralisedCopyConstructors(self):
         # these are generalised (templated) copy constructors in C++
@@ -388,9 +388,9 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         imageF = imageU.convertF()
         imageD = imageF.convertD()
 
-        self.assertEqual(imageU[0, 0, afwImage.PARENT], self.val1)
-        self.assertEqual(imageF[0, 0, afwImage.PARENT], self.val1)
-        self.assertEqual(imageD[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(imageU[0, 0], self.val1)
+        self.assertEqual(imageF[0, 0], self.val1)
+        self.assertEqual(imageD[0, 0], self.val1)
 
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
@@ -450,7 +450,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testSubimages2(self):
         """Test subimages when we've played with the (x0, y0) value"""
 
-        self.image1[9, 4, afwImage.PARENT] = 888
+        self.image1[9, 4] = 888
 
         simage1 = afwImage.ImageF(
             self.image1,
@@ -495,18 +495,18 @@ class ImageTestCase(lsst.utils.tests.TestCase):
 
         del self.image1                 # tempt C++ to reuse the memory
         self.image1 = factory(dims)
-        self.assertEqual(self.image1[10, 10, afwImage.PARENT], 0)
+        self.assertEqual(self.image1[10, 10], 0)
 
     def testImageSlicesOrigin(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.ImageF(10, 20)
         im.setXY0(50, 100)
-        im[54, 110, afwImage.PARENT] = 10
+        im[54, 110] = 10
         im[-3:, -2:, afwImage.LOCAL] = 100
         im[-2, -2, afwImage.LOCAL] = -10
-        sim = im[51:54, 106:110, afwImage.PARENT]
+        sim = im[51:54, 106:110]
         sim[:] = -1
-        im[50:54, 100:104, afwImage.PARENT] = im[2:6, 8:12, afwImage.LOCAL]
+        im[50:54, 100:104] = im[2:6, 8:12, afwImage.LOCAL]
 
         if display:
             ds9.mtv(im)
@@ -527,21 +527,21 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         bbox = lsst.geom.BoxI(lsst.geom.PointI(1, 3), lsst.geom.PointI(6, 9))
-        im[bbox, afwImage.PARENT] = -1
+        im[bbox] = -1
 
         if display:
             ds9.mtv(im)
 
-        self.assertEqual(im[0, 6, afwImage.PARENT], 0)
-        self.assertEqual(im[1, 6, afwImage.PARENT], -1)
-        self.assertEqual(im[3, 9, afwImage.PARENT], -1)
+        self.assertEqual(im[0, 6], 0)
+        self.assertEqual(im[1, 6], -1)
+        self.assertEqual(im[3, 9], -1)
 
     def testImageSliceFromBoxOrigin(self):
         """Test using a Box2I to index an Image"""
         im = afwImage.ImageF(10, 20)
         im.setXY0(50, 100)
         bbox = lsst.geom.BoxI(lsst.geom.PointI(51, 103), lsst.geom.ExtentI(6, 7))
-        im[bbox, afwImage.PARENT] = -1
+        im[bbox] = -1
 
         if display:
             ds9.mtv(im)
@@ -553,19 +553,19 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     def testClone(self):
         """Test that clone works properly"""
         im = afwImage.ImageF(10, 20)
-        im[0, 0, afwImage.PARENT] = 100
+        im[0, 0] = 100
 
         im2 = im.clone()                # check that clone with no arguments makes a deep copy
         self.assertEqual(im.getDimensions(), im2.getDimensions())
-        self.assertEqual(im[0, 0, afwImage.PARENT], im2[0, 0, afwImage.PARENT])
-        im2[0, 0, afwImage.PARENT] += 100
-        self.assertNotEqual(im[0, 0, afwImage.PARENT], im2[0, 0, afwImage.PARENT])  # so it's a deep copy
+        self.assertEqual(im[0, 0], im2[0, 0])
+        im2[0, 0] += 100
+        self.assertNotEqual(im[0, 0], im2[0, 0])  # so it's a deep copy
 
-        im2 = im[0:3, 0:5, afwImage.PARENT].clone()  # check that we can slice-then-clone
+        im2 = im[0:3, 0:5].clone()  # check that we can slice-then-clone
         self.assertEqual(im2.getDimensions(), lsst.geom.ExtentI(3, 5))
-        self.assertEqual(im[0, 0, afwImage.PARENT], im2[0, 0, afwImage.PARENT])
-        im2[0, 0, afwImage.PARENT] += 10
-        self.assertNotEqual(float(im[0, 0, afwImage.PARENT]), float(im2[0, 0, afwImage.PARENT]))
+        self.assertEqual(im[0, 0], im2[0, 0])
+        im2[0, 0] += 10
+        self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))
 
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):
@@ -591,7 +591,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     def testCreateDecoratedImage(self):
         self.assertEqual(self.dimage1.getWidth(), self.width)
         self.assertEqual(self.dimage1.getHeight(), self.height)
-        self.assertEqual(self.dimage1.image[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(self.dimage1.image[0, 0], self.val1)
 
     def testCreateDecoratedImageFromImage(self):
         image = afwImage.ImageF(lsst.geom.Extent2I(self.width, self.height))
@@ -600,16 +600,16 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         dimage = afwImage.DecoratedImageF(image)
         self.assertEqual(dimage.getWidth(), self.width)
         self.assertEqual(dimage.getHeight(), self.height)
-        self.assertEqual(dimage.image[0, 0, afwImage.PARENT], self.val1)
+        self.assertEqual(dimage.image[0, 0], self.val1)
 
     def testCopyConstructors(self):
         dimage = afwImage.DecoratedImageF(self.dimage1, True)  # deep copy
-        self.dimage1.image[0, 0, afwImage.PARENT] = 1 + 2*self.val1
-        self.assertEqual(dimage.image[0, 0, afwImage.PARENT], self.val1)
+        self.dimage1.image[0, 0] = 1 + 2*self.val1
+        self.assertEqual(dimage.image[0, 0], self.val1)
 
         dimage = afwImage.DecoratedImageF(self.dimage1)  # shallow copy
-        self.dimage1.image[0, 0, afwImage.PARENT] = 1 + 2*self.val1
-        self.assertNotEqual(dimage.image[0, 0, afwImage.PARENT], self.val1)
+        self.dimage1.image[0, 0] = 1 + 2*self.val1
+        self.assertNotEqual(dimage.image[0, 0], self.val1)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
@@ -715,7 +715,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     def testTicket1040(self):
         """ How to repeat from #1040"""
         image = afwImage.ImageD(lsst.geom.Extent2I(6, 6))
-        image[2, 2, afwImage.PARENT] = 100
+        image[2, 2] = 100
 
         bbox = lsst.geom.Box2I(lsst.geom.Point2I(1, 1), lsst.geom.Extent2I(5, 5))
         subImage = image.Factory(image, bbox)

@@ -648,10 +648,10 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         exp = afwImage.ExposureF(10, 20)
         mi = exp.getMaskedImage()
-        mi.image[9, 19, afwImage.PARENT] = 10
+        mi.image[9, 19] = 10
         # N.b. Exposures don't support setting/getting the pixels so can't
         # replicate e.g. Image's slice tests
-        sexp = exp[1:4, 6:10, afwImage.PARENT]
+        sexp = exp[1:4, 6:10]
         self.assertEqual(sexp.getDimensions(), lsst.geom.ExtentI(3, 4))
         sexp = exp[:, -3:, afwImage.LOCAL]
         self.assertEqual(sexp.getDimensions(),
@@ -666,7 +666,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # only single pixel images may be converted
         self.assertRaises(TypeError, float, im)
         # actually, can't convert (img, msk, var) to scalar
-        self.assertRaises(TypeError, float, im[0, 0, afwImage.PARENT])
+        self.assertRaises(TypeError, float, im[0, 0])
 
     def testReadMetadata(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:

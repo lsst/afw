@@ -65,9 +65,9 @@ def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
     val = 0
     for yInd in range(height):
         for xInd in range(width):
-            image[xInd, yInd, afwImage.PARENT] = val
-            variance[xInd, yInd, afwImage.PARENT] = val + 100
-            mask[xInd, yInd, afwImage.PARENT] = val % 0x100
+            image[xInd, yInd] = val
+            variance[xInd, yInd] = val + 100
+            mask[xInd, yInd] = val % 0x100
             val += 1
     return mi
 
@@ -782,12 +782,12 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.MaskedImageF(10, 20)
-        im[4, 10, afwImage.PARENT] = (10, 0x2, 100)
+        im[4, 10] = (10, 0x2, 100)
         im[-3:, -2:, afwImage.LOCAL] = 100
-        sim = im[1:4, 6:10, afwImage.PARENT]
+        sim = im[1:4, 6:10]
         nan = -666  # a real NaN != NaN so tests fail
         sim[:] = (-1, 0x8, nan)
-        im[0:4, 0:4, afwImage.PARENT] = im[2:6, 8:12, afwImage.PARENT]
+        im[0:4, 0:4] = im[2:6, 8:12]
 
         if display:
             ds9.mtv(im)
@@ -810,7 +810,7 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         # only single pixel images may be converted
         self.assertRaises(TypeError, float, im)
         # actually, can't convert (img, msk, var) to scalar
-        self.assertRaises(TypeError, float, im[0, 0, afwImage.PARENT])
+        self.assertRaises(TypeError, float, im[0, 0])
 
 
 def printImg(img):
