@@ -150,10 +150,7 @@ class MultibandFootprint(MultibandBase):
                    "a list of single band HeavyFootprints (`singles`) or `images` ")
             raise ValueError(err)
 
-        self._filters = filters
-        self._singles = singles
-        self._singleType = type(self._singles[0])
-        self._bbox = self._footprint.getBBox()
+        super().__init__(filters, singles, bbox=self._footprint.getBBox())
 
     def getSpans(self):
         """Get the full `SpanSet`"""
@@ -219,7 +216,7 @@ class MultibandFootprint(MultibandBase):
         image = MultibandImage(filters=self.filters, singles=images)
         return image
 
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Copy the current object
 
         Parameters

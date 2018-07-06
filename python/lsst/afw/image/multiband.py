@@ -57,10 +57,10 @@ class MultibandPixel(MultibandBase):
             err = "Expected an array of `singles`, a list of `filters, and a `bbox`"
             raise NotImplementedError(err)
 
-        self._singles = np.array(singles)
-        self._filters = tuple(filters)
-        self._bbox = Box2I(coords, Extent2I(1, 1))
-        self._singleType = self.singles.dtype
+        singles = np.array(singles)
+        super().__init__(filters, singles, bbox=Box2I(coords, Extent2I(1, 1)), singleType=singles.dtype)
+        # In this case we want self.singles to be an array
+        self._singles = singles
 
         # Make sure that the bounding box has been setup properly
         if self.getBBox().getDimensions() != Extent2I(1,1):
@@ -78,11 +78,11 @@ class MultibandPixel(MultibandBase):
 
     def _setArray(self, value):
         assert value.shape == self.array.shape
-        self._singles = value
+        self._singles[:] = value
 
     array = property(_getArray, _setArray)
 
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Make a copy of the current instance
 
         `MultibandPixel._singles` is an array,
@@ -90,14 +90,11 @@ class MultibandPixel(MultibandBase):
         (as opposed to a view of the parent array).
         """
         if deep:
-            filters = tuple([f for f in self.filters])
             singles = np.copy(self.singles)
             coords = self.getBBox().getMin()
-            return MultibandPixel(filters=filters, singles=singles, coords=coords)
+            return MultibandPixel(filters=self.filters, singles=singles, coords=coords)
 
-        filters = self.filters
-        singles = self.singles
-        result = MultibandPixel(filters=filters, singles=singles, coords=self.getBBox().getMin())
+        result = MultibandPixel(filters=self.filters, singles=self.singles, coords=self.getBBox().getMin())
         result._bbox = self.getBBox()
         return result
 
@@ -119,7 +116,7 @@ class MultibandPixel(MultibandBase):
             # The user only requested a pixel in a single band, so return it
             return self.array[filterIndex[0]]
 
-        result = self.copy()
+        result = self.clone(False)
         result._filters = filters
         result._singles = self._singles[filterIndex]
         # No need to update the bounding box, since pixels can only be sliced in the filter dimension
@@ -135,6 +132,10 @@ class MultibandImage(MultibandBase):
     This class acts as a container for multiple `afw.Image` objects.
     All images must be contained in the same bounding box,
     and have the same data type.
+    The data is stored in a 3D array (filters, y, x), and the single
+    band `Image` instances have an internal array that points to the
+    3D multiband array, so that the single band objects and multiband
+    array are always in agreement.
 
     Parameters
     ----------
@@ -153,7 +154,7 @@ class MultibandImage(MultibandBase):
         This is ignored unless `singles` and `array`
         are both `None`, in which case it is required.
     bbox: `Box2I`
-        Location of the array in the parent image.
+        Location of the array in a larger single band image.
         This argument is ignored if `singles` is not `None`.
     filterKwargs: dict
         Keyword arguments to pass to `_fullInitialize` to
@@ -206,19 +207,23 @@ class MultibandImage(MultibandBase):
                 err = ("Either a list of `singles` and `filters`; "
                        "or an `array`, `filters`, `bbox`, and `singleType`; "
                        "or a set of `kwargs` is required to initialize a `MultibandImage`.")
-                raise NotImplementedError(err)
+                raise TypeError(err)
 
             self._array = np.array([image.array for image in self.singles])
             self._updateSingles(type(self.singles[0]))
 
         # Make sure that all of the parameters have been setup appropriately
-        if not isinstance(self._bbox, Box2I):
-            raise RuntimeError("Something went wrong, `self._bbox` should be a `Box2I`")
+        assert isinstance(self._bbox, Box2I)
         if not np.all([single.getBBox() == self.getBBox() for single in self.singles]):
             raise ValueError("Single band images did not all have the same bounding box")
 
     def _getArray(self):
         """Data cube array in multiple bands
+
+        Returns
+        -------
+        self._array: array
+            The resulting 3D data cube with shape (filters, y, x).
         """
         return self._array
 
@@ -242,7 +247,7 @@ class MultibandImage(MultibandBase):
         """
         return tuple([singleType(array=array[n], xy0=xy0) for n in range(len(array))])
 
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Copy the current object
 
         Parameters
@@ -251,10 +256,9 @@ class MultibandImage(MultibandBase):
             Whether or not to make a deep copy
         """
         if deep:
-            filters = tuple([f for f in self.filters])
             array = np.copy(self.array)
             bbox = Box2I(self.getBBox())
-            result = type(self)(filters=filters, array=array, bbox=bbox, singleType=self.singleType)
+            result = type(self)(self.filters, array=array, bbox=bbox, singleType=self.singleType)
         else:
             result = type(self)(self.filters, self.singles, array=self.array)
         return result
@@ -262,7 +266,7 @@ class MultibandImage(MultibandBase):
     def _slice(self, filters, filterIndex, indices):
         """Slice the current object and return the result
 
-        See `Multiband._slice` for a list of the parameters.
+        See `MultibandBase._slice` for a list of the parameters.
         """
         if len(indices) > 0:
             allSlices = [filterIndex, slice(None), slice(None)]
@@ -297,10 +301,8 @@ class MultibandImage(MultibandBase):
             result.getBBox().getHeight(),
             result.getBBox().getWidth()
         )
-        if result.array.shape != imageShape:
-            err = ("Something went wrong with the internal slicing mechanism, "
-                   "the array shape {0} != the image shape {1}.")
-            raise RuntimeError(err.format(result.array.shape, imageShape))
+        assert result.array.shape == imageShape
+
         return result
 
 
@@ -313,16 +315,65 @@ class MultibandMask(MultibandImage):
                  singleType=Mask, filterKwargs=None, **kwargs):
         super().__init__(filters, singles, array, bbox, singleType, filterKwargs, **kwargs)
         # Set Mask specific properties
-        refMask = self._singles[0]
-        self._maskPlaneDict = refMask.getMaskPlaneDict()
+        self._refMask = self._singles[0]
+        refMask = self._refMask
         assert np.all([refMask.getMaskPlaneDict() == m.getMaskPlaneDict() for m in self.singles])
-        self._getNumPlanesMax = refMask.getNumPlanesMax()
         assert np.all([refMask.getNumPlanesMax() == m.getNumPlanesMax() for m in self.singles])
-        self._getNumPlanesUsed = refMask.getNumPlanesUsed()
         assert np.all([refMask.getNumPlanesUsed() == m.getNumPlanesUsed() for m in self.singles])
 
     def getMaskPlane(self, key):
-        return self.getMaskPlaneDict()[key]
+        """Get the bit number of a mask in the `MaskPlaneDict`
+
+        Each `key` in the mask plane has an associated bit value
+        in the mask. This method returns the bit number of the
+        `key` in the `MaskPlaneDict`.
+        This is in contrast to `getPlaneBitMask`, which returns the
+        value of the bit number.
+
+        For example, if `getMaskPlane` returns `8`, then `getPlaneBitMask`
+        returns `256`.
+
+        Parameters
+        ----------
+        key: string
+            Name of the key in the `MaskPlaneDict`
+
+        Returns
+        -------
+        bit: int
+            Bit number for mask `key`
+        """
+        return self._refMask.getMaskPlaneDict()[key]
+
+    def getPlaneBitMask(self, names):
+        """Get the bit number of a mask in the `MaskPlaneDict`
+
+        Each `key` in the mask plane has an associated bit value
+        in the mask. This method returns the bit number of the
+        `key` in the `MaskPlaneDict`.
+        This is in contrast to `getPlaneBitMask`, which returns the
+        value of the bit number.
+
+        For example, if `getMaskPlane` returns `8`, then `getPlaneBitMask`
+        returns `256`.
+
+        Parameters
+        ----------
+        names: `str` or list of `str`
+            Name of the key in the `MaskPlaneDict` or a list of keys.
+            If multiple keys are used, the value returned is the integer
+            value of the number with all of the bit values in `names`.
+
+            For example if `MaskPlaneDict("CR")=3` and
+            `MaskPlaneDict("NO_DATA)=8`, then
+            `getPlaneBitMask(("CR", "NO_DATA"))=264`
+
+        Returns
+        -------
+        bit value: int
+            Bit value for all of the combined bits described by `names`.
+        """
+        return self._refMask.getPlaneBitMask(names)
 
     def getNumPlanesMax(self):
         """Maximum number of mask planes available
@@ -330,7 +381,7 @@ class MultibandMask(MultibandImage):
         This is required to be the same for all of the single
         band `Mask` objects.
         """
-        return self._getNumPlanesMax
+        return self._refMask.getNumPlanesMax()
 
     def getNumPlanesUsed(self):
         """Number of mask planes used
@@ -338,34 +389,40 @@ class MultibandMask(MultibandImage):
         This is required to be the same for all of the single
         band `Mask` objects.
         """
-        return self._getNumPlanesUsed
+        return self._refMask.getNumPlanesUsed()
 
     def getMaskPlaneDict(self):
         """Dictionary of Mask Plane bit values
         """
-        return self._maskPlaneDict
+        return self._refMask.getMaskPlaneDict()
 
-    def clearMaskPlaneDict(self):
+    @staticmethod
+    def clearMaskPlaneDict():
         """Reset the mask plane dictionary
         """
-        mask = self._singles[0]
-        mask.clearMaskPlaneDict()
-        self._maskPlaneDict = mask.getMaskPlaneDict()
+        Mask = afwImage.Mask[afwImage.MaskPixel]
+        Mask.clearMaskPlaneDict()
 
-    def addMaskPlane(self, name):
+    @staticmethod
+    def addMaskPlane(name):
         """Add a mask to the mask plane
 
         Parameters
         ----------
         name: str
             Name of the new mask plane
+
+        Returns
+        -------
+        index: int
+            Bit value of the mask in the mask plane.
         """
-        mask = self._singles[0]
-        idx = mask.addMaskPlane(name)
-        self._maskPlaneDict = mask.getMaskPlaneDict()
+        Mask = afwImage.Mask[afwImage.MaskPixel]
+        idx = Mask.addMaskPlane(name)
         return idx
 
-    def removeMaskPlane(self, name):
+    @staticmethod
+    def removeMaskPlane(name):
         """Remove a mask from the mask plane
 
         Parameters
@@ -373,15 +430,13 @@ class MultibandMask(MultibandImage):
         name: str
             Name of the mask plane to remove
         """
-        mask = self._singles[0]
-        mask.removeMaskPlane(name)
-        self._maskPlaneDict = mask.getMaskPlaneDict()
+        Mask = afwImage.Mask[afwImage.MaskPixel]
+        Mask.removeMaskPlaneDict()
 
     def clearAllMaskPlanes(self):
         """Clear all the pixels
         """
-        mask = self._singles[0]
-        mask.clearAllMaskPlanes()
+        self._refMask.clearAllMaskPlanes()
 
     def _getOtherMasks(self, others):
         """Check if two masks can be combined
@@ -402,26 +457,20 @@ class MultibandMask(MultibandImage):
 
     def __ior__(self, others):
         _others = self._getOtherMasks(others)
-        singles = list(self.singles)
-        for n in range(len(self)):
-            singles[n] |= _others[n]
-        self._singles = tuple(singles)
+        for s, o in zip(self.singles, _others):
+            s |= o
         return self
 
     def __iand__(self, others):
         _others = self._getOtherMasks(others)
-        singles = list(self.singles)
-        for n in range(len(self)):
-            singles[n] &= _others[n]
-        self._singles = tuple(singles)
+        for s, o in zip(self.singles, _others):
+            s &= o
         return self
 
     def __ixor__(self, others):
         _others = self._getOtherMasks(others)
-        singles = list(self.singles)
-        for n in range(len(self)):
-            singles[n] ^= _others[n]
-        self._singles = tuple(singles)
+        for s,o in zip(self.singles, _others):
+            s ^= o
         return self
 
     def __setitem__(self, args, value):
@@ -444,51 +493,6 @@ class MultibandMask(MultibandImage):
         else:
             self._array[filterIndex, sy, sx] = value
 
-    def set(self, value, filters=None, x=None, y=None):
-        """Set the value of the mask
-
-        Parameters
-        ----------
-        filters: str name, index, or slice
-            Filter(s) to set to `value`.
-            If filters is `None` then all filters are used.
-        value: int or array
-            Value(s) to set for the assigned filter(s)
-        x: int
-            Optional x-position of a pixel to set
-        y: int
-            Optional y-position of a pixel to set
-        """
-        if (x is None) ^ (y is None):
-            err = "Must specify either `x` and `y` coordinate or no coordinates"
-            raise IndexError(err)
-        if x is not None:
-            if not np.issubdtype(type(y), np.integer) or not np.issubdtype(type(x), np.integer):
-                raise IndexError("x and y must be integers if they are specified")
-            # Temporarily adjust for XY0, since Mask does not support XY0 yet
-            x -= self.x0
-            y -= self.y0
-
-        if filters is not None:
-            filters, filterIndex = self._filterNamesToIndex(filters)
-        else:
-            filterIndex = range(len(self))
-        if isinstance(filterIndex, slice):
-            filterIndex = np.arange(len(self))[filterIndex]
-
-        if hasattr(value, "__len__"):
-            for f in filterIndex:
-                if x is None:
-                    self.singles[f].set(value[f])
-                else:
-                    self.singles[f].set(x, y, value[f])
-        else:
-            for f in filterIndex:
-                if x is None:
-                    self.singles[f].set(value)
-                else:
-                    self.singles[f].set(x, y, value)
-
 
 class MultibandTripleBase(MultibandBase):
     """MultibandTripleBase class
@@ -507,14 +511,17 @@ class MultibandTripleBase(MultibandBase):
     filters: list
         List of filter names. If `singles` is an `OrderedDict`
         then this argument is ignored, otherwise it is required.
-    image: list
-        List of `Image` objects that represent the image in each band.
+    image: list or `MultibandImage`
+        List of `Image` objects that represent the image in each band or
+        a `MultibandImage`.
         Ignored if `singles` is not `None`.
-    mask: list
-        List of `Mask` objects that represent the mask in each band.
+    mask: list or `MultibandMask`
+        List of `Mask` objects that represent the mask in each bandor
+        a `MultibandMask`.
         Ignored if `singles` is not `None`.
-    variance: list
-        List of `Image` objects that represent the variance in each band.
+    variance: list or `MultibandImage`
+        List of `Image` objects that represent the variance in each bandor
+        a `MultibandImage`.
         Ignored if `singles` is not `None`.
     singleType: class
         Class of single band objects.
@@ -543,12 +550,12 @@ class MultibandTripleBase(MultibandBase):
             if image is None or mask is None or variance is None or filters is None:
                 err = ("`MultibandTripleBase` must be initialized with "
                        "`singles` and `filters` or `image`, `mask`, `variance`, and `filters`")
-                raise ValueError(err)
+                raise TypeError(err)
             isMultiband = [isinstance(m, MultibandBase) for m in [image, mask, variance]]
-            if np.any(isMultiband):
-                if not np.all(isMultiband):
+            if any(isMultiband):
+                if not all(isMultiband):
                     err = "`image`, `mask`, `variance` must all be either multiband or single band"
-                    raise ValueError(err)
+                    raise TypeError(err)
                 self._image = image
                 self._mask = mask
                 self._variance = variance
@@ -570,7 +577,7 @@ class MultibandTripleBase(MultibandBase):
             err = ("Either a list of `singles` and `filters`; "
                    "a set of `filters`, `image`, `mask`, and `variance`; "
                    "or a set of `kwargs` is required to initialize a `MultibandImage`.")
-            raise NotImplementedError(err)
+            raise TypeError(err)
 
         self._singles = self._buildSingles(self._image, self._mask, self._variance)
 
@@ -600,13 +607,12 @@ class MultibandTripleBase(MultibandBase):
         self.mask.shiftedTo(xy0)
         self.variance.shiftedTo(xy0)
 
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Make a copy of the current instance
         """
         if deep:
-            filters = tuple([f for f in self.filters])
-            singles = tuple([self.singleType(s, deep=True) for s in self.singles])
-            result = type(self)(filters=filters, singles=singles)
+            singles = tuple([self.singleType(s) for s in self.singles])
+            result = type(self)(self.filters, singles=singles)
         else:
             result = type(self)(image=self.image, mask=self.mask, variance=self.variance,
                                 filters=self.filters)
@@ -692,7 +698,7 @@ class MaskedPixel(object):
         self._variance = variance
         self._bbox = Box2I(coords, Extent2I(1, 1))
 
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Make a copy of the current instance
 
         `image`, `mask`, and `variance` are all just
@@ -798,7 +804,7 @@ class MultibandMaskedPixel(MultibandTripleBase):
         self._mask = MultibandPixel(filters, mask, coords=coords)
         self._variance = MultibandPixel(filters, variance, coords=coords)
 
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Make a copy of the current instance
 
         `MultibandPixel._singles` is an array,
@@ -806,12 +812,11 @@ class MultibandMaskedPixel(MultibandTripleBase):
         (as opposed to a view of the parent array).
         """
         if deep:
-            filters = tuple([f for f in self.filters])
-            singles = tuple([s.copy(True) for s in self.singles])
+            singles = tuple([s.clone() for s in self.singles])
             # For MultibandPixels, `bbox` is a `Point2I`
             coords = self.getBBox().getMin()
             coords = Point2I(coords.getX(), coords.getY())
-            return MultibandMaskedPixel(filters=filters, singles=singles, coords=coords)
+            return MultibandMaskedPixel(filters=self.filters, singles=singles, coords=coords)
 
         filters = self.filters
         singles = self.singles

@@ -54,23 +54,30 @@ class MultibandBase(ABC):
         By default `MultibandBase` uses `singles[0].getBBox()` to set
         the bounding box of the multiband
     """
-    def __init__(self, filters, singles, bbox=None):
+    def __init__(self, filters, singles, bbox=None, singleType=None):
         self._filters = tuple([f for f in filters])
-        self._singles = tuple(singles)
-        self._bbox = self._singles[0].getBBox()
-        self._singleType = type(self._singles[0])
+        self._singles = tuple(singles)        
 
-        if not all([s.getBBox() == self.getBBox() for s in self.singles]):
-            bboxes = [s.getBBox() == self.getBBox() for s in self.singles]
-            err = "`singles` are required to have the same bounding box, received {0}"
-            raise ValueError(err.format(bboxes))
-        if not all([type(s) == self.singleType for s in self.singles]):
-            singleTypes = [type(s) == self.singleType for s in self.singles]
-            err = "`singles` are required to have the same type, received {0}"
-            raise ValueError(err.format(singleTypes))
+        if bbox is None:
+            self._bbox = self._singles[0].getBBox()
+            if not all([s.getBBox() == self.getBBox() for s in self.singles]):
+                bboxes = [s.getBBox() == self.getBBox() for s in self.singles]
+                err = "`singles` are required to have the same bounding box, received {0}"
+                raise ValueError(err.format(bboxes))
+        else:
+            self._bbox = bbox
+
+        if singleType is None:
+            self._singleType = type(self._singles[0])
+            if not all([type(s) == self.singleType for s in self.singles]):
+                singleTypes = [type(s) == self.singleType for s in self.singles]
+                err = "`singles` are required to have the same type, received {0}"
+                raise ValueError(err.format(singleTypes))
+        else:
+            self._singleType = singleType
 
     @abstractmethod
-    def copy(self, deep=False):
+    def clone(self, deep=True):
         """Copy the current object
 
         This must be overloaded in a subclass of `MultibandBase`
