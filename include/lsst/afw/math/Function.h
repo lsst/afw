@@ -49,6 +49,14 @@ namespace math {
 
 using boost::serialization::make_nvp;
 
+/** Test that a Function's return value is nothrow-castable to T
+ *
+ * std::complex is an example of a numeric type that does not satisfy
+ * this requirement.
+ */
+template <typename T>
+bool constexpr IS_NOTHROW_INIT = noexcept(static_cast<T>(1.0));
+
 /**
  * Basic Function class.
  *
@@ -102,14 +110,14 @@ public:
     Function& operator=(Function const&) = default;
     Function& operator=(Function&&) = default;
 
-    virtual ~Function() = default;
+    virtual ~Function() noexcept = default;
 
     /**
      * Return the number of function parameters
      *
      * @returns the number of function parameters
      */
-    unsigned int getNParameters() const { return _params.size(); }
+    unsigned int getNParameters() const noexcept { return _params.size(); }
 
     /**
      * Get one function parameter without range checking
@@ -126,7 +134,7 @@ public:
      *
      * @returns the function parameters as a vector
      */
-    std::vector<double> const& getParameters() const { return _params; }
+    std::vector<double> const& getParameters() const noexcept { return _params; }
 
     /**
      * Is the function a linear combination of its parameters?
@@ -135,7 +143,7 @@ public:
      *
      * @warning: subclasses must override if true.
      */
-    virtual bool isLinearCombination() const { return false; }
+    virtual bool isLinearCombination() const noexcept { return false; }
 
     /**
      * Set one function parameter without range checking
@@ -227,7 +235,7 @@ public:
     Function1& operator=(Function1 const&) = default;
     Function1& operator=(Function1&&) = default;
 
-    virtual ~Function1() = default;
+    virtual ~Function1() noexcept = default;
 
     /**
      * Return a pointer to a deep copy of this function
@@ -293,7 +301,7 @@ public:
     Function2& operator=(Function2 const&) = default;
     Function2& operator=(Function2&&) = default;
 
-    virtual ~Function2() = default;
+    virtual ~Function2() noexcept = default;
 
     /**
      * Return a pointer to a deep copy of this function
@@ -373,14 +381,14 @@ public:
     BasePolynomialFunction2& operator=(BasePolynomialFunction2 const&) = default;
     BasePolynomialFunction2& operator=(BasePolynomialFunction2&&) = default;
 
-    virtual ~BasePolynomialFunction2() = default;
+    virtual ~BasePolynomialFunction2() noexcept = default;
 
     /**
      * Get the polynomial order
      */
-    int getOrder() const { return _order; }
+    int getOrder() const noexcept { return _order; }
 
-    virtual bool isLinearCombination() const { return true; }
+    virtual bool isLinearCombination() const noexcept { return true; }
 
     /**
      * Compute number of parameters from polynomial order.
@@ -475,7 +483,7 @@ public:
     }
 
 private:
-    ReturnT operator()(double) const { return static_cast<ReturnT>(0); }
+    ReturnT operator()(double) const noexcept(IS_NOTHROW_INIT<ReturnT>) { return static_cast<ReturnT>(0); }
 
 private:
     friend class boost::serialization::access;
@@ -497,7 +505,9 @@ public:
     }
 
 private:
-    ReturnT operator()(double, double) const { return static_cast<ReturnT>(0); }
+    ReturnT operator()(double, double) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
+        return static_cast<ReturnT>(0);
+    }
 
 private:
     friend class boost::serialization::access;

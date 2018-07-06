@@ -164,7 +164,7 @@ public:
     /// get basic weather information
     coord::Weather getWeather() const { return _weather; }
 
-    bool isPersistable() const { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     // get the local sidereal time on the meridian (equivalent, but not equal, to Local Mean Sidereal Time)
     lsst::geom::Angle getLocalEra() const;

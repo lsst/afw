@@ -54,7 +54,7 @@ template <typename ReturnT>
 class IntegerDeltaFunction1 : public Function1<ReturnT> {
 public:
     /**
-     * Construct an integer delta function with specified xo, yo
+     * Construct an integer delta function with specified xo
      */
     explicit IntegerDeltaFunction1(double xo) : Function1<ReturnT>(0), _xo(xo) {}
 
@@ -62,13 +62,15 @@ public:
     IntegerDeltaFunction1(IntegerDeltaFunction1&&) = default;
     IntegerDeltaFunction1& operator=(IntegerDeltaFunction1 const&) = default;
     IntegerDeltaFunction1& operator=(IntegerDeltaFunction1&&) = default;
-    virtual ~IntegerDeltaFunction1() = default;
+    virtual ~IntegerDeltaFunction1() noexcept = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new IntegerDeltaFunction1(_xo));
     }
 
-    virtual ReturnT operator()(double x) const { return static_cast<ReturnT>(x == _xo); }
+    virtual ReturnT operator()(double x) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
+        return static_cast<ReturnT>(x == _xo);
+    }
 
     virtual std::string toString(std::string const& prefix = "") const {
         std::ostringstream os;
@@ -115,13 +117,13 @@ public:
     IntegerDeltaFunction2(IntegerDeltaFunction2&&) = default;
     IntegerDeltaFunction2& operator=(IntegerDeltaFunction2 const&) = default;
     IntegerDeltaFunction2& operator=(IntegerDeltaFunction2&&) = default;
-    virtual ~IntegerDeltaFunction2() = default;
+    virtual ~IntegerDeltaFunction2() noexcept = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(new IntegerDeltaFunction2(_xo, _yo));
     }
 
-    virtual ReturnT operator()(double x, double y) const {
+    virtual ReturnT operator()(double x, double y) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         return static_cast<ReturnT>((x == _xo) && (y == _yo));
     }
 
@@ -174,13 +176,13 @@ public:
     GaussianFunction1(GaussianFunction1&&) = default;
     GaussianFunction1& operator=(GaussianFunction1 const&) = default;
     GaussianFunction1& operator=(GaussianFunction1&&) = default;
-    virtual ~GaussianFunction1() = default;
+    virtual ~GaussianFunction1() noexcept = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new GaussianFunction1(this->_params[0]));
     }
 
-    virtual ReturnT operator()(double x) const {
+    virtual ReturnT operator()(double x) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         return static_cast<ReturnT>((_multFac / this->_params[0]) *
                                     std::exp(-(x * x) / (2.0 * this->_params[0] * this->_params[0])));
     }
@@ -241,14 +243,14 @@ public:
     GaussianFunction2(GaussianFunction2&&) = default;
     GaussianFunction2& operator=(GaussianFunction2 const&) = default;
     GaussianFunction2& operator=(GaussianFunction2&&) = default;
-    virtual ~GaussianFunction2() = default;
+    virtual ~GaussianFunction2() noexcept = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
                 new GaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
     }
 
-    virtual ReturnT operator()(double x, double y) const {
+    virtual ReturnT operator()(double x, double y) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         if (_angle != this->_params[2]) {
             _updateCache();
         }
@@ -266,7 +268,7 @@ public:
         return os.str();
     }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;
@@ -291,7 +293,7 @@ private:
      * The overhead is small, but the function is typically evaulated more often
      * than its parameters are changed.
      */
-    void _updateCache() const {
+    void _updateCache() const noexcept {
         _angle = this->_params[2];
         _sinAngle = std::sin(_angle);
         _cosAngle = std::cos(_angle);
@@ -355,14 +357,14 @@ public:
     DoubleGaussianFunction2(DoubleGaussianFunction2&&) = default;
     DoubleGaussianFunction2& operator=(DoubleGaussianFunction2 const&) = default;
     DoubleGaussianFunction2& operator=(DoubleGaussianFunction2&&) = default;
-    virtual ~DoubleGaussianFunction2() = default;
+    virtual ~DoubleGaussianFunction2() noexcept = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
                 new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
     }
 
-    virtual ReturnT operator()(double x, double y) const {
+    virtual ReturnT operator()(double x, double y) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         double radSq = (x * x) + (y * y);
         double sigma1Sq = this->_params[0] * this->_params[0];
         double sigma2Sq = this->_params[1] * this->_params[1];
@@ -379,7 +381,7 @@ public:
         return os.str();
     }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;
@@ -438,15 +440,15 @@ public:
     PolynomialFunction1(PolynomialFunction1&&) = default;
     PolynomialFunction1& operator=(PolynomialFunction1 const&) = default;
     PolynomialFunction1& operator=(PolynomialFunction1&&) = default;
-    virtual ~PolynomialFunction1() = default;
+    virtual ~PolynomialFunction1() noexcept = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new PolynomialFunction1(this->_params));
     }
 
-    virtual bool isLinearCombination() const { return true; };
+    virtual bool isLinearCombination() const noexcept { return true; };
 
-    virtual ReturnT operator()(double x) const {
+    virtual ReturnT operator()(double x) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         int const order = static_cast<int>(this->_params.size()) - 1;
         double retVal = this->_params[order];
         for (int ii = order - 1; ii >= 0; --ii) {
@@ -458,7 +460,7 @@ public:
     /**
      * Get the polynomial order
      */
-    unsigned int getOrder() const { return this->getNParameters() - 1; };
+    unsigned int getOrder() const noexcept { return this->getNParameters() - 1; };
 
     virtual std::string toString(std::string const& prefix) const {
         std::ostringstream os;
@@ -525,13 +527,13 @@ public:
     PolynomialFunction2(PolynomialFunction2&&) = default;
     PolynomialFunction2& operator=(PolynomialFunction2 const&) = default;
     PolynomialFunction2& operator=(PolynomialFunction2&&) = default;
-    virtual ~PolynomialFunction2() = default;
+    virtual ~PolynomialFunction2() noexcept = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(new PolynomialFunction2(this->_params));
     }
 
-    virtual ReturnT operator()(double x, double y) const {
+    virtual ReturnT operator()(double x, double y) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         /* Solve as follows:
         - f(x,y) = Cx0 + Cx1 x + Cx2 x^2 + Cx3 x^3 + ...
         where:
@@ -594,7 +596,7 @@ public:
         return os.str();
     }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;
@@ -671,7 +673,7 @@ public:
     Chebyshev1Function1(Chebyshev1Function1&&) = default;
     Chebyshev1Function1& operator=(Chebyshev1Function1 const&) = default;
     Chebyshev1Function1& operator=(Chebyshev1Function1&&) = default;
-    virtual ~Chebyshev1Function1() = default;
+    virtual ~Chebyshev1Function1() noexcept = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new Chebyshev1Function1(this->_params, _minX, _maxX));
@@ -680,19 +682,19 @@ public:
     /**
      * Get minimum allowed x
      */
-    double getMinX() const { return _minX; };
+    double getMinX() const noexcept { return _minX; };
 
     /**
      * Get maximum allowed x
      */
-    double getMaxX() const { return _maxX; };
+    double getMaxX() const noexcept { return _maxX; };
 
     /**
      * Get the polynomial order
      */
-    unsigned int getOrder() const { return this->getNParameters() - 1; };
+    unsigned int getOrder() const noexcept { return this->getNParameters() - 1; };
 
-    virtual bool isLinearCombination() const { return true; };
+    virtual bool isLinearCombination() const noexcept { return true; };
 
     virtual ReturnT operator()(double x) const {
         double xPrime = (x + _offset) * _scale;
@@ -826,7 +828,7 @@ public:
     Chebyshev1Function2(Chebyshev1Function2&&) = default;
     Chebyshev1Function2& operator=(Chebyshev1Function2 const&) = default;
     Chebyshev1Function2& operator=(Chebyshev1Function2&&) = default;
-    virtual ~Chebyshev1Function2() = default;
+    virtual ~Chebyshev1Function2() noexcept = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
@@ -836,7 +838,7 @@ public:
     /**
      * Get x,y range
      */
-    lsst::geom::Box2D getXYRange() const {
+    lsst::geom::Box2D getXYRange() const noexcept {
         return lsst::geom::Box2D(lsst::geom::Point2D(_minX, _minY), lsst::geom::Point2D(_maxX, _maxY));
     };
 
@@ -929,7 +931,7 @@ public:
         return os.str();
     }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;
@@ -1025,13 +1027,13 @@ public:
     LanczosFunction1(LanczosFunction1&&) = default;
     LanczosFunction1& operator=(LanczosFunction1 const&) = default;
     LanczosFunction1& operator=(LanczosFunction1&&) = default;
-    virtual ~LanczosFunction1() = default;
+    virtual ~LanczosFunction1() noexcept = default;
 
     virtual std::shared_ptr<Function1<ReturnT>> clone() const {
         return std::shared_ptr<Function1<ReturnT>>(new LanczosFunction1(this->getOrder(), this->_params[0]));
     }
 
-    virtual ReturnT operator()(double x) const {
+    virtual ReturnT operator()(double x) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         double xArg1 = (x - this->_params[0]) * lsst::geom::PI;
         double xArg2 = xArg1 * _invN;
         if (std::fabs(xArg1) > 1.0e-5) {
@@ -1044,7 +1046,7 @@ public:
     /**
      * Get the order of the Lanczos function
      */
-    unsigned int getOrder() const { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
+    unsigned int getOrder() const noexcept { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
 
     virtual std::string toString(std::string const& prefix) const {
         std::ostringstream os;
@@ -1100,14 +1102,14 @@ public:
     LanczosFunction2(LanczosFunction2&&) = default;
     LanczosFunction2& operator=(LanczosFunction2 const&) = default;
     LanczosFunction2& operator=(LanczosFunction2&&) = default;
-    virtual ~LanczosFunction2() = default;
+    virtual ~LanczosFunction2() noexcept = default;
 
     virtual std::shared_ptr<Function2<ReturnT>> clone() const {
         return std::shared_ptr<Function2<ReturnT>>(
                 new LanczosFunction2(this->getOrder(), this->_params[0], this->_params[1]));
     }
 
-    virtual ReturnT operator()(double x, double y) const {
+    virtual ReturnT operator()(double x, double y) const noexcept(IS_NOTHROW_INIT<ReturnT>) {
         double xArg1 = (x - this->_params[0]) * lsst::geom::PI;
         double xArg2 = xArg1 * _invN;
         double xFunc = 1;
@@ -1126,7 +1128,7 @@ public:
     /**
      * Get the order of Lanczos function
      */
-    unsigned int getOrder() const { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
+    unsigned int getOrder() const noexcept { return static_cast<unsigned int>(0.5 + (1.0 / _invN)); };
 
     virtual std::string toString(std::string const& prefix) const {
         std::ostringstream os;

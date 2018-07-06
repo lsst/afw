@@ -47,7 +47,7 @@ public:
         throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "Not Implemented");
     }
 
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept { return true; }
 
     double getValue() const { return _x; }
 

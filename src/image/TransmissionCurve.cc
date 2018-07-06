@@ -71,7 +71,7 @@ public:
         out.deep() = 1.0;
     }
 
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
     // transforming an IdentityTransmissionCurve is a no-op
@@ -322,7 +322,7 @@ public:
         }
     }
 
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
 protected:
     std::shared_ptr<TransmissionCurve const> _transformedByImpl(
@@ -452,7 +452,7 @@ public:
         out.deep() *= tmp;
     }
 
-    bool isPersistable() const override { return _a->isPersistable() && _b->isPersistable(); }
+    bool isPersistable() const noexcept override { return _a->isPersistable() && _b->isPersistable(); }
 
 protected:
     std::string getPersistenceName() const override { return NAME; }
@@ -535,7 +535,9 @@ public:
         return _nested->sampleAt(_transform->applyInverse(position), wavelengths, out);
     }
 
-    bool isPersistable() const override { return _nested->isPersistable() && _transform->isPersistable(); }
+    bool isPersistable() const noexcept override {
+        return _nested->isPersistable() && _transform->isPersistable();
+    }
 
 protected:
     // transforming a TransformedTransmissionCurve composes the transforms

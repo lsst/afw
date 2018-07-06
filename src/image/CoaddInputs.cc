@@ -63,7 +63,7 @@ CoaddInputs& CoaddInputs::operator=(CoaddInputs const&) = default;
 CoaddInputs& CoaddInputs::operator=(CoaddInputs&&) = default;
 CoaddInputs::~CoaddInputs() = default;
 
-bool CoaddInputs::isPersistable() const { return true; }
+bool CoaddInputs::isPersistable() const noexcept { return true; }
 
 std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }
 

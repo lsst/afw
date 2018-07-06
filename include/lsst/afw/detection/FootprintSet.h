@@ -137,7 +137,7 @@ public:
     FootprintSet& operator=(FootprintSet const& rhs);
     FootprintSet& operator=(FootprintSet&& rhs);
 
-    void swap(FootprintSet& rhs) {
+    void swap(FootprintSet& rhs) noexcept {
         using std::swap;  // See Meyers, Effective C++, Item 25
         swap(*_footprints, *rhs.getFootprints());
         lsst::geom::Box2I rhsRegion = rhs.getRegion();
@@ -145,7 +145,7 @@ public:
         setRegion(rhsRegion);
     }
 
-    void swapFootprintList(FootprintList& rhs) {
+    void swapFootprintList(FootprintList& rhs) noexcept {
         using std::swap;
         swap(*_footprints, rhs);
     }

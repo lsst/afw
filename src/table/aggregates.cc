@@ -235,7 +235,7 @@ CovarianceMatrixKey<T, N> &CovarianceMatrixKey<T, N>::operator=(CovarianceMatrix
 template <typename T, int N>
 CovarianceMatrixKey<T, N> &CovarianceMatrixKey<T, N>::operator=(CovarianceMatrixKey &&) = default;
 template <typename T, int N>
-CovarianceMatrixKey<T, N>::~CovarianceMatrixKey() = default;
+CovarianceMatrixKey<T, N>::~CovarianceMatrixKey() noexcept = default;
 
 // these are workarounds for the fact that Eigen has different constructors for
 // dynamic-sized matrices and fixed-size matrices, but we don't want to have to
@@ -291,7 +291,7 @@ void CovarianceMatrixKey<T, N>::set(BaseRecord &record, Eigen::Matrix<T, N, N> c
 }
 
 template <typename T, int N>
-bool CovarianceMatrixKey<T, N>::isValid() const {
+bool CovarianceMatrixKey<T, N>::isValid() const noexcept {
     int const n = _sigma.size();
     if (n < 1) return false;
     for (int i = 0; i < n; ++i) {
@@ -301,7 +301,7 @@ bool CovarianceMatrixKey<T, N>::isValid() const {
 }
 
 template <typename T, int N>
-bool CovarianceMatrixKey<T, N>::operator==(CovarianceMatrixKey const &other) const {
+bool CovarianceMatrixKey<T, N>::operator==(CovarianceMatrixKey const &other) const noexcept {
     if (_sigma.size() != other._sigma.size()) {
         return false;
     }

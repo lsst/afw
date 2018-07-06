@@ -110,7 +110,7 @@ ApCorrMapFactory registration(getApCorrMapPersistenceName());
 
 }  // namespace
 
-bool ApCorrMap::isPersistable() const {
+bool ApCorrMap::isPersistable() const noexcept {
     for (Iterator i = begin(); i != end(); ++i) {
         if (!i->second->isPersistable()) return false;
     }

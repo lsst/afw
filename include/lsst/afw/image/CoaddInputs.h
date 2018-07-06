@@ -76,7 +76,7 @@ public:
      *  To avoid letting coadd provenance prevent coadd code from running, if a nested Wcs or
      *  Psf is not persistable, it will silently not be saved, instead of throwing an exception.
      */
-    virtual bool isPersistable() const;
+    virtual bool isPersistable() const noexcept override;
 
 protected:
     virtual std::string getPersistenceName() const;

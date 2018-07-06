@@ -61,14 +61,14 @@ public:
               )
             : _value(value), _type(type), _polarity(polarity), _includeMultiplier(includeMultiplier) {}
 
-    ~Threshold() = default;
-    Threshold(Threshold const &) = default;
-    Threshold(Threshold &&) = default;
-    Threshold &operator=(Threshold const &) = default;
-    Threshold &operator=(Threshold &&) = default;
+    ~Threshold() noexcept = default;
+    Threshold(Threshold const &) noexcept = default;
+    Threshold(Threshold &&) noexcept = default;
+    Threshold &operator=(Threshold const &) noexcept = default;
+    Threshold &operator=(Threshold &&) noexcept = default;
 
     /// return type of threshold
-    ThresholdType getType() const { return _type; }
+    ThresholdType getType() const noexcept { return _type; }
 
     static ThresholdType parseTypeString(std::string const &typeStr);
     static std::string getTypeString(ThresholdType const &type);
@@ -89,15 +89,15 @@ public:
     double getValue(ImageT const &image) const;
 
     /// return Threshold's polarity
-    bool getPolarity() const { return _polarity; }
+    bool getPolarity() const noexcept { return _polarity; }
     /// set Threshold's polarity
     void setPolarity(bool const polarity  ///< desired polarity
-    ) {
+                     ) noexcept {
         _polarity = polarity;
     }
 
     /// return includeMultiplier
-    double getIncludeMultiplier() const { return _includeMultiplier; }
+    double getIncludeMultiplier() const noexcept { return _includeMultiplier; }
     /// set includeMultiplier
     void setIncludeMultiplier(double const includeMultiplier  ///< desired multiplier
     ) {

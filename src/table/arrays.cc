@@ -75,7 +75,7 @@ ArrayKey<T>::ArrayKey(std::vector<Key<T> > const &keys) : _begin(), _size(keys.s
 }
 
 template <typename T>
-ArrayKey<T>::ArrayKey(Key<Array<T> > const &other) : _begin(other[0]), _size(other.getSize()) {}
+ArrayKey<T>::ArrayKey(Key<Array<T> > const &other) noexcept : _begin(other[0]), _size(other.getSize()) {}
 
 template <typename T>
 ArrayKey<T>::ArrayKey(SubSchema const &s) : _begin(s["0"]), _size(1) {
@@ -95,15 +95,15 @@ ArrayKey<T>::ArrayKey(SubSchema const &s) : _begin(s["0"]), _size(1) {
 }
 
 template <typename T>
-ArrayKey<T>::ArrayKey(ArrayKey const &) = default;
+ArrayKey<T>::ArrayKey(ArrayKey const &) noexcept = default;
 template <typename T>
-ArrayKey<T>::ArrayKey(ArrayKey &&) = default;
+ArrayKey<T>::ArrayKey(ArrayKey &&) noexcept = default;
 template <typename T>
-ArrayKey<T> &ArrayKey<T>::operator=(ArrayKey const &) = default;
+ArrayKey<T> &ArrayKey<T>::operator=(ArrayKey const &) noexcept = default;
 template <typename T>
-ArrayKey<T> &ArrayKey<T>::operator=(ArrayKey &&) = default;
+ArrayKey<T> &ArrayKey<T>::operator=(ArrayKey &&) noexcept = default;
 template <typename T>
-ArrayKey<T>::~ArrayKey() = default;
+ArrayKey<T>::~ArrayKey() noexcept = default;
 
 template <typename T>
 ndarray::Array<T const, 1, 1> ArrayKey<T>::get(BaseRecord const &record) const {

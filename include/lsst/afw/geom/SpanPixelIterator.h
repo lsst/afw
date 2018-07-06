@@ -42,13 +42,13 @@ namespace geom {
 class SpanPixelIterator : public boost::iterator_facade<SpanPixelIterator, lsst::geom::Point2I const,
                                                         boost::random_access_traversal_tag> {
 public:
-    explicit SpanPixelIterator(lsst::geom::Point2I const& p = lsst::geom::Point2I()) : _p(p) {}
+    explicit SpanPixelIterator(lsst::geom::Point2I const& p = lsst::geom::Point2I()) noexcept : _p(p) {}
 
-    SpanPixelIterator(SpanPixelIterator const&) = default;
-    SpanPixelIterator(SpanPixelIterator&&) = default;
-    SpanPixelIterator& operator=(SpanPixelIterator const&) = default;
-    SpanPixelIterator& operator=(SpanPixelIterator&&) = default;
-    ~SpanPixelIterator() = default;
+    SpanPixelIterator(SpanPixelIterator const&) noexcept = default;
+    SpanPixelIterator(SpanPixelIterator&&) noexcept = default;
+    SpanPixelIterator& operator=(SpanPixelIterator const&) noexcept = default;
+    SpanPixelIterator& operator=(SpanPixelIterator&&) noexcept = default;
+    ~SpanPixelIterator() noexcept = default;
 
 private:
     friend class boost::iterator_core_access;

@@ -706,7 +706,7 @@ public:
      */
     std::vector<std::shared_ptr<geom::SpanSet>> split() const;
 
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * Select pixels within the SpanSet which touch its edge

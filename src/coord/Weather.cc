@@ -36,7 +36,7 @@ Weather::Weather(double airTemperature, double airPressure, double humidity)
     validate();
 }
 
-bool Weather::operator==(Weather const& other) const {
+bool Weather::operator==(Weather const& other) const noexcept {
     return (_airTemperature == other.getAirTemperature() && _airPressure == other.getAirPressure() &&
             _humidity == other.getHumidity());
 }

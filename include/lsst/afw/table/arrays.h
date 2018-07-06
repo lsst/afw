@@ -73,7 +73,7 @@ public:
                               std::string const& unit, int size);
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
-    ArrayKey() : _begin() {}
+    ArrayKey() noexcept : _begin(), _size(0) {}
 
     /// Construct from a vector of scalar Keys
     explicit ArrayKey(std::vector<Key<T> > const& keys);
@@ -84,7 +84,7 @@ public:
      *  Key< Array<T> > is now deprecated in favor of ArrayKey; this factory function is intended to
      *  aid in the transition.
      */
-    explicit ArrayKey(Key<Array<T> > const& other);
+    explicit ArrayKey(Key<Array<T> > const& other) noexcept;
 
     /**
      *  Construct from a subschema, assuming *_0, *_1, *_2, etc. subfields
@@ -96,14 +96,14 @@ public:
      */
     ArrayKey(SubSchema const& s);
 
-    ArrayKey(ArrayKey const&);
-    ArrayKey(ArrayKey&&);
-    ArrayKey& operator=(ArrayKey const&);
-    ArrayKey& operator=(ArrayKey&&);
-    ~ArrayKey();
+    ArrayKey(ArrayKey const&) noexcept;
+    ArrayKey(ArrayKey&&) noexcept;
+    ArrayKey& operator=(ArrayKey const&) noexcept;
+    ArrayKey& operator=(ArrayKey&&) noexcept;
+    virtual ~ArrayKey() noexcept;
 
     /// Return the number of elements in the array.
-    int getSize() const { return _size; }
+    int getSize() const noexcept { return _size; }
 
     /// Get an array from the given record
     virtual ndarray::Array<T const, 1, 1> get(BaseRecord const& record) const;
@@ -119,12 +119,14 @@ public:
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying scalar Keys
-    bool operator==(ArrayKey<T> const& other) const { return other._begin == _begin && other._size == _size; }
-    bool operator!=(ArrayKey<T> const& other) const { return !operator==(other); }
+    bool operator==(ArrayKey<T> const& other) const noexcept {
+        return other._begin == _begin && other._size == _size;
+    }
+    bool operator!=(ArrayKey<T> const& other) const noexcept { return !operator==(other); }
     //@}
 
     /// Return True if the FunctorKey contains valid scalar keys.
-    bool isValid() const { return _begin.isValid(); }
+    bool isValid() const noexcept { return _begin.isValid(); }
 
     /// Return a scalar Key for an element of the array
     Key<T> operator[](int i) const;
@@ -133,7 +135,7 @@ public:
     ArrayKey slice(int begin, int end) const;
 
 private:
-    ArrayKey(Key<T> const& begin, int size) : _begin(begin), _size(size) {}
+    ArrayKey(Key<T> const& begin, int size) noexcept : _begin(begin), _size(size) {}
 
     Key<T> _begin;
     int _size;

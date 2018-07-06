@@ -98,7 +98,7 @@ public:
     //@}
 
     /// Swap two polygons
-    void swap(Polygon& other) { std::swap(this->_impl, other._impl); }
+    void swap(Polygon& other) noexcept { std::swap(this->_impl, other._impl); }
 
     /// Return number of edges
     ///
@@ -248,7 +248,7 @@ public:
 
     //@{
     /// Whether Polygon is persistable which is always true
-    virtual bool isPersistable() const { return true; }
+    virtual bool isPersistable() const noexcept override { return true; }
 
 protected:
     virtual std::string getPersistenceName() const;

@@ -283,7 +283,7 @@ public:
     /**
      * Report if this object is persistable
      */
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * Dilate the Footprint with a defined kernel

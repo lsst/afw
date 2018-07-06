@@ -29,7 +29,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-bool Span::operator<(const Span& b) const {
+bool Span::operator<(const Span& b) const noexcept {
     if (_y < b._y) return true;
     if (_y > b._y) return false;
     // y equal; check x0...

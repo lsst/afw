@@ -59,11 +59,11 @@ public:
      */
     Observatory(std::string const& longitude, std::string const& latitude, double const elevation);
 
-    ~Observatory();
-    Observatory(Observatory const&);
-    Observatory(Observatory&&);
-    Observatory& operator=(Observatory const&);
-    Observatory& operator=(Observatory&&);
+    ~Observatory() noexcept;
+    Observatory(Observatory const&) noexcept;
+    Observatory(Observatory&&) noexcept;
+    Observatory& operator=(Observatory const&) noexcept;
+    Observatory& operator=(Observatory&&) noexcept;
 
     /// set telescope longitude
     void setLongitude(lsst::geom::Angle const longitude);
@@ -73,11 +73,11 @@ public:
     void setElevation(double const elevation);
 
     /// get telescope longitude (positive values are E of Greenwich)
-    lsst::geom::Angle getLongitude() const;
+    lsst::geom::Angle getLongitude() const noexcept;
     /// get telescope latitude
-    lsst::geom::Angle getLatitude() const;
+    lsst::geom::Angle getLatitude() const noexcept;
     /// get telescope elevation (meters above reference spheroid)
-    double getElevation() const { return _elevation; }
+    double getElevation() const noexcept { return _elevation; }
 
     /// get telescope longitude as a dd:mm:ss.s string (positive values are E of Greenwich)
     std::string getLongitudeStr() const;
@@ -86,13 +86,13 @@ public:
     /// get string representation
     std::string toString() const;
 
-    bool operator==(Observatory const& rhs) const {
+    bool operator==(Observatory const& rhs) const noexcept {
         auto deltaLongitude = (_latitude - rhs.getLatitude()).wrapCtr();
         auto deltaLatitude = (_longitude - rhs.getLongitude()).wrapCtr();
         return (deltaLongitude == 0.0 * lsst::geom::degrees) &&
                (deltaLatitude == 0.0 * lsst::geom::degrees) && ((_elevation - rhs._elevation) == 0.0);
     }
-    bool operator!=(Observatory const& rhs) const { return !(*this == rhs); }
+    bool operator!=(Observatory const& rhs) const noexcept { return !(*this == rhs); }
 
 private:
     lsst::geom::Angle _latitude;

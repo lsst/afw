@@ -70,7 +70,7 @@ public:
     using BoundedField::evaluate;
 
     /// TransformBoundedField is always persistable.
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     /// @copydoc BoundedField::operator*
     std::shared_ptr<BoundedField> operator*(double const scale) const override;

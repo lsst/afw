@@ -396,7 +396,7 @@ public:
     /// @copydoc operator==
     bool operator!=(PhotoCalib const &rhs) const { return !(*this == rhs); }
 
-    bool isPersistable() const { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     friend std::ostream &operator<<(std::ostream &os, PhotoCalib const &photoCalib);
 

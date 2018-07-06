@@ -47,24 +47,24 @@ public:
      */
     explicit Weather(double airTemperature, double airPressure, double humidity);
 
-    ~Weather() = default;
+    ~Weather() noexcept = default;
 
-    Weather(Weather const &) = default;
-    Weather(Weather &&) = default;
-    Weather &operator=(Weather const &) = default;
-    Weather &operator=(Weather &&) = default;
+    Weather(Weather const &) noexcept = default;
+    Weather(Weather &&) noexcept = default;
+    Weather &operator=(Weather const &) noexcept = default;
+    Weather &operator=(Weather &&) noexcept = default;
 
-    bool operator==(Weather const &other) const;
-    bool operator!=(Weather const &other) const { return !(*this == other); }
+    bool operator==(Weather const &other) const noexcept;
+    bool operator!=(Weather const &other) const noexcept { return !(*this == other); }
 
     /// get outside air temperature (C)
-    double getAirTemperature() const { return _airTemperature; };
+    double getAirTemperature() const noexcept { return _airTemperature; };
 
     /// get outside air pressure (Pascal)
-    double getAirPressure() const { return _airPressure; };
+    double getAirPressure() const noexcept { return _airPressure; };
 
     /// get outside relative humidity (%)
-    double getHumidity() const { return _humidity; };
+    double getHumidity() const noexcept { return _humidity; };
 
 private:
     double _airTemperature;  ///< air temperature (C)

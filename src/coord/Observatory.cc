@@ -44,16 +44,16 @@ Observatory::Observatory(std::string const& longitude, std::string const& latitu
           _longitude(dmsStringToAngle(longitude)),
           _elevation(elevation) {}
 
-Observatory::~Observatory() = default;
+Observatory::~Observatory() noexcept = default;
 
-Observatory::Observatory(Observatory const&) = default;
-Observatory::Observatory(Observatory&&) = default;
-Observatory& Observatory::operator=(Observatory const&) = default;
-Observatory& Observatory::operator=(Observatory&&) = default;
+Observatory::Observatory(Observatory const&) noexcept = default;
+Observatory::Observatory(Observatory&&) noexcept = default;
+Observatory& Observatory::operator=(Observatory const&) noexcept = default;
+Observatory& Observatory::operator=(Observatory&&) noexcept = default;
 
-lsst::geom::Angle Observatory::getLongitude() const { return _longitude; }
+lsst::geom::Angle Observatory::getLongitude() const noexcept { return _longitude; }
 
-lsst::geom::Angle Observatory::getLatitude() const { return _latitude; }
+lsst::geom::Angle Observatory::getLatitude() const noexcept { return _latitude; }
 
 void Observatory::setLatitude(lsst::geom::Angle const latitude) { _latitude = latitude; }
 

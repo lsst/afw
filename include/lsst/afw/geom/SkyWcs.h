@@ -263,7 +263,7 @@ public:
      */
     bool isFlipped() const;
 
-    bool isPersistable() const override { return true; }
+    bool isPersistable() const noexcept override { return true; }
 
     /**
      * Return the local linear approximation to pixelToSky at a point given in sky coordinates.

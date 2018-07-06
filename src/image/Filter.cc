@@ -92,7 +92,9 @@ void FilterProperty::_insert(bool force) {
     _propertyMap->insert(std::make_pair(getName(), *this));
 }
 
-bool FilterProperty::operator==(FilterProperty const& rhs) const { return (_lambdaEff == rhs._lambdaEff); }
+bool FilterProperty::operator==(FilterProperty const& rhs) const noexcept {
+    return (_lambdaEff == rhs._lambdaEff);
+}
 
 void FilterProperty::_initRegistry() {
     if (_propertyMap) {
@@ -177,7 +179,7 @@ std::vector<std::string> Filter::getNames() {
     return names;
 }
 
-bool Filter::operator==(Filter const& rhs) const { return _id != UNKNOWN && _id == rhs._id; }
+bool Filter::operator==(Filter const& rhs) const noexcept { return _id != UNKNOWN && _id == rhs._id; }
 
 void Filter::_initRegistry() {
     _id0 = UNKNOWN;
